@@ -30,7 +30,9 @@ export default observer(function Navbar() {
     return (
         <AppBar position="fixed" sx={{background: "#000000", display: "flex" }}>
             <Toolbar>
-                <IconButton size="large"
+                <IconButton 
+                  href="/"
+                  size="large"
                   color="inherit"
                   value={0}
                   onClick={() => actions.setTab(0)} 
