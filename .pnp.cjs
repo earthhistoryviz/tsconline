@@ -36,6 +36,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/react", "npm:18.0.27"],\
             ["@types/react-dom", "npm:18.0.10"],\
             ["@vitejs/plugin-react", "virtual:a71a1b29c0a7834fef7ac260835e2250cbef21fb5833274941e10b641bf2f002311839c9bbce7825697f3c5c5842ad96b16231cde2a69ab525a439582412ce38#npm:3.0.1"],\
+            ["mobx", "npm:6.7.0"],\
+            ["mobx-react-lite", "virtual:a71a1b29c0a7834fef7ac260835e2250cbef21fb5833274941e10b641bf2f002311839c9bbce7825697f3c5c5842ad96b16231cde2a69ab525a439582412ce38#npm:3.4.0"],\
             ["react", "npm:18.2.0"],\
             ["react-bootstrap", "virtual:a71a1b29c0a7834fef7ac260835e2250cbef21fb5833274941e10b641bf2f002311839c9bbce7825697f3c5c5842ad96b16231cde2a69ab525a439582412ce38#npm:2.7.0"],\
             ["react-dom", "virtual:a71a1b29c0a7834fef7ac260835e2250cbef21fb5833274941e10b641bf2f002311839c9bbce7825697f3c5c5842ad96b16231cde2a69ab525a439582412ce38#npm:18.2.0"],\
@@ -2474,6 +2476,49 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"\
         }]\
       ]],\
+      ["mobx", [\
+        ["npm:6.7.0", {\
+          "packageLocation": "./.yarn/cache/mobx-npm-6.7.0-851e814a7a-895b46177b.zip/node_modules/mobx/",\
+          "packageDependencies": [\
+            ["mobx", "npm:6.7.0"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["mobx-react-lite", [\
+        ["npm:3.4.0", {\
+          "packageLocation": "./.yarn/cache/mobx-react-lite-npm-3.4.0-26d039ddfd-9294e127e2.zip/node_modules/mobx-react-lite/",\
+          "packageDependencies": [\
+            ["mobx-react-lite", "npm:3.4.0"]\
+          ],\
+          "linkType": "SOFT"\
+        }],\
+        ["virtual:a71a1b29c0a7834fef7ac260835e2250cbef21fb5833274941e10b641bf2f002311839c9bbce7825697f3c5c5842ad96b16231cde2a69ab525a439582412ce38#npm:3.4.0", {\
+          "packageLocation": "./.yarn/__virtual__/mobx-react-lite-virtual-300bd2e6b9/0/cache/mobx-react-lite-npm-3.4.0-26d039ddfd-9294e127e2.zip/node_modules/mobx-react-lite/",\
+          "packageDependencies": [\
+            ["mobx-react-lite", "virtual:a71a1b29c0a7834fef7ac260835e2250cbef21fb5833274941e10b641bf2f002311839c9bbce7825697f3c5c5842ad96b16231cde2a69ab525a439582412ce38#npm:3.4.0"],\
+            ["@types/mobx", null],\
+            ["@types/react", "npm:18.0.27"],\
+            ["@types/react-dom", "npm:18.0.10"],\
+            ["@types/react-native", null],\
+            ["mobx", "npm:6.7.0"],\
+            ["react", "npm:18.2.0"],\
+            ["react-dom", "virtual:a71a1b29c0a7834fef7ac260835e2250cbef21fb5833274941e10b641bf2f002311839c9bbce7825697f3c5c5842ad96b16231cde2a69ab525a439582412ce38#npm:18.2.0"],\
+            ["react-native", null]\
+          ],\
+          "packagePeers": [\
+            "@types/mobx",\
+            "@types/react-dom",\
+            "@types/react-native",\
+            "@types/react",\
+            "mobx",\
+            "react-dom",\
+            "react-native",\
+            "react"\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
       ["ms", [\
         ["npm:2.1.2", {\
           "packageLocation": "./.yarn/cache/ms-npm-2.1.2-ec0c1512ff-673cdb2c31.zip/node_modules/ms/",\
@@ -3206,6 +3251,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/react", "npm:18.0.27"],\
             ["@types/react-dom", "npm:18.0.10"],\
             ["@vitejs/plugin-react", "virtual:a71a1b29c0a7834fef7ac260835e2250cbef21fb5833274941e10b641bf2f002311839c9bbce7825697f3c5c5842ad96b16231cde2a69ab525a439582412ce38#npm:3.0.1"],\
+            ["mobx", "npm:6.7.0"],\
+            ["mobx-react-lite", "virtual:a71a1b29c0a7834fef7ac260835e2250cbef21fb5833274941e10b641bf2f002311839c9bbce7825697f3c5c5842ad96b16231cde2a69ab525a439582412ce38#npm:3.4.0"],\
             ["react", "npm:18.2.0"],\
             ["react-bootstrap", "virtual:a71a1b29c0a7834fef7ac260835e2250cbef21fb5833274941e10b641bf2f002311839c9bbce7825697f3c5c5842ad96b16231cde2a69ab525a439582412ce38#npm:2.7.0"],\
             ["react-dom", "virtual:a71a1b29c0a7834fef7ac260835e2250cbef21fb5833274941e10b641bf2f002311839c9bbce7825697f3c5c5842ad96b16231cde2a69ab525a439582412ce38#npm:18.2.0"],\

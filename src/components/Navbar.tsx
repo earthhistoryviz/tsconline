@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useContext } from 'react'
+import { observer } from 'mobx-react-lite';
+import { context } from '../state';
 import AppBar from '@mui/material/AppBar'
 import * as React from 'react'
 //import { CssVarsProvider } from '@mui/joy/styles';
@@ -21,56 +23,43 @@ import "./navbar.css"
 //<Tab value={0} label="Home" to="/" component={Link} />
 
 
-export function Navbar() {
-const [value, setValue] = useState(0);
+export default observer(function Navbar() {
 
-  
+    const { state, actions } = useContext(context);
+
     return (
         <AppBar position="fixed" sx={{background: "#000000", display: "flex" }}>
             <Toolbar>
                 <IconButton size="large"
                   color="inherit"
                   value={0}
-                  onClick={() => setValue(0)} 
+                  onClick={() => actions.setTab(0)} 
                   >
                     <HomeIcon /> 
                 </IconButton> 
-                <Tabs 
-                textColor="inherit" 
-                value={value} 
-                onChange={(e, value) => setValue(value)} 
-                indicatorColor="secondary"
-                TabIndicatorProps={{
-                    style: {
-                        backgroundColor: "#a1e7a1"
-                    }
-                }}
-                >
-                    <Tab value={1} label="Settings" to="/settings" component={Link} />
-                    <Tab value={2} label="Chart" to="/chart" component={Link}/>
-                </Tabs>
+                { (state.tab === 0) 
+                ? 
+                  <div onClick={() => actions.setTab(1)}>There are no tabs</div> 
+                : 
+                  <Tabs 
+                  textColor="inherit" 
+                  value={state.tab} 
+                  onChange={(e, value) => actions.setTab(value)} 
+                  indicatorColor="secondary"
+                  TabIndicatorProps={{
+                      style: {
+                          backgroundColor: "#a1e7a1"
+                      }
+                  }}
+                  >
+                      <Tab value={1} label="Settings" to="/settings" component={Link} />
+                      <Tab value={2} label="Chart" to="/chart" component={Link}/>
+                  </Tabs>
+                }
                 <div style={{flexGrow: 2}}></div>
                 <img src={TSCreatorLogo} width="50px" height="50px"></img>
             </Toolbar>
         </AppBar>
     )   
-}
+});
 
-                /*<IconButton>
-                </IconButton>
-                <Typography variant="h6" component="div" sx={{flexGrow: 1}}>Home</Typography>
-                <Stack direction="row" spacing={2}>
-                    <Button color="inherit">
-                    Home
-                    <Link to="/"></Link>
-                    </Button>
-                    <Button color="inherit">Settings</Button>
-                    <Link to="/settings"></Link>
-                    <Button color="inherit">Chart</Button>
-                    <Link to="/chart"></Link>
-                </Stack>*/
-
-                /*<Link to="/">Home</Link>
-                <Link to="/settings">Settings</Link>
-                <Link to="/chart">Chart</Link>*/
-export default Navbar; 
