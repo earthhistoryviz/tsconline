@@ -1,0 +1,28 @@
+.body {
+    overflow: hidden;
+}
+
+.panel {
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+}
+.options {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-content: space-around;
+    min-width: 0;
+    gap: 400px;
+    width: 1000px 
+}
+
+.last-item {
+  margin-right: auto;
+}
+
+.item {
+    width: 5px;
+    height: 5px;
+}
+
