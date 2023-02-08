@@ -1,7 +1,7 @@
 import { useContext } from 'react'
 import { observer } from 'mobx-react-lite';
 import { context } from '../state';
-import AppBar from '@mui/material/AppBar'
+import AppBar from '@mui/material/AppBar' 
 import * as React from 'react'
 //import { CssVarsProvider } from '@mui/joy/styles';
 //import Button from '@mui/joy/Button';
@@ -58,7 +58,11 @@ export default observer(function Navbar() {
                       <Tab value={2} label="Chart" to="/chart" component={Link}/>
                   </Tabs>
                 }
-                <div style={{flexGrow: 2}}></div>
+                <div style={{ flexGrow: 3 }}>
+                </div>
+                <div style={{ flexGrow: 2 }}>
+                    We are on chart number: {state.chart} 
+                </div>
                 <img src={TSCreatorLogo} width="50px" height="50px"></img>
             </Toolbar>
         </AppBar>
