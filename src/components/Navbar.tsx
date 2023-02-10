@@ -61,7 +61,7 @@ export default observer(function Navbar() {
                 <div style={{ flexGrow: 3 }}>
                 </div>
                 <div style={{ flexGrow: 2 }}>
-                    We are on chart number: { state.chart } 
+                    We are on chart number: { state.chart.chartNumber } 
                 </div>
                 <img src={TSCreatorLogo} width="50px" height="50px"></img>
             </Toolbar>

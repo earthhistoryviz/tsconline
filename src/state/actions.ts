@@ -6,5 +6,5 @@ export const setTab = action('setTab', (newval: number) => {
 });
 
 export const setChart= action('setChart', (newval: number) => {
-  state.chart = newval;
+  state.chart = state.charts[newval]!;
 });
