@@ -5,7 +5,15 @@
 .panel {
     display: flex;
     flex-direction: column;
-    gap: 50px;
+    gap: 100px;
+}
+.chart_display {
+    display: flex;
+    flex-direction: row;
+}
+.details {
+    display: flex;
+    flex-direction: column;
 }
 .options {
     display: flex;
