@@ -30,16 +30,20 @@ export default observer(function Navbar() {
     return (
         <AppBar position="fixed" sx={{background: "#000000", display: "flex" }}>
             <Toolbar>
-                <IconButton 
-                  href="/"
-                  size="large"
-                  color="inherit"
-                  value={0}
-                  onClick={() => actions.setTab(0)} 
-                  >
-                    <HomeIcon /> 
-                </IconButton> 
-                { (state.tab === 0) 
+                <Link to="/">
+                    <IconButton 
+                      size="large"
+                      color="inherit"
+                      value={0}
+                      onClick={() => {
+                        actions.setTab(0);
+
+                      }}
+                      >
+                        <HomeIcon /> 
+                    </IconButton> 
+                </Link>
+                { (!state.showAllTabs) 
                 ? 
                   <div onClick={() => actions.setTab(1)}>There are no tabs</div> 
                 : 
@@ -61,7 +65,7 @@ export default observer(function Navbar() {
                 <div style={{ flexGrow: 3 }}>
                 </div>
                 <div style={{ flexGrow: 2 }}>
-                    We are on chart number: { state.chart.chartNumber } 
+                    We are on chart number: {state.chart.chartNumber} 
                 </div>
                 <img src={TSCreatorLogo} width="50px" height="50px"></img>
             </Toolbar>

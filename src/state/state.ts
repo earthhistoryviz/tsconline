@@ -1,4 +1,6 @@
 import { observable } from 'mobx';
+import imgSrc1 from '../assets/AfricaBight_Nigeria_Image.jpg'
+import imgSrc2 from '../assets/Past_10_yr_image.jpg'
 
 export type Chart = {
   imageSrc: string,
@@ -9,21 +11,33 @@ export type Chart = {
 
 export type State = {
   tab: number,
+  showAllTabs: boolean,
   chart: Chart,
   charts: Chart[],
 };
 
 const charts = [];
 for (let i = 0; i < 10; i++) {
-  charts.push({
-    imageSrc: `charts/chart_${i}/image.jpg`,
-    dataPackTitle: 'AfricaBight_Nigeria_Image Maps ' + i,
-    dataPackDescription: 'data pack number ' + i,
-    chartNumber: i,
-  });
+  if (i % 2 == 0) {
+      charts.push({
+        imageSrc: imgSrc1,
+        dataPackTitle: 'AfricaBight_Nigeria_Image Maps ' + i,
+        dataPackDescription: 'data pack number ' + i,
+        chartNumber: i,
+      });
+  }
+  else {
+      charts.push({
+        imageSrc: imgSrc1,
+        dataPackTitle: 'AfricaBight_Nigeria_Image Maps ' + i,
+        dataPackDescription: 'data pack number ' + i,
+        chartNumber: i,
+      });
+  }
 }
 export const state = observable<State>({
   tab: 0,
+  showAllTabs: false,
   chart: charts[0]!,
   charts,
 });
