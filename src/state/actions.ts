@@ -8,3 +8,7 @@ export const setTab = action('setTab', (newval: number) => {
 export const setChart= action('setChart', (newval: number) => {
   state.chart = state.charts[newval]!;
 });
+
+export const setAllTabs = action('setAllTabs', (newval: boolean) => {
+    state.showAllTabs = newval;
+})

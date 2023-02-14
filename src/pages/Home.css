@@ -1,15 +1,14 @@
 .body {
-    overflow: hidden;
-}
-
-.panel {
-    display: flex;
-    flex-direction: column;
-    gap: 100px;
+    overflow:hidden
 }
 .chart_display {
+    position: sticky;
     display: flex;
     flex-direction: row;
+}
+
+.button_link {
+    text-decoration: none;
 }
 .details {
     display: flex;
@@ -17,13 +16,19 @@
 }
 .options {
     display: flex;
-    justify-content: center;
+    flex-direction: row;
     flex-wrap: wrap;
-    align-content: space-around;
-    min-width: 0;
-    gap: 400px;
-    width: 1000px 
+    margin-top: 100px;
+    justify-content: space-between;
+    row-gap: 400px;
+    column-gap: 140px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+
 }
+.options>* {
+        flex: 1 1 240px;
+    }
 
 .last-item {
   margin-right: auto;
@@ -34,3 +39,5 @@
     height: 5px;
 }
 
+    align-content: space-around;
+    gap: 300px;
