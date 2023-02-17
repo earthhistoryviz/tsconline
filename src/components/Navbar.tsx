@@ -45,7 +45,7 @@ export default observer(function Navbar() {
                 </Link>
                 { (!state.showAllTabs) 
                 ? 
-                  <div onClick={() => actions.setTab(1)}>There are no tabs piper change</div> 
+                  <div onClick={() => actions.setTab(1)}>There are no tabs</div> 
                 : 
                   <Tabs 
                   textColor="inherit" 
