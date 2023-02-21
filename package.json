@@ -5,5 +5,8 @@
   "workspaces": [
     "app",
     "server"
-  ]
+  ],
+  "dependencies": {
+    "fastify": "^4.13.0"
+  }
 }
