@@ -17,6 +17,16 @@ export type State = {
 };
 
 const charts = [];
+
+for (let i = 0; i < 3; i++) {
+  charts.push({
+    imageSrc: "",
+    dataPackTitle: "",
+    dataPackDescription: "",
+    chartNumber: -1 
+  })
+}
+/*
 for (let i = 0; i < 10; i++) {
   if (i % 2 == 0) {
       charts.push({
@@ -28,7 +38,7 @@ for (let i = 0; i < 10; i++) {
   }
   else {
       charts.push({
-        imageSrc: imgSrc1,
+        imageSrc: imgSrc2,
         dataPackTitle: 'AfricaBight_Nigeria_Image Maps ' + i,
         dataPackDescription: 'data pack number ' + i,
         chartNumber: i,

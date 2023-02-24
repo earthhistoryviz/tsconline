@@ -25,19 +25,19 @@ export const Home = observer(function () {
          <div style={{position: "sticky", width: "100%", height: "43vh", outline: "4px solid blue"}}>
             <div className="chart_display">
                 <div className="holds_picture" style={{width: "35%", height: "38vh"}}>
-                    <img style={{minWidth: "100%", maxHeight: "100%", marginTop: "3%"}} src={state.chart.imageSrc}></img>
+                    <img style={{width: "100%", height: "100%", minWidth: "100%", maxHeight: "100%", marginTop: "3%"}} src={state.chart.imageSrc}></img>
                 </div>
-                <div className="details" >
+                <div className="details" style={{width: "100%", height: "30hv"}}>
                     <h2 style={{ marginLeft: "10%", marginRight: "5%" }}>Preset Title: chart number is {state.chart.chartNumber} </h2>
-                    <p className="description" style={{ marginLeft: "10%", marginRight: "5%" }}>description of the chart description of the chart description of the chart description of the chart description of the chart description of the chart description of the chart description of the chart description of the chart description of the chart description of the chart </p>
-                    <Link className="button_link" to="/chart" style={{marginLeft: "25%", width: "20%", height: "15%"}}>
+                    <p className="description" style={{ marginLeft: "10%", marginRight: "5%" }}>{state.chart.dataPackDescription} </p>
+                    <Link className="button_link" to="/chart" style={{position: "relative", width: "40%", height: "50%",  top: "2%", left: "30%"}}>
                     <Button 
                         onClick={() => {
                         actions.setTab(1);
                         actions.setAllTabs(true);
 
                     }}
-                    variant="contained" style={{width: "250%", height: "250%"}} 
+                    variant="contained" style={{width: "100%", height: "100%"}} 
                     endIcon={<ForwardIcon />}
                     >
                     Make your own chart 

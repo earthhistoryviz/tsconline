@@ -58,8 +58,8 @@ export default observer(function Navbar() {
                       }
                   }}
                   >
-                      <Tab value={1} label="Settings" to="/settings" component={Link} />
-                      <Tab value={2} label="Chart" to="/chart" component={Link}/>
+                      <Tab value={1} label="Chart" to="/chart" component={Link}/>
+                      <Tab value={2} label="Settings" to="/settings" component={Link} />
                   </Tabs>
                 }
                 <div style={{ flexGrow: 3 }}>
