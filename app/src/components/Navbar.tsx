@@ -45,7 +45,7 @@ export default observer(function Navbar() {
                 </Link>
                 { (!state.showAllTabs) 
                 ? 
-                  <div onClick={() => actions.setTab(1)}>There are no tabs piper change</div> 
+                  <div onClick={() => actions.setTab(1)}>There are no tabs</div> 
                 : 
                   <Tabs 
                   textColor="inherit" 
@@ -67,7 +67,7 @@ export default observer(function Navbar() {
                 <div style={{ flexGrow: 2 }}>
                     We are on chart number: {state.chart.chartNumber} 
                 </div>
-                <img src={TSCreatorLogo} width="50px" height="50px"></img>
+                <img src={TSCreatorLogo} width="4%" height="4%"></img>
             </Toolbar>
         </AppBar>
     )   

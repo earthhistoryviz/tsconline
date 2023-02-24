@@ -21,22 +21,23 @@ export const Home = observer(function () {
 
     return (
 
-         <div style={{position: "sticky", width: "1350px", height: "300px", outline: "4px solid blue"}}>
+        <div style={{position: "sticky", width: "100%", height: "88vh"}}>
+         <div style={{position: "sticky", width: "100%", height: "43vh", outline: "4px solid blue"}}>
             <div className="chart_display">
-                <div className="holds_picture" style={{width: "450px", height: "250px"}}>
-                    <img style={{minWidth: "100%", maxHeight: "100%"}} src={state.chart.imageSrc}></img>
+                <div className="holds_picture" style={{width: "35%", height: "38vh"}}>
+                    <img style={{minWidth: "100%", maxHeight: "100%", marginTop: "3%"}} src={state.chart.imageSrc}></img>
                 </div>
                 <div className="details" >
-                    <h2 style={{ marginLeft: 100, marginRight: 50 }}>Preset Title: chart number is {state.chart.chartNumber} </h2>
-                    <p className="description" style={{ marginLeft: 100, marginRight: 50 }}>description of the chart description of the chart description of the chart description of the chart description of the chart description of the chart description of the chart description of the chart description of the chart description of the chart description of the chart </p>
-                    <Link className="button_link" to="/chart" style={{marginLeft: 220, width: "450px", height: "100px"}}>
+                    <h2 style={{ marginLeft: "10%", marginRight: "5%" }}>Preset Title: chart number is {state.chart.chartNumber} </h2>
+                    <p className="description" style={{ marginLeft: "10%", marginRight: "5%" }}>description of the chart description of the chart description of the chart description of the chart description of the chart description of the chart description of the chart description of the chart description of the chart description of the chart description of the chart </p>
+                    <Link className="button_link" to="/chart" style={{marginLeft: "25%", width: "20%", height: "15%"}}>
                     <Button 
                         onClick={() => {
                         actions.setTab(1);
                         actions.setAllTabs(true);
 
                     }}
-                    variant="contained" style={{width: "450px", height: "100px"}} 
+                    variant="contained" style={{width: "250%", height: "250%"}} 
                     endIcon={<ForwardIcon />}
                     >
                     Make your own chart 
@@ -55,5 +56,6 @@ export const Home = observer(function () {
               ))}
             </div>
           </div>
+        </div>
     )
 });
