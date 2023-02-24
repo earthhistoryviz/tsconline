@@ -38,14 +38,13 @@ for (let i = 0; i < 10; i++) {
   }
   else {
       charts.push({
-        imageSrc: imgSrc1,
+        imageSrc: imgSrc2,
         dataPackTitle: 'AfricaBight_Nigeria_Image Maps ' + i,
         dataPackDescription: 'data pack number ' + i,
         chartNumber: i,
       });
   }
 }
-*/
 export const state = observable<State>({
   tab: 0,
   showAllTabs: false,

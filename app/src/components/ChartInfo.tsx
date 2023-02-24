@@ -13,9 +13,9 @@ export default observer(function ChartInfo(chart: ChartBlock) {
         return (
         <div className="panel">
             { (chart.imageSrc === ('../assets/AfricaBright_Nigeria_Image.jpg')) ?
-                <img style={{maxWidth: "100%", maxHeight:"100%"}} src={chart.imageSrc} />
+                <img style={{ maxWidth: "100%", maxHeight:"100%"}} src={chart.imageSrc} />
                 :
-                <img style={{maxWidth: "100%", maxHeight:"100%"}} src={chart.imageSrc} />
+                <img style={{ maxWidth: "100%", maxHeight:"100%"}} src={chart.imageSrc} />
 
             }
             <h1 className="header1">{chart.dataPackTitle}</h1>
