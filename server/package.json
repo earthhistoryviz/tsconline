@@ -18,6 +18,9 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
+    "@fastify/cors": "^8.2.0",
+    "@types/cors": "^2.8.13",
+    "cors": "^2.8.5",
     "fastify": "^4.13.0",
     "tsc": "^2.0.4"
   }
