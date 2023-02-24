@@ -17,6 +17,16 @@ export type State = {
 };
 
 const charts = [];
+
+for (let i = 0; i < 3; i++) {
+  charts.push({
+    imageSrc: "",
+    dataPackTitle: "",
+    dataPackDescription: "",
+    chartNumber: -1 
+  })
+}
+/*
 for (let i = 0; i < 10; i++) {
   if (i % 2 == 0) {
       charts.push({
@@ -35,6 +45,7 @@ for (let i = 0; i < 10; i++) {
       });
   }
 }
+*/
 export const state = observable<State>({
   tab: 0,
   showAllTabs: false,
