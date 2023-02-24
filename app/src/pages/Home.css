@@ -5,6 +5,7 @@
     position: sticky;
     display: flex;
     flex-direction: row;
+    margin-left: 1%;
 }
 
 .button_link {
@@ -16,18 +17,19 @@
 }
 .options {
     display: flex;
+    height: 42vh;
     flex-direction: row;
     flex-wrap: wrap;
-    margin-top: 100px;
+    margin-top: 5%;
     justify-content: space-between;
-    row-gap: 400px;
-    column-gap: 140px;
+    row-gap: 110%;
+    column-gap: 8%;
     overflow-y: scroll;
     overflow-x: hidden;
 
 }
 .options>* {
-        flex: 1 1 240px;
+        flex: 1 1 25%;
     }
 
 .last-item {
