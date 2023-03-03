@@ -18,7 +18,7 @@ export type State = {
 
 const charts = [];
 
-for (let i = 0; i < 3; i++) {
+for (let i = 0; i < 1; i++) {
   charts.push({
     imageSrc: "",
     dataPackTitle: "",
