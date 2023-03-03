@@ -45,6 +45,7 @@ for (let i = 0; i < 10; i++) {
       });
   }
 }
+*/
 export const state = observable<State>({
   tab: 0,
   showAllTabs: false,
