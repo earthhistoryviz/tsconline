@@ -1,0 +1,18 @@
+//const fetch = require('node-fetch');
+//var fs = require('fs');
+
+import axios from 'axios';
+
+export async function initialize() {
+  // put any initialization code here
+  console.log('here at initialize');
+  await fetch('http://localhost:3000/charts')
+    .then(res => console.log(res + 'here fetching'))
+    .then(res => console.log(res))
+    .then(res => console.log('here logging ' + res))
+
+  await axios.post('http://localhost:3000/charts')
+  .then(function (response) {
+        console.log(response);
+  })
+}
