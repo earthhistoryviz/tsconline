@@ -22,22 +22,23 @@ export const Home = observer(function () {
     return (
 
         <div style={{position: "sticky", width: "100%", height: "88vh"}}>
-         <div style={{position: "sticky", width: "100%", height: "43vh", outline: "4px solid blue"}}>
+         <div style={{position: "sticky", width: "100%", height: "43vh", backgroundColor: "#ACB992"}}>
             <div className="chart_display">
                 <div className="holds_picture" style={{width: "35%", height: "38vh"}}>
                     <img style={{width: "100%", height: "100%", minWidth: "100%", maxHeight: "100%", marginTop: "3%"}} src={state.chart.imageSrc}></img>
                 </div>
                 <div className="details" style={{width: "100%", height: "30hv"}}>
-                    <h2 style={{ marginLeft: "10%", marginRight: "5%" }}>Preset Title: chart number is {state.chart.chartNumber} </h2>
-                    <p className="description" style={{ marginLeft: "10%", marginRight: "5%" }}>{state.chart.dataPackDescription} </p>
-                    <Link className="button_link" to="/chart" style={{position: "relative", width: "40%", height: "50%",  top: "2%", left: "30%"}}>
+                    <h2 style={{color: "#362706",marginLeft: "10%", marginRight: "5%" }}>Preset Title: chart number is {state.chart.chartNumber} </h2>
+                    <p className="description" style={{color: "#362706", marginLeft: "10%", marginRight: "5%" }}>{state.chart.dataPackDescription}</p>
+                    <Link className="button_link" to="/chart" style={{marginLeft: "25%", width: "20%", height: "15%"}}>
                     <Button 
+                        sx={{backgroundColor: "#464E2E", color: "#FFFFFF"}}
                         onClick={() => {
                         actions.setTab(1);
                         actions.setAllTabs(true);
 
                     }}
-                    variant="contained" style={{width: "100%", height: "100%"}} 
+                    variant="contained" style={{width: "250%", height: "250%"}} 
                     endIcon={<ForwardIcon />}
                     >
                     Make your own chart 
