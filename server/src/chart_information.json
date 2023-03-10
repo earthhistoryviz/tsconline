@@ -1,23 +1,22 @@
 {
-  "charts":
-            [
-              {
-                "imgSrc": "src/assets/AfricaBight_Nigeria_Image.jpg",
-                "dataPackTitle": "AfricaBight_Nigeria_Image Maps",
-                "dataPackDescription": "data pack number",
-                "chartNumber": "1"
-              },
-              {
-                "imgSrc": "src/assets/AfricaBight_Nigeria_Image.jpg",
-                "dataPackTitle": "AfricaBight_Nigeria_Image Maps",
-                "dataPackDescription": "data pack number",
-                "chartNumber": "2"
-              },
-              {
-                "imgSrc": "src/assets/AfricaBight_Nigeria_Image.jpg",
-                "dataPackTitle": "AfricaBight_Nigeria_Image Maps",
-                "dataPackDescription": "data pack number",
-                "chartNumber": "3"
-              }
-            ]
+    "charts": [
+        {
+            "imgSrc": "src/assets/AfricaBight_Nigeria_Image.jpg",
+            "dataPackTitle": "AfricaBight_Nigeria_Image Maps",
+            "dataPackDescription": "data pack number",
+            "chartNumber": "1"
+        },
+        {
+            "imgSrc": "src/assets/AfricaBight_Nigeria_Image.jpg",
+            "dataPackTitle": "AfricaBight_Nigeria_Image Maps",
+            "dataPackDescription": "data pack number",
+            "chartNumber": "2"
+        },
+        {
+            "imgSrc": "src/assets/AfricaBight_Nigeria_Image.jpg",
+            "dataPackTitle": "AfricaBight_Nigeria_Image Maps",
+            "dataPackDescription": "data pack number",
+            "chartNumber": "3"
+        }
+    ]
 }
