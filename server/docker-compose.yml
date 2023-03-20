@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+
+  tsconline:
+    build: .
+    expose:
+      - 80
+      - 5900
+      - 5800
+    ports:
+      - 80:6000
+      - 5900:5900
+      - 5800:5800
+    volumes:
+      - ./jar:/jar
