@@ -16,6 +16,7 @@ import  TSCreatorLogo  from '../assets/TSCreatorLogo.png'
 import HomeIcon from '@mui/icons-material/Home';
 import { IconButton, Typography, Stack, Button, Tabs, Tab } from '@mui/material'
 import "./navbar.css"
+import { primary_light, primary_dark, secondary } from '../constant';
 
 
 //bg-white shadow-sm mb-3
@@ -28,12 +29,12 @@ export default observer(function Navbar() {
     const { state, actions } = useContext(context);
 
     return (
-        <AppBar position="fixed" sx={{background: "#362706", display: "flex" }}>
+        <AppBar position="fixed" sx={{background: secondary, display: "flex" }}>
             <Toolbar>
                 <Link to="/">
                     <IconButton 
                       size="large"
-                      sx={{color: "#ACB992"}}
+                      sx={{color: primary_light}}
                       value={0}
                       onClick={() => {
                         actions.setTab(0);
@@ -54,7 +55,7 @@ export default observer(function Navbar() {
                   indicatorColor="secondary"
                   TabIndicatorProps={{
                       style: {
-                          backgroundColor: "#ACB992"
+                          backgroundColor: primary_light
                       }
                   }}
                   >
