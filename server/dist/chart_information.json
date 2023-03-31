@@ -3,20 +3,74 @@
         {
             "imgSrc": "src/assets/AfricaBight_Nigeria_Image.jpg",
             "dataPackTitle": "AfricaBight_Nigeria_Image Maps",
-            "dataPackDescription": "data pack number",
+            "dataPackDescription": "data pack description",
             "chartNumber": "1"
         },
         {
-            "imgSrc": "src/assets/AfricaBight_Nigeria_Image.jpg",
+            "imgSrc": "/src/assets/Past_10_yr_image.jpg",
             "dataPackTitle": "AfricaBight_Nigeria_Image Maps",
-            "dataPackDescription": "data pack number",
+            "dataPackDescription": "data pack description",
             "chartNumber": "2"
         },
         {
             "imgSrc": "src/assets/AfricaBight_Nigeria_Image.jpg",
             "dataPackTitle": "AfricaBight_Nigeria_Image Maps",
-            "dataPackDescription": "data pack number",
+            "dataPackDescription": "data pack description",
             "chartNumber": "3"
+        },
+        {
+            "imgSrc": "/src/assets/Past_10_yr_image.jpg",
+            "dataPackTitle": "AfricaBight_Nigeria_Image Maps",
+            "dataPackDescription": "data pack description",
+            "chartNumber": "4"
+        },
+        {
+            "imgSrc": "src/assets/AfricaBight_Nigeria_Image.jpg",
+            "dataPackTitle": "AfricaBight_Nigeria_Image Maps",
+            "dataPackDescription": "data pack description",
+            "chartNumber": "5"
+        },
+        {
+            "imgSrc": "/src/assets/Past_10_yr_image.jpg",
+            "dataPackTitle": "AfricaBight_Nigeria_Image Maps",
+            "dataPackDescription": "data pack description",
+            "chartNumber": "6"
+        },
+        {
+            "imgSrc": "src/assets/AfricaBight_Nigeria_Image.jpg",
+            "dataPackTitle": "AfricaBight_Nigeria_Image Maps",
+            "dataPackDescription": "data pack description",
+            "chartNumber": "7"
+        },
+        {
+            "imgSrc": "/src/assets/Past_10_yr_image.jpg",
+            "dataPackTitle": "AfricaBight_Nigeria_Image Maps",
+            "dataPackDescription": "data pack description",
+            "chartNumber": "8"
+        },
+        {
+            "imgSrc": "src/assets/AfricaBight_Nigeria_Image.jpg",
+            "dataPackTitle": "AfricaBight_Nigeria_Image Maps",
+            "dataPackDescription": "data pack description",
+            "chartNumber": "9"
+        },
+        {
+            "imgSrc": "/src/assets/Past_10_yr_image.jpg",
+            "dataPackTitle": "AfricaBight_Nigeria_Image Maps",
+            "dataPackDescription": "data pack description",
+            "chartNumber": "10"
+        },
+        {
+            "imgSrc": "src/assets/AfricaBight_Nigeria_Image.jpg",
+            "dataPackTitle": "AfricaBight_Nigeria_Image Maps",
+            "dataPackDescription": "data pack description",
+            "chartNumber": "11"
+        },
+        {
+            "imgSrc": "/src/assets/Past_10_yr_image.jpg",
+            "dataPackTitle": "AfricaBight_Nigeria_Image Maps",
+            "dataPackDescription": "data pack description",
+            "chartNumber": "12"
         }
     ]
 }
