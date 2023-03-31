@@ -1,11 +1,14 @@
+* { margin: 0; padding: 0; }
 .body {
     overflow:hidden
 }
 .chart_display {
     position: sticky;
     display: flex;
+    flex-grow: 1;
     flex-direction: row;
     margin-left: 1%;
+    flex-wrap: wrap;
 }
 
 .button_link {
@@ -14,6 +17,10 @@
 .details {
     display: flex;
     flex-direction: column;
+    margin: auto;
+    padding: 2%;
+    max-width: 60%;
+    min-width: 50%;
 }
 .options {
     display: flex;
@@ -21,9 +28,9 @@
     flex-direction: row;
     flex-wrap: wrap;
     margin-top: 5%;
-    justify-content: space-between;
-    row-gap: 110%;
-    column-gap: 8%;
+    justify-content: space-evenly;
+    row-gap: 90%;
+    column-gap: 5%;
     overflow-y: scroll;
     overflow-x: hidden;
 
@@ -37,8 +44,10 @@
 }
 
 .item {
-    width: 5px;
-    height: 5px;
+    display: flex;
+    width: 50%;
+    height: 50%;
+    flex-wrap: wrap;
 }
 
     align-content: space-around;
