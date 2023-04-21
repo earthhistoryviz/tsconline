@@ -2,6 +2,13 @@
 .body {
     overflow:hidden
 }
+.top_box {
+    position: sticky;
+    width: 100%;
+    background-color: #acb992;
+    padding-top: 10px; 
+    padding-bottom: 10px;
+}
 .chart_display {
     position: sticky;
     display: flex;
@@ -11,8 +18,17 @@
     flex-wrap: wrap;
 }
 
+.holds_picture {
+    width: 325px;
+    height: 235px;
+    display: flex;
+}
+
 .button_link {
     text-decoration: none;
+    margin-left: 25%;
+    width: 20%;
+    height: 15%;
 }
 .details {
     display: flex;
@@ -48,6 +64,25 @@
     width: 50%;
     height: 50%;
     flex-wrap: wrap;
+}
+
+@media (max-width: 928px) {
+    .chart_display{
+        justify-content: center;
+    }
+    .holds_picture{
+        display: flex;
+        justify-content: center;
+    }
+    .details{
+        justify-content: center;
+    }
+    .button_link{
+        margin-left: 20%;
+        margin-right: 20%;
+        justify-content: center;
+        
+    }
 }
 
     align-content: space-around;
