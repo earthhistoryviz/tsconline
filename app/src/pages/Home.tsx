@@ -23,15 +23,15 @@ export const Home = observer(function () {
     return (
 
         <div style={{position: "sticky", width: "100%", height: "88vh"}}>
-         <div style={{position: "sticky", width: "100%", backgroundColor: primary_light, paddingTop: "10px", paddingBottom: "10px"}}>
+         <div className="top_box">
             <div className="chart_display">
-                <div className="holds_picture" style={{width: "325px", height: "235px", display: "flex"}}>
+                <div className="holds_picture">
                     <img style={{width: "100%", height: "100%"}} src={state.chart.imageSrc}></img>
                 </div>
                 <div className="details" style={{width: "100%", height: "30hv", flexWrap: "wrap"}}>
                     <h2 style={{color: secondary, marginLeft: "10%", marginRight: "5%", padding:"2%" }}>Preset Title: chart number is {state.chart.chartNumber} </h2>
                     <p className="description" style={{color: secondary, marginLeft: "10%", marginRight: "5%", padding:"2%" }}>{state.chart.dataPackDescription}</p>
-                    <Link className="button_link" to="/chart" style={{marginLeft: "25%", width: "20%", height: "15%"}}>
+                    <Link className="button_link" to="/chart">
                     <Button 
                         sx={{backgroundColor: primary_dark, color: "#FFFFFF"}}
                         onClick={() => {
