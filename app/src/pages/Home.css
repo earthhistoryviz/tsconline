@@ -2,10 +2,14 @@
 .body {
     overflow:hidden
 }
+.whole_page {
+    position: sticky;
+    width: 100%;
+    height: 88vh;
+}
 .top_box {
     position: sticky;
     width: 100%;
-    background-color: #acb992;
     padding-top: 10px; 
     padding-bottom: 10px;
 }
@@ -17,13 +21,15 @@
     margin-left: 1%;
     flex-wrap: wrap;
 }
-
 .holds_picture {
     width: 325px;
     height: 235px;
     display: flex;
 }
-
+.chart {
+    width: 100%;
+    height: 100%;
+}
 .button_link {
     text-decoration: none;
     margin-left: 25%;
@@ -37,6 +43,18 @@
     padding: 2%;
     max-width: 60%;
     min-width: 50%;
+    width: 100%;
+    flex-wrap: wrap;
+}
+.preset_name {
+    margin-left: 10%;
+    margin-right: 5%;
+    padding: 2%;
+}
+.description {
+    margin-left: 10%;
+    margin-right: 5%;
+    padding: 2%;
 }
 .options {
     display: flex;
