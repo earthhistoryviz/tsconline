@@ -1,29 +1,22 @@
-FROM ubuntu:latest
+# Pull base image.
+FROM jlesage/baseimage-gui:ubuntu-20.04
 
-RUN apt-get update
+# Download Java    
+RUN apt-get update && \
+    apt-get install -y openjdk-8-jdk
 
-RUN apt-get install -y curl
+COPY TSC.jar /
+COPY datapack.txt /
+COPY settings.tsc /
 
-RUN mkdir -p ~/.vnc
+# Install xterm.
+RUN add-pkg xterm
 
+# Copy the start script.
+COPY startapp.sh /startapp.sh
 
+# Set the name of the application.
 
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash && \
-    export NVM_DIR="$HOME/.nvm" && \
-      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && \  
-      [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" && \ 
-    nvm install v18 && \
-    nvm use v18 && \
-    npm install -g yarn
+CMD ["java", "-jar", "TSC.jar"]
 
-RUN touch /root/.Xauthority
-
-RUN apt-get install -y x11-xserver-utils
-
-
-ENV USER=root
-
-RUN apt-get install -y tightvncserver
-
-CMD ["bash", "-c", "echo $VNC_PASSWORD | vncpasswd -f > ~/.vnc/passwd && chmod 0600 ~/.vnc/passwd && vncserver :1 -localhost no -geometry 1280x720"]
 
