@@ -11,6 +11,7 @@ import { Button } from '@mui/material';
 import ForwardIcon from '@mui/icons-material/Forward';
 import { Link } from "react-router-dom";
 import { primary_light, primary_dark, secondary } from '../constant';
+import { useNavigate } from 'react-router-dom';
 
 
 export const Home = observer(function () {
@@ -20,23 +21,25 @@ export const Home = observer(function () {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, []);
 
+    const navigate = useNavigate();
+
     return (
 
-        <div style={{position: "sticky", width: "100%", height: "88vh"}}>
-         <div style={{position: "sticky", width: "100%", backgroundColor: primary_light, paddingTop: "10px", paddingBottom: "10px"}}>
+        <div className="whole_page">
+         <div className="top_box" style={{backgroundColor: primary_light}}>
             <div className="chart_display">
-                <div className="holds_picture" style={{width: "325px", height: "235px", display: "flex"}}>
-                    <img style={{width: "100%", height: "100%"}} src={state.chart.imageSrc}></img>
+                <div className="holds_picture">
+                    <img className="chart" src={state.chart.imageSrc}></img>
                 </div>
-                <div className="details" style={{width: "100%", height: "30hv", flexWrap: "wrap"}}>
-                    <h2 style={{color: secondary, marginLeft: "10%", marginRight: "5%", padding:"2%" }}>Preset Title: chart number is {state.chart.chartNumber} </h2>
-                    <p className="description" style={{color: secondary, marginLeft: "10%", marginRight: "5%", padding:"2%" }}>{state.chart.dataPackDescription}</p>
-                    <Link className="button_link" to="/chart" style={{marginLeft: "25%", width: "20%", height: "15%"}}>
+                <div className="details">
+                    <h2 className="preset_name"style={{color: secondary}}>Preset Title: chart number is {state.chart.chartNumber} </h2>
+                    <p className="description" style={{color: secondary}}>{state.chart.dataPackDescription}</p>
                     <Button 
                         sx={{backgroundColor: primary_dark, color: "#FFFFFF"}}
                         onClick={() => {
                         actions.setTab(1);
                         actions.setAllTabs(true);
+                        navigate('/chart');
 
                     }}
                     variant="contained" style={{width: "325px", height: "75px", marginLeft: "auto", marginRight: "auto"}} 
@@ -44,7 +47,6 @@ export const Home = observer(function () {
                     >
                     Make your own chart 
                     </Button>
-                    </Link>
 
                 </div>
             </div>
