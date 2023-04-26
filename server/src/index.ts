@@ -1,6 +1,9 @@
 import fastify from 'fastify';
 import cors from '@fastify/cors';
 
+
+import getCharts from './tscreator/tscreator'
+
 const server = fastify();
 
 import chart_information from './chart_information.json' assert { type: "json" };
@@ -20,11 +23,18 @@ server.register(cors, {
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
 });
 
-server.post('/charts', (request, reply) => {
+server.post('/charts', (request: any, reply: any) => {
   //reply.send(request.body.imgSrc);
   console.log(chart_information);
   //reply.send(chart_information);
   reply.send(chart_information);
+})
+
+server.post('/getchart', (request: any, reply: any) => {
+  console.log('here')
+  const title = request.title
+  getCharts(title);
+
 })
 
 const start = async () => {
