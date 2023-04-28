@@ -39,6 +39,7 @@ export const Home = observer(function () {
                         onClick={() => {
                         actions.setTab(1);
                         actions.setAllTabs(true);
+                        actions.generateChart();
                         navigate('/chart');
 
                     }}
