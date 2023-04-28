@@ -1,6 +1,7 @@
 import imgSrc1 from '../assets/AfricaBight_Nigeria_Image.jpg'
 import imgSrc2 from '../assets/Past_10_yr_image.jpg'
-import { action } from 'mobx';
+import { action, runInAction } from 'mobx';
+import axios from "axios";
 import { state, State } from './state';
 
 export const setTab = action('setTab', (newval: number) => {
@@ -14,6 +15,22 @@ export const setChart= action('setChart', (newval: number) => {
 export const setAllTabs = action('setAllTabs', (newval: boolean) => {
     state.showAllTabs = newval;
 })
+
+export const generateChart = action('generateChart', async () => {
+  await axios
+      .post(
+        "http://localhost:3000/getchart",
+      {
+        title: "Past_10_yr_image"
+      })
+      .then((response: any) => {
+        runInAction(() => state.chartPath = response.data.url);
+        console.log(state.chartPath);
+      })
+      .catch((error: any) => {
+      })
+})
+
 
 export const loadCharts = action('loadCharts', (charts: any) => {
   //newval = newval.json();

@@ -1,9 +1,17 @@
 import fastify from 'fastify';
 import cors from '@fastify/cors';
+import 'fs';
+import process from "process";
 import { exec } from 'child_process';
 //import getCharts from './tscreator/tscreator'
-const server = fastify();
 import chart_information from './chart_information.json' assert { type: "json" };
+import fastifyStatic from '@fastify/static';
+const server = fastify();
+// @ts-ignore
+server.register(fastifyStatic, {
+    root: process.cwd() + '/files',
+    prefix: '/files/',
+});
 for (let x in chart_information) {
     console.log(x + chart_information);
 }
@@ -11,6 +19,7 @@ console.log(chart_information.charts);
 console.log('length of json object = ' + chart_information);
 console.log('here');
 console.log('here');
+// @ts-ignore
 server.register(cors, {
     origin: "*",
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
@@ -30,30 +39,42 @@ server.post('/getchart', async (request, reply) => {
     //const jarArgs: string[] = ['-jar', './jar/TSC.jar', '-d', `./files/${title}datapack.txt`, '-s', `./files/${title}settings.tsc`];
     console.log(jarArgs);
     //const child: ChildProcess = spawn('java', jarArgs);
-    const child = exec(jarArgs.join(" "), function (error, stdout, stderror) {
-        var stdoutstring = stdout.toString();
-        console.log("Child Created");
-        console.log("Error: " + error);
-        console.log("Data: " + stdoutstring);
-        console.log("Standarad Error: " + stderror);
-        reply.send(stdoutstring);
+    //
+    await new Promise((resolve, reject) => {
+        exec(jarArgs.join(" "), function (error, stdout, stderror) {
+            var stdoutstring = stdout.toString();
+            console.log("Child Created");
+            console.log("Error: " + error);
+            console.log("Data: " + stdoutstring);
+            console.log("Standarad Error: " + stderror);
+            console.log('sending reply');
+            reply.send({ "url": `/files/${title}save.pdf` });
+            resolve();
+        });
     });
-    let response = '';
-    let error = '';
+    /*
+    let response: string = '';
+    let error: string = '';
+  
     child.stdout?.on('data', (data) => {
-        response += data.toString();
+      response += data.toString();
     });
+  
     console.log(response);
+  
     child.stderr?.on('data', (data) => {
-        error += data.toString();
+      error += data.toString();
     });
+  
     //await new Promise((resolve, reject) => {
-    child.on('exit', (code) => {
+      child.on('exit', (code) => {
         console.log(error);
         console.log('Child process exited with exit code ' + code);
-    });
+      });
     //});
+  
     //getCharts(title);
+    */
 });
 const start = async () => {
     try {
@@ -63,6 +84,7 @@ const start = async () => {
         console.log(address + ' ' + port);
     }
     catch (err) {
+        console.log("Server error: " + err);
         server.log.error(err);
         process.exit(1);
     }

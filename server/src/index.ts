@@ -1,14 +1,25 @@
 import fastify from 'fastify';
 import cors from '@fastify/cors';
+import * as fs from 'fs';
 
+import process from "process";
 import { exec, ChildProcess } from 'child_process';
 
 
 //import getCharts from './tscreator/tscreator'
 
-const server = fastify();
 
 import chart_information from './chart_information.json' assert { type: "json" };
+
+import fastifyStatic from '@fastify/static';
+
+const server = fastify();
+// @ts-ignore
+server.register(fastifyStatic, {
+  root: process.cwd() + '/files',
+  prefix: '/files/',
+});
+
 
 
 for (let x in chart_information) {
@@ -20,6 +31,7 @@ console.log('length of json object = ' + chart_information);
 console.log('here');
 console.log('here');
 
+// @ts-ignore
 server.register(cors, {
   origin: "*",
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
@@ -43,17 +55,23 @@ server.post('/getchart', async (request: any, reply: any) => {
   console.log(jarArgs);
 
   //const child: ChildProcess = spawn('java', jarArgs);
-  const child: ChildProcess = exec(jarArgs.join(" "), function (error, stdout, stderror) {
-    var stdoutstring = stdout.toString();
-    console.log("Child Created");
-    console.log("Error: " + error);
-    console.log("Data: " + stdoutstring);
-    console.log("Standarad Error: " + stderror);
-    reply.send(stdoutstring);
+  //
+  await new Promise<void>((resolve, reject) => {
+    exec(jarArgs.join(" "), function (error, stdout, stderror) {
+      var stdoutstring = stdout.toString();
+      console.log("Child Created");
+      console.log("Error: " + error);
+      console.log("Data: " + stdoutstring);
+      console.log("Standarad Error: " + stderror);
+      console.log('sending reply');
+      reply.send({ "url": `/files/${title}save.pdf` });
+      resolve();
+    });
   });
 
 
 
+  /*
   let response: string = '';
   let error: string = '';
 
@@ -75,6 +93,7 @@ server.post('/getchart', async (request: any, reply: any) => {
   //});
 
   //getCharts(title);
+  */
 });
 
 const start = async () => {
@@ -84,6 +103,7 @@ const start = async () => {
     const port = typeof address === 'string' ? address : address?.port
     console.log(address + ' ' + port);
   } catch (err) {
+    console.log("Server error: " + err);
     server.log.error(err)
     process.exit(1)
   }

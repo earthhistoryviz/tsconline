@@ -14,6 +14,7 @@ export type State = {
   showAllTabs: boolean,
   chart: Chart,
   charts: Chart[],
+  chartPath: string,
 };
 
 const charts = [];
@@ -51,4 +52,5 @@ export const state = observable<State>({
   showAllTabs: false,
   chart: charts[0]!,
   charts,
+  chartPath: "",
 });
