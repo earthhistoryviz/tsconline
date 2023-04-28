@@ -1,6 +1,7 @@
 import fastify from 'fastify';
 import cors from '@fastify/cors';
-import getCharts from './tscreator/tscreator';
+import { exec } from 'child_process';
+//import getCharts from './tscreator/tscreator'
 const server = fastify();
 import chart_information from './chart_information.json' assert { type: "json" };
 for (let x in chart_information) {
@@ -20,10 +21,39 @@ server.post('/charts', (request, reply) => {
     //reply.send(chart_information);
     reply.send(chart_information);
 });
-server.post('/getchart', (request, reply) => {
+server.post('/getchart', async (request, reply) => {
     console.log('here');
-    const title = request.title;
-    getCharts(title);
+    console.log(request.body);
+    const title = request.body.title;
+    //const jarArgs: string[] = ['xvfb-run', '-jar', './jar/TSC.jar', '-node', '-s', `../files/${title}settings.tsc`, '-ss', `../files/${title}settings.tsc`, '-d', `../files/${title}datapack.txt`, '-o', `../files/${title}save.pdf`];
+    const jarArgs = ['java', '-jar', './jar/TSC.jar', '-node', '-s', `./files/${title}settings.tsc`, '-ss', `./files/${title}settings.tsc`, '-d', `./files/${title}datapack.txt`, '-o', `./files/${title}save.pdf`];
+    //const jarArgs: string[] = ['-jar', './jar/TSC.jar', '-d', `./files/${title}datapack.txt`, '-s', `./files/${title}settings.tsc`];
+    console.log(jarArgs);
+    //const child: ChildProcess = spawn('java', jarArgs);
+    const child = exec(jarArgs.join(" "), function (error, stdout, stderror) {
+        var stdoutstring = stdout.toString();
+        console.log("Child Created");
+        console.log("Error: " + error);
+        console.log("Data: " + stdoutstring);
+        console.log("Standarad Error: " + stderror);
+        reply.send(stdoutstring);
+    });
+    let response = '';
+    let error = '';
+    child.stdout?.on('data', (data) => {
+        response += data.toString();
+    });
+    console.log(response);
+    child.stderr?.on('data', (data) => {
+        error += data.toString();
+    });
+    //await new Promise((resolve, reject) => {
+    child.on('exit', (code) => {
+        console.log(error);
+        console.log('Child process exited with exit code ' + code);
+    });
+    //});
+    //getCharts(title);
 });
 const start = async () => {
     try {
