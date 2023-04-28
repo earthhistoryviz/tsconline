@@ -82,6 +82,7 @@
     width: 50%;
     height: 50%;
     flex-wrap: wrap;
+    justify-content: center;
 }
 
 @media (max-width: 928px) {
@@ -99,7 +100,6 @@
         margin-left: 20%;
         margin-right: 20%;
         justify-content: center;
-        
     }
 }
 
