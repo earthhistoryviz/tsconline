@@ -1,6 +1,6 @@
 {
   "name": "tsconline-monorepo",
-  "packageManager": "yarn@3.4.1",
+  "packageManager": "yarn@3.5.1",
   "private": true,
   "workspaces": [
     "app",
@@ -8,6 +8,10 @@
   ],
   "dependencies": {
     "fastify": "^4.13.0",
-    "nvm": "^0.0.4"
+    "nvm": "^0.0.4",
+    "typescript": "^5.0.4"
+  },
+  "devDependencies": {
+    "@yarnpkg/sdks": "^3.0.0-rc.43"
   }
 }
