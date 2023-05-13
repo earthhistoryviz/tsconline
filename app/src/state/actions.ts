@@ -1,53 +1,64 @@
-import imgSrc1 from '../assets/AfricaBight_Nigeria_Image.jpg'
-import imgSrc2 from '../assets/Past_10_yr_image.jpg'
 import { action, runInAction } from 'mobx';
-import axios from "axios";
-import { state, State } from './state';
+import { type ChartConfig, assertChartInfo, isChartError } from '@tsconline/shared';
+import { state } from './state';
+import { fetcher, devSafeUrl } from '../util';
 
 export const setTab = action('setTab', (newval: number) => {
   state.tab = newval;
 });
 
-export const setChart= action('setChart', (newval: number) => {
-  state.chart = state.charts[newval]!;
+export const setChart = action('setChart', async (newval: number) => {
+  if (state.presets.length <= newval) { 
+    state.chart = null;
+    return;
+  }
+  state.chart = state.presets[newval]!;
+  // Grab the settings for this chart if there are any:
+  if (state.chart.settings) {
+    const response = await fetcher(state.chart.settings);
+    const xml = await response.text();
+    if (typeof xml === 'string' && xml.match(/<TSCreator/)) {
+      runInAction(() => state.settingsXML = xml);
+    } else {
+      console.log('WARNING: grabbed settings from server at url: ', devSafeUrl(state.chart.settings), ', but it was either not a string or did not have a <TSCreator tag in it');
+      console.log('The returned settignsXML was: ', xml);
+    }
+  }
 });
 
 export const setAllTabs = action('setAllTabs', (newval: boolean) => {
-    state.showAllTabs = newval;
+  state.showAllTabs = newval;
 })
 
 export const generateChart = action('generateChart', async () => {
-  await axios
-      .post(
-        "http://localhost:3000/getchart",
-      {
-        title: "Past_10_yr_image"
-      })
-      .then((response: any) => {
-        runInAction(() => state.chartPath = response.data.url);
-        console.log(state.chartPath);
-      })
-      .catch((error: any) => {
-      })
+  const body = JSON.stringify({
+    settings: state.settingsXML,
+  });
+  console.log('Sending to server: ', body);
+  const response = await fetcher('/charts', { 
+    method: 'POST',
+    body,
+  });
+  const answer = await response.json();
+  try {
+    assertChartInfo(answer);
+    runInAction(() => state.chartPath = devSafeUrl(answer.chartpath));
+  } catch(e: any) {
+    if (isChartError(answer)) {
+      console.log('ERROR failed to fetch chart with the settings.  Error response from server was: ', answer);
+      return;
+    }
+    console.log('ERROR: unkonwn error in fetching chart with settings.  Response from server was: ', answer, ', Error was: ', e);
+    return;
+  }
 })
 
 
-export const loadCharts = action('loadCharts', (charts: any) => {
-  //newval = newval.json();
-  let index: any = 0;
-  for (index in charts) {
-    //state.charts[index] = {
-    //}
-    console.log(charts[index]);
-    state.charts[index] = ({
-      imageSrc: charts[index].imgSrc,
-      dataPackTitle: charts[index].dataPackTitle,
-      dataPackDescription: charts[index].dataPackDescription,
-      chartNumber: charts[index].chartNumber
-    })
-    console.log('actions did this');
-  }
-  state.chart = state.charts[0];
-  console.log(state.charts[0].chartNumber + ' this is the charts');
+export const loadPresets = action('loadPresets', (presets: ChartConfig[]) => {
+  state.presets = presets;
+  setChart(0);
+});
 
+export const settingsXML = action('settingsXML', (xml: string) => {
+  state.settingsXML = xml;
 });
