@@ -34,7 +34,7 @@ export const generateChart = action('generateChart', async () => {
   const body = JSON.stringify({
     settings: state.settingsXML,
   });
-  console.log('Sending to server: ', body);
+  console.log('Sending settings to server...');
   const response = await fetcher('/charts', { 
     method: 'POST',
     body,
