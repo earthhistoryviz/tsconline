@@ -3,8 +3,8 @@ version: '3'
 services:
 
   tsconline:
-    #build: .
-    image: tscreator/tscreator_online:v2
+    build: .
+      #image: tscreator/tscreator_online:v2
     env_file: # You have to create this file yourself with a VNCPASSWORD=thepasswordyouwant
       - secrets.env
     expose:
