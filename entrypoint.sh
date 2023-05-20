@@ -15,6 +15,7 @@ source /root/.bashrc
 XAUTH="/root/.Xauthority"
 touch $XAUTH
 XERR="/root/.Xerrors"
+rm -f $XERR
 XARGS="-e $XERR -l -f $XAUTH -n 99 --server-args='-screen 0 1280x1024x24'"
 cd /code
 echo "-----------------------------------------------------------------------------------------------"
@@ -46,5 +47,5 @@ echo
 echo "and then CTRL-C to stop it.  Now you can exit the bash shell."
 echo "-----------------------------------------------------------------------------------------------"
 xvfb-run -e $XERR -l -f $XAUTH -n 99 --server-args='-screen 0 1280x1024x24' \
-    yarn workspace server start || \
+    yarn start || \
     cat $XERR
