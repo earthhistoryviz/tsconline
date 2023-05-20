@@ -1,5 +1,5 @@
 {
-  "name": "tsconline3",
+  "name": "@tsconline/app",
   "private": true,
   "version": "0.0.0",
   "type": "module",

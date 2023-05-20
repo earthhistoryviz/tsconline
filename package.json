@@ -7,6 +7,9 @@
     "shared",
     "server"
   ],
+  "scripts": {
+    "build": "echo \"Building all workspaces...\" && yarn workspace @tsconline/shared run build && yarn workspaces foreach -p -v run build"
+  },
   "dependencies": {
     "fastify": "^4.13.0",
     "nvm": "^0.0.4",

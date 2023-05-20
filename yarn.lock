@@ -1260,6 +1260,55 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tsconline/app@workspace:app":
+  version: 0.0.0-use.local
+  resolution: "@tsconline/app@workspace:app"
+  dependencies:
+    "@emotion/react": ^11.10.6
+    "@emotion/styled": ^11.10.6
+    "@mui/icons-material": ^5.11.9
+    "@mui/joy": ^5.0.0-alpha.79
+    "@mui/material": ^5.12.0
+    "@tsconline/shared": "workspace:^"
+    "@types/react": ^18.0.27
+    "@types/react-dom": ^18.0.10
+    "@vitejs/plugin-react": ^3.1.0
+    mobx: ^6.8.0
+    mobx-react-lite: ^3.4.0
+    node-fetch: ^3.3.0
+    react: ^18.2.0
+    react-bootstrap: ^2.7.4
+    react-dom: ^18.2.0
+    react-router: ^6.8.1
+    react-router-dom: ^6.8.1
+    typescript: ^4.9.3
+    vite: ^4.1.0
+  languageName: unknown
+  linkType: soft
+
+"@tsconline/server@workspace:server":
+  version: 0.0.0-use.local
+  resolution: "@tsconline/server@workspace:server"
+  dependencies:
+    "@fastify/cors": ^8.2.1
+    "@fastify/static": ^6.10.1
+    "@tsconline/shared": "workspace:^"
+    "@types/cors": ^2.8.13
+    "@types/md5": ^2.3.2
+    "@types/node": ^18.14.0
+    cors: ^2.8.5
+    fastify: ^4.17.0
+    glob: ^10.2.3
+    md5: ^2.3.0
+    mkdirp: ^3.0.1
+    nodemon: ^2.0.22
+    p-map: ^6.0.0
+    pino-pretty: ^10.0.0
+    tsc: ^2.0.4
+    typescript: ^4.9.5
+  languageName: unknown
+  linkType: soft
+
 "@tsconline/shared@workspace:^, @tsconline/shared@workspace:shared":
   version: 0.0.0-use.local
   resolution: "@tsconline/shared@workspace:shared"
@@ -4420,29 +4469,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"server@workspace:server":
-  version: 0.0.0-use.local
-  resolution: "server@workspace:server"
-  dependencies:
-    "@fastify/cors": ^8.2.1
-    "@fastify/static": ^6.10.1
-    "@tsconline/shared": "workspace:^"
-    "@types/cors": ^2.8.13
-    "@types/md5": ^2.3.2
-    "@types/node": ^18.14.0
-    cors: ^2.8.5
-    fastify: ^4.17.0
-    glob: ^10.2.3
-    md5: ^2.3.0
-    mkdirp: ^3.0.1
-    nodemon: ^2.0.22
-    p-map: ^6.0.0
-    pino-pretty: ^10.0.0
-    tsc: ^2.0.4
-    typescript: ^4.9.5
-  languageName: unknown
-  linkType: soft
-
 "set-blocking@npm:^2.0.0":
   version: 2.0.0
   resolution: "set-blocking@npm:2.0.0"
@@ -4804,32 +4830,6 @@ __metadata:
     fastify: ^4.13.0
     nvm: ^0.0.4
     typescript: ^5.0.4
-  languageName: unknown
-  linkType: soft
-
-"tsconline3@workspace:app":
-  version: 0.0.0-use.local
-  resolution: "tsconline3@workspace:app"
-  dependencies:
-    "@emotion/react": ^11.10.6
-    "@emotion/styled": ^11.10.6
-    "@mui/icons-material": ^5.11.9
-    "@mui/joy": ^5.0.0-alpha.79
-    "@mui/material": ^5.12.0
-    "@tsconline/shared": "workspace:^"
-    "@types/react": ^18.0.27
-    "@types/react-dom": ^18.0.10
-    "@vitejs/plugin-react": ^3.1.0
-    mobx: ^6.8.0
-    mobx-react-lite: ^3.4.0
-    node-fetch: ^3.3.0
-    react: ^18.2.0
-    react-bootstrap: ^2.7.4
-    react-dom: ^18.2.0
-    react-router: ^6.8.1
-    react-router-dom: ^6.8.1
-    typescript: ^4.9.3
-    vite: ^4.1.0
   languageName: unknown
   linkType: soft
 
