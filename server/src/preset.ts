@@ -6,6 +6,8 @@ import { type Preset, assertChartConfig  } from '@tsconline/shared';
 export async function loadPresets(): Promise<Preset[]> {
   // Build the list of presets from the filesystem:
   const chartconfig_paths = await glob(`public/presets/*-*/config.json`);
+  // Sort them alphabetically:
+  chartconfig_paths.sort();
   // Load all the configs out of all the files in public/presets:
   return pmap(chartconfig_paths, async (chartconfig) => {
     try { 
