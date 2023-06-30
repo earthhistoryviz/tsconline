@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -b",
     "dev": "tsc -b -w",
-    "start": "nodemon --watch dist --watch ../shared/dist --watch ./package.json --watch assets dist/index.js"
+    "start": "nodemon --watch dist --watch ../shared/dist --watch ./package.json --watch assets --watch ./public/presets dist/index.js"
   },
   "keywords": [],
   "author": "",
