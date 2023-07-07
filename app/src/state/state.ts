@@ -9,6 +9,11 @@ export type State = {
   presets: ChartConfig[],
   chartPath: string,
   settingsXML: string,
+  settings: {
+    topAge: number,
+    baseAge: number,
+    verticalScale: number,
+  },
 };
 
 export const state = observable<State>({
@@ -18,4 +23,9 @@ export const state = observable<State>({
   presets: [],
   chartPath: '',
   settingsXML: '',
+  settings: {
+    topAge: 0,
+    baseAge: 30,
+    verticalScale: 2,
+  },
 });
