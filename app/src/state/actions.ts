@@ -91,8 +91,3 @@ export const updateSettingsXML = action('updateSettingsXML', () => {
   state.settingsXML = updatedXML;
 });
 
-
-
-export const settingsXML = action('settingsXML', (xml: string) => {
-  state.settingsXML = xml;
-});
