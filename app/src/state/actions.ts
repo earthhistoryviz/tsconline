@@ -59,6 +59,35 @@ export const loadPresets = action('loadPresets', (presets: ChartConfig[]) => {
   setChart(0);
 });
 
+
 export const settingsXML = action('settingsXML', (xml: string) => {
   state.settingsXML = xml;
 });
+
+
+//update
+export const updateSettingsXML = action('updateSettingsXML', () => {
+  const { topAge, baseAge } = state.settings;
+  const parser = new DOMParser();
+  const xmlDoc = parser.parseFromString(state.settingsXML, 'application/xml');
+
+  const topAgeNode = xmlDoc.querySelector('setting[name="topAge"] > setting[name="text"]');
+  if (topAgeNode) {
+    topAgeNode.textContent = topAge.toString();
+    console.log('topAge new in update ->', topAge);
+  }
+
+  const baseAgeNode = xmlDoc.querySelector('setting[name="baseAge"] > setting[name="text"]');
+  if (baseAgeNode) {
+    baseAgeNode.textContent = baseAge.toString();
+    console.log('baseAge new in update ->', baseAge);
+  }
+
+  const serializer = new XMLSerializer();
+  const updatedXML = serializer.serializeToString(xmlDoc);
+
+  console.log('Updated settingsXML:', updatedXML); // Print the updated XML
+
+  state.settingsXML = updatedXML;
+});
+
