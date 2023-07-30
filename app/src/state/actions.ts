@@ -2,6 +2,7 @@ import { action, runInAction } from 'mobx';
 import { type ChartConfig, assertChartInfo, isChartError } from '@tsconline/shared';
 import { state } from './state';
 import { fetcher, devSafeUrl } from '../util';
+import { xmlToJson , jsonToXml } from './settingsParser';
 
 export const setTab = action('setTab', (newval: number) => {
   state.tab = newval;
@@ -18,10 +19,13 @@ export const setChart = action('setChart', async (newval: number) => {
     const response = await fetcher(state.chart.settings);
     const xml = await response.text();
     if (typeof xml === 'string' && xml.match(/<TSCreator/)) {
-      runInAction(() => state.settingsXML = xml);
+      // Call the xmlToJsonParser function here
+      const jsonSettings = xmlToJson(xml);
+      runInAction(() => state.settingsJSON = jsonSettings); // Save the parsed JSON to the state.settingsJSON
+      console.log("Parsed JSON Object:", jsonSettings); 
     } else {
       console.log('WARNING: grabbed settings from server at url: ', devSafeUrl(state.chart.settings), ', but it was either not a string or did not have a <TSCreator tag in it');
-      console.log('The returned settignsXML was: ', xml);
+      console.log('The returned settingsXML was: ', xml);
     }
   }
 });
@@ -31,8 +35,10 @@ export const setAllTabs = action('setAllTabs', (newval: boolean) => {
 })
 
 export const generateChart = action('generateChart', async () => {
+  const xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
+  console.log('XML Settings:', xmlSettings); // Log the XML settings to the console
   const body = JSON.stringify({
-    settings: state.settingsXML,
+    settings: xmlSettings,
   });
   console.log('Sending settings to server...');
   const response = await fetcher('/charts', { 
@@ -48,17 +54,15 @@ export const generateChart = action('generateChart', async () => {
       console.log('ERROR failed to fetch chart with the settings.  Error response from server was: ', answer);
       return;
     }
-    console.log('ERROR: unkonwn error in fetching chart with settings.  Response from server was: ', answer, ', Error was: ', e);
+    console.log('ERROR: unknown error in fetching chart with settings.  Response from server was: ', answer, ', Error was: ', e);
     return;
   }
-})
-
+});
 
 export const loadPresets = action('loadPresets', (presets: ChartConfig[]) => {
   state.presets = presets;
   setChart(0);
 });
-
 
 export const settingsXML = action('settingsXML', (xml: string) => {
   state.settingsXML = xml;
@@ -66,28 +70,50 @@ export const settingsXML = action('settingsXML', (xml: string) => {
 
 
 //update
-export const updateSettingsXML = action('updateSettingsXML', () => {
+export const updateSettings = action('updateSettings', () => {
   const { topAge, baseAge } = state.settings;
-  const parser = new DOMParser();
-  const xmlDoc = parser.parseFromString(state.settingsXML, 'application/xml');
+  const jsonSettings = state.settingsJSON;
 
-  const topAgeNode = xmlDoc.querySelector('setting[name="topAge"] > setting[name="text"]');
-  if (topAgeNode) {
-    topAgeNode.textContent = topAge.toString();
-    console.log('topAge new in update ->', topAge);
+  if (jsonSettings['settings']) {
+    const settings = jsonSettings['settings'];
+    settings['topAge']['text'] = topAge.toString();
+    settings['baseAge']['text'] = baseAge.toString();
   }
 
-  const baseAgeNode = xmlDoc.querySelector('setting[name="baseAge"] > setting[name="text"]');
-  if (baseAgeNode) {
-    baseAgeNode.textContent = baseAge.toString();
-    console.log('baseAge new in update ->', baseAge);
-  }
+  const xmlSettings = jsonToXml(jsonSettings); // Convert JSON to XML using jsonToXml function
 
-  const serializer = new XMLSerializer();
-  const updatedXML = serializer.serializeToString(xmlDoc);
+  console.log('Updated settingsXML:', xmlSettings); // Print the updated XML
 
-  console.log('Updated settingsXML:', updatedXML); // Print the updated XML
-
-  state.settingsXML = updatedXML;
+  state.settingsXML = xmlSettings;
 });
 
+
+//update the checkboxes
+// Define settingOptions globally
+export const settingOptions = [
+  { name: 'enablePopups', label: 'Enable popups', stateName: 'doPopups' },
+  { name: 'enablePriorityFiltering', label: 'Enable priority filtering', stateName: 'enPriority' },
+  { name: 'enableChartLegend', label: 'Enable chart legend', stateName: 'enChartLegend' },
+  { name: 'hideBlockLabelsIfCrowded', label: 'If crowded, hide block labels', stateName: 'enHideBlockLable' },
+  { name: 'skipEmptyColumns', label: 'Skip empty columns', stateName: 'skipEmptyColumns' },
+];
+
+// Combined function to update the checkbox settings and individual action functions
+export const updateCheckboxSetting = action((stateName: string, checked: boolean) => {
+  // Check if the stateName is a valid setting option
+  const settingOption = settingOptions.find((option) => option.stateName === stateName);
+  if (!settingOption) return;
+
+  // Update the checkbox setting in state.settings
+  state.settings[stateName] = checked;
+
+  // Update the checkbox setting in jsonSettings['settings'] if available
+  const jsonSettings = state.settingsJSON;
+  if (jsonSettings['settings']) {
+    const settings = jsonSettings['settings'];
+    settings[stateName] = checked;
+  }
+
+  // Log the updated setting
+  console.log(`Updated setting "${stateName}" to ${checked}`);
+});
