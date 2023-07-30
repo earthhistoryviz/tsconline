@@ -1,9 +1,10 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { Button, TextField, Box } from '@mui/material';
+import { Button, TextField, Box, FormControlLabel, Checkbox } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ForwardIcon from '@mui/icons-material/Forward';
 import { context } from './state';
 import { primary_dark } from './constant';
+import { settingOptions, updateCheckboxSetting } from './state/actions';
 
 export function Settings() {
   const { state, actions } = useContext(context);
@@ -26,9 +27,7 @@ export function Settings() {
       return;
     }
 
-    console.log("new values: baseage=> ", baseAge);
-    console.log("new values: baseage.settings=> ", state.settings.baseAge);
-    actions.updateSettingsXML(); // Call the updateSettingsXML directly
+    actions.updateSettings(); 
   
     actions.generateChart();
   
@@ -46,7 +45,7 @@ export function Settings() {
       border={1}
       borderRadius={4}
       borderColor="gray"
-      maxWidth="400px"
+      maxWidth="600px"
       margin="0 auto"
       marginTop="50px"
     >
@@ -80,7 +79,7 @@ export function Settings() {
         />
       ))}
       <Button
-        sx={{ backgroundColor: primary_dark, color: '#FFFFFF' }}
+        sx={{ backgroundColor: primary_dark, color: '#FFFFFF', marginTop: '10px' }}
         onClick={handleButtonClick}
         variant="contained"
         style={{ width: '100%', height: '75px' }}
