@@ -1,9 +1,10 @@
-import React, { useContext, useState, useEffect } from 'react';
-import { Button, TextField, Box } from '@mui/material';
+import React, { useContext, useState } from 'react';
+import { Button, TextField, Box, FormControlLabel, Checkbox } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ForwardIcon from '@mui/icons-material/Forward';
 import { context } from './state';
 import { primary_dark } from './constant';
+import { settingOptions, updateCheckboxSetting } from './state/actions';
 
 export function Settings() {
   const { state, actions } = useContext(context);
@@ -13,28 +14,22 @@ export function Settings() {
   const [baseAge, setBaseAge] = useState(state.settings.baseAge);
   const [verticalScale, setVerticalScale] = useState(state.settings.verticalScale);
 
-  state.settings.topAge = topAge;
-  state.settings.baseAge = baseAge;
-
   const handleButtonClick = () => {
     actions.setTab(1);
     actions.setAllTabs(true);
-  
+
     // Validate the user input
     if (isNaN(topAge) || isNaN(baseAge) || isNaN(verticalScale)) {
       // Handle invalid input, show error message, etc.
       return;
     }
 
-    console.log("new values: baseage=> ", baseAge);
-    console.log("new values: baseage.settings=> ", state.settings.baseAge);
-    actions.updateSettingsXML(); // Call the updateSettingsXML directly
-  
+    actions.updateSettings();
+
     actions.generateChart();
-  
+
     navigate('/chart');
   };
-  
 
   return (
     <Box
@@ -46,7 +41,7 @@ export function Settings() {
       border={1}
       borderRadius={4}
       borderColor="gray"
-      maxWidth="400px"
+      maxWidth="600px" // Adjust the maxWidth here
       margin="0 auto"
       marginTop="50px"
     >
@@ -71,8 +66,16 @@ export function Settings() {
         onChange={(event) => setVerticalScale(parseFloat(event.target.value))}
         style={{ marginBottom: '20px', width: '100%' }}
       />
+      {settingOptions.map(({ name, label, stateName }) => (
+        <FormControlLabel
+          key={name}
+          control={<Checkbox checked={state.settingsJSON[stateName]} onChange={(event) => updateCheckboxSetting(stateName, event.target.checked)} />}
+          label={label}
+          style={{ marginBottom: '10px' }} 
+        />
+      ))}
       <Button
-        sx={{ backgroundColor: primary_dark, color: '#FFFFFF' }}
+        sx={{ backgroundColor: primary_dark, color: '#FFFFFF', marginTop: '10px' }}
         onClick={handleButtonClick}
         variant="contained"
         style={{ width: '100%', height: '75px' }}
