@@ -5,6 +5,7 @@ import ForwardIcon from '@mui/icons-material/Forward';
 import { context } from './state';
 import { primary_dark } from './constant';
 import { settingOptions, updateCheckboxSetting } from './state/actions';
+import { Observer } from 'mobx-react-lite';
 
 export function Settings() {
   const { state, actions } = useContext(context);
@@ -72,12 +73,15 @@ export function Settings() {
         style={{ marginBottom: '20px', width: '100%' }}
       />
       {settingOptions.map(({ name, label, stateName }) => (
-        <FormControlLabel
-          key={name}
-          control={<Checkbox checked={state.settings[stateName]} onChange={(event) => updateCheckboxSetting(stateName, event.target.checked)} />}
-          label={label}
-          style={{ marginBottom: '10px' }} 
-        />
+        <Observer key={name}>
+          {() => (
+            <FormControlLabel
+              control={<Checkbox checked={state.settings[stateName]} onChange={(event) => actions.updateCheckboxSetting(stateName, event.target.checked)} />}
+              label={label}
+              style={{ marginBottom: '10px' }}
+            />
+          )}
+        </Observer>
       ))}
       <Button
         sx={{ backgroundColor: primary_dark, color: '#FFFFFF', marginTop: '10px' }}
