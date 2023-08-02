@@ -71,13 +71,14 @@ export const settingsXML = action('settingsXML', (xml: string) => {
 
 //update
 export const updateSettings = action('updateSettings', () => {
-  const { topAge, baseAge } = state.settings;
+  const { topAge, baseAge, unitsPerMY } = state.settings;
   const jsonSettings = state.settingsJSON;
 
   if (jsonSettings['settings']) {
     const settings = jsonSettings['settings'];
     settings['topAge']['text'] = topAge.toString();
     settings['baseAge']['text'] = baseAge.toString();
+    settings['unitsPerMY'] = unitsPerMY.toString();
   }
 
   const xmlSettings = jsonToXml(jsonSettings); // Convert JSON to XML using jsonToXml function
