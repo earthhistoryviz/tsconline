@@ -109,10 +109,12 @@ export const updateCheckboxSetting = action((stateName: string, checked: boolean
   state.settings[stateName] = checked;
 
   // Update the checkbox setting in jsonSettings['settings'] if available
-  const jsonSettings = state.settingsJSON;
-  if (jsonSettings['settings']) {
-    const settings = jsonSettings['settings'];
-    settings[stateName] = checked;
+  if (state.settingsJSON['settings']) {
+    const settings = state.settingsJSON['settings'];
+    // Check if the current setting is already equal to the new value
+    if (settings[stateName] !== checked) {
+      settings[stateName] = checked;
+    }
   }
 
   // Log the updated setting
