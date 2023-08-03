@@ -78,7 +78,7 @@ export const updateSettings = action('updateSettings', () => {
     const settings = jsonSettings['settings'];
     settings['topAge']['text'] = topAge.toString();
     settings['baseAge']['text'] = baseAge.toString();
-    settings['unitsPerMY'] = unitsPerMY.toString();
+    settings['unitsPerMY'] = (unitsPerMY * 30).toString();
   }
 
   const xmlSettings = jsonToXml(jsonSettings); // Convert JSON to XML using jsonToXml function
@@ -120,3 +120,4 @@ export const updateCheckboxSetting = action((stateName: string, checked: boolean
   // Log the updated setting
   console.log(`Updated setting "${stateName}" to ${checked}`);
 });
+
