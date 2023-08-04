@@ -71,13 +71,14 @@ export const settingsXML = action('settingsXML', (xml: string) => {
 
 //update
 export const updateSettings = action('updateSettings', () => {
-  const { topAge, baseAge } = state.settings;
+  const { topAge, baseAge, unitsPerMY } = state.settings;
   const jsonSettings = state.settingsJSON;
 
-  if (jsonSettings['settings']) {
-    const settings = jsonSettings['settings'];
+  if ('settings' in jsonSettings) {
+    const settings = jsonSettings.settings as any;
     settings['topAge']['text'] = topAge.toString();
     settings['baseAge']['text'] = baseAge.toString();
+    settings['unitsPerMY'] = (unitsPerMY * 30).toString();
   }
 
   const xmlSettings = jsonToXml(jsonSettings); // Convert JSON to XML using jsonToXml function
@@ -105,15 +106,18 @@ export const updateCheckboxSetting = action((stateName: string, checked: boolean
   if (!settingOption) return;
 
   // Update the checkbox setting in state.settings
-  state.settings[stateName] = checked;
+  (state.settings as any)[stateName] = checked;
 
   // Update the checkbox setting in jsonSettings['settings'] if available
-  const jsonSettings = state.settingsJSON;
-  if (jsonSettings['settings']) {
-    const settings = jsonSettings['settings'];
-    settings[stateName] = checked;
+  if (state.settingsJSON['settings']) {
+    const settings = state.settingsJSON['settings'];
+    // Check if the current setting is already equal to the new value
+    if (settings[stateName] !== checked) {
+      settings[stateName] = checked;
+    }
   }
 
   // Log the updated setting
   console.log(`Updated setting "${stateName}" to ${checked}`);
 });
+

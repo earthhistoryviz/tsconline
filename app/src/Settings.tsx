@@ -5,6 +5,7 @@ import ForwardIcon from '@mui/icons-material/Forward';
 import { context } from './state';
 import { primary_dark } from './constant';
 import { settingOptions, updateCheckboxSetting } from './state/actions';
+import { Observer } from 'mobx-react-lite';
 
 export function Settings() {
   const { state, actions } = useContext(context);
@@ -12,17 +13,18 @@ export function Settings() {
 
   const [topAge, setTopAge] = useState(state.settings.topAge);
   const [baseAge, setBaseAge] = useState(state.settings.baseAge);
-  const [verticalScale, setVerticalScale] = useState(state.settings.verticalScale);
+  const [unitsPerMY, setUnitsPerMY] = useState(state.settings.unitsPerMY);
 
   state.settings.topAge = topAge;
   state.settings.baseAge = baseAge;
+  state.settings.unitsPerMY = unitsPerMY;
 
   const handleButtonClick = () => {
     actions.setTab(1);
     actions.setAllTabs(true);
   
     // Validate the user input
-    if (isNaN(topAge) || isNaN(baseAge) || isNaN(verticalScale)) {
+    if (isNaN(topAge) || isNaN(baseAge) || isNaN(unitsPerMY)) {
       // Handle invalid input, show error message, etc.
       return;
     }
@@ -66,17 +68,20 @@ export function Settings() {
       <TextField
         label="Vertical Scale (cm/Ma)"
         type="number"
-        value={verticalScale}
-        onChange={(event) => setVerticalScale(parseFloat(event.target.value))}
+        value={unitsPerMY}
+        onChange={(event) => setUnitsPerMY(parseFloat(event.target.value))}
         style={{ marginBottom: '20px', width: '100%' }}
       />
       {settingOptions.map(({ name, label, stateName }) => (
-        <FormControlLabel
-          key={name}
-          control={<Checkbox checked={state.settingsJSON[stateName]} onChange={(event) => updateCheckboxSetting(stateName, event.target.checked)} />}
-          label={label}
-          style={{ marginBottom: '10px' }} 
-        />
+        <Observer key={name}>
+          {() => (
+            <FormControlLabel
+              control={<Checkbox checked={state.settingsJSON[stateName]} onChange={(event) => actions.updateCheckboxSetting(stateName, event.target.checked)} />}
+              label={label}
+              style={{ marginBottom: '10px' }}
+            />
+          )}
+        </Observer>
       ))}
       <Button
         sx={{ backgroundColor: primary_dark, color: '#FFFFFF', marginTop: '10px' }}
