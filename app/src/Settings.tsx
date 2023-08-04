@@ -76,7 +76,7 @@ export function Settings() {
         <Observer key={name}>
           {() => (
             <FormControlLabel
-              control={<Checkbox checked={state.settings[stateName]} onChange={(event) => actions.updateCheckboxSetting(stateName, event.target.checked)} />}
+              control={<Checkbox checked={state.settingsJSON[stateName]} onChange={(event) => actions.updateCheckboxSetting(stateName, event.target.checked)} />}
               label={label}
               style={{ marginBottom: '10px' }}
             />

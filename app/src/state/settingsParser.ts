@@ -106,7 +106,7 @@ export function xmlToJson(xml: string): any {
 
     const rootColumnNode = tsCreatorNode.getElementsByTagName('column')[0];
     if (rootColumnNode) {
-      json[rootColumnNode.getAttribute('id')] = processColumn(rootColumnNode);
+      json[rootColumnNode.getAttribute('id') || 'unknown'] = processColumn(rootColumnNode);
     }
   }
 

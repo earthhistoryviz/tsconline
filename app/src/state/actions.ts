@@ -74,8 +74,8 @@ export const updateSettings = action('updateSettings', () => {
   const { topAge, baseAge, unitsPerMY } = state.settings;
   const jsonSettings = state.settingsJSON;
 
-  if (jsonSettings['settings']) {
-    const settings = jsonSettings['settings'];
+  if ('settings' in jsonSettings) {
+    const settings = jsonSettings.settings as any;
     settings['topAge']['text'] = topAge.toString();
     settings['baseAge']['text'] = baseAge.toString();
     settings['unitsPerMY'] = (unitsPerMY * 30).toString();
@@ -106,7 +106,7 @@ export const updateCheckboxSetting = action((stateName: string, checked: boolean
   if (!settingOption) return;
 
   // Update the checkbox setting in state.settings
-  state.settings[stateName] = checked;
+  (state.settings as any)[stateName] = checked;
 
   // Update the checkbox setting in jsonSettings['settings'] if available
   if (state.settingsJSON['settings']) {
