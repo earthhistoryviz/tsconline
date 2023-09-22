@@ -121,3 +121,16 @@ export const updateCheckboxSetting = action((stateName: string, checked: boolean
   console.log(`Updated setting "${stateName}" to ${checked}`);
 });
 
+
+export const setTopAge = action((topage: number) => {
+  state.settings.topAge = topage;
+});
+
+export const setBaseAge = action((baseage: number) => {
+  state.settings.baseAge=  baseage;
+});
+
+export const setUnitsPerMY = action((units: number) => {
+  state.settings.unitsPerMY = units;
+});
+
