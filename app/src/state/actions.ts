@@ -3,6 +3,7 @@ import { type ChartConfig, assertChartInfo, isChartError } from '@tsconline/shar
 import { state, State } from './state';
 import { fetcher, devSafeUrl } from '../util';
 import { xmlToJson , jsonToXml } from './settingsParser';
+import {ColumnSetting} from './state';
 
 export const setTab = action('setTab', (newval: number) => {
   state.tab = newval;
@@ -159,3 +160,22 @@ export function translateTabToIndex(tab: State['settingsTabs']['selected']) {
     case 'mappoints': return 3;
   }
 }
+
+
+export const toggleSettingsTabColumn = action((name: string, parents: string[]) => {
+  let curcol: ColumnSetting | null = state.settingsTabs.columns;
+  // Walk down the path of parents in the tree of columns
+  for (const p of parents) {
+    curcol = curcol[p].children;
+    if (!curcol) {
+      console.log('WARNING: tried to access path at parent ',p,' from path ', parents, ' in settings tabs column list, but children was null at this level.');
+      return;
+    }
+  }
+  if (!curcol[name]) {
+    console.log('WARNING: tried to access name ', name, ' from path ', parents, ' in settings tabs column list, but object[name] was null here.');
+    return;
+  }
+  curcol[name].on = !curcol[name].on;
+  console.log('state after my change: ', state);
+});
