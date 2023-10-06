@@ -62,7 +62,7 @@ export const Column = observer(function Column() {
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+    <div style={{ display: 'flex', justifyContent: 'left', alignItems: 'center' }}>
       <Accordion expanded={expanded === 'panel1'} onChange={handleChange('panel1')}>
         <AccordionSummary aria-controls="panel1d-content" id="panel1d-header">
           <Typography>TimeScale Creator GTS2020 Chart</Typography>
@@ -70,15 +70,41 @@ export const Column = observer(function Column() {
         <AccordionDetails>
           {showOptions && (
             <div>
-              <label>
-                <Checkbox /> MA
-              </label>
-              <label>
-                <Checkbox /> Standard Chronostratigraphy
-              </label>
-              <label>
-                <Checkbox /> Standard Chronostratigraphy
-              </label>
+              <div>
+                <label>
+                  <Checkbox /> MA
+                </label>
+              </div>
+              <div>
+                <label>
+                  <Checkbox /> Standard Chronostratigraphy
+                </label>
+              </div>
+              <div>
+                <label>
+                  <Checkbox /> Planetary Time Scale
+                </label>
+              </div>
+              <div>
+                <label>
+                  <Checkbox /> Regional Stages
+                </label>
+              </div>
+              <div>
+                <label>
+                  <Checkbox /> Geomagnetic Polarity
+                </label>
+              </div>
+              <div>
+                <label>
+                  <Checkbox /> Marine Macrofossils
+                </label>
+              </div>
+              <div>
+                <label>
+                  <Checkbox /> Microfossiles
+                </label>
+              </div>
             </div>
           )}
         </AccordionDetails>
