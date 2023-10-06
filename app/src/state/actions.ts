@@ -1,6 +1,6 @@
 import { action, runInAction } from 'mobx';
 import { type ChartConfig, assertChartInfo, isChartError } from '@tsconline/shared';
-import { state } from './state';
+import { state, State } from './state';
 import { fetcher, devSafeUrl } from '../util';
 import { xmlToJson , jsonToXml } from './settingsParser';
 
@@ -134,3 +134,28 @@ export const setUnitsPerMY = action((units: number) => {
   state.settings.unitsPerMY = units;
 });
 
+
+export const setSettingTabsSelected = action((newtab: number | State['settingsTabs']['selected']) => {
+  if (typeof newtab === 'string')  {
+    state.settingsTabs.selected = newtab;
+    return;
+  }
+  switch (newtab) {
+    case 0: state.settingsTabs.selected = 'time'; break;
+    case 1: state.settingsTabs.selected = 'column'; break;
+    case 2: state.settingsTabs.selected = 'font'; break;
+    case 3: state.settingsTabs.selected = 'mappoints'; break;
+    default:
+      console.log('WARNING: setSettingTabsSelected: received index number that is unknown: ', newtab);
+      state.settingsTabs.selected = 'time';
+  }
+});
+
+export function translateTabToIndex(tab: State['settingsTabs']['selected']) {
+  switch(tab) {
+    case 'time': return 0;
+    case 'column': return 1;
+    case 'font': return 2;
+    case 'mappoints': return 3;
+  }
+}

@@ -18,33 +18,12 @@ interface TabPanelProps {
   value: number;
 }
 
-function CustomTabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          <Typography>{children}</Typography>
-        </Box>
-      )}
-    </div>
-  );
-}
-
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
-  const [value, setValue] = React.useState(0);
 
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setValue(newValue);
+  const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
+    actions.setSettingTabsSelected(newValue);
   };
   const handleButtonClick = () => {
     actions.setTab(1);
@@ -62,30 +41,26 @@ export const Settings = observer(function Settings() {
   
     navigate('/chart');
   };
-  
-console.log('RENDER: state = ', state.settings);
+
+  const selectedTabIndex = actions.translateTabToIndex(state.settingsTabs.selected);
+  function displayChosenTab() {
+    switch(state.settingsTabs.selected) {
+           case 'time': return <Time/>;
+         case 'column': return <Column/>;
+           case 'font': return <Font/>;
+      case 'mappoints': return <MapPoint/>;
+    }
+  }
 
   return (
     <div>
-      <Tabs value={value} onChange={handleChange}>
+      <Tabs value={selectedTabIndex} onChange={handleChange}>
         <Tab label="Time" />
         <Tab label="Column"/>
         <Tab label="Font"/>
         <Tab label="Map Points"/>
       </Tabs>
-      <CustomTabPanel value={value} index={0}>
-        <Time></Time>
-      </CustomTabPanel>
-      <CustomTabPanel value={value} index={1}>
-      <Column></Column>
-      </CustomTabPanel>
-      <CustomTabPanel value={value} index={2}>
-        <Font></Font>
-      </CustomTabPanel>
-      <CustomTabPanel value={value} index={3}>
-        <MapPoint></MapPoint>
-      </CustomTabPanel>
-      <div></div>
+      {displayChosenTab()}
       <Box
         display="flex"
         flexDirection="column"

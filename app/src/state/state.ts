@@ -5,6 +5,9 @@ import type { ChartConfig } from '@tsconline/shared';
 export type State = {
   tab: number,
   showAllTabs: boolean,
+  settingsTabs: {
+    selected: 'time' | 'font' | 'column' | 'mappoints',
+  },
   chart: ChartConfig | null,
   presets: ChartConfig[],
   chartPath: string,
@@ -20,6 +23,9 @@ export type State = {
 export const state = observable<State>({
   tab: 0,
   showAllTabs: false,
+  settingsTabs: {
+    selected: 'time',
+  },
   chart: null,
   presets: [],
   chartPath: '',
