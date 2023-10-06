@@ -70,41 +70,15 @@ export const Column = observer(function Column() {
         <AccordionDetails>
           {showOptions && (
             <div>
-              <div>
-                <label>
-                  <Checkbox /> MA
-                </label>
-              </div>
-              <div>
-                <label>
-                  <Checkbox /> Standard Chronostratigraphy
-                </label>
-              </div>
-              <div>
-                <label>
-                  <Checkbox /> Planetary Time Scale
-                </label>
-              </div>
-              <div>
-                <label>
-                  <Checkbox /> Regional Stages
-                </label>
-              </div>
-              <div>
-                <label>
-                  <Checkbox /> Geomagnetic Polarity
-                </label>
-              </div>
-              <div>
-                <label>
-                  <Checkbox /> Marine Macrofossils
-                </label>
-              </div>
-              <div>
-                <label>
-                  <Checkbox /> Microfossiles
-                </label>
-              </div>
+              <label>
+                <Checkbox /> MA
+              </label>
+              <label>
+                <Checkbox /> Standard Chronostratigraphy
+              </label>
+              <label>
+                <Checkbox /> Standard Chronostratigraphy
+              </label>
             </div>
           )}
         </AccordionDetails>
