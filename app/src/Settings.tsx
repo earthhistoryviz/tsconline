@@ -1,26 +1,38 @@
 import React, { useContext } from 'react';
-import { Button, TextField, Box, FormControlLabel, Checkbox, Tabs, Typography } from '@mui/material';
-import ForwardIcon from '@mui/icons-material/Forward';
+import { Tabs } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { context } from './state';
-import { primary_dark } from './constant';
-import { settingOptions, updateCheckboxSetting } from './state/actions';
 import { observer } from 'mobx-react-lite';
 import Tab from '@mui/material/Tab';
 import { Column } from './SettingsTabs/Column';
 import { Time } from './SettingsTabs/Time';
 import { Font } from './SettingsTabs/Font';
 import { MapPoint } from './SettingsTabs/MapPoint';
-
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
+import { ColumnSetting } from './state/state';
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
+
+  //temporary code to test recursive functionality in column
+  //doesn't work if it's put in the column section
+  let temp: ColumnSetting = {
+    "MA": { on: false, children: null, parents: [] },
+      "Standard Chronostratigraphy": { on: false, children: null, parents: [] },
+      "Planetary Time Scale": { on: false, children: null, parents: [] },
+      "Regional Stages": { on: false, children: null, parents: [] },
+      "Geomagnetic Polarity": { on: false, children: null, parents: [] },
+      "Marine Macrofossils": { on: false, children: null, parents: [] },
+      "Microfossils": { on: false, children: null, parents: [] },
+  };
+  let i = 0;
+  for (const name in temp) {
+    temp[name].children = { [i]: { on: false, children: null, parents:[name] } };
+    console.log(temp[name]);
+    i++;
+  }
+  actions.setSettingsColumns(temp)
+
 
   const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
     actions.setSettingTabsSelected(newValue);
