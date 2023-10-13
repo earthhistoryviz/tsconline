@@ -1,30 +1,48 @@
-import React, { useContext, useState, useEffect } from 'react';
-import { Button, TextField, Box, FormControlLabel, Checkbox } from '@mui/material';
+import React, { useContext } from 'react';
+import { Tabs } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import ForwardIcon from '@mui/icons-material/Forward';
 import { context } from './state';
-import { primary_dark } from './constant';
-import { settingOptions, updateCheckboxSetting } from './state/actions';
-import { Observer } from 'mobx-react-lite';
+import { observer } from 'mobx-react-lite';
+import Tab from '@mui/material/Tab';
+import { Column } from './SettingsTabs/Column';
+import { Time } from './SettingsTabs/Time';
+import { Font } from './SettingsTabs/Font';
+import { MapPoint } from './SettingsTabs/MapPoint';
+import { ColumnSetting } from './state/state';
 
-export function Settings() {
+export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
 
-  const [topAge, setTopAge] = useState(state.settings.topAge);
-  const [baseAge, setBaseAge] = useState(state.settings.baseAge);
-  const [unitsPerMY, setUnitsPerMY] = useState(state.settings.unitsPerMY);
+  //temporary code to test recursive functionality in column
+  //doesn't work if it's put in the column section
+  let temp: ColumnSetting = {
+    "MA": { on: false, children: null, parents: [] },
+      "Standard Chronostratigraphy": { on: false, children: null, parents: [] },
+      "Planetary Time Scale": { on: false, children: null, parents: [] },
+      "Regional Stages": { on: false, children: null, parents: [] },
+      "Geomagnetic Polarity": { on: false, children: null, parents: [] },
+      "Marine Macrofossils": { on: false, children: null, parents: [] },
+      "Microfossils": { on: false, children: null, parents: [] },
+  };
+  let i = 0;
+  for (const name in temp) {
+    temp[name].children = { [i]: { on: false, children: null, parents:[name] } };
+    console.log(temp[name]);
+    i++;
+  }
+  actions.setSettingsColumns(temp)
 
-  state.settings.topAge = topAge;
-  state.settings.baseAge = baseAge;
-  state.settings.unitsPerMY = unitsPerMY;
 
+  const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
+    actions.setSettingTabsSelected(newValue);
+  };
   const handleButtonClick = () => {
     actions.setTab(1);
     actions.setAllTabs(true);
   
     // Validate the user input
-    if (isNaN(topAge) || isNaN(baseAge) || isNaN(unitsPerMY)) {
+    if (isNaN(state.settings.topAge) || isNaN(state.settings.baseAge) || isNaN(state.settings.unitsPerMY)) {
       // Handle invalid input, show error message, etc.
       return;
     }
@@ -35,63 +53,26 @@ export function Settings() {
   
     navigate('/chart');
   };
-  
+
+  const selectedTabIndex = actions.translateTabToIndex(state.settingsTabs.selected);
+  function displayChosenTab() {
+    switch(state.settingsTabs.selected) {
+           case 'time': return <Time/>;
+         case 'column': return <Column/>;
+           case 'font': return <Font/>;
+      case 'mappoints': return <MapPoint/>;
+    }
+  }
 
   return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-      p={2}
-      border={1}
-      borderRadius={4}
-      borderColor="gray"
-      maxWidth="600px"
-      margin="0 auto"
-      marginTop="50px"
-    >
-      <TextField
-        label="Top Age (Ma)"
-        type="number"
-        value={topAge}
-        onChange={(event) => setTopAge(parseFloat(event.target.value))}
-        style={{ marginBottom: '10px', width: '100%' }}
-      />
-      <TextField
-        label="Base Age (Ma)"
-        type="number"
-        value={baseAge}
-        onChange={(event) => setBaseAge(parseFloat(event.target.value))}
-        style={{ marginBottom: '10px', width: '100%' }}
-      />
-      <TextField
-        label="Vertical Scale (cm/Ma)"
-        type="number"
-        value={unitsPerMY}
-        onChange={(event) => setUnitsPerMY(parseFloat(event.target.value))}
-        style={{ marginBottom: '20px', width: '100%' }}
-      />
-      {settingOptions.map(({ name, label, stateName }) => (
-        <Observer key={name}>
-          {() => (
-            <FormControlLabel
-              control={<Checkbox checked={state.settingsJSON[stateName]} onChange={(event) => actions.updateCheckboxSetting(stateName, event.target.checked)} />}
-              label={label}
-              style={{ marginBottom: '10px' }}
-            />
-          )}
-        </Observer>
-      ))}
-      <Button
-        sx={{ backgroundColor: primary_dark, color: '#FFFFFF', marginTop: '10px' }}
-        onClick={handleButtonClick}
-        variant="contained"
-        style={{ width: '100%', height: '75px' }}
-        endIcon={<ForwardIcon />}
-      >
-        Make your own chart
-      </Button>
-    </Box>
+    <div>
+      <Tabs value={selectedTabIndex} onChange={handleChange}>
+        <Tab label="Time" />
+        <Tab label="Column"/>
+        <Tab label="Font"/>
+        <Tab label="Map Points"/>
+      </Tabs>
+      {displayChosenTab()}
+    </div>
   );
-}
+});

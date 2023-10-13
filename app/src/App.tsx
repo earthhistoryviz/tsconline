@@ -5,6 +5,8 @@ import { NavBar }from './NavBar'
 import { Home } from './Home'
 import { Settings } from './Settings'
 import { Chart} from './Chart'
+import { Datapack } from './Datapack'
+import { Help } from './Help';
 
 export default observer(function App() {
   return (
@@ -15,6 +17,8 @@ export default observer(function App() {
         <Route path="/" element={<Home/>} />
         <Route path="/settings" element={<Settings/>} />
         <Route path="/chart" element={<Chart/>} />
+        <Route path="/datapack" element={<Datapack/>} />
+        <Route path="/help" element={<Help/>} />
       </Routes>
     </div>
   );
