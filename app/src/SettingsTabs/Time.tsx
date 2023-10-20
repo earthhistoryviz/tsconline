@@ -5,6 +5,13 @@ import { actions, state } from "../state";
 import { primary_dark } from "../constant";
 import ForwardIcon from '@mui/icons-material/Forward';
 import { useNavigate } from "react-router-dom";
+import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
+
+const geologicalStages = ["Gelasian (1.8 Ma top)", "Piacenzian (2.58 Ma top)", "Zanclean (3.6 Ma top)", "Messinian (5.335 Ma top)", "Tortonian (7.25 Ma top)", "Serravallian (11.63 Ma top)", "Langhian (13.82 Ma top)", "Burdigalian (15.99 Ma top)"];
 
 export const Time = observer(function Time() {
     const navigate = useNavigate();
@@ -47,6 +54,19 @@ export const Time = observer(function Time() {
           onChange={(event) => actions.setTopAge(parseFloat(event.target.value))}
           style={{ marginBottom: '10px', width: '100%' }}
         />
+        <FormControl style={{ marginBottom: '10px', width: '100%' }}>
+        <InputLabel>Stage Name</InputLabel> 
+        <Select
+          value={state.settings.selectedStage} 
+          onChange={(event) => actions.setSelectedStage(event.target.value as string)}
+        >
+          {geologicalStages.map((stage) => (
+            <MenuItem key={stage} value={stage}>
+              {stage}
+            </MenuItem>
+          ))}
+        </Select>
+        </FormControl>
         <TextField
           label="Base Age (Ma)"
           type="number"
@@ -83,5 +103,6 @@ export const Time = observer(function Time() {
       </Box>
     )
 }
+
 
 )
