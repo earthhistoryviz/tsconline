@@ -160,6 +160,11 @@ export const setTopAge = action((topage: number) => {
   state.settings.topAge = topage;
 });
 
+export const setSelectedStage = action("setSelectedStage", (stage: string) => {
+  state.settings.selectedStage = stage;
+});
+
+
 export const setBaseAge = action((baseage: number) => {
   state.settings.baseAge = baseage;
 });

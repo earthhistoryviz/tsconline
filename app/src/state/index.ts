@@ -5,7 +5,7 @@ import { initialize } from './initialize';
 
 export type State = typeof state;
 export type Actions = typeof actions;
-export { state, actions };
+export { state, actions }; 
 
 export type Context = {
   state: State,
