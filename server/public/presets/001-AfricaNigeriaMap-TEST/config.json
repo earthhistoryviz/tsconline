@@ -2,5 +2,8 @@
   "img": "AfricaBight_Nigeria_Image.jpg",
   "title": "AfricaBight_Nigeria_Image Maps",
   "description": "data pack description",
-  "settings": "AfricaBight settings.tsc"
+  "settings": "",
+  "datapacks": [
+    "default.txt"
+  ]
 }
