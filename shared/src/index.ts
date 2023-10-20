@@ -14,7 +14,7 @@ export function assertChartConfig(o: any): asserts o is ChartConfig {
   if (typeof o.title !== 'string') throw 'ChartConfig must have a title string';
   if (typeof o.description !== 'string') throw 'ChartConfig must have a description string';
   if (typeof o.settings !== 'string') throw 'ChartConfig must have a settings path string';
-  if (typeof !Array.isArray(o.datapacks)) throw 'ChartConfig must have a datapacks array of datapack string names'
+  if (!Array.isArray(o.datapacks)) throw 'ChartConfig must have a datapacks array of datapack string names.  '
 }
 
 export function assertChartConfigArray(o: any): asserts o is ChartConfig[] {

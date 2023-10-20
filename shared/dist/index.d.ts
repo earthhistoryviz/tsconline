@@ -3,7 +3,7 @@ export type ChartConfig = {
     title: string;
     description: string;
     settings: string;
-    datapacks: string[] // active datapack names
+    datapacks: string[];
 };
 export declare function assertChartConfig(o: any): asserts o is ChartConfig;
 export declare function assertChartConfigArray(o: any): asserts o is ChartConfig[];
@@ -13,7 +13,7 @@ export type ChartConfigError = {
 export type Preset = ChartConfig | ChartConfigError;
 export type ChartRequest = {
     settings: string;
-    datapacks: string[]
+    datapacks: string[];
 };
 export declare function assertChartRequest(o: any): asserts o is ChartRequest;
 export type ChartResponseInfo = {
