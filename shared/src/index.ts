@@ -5,6 +5,7 @@ export type ChartConfig = {
   title: string,
   description: string,
   settings: string, // path to base settings file
+  datapacks: string[] // active datapack names
 };
 
 export function assertChartConfig(o: any): asserts o is ChartConfig {
@@ -13,6 +14,7 @@ export function assertChartConfig(o: any): asserts o is ChartConfig {
   if (typeof o.title !== 'string') throw 'ChartConfig must have a title string';
   if (typeof o.description !== 'string') throw 'ChartConfig must have a description string';
   if (typeof o.settings !== 'string') throw 'ChartConfig must have a settings path string';
+  if (typeof !Array.isArray(o.datapacks)) throw 'ChartConfig must have a datapacks array of datapack string names'
 }
 
 export function assertChartConfigArray(o: any): asserts o is ChartConfig[] {
@@ -28,10 +30,12 @@ export type Preset = ChartConfig | ChartConfigError;
 
 export type ChartRequest = {
   settings: string, // XML string representing the settings file you want to use to make a chart
+  datapacks: string[], // active datapacks to be used on chart
 }
 export function assertChartRequest(o: any): asserts o is ChartRequest {
   if (typeof o !== 'object') throw 'ChartRequest must be an object';
   if (typeof o.settings !== 'string') throw 'ChartRequest must have a settings string';
+  if (!Array.isArray(o.datapacks)) throw 'ChartRequest must have a datapacks array';
 }
 
 export type ChartResponseInfo = {

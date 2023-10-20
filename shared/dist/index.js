@@ -10,6 +10,8 @@ export function assertChartConfig(o) {
         throw 'ChartConfig must have a description string';
     if (typeof o.settings !== 'string')
         throw 'ChartConfig must have a settings path string';
+    if (typeof !Array.isArray(o.datapacks))
+        throw 'ChartConfig must have a datapacks array';
 }
 export function assertChartConfigArray(o) {
     if (!o || !Array.isArray(o))
