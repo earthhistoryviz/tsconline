@@ -11,6 +11,7 @@ import Typography from "@mui/material/Typography";
 import Checkbox from "@mui/material/Checkbox";
 import { context } from "../state";
 import { ColumnSetting } from "../state/state";
+import { Button, TextField } from "@mui/material";
 
 // Define the Accordion component outside the Column component
 const Accordion = styled((props: AccordionProps) => (
@@ -54,7 +55,7 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
 export const Column = observer(function Column() {
   const { state, actions } = useContext(context);
   const [expanded, setExpanded] = useState<string | false>("panel1");
-
+  const [columnName, setColumnName] = useState('');
   const handleChange =
     (panel: string) => (_event: React.SyntheticEvent, newExpanded: boolean) => {
       setExpanded(newExpanded ? panel : false);
@@ -62,7 +63,12 @@ export const Column = observer(function Column() {
 
   //recursively goes through the column settings state and makes a component
   //with all of the columns
-  function renderColumns(columnInfo: ColumnSetting) {
+  function renderColumns(columnInfo: ColumnSetting, depth: number) {
+    //for indenting child. depth is how far it is from the top
+    let indent = depth * 20 + "px";
+    const divStyle = {
+      marginLeft: indent,
+    };
     return (
       <div>
         {Object.entries(columnInfo).map(([columnName, columnData]) => (
@@ -79,28 +85,53 @@ export const Column = observer(function Column() {
               />
               {columnName}
             </label>
-            {columnData.children && renderColumns(columnData.children)}
+
+            <div style={divStyle}>
+              {columnData.children &&
+                renderColumns(columnData.children, depth + 1)}
+            </div>
           </div>
         ))}
       </div>
     );
   }
-
+  const handleColumnNameChange = (event: { target: { value: string; }; }) => {
+    setColumnName(event.target.value);
+    actions.updateColumnName(event.target.value)
+  }
   return (
-    <div
-      style={{ display: "flex", justifyContent: "left", alignItems: "center" }}
-    >
-      <Accordion
-        expanded={expanded === "panel1"}
-        onChange={handleChange("panel1")}
+    <div style={{ display: "flex", justifyContent: "center" }}>
+      {/*component for selecting column*/}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
       >
-        <AccordionSummary aria-controls="panel1d-content" id="panel1d-header">
-          <Typography>TimeScale Creator GTS2020 Chart</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <div>{renderColumns(state.settingsTabs.columns)}</div>
-        </AccordionDetails>
-      </Accordion>
+        <Accordion
+          expanded={expanded === "panel1"}
+          onChange={handleChange("panel1")}
+        >
+          <AccordionSummary aria-controls="panel1d-content" id="panel1d-header">
+            <Typography>TimeScale Creator GTS2020 Chart</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <div>{renderColumns(state.settingsTabs.columns, 1)}</div>
+          </AccordionDetails>
+        </Accordion>
+      </div>
+      {/*component for changing settings for a specific column*/}
+      <div style={{ border: "1px solid black", width: "400px" }}>
+        <div style={{paddingTop: "20px"}}>
+        <Button variant="outlined">Font</Button>
+        </div>
+        <div style={{paddingTop: "20px"}}>
+          Edit Title:
+          <br/>
+          <TextField></TextField>
+        </div>
+      </div>
     </div>
   );
 });
