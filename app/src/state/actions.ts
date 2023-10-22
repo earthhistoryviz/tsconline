@@ -46,7 +46,10 @@ export const setAllTabs = action("setAllTabs", (newval: boolean) => {
 export const generateChart = action("generateChart", async () => {
   const xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
   console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
-  const datapacks = new Array<String>("assets/datapacks/TSC2020_InternalDatapack_encrypted_13Feb2021.txt");
+  var datapacks = new Array<String>();
+  if (state.chart != null) {
+    datapacks = state.chart.datapacks
+  }
   const body = JSON.stringify({
     settings: xmlSettings,
     datapacks: datapacks

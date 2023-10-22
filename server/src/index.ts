@@ -80,7 +80,7 @@ server.post('/charts', async (request, reply) => {
   }
 
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
-  const hash = md5(chartrequest.settings);
+  const hash = md5(chartrequest.settings + chartrequest.datapacks.join(','));
   const chartdir_urlpath = '/public/charts/'+hash;
   const chart_urlpath = chartdir_urlpath+ '/chart.pdf';
 
