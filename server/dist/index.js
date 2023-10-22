@@ -105,7 +105,7 @@ server.post('/charts', async (request, reply) => {
         // Add settings:
         + `-s ${settings_filepath} -ss ${settings_filepath} `
         // Add datapacks:
-        + `-d ${assetconfigs.activeDatapacks.join(' ')} `
+        + `-d ${chartrequest.datapacks} `
         // Tell it where to save chart
         + `-o ${chart_filepath} `;
     // Exec Java command and send final reply to browser

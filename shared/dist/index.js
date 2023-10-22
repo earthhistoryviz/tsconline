@@ -10,6 +10,8 @@ export function assertChartConfig(o) {
         throw 'ChartConfig must have a description string';
     if (typeof o.settings !== 'string')
         throw 'ChartConfig must have a settings path string';
+    if (!Array.isArray(o.datapacks))
+        throw 'ChartConfig must have a datapacks array of datapack string names.  ';
 }
 export function assertChartConfigArray(o) {
     if (!o || !Array.isArray(o))
@@ -22,6 +24,8 @@ export function assertChartRequest(o) {
         throw 'ChartRequest must be an object';
     if (typeof o.settings !== 'string')
         throw 'ChartRequest must have a settings string';
+    if (!Array.isArray(o.datapacks))
+        throw 'ChartRequest must have a datapacks array';
 }
 export function isChartError(o) {
     if (!o || typeof o !== 'object')

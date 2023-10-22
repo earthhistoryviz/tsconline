@@ -16,6 +16,7 @@ export type State = {
   settingsTabs: {
     selected: "time" | "font" | "column" | "mappoints";
     columns: ColumnSetting;
+    columnSelected: {name: string, parents: string[]} | null;
   };
   chart: ChartConfig | null;
   presets: ChartConfig[];
@@ -44,6 +45,7 @@ export const state = observable<State>({
       "Marine Macrofossils": { on: false, children: null, parents: [] },
       "Microfossils": { on: false, children: null, parents: [] },
     },
+    columnSelected: null,
   },
   chart: null,
   presets: [],
