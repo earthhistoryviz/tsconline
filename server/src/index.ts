@@ -111,6 +111,15 @@ server.post('/charts', async (request, reply) => {
     reply.send({ error: 'ERROR: failed to save settings' });
     return;
   }
+  for (const datapack of chartrequest.datapacks) {
+    if (!assetconfigs.activeDatapacks.includes(datapack)) {
+      console.log('ERROR: datapack: ',datapack,' is not included in activeDatapacks')
+      console.log('assetconfig.activeDatapacks:', assetconfigs.activeDatapacks)
+      console.log('chartrequest.datapacks: ', chartrequest.datapacks)
+      reply.send({ error: 'ERROR: failed to load datapacks' });
+      return;
+    }
+  }
 
 
   // Call the Java monster...
