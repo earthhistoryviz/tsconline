@@ -10,15 +10,17 @@ import { assertChartRequest } from '@tsconline/shared';
 import { loadPresets } from './preset.js';
 import { assertAssetConfig } from './types.js';
 const server = fastify({
-    logger: false, /*{  // uncomment for detailed logs from fastify
-      transport: {
-        target: 'pino-pretty',
-        options: {
-          translateTime: 'HH:MM:ss Z',
-          ignore: 'pid,hostname',
-        },
-      }
-    }*/
+    logger: false,
+    bodyLimit: 1024 * 1024 * 100, // 10 mb
+    /*{  // uncomment for detailed logs from fastify
+     transport: {
+       target: 'pino-pretty',
+       options: {
+         translateTime: 'HH:MM:ss Z',
+         ignore: 'pid,hostname',
+       },
+     }
+   }*/
 });
 // Load up all the chart configs found in presets:
 const chartconfigs = await loadPresets();

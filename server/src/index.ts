@@ -12,7 +12,9 @@ import { loadPresets } from './preset.js';
 import { AssetConfig, assertAssetConfig } from './types.js';
 
 const server = fastify({ 
-  logger: false, /*{  // uncomment for detailed logs from fastify
+  logger: false,
+  bodyLimit: 1024 * 1024 * 100, // 10 mb
+   /*{  // uncomment for detailed logs from fastify
     transport: {
       target: 'pino-pretty',
       options: {
