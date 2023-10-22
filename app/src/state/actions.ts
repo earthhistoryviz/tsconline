@@ -46,7 +46,7 @@ export const setAllTabs = action("setAllTabs", (newval: boolean) => {
 export const generateChart = action("generateChart", async () => {
   const xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
   console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
-  var datapacks = new Array<String>();
+  var datapacks: string[] = [];
   if (state.chart != null) {
     datapacks = state.chart.datapacks
   }
