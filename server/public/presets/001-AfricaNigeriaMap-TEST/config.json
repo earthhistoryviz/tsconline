@@ -4,6 +4,6 @@
   "description": "data pack description",
   "settings": "",
   "datapacks": [
-    "default.txt"
+    "assets/datapacks/default.txt"
   ]
 }
