@@ -48,11 +48,11 @@ export const generateChart = action("generateChart", async () => {
   console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
   var datapacks: string[] = [];
   if (state.chart != null) {
-    datapacks = state.chart.datapacks
+    datapacks = state.chart.datapacks;
   }
   const body = JSON.stringify({
     settings: xmlSettings,
-    datapacks: datapacks
+    datapacks: datapacks,
   });
   console.log("Sending settings to server...");
   const response = await fetcher("/charts", {
@@ -93,18 +93,21 @@ export const settingsXML = action("settingsXML", (xml: string) => {
 //update
 export const updateSettings = action("updateSettings", () => {
   const { topAge, baseAge, unitsPerMY } = state.settings;
+  state.settingsJSON["settingsTabs"] = state.settingsTabs;
   const jsonSettings = state.settingsJSON;
-
   if ("settings" in jsonSettings) {
     const settings = jsonSettings.settings as any;
     settings["topAge"]["text"] = topAge.toString();
     settings["baseAge"]["text"] = baseAge.toString();
     settings["unitsPerMY"] = (unitsPerMY * 30).toString();
   }
-
+  if ("settingsTabs" in jsonSettings) {
+    const settingsTabs = jsonSettings as any;
+  }
+  console.log(jsonSettings);
   const xmlSettings = jsonToXml(jsonSettings); // Convert JSON to XML using jsonToXml function
 
-  console.log("Updated settingsXML:", xmlSettings); // Print the updated XML
+  console.log("Updated settingsXML:\n", xmlSettings); // Print the updated XML
 
   state.settingsXML = xmlSettings;
 });
@@ -168,7 +171,6 @@ export const setTopAge = action((topage: number) => {
 export const setSelectedStage = action("setSelectedStage", (stage: string) => {
   state.settings.selectedStage = stage;
 });
-
 
 export const setBaseAge = action((baseage: number) => {
   state.settings.baseAge = baseage;
@@ -265,6 +267,7 @@ export const toggleSettingsTabColumn = action(
     console.log("state after my change: ", state);
     //if the column is unchecked, then no need to check the parents
     if (!curcol[name].on) {
+      //updateSettings();
       return;
     }
     //since column is checked, toggle parents on if they were previously off
@@ -283,6 +286,7 @@ export const toggleSettingsTabColumn = action(
       if (!curcol[p].on) curcol[p].on = true;
       curcol = curcol[p]["children"];
     }
+    //updateSettings();
   }
 );
 
