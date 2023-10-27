@@ -4,7 +4,6 @@
   "description": "data pack description",
   "settings": "settings.tsc",
   "datapacks": [
-    "default.txt",
-    "TSC2020_InternalDatapack_encrypted_13Feb2021.txt"
+    "assets/datapacks/default.txt"
   ]
 }

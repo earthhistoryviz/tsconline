@@ -10,15 +10,17 @@ import { assertChartRequest } from '@tsconline/shared';
 import { loadPresets } from './preset.js';
 import { assertAssetConfig } from './types.js';
 const server = fastify({
-    logger: false, /*{  // uncomment for detailed logs from fastify
-      transport: {
-        target: 'pino-pretty',
-        options: {
-          translateTime: 'HH:MM:ss Z',
-          ignore: 'pid,hostname',
-        },
-      }
-    }*/
+    logger: false,
+    bodyLimit: 1024 * 1024 * 100, // 10 mb
+    /*{  // uncomment for detailed logs from fastify
+     transport: {
+       target: 'pino-pretty',
+       options: {
+         translateTime: 'HH:MM:ss Z',
+         ignore: 'pid,hostname',
+       },
+     }
+   }*/
 });
 // Load up all the chart configs found in presets:
 const chartconfigs = await loadPresets();
@@ -70,7 +72,7 @@ server.post('/charts', async (request, reply) => {
         return;
     }
     // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
-    const hash = md5(chartrequest.settings);
+    const hash = md5(chartrequest.settings + chartrequest.datapacks.join(','));
     const chartdir_urlpath = '/public/charts/' + hash;
     const chart_urlpath = chartdir_urlpath + '/chart.pdf';
     const chartdir_filepath = chartdir_urlpath.slice(1); // no leading slash
@@ -97,6 +99,15 @@ server.post('/charts', async (request, reply) => {
         console.log('ERROR: failed to save settings at', settings_filepath, '  Error was:', e);
         reply.send({ error: 'ERROR: failed to save settings' });
         return;
+    }
+    for (const datapack of chartrequest.datapacks) {
+        if (!assetconfigs.activeDatapacks.includes(datapack)) {
+            console.log('ERROR: datapack: ', datapack, ' is not included in activeDatapacks');
+            console.log('assetconfig.activeDatapacks:', assetconfigs.activeDatapacks);
+            console.log('chartrequest.datapacks: ', chartrequest.datapacks);
+            reply.send({ error: 'ERROR: failed to load datapacks' });
+            return;
+        }
     }
     // Call the Java monster...
     //const jarArgs: string[] = ['xvfb-run', '-jar', './jar/TSC.jar', '-node', '-s', `../files/${title}settings.tsc`, '-ss', `../files/${title}settings.tsc`, '-d', `../files/${title}datapack.txt`, '-o', `../files/${title}save.pdf`];
