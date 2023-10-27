@@ -12,7 +12,9 @@ import { loadPresets } from './preset.js';
 import { AssetConfig, assertAssetConfig } from './types.js';
 
 const server = fastify({ 
-  logger: false, /*{  // uncomment for detailed logs from fastify
+  logger: false,
+  bodyLimit: 1024 * 1024 * 100, // 10 mb
+   /*{  // uncomment for detailed logs from fastify
     transport: {
       target: 'pino-pretty',
       options: {
@@ -80,7 +82,7 @@ server.post('/charts', async (request, reply) => {
   }
 
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
-  const hash = md5(chartrequest.settings);
+  const hash = md5(chartrequest.settings + chartrequest.datapacks.join(','));
   const chartdir_urlpath = '/public/charts/'+hash;
   const chart_urlpath = chartdir_urlpath+ '/chart.pdf';
 
@@ -108,6 +110,15 @@ server.post('/charts', async (request, reply) => {
     console.log('ERROR: failed to save settings at',settings_filepath,'  Error was:', e);
     reply.send({ error: 'ERROR: failed to save settings' });
     return;
+  }
+  for (const datapack of chartrequest.datapacks) {
+    if (!assetconfigs.activeDatapacks.includes(datapack)) {
+      console.log('ERROR: datapack: ',datapack,' is not included in activeDatapacks')
+      console.log('assetconfig.activeDatapacks:', assetconfigs.activeDatapacks)
+      console.log('chartrequest.datapacks: ', chartrequest.datapacks)
+      reply.send({ error: 'ERROR: failed to load datapacks' });
+      return;
+    }
   }
 
 

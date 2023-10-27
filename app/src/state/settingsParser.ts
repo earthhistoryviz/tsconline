@@ -2,23 +2,27 @@
 //                                          XML to JSON parser                                       //
 //-------------------------------------------------------------------------------------------------- //
 
+import { ColumnSetting } from "./state";
+
 function processSettings(settingsNode: any): any {
   const settings: any = {};
-  const settingNodes = settingsNode.getElementsByTagName('setting');
+  const settingNodes = settingsNode.getElementsByTagName("setting");
   for (let i = 0; i < settingNodes.length; i++) {
     const settingNode = settingNodes[i];
-    const settingName = settingNode.getAttribute('name');
-    const nestedSettingsNode = settingNode.getElementsByTagName('setting')[0];
-    const justificationValue = settingNode.getAttribute('justification');
-    const settingValue = nestedSettingsNode ? nestedSettingsNode.textContent.trim() : settingNode.textContent.trim();
+    const settingName = settingNode.getAttribute("name");
+    const nestedSettingsNode = settingNode.getElementsByTagName("setting")[0];
+    const justificationValue = settingNode.getAttribute("justification");
+    const settingValue = nestedSettingsNode
+      ? nestedSettingsNode.textContent.trim()
+      : settingNode.textContent.trim();
 
-    if (settingName === 'topAge' || settingName === 'baseAge') {
+    if (settingName === "topAge" || settingName === "baseAge") {
       settings[settingName] = {
-        source: 'text',
-        unit: 'Ma',
+        source: "text",
+        unit: "Ma",
         text: settingValue,
       };
-    }  else if (justificationValue !== null) {
+    } else if (justificationValue !== null) {
       settings[settingName] = justificationValue;
     } else {
       const settingValue = settingNode.textContent.trim();
@@ -28,20 +32,18 @@ function processSettings(settingsNode: any): any {
   return settings;
 }
 
-
 function processFonts(fontsNode: any): any {
   const fonts: any = {};
-  const fontNodes = fontsNode.getElementsByTagName('font');
+  const fontNodes = fontsNode.getElementsByTagName("font");
   for (let i = 0; i < fontNodes.length; i++) {
     const fontNode = fontNodes[i];
-    const fontFunction = fontNode.getAttribute('function');
-    const inheritable = fontNode.getAttribute('inheritable');
-    const fontInfo = { inheritable: inheritable === 'true' };
+    const fontFunction = fontNode.getAttribute("function");
+    const inheritable = fontNode.getAttribute("inheritable");
+    const fontInfo = { inheritable: inheritable === "true" };
     fonts[fontFunction] = fontInfo;
   }
   return fonts;
 }
-
 
 function processColumn(node: any): any {
   const result: any = {};
@@ -61,15 +63,15 @@ function processColumn(node: any): any {
       const child = childNodes[i];
 
       if (child.nodeType === Node.ELEMENT_NODE) {
-        const childName = child.getAttribute('id');
+        const childName = child.getAttribute("id");
 
-        if (child.nodeName === 'column') {
+        if (child.nodeName === "column") {
           result[childName] = processColumn(child);
-        } else if (child.nodeName === 'fonts') {
-          result['fonts'] = processFonts(child);
-        } else if (child.nodeName === 'setting') {
-          const settingName = child.getAttribute('name');
-          const justificationValue = child.getAttribute('justification');
+        } else if (child.nodeName === "fonts") {
+          result["fonts"] = processFonts(child);
+        } else if (child.nodeName === "setting") {
+          const settingName = child.getAttribute("name");
+          const justificationValue = child.getAttribute("justification");
 
           if (justificationValue !== null) {
             result[settingName] = justificationValue;
@@ -87,47 +89,46 @@ function processColumn(node: any): any {
   return result;
 }
 
-
 //the main parser
 export function xmlToJson(xml: string): any {
   const parser = new DOMParser();
-  const xmlDoc = parser.parseFromString(xml, 'text/xml');
+  const xmlDoc = parser.parseFromString(xml, "text/xml");
   const json: any = {};
 
-  const tsCreatorNode = xmlDoc.getElementsByTagName('TSCreator')[0];
+  const tsCreatorNode = xmlDoc.getElementsByTagName("TSCreator")[0];
   if (tsCreatorNode) {
-    const settingsNode = tsCreatorNode.getElementsByTagName('settings')[0];
+    const settingsNode = tsCreatorNode.getElementsByTagName("settings")[0];
     if (settingsNode) {
-      const versionAttr = settingsNode.getAttribute('version');
-      if (versionAttr === '1.0') {
-        json['settings'] = processSettings(settingsNode);
+      const versionAttr = settingsNode.getAttribute("version");
+      if (versionAttr === "1.0") {
+        json["settings"] = processSettings(settingsNode);
       }
     }
 
-    const rootColumnNode = tsCreatorNode.getElementsByTagName('column')[0];
+    const rootColumnNode = tsCreatorNode.getElementsByTagName("column")[0];
     if (rootColumnNode) {
-      json[rootColumnNode.getAttribute('id') || 'unknown'] = processColumn(rootColumnNode);
+      json[rootColumnNode.getAttribute("id") || "unknown"] =
+        processColumn(rootColumnNode);
     }
   }
 
   return json;
 }
 
-
 //-------------------------------------------------------------------------------------------------- //
 //                                          JSON to XML parser                                       //
 //-------------------------------------------------------------------------------------------------- //
 
-function generateSettingsXml(settings: any, indent: string = ''): string {
-  let xml = '';
+function generateSettingsXml(settings: any, indent: string = ""): string {
+  let xml = "";
   for (const key in settings) {
     if (Object.prototype.hasOwnProperty.call(settings, key)) {
       const value = settings[key];
-      if (typeof value === 'object') {
+      if (typeof value === "object") {
         xml += `${indent}<setting name="${key}" source="${value.source}" unit="${value.unit}">\n`;
         xml += `${indent}  <setting name="text">${value.text}</setting>\n`;
         xml += `${indent}</setting>\n`;
-      } else if (key === 'justification') {
+      } else if (key === "justification") {
         xml += `${indent}<setting justification="${value}" name="${key}"/>\n`;
       } else {
         xml += `${indent}<setting name="${key}">${value}</setting>\n`;
@@ -137,9 +138,8 @@ function generateSettingsXml(settings: any, indent: string = ''): string {
   return xml;
 }
 
-
 function generateFontsXml(fonts: any, indent: string): string {
-  let xml = '';
+  let xml = "";
   for (const key in fonts) {
     if (Object.prototype.hasOwnProperty.call(fonts, key)) {
       const inheritable = fonts[key].inheritable;
@@ -149,57 +149,74 @@ function generateFontsXml(fonts: any, indent: string): string {
   return xml;
 }
 
-
 function generateColumnXml(column: any, indent: string): string {
-  let xml = '';
+  let xml = "";
+  //adds checked columns to the xml file
   for (const key in column) {
-    if (Object.prototype.hasOwnProperty.call(column, key)) {
-      if (key === 'id') {
-        // Skip the 'id' element.
-        continue;
-      } else if (key.startsWith('_')) {
-        xml += `${indent}<${key.slice(1)}>${column[key]}</${key.slice(1)}>\n`;
-      } else if (key === 'fonts') {
-        xml += `${indent}<fonts>\n`;
-        xml += generateFontsXml(column[key], `${indent}  `);
-        xml += `${indent}</fonts>\n`;
-      } else if (typeof column[key] === 'object') {
-        xml += `${indent}<column id="${key}">\n`;
-        xml += generateColumnXml(column[key], `${indent}  `);
-        xml += `${indent}</column>\n`;
-      } else {
-        xml += `${indent}<setting name="${key}">${column[key]}</setting>\n`;
-      }
+    if (column[key].on === false) {
+      continue;
     }
+    xml += `${indent}<column id="${key}">\n`;
+    xml +=  generateColumnXml(column[key].children, `${indent}  `);
+    xml += `${indent}</column>\n`;
   }
+  // for (const key in column) {
+  //   if (Object.prototype.hasOwnProperty.call(column, key)) {
+  //     if (key === "id") {
+  //       // Skip the 'id' element.
+  //       continue;
+  //     } else if (key.startsWith("_")) {
+  //       xml += `${indent}<${key.slice(1)}>${column[key]}</${key.slice(1)}>\n`;
+  //     } else if (key === "fonts") {
+  //       xml += `${indent}<fonts>\n`;
+  //       xml += generateFontsXml(column[key], `${indent}  `);
+  //       xml += `${indent}</fonts>\n`;
+  //     } else if (typeof column[key] === "object") {
+  //       xml += `${indent}<column id="${key}">\n`;
+  //       xml += generateColumnXml(column[key], `${indent}  `);
+  //       xml += `${indent}</column>\n`;
+  //     } else {
+  //       xml += `${indent}<setting name="${key}">${column[key]}</setting>\n`;
+  //     }
+  //   }
+  // }
   return xml;
 }
-
 
 //the main parser
 export function jsonToXml(json: any, version: string = "PRO8.0"): string {
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
 
-  if (json['settings']) {
-    xml += '  <settings version="1.0">\n';
-    xml += generateSettingsXml(json['settings'], '    ');
-    xml += '  </settings>\n';
+  if (json["settingsTabs"]["columns"]) {
+    console.log("---parsing columns---");
+    console.log(json["settingsTabs"]["columns"]);
+    xml += generateColumnXml(json["settingsTabs"]["columns"], "     ");
   }
 
-  if (json['id']) {
-    xml += `  <column id="${json['id']}">\n`;
-    xml += generateColumnXml(json, '    ');
-    xml += '  </column>\n';
-  } else {
-    for (const key in json) {
-      if (key !== 'settings' && key !== 'id' && Object.prototype.hasOwnProperty.call(json, key)) {
-        xml += `  <column id="${key}">\n`;
-        xml += generateColumnXml(json[key], '    ');
-        xml += '  </column>\n';
-      }
-    }
+  if (json["settings"]) {
+    xml += '  <settings version="1.0">\n';
+    xml += generateSettingsXml(json["settings"], "    ");
+    xml += "  </settings>\n";
   }
-  xml += '</TSCreator>\n';
+
+  // if (json["id"]) {
+  //   xml += `  <column id="${json["id"]}">\n`;
+  //   xml += generateColumnXml(json, "    ");
+  //   xml += "  </column>\n";
+  // } else {
+  //   for (const key in json) {
+  //     if (
+  //       key !== "settings" &&
+  //       key !== "id" &&
+  //       Object.prototype.hasOwnProperty.call(json, key)
+  //     ) {
+  //       xml += `  <column id="${key}">\n`;
+  //       xml += generateColumnXml(json[key], "    ");
+  //       xml += "  </column>\n";
+  //     }
+  //   }
+  // }
+  xml += "</TSCreator>\n";
   return xml;
 }
