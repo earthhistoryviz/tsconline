@@ -55,8 +55,9 @@ export const Time = observer(function Time() {
           style={{ marginBottom: '10px', width: '100%' }}
         />
         <FormControl style={{ marginBottom: '10px', width: '100%' }}>
-          <InputLabel>Age</InputLabel> 
+          <InputLabel>Stage Name</InputLabel> 
         <Select
+          label="Stage Name"
           type="number"
           value={state.settings.selectedStage} 
           onChange={(event) => actions.setSelectedStage(event.target.value as string)}
