@@ -152,34 +152,34 @@ function generateFontsXml(fonts: any, indent: string): string {
 function generateColumnXml(column: any, indent: string): string {
   let xml = "";
   //adds checked columns to the xml file
-  for (const key in column) {
-    if (column[key].on === false) {
-      continue;
-    }
-    xml += `${indent}<column id="${key}">\n`;
-    xml +=  generateColumnXml(column[key].children, `${indent}  `);
-    xml += `${indent}</column>\n`;
-  }
   // for (const key in column) {
-  //   if (Object.prototype.hasOwnProperty.call(column, key)) {
-  //     if (key === "id") {
-  //       // Skip the 'id' element.
-  //       continue;
-  //     } else if (key.startsWith("_")) {
-  //       xml += `${indent}<${key.slice(1)}>${column[key]}</${key.slice(1)}>\n`;
-  //     } else if (key === "fonts") {
-  //       xml += `${indent}<fonts>\n`;
-  //       xml += generateFontsXml(column[key], `${indent}  `);
-  //       xml += `${indent}</fonts>\n`;
-  //     } else if (typeof column[key] === "object") {
-  //       xml += `${indent}<column id="${key}">\n`;
-  //       xml += generateColumnXml(column[key], `${indent}  `);
-  //       xml += `${indent}</column>\n`;
-  //     } else {
-  //       xml += `${indent}<setting name="${key}">${column[key]}</setting>\n`;
-  //     }
+  //   if (column[key].on === false) {
+  //     continue;
   //   }
+  //   xml += `${indent}<column id="${key}">\n`;
+  //   xml +=  generateColumnXml(column[key].children, `${indent}  `);
+  //   xml += `${indent}</column>\n`;
   // }
+  for (const key in column) {
+    if (Object.prototype.hasOwnProperty.call(column, key)) {
+      if (key === "id") {
+        // Skip the 'id' element.
+        continue;
+      } else if (key.startsWith("_")) {
+        xml += `${indent}<${key.slice(1)}>${column[key]}</${key.slice(1)}>\n`;
+      } else if (key === "fonts") {
+        xml += `${indent}<fonts>\n`;
+        xml += generateFontsXml(column[key], `${indent}  `);
+        xml += `${indent}</fonts>\n`;
+      } else if (typeof column[key] === "object") {
+        xml += `${indent}<column id="${key}">\n`;
+        xml += generateColumnXml(column[key], `${indent}  `);
+        xml += `${indent}</column>\n`;
+      } else {
+        xml += `${indent}<setting name="${key}">${column[key]}</setting>\n`;
+      }
+    }
+  }
   return xml;
 }
 
@@ -188,11 +188,11 @@ export function jsonToXml(json: any, version: string = "PRO8.0"): string {
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
 
-  if (json["settingsTabs"]["columns"]) {
-    console.log("---parsing columns---");
-    console.log(json["settingsTabs"]["columns"]);
-    xml += generateColumnXml(json["settingsTabs"]["columns"], "     ");
-  }
+  // if (json["settingsTabs"]["columns"]) {
+  //   console.log("---parsing columns---");
+  //   console.log(json["settingsTabs"]["columns"]);
+  //   xml += generateColumnXml(json["settingsTabs"]["columns"], "     ");
+  // }
 
   if (json["settings"]) {
     xml += '  <settings version="1.0">\n';
@@ -200,23 +200,23 @@ export function jsonToXml(json: any, version: string = "PRO8.0"): string {
     xml += "  </settings>\n";
   }
 
-  // if (json["id"]) {
-  //   xml += `  <column id="${json["id"]}">\n`;
-  //   xml += generateColumnXml(json, "    ");
-  //   xml += "  </column>\n";
-  // } else {
-  //   for (const key in json) {
-  //     if (
-  //       key !== "settings" &&
-  //       key !== "id" &&
-  //       Object.prototype.hasOwnProperty.call(json, key)
-  //     ) {
-  //       xml += `  <column id="${key}">\n`;
-  //       xml += generateColumnXml(json[key], "    ");
-  //       xml += "  </column>\n";
-  //     }
-  //   }
-  // }
+  if (json["id"]) {
+    xml += `  <column id="${json["id"]}">\n`;
+    xml += generateColumnXml(json, "    ");
+    xml += "  </column>\n";
+  } else {
+    for (const key in json) {
+      if (
+        key !== "settings" &&
+        key !== "id" &&
+        Object.prototype.hasOwnProperty.call(json, key)
+      ) {
+        xml += `  <column id="${key}">\n`;
+        xml += generateColumnXml(json[key], "    ");
+        xml += "  </column>\n";
+      }
+    }
+  }
   xml += "</TSCreator>\n";
   return xml;
 }

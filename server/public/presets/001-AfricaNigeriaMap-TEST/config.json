@@ -2,7 +2,7 @@
   "img": "AfricaBight_Nigeria_Image.jpg",
   "title": "AfricaBight_Nigeria_Image Maps",
   "description": "data pack description",
-  "settings": "",
+  "settings": "settings.tsc",
   "datapacks": [
     "assets/datapacks/TSC2020_InternalDatapack_encrypted_13Feb2021.txt"
   ]
