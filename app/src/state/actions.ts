@@ -19,15 +19,17 @@ export const setChart = action("setChart", async (newval: number) => {
     return;
   }
   state.chart = state.presets[newval]!;
+  console.log(state.chart);
   // Grab the settings for this chart if there are any:
   if (state.chart.settings) {
+    console.log("---in settings---");
     const response = await fetcher(state.chart.settings);
     const xml = await response.text();
     if (typeof xml === "string" && xml.match(/<TSCreator/)) {
       // Call the xmlToJsonParser function here
       const jsonSettings = xmlToJson(xml);
       runInAction(() => (state.settingsJSON = jsonSettings)); // Save the parsed JSON to the state.settingsJSON
-      console.log("Parsed JSON Object:", jsonSettings);
+      console.log("Parsed JSON Object:\n", jsonSettings);
     } else {
       console.log(
         "WARNING: grabbed settings from server at url: ",
@@ -37,6 +39,8 @@ export const setChart = action("setChart", async (newval: number) => {
       console.log("The returned settingsXML was: ", xml);
     }
   }
+  console.log(state.settingsJSON);
+  console.log("---out settings---");
 });
 
 export const setAllTabs = action("setAllTabs", (newval: boolean) => {
@@ -54,6 +58,7 @@ export const generateChart = action("generateChart", async () => {
     settings: xmlSettings,
     datapacks: datapacks,
   });
+  console.log("body: \n", body);
   console.log("Sending settings to server...");
   const response = await fetcher("/charts", {
     method: "POST",
