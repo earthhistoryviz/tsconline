@@ -55,10 +55,12 @@ export const Time = observer(function Time() {
           style={{ marginBottom: '10px', width: '100%' }}
         />
         <FormControl style={{ marginBottom: '10px', width: '100%' }}>
-        <InputLabel>Stage Name</InputLabel> 
+          <InputLabel>Age</InputLabel> 
         <Select
+          type="number"
           value={state.settings.selectedStage} 
           onChange={(event) => actions.setSelectedStage(event.target.value as string)}
+          style={{ marginBottom: '10px', width: '100%' }}
         >
           {geologicalStages.map((stage) => (
             <MenuItem key={stage} value={stage}>
