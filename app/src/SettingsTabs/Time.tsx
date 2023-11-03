@@ -33,7 +33,7 @@ export const Time = observer(function Time() {
         navigate('/chart');
       };
     return (
-    
+      <div>
         <Box
         display="flex"
         flexDirection="column"
@@ -55,10 +55,10 @@ export const Time = observer(function Time() {
           style={{ marginBottom: '10px', width: '100%' }}
         />
         <FormControl style={{ marginBottom: '10px', width: '100%' }}>
-          <InputLabel>Stage Name</InputLabel> 
+        <InputLabel>Stage Name</InputLabel> 
         <Select
           label="Stage Name"
-          type="number"
+          type="string"
           value={state.settings.selectedStage} 
           onChange={(event) => actions.setSelectedStage(event.target.value as string)}
           style={{ marginBottom: '10px', width: '100%' }}
@@ -104,7 +104,22 @@ export const Time = observer(function Time() {
           Make your own chart
         </Button>
       </Box>
+
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+        <FormGroup>
+          <FormControlLabel control={<Checkbox />} label="Add MouseOver info (popups)" />
+          <FormControlLabel control={<Checkbox />} label="Enabled Global Priority Filtering for block columns" />
+          <FormControlLabel control={<Checkbox />} label="Enabled stage background for event columns" />
+          <FormControlLabel control={<Checkbox />} label="Enable legend for the chart" />
+          <FormControlLabel control={<Checkbox />} label="Do not auto-indent lithology patterns" />
+          <FormControlLabel control={<Checkbox />} label="Conserve Chart Space in Family Tree Plotting" />
+          <FormControlLabel control={<Checkbox />} label="Hide block labels based on priority" />
+        </FormGroup>
+      </div>
+      </div>
+      
     )
+    
 }
 
 
