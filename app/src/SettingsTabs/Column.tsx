@@ -12,6 +12,7 @@ import Checkbox from "@mui/material/Checkbox";
 import { context } from "../state";
 import { ColumnSetting } from "../state/state";
 import { Button, TextField } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 // Define the Accordion component outside the Column component
 const Accordion = styled((props: AccordionProps) => (
@@ -55,7 +56,7 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
 export const Column = observer(function Column() {
   const { state, actions } = useContext(context);
   const [expanded, setExpanded] = useState<string | false>("panel1");
-  const [columnName, setColumnName] = useState('');
+  const [columnName, setColumnName] = useState("");
   const handleChange =
     (panel: string) => (_event: React.SyntheticEvent, newExpanded: boolean) => {
       setExpanded(newExpanded ? panel : false);
@@ -95,10 +96,32 @@ export const Column = observer(function Column() {
       </div>
     );
   }
-  const handleColumnNameChange = (event: { target: { value: string; }; }) => {
+  const handleColumnNameChange = (event: { target: { value: string } }) => {
     setColumnName(event.target.value);
-    actions.updateColumnName(event.target.value)
-  }
+    actions.updateColumnName(event.target.value);
+  };
+  const navigate = useNavigate();
+  const handleButtonClick = () => {
+    actions.setTab(1);
+    actions.setAllTabs(true);
+
+    // Validate the user input
+    if (
+      isNaN(state.settings.topAge) ||
+      isNaN(state.settings.baseAge) ||
+      isNaN(state.settings.unitsPerMY)
+    ) {
+      // Handle invalid input, show error message, etc.
+      return;
+    }
+
+    actions.updateSettings();
+
+    actions.generateChart();
+
+    navigate("/chart");
+  };
+
   return (
     <div style={{ display: "flex", justifyContent: "center" }}>
       {/*component for selecting column*/}
@@ -123,12 +146,14 @@ export const Column = observer(function Column() {
       </div>
       {/*component for changing settings for a specific column*/}
       <div style={{ border: "1px solid black", width: "400px" }}>
-        <div style={{paddingTop: "20px"}}>
-        <Button variant="outlined">Font</Button>
+        <div style={{ paddingTop: "20px" }}>
+          <Button onClick={handleButtonClick} variant="outlined">
+            Generate the Chart!
+          </Button>
         </div>
-        <div style={{paddingTop: "20px"}}>
+        <div style={{ paddingTop: "20px" }}>
           Edit Title:
-          <br/>
+          <br />
           <TextField></TextField>
         </div>
       </div>
