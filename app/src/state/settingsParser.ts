@@ -2,7 +2,7 @@
 //                                          XML to JSON parser                                       //
 //-------------------------------------------------------------------------------------------------- //
 
-import { ColumnSetting } from "./state";
+import { ColumnSetting, state } from "./state";
 
 function processSettings(settingsNode: any): any {
   const settings: any = {};
@@ -124,6 +124,18 @@ function generateSettingsXml(settings: any, indent: string = ""): string {
   for (const key in settings) {
     if (Object.prototype.hasOwnProperty.call(settings, key)) {
       const value = settings[key];
+      //TODO: hard coded top age and base age for testing africa and nigeria datapack, change later
+      // if (key === "topAge") {
+      //   xml += `${indent}<setting name="${key}" source="text" unit="Ma">\n`;
+      //   xml += `${indent}${indent}<setting name="stage">Present (0 Ma)</setting>\n`;
+      //   xml += `${indent}${indent}<setting name="text">0.0</setting>\n`;
+      //   xml += `${indent}</setting>\n`;
+      // } else if (key === "baseAge") {
+      //   xml += `${indent}<setting name="${key}" source="text" unit="Ma">\n`;
+      //   xml += `${indent}${indent}<setting name="stage">Lt. Pleist. (0.129 Ma base</setting>\n`;
+      //   xml += `${indent}${indent}<setting name="text">10.0</setting>\n`;
+      //   xml += `${indent}</setting>\n`;
+      // }
       if (typeof value === "object") {
         xml += `${indent}<setting name="${key}" source="${value.source}" unit="${value.unit}">\n`;
         xml += `${indent}  <setting name="text">${value.text}</setting>\n`;
@@ -151,17 +163,11 @@ function generateFontsXml(fonts: any, indent: string): string {
 
 function generateColumnXml(column: any, indent: string): string {
   let xml = "";
-  //adds checked columns to the xml file
-  // for (const key in column) {
-  //   if (column[key].on === false) {
-  //     continue;
-  //   }
-  //   xml += `${indent}<column id="${key}">\n`;
-  //   xml +=  generateColumnXml(column[key].children, `${indent}  `);
-  //   xml += `${indent}</column>\n`;
-  // }
+  let columns = state.settingsTabs.columns;
   for (const key in column) {
+    //console.log(key);
     if (Object.prototype.hasOwnProperty.call(column, key)) {
+      //console.log(key);
       if (key === "id") {
         // Skip the 'id' element.
         continue;
@@ -176,23 +182,33 @@ function generateColumnXml(column: any, indent: string): string {
         xml += generateColumnXml(column[key], `${indent}  `);
         xml += `${indent}</column>\n`;
       } else {
-        xml += `${indent}<setting name="${key}">${column[key]}</setting>\n`;
+        if (`${key}` === "isSelected") {
+          //extract column name
+          let temp = column._id.substring(
+            column._id.indexOf(":") + 1,
+            column._id.length
+          );
+          console.log(temp);
+          //check if column is checked or not, and change the isSelected field to true or false
+          if (columns[temp]) {
+            console.log(columns[temp].on);
+            if (columns[temp].on) {
+              xml += `${indent}<setting name="${key}">true</setting>\n`;
+            } else {
+              xml += `${indent}<setting name="${key}">false</setting>\n`;
+            }
+          }
+        } else
+          xml += `${indent}<setting name="${key}">${column[key]}</setting>\n`;
       }
     }
   }
   return xml;
 }
-
 //the main parser
 export function jsonToXml(json: any, version: string = "PRO8.0"): string {
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
-
-  // if (json["settingsTabs"]["columns"]) {
-  //   console.log("---parsing columns---");
-  //   console.log(json["settingsTabs"]["columns"]);
-  //   xml += generateColumnXml(json["settingsTabs"]["columns"], "     ");
-  // }
 
   if (json["settings"]) {
     xml += '  <settings version="1.0">\n';
@@ -204,7 +220,9 @@ export function jsonToXml(json: any, version: string = "PRO8.0"): string {
     xml += `  <column id="${json["id"]}">\n`;
     xml += generateColumnXml(json, "    ");
     xml += "  </column>\n";
-  } else {
+  }
+  //generate columns
+  else {
     for (const key in json) {
       if (
         key !== "settings" &&
@@ -218,5 +236,30 @@ export function jsonToXml(json: any, version: string = "PRO8.0"): string {
     }
   }
   xml += "</TSCreator>\n";
+  //when the xml file is converted to json, the special characters in xml are
+  //changed back to their original characters. The next code is to change them back
+  //so the java app can have the correct xml format. Currently only works with the
+  //Africa Nigeria map, more edge cases might be considered with other datapacks.
+  xml = xml.replaceAll("&", "&amp;");
+  xml = xml.replaceAll(" < ", " &lt; ");
+  xml = xml.replaceAll(" > ", " &gt; ");
+  xml = xml.replaceAll(' "', " &quot;");
+  xml = xml.replaceAll("'", "&apos;");
+  for (let i = 5; i < xml.length; i++) {
+    if (
+      xml.at(i) === '"' &&
+      xml.at(i - 1) !== "=" &&
+      xml.at(i + 1) !== "/" &&
+      xml.at(i + 1) !== ">" &&
+      xml.at(i + 1) !== ">" &&
+      xml.at(i + 1) !== "?" &&
+      xml.at(i + 1) !== " "
+    ) {
+      xml = xml.substring(0, i) + "&quot;" + xml.substring(i + 1, xml.length);
+    }
+    if (xml.at(i) === "<" && xml.at(i - 1) === "(") {
+      xml = xml.substring(0, i) + "&lt;" + xml.substring(i + 1, xml.length);
+    }
+  }
   return xml;
 }

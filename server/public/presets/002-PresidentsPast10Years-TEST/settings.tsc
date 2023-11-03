@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<TSCreator version="PRO8.0">
+<TSCreator version="8.0">
     <settings version="1.0">
         <setting name="topAge" source="text" unit="Ma">
             <setting name="text">0.0</setting>
@@ -56,7 +56,7 @@
             <setting name="drawAgeLabel">false</setting>
             <setting name="drawUncertaintyLabel">false</setting>
             <setting name="isSelected">true</setting>
-            <setting name="width">342.0</setting>
+            <setting name="width">140.0</setting>
             <setting name="pad">0.2</setting>
             <setting name="age pad">2.0</setting>
             <setting name="backgroundColor"/>
@@ -118,7 +118,7 @@
                 <setting name="drawAgeLabel">false</setting>
                 <setting name="drawUncertaintyLabel">false</setting>
                 <setting name="isSelected">true</setting>
-                <setting name="width">302.0</setting>
+                <setting name="width">100.0</setting>
                 <setting name="pad">0.2</setting>
                 <setting name="age pad">2.0</setting>
                 <setting name="backgroundColor"/>
@@ -184,7 +184,7 @@
                     <setting name="drawTitle">true</setting>
                     <setting name="drawAgeLabel">false</setting>
                     <setting name="drawUncertaintyLabel">false</setting>
-                    <setting name="isSelected">true</setting>
+                    <setting name="isSelected">false</setting>
                     <setting name="width">200.0</setting>
                     <setting name="pad">0.2</setting>
                     <setting name="age pad">2.0</setting>

@@ -16,7 +16,7 @@ export type State = {
   settingsTabs: {
     selected: "time" | "font" | "column" | "mappoints";
     columns: ColumnSetting;
-    columnSelected: {name: string, parents: string[]} | null;
+    columnSelected: { name: string; parents: string[] } | null;
   };
   chart: ChartConfig | null;
   presets: ChartConfig[];
@@ -37,13 +37,15 @@ export const state = observable<State>({
   settingsTabs: {
     selected: "time",
     columns: {
-      "MA": { on: false, children: null, parents: [] },
-      "Standard Chronostratigraphy": { on: false, children: null, parents: [] },
-      "Planetary Time Scale": { on: false, children: null, parents: [] },
-      "Regional Stages": { on: false, children: null, parents: [] },
-      "Geomagnetic Polarity": { on: false, children: null, parents: [] },
-      "Marine Macrofossils": { on: false, children: null, parents: [] },
-      "Microfossils": { on: false, children: null, parents: [] },
+      MA: { on: true, children: null, parents: [] },
+      Presidents: { on: true, children: null, parents: [] },
+      Society: { on: true, children: null, parents: [] },
+      // "Standard Chronostratigraphy": { on: false, children: null, parents: [] },
+      // "Planetary Time Scale": { on: false, children: null, parents: [] },
+      // "Regional Stages": { on: false, children: null, parents: [] },
+      // "Geomagnetic Polarity": { on: false, children: null, parents: [] },
+      // "Marine Macrofossils": { on: false, children: null, parents: [] },
+      // "Microfossils": { on: false, children: null, parents: [] },
     },
     columnSelected: null,
   },
