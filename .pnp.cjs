@@ -45,6 +45,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [\
             ["@yarnpkg/sdks", "npm:3.0.0-rc.43"],\
             ["fastify", "npm:4.16.0"],\
+            ["fs", "npm:0.0.1-security"],\
             ["nvm", "npm:0.0.4"],\
             ["typescript", "patch:typescript@npm%3A5.0.4#~builtin<compat/typescript>::version=5.0.4&hash=b5f058"]\
           ],\
@@ -1740,6 +1741,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["cors", "npm:2.8.5"],\
             ["fastify", "npm:4.17.0"],\
             ["glob", "npm:10.2.3"],\
+            ["leaflet", "npm:1.9.4"],\
+            ["leaflet-draw", "npm:1.0.4"],\
             ["md5", "npm:2.3.0"],\
             ["mkdirp", "npm:3.0.1"],\
             ["nodemon", "npm:2.0.22"],\
@@ -3339,6 +3342,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"\
         }]\
       ]],\
+      ["fs", [\
+        ["npm:0.0.1-security", {\
+          "packageLocation": "./.yarn/cache/fs-npm-0.0.1-security-5060b47e87-53c6230e1f.zip/node_modules/fs/",\
+          "packageDependencies": [\
+            ["fs", "npm:0.0.1-security"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
       ["fs-minipass", [\
         ["npm:2.1.0", {\
           "packageLocation": "./.yarn/cache/fs-minipass-npm-2.1.0-501ef87306-1b8d128dae.zip/node_modules/fs-minipass/",\
@@ -3963,6 +3975,24 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [\
             ["keyv", "npm:4.5.2"],\
             ["json-buffer", "npm:3.0.1"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["leaflet", [\
+        ["npm:1.9.4", {\
+          "packageLocation": "./.yarn/cache/leaflet-npm-1.9.4-8d372b0fe6-bfc79f17a2.zip/node_modules/leaflet/",\
+          "packageDependencies": [\
+            ["leaflet", "npm:1.9.4"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["leaflet-draw", [\
+        ["npm:1.0.4", {\
+          "packageLocation": "./.yarn/cache/leaflet-draw-npm-1.0.4-0ca0ebcf65-57a424e01a.zip/node_modules/leaflet-draw/",\
+          "packageDependencies": [\
+            ["leaflet-draw", "npm:1.0.4"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -5763,6 +5793,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["tsconline-monorepo", "workspace:."],\
             ["@yarnpkg/sdks", "npm:3.0.0-rc.43"],\
             ["fastify", "npm:4.16.0"],\
+            ["fs", "npm:0.0.1-security"],\
             ["nvm", "npm:0.0.4"],\
             ["typescript", "patch:typescript@npm%3A5.0.4#~builtin<compat/typescript>::version=5.0.4&hash=b5f058"]\
           ],\
