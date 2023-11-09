@@ -16,6 +16,8 @@
     "@mui/joy": "^5.0.0-alpha.79",
     "@mui/material": "^5.12.0",
     "@tsconline/shared": "workspace:^",
+    "leaflet": "^1.9.4",
+    "leaflet-draw": "^1.0.4",
     "mobx": "^6.8.0",
     "mobx-react-lite": "^3.4.0",
     "node-fetch": "^3.3.0",
@@ -26,6 +28,8 @@
     "react-router-dom": "^6.8.1"
   },
   "devDependencies": {
+    "@types/leaflet": "^1.9.8",
+    "@types/leaflet-draw": "^1.0.10",
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
     "@vitejs/plugin-react": "^3.1.0",

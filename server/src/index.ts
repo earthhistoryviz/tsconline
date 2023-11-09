@@ -10,7 +10,7 @@ import { mkdirp } from 'mkdirp';
 import { assertChartRequest } from '@tsconline/shared';
 import { loadPresets } from './preset.js';
 import { AssetConfig, assertAssetConfig } from './types.js';
-import readAndDecryptFile from './decrypt';
+import  { decrypt, readAndDecryptFile } from './decrypt.js';
 
 const server = fastify({ 
   logger: false,
@@ -73,11 +73,11 @@ server.get('/presets', async (_request, reply) => {
 
 
 server.post('/charts', async (request, reply) => {
-  const key = Buffer.from('016481d57e032c18f750919bcd7dba2e', 'hex');
-  const iv = Buffer.from('2e918edf00c37c9c722512e35cf498a4', 'hex');
-  console.log('key: ', key);
-  console.log('iv: ', iv);
-  readAndDecryptFile('assets/datapacks/TimeTree of Life GTS2020.dpk', key, iv);
+  // const key = Buffer.from('016481d57e032c18f750919bcd7dba2e', 'hex');
+  // const iv = Buffer.from('2e918edf00c37c9c722512e35cf498a4', 'hex');
+  // console.log('key: ', key);
+  // console.log('iv: ', iv);
+  // readAndDecryptFile('assets/datapacks/TimeTree of Life GTS2020.dpk', key, iv);
 
   let chartrequest;
   try {
