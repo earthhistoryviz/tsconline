@@ -1710,13 +1710,9 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@mui/joy", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:5.0.0-alpha.79"],\
             ["@mui/material", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:5.12.2"],\
             ["@tsconline/shared", "workspace:shared"],\
-            ["@types/leaflet", "npm:1.9.8"],\
-            ["@types/leaflet-draw", "npm:1.0.10"],\
             ["@types/react", "npm:18.2.0"],\
             ["@types/react-dom", "npm:18.2.1"],\
             ["@vitejs/plugin-react", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:3.1.0"],\
-            ["leaflet", "npm:1.9.4"],\
-            ["leaflet-draw", "npm:1.0.4"],\
             ["mobx", "npm:6.9.0"],\
             ["mobx-react-lite", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:3.4.3"],\
             ["node-fetch", "npm:3.3.1"],\
@@ -1800,15 +1796,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"\
         }]\
       ]],\
-      ["@types/geojson", [\
-        ["npm:7946.0.13", {\
-          "packageLocation": "./.yarn/cache/@types-geojson-npm-7946.0.13-2734c2a29c-b3b68457c8.zip/node_modules/@types/geojson/",\
-          "packageDependencies": [\
-            ["@types/geojson", "npm:7946.0.13"]\
-          ],\
-          "linkType": "HARD"\
-        }]\
-      ]],\
       ["@types/http-cache-semantics", [\
         ["npm:4.0.1", {\
           "packageLocation": "./.yarn/cache/@types-http-cache-semantics-npm-4.0.1-90863c7a3e-1048aacf62.zip/node_modules/@types/http-cache-semantics/",\
@@ -1824,26 +1811,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [\
             ["@types/keyv", "npm:3.1.4"],\
             ["@types/node", "npm:18.14.0"]\
-          ],\
-          "linkType": "HARD"\
-        }]\
-      ]],\
-      ["@types/leaflet", [\
-        ["npm:1.9.8", {\
-          "packageLocation": "./.yarn/cache/@types-leaflet-npm-1.9.8-37444cf7c0-d6a33d5db0.zip/node_modules/@types/leaflet/",\
-          "packageDependencies": [\
-            ["@types/leaflet", "npm:1.9.8"],\
-            ["@types/geojson", "npm:7946.0.13"]\
-          ],\
-          "linkType": "HARD"\
-        }]\
-      ]],\
-      ["@types/leaflet-draw", [\
-        ["npm:1.0.10", {\
-          "packageLocation": "./.yarn/cache/@types-leaflet-draw-npm-1.0.10-990b0e7fed-be93daf3ce.zip/node_modules/@types/leaflet-draw/",\
-          "packageDependencies": [\
-            ["@types/leaflet-draw", "npm:1.0.10"],\
-            ["@types/leaflet", "npm:1.9.8"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -4006,24 +3973,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [\
             ["keyv", "npm:4.5.2"],\
             ["json-buffer", "npm:3.0.1"]\
-          ],\
-          "linkType": "HARD"\
-        }]\
-      ]],\
-      ["leaflet", [\
-        ["npm:1.9.4", {\
-          "packageLocation": "./.yarn/cache/leaflet-npm-1.9.4-8d372b0fe6-bfc79f17a2.zip/node_modules/leaflet/",\
-          "packageDependencies": [\
-            ["leaflet", "npm:1.9.4"]\
-          ],\
-          "linkType": "HARD"\
-        }]\
-      ]],\
-      ["leaflet-draw", [\
-        ["npm:1.0.4", {\
-          "packageLocation": "./.yarn/cache/leaflet-draw-npm-1.0.4-0ca0ebcf65-57a424e01a.zip/node_modules/leaflet-draw/",\
-          "packageDependencies": [\
-            ["leaflet-draw", "npm:1.0.4"]\
           ],\
           "linkType": "HARD"\
         }]\
