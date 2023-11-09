@@ -1299,6 +1299,8 @@ __metadata:
     cors: ^2.8.5
     fastify: ^4.17.0
     glob: ^10.2.3
+    leaflet: ^1.9.4
+    leaflet-draw: ^1.0.4
     md5: ^2.3.0
     mkdirp: ^3.0.1
     nodemon: ^2.0.22
@@ -2734,6 +2736,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fs@npm:^0.0.1-security":
+  version: 0.0.1-security
+  resolution: "fs@npm:0.0.1-security"
+  checksum: 53c6230e1faae9fa32c1df82c16a84b51b1243d20f3da2b64bd110bb472b73b9185169b703e008356e3cdc92d155088b617d9d39a63b5227a30b3621baad7f5d
+  languageName: node
+  linkType: hard
+
 "fsevents@npm:~2.3.2":
   version: 2.3.2
   resolution: "fsevents@npm:2.3.2"
@@ -3274,6 +3283,20 @@ __metadata:
   dependencies:
     json-buffer: 3.0.1
   checksum: 13ad58303acd2261c0d4831b4658451603fd159e61daea2121fcb15feb623e75ee328cded0572da9ca76b7b3ceaf8e614f1806c6b3af5db73c9c35a345259651
+  languageName: node
+  linkType: hard
+
+"leaflet-draw@npm:^1.0.4":
+  version: 1.0.4
+  resolution: "leaflet-draw@npm:1.0.4"
+  checksum: 57a424e01ad21b782638e04f2647bec26af351938aa196d61249b0f996c86cc5f1e73f7fd9b706bbe4d38f007e3f4ab923a772ee06c78d3dfde58225c05597f2
+  languageName: node
+  linkType: hard
+
+"leaflet@npm:^1.9.4":
+  version: 1.9.4
+  resolution: "leaflet@npm:1.9.4"
+  checksum: bfc79f17a247b37b92d84b3c78702501603392d6589fde606de4a825d11f1609d90225388834f2e0709dac327e52dcd4b4b9cc9fd3d590060c5b1e53b84fa6c6
   languageName: node
   linkType: hard
 
@@ -4828,6 +4851,7 @@ __metadata:
   dependencies:
     "@yarnpkg/sdks": ^3.0.0-rc.43
     fastify: ^4.13.0
+    fs: ^0.0.1-security
     nvm: ^0.0.4
     typescript: ^5.0.4
   languageName: unknown
