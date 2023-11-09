@@ -2,7 +2,7 @@
 import * as crypto from 'crypto';
 import { writeFile } from 'fs/promises';
 import * as fs from 'fs';
-function decrypt(file: Buffer, key: Buffer, iv: Buffer): Buffer {
+export function decrypt(file: Buffer, key: Buffer, iv: Buffer): Buffer {
   console.log(file);
   const algorithm = 'aes-128-cfb';
   const decipher = crypto.createDecipheriv(algorithm, key, iv);
@@ -10,7 +10,7 @@ function decrypt(file: Buffer, key: Buffer, iv: Buffer): Buffer {
   console.log(decrypted.toString('utf-8'));
   return decrypted
 }
-export default async function readAndDecryptFile(filePath: string, key: Buffer, iv: Buffer): Promise<void> {
+export async function readAndDecryptFile(filePath: string, key: Buffer, iv: Buffer): Promise<void> {
   let fileStream = fs.createReadStream(filePath, {
     encoding: 'utf-8'
   });

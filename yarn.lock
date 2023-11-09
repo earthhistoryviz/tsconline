@@ -1270,9 +1270,13 @@ __metadata:
     "@mui/joy": ^5.0.0-alpha.79
     "@mui/material": ^5.12.0
     "@tsconline/shared": "workspace:^"
+    "@types/leaflet": ^1.9.8
+    "@types/leaflet-draw": ^1.0.10
     "@types/react": ^18.0.27
     "@types/react-dom": ^18.0.10
     "@vitejs/plugin-react": ^3.1.0
+    leaflet: ^1.9.4
+    leaflet-draw: ^1.0.4
     mobx: ^6.8.0
     mobx-react-lite: ^3.4.0
     node-fetch: ^3.3.0
@@ -1299,8 +1303,6 @@ __metadata:
     cors: ^2.8.5
     fastify: ^4.17.0
     glob: ^10.2.3
-    leaflet: ^1.9.4
-    leaflet-draw: ^1.0.4
     md5: ^2.3.0
     mkdirp: ^3.0.1
     nodemon: ^2.0.22
@@ -1349,6 +1351,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/geojson@npm:*":
+  version: 7946.0.13
+  resolution: "@types/geojson@npm:7946.0.13"
+  checksum: b3b68457c89bc3f0445dc9eb54d07e6f89658672867c54989bc7f71f87d54e562195b291d43e1b84476493351271d7ccb9f5c6ab2012b29fbafbb0e8e43c4bca
+  languageName: node
+  linkType: hard
+
 "@types/http-cache-semantics@npm:*":
   version: 4.0.1
   resolution: "@types/http-cache-semantics@npm:4.0.1"
@@ -1362,6 +1371,24 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: e009a2bfb50e90ca9b7c6e8f648f8464067271fd99116f881073fa6fa76dc8d0133181dd65e6614d5fb1220d671d67b0124aef7d97dc02d7e342ab143a47779d
+  languageName: node
+  linkType: hard
+
+"@types/leaflet-draw@npm:^1.0.10":
+  version: 1.0.10
+  resolution: "@types/leaflet-draw@npm:1.0.10"
+  dependencies:
+    "@types/leaflet": "*"
+  checksum: be93daf3ce3f36575ca6ba9286c79098d0a991db942c0acdd3d8a9f2b8cfd31c36c11cb817e26189bcad6b937d8bcb5a6276b63e524afdb969094046e0733502
+  languageName: node
+  linkType: hard
+
+"@types/leaflet@npm:*, @types/leaflet@npm:^1.9.8":
+  version: 1.9.8
+  resolution: "@types/leaflet@npm:1.9.8"
+  dependencies:
+    "@types/geojson": "*"
+  checksum: d6a33d5db0bdf608957cd52701b17ee89e936034a8f0ab619b8e7ef70312a0da177837dd125756e83af036276a8b299cc724c9ffb3caa7d22893fea2791e1e13
   languageName: node
   linkType: hard
 
