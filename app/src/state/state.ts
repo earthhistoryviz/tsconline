@@ -37,7 +37,6 @@ export const state = observable<State>({
   settingsTabs: {
     selected: "time",
     columns: {
-      MA: { on: true, children: null, parents: [] },
       Presidents: { on: true, children: null, parents: [] },
       Society: { on: true, children: null, parents: [] },
       // "Standard Chronostratigraphy": { on: false, children: null, parents: [] },

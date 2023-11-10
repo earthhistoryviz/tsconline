@@ -18,6 +18,27 @@ export const setChart = action("setChart", async (newval: number) => {
     state.chart = null;
     return;
   }
+  let tempColumns: ColumnSetting | null;
+  function asdf(parents: string[], settings: any, stateSettings: any) {
+    for (const key in settings) {
+      if (String(key).includes("Column")) {
+        //console.log(String(key).split(":")[1]);
+        stateSettings[String(key).split(":")[1]] = {
+          on: true,
+          children: {},
+          parents: parents,
+        };
+        //console.log(stateSettings);
+        parents.push(String(key).split(":")[1]);
+        asdf(
+          parents,
+          settings[key],
+          stateSettings[String(key).split(":")[1]].children
+        );
+      }
+    }
+    parents.pop();
+  }
   state.chart = state.presets[newval]!;
   // Grab the settings for this chart if there are any:
   if (state.chart.settings) {
@@ -27,7 +48,16 @@ export const setChart = action("setChart", async (newval: number) => {
       // Call the xmlToJsonParser function here
       const jsonSettings = xmlToJson(xml);
       runInAction(() => (state.settingsJSON = jsonSettings)); // Save the parsed JSON to the state.settingsJSON
+
+      //start of column parser to display in app
       console.log("Parsed JSON Object:\n", jsonSettings);
+      let temp =
+        jsonSettings["class datastore.RootColumn:Chart Root"][
+          "class datastore.RootColumn:Chart Title"
+        ];
+      state.settingsTabs.columns = {};
+      asdf([], temp, state.settingsTabs.columns);
+      //console.log(state.settingsTabs.columns);
     } else {
       console.log(
         "WARNING: grabbed settings from server at url: ",

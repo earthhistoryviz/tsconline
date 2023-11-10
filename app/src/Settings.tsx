@@ -14,10 +14,7 @@ export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
   //test for Presidents column
-  let temp: ColumnSetting = {
-    Presidents: { on: false, children: null, parents: [] },
-    Society: { on: false, children: null, parents: [] },
-  };
+   
 
   //temporary code to test recursive functionality in column
   //doesn't work if it's put in the column section
@@ -81,7 +78,6 @@ export const Settings = observer(function Settings() {
   //       };
   //   }
   //}
-  actions.setSettingsColumns(temp);
 
   const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
     actions.setSettingTabsSelected(newValue);
