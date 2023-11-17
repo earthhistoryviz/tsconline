@@ -10,7 +10,6 @@ import { mkdirp } from 'mkdirp';
 import { assertChartRequest } from '@tsconline/shared';
 import { loadPresets } from './preset.js';
 import { AssetConfig, assertAssetConfig } from './types.js';
-import  { decrypt, readAndDecryptFile } from './decrypt.js';
 
 const server = fastify({ 
   logger: false,
@@ -70,14 +69,18 @@ server.register(cors, {
 server.get('/presets', async (_request, reply) => {
   reply.send(chartconfigs);
 })
+server.get('/map', async (request, reply) => {
+  try {
+    const contents = await readFile('public/geo/test.json').toString();
+    reply.send(contents);
+  } catch(e: any) {
+    console.log('ERROR: Failed to load geo json from test.json.  Error was: ', e);
+    process.exit(1);
+  }
+})
 
 
 server.post('/charts', async (request, reply) => {
-  // const key = Buffer.from('016481d57e032c18f750919bcd7dba2e', 'hex');
-  // const iv = Buffer.from('2e918edf00c37c9c722512e35cf498a4', 'hex');
-  // console.log('key: ', key);
-  // console.log('iv: ', iv);
-  // readAndDecryptFile('assets/datapacks/TimeTree of Life GTS2020.dpk', key, iv);
 
   let chartrequest;
   try {
