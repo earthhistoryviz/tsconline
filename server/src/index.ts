@@ -160,3 +160,9 @@ try {
   server.log.error(err);
   process.exit(1);
 }
+
+// //Endpoint to serve the timescale data
+// app.get('/timescale', (req: Request, res: Response) => {
+//   const timescaleData = readExcelFile('path.xlsx'); // what is path.xlsx from the GitHub repo?
+//   res.json({ stages: timescaleData });
+// });

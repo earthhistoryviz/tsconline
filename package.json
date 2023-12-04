@@ -27,7 +27,8 @@
     "fs": "^0.0.1-security",
     "nvm": "^0.0.4",
     "ts-node": "^10.9.2",
-    "typescript": "^5.0.4"
+    "typescript": "^5.0.4",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/eslint": "^8",
