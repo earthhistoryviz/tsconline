@@ -161,16 +161,38 @@ function generateFontsXml(fonts: any, indent: string): string {
   return xml;
 }
 
-function generateColumnXml(column: any, indent: string): string {
+function generateColumnXml(
+  column: any,
+  stateColumn: any | null,
+  parent: string,
+  indent: string
+): string {
   let xml = "";
-  let columns = state.settingsTabs.columns;
+  //let columns = state.settingsTabs.columns;
+  //console.log("start ", parent, column, stateColumn);
   for (const key in column) {
-    //console.log(key);
     if (Object.prototype.hasOwnProperty.call(column, key)) {
       //console.log(key);
       if (key === "id") {
         // Skip the 'id' element.
         continue;
+      } else if (`${key}` === "isSelected") {
+        //extract column name
+        let temp = column._id.substring(
+          column._id.indexOf(":") + 1,
+          column._id.length
+        );
+        //let temp = column._id.split(":")[1];
+        //check if column is checked or not, and change the isSelected field to true or false
+        if (stateColumn && !parent.includes("Chart") && parent != "") {
+          //console.log("inside on", column._id);
+          //console.log(stateColumn.on);
+          if (stateColumn.on) {
+            xml += `${indent}<setting name="${key}">true</setting>\n`;
+          } else {
+            xml += `${indent}<setting name="${key}">false</setting>\n`;
+          }
+        }
       } else if (key.startsWith("_")) {
         xml += `${indent}<${key.slice(1)}>${column[key]}</${key.slice(1)}>\n`;
       } else if (key === "fonts") {
@@ -178,28 +200,56 @@ function generateColumnXml(column: any, indent: string): string {
         xml += generateFontsXml(column[key], `${indent}  `);
         xml += `${indent}</fonts>\n`;
       } else if (typeof column[key] === "object") {
+        //console.log(key, "yoyo", column[key]);
         xml += `${indent}<column id="${key}">\n`;
-        xml += generateColumnXml(column[key], `${indent}  `);
-        xml += `${indent}</column>\n`;
-      } else {
-        if (`${key}` === "isSelected") {
-          //extract column name
-          let temp = column._id.substring(
-            column._id.indexOf(":") + 1,
-            column._id.length
+        //pass the full state of columns for first iteration
+        if (key == "class datastore.RootColumn:Chart Title") {
+          xml += generateColumnXml(
+            column[key],
+            stateColumn,
+            key,
+            `${indent}  `
           );
-          console.log(temp);
-          //check if column is checked or not, and change the isSelected field to true or false
-          if (columns[temp]) {
-            console.log(columns[temp].on);
-            if (columns[temp].on) {
-              xml += `${indent}<setting name="${key}">true</setting>\n`;
+        }
+        //recursively go down column settings
+        else {
+          let temp = column[key]._id.substring(
+            column[key]._id.indexOf(":") + 1,
+            column[key]._id.length
+          );
+          //console.log(temp);
+          if (stateColumn != null) {
+            //the first layer of columns ettings don't have children, so directly
+            //access the settings of the key
+            if (parent == "class datastore.RootColumn:Chart Title") {
+              xml += generateColumnXml(
+                column[key],
+                stateColumn[temp],
+                temp,
+                `${indent}  `
+              );
+            }
+            // reached end of column tree, no more children
+            if (
+              stateColumn.children == null ||
+              stateColumn.children == undefined
+            ) {
+              xml += generateColumnXml(column[key], null, temp, `${indent}  `);
             } else {
-              xml += `${indent}<setting name="${key}">false</setting>\n`;
+              //more children to be had
+              xml += generateColumnXml(
+                column[key],
+                stateColumn.children[temp],
+                temp,
+                `${indent}  `
+              );
             }
           }
-        } else
-          xml += `${indent}<setting name="${key}">${column[key]}</setting>\n`;
+        }
+
+        xml += `${indent}</column>\n`;
+      } else {
+        xml += `${indent}<setting name="${key}">${column[key]}</setting>\n`;
       }
     }
   }
@@ -218,7 +268,8 @@ export function jsonToXml(json: any, version: string = "PRO8.0"): string {
 
   if (json["id"]) {
     xml += `  <column id="${json["id"]}">\n`;
-    xml += generateColumnXml(json, "    ");
+    let temp = state.settingsTabs.columns;
+    xml += generateColumnXml(json, temp, "", "    ");
     xml += "  </column>\n";
   }
   //generate columns
@@ -227,10 +278,17 @@ export function jsonToXml(json: any, version: string = "PRO8.0"): string {
       if (
         key !== "settings" &&
         key !== "id" &&
+        key !== "settingsTabs" &&
         Object.prototype.hasOwnProperty.call(json, key)
       ) {
+        //console.log(key);
         xml += `  <column id="${key}">\n`;
-        xml += generateColumnXml(json[key], "    ");
+        xml += generateColumnXml(
+          json[key],
+          state.settingsTabs.columns,
+          "",
+          "    "
+        );
         xml += "  </column>\n";
       }
     }
