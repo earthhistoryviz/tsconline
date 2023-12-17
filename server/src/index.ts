@@ -34,6 +34,7 @@ try {
   const contents = JSON.parse((await readFile('assets/config.json')).toString());
   assertAssetConfig(contents);
   assetconfigs = contents;
+  
 } catch(e: any) {
   console.log('ERROR: Failed to load asset configs from assets/config.json.  Error was: ', e);
   process.exit(1);
