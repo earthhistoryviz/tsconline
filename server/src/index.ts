@@ -44,7 +44,7 @@ try {
     // Decrypting these datapacks:
     + `-d ${assetconfigs.activeDatapacks.join(" ")} `
     // Tell it where to send the datapacks
-    + `-dest ${assetconfigs.decryptedFilepath} `;
+    + `-dest ${assetconfigs.decryptionFilepath} `;
     console.log('Calling Java: ', cmd);
     exec(cmd, function (error, stdout, stderror) {
       console.log('Java finished, sending reply to browser');

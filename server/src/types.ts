@@ -2,7 +2,7 @@ export type AssetConfig = {
   activeJar: string,
   activeDatapacks: string[],
   decryptionJar: string,
-  decryptedFilepath: string,
+  decryptionFilepath: string,
 };
 
 export function assertAssetConfig(o: any): asserts o is AssetConfig {

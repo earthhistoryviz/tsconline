@@ -8,6 +8,7 @@ import { state, State } from "./state";
 import { fetcher, devSafeUrl } from "../util";
 import { xmlToJson, jsonToXml } from "./settingsParser";
 import { ColumnSetting } from "./state";
+import { ConstructionOutlined } from "@mui/icons-material";
 
 export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;
@@ -40,8 +41,17 @@ export const setChart = action("setChart", async (newval: number) => {
     parents.pop();
   }
   state.chart = state.presets[newval]!;
+  if (state.chart.decrypted) {
+    for (let i = 0; i < state.chart.decrypted.length; i++) {
+      console.log(state.chart.decrypted[i]);
+      const response = await fetcher(state.chart.decrypted[i]);
+      const text = await response.text();
+      console.log(text);
+    }
+  }
   // Grab the settings for this chart if there are any:
   if (state.chart.settings) {
+    console.log(state.chart.settings);
     const response = await fetcher(state.chart.settings);
     const xml = await response.text();
     if (typeof xml === "string" && xml.match(/<TSCreator/)) {
