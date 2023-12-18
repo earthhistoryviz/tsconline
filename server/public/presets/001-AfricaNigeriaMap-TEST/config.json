@@ -5,5 +5,8 @@
   "settings": "settings.tsc",
   "datapacks": [
     "assets/datapacks/TSC2020_InternalDatapack_encrypted_13Feb2021.txt"
+  ],
+  "decrypted": [
+    "assets/decrypted/TSC2020_InternalDatapack_encrypted_13Feb2021.txt"
   ]
 }

@@ -12,6 +12,8 @@ export function assertChartConfig(o) {
         throw 'ChartConfig must have a settings path string';
     if (!Array.isArray(o.datapacks))
         throw 'ChartConfig must have a datapacks array of datapack string names.  ';
+    if (!Array.isArray(o.decrypted))
+        throw 'ChartConfig must have a decrypted array of datapack string names.  ';
 }
 export function assertChartConfigArray(o) {
     if (!o || !Array.isArray(o))
