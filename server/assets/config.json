@@ -7,5 +7,5 @@
     "assets/datapacks/TimeTree_of_Life_GTS2020.dpk"
   ],
   "decryptionJar": "assets/jars/decrypt.jar",
-  "decryptionFilepath": "assets/decrypted"
+  "decryptionFilepath": "public/decrypted"
 }
