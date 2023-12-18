@@ -30,6 +30,19 @@ try {
     const contents = JSON.parse((await readFile('assets/config.json')).toString());
     assertAssetConfig(contents);
     assetconfigs = contents;
+    const decrypted_filepath = "assets/decrypted";
+    const cmd = `java -jar ${assetconfigs.decryptionJar} `
+        // Decrypting these datapacks:
+        + `-d ${assetconfigs.activeDatapacks.join(" ")} `
+        // Tell it where to send the datapacks
+        + `-dest ${decrypted_filepath} `;
+    console.log('Calling Java: ', cmd);
+    exec(cmd, function (error, stdout, stderror) {
+        console.log('Java finished, sending reply to browser');
+        console.log("Java error param: " + error);
+        console.log("Java stdout: " + stdout.toString());
+        console.log("Java stderr: " + stderror.toString());
+    });
 }
 catch (e) {
     console.log('ERROR: Failed to load asset configs from assets/config.json.  Error was: ', e);
