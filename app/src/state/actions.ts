@@ -41,35 +41,45 @@ export const setChart = action("setChart", async (newval: number) => {
     parents.pop();
   }
   state.chart = state.presets[newval]!;
-  await fetcher('/columns')
-  // Grab the settings for this chart if there are any:
-  if (state.chart.settings) {
-    console.log(state.chart.settings);
-    const response = await fetcher(state.chart.settings);
-    const xml = await response.text();
-    if (typeof xml === "string" && xml.match(/<TSCreator/)) {
-      // Call the xmlToJsonParser function here
-      const jsonSettings = xmlToJson(xml);
-      runInAction(() => (state.settingsJSON = jsonSettings)); // Save the parsed JSON to the state.settingsJSON
+  const res = await fetcher('/columns')
+  const reply = await res.json()
+  console.log("reply to /columns: ", reply)
+  //process decrypted file
+  // TODO handle more than one datapack
+  const temp = state.presets[newval]!.datapacks[0].split("/")
+  const filepath = "assets/decrypted/" + temp[temp.length - 1].split(".")[0] + ".txt"
+  console.log(filepath)
 
-      //start of column parser to display in app
-      console.log("Parsed JSON Object:\n", jsonSettings);
-      let temp =
-        jsonSettings["class datastore.RootColumn:Chart Root"][
-          "class datastore.RootColumn:Chart Title"
-        ];
-      state.settingsTabs.columns = {};
-      asdf([], temp, state.settingsTabs.columns);
-      //console.log(state.settingsTabs.columns);
-    } else {
-      console.log(
-        "WARNING: grabbed settings from server at url: ",
-        devSafeUrl(state.chart.settings),
-        ", but it was either not a string or did not have a <TSCreator tag in it"
-      );
-      console.log("The returned settingsXML was: ", xml);
-    }
-  }
+  state.settingsTabs.columns = reply[filepath]
+  console.log(state.settingsTabs.columns)
+  // Grab the settings for this chart if there are any:
+  // if (state.chart.settings) {
+  //   console.log(state.chart.settings);
+  //   const response = await fetcher(state.chart.settings);
+  //   const xml = await response.text();
+  //   if (typeof xml === "string" && xml.match(/<TSCreator/)) {
+  //     // Call the xmlToJsonParser function here
+  //     const jsonSettings = xmlToJson(xml);
+  //     runInAction(() => (state.settingsJSON = jsonSettings)); // Save the parsed JSON to the state.settingsJSON
+
+  //     //start of column parser to display in app
+  //     console.log("Parsed JSON Object:\n", jsonSettings);
+  //     let temp =
+  //       jsonSettings["class datastore.RootColumn:Chart Root"][
+  //         "class datastore.RootColumn:Chart Title"
+  //       ];
+  //     state.settingsTabs.columns = {};
+  //     asdf([], temp, state.settingsTabs.columns);
+  //     console.log(state.settingsTabs.columns);
+  //   } else {
+  //     console.log(
+  //       "WARNING: grabbed settings from server at url: ",
+  //       devSafeUrl(state.chart.settings),
+  //       ", but it was either not a string or did not have a <TSCreator tag in it"
+  //     );
+  //     console.log("The returned settingsXML was: ", xml);
+  //   }
+  // }
 });
 
 export const setAllTabs = action("setAllTabs", (newval: boolean) => {

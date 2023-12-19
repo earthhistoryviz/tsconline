@@ -89,7 +89,9 @@ server.get('/presets', async (_request, reply) => {
   reply.send(chartconfigs);
 })
 server.get('/columns', async (request, reply) => {
-  reply.send( await getColumns(assetconfigs.decryptionFilepath));
+  const repl =  await getColumns(assetconfigs.decryptionFilepath);
+  console.log("reply.send: ", repl)
+  reply.send(repl);
 });
 
 
