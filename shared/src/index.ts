@@ -6,7 +6,14 @@ export type ChartConfig = {
   description: string,
   settings: string, // path to base settings file
   datapacks: string[], // active datapack names
-  decrypted: string[]
+};
+
+export type ColumnSetting = {
+  [name: string]: {
+    on: boolean;
+    children: ColumnSetting | null;
+    parents: string[];
+  };
 };
 
 export function assertChartConfig(o: any): asserts o is ChartConfig {
@@ -16,7 +23,6 @@ export function assertChartConfig(o: any): asserts o is ChartConfig {
   if (typeof o.description !== 'string') throw 'ChartConfig must have a description string';
   if (typeof o.settings !== 'string') throw 'ChartConfig must have a settings path string';
   if (!Array.isArray(o.datapacks)) throw 'ChartConfig must have a datapacks array of datapack string names.  '
-  if (!Array.isArray(o.decrypted)) throw 'ChartConfig must have a decrypted array of decrypted datapack string names.  '
 }
 
 export function assertChartConfigArray(o: any): asserts o is ChartConfig[] {

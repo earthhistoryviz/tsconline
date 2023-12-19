@@ -10,7 +10,7 @@ import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import Typography from "@mui/material/Typography";
 import Checkbox from "@mui/material/Checkbox";
 import { context } from "../state";
-import { ColumnSetting } from "../state/state";
+import { ColumnSetting } from "@tsconline/shared";
 import { Button, TextField } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 

@@ -1,14 +1,7 @@
 import { observable } from "mobx";
 
-import type { ChartConfig } from "@tsconline/shared";
+import type { ChartConfig, ColumnSetting } from "@tsconline/shared";
 
-export type ColumnSetting = {
-  [name: string]: {
-    on: boolean;
-    children: ColumnSetting | null;
-    parents: string[];
-  };
-};
 
 export type State = {
   tab: number;

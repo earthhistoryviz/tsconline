@@ -7,7 +7,7 @@ import {
 import { state, State } from "./state";
 import { fetcher, devSafeUrl } from "../util";
 import { xmlToJson, jsonToXml } from "./settingsParser";
-import { ColumnSetting } from "./state";
+import { ColumnSetting } from "@tsconline/shared";
 import { ConstructionOutlined } from "@mui/icons-material";
 
 export const setTab = action("setTab", (newval: number) => {
@@ -41,14 +41,7 @@ export const setChart = action("setChart", async (newval: number) => {
     parents.pop();
   }
   state.chart = state.presets[newval]!;
-  if (state.chart.decrypted) {
-    for (let i = 0; i < state.chart.decrypted.length; i++) {
-      console.log(state.chart.decrypted[i]);
-      const response = await fetcher(state.chart.decrypted[i]);
-      const text = await response.text();
-      console.log(text);
-    }
-  }
+  await fetcher('/columns')
   // Grab the settings for this chart if there are any:
   if (state.chart.settings) {
     console.log(state.chart.settings);

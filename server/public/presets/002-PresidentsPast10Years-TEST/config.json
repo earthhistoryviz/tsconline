@@ -5,8 +5,5 @@
   "settings": "settings.tsc",
   "datapacks": [
     "assets/datapacks/default.txt"
-  ],
-  "decrypted": [
-    "/public/datapacks/default.txt"
   ]
 }

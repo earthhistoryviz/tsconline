@@ -2,7 +2,8 @@
 //                                          XML to JSON parser                                       //
 //-------------------------------------------------------------------------------------------------- //
 
-import { ColumnSetting, state } from "./state";
+import { state } from "./state";
+import { ColumnSetting } from "@tsconline/shared"
 
 function processSettings(settingsNode: any): any {
   const settings: any = {};
