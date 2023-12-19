@@ -4,7 +4,7 @@
     "assets/datapacks/default.txt",
     "assets/datapacks/TSC2020_InternalDatapack_encrypted_13Feb2021.txt",
     "assets/datapacks/MarineGenera_GTS2020_ENCRYPTED_23Jan2021.txt",
-    "assets/datapacks/TimeTree_of_Life_GTS2020.dpk"
+    "assets/datapacks/TimeTree of Life GTS2020.dpk"
   ],
   "decryptionJar": "assets/jars/decrypt.jar",
   "decryptionFilepath": "assets/decrypted"

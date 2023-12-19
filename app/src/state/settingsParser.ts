@@ -30,6 +30,7 @@ function processSettings(settingsNode: any): any {
       settings[settingName] = settingValue;
     }
   }
+  console.log(settings);
   return settings;
 }
 

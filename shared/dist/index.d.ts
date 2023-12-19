@@ -5,6 +5,13 @@ export type ChartConfig = {
     settings: string;
     datapacks: string[];
 };
+export type ColumnSetting = {
+  [name: string]: {
+    on: boolean;
+    children: ColumnSetting | null;
+    parents: string[];
+  };
+};
 export declare function assertChartConfig(o: any): asserts o is ChartConfig;
 export declare function assertChartConfigArray(o: any): asserts o is ChartConfig[];
 export type ChartConfigError = {
