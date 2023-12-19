@@ -6,14 +6,14 @@ import type { ColumnSetting } from '@tsconline/shared';
 export async function getColumns(decrypt_filepath: string): Promise<{[filepath: string]: ColumnSetting}> {
     const decrypt_paths = await glob(`${decrypt_filepath}/*`)
     function spliceArrayAtFirstSpecialMatch(array: string[]): string[] {
-        const regexQuotePattern = /"*"/;
-        const regexSpacePattern = /"\s*"/;
+        const regexQuotePattern = /".*"/;
+        // const regexSpacePattern = /\s+/;
         const metaColumnOffIndex = array.findIndex(item => item === "_METACOLUMN_OFF");
-        const spaceIndex = array.findIndex(item => regexSpacePattern.test(item))
+        // const spaceIndex = array.findIndex(item => regexSpacePattern.test(item))
         const quoteIndex = array.findIndex(item => regexQuotePattern.test(item));
 
         // Determine the first index where either condition is met
-        let indices = [metaColumnOffIndex, quoteIndex, spaceIndex].filter(index => index !== -1);
+        let indices = [metaColumnOffIndex, quoteIndex].filter(index => index !== -1);
         const firstIndex = indices.length > 0 ? Math.min(...indices) : -1;
         if (firstIndex !== -1) {
             return array.slice(0, firstIndex);
@@ -22,6 +22,10 @@ export async function getColumns(decrypt_filepath: string): Promise<{[filepath: 
         return array; // Return the original array if no special condition is met
     }
     function recursive(parents: string[], lastparent: string, children: string[], stateSettings: any, allEntries: any) {
+        const index = lastparent.indexOf("_METACOLUMN_OFF");
+        if (index != -1) {
+            lastparent = lastparent.slice(0, index)
+        }
         stateSettings[lastparent] = {
             on: true,
             children: {},
@@ -50,9 +54,7 @@ export async function getColumns(decrypt_filepath: string): Promise<{[filepath: 
                     allEntries
                 )
             }
-            delete allEntries[child]
         });
-        delete allEntries[lastparent]
         // parents.pop();
     }
     let fileSettingsMap: { [filePath: string]: ColumnSetting } = {};
@@ -71,7 +73,8 @@ export async function getColumns(decrypt_filepath: string): Promise<{[filepath: 
                 const childrenstring = line.split("\t:\t")[1];
                 if (!parent || !childrenstring) return;
 
-                const children = spliceArrayAtFirstSpecialMatch(childrenstring.split('\t'));
+                let children = spliceArrayAtFirstSpecialMatch(childrenstring.split('\t'));
+                children = children.filter(str => str.trim() !== "");
                 console.log(children)
                 allEntries.set(parent, children);
             });
