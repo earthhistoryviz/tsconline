@@ -1,5 +1,5 @@
 {
-  "activeJar": "assets/jars/TSCreatorBASE-8.1_16December2023.jar",
+  "activeJar": "assets/jars/TSCreatorBASE-8.0_29July2022.jar",
   "activeDatapacks": [
     "assets/datapacks/default.txt",
     "assets/datapacks/TSC2020_InternalDatapack_encrypted_13Feb2021.txt",
@@ -7,5 +7,5 @@
     "assets/datapacks/TimeTree_of_Life_GTS2020.dpk"
   ],
   "decryptionJar": "assets/jars/decrypt.jar",
-  "decryptionFilepath": "public/decrypted"
+  "decryptionFilepath": "assets/decrypted"
 }

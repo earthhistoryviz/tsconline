@@ -5,8 +5,5 @@
   "settings": "settings.tsc",
   "datapacks": [
     "assets/datapacks/TimeTree_of_Life_GTS2020.dpk"
-  ],
-  "decrypted": [
-    "/public/decrypted/TimeTree\\ of\\ Life\\ GTS2020.txt"
   ]
 }

@@ -10,6 +10,7 @@ import { mkdirp } from 'mkdirp';
 import { assertChartRequest } from '@tsconline/shared';
 import { loadPresets } from './preset.js';
 import { AssetConfig, assertAssetConfig } from './types.js';
+import { getColumns } from './parse.js'
 
 const server = fastify({ 
   logger: false,
@@ -87,15 +88,9 @@ server.register(cors, {
 server.get('/presets', async (_request, reply) => {
   reply.send(chartconfigs);
 })
-server.get('/map', async (request, reply) => {
-  try {
-    const contents = await readFile('public/geo/test.json').toString();
-    reply.send(contents);
-  } catch(e: any) {
-    console.log('ERROR: Failed to load geo json from test.json.  Error was: ', e);
-    process.exit(1);
-  }
-})
+server.get('/columns', async (request, reply) => {
+  reply.send( await getColumns(assetconfigs.decryptionFilepath));
+});
 
 
 server.post('/charts', async (request, reply) => {

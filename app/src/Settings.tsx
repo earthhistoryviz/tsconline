@@ -8,7 +8,7 @@ import { Column } from "./SettingsTabs/Column";
 import { Time } from "./SettingsTabs/Time";
 import { Font } from "./SettingsTabs/Font";
 import { MapPoint } from "./SettingsTabs/MapPoint";
-import { ColumnSetting } from "./state/state";
+import { ColumnSetting } from "@tsconline/shared";
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);

@@ -4,7 +4,6 @@ export type ChartConfig = {
     description: string;
     settings: string;
     datapacks: string[];
-    decrypted: string[];
 };
 export declare function assertChartConfig(o: any): asserts o is ChartConfig;
 export declare function assertChartConfigArray(o: any): asserts o is ChartConfig[];
