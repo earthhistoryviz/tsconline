@@ -6,7 +6,7 @@ import type { ColumnSetting } from '@tsconline/shared';
 export async function getColumns(decrypt_filepath: string): Promise<{[filepath: string]: ColumnSetting}> {
     const decrypt_paths = await glob(`${decrypt_filepath}/*`)
     function spliceArrayAtFirstSpecialMatch(array: string[]): string[] {
-        const regexQuotePattern = /".*"/;
+        const regexQuotePattern = /href=["'][^"']*["']/;
         // const regexSpacePattern = /\s+/;
         const metaColumnOffIndex = array.findIndex(item => item === "_METACOLUMN_OFF");
         // const spaceIndex = array.findIndex(item => regexSpacePattern.test(item))
@@ -18,8 +18,13 @@ export async function getColumns(decrypt_filepath: string): Promise<{[filepath: 
         if (firstIndex !== -1) {
             return array.slice(0, firstIndex);
         }
-    
-        return array; // Return the original array if no special condition is met
+        // if (array.length > 2 && array[array.length - 1] !== "" && array[array.length - 2] !== "") {
+        //     array = array.slice(0, -2);
+        // }
+        if (array[array.length - 1]!.trim() === "") {
+            return array.slice(0, -1)
+        }
+        return array;
     }
     function recursive(parents: string[], lastparent: string, children: string[], stateSettings: any, allEntries: any) {
         const index = lastparent.indexOf("_METACOLUMN_OFF");
@@ -68,13 +73,23 @@ export async function getColumns(decrypt_filepath: string): Promise<{[filepath: 
 
             // First, gather all parents and their direct children
             lines.forEach(line => {
-                if (!line || !line.includes("\t:\t")) return;
+                if (!line) return
+                if (!line.includes("\t:\t")) {
+                    if (line.includes(":") && line.split(":")[0]!.includes("age units")) {
+                        settings['MA'] = {
+                            on: true,
+                            children: {},
+                            parents: []
+                        }
+                    }
+                    return;
+                }
                 const parent = line.split("\t:\t")[0];
-                const childrenstring = line.split("\t:\t")[1];
+                let childrenstring = line.split("\t:\t")[1];
                 if (!parent || !childrenstring) return;
-
-                let children = spliceArrayAtFirstSpecialMatch(childrenstring.split('\t'));
-                children = children.filter(str => str.trim() !== "");
+                childrenstring = childrenstring!.split("\t\t")[0];
+                let children = spliceArrayAtFirstSpecialMatch(childrenstring!.split("\t"));
+                // children = children.filter(str => str.trim() !== "");
                 console.log(children)
                 allEntries.set(parent, children);
             });
