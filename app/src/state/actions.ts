@@ -46,7 +46,7 @@ export const setChart = action("setChart", async (newval: number) => {
   const datapacks = state.presets[newval]!.datapacks.map(data => data.split(".")[0] + ".txt")
   const res = await fetcher(`/columns/${datapacks.join(" ")}`)
   const reply = await res.json()
-  console.log("reply to /columns: ", JSON.stringify(reply, null, 2))
+  // console.log("reply to /columns: ", JSON.stringify(reply, null, 2))
 
   state.settingsTabs.columns = reply
   // Grab the settings for this chart if there are any:

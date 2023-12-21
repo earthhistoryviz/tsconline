@@ -33,7 +33,7 @@ export const Home = observer(function Home() {
               <img className="chart" src={devSafeUrl(state.chart.img)} />
             </div>
             <div className="details">
-              <h2 className="preset_name"style={{color: secondary}}>Preset Title: {state.chart.title} </h2>
+              <h2 className="preset_name"style={{color: secondary}}>{state.chart.title} </h2>
               <p className="description" style={{color: secondary}}>{state.chart.description}</p>
               <Button 
                 sx={{backgroundColor: primary_dark, color: "#FFFFFF"}}
