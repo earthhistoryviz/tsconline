@@ -11,6 +11,8 @@ import { assertChartRequest } from '@tsconline/shared';
 import { loadPresets } from './preset.js';
 import { AssetConfig, assertAssetConfig } from './types.js';
 import { getColumns } from './parse.js'
+import fs from 'fs';
+import path from 'path';
 
 const server = fastify({ 
   logger: false,
@@ -49,12 +51,12 @@ try {
     + `-d ${datapacks.join(" ")} `
     // Tell it where to send the datapacks
     + `-dest ${assetconfigs.decryptionDirectory} `;
-    console.log('Calling Java: ', cmd);
+    console.log('Calling Java decrypt.jar: ', cmd);
     exec(cmd, function (error, stdout, stderror) {
-      console.log('Java finished, sending reply to browser');
-      console.log("Java error param: " + error);
-      console.log("Java stdout: " + stdout.toString());
-      console.log("Java stderr: " + stderror.toString());
+      console.log('Decryption finished');
+      console.log("Decryption error param: " + error);
+      console.log("Decryption stdout: " + stdout.toString());
+      console.log("Decryption stderr: " + stderror.toString());
   });
 } catch (e: any) {
   console.log('ERROR: Failed to decrypt activeDatapacks in AssetConfig with error: ', e);
@@ -84,6 +86,27 @@ server.register(cors, {
   origin: "*",
   methods: ["GET", "POST" ],
 });
+server.post('/removecache', async (request, reply) => {
+  fs.readdir(assetconfigs.chartsDirectory, (err, files) => {
+    if (err) {
+      // handle error
+      console.log(err);
+      return;
+    }
+  
+    for (const file of files) {
+      fs.unlink(path.join(assetconfigs.chartsDirectory, file), err => {
+        if (err) {
+          // handle error
+          console.log(err);
+        } else {
+          console.log(`Deleted: ${file}`);
+        }
+      });
+    }
+  });
+  reply.send({message: "successfully removed cache"})
+})
 
 // Handle browser request for charts list:
 // TODO: make this a websocket so we can try to report progress
@@ -116,7 +139,8 @@ server.post<{Params: { usecache: string }}>('/charts/:usecache', async (request:
 
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
   const hash = md5(chartrequest.settings + chartrequest.datapacks.join(','));
-  const chartdir_urlpath = '/public/charts/'+hash;
+  console.log(`assetconfigs.chartsDirectory: ${assetconfigs.chartsDirectory}`)
+  const chartdir_urlpath = `/${assetconfigs.chartsDirectory}/${hash}`;
   const chart_urlpath = chartdir_urlpath+ '/chart.pdf';
 
   const chartdir_filepath = chartdir_urlpath.slice(1); // no leading slash
@@ -181,13 +205,25 @@ server.post<{Params: { usecache: string }}>('/charts/:usecache', async (request:
       console.log("Java stderr: " + stderror.toString());
       console.log('Sending reply to browser: ', { chartpath: chart_urlpath });
       reply.send({ chartpath: chart_urlpath });
+      // if cache is not to be used, then remove the chart we just created
       if (!usecache) {
-        const removeCache = `rm ${chart_filepath}`
-        exec(removeCache, function (error, stdout, stderror) {
-          console.log('removing currently cached file');
-          console.log("error param: " + error);
-          console.log("stdout: " + stdout.toString());
-          console.log("stderr: " + stderror.toString());
+        fs.readdir(chartdir_filepath, (err, files) => {
+          if (err) {
+            // handle error
+            console.log(err);
+            return;
+          }
+        
+          for (const file of files) {
+            fs.unlink(path.join(chartdir_filepath, file), err => {
+              if (err) {
+                // handle error
+                console.log(err);
+              } else {
+                console.log(`Deleted: ${file}`);
+              }
+            });
+          }
         });
       }
       resolve();
