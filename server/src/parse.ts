@@ -31,8 +31,11 @@ function spliceArrayAtFirstSpecialMatch(array: string[]): string[] {
     }
     return array;
 }
+
 /**
  * This is a recursive function meant to instantiate all columns.
+ * Datapack is encrypted as <parent>\t:\t<child>\t<child>\t<child>
+ * Where children could be parents later on
  */
 function recursive(parents: string[], lastparent: string, children: string[], stateSettings: any, allEntries: any) {
     //if somehow the data at this point is _METACOLUMN_OFF, remove it
@@ -69,8 +72,8 @@ function recursive(parents: string[], lastparent: string, children: string[], st
             )
         }
     });
-    // parents.pop();
 }
+
 /**
  * Get columns based on a decrypt_filepath that leads to the decrypted directory
  * and an amount of files in a string array that should pop up in that decrypted directory
@@ -80,10 +83,8 @@ function recursive(parents: string[], lastparent: string, children: string[], st
 export async function getDatapackInfo(decrypt_filepath: string, files: string[]): Promise<{columns: ColumnSetting, stages: GeologicalStages}> {
     // regular expression for all filenames
     const pattern = new RegExp(files.map(name => `${decrypt_filepath}/${name}`).join('|'));
-    // console.log("pattern: ", pattern)
     let decrypt_paths = await glob(`${decrypt_filepath}/*`);
     decrypt_paths = decrypt_paths.filter(path => pattern.test(path));
-    // console.log("result: ", decrypt_paths)
     let fileSettingsMap: { [filePath: string]: ColumnSetting } = {};
     let decryptedfiles: String = ""
     let settings: ColumnSetting = {}; 
@@ -126,8 +127,6 @@ export async function getDatapackInfo(decrypt_filepath: string, files: string[])
             if (!parent || !childrenstring) continue;
             childrenstring = childrenstring!.split("\t\t")[0];
             let children = spliceArrayAtFirstSpecialMatch(childrenstring!.split("\t"));
-            // children = children.filter(str => str.trim() !== "");
-            // console.log(children)
             allEntries.set(parent, children);
         }
         //if the entry is a child, add it to a set.
@@ -150,9 +149,12 @@ export async function getDatapackInfo(decrypt_filepath: string, files: string[])
     return {columns: settings, stages: geoStage};
 }
 
+/**
+ * Gets Age/Stage from the decrypted datapack
+ */
 function setAgeStage(lines: string[], index: number): {stages: GeologicalStages, index: number } {
     let geoStage: GeologicalStages = {}
-    let i = 1
+    let i = 0
     if (!lines[index + i]) return {stages: geoStage, index: index + i} 
     let line: String = lines[index + i]!
     while(line.startsWith("\t")) {

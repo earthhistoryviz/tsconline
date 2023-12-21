@@ -53,15 +53,35 @@ export const Time = observer(function Time() {
           style={{ marginBottom: '10px', width: '100%' }}
         /> */}
         <FormControl style={{ marginBottom: '10px', width: '100%' }}>
+        <InputLabel>Top Age/Stage Name</InputLabel> 
+        <Select
+          label="Top Age/Stage Name"
+          type="string"
+          value={state.settings.topStageKey} 
+          onChange={(event) => {
+            // console.log("event.target.value: " , event.target.value)
+            actions.setTopStage(`${event.target.value} (${state.settingsTabs.geologicalStages[event.target.value]} Ma top)`)
+            actions.setTopStageKey(event.target.value)
+          }}
+          style={{ marginBottom: '10px', width: '100%' }}
+        >
+          {Object.keys(state.settingsTabs.geologicalStages).map((key) => (
+            <MenuItem value={key} key={key}>
+              {`${key} (${state.settingsTabs.geologicalStages[key]} Ma top)`}
+            </MenuItem>
+          ))}
+        </Select>
+        </FormControl>
+        <FormControl style={{ marginBottom: '10px', width: '100%' }}>
         <InputLabel>Base Age/Stage Name</InputLabel> 
         <Select
           label="Base Age/Stage Name"
           type="string"
-          value={state.settings.baseStageName} 
+          value={state.settings.baseStageKey} 
           onChange={(event) => {
             // console.log("event.target.value: " , event.target.value)
-            actions.setBaseStageName(event.target.value)
-            actions.setBaseStageAge(state.settingsTabs.geologicalStages[event.target.value])
+            actions.setBaseStage(`${event.target.value} (${state.settingsTabs.geologicalStages[event.target.value]} Ma base)`)
+            actions.setBaseStageKey(event.target.value)
           }}
           style={{ marginBottom: '10px', width: '100%' }}
         >
