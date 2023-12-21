@@ -12,6 +12,11 @@ export type ColumnSetting = {
     parents: string[];
   };
 };
+
+export type GeologicalStages = {
+  [key: string]: number
+}
+
 export declare function assertChartConfig(o: any): asserts o is ChartConfig;
 export declare function assertChartConfigArray(o: any): asserts o is ChartConfig[];
 export type ChartConfigError = {

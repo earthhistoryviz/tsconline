@@ -10,7 +10,7 @@ import { mkdirp } from 'mkdirp';
 import { assertChartRequest } from '@tsconline/shared';
 import { loadPresets } from './preset.js';
 import { AssetConfig, assertAssetConfig } from './types.js';
-import { getColumns } from './parse.js'
+import { getDatapackInfo } from './parse.js'
 import { deleteDirectory } from './util.js' 
 
 const server = fastify({ 
@@ -99,10 +99,10 @@ server.get('/presets', async (_request, reply) => {
 
 // Handles getting the columns for the files specified in the url
 // Currently Returns ColumnSettings
-server.get<{Params: { files: string} }>('/columns/:files', async (request: FastifyRequest<{Params: { files: string}}>, reply) => {
+server.get<{Params: { files: string} }>('/datapackinfo/:files', async (request: FastifyRequest<{Params: { files: string}}>, reply) => {
   const { files } = request.params;
   console.log(files);
-  const repl =  await getColumns(assetconfigs.decryptionDirectory, files.split(" "));
+  const repl =  await getDatapackInfo(assetconfigs.decryptionDirectory, files.split(" "));
   reply.send(repl)
 });
 

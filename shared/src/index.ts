@@ -16,6 +16,10 @@ export type ColumnSetting = {
   };
 };
 
+export type GeologicalStages = {
+  [key: string]: number
+}
+
 export function assertChartConfig(o: any): asserts o is ChartConfig {
   if (typeof o !== 'object') throw 'ChartConfig must be an object';
   if (typeof o.img !== 'string') throw 'ChartConfig must have an img string';

@@ -1,6 +1,6 @@
 import { observable } from "mobx";
 
-import type { ChartConfig, ColumnSetting } from "@tsconline/shared";
+import type { ChartConfig, ColumnSetting, GeologicalStages} from "@tsconline/shared";
 
 
 export type State = {
@@ -10,6 +10,7 @@ export type State = {
     selected: "time" | "font" | "column" | "mappoints";
     columns: ColumnSetting;
     columnSelected: { name: string; parents: string[] } | null;
+    geologicalStages: GeologicalStages
   };
   chart: ChartConfig | null;
   presets: ChartConfig[];
@@ -17,9 +18,10 @@ export type State = {
   settingsXML: string;
   settingsJSON: any;
   settings: {
-    topAge: number;
-    selectedStage: string;
-    baseAge: number;
+    topStageNameYear: string;
+    topStageAge: number;
+    baseStageName: string;
+    baseStageAge: number;
     unitsPerMY: number;
   };
   useCache: boolean;
@@ -41,6 +43,7 @@ export const state = observable<State>({
       // "Microfossils": { on: false, children: null, parents: [] },
     },
     columnSelected: null,
+    geologicalStages: {} 
   },
   chart: null,
   presets: [],
@@ -48,9 +51,10 @@ export const state = observable<State>({
   settingsXML: "",
   settingsJSON: {},
   settings: {
-    topAge: 0,
-    selectedStage: "",
-    baseAge: 20,
+    topStageName: "",
+    topStageAge: 0,
+    baseStageName: "",
+    baseStageAge: 0,
     unitsPerMY: 2,
   },
   useCache: false,

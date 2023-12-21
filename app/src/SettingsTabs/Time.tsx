@@ -11,8 +11,6 @@ import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 
-const geologicalStages = ["Gelasian (1.8 Ma top)", "Piacenzian (2.58 Ma top)", "Zanclean (3.6 Ma top)", "Messinian (5.335 Ma top)", "Tortonian (7.25 Ma top)", "Serravallian (11.63 Ma top)", "Langhian (13.82 Ma top)", "Burdigalian (15.99 Ma top)"];
-
 export const Time = observer(function Time() {
     const navigate = useNavigate();
 
@@ -47,36 +45,33 @@ export const Time = observer(function Time() {
         margin="0 auto"
         marginTop="50px"
       >
-        <TextField
+        {/* <TextField
           label="Top Age (Ma)"
           type="number"
           value={state.settings.topAge}
           onChange={(event) => actions.setTopAge(parseFloat(event.target.value))}
           style={{ marginBottom: '10px', width: '100%' }}
-        />
+        /> */}
         <FormControl style={{ marginBottom: '10px', width: '100%' }}>
-        <InputLabel>Stage Name</InputLabel> 
+        <InputLabel>Base Age/Stage Name</InputLabel> 
         <Select
-          label="Stage Name"
+          label="Base Age/Stage Name"
           type="string"
-          value={state.settings.selectedStage} 
-          onChange={(event) => actions.setSelectedStage(event.target.value as string)}
+          value={state.settings.baseStageName} 
+          onChange={(event) => {
+            // console.log("event.target.value: " , event.target.value)
+            actions.setBaseStageName(event.target.value)
+            actions.setBaseStageAge(state.settingsTabs.geologicalStages[event.target.value])
+          }}
           style={{ marginBottom: '10px', width: '100%' }}
         >
-          {geologicalStages.map((stage) => (
-            <MenuItem key={stage} value={stage}>
-              {stage}
+          {Object.keys(state.settingsTabs.geologicalStages).map((key) => (
+            <MenuItem value={key} key={key}>
+              {`${key} (${state.settingsTabs.geologicalStages[key]} Ma base)`}
             </MenuItem>
           ))}
         </Select>
         </FormControl>
-        <TextField
-          label="Base Age (Ma)"
-          type="number"
-          value={state.settings.baseAge}
-          onChange={(event) => actions.setBaseAge(parseFloat(event.target.value))}
-          style={{ marginBottom: '10px', width: '100%' }}
-        />
         <TextField
           label="Vertical Scale (cm/Ma)"
           type="number"
