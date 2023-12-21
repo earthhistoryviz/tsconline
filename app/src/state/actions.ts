@@ -193,21 +193,17 @@ export const updateCheckboxSetting = action(
   }
 );
 
-export const setBaseStageAge = action("setBaseStageAge", (age: number) => {
-  state.settings.baseStageAge = age;
+export const setBaseStage = action("setBaseStage", (stage: string) => {
+  state.settings.baseStage = stage;
 });
-export const setTopStageAge = action("setTopStageAge", (age: number) => {
-  state.settings.topStageAge = age;
+export const setTopStage = action("setTopStage", (stage: string) => {
+  state.settings.topStage = stage;
 });
-export const setBaseStageName = action("setBaseStageName", (name: string) => {
-  state.settings.baseStageName = name;
+export const setTopStageKey = action("setTopStageKey", (key: string) => {
+  state.settings.topStageKey = key;
 });
-export const setTopStageName = action("setTopStageName", (name: string) => {
-  state.settings.topStageName = name;
-});
-
-export const setBaseAge = action((baseage: number) => {
-  state.settings.baseAge = baseage;
+export const setBaseStageKey = action("setBottomStageKey", (key: string) => {
+  state.settings.baseStageKey = key;
 });
 
 export const setUnitsPerMY = action((units: number) => {
