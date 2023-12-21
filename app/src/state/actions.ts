@@ -41,17 +41,14 @@ export const setChart = action("setChart", async (newval: number) => {
     parents.pop();
   }
   state.chart = state.presets[newval]!;
-  const res = await fetcher('/columns')
-  const reply = await res.json()
-  console.log("reply to /columns: ", reply)
   //process decrypted file
   // TODO handle more than one datapack
-  const temp = state.presets[newval]!.datapacks[0].split("/")
-  const filepath = "assets/decrypted/" + temp[temp.length - 1].split(".")[0] + ".txt"
-  console.log(filepath)
+  const datapacks = state.presets[newval]!.datapacks.map(data => data.split(".")[0] + ".txt")
+  const res = await fetcher(`/columns/${datapacks.join(" ")}`)
+  const reply = await res.json()
+  console.log("reply to /columns: ", JSON.stringify(reply, null, 2))
 
-  state.settingsTabs.columns = reply[filepath]
-  console.log(state.settingsTabs.columns)
+  state.settingsTabs.columns = reply
   // Grab the settings for this chart if there are any:
   // if (state.chart.settings) {
   //   console.log(state.chart.settings);

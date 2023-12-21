@@ -3,8 +3,12 @@ import { readFile } from 'fs/promises';
 import pmap from 'p-map';
 import type { ColumnSetting } from '@tsconline/shared';
 
-export async function getColumns(decrypt_filepath: string): Promise<{[filepath: string]: ColumnSetting}> {
-    const decrypt_paths = await glob(`${decrypt_filepath}/*`)
+export async function getColumns(decrypt_filepath: string, files: string[]): Promise<ColumnSetting> {
+    const pattern = new RegExp(files.map(name => `${decrypt_filepath}/${name}`).join('|'));
+    // console.log("pattern: ", pattern)
+    let decrypt_paths = await glob(`${decrypt_filepath}/*`);
+    decrypt_paths = decrypt_paths.filter(path => pattern.test(path));
+    // console.log("result: ", decrypt_paths)
     function spliceArrayAtFirstSpecialMatch(array: string[]): string[] {
         const regexQuotePattern = /href=["'][^"']*["']/;
         // const regexSpacePattern = /\s+/;
@@ -63,53 +67,52 @@ export async function getColumns(decrypt_filepath: string): Promise<{[filepath: 
         // parents.pop();
     }
     let fileSettingsMap: { [filePath: string]: ColumnSetting } = {};
+    let decryptedfiles: String = ""
+    let settings: ColumnSetting = {}; 
     await pmap(decrypt_paths, async (decryptedfile) => {
-        try {
-            const isChild: Set<string> = new Set();
-            let settings: ColumnSetting = {}; 
-            const contents = (await readFile(decryptedfile)).toString();
-            let lines = contents.split("\n");
-            const allEntries: Map<string, string[]> = new Map();
-
-            // First, gather all parents and their direct children
-            lines.forEach(line => {
-                if (!line) return
-                if (!line.includes("\t:\t")) {
-                    if (line.includes(":") && line.split(":")[0]!.includes("age units")) {
-                        settings['MA'] = {
-                            on: true,
-                            children: {},
-                            parents: []
-                        }
-                    }
-                    return;
-                }
-                const parent = line.split("\t:\t")[0];
-                let childrenstring = line.split("\t:\t")[1];
-                if (!parent || !childrenstring) return;
-                childrenstring = childrenstring!.split("\t\t")[0];
-                let children = spliceArrayAtFirstSpecialMatch(childrenstring!.split("\t"));
-                // children = children.filter(str => str.trim() !== "");
-                console.log(children)
-                allEntries.set(parent, children);
-            });
-            allEntries.forEach(children => {
-                children.forEach(child => {
-                    isChild.add(child);
-                });
-            });
-            allEntries.forEach((children, parent) => {
-                if (!isChild.has(parent)) { 
-                    recursive([], parent, children, settings,allEntries);
-                }
-            });
-            fileSettingsMap[decryptedfile] = settings;
-            return 1;
-            // console.log(JSON.stringify(settings, null, 2));
-        } catch (e: any) {
-            console.log('ERROR: failed to read columns for path '+decryptedfile+'.  Error was: ', e);
-            return 0; 
-        }
+        const contents = (await readFile(decryptedfile)).toString();
+        decryptedfiles = decryptedfiles + "\n" + contents;
     })
-    return fileSettingsMap;
+    try {
+        const isChild: Set<string> = new Set();
+        let lines = decryptedfiles.split("\n");
+        const allEntries: Map<string, string[]> = new Map();
+
+        // First, gather all parents and their direct children
+        lines.forEach(line => {
+            if (!line) return
+            if (!line.includes("\t:\t")) {
+                if (line.includes(":") && line.split(":")[0]!.includes("age units")) {
+                    settings['MA'] = {
+                        on: true,
+                        children: {},
+                        parents: []
+                    }
+                }
+                return;
+            }
+            const parent = line.split("\t:\t")[0];
+            let childrenstring = line.split("\t:\t")[1];
+            if (!parent || !childrenstring) return;
+            childrenstring = childrenstring!.split("\t\t")[0];
+            let children = spliceArrayAtFirstSpecialMatch(childrenstring!.split("\t"));
+            // children = children.filter(str => str.trim() !== "");
+            // console.log(children)
+            allEntries.set(parent, children);
+        });
+        allEntries.forEach(children => {
+            children.forEach(child => {
+                isChild.add(child);
+            });
+        });
+        allEntries.forEach((children, parent) => {
+            if (!isChild.has(parent)) { 
+                recursive([], parent, children, settings,allEntries);
+            }
+        });
+        // console.log(JSON.stringify(settings, null, 2));
+    } catch (e: any) {
+        console.log('ERROR: failed to read columns for path '+decryptedfiles+'.  Error was: ', e);
+    }
+    return settings;
 }

@@ -4,6 +4,6 @@
   "description": "data pack description",
   "settings": "settings.tsc",
   "datapacks": [
-    "assets/datapacks/default.txt"
+    "default.txt"
   ]
 }

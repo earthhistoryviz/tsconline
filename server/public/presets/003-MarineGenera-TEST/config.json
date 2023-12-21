@@ -4,6 +4,6 @@
   "description": "data pack description",
   "settings": "settings.tsc",
   "datapacks": [
-    "assets/datapacks/MarineGenera_GTS2020_ENCRYPTED_23Jan2021.txt"
+    "MarineGenera_GTS2020_ENCRYPTED_23Jan2021.txt"
   ]
 }

@@ -37,11 +37,12 @@ catch (e) {
     process.exit(1);
 }
 try {
+    const datapacks = assetconfigs.activeDatapacks.map(datapack => assetconfigs.datapacksDirectory + "/" + datapack);
     const cmd = `java -jar ${assetconfigs.decryptionJar} `
         // Decrypting these datapacks:
-        + `-d ${assetconfigs.activeDatapacks.join(" ")} `
+        + `-d ${datapacks.join(" ")} `
         // Tell it where to send the datapacks
-        + `-dest ${assetconfigs.decryptionFilepath} `;
+        + `-dest ${assetconfigs.decryptionDirectory} `;
     console.log('Calling Java: ', cmd);
     exec(cmd, function (error, stdout, stderror) {
         console.log('Java finished, sending reply to browser');
@@ -79,9 +80,11 @@ server.register(cors, {
 server.get('/presets', async (_request, reply) => {
     reply.send(chartconfigs);
 });
-server.get('/columns', async (request, reply) => {
-    const repl = await getColumns(assetconfigs.decryptionFilepath);
-    console.log("reply.send: ", repl);
+server.get('/columns/:files', async (request, reply) => {
+    const { files } = request.params;
+    console.log(files);
+    const repl = await getColumns(assetconfigs.decryptionDirectory, files.split(" "));
+    // console.log("reply.send: ", repl)
     reply.send(repl);
 });
 server.post('/charts', async (request, reply) => {
@@ -124,6 +127,7 @@ server.post('/charts', async (request, reply) => {
         reply.send({ error: 'ERROR: failed to save settings' });
         return;
     }
+    const datapacks = chartrequest.datapacks.map(datapack => assetconfigs.decryptionDirectory + " " + datapack);
     for (const datapack of chartrequest.datapacks) {
         if (!assetconfigs.activeDatapacks.includes(datapack)) {
             console.log('ERROR: datapack: ', datapack, ' is not included in activeDatapacks');
@@ -140,7 +144,7 @@ server.post('/charts', async (request, reply) => {
         // Add settings:
         + `-s ${settings_filepath} -ss ${settings_filepath} `
         // Add datapacks:
-        + `-d ${chartrequest.datapacks} `
+        + `-d ${datapacks} `
         // Tell it where to save chart
         + `-o ${chart_filepath} `;
     // Exec Java command and send final reply to browser
