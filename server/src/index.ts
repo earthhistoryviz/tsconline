@@ -94,7 +94,7 @@ server.get('/presets', async (_request, reply) => {
 
 // Handles getting the columns for the files specified in the url
 // Currently Returns ColumnSettings
-server.get<{Params: { files: string}}>('/columns/:files', async (request: FastifyRequest<{Params: { files: string}}>, reply) => {
+server.get<{Params: { files: string} }>('/columns/:files', async (request: FastifyRequest<{Params: { files: string}}>, reply) => {
   const { files } = request.params;
   console.log(files);
   const repl =  await getColumns(assetconfigs.decryptionDirectory, files.split(" "));
@@ -102,8 +102,8 @@ server.get<{Params: { files: string}}>('/columns/:files', async (request: Fastif
 });
 
 
-server.post('/charts', async (request, reply) => {
-
+server.post<{Params: { usecache: string }}>('/charts/:usecache', async (request: FastifyRequest<{Params: { usecache: string }}>, reply) => {
+  const usecache = request.params.usecache === 'true'
   let chartrequest;
   try {
     chartrequest = JSON.parse(request.body as string);
@@ -124,14 +124,17 @@ server.post('/charts', async (request, reply) => {
   const settings_filepath = chartdir_filepath + '/settings.tsc';
 
   // If this setting already has a chart, just return that
-  try {
-    await stat(chart_filepath);
-    console.log('Request for chart that already exists (hash:',hash,'.  Returning cached version');
-    reply.send({ chartpath: chart_urlpath }); // send the browser back the URL equivalent...
-    return;
-  } catch(e: any) { 
-    // Doesn't exist, so make one
-    console.log('Request for chart', chart_urlpath, ': chart does not exist, creating...');
+  if (usecache) {
+    console.log("using cache")
+    try {
+      await stat(chart_filepath);
+      console.log('Request for chart that already exists (hash:',hash,'.  Returning cached version');
+      reply.send({ chartpath: chart_urlpath }); // send the browser back the URL equivalent...
+      return;
+    } catch(e: any) { 
+      // Doesn't exist, so make one
+      console.log('Request for chart', chart_urlpath, ': chart does not exist, creating...');
+    }
   }
 
   // Create the directory and save the settings there for java:
@@ -144,7 +147,7 @@ server.post('/charts', async (request, reply) => {
     reply.send({ error: 'ERROR: failed to save settings' });
     return;
   }
-  const datapacks = chartrequest.datapacks.map(datapack => assetconfigs.decryptionDirectory + " " + datapack)
+  const datapacks = chartrequest.datapacks.map(datapack => assetconfigs.datapacksDirectory + "/" + datapack)
   for (const datapack of chartrequest.datapacks) {
     if (!assetconfigs.activeDatapacks.includes(datapack)) {
       console.log('ERROR: datapack: ',datapack,' is not included in activeDatapacks')
@@ -163,7 +166,7 @@ server.post('/charts', async (request, reply) => {
     // Add settings:
     + `-s ${settings_filepath} -ss ${settings_filepath} ` 
     // Add datapacks:
-    + `-d ${datapacks} `
+    + `-d ${datapacks.join(" ")} `
     // Tell it where to save chart
     + `-o ${chart_filepath} `;
 
@@ -178,10 +181,18 @@ server.post('/charts', async (request, reply) => {
       console.log("Java stderr: " + stderror.toString());
       console.log('Sending reply to browser: ', { chartpath: chart_urlpath });
       reply.send({ chartpath: chart_urlpath });
+      if (!usecache) {
+        const removeCache = `rm ${chart_filepath}`
+        exec(removeCache, function (error, stdout, stderror) {
+          console.log('removing currently cached file');
+          console.log("error param: " + error);
+          console.log("stdout: " + stdout.toString());
+          console.log("stderr: " + stderror.toString());
+        });
+      }
       resolve();
     });
   });
-
 });
 
 // Start the server...

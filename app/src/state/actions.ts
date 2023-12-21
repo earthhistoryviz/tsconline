@@ -20,26 +20,6 @@ export const setChart = action("setChart", async (newval: number) => {
     return;
   }
   let tempColumns: ColumnSetting | null;
-  function asdf(parents: string[], settings: any, stateSettings: any) {
-    for (const key in settings) {
-      if (String(key).includes("Column")) {
-        //console.log(String(key).split(":")[1]);
-        stateSettings[String(key).split(":")[1]] = {
-          on: true,
-          children: {},
-          parents: parents,
-        };
-        //console.log(stateSettings);
-        parents.push(String(key).split(":")[1]);
-        asdf(
-          parents,
-          settings[key],
-          stateSettings[String(key).split(":")[1]].children
-        );
-      }
-    }
-    parents.pop();
-  }
   state.chart = state.presets[newval]!;
   //process decrypted file
   // TODO handle more than one datapack
@@ -50,33 +30,30 @@ export const setChart = action("setChart", async (newval: number) => {
 
   state.settingsTabs.columns = reply
   // Grab the settings for this chart if there are any:
-  // if (state.chart.settings) {
-  //   console.log(state.chart.settings);
-  //   const response = await fetcher(state.chart.settings);
-  //   const xml = await response.text();
-  //   if (typeof xml === "string" && xml.match(/<TSCreator/)) {
-  //     // Call the xmlToJsonParser function here
-  //     const jsonSettings = xmlToJson(xml);
-  //     runInAction(() => (state.settingsJSON = jsonSettings)); // Save the parsed JSON to the state.settingsJSON
+  if (state.chart.settings) {
+    console.log(state.chart.settings);
+    const response = await fetcher(state.chart.settings);
+    const xml = await response.text();
+    if (typeof xml === "string" && xml.match(/<TSCreator/)) {
+      // Call the xmlToJsonParser function here
+      const jsonSettings = xmlToJson(xml);
+      runInAction(() => (state.settingsJSON = jsonSettings)); // Save the parsed JSON to the state.settingsJSON
 
-  //     //start of column parser to display in app
-  //     console.log("Parsed JSON Object:\n", jsonSettings);
-  //     let temp =
-  //       jsonSettings["class datastore.RootColumn:Chart Root"][
-  //         "class datastore.RootColumn:Chart Title"
-  //       ];
-  //     state.settingsTabs.columns = {};
-  //     asdf([], temp, state.settingsTabs.columns);
-  //     console.log(state.settingsTabs.columns);
-  //   } else {
-  //     console.log(
-  //       "WARNING: grabbed settings from server at url: ",
-  //       devSafeUrl(state.chart.settings),
-  //       ", but it was either not a string or did not have a <TSCreator tag in it"
-  //     );
-  //     console.log("The returned settingsXML was: ", xml);
-  //   }
-  // }
+      //start of column parser to display in app
+      // console.log("Parsed JSON Object:\n", jsonSettings);
+      let temp =
+        jsonSettings["class datastore.RootColumn:Chart Root"][
+          "class datastore.RootColumn:Chart Title"
+        ];
+    } else {
+      console.log(
+        "WARNING: grabbed settings from server at url: ",
+        devSafeUrl(state.chart.settings),
+        ", but it was either not a string or did not have a <TSCreator tag in it"
+      );
+      console.log("The returned settingsXML was: ", xml);
+    }
+  }
 });
 
 export const setAllTabs = action("setAllTabs", (newval: boolean) => {
@@ -85,7 +62,7 @@ export const setAllTabs = action("setAllTabs", (newval: boolean) => {
 
 export const generateChart = action("generateChart", async () => {
   let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
-  console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
+  // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
   var datapacks: string[] = [];
   if (state.chart != null) {
     datapacks = state.chart.datapacks;
@@ -95,7 +72,7 @@ export const generateChart = action("generateChart", async () => {
     datapacks: datapacks,
   });
   console.log("Sending settings to server...");
-  const response = await fetcher("/charts", {
+  const response = await fetcher(`/charts/${state.useCache}`, {
     method: "POST",
     body,
   });
@@ -332,6 +309,9 @@ export const toggleSettingsTabColumn = action(
 
 export const setSettingsColumns = action((temp: ColumnSetting) => {
   state.settingsTabs.columns = temp;
+});
+export const setUseCache = action((temp: boolean) => {
+  state.useCache = temp;
 });
 
 export const setcolumnSelected = action((name: string, parents: string[]) => {
