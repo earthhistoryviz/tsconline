@@ -1,7 +1,7 @@
 import { glob } from 'glob';
 import { readFile } from 'fs/promises';
 import pmap from 'p-map';
-import type { ColumnSetting } from '@tsconline/shared';
+import type { ColumnSetting, GeologicalStages } from '@tsconline/shared';
 
 /**
  * TODO:
@@ -77,7 +77,7 @@ function recursive(parents: string[], lastparent: string, children: string[], st
  * Have not checked edge cases in which a file doesn't show up, will only return any that are correct.
  * Maybe add functionality in the future to check if all the files exist
  */
-export async function getColumns(decrypt_filepath: string, files: string[]): Promise<ColumnSetting> {
+export async function getDatapackInfo(decrypt_filepath: string, files: string[]): Promise<{columns: ColumnSetting, stages: GeologicalStages}> {
     // regular expression for all filenames
     const pattern = new RegExp(files.map(name => `${decrypt_filepath}/${name}`).join('|'));
     // console.log("pattern: ", pattern)
@@ -87,6 +87,7 @@ export async function getColumns(decrypt_filepath: string, files: string[]): Pro
     let fileSettingsMap: { [filePath: string]: ColumnSetting } = {};
     let decryptedfiles: String = ""
     let settings: ColumnSetting = {}; 
+    let geoStage: GeologicalStages = {};
     //put all contents into one string for parsing
     await pmap(decrypt_paths, async (decryptedfile) => {
         const contents = (await readFile(decryptedfile)).toString();
@@ -98,27 +99,37 @@ export async function getColumns(decrypt_filepath: string, files: string[]): Pro
         const allEntries: Map<string, string[]> = new Map();
 
         // First, gather all parents and their direct children
-        lines.forEach(line => {
-            if (!line) return
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i]
+            if (!line) continue
             if (!line.includes("\t:\t")) {
                 if (line.includes(":") && line.split(":")[0]!.includes("age units")) {
+                    //create MA setting
                     settings['MA'] = {
                         on: true,
                         children: {},
                         parents: []
                     }
                 }
-                return;
+                //TODO assess if Age/Stage can only appear once
+                if (line.includes("Age/Stage")) {
+                    // setAgeStage will return where it stops
+                    // so the next iteration must start at where it stops
+                    const { stages, index } = setAgeStage(lines, i + 1)
+                    i = i + index - 1
+                    geoStage = {...geoStage, ...stages}
+                }
+                continue
             }
             const parent = line.split("\t:\t")[0];
             let childrenstring = line.split("\t:\t")[1];
-            if (!parent || !childrenstring) return;
+            if (!parent || !childrenstring) continue;
             childrenstring = childrenstring!.split("\t\t")[0];
             let children = spliceArrayAtFirstSpecialMatch(childrenstring!.split("\t"));
             // children = children.filter(str => str.trim() !== "");
             // console.log(children)
             allEntries.set(parent, children);
-        });
+        }
         //if the entry is a child, add it to a set.
         allEntries.forEach(children => {
             children.forEach(child => {
@@ -136,5 +147,25 @@ export async function getColumns(decrypt_filepath: string, files: string[]): Pro
     } catch (e: any) {
         console.log('ERROR: failed to read columns for path '+decryptedfiles+'.  Error was: ', e);
     }
-    return settings;
+    return {columns: settings, stages: geoStage};
+}
+
+function setAgeStage(lines: string[], index: number): {stages: GeologicalStages, index: number } {
+    let geoStage: GeologicalStages = {}
+    let i = 1
+    if (!lines[index + i]) return {stages: geoStage, index: index + i} 
+    let line: String = lines[index + i]!
+    while(line.startsWith("\t")) {
+       let items = line.split("\t")
+       //first item is ""
+       const name = items[1]
+       const value = items[2]
+       if (!name || !value) break
+       geoStage[name] = Number(value)
+       i += 1
+       if (!lines[index + i]) break
+       line = lines[index + i]!
+    }
+    const value = index + i
+    return {stages: geoStage, index: value};
 }
