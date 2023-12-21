@@ -22,17 +22,21 @@ export const NavBar = observer(function Navbar() {
             size="large"
             sx={{color: primary_light}}
             value={0}
-            onClick={() => actions.setTab(0)}
+            onClick={() => {
+              actions.setTab(0)
+              actions.setUseCache(true)
+            }}
           >
           <HomeIcon /> 
           </IconButton> 
         </Link>
-        { (!state.showAllTabs) 
-          ? <div onClick={() => actions.setTab(1)}></div> 
-          : <Tabs 
+        { state.showAllTabs && (
+          <Tabs 
               textColor="inherit" 
-              value={state.tab} 
-              onChange={(_e, value) => actions.setTab(value)} 
+              value={state.tab !== 0 ? state.tab : false} 
+              onChange={(_e, value) =>  {
+                actions.setTab(value)
+              }} 
               indicatorColor="secondary"
               TabIndicatorProps={{
                 style: {
@@ -45,7 +49,7 @@ export const NavBar = observer(function Navbar() {
               <Tab value={3} label="Datapack" to="/datapack" component={Link} />
               <Tab value={4} label="Help" to="/help" component={Link} />
             </Tabs>
-        }
+        )}
         <div style={{ flexGrow: 3 }} />
         <div style={{ flexGrow: 2 }} />
         <img src={TSCreatorLogo} width="4%" height="4%" />

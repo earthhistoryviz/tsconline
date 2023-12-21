@@ -11,8 +11,7 @@ import { assertChartRequest } from '@tsconline/shared';
 import { loadPresets } from './preset.js';
 import { AssetConfig, assertAssetConfig } from './types.js';
 import { getColumns } from './parse.js'
-import fs from 'fs';
-import path from 'path';
+import { deleteDirectory } from './util.js' 
 
 const server = fastify({ 
   logger: false,
@@ -87,24 +86,7 @@ server.register(cors, {
   methods: ["GET", "POST" ],
 });
 server.post('/removecache', async (request, reply) => {
-  fs.readdir(assetconfigs.chartsDirectory, (err, files) => {
-    if (err) {
-      // handle error
-      console.log(err);
-      return;
-    }
-  
-    for (const file of files) {
-      fs.unlink(path.join(assetconfigs.chartsDirectory, file), err => {
-        if (err) {
-          // handle error
-          console.log(err);
-        } else {
-          console.log(`Deleted: ${file}`);
-        }
-      });
-    }
-  });
+  deleteDirectory(assetconfigs.chartsDirectory)
   reply.send({message: "successfully removed cache"})
 })
 
@@ -199,6 +181,11 @@ server.post<{Params: { usecache: string }}>('/charts/:usecache', async (request:
   await new Promise<void>((resolve, _reject) => {
     console.log('Calling Java: ', cmd);
     exec(cmd, function (error, stdout, stderror) {
+      // if (error) {
+      //   console.log("Java error: " + error);
+      //   reply.send({ error: `Error generating chart with error: ${error}`});
+      //   return;
+      // }
       console.log('Java finished, sending reply to browser');
       console.log("Java error param: " + error);
       console.log("Java stdout: " + stdout.toString());
@@ -207,24 +194,7 @@ server.post<{Params: { usecache: string }}>('/charts/:usecache', async (request:
       reply.send({ chartpath: chart_urlpath });
       // if cache is not to be used, then remove the chart we just created
       if (!usecache) {
-        fs.readdir(chartdir_filepath, (err, files) => {
-          if (err) {
-            // handle error
-            console.log(err);
-            return;
-          }
-        
-          for (const file of files) {
-            fs.unlink(path.join(chartdir_filepath, file), err => {
-              if (err) {
-                // handle error
-                console.log(err);
-              } else {
-                console.log(`Deleted: ${file}`);
-              }
-            });
-          }
-        });
+        deleteDirectory(chartdir_filepath)
       }
       resolve();
     });

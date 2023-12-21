@@ -50,7 +50,7 @@ export const Home = observer(function Home() {
                 </Button>
                 <FormControlLabel control={
                 <Checkbox 
-                value={state.useCache}
+                checked={state.useCache}
                 onChange={(e) => {
                   actions.setUseCache(e.target.checked)
                 }}
