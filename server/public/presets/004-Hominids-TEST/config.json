@@ -4,6 +4,7 @@
   "description": "data pack description",
   "settings": "",
   "datapacks": [
-    "assets/datapacks/Hominids_wImages_GTS2020_Encrypted.dpk"
+    "Hominids_wImages_GTS2020_Encrypted.dpk",
+    "TimeTree_of_Life_GTS2020_ENCRYPTED_23Jan2020.dpk"
   ]
 }
