@@ -22,6 +22,7 @@ export type State = {
     baseAge: number;
     unitsPerMY: number;
   };
+  useCache: boolean;
 };
 
 export const state = observable<State>({
@@ -52,4 +53,5 @@ export const state = observable<State>({
     baseAge: 20,
     unitsPerMY: 2,
   },
+  useCache: false,
 });
