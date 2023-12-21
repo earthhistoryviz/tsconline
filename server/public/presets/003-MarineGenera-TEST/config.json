@@ -1,7 +1,7 @@
 {
   "img": "marine_genera.jpeg",
-  "title": "Maring Genera",
-  "description": "data pack description",
+  "title": "Marine Genera",
+  "description": "Large file",
   "settings": "settings.tsc",
   "datapacks": [
     "MarineGenera_GTS2020_ENCRYPTED_23Jan2021.txt"
