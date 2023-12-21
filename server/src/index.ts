@@ -40,6 +40,8 @@ try {
   console.log('ERROR: Failed to load asset configs from assets/config.json.  Error was: ', e);
   process.exit(1);
 }
+// this try will run the decryption jar to decrypt all files in the datapack folder
+// TOOO: if the datapack is not encrypted, handle it properly. potentially a problem for the decrypt.jar
 try {
   const datapacks = assetconfigs.activeDatapacks.map(datapack => assetconfigs.datapacksDirectory + "/" + datapack)
   const cmd = `java -jar ${assetconfigs.decryptionJar} `
@@ -89,11 +91,13 @@ server.register(cors, {
 server.get('/presets', async (_request, reply) => {
   reply.send(chartconfigs);
 })
+
+// Handles getting the columns for the files specified in the url
+// Currently Returns ColumnSettings
 server.get<{Params: { files: string}}>('/columns/:files', async (request: FastifyRequest<{Params: { files: string}}>, reply) => {
   const { files } = request.params;
   console.log(files);
   const repl =  await getColumns(assetconfigs.decryptionDirectory, files.split(" "));
-  // console.log("reply.send: ", repl)
   reply.send(repl)
 });
 
