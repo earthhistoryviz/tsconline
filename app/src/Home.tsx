@@ -48,13 +48,13 @@ export const Home = observer(function Home() {
                 >
                   Make your own chart 
                 </Button>
-                  <FormControlLabel control={
-                  <Checkbox 
-                  value={state.useCache}
-                  onChange={(e) => {
-                    actions.setUseCache(e.target.checked)
-                  }}
-                  />} label="Use Cache" />
+                <FormControlLabel control={
+                <Checkbox 
+                value={state.useCache}
+                onChange={(e) => {
+                  actions.setUseCache(e.target.checked)
+                }}
+                />} label="Use Cache" />
             </div>
           </div>
         }
@@ -67,6 +67,16 @@ export const Home = observer(function Home() {
             { displayPreset(chart) }
           </div>
         ))}
+      </div>
+      <div className="bottom_button">
+        <Button
+          sx={{backgroundColor: primary_dark, color: "#FFFFFF"}}
+          variant="contained" style={{width: "325px", height: "75px", marginLeft: "auto", marginRight: "auto"}} 
+          onClick={() => {
+            actions.removeCache();
+          }}>
+            Remove Cache
+        </Button>
       </div>
     </div>
   );

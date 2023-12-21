@@ -24,7 +24,9 @@ export const setChart = action("setChart", async (newval: number) => {
   //process decrypted file
   // TODO handle more than one datapack
   const datapacks = state.presets[newval]!.datapacks.map(data => data.split(".")[0] + ".txt")
-  const res = await fetcher(`/columns/${datapacks.join(" ")}`)
+  const res = await fetcher(`/columns/${datapacks.join(" ")}`, {
+    method: "GET"
+  })
   const reply = await res.json()
   // console.log("reply to /columns: ", JSON.stringify(reply, null, 2))
 
@@ -59,6 +61,12 @@ export const setChart = action("setChart", async (newval: number) => {
 export const setAllTabs = action("setAllTabs", (newval: boolean) => {
   state.showAllTabs = newval;
 });
+
+export const removeCache = action("removeCache", async () => {
+  await fetcher(`/removecache`, {
+    method: "POST",
+  });
+})
 
 export const generateChart = action("generateChart", async () => {
   let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
