@@ -18,7 +18,7 @@ export type State = {
   settingsJSON: any;
   settings: {
     topAge: number;
-    selectedStage: string | null;
+    selectedStage: string;
     baseAge: number;
     unitsPerMY: number;
   };
@@ -49,7 +49,7 @@ export const state = observable<State>({
   settingsJSON: {},
   settings: {
     topAge: 0,
-    selectedStage: null,
+    selectedStage: "",
     baseAge: 20,
     unitsPerMY: 2,
   },
