@@ -60,14 +60,14 @@ export const Time = observer(function Time() {
           value={state.settings.topStageKey} 
           onChange={(event) => {
             // console.log("event.target.value: " , event.target.value)
-            actions.setTopStage(`${event.target.value} (${state.settingsTabs.geologicalStages[event.target.value]} Ma top)`)
+            actions.setTopStage(`${event.target.value} (${state.settingsTabs.geologicalTopStages[event.target.value]} Ma top)`)
             actions.setTopStageKey(event.target.value)
           }}
           style={{ marginBottom: '10px', width: '100%' }}
         >
-          {Object.keys(state.settingsTabs.geologicalStages).map((key) => (
+          {Object.keys(state.settingsTabs.geologicalTopStages).map((key) => (
             <MenuItem value={key} key={key}>
-              {`${key} (${state.settingsTabs.geologicalStages[key]} Ma top)`}
+              {`${key} (${state.settingsTabs.geologicalTopStages[key]} Ma top)`}
             </MenuItem>
           ))}
         </Select>
@@ -80,14 +80,14 @@ export const Time = observer(function Time() {
           value={state.settings.baseStageKey} 
           onChange={(event) => {
             // console.log("event.target.value: " , event.target.value)
-            actions.setBaseStage(`${event.target.value} (${state.settingsTabs.geologicalStages[event.target.value]} Ma base)`)
+            actions.setBaseStage(`${event.target.value} (${state.settingsTabs.geologicalBaseStages[event.target.value]} Ma base)`)
             actions.setBaseStageKey(event.target.value)
           }}
           style={{ marginBottom: '10px', width: '100%' }}
         >
-          {Object.keys(state.settingsTabs.geologicalStages).map((key) => (
+          {Object.keys(state.settingsTabs.geologicalBaseStages).map((key) => (
             <MenuItem value={key} key={key}>
-              {`${key} (${state.settingsTabs.geologicalStages[key]} Ma base)`}
+              {`${key} (${state.settingsTabs.geologicalBaseStages[key]} Ma base)`}
             </MenuItem>
           ))}
         </Select>

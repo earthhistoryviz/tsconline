@@ -59,8 +59,17 @@ export const setChart = action("setChart", async (newval: number) => {
 });
 
 
-export const setGeologicalStages = action("setGeologicalStages", (newval: GeologicalStages) => {
-  state.settingsTabs.geologicalStages = newval;
+export const setGeologicalStages = action("setGeologicalStages", (stages: GeologicalStages) => {
+  let top = stages['TOP']
+  let geologicalTopStages: GeologicalStages = {"Present": 0}
+  Object.keys(stages).map((key) => {
+    geologicalTopStages[key] = top 
+    top = stages[key]
+  })
+  delete stages['TOP']
+  delete geologicalTopStages['TOP']
+  state.settingsTabs.geologicalTopStages = geologicalTopStages 
+  state.settingsTabs.geologicalBaseStages = stages
 });
 
 export const setAllTabs = action("setAllTabs", (newval: boolean) => {
@@ -121,7 +130,7 @@ export const settingsXML = action("settingsXML", (xml: string) => {
 
 //update
 export const updateSettings = action("updateSettings", () => {
-  const { topAge, baseAge, unitsPerMY } = state.settings;
+  const { topStage, baseStage, unitsPerMY } = state.settings;
   state.settingsJSON["settingsTabs"] = state.settingsTabs;
   const jsonSettings = state.settingsJSON;
   if ("settings" in jsonSettings) {
