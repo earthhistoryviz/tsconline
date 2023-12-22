@@ -19,7 +19,7 @@ export const Time = observer(function Time() {
         actions.setAllTabs(true);
       
         // Validate the user input
-        if (isNaN(state.settings.topAge) || isNaN(state.settings.baseAge) || isNaN(state.settings.unitsPerMY)) {
+        if (isNaN(state.settings.topStage) || isNaN(state.settings.baseStage) || isNaN(state.settings.unitsPerMY)) {
           // Handle invalid input, show error message, etc.
           return;
         }
@@ -62,10 +62,11 @@ export const Time = observer(function Time() {
             // console.log("event.target.value: " , event.target.value)
             actions.setTopStage(`${event.target.value} (${state.settingsTabs.geologicalTopStages[event.target.value]} Ma top)`)
             actions.setTopStageKey(event.target.value)
+            actions.updateSettings()
           }}
           style={{ marginBottom: '10px', width: '100%' }}
         >
-          {Object.keys(state.settingsTabs.geologicalTopStages).map((key) => (
+          {Object.keys(state.settingsTabs.geologicalTopStages).length > 1 && Object.keys(state.settingsTabs.geologicalTopStages).map((key) => (
             <MenuItem value={key} key={key}>
               {`${key} (${state.settingsTabs.geologicalTopStages[key]} Ma top)`}
             </MenuItem>
@@ -82,10 +83,11 @@ export const Time = observer(function Time() {
             // console.log("event.target.value: " , event.target.value)
             actions.setBaseStage(`${event.target.value} (${state.settingsTabs.geologicalBaseStages[event.target.value]} Ma base)`)
             actions.setBaseStageKey(event.target.value)
+            actions.updateSettings()
           }}
           style={{ marginBottom: '10px', width: '100%' }}
         >
-          {Object.keys(state.settingsTabs.geologicalBaseStages).map((key) => (
+          {state.settingsTabs.geologicalTopStages && Object.keys(state.settingsTabs.geologicalBaseStages).map((key) => (
             <MenuItem value={key} key={key}>
               {`${key} (${state.settingsTabs.geologicalBaseStages[key]} Ma base)`}
             </MenuItem>

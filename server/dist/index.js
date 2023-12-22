@@ -96,11 +96,13 @@ server.get('/datapackinfo/:files', async (request, reply) => {
     reply.send(repl);
 });
 server.post('/charts/:usecache', async (request, reply) => {
+    //TODO change this to be in request body
     const usecache = request.params.usecache === 'true';
     let chartrequest;
     try {
         chartrequest = JSON.parse(request.body);
         assertChartRequest(chartrequest);
+        console.log(chartrequest.settings);
     }
     catch (e) {
         console.log('ERROR: chart request is not valid.  Request was: ', chartrequest, '.  Error was: ', e);

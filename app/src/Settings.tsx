@@ -88,8 +88,8 @@ export const Settings = observer(function Settings() {
 
     // Validate the user input
     if (
-      isNaN(state.settings.topAge) ||
-      isNaN(state.settings.baseAge) ||
+      isNaN(state.settings.topStage) ||
+      isNaN(state.settings.baseStage) ||
       isNaN(state.settings.unitsPerMY)
     ) {
       // Handle invalid input, show error message, etc.
