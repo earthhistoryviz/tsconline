@@ -108,11 +108,13 @@ server.get<{Params: { files: string} }>('/datapackinfo/:files', async (request: 
 
 
 server.post<{Params: { usecache: string }}>('/charts/:usecache', async (request: FastifyRequest<{Params: { usecache: string }}>, reply) => {
+  //TODO change this to be in request body
   const usecache = request.params.usecache === 'true'
   let chartrequest;
   try {
     chartrequest = JSON.parse(request.body as string);
     assertChartRequest(chartrequest);
+    console.log(chartrequest.settings)
   } catch (e: any) {
     console.log('ERROR: chart request is not valid.  Request was: ', chartrequest, '.  Error was: ', e);
     reply.send({ error: 'ERROR: chart request is not valid.  Error was: '+e.toString() });

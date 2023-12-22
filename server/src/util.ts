@@ -1,30 +1,24 @@
 import fs from 'fs';
 import path from 'path';
-export function deleteDirectory(directory: string) {
-    fs.readdir(directory, (err, files) => {
-        if (err) {
-        // handle error
-        console.log(err);
-        return;
-        }
-    
-        for (const file of files) {
-            fs.unlink(path.join(directory, file), err => {
-                if (err) {
-                // handle error
-                console.log(err);
-                } else {
-                console.log(`Deleted: ${file}`);
-                }
-            });
-        }
-        fs.rmdir(directory, err => {
-        if (err) {
-            // handle error
-            console.log(err);
-        } else {
-            console.log(`Deleted: ${directory}`);
-        }
+export function deleteDirectory(directoryPath: string) {
+    // Check if the directory exists
+    if (fs.existsSync(directoryPath)) {
+        fs.readdirSync(directoryPath).forEach((file) => {
+            const currentPath = path.join(directoryPath, file);
+
+            // Check if the current path is a directory
+            if (fs.lstatSync(currentPath).isDirectory()) {
+                deleteDirectory(currentPath);
+            } else {
+                // Delete the file
+                fs.unlinkSync(currentPath);
+                console.log(`Deleted file: ${currentPath}`)
+            }
         });
-    });
+
+        // Delete the now-empty directory
+        fs.rmdirSync(directoryPath);
+    } else {
+        console.log("Directory not found: ", directoryPath);
+    }
 }

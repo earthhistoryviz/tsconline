@@ -135,8 +135,8 @@ export const updateSettings = action("updateSettings", () => {
   const jsonSettings = state.settingsJSON;
   if ("settings" in jsonSettings) {
     const settings = jsonSettings.settings as any;
-    settings["topAge"]["text"] = topAge.toString();
-    settings["baseAge"]["text"] = baseAge.toString();
+    settings["topAge"]["stage"] = topStage;
+    settings["baseAge"]["stage"] = baseStage;
     settings["unitsPerMY"] = (unitsPerMY * 30).toString();
   }
   if ("settingsTabs" in jsonSettings) {
