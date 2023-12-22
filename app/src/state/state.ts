@@ -10,7 +10,8 @@ export type State = {
     selected: "time" | "font" | "column" | "mappoints";
     columns: ColumnSetting;
     columnSelected: { name: string; parents: string[] } | null;
-    geologicalStages: GeologicalStages
+    geologicalTopStages: GeologicalStages
+    geologicalBaseStages: GeologicalStages
   };
   chart: ChartConfig | null;
   presets: ChartConfig[];
@@ -41,7 +42,8 @@ export const state = observable<State>({
       // "Microfossils": { on: false, children: null, parents: [] },
     },
     columnSelected: null,
-    geologicalStages: {} 
+    geologicalTopStages: {},
+    geologicalBaseStages: {} 
   },
   chart: null,
   presets: [],
