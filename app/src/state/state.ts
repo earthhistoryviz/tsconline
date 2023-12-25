@@ -20,7 +20,9 @@ export type State = {
   settingsJSON: any;
   settings: {
     topStage: string;
+    topStageKey: string;
     baseStage: string;
+    baseStageKey: string;
     unitsPerMY: number;
   };
   useCache: boolean;

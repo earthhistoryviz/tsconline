@@ -105,15 +105,6 @@ export const Column = observer(function Column() {
     actions.setTab(1);
     actions.setAllTabs(true);
 
-    // Validate the user input
-    if (
-      isNaN(state.settings.topAge) ||
-      isNaN(state.settings.baseAge) ||
-      isNaN(state.settings.unitsPerMY)
-    ) {
-      // Handle invalid input, show error message, etc.
-      return;
-    }
 
     actions.updateSettings();
 
