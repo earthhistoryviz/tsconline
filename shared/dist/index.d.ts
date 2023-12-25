@@ -6,17 +6,15 @@ export type ChartConfig = {
     datapacks: string[];
 };
 export type ColumnSetting = {
-  [name: string]: {
-    on: boolean;
-    children: ColumnSetting | null;
-    parents: string[];
-  };
+    [name: string]: {
+        on: boolean;
+        children: ColumnSetting | null;
+        parents: string[];
+    };
 };
-
 export type GeologicalStages = {
-  [key: string]: number
-}
-
+    [key: string]: number;
+};
 export declare function assertChartConfig(o: any): asserts o is ChartConfig;
 export declare function assertChartConfigArray(o: any): asserts o is ChartConfig[];
 export type ChartConfigError = {

@@ -7,7 +7,7 @@ import {
 import { state, State } from "./state";
 import { fetcher, devSafeUrl } from "../util";
 import { xmlToJson, jsonToXml } from "./settingsParser";
-import { ColumnSetting } from "@tsconline/shared";
+import { ColumnSetting, GeologicalStages } from "@tsconline/shared";
 import { ConstructionOutlined } from "@mui/icons-material";
 
 export const setTab = action("setTab", (newval: number) => {
@@ -131,6 +131,11 @@ export const settingsXML = action("settingsXML", (xml: string) => {
 //update
 export const updateSettings = action("updateSettings", () => {
   const { topStage, baseStage, unitsPerMY } = state.settings;
+  // Validate the user input
+  if (isNaN(unitsPerMY)) {
+    // Handle invalid input, show error message, etc.
+    return;
+  }
   state.settingsJSON["settingsTabs"] = state.settingsTabs;
   const jsonSettings = state.settingsJSON;
   if ("settings" in jsonSettings) {

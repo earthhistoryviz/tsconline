@@ -86,15 +86,6 @@ export const Settings = observer(function Settings() {
     actions.setTab(1);
     actions.setAllTabs(true);
 
-    // Validate the user input
-    if (
-      isNaN(state.settings.topStage) ||
-      isNaN(state.settings.baseStage) ||
-      isNaN(state.settings.unitsPerMY)
-    ) {
-      // Handle invalid input, show error message, etc.
-      return;
-    }
 
     actions.updateSettings();
 
