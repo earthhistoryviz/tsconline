@@ -1270,7 +1270,6 @@ __metadata:
     "@mui/joy": "npm:^5.0.0-alpha.79"
     "@mui/material": "npm:^5.12.0"
     "@tsconline/shared": "workspace:^"
-    "@types/node": "npm:^20.10.5"
     "@types/react": "npm:^18.0.27"
     "@types/react-dom": "npm:^18.0.10"
     "@vitejs/plugin-react": "npm:^3.1.0"
@@ -1375,15 +1374,6 @@ __metadata:
   version: 18.14.0
   resolution: "@types/node@npm:18.14.0"
   checksum: dddca46af4671977b711e5dcc46e98e764c9f51b591e97d0aae17abdd2e9afb2baa26211b8e4392f9fb6c4fffa8d86d693a6908b8c28b33668e3cc1e90e70c30
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:^20.10.5":
-  version: 20.10.5
-  resolution: "@types/node@npm:20.10.5"
-  dependencies:
-    undici-types: "npm:~5.26.4"
-  checksum: 4a378428d2c9f692b19801a5a3d20dc4c0ad5d4a3d103350f8b401af439941a9aa5efeadc8eb9db13c66c620318bc7f336abfc8934f82fd32c4a689d85068c6f
   languageName: node
   linkType: hard
 
@@ -4930,13 +4920,6 @@ __metadata:
   version: 2.0.5
   resolution: "undefsafe@npm:2.0.5"
   checksum: f42ab3b5770fedd4ada175fc1b2eb775b78f609156f7c389106aafd231bfc210813ee49f54483d7191d7b76e483bc7f537b5d92d19ded27156baf57592eb02cc
-  languageName: node
-  linkType: hard
-
-"undici-types@npm:~5.26.4":
-  version: 5.26.5
-  resolution: "undici-types@npm:5.26.5"
-  checksum: 0097779d94bc0fd26f0418b3a05472410408877279141ded2bd449167be1aed7ea5b76f756562cb3586a07f251b90799bab22d9019ceba49c037c76445f7cddd
   languageName: node
   linkType: hard
 

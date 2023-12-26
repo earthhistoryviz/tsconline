@@ -16,7 +16,6 @@
     "@mui/joy": "^5.0.0-alpha.79",
     "@mui/material": "^5.12.0",
     "@tsconline/shared": "workspace:^",
-    "@types/node": "^20.10.5",
     "mobx": "^6.8.0",
     "mobx-react-lite": "^3.4.0",
     "node-fetch": "^3.3.0",
