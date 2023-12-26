@@ -1,7 +1,7 @@
 
 // If you are running in dev mode, prefix URL's with the dev server URL:
 
-const devurl = process.env.REACT_APP_DEV_URL || "http://localhost:3000";
+const devurl = process.env.DEV_URL|| "http://localhost:3000";
 
 export function devSafeUrl(url: string) {
   if (!url.match(/^\//)) {
