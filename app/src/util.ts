@@ -15,8 +15,10 @@ export function devSafeUrl(url: string) {
   // browser from the node server instead of the vite dev server), then it 
   // will be false.
   if (import.meta.env.DEV) {
+    console.log(devurl + url)
     return devurl + url;
   }
+  console.log(url)
   return url;
 }
 

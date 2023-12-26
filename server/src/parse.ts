@@ -75,6 +75,7 @@ function recursive(parents: string[], lastparent: string, children: string[], st
 }
 
 /**
+ * Main Function...
  * Get columns based on a decrypt_filepath that leads to the decrypted directory
  * and an amount of files in a string array that should pop up in that decrypted directory
  * Have not checked edge cases in which a file doesn't show up, will only return any that are correct.

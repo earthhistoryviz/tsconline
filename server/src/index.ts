@@ -98,7 +98,7 @@ server.get('/presets', async (_request, reply) => {
 })
 
 // Handles getting the columns for the files specified in the url
-// Currently Returns ColumnSettings
+// Currently Returns ColumnSettings and Stages if they exist
 server.get<{Params: { files: string} }>('/datapackinfo/:files', async (request: FastifyRequest<{Params: { files: string}}>, reply) => {
   const { files } = request.params;
   console.log(files);
