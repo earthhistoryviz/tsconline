@@ -28,5 +28,6 @@ export async function fetcher(...args: Parameters<typeof fetch>): ReturnType<typ
       args[0] = devSafeUrl(args[0]);
     }
   }
+  console.log(args[0])
   return fetch(...args);
 }
