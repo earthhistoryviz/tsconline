@@ -15,12 +15,12 @@ export function devSafeUrl(url: string) {
   // are running from the built files in dist/ (i.e. they are served to the 
   // browser from the node server instead of the vite dev server), then it 
   // will be false.
-  if (import.meta.env.DEV) {
+  // if (import.meta.env.DEV) {
     console.log(devurl + url)
     return devurl + url;
-  }
-  console.log(url)
-  return url;
+  // }
+  // console.log(url)
+  // return url;
 }
 
 export async function fetcher(...args: Parameters<typeof fetch>): ReturnType<typeof fetch> {
