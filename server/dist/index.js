@@ -102,7 +102,7 @@ server.post('/charts/:usecache', async (request, reply) => {
     try {
         chartrequest = JSON.parse(request.body);
         assertChartRequest(chartrequest);
-        console.log(chartrequest.settings);
+        // console.log(chartrequest.settings)
     }
     catch (e) {
         console.log('ERROR: chart request is not valid.  Request was: ', chartrequest, '.  Error was: ', e);
