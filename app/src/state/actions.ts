@@ -27,7 +27,8 @@ export const setChart = action("setChart", async (newval: number) => {
     method: "GET"
   })
   const {columns, stages} = await res.json()
-  console.log("reply to /columns: ", JSON.stringify(res, null, 2))
+  console.log("reply of columns: ", JSON.stringify(columns, null, 2))
+  console.log("reply of stages: ", JSON.stringify(stages, null, 2))
 
   state.settingsTabs.columns = columns 
   setGeologicalStages(stages)
