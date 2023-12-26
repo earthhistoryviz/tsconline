@@ -106,7 +106,7 @@ export async function getDatapackInfo(decrypt_filepath: string, files: string[])
             if (!line) continue
             if (!line.includes("\t:\t")) {
                 if (line.includes(":") && line.split(":")[0]!.includes("age units")) {
-                    //create MA setting
+                    //create MA setting since this doesn't follow the standard format of "\t:\t"
                     settings['MA'] = {
                         on: true,
                         children: {},
@@ -137,7 +137,7 @@ export async function getDatapackInfo(decrypt_filepath: string, files: string[])
             });
         });
         // only iterate over parents. if we encounter one that is a child, the recursive function
-        // should have already process it.
+        // should have already processed it.
         allEntries.forEach((children, parent) => {
             if (!isChild.has(parent)) { 
                 recursive([], parent, children, settings,allEntries);

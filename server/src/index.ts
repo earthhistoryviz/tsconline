@@ -132,17 +132,20 @@ server.post<{Params: { usecache: string }}>('/charts/:usecache', async (request:
   const settings_filepath = chartdir_filepath + '/settings.tsc';
 
   // If this setting already has a chart, just return that
-  if (usecache) {
-    console.log("using cache")
-    try {
-      await stat(chart_filepath);
+  try {
+    await stat(chart_filepath);
+    if (!usecache) {
+      console.log("Deleting chart filepath since it already exists and cache is not being used")
+      deleteDirectory(chart_filepath)
+    } else {
+      console.log("using cache")
       console.log('Request for chart that already exists (hash:',hash,'.  Returning cached version');
       reply.send({ chartpath: chart_urlpath }); // send the browser back the URL equivalent...
       return;
-    } catch(e: any) { 
-      // Doesn't exist, so make one
-      console.log('Request for chart', chart_urlpath, ': chart does not exist, creating...');
     }
+  } catch(e: any) { 
+    // Doesn't exist, so make one
+    console.log('Request for chart', chart_urlpath, ': chart does not exist, creating...');
   }
 
   // Create the directory and save the settings there for java:
@@ -193,14 +196,10 @@ server.post<{Params: { usecache: string }}>('/charts/:usecache', async (request:
       console.log("Java stdout: " + stdout.toString());
       console.log("Java stderr: " + stderror.toString());
       console.log('Sending reply to browser: ', { chartpath: chart_urlpath });
-      reply.send({ chartpath: chart_urlpath });
-      // if cache is not to be used, then remove the chart we just created
-      if (!usecache) {
-        deleteDirectory(chartdir_filepath)
-      }
       resolve();
     });
   });
+  reply.send({ chartpath: chart_urlpath });
 });
 
 // Start the server...

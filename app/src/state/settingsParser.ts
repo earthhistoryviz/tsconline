@@ -54,6 +54,9 @@ function processColumn(node: any): any {
   if (nodeAttributes.length > 0) {
     for (let i = 0; i < nodeAttributes.length; i++) {
       const attribute = nodeAttributes[i];
+      if (attribute.value.includes("INIOPTERYGIA")) {
+        console.log(`attribute.name: ${attribute.name}\nattribute.value: ${attribute.value}`)
+      }
       result[`_${attribute.name}`] = attribute.value;
     }
   }
@@ -172,9 +175,14 @@ function generateColumnXml(
   let xml = "";
   //let columns = state.settingsTabs.columns;
   //console.log("start ", parent, column, stateColumn);
-  for (const key in column) {
+  for (let key in column) {
     if (Object.prototype.hasOwnProperty.call(column, key)) {
       //console.log(key);
+      key = key.replaceAll("\"", "quot&;")
+      key = key.replaceAll("\&", "&amp;");
+      key = key.replaceAll("\<", " &lt; ");
+      key = key.replaceAll("\>", " &gt; ");
+      key = key.replaceAll("\'", "&apos;");
       if (key === "id") {
         // Skip the 'id' element.
         continue;
@@ -300,26 +308,26 @@ export function jsonToXml(json: any, version: string = "PRO8.0"): string {
   //changed back to their original characters. The next code is to change them back
   //so the java app can have the correct xml format. Currently only works with the
   //Africa Nigeria map, more edge cases might be considered with other datapacks.
-  xml = xml.replaceAll("&", "&amp;");
-  xml = xml.replaceAll(" < ", " &lt; ");
-  xml = xml.replaceAll(" > ", " &gt; ");
-  xml = xml.replaceAll(' "', " &quot;");
-  xml = xml.replaceAll("'", "&apos;");
-  for (let i = 5; i < xml.length; i++) {
-    if (
-      xml.at(i) === '"' &&
-      xml.at(i - 1) !== "=" &&
-      xml.at(i + 1) !== "/" &&
-      xml.at(i + 1) !== ">" &&
-      xml.at(i + 1) !== ">" &&
-      xml.at(i + 1) !== "?" &&
-      xml.at(i + 1) !== " "
-    ) {
-      xml = xml.substring(0, i) + "&quot;" + xml.substring(i + 1, xml.length);
-    }
-    if (xml.at(i) === "<" && xml.at(i - 1) === "(") {
-      xml = xml.substring(0, i) + "&lt;" + xml.substring(i + 1, xml.length);
-    }
-  }
+  // xml = xml.replaceAll("&", "&amp;");
+  // xml = xml.replaceAll(" < ", " &lt; ");
+  // xml = xml.replaceAll(" > ", " &gt; ");
+  // xml = xml.replaceAll(' "', " &quot;");
+  // xml = xml.replaceAll("'", "&apos;");
+  // for (let i = 5; i < xml.length; i++) {
+  //   if (
+  //     xml.at(i) === '"' &&
+  //     xml.at(i - 1) !== "=" &&
+  //     xml.at(i + 1) !== "/" &&
+  //     xml.at(i + 1) !== ">" &&
+  //     xml.at(i + 1) !== ">" &&
+  //     xml.at(i + 1) !== "?" &&
+  //     xml.at(i + 1) !== " "
+  //   ) {
+  //     xml = xml.substring(0, i) + "&quot;" + xml.substring(i + 1, xml.length);
+  //   }
+  //   if (xml.at(i) === "<" && xml.at(i - 1) === "(") {
+  //     xml = xml.substring(0, i) + "&lt;" + xml.substring(i + 1, xml.length);
+  //   }
+  // }
   return xml;
 }
