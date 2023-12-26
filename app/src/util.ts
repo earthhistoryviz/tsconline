@@ -1,7 +1,8 @@
 
 // If you are running in dev mode, prefix URL's with the dev server URL:
 
-const devurl = "http://localhost:3000";
+const devurl = process.env.REACT_APP_DEV_URL || "http://localhost:3000";
+
 export function devSafeUrl(url: string) {
   if (!url.match(/^\//)) {
     console.log('WARNING: you did not use an absolute path for your URL in a request to fetcher (i.e. one starting with a /).');
