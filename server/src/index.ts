@@ -181,7 +181,7 @@ server.post<{Params: { usecache: string }}>('/charts/:usecache', async (request:
   // Call the Java monster...
   //const jarArgs: string[] = ['xvfb-run', '-jar', './jar/TSC.jar', '-node', '-s', `../files/${title}settings.tsc`, '-ss', `../files/${title}settings.tsc`, '-d', `../files/${title}datapack.txt`, '-o', `../files/${title}save.pdf`];
   //const jarArgs: string[] = ['-jar', './jar/TSC.jar', '-d', `./files/${title}datapack.txt`, '-s', `./files/${title}settings.tsc`];
-  const cmd = `java -Xmx2048m -jar ${assetconfigs.activeJar} -node `
+  const cmd = `java -Xmx512m -jar ${assetconfigs.activeJar} -node `
     // Add settings:
     + `-s ${settings_filepath} -ss ${settings_filepath} ` 
     // Add datapacks:
