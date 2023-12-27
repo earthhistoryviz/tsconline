@@ -4,6 +4,7 @@ import type { ChartConfig, ColumnSetting, GeologicalStages} from "@tsconline/sha
 
 
 export type State = {
+  chartLoading: boolean;
   tab: number;
   showAllTabs: boolean;
   settingsTabs: {
@@ -16,6 +17,7 @@ export type State = {
   chart: ChartConfig | null;
   presets: ChartConfig[];
   chartPath: string;
+  chartHash: string;
   settingsXML: string;
   settingsJSON: any;
   settings: {
@@ -29,6 +31,7 @@ export type State = {
 };
 
 export const state = observable<State>({
+  chartLoading: true, 
   tab: 0,
   showAllTabs: false,
   settingsTabs: {
@@ -50,6 +53,7 @@ export const state = observable<State>({
   chart: null,
   presets: [],
   chartPath: "",
+  chartHash: "",
   settingsXML: "",
   settingsJSON: {},
   settings: {

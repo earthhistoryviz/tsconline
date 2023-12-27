@@ -1,0 +1,37 @@
+.loading-container {
+  display: grid;
+  place-items: center;
+  height: 92vh;
+  font-family: "Titillium Web", sans-serif;
+  grid-template-rows: auto 100px 200px 100px auto;
+  text-align: center;
+  position: relative;
+  width: 100%;
+  gap: 2px; /* Adjust the gap as needed for space between items */
+}
+
+/* CSS for the SVG style */
+.svg-style {
+  width: 200px;
+  height: 200px;
+  display: block; /* SVG should be block level for proper centering */
+  grid-row: 2;
+}
+
+/* CSS for the text style */
+.loading {
+  font-size: 48px;
+  color: black;
+  padding: 8px;
+  border-radius: 4px;
+  line-height: 1;
+  grid-row: 3;
+}
+.loading-sub {
+  font-size: 48px;
+  color: black;
+  padding: 8px;
+  border-radius: 4px;
+  line-height: 1;
+  grid-row: 4;
+}

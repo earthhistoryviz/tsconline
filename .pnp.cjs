@@ -1743,6 +1743,7 @@ const RAW_RUNTIME_STATE =
           ["mkdirp", "npm:3.0.1"],\
           ["nodemon", "npm:2.0.22"],\
           ["p-map", "npm:6.0.0"],\
+          ["pdf2json", "npm:3.0.5"],\
           ["pino-pretty", "npm:10.0.0"],\
           ["tsc", "npm:2.0.4"],\
           ["typescript", "patch:typescript@npm%3A4.9.5#optional!builtin<compat/typescript>::version=4.9.5&hash=289587"]\
@@ -1970,6 +1971,15 @@ const RAW_RUNTIME_STATE =
         "packagePeers": [\
           "@types/vite",\
           "vite"\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["@xmldom/xmldom", [\
+      ["npm:0.8.10", {\
+        "packageLocation": "./.yarn/cache/@xmldom-xmldom-npm-0.8.10-c1bd991e61-62400bc5e0.zip/node_modules/@xmldom/xmldom/",\
+        "packageDependencies": [\
+          ["@xmldom/xmldom", "npm:0.8.10"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -4656,6 +4666,16 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./.yarn/cache/path-type-npm-4.0.0-10d47fc86a-5b1e2daa24.zip/node_modules/path-type/",\
         "packageDependencies": [\
           ["path-type", "npm:4.0.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["pdf2json", [\
+      ["npm:3.0.5", {\
+        "packageLocation": "./.yarn/cache/pdf2json-npm-3.0.5-e908f47640-13e93aefcc.zip/node_modules/pdf2json/",\
+        "packageDependencies": [\
+          ["pdf2json", "npm:3.0.5"],\
+          ["@xmldom/xmldom", "npm:0.8.10"]\
         ],\
         "linkType": "HARD"\
       }]\

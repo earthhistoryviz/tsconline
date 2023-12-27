@@ -1303,6 +1303,7 @@ __metadata:
     mkdirp: "npm:^3.0.1"
     nodemon: "npm:^2.0.22"
     p-map: "npm:^6.0.0"
+    pdf2json: "npm:^3.0.5"
     pino-pretty: "npm:^10.0.0"
     tsc: "npm:^2.0.4"
     typescript: "npm:^4.9.5"
@@ -1500,6 +1501,13 @@ __metadata:
   peerDependencies:
     vite: ^4.1.0-beta.0
   checksum: 54baf15170faed08c5c050ed6ac3b071e743d703f2c26ae685bf362bbaa2d8a733a98af0639f0662d474d95a6d91d008da9de8f3a51cc3e6660c4e642399cf2c
+  languageName: node
+  linkType: hard
+
+"@xmldom/xmldom@npm:^0.8.8":
+  version: 0.8.10
+  resolution: "@xmldom/xmldom@npm:0.8.10"
+  checksum: 62400bc5e0e75b90650e33a5ceeb8d94829dd11f9b260962b71a784cd014ddccec3e603fe788af9c1e839fa4648d8c521ebd80d8b752878d3a40edabc9ce7ccf
   languageName: node
   linkType: hard
 
@@ -3896,6 +3904,17 @@ __metadata:
   version: 4.0.0
   resolution: "path-type@npm:4.0.0"
   checksum: 5b1e2daa247062061325b8fdbfd1fb56dde0a448fb1455453276ea18c60685bdad23a445dc148cf87bc216be1573357509b7d4060494a6fd768c7efad833ee45
+  languageName: node
+  linkType: hard
+
+"pdf2json@npm:^3.0.5":
+  version: 3.0.5
+  resolution: "pdf2json@npm:3.0.5"
+  dependencies:
+    "@xmldom/xmldom": "npm:^0.8.8"
+  bin:
+    pdf2json: bin/pdf2json.js
+  checksum: 13e93aefcc046931d3e03013174bc135c919e7a033ce578106c75f9c8b9b9e96e9a7bce2db49a7d91a23b1fa20610474acb9620b5510f7fd3ccc9950786dc9c7
   languageName: node
   linkType: hard
 
