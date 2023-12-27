@@ -2,7 +2,7 @@ import fastify, { FastifyRequest} from 'fastify';
 import cors from '@fastify/cors';
 import fastifyStatic from '@fastify/static';
 import process from "process";
-import { exec } from 'child_process';
+import { exec, ChildProcess } from 'child_process';
 import { readFile, writeFile, stat } from 'fs/promises';
 import md5 from 'md5';
 import { mkdirp } from 'mkdirp';
@@ -11,7 +11,7 @@ import { assertChartRequest } from '@tsconline/shared';
 import { loadPresets } from './preset.js';
 import { AssetConfig, assertAssetConfig } from './types.js';
 import { getDatapackInfo } from './parse.js'
-import { deleteDirectory } from './util.js' 
+import { deleteDirectory, checkIfPdfIsReady } from './util.js' 
 
 const server = fastify({ 
   logger: false,
@@ -99,14 +99,25 @@ server.get('/presets', async (_request, reply) => {
 
 // Handles getting the columns for the files specified in the url
 // Currently Returns ColumnSettings and Stages if they exist
+// TODO: ADD ASSERTS
 server.get<{Params: { files: string} }>('/datapackinfo/:files', async (request: FastifyRequest<{Params: { files: string}}>, reply) => {
   const { files } = request.params;
-  console.log(files);
+  console.log("getting decrypted info for files: ", files);
   const repl =  await getDatapackInfo(assetconfigs.decryptionDirectory, files.split(" "));
   reply.send(repl)
 });
 
+// checks chart.pdf-status
+// TODO: ADD ASSERTS
+server.get<{Params: { hash: string} }>('/pdfstatus/:hash', async (request: FastifyRequest<{ Params: { hash: string } }>, reply) => {
+  const { hash } = request.params;
+  const isPdfReady = await checkIfPdfIsReady(hash, assetconfigs.chartsDirectory);
+  reply.send({ ready: isPdfReady });
+});
 
+
+// generates chart and sends to proper directory
+// will return url chart path and hash that was generated for it
 server.post<{Params: { usecache: string }}>('/charts/:usecache', async (request: FastifyRequest<{Params: { usecache: string }}>, reply) => {
   //TODO change this to be in request body
   const usecache = request.params.usecache === 'true'
@@ -114,7 +125,6 @@ server.post<{Params: { usecache: string }}>('/charts/:usecache', async (request:
   try {
     chartrequest = JSON.parse(request.body as string);
     assertChartRequest(chartrequest);
-    // console.log(chartrequest.settings)
   } catch (e: any) {
     console.log('ERROR: chart request is not valid.  Request was: ', chartrequest, '.  Error was: ', e);
     reply.send({ error: 'ERROR: chart request is not valid.  Error was: '+e.toString() });
@@ -123,7 +133,6 @@ server.post<{Params: { usecache: string }}>('/charts/:usecache', async (request:
 
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
   const hash = md5(chartrequest.settings + chartrequest.datapacks.join(','));
-  console.log(`assetconfigs.chartsDirectory: ${assetconfigs.chartsDirectory}`)
   const chartdir_urlpath = `/${assetconfigs.chartsDirectory}/${hash}`;
   const chart_urlpath = chartdir_urlpath+ '/chart.pdf';
 
@@ -138,9 +147,8 @@ server.post<{Params: { usecache: string }}>('/charts/:usecache', async (request:
       console.log("Deleting chart filepath since it already exists and cache is not being used")
       deleteDirectory(chart_filepath)
     } else {
-      console.log("using cache")
       console.log('Request for chart that already exists (hash:',hash,'.  Returning cached version');
-      reply.send({ chartpath: chart_urlpath }); // send the browser back the URL equivalent...
+      reply.send({ chartpath: chart_urlpath, hash: hash}); // send the browser back the URL equivalent...
       return;
     }
   } catch(e: any) { 
@@ -186,20 +194,15 @@ server.post<{Params: { usecache: string }}>('/charts/:usecache', async (request:
   await new Promise<void>((resolve, _reject) => {
     console.log('Calling Java: ', cmd);
     exec(cmd, function (error, stdout, stderror) {
-      // if (error) {
-      //   console.log("Java error: " + error);
-      //   reply.send({ error: `Error generating chart with error: ${error}`});
-      //   return;
-      // }
       console.log('Java finished, sending reply to browser');
       console.log("Java error param: " + error);
       console.log("Java stdout: " + stdout.toString());
       console.log("Java stderr: " + stderror.toString());
-      console.log('Sending reply to browser: ', { chartpath: chart_urlpath });
       resolve();
     });
   });
-  reply.send({ chartpath: chart_urlpath });
+  console.log('Sending reply to browser: ', { chartpath: chart_urlpath, hash: hash });
+  reply.send({ chartpath: chart_urlpath, hash: hash });
 });
 
 // Start the server...

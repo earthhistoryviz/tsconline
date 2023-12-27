@@ -83,6 +83,10 @@ export const removeCache = action("removeCache", async () => {
 })
 
 export const generateChart = action("generateChart", async () => {
+  
+  setChartLoading(true)
+  setChartHash("")
+  setChartPath("")
   let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
   // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
   var datapacks: string[] = [];
@@ -99,9 +103,12 @@ export const generateChart = action("generateChart", async () => {
     body,
   });
   const answer = await response.json();
+  // will check if pdf is loaded
   try {
     assertChartInfo(answer);
-    runInAction(() => (state.chartPath = devSafeUrl(answer.chartpath)));
+    setChartHash(answer.hash);
+    setChartPath(devSafeUrl(answer.chartpath));
+    await checkPdfStatus()
   } catch (e: any) {
     if (isChartError(answer)) {
       console.log(
@@ -123,6 +130,12 @@ export const generateChart = action("generateChart", async () => {
 export const loadPresets = action("loadPresets", (presets: ChartConfig[]) => {
   state.presets = presets;
   setChart(0);
+});
+export const setChartPath = action("setChartPath", (chartpath: string) => {
+  state.chartPath = chartpath;
+});
+export const setChartHash = action("setChartHash", (charthash: string) => {
+  state.chartHash = charthash;
 });
 
 export const settingsXML = action("settingsXML", (xml: string) => {
@@ -223,6 +236,9 @@ export const setBaseStageKey = action("setBottomStageKey", (key: string) => {
 
 export const setUnitsPerMY = action((units: number) => {
   state.settings.unitsPerMY = units;
+});
+export const setChartLoading = action((value: boolean) => {
+  state.chartLoading = value;
 });
 
 export const setSettingTabsSelected = action(
@@ -389,3 +405,31 @@ export const updateColumnName = action((newName: string) => {
   curcol[newName] = curcol[oldName];
   delete curcol[oldName];
 });
+export const checkPdfStatus = action(async () => {
+  let pdfReady = false;
+  while (!pdfReady) {
+    pdfReady = await fetchPdfStatus();
+    if (!pdfReady) {
+      // Wait for some time before checking again
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+  }
+  setChartLoading(false);
+});
+
+async function fetchPdfStatus(): Promise<boolean>{
+  try {
+    if (state.chartHash === "") {
+      return false
+    }
+    const response = await fetcher(`/pdfstatus/${state.chartHash}`, {
+      method: "GET",
+    });
+    const data = await response.json();
+    return data.ready;
+  } catch (error) {
+    console.error("Error checking PDF status", error);
+    return false;
+  }
+
+}

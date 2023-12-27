@@ -28,6 +28,7 @@ export type ChartRequest = {
 export declare function assertChartRequest(o: any): asserts o is ChartRequest;
 export type ChartResponseInfo = {
     chartpath: string;
+    hash: string;
 };
 export type ChartError = ChartConfigError;
 export declare function isChartError(o: any): o is ChartError;

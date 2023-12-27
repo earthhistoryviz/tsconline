@@ -52,6 +52,7 @@ export function assertChartRequest(o: any): asserts o is ChartRequest {
 
 export type ChartResponseInfo = {
   chartpath: string, // path to the chart
+  hash: string // hash for where it is stored
 }
 export type ChartError = ChartConfigError;
 export function isChartError(o: any): o is ChartError {
@@ -65,4 +66,5 @@ export type ChartResponse = ChartResponseInfo | ChartError;
 export function assertChartInfo(o: any): asserts o is ChartResponseInfo {
   if (!o || typeof o !== 'object') throw 'ChartInfo must be an object';
   if (typeof o.chartpath !== 'string') throw 'ChartInfo must have a chartpath string';
+  if (typeof o.hash !== 'string') throw 'ChartInfo must have a hash string';
 }

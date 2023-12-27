@@ -10,7 +10,7 @@ import { assertChartRequest } from '@tsconline/shared';
 import { loadPresets } from './preset.js';
 import { assertAssetConfig } from './types.js';
 import { getDatapackInfo } from './parse.js';
-import { deleteDirectory } from './util.js';
+import { deleteDirectory, checkIfPdfIsReady } from './util.js';
 const server = fastify({
     logger: false,
     bodyLimit: 1024 * 1024 * 100, // 10 mb
@@ -89,12 +89,22 @@ server.get('/presets', async (_request, reply) => {
 });
 // Handles getting the columns for the files specified in the url
 // Currently Returns ColumnSettings and Stages if they exist
+// TODO: ADD ASSERTS
 server.get('/datapackinfo/:files', async (request, reply) => {
     const { files } = request.params;
-    console.log(files);
+    console.log("getting decrypted info for files: ", files);
     const repl = await getDatapackInfo(assetconfigs.decryptionDirectory, files.split(" "));
     reply.send(repl);
 });
+// checks chart.pdf-status
+// TODO: ADD ASSERTS
+server.get('/pdfstatus/:hash', async (request, reply) => {
+    const { hash } = request.params;
+    const isPdfReady = await checkIfPdfIsReady(hash, assetconfigs.chartsDirectory);
+    reply.send({ ready: isPdfReady });
+});
+// generates chart and sends to proper directory
+// will return url chart path and hash that was generated for it
 server.post('/charts/:usecache', async (request, reply) => {
     //TODO change this to be in request body
     const usecache = request.params.usecache === 'true';
@@ -102,7 +112,6 @@ server.post('/charts/:usecache', async (request, reply) => {
     try {
         chartrequest = JSON.parse(request.body);
         assertChartRequest(chartrequest);
-        // console.log(chartrequest.settings)
     }
     catch (e) {
         console.log('ERROR: chart request is not valid.  Request was: ', chartrequest, '.  Error was: ', e);
@@ -111,7 +120,6 @@ server.post('/charts/:usecache', async (request, reply) => {
     }
     // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
     const hash = md5(chartrequest.settings + chartrequest.datapacks.join(','));
-    console.log(`assetconfigs.chartsDirectory: ${assetconfigs.chartsDirectory}`);
     const chartdir_urlpath = `/${assetconfigs.chartsDirectory}/${hash}`;
     const chart_urlpath = chartdir_urlpath + '/chart.pdf';
     const chartdir_filepath = chartdir_urlpath.slice(1); // no leading slash
@@ -125,9 +133,8 @@ server.post('/charts/:usecache', async (request, reply) => {
             deleteDirectory(chart_filepath);
         }
         else {
-            console.log("using cache");
             console.log('Request for chart that already exists (hash:', hash, '.  Returning cached version');
-            reply.send({ chartpath: chart_urlpath }); // send the browser back the URL equivalent...
+            reply.send({ chartpath: chart_urlpath, hash: hash }); // send the browser back the URL equivalent...
             return;
         }
     }
@@ -170,20 +177,15 @@ server.post('/charts/:usecache', async (request, reply) => {
     await new Promise((resolve, _reject) => {
         console.log('Calling Java: ', cmd);
         exec(cmd, function (error, stdout, stderror) {
-            // if (error) {
-            //   console.log("Java error: " + error);
-            //   reply.send({ error: `Error generating chart with error: ${error}`});
-            //   return;
-            // }
             console.log('Java finished, sending reply to browser');
             console.log("Java error param: " + error);
             console.log("Java stdout: " + stdout.toString());
             console.log("Java stderr: " + stderror.toString());
-            console.log('Sending reply to browser: ', { chartpath: chart_urlpath });
             resolve();
         });
     });
-    reply.send({ chartpath: chart_urlpath });
+    console.log('Sending reply to browser: ', { chartpath: chart_urlpath, hash: hash });
+    reply.send({ chartpath: chart_urlpath, hash: hash });
 });
 // Start the server...
 try {
