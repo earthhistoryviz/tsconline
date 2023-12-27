@@ -30,7 +30,7 @@ export const setChart = action("setChart", async (newval: number) => {
   // console.log("reply of columns: ", JSON.stringify(columns, null, 2))
   // console.log("reply of stages: ", JSON.stringify(stages, null, 2))
 
-  state.settingsTabs.columns = columns 
+  setSettingsTabsColumns(columns)
   setGeologicalStages(stages)
   // Grab the settings for this chart if there are any:
   if (state.chart.settings) {
@@ -133,6 +133,9 @@ export const loadPresets = action("loadPresets", (presets: ChartConfig[]) => {
 });
 export const setChartPath = action("setChartPath", (chartpath: string) => {
   state.chartPath = chartpath;
+});
+export const setSettingsTabsColumns = action("setSettingsTabsColumns", (columns: ColumnSetting) => {
+  state.settingsTabs.columns = columns;
 });
 export const setChartHash = action("setChartHash", (charthash: string) => {
   state.chartHash = charthash;
@@ -287,11 +290,20 @@ export function translateTabToIndex(tab: State["settingsTabs"]["selected"]) {
  * name: the name of the toggled column
  * parents: list of names that indicates the path from top to the toggled column
  */
-export const toggleSettingsTabColumn = action(
-  (name: string, parents: string[]) => {
+export const toggleSettingsTabColumn = action("toggleSettingsTabColumn", (name: string, parents: string[]) => {
     let curcol: ColumnSetting | null = state.settingsTabs.columns;
+    const orig = curcol
     // Walk down the path of parents in the tree of columns
+    console.log("name: ", name)
+    let i = 1
+    for (const item of parents) {
+      console.log("item ", i, ": ", item);
+      i++
+    }
+    i = 1
     for (const p of parents) {
+      console.log("accessing ", p, " of count: ", i)
+      i++
       if (!curcol) {
         console.log(
           "WARNING: tried to access path at parent ",
@@ -304,6 +316,7 @@ export const toggleSettingsTabColumn = action(
       }
       curcol = curcol[p]["children"];
     }
+    // console.log(JSON.stringify(curcol[name], null, 2));
     //need this to check if curcol is null for typescript to be happy in future operations
     if (!curcol) {
       console.log(
@@ -324,8 +337,10 @@ export const toggleSettingsTabColumn = action(
       return;
     }
     curcol[name].on = !curcol[name].on;
+    // setSettingsTabsColumns(orig)
+    console.log(JSON.stringify(curcol[name], null, 2));
     setcolumnSelected(name, parents);
-    console.log("state after my change: ", state);
+    // console.log("state after my change: ", state);
     //if the column is unchecked, then no need to check the parents
     if (!curcol[name].on) {
       //updateSettings();

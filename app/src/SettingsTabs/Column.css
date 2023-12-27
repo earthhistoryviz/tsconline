@@ -1,0 +1,23 @@
+.accordion-item {
+  display: grid;
+  position: relative;
+  grid-template-rows: auto;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 2px;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  text-align: left;
+  margin-right: 10px;
+  grid-column: span 2;
+}
+.label-container {
+  display: flex;
+  align-items: left;
+  text-align: left;
+  margin-right: 10px;
+  grid-column: 1;
+}

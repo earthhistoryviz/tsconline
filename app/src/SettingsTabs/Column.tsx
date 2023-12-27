@@ -13,6 +13,7 @@ import { context } from "../state";
 import { ColumnSetting } from "@tsconline/shared";
 import { Button, TextField } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import './Column.css'
 
 // Define the Accordion component outside the Column component
 const Accordion = styled((props: AccordionProps) => (
@@ -38,13 +39,16 @@ const AccordionSummary = styled((props: AccordionSummaryProps) => (
     theme.palette.mode === "dark"
       ? "rgba(255, 255, 255, .05)"
       : "rgba(0, 0, 0, .03)",
-  flexDirection: "column", // Change to column layout
-  alignItems: "flex-start", // Align headers to the start
+  display: "flex",
   "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
     transform: "rotate(90deg)",
+    display: "flex",
+    order: -1, 
   },
   "& .MuiAccordionSummary-content": {
-    marginLeft: theme.spacing(1),
+    order: 2,
+    flexGrow: 1, 
+    alignItems: "center",
   },
 }));
 
@@ -52,54 +56,73 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
   padding: theme.spacing(2),
   borderTop: "1px solid rgba(0, 0, 0, .125)",
 }));
+type ColumnAccordionProps = {
+  name: string;
+  details: ColumnSetting[string];
+  onToggle: (name: string, parents: string[]) => void;
+};
+const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({name, details, onToggle}) => {
+  const [open, setOpen] = useState(false);
+  const hasChildren = details.children && Object.keys(details.children).length > 0;
+  const checkbox = (
+    <div className="accordion-item">
+      <div className="checkbox-container">
+        <Checkbox checked={details.on} onChange={
+          () => { onToggle(name, details.parents)
+        }} />
+        <Typography className="label-container">{name}</Typography>
+      </div>
+    </div>
+  )
+
+
+  if (!hasChildren) {
+    return checkbox
+  }
+
+  return (
+    <Accordion expanded={open} onChange={() => setOpen(!open)}>
+      <AccordionSummary aria-controls="panel-content" id="panel-header">
+        {checkbox}
+      </AccordionSummary>
+      <AccordionDetails>
+        <div >
+          {details.children && Object.entries(details.children).map(([childName, childDetails]) => (
+            <ColumnAccordion 
+              key={childName} 
+              name={childName} 
+              details={childDetails} 
+              onToggle={onToggle}
+            />
+          ))}
+        </div>
+      </AccordionDetails>
+    </Accordion>
+  );
+});
+
 
 export const Column = observer(function Column() {
   const { state, actions } = useContext(context);
-  const [expanded, setExpanded] = useState<string | false>("panel1");
-  const [columnName, setColumnName] = useState("");
-  const handleChange =
-    (panel: string) => (_event: React.SyntheticEvent, newExpanded: boolean) => {
-      setExpanded(newExpanded ? panel : false);
-    };
+  const [open, setOpen] = useState(false);
 
-  //recursively goes through the column settings state and makes a component
-  //with all of the columns
-  function renderColumns(columnInfo: ColumnSetting, depth: number) {
-    //for indenting child. depth is how far it is from the top
-    let indent = depth * 20 + "px";
-    const divStyle = {
-      marginLeft: indent,
-    };
-    return (
-      <div>
-        {Object.entries(columnInfo).map(([columnName, columnData]) => (
-          <div key={columnName}>
-            <label>
-              <Checkbox
-                checked={columnData.on}
-                onChange={() =>
-                  actions.toggleSettingsTabColumn(
-                    columnName,
-                    columnData.parents
-                  )
-                }
-              />
-              {columnName}
-            </label>
-
-            <div style={divStyle}>
-              {columnData.children &&
-                renderColumns(columnData.children, depth + 1)}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  const handleColumnNameChange = (event: { target: { value: string } }) => {
-    setColumnName(event.target.value);
-    actions.updateColumnName(event.target.value);
+  const handleChange = () => {
+    setOpen(!open);
   };
+  function renderColumns(columnInfo: ColumnSetting) {
+    return Object.entries(columnInfo).map(([columnName, columnData]) => (
+      <ColumnAccordion
+        key={columnName}
+        name={columnName}
+        details={columnData}
+        onToggle={actions.toggleSettingsTabColumn}
+      />
+    ));
+  }
+  // const handleColumnNameChange = (event: { target: { value: string } }) => {
+  //   setColumnName(event.target.value);
+  //   actions.updateColumnName(event.target.value);
+  // };
   const navigate = useNavigate();
   const handleButtonClick = () => {
     actions.setTab(1);
@@ -115,28 +138,26 @@ export const Column = observer(function Column() {
 
   return (
     <div style={{ display: "flex", justifyContent: "center" }}>
-      {/*component for selecting column*/}
       <div
         style={{
           display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
+          // justifyContent: "center",
+          // alignItems: "center",
         }}
       >
         <Accordion
-          expanded={expanded === "panel1"}
-          onChange={handleChange("panel1")}
+          expanded={open}
+          onChange={handleChange}
         >
           <AccordionSummary aria-controls="panel1d-content" id="panel1d-header">
             <Typography>TimeScale Creator GTS2020 Chart</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <div>{renderColumns(state.settingsTabs.columns, 1)}</div>
+            <div>{renderColumns(state.settingsTabs.columns)}</div>
           </AccordionDetails>
         </Accordion>
       </div>
-      {/*component for changing settings for a specific column*/}
-      <div style={{ border: "1px solid black", width: "400px" }}>
+      <div style={{ border: "1px solid black", width: "400px" ,minHeight: "1000px",}}>
         <div style={{ paddingTop: "20px" }}>
           <Button onClick={handleButtonClick} variant="outlined">
             Generate the Chart!
