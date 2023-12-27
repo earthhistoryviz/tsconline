@@ -7,18 +7,16 @@
   text-align: center;
   position: relative;
   width: 100%;
-  gap: 2px; /* Adjust the gap as needed for space between items */
+  gap: 2px;
 }
 
-/* CSS for the SVG style */
 .svg-style {
   width: 200px;
   height: 200px;
-  display: block; /* SVG should be block level for proper centering */
+  display: block;
   grid-row: 2;
 }
 
-/* CSS for the text style */
 .loading {
   font-size: 48px;
   color: black;
