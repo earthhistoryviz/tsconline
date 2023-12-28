@@ -6,12 +6,15 @@ import { primary_dark } from "../constant";
 import ForwardIcon from '@mui/icons-material/Forward';
 import { useNavigate } from "react-router-dom";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import { useTheme } from '@mui/material/styles';
+import { TSCCheckbox } from '../assets'
 
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 
 export const Time = observer(function Time() {
+    const theme = useTheme();
     const navigate = useNavigate();
 
     const handleButtonClick = () => {
@@ -94,18 +97,8 @@ export const Time = observer(function Time() {
           onChange={(event) => actions.setUnitsPerMY(parseFloat(event.target.value))}
           style={{ marginBottom: '20px', width: '100%' }}
         />
-        { /* 
-        {settingOptions.map(({ name, label, stateName }) => (
-            {() => (
-              <FormControlLabel
-                control={<Checkbox checked={state.settingsJSON[stateName]} onChange={(event) => actions.updateCheckboxSetting(stateName, event.target.checked)} />}
-                label={label}
-                style={{ marginBottom: '10px' }}
-              />
-            )}
-        ))} */ }
         <Button
-          sx={{ backgroundColor: primary_dark, color: '#FFFFFF', marginTop: '10px' }}
+          sx={{ backgroundColor: theme.palette.button.main, color: '#FFFFFF', marginTop: '10px' }}
           onClick={handleButtonClick}
           variant="contained"
           style={{ width: '100%', height: '75px' }}
@@ -117,6 +110,7 @@ export const Time = observer(function Time() {
 
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
         <FormGroup>
+          {/* TODO: change below checkboxes to TSCChecbok once we implement settings*/}
           <FormControlLabel control={<Checkbox />} label="Add MouseOver info (popups)" />
           <FormControlLabel control={<Checkbox />} label="Enabled Global Priority Filtering for block columns" />
           <FormControlLabel control={<Checkbox />} label="Enabled stage background for event columns" />
