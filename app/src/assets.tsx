@@ -18,6 +18,12 @@ type CheckboxProps = {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
+interface TSCTabsProps extends TabsProps {
+  children?: React.ReactNode;
+  value: number | boolean;
+  onChange: (event: React.SyntheticEvent, newValue: number) => void;
+}
+
 export const TSCCheckbox: React.FC<CheckboxProps> = (props: CheckboxProps) => {
   const theme = useTheme();
 
@@ -37,11 +43,6 @@ export const TSCCheckbox: React.FC<CheckboxProps> = (props: CheckboxProps) => {
   )
 };
 
-interface TSCTabsProps extends TabsProps {
-  children?: React.ReactNode;
-  value: number | boolean;
-  onChange: (event: React.SyntheticEvent, newValue: number) => void;
-}
 
 // wraps tabs from mui to be able to change certain properties
 export const TSCTabs = styled((props: TSCTabsProps) => (
