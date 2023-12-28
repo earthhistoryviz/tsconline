@@ -14,9 +14,19 @@ export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;
 });
 
+export const resetSettings = action("resetSettings", () => {
+  state.settings = {
+    topStageKey: "",
+    baseStageKey: "",
+    unitsPerMY: 2
+  }
+});
+
 export const setChart = action("setChart", async (newval: number) => {
+  resetSettings()
   if (state.presets.length <= newval) {
     state.chart = null;
+    console.log("unknown preset selected")
     return;
   }
   let tempColumns: ColumnSetting | null;
@@ -83,7 +93,7 @@ export const removeCache = action("removeCache", async () => {
 })
 
 export const generateChart = action("generateChart", async () => {
-  
+  //set the loading screen and make sure the chart isn't up
   setChartLoading(true)
   setChartHash("")
   setChartPath("")
@@ -146,8 +156,9 @@ export const settingsXML = action("settingsXML", (xml: string) => {
 });
 
 //update
+//TODO: need to overhaul
 export const updateSettings = action("updateSettings", () => {
-  const { topStage, baseStage, unitsPerMY } = state.settings;
+  const { topStageKey, baseStageKey, unitsPerMY } = state.settings;
   // Validate the user input
   if (isNaN(unitsPerMY)) {
     // Handle invalid input, show error message, etc.
@@ -157,8 +168,8 @@ export const updateSettings = action("updateSettings", () => {
   const jsonSettings = state.settingsJSON;
   if ("settings" in jsonSettings) {
     const settings = jsonSettings.settings as any;
-    settings["topAge"]["stage"] = topStage;
-    settings["baseAge"]["stage"] = baseStage;
+    settings["topAge"]["stage"] = state.settingsTabs.columns[topStageKey];
+    settings["baseAge"]["stage"] = state.settingsTabs.columns[baseStageKey];
     settings["unitsPerMY"] = (unitsPerMY * 30).toString();
   }
   if ("settingsTabs" in jsonSettings) {
@@ -224,12 +235,6 @@ export const updateCheckboxSetting = action(
   }
 );
 
-export const setBaseStage = action("setBaseStage", (stage: string) => {
-  state.settings.baseStage = stage;
-});
-export const setTopStage = action("setTopStage", (stage: string) => {
-  state.settings.topStage = stage;
-});
 export const setTopStageKey = action("setTopStageKey", (key: string) => {
   state.settings.topStageKey = key;
 });

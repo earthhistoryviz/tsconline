@@ -21,9 +21,7 @@ export type State = {
   settingsXML: string;
   settingsJSON: any;
   settings: {
-    topStage: string;
     topStageKey: string;
-    baseStage: string;
     baseStageKey: string;
     unitsPerMY: number;
   };
@@ -57,9 +55,7 @@ export const state = observable<State>({
   settingsXML: "",
   settingsJSON: {},
   settings: {
-    topStage: "",
     topStageKey: "",
-    baseStage: "",
     baseStageKey: "",
     unitsPerMY: 2,
   },

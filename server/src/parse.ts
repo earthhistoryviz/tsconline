@@ -82,11 +82,16 @@ function recursive(parents: string[], lastparent: string, children: string[], st
  * Maybe add functionality in the future to check if all the files exist
  */
 export async function getDatapackInfo(decrypt_filepath: string, files: string[]): Promise<{columns: ColumnSetting, stages: GeologicalStages}> {
-    // regular expression for all filenames
-    const pattern = new RegExp(files.map(name => `${decrypt_filepath}/${name}`).join('|'));
-    let decrypt_paths = await glob(`${decrypt_filepath}/*`);
+    // regular expression for all filenames located in <decrypt_filepath>/<file_name>
+    const pattern = new RegExp(files.map(name => {
+        const lastIndex = name.lastIndexOf(".");
+        const filename = lastIndex !== -1 ? name.substring(0, lastIndex) : name;
+        return `${decrypt_filepath}/${filename}/datapacks/.*`
+    }).join('|'));
+    let decrypt_paths = await glob(`${decrypt_filepath}/**/*`);
     decrypt_paths = decrypt_paths.filter(path => pattern.test(path));
-    let fileSettingsMap: { [filePath: string]: ColumnSetting } = {};
+    if (decrypt_paths.length == 0) return {columns: {}, stages: {}}
+    // let fileSettingsMap: { [filePath: string]: ColumnSetting } = {};
     let decryptedfiles: String = ""
     let settings: ColumnSetting = {}; 
     let geoStage: GeologicalStages = {};
