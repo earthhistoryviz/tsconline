@@ -10,7 +10,7 @@ import { mkdirp } from 'mkdirp';
 import { assertChartRequest } from '@tsconline/shared';
 import { loadPresets } from './preset.js';
 import { AssetConfig, assertAssetConfig } from './types.js';
-import { deleteDirectory, checkIfPdfIsReady } from './util.js' 
+import { deleteDirectory } from './util.js' 
 import * as routes from './routes.js'
 
 const server = fastify({ 
@@ -88,6 +88,7 @@ server.register(cors, {
   origin: "*",
   methods: ["GET", "POST" ],
 });
+
 server.post('/removecache', async (request, reply) => {
   deleteDirectory(assetconfigs.chartsDirectory)
   reply.send({message: "successfully removed cache"})
@@ -104,12 +105,7 @@ server.get('/presets', async (_request, reply) => {
 server.get<{Params: { files: string} }>('/datapackinfo/:files', routes.fetchDatapackInfo);
 
 // checks chart.pdf-status
-// TODO: ADD ASSERTS
-server.get<{Params: { hash: string} }>('/pdfstatus/:hash', async (request: FastifyRequest<{ Params: { hash: string } }>, reply) => {
-  const { hash } = request.params;
-  const isPdfReady = await checkIfPdfIsReady(hash, assetconfigs.chartsDirectory);
-  reply.send({ ready: isPdfReady });
-});
+server.get<{Params: { hash: string} }>('/pdfstatus/:hash', routes.fetchPdfStatus);
 
 
 // generates chart and sends to proper directory
