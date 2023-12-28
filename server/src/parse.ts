@@ -81,7 +81,7 @@ function recursive(parents: string[], lastparent: string, children: string[], st
  * Have not checked edge cases in which a file doesn't show up, will only return any that are correct.
  * Maybe add functionality in the future to check if all the files exist
  */
-export async function getDatapackInfo(decrypt_filepath: string, files: string[]): Promise<{columns: ColumnSetting, stages: GeologicalStages}> {
+export async function parse(decrypt_filepath: string, files: string[]): Promise<{columns: ColumnSetting, stages: GeologicalStages}> {
     // regular expression for all filenames located in <decrypt_filepath>/<file_name>
     const pattern = new RegExp(files.map(name => {
         const lastIndex = name.lastIndexOf(".");

@@ -10,8 +10,8 @@ import { mkdirp } from 'mkdirp';
 import { assertChartRequest } from '@tsconline/shared';
 import { loadPresets } from './preset.js';
 import { AssetConfig, assertAssetConfig } from './types.js';
-import { getDatapackInfo } from './parse.js'
 import { deleteDirectory, checkIfPdfIsReady } from './util.js' 
+import * as routes from './routes.js'
 
 const server = fastify({ 
   logger: false,
@@ -41,6 +41,8 @@ try {
   console.log('ERROR: Failed to load asset configs from assets/config.json.  Error was: ', e);
   process.exit(1);
 }
+// so routes.ts can handle this
+export default assetconfigs;
 // this try will run the decryption jar to decrypt all files in the datapack folder
 // TODO: if the datapack is not encrypted, handle it properly. potentially a problem for the decrypt.jar
 // TODO: We might need to make each it's own directory
@@ -98,15 +100,8 @@ server.get('/presets', async (_request, reply) => {
   reply.send(chartconfigs);
 })
 
-// Handles getting the columns for the files specified in the url
-// Currently Returns ColumnSettings and Stages if they exist
-// TODO: ADD ASSERTS
-server.get<{Params: { files: string} }>('/datapackinfo/:files', async (request: FastifyRequest<{Params: { files: string}}>, reply) => {
-  const { files } = request.params;
-  console.log("getting decrypted info for files: ", files);
-  const repl =  await getDatapackInfo(assetconfigs.decryptionDirectory, files.split(" "));
-  reply.send(repl)
-});
+// handles chart columns and age ranges requests
+server.get<{Params: { files: string} }>('/datapackinfo/:files', routes.fetchDatapackInfo);
 
 // checks chart.pdf-status
 // TODO: ADD ASSERTS
