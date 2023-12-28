@@ -4,7 +4,7 @@ declare module '@mui/material/styles' {
       altbackground: Palette['primary'];
       dark: Palette['primary'];
       button: Palette['primary'];
-      altdark: Palette['primary'];
+      navbar: Palette['primary'];
       selection: Palette['primary'];
     }
   
@@ -12,7 +12,7 @@ declare module '@mui/material/styles' {
       altbackground?: PaletteOptions['primary'];
       dark?: PaletteOptions['primary'];
       button?: PaletteOptions['primary'];
-      altdark?: PaletteOptions['primary'];
+      navbar?: PaletteOptions['primary'];
       selection?: PaletteOptions['primary'];
     }
   }
@@ -38,7 +38,7 @@ const theme = createTheme({
             light: "#6D8A96",
             main: "#001A23"
         },
-        altdark: {
+        navbar: {
             light: "#6693C9",
             main: "#27476E",
             dark: "#16262E"

@@ -71,9 +71,9 @@ export const Home = observer(function Home() {
           </div>
         ))}
       </div>
-      <div className="bottom_button">
+      <div className="bottom_button" >
         <Button
-          sx={{backgroundColor: primary_dark, color: "#FFFFFF"}}
+          sx={{backgroundColor: theme.palette.button.main, color: "#FFFFFF"}}
           variant="contained" style={{width: "325px", height: "75px", marginLeft: "auto", marginRight: "auto"}} 
           onClick={() => {
             actions.removeCache();

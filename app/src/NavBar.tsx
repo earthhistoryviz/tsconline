@@ -18,12 +18,18 @@ export const NavBar = observer(function Navbar() {
   const theme = useTheme()
   const { state, actions } = useContext(context);
   return (
-    <AppBar position="fixed" sx={{background: theme.palette.altdark.dark, display: "flex" }}>
+    <AppBar position="fixed" sx={{background: theme.palette.navbar.dark, display: "flex" }}>
       <Toolbar>
         <Link to="/">
           <IconButton 
             size="large"
-            sx={{color: theme.palette.altdark.light}}
+            sx={{
+              color: theme.palette.selection.main,
+              "&:hover": {
+                color: theme.palette.selection.light,
+                opacity: 1,
+              },
+            }}
             value={0}
             onClick={() => {
               actions.setTab(0)
@@ -43,7 +49,7 @@ export const NavBar = observer(function Navbar() {
                 '& .MuiTab-root': {  
                   color: theme.palette.primary.main,
                   '&:hover': {
-                    color: theme.palette.secondary.main, 
+                    color: theme.palette.selection.light, 
                     backgroundColor: 'hoverColor'
                   },
                 },
