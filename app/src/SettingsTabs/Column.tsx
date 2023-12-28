@@ -1,61 +1,16 @@
 import { observer } from "mobx-react-lite";
 import React, { useContext, useState } from "react";
 import { styled } from "@mui/material/styles";
-import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
-import MuiAccordion, { AccordionProps } from "@mui/material/Accordion";
-import MuiAccordionSummary, {
-  AccordionSummaryProps,
-} from "@mui/material/AccordionSummary";
-import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import Typography from "@mui/material/Typography";
 import Checkbox from "@mui/material/Checkbox";
 import { context } from "../state";
 import { ColumnSetting } from "@tsconline/shared";
 import { Button, TextField } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import './Column.css'
+import { useTheme } from '@mui/material/styles';
+import { ColumnContainer, TSCCheckbox, AccordionDetails, AccordionSummary, Accordion} from '../assets'
 
-// Define the Accordion component outside the Column component
-const Accordion = styled((props: AccordionProps) => (
-  <MuiAccordion disableGutters elevation={0} square {...props} />
-))(({ theme }) => ({
-  border: `1px solid ${theme.palette.divider}`,
-  "&:not(:last-child)": {
-    borderBottom: 0,
-  },
-  "&:before": {
-    display: "none",
-  },
-}));
 
-// Define the AccordionSummary and AccordionDetails components outside the Column component
-const AccordionSummary = styled((props: AccordionSummaryProps) => (
-  <MuiAccordionSummary
-    expandIcon={<ArrowForwardIosSharpIcon sx={{ fontSize: "0.9rem" }} />}
-    {...props}
-  />
-))(({ theme }) => ({
-  backgroundColor:
-    theme.palette.mode === "dark"
-      ? "rgba(255, 255, 255, .05)"
-      : "rgba(0, 0, 0, .03)",
-  display: "flex",
-  "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
-    transform: "rotate(90deg)",
-    display: "flex",
-    order: -1, 
-  },
-  "& .MuiAccordionSummary-content": {
-    order: 2,
-    flexGrow: 1, 
-    alignItems: "center",
-  },
-}));
-
-const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
-  padding: theme.spacing(2),
-  borderTop: "1px solid rgba(0, 0, 0, .125)",
-}));
 
 //types for recursively creation accordions
 type ColumnAccordionProps = {
@@ -63,20 +18,19 @@ type ColumnAccordionProps = {
   details: ColumnSetting[string];
   onToggle: (name: string, parents: string[]) => void;
 };
-
 // component for column accordion recursion creation 
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({name, details, onToggle}) => {
+  const theme = useTheme();
   const [open, setOpen] = useState(true);
   const hasChildren = details.children && Object.keys(details.children).length > 0;
   const checkbox = (
-    <div className="accordion-item">
-      <div className="checkbox-container">
-        <Checkbox checked={details.on} onChange={
+    <ColumnContainer>
+        <TSCCheckbox checked={details.on} onChange={
           () => { onToggle(name, details.parents)
-        }} />
-        <Typography className="label-container">{name}</Typography>
-      </div>
-    </div>
+        }} 
+        />
+        <Typography sx={{ fontSize: "0.97rem"}}>{name}</Typography>
+    </ColumnContainer>
   )
   // if there are no children, don't make an accordion
   if (!hasChildren) {
@@ -84,12 +38,14 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({name, details
   }
 
   return (
-    <Accordion expanded={open} onChange={() => setOpen(!open)}>
-      <AccordionSummary aria-controls="panel-content" id="panel-header">
+    <Accordion expanded={open} onChange={() => setOpen(!open)} >
+      <AccordionSummary aria-controls="panel-content" id="panel-header"
+        sx={{backgroundColor: theme.palette.background.default}}
+      >
         {checkbox}
       </AccordionSummary>
       <AccordionDetails>
-        <div >
+        <div>
           {details.children && Object.entries(details.children).map(([childName, childDetails]) => (
             <ColumnAccordion 
               key={childName} 
@@ -106,6 +62,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({name, details
 
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
+  const theme = useTheme();
   const { state, actions } = useContext(context);
   const [open, setOpen] = useState(true);
 
@@ -146,10 +103,12 @@ export const Column = observer(function Column() {
           expanded={open}
           onChange={handleChange}
         >
-          <AccordionSummary aria-controls="panel1d-content" id="panel1d-header">
-            <Typography>TimeScale Creator GTS2020 Chart</Typography>
+          <AccordionSummary aria-controls="panel1d-content" id="panel1d-header"
+          sx={{backgroundColor: theme.palette.background.default}}
+          >
+            <Typography sx={{ fontSize: "1.2rem", marginLeft: "15px" }}>TimeScale Creator GTS2020 Chart</Typography>
           </AccordionSummary>
-          <AccordionDetails>
+          <AccordionDetails >
             <div>{renderColumns(state.settingsTabs.columns)}</div>
           </AccordionDetails>
         </Accordion>

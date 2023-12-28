@@ -8,11 +8,14 @@ import { primary_light, primary_dark, secondary } from './constant';
 import { devSafeUrl } from './util';
 import { context } from './state';
 import { Box, Button, FormGroup, FormControlLabel, Checkbox, FormControl } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import { TSCCheckbox }  from './assets'
 
 import "./Home.css"
 
 export const Home = observer(function Home() {
   const { state, actions } = useContext(context); 
+  const theme = useTheme();
 
   const navigate = useNavigate();
 
@@ -26,7 +29,7 @@ export const Home = observer(function Home() {
 
   return (
     <div className="whole_page">
-      <div className="top_box" style={{backgroundColor: primary_light}}>
+      <div className="top_box" style={{backgroundColor: theme.palette.altbackground.main}}>
         { !state.chart ? <React.Fragment /> : 
           <div className="chart_display">
             <div className="holds_picture">
@@ -36,7 +39,7 @@ export const Home = observer(function Home() {
               <h2 className="preset_name"style={{color: secondary}}>{state.chart.title} </h2>
               <p className="description" style={{color: secondary}}>{state.chart.description}</p>
                 <Button 
-                  sx={{backgroundColor: primary_dark, color: "#FFFFFF"}}
+                  sx={{backgroundColor: theme.palette.button.main, color: "#FFFFFF"}}
                   onClick={() => {
                     actions.setTab(1);
                     actions.setAllTabs(true);
@@ -49,7 +52,7 @@ export const Home = observer(function Home() {
                   Make your own chart 
                 </Button>
                 <FormControlLabel control={
-                <Checkbox 
+                <TSCCheckbox 
                 checked={state.useCache}
                 onChange={(e) => {
                   actions.setUseCache(e.target.checked)
