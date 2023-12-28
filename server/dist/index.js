@@ -9,7 +9,7 @@ import { mkdirp } from 'mkdirp';
 import { assertChartRequest } from '@tsconline/shared';
 import { loadPresets } from './preset.js';
 import { assertAssetConfig } from './types.js';
-import { deleteDirectory, checkIfPdfIsReady } from './util.js';
+import { deleteDirectory } from './util.js';
 import * as routes from './routes.js';
 const server = fastify({
     logger: false,
@@ -93,12 +93,7 @@ server.get('/presets', async (_request, reply) => {
 // handles chart columns and age ranges requests
 server.get('/datapackinfo/:files', routes.fetchDatapackInfo);
 // checks chart.pdf-status
-// TODO: ADD ASSERTS
-server.get('/pdfstatus/:hash', async (request, reply) => {
-    const { hash } = request.params;
-    const isPdfReady = await checkIfPdfIsReady(hash, assetconfigs.chartsDirectory);
-    reply.send({ ready: isPdfReady });
-});
+server.get('/pdfstatus/:hash', routes.fetchPdfStatus);
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
 server.post('/charts/:usecache', async (request, reply) => {
