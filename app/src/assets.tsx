@@ -1,7 +1,7 @@
 import React from "react";
 import Checkbox from "@mui/material/Checkbox";
 import { useTheme, styled } from "@mui/material/styles";
-import { TabProps } from '@mui/material';
+import { TabProps, TabsProps} from '@mui/material';
 import Tab from "@mui/material/Tab";
 import Box from '@mui/material/Box';
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
@@ -37,7 +37,7 @@ export const TSCCheckbox: React.FC<CheckboxProps> = (props: CheckboxProps) => {
   )
 };
 
-interface TSCTabsProps {
+interface TSCTabsProps extends TabsProps {
   children?: React.ReactNode;
   value: number | boolean;
   onChange: (event: React.SyntheticEvent, newValue: number) => void;

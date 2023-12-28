@@ -51,8 +51,8 @@ export const Settings = observer(function Settings() {
 
 
   return (
-    <div>
-      <TSCTabs value={selectedTabIndex} onChange={handleChange}>
+    <div >
+      <TSCTabs value={selectedTabIndex} onChange={handleChange} centered>
         <TSCTab label="Time" />
         <TSCTab label="Column" />
         <TSCTab label="Font" />
