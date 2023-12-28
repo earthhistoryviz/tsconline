@@ -42,7 +42,8 @@ try {
   process.exit(1);
 }
 // this try will run the decryption jar to decrypt all files in the datapack folder
-// TOOO: if the datapack is not encrypted, handle it properly. potentially a problem for the decrypt.jar
+// TODO: if the datapack is not encrypted, handle it properly. potentially a problem for the decrypt.jar
+// TODO: We might need to make each it's own directory
 try {
   const datapacks = assetconfigs.activeDatapacks.map(datapack => assetconfigs.datapacksDirectory + "/" + datapack)
   const cmd = `java -jar ${assetconfigs.decryptionJar} `

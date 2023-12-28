@@ -56,13 +56,17 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
   padding: theme.spacing(2),
   borderTop: "1px solid rgba(0, 0, 0, .125)",
 }));
+
+//types for recursively creation accordions
 type ColumnAccordionProps = {
   name: string;
   details: ColumnSetting[string];
   onToggle: (name: string, parents: string[]) => void;
 };
+
+// component for column accordion recursion creation 
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({name, details, onToggle}) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const hasChildren = details.children && Object.keys(details.children).length > 0;
   const checkbox = (
     <div className="accordion-item">
@@ -74,8 +78,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({name, details
       </div>
     </div>
   )
-
-
+  // if there are no children, don't make an accordion
   if (!hasChildren) {
     return checkbox
   }
@@ -101,10 +104,10 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({name, details
   );
 });
 
-
+// column with generate button, and accordion columns
 export const Column = observer(function Column() {
   const { state, actions } = useContext(context);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
 
   const handleChange = () => {
     setOpen(!open);
@@ -119,10 +122,6 @@ export const Column = observer(function Column() {
       />
     ));
   }
-  // const handleColumnNameChange = (event: { target: { value: string } }) => {
-  //   setColumnName(event.target.value);
-  //   actions.updateColumnName(event.target.value);
-  // };
   const navigate = useNavigate();
   const handleButtonClick = () => {
     actions.setTab(1);
@@ -141,8 +140,6 @@ export const Column = observer(function Column() {
       <div
         style={{
           display: "flex",
-          // justifyContent: "center",
-          // alignItems: "center",
         }}
       >
         <Accordion

@@ -55,7 +55,6 @@ export const Time = observer(function Time() {
           value={state.settings.topStageKey} 
           onChange={(event) => {
             // console.log("event.target.value: " , event.target.value)
-            actions.setTopStage(`${event.target.value} (${state.settingsTabs.geologicalTopStages[event.target.value]} Ma top)`)
             actions.setTopStageKey(event.target.value)
             actions.updateSettings()
           }}
@@ -76,7 +75,6 @@ export const Time = observer(function Time() {
           value={state.settings.baseStageKey} 
           onChange={(event) => {
             // console.log("event.target.value: " , event.target.value)
-            actions.setBaseStage(`${event.target.value} (${state.settingsTabs.geologicalBaseStages[event.target.value]} Ma base)`)
             actions.setBaseStageKey(event.target.value)
             actions.updateSettings()
           }}
