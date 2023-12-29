@@ -16,6 +16,7 @@ import path from 'path';
 // Currently Returns ColumnSettings and Stages if they exist
 // TODO: ADD ASSERTS
 export const fetchDatapackInfo = async function fetchDatapackInfo(request: FastifyRequest<{Params: { files: string}}>, reply: FastifyReply) {
+  deleteDirectory(assetconfigs.imagesDirectory)
   const { files } = request.params;
   console.log("getting decrypted info for files: ", files);
   const filesSplit = files.split(" ")
