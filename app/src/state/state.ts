@@ -11,8 +11,9 @@ export type State = {
     selected: "time" | "font" | "column" | "mappoints";
     columns: ColumnSetting;
     columnSelected: { name: string; parents: string[] } | null;
-    geologicalTopStages: GeologicalStages
-    geologicalBaseStages: GeologicalStages
+    geologicalTopStages: GeologicalStages;
+    geologicalBaseStages: GeologicalStages;
+    mapImages: string[];
   };
   chart: ChartConfig | null;
   presets: ChartConfig[];
@@ -46,7 +47,8 @@ export const state = observable<State>({
     },
     columnSelected: null,
     geologicalTopStages: {},
-    geologicalBaseStages: {} 
+    geologicalBaseStages: {} ,
+    mapImages: [],
   },
   chart: null,
   presets: [],

@@ -6,6 +6,7 @@ import pmap from 'p-map';
 
 export async function grabMapImages(datapacks: string[], destination: string) {
     const image_paths = await grabFilepaths(datapacks, assetconfigs.decryptionDirectory, "MapImages")
+    const compiled_images: string[] = [];
     try {
         // recursive: true ensures if it already exists, we continue with no error
         await fs.mkdir(destination, { recursive: true });
@@ -14,6 +15,7 @@ export async function grabMapImages(datapacks: string[], destination: string) {
             const destPath = path.join(destination, fileName);
             try {
                 await fs.copyFile(image_path, destPath);
+                compiled_images.push(`/${destPath}`)
             } catch (e) {
                 console.log("Error copying image file, file could already exist. Resulting Error: ", e)
             }
@@ -22,4 +24,5 @@ export async function grabMapImages(datapacks: string[], destination: string) {
         console.log("Error processing image paths for datapacks: ", datapacks, " \n",
         "With error: ", e)
     }
+    return compiled_images
 }
