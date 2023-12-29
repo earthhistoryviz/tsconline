@@ -19,9 +19,10 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(request: Fasti
   const { files } = request.params;
   console.log("getting decrypted info for files: ", files);
   const filesSplit = files.split(" ")
-  const repl =  await parse(assetconfigs.decryptionDirectory, filesSplit);
-  await grabMapImages(filesSplit, assetconfigs.imagesDirectory);
-  reply.send(repl)
+  const { columns, stages } =  await parse(assetconfigs.decryptionDirectory, filesSplit);
+  const images = await grabMapImages(filesSplit, assetconfigs.imagesDirectory);
+  console.log(images)
+  reply.send({ columns: columns, stages: stages, image_paths: images})
 }
 
 /**

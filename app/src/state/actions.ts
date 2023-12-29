@@ -13,6 +13,9 @@ import { ConstructionOutlined } from "@mui/icons-material";
 export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;
 });
+export const setMapImages = action("setMapImages", (mapImages: string[]) => {
+  state.settingsTabs.mapImages = mapImages;
+});
 
 export const resetSettings = action("resetSettings", () => {
   state.settings = {
@@ -36,12 +39,13 @@ export const setChart = action("setChart", async (newval: number) => {
   const res = await fetcher(`/datapackinfo/${datapacks.join(" ")}`, {
     method: "GET"
   })
-  const {columns, stages} = await res.json()
+  const {columns, stages, image_paths} = await res.json()
   // console.log("reply of columns: ", JSON.stringify(columns, null, 2))
   // console.log("reply of stages: ", JSON.stringify(stages, null, 2))
 
   setSettingsTabsColumns(columns)
   setGeologicalStages(stages)
+  setMapImages(image_paths)
   // Grab the settings for this chart if there are any:
   if (state.chart.settings) {
     console.log(state.chart.settings);

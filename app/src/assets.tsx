@@ -1,13 +1,14 @@
 import React from "react";
 import Checkbox from "@mui/material/Checkbox";
 import { useTheme, styled } from "@mui/material/styles";
-import { TabProps, TabsProps} from '@mui/material';
-import Tab from "@mui/material/Tab";
-import Box from '@mui/material/Box';
+import { makeStyles } from '@mui/styles';
+import { ListItem, List, ListItemAvatar, Avatar, ListItemText, TabProps, TabsProps, Tab, Box} from '@mui/material';
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import MuiAccordion, { AccordionProps } from "@mui/material/Accordion";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 import { Link, LinkProps } from 'react-router-dom';
+import { observer } from "mobx-react-lite";
+import { devSafeUrl } from './util'
 import MuiAccordionSummary, {
   AccordionSummaryProps,
 } from "@mui/material/AccordionSummary";
@@ -134,3 +135,43 @@ export const ColumnContainer = styled(Box)(({ theme }) => ({
   alignItems: 'center',
   padding: theme.spacing(1),
 }));
+const useStyles = makeStyles({
+  listItem: {
+    '&:hover': {
+      backgroundColor: '#f5f5f5',
+      cursor: 'pointer'
+    }
+  }
+});
+type ImageRowComponentProps = {
+  imageUrls: string[]; // Array of image URLs
+};
+
+export const ImageRowComponent: React.FC<ImageRowComponentProps> = observer(({ imageUrls }) => {
+  const classes = useStyles();
+
+  const handleRowClick = (imageUrl: string) => {
+    console.log('Clicked on image URL:', imageUrl);
+  };
+
+  return (
+    <Box>
+      <List>
+        {imageUrls.map((imageUrl, index) => (
+          <ListItem 
+            key={index} 
+            className={classes.listItem} 
+            onClick={() => handleRowClick(imageUrl)}
+          >
+            <ListItemAvatar>
+              <Avatar alt={`Image ${index}`} src={devSafeUrl(imageUrl)} />
+            </ListItemAvatar>
+            <ListItemText primary={`Image ${index}`} />
+          </ListItem>
+        ))}
+      </List>
+    </Box>
+  );
+});
+
+export default ImageRowComponent;
