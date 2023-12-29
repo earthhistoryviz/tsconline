@@ -6,10 +6,11 @@ import { exec } from 'child_process';
 import { readFile, writeFile, stat } from 'fs/promises';
 import md5 from 'md5';
 import { mkdirp } from 'mkdirp';
+import XLSX from 'xlsx';
 import { assertChartRequest } from '@tsconline/shared';
 import { loadPresets } from './preset.js';
 import { assertAssetConfig } from './types.js';
-import './decrypt.js';
+//import  { decrypt, readAndDecryptFile } from './decrypt.js';
 const server = fastify({
     logger: false,
     bodyLimit: 1024 * 1024 * 100, // 10 mb
@@ -23,6 +24,26 @@ const server = fastify({
      }
    }*/
 });
+function readExcelFile(filePath) {
+    const workbook = XLSX.readFile(filePath);
+    const sheetName = workbook.SheetNames[0] || ""; // Assuming the data is in the first sheet
+    const sheet = workbook.Sheets[sheetName];
+    if (!sheet)
+        return [];
+    // Convert sheet to JSON
+    const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    // Log the converted JSON data to the console
+    console.log(jsonData);
+    /*
+      const columnData: string[] = jsonData
+        .filter((row: string[]) => row.length >= 3) // Filter rows with at least 3 columns
+        .map((row: string[]) => (row[2] || "")); // Extract data from the third column
+    
+      const uniqueValues: string[] = Array.from(new Set(columnData)); // Get unique values
+      return uniqueValues;
+    */
+    return jsonData;
+}
 // Load up all the chart configs found in presets:
 const chartconfigs = await loadPresets();
 // Load the current asset config:
@@ -60,6 +81,26 @@ server.register(cors, {
 // Note the "_" on the front of "request" tells TS that we aren't going to use it
 server.get('/presets', async (_request, reply) => {
     reply.send(chartconfigs);
+});
+function assertTimescale(val) {
+    if (!val || typeof val !== 'object')
+        throw new Error('Must be an object');
+    // Additional checks for required keys, types, etc.
+    if (typeof val.key !== 'string' || typeof val.value !== 'number') {
+        throw new Error('Invalid Timescale object');
+    }
+}
+// Serve timescale data endpoint
+server.get('/timescale', async (_req, res) => {
+    try {
+        const timescaleData = readExcelFile('filePath.xlsx'); // Replace with the correct file path
+        timescaleData.forEach((data) => assertTimescale(data)); // Type assertion
+        res.send({ stages: timescaleData });
+    }
+    catch (error) {
+        console.error('Error reading Excel file:', error);
+        res.status(500).send({ error: 'Internal Server Error' });
+    }
 });
 server.post('/charts', async (request, reply) => {
     // const key = Buffer.from('016481d57e032c18f750919bcd7dba2e', 'hex');
@@ -153,4 +194,9 @@ catch (err) {
     server.log.error(err);
     process.exit(1);
 }
+// //Endpoint to serve the timescale data
+// app.get('/timescale', (req: Request, res: Response) => {
+//   const timescaleData = readExcelFile('path.xlsx'); // what is path.xlsx from the GitHub repo?
+//   res.json({ stages: timescaleData });
+// });
 //# sourceMappingURL=index.js.map

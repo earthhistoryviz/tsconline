@@ -11,7 +11,7 @@ import XLSX from 'xlsx';
 import { assertChartRequest } from '@tsconline/shared';
 import { loadPresets } from './preset.js';
 import { AssetConfig, assertAssetConfig } from './types.js';
-import  { decrypt, readAndDecryptFile } from './decrypt.js';
+//import  { decrypt, readAndDecryptFile } from './decrypt.js';
 
 const server = fastify({ 
   logger: false,
@@ -27,24 +27,26 @@ const server = fastify({
   }*/
 });
 
-function readExcelFile(filePath: string): string[] {
+function readExcelFile(filePath: string) {
   const workbook = XLSX.readFile(filePath);
-  const sheetName: string = workbook.SheetNames[0]; // Assuming the data is in the first sheet
+  const sheetName: string = workbook.SheetNames[0] || ""; // Assuming the data is in the first sheet
   const sheet = workbook.Sheets[sheetName];
+  if (!sheet) return [];
 
   // Convert sheet to JSON
   const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
   // Log the converted JSON data to the console
   console.log(jsonData);
-
+/*
   const columnData: string[] = jsonData
     .filter((row: string[]) => row.length >= 3) // Filter rows with at least 3 columns
-    .map((row: string[]) => row[2]); // Extract data from the third column
+    .map((row: string[]) => (row[2] || "")); // Extract data from the third column
 
   const uniqueValues: string[] = Array.from(new Set(columnData)); // Get unique values
-
   return uniqueValues;
+*/
+  return jsonData;
 }
 
 
