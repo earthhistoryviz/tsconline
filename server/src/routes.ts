@@ -6,6 +6,7 @@ import { writeFile, stat } from 'fs/promises';
 import { assertChartRequest } from '@tsconline/shared';
 import { deleteDirectory } from './util.js' 
 import { mkdirp } from 'mkdirp';
+import { grabMapImages } from './mappacks.js'
 import md5 from 'md5';
 import assetconfigs from './index.js';
 import PDFParser from 'pdf2json';
@@ -17,7 +18,9 @@ import path from 'path';
 export const fetchDatapackInfo = async function fetchDatapackInfo(request: FastifyRequest<{Params: { files: string}}>, reply: FastifyReply) {
   const { files } = request.params;
   console.log("getting decrypted info for files: ", files);
-  const repl =  await parse(assetconfigs.decryptionDirectory, files.split(" "));
+  const filesSplit = files.split(" ")
+  const repl =  await parse(assetconfigs.decryptionDirectory, filesSplit);
+  await grabMapImages(filesSplit, assetconfigs.imagesDirectory);
   reply.send(repl)
 }
 

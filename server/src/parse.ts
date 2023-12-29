@@ -1,7 +1,7 @@
-import { glob } from 'glob';
 import { readFile } from 'fs/promises';
 import pmap from 'p-map';
 import type { ColumnSetting, GeologicalStages } from '@tsconline/shared';
+import { grabFilepaths } from './util.js'
 
 /**
  * TODO:
@@ -82,14 +82,7 @@ function recursive(parents: string[], lastparent: string, children: string[], st
  * Maybe add functionality in the future to check if all the files exist
  */
 export async function parse(decrypt_filepath: string, files: string[]): Promise<{columns: ColumnSetting, stages: GeologicalStages}> {
-    // regular expression for all filenames located in <decrypt_filepath>/<file_name>
-    const pattern = new RegExp(files.map(name => {
-        const lastIndex = name.lastIndexOf(".");
-        const filename = lastIndex !== -1 ? name.substring(0, lastIndex) : name;
-        return `${decrypt_filepath}/${filename}/datapacks/.*`
-    }).join('|'));
-    let decrypt_paths = await glob(`${decrypt_filepath}/**/*`);
-    decrypt_paths = decrypt_paths.filter(path => pattern.test(path));
+    const decrypt_paths = await grabFilepaths(files, decrypt_filepath, "datapacks")
     if (decrypt_paths.length == 0) return {columns: {}, stages: {}}
     // let fileSettingsMap: { [filePath: string]: ColumnSetting } = {};
     let decryptedfiles: String = ""

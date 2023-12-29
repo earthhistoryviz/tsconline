@@ -10,5 +10,6 @@
   "decryptionJar": "assets/jars/decrypt.jar",
   "decryptionDirectory": "assets/decrypted",
   "datapacksDirectory": "assets/datapacks",
-  "chartsDirectory": "public/charts"
+  "chartsDirectory": "public/charts",
+  "imagesDirectory": "public/mapimages"
 }
