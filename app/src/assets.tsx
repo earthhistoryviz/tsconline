@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import Checkbox from "@mui/material/Checkbox";
-import { useTheme, styled } from "@mui/material/styles";
+import { Theme, useTheme, styled } from "@mui/material/styles";
 import { makeStyles } from '@mui/styles';
-import { ListItem, List, ListItemAvatar, Avatar, ListItemText, TabProps, TabsProps, Tab, Box} from '@mui/material';
+import { Dialog, ListItem, List, ListItemAvatar, Avatar, ListItemText, TabProps, TabsProps, Tab, Box} from '@mui/material';
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import MuiAccordion, { AccordionProps } from "@mui/material/Accordion";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
@@ -135,42 +135,66 @@ export const ColumnContainer = styled(Box)(({ theme }) => ({
   alignItems: 'center',
   padding: theme.spacing(1),
 }));
-const useStyles = makeStyles({
-  listItem: {
-    '&:hover': {
-      backgroundColor: '#f5f5f5',
-      cursor: 'pointer'
-    }
-  }
-});
+  // listItem: {
+  //   '&:hover': {
+  //     backgroundColor: theme.palette.selection.main,
+  //     cursor: 'pointer'
+  //   },
+  // },
 type ImageRowComponentProps = {
   imageUrls: string[]; // Array of image URLs
 };
 
 export const ImageRowComponent: React.FC<ImageRowComponentProps> = observer(({ imageUrls }) => {
-  const classes = useStyles();
+  const theme = useTheme();
+  const [selectedImageUrl, setSelectedImageUrl] = useState('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<number | null>(null);
 
-  const handleRowClick = (imageUrl: string) => {
+  const handleRowClick = (imageUrl: string, index: number) => {
     console.log('Clicked on image URL:', imageUrl);
+    setSelectedImageUrl(imageUrl);
+    setSelectedItem(selectedItem === index ? null : index);
+    setIsDialogOpen(true);
+  };
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setSelectedItem(null);
   };
 
   return (
-    <Box>
-      <List>
-        {imageUrls.map((imageUrl, index) => (
-          <ListItem 
-            key={index} 
-            className={classes.listItem} 
-            onClick={() => handleRowClick(imageUrl)}
-          >
-            <ListItemAvatar>
-              <Avatar alt={`Image ${index}`} src={devSafeUrl(imageUrl)} />
-            </ListItemAvatar>
-            <ListItemText primary={`Image ${index}`} />
-          </ListItem>
-        ))}
-      </List>
-    </Box>
+    <div>
+      <Box>
+        <List>
+          {imageUrls.map((imageUrl, index) => {
+            const imageName = imageUrl.split("/").pop();
+            return (
+              <ListItem key={index} 
+              selected={selectedItem === index}
+              onClick={() => handleRowClick(devSafeUrl(imageUrl), index)} sx={{
+                    '&:hover': {
+                      backgroundColor: theme.palette.primary.main,
+                      cursor: 'pointer'
+                    },
+                    '&.Mui-selected': {
+                      backgroundColor: theme.palette.selection.light,
+                    },
+
+              }}>
+                <ListItemAvatar>
+                  <Avatar alt={imageName} src={devSafeUrl(imageUrl)} />
+                </ListItemAvatar>
+                <ListItemText primary={`${imageName}`} />
+              </ListItem>
+            )
+          })}
+        </List>
+      </Box>
+
+      <Dialog open={isDialogOpen} onClose={handleCloseDialog}>
+        <img src={selectedImageUrl} alt="Selected" style={{ maxWidth: '100%', maxHeight: '90vh' }} />
+      </Dialog>
+    </div>
   );
 });
 
