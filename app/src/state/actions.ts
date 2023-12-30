@@ -39,12 +39,11 @@ export const setChart = action("setChart", async (newval: number) => {
   const res = await fetcher(`/datapackinfo/${datapacks.join(" ")}`, {
     method: "GET"
   })
-  const {columns, stages, image_paths} = await res.json()
+  const {columns, image_paths} = await res.json()
   // console.log("reply of columns: ", JSON.stringify(columns, null, 2))
   // console.log("reply of stages: ", JSON.stringify(stages, null, 2))
 
   setSettingsTabsColumns(columns)
-  setGeologicalStages(stages)
   setMapImages(image_paths)
   // Grab the settings for this chart if there are any:
   if (state.chart.settings) {
@@ -74,6 +73,9 @@ export const setChart = action("setChart", async (newval: number) => {
 });
 
 
+/**
+ * Sets the geological top stages and the base stages
+ */
 export const setGeologicalStages = action("setGeologicalStages", (stages: GeologicalStages) => {
   let top = stages['TOP']
   let geologicalTopStages: GeologicalStages = {"Present": 0}

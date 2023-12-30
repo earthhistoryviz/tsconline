@@ -1,0 +1,21 @@
+.ImageListItem {
+  height: 60px;
+  margin: 10px;
+  padding: 20px;
+}
+.ImageList {
+  width: "100%";
+  max-width: 1000;
+}
+.ImageListItemText .MuiListItemText-primary {
+  font-size: 1.2rem;
+}
+/* .ListItemAvatar .MuiListItemAvatar-root {
+  width: 100px;
+  height: 100px;
+  border-radius: 5%;
+} */
+.ListItemAvatar {
+  width: 100px;
+  height: 100px;
+}
