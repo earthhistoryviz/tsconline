@@ -1,0 +1,9 @@
+{
+  "img": "AfricaBight.png",
+  "title": "Africa Bight",
+  "description": "simple map pack dev pack",
+  "settings": "settings.tsc",
+  "datapacks": [
+    "AfricaBight.map"
+  ]
+}

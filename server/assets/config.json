@@ -7,7 +7,7 @@
     "Hominids_wImages_GTS2020_Encrypted.dpk",
     "USA-Alaska-Mexico_Encrypted_GTS2020.mdpk",
     "Belgium_GTS2020.mdpk",
-    "AfricaBight.mdpk"
+    "AfricaBight.map"
   ],
   "decryptionJar": "assets/jars/decrypt.jar",
   "decryptionDirectory": "assets/decrypted",
