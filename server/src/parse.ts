@@ -81,7 +81,7 @@ function recursive(parents: string[], lastparent: string, children: string[], st
  * Have not checked edge cases in which a file doesn't show up, will only return any that are correct.
  * Maybe add functionality in the future to check if all the files exist
  */
-export async function parse(decrypt_filepath: string, files: string[]): Promise<{columns: ColumnSetting }> {
+export async function parseDatapacks(decrypt_filepath: string, files: string[]): Promise<{columns: ColumnSetting }> {
     const decrypt_paths = await grabFilepaths(files, decrypt_filepath, "datapacks")
     if (decrypt_paths.length == 0) return {columns: {}}
     // let fileSettingsMap: { [filePath: string]: ColumnSetting } = {};

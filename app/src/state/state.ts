@@ -1,6 +1,6 @@
 import { observable } from "mobx";
 
-import type { ChartConfig, ColumnSetting, GeologicalStages} from "@tsconline/shared";
+import type { MapPoints, ChartConfig, ColumnSetting, GeologicalStages} from "@tsconline/shared";
 
 
 export type State = {
@@ -14,6 +14,7 @@ export type State = {
     geologicalTopStages: GeologicalStages;
     geologicalBaseStages: GeologicalStages;
     mapImages: string[];
+    mapPoints: MapPoints;
   };
   chart: ChartConfig | null;
   presets: ChartConfig[];
@@ -49,6 +50,7 @@ export const state = observable<State>({
     geologicalTopStages: {},
     geologicalBaseStages: {} ,
     mapImages: [],
+    mapPoints: {} ,
   },
   chart: null,
   presets: [],

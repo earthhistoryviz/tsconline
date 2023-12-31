@@ -1,4 +1,46 @@
 // Shared types between app and server (i.e. messages they send back and forth)
+export function assertMaps(o) {
+    if (typeof o !== 'object' || o === null) {
+        throw new Error('Maps must be a non-null object');
+    }
+    for (const key in o) {
+        const map = o[key];
+        if (typeof map !== 'object' || map === null) {
+            throw new Error(`Maps' value for key '${key}' must be a non-null object`);
+        }
+        if (typeof map.img !== 'string') {
+            throw new Error(`Maps' value for key '${key}' must have an 'img' string property`);
+        }
+        if ('note' in map && typeof map.note !== 'string') {
+            throw new Error(`Maps' value for key '${key}' must have a 'note' string property`);
+        }
+        if ('parent' in map && typeof map.parent !== 'object') {
+            throw new Error(`Maps' value for key '${key}' has an invalid 'parent' property`);
+        }
+        if (typeof map.coordtype !== 'string') {
+            throw new Error(`Maps' value for key '${key}' must have a 'coordtype' string property`);
+        }
+        assertBounds(map.bounds);
+        assertMapPoints(map.mapPoints);
+    }
+}
+function assertBounds(bounds) {
+    if (typeof bounds !== 'object' || bounds === null) {
+        throw new Error('Bounds must be a non-null object');
+    }
+    if (typeof bounds.upperLeftLon !== 'number') {
+        throw new Error('Bounds must have an upperLeftLon number property');
+    }
+    if (typeof bounds.upperLeftLat !== 'number') {
+        throw new Error('Bounds must have an upperLeftLat number property');
+    }
+    if (typeof bounds.lowerLeftLon !== 'number') {
+        throw new Error('Bounds must have a lowerLeftLon number property');
+    }
+    if (typeof bounds.lowerLeftLat !== 'number') {
+        throw new Error('Bounds must have a lowerLeftLat number property');
+    }
+}
 export function assertMapPoints(o) {
     if (typeof o !== 'object' || o === null) {
         throw new Error('MapPoints must be a non-null object');
