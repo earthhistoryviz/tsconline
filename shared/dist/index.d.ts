@@ -25,6 +25,23 @@ export type MapPoints = {
         note?: string;
     };
 };
+export type Maps = {
+    [name: string]: {
+        img: string;
+        note?: string;
+        parent?: Maps[string];
+        coordtype: string;
+        bounds: Bounds;
+        mapPoints: MapPoints;
+    };
+};
+export type Bounds = {
+    upperLeftLon: number;
+    upperLeftLat: number;
+    lowerLeftLon: number;
+    lowerLeftLat: number;
+};
+export declare function assertMaps(o: any): asserts o is Maps;
 export declare function assertMapPoints(o: any): asserts o is MapPoints;
 export declare function assertChartConfig(o: any): asserts o is ChartConfig;
 export declare function assertChartConfigArray(o: any): asserts o is ChartConfig[];

@@ -1,5 +1,5 @@
 
-import { parse } from './parse.js';
+import { parseDatapacks } from './parse.js';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { exec } from 'child_process';
 import { writeFile, stat } from 'fs/promises';
@@ -18,9 +18,10 @@ import path from 'path';
 export const fetchDatapackInfo = async function fetchDatapackInfo(request: FastifyRequest<{Params: { files: string}}>, reply: FastifyReply) {
   deleteDirectory(assetconfigs.imagesDirectory)
   const { files } = request.params;
+  //TODO check if files exist. probably check this in the glob of parse Datapacks
   console.log("getting decrypted info for files: ", files);
   const filesSplit = files.split(" ")
-  const { columns } =  await parse(assetconfigs.decryptionDirectory, filesSplit);
+  const { columns } =  await parseDatapacks(assetconfigs.decryptionDirectory, filesSplit);
   const images = await grabMapImages(filesSplit, assetconfigs.imagesDirectory);
 //   console.log(images)
   reply.send({ columns: columns, image_paths: images})
