@@ -15,6 +15,17 @@ export type ColumnSetting = {
 export type GeologicalStages = {
     [key: string]: number;
 };
+export type MapPoints = {
+    [name: string]: {
+        lat: number;
+        lon: number;
+        default?: string;
+        minage?: number;
+        maxage?: number;
+        note?: string;
+    };
+};
+export declare function assertMapPoints(o: any): asserts o is MapPoints;
 export declare function assertChartConfig(o: any): asserts o is ChartConfig;
 export declare function assertChartConfigArray(o: any): asserts o is ChartConfig[];
 export type ChartConfigError = {
