@@ -78,6 +78,7 @@ export async function grabMaps(datapacks: string[]): Promise<{maps: Maps}> {
                         if (!info || info.length < 6) {
                             throw new Error(error)
                         }
+                        // TODO: coordtype can be multiple things, so won't always be called upperLeftLon
                         map.coordtype = String(info[1])
                         map.bounds.upperLeftLon = Number(info[2])
                         map.bounds.upperLeftLat = Number(info[3])

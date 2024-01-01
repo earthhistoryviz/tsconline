@@ -148,9 +148,8 @@ type ImageRowComponentProps = {
 
 export const ImageRowComponent: React.FC<ImageRowComponentProps> = observer(({ maps }) => {
   const theme = useTheme();
-  const [selectedMap, setSelectedMap] = useState('');
+  const [selectedMap, setSelectedMap] = useState<String | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<number | null>(null);
 
   const handleRowClick = (name: string) => {
     console.log('Clicked on map:', name);
@@ -159,7 +158,7 @@ export const ImageRowComponent: React.FC<ImageRowComponentProps> = observer(({ m
   };
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
-    setSelectedItem(null);
+    setSelectedMap(null)
   };
 
   return (
@@ -190,7 +189,7 @@ export const ImageRowComponent: React.FC<ImageRowComponentProps> = observer(({ m
       </Box>
 
       <Dialog open={isDialogOpen} onClose={handleCloseDialog}>
-        <MapViewer mapData={maps[selectedMap]} />
+        {selectedMap ? <MapViewer mapData={maps[selectedMap]} /> : null}
         {/* <img src={selectedImageUrl} alt="Selected" style={{ maxWidth: '100%', maxHeight: '90vh' }} /> */}
       </Dialog>
     </div>
@@ -223,8 +222,13 @@ export const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
   };
 
   return (
-    <div style={{position: 'relative'}}>
-      <img src={devSafeUrl(mapData.img)} alt="Map" />
+    <div style={{overflowY: "hidden", overflowX: "hidden"}} >
+      <img src={devSafeUrl(mapData.img)} alt="Map" 
+       style ={{
+        maxWidth: '100%',
+        maxHeight: '100vh',
+      }}
+      />
       {Object.entries(mapData.mapPoints).map(([name, point]) => {
         const position = calculatePosition(point.lat, point.lon);
         return (
