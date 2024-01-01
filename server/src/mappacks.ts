@@ -71,7 +71,7 @@ export async function grabMaps(datapacks: string[]): Promise<{maps: Maps}> {
                             throw new Error(error)
                         }
                         mapname = String(info[1])
-                        map.img = String(info[2])
+                        map.img = `/${assetconfigs.imagesDirectory}/${String(info[2])}`
                         map.note = String(info[3])
                         break;
                     case 'HEADER-COORD':

@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import Checkbox from "@mui/material/Checkbox";
 import { Theme, useTheme, styled } from "@mui/material/styles";
 import { makeStyles } from '@mui/styles';
-import { Dialog, ListItem, List, ListItemAvatar, Avatar, ListItemText, TabProps, TabsProps, Tab, Box} from '@mui/material';
+import { Button, Dialog, ListItem, List, ListItemAvatar, Avatar, ListItemText, TabProps, TabsProps, Tab, Box} from '@mui/material';
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import MuiAccordion, { AccordionProps } from "@mui/material/Accordion";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 import { Link, LinkProps } from 'react-router-dom';
 import { observer } from "mobx-react-lite";
 import { devSafeUrl } from './util'
+import type { Maps } from '@tsconline/shared'
 import MuiAccordionSummary, {
   AccordionSummaryProps,
 } from "@mui/material/AccordionSummary";
@@ -142,19 +143,18 @@ export const ColumnContainer = styled(Box)(({ theme }) => ({
   //   },
   // },
 type ImageRowComponentProps = {
-  imageUrls: string[]; // Array of image URLs
+  maps: Maps; // Array of image URLs
 };
 
-export const ImageRowComponent: React.FC<ImageRowComponentProps> = observer(({ imageUrls }) => {
+export const ImageRowComponent: React.FC<ImageRowComponentProps> = observer(({ maps }) => {
   const theme = useTheme();
-  const [selectedImageUrl, setSelectedImageUrl] = useState('');
+  const [selectedMap, setSelectedMap] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<number | null>(null);
 
-  const handleRowClick = (imageUrl: string, index: number) => {
-    console.log('Clicked on image URL:', imageUrl);
-    setSelectedImageUrl(imageUrl);
-    setSelectedItem(selectedItem === index ? null : index);
+  const handleRowClick = (name: string) => {
+    console.log('Clicked on map:', name);
+    setSelectedMap(name);
     setIsDialogOpen(true);
   };
   const handleCloseDialog = () => {
@@ -166,25 +166,23 @@ export const ImageRowComponent: React.FC<ImageRowComponentProps> = observer(({ i
     <div>
       <Box>
         <List>
-          {imageUrls.map((imageUrl, index) => {
-            const imageName = imageUrl.split("/").pop();
+          {Object.entries(maps).map(([name, map]) => {
             return (
-              <ListItem key={index} 
-              selected={selectedItem === index}
-              onClick={() => handleRowClick(devSafeUrl(imageUrl), index)} sx={{
-                    '&:hover': {
-                      backgroundColor: theme.palette.primary.main,
-                      cursor: 'pointer'
-                    },
-                    '&.Mui-selected': {
-                      backgroundColor: theme.palette.selection.light,
-                    },
-
+              <ListItem key={name} 
+                selected={selectedMap === name}
+                onClick={() => handleRowClick(name)} sx={{
+                      '&:hover': {
+                        backgroundColor: theme.palette.primary.main,
+                        cursor: 'pointer'
+                      },
+                      '&.Mui-selected': {
+                        backgroundColor: theme.palette.selection.light,
+                      },
               }}>
                 <ListItemAvatar>
-                  <Avatar alt={imageName} src={devSafeUrl(imageUrl)} />
+                  <Avatar alt={name} src={devSafeUrl(map.img)} />
                 </ListItemAvatar>
-                <ListItemText primary={`${imageName}`} />
+                <ListItemText primary={`${name}`} />
               </ListItem>
             )
           })}
@@ -192,10 +190,49 @@ export const ImageRowComponent: React.FC<ImageRowComponentProps> = observer(({ i
       </Box>
 
       <Dialog open={isDialogOpen} onClose={handleCloseDialog}>
-        <img src={selectedImageUrl} alt="Selected" style={{ maxWidth: '100%', maxHeight: '90vh' }} />
+        <MapViewer mapData={maps[selectedMap]} />
+        {/* <img src={selectedImageUrl} alt="Selected" style={{ maxWidth: '100%', maxHeight: '90vh' }} /> */}
       </Dialog>
     </div>
   );
 });
 
-export default ImageRowComponent;
+interface MapViewerProps {
+  mapData: Maps[string];
+}
+
+export const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
+  const calculatePosition = (lat: number, lon: number) => {
+    // This function should calculate the position of the point on the image
+    // based on the latitude and longitude, and the bounds of the map.
+    // The exact implementation will depend on how your coordinates map to the image.
+    // This is a placeholder function.
+    return { x: lat, y: lon };
+  };
+
+  return (
+    <div>
+      <img src={devSafeUrl(mapData.img)} alt="Map" style={{ position: 'relative' }} />
+      {Object.entries(mapData.mapPoints).map(([name, point]) => {
+        const position = calculatePosition(point.lat, point.lon);
+        return (
+          <Button
+            key={name}
+            style={{
+              position: 'absolute',
+              left: `${position.x}%`,
+              top: `${position.y}%`,
+            }}
+            onClick={() => console.log(`Point ${name} clicked`)}
+          >
+            {/* You can replace this with any representation of a point */}
+            🔴
+          </Button>
+        );
+      })}
+    </div>
+  );
+};
+
+// export default ImageRowComponent;
+// export default MapViewer;
