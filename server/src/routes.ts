@@ -6,7 +6,7 @@ import { writeFile, stat } from 'fs/promises';
 import { assertChartRequest } from '@tsconline/shared';
 import { deleteDirectory } from './util.js' 
 import { mkdirp } from 'mkdirp';
-import { grabMapImages } from './mappacks.js'
+import { grabMapImages, grabMaps } from './mappacks.js'
 import md5 from 'md5';
 import assetconfigs from './index.js';
 import PDFParser from 'pdf2json';
@@ -22,9 +22,10 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(request: Fasti
   console.log("getting decrypted info for files: ", files);
   const filesSplit = files.split(" ")
   const { columns } =  await parseDatapacks(assetconfigs.decryptionDirectory, filesSplit);
-  const images = await grabMapImages(filesSplit, assetconfigs.imagesDirectory);
+  const image_paths = await grabMapImages(filesSplit, assetconfigs.imagesDirectory);
+  const { maps } = await grabMaps(filesSplit)
 //   console.log(images)
-  reply.send({ columns: columns, image_paths: images})
+  reply.send({ columns: columns, image_paths: image_paths, maps: maps})
 }
 
 /**
