@@ -202,17 +202,29 @@ interface MapViewerProps {
 }
 
 export const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
+  const theme = useTheme()
   const calculatePosition = (lat: number, lon: number) => {
-    // This function should calculate the position of the point on the image
-    // based on the latitude and longitude, and the bounds of the map.
-    // The exact implementation will depend on how your coordinates map to the image.
-    // This is a placeholder function.
-    return { x: lat, y: lon };
+    const {upperLeftLat, upperLeftLon, lowerRightLat, lowerRightLon} = mapData.bounds
+
+    const latRange = Math.abs(upperLeftLat - lowerRightLat);
+    const lonRange = Math.abs(upperLeftLon - lowerRightLon);
+
+    let normalizedLat = lat - Math.min(upperLeftLat, lowerRightLat);
+    let normalizedLon = lon - Math.min(upperLeftLon, lowerRightLon);
+
+    let x = (normalizedLon / lonRange) * 100;
+    let y = (normalizedLat / latRange) * 100;
+
+    // invert y-axis if y is 0 at the top
+    y = 100 - y;
+
+    console.log(`x: ${x}, y: ${y}`);
+    return { x, y };
   };
 
   return (
-    <div>
-      <img src={devSafeUrl(mapData.img)} alt="Map" style={{ position: 'relative' }} />
+    <div style={{position: 'relative'}}>
+      <img src={devSafeUrl(mapData.img)} alt="Map" />
       {Object.entries(mapData.mapPoints).map(([name, point]) => {
         const position = calculatePosition(point.lat, point.lon);
         return (
@@ -220,14 +232,16 @@ export const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
             key={name}
             style={{
               position: 'absolute',
-              left: `${position.x}%`,
-              top: `${position.y}%`,
+              left: `calc(${position.x}% - 10px)`,
+              top: `calc(${position.y}% - 10px)`,
+              width: '10px',       
+              height: '10px',      
+              borderRadius: '50%', 
+              padding: 0,          
+              backgroundColor: theme.palette.selection.main,
             }}
-            onClick={() => console.log(`Point ${name} clicked`)}
-          >
-            {/* You can replace this with any representation of a point */}
-            🔴
-          </Button>
+            onClick={() => console.log(`Point ${name} clicked at point x:${position.x}, y:${position.y}`)}
+          />
         );
       })}
     </div>

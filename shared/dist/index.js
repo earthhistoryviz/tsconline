@@ -34,10 +34,10 @@ function assertBounds(bounds) {
     if (typeof bounds.upperLeftLat !== 'number') {
         throw new Error('Bounds must have an upperLeftLat number property');
     }
-    if (typeof bounds.lowerLeftLon !== 'number') {
+    if (typeof bounds.lowerRightLon !== 'number') {
         throw new Error('Bounds must have a lowerLeftLon number property');
     }
-    if (typeof bounds.lowerLeftLat !== 'number') {
+    if (typeof bounds.lowerRightLat !== 'number') {
         throw new Error('Bounds must have a lowerLeftLat number property');
     }
 }
