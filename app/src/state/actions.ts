@@ -1,6 +1,7 @@
 import { action, runInAction } from "mobx";
 import {
   type ChartConfig,
+  type Maps,
   assertChartInfo,
   isChartError,
 } from "@tsconline/shared";
@@ -39,12 +40,14 @@ export const setChart = action("setChart", async (newval: number) => {
   const res = await fetcher(`/datapackinfo/${datapacks.join(" ")}`, {
     method: "GET"
   })
-  const {columns, image_paths} = await res.json()
+  const {columns, image_paths, maps} = await res.json()
   // console.log("reply of columns: ", JSON.stringify(columns, null, 2))
   // console.log("reply of stages: ", JSON.stringify(stages, null, 2))
 
   setSettingsTabsColumns(columns)
   setMapImages(image_paths)
+  setMaps(maps)
+  console.log(state.settingsTabs.maps)
   // Grab the settings for this chart if there are any:
   if (state.chart.settings) {
     console.log(state.chart.settings);
@@ -149,6 +152,9 @@ export const loadPresets = action("loadPresets", (presets: ChartConfig[]) => {
 });
 export const setChartPath = action("setChartPath", (chartpath: string) => {
   state.chartPath = chartpath;
+});
+export const setMaps = action("setMaps", (maps: Maps) => {
+  state.settingsTabs.maps = maps;
 });
 export const setSettingsTabsColumns = action("setSettingsTabsColumns", (columns: ColumnSetting) => {
   state.settingsTabs.columns = columns;
