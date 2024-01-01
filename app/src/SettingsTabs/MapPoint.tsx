@@ -11,7 +11,7 @@ export const MapPoint = observer(function MapPoint() {
                     This is Map Point
                 </div>
                 :
-                <ImageRowComponent imageUrls={state.settingsTabs.mapImages}/>
+                <ImageRowComponent maps={state.settingsTabs.maps}/>
         }
         </div>
     )
