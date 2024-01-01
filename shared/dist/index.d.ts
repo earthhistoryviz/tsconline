@@ -38,8 +38,8 @@ export type Maps = {
 export type Bounds = {
     upperLeftLon: number;
     upperLeftLat: number;
-    lowerLeftLon: number;
-    lowerLeftLat: number;
+    lowerRightLon: number;
+    lowerRightLat: number;
 };
 export declare function assertMaps(o: any): asserts o is Maps;
 export declare function assertMapPoints(o: any): asserts o is MapPoints;

@@ -47,8 +47,8 @@ export async function grabMaps(datapacks: string[]): Promise<{maps: Maps}> {
                 bounds: {
                     upperLeftLon: 0,
                     upperLeftLat: 0,
-                    lowerLeftLon: 0,
-                    lowerLeftLat: 0
+                    lowerRightLon: 0,
+                    lowerRightLat: 0
                 },
                 mapPoints: {}
             }
@@ -81,8 +81,8 @@ export async function grabMaps(datapacks: string[]): Promise<{maps: Maps}> {
                         map.coordtype = String(info[1])
                         map.bounds.upperLeftLon = Number(info[2])
                         map.bounds.upperLeftLat = Number(info[3])
-                        map.bounds.lowerLeftLon = Number(info[4])
-                        map.bounds.lowerLeftLat = Number(info[5])
+                        map.bounds.lowerRightLon = Number(info[4])
+                        map.bounds.lowerRightLat = Number(info[5])
                         break;
                     case 'HEADER-DATACOL':
                         if (!info || info.length < 3) {
@@ -103,14 +103,15 @@ export async function grabMaps(datapacks: string[]): Promise<{maps: Maps}> {
                         }
                         console.log(settingsNames)
                         let i = index + 1
-                        let mapPoint: MapPoints[string] = {
-                            lat: 0,
-                            lon: 0
-                        }
-                        let mapPointName = ""
                         // iterate over the line and depending on the columns above, figure out which
                         // parts of MapPoints to put it in
                         while (info && info[0] === "DATACOL") {
+                            let mapPoint: MapPoints[string] = {
+                                lat: 0,
+                                lon: 0
+                            }
+                            let mapPointName = ""
+                            console.log(info)
                             for (let j = 1; j < info.length; j++) {
                                 if (!settingsNames[j] || !settingsNames[j]!.label) {
                                     throw new Error(error)
@@ -144,8 +145,8 @@ export async function grabMaps(datapacks: string[]): Promise<{maps: Maps}> {
                             }
                             i++
                             info = tabSeparated[i]
+                            map.mapPoints[mapPointName] = mapPoint
                         }
-                        map.mapPoints[mapPointName] = mapPoint
                         break;
                 }
             }

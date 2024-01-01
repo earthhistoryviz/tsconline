@@ -51,6 +51,16 @@ const theme = createTheme({
     typography: {
         fontFamily: '"Titillium Web", sans-serif',
     },
+    components: {
+        // changes for the mappack buttons
+        MuiButton: {
+          styleOverrides: {
+            root: {
+              minWidth: '0px', // Override min-width
+            },
+          },
+        },
+      },
 });
 
 export default theme;
