@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "../state";
-import { MapRowComponent } from "../assets"
+import { MapRowComponent } from "../MapPointAssets"
 export const MapPoint = observer(function MapPoint() {
     const { state } = useContext(context);
     return (
