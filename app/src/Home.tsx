@@ -7,7 +7,7 @@ import { ChartConfig } from '@tsconline/shared';
 import { primary_light, primary_dark, secondary } from './constant';
 import { devSafeUrl } from './util';
 import { context } from './state';
-import { Box, Button, FormGroup, FormControlLabel, Checkbox, FormControl } from '@mui/material';
+import { Box, Button, List, ListItem,FormGroup, FormControlLabel, Checkbox, FormControl } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { TSCCheckbox }  from './assets'
 
@@ -62,15 +62,23 @@ export const Home = observer(function Home() {
           </div>
         }
       </div>
-      <div className="options">
+      <List className="options">
         { state.presets.map((chart, index) => (
-          <div key={`chart_${index}`} className="item" onClick={() => {
+          <ListItem key={`chart_${index}`} className="item" onClick={() => {
             actions.setChart(index)
-          }}>
+          }}
+          sx={{
+            '&:hover': {
+              backgroundColor: theme.palette.primary.main,
+              cursor: 'pointer'
+            },
+            '&.Mui-selected': {
+              backgroundColor: theme.palette.selection.light,
+            },}}>
             { displayPreset(chart) }
-          </div>
+          </ListItem>
         ))}
-      </div>
+      </List>
       <div className="bottom_button" >
         <Button
           sx={{backgroundColor: theme.palette.button.main, color: "#FFFFFF"}}
