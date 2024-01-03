@@ -7,7 +7,7 @@ import { ChartConfig } from '@tsconline/shared';
 import { primary_light, primary_dark, secondary } from './constant';
 import { devSafeUrl } from './util';
 import { context } from './state';
-import { Box, Button, List, ListItem,FormGroup, FormControlLabel, Checkbox, FormControl } from '@mui/material';
+import { Box, Button, List, ListItem,FormGroup, FormControlLabel, Checkbox, FormControl, CardActions, Card, Grid, Container, CardContent, Typography, CardMedia } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { TSCCheckbox }  from './assets'
 
@@ -18,14 +18,6 @@ export const Home = observer(function Home() {
   const theme = useTheme();
 
   const navigate = useNavigate();
-
-  const displayPreset = (p: ChartConfig) => (
-    <div className="panel">
-      <img style={{ maxWidth: "100%", maxHeight:"100%"}} src={devSafeUrl(p.img)} />
-      <h1 className="header1">{p.title}</h1>
-      <h2 className="header2">{p.description}</h2>
-    </div>
-  );
 
   return (
     <div className="whole_page">
@@ -62,23 +54,39 @@ export const Home = observer(function Home() {
           </div>
         }
       </div>
-      <List className="options">
-        { state.presets.map((chart, index) => (
-          <ListItem key={`chart_${index}`} className="item" onClick={() => {
-            actions.setChart(index)
-          }}
-          sx={{
-            '&:hover': {
-              backgroundColor: theme.palette.primary.main,
-              cursor: 'pointer'
-            },
-            '&.Mui-selected': {
-              backgroundColor: theme.palette.selection.light,
-            },}}>
-            { displayPreset(chart) }
-          </ListItem>
-        ))}
-      </List>
+      <Container sx={{ py: 8 }} maxWidth="md">
+          {/* End hero unit */}
+          <Grid container spacing={4}>
+            {state.presets.map((preset, index) => (
+              <Grid item key={index} xs={12} sm={6} md={4}>
+                <Card
+                  sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+                >
+                  <CardMedia
+                    component="div"
+                    sx={{
+                      // 16:9
+                      pt: '56.25%',
+                    }}
+                    image={devSafeUrl(preset.img)}
+                  />
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <Typography gutterBottom variant="h5" component="h2">
+                     {preset.title} 
+                    </Typography>
+                    <Typography>
+                      {preset.description}
+                    </Typography>
+                  </CardContent>
+                  <CardActions>
+                    <Button size="small">View</Button>
+                    <Button size="small">Edit</Button>
+                  </CardActions>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
       <div className="bottom_button" >
         <Button
           sx={{backgroundColor: theme.palette.button.main, color: "#FFFFFF"}}
