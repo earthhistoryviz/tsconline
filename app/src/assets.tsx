@@ -121,19 +121,23 @@ export const AccordionSummary = styled((props: AccordionSummaryProps) => (
     order: 2,
     flexGrow: 1, 
     alignItems: "center",
+    margin: "0px"
   },
 }));
 
 export const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
   padding: theme.spacing(2),
   borderTop: "1px solid rgba(0, 0, 0, .125)",
+  "& .MuiAccordionDetails-root": {
+    padding: "0px 8px 4px"
+  }
 }));
 
 export const ColumnContainer = styled(Box)(({ theme }) => ({
   // backgroundColor: theme.palette.background.default, 
   display: 'flex',
   alignItems: 'center',
-  padding: theme.spacing(1),
+  padding: theme.spacing(0),
 }));
   // listItem: {
   //   '&:hover': {
