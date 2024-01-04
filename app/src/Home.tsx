@@ -10,6 +10,7 @@ import { context } from './state';
 import { Box, Button, List, ListItem,FormGroup, FormControlLabel, Checkbox, FormControl, CardActions, Card, Grid, Container, CardContent, Typography, CardMedia } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { TSCCheckbox }  from './assets'
+import { CustomCard }  from './PresetListComponent' 
 
 import "./Home.css"
 
@@ -54,39 +55,7 @@ export const Home = observer(function Home() {
           </div>
         }
       </div>
-      <Container sx={{ py: 8 }} maxWidth="md">
-          {/* End hero unit */}
-          <Grid container spacing={4}>
-            {state.presets.map((preset, index) => (
-              <Grid item key={index} xs={12} sm={6} md={4}>
-                <Card
-                  sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-                >
-                  <CardMedia
-                    component="div"
-                    sx={{
-                      // 16:9
-                      pt: '56.25%',
-                    }}
-                    image={devSafeUrl(preset.img)}
-                  />
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <Typography gutterBottom variant="h5" component="h2">
-                     {preset.title} 
-                    </Typography>
-                    <Typography>
-                      {preset.description}
-                    </Typography>
-                  </CardContent>
-                  <CardActions>
-                    <Button size="small">View</Button>
-                    <Button size="small">Edit</Button>
-                  </CardActions>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
+      <TSCPresetHighlights/>
       <div className="bottom_button" >
         <Button
           sx={{backgroundColor: theme.palette.button.main, color: "#FFFFFF"}}
@@ -100,3 +69,33 @@ export const Home = observer(function Home() {
     </div>
   );
 });
+
+const TSCPresetHighlights = observer(function TSCPresetHighlights() {
+  const { state, actions } = useContext(context);
+  const theme = useTheme()
+  return (
+    <Grid container spacing={4}>
+      {state.presets.map((preset, index) => (
+        <Grid item key={index}>
+        <CustomCard
+          color={theme.palette.navbar.main}
+          date={"02.04.2020"}
+          img={
+            devSafeUrl(preset.img)
+          }
+          logo={devSafeUrl(preset.img)}
+          title={
+            <>
+              {preset.title}
+              <br />
+            </>
+          }
+          onClick={ () => {
+            actions.setChart(index)
+          }
+          }
+        />
+      </Grid> ))}
+    </Grid>
+  );
+})
