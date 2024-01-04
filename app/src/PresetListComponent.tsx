@@ -48,9 +48,10 @@ const CardMediaCover = styled(CardMedia)(() => ({
 }));
 
 const StyledH2 = styled("h2")(({ theme }) => ({
-  fontFamily: "Fjalla One",
+  fontFamily: theme.typography.fontFamily,
+  fontWeight: 700,
   fontSize: "1.25rem",
-  color: theme.palette.primary.main,
+  color: theme.palette.background.default,
   margin: 0,
   overflow: "hidden",
   textOverflow: "ellipsis",
@@ -96,19 +97,18 @@ const ClickableCard = styled(ButtonBase)(() => ({
   display: 'block',
   textAlign: 'inherit',
   width: '100%',
-  '&:hover': {
-    // Optional: styling for hover state
-  },
+  // '&:hover': {
+  // },
 }));
 
 const StyledDivTeam = styled("div")(({ theme }) => ({
-  fontFamily: "Sen",
+  fontFamily: theme.typography.fontFamily,
   fontSize: "0.75rem",
   color: "rgba(255 255 255 / 80%)",
 }));
 
 const StyledDivDate = styled("div")(({ theme }) => ({
-  fontFamily: "Sen",
+  fontFamily: theme.typography.fontFamily,
   color: "#fff",
   backgroundColor: theme.palette.text.disabled,
   opacity: 0.72,

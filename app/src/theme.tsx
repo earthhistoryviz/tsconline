@@ -50,6 +50,7 @@ const theme = createTheme({
     },
     typography: {
         fontFamily: '"Titillium Web", sans-serif',
+        // fontFamily: '"Cinzel", sans-serif',
     },
     components: {
         // changes for the mappack buttons
