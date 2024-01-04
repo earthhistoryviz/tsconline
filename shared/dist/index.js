@@ -35,10 +35,10 @@ function assertBounds(bounds) {
         throw new Error('Bounds must have an upperLeftLat number property');
     }
     if (typeof bounds.lowerRightLon !== 'number') {
-        throw new Error('Bounds must have a lowerLeftLon number property');
+        throw new Error('Bounds must have a lowerRightLon number property');
     }
     if (typeof bounds.lowerRightLat !== 'number') {
-        throw new Error('Bounds must have a lowerLeftLat number property');
+        throw new Error('Bounds must have a lowerRightLat number property');
     }
 }
 export function assertMapPoints(o) {
