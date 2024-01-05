@@ -1,4 +1,5 @@
 import { createTheme } from '@mui/material/styles';
+import Color from 'color';
 declare module '@mui/material/styles' {
     interface Palette {
       altbackground: Palette['primary'];
@@ -17,7 +18,7 @@ declare module '@mui/material/styles' {
     }
   }
 
-const theme = createTheme({
+let theme = createTheme({
     palette: {
         primary: {
             main: "#D3D3D3",
@@ -29,7 +30,9 @@ const theme = createTheme({
             default: "#FAF9F9"
         },
         altbackground: {
-            main: "#E2FDFF"
+            light: "#72A4E1",
+            main: "#8FB7E7",
+            dark: "#1D4E89",
         },
         button: {
             main: "#3C91E6"
@@ -46,22 +49,33 @@ const theme = createTheme({
         selection: {
             light: "#B1ADE2",
             main: "#9792E3"
-        }
+        },
     },
     typography: {
         fontFamily: '"Titillium Web", sans-serif',
         // fontFamily: '"Cinzel", sans-serif',
     },
     components: {
-        // changes for the mappack buttons
         MuiButton: {
           styleOverrides: {
             root: {
-              minWidth: '0px', // Override min-width
+              minWidth: '0px', 
             },
           },
         },
       },
+});
+theme = createTheme(theme, {
+  palette: {
+    gradient: {
+      main: `linear-gradient(to top, 
+              ${Color(theme.palette.altbackground.light)
+              .lighten(0.3)}, 
+            ${Color(theme.palette.altbackground.main)
+              .rotate(24)
+              .lighten(0.3)})`,
+    },
+  },
 });
 
 export default theme;

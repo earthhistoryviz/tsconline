@@ -104,7 +104,7 @@ export const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
               height: '10px',      
               borderRadius: '50%', 
               padding: 0,          
-              backgroundColor: theme.palette.selection.main,
+              backgroundColor: 'red',
             }}
             onClick={() => console.log(`Point ${name} clicked at point x:${position.x}, y:${position.y}`)}
           />

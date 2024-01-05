@@ -7,7 +7,6 @@ import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import MuiAccordion, { AccordionProps } from "@mui/material/Accordion";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 // import { Link, LinkProps } from 'react-router-dom';
-import { observer } from "mobx-react-lite";
 import { devSafeUrl } from './util'
 import MuiAccordionSummary, {
   AccordionSummaryProps,

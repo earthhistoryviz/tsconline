@@ -2,7 +2,6 @@
   display: grid;
   place-items: center;
   height: 92vh;
-  font-family: "Titillium Web", sans-serif;
   grid-template-rows: auto 100px 200px 100px auto;
   text-align: center;
   position: relative;
