@@ -1,5 +1,6 @@
 import React from 'react';
 import { useContext } from 'react'
+import Color from 'color';
 import { observer } from 'mobx-react-lite';
 import ForwardIcon from '@mui/icons-material/Forward';
 import { useNavigate } from 'react-router-dom';
@@ -8,7 +9,7 @@ import { primary_light, primary_dark, secondary } from './constant';
 import { devSafeUrl } from './util';
 import { context } from './state';
 import { Box, Button, List, ListItem,FormGroup, FormControlLabel, Checkbox, FormControl, CardActions, Card, Grid, Container, CardContent, Typography, CardMedia } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import { useTheme, styled } from '@mui/material/styles';
 import { TSCCheckbox }  from './assets'
 import { CustomCard }  from './PresetListComponent' 
 
@@ -18,17 +19,28 @@ export const Home = observer(function Home() {
   const { state, actions } = useContext(context); 
   const theme = useTheme();
 
+  const background = `linear-gradient(to top, 
+        ${Color(theme.palette.altbackground.light)
+        .lighten(0.3)}, 
+      ${Color(theme.palette.altbackground.main)
+        .rotate(24)
+        .lighten(0.3)})`;
+
+
   const navigate = useNavigate();
 
   return (
-    <div className="whole_page">
-      <div className="top_box" style={{backgroundColor: theme.palette.altbackground.main}}>
+    <div className="whole_page" style={{
+      background: background,
+    }}>
+      <div className="top_box" style={{
+        }}>
         { !state.chart ? <React.Fragment /> : 
           <div className="chart_display">
             <div className="holds_picture">
               <img className="chart" src={devSafeUrl(state.chart.img)} />
             </div>
-            <div className="details">
+            <div className="details" style ={{ fontFamily: theme.typography.fontFamily }}>
               <h2 className="preset_name"style={{color: secondary}}>{state.chart.title} </h2>
               <p className="description" style={{color: secondary}}>{state.chart.description}</p>
                 <Button 
@@ -56,10 +68,19 @@ export const Home = observer(function Home() {
         }
       </div>
       <TSCPresetHighlights/>
-      <div className="bottom_button" >
+      <div className="bottom_button">
         <Button
-          sx={{backgroundColor: theme.palette.button.main, color: "#FFFFFF"}}
-          variant="contained" style={{width: "325px", height: "75px", marginLeft: "auto", marginRight: "auto"}} 
+          variant="contained" style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "10vh",
+            backgroundColor: theme.palette.dark.main, 
+            color: "#FFFFFF", 
+            width: "30vh", 
+            marginLeft: "auto", 
+            marginRight: "auto",
+          }} 
           onClick={() => {
             actions.removeCache();
           }}>
@@ -74,7 +95,9 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights() {
   const { state, actions } = useContext(context);
   const theme = useTheme()
   return (
-    <Grid container spacing={4}>
+    <Grid className="presets" container spacing={4} style={{
+      background: "#00" 
+    }}>
       {state.presets.map((preset, index) => (
         <Grid item key={index}>
         <CustomCard

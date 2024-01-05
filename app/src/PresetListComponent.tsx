@@ -1,6 +1,6 @@
 import React from "react";
 import cx from "clsx";
-import Color from "color"; // v3.2.1
+import Color from "color";
 import { styled, useTheme } from "@mui/material/styles";
 import { Grid, Box, Avatar, ButtonBase, CardMedia } from "@mui/material";
 const defaultColor = "#747f84";
