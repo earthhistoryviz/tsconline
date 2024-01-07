@@ -21,10 +21,11 @@ export const MapRowComponent: React.FC<MapRowComponentProps> = observer(({ maps 
   };
   const handleClosePopup = () => {
     setIsPopupOpen(false)
+    setSelectedMap(null)
   }
 
   return (
-    <div>
+    <div style={{minHeight: '100vh'}}>
       <Box>
         <List>
           {Object.entries(maps).map(([name, map]) => {

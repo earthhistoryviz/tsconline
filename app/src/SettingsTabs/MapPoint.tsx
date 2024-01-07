@@ -11,7 +11,7 @@ export const MapPoint = observer(function MapPoint() {
     return (
         <div>
             { !state.settingsTabs.maps || Object.entries(state.settingsTabs.maps).length === 0 ?
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', minHeight: '80vh'}}>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', minHeight: '100vh'}}>
                     <Typography sx={{
                     fontSize: theme.typography.pxToRem(18),
                     }}>
