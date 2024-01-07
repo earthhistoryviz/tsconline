@@ -25,6 +25,8 @@ export const resetSettings = action("resetSettings", () => {
 
 export const setChart = action("setChart", async (newval: number) => {
   resetSettings()
+  //set the settings tab back to time
+  setSettingsTabsSelected(0)
   if (state.presets.length <= newval) {
     state.chart = null;
     console.log("unknown preset selected")

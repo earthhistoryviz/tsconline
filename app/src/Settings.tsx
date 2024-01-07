@@ -10,7 +10,7 @@ import Color from 'color';
 import { ColumnSetting } from "@tsconline/shared";
 import { styled } from '@mui/material/styles';
 import { useTheme } from '@mui/material/styles';
-import { TSCTabs, TSCTab } from './assets';
+import { TSCTabs, TSCTab } from './components';
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
