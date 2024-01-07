@@ -10,7 +10,7 @@ import { devSafeUrl } from './util';
 import { context } from './state';
 import { Box, Button, List, ListItem,FormGroup, FormControlLabel, Checkbox, FormControl, CardActions, Card, Grid, Container, CardContent, Typography, CardMedia } from '@mui/material';
 import { useTheme, styled } from '@mui/material/styles';
-import { TSCCheckbox }  from './assets'
+import { TSCCheckbox, TSCButton }  from './assets'
 import { CustomCard }  from './PresetListComponent' 
 
 import "./Home.css"
@@ -19,19 +19,13 @@ export const Home = observer(function Home() {
   const { state, actions } = useContext(context); 
   const theme = useTheme();
 
-  const background = `linear-gradient(to top, 
-        ${Color(theme.palette.altbackground.light)
-        .lighten(0.3)}, 
-      ${Color(theme.palette.altbackground.main)
-        .rotate(24)
-        .lighten(0.3)})`;
 
 
   const navigate = useNavigate();
 
   return (
     <div className="whole_page" style={{
-      background: background,
+      background: theme.palette.gradient.main,
     }}>
       <div className="top_box" style={{
         }}>
@@ -43,19 +37,23 @@ export const Home = observer(function Home() {
             <div className="details" style ={{ fontFamily: theme.typography.fontFamily }}>
               <h2 className="preset_name"style={{color: secondary}}>{state.chart.title} </h2>
               <p className="description" style={{color: secondary}}>{state.chart.description}</p>
-                <Button 
-                  sx={{backgroundColor: theme.palette.button.main, color: "#FFFFFF"}}
+                <TSCButton 
                   onClick={() => {
                     actions.setTab(1);
                     actions.setAllTabs(true);
                     actions.generateChart();
                     navigate('/chart');
                   }}
-                  variant="contained" style={{width: "325px", height: "75px", marginLeft: "auto", marginRight: "auto"}} 
+                  variant="contained" 
+                  style={{
+                    width: "325px", 
+                    height: "75px", 
+                    marginLeft: "auto", 
+                    marginRight: "auto"}} 
                   endIcon={<ForwardIcon />}
                 >
                   Make your own chart 
-                </Button>
+                </TSCButton>
                 <FormControlLabel control={
                 <TSCCheckbox 
                 checked={state.useCache}
@@ -69,14 +67,12 @@ export const Home = observer(function Home() {
       </div>
       <TSCPresetHighlights/>
       <div className="bottom_button">
-        <Button
+        <TSCButton
           variant="contained" style={{
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
             height: "10vh",
-            backgroundColor: theme.palette.dark.main, 
-            color: "#FFFFFF", 
             width: "30vh", 
             marginLeft: "auto", 
             marginRight: "auto",
@@ -85,7 +81,7 @@ export const Home = observer(function Home() {
             actions.removeCache();
           }}>
             Remove Cache
-        </Button>
+        </TSCButton>
       </div>
     </div>
   );

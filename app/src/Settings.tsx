@@ -6,6 +6,7 @@ import { Column } from "./SettingsTabs/Column";
 import { Time } from "./SettingsTabs/Time";
 import { Font } from "./SettingsTabs/Font";
 import { MapPoint } from "./SettingsTabs/MapPoint";
+import Color from 'color';
 import { ColumnSetting } from "@tsconline/shared";
 import { styled } from '@mui/material/styles';
 import { useTheme } from '@mui/material/styles';
@@ -17,7 +18,7 @@ export const Settings = observer(function Settings() {
   const navigate = useNavigate();
 
   const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
-    actions.setSettingTabsSelected(newValue);
+    actions.setSettingsTabsSelected(newValue);
   };
 
   const handleButtonClick = () => {
@@ -51,7 +52,7 @@ export const Settings = observer(function Settings() {
 
 
   return (
-    <div >
+    <div style={{background: theme.palette.settings.light}}>
       <TSCTabs value={selectedTabIndex} onChange={handleChange} centered>
         <TSCTab label="Time" />
         <TSCTab label="Column" />

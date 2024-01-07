@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import Checkbox from "@mui/material/Checkbox";
 import { context } from "../state";
 import { ColumnSetting } from "@tsconline/shared";
-import { Button, TextField } from "@mui/material";
+import { Button, TextField, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from '@mui/material/styles';
 import { ColumnContainer, TSCCheckbox, AccordionDetails, AccordionSummary, Accordion} from '../assets'
@@ -40,7 +40,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({name, details
   return (
     <Accordion expanded={open} onChange={() => setOpen(!open)} >
       <AccordionSummary aria-controls="panel-content" id="panel-header"
-        sx={{backgroundColor: theme.palette.background.default}}
+        // sx={{backgroundColor: theme.palette.background.default}}
       >
         {checkbox}
       </AccordionSummary>
@@ -94,25 +94,28 @@ export const Column = observer(function Column() {
 
   return (
     <div style={{ display: "flex", justifyContent: "center" }}>
-      <div
-        style={{
-          display: "flex",
+      <Box
+        sx={{
+          border: `1px solid ${theme.palette.dark.main}`,
+          borderRadius: '10px',
+          zIndex: 0,
+          padding: '10px'
         }}
       >
         <Accordion
           expanded={open}
           onChange={handleChange}
+          // style={{background: theme.palette.gradient.main}}
         >
           <AccordionSummary aria-controls="panel1d-content" id="panel1d-header"
-          sx={{backgroundColor: theme.palette.background.default}}
           >
             <Typography sx={{ fontSize: "1.2rem", marginLeft: "15px" }}>TimeScale Creator GTS2020 Chart</Typography>
           </AccordionSummary>
           <AccordionDetails >
-            <div>{renderColumns(state.settingsTabs.columns)}</div>
+            {renderColumns(state.settingsTabs.columns)}
           </AccordionDetails>
         </Accordion>
-      </div>
+      </Box>
       <div style={{ border: "1px solid black", width: "400px" ,minHeight: "1000px",}}>
         <div style={{ paddingTop: "20px" }}>
           <Button onClick={handleButtonClick} variant="outlined">

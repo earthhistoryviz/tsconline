@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Checkbox from "@mui/material/Checkbox";
 import { Theme, useTheme, styled } from "@mui/material/styles";
 import { makeStyles } from '@mui/styles';
-import { Button, Dialog, ListItem, List, ListItemAvatar, Avatar, ListItemText, TabProps, TabsProps, Tab, Box} from '@mui/material';
+import { Button, ButtonProps, Dialog, ListItem, List, ListItemAvatar, Avatar, ListItemText, TabProps, TabsProps, Tab, Box} from '@mui/material';
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import MuiAccordion, { AccordionProps } from "@mui/material/Accordion";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
@@ -13,6 +13,38 @@ import MuiAccordionSummary, {
 } from "@mui/material/AccordionSummary";
 import { Tabs } from "@mui/material";
 
+export const TSCButton: React.FC<ButtonProps>  = ( props ) => {
+  const theme = useTheme();
+
+  return (
+    <Button
+      {...props} 
+      sx={{
+        backgroundColor: theme.palette.button.main, 
+        color: "#FFFFFF",
+        ":hover": {
+          backgroundColor: theme.palette.button.light,
+        },
+        ":active": {
+          backgroundColor: theme.palette.button.dark,
+        },
+        ...props?.sx,
+      }}
+      style={{
+        width: "325px", 
+        height: "75px", 
+        marginLeft: "auto", 
+        marginRight: "auto", 
+        ...props?.style,
+      }}
+      variant="contained"
+      endIcon={props?.endIcon} 
+    >
+      {props?.children}
+    </Button>
+  );
+
+}
 type CheckboxProps = {
   checked: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -109,7 +141,6 @@ export const AccordionSummary = styled((props: AccordionSummaryProps) => (
     {...props}
   />
 ))(({ theme }) => ({
-  // backgroundColor: theme.palette.background.default,
   display: "flex",
   "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
     transform: "rotate(90deg)",

@@ -22,10 +22,9 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(request: Fasti
   console.log("getting decrypted info for files: ", files);
   const filesSplit = files.split(" ")
   const { columns } =  await parseDatapacks(assetconfigs.decryptionDirectory, filesSplit);
-  const image_paths = await grabMapImages(filesSplit, assetconfigs.imagesDirectory);
   const { maps } = await grabMaps(filesSplit)
 //   console.log(images)
-  reply.send({ columns: columns, image_paths: image_paths, maps: maps})
+  reply.send({ columns: columns, maps: maps})
 }
 
 /**
