@@ -1,6 +1,6 @@
 import { readFile } from 'fs/promises';
 import pmap from 'p-map';
-import type { ColumnSetting } from '@tsconline/shared';
+import type { ColumnInfo } from '@tsconline/shared';
 import { grabFilepaths } from './util.js'
 
 /**
@@ -81,12 +81,12 @@ function recursive(parents: string[], lastparent: string, children: string[], st
  * Have not checked edge cases in which a file doesn't show up, will only return any that are correct.
  * Maybe add functionality in the future to check if all the files exist
  */
-export async function parseDatapacks(decrypt_filepath: string, files: string[]): Promise<{columns: ColumnSetting }> {
+export async function parseDatapacks(decrypt_filepath: string, files: string[]): Promise<{columns: ColumnInfo }> {
     const decrypt_paths = await grabFilepaths(files, decrypt_filepath, "datapacks")
     if (decrypt_paths.length == 0) return {columns: {}}
-    // let fileSettingsMap: { [filePath: string]: ColumnSetting } = {};
+    // let fileSettingsMap: { [filePath: string]: ColumnInfo } = {};
     let decryptedfiles: String = ""
-    let settings: ColumnSetting = {}; 
+    let settings: ColumnInfo = {}; 
     //put all contents into one string for parsing
     await pmap(decrypt_paths, async (decryptedfile) => {
         const contents = (await readFile(decryptedfile)).toString();

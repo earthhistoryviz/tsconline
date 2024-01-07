@@ -35,10 +35,7 @@ export const state = observable<State>({
   showAllTabs: false,
   settingsTabs: {
     selected: "time",
-    columns: {
-      Presidents: { on: true, children: null, parents: [] },
-      Society: { on: true, children: null, parents: [] },
-    },
+    columns: {},
     columnSelected: null,
     geologicalTopStages: {},
     geologicalBaseStages: {} ,

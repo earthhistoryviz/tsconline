@@ -7,7 +7,7 @@ import { glob } from 'glob';
 /**
  * Recursively deletes directory INCLUDING directoryPath
  */
-export function deleteDirectory(directoryPath: string) {
+export function deleteDirectory(directoryPath: string): string {
     // Check if the directory exists
     if (fs.existsSync(directoryPath)) {
         fs.readdirSync(directoryPath).forEach((file) => {
@@ -22,11 +22,11 @@ export function deleteDirectory(directoryPath: string) {
                 console.log(`Deleted file: ${currentPath}`)
             }
         });
-
         // Delete the now-empty directory
         fs.rmdirSync(directoryPath);
+        return `Directory ${directoryPath} successfully deleted`
     } else {
-        console.log("Directory not found: ", directoryPath);
+        return `Directory not found: ${directoryPath}`;
     }
 }
 

@@ -79,8 +79,13 @@ server.register(cors, {
 });
 // removes the cached public/charts directory
 server.post('/removecache', async (request, reply) => {
-    deleteDirectory(assetconfigs.chartsDirectory);
-    reply.send({ message: "successfully removed cache" });
+    try {
+        const msg = deleteDirectory(assetconfigs.chartsDirectory);
+        reply.send({ message: msg });
+    }
+    catch (error) {
+        reply.send({ error: `Error deleting directory ${assetconfigs.chartsDirectory} with error: ${error}` });
+    }
 });
 // Handle browser request for charts list:
 // TODO: make this a websocket so we can try to report progress
