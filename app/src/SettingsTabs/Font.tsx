@@ -9,7 +9,7 @@ export const Font = observer(function Font() {
             justifyContent: 'center',
             alignItems: 'center', 
             width: '100%',
-            minHeight: '80vh'
+            minHeight: '100vh'
         }}>
             <Typography sx={{
             fontSize: theme.typography.pxToRem(18),

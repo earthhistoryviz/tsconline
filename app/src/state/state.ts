@@ -38,12 +38,6 @@ export const state = observable<State>({
     columns: {
       Presidents: { on: true, children: null, parents: [] },
       Society: { on: true, children: null, parents: [] },
-      // "Standard Chronostratigraphy": { on: false, children: null, parents: [] },
-      // "Planetary Time Scale": { on: false, children: null, parents: [] },
-      // "Regional Stages": { on: false, children: null, parents: [] },
-      // "Geomagnetic Polarity": { on: false, children: null, parents: [] },
-      // "Marine Macrofossils": { on: false, children: null, parents: [] },
-      // "Microfossils": { on: false, children: null, parents: [] },
     },
     columnSelected: null,
     geologicalTopStages: {},

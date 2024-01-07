@@ -93,11 +93,11 @@ export const Column = observer(function Column() {
   };
 
   return (
-    <div style={{ display: "flex", justifyContent: "center" }}>
+    <div style={{ display: "flex", justifyContent: "center", minHeight: '100vh'}}>
       <Box
         sx={{
-          border: `1px solid ${theme.palette.dark.main}`,
-          borderRadius: '10px',
+          border: `1px solid gray`,
+          borderRadius: '4px',
           zIndex: 0,
           padding: '10px'
         }}
@@ -105,7 +105,7 @@ export const Column = observer(function Column() {
         <Accordion
           expanded={open}
           onChange={handleChange}
-          // style={{background: theme.palette.gradient.main}}
+          style={{minWidth: '70vh'}}
         >
           <AccordionSummary aria-controls="panel1d-content" id="panel1d-header"
           >
@@ -116,18 +116,6 @@ export const Column = observer(function Column() {
           </AccordionDetails>
         </Accordion>
       </Box>
-      <div style={{ border: "1px solid black", width: "400px" ,minHeight: "1000px",}}>
-        <div style={{ paddingTop: "20px" }}>
-          <Button onClick={handleButtonClick} variant="outlined">
-            Generate the Chart!
-          </Button>
-        </div>
-        <div style={{ paddingTop: "20px" }}>
-          Edit Title:
-          <br />
-          <TextField></TextField>
-        </div>
-      </div>
     </div>
   );
 });

@@ -2,25 +2,42 @@ import { AccordionSummary, Typography, AccordionDetails } from "@mui/material";
 import Accordion from "@mui/material/Accordion";
 import { observer } from "mobx-react-lite";
 import React from "react";
+import { useTheme } from '@mui/material/styles';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 export const Help = observer(function Help() {
+    const theme = useTheme()
+    const background = {background: "white"}
+
     return (
-        <div style={{margin:'0',position:'absolute',top:'25%',left:"25%",right:"25%",alignItems:'center'}}>
-            <Accordion>
+      <div style={{
+          background: theme.palette.settings.light,
+          minHeight: "100vh"
+      }}>
+        <div style={{
+          margin:'0',
+          position:'absolute',
+          top:'25%',
+          left:"25%",
+          right:"25%",
+          alignItems:'center',
+          }}
+          >
+            <Accordion style={background}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel1a-content"
           id="panel1a-header"
+          className="accordion"
         >
           <Typography>Quick Start Guide</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <Typography>
-            put quick start guide here
+          Put QSG here
           </Typography>
         </AccordionDetails>
       </Accordion>
-      <Accordion>
+      <Accordion style={background}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel2a-content"
@@ -34,7 +51,7 @@ export const Help = observer(function Help() {
           </Typography>
         </AccordionDetails>
       </Accordion>
-      <Accordion>
+      <Accordion style={background}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel2a-content"
@@ -48,7 +65,7 @@ export const Help = observer(function Help() {
           </Typography>
         </AccordionDetails>
       </Accordion>
-      <Accordion>
+      <Accordion style={background}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel2a-content"
@@ -62,7 +79,7 @@ export const Help = observer(function Help() {
           </Typography>
         </AccordionDetails>
       </Accordion>
-      <Accordion>
+      <Accordion style={background}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel2a-content"
@@ -76,7 +93,7 @@ export const Help = observer(function Help() {
           </Typography>
         </AccordionDetails>
       </Accordion>
-      <Accordion>
+      <Accordion style={background}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel2a-content"
@@ -92,6 +109,7 @@ export const Help = observer(function Help() {
       </Accordion>
       
         </div>
+      </div>
     )
 }
 
