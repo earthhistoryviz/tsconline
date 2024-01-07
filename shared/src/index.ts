@@ -197,3 +197,11 @@ export function assertMapPoints(o: any): asserts o is MapPoints {
     }
   }
 }
+export type SuccessfulServerResponse = {
+  message: string
+}
+export type ServerResponse = SuccessfulServerResponse | ServerResponseError
+export function assertSuccessfulServerResponse(o: any): asserts o is SuccessfulServerResponse {
+  if (!o || typeof o !== 'object') throw new Error (`SuccessfulServerResponse must be a non-null object`);
+  if (typeof o.message !== 'string') throw new Error(`SuccessfulServerResponse must have a 'message' string property`);
+}

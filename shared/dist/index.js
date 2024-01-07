@@ -133,4 +133,10 @@ export function assertMapPoints(o) {
         }
     }
 }
+export function assertSuccessfulServerResponse(o) {
+    if (!o || typeof o !== 'object')
+        throw new Error(`SuccessfulServerResponse must be a non-null object`);
+    if (typeof o.message !== 'string')
+        throw new Error(`SuccessfulServerResponse must have a 'message' string property`);
+}
 //# sourceMappingURL=index.js.map

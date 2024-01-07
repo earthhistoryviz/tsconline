@@ -8,7 +8,9 @@ import {
   isServerResponseError,
   assertMaps,
   assertColumnInfo,
-  GeologicalStages
+  GeologicalStages,
+  SuccessfulServerResponse,
+  assertSuccessfulServerResponse
 } from "@tsconline/shared";
 import { state, State } from "./state";
 import { fetcher, devSafeUrl } from "../util";
@@ -116,10 +118,24 @@ export const setGeologicalStages = action("setGeologicalStages", (stages: Geolog
 export const setAllTabs = action("setAllTabs", (newval: boolean) => {
   state.showAllTabs = newval;
 });
+/**
+ * Removes cache in public dir on server
+ */
 export const removeCache = action("removeCache", async () => {
-  await fetcher(`/removecache`, {
+  const response = await fetcher(`/removecache`, {
     method: "POST",
   });
+  // check if we successfully removed cache
+  try {
+    assertSuccessfulServerResponse(response)
+    console.log(`Server successfully deleted cache with message: ${response.message}`)
+  } catch (e) {
+    if (isServerResponseError(response)) {
+      console.log("Server could not remove cache with error: ", response.error)
+    } else {
+      console.log("Server responded with an unknown response with error: ", e)
+    }
+  }
 })
 
 /**
