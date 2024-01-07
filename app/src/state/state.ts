@@ -1,6 +1,6 @@
 import { observable } from "mobx";
 
-import type { Maps, ChartConfig, ColumnSetting, GeologicalStages} from "@tsconline/shared";
+import type { MapInfo, ChartConfig, ColumnInfo, GeologicalStages} from "@tsconline/shared";
 
 
 export type State = {
@@ -9,11 +9,11 @@ export type State = {
   showAllTabs: boolean;
   settingsTabs: {
     selected: "time" | "font" | "column" | "mappoints";
-    columns: ColumnSetting;
+    columns: ColumnInfo;
     columnSelected: { name: string; parents: string[] } | null;
     geologicalTopStages: GeologicalStages;
     geologicalBaseStages: GeologicalStages;
-    maps: Maps;
+    maps: MapInfo;
   };
   chart: ChartConfig | null;
   presets: ChartConfig[];

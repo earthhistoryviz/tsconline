@@ -7,7 +7,6 @@ import { Time } from "./SettingsTabs/Time";
 import { Font } from "./SettingsTabs/Font";
 import { MapPoint } from "./SettingsTabs/MapPoint";
 import Color from 'color';
-import { ColumnSetting } from "@tsconline/shared";
 import { styled } from '@mui/material/styles';
 import { useTheme } from '@mui/material/styles';
 import { TSCTabs, TSCTab } from './components';

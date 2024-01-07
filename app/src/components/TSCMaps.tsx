@@ -1,12 +1,12 @@
 import { Button, List, Box, ListItem, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
 import { useTheme } from "@mui/material/styles";
-import type { Maps } from '@tsconline/shared'
+import type { MapInfo } from '@tsconline/shared'
 import { devSafeUrl } from '../util'
 import React, { useState } from "react";
 import { observer } from "mobx-react-lite";
 
 type MapRowComponentProps = {
-  maps: Maps; 
+  maps: MapInfo; 
 };
 
 export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ maps }) => {
@@ -59,7 +59,7 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ maps }) =>
 });
 
 type MapViewerProps  = {
-  mapData: Maps[string];
+  mapData: MapInfo[string];
 }
 const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
   const theme = useTheme()
