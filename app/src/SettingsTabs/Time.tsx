@@ -7,8 +7,7 @@ import ForwardIcon from '@mui/icons-material/Forward';
 import { useNavigate } from "react-router-dom";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import { useTheme } from '@mui/material/styles';
-import { TSCCheckbox } from '../assets'
-
+import { TSCCheckbox, TSCButton } from '../components'
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
@@ -111,13 +110,13 @@ export const Time = observer(function Time() {
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
         <FormGroup>
           {/* TODO: change below checkboxes to TSCChecbok once we implement settings*/}
-          <FormControlLabel control={<Checkbox />} label="Add MouseOver info (popups)" />
-          <FormControlLabel control={<Checkbox />} label="Enabled Global Priority Filtering for block columns" />
-          <FormControlLabel control={<Checkbox />} label="Enabled stage background for event columns" />
-          <FormControlLabel control={<Checkbox />} label="Enable legend for the chart" />
-          <FormControlLabel control={<Checkbox />} label="Do not auto-indent lithology patterns" />
-          <FormControlLabel control={<Checkbox />} label="Conserve Chart Space in Family Tree Plotting" />
-          <FormControlLabel control={<Checkbox />} label="Hide block labels based on priority" />
+          <FormControlLabel control={<TSCCheckbox />} label="Add MouseOver info (popups)" />
+          <FormControlLabel control={<TSCCheckbox />} label="Enabled Global Priority Filtering for block columns" />
+          <FormControlLabel control={<TSCCheckbox />} label="Enabled stage background for event columns" />
+          <FormControlLabel control={<TSCCheckbox />} label="Enable legend for the chart" />
+          <FormControlLabel control={<TSCCheckbox />} label="Do not auto-indent lithology patterns" />
+          <FormControlLabel control={<TSCCheckbox />} label="Conserve Chart Space in Family Tree Plotting" />
+          <FormControlLabel control={<TSCCheckbox />} label="Hide block labels based on priority" />
         </FormGroup>
       </div>
       </div>

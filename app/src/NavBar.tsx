@@ -4,13 +4,12 @@ import AppBar from '@mui/material/AppBar'
 import { Link } from 'react-router-dom'
 import Toolbar from '@mui/material/Toolbar'
 import { useTheme } from '@mui/material/styles';
-
 import TSCreatorLogo  from './assets/TSCreatorLogo.png'
 import HomeIcon from '@mui/icons-material/Home';
 import { IconButton, Tabs, Tab } from '@mui/material'
 import { primary_light, secondary } from './constant';
 import { context } from './state';
-import { TSCTabs, TSCTab } from './assets'
+import { TSCTabs, TSCTab } from './components'
 
 import "./NavBar.css"
 
@@ -45,19 +44,18 @@ export const NavBar = observer(function Navbar() {
               onChange={(_e, value) =>  {
                 actions.setTab(value)
               }} 
+              //override the TSCTabs since it has the dark navbar
               sx={{
                 '& .MuiTab-root': {  
                   color: theme.palette.primary.main,
                   '&:hover': {
                     color: theme.palette.selection.light, 
-                    backgroundColor: 'hoverColor'
                   },
                 },
                 '& .Mui-selected': { 
                   color: theme.palette.selection.main,
                 }
               }}
-              // indicatorColor="secondary"
             >
               <Tab value={1} label="Chart" to="/chart" component={Link}/>
               <Tab value={2} label="Settings" to="/settings" component={Link} />

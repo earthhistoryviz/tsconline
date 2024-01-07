@@ -10,8 +10,7 @@ import { devSafeUrl } from './util';
 import { context } from './state';
 import { Box, Button, List, ListItem,FormGroup, FormControlLabel, Checkbox, FormControl, CardActions, Card, Grid, Container, CardContent, Typography, CardMedia } from '@mui/material';
 import { useTheme, styled } from '@mui/material/styles';
-import { TSCCheckbox, TSCButton }  from './assets'
-import { CustomCard }  from './PresetListComponent' 
+import { TSCCheckbox, TSCButton, TSCCardList }  from './components'
 
 import "./Home.css"
 
@@ -98,7 +97,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights() {
     }}>
       {state.presets.map((preset, index) => (
         <Grid item key={index}>
-        <CustomCard
+        <TSCCardList
           color={theme.palette.navbar.main}
           date={"02.04.2020"}
           img={

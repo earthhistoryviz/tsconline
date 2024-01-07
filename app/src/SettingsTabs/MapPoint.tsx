@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "../state";
-import { MapRowComponent } from "../MapPointAssets"
+import { TSCMapList } from "../components"
 import { Typography } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 
@@ -19,7 +19,7 @@ export const MapPoint = observer(function MapPoint() {
                     </Typography>
                 </div>
                 :
-                <MapRowComponent maps={state.settingsTabs.maps}/>
+                <TSCMapList maps={state.settingsTabs.maps}/>
         }
         </div>
     )

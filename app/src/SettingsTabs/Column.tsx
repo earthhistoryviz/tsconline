@@ -8,9 +8,8 @@ import { ColumnSetting } from "@tsconline/shared";
 import { Button, TextField, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from '@mui/material/styles';
-import { ColumnContainer, TSCCheckbox, AccordionDetails, AccordionSummary, Accordion} from '../assets'
-
-
+import { ColumnContainer, AccordionDetails, AccordionSummary, Accordion} from '../assets'
+import { TSCCheckbox } from '../components/TSCCheckbox'
 
 //types for recursively creation accordions
 type ColumnAccordionProps = {
