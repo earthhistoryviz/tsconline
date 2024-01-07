@@ -13,7 +13,6 @@ export type State = {
     columnSelected: { name: string; parents: string[] } | null;
     geologicalTopStages: GeologicalStages;
     geologicalBaseStages: GeologicalStages;
-    mapImages: string[];
     maps: Maps;
   };
   chart: ChartConfig | null;
@@ -49,7 +48,6 @@ export const state = observable<State>({
     columnSelected: null,
     geologicalTopStages: {},
     geologicalBaseStages: {} ,
-    mapImages: [],
     maps: {} ,
   },
   chart: null,

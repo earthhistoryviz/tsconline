@@ -14,9 +14,6 @@ import { ConstructionOutlined } from "@mui/icons-material";
 export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;
 });
-export const setMapImages = action("setMapImages", (mapImages: string[]) => {
-  state.settingsTabs.mapImages = mapImages;
-});
 
 export const resetSettings = action("resetSettings", () => {
   state.settings = {
@@ -40,12 +37,11 @@ export const setChart = action("setChart", async (newval: number) => {
   const res = await fetcher(`/datapackinfo/${datapacks.join(" ")}`, {
     method: "GET"
   })
-  const {columns, image_paths, maps} = await res.json()
+  const {columns, maps} = await res.json()
   // console.log("reply of columns: ", JSON.stringify(columns, null, 2))
   // console.log("reply of stages: ", JSON.stringify(stages, null, 2))
 
   setSettingsTabsColumns(columns)
-  setMapImages(image_paths)
   setMaps(maps)
   console.log(state.settingsTabs.maps)
   // Grab the settings for this chart if there are any:
@@ -261,7 +257,7 @@ export const setChartLoading = action((value: boolean) => {
   state.chartLoading = value;
 });
 
-export const setSettingTabsSelected = action(
+export const setSettingsTabsSelected = action(
   (newtab: number | State["settingsTabs"]["selected"]) => {
     if (typeof newtab === "string") {
       state.settingsTabs.selected = newtab;

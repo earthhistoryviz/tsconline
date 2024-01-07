@@ -7,6 +7,8 @@ declare module '@mui/material/styles' {
       button: Palette['primary'];
       navbar: Palette['primary'];
       selection: Palette['primary'];
+      settings: Palette['primary'];
+      gradient: Palette['primary'];
     }
   
     interface PaletteOptions {
@@ -15,6 +17,8 @@ declare module '@mui/material/styles' {
       button?: PaletteOptions['primary'];
       navbar?: PaletteOptions['primary'];
       selection?: PaletteOptions['primary'];
+      settings?: PaletteOptions['primary'];
+      gradient?: PaletteOptions['primary'];
     }
   }
 
@@ -30,12 +34,14 @@ let theme = createTheme({
             default: "#FAF9F9"
         },
         altbackground: {
-            light: "#72A4E1",
-            main: "#8FB7E7",
+            light: "#8FB7E7",
+            main: "#72A4E1",
             dark: "#1D4E89",
         },
         button: {
-            main: "#3C91E6"
+            light: `${Color("#3C91E6").lighten(0.3)}`,
+            main: "#3C91E6",
+            dark: `${Color("#3C91E6").darken(0.3)}`,
         },
         dark: {
             light: "#6D8A96",
@@ -69,13 +75,30 @@ theme = createTheme(theme, {
   palette: {
     gradient: {
       main: `linear-gradient(to top, 
-              ${Color(theme.palette.altbackground.light)
+              ${Color(theme.palette.altbackground.main)
               .lighten(0.3)}, 
-            ${Color(theme.palette.altbackground.main)
+            ${Color(theme.palette.altbackground.light)
               .rotate(24)
               .lighten(0.3)})`,
     },
+    settings: {
+      light: `${Color(theme.palette.altbackground.light)
+              .lighten(0.3)}`,
+      main: `${Color(theme.palette.altbackground.main)
+              .lighten(0.3)}`
+    }
   },
 });
+theme = createTheme(theme, {
+  components: {
+    MuiAccordion: {
+      styleOverrides: {
+        root: {
+          background: theme.palette.settings.light
+        }
+      }
+    }
+  }
+})
 
 export default theme;
