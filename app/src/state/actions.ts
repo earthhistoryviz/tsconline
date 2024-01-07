@@ -1,14 +1,18 @@
 import { action, runInAction } from "mobx";
 import {
   type ChartConfig,
-  type Maps,
+  type MapResponse,
+  type MapInfo,
+  type ColumnInfo,
   assertChartInfo,
-  isChartError,
+  isServerResponseError,
+  assertMaps,
+  assertColumnInfo,
+  GeologicalStages
 } from "@tsconline/shared";
 import { state, State } from "./state";
 import { fetcher, devSafeUrl } from "../util";
 import { xmlToJson, jsonToXml } from "./settingsParser";
-import { ColumnSetting, GeologicalStages } from "@tsconline/shared";
 import { ConstructionOutlined } from "@mui/icons-material";
 
 export const setTab = action("setTab", (newval: number) => {
@@ -32,20 +36,38 @@ export const setChart = action("setChart", async (newval: number) => {
     console.log("unknown preset selected")
     return;
   }
-  let tempColumns: ColumnSetting | null;
+  let tempColumns: ColumnInfo | null;
   state.chart = state.presets[newval]!;
   //process decrypted file
   const datapacks = state.presets[newval]!.datapacks.map(data => data.split(".")[0] + ".txt")
   const res = await fetcher(`/datapackinfo/${datapacks.join(" ")}`, {
     method: "GET"
   })
+  // get the columns and map info
   const {columns, maps} = await res.json()
   // console.log("reply of columns: ", JSON.stringify(columns, null, 2))
-  // console.log("reply of stages: ", JSON.stringify(stages, null, 2))
+  // console.log("reply of maps: ", JSON.stringify(maps, null, 2))
+  try {
+    assertMaps(maps)
+    setMaps(maps)
+  } catch (e) {
+    if (isServerResponseError(maps)) {
+      console.log("Server failed to send map info with error: ", maps.error)
+    } else {
+      console.log("Failed to fetch map info with error: ", e)
+    }
+  }
+  try {
+    assertColumnInfo(columns)
+    setSettingsTabsColumns(columns)
+  } catch (e) {
+    if (isServerResponseError(columns)) {
+      console.log("Server failed to send column info with error: ", columns.error)
+    } else {
+      console.log("Failed to fetch column info with error: ", e)
+    }
+  }
 
-  setSettingsTabsColumns(columns)
-  setMaps(maps)
-  console.log(state.settingsTabs.maps)
   // Grab the settings for this chart if there are any:
   if (state.chart.settings) {
     console.log(state.chart.settings);
@@ -76,6 +98,7 @@ export const setChart = action("setChart", async (newval: number) => {
 
 /**
  * Sets the geological top stages and the base stages
+ * Assuming the given stages includes the stages[TOP] = 0
  */
 export const setGeologicalStages = action("setGeologicalStages", (stages: GeologicalStages) => {
   let top = stages['TOP']
@@ -127,7 +150,7 @@ export const generateChart = action("generateChart", async () => {
     setChartPath(devSafeUrl(answer.chartpath));
     await checkPdfStatus()
   } catch (e: any) {
-    if (isChartError(answer)) {
+    if (isServerResponseError(answer)) {
       console.log(
         "ERROR failed to fetch chart with the settings.  Error response from server was: ",
         answer
@@ -151,10 +174,10 @@ export const loadPresets = action("loadPresets", (presets: ChartConfig[]) => {
 export const setChartPath = action("setChartPath", (chartpath: string) => {
   state.chartPath = chartpath;
 });
-export const setMaps = action("setMaps", (maps: Maps) => {
+export const setMaps = action("setMaps", (maps: MapInfo) => {
   state.settingsTabs.maps = maps;
 });
-export const setSettingsTabsColumns = action("setSettingsTabsColumns", (columns: ColumnSetting) => {
+export const setSettingsTabsColumns = action("setSettingsTabsColumns", (columns: ColumnInfo) => {
   state.settingsTabs.columns = columns;
 });
 export const setChartHash = action("setChartHash", (charthash: string) => {
@@ -306,7 +329,7 @@ export function translateTabToIndex(tab: State["settingsTabs"]["selected"]) {
  * parents: list of names that indicates the path from top to the toggled column
  */
 export const toggleSettingsTabColumn = action("toggleSettingsTabColumn", (name: string, parents: string[]) => {
-    let curcol: ColumnSetting | null = state.settingsTabs.columns;
+    let curcol: ColumnInfo | null = state.settingsTabs.columns;
     const orig = curcol
     // Walk down the path of parents in the tree of columns
     console.log("name: ", name)
@@ -381,7 +404,7 @@ export const toggleSettingsTabColumn = action("toggleSettingsTabColumn", (name: 
   }
 );
 
-export const setSettingsColumns = action((temp: ColumnSetting) => {
+export const setSettingsColumns = action((temp: ColumnInfo) => {
   state.settingsTabs.columns = temp;
 });
 export const setUseCache = action((temp: boolean) => {
@@ -397,7 +420,7 @@ export const updateColumnName = action((newName: string) => {
     console.log("WARNING: the user hasn't selected a column.");
     return;
   }
-  let curcol: ColumnSetting | null = state.settingsTabs.columns;
+  let curcol: ColumnInfo | null = state.settingsTabs.columns;
   let oldName = state.settingsTabs.columnSelected.name;
   let parents = state.settingsTabs.columnSelected.parents;
   // Walk down the path of parents in the tree of columns

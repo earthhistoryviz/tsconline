@@ -1,4 +1,67 @@
 // Shared types between app and server (i.e. messages they send back and forth)
+export function assertChartConfig(o) {
+    if (typeof o !== 'object')
+        throw new Error('ChartConfig must be an object');
+    if (typeof o.img !== 'string')
+        throw new Error('ChartConfig must have an img string');
+    if (typeof o.title !== 'string')
+        throw new Error('ChartConfig must have a title string');
+    if (typeof o.description !== 'string')
+        throw new Error('ChartConfig must have a description string');
+    if (typeof o.settings !== 'string')
+        throw new Error('ChartConfig must have a settings path string');
+    if (!Array.isArray(o.datapacks))
+        throw new Error('ChartConfig must have a datapacks array of datapack string names.  ');
+}
+export function assertChartConfigArray(o) {
+    if (!o || !Array.isArray(o))
+        throw new Error('ChartConfig array must be an array');
+    for (const c of o)
+        assertChartConfig(c);
+}
+export function assertChartRequest(o) {
+    if (typeof o !== 'object')
+        throw new Error('ChartRequest must be an object');
+    if (typeof o.settings !== 'string')
+        throw new Error('ChartRequest must have a settings string');
+    if (!Array.isArray(o.datapacks))
+        throw new Error('ChartRequest must have a datapacks array');
+}
+export function isServerResponseError(o) {
+    if (!o || typeof o !== 'object')
+        return false;
+    if (typeof o.error !== 'string')
+        return false;
+    return true;
+}
+export function assertChartInfo(o) {
+    if (!o || typeof o !== 'object')
+        throw new Error('ChartInfo must be an object');
+    if (typeof o.chartpath !== 'string')
+        throw new Error('ChartInfo must have a chartpath string');
+    if (typeof o.hash !== 'string')
+        throw new Error('ChartInfo must have a hash string');
+}
+export function assertColumnInfo(o) {
+    if (typeof o !== 'object' || o === null) {
+        throw new Error('ColumnInfo must be a non-null object');
+    }
+    for (const key in o) {
+        const columnInfo = o[key];
+        if (typeof columnInfo !== 'object' || columnInfo === null) {
+            throw new Error(`ColumnInfo' value for key '${key}' must be a non-null object`);
+        }
+        if (typeof columnInfo.on !== 'boolean') {
+            throw new Error(`ColumnInfo' value for key '${key}' must have an 'on' boolean`);
+        }
+        if (!Array.isArray(columnInfo.parents)) {
+            throw new Error(`ColumnInfo' value for key '${key}' must have a 'parents' string array`);
+        }
+        if (columnInfo.children) {
+            assertColumnInfo(columnInfo.children);
+        }
+    }
+}
 export function assertMaps(o) {
     if (typeof o !== 'object' || o === null) {
         throw new Error('Maps must be a non-null object');
@@ -69,48 +132,5 @@ export function assertMapPoints(o) {
             throw new Error(`MapPoints' value for key '${key}' must have a 'note' string property`);
         }
     }
-}
-export function assertChartConfig(o) {
-    if (typeof o !== 'object')
-        throw new Error('ChartConfig must be an object');
-    if (typeof o.img !== 'string')
-        throw new Error('ChartConfig must have an img string');
-    if (typeof o.title !== 'string')
-        throw new Error('ChartConfig must have a title string');
-    if (typeof o.description !== 'string')
-        throw new Error('ChartConfig must have a description string');
-    if (typeof o.settings !== 'string')
-        throw new Error('ChartConfig must have a settings path string');
-    if (!Array.isArray(o.datapacks))
-        throw new Error('ChartConfig must have a datapacks array of datapack string names.  ');
-}
-export function assertChartConfigArray(o) {
-    if (!o || !Array.isArray(o))
-        throw new Error('ChartConfig array must be an array');
-    for (const c of o)
-        assertChartConfig(c);
-}
-export function assertChartRequest(o) {
-    if (typeof o !== 'object')
-        throw new Error('ChartRequest must be an object');
-    if (typeof o.settings !== 'string')
-        throw new Error('ChartRequest must have a settings string');
-    if (!Array.isArray(o.datapacks))
-        throw new Error('ChartRequest must have a datapacks array');
-}
-export function isChartError(o) {
-    if (!o || typeof o !== 'object')
-        return false;
-    if (typeof o.error !== 'string')
-        return false;
-    return true;
-}
-export function assertChartInfo(o) {
-    if (!o || typeof o !== 'object')
-        throw new Error('ChartInfo must be an object');
-    if (typeof o.chartpath !== 'string')
-        throw new Error('ChartInfo must have a chartpath string');
-    if (typeof o.hash !== 'string')
-        throw new Error('ChartInfo must have a hash string');
 }
 //# sourceMappingURL=index.js.map

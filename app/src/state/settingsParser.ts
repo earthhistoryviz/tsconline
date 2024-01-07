@@ -3,7 +3,6 @@
 //-------------------------------------------------------------------------------------------------- //
 
 import { state } from "./state";
-import { ColumnSetting } from "@tsconline/shared"
 
 function processSettings(settingsNode: any): any {
   const settings: any = {};

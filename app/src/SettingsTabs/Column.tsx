@@ -4,7 +4,7 @@ import { styled } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import Checkbox from "@mui/material/Checkbox";
 import { context } from "../state";
-import { ColumnSetting } from "@tsconline/shared";
+import { ColumnInfo } from "@tsconline/shared";
 import { Button, TextField, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from '@mui/material/styles';
@@ -13,7 +13,7 @@ import { ColumnContainer, AccordionDetails, TSCCheckbox, AccordionSummary, Accor
 //types for recursively creation accordions
 type ColumnAccordionProps = {
   name: string;
-  details: ColumnSetting[string];
+  details: ColumnInfo[string];
   onToggle: (name: string, parents: string[]) => void;
 };
 // component for column accordion recursion creation 
@@ -67,7 +67,7 @@ export const Column = observer(function Column() {
   const handleChange = () => {
     setOpen(!open);
   };
-  function renderColumns(columnInfo: ColumnSetting) {
+  function renderColumns(columnInfo: ColumnInfo) {
     return Object.entries(columnInfo).map(([columnName, columnData]) => (
       <ColumnAccordion
         key={columnName}

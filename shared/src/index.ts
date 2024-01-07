@@ -8,13 +8,87 @@ export type ChartConfig = {
   datapacks: string[], // active datapack names
 };
 
-export type ColumnSetting = {
+export function assertChartConfig(o: any): asserts o is ChartConfig {
+  if (typeof o !== 'object') throw new Error('ChartConfig must be an object');
+  if (typeof o.img !== 'string') throw new Error('ChartConfig must have an img string');
+  if (typeof o.title !== 'string') throw new Error('ChartConfig must have a title string');
+  if (typeof o.description !== 'string') throw new Error('ChartConfig must have a description string');
+  if (typeof o.settings !== 'string') throw new Error('ChartConfig must have a settings path string');
+  if (!Array.isArray(o.datapacks)) throw new Error('ChartConfig must have a datapacks array of datapack string names.  ');
+}
+
+export function assertChartConfigArray(o: any): asserts o is ChartConfig[] {
+  if (!o || !Array.isArray(o)) throw new Error('ChartConfig array must be an array');
+  for (const c of o) assertChartConfig(c);
+}
+
+export type ServerResponseError = {
+  error: string, // any time an error is thrown on the server side
+}
+
+export type Preset = ChartConfig | ServerResponseError;
+
+export type ChartRequest = {
+  settings: string, // XML string representing the settings file you want to use to make a chart
+  datapacks: string[], // active datapacks to be used on chart
+}
+export function assertChartRequest(o: any): asserts o is ChartRequest {
+  if (typeof o !== 'object') throw new Error('ChartRequest must be an object');
+  if (typeof o.settings !== 'string') throw new Error('ChartRequest must have a settings string');
+  if (!Array.isArray(o.datapacks)) throw new Error('ChartRequest must have a datapacks array');
+}
+
+export type ChartResponseInfo = {
+  chartpath: string, // path to the chart
+  hash: string // hash for where it is stored
+}
+export function isServerResponseError(o: any): o is ServerResponseError {
+  if (!o || typeof o !== 'object') return false;
+  if (typeof o.error !== 'string') return false;
+  return true;
+}
+
+export type ChartResponse = ChartResponseInfo | ServerResponseError;
+
+export function assertChartInfo(o: any): asserts o is ChartResponseInfo {
+  if (!o || typeof o !== 'object') throw new Error('ChartInfo must be an object');
+  if (typeof o.chartpath !== 'string') throw new Error('ChartInfo must have a chartpath string');
+  if (typeof o.hash !== 'string') throw new Error('ChartInfo must have a hash string');
+}
+
+export type ColumnInfo = {
   [name: string]: {
     on: boolean;
-    children: ColumnSetting | null;
+    children: ColumnInfo | null;
     parents: string[];
   };
 };
+
+export type ColumnResponse = ColumnInfo | ServerResponseError
+
+export function assertColumnInfo(o: any): asserts o is ColumnInfo {
+  if (typeof o !== 'object' || o === null) {
+    throw new Error('ColumnInfo must be a non-null object');
+  }
+
+  for (const key in o) {
+    const columnInfo = o[key];
+    
+    if (typeof columnInfo !== 'object' || columnInfo === null) {
+      throw new Error(`ColumnInfo' value for key '${key}' must be a non-null object`);
+    }
+    if (typeof columnInfo.on !== 'boolean') {
+      throw new Error(`ColumnInfo' value for key '${key}' must have an 'on' boolean`);
+    }
+    if (!Array.isArray(columnInfo.parents)) {
+      throw new Error(`ColumnInfo' value for key '${key}' must have a 'parents' string array`);
+    }
+    if (columnInfo.children) {
+      assertColumnInfo(columnInfo.children)
+    }
+  }
+}
+
 
 export type GeologicalStages = {
   [key: string]: number
@@ -29,23 +103,26 @@ export type MapPoints = {
     note?: string;
   }
 }
-export type Maps = {
+export type MapInfo = {
   [name: string]: {
     img: string,
     note?: string,
-    parent?: Maps[string],
+    parent?: MapInfo[string],
     coordtype: string,
     bounds: Bounds,
     mapPoints: MapPoints,
   }
 }
+export type MapResponse = MapInfo | ServerResponseError
+
 export type Bounds = {
   upperLeftLon: number,
   upperLeftLat: number,
   lowerRightLon: number,
   lowerRightLat: number
 }
-export function assertMaps(o: any): asserts o is Maps {
+
+export function assertMaps(o: any): asserts o is MapInfo {
   if (typeof o !== 'object' || o === null) {
     throw new Error('Maps must be a non-null object');
   }
@@ -119,53 +196,4 @@ export function assertMapPoints(o: any): asserts o is MapPoints {
       throw new Error(`MapPoints' value for key '${key}' must have a 'note' string property`);
     }
   }
-}
-
-export function assertChartConfig(o: any): asserts o is ChartConfig {
-  if (typeof o !== 'object') throw new Error('ChartConfig must be an object');
-  if (typeof o.img !== 'string') throw new Error('ChartConfig must have an img string');
-  if (typeof o.title !== 'string') throw new Error('ChartConfig must have a title string');
-  if (typeof o.description !== 'string') throw new Error('ChartConfig must have a description string');
-  if (typeof o.settings !== 'string') throw new Error('ChartConfig must have a settings path string');
-  if (!Array.isArray(o.datapacks)) throw new Error('ChartConfig must have a datapacks array of datapack string names.  ');
-}
-
-export function assertChartConfigArray(o: any): asserts o is ChartConfig[] {
-  if (!o || !Array.isArray(o)) throw new Error('ChartConfig array must be an array');
-  for (const c of o) assertChartConfig(c);
-}
-
-export type ChartConfigError = {
-  error: string, // a chart that couldn't be loaded from the disk
-}
-
-export type Preset = ChartConfig | ChartConfigError;
-
-export type ChartRequest = {
-  settings: string, // XML string representing the settings file you want to use to make a chart
-  datapacks: string[], // active datapacks to be used on chart
-}
-export function assertChartRequest(o: any): asserts o is ChartRequest {
-  if (typeof o !== 'object') throw new Error('ChartRequest must be an object');
-  if (typeof o.settings !== 'string') throw new Error('ChartRequest must have a settings string');
-  if (!Array.isArray(o.datapacks)) throw new Error('ChartRequest must have a datapacks array');
-}
-
-export type ChartResponseInfo = {
-  chartpath: string, // path to the chart
-  hash: string // hash for where it is stored
-}
-export type ChartError = ChartConfigError;
-export function isChartError(o: any): o is ChartError {
-  if (!o || typeof o !== 'object') return false;
-  if (typeof o.error !== 'string') return false;
-  return true;
-}
-
-export type ChartResponse = ChartResponseInfo | ChartError;
-
-export function assertChartInfo(o: any): asserts o is ChartResponseInfo {
-  if (!o || typeof o !== 'object') throw new Error('ChartInfo must be an object');
-  if (typeof o.chartpath !== 'string') throw new Error('ChartInfo must have a chartpath string');
-  if (typeof o.hash !== 'string') throw new Error('ChartInfo must have a hash string');
 }
