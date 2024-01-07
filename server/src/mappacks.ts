@@ -3,7 +3,7 @@ import path from 'path';
 import { grabFilepaths } from './util.js'
 import assetconfigs from './index.js';
 import pmap from 'p-map';
-import type { Maps, MapPoints, Bounds} from '@tsconline/shared'
+import type { MapInfo, MapPoints, Bounds} from '@tsconline/shared'
 
 /**
  * Finds all map images and puts them in the public directory
@@ -32,16 +32,16 @@ export async function grabMapImages(datapacks: string[], destination: string) {
     return compiled_images
 }
 
-export async function grabMaps(datapacks: string[]): Promise<{maps: Maps}> {
+export async function grabMapInfo(datapacks: string[]): Promise<{maps: MapInfo}> {
     const map_info_paths = await grabFilepaths(datapacks, assetconfigs.decryptionDirectory, "mappacks")
-    let maps: Maps = {}
+    let maps: MapInfo = {}
     try {
         await pmap(map_info_paths, async (map_info) => {
             // const error = new Error(`Map info file: ${map_info} is not in the correct format`)
             const error = `Map info file: ${path.basename(map_info)} is not in the correct format`
             const contents = (await fs.readFile(map_info)).toString();
             const lines = contents.split(/\n|\r/)
-            let map: Maps[string] = {
+            let map: MapInfo[string] = {
                 img: "",
                 coordtype: "",
                 bounds: {
@@ -170,7 +170,7 @@ export async function grabMaps(datapacks: string[]): Promise<{maps: Maps}> {
             maps[mapname] = map
         })
     } catch (e) {
-        console.log("grabMaps threw error: ", e)
+        console.log("grabMapInfo threw error: ", e)
         return {maps: {}}
     }
     return {maps: maps}

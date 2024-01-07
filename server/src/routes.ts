@@ -6,7 +6,7 @@ import { writeFile, stat } from 'fs/promises';
 import { assertChartRequest } from '@tsconline/shared';
 import { deleteDirectory } from './util.js' 
 import { mkdirp } from 'mkdirp';
-import { grabMapImages, grabMaps } from './mappacks.js'
+import { grabMapImages, grabMapInfo } from './mappacks.js'
 import md5 from 'md5';
 import assetconfigs from './index.js';
 import PDFParser from 'pdf2json';
@@ -22,7 +22,7 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(request: Fasti
   console.log("getting decrypted info for files: ", files);
   const filesSplit = files.split(" ")
   const { columns } =  await parseDatapacks(assetconfigs.decryptionDirectory, filesSplit);
-  const { maps } = await grabMaps(filesSplit)
+  const { maps } = await grabMapInfo(filesSplit)
   await grabMapImages(filesSplit, assetconfigs.imagesDirectory)
 //   console.log(images)
   reply.send({ columns: columns, maps: maps})
@@ -55,7 +55,8 @@ export const fetchPdfStatus = async function fetchPdfStatus(request: FastifyRequ
 
         pdfParser.loadPDF(filepath);
     });
-  reply.send({ ready: isPdfReady });
+    console.log("reply: ", {ready: isPdfReady})
+    reply.send({ ready: isPdfReady });
 }
 
 /**

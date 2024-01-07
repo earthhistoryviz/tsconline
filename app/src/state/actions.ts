@@ -59,7 +59,7 @@ export const setChart = action("setChart", async (newval: number) => {
   }
   try {
     assertColumnInfo(columns)
-    setSettingsTabsColumns(columns)
+    setSettingsColumns(columns)
   } catch (e) {
     if (isServerResponseError(columns)) {
       console.log("Server failed to send column info with error: ", columns.error)
@@ -122,6 +122,26 @@ export const removeCache = action("removeCache", async () => {
   });
 })
 
+/**
+ * Resets state
+ * Only implementation is used when we remove cache
+ */
+export const resetState = action("resetState", () => {
+  setChartLoading(true)
+  setChart(0)
+  setChartHash("")
+  setChartPath("")
+  setAllTabs(false)
+  setUseCache(false)
+  setTab(0)
+  setSettingsTabsSelected('time')
+  setSettingsColumns({})
+  setMaps({})
+  state.settingsTabs.columnSelected = null
+  state.settingsXML = ""
+  state.settingsJSON = {}
+})
+
 export const generateChart = action("generateChart", async () => {
   //set the loading screen and make sure the chart isn't up
   setChartLoading(true)
@@ -176,9 +196,6 @@ export const setChartPath = action("setChartPath", (chartpath: string) => {
 });
 export const setMaps = action("setMaps", (maps: MapInfo) => {
   state.settingsTabs.maps = maps;
-});
-export const setSettingsTabsColumns = action("setSettingsTabsColumns", (columns: ColumnInfo) => {
-  state.settingsTabs.columns = columns;
 });
 export const setChartHash = action("setChartHash", (charthash: string) => {
   state.chartHash = charthash;
