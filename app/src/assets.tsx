@@ -38,7 +38,6 @@ export const TSCButton: React.FC<ButtonProps>  = ( props ) => {
         ...props?.style,
       }}
       variant="contained"
-      endIcon={props?.endIcon} 
     >
       {props?.children}
     </Button>
