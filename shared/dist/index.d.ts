@@ -64,3 +64,8 @@ export type Bounds = {
 };
 export declare function assertMaps(o: any): asserts o is MapInfo;
 export declare function assertMapPoints(o: any): asserts o is MapPoints;
+export type SuccessfulServerResponse = {
+    message: string;
+};
+export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
+export declare function assertSuccessfulServerResponse(o: any): asserts o is SuccessfulServerResponse;
