@@ -1,19 +1,9 @@
-import React, { useState } from "react";
-import Checkbox from "@mui/material/Checkbox";
-import { Theme, useTheme, styled } from "@mui/material/styles";
-import { makeStyles } from '@mui/styles';
-import { ListItem, List, ListItemAvatar, Avatar, ListItemText, Box} from '@mui/material';
+import { AccordionSummaryProps, AccordionProps, Box } from '@mui/material';
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
-import MuiAccordion, { AccordionProps } from "@mui/material/Accordion";
+import MuiAccordion from "@mui/material/Accordion";
+import MuiAccordionSummary from "@mui/material/AccordionSummary";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
-// import { Link, LinkProps } from 'react-router-dom';
-import { devSafeUrl } from './util'
-import MuiAccordionSummary, {
-  AccordionSummaryProps,
-} from "@mui/material/AccordionSummary";
-
-
-
+import { useTheme, styled } from '@mui/material/styles'
 
 // Define the Accordion component outside the Column component
 export const Accordion = styled((props: AccordionProps) => (
