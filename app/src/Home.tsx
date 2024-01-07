@@ -72,10 +72,12 @@ export const Home = observer(function Home() {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            height: "10vh",
-            width: "30vh", 
+            height: "7vh",
+            width: "16vh", 
             marginLeft: "auto", 
             marginRight: "auto",
+            borderRadius: "40px",
+            fontSize: theme.typography.pxToRem(12),
           }} 
           onClick={() => {
             actions.removeCache();
