@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import { useContext } from 'react'
 import Color from 'color';
 import { observer } from 'mobx-react-lite';
@@ -8,7 +8,8 @@ import { ChartConfig } from '@tsconline/shared';
 import { primary_light, primary_dark, secondary } from './constant';
 import { devSafeUrl } from './util';
 import { context } from './state';
-import { Box, Button, List, ListItem,FormGroup, FormControlLabel, Checkbox, FormControl, CardActions, Card, Grid, Container, CardContent, Typography, CardMedia } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Accordion, AccordionSummary, AccordionDetails, Box, Button, List, ListItem,FormGroup, FormControlLabel, Checkbox, FormControl, CardActions, Card, Grid, Container, CardContent, Typography, CardMedia } from '@mui/material';
 import { useTheme, styled } from '@mui/material/styles';
 import { TSCCheckbox, TSCButton, TSCCardList }  from './components'
 
@@ -92,31 +93,64 @@ export const Home = observer(function Home() {
 const TSCPresetHighlights = observer(function TSCPresetHighlights() {
   const { state, actions } = useContext(context);
   const theme = useTheme()
+  const [expanded, setExpanded] = useState(true);
+  const handleAccordionChange = () => {
+    setExpanded(!expanded);
+  };
   return (
-    <Grid className="presets" container spacing={4} style={{
-      background: "#00" 
-    }}>
-      {state.presets.map((preset, index) => (
-        <Grid item key={index}>
-        <TSCCardList
-          color={theme.palette.navbar.main}
-          date={"02.04.2020"}
-          img={
-            devSafeUrl(preset.img)
-          }
-          logo={devSafeUrl(preset.img)}
-          title={
-            <>
-              {preset.title}
-              <br />
-            </>
-          }
-          onClick={ () => {
-            actions.setChart(index)
-          }
-          }
-        />
-      </Grid> ))}
-    </Grid>
+    <Accordion style={{
+      background: 'transparent',
+      marginLeft: '5vh',
+      marginRight: '5vh',
+      border: '1px solid gray',
+      borderRadius: '4px',
+      overflow: 'hidden',
+    }}
+    onChange={handleAccordionChange}
+    expanded={expanded}
+    >
+      <AccordionSummary
+        expandIcon={<ExpandMoreIcon />}
+        aria-controls="panel1a-content"
+        id="panel1a-header"
+        style={{
+          borderBottom: '1px solid rgba(0, 0, 0, 0.20)',
+          backgroundColor: 'rgba(0, 0, 0, 0.04)', 
+        }}
+      >
+        <Typography sx={{ fontSize: "1.5rem"}}>BASIC PRESETS</Typography>
+      </AccordionSummary>
+      <AccordionDetails>
+        <Grid className="presets" container style={{
+          display: "flex",
+          flexWrap: "nowrap",
+          overflowX: "auto",
+          width: "auto",
+          paddingBottom: "9vh",
+        }}>
+          {state.presets.map((preset, index) => (
+            <Grid item key={index} style={{ marginRight: '16px', marginLeft: '16px'}}>
+            <TSCCardList
+              color={theme.palette.navbar.main}
+              date={"02.04.2020"}
+              img={
+                devSafeUrl(preset.img)
+              }
+              logo={devSafeUrl(preset.img)}
+              title={
+                <>
+                  {preset.title}
+                  <br />
+                </>
+              }
+              onClick={ () => {
+                actions.setChart(index)
+              }
+              }
+            />
+          </Grid> ))}
+        </Grid>
+      </AccordionDetails>
+    </Accordion>
   );
 })
