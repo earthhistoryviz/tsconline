@@ -118,6 +118,9 @@ export const setGeologicalStages = action("setGeologicalStages", (stages: Geolog
 export const setAllTabs = action("setAllTabs", (newval: boolean) => {
   state.showAllTabs = newval;
 });
+export const setShowPresetInfo = action("setShowPresetInfo", (newval: boolean) => {
+  state.showPresetInfo= newval;
+});
 /**
  * Removes cache in public dir on server
  */
@@ -160,6 +163,8 @@ export const resetState = action("resetState", () => {
 
 export const generateChart = action("generateChart", async () => {
   //set the loading screen and make sure the chart isn't up
+  setTab(1);
+  setAllTabs(true);
   setChartLoading(true)
   setChartHash("")
   setChartPath("")
