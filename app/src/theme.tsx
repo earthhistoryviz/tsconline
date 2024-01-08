@@ -39,9 +39,7 @@ let theme = createTheme({
             dark: "#1D4E89",
         },
         button: {
-            light: `${Color("#3C91E6").lighten(0.3)}`,
-            main: "#3C91E6",
-            dark: `${Color("#3C91E6").darken(0.3)}`,
+            main: "#6693C9",
         },
         dark: {
             light: "#6D8A96",
@@ -86,6 +84,11 @@ theme = createTheme(theme, {
               .lighten(0.3)}`,
       main: `${Color(theme.palette.altbackground.main)
               .lighten(0.3)}`
+    },
+    button : {
+            light: `${Color(theme.palette.button.main).lighten(0.3)}`,
+            main: theme.palette.button.main,
+            dark: `${Color(theme.palette.button.main).darken(0.3)}`,
     }
   },
 });
