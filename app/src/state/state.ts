@@ -54,5 +54,5 @@ export const state = observable<State>({
     baseStageKey: "",
     unitsPerMY: 2,
   },
-  useCache: false,
+  useCache: true,
 });

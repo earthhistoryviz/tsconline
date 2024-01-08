@@ -29,14 +29,14 @@ export const resetSettings = action("resetSettings", () => {
   }
 });
 
-export const setChart = action("setChart", async (newval: number) => {
+export const setChart = action("setChart", async (newval: number): boolean => {
   resetSettings()
   //set the settings tab back to time
   setSettingsTabsSelected(0)
   if (state.presets.length <= newval) {
     state.chart = null;
     console.log("unknown preset selected")
-    return;
+    return false;
   }
   let tempColumns: ColumnInfo | null;
   state.chart = state.presets[newval]!;
@@ -59,7 +59,7 @@ export const setChart = action("setChart", async (newval: number) => {
       console.log("Failed to fetch map info with error: ", e)
     }
     resetState()
-    return
+    return false
   }
   try {
     assertColumnInfo(columns)
@@ -71,7 +71,7 @@ export const setChart = action("setChart", async (newval: number) => {
       console.log("Failed to fetch column info with error: ", e)
     }
     resetState()
-    return
+    return false
   }
 
   // Grab the settings for this chart if there are any:
@@ -99,6 +99,7 @@ export const setChart = action("setChart", async (newval: number) => {
       console.log("The returned settingsXML was: ", xml);
     }
   }
+  return true
 });
 
 
@@ -155,7 +156,7 @@ export const resetState = action("resetState", () => {
   setChartHash("")
   setChartPath("")
   setAllTabs(false)
-  setUseCache(false)
+  setUseCache(true)
   setTab(0)
   setShowPresetInfo(false)
   setSettingsTabsSelected('time')
