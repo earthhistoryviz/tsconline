@@ -21,11 +21,13 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(request: Fasti
   //TODO check if files exist. probably check this in the glob of parse Datapacks
   console.log("getting decrypted info for files: ", files);
   const filesSplit = files.split(" ")
-  const { columns } =  await parseDatapacks(assetconfigs.decryptionDirectory, filesSplit);
-  const { maps } = await grabMapInfo(filesSplit)
-  await grabMapImages(filesSplit, assetconfigs.imagesDirectory)
-//   console.log(images)
-  reply.send({ columns: columns, maps: maps})
+  try {
+    const { columns } =  await parseDatapacks(assetconfigs.decryptionDirectory, filesSplit);
+    const { maps } = await grabMapInfo(filesSplit)
+    reply.send({ columns: columns, maps: maps})
+  } catch (e) {
+      reply.send({error: e})
+  }
 }
 
 /**

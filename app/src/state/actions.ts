@@ -58,6 +58,8 @@ export const setChart = action("setChart", async (newval: number) => {
     } else {
       console.log("Failed to fetch map info with error: ", e)
     }
+    resetState()
+    return
   }
   try {
     assertColumnInfo(columns)
@@ -68,6 +70,8 @@ export const setChart = action("setChart", async (newval: number) => {
     } else {
       console.log("Failed to fetch column info with error: ", e)
     }
+    resetState()
+    return
   }
 
   // Grab the settings for this chart if there are any:
@@ -153,6 +157,7 @@ export const resetState = action("resetState", () => {
   setAllTabs(false)
   setUseCache(false)
   setTab(0)
+  setShowPresetInfo(false)
   setSettingsTabsSelected('time')
   setSettingsColumns({})
   setMaps({})

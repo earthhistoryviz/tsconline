@@ -171,7 +171,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{maps: MapInfo}>
         })
     } catch (e) {
         console.log("grabMapInfo threw error: ", e)
-        return {maps: {}}
+        throw e
     }
     return {maps: maps}
 }
