@@ -11,9 +11,46 @@ import { context } from './state';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Drawer, Accordion, AccordionSummary, AccordionDetails, Box, Button, List, ListItem,FormGroup, FormControlLabel, Checkbox, FormControl, CardActions, Card, Grid, Container, CardContent, Typography, CardMedia } from '@mui/material';
 import { useTheme, styled } from '@mui/material/styles';
-import { TSCCheckbox, TSCButton, TSCCardList }  from './components'
+import { TSCIcon, TSCCheckbox, TSCButton, TSCCardList }  from './components'
+import TSCreatorLogo from './assets/TSCreatorLogo.png'
 
 import "./Home.css"
+
+const HeaderContainer = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: theme.spacing(2),
+  marginBottom: theme.spacing(4),
+}));
+
+const HeaderIcon = styled(TSCIcon)(({ theme }) => ({
+  fontSize: theme.typography.h4.fontSize, 
+}));
+
+const HeaderTitle = styled(Typography)(({ theme }) => ({
+  fontWeight: theme.typography.fontWeightBold,
+  color: theme.palette.dark.main,
+  fontSize: theme.typography.h2.fontSize, 
+}));
+
+const TSCOnlineHeader = () => {
+  return (
+    <HeaderContainer>
+      <TSCIcon src={TSCreatorLogo} alt="Logo" size="80px" marginTop="20px"/>
+      <HeaderTitle variant="h2">Time Scale Creator Online</HeaderTitle>
+    </HeaderContainer>
+  );
+};
+const RemoveCacheButton = styled(TSCButton)(({ theme }) => ({
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  marginLeft: "auto", 
+  marginRight: "auto",
+  borderRadius: "40px",
+  fontSize: theme.typography.pxToRem(12),
+}))
 
 export const Home = observer(function Home() {
   const { state, actions } = useContext(context); 
@@ -24,63 +61,21 @@ export const Home = observer(function Home() {
     <div className="whole_page" style={{
       background: theme.palette.gradient.main,
     }}>
-      <div className="top_box" style={{
-        }}>
-        { !state.chart ? <React.Fragment /> : 
-          <div className="chart_display">
-            <div className="holds_picture">
-              <img className="chart" src={devSafeUrl(state.chart.img)} />
-            </div>
-            <div className="details" style ={{ fontFamily: theme.typography.fontFamily }}>
-              <h2 className="preset_name"style={{color: secondary}}>{state.chart.title} </h2>
-              <p className="description" style={{color: secondary}}>{state.chart.description}</p>
-                <TSCButton 
-                  onClick={() => {
-                    actions.generateChart();
-                    navigate('/chart');
-                  }}
-                  variant="contained" 
-                  style={{
-                    width: "325px", 
-                    height: "75px", 
-                    marginLeft: "auto", 
-                    marginRight: "auto"}} 
-                  endIcon={<ForwardIcon />}
-                >
-                  Make your own chart 
-                </TSCButton>
-                <FormControlLabel control={
-                <TSCCheckbox 
-                checked={state.useCache}
-                onChange={(e) => {
-                  actions.setUseCache(e.target.checked)
-                }}
-                />} 
-                label="Use Cache" />
-            </div>
-          </div>
-        }
-      </div>
+      <TSCOnlineHeader/>
       <TSCPresetHighlights navigate={navigate}/>
       <div className="bottom_button">
-        <TSCButton
-          variant="contained" style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "7vh",
-            width: "16vh", 
-            marginLeft: "auto", 
-            marginRight: "auto",
-            borderRadius: "40px",
-            fontSize: theme.typography.pxToRem(12),
-          }} 
+        <RemoveCacheButton
+          variant="contained"
+          // style={{
+          //   height: "7vh",
+          //   width: "16vh", 
+          // }} 
           onClick={() => {
             actions.removeCache();
             actions.resetState();
           }}>
             Remove Cache
-        </TSCButton>
+        </RemoveCacheButton>
       </div>
       <Drawer anchor="bottom" 
         open={state.showPresetInfo} 
@@ -138,7 +133,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({navigate}: {n
     setExpanded(!expanded);
   };
   return (
-    <div>
+    <>
     <Accordion style={{
       background: 'transparent',
       marginLeft: '5vh',
@@ -200,6 +195,6 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({navigate}: {n
         </Grid>
       </AccordionDetails>
     </Accordion>
-    </div>
+    </>
   );
 })
