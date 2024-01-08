@@ -90,7 +90,7 @@ export const Home = observer(function Home() {
         }}>
           {!state.chart ? <React.Fragment /> : 
           <div className="chart_display" style={{
-            background:theme.palette.dark.main
+            background:`${Color(theme.palette.navbar.main).darken(0.5)}`
           }}>
             <div className="holds_picture">
               <img className="chart" src={devSafeUrl(state.chart.img)} />
