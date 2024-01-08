@@ -179,15 +179,23 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({navigate}: {n
                   <br />
                 </>
               }
-              onInfoClick={ () => {
-                actions.setChart(index)
-                actions.setShowPresetInfo(true)
+              onInfoClick={ async () => {
+                // wait to see if we can grab necessary data
+                const success = await actions.setChart(index)
+                if (success) {
+                  actions.setShowPresetInfo(true)
+                }
+                //TODO add an error message saying the data is irregular and can't be loaded
               }
             }
-              generateChart={() => {
-                actions.setChart(index)
-                actions.generateChart()
-                navigate('/chart')
+              generateChart={async () => {
+                const success = await actions.setChart(index)
+                // wait to see if we can grab necessary data
+                if (success) {
+                  actions.generateChart()
+                  navigate('/chart')
+                }
+                //TODO add an error message saying the data is irregular and can't be loaded
               }}
               
             />
