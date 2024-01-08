@@ -2,14 +2,16 @@ import React from "react";
 import cx from "clsx";
 import Color from "color";
 import { styled, useTheme } from "@mui/material/styles";
-import { Grid, Box, Avatar, ButtonBase, CardMedia } from "@mui/material";
+import { Button,Grid, Box, Avatar, ButtonBase, CardMedia, IconButton } from "@mui/material";
+import InfoIcon from '@mui/icons-material/Info';
+import {TSCButton} from './TSCButton'
 const defaultColor = "#747f84";
 
 const StyledRoot = styled("div")(
   ({ theme, color }) => ({
     position: "relative",
     borderRadius: "1rem",
-    minWidth: 320,
+    minWidth: 350,
     paddingTop: 160,
     "&:before": {
       transition: "0.2s",
@@ -50,14 +52,14 @@ const CardMediaCover = styled(CardMedia)(() => ({
 const StyledH2 = styled("h2")(({ theme }) => ({
   fontFamily: theme.typography.fontFamily,
   fontWeight: 700,
-  fontSize: "1.25rem",
+  fontSize: "1.15rem",
   color: theme.palette.background.default,
   margin: 0,
   overflow: "hidden",
   textOverflow: "ellipsis",
   maxWidth: "150px",
-  // might need to uncomment this in the future
-  // whiteSpace: "nowrap"
+  maxHeight: '2.8em',
+  whiteSpace: "normal"
 }));
 
 const StyledContent = styled("div")(
@@ -66,7 +68,11 @@ const StyledContent = styled("div")(
     zIndex: 1,
     padding: "1rem",
     borderRadius: "1rem",
-    boxShadow: `0 6px 16px 0 ${Color(color).fade(0.5)}`,
+    boxShadow: `
+    -10px 10px 15px -5px ${Color(color).fade(0.5)}, 
+      10px 10px 15px -5px ${Color(color).fade(0.5)}, 
+      0 10px 15px -5px ${Color(color).fade(0.5)}
+    `,
     "&:before": {
       content: '""',
       display: "block",
@@ -101,11 +107,11 @@ const ClickableCard = styled(ButtonBase)(() => ({
   // },
 }));
 
-const StyledDivTeam = styled("div")(({ theme }) => ({
-  fontFamily: theme.typography.fontFamily,
-  fontSize: "0.75rem",
-  color: "rgba(255 255 255 / 80%)",
-}));
+// const StyledDivBrand = styled("div")(({ theme }) => ({
+//   fontFamily: theme.typography.fontFamily,
+//   fontSize: "0.75rem",
+//   color: "rgba(255 255 255 / 80%)",
+// }));
 
 const StyledDivDate = styled("div")(({ theme }) => ({
   fontFamily: theme.typography.fontFamily,
@@ -133,7 +139,7 @@ export const TSCCardList = ({
   onClick?: () => void;
 }) => {
   return (
-    <ClickableCard onClick={onClick}>
+    // <ClickableCard onClick={onClick}>
     <StyledRoot color = {color}>
     <CardMediaCover image={img} />
     <StyledContent color={color}>
@@ -146,9 +152,20 @@ export const TSCCardList = ({
             <StyledH2>{title}</StyledH2>
           </Grid>
         </Grid>
-        <Grid container mt={4} alignItems="center" spacing={2}>
+        <Grid container mt={2} alignItems="center" justifyContent="center" spacing={2} wrap="nowrap">
           <Grid item>
-            <StyledDivTeam>tsconline</StyledDivTeam>
+          <IconButton onClick={() => {console.log("Info Pressed")}}>
+            <InfoIcon />
+          </IconButton>
+          </Grid>
+          <Grid item >
+            <Button style={{
+              width: "auto",
+              height: "auto",
+              fontSize: "0.85rem"
+            }}>
+              Generate
+            </Button>
           </Grid>
           <Grid item xs>
             <Box display="flex" justifyContent="flex-end">
@@ -159,6 +176,6 @@ export const TSCCardList = ({
       </Box>
     </StyledContent>
   </StyledRoot>
-  </ClickableCard>
+  // </ClickableCard>
   );
 };
