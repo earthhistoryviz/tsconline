@@ -129,14 +129,16 @@ export const TSCCardList = ({
   logo,
   title,
   date,
-  onClick,
+  onInfoClick,
+  generateChart
 }: {
   color?: string;
   img: string;
   logo: string;
   title: React.ReactNode;
   date: string;
-  onClick?: () => void;
+  onInfoClick?: () => void;
+  generateChart?: () => void;
 }) => {
   return (
     // <ClickableCard onClick={onClick}>
@@ -154,7 +156,7 @@ export const TSCCardList = ({
         </Grid>
         <Grid container mt={2} alignItems="center" justifyContent="center" spacing={2} wrap="nowrap">
           <Grid item>
-          <IconButton onClick={() => {console.log("Info Pressed")}}>
+          <IconButton onClick={onInfoClick}>
             <InfoIcon />
           </IconButton>
           </Grid>
@@ -163,7 +165,8 @@ export const TSCCardList = ({
               width: "auto",
               height: "auto",
               fontSize: "0.85rem"
-            }}>
+            }}
+            onClick={generateChart}>
               Generate
             </Button>
           </Grid>
