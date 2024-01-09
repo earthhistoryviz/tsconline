@@ -29,7 +29,7 @@ export const resetSettings = action("resetSettings", () => {
   }
 });
 
-export const setChart = action("setChart", async (newval: number): boolean => {
+export const setChart = action("setChart", async (newval: number): Promise<boolean> => {
   resetSettings()
   //set the settings tab back to time
   setSettingsTabsSelected(0)
