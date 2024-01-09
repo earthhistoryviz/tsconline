@@ -24,6 +24,7 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(request: Fasti
   try {
     const { columns } =  await parseDatapacks(assetconfigs.decryptionDirectory, filesSplit);
     const { maps } = await grabMapInfo(filesSplit)
+    await grabMapImages(filesSplit, assetconfigs.imagesDirectory)
     reply.send({ columns: columns, maps: maps})
   } catch (e) {
       reply.send({error: e})

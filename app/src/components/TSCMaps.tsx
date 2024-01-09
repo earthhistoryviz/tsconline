@@ -1,9 +1,14 @@
-import { Dialog, Button, List, Box, ListItem, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
+import { IconButton, Dialog, DialogContent, Button, List, Box, ListItem, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
 import { useTheme } from "@mui/material/styles";
 import type { MapInfo } from '@tsconline/shared'
 import { devSafeUrl } from '../util'
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 import React, { useState } from "react";
 import { observer } from "mobx-react-lite";
+
+const height = '80vh'
+const width = '80vw'
 
 type MapRowComponentProps = {
   maps: MapInfo; 
@@ -51,18 +56,58 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ maps }) =>
         </List>
       </Box>
 
-      <Dialog open={isDialogOpen} onClose={handleCloseDialog} >
-        {selectedMap ? <MapViewer mapData={maps[selectedMap]} /> : null}
-      </Dialog> 
+      <Dialog open={isDialogOpen} onClose={handleCloseDialog} 
+        // fullWidth={true}
+        // maxWidth={false}
+        PaperProps={{
+          style: {
+            height: `auto`,
+            // maxHeight: `${height}`,
+            width: `auto`, 
+            // maxWidth: 'none',
+          },
+        }}
+        >
+        {selectedMap ? <MapDialog mapData={maps[selectedMap]} /> : null}
+      </Dialog>
     </div>
   );
 });
+
+const MapDialog = ({ mapData }: {mapData: MapInfo[string]; }) => {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  // const handleOpenDialog = (newMapData) => {
+  //   setDialogOpen(true);
+  // };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+  };
+
+  return (
+    <>
+      <MapViewer mapData={mapData}/>
+      <Dialog open={dialogOpen} onClose={handleCloseDialog}>
+        <MapViewer mapData={mapData}/>
+      </Dialog>
+    </>
+  );
+}
 
 type MapViewerProps  = {
   mapData: MapInfo[string];
 }
 const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
   const theme = useTheme()
+  const [zoomLevel, setZoomLevel] = useState(1)
+  const [imageAspect, setImageAspect] = useState(1);
+  const handleZoomIn = () => {
+    setZoomLevel(zoomLevel * 1.1)
+  };
+  const handleZoomOut = () => {
+    setZoomLevel(Math.max(zoomLevel / 1.1, 1)) 
+  };
   const calculatePosition = (lat: number, lon: number) => {
     const {upperLeftLat, upperLeftLon, lowerRightLat, lowerRightLon} = mapData.bounds
 
@@ -81,16 +126,30 @@ const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
     // console.log(`x: ${x}, y: ${y}`);
     return { x, y };
   };
+  
+
+  const imageStyle = {
+    transform: `scale(${zoomLevel})`,
+    transformOrigin: 'center center',
+    maxHeight: '100%', 
+    maxWidth: '100%',
+    objectFit: 'cover',
+  };
 
   return (
-    <div style={{position: 'relative', overflowY: "auto", overflowX: "auto", width: '100%', height: '100%' }} >
+    <Box sx={{ 
+      display: 'flex',
+      // maxHeight: '100vh',
+      // width: '100vh'
+    }}>
+      <Box sx={{
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        // overflow: 'hidden', // Hide any overflow
+      }}>
       <img src={devSafeUrl(mapData.img)} alt="Map" 
-       style ={{
-        maxWidth: '100%',
-        maxHeight: '100%',
-        width: '100%',
-        height: '100%',
-      }}
+       style ={imageStyle}
       />
       {Object.entries(mapData.mapPoints).map(([name, point]) => {
         const position = calculatePosition(point.lat, point.lon);
@@ -111,74 +170,15 @@ const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
           />
         );
       })}
-    </div>
+      </Box>
+      <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <IconButton onClick={handleZoomIn} color="primary">
+          <AddIcon />
+        </IconButton>
+        <IconButton onClick={handleZoomOut} color="primary">
+          <RemoveIcon />
+        </IconButton>
+      </Box>
+    </Box>
   );
 }
-// interface PopupProps {
-//   isOpen: boolean;
-//   onClose: () => void;
-//   children: React.ReactNode;
-//   style?: React.CSSProperties;
-//   initialPosition?: { x: number; y: number };
-// }
-// const Popup: React.FC<PopupProps> = ({ isOpen, onClose, children, style, initialPosition ={x: 50, y: 50} }) => {
-//   const theme = useTheme()
-//   const [position, setPosition] = useState(initialPosition);
-//   const [isDragging, setIsDragging] = useState(false);
-//   const [offset, setOffset] = useState({ x: 0, y: 0 });
-
-//   if (!isOpen) return null;
-
-//   const startDrag = (e: React.MouseEvent<HTMLDivElement>) => {
-//     setIsDragging(true);
-//     setOffset({
-//       x: e.clientX - position.x,
-//       y: e.clientY - position.y,
-//     });
-//   };
-
-//   const onDrag = (e: React.MouseEvent<HTMLDivElement>) => {
-//     if (!isDragging) return;
-//     setPosition({
-//       x: e.clientX - offset.x,
-//       y: e.clientY - offset.y,
-//     });
-//   };
-
-//   const endDrag = () => {
-//     setIsDragging(false);
-//   };
-
-//   const popupStyle: React.CSSProperties = {
-//     position: 'fixed',
-//     left: `${position.x}px`,
-//     top: `${position.y}px`,
-//     width: '50vh',
-//     height: '50vh',
-//     cursor: 'move',
-//     backgroundColor: theme.palette.selection.main,
-//     padding: '5px',
-//     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-//     zIndex: 1000, 
-//     ...style,
-//   };
-
-//   return (
-//     <div 
-//       style={popupStyle}
-//       onMouseDown={startDrag}
-//       onMouseMove={onDrag}
-//       onMouseUp={endDrag}
-//       onMouseLeave={endDrag}
-//       // onClick={onClick}
-//       >
-//       <div onMouseDown={startDrag} style={{cursor: 'move', backgroundColor: theme.palette.selection.main, padding: '5px' }}>
-//         <span>Popup</span>
-//         <Button onClick={onClose} style={{ float: 'right', color: theme.palette.dark.main }}>X</Button>
-//       </div>
-//       <div style={{resize: 'both', overflow: 'auto'}}>
-//       {children}
-//       </div>
-//     </div>
-//   );
-// };
