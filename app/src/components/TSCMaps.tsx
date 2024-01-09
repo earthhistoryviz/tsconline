@@ -133,7 +133,7 @@ const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
     transformOrigin: 'center center',
     maxHeight: '100%', 
     maxWidth: '100%',
-    objectFit: 'cover',
+    // objectFit: 'cover',
   };
 
   return (
@@ -149,7 +149,7 @@ const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
         // overflow: 'hidden', // Hide any overflow
       }}>
       <img src={devSafeUrl(mapData.img)} alt="Map" 
-       style ={imageStyle}
+       style={imageStyle}
       />
       {Object.entries(mapData.mapPoints).map(([name, point]) => {
         const position = calculatePosition(point.lat, point.lon);
