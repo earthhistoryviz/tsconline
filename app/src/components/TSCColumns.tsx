@@ -16,6 +16,9 @@ export const Accordion = styled((props: AccordionProps) => (
   "&:before": {
     display: "none",
   },
+  transitionProps: {
+    timeout: 0
+  }
 }));
 
 // Define the AccordionSummary and AccordionDetails components outside the Column component
