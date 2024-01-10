@@ -161,14 +161,14 @@ export const TSCCardList = ({
           </IconButton>
           </Grid>
           <Grid item >
-            <Button style={{
+            <TSCButton style={{
               width: "auto",
               height: "auto",
               fontSize: "0.85rem"
             }}
             onClick={generateChart}>
               Generate
-            </Button>
+            </TSCButton>
           </Grid>
           <Grid item xs>
             <Box display="flex" justifyContent="flex-end">
