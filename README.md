@@ -10,13 +10,26 @@ This monorepo has 3 workspaces: `app`, `shared`, and `server`. Anything shared b
 the app and server (i.e. types and assertions) goes in `shared`.
 
 The server run on port 3000 by default, and will serve the following routes:
-| `Route` | `Description` |
+
+<!-- | **Route** | **Description** |
 |----------------------------|---------------|
 | `/_` | Serves any files in `app/dist`. |
 | `GET /presets` | Node process reads `server/public/presets` to build JSON. |
 | `POST /charts` | POST settings file here to make a chart, URL returned. |
 | `GET /public/_` | GET anything in the `server/public` folder (i.e., charts). |
-| `GET /datapackinfo/:files` | GET column settings info, map info, and grabs map images from decrypted datapacks. |
+| `GET /datapackinfo/:files` | GET column settings info, map info, and grabs map images from decrypted datapacks. | -->
+
+| Route                         | Description                                                                        |
+| ----------------------------- | ---------------------------------------------------------------------------------- |
+| `/_`                          | Serves any files in `app/dist`.                                                    |
+| ----------------------------- | -------------                                                                      |
+| `GET /presets`                | Node process reads `server/public/presets` to build JSON.                          |
+| ----------------------------- | -------------                                                                      |
+| `POST /charts`                | POST settings file here to make a chart, URL returned.                             |
+| ----------------------------- | -------------                                                                      |
+| `GET /public/_`               | GET anything in the `server/public` folder (i.e., charts).                         |
+| ----------------------------- | -------------                                                                      |
+| `GET /datapackinfo/:files`    | GET column settings info, map info, and grabs map images from decrypted datapacks. |
 
 ## Running in Production
 
