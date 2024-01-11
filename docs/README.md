@@ -16,7 +16,7 @@ The current state of the website is available [here](http://dev.timescalecreator
 
 ---
 
-This monorepo has 3 workspaces: [app](#general-app-structure), [shared](#general-shared-structure), and [server](/server/). Anything shared between
+This monorepo has 3 workspaces: [app](#general-app-structure), [shared](#general-shared-structure), and [server](/server.md#server). Anything shared between
 the app and server (i.e. types and assertions) goes in `shared`. Keep as much backend work like parsing on the `server` end.
 
 ---
@@ -39,7 +39,7 @@ The server runs on port 3000 by default, and will serve the following routes:
 
 ---
 
-These [routes](/server/README.md#routes) can be found in server/src/routes.ts
+These [routes](server.md#routes) can be found in server/src/routes.ts
 
 ---
 
