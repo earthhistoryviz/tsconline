@@ -20,11 +20,9 @@ The server run on port 3000 by default, and will serve the following routes:
 | `/removecache` | POST removes cache of previously generated charts |
 | `/pdfstatus:hash` | GET whether the pdf is readable from the hashed generated chart|
 
-## Running in Production
+## Initial Setup
 
 ---
-
-The monorepo is missing 2 things you need to get started: a jar file and secrets.txt.
 
 1. To run for production, clone the monorepo:
 
@@ -33,31 +31,44 @@ git clone git@github.com:earthhistoryviz/tsconline.git
 cd tsconline
 ```
 
-2. Create a secrets.env file to hold your VNC password (to view the GUI if needed):
+2. Run setup in the 'tsconline' directory to ensure that all workspaces are properly built and installed with the correct packages
+
+```bash
+yarn setup
+```
+
+The server requires 2 jar files to operate. Contact a team member to direct you to the TSCreator jar and decryption jar
+
+3. Put the jars within server/assets/jars. If the names are different than what is described in server/assets/config.json, then make the required changes.
+
+## Follow the following steps if you want to setup the website to service remote requests
+
+The monorepo is missing a secrets.env file for setting up the docker container
+
+1. Create a secrets.env file to hold your VNC password (to view the GUI if needed):
 
 ```bash
 echo "VNC_PASSWORD=passwordyouwant" > secrets.env
 ```
 
-3. Then run a temporary docker container to build everything with the right versions of
+2. Run a temporary docker container to build everything with the right versions of
    yarn/node/etc.:
 
 ```bash
 docker-compose run tsconline bash
-# yarn && yarn build
 ```
 
-4. Then **Put a jar file in server/assets/jars** and **Put it's name in server/assets/config.json**.
+3. Then **Put a jar file in server/assets/jars** and **Put it's name in server/assets/config.json**.
 
-5. Bring up the server:
+4. Bring up the server:
 
 ```bash
 docker-compose up -d
 ```
 
-6. Trying loading the page at [http://dev.timescalecreator.org:3000]
+5. Trying loading the page at [http://dev.timescalecreator.org:3000]
 
-7. There are instructions printed out when the container starts about how to connect a
+6. There are instructions printed out when the container starts about how to connect a
    VNC viewer if you want to do that. To see the instructions, looks at the logs:
 
 ```bash
