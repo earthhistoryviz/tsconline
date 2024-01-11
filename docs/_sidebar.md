@@ -1,2 +1,2 @@
 - [Overview](/README)
-- [Server](/server/)
+- [Server](server#server)
