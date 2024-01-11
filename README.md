@@ -11,7 +11,7 @@ the app and server (i.e. types and assertions) goes in `shared`.
 
 The server run on port 3000 by default, and will serve the following routes:
 | Route | Description |
-|-----------------|---------------------------------------------------------|
+|------------------------------|---------------------------------------------------------|
 | /_ | serves any files in `app/dist` |
 | GET /presets | node process reads server/public/presets to build JSON |
 | POST /charts | POST settings file here to make a chart, url returned |
