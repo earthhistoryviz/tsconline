@@ -11,7 +11,7 @@ the app and server (i.e. types and assertions) goes in `shared`.
 
 The server run on port 3000 by default, and will serve the following routes:
 | **Route** | **Description** |
-|----------------------------|---------------|
+| :-- |---------------|
 | `/_` | Serves any files in `app/dist`. |
 | `/presets` | Node process reads `server/public/presets` to build JSON. |
 | `/charts:usecache` | POST settings file here to make a chart, URL returned. |
@@ -20,9 +20,12 @@ The server run on port 3000 by default, and will serve the following routes:
 | `/removecache` | POST removes cache of previously generated charts |
 | `/pdfstatus:hash` | GET whether the pdf is readable from the hashed generated chart|
 
-## Initial Setup
+## Get Started
 
 ---
+
+**The server requires 2 jar files to operate.**
+**Contact a team member to direct you to the TSCreator jar and decryption jar**
 
 1. To run for production, clone the monorepo:
 
@@ -37,12 +40,76 @@ cd tsconline
 yarn setup
 ```
 
-**\_The server requires 2 jar files to operate.**
-**Contact a team member to direct you to the TSCreator jar and decryption jar\_**
-
 3. Put the jars within server/assets/jars. If the names are different than what is described in server/assets/config.json, then make the required changes.
 
-## Follow the following steps if you want to setup the website to service remote requests
+## For dev work locally
+
+---
+
+To dev, each workspace has it's own "watch and rebuild"-style development command.
+The app can do it in two ways depending on whether you want the vite dev server
+or if you are trying to test it through the node server. The node server only
+serves files built in `app/dist/`, which the vite dev server does not modify.
+So if you are loading through the node server, you have to get vite to make
+the production build in `dist/` whenever you change files instad of using
+the vite dev server.
+
+If you are on a Mac, you should be fine to use your local yarn (no need to run
+the docker). If you are on windows, you need to run these commands in Docker:
+
+```bash
+docker-compose exec tconline bash
+```
+
+note this depends on the tsconline service being up and running. If it is not,
+use `docker-compose run tsconline bash` instead.
+
+You should now be within the docker container if on Windows.
+Execute the following commands within their respective workspaces. You will need three seperate windows.
+
+#### Server terminal 1
+
+---
+
+```bash
+cd server
+yarn dev
+```
+
+#### Server terminal 2
+
+---
+
+```bash
+cd server
+yarn start
+```
+
+#### App with vite dev server:
+
+_If you are not sure which one to use, use this_
+
+---
+
+```bash
+cd app
+yarn dev
+```
+
+#### App through node server:
+
+---
+
+```bash
+cd app
+yarn build-watch
+```
+
+#### App should open automatically at http://localhost:5173/
+
+## For serving remote requests
+
+---
 
 The monorepo is missing a secrets.env file for setting up the docker container
 
@@ -74,62 +141,4 @@ docker-compose up -d
 
 ```bash
 docker-compose logs
-```
-
-## dev
-
----
-
-To dev, each workspace has it's own "watch and rebuild"-style development command.
-The app can do it in two ways depending on whether you want the vite dev server
-or if you are trying to test it through the node server. The node server only
-serves files built in `app/dist/`, which the vite dev server does not modify.
-So if you are loading through the node server, you have to get vite to make
-the production build in `dist/` whenever you change files instad of using
-the vite dev server.
-
-If you are on a Mac, you should be fine to use your local yarn (no need to run
-the docker). If you are on windows, you need to run these commands in Docker:
-
-```bash
-docker-compose exec tconline bash
-```
-
-note this depends on the tsconline service being up and running. If it is not,
-use `docker-compose run tsconline bash` instead.
-
-#### Server
-
----
-
-```bash
-cd server
-yarn dev
-```
-
-#### Shared
-
----
-
-```bash
-cd shared
-yarn dev
-```
-
-#### App with vite dev server:
-
----
-
-```bash
-cd app
-yarn dev
-```
-
-#### App through node server:
-
----
-
-```bash
-cd app
-yarn build-watch
 ```
