@@ -37,7 +37,8 @@ cd tsconline
 yarn setup
 ```
 
-**_The server requires 2 jar files to operate. Contact a team member to direct you to the TSCreator jar and decryption jar_**
+**\_The server requires 2 jar files to operate.**
+**Contact a team member to direct you to the TSCreator jar and decryption jar\_**
 
 3. Put the jars within server/assets/jars. If the names are different than what is described in server/assets/config.json, then make the required changes.
 
