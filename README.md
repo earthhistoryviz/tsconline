@@ -2,143 +2,93 @@
 
 ---
 
+## What are we doing?
+
+---
+
+Our goal with this project is to increase accessibility of TSCreator to geologists everywhere by porting the java application TSCreator to an online interface. See [here](https://timescalecreator.org/index/index.php) for information on TSCreator. If you haven't already, ask a team member for the java application and take some time to go through the java application's quick start guide and familiarize yourself with the interface. We intend to implement every feature of the java program on this website. The features currently working are the generation of charts.
+
+This project utilizes React.js with Typescript and Java.
+
+The current state of the website is available [here](http://dev.timescalecreator.org:3000/) for reference.
+
 ## Structure
 
 ---
 
-This monorepo has 3 workspaces: `app`, `shared`, and `server`. Anything shared between
-the app and server (i.e. types and assertions) goes in `shared`.
+This monorepo has 3 workspaces: [app](#general-app-structure), [shared](#general-shared-structure), and [server](/server.md#server). Anything shared between
+the app and server (i.e. types and assertions) goes in `shared`. Keep as much backend work like parsing on the `server` end.
 
-The server run on port 3000 by default, and will serve the following routes:
-| **Route** | **Description** |
-| :-- |---------------|
-| `/_` | Serves any files in `app/dist`. |
-| `/presets` | Node process reads `server/public/presets` to build JSON. |
-| `/charts:usecache` | POST settings file here to make a chart, URL returned. |
-| `/public/_` | GET anything in the `server/public` folder (i.e., charts). |
+---
+
+## General Server Structure
+
+---
+
+The server runs on port 3000 by default, and will serve the following routes:
+
+| **Route**              | **Description**                                                                    |
+| :--------------------- | ---------------------------------------------------------------------------------- |
+| `/_`                   | Serves any files in `app/dist`.                                                    |
+| `/presets`             | Node process reads `server/public/presets` to build JSON.                          |
+| `/charts:usecache`     | POST settings file here to make a chart, URL returned.                             |
+| `/public/_`            | GET anything in the `server/public` folder (i.e., charts).                         |
 | `/datapackinfo/:files` | GET column settings info, map info, and grabs map images from decrypted datapacks. |
-| `/removecache` | POST removes cache of previously generated charts |
-| `/pdfstatus:hash` | GET whether the pdf is readable from the hashed generated chart|
-
-## Get Started
+| `/removecache`         | POST removes cache of previously generated charts                                  |
+| `/pdfstatus:hash`      | GET whether the pdf is readable from the hashed generated chart                    |
 
 ---
 
-**The server requires 2 jar files to operate.**
-**Contact a team member to direct you to the TSCreator jar and decryption jar**
-
-1. To run for production, clone the monorepo:
-
-```bash
-git clone git@github.com:earthhistoryviz/tsconline.git
-cd tsconline
-```
-
-2. Run setup in the 'tsconline' directory to ensure that all workspaces are properly built and installed with the correct packages
-
-```bash
-yarn setup
-```
-
-3. Put the jars within server/assets/jars. If the names are different than what is described in server/assets/config.json, then make the required changes.
-
-## For dev work locally
+These [routes](server.md#routes) can be found in server/src/routes.ts
 
 ---
 
-To dev, each workspace has it's own "watch and rebuild"-style development command.
-The app can do it in two ways depending on whether you want the vite dev server
-or if you are trying to test it through the node server. The node server only
-serves files built in `app/dist/`, which the vite dev server does not modify.
-So if you are loading through the node server, you have to get vite to make
-the production build in `dist/` whenever you change files instad of using
-the vite dev server.
-
-If you are on a Mac, you should be fine to use your local yarn (no need to run
-the docker). If you are on windows, you need to run these commands in Docker:
-
-```bash
-docker-compose exec tconline bash
-```
-
-note this depends on the tsconline service being up and running. If it is not,
-use `docker-compose run tsconline bash` instead.
-
-You should now be within the docker container if on Windows.
-Execute the following commands within their respective workspaces. You will need three seperate windows.
-
-#### Server terminal 1
+## General App Structure
 
 ---
 
-```bash
-cd server
-yarn dev
+We use mobx-observable state to keep track of the website state. To change the `state` we use action methods located in `app/src/state/actions.ts`. **ONLY** use `actions` to change the state.
+
+The color of the app and any components are managed through `app/src/theme.tsx`. Don't use any hardcoded colors. This allows for consistency throughout. This will require you to use inline styling. See [here](theme.md) for more info on theme.
+
+### Theme Wrapping Example
+
+```js
+const TSCExample = styled((props: TSCExampleProps) => (
+  <WrappedComponent {...props} />
+))(({ theme }) => {
+  return {
+    color: theme.palette.primary.main,
+  };
+});
 ```
 
-#### Server terminal 2
+For any general use components, wrap them and put them in the components folder. Export them from `app/src/components/index.ts`.
 
 ---
 
-```bash
-cd server
-yarn start
+## General Shared Structure
+
+This is where we keep all shared types between the server and app. To maintain consistency between requests to and from the app to server, use an assert method to verify types. There is a general type called `ServerResponseError` that is returned to the app when there is an error. The app side catches this correctly, but will need to develop a dialog for the user to see.
+
+```js
+export type ExampleType = {
+  stringVar: string;
+  booleanVar: boolean;
+  arrayVar: string[];
+};
+export function assertExampleType(o: any): asserts o is ExampleType {
+  if (typeof o !== "object") throw new Error("ExampleType must be an object");
+  if (typeof o.stringVar !== "string")
+    throw new Error("ExampleType must have a stringVar string");
+  if (typeof o.booleanVar !== "boolean")
+    throw new Error("ExampleType must have a booleanVar boolean");
+  if (!Array.isArray(o.arrayVar))
+    throw new Error("ExampleType must have an arrayVar array");
+}
+export type ExampleResponse = ExampleType | ServerResponseError
 ```
 
-#### App with vite dev server:
+The server should send `ExampleResponse` to the app, and the app should use `assertExampleType` within a `try-catch` block and if it's not `ExampleType` then try `isServerResponseError`.
 
-_If you are not sure which one to use, use this_
-
----
-
-```bash
-cd app
-yarn dev
-```
-
-#### App through node server:
-
----
-
-```bash
-cd app
-yarn build-watch
-```
-
-#### App should open automatically at http://localhost:5173/
-
-## For serving remote requests
-
----
-
-The monorepo is missing a secrets.env file for setting up the docker container
-
-1. Create a secrets.env file to hold your VNC password (to view the GUI if needed):
-
-```bash
-echo "VNC_PASSWORD=passwordyouwant" > secrets.env
-```
-
-2. Run a temporary docker container to build everything with the right versions of
-   yarn/node/etc.:
-
-```bash
-docker-compose run tsconline bash
-```
-
-3. Then **Put a jar file in server/assets/jars** and **Put it's name in server/assets/config.json**.
-
-4. Bring up the server:
-
-```bash
-docker-compose up -d
-```
-
-5. Trying loading the page at [http://dev.timescalecreator.org:3000]
-
-6. There are instructions printed out when the container starts about how to connect a
-   VNC viewer if you want to do that. To see the instructions, looks at the logs:
-
-```bash
-docker-compose logs
-```
+**_Any type changes that are made, must be built again so the app and server can access them. This is done by `yarn build` in `shared` or in `tsconline`_**
