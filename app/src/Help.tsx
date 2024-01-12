@@ -57,11 +57,11 @@ export const Help = observer(function Help() {
           aria-controls="panel2a-content"
           id="panel2a-header"
         >
-          <Typography>Features Reference</Typography>
+          <Typography>Contributors</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <Typography>
-            put features reference here
+            Paolo Gumasing
           </Typography>
         </AccordionDetails>
       </Accordion>
