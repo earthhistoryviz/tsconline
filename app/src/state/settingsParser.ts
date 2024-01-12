@@ -7,6 +7,7 @@ import { state } from "./state";
 function processSettings(settingsNode: any): any {
   const settings: any = {};
   const settingNodes = settingsNode.getElementsByTagName("setting");
+  console.log(settingsNode);
   for (let i = 0; i < settingNodes.length; i++) {
     const settingNode = settingNodes[i];
     const settingName = settingNode.getAttribute("name");
@@ -15,10 +16,24 @@ function processSettings(settingsNode: any): any {
     const settingValue = nestedSettingsNode
       ? nestedSettingsNode.textContent.trim()
       : settingNode.textContent.trim();
-
-    if (settingName === "topAge" || settingName === "baseAge") {
+    //when the setting object is created, it looks like the nested objects in topAge and baseAge
+    //are taken out and created as standalone setting options. This should not happen,
+    //so skip when the setting name is text.
+    if (settingName === "text") {
+      continue;
+    } else if (settingName === "topAge" || settingName === "baseAge") {
       settings[settingName] = {
         source: "text",
+        unit: "Ma",
+        text: settingValue,
+      };
+    }
+    //these two tags have units, so make an object storing its unit and value
+    else if (
+      settingName === "unitsPerMY" ||
+      settingName === "skipEmptyColumns"
+    ) {
+      settings[settingName] = {
         unit: "Ma",
         text: settingValue,
       };
@@ -29,7 +44,10 @@ function processSettings(settingsNode: any): any {
       settings[settingName] = settingValue;
     }
   }
-  console.log(settings);
+  console.log(
+    "result of processSettings in xmlToJson under actions...\n",
+    settings
+  );
   return settings;
 }
 
@@ -54,7 +72,9 @@ function processColumn(node: any): any {
     for (let i = 0; i < nodeAttributes.length; i++) {
       const attribute = nodeAttributes[i];
       if (attribute.value.includes("INIOPTERYGIA")) {
-        console.log(`attribute.name: ${attribute.name}\nattribute.value: ${attribute.value}`)
+        console.log(
+          `attribute.name: ${attribute.name}\nattribute.value: ${attribute.value}`
+        );
       }
       result[`_${attribute.name}`] = attribute.value;
     }
@@ -95,6 +115,8 @@ function processColumn(node: any): any {
 
 //the main parser
 export function xmlToJson(xml: string): any {
+  //TEST
+  console.log("xml at start of xmlToJson...\n", xml);
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xml, "text/xml");
   const json: any = {};
@@ -115,7 +137,7 @@ export function xmlToJson(xml: string): any {
         processColumn(rootColumnNode);
     }
   }
-
+  console.log("json at end of xmlToJson\n", json);
   return json;
 }
 
@@ -125,9 +147,11 @@ export function xmlToJson(xml: string): any {
 
 function generateSettingsXml(settings: any, indent: string = ""): string {
   let xml = "";
+  console.log(settings);
   for (const key in settings) {
     if (Object.prototype.hasOwnProperty.call(settings, key)) {
       const value = settings[key];
+      console.log(key, value);
       //TODO: hard coded top age and base age for testing africa and nigeria datapack, change later
       // if (key === "topAge") {
       //   xml += `${indent}<setting name="${key}" source="text" unit="Ma">\n`;
@@ -141,9 +165,13 @@ function generateSettingsXml(settings: any, indent: string = ""): string {
       //   xml += `${indent}</setting>\n`;
       // }
       if (typeof value === "object") {
-        xml += `${indent}<setting name="${key}" source="${value.source}" unit="${value.unit}">\n`;
-        xml += `${indent}  <setting name="text">${value.text}</setting>\n`;
-        xml += `${indent}</setting>\n`;
+        if (key === "topAge" || key === "baseAge") {
+          xml += `${indent}<setting name="${key}" source="${value.source}" unit="${value.unit}">\n`;
+          xml += `${indent}  <setting name="text">${value.text}</setting>\n`;
+          xml += `${indent}</setting>\n`;
+        } else if (key === "unitsPerMY" || key === "skipEmptyColumns") {
+          xml += `${indent}<setting name="${key}" unit="${value.unit}">${value.text}</setting>\n`;
+        }
       } else if (key === "justification") {
         xml += `${indent}<setting justification="${value}" name="${key}"/>\n`;
       } else {
@@ -177,11 +205,11 @@ function generateColumnXml(
   for (let key in column) {
     if (Object.prototype.hasOwnProperty.call(column, key)) {
       //console.log(key);
-      key = key.replaceAll("\"", "quot&;")
-      key = key.replaceAll("\&", "&amp;");
-      key = key.replaceAll("\<", " &lt; ");
-      key = key.replaceAll("\>", " &gt; ");
-      key = key.replaceAll("\'", "&apos;");
+      key = key.replaceAll('"', "quot&;");
+      key = key.replaceAll("&", "&amp;");
+      key = key.replaceAll("<", " &lt; ");
+      key = key.replaceAll(">", " &gt; ");
+      key = key.replaceAll("'", "&apos;");
       if (key === "id") {
         // Skip the 'id' element.
         continue;
@@ -265,10 +293,10 @@ function generateColumnXml(
   return xml;
 }
 //the main parser
-export function jsonToXml(json: any, version: string = "PRO8.0"): string {
+export function jsonToXml(json: any, version: string = "PRO8.1"): string {
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
-
+  //console.log("json 2...\n", state.settingsJSON);
   if (json["settings"]) {
     xml += '  <settings version="1.0">\n';
     xml += generateSettingsXml(json["settings"], "    ");
@@ -328,5 +356,6 @@ export function jsonToXml(json: any, version: string = "PRO8.0"): string {
   //     xml = xml.substring(0, i) + "&lt;" + xml.substring(i + 1, xml.length);
   //   }
   // }
+  console.log("printing final xml...\n", xml);
   return xml;
 }
