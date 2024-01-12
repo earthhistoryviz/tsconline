@@ -34,6 +34,7 @@ export function isServerResponseError(o) {
         return false;
     return true;
 }
+// export type ChartResponse = ChartResponseInfo | ServerResponseError;
 export function assertChartInfo(o) {
     if (!o || typeof o !== 'object')
         throw new Error('ChartInfo must be an object');
@@ -62,26 +63,46 @@ export function assertColumnInfo(o) {
         }
     }
 }
-export function assertMaps(o) {
+export function assertMapHierarchy(o) {
     if (typeof o !== 'object' || o === null) {
-        throw new Error('Maps must be a non-null object');
+        throw new Error('MapsHierarchy must be a non-null object');
+    }
+    for (const key in o) {
+        const map = o[key];
+        if (typeof o[key] !== 'string') {
+            throw new Error(`MapHierarchy value for key '${key}' must be a string object`);
+        }
+    }
+}
+export function assertMapInfo(o) {
+    if (typeof o !== 'object' || o === null) {
+        throw new Error('MapInfo must be a non-null object');
     }
     for (const key in o) {
         const map = o[key];
         if (typeof map !== 'object' || map === null) {
-            throw new Error(`Maps' value for key '${key}' must be a non-null object`);
+            throw new Error(`MapInfo' value for key '${key}' must be a non-null object`);
         }
         if (typeof map.img !== 'string') {
-            throw new Error(`Maps' value for key '${key}' must have an 'img' string property`);
+            throw new Error(`MapInfo' value for key '${key}' must have an 'img' string property`);
         }
         if ('note' in map && typeof map.note !== 'string') {
-            throw new Error(`Maps' value for key '${key}' must have a 'note' string property`);
+            throw new Error(`MapInfo' value for key '${key}' must have a 'note' string property`);
         }
-        if ('parent' in map && typeof map.parent !== 'object') {
-            throw new Error(`Maps' value for key '${key}' has an invalid 'parent' property`);
+        if ('parent' in map) {
+            if (typeof map.parent !== 'object') {
+                throw new Error(`MapInfo' value for key '${key}' has an invalid 'parent' property`);
+            }
+            if (typeof map.parent.name !== 'string') {
+                throw new Error(`MapInfo' parent value for key '${key}' must have a 'name' string property`);
+            }
+            if (typeof map.parent.coordtype !== 'string') {
+                throw new Error(`MapInfo' parent value for key '${key}' must have a 'coordtype' string property`);
+            }
+            assertBounds(map.parent.bounds);
         }
         if (typeof map.coordtype !== 'string') {
-            throw new Error(`Maps' value for key '${key}' must have a 'coordtype' string property`);
+            throw new Error(`MapInfo' value for key '${key}' must have a 'coordtype' string property`);
         }
         assertBounds(map.bounds);
         assertMapPoints(map.mapPoints);

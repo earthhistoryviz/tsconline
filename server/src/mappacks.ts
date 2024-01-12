@@ -3,7 +3,7 @@ import path from 'path';
 import { grabFilepaths } from './util.js'
 import assetconfigs from './index.js';
 import pmap from 'p-map';
-import type { MapInfo, MapPoints, Bounds} from '@tsconline/shared'
+import type { MapHierarchy, MapInfo, MapPoints, Bounds} from '@tsconline/shared'
 
 /**
  * Finds all map images and puts them in the public directory
@@ -32,9 +32,10 @@ export async function grabMapImages(datapacks: string[], destination: string) {
     return compiled_images
 }
 
-export async function grabMapInfo(datapacks: string[]): Promise<{maps: MapInfo}> {
+export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInfo, mapHierarchy: MapHierarchy}> {
     const map_info_paths = await grabFilepaths(datapacks, assetconfigs.decryptionDirectory, "mappacks")
-    let maps: MapInfo = {}
+    let mapInfo: MapInfo = {}
+    let mapHierarchy: MapHierarchy = {}
     try {
         await pmap(map_info_paths, async (map_info) => {
             // const error = new Error(`Map info file: ${map_info} is not in the correct format`)
@@ -85,6 +86,29 @@ export async function grabMapInfo(datapacks: string[]): Promise<{maps: MapInfo}>
                         map.bounds.lowerRightLon = Number(info[4])
                         map.bounds.lowerRightLat = Number(info[5])
                         break;
+                    //TODO: Can this have multiple parents?
+                    case 'HEADER-PARENT MAP':
+                        if (!info || info.length < 7) {
+                            throw new Error(error)
+                        }
+                        // TODO: coordtype can be multiple things, so won't always be called upperLeftLon
+                        map.parent = {
+                            name: String(info[1]),
+                            coordtype: String(info[2]) ,
+                            bounds: {
+                                upperLeftLon: Number(info[3]),
+                                upperLeftLat: Number(info[4]),
+                                lowerRightLon: Number(info[5]),
+                                lowerRightLat: Number(info[6])
+                            }
+                        }
+                        mapHierarchy[map.parent.name] = mapname
+                        // map.parent.coordtype = String(info[1])
+                        // map.parent.bounds.upperLeftLon = Number(info[2])
+                        // map.parent.bounds.upperLeftLat = Number(info[3])
+                        // map.parent.bounds.lowerRightLon = Number(info[4])
+                        // map.parent.bounds.lowerRightLat = Number(info[5])
+                        break;
                     case 'HEADER-DATACOL':
                         if (!info || info.length < 3) {
                             throw new Error(`Map info file: ${path.basename(map_info)} is not in the correct format`)
@@ -102,7 +126,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{maps: MapInfo}>
                             }
                             settingsNames[i] = { label: line[i]! }
                         }
-                        console.log(settingsNames)
+                        // console.log(settingsNames)
                         let i = index + 1
                         // iterate over the line and depending on the columns above, figure out which
                         // parts of MapPoints to put it in
@@ -112,7 +136,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{maps: MapInfo}>
                                 lon: 0
                             }
                             let mapPointName = ""
-                            console.log(info)
+                            // console.log(info)
                             for (let j = 1; j < info.length; j++) {
                                 if (!settingsNames[j] || !settingsNames[j]!.label) {
                                     throw new Error(error)
@@ -167,11 +191,11 @@ export async function grabMapInfo(datapacks: string[]): Promise<{maps: MapInfo}>
             });
             //if reached here map has been properly processed
             console.log(map)
-            maps[mapname] = map
+            mapInfo[mapname] = map
         })
     } catch (e) {
         console.log("grabMapInfo threw error: ", e)
         throw e
     }
-    return {maps: maps}
+    return {mapInfo: mapInfo, mapHierarchy: mapHierarchy}
 }

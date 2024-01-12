@@ -21,7 +21,6 @@ export type ChartResponseInfo = {
     hash: string;
 };
 export declare function isServerResponseError(o: any): o is ServerResponseError;
-export type ChartResponse = ChartResponseInfo | ServerResponseError;
 export declare function assertChartInfo(o: any): asserts o is ChartResponseInfo;
 export type ColumnInfo = {
     [name: string]: {
@@ -30,7 +29,6 @@ export type ColumnInfo = {
         parents: string[];
     };
 };
-export type ColumnResponse = ColumnInfo | ServerResponseError;
 export declare function assertColumnInfo(o: any): asserts o is ColumnInfo;
 export type GeologicalStages = {
     [key: string]: number;
@@ -49,20 +47,32 @@ export type MapInfo = {
     [name: string]: {
         img: string;
         note?: string;
-        parent?: MapInfo[string];
+        parent?: {
+            name: string;
+            coordtype: string;
+            bounds: Bounds;
+        };
         coordtype: string;
         bounds: Bounds;
         mapPoints: MapPoints;
     };
 };
-export type MapResponse = MapInfo | ServerResponseError;
+export type MapHierarchy = {
+    [parent: string]: string;
+};
+export type DatapackResponse = {
+    columnInfo: ColumnInfo;
+    mapInfo: MapInfo;
+    mapHierarchy: MapHierarchy;
+};
 export type Bounds = {
     upperLeftLon: number;
     upperLeftLat: number;
     lowerRightLon: number;
     lowerRightLat: number;
 };
-export declare function assertMaps(o: any): asserts o is MapInfo;
+export declare function assertMapHierarchy(o: any): asserts o is MapHierarchy;
+export declare function assertMapInfo(o: any): asserts o is MapInfo;
 export declare function assertMapPoints(o: any): asserts o is MapPoints;
 export type SuccessfulServerResponse = {
     message: string;
