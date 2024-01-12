@@ -1,16 +1,17 @@
 import { action, runInAction } from "mobx";
 import {
   type ChartConfig,
-  type MapResponse,
   type MapInfo,
   type ColumnInfo,
+  type MapHierarchy,
+  type GeologicalStages,
+  type SuccessfulServerResponse,
   assertChartInfo,
-  isServerResponseError,
-  assertMaps,
+  assertMapInfo,
   assertColumnInfo,
-  GeologicalStages,
-  SuccessfulServerResponse,
-  assertSuccessfulServerResponse
+  assertMapHierarchy,
+  assertSuccessfulServerResponse,
+  isServerResponseError,
 } from "@tsconline/shared";
 import { state, State } from "./state";
 import { fetcher, devSafeUrl } from "../util";
@@ -46,29 +47,20 @@ export const setChart = action("setChart", async (newval: number): Promise<boole
     method: "GET"
   })
   // get the columns and map info
-  const {columns, maps} = await res.json()
+  const reply = await res.json()
   // console.log("reply of columns: ", JSON.stringify(columns, null, 2))
   // console.log("reply of maps: ", JSON.stringify(maps, null, 2))
   try {
-    assertMaps(maps)
-    setMaps(maps)
+    assertMapInfo(reply.mapInfo)
+    assertColumnInfo(reply.columnInfo)
+    assertMapHierarchy(reply.mapHierarchy)
+    setMapInfo(reply.mapInfo)
+    setSettingsColumns(reply.columnInfo)
   } catch (e) {
-    if (isServerResponseError(maps)) {
-      console.log("Server failed to send map info with error: ", maps.error)
+    if (isServerResponseError(reply)) {
+      console.log("Server failed to send datapack info with error: ", reply.error)
     } else {
-      console.log("Failed to fetch map info with error: ", e)
-    }
-    resetState()
-    return false
-  }
-  try {
-    assertColumnInfo(columns)
-    setSettingsColumns(columns)
-  } catch (e) {
-    if (isServerResponseError(columns)) {
-      console.log("Server failed to send column info with error: ", columns.error)
-    } else {
-      console.log("Failed to fetch column info with error: ", e)
+      console.log("Failed to fetch datapack info with error: ", e)
     }
     resetState()
     return false
@@ -161,7 +153,7 @@ export const resetState = action("resetState", () => {
   setShowPresetInfo(false)
   setSettingsTabsSelected('time')
   setSettingsColumns({})
-  setMaps({})
+  setMapInfo({})
   state.settingsTabs.columnSelected = null
   state.settingsXML = ""
   state.settingsJSON = {}
@@ -221,8 +213,11 @@ export const loadPresets = action("loadPresets", (presets: ChartConfig[]) => {
 export const setChartPath = action("setChartPath", (chartpath: string) => {
   state.chartPath = chartpath;
 });
-export const setMaps = action("setMaps", (maps: MapInfo) => {
-  state.settingsTabs.maps = maps;
+export const setMapInfo = action("setMapInfo", (mapInfo: MapInfo) => {
+  state.settingsTabs.mapInfo = mapInfo;
+});
+export const setMapHierarchy = action("setMapHierarchy", (mapHierarchy: MapHierarchy) => {
+  state.settingsTabs.mapHierarchy = mapHierarchy;
 });
 export const setChartHash = action("setChartHash", (charthash: string) => {
   state.chartHash = charthash;

@@ -3,7 +3,7 @@ import { parseDatapacks } from './parse.js';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { exec } from 'child_process';
 import { writeFile, stat } from 'fs/promises';
-import { assertChartRequest } from '@tsconline/shared';
+import { assertChartRequest, type DatapackResponse } from '@tsconline/shared';
 import { deleteDirectory } from './util.js' 
 import { mkdirp } from 'mkdirp';
 import { grabMapImages, grabMapInfo } from './mappacks.js'
@@ -23,9 +23,10 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(request: Fasti
   const filesSplit = files.split(" ")
   try {
     const { columns } =  await parseDatapacks(assetconfigs.decryptionDirectory, filesSplit);
-    const { maps } = await grabMapInfo(filesSplit)
+    const { mapInfo, mapHierarchy } = await grabMapInfo(filesSplit)
     await grabMapImages(filesSplit, assetconfigs.imagesDirectory)
-    reply.send({ columns: columns, maps: maps})
+    const datapackResponse: DatapackResponse = { columnInfo: columns, mapInfo: mapInfo, mapHierarchy: mapHierarchy}
+    reply.send(datapackResponse)
   } catch (e) {
       reply.send({error: e})
   }

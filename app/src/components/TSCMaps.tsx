@@ -4,17 +4,18 @@ import type { MapInfo } from '@tsconline/shared'
 import { devSafeUrl } from '../util'
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { observer } from "mobx-react-lite";
 
-const height = '80vh'
-const width = '80vw'
+const SCALE_AMOUNT = 1.1;
+const MAX_ZOOM = 2;
+const MIN_ZOOM = 1;
 
 type MapRowComponentProps = {
-  maps: MapInfo; 
+  mapInfo: MapInfo; 
 };
 
-export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ maps }) => {
+export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
   const theme = useTheme();
   const [selectedMap, setSelectedMap] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -33,7 +34,7 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ maps }) =>
     <div style={{minHeight: '100vh'}}>
       <Box>
         <List>
-          {Object.entries(maps).map(([name, map]) => {
+          {Object.entries(mapInfo).map(([name, map]) => {
             return (
               <ListItem key={name} 
                 selected={selectedMap === name}
@@ -68,7 +69,7 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ maps }) =>
           },
         }}
         >
-        {selectedMap ? <MapDialog mapData={maps[selectedMap]} /> : null}
+        {selectedMap ? <MapDialog mapData={mapInfo[selectedMap]} /> : null}
       </Dialog>
     </div>
   );
@@ -101,55 +102,113 @@ type MapViewerProps  = {
 const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
   const theme = useTheme()
   const [zoomLevel, setZoomLevel] = useState(1)
-  const [imageAspect, setImageAspect] = useState(1);
+  const [lastCursorPos, setLastCursorPos] = useState({ x: 50, y: 50 })
+  const [cursor, setCursor] = useState({ x: 50, y: 50 })
+  const imageRef = useRef<HTMLImageElement>(null);
   const handleZoomIn = () => {
-    setZoomLevel(zoomLevel * 1.1)
+    const newZoomLevel = Math.min(zoomLevel * SCALE_AMOUNT, MAX_ZOOM)
+    setZoomLevel(newZoomLevel)
   };
   const handleZoomOut = () => {
-    setZoomLevel(Math.max(zoomLevel / 1.1, 1)) 
+    const newZoomLevel = Math.max(zoomLevel / SCALE_AMOUNT, MIN_ZOOM)
+    setZoomLevel(newZoomLevel) 
   };
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!imageRef.current) return
+      event.preventDefault()
+      if (event.metaKey && (event.key === '+' || event.key === '=')) { // 'Cmd' + '+' or 'Cmd' + '='
+        const newZoomLevel = Math.min(zoomLevel * SCALE_AMOUNT, MAX_ZOOM);
+        if (newZoomLevel > MAX_ZOOM) {
+            return;
+        }
+        setZoomLevel(newZoomLevel)
+        setLastCursorPos(cursor)
+      }
+      if (event.metaKey && (event.key === '-' || event.key === '_')) { // 'Cmd' + '+' or 'Cmd' + '='
+        const newZoomLevel = Math.max(zoomLevel / SCALE_AMOUNT, MIN_ZOOM);
+        // Prevent zooming too much in or out
+        if (newZoomLevel < MIN_ZOOM) {
+            return;
+        }
+        setZoomLevel(newZoomLevel)
+        setLastCursorPos(cursor)
+      }
+    };
+
+    const handleMouseMove = (event: MouseEvent) => {
+      if (!imageRef.current) return
+      const bounds = imageRef.current.getBoundingClientRect();
+
+      // Relative position of the cursor to the image
+      const cursorX = event.clientX - bounds.left;
+      const cursorY = event.clientY - bounds.top;
+
+      // Convert cursor position to a percentage of the image's dimensions
+      const cursorPercentX = (cursorX / bounds.width) * 100;
+      const cursorPercentY = (cursorY / bounds.height) * 100;
+      // console.log(`cursorPercentX: ${cursorPercentX}`)
+
+      setCursor({x: cursorPercentX, y: cursorPercentY})
+    };
+
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('keydown', handleKeyDown);
+  
+    // Cleanup
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('keydown', handleKeyDown);
+    }; 
+  }, [zoomLevel, cursor, imageRef]);
+
   const calculatePosition = (lat: number, lon: number) => {
     const {upperLeftLat, upperLeftLon, lowerRightLat, lowerRightLon} = mapData.bounds
 
     const latRange = Math.abs(upperLeftLat - lowerRightLat);
     const lonRange = Math.abs(upperLeftLon - lowerRightLon);
 
-    let normalizedLat = lat - Math.min(upperLeftLat, lowerRightLat);
-    let normalizedLon = lon - Math.min(upperLeftLon, lowerRightLon);
+    let normalizedLat = (lat - Math.min(upperLeftLat, lowerRightLat)) / latRange;
+    let normalizedLon = (lon - Math.min(upperLeftLon, lowerRightLon)) / lonRange;
 
-    let x = (normalizedLon / lonRange) * 100;
-    let y = (normalizedLat / latRange) * 100;
-
-    // invert y-axis if y is 0 at the top
+    let x = normalizedLon * 100;
+    let y = normalizedLat * 100;
     y = 100 - y;
 
     // console.log(`x: ${x}, y: ${y}`);
     return { x, y };
   };
-  
 
   const imageStyle = {
-    transform: `scale(${zoomLevel})`,
-    transformOrigin: 'center center',
-    maxHeight: '100%', 
-    maxWidth: '100%',
-    // objectFit: 'cover',
-  };
+    maxHeight: '100%', maxWidth: '100%'
+  }
 
   return (
     <Box sx={{ 
       display: 'flex',
-      // maxHeight: '100vh',
-      // width: '100vh'
+      maxHeight: '100vh', 
+      maxWidth: '100vw'
     }}>
-      <Box sx={{
+      <Box 
+      sx={{
+        transform: `scale(${zoomLevel})`,
+        transformOrigin: `${lastCursorPos.x}% ${lastCursorPos.y}%`,
         display: 'flex', 
+        position: 'relative',
         alignItems: 'center', 
         justifyContent: 'center', 
-        // overflow: 'hidden', // Hide any overflow
-      }}>
-      <img src={devSafeUrl(mapData.img)} alt="Map" 
-       style={imageStyle}
+        // height: 'auto',
+        // idth: '100%',
+        overflow: 'hidden', 
+      }}
+      >
+      <img
+      ref={imageRef}
+      src={devSafeUrl(mapData.img)}
+      alt="Map" 
+      style={imageStyle}
       />
       {Object.entries(mapData.mapPoints).map(([name, point]) => {
         const position = calculatePosition(point.lat, point.lon);
@@ -171,7 +230,14 @@ const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
         );
       })}
       </Box>
-      <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        justifyContent: 'center' ,
+        position: 'absolute', // Position the zoom controls absolutely
+        right: '10px', // Position to the right
+        top: '10px' //
+        }}>
         <IconButton onClick={handleZoomIn} color="primary">
           <AddIcon />
         </IconButton>

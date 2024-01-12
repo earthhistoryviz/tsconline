@@ -10,7 +10,7 @@ export const MapPoint = observer(function MapPoint() {
     const theme = useTheme();
     return (
         <div>
-            { !state.settingsTabs.maps || Object.entries(state.settingsTabs.maps).length === 0 ?
+            { !state.settingsTabs.mapInfo || Object.entries(state.settingsTabs.mapInfo).length === 0 ?
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', minHeight: '100vh'}}>
                     <Typography sx={{
                     fontSize: theme.typography.pxToRem(18),
@@ -19,7 +19,7 @@ export const MapPoint = observer(function MapPoint() {
                     </Typography>
                 </div>
                 :
-                <TSCMapList maps={state.settingsTabs.maps}/>
+                <TSCMapList mapInfo={state.settingsTabs.mapInfo}/>
         }
         </div>
     )
