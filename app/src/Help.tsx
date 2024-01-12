@@ -61,7 +61,7 @@ export const Help = observer(function Help() {
         </AccordionSummary>
         <AccordionDetails>
           <Typography>
-            Paolo Gumasing
+            Paolo Gumasing, Jaehyuk Lee
           </Typography>
         </AccordionDetails>
       </Accordion>
