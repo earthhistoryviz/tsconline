@@ -2,12 +2,14 @@
 //                                          XML to JSON parser                                       //
 //-------------------------------------------------------------------------------------------------- //
 
+import { TempleBuddhist } from "@mui/icons-material";
 import { state } from "./state";
+import { set } from "mobx";
 
 function processSettings(settingsNode: any): any {
   const settings: any = {};
   const settingNodes = settingsNode.getElementsByTagName("setting");
-  console.log(settingsNode);
+  //console.log(settingsNode);
   for (let i = 0; i < settingNodes.length; i++) {
     const settingNode = settingNodes[i];
     const settingName = settingNode.getAttribute("name");
@@ -85,10 +87,8 @@ function processColumn(node: any): any {
   if (childNodes.length > 0) {
     for (let i = 0; i < childNodes.length; i++) {
       const child = childNodes[i];
-
       if (child.nodeType === Node.ELEMENT_NODE) {
         const childName = child.getAttribute("id");
-
         if (child.nodeName === "column") {
           result[childName] = processColumn(child);
         } else if (child.nodeName === "fonts") {
@@ -96,9 +96,25 @@ function processColumn(node: any): any {
         } else if (child.nodeName === "setting") {
           const settingName = child.getAttribute("name");
           const justificationValue = child.getAttribute("justification");
-
-          if (justificationValue !== null) {
+          const orientationValue = child.getAttribute("orientation");
+          const useNamedValue = child.getAttribute("useNamed");
+          //console.log(settingName);
+          if (
+            settingName === "backgroundColor" ||
+            settingName === "customColor"
+          ) {
+            if (useNamedValue !== null) {
+              result[settingName] = {
+                useNamed: useNamedValue,
+                text: child.textContent.trim(),
+              };
+            } else {
+              result[settingName] = child.textContent.trim();
+            }
+          } else if (justificationValue !== null) {
             result[settingName] = justificationValue;
+          } else if (orientationValue !== null) {
+            result[settingName] = orientationValue;
           } else {
             const textContent = child.textContent.trim();
             if (textContent) {
@@ -115,7 +131,6 @@ function processColumn(node: any): any {
 
 //the main parser
 export function xmlToJson(xml: string): any {
-  //TEST
   console.log("xml at start of xmlToJson...\n", xml);
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xml, "text/xml");
@@ -147,11 +162,11 @@ export function xmlToJson(xml: string): any {
 
 function generateSettingsXml(settings: any, indent: string = ""): string {
   let xml = "";
-  console.log(settings);
+  //console.log(settings);
   for (const key in settings) {
     if (Object.prototype.hasOwnProperty.call(settings, key)) {
       const value = settings[key];
-      console.log(key, value);
+      //console.log(key, value);
       //TODO: hard coded top age and base age for testing africa and nigeria datapack, change later
       // if (key === "topAge") {
       //   xml += `${indent}<setting name="${key}" source="text" unit="Ma">\n`;
@@ -194,7 +209,7 @@ function generateFontsXml(fonts: any, indent: string): string {
 }
 
 function generateColumnXml(
-  column: any,
+  jsonColumn: any,
   stateColumn: any | null,
   parent: string,
   indent: string
@@ -202,47 +217,76 @@ function generateColumnXml(
   let xml = "";
   //let columns = state.settingsTabs.columns;
   //console.log("start ", parent, column, stateColumn);
-  for (let key in column) {
-    if (Object.prototype.hasOwnProperty.call(column, key)) {
+  //console.log("poop", jsonColumn);
+  for (let key in jsonColumn) {
+    if (Object.prototype.hasOwnProperty.call(jsonColumn, key)) {
+      //for replacing special characters in the key to its xml versions
+      let xmlKey = key;
+      xmlKey = key.replaceAll('"', "quot&;");
+      xmlKey = key.replaceAll("&", "&amp;");
+      xmlKey = key.replaceAll("<", " &lt; ");
+      xmlKey = key.replaceAll(">", " &gt; ");
+      xmlKey = key.replaceAll("'", "&apos;");
       //console.log(key);
-      key = key.replaceAll('"', "quot&;");
-      key = key.replaceAll("&", "&amp;");
-      key = key.replaceAll("<", " &lt; ");
-      key = key.replaceAll(">", " &gt; ");
-      key = key.replaceAll("'", "&apos;");
-      if (key === "id") {
+      if (key === "_id") {
         // Skip the 'id' element.
         continue;
-      } else if (`${key}` === "isSelected") {
+      } else if (key === "backgroundColor" || key === "customColor") {
+        if (jsonColumn[key].useNamed) {
+          xml += `${indent}<setting name="${xmlKey}" useNamed="${jsonColumn[key].useNamed}">${jsonColumn[key].text}</setting>\n`;
+        } else {
+          xml += `${indent}<setting name="${xmlKey}"/>\n`;
+        }
+      } else if (key === "customColor") {
+      } else if (key === "justification") {
+        xml += `${indent}<setting justification="${jsonColumn[key]}" name="${xmlKey}"/>\n`;
+      } else if (key === "orientation") {
+        xml += `${indent}<setting name="${xmlKey}" orientation="${jsonColumn[key]}"/>\n`;
+      } else if (key === "isSelected") {
         //extract column name
-        let temp = column._id.substring(
-          column._id.indexOf(":") + 1,
-          column._id.length
+        let colName = jsonColumn._id.substring(
+          jsonColumn._id.indexOf(":") + 1,
+          jsonColumn._id.length
         );
+        //always display these things (the original tsc throws an error if not selected)
+        //(but online doesn't have option to deselect them)
+        if (
+          colName === "Chart Root" ||
+          colName === "Chart Title" ||
+          colName === "Ma"
+        ) {
+          xml += `${indent}<setting name="${xmlKey}">true</setting>\n`;
+          continue;
+        }
+        //if column isn't in state, then use default given by the original xml
+        else if (stateColumn === null) {
+          xml += `${indent}<setting name="${xmlKey}">${jsonColumn["isSelected"]}</setting>\n`;
+        }
         //let temp = column._id.split(":")[1];
         //check if column is checked or not, and change the isSelected field to true or false
         if (stateColumn && !parent.includes("Chart") && parent != "") {
           //console.log("inside on", column._id);
           //console.log(stateColumn.on);
           if (stateColumn.on) {
-            xml += `${indent}<setting name="${key}">true</setting>\n`;
+            xml += `${indent}<setting name="${xmlKey}">true</setting>\n`;
           } else {
-            xml += `${indent}<setting name="${key}">false</setting>\n`;
+            xml += `${indent}<setting name="${xmlKey}">false</setting>\n`;
           }
         }
       } else if (key.startsWith("_")) {
-        xml += `${indent}<${key.slice(1)}>${column[key]}</${key.slice(1)}>\n`;
+        xml += `${indent}<${xmlKey.slice(1)}>${jsonColumn[key]}</${xmlKey.slice(
+          1
+        )}>\n`;
       } else if (key === "fonts") {
         xml += `${indent}<fonts>\n`;
-        xml += generateFontsXml(column[key], `${indent}  `);
+        xml += generateFontsXml(jsonColumn[key], `${indent}  `);
         xml += `${indent}</fonts>\n`;
-      } else if (typeof column[key] === "object") {
-        //console.log(key, "yoyo", column[key]);
-        xml += `${indent}<column id="${key}">\n`;
+      } else if (typeof jsonColumn[key] === "object") {
+        xml += `${indent}<column id="${xmlKey}">\n`;
         //pass the full state of columns for first iteration
-        if (key == "class datastore.RootColumn:Chart Title") {
+        if (key === "class datastore.RootColumn:Chart Title") {
           xml += generateColumnXml(
-            column[key],
+            jsonColumn[key],
             stateColumn,
             key,
             `${indent}  `
@@ -250,32 +294,34 @@ function generateColumnXml(
         }
         //recursively go down column settings
         else {
-          let temp = column[key]._id.substring(
-            column[key]._id.indexOf(":") + 1,
-            column[key]._id.length
+          let temp = jsonColumn[key]._id.substring(
+            jsonColumn[key]._id.indexOf(":") + 1,
+            jsonColumn[key]._id.length
           );
-          //console.log(temp);
+          if (stateColumn === null) {
+            xml += generateColumnXml(
+              jsonColumn[key],
+              null,
+              temp,
+              `${indent}  `
+            );
+          }
           if (stateColumn != null) {
-            //the first layer of columns ettings don't have children, so directly
-            //access the settings of the key
-            if (parent == "class datastore.RootColumn:Chart Title") {
-              xml += generateColumnXml(
-                column[key],
-                stateColumn[temp],
-                temp,
-                `${indent}  `
-              );
-            }
             // reached end of column tree, no more children
             if (
               stateColumn.children == null ||
               stateColumn.children == undefined
             ) {
-              xml += generateColumnXml(column[key], null, temp, `${indent}  `);
+              xml += generateColumnXml(
+                jsonColumn[key],
+                null,
+                temp,
+                `${indent}  `
+              );
             } else {
               //more children to be had
               xml += generateColumnXml(
-                column[key],
+                jsonColumn[key],
                 stateColumn.children[temp],
                 temp,
                 `${indent}  `
@@ -283,10 +329,9 @@ function generateColumnXml(
             }
           }
         }
-
         xml += `${indent}</column>\n`;
       } else {
-        xml += `${indent}<setting name="${key}">${column[key]}</setting>\n`;
+        xml += `${indent}<setting name="${xmlKey}">${jsonColumn[key]}</setting>\n`;
       }
     }
   }
@@ -302,8 +347,9 @@ export function jsonToXml(json: any, version: string = "PRO8.1"): string {
     xml += generateSettingsXml(json["settings"], "    ");
     xml += "  </settings>\n";
   }
-
-  if (json["id"]) {
+  //the top level doesn't have _id so it usually doesn't proc, but
+  //procs if used for a child
+  if (json["_id"]) {
     xml += `  <column id="${json["id"]}">\n`;
     let temp = state.settingsTabs.columns;
     xml += generateColumnXml(json, temp, "", "    ");
@@ -314,9 +360,7 @@ export function jsonToXml(json: any, version: string = "PRO8.1"): string {
     for (const key in json) {
       if (
         key !== "settings" &&
-        key !== "id" &&
-        key !== "settingsTabs" &&
-        Object.prototype.hasOwnProperty.call(json, key)
+        Object.hasOwn(json, key) //maybe not necessary since we are iterating over the keys of json
       ) {
         //console.log(key);
         xml += `  <column id="${key}">\n`;
