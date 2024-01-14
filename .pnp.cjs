@@ -1865,6 +1865,7 @@ const RAW_RUNTIME_STATE =
           ["react-dom", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:18.2.0"],\
           ["react-router", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:6.10.0"],\
           ["react-router-dom", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:6.10.0"],\
+          ["react-zoom-pan-pinch", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:3.3.0"],\
           ["typescript", "patch:typescript@npm%3A4.9.5#optional!builtin<compat/typescript>::version=4.9.5&hash=289587"],\
           ["vite", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:4.3.2"]\
         ],\
@@ -5450,6 +5451,32 @@ const RAW_RUNTIME_STATE =
           ["dom-helpers", "npm:5.2.1"],\
           ["loose-envify", "npm:1.4.0"],\
           ["prop-types", "npm:15.8.1"],\
+          ["react", "npm:18.2.0"],\
+          ["react-dom", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:18.2.0"]\
+        ],\
+        "packagePeers": [\
+          "@types/react-dom",\
+          "@types/react",\
+          "react-dom",\
+          "react"\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["react-zoom-pan-pinch", [\
+      ["npm:3.3.0", {\
+        "packageLocation": "./.yarn/cache/react-zoom-pan-pinch-npm-3.3.0-3af8e9bc72-56e102f603.zip/node_modules/react-zoom-pan-pinch/",\
+        "packageDependencies": [\
+          ["react-zoom-pan-pinch", "npm:3.3.0"]\
+        ],\
+        "linkType": "SOFT"\
+      }],\
+      ["virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:3.3.0", {\
+        "packageLocation": "./.yarn/__virtual__/react-zoom-pan-pinch-virtual-5256a78baa/0/cache/react-zoom-pan-pinch-npm-3.3.0-3af8e9bc72-56e102f603.zip/node_modules/react-zoom-pan-pinch/",\
+        "packageDependencies": [\
+          ["react-zoom-pan-pinch", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:3.3.0"],\
+          ["@types/react", "npm:18.2.0"],\
+          ["@types/react-dom", "npm:18.2.1"],\
           ["react", "npm:18.2.0"],\
           ["react-dom", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:18.2.0"]\
         ],\

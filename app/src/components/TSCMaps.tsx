@@ -6,10 +6,9 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import React, { useState, useRef, useEffect } from "react";
 import { observer } from "mobx-react-lite";
-
-const SCALE_AMOUNT = 1.1;
-const MAX_ZOOM = 2;
-const MIN_ZOOM = 1;
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { TSCButton } from './TSCButton'
+import './TSCMaps.css'
 
 type MapRowComponentProps = {
   mapInfo: MapInfo; 
@@ -58,16 +57,7 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo })
       </Box>
 
       <Dialog open={isDialogOpen} onClose={handleCloseDialog} 
-        // fullWidth={true}
-        // maxWidth={false}
-        PaperProps={{
-          style: {
-            height: `auto`,
-            // maxHeight: `${height}`,
-            width: `auto`, 
-            // maxWidth: 'none',
-          },
-        }}
+        maxWidth={false}
         >
         {selectedMap ? <MapDialog mapData={mapInfo[selectedMap]} /> : null}
       </Dialog>
@@ -75,12 +65,11 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo })
   );
 });
 
+/**
+ * The map interface that will be recursive so that we can create "multiple" windows.
+ */
 const MapDialog = ({ mapData }: {mapData: MapInfo[string]; }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  // const handleOpenDialog = (newMapData) => {
-  //   setDialogOpen(true);
-  // };
 
   const handleCloseDialog = () => {
     setDialogOpen(false);
@@ -99,70 +88,15 @@ const MapDialog = ({ mapData }: {mapData: MapInfo[string]; }) => {
 type MapViewerProps  = {
   mapData: MapInfo[string];
 }
+
+const zoomButtonStyle = {
+  height: '20px',
+  width: '100px',
+  margin: '5px'
+}
+
+
 const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
-  const theme = useTheme()
-  const [zoomLevel, setZoomLevel] = useState(1)
-  const [lastCursorPos, setLastCursorPos] = useState({ x: 50, y: 50 })
-  const [cursor, setCursor] = useState({ x: 50, y: 50 })
-  const imageRef = useRef<HTMLImageElement>(null);
-  const handleZoomIn = () => {
-    const newZoomLevel = Math.min(zoomLevel * SCALE_AMOUNT, MAX_ZOOM)
-    setZoomLevel(newZoomLevel)
-  };
-  const handleZoomOut = () => {
-    const newZoomLevel = Math.max(zoomLevel / SCALE_AMOUNT, MIN_ZOOM)
-    setZoomLevel(newZoomLevel) 
-  };
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (!imageRef.current) return
-      event.preventDefault()
-      if (event.metaKey && (event.key === '+' || event.key === '=')) { // 'Cmd' + '+' or 'Cmd' + '='
-        const newZoomLevel = Math.min(zoomLevel * SCALE_AMOUNT, MAX_ZOOM);
-        if (newZoomLevel > MAX_ZOOM) {
-            return;
-        }
-        setZoomLevel(newZoomLevel)
-        setLastCursorPos(cursor)
-      }
-      if (event.metaKey && (event.key === '-' || event.key === '_')) { // 'Cmd' + '+' or 'Cmd' + '='
-        const newZoomLevel = Math.max(zoomLevel / SCALE_AMOUNT, MIN_ZOOM);
-        // Prevent zooming too much in or out
-        if (newZoomLevel < MIN_ZOOM) {
-            return;
-        }
-        setZoomLevel(newZoomLevel)
-        setLastCursorPos(cursor)
-      }
-    };
-
-    const handleMouseMove = (event: MouseEvent) => {
-      if (!imageRef.current) return
-      const bounds = imageRef.current.getBoundingClientRect();
-
-      // Relative position of the cursor to the image
-      const cursorX = event.clientX - bounds.left;
-      const cursorY = event.clientY - bounds.top;
-
-      // Convert cursor position to a percentage of the image's dimensions
-      const cursorPercentX = (cursorX / bounds.width) * 100;
-      const cursorPercentY = (cursorY / bounds.height) * 100;
-      // console.log(`cursorPercentX: ${cursorPercentX}`)
-
-      setCursor({x: cursorPercentX, y: cursorPercentY})
-    };
-
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('keydown', handleKeyDown);
-  
-    // Cleanup
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('keydown', handleKeyDown);
-    }; 
-  }, [zoomLevel, cursor, imageRef]);
 
   const calculatePosition = (lat: number, lon: number) => {
     const {upperLeftLat, upperLeftLon, lowerRightLat, lowerRightLon} = mapData.bounds
@@ -177,74 +111,60 @@ const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
     let y = normalizedLat * 100;
     y = 100 - y;
 
-    // console.log(`x: ${x}, y: ${y}`);
     return { x, y };
   };
 
-  const imageStyle = {
-    maxHeight: '100%', maxWidth: '100%'
-  }
+  const Controls = (
+    { 
+      zoomIn, 
+      zoomOut, 
+      resetTransform, 
+      ...rest 
+    } : {
+      zoomIn: any,
+      zoomOut: any,
+      resetTransform: any,
+    }
+  ) => (
+    <div className="controls">
+      <TSCButton style={zoomButtonStyle} onClick={() => zoomIn()}>zoom in</TSCButton>
+      <TSCButton style={zoomButtonStyle} onClick={() => zoomOut()}>zoom out</TSCButton>
+      <TSCButton style={zoomButtonStyle} onClick={() => resetTransform()}>reset</TSCButton>
+    </div>
+  );
 
   return (
-    <Box sx={{ 
-      display: 'flex',
-      maxHeight: '100vh', 
-      maxWidth: '100vw'
-    }}>
-      <Box 
-      sx={{
-        transform: `scale(${zoomLevel})`,
-        transformOrigin: `${lastCursorPos.x}% ${lastCursorPos.y}%`,
-        display: 'flex', 
-        position: 'relative',
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        // height: 'auto',
-        // idth: '100%',
-        overflow: 'hidden', 
-      }}
-      >
-      <img
-      ref={imageRef}
-      src={devSafeUrl(mapData.img)}
-      alt="Map" 
-      style={imageStyle}
-      />
-      {Object.entries(mapData.mapPoints).map(([name, point]) => {
-        const position = calculatePosition(point.lat, point.lon);
-        return (
-          <Button
-            key={name}
-            style={{
-              position: 'absolute',
-              left: `calc(${position.x}% - 10px)`,
-              top: `calc(${position.y}% - 10px)`,
-              width: '10px',       
-              height: '10px',      
-              borderRadius: '50%', 
-              padding: 0,          
-              backgroundColor: 'red',
-            }}
-            onClick={() => console.log(`Point ${name} clicked at point x:${position.x}, y:${position.y}`)}
+    <TransformWrapper 
+    minScale={1} 
+    maxScale={2}
+    limitToBounds={true}
+    >
+      {(utils) => (
+      <>
+        <TransformComponent >
+          <img
+          src={devSafeUrl(mapData.img)}
+          alt="Map" 
+          className="map"
           />
-        );
-      })}
-      </Box>
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: 'column',
-        justifyContent: 'center' ,
-        position: 'absolute', // Position the zoom controls absolutely
-        right: '10px', // Position to the right
-        top: '10px' //
-        }}>
-        <IconButton onClick={handleZoomIn} color="primary">
-          <AddIcon />
-        </IconButton>
-        <IconButton onClick={handleZoomOut} color="primary">
-          <RemoveIcon />
-        </IconButton>
-      </Box>
-    </Box>
+          {Object.entries(mapData.mapPoints).map(([name, point]) => {
+            const position = calculatePosition(point.lat, point.lon);
+            return (
+              <Button
+                key={name}
+                className="map-point"
+                style={{
+                  left: `calc(${position.x}% - 10px)`,
+                  top: `calc(${position.y}% - 10px)`,
+                }}
+                onClick={() => console.log(`Point ${name} clicked at point x:${position.x}, y:${position.y}`)}
+              />
+            );
+          })}
+        </TransformComponent>
+        <Controls {...utils}/>
+      </>
+      )}
+    </TransformWrapper>
   );
 }

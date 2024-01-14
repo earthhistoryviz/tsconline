@@ -19,8 +19,6 @@ export const TSCButton: React.FC<ButtonProps>  = ( props ) => {
         ...props?.sx,
       }}
       style={{
-        // width: "325px", 
-        // height: "75px", 
         height: "7vh",
         width: "16vh", 
         marginLeft: "auto", 
