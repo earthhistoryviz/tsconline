@@ -1,13 +1,16 @@
 import { IconButton, Dialog, DialogContent, Button, List, Box, ListItem, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
-import { useTheme } from "@mui/material/styles";
-import type { MapInfo } from '@tsconline/shared'
+import { useTheme } from "@mui/material/styles"
+import type { MapPoints, MapInfo } from '@tsconline/shared'
 import { devSafeUrl } from '../util'
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
-import React, { useState, useRef, useEffect } from "react";
-import { observer } from "mobx-react-lite";
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import AddIcon from '@mui/icons-material/Add'
+import RemoveIcon from '@mui/icons-material/Remove'
+import React, { useState, useRef, useEffect } from "react"
+import { observer } from "mobx-react-lite"
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 import { TSCButton } from './TSCButton'
+import { Tooltip } from 'react-tooltip'
+import 'react-tooltip/dist/react-tooltip.css'
+
 import './TSCMaps.css'
 
 type MapRowComponentProps = {
@@ -55,7 +58,6 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo })
           })}
         </List>
       </Box>
-
       <Dialog open={isDialogOpen} onClose={handleCloseDialog} 
         maxWidth={false}
         >
@@ -153,15 +155,12 @@ const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
           {Object.entries(mapData.mapPoints).map(([name, point]) => {
             const position = calculatePosition(point.lat, point.lon);
             return (
-              <Button
-                key={name}
-                className="map-point"
-                style={{
-                  left: `calc(${position.x}% - 10px)`,
-                  top: `calc(${position.y}% - 10px)`,
-                }}
-                onClick={() => console.log(`Point ${name} clicked at point x:${position.x}, y:${position.y}`)}
-              />
+              <MapPointButton 
+              key={name} 
+              mapPoint={point}
+              x={position.x} 
+              y={position.y} 
+              name={name}/>
             );
           })}
         </TransformComponent>
@@ -170,4 +169,43 @@ const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
       )}
     </TransformWrapper>
   );
+}
+type MapPointButtonProps = {
+  mapPoint: MapPoints[string],
+  x: number,
+  y: number,
+  name: string
+}
+
+const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name}) => {
+  return (
+    <>
+      <Button
+        className="map-point"
+        style={{
+          position: 'absolute',
+          left: `calc(${x}% - 10px)`,
+          top: `calc(${y}% - 10px)`,
+        }}
+        data-tooltip-id={name}
+      />
+      <Tooltip
+        id={name}
+        place="bottom"
+        className="tooltip"
+      >
+        <div>
+        <h3 className="header">{`${name}`}</h3>
+        <ul>
+            <li>Latitude: {mapPoint.lat}</li>
+            <li>Longitude: {mapPoint.lon}</li>
+            {/* <li>Default: {mapPoint.default || '--'}</li>
+            <li>Minimum Age: {mapPoint.minage || '--'}</li>
+            <li>Maximum Age: {mapPoint.maxage || '--'}</li> */}
+            <li>Note: {mapPoint.note || '--'}</li>
+        </ul>
+        </div>
+      </Tooltip>
+    </>
+  )
 }

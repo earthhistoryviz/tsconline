@@ -8,7 +8,7 @@
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  z-index: 2;
+  z-index: 1;
 }
 .map {
   height: 450px;
@@ -25,4 +25,10 @@
 .MuiButton-root.map-point:hover {
   background-color: red;
   opacity: 0.6;
+}
+.tooltip {
+  z-index: 1;
+}
+.header {
+  text-align: center;
 }
