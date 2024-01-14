@@ -198,7 +198,7 @@ The decrypt.jar will create in every successful decryption of a datapack a mappa
 
 The mappack is formatted like
 
-![mappack](../assets/Map-Example.png)
+![mappack](assets/Map-Example.png)
 
 Parsing this is more or less self explanatory. The one nuance that comes up are some of the settings can be present while some do not have to such as note and parent. `Parent` would exist if there is a parent map for the current map we are on. To accomodate these possibilities we parse the names found in the header. We know it's a header if it contains `HEADER` at the beginning. Using these labels at the top as the keys we can create a switch statement that checks all the labels that we know exist.
 
