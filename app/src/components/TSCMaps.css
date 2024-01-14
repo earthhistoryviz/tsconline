@@ -22,7 +22,7 @@
   padding: 0;
   background-color: red;
 }
-.map-point:hover {
+.MuiButton-root.map-point:hover {
   background-color: red;
   opacity: 0.6;
 }
