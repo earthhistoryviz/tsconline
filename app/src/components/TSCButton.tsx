@@ -1,6 +1,5 @@
 import { Button, ButtonProps } from '@mui/material'
 import { useTheme } from "@mui/material/styles";
-import './TSCButton.css'
 
 export const TSCButton: React.FC<ButtonProps>  = ( props ) => {
   const theme = useTheme();

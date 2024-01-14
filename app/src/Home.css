@@ -79,3 +79,8 @@
   margin-right: auto;
   border-radius: 40px;
 }
+
+.MuiFormControlLabel-root.checkbox {
+  margin-left: 30%;
+  margin-top: 30px;
+}

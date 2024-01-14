@@ -95,7 +95,7 @@ export const Home = observer(function Home() {
                   Make your own chart 
                 </TSCButton>
                 <FormControlLabel 
-                  className="checkbox"
+                className="checkbox"
                   control={
                     <TSCCheckbox 
                     checked={state.useCache}
@@ -123,7 +123,8 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({navigate}: {n
   };
   return (
     <>
-    <Accordion style={{
+    <Accordion 
+    style={{
       background: 'transparent',
       marginLeft: '5vh',
       marginRight: '5vh',
