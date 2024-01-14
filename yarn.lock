@@ -743,6 +743,32 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@floating-ui/core@npm:^1.5.3":
+  version: 1.5.3
+  resolution: "@floating-ui/core@npm:1.5.3"
+  dependencies:
+    "@floating-ui/utils": "npm:^0.2.0"
+  checksum: 7d9feaca2565a2a71bf03d23cd292c03def63097d7fde7d62909cdb8ddb84664781f3922086bcf10443f3310cb92381a0ecf745b2774edb917fa74fe61015c56
+  languageName: node
+  linkType: hard
+
+"@floating-ui/dom@npm:^1.0.0":
+  version: 1.5.4
+  resolution: "@floating-ui/dom@npm:1.5.4"
+  dependencies:
+    "@floating-ui/core": "npm:^1.5.3"
+    "@floating-ui/utils": "npm:^0.2.0"
+  checksum: 3ba02ba2b4227c1e18df6ccdd029a1c100058db2e76ca1dac60a593ec72b2d4d995fa5c2d1639a5c38adb17e12398fbfe4f6cf5fd45f2ee6170ed0cf64acea06
+  languageName: node
+  linkType: hard
+
+"@floating-ui/utils@npm:^0.2.0":
+  version: 0.2.1
+  resolution: "@floating-ui/utils@npm:0.2.1"
+  checksum: 33c9ab346e7b05c5a1e6a95bc902aafcfc2c9d513a147e2491468843bd5607531b06d0b9aa56aa491cbf22a6c2495c18ccfc4c0344baec54a689a7bb8e4898d6
+  languageName: node
+  linkType: hard
+
 "@gar/promisify@npm:^1.1.3":
   version: 1.1.3
   resolution: "@gar/promisify@npm:1.1.3"
@@ -1389,6 +1415,7 @@ __metadata:
     react-dom: "npm:^18.2.0"
     react-router: "npm:^6.8.1"
     react-router-dom: "npm:^6.8.1"
+    react-tooltip: "npm:^5.25.1"
     react-zoom-pan-pinch: "npm:^3.3.0"
     typescript: "npm:^4.9.3"
     vite: "npm:^4.1.0"
@@ -2150,6 +2177,13 @@ __metadata:
   version: 3.8.0
   resolution: "ci-info@npm:3.8.0"
   checksum: b00e9313c1f7042ca8b1297c157c920d6d69f0fbad7b867910235676df228c4b4f4df33d06cacae37f9efba7a160b0a167c6be85492b419ef71d85660e60606b
+  languageName: node
+  linkType: hard
+
+"classnames@npm:^2.3.0":
+  version: 2.5.1
+  resolution: "classnames@npm:2.5.1"
+  checksum: 58eb394e8817021b153bb6e7d782cfb667e4ab390cb2e9dac2fc7c6b979d1cc2b2a733093955fc5c94aa79ef5c8c89f11ab77780894509be6afbb91dddd79d15
   languageName: node
   linkType: hard
 
@@ -4494,6 +4528,19 @@ __metadata:
   peerDependencies:
     react: ">=16.8"
   checksum: 3c78db213d2c67c7ae06125b296889ebf3407963268ef23319312b4d7bf455ecfaa59164be73d6b4e19fb2ef6c2771d7dfe764d5a91cbdbb7c8e84c95aca99cc
+  languageName: node
+  linkType: hard
+
+"react-tooltip@npm:^5.25.1":
+  version: 5.25.1
+  resolution: "react-tooltip@npm:5.25.1"
+  dependencies:
+    "@floating-ui/dom": "npm:^1.0.0"
+    classnames: "npm:^2.3.0"
+  peerDependencies:
+    react: ">=16.14.0"
+    react-dom: ">=16.14.0"
+  checksum: e1538c6701f5998c61dc796b2aa4d4265885550a3bd4b6f006a43e757ba088a1bec655e40a98b1bfa75a4acd8ed2faf3f911785dc8ae8c8995b89ecf5407fd70
   languageName: node
   linkType: hard
 
