@@ -1,5 +1,6 @@
 import { Button, ButtonProps } from '@mui/material'
 import { useTheme } from "@mui/material/styles";
+import './TSCButton.css'
 
 export const TSCButton: React.FC<ButtonProps>  = ( props ) => {
   const theme = useTheme();
@@ -17,13 +18,6 @@ export const TSCButton: React.FC<ButtonProps>  = ( props ) => {
           backgroundColor: theme.palette.button.dark,
         },
         ...props?.sx,
-      }}
-      style={{
-        height: "7vh",
-        width: "16vh", 
-        marginLeft: "auto", 
-        marginRight: "auto", 
-        ...props?.style,
       }}
       variant="contained"
     >
