@@ -42,15 +42,6 @@ const TSCOnlineHeader = () => {
     </HeaderContainer>
   );
 };
-const RemoveCacheButton = styled(TSCButton)(({ theme }) => ({
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  marginLeft: "auto", 
-  marginRight: "auto",
-  borderRadius: "40px",
-  fontSize: theme.typography.pxToRem(12),
-}))
 
 export const Home = observer(function Home() {
   const { state, actions } = useContext(context); 
@@ -63,19 +54,18 @@ export const Home = observer(function Home() {
     }}>
       <TSCOnlineHeader/>
       <TSCPresetHighlights navigate={navigate}/>
-      <div className="bottom_button">
-        <RemoveCacheButton
-          variant="contained"
-          // style={{
-          //   height: "7vh",
-          //   width: "16vh", 
-          // }} 
+      <div className="bottom-button">
+        <TSCButton
+          className="remove-cache-button"
+          style={{
+            fontSize: theme.typography.pxToRem(12),
+          }}
           onClick={() => {
             actions.removeCache();
             actions.resetState();
           }}>
             Remove Cache
-        </RemoveCacheButton>
+        </TSCButton>
       </div>
       <Drawer anchor="bottom" 
         open={state.showPresetInfo} 
@@ -94,27 +84,26 @@ export const Home = observer(function Home() {
               <h2 className="preset_name"style={{color: theme.palette.primary.main}}>{state.chart.title} </h2>
               <p className="description" style={{color: theme.palette.primary.main}}>{state.chart.description}</p>
                 <TSCButton 
+                  className="info-button"
                   onClick={() => {
                     actions.generateChart();
                     navigate('/chart');
                   }}
                   variant="contained" 
-                  style={{
-                    width: "325px", 
-                    height: "75px", 
-                    marginLeft: "auto", 
-                    marginRight: "auto"}} 
                   endIcon={<ForwardIcon />}
                 >
                   Make your own chart 
                 </TSCButton>
-                <FormControlLabel control={
-                <TSCCheckbox 
-                checked={state.useCache}
-                onChange={(e) => {
-                  actions.setUseCache(e.target.checked)
-                }}
-                />}
+                <FormControlLabel 
+                  className="checkbox"
+                  control={
+                    <TSCCheckbox 
+                    checked={state.useCache}
+                    onChange={(e) => {
+                      actions.setUseCache(e.target.checked)
+                  }}
+                  />
+                }
                 style={{color: theme.palette.primary.main}}
                 label="Use Cache" />
             </div>

@@ -58,9 +58,24 @@
   padding: 2%;
 }
 
-.bottom_button {
+.MuiButton-root.info-button {
+  margin-left: auto;
+  margin-right: auto;
+  width: 325px;
+  height: 75px;
+}
+
+.bottom-button {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 20vh;
+}
+.MuiButton-root.remove-cache-button {
+  display: flex;
+  justify-content: center;
+  align-items: auto;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 40px;
 }
