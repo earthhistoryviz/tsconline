@@ -136,7 +136,7 @@ const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
   return (
     <TransformWrapper 
     doubleClick={{
-      disabled: "false"
+      disabled: false
     }}
     minScale={1} 
     maxScale={2}
