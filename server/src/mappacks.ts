@@ -69,7 +69,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                 switch (header) {
                     case 'HEADER-MAP INFO':
                         if (!info || info.length < 4)  {
-                            throw new Error(error)
+                            throw new Error(`${error}: HEADER-MAP INFO isn't properly formatted`)
                         }
                         mapname = String(info[1])
                         map.img = `/${assetconfigs.imagesDirectory}/${String(info[2])}`
@@ -77,7 +77,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                         break;
                     case 'HEADER-COORD':
                         if (!info || info.length < 6) {
-                            throw new Error(error)
+                            throw new Error(`${error}: HEADER-COORD isn't properly formatted`)
                         }
                         // TODO: coordtype can be multiple things, so won't always be called upperLeftLon
                         map.coordtype = String(info[1])
@@ -114,7 +114,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                     //TODO: Can this have multiple parents?
                     case 'HEADER-PARENT MAP':
                         if (!info || info.length < 7) {
-                            throw new Error(error)
+                            throw new Error(`${error}: HEADER-PARENT MAP isn't properly formatted`)
                         }
                         // TODO: coordtype can be multiple things, so won't always be called upperLeftLon
                         map.parent = {
@@ -164,7 +164,8 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                             // console.log(info)
                             for (let j = 1; j < info.length; j++) {
                                 if (!settingsNames[j] || !settingsNames[j]!.label) {
-                                    throw new Error(error)
+                                    // throw new Error(`${error}: no settings names exist`)
+                                    continue
                                 }
                                 switch (settingsNames[j]!.label) {
                                     case 'NAME':

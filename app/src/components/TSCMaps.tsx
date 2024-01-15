@@ -11,7 +11,7 @@ import { TransformWrapper, TransformComponent, useTransformEffect } from "react-
 import { TSCButton } from './TSCButton'
 import { Tooltip } from 'react-tooltip'
 import { isRectBounds, isVertBounds } from '@tsconline/shared'
-import { calculateRectPosition, calculateRectButton } from '../coordinates'
+import { calculateRectPosition, calculateVertPosition, calculateRectButton } from '../coordinates'
 import 'react-tooltip/dist/react-tooltip.css'
 
 import './TSCMaps.css'
@@ -147,6 +147,8 @@ type MapProps  = {
 
 const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
   const {state, actions} = useContext(context)
+  const [imageLoaded, setImageLoaded] = useState(false)
+  const imageRef = useRef<HTMLImageElement | null>(null)
   const mapInfo: MapInfo = state.settingsTabs.mapInfo
   const mapData: MapInfo[string] = mapInfo[name]
   const mapHierarchy: MapHierarchy = state.settingsTabs.mapHierarchy
@@ -183,23 +185,32 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
       <>
         <TransformComponent >
           <img
+          ref={imageRef}
           src={devSafeUrl(mapData.img)}
           alt="Map" 
           className="map"
+          onLoad={() => setImageLoaded(true)}
           />
-          {Object.entries(mapData.mapPoints).map(([name, point]) => {
+          {imageLoaded && Object.entries(mapData.mapPoints).map(([name, point]) => {
+            if (!imageRef || !imageRef.current) return
+            console.log(imageRef.current.getBoundingClientRect())
+            let position = {x: 0, y: 0}
             if(isRectBounds(mapData.bounds)) {
-              const position = calculateRectPosition(point.lat, point.lon, mapData.bounds);
-              return (
-                <MapPointButton 
-                key={name} 
-                mapPoint={point}
-                x={position.x} 
-                y={position.y} 
-                name={name}/>
-              );
+              position = calculateRectPosition(point.lat, point.lon, mapData.bounds);
+            } else if (isVertBounds(mapData.bounds)) {
+              const rect = imageRef.current.getBoundingClientRect()
+              position = calculateVertPosition(point.lat, point.lon, rect.height, rect.width, mapData.bounds);
+            } else {
+              return null
             }
-            return null
+            return (
+              <MapPointButton 
+              key={name} 
+              mapPoint={point}
+              x={position.x} 
+              y={position.y} 
+              name={name}/>
+            );
           })}
           {Object.keys(mapHierarchy).includes(name) ? 
           createChildMapButton(
@@ -219,10 +230,10 @@ type MapPointButtonProps = {
   mapPoint: MapPoints[string],
   x: number,
   y: number,
-  name: string
+  name: string,
 }
 
-const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name}) => {
+const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name }) => {
   const [clicked, setClicked] = useState(false)
   const theme = useTheme()
 

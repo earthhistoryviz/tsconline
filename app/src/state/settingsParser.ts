@@ -218,10 +218,10 @@ function generateColumnXml(
       //for replacing special characters in the key to its xml versions
       let xmlKey = key;
       xmlKey = key.replaceAll('"', "quot&;");
-      xmlKey = key.replaceAll("&", "&amp;");
-      xmlKey = key.replaceAll("<", " &lt; ");
-      xmlKey = key.replaceAll(">", " &gt; ");
-      xmlKey = key.replaceAll("'", "&apos;");
+      xmlKey = xmlKey.replaceAll("&", "&amp;");
+      xmlKey = xmlKey.replaceAll("<", " &lt; ");
+      xmlKey = xmlKey.replaceAll(">", " &gt; ");
+      xmlKey = xmlKey.replaceAll("'", "&apos;");
       //console.log(key);
       if (key === "_id") {
         // Skip the 'id' element.
