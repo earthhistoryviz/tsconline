@@ -51,11 +51,13 @@ export const setChart = action("setChart", async (newval: number): Promise<boole
   // console.log("reply of columns: ", JSON.stringify(columns, null, 2))
   // console.log("reply of maps: ", JSON.stringify(maps, null, 2))
   try {
+    console.log(reply)
     assertMapInfo(reply.mapInfo)
     assertColumnInfo(reply.columnInfo)
     assertMapHierarchy(reply.mapHierarchy)
     setMapInfo(reply.mapInfo)
     setSettingsColumns(reply.columnInfo)
+    setMapHierarchy(reply.mapHierarchy)
   } catch (e) {
     if (isServerResponseError(reply)) {
       console.log("Server failed to send datapack info with error: ", reply.error)
