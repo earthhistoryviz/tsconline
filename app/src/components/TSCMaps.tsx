@@ -133,7 +133,10 @@ function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Boun
       </>
   )
   } else {
-    throw new Error(`bounds not recognized, objects are (${mapBounds}) and (${childBounds})`)
+    console.log('map and child bounds are not rectbounds')
+    console.log(`mapBounds not recognized, mapBounds are ${JSON.stringify(mapBounds, null, 2)}`)
+    console.log(`childBounds not recognized, childBounds are ${JSON.stringify(childBounds, null, 2)}`)
+    return
   }
 
 }
@@ -149,6 +152,7 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
   const {state, actions} = useContext(context)
   const [imageLoaded, setImageLoaded] = useState(false)
   const imageRef = useRef<HTMLImageElement | null>(null)
+
   const mapInfo: MapInfo = state.settingsTabs.mapInfo
   const mapData: MapInfo[string] = mapInfo[name]
   const mapHierarchy: MapHierarchy = state.settingsTabs.mapHierarchy
@@ -193,7 +197,6 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
           />
           {imageLoaded && Object.entries(mapData.mapPoints).map(([name, point]) => {
             if (!imageRef || !imageRef.current) return
-            console.log(imageRef.current.getBoundingClientRect())
             let position = {x: 0, y: 0}
             if(isRectBounds(mapData.bounds)) {
               position = calculateRectPosition(point.lat, point.lon, mapData.bounds);
@@ -201,6 +204,7 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
               const rect = imageRef.current.getBoundingClientRect()
               position = calculateVertPosition(point.lat, point.lon, rect.height, rect.width, mapData.bounds);
             } else {
+              console.log(`Bounds is not in the correct format `, JSON.stringify(mapData.bounds, null, 2))
               return null
             }
             return (

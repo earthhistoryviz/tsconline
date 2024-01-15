@@ -37,32 +37,31 @@ export const calculateVertPosition = (lat: number, lon: number, frameHeight: num
     let centerLat = toRadians(bounds.centerLat)
     let centerLon = toRadians(bounds.centerLon)
     const noOfKmPerPix = bounds.scale / (0.4 * frameWidth); // 10% of the frameWidth (pixels) = scale (Km).
-    const noOfPixPerKm = (0.4 * frameWidth) / bounds.scale; // scale (K
+    const noOfPixPerKm = (0.4 * frameWidth) / bounds.scale; // scale (Km) = 10% of the frameWidth (pixels).
+
     const lonOffset = lon - centerLon; // longitude offset from the center
+
     const P = (bounds.height / RADIUS) + 1; // Normalized distance above sphere
 
-    // Calculate the cosine of the angular distance between the two points
+    // calculate the cosine of the angular distance between the two points
     const cosC = Math.cos(
         Math.sin(centerLat) * Math.sin(lat) +
-        Math.cos(centerLat) * Math.cos(lat) * Math.cos(lonOffset)
+        Math.sin(centerLat) * Math.cos(lat) * Math.cos(lonOffset)
     );
 
-    // Calculate the proportion of the viewable map that the point takes up
+    // calculate the proportion of the viewable map that the point takes up
     const K = P !== cosC ? (P - 1) / (P - cosC) : 1;
 
-    // Calculate offsets in kilometers using the proportion K
-    let x = K * (Math.cos(lat) * Math.sin(lonOffset)) * RADIUS;
+    // calculate offsets in kilometers using the proportion K
+    let x = K * (Math.cos(lat) * Math.sin(lonOffset)) * RADIUS; // offset from the center in kilometers.
     let y = K * (Math.cos(centerLat) * Math.sin(lat) - Math.sin(centerLat) * Math.cos(lat) * Math.cos(lonOffset)) * RADIUS;
 
-    // Convert offsets to pixels
     x = x * noOfPixPerKm;
     y = y * noOfPixPerKm;
 
-    // Calculate the x and y as percentages of the frame dimensions
     const xPercent = ((frameWidth / 2 + x) / frameWidth) * 100;
     const yPercent = ((frameHeight / 2 - y) / frameHeight) * 100;
 
-    // Return the percentage positions
     return { x: xPercent, y: yPercent };
 }
 
