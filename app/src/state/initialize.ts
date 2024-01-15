@@ -8,7 +8,7 @@ export async function initialize() {
   const response = await fetcher('/presets');
   const presets = await response.json();
   try {
-    console.log('Received response from server for presets: ', presets);
+    // console.log('Received response from server for presets: ', presets);
     assertChartConfigArray(presets);
     actions.loadPresets(presets);
     console.log('Presets loaded');

@@ -51,7 +51,7 @@ export const setChart = action("setChart", async (newval: number): Promise<boole
   // console.log("reply of columns: ", JSON.stringify(columns, null, 2))
   // console.log("reply of maps: ", JSON.stringify(maps, null, 2))
   try {
-    console.log(reply)
+    // console.log(reply)
     assertMapInfo(reply.mapInfo)
     assertColumnInfo(reply.columnInfo)
     assertMapHierarchy(reply.mapHierarchy)
@@ -70,7 +70,7 @@ export const setChart = action("setChart", async (newval: number): Promise<boole
 
   // Grab the settings for this chart if there are any:
   if (state.chart.settings) {
-    console.log(state.chart.settings);
+    // console.log(state.chart.settings);
     const response = await fetcher(state.chart.settings);
     const xml = await response.text();
     if (typeof xml === "string" && xml.match(/<TSCreator/)) {
@@ -249,7 +249,6 @@ export const updateSettings = action("updateSettings", () => {
   if ("settingsTabs" in jsonSettings) {
     const settingsTabs = jsonSettings as any;
   }
-  console.log(jsonSettings);
   const xmlSettings = jsonToXml(jsonSettings); // Convert JSON to XML using jsonToXml function
 
   console.log("Updated settingsXML:\n", xmlSettings); // Print the updated XML
@@ -373,15 +372,15 @@ export const toggleSettingsTabColumn = action("toggleSettingsTabColumn", (name: 
     let curcol: ColumnInfo | null = state.settingsTabs.columns;
     const orig = curcol
     // Walk down the path of parents in the tree of columns
-    console.log("name: ", name)
+    // console.log("name: ", name)
     let i = 1
     for (const item of parents) {
-      console.log("item ", i, ": ", item);
+      // console.log("item ", i, ": ", item);
       i++
     }
     i = 1
     for (const p of parents) {
-      console.log("accessing ", p, " of count: ", i)
+      // console.log("accessing ", p, " of count: ", i)
       i++
       if (!curcol) {
         console.log(
@@ -417,7 +416,7 @@ export const toggleSettingsTabColumn = action("toggleSettingsTabColumn", (name: 
     }
     curcol[name].on = !curcol[name].on;
     // setSettingsTabsColumns(orig)
-    console.log(JSON.stringify(curcol[name], null, 2));
+    // console.log(JSON.stringify(curcol[name], null, 2));
     setcolumnSelected(name, parents);
     // console.log("state after my change: ", state);
     //if the column is unchecked, then no need to check the parents

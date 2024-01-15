@@ -46,10 +46,10 @@ function processSettings(settingsNode: any): any {
       settings[settingName] = settingValue;
     }
   }
-  console.log(
-    "result of processSettings in xmlToJson under actions...\n",
-    settings
-  );
+  // console.log(
+  //   "result of processSettings in xmlToJson under actions...\n",
+  //   settings
+  // );
   return settings;
 }
 
@@ -73,11 +73,6 @@ function processColumn(node: any): any {
   if (nodeAttributes.length > 0) {
     for (let i = 0; i < nodeAttributes.length; i++) {
       const attribute = nodeAttributes[i];
-      if (attribute.value.includes("INIOPTERYGIA")) {
-        console.log(
-          `attribute.name: ${attribute.name}\nattribute.value: ${attribute.value}`
-        );
-      }
       result[`_${attribute.name}`] = attribute.value;
     }
   }
@@ -131,7 +126,7 @@ function processColumn(node: any): any {
 
 //the main parser
 export function xmlToJson(xml: string): any {
-  console.log("xml at start of xmlToJson...\n", xml);
+  // console.log("xml at start of xmlToJson...\n", xml);
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xml, "text/xml");
   const json: any = {};
@@ -152,7 +147,7 @@ export function xmlToJson(xml: string): any {
         processColumn(rootColumnNode);
     }
   }
-  console.log("json at end of xmlToJson\n", json);
+  // console.log("json at end of xmlToJson\n", json);
   return json;
 }
 
