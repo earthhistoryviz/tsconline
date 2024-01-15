@@ -59,10 +59,10 @@ export const calculateVertPosition = (lat: number, lon: number, frameHeight: num
     x = x * noOfPixPerKm;
     y = y * noOfPixPerKm;
 
-    const xPercent = ((frameWidth / 2 + x) / frameWidth) * 100;
-    const yPercent = ((frameHeight / 2 - y) / frameHeight) * 100;
+    const normalizedX = ((frameWidth / 2 + x) / frameWidth) * 100;
+    const normalizedY = ((frameHeight / 2 - y) / frameHeight) * 100;
 
-    return { x: xPercent, y: yPercent };
+    return { x: normalizedX, y: normalizedY };
 }
 
 function toRadians(degrees: number): number {
