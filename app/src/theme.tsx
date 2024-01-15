@@ -86,9 +86,12 @@ theme = createTheme(theme, {
               .lighten(0.3)}`
     },
     button : {
-            light: `${Color(theme.palette.button.main).lighten(0.3)}`,
-            main: theme.palette.button.main,
-            dark: `${Color(theme.palette.button.main).darken(0.3)}`,
+      light: `${Color(theme.palette.button.main).lighten(0.3)}`,
+      main: theme.palette.button.main,
+      dark: `${Color(theme.palette.button.main).darken(0.3)}`,
+    },
+    selection : {
+      dark: `${Color(theme.palette.selection.main).darken(0.3)}`,
     }
   },
 });

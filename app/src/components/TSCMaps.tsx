@@ -24,7 +24,6 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo })
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleRowClick = (name: string) => {
-    console.log('Clicked on map:', name);
     setSelectedMap(name);
     setIsDialogOpen(true);
   };
@@ -59,7 +58,10 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo })
           })}
         </List>
       </Box>
-      <Dialog open={isDialogOpen} onClose={handleCloseDialog} maxWidth={false}>
+      <Dialog open={isDialogOpen} onClose={handleCloseDialog} maxWidth={false}
+      style={{
+        overflow: "visible",
+      }}>
         {selectedMap ? <MapDialog name={selectedMap} /> : null}
       </Dialog>
     </div>
@@ -107,7 +109,7 @@ const calculatePosition = (lat: number, lon: number, bounds: Bounds) => {
   return { x, y };
 };
 
-function createChildButton(name: string, mapBounds: Bounds, childBounds: Bounds, openChild: (childName: string) => void) {
+function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Bounds, openChild: (childName: string) => void) {
 
   let upperLeft = calculatePosition(childBounds.upperLeftLat, childBounds.upperLeftLon, mapBounds);
 
@@ -117,7 +119,6 @@ function createChildButton(name: string, mapBounds: Bounds, childBounds: Bounds,
   }
   let width = Math.max(childBounds.lowerRightLon, childBounds.upperLeftLon) - Math.min(childBounds.upperLeftLon, childBounds.lowerRightLon)
   let height = Math.max(childBounds.lowerRightLat, childBounds.upperLeftLat) - Math.min(childBounds.lowerRightLat, childBounds.upperLeftLat)
-  console.log(`width: ${width}, height: ${height}`)
 
   return (
     <>
@@ -215,7 +216,7 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
             );
           })}
           {Object.keys(mapHierarchy).includes(name) ? 
-          createChildButton(
+          createChildMapButton(
             mapHierarchy[name], 
             mapData.bounds, 
             mapInfo[mapHierarchy[name]].bounds, 
@@ -236,6 +237,8 @@ type MapPointButtonProps = {
 }
 
 const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name}) => {
+  const [clicked, setClicked] = useState(false)
+  const theme = useTheme()
 
   // below is the hook for grabbing the scale from map image scaling
   // commented out because the positioning of the tooltip is seperate from
@@ -256,14 +259,23 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name}) =
         className="map-point"
         style={{
           position: 'absolute',
+          backgroundColor: `${clicked ? theme.palette.selection.dark : 'red'}`,
           left: `calc(${x}% - 10px)`,
           top: `calc(${y}% - 10px)`,
         }}
         data-tooltip-id={name}
+        onClick={() => {
+          setClicked(!clicked)
+        }}
       />
       <Tooltip
         id={name}
         place="bottom"
+        globalCloseEvents={{
+          scroll: true,
+          resize: true,
+          clickOutsideAnchor: true
+        }}
         className="tooltip"
       >
         <div>
