@@ -1,6 +1,6 @@
 import { IconButton, Dialog, DialogContent, Button, List, Box, ListItem, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
 import { useTheme } from "@mui/material/styles"
-import type { Bounds, MapPoints, MapInfo } from '@tsconline/shared'
+import type { MapHierarchy, Bounds, MapPoints, MapInfo } from '@tsconline/shared'
 import { devSafeUrl } from '../util'
 import AddIcon from '@mui/icons-material/Add'
 import RemoveIcon from '@mui/icons-material/Remove'
@@ -60,7 +60,7 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo })
         </List>
       </Box>
       <Dialog open={isDialogOpen} onClose={handleCloseDialog} maxWidth={false}>
-        {selectedMap ? <MapDialog mapInfo={mapInfo} name={selectedMap} /> : null}
+        {selectedMap ? <MapDialog name={selectedMap} /> : null}
       </Dialog>
     </div>
   );
@@ -69,7 +69,7 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo })
 /**
  * The map interface that will be recursive so that we can create "multiple" windows.
  */
-const MapDialog = ({ mapInfo, name }: {mapInfo: MapInfo; name: string; }) => {
+const MapDialog = ({ name }: {name: string;}) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [childName, setChildName] = useState(name)
 
@@ -83,9 +83,9 @@ const MapDialog = ({ mapInfo, name }: {mapInfo: MapInfo; name: string; }) => {
 
   return (
     <>
-      <MapViewer openChild={openChild} mapInfo={mapInfo} name={name} />
+      <MapViewer openChild={openChild} name={name} />
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth={false} >
-        <MapViewer openChild={openChild} mapInfo={mapInfo} name={childName}/>
+        <MapDialog name={childName}/>
       </Dialog>
     </>
   );
@@ -157,15 +157,15 @@ function createChildButton(name: string, mapBounds: Bounds, childBounds: Bounds,
 
 
 type MapProps  = {
-  mapInfo: MapInfo;
   name: string;
   openChild: (childName: string) => void;
 }
 
-const MapViewer: React.FC<MapProps> = ({ mapInfo, name, openChild }) => {
+const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
   const {state, actions} = useContext(context)
-  const mapData = mapInfo[name]
-  const mapHierarchy = state.settingsTabs.mapHierarchy
+  const mapInfo: MapInfo = state.settingsTabs.mapInfo
+  const mapData: MapInfo[string] = mapInfo[name]
+  const mapHierarchy: MapHierarchy = state.settingsTabs.mapHierarchy
 
   const Controls = (
     { 
