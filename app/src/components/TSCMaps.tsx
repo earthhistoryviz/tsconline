@@ -60,10 +60,8 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo })
           })}
         </List>
       </Box>
-      <Dialog open={isDialogOpen} onClose={handleCloseDialog} maxWidth={false}
-      style={{
-        overflow: "visible",
-      }}>
+
+      <Dialog open={isDialogOpen} onClose={handleCloseDialog} maxWidth={false}>
         {selectedMap ? <MapDialog name={selectedMap} /> : null}
       </Dialog>
     </div>
