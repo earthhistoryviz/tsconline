@@ -1,6 +1,6 @@
 import { IconButton, Dialog, DialogContent, Button, List, Box, ListItem, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
 import { useTheme } from "@mui/material/styles"
-import type { MapHierarchy, Bounds, MapPoints, MapInfo } from '@tsconline/shared'
+import type { MapHierarchy, Bounds, MapPoints, MapInfo, RectBounds} from '@tsconline/shared'
 import { devSafeUrl } from '../util'
 import AddIcon from '@mui/icons-material/Add'
 import RemoveIcon from '@mui/icons-material/Remove'
@@ -10,6 +10,8 @@ import { observer } from "mobx-react-lite"
 import { TransformWrapper, TransformComponent, useTransformEffect } from "react-zoom-pan-pinch"
 import { TSCButton } from './TSCButton'
 import { Tooltip } from 'react-tooltip'
+import { isRectBounds, isVertBounds } from '@tsconline/shared'
+import { calculateRectPosition, calculateRectButton } from '../coordinates'
 import 'react-tooltip/dist/react-tooltip.css'
 
 import './TSCMaps.css'
@@ -93,66 +95,47 @@ const MapDialog = ({ name }: {name: string;}) => {
   );
 }
 
-const calculatePosition = (lat: number, lon: number, bounds: Bounds) => {
-  const {upperLeftLat, upperLeftLon, lowerRightLat, lowerRightLon} = bounds
-
-  const latRange = Math.abs(upperLeftLat - lowerRightLat);
-  const lonRange = Math.abs(upperLeftLon - lowerRightLon);
-
-  let normalizedLat = (lat - Math.min(upperLeftLat, lowerRightLat)) / latRange;
-  let normalizedLon = (lon - Math.min(upperLeftLon, lowerRightLon)) / lonRange;
-
-  let x = normalizedLon * 100;
-  let y = normalizedLat * 100;
-  y = 100 - y;
-
-  return { x, y };
-};
 
 function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Bounds, openChild: (childName: string) => void) {
-
-  let upperLeft = calculatePosition(childBounds.upperLeftLat, childBounds.upperLeftLon, mapBounds);
-
-  let midpoint = { 
-    x: (Math.abs(childBounds.upperLeftLon) + Math.abs(childBounds.lowerRightLon)) / 2, 
-    y: (Math.abs(childBounds.upperLeftLat) + Math.abs(childBounds.lowerRightLat)) / 2
-  }
-  let width = Math.max(childBounds.lowerRightLon, childBounds.upperLeftLon) - Math.min(childBounds.upperLeftLon, childBounds.lowerRightLon)
-  let height = Math.max(childBounds.lowerRightLat, childBounds.upperLeftLat) - Math.min(childBounds.lowerRightLat, childBounds.upperLeftLat)
-
-  return (
-    <>
-    <Button
-    data-tooltip-id={name}
-    style={{
-      border: "0.5px solid yellow",
-      position: 'absolute',
-      left: `calc(${upperLeft.x}% - ${width / 2}px`,
-      top: `calc(${upperLeft.y}% - ${height / 2}px`,
-      width: width,
-      height: height
-    }} 
-    onClick={() => {openChild(name)}}
-    />
-    <Tooltip
-      id={name}
-      place="bottom"
-      className="tooltip"
-    >
-      <div>
-      <h3 className="header">{`${name}`}</h3>
-      <ul>
-          <li>Latitude: {midpoint.x}</li>
-          <li>Longitude: {midpoint.y}</li>
-          {/* <li>Default: {mapPoint.default || '--'}</li>
-          <li>Minimum Age: {mapPoint.minage || '--'}</li>
-          <li>Maximum Age: {mapPoint.maxage || '--'}</li> */}
-          {/* <li>Note: {mapPoint.note || '--'}</li> */}
-      </ul>
-      </div>
-    </Tooltip>
-    </>
+  if (isRectBounds(childBounds) && isRectBounds(mapBounds)) {
+    const { midpoint, upperLeft, width, height } = calculateRectButton(childBounds, mapBounds)
+    return (
+      <>
+      <Button
+      data-tooltip-id={name}
+      style={{
+        border: "0.5px solid yellow",
+        position: 'absolute',
+        left: `calc(${upperLeft.x}% - ${width / 2}px`,
+        top: `calc(${upperLeft.y}% - ${height / 2}px`,
+        width: width,
+        height: height
+      }} 
+      onClick={() => {openChild(name)}}
+      />
+      <Tooltip
+        id={name}
+        place="bottom"
+        className="tooltip"
+      >
+        <div>
+        <h3 className="header">{`${name}`}</h3>
+        <ul>
+            <li>Latitude: {midpoint.x}</li>
+            <li>Longitude: {midpoint.y}</li>
+            {/* <li>Default: {mapPoint.default || '--'}</li>
+            <li>Minimum Age: {mapPoint.minage || '--'}</li>
+            <li>Maximum Age: {mapPoint.maxage || '--'}</li> */}
+            {/* <li>Note: {mapPoint.note || '--'}</li> */}
+        </ul>
+        </div>
+      </Tooltip>
+      </>
   )
+  } else {
+    throw new Error(`bounds not recognized, objects are (${mapBounds}) and (${childBounds})`)
+  }
+
 }
 
 
@@ -205,15 +188,18 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
           className="map"
           />
           {Object.entries(mapData.mapPoints).map(([name, point]) => {
-            const position = calculatePosition(point.lat, point.lon, mapData.bounds);
-            return (
-              <MapPointButton 
-              key={name} 
-              mapPoint={point}
-              x={position.x} 
-              y={position.y} 
-              name={name}/>
-            );
+            if(isRectBounds(mapData.bounds)) {
+              const position = calculateRectPosition(point.lat, point.lon, mapData.bounds);
+              return (
+                <MapPointButton 
+                key={name} 
+                mapPoint={point}
+                x={position.x} 
+                y={position.y} 
+                name={name}/>
+              );
+            }
+            return null
           })}
           {Object.keys(mapHierarchy).includes(name) ? 
           createChildMapButton(

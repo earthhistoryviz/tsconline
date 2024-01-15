@@ -65,14 +65,24 @@ export type DatapackResponse = {
     mapInfo: MapInfo;
     mapHierarchy: MapHierarchy;
 };
-export type Bounds = {
+export type Bounds = RectBounds | VertBounds;
+export type RectBounds = {
     upperLeftLon: number;
     upperLeftLat: number;
     lowerRightLon: number;
     lowerRightLat: number;
 };
+export type VertBounds = {
+    centerLat: number;
+    centerLon: number;
+    height: number;
+    scale: number;
+};
 export declare function assertMapHierarchy(o: any): asserts o is MapHierarchy;
 export declare function assertMapInfo(o: any): asserts o is MapInfo;
+export declare function isRectBounds(bounds: Bounds): bounds is RectBounds;
+export declare function isVertBounds(bounds: Bounds): bounds is VertBounds;
+export declare function assertBounds(coordtype: string, bounds: any): asserts bounds is Bounds;
 export declare function assertMapPoints(o: any): asserts o is MapPoints;
 export type SuccessfulServerResponse = {
     message: string;
