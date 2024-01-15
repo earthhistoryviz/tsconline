@@ -59,10 +59,8 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo })
           })}
         </List>
       </Box>
-      <Dialog open={isDialogOpen} onClose={handleCloseDialog} 
-        maxWidth={false}
-        >
-        {selectedMap ? <MapDialog mapData={mapInfo[selectedMap]} name={selectedMap} /> : null}
+      <Dialog open={isDialogOpen} onClose={handleCloseDialog} maxWidth={false}>
+        {selectedMap ? <MapDialog mapInfo={mapInfo} name={selectedMap} /> : null}
       </Dialog>
     </div>
   );
@@ -71,27 +69,23 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo })
 /**
  * The map interface that will be recursive so that we can create "multiple" windows.
  */
-const MapDialog = ({ mapData, name }: {mapData: MapInfo[string]; name: string; }) => {
+const MapDialog = ({ mapInfo, name }: {mapInfo: MapInfo; name: string; }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [stateMapData, setStateMapData] = useState(mapData)
   const [childName, setChildName] = useState(name)
 
   const handleCloseDialog = () => {
     setDialogOpen(false);
   };
-  const openChild = (childMapData: MapInfo[string], childName: string) => {
-    console.log(childName)
-    console.log(childMapData)
+  const openChild = (childName: string) => {
     setDialogOpen(true)
-    setStateMapData(childMapData)
     setChildName(childName)
   }
 
   return (
     <>
-      <MapViewer openChild={openChild} mapData={mapData} name={name} />
+      <MapViewer openChild={openChild} mapInfo={mapInfo} name={name} />
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth={false} >
-        <MapViewer openChild={() => {}} mapData={stateMapData} name={childName}/>
+        <MapViewer openChild={openChild} mapInfo={mapInfo} name={childName}/>
       </Dialog>
     </>
   );
@@ -113,11 +107,14 @@ const calculatePosition = (lat: number, lon: number, bounds: Bounds) => {
   return { x, y };
 };
 
-function createChildButton(mapData: MapInfo[string], name: string, mapBounds: Bounds, childBounds: Bounds, openChild: (childMapData: MapInfo[string], childName: string) => void) {
+function createChildButton(name: string, mapBounds: Bounds, childBounds: Bounds, openChild: (childName: string) => void) {
 
   let upperLeft = calculatePosition(childBounds.upperLeftLat, childBounds.upperLeftLon, mapBounds);
 
-  let midpoint = { x: (Math.abs(childBounds.upperLeftLon) + Math.abs(childBounds.lowerRightLon)) / 2, y: (Math.abs(childBounds.upperLeftLat) + Math.abs(childBounds.lowerRightLat)) / 2}
+  let midpoint = { 
+    x: (Math.abs(childBounds.upperLeftLon) + Math.abs(childBounds.lowerRightLon)) / 2, 
+    y: (Math.abs(childBounds.upperLeftLat) + Math.abs(childBounds.lowerRightLat)) / 2
+  }
   let width = Math.max(childBounds.lowerRightLon, childBounds.upperLeftLon) - Math.min(childBounds.upperLeftLon, childBounds.lowerRightLon)
   let height = Math.max(childBounds.lowerRightLat, childBounds.upperLeftLat) - Math.min(childBounds.lowerRightLat, childBounds.upperLeftLat)
   console.log(`width: ${width}, height: ${height}`)
@@ -134,7 +131,7 @@ function createChildButton(mapData: MapInfo[string], name: string, mapBounds: Bo
       width: width,
       height: height
     }} 
-    onClick={() => {openChild(mapData, name)}}
+    onClick={() => {openChild(name)}}
     />
     <Tooltip
       id={name}
@@ -159,16 +156,16 @@ function createChildButton(mapData: MapInfo[string], name: string, mapBounds: Bo
 
 
 
-type MapViewerProps  = {
-  mapData: MapInfo[string];
+type MapProps  = {
+  mapInfo: MapInfo;
   name: string;
-  openChild: (childMapData: MapInfo[string], childName: string) => void;
+  openChild: (childName: string) => void;
 }
 
-const MapViewer: React.FC<MapViewerProps> = ({ mapData, name, openChild }) => {
-
+const MapViewer: React.FC<MapProps> = ({ mapInfo, name, openChild }) => {
   const {state, actions} = useContext(context)
-
+  const mapData = mapInfo[name]
+  const mapHierarchy = state.settingsTabs.mapHierarchy
 
   const Controls = (
     { 
@@ -217,12 +214,11 @@ const MapViewer: React.FC<MapViewerProps> = ({ mapData, name, openChild }) => {
               name={name}/>
             );
           })}
-          {Object.keys(state.settingsTabs.mapHierarchy).includes(name) ? 
+          {Object.keys(mapHierarchy).includes(name) ? 
           createChildButton(
-            state.settingsTabs.mapInfo[state.settingsTabs.mapHierarchy[name]], 
-            state.settingsTabs.mapHierarchy[name], 
+            mapHierarchy[name], 
             mapData.bounds, 
-            state.settingsTabs.mapInfo[state.settingsTabs.mapHierarchy[name]].bounds, 
+            mapInfo[mapHierarchy[name]].bounds, 
             openChild)
           : null}
         </TransformComponent>
