@@ -73,16 +73,25 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo })
  */
 const MapDialog = ({ mapData, name }: {mapData: MapInfo[string]; name: string; }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [stateMapData, setStateMapData] = useState(mapData)
+  const [childName, setChildName] = useState(name)
 
   const handleCloseDialog = () => {
     setDialogOpen(false);
   };
+  const openChild = (childMapData: MapInfo[string], childName: string) => {
+    console.log(childName)
+    console.log(childMapData)
+    setDialogOpen(true)
+    setStateMapData(childMapData)
+    setChildName(childName)
+  }
 
   return (
     <>
-      <MapViewer mapData={mapData} name={name} />
-      <Dialog open={dialogOpen} onClose={handleCloseDialog}>
-        <MapViewer mapData={mapData} name={name}/>
+      <MapViewer openChild={openChild} mapData={mapData} name={name} />
+      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth={false} >
+        <MapViewer openChild={() => {}} mapData={stateMapData} name={childName}/>
       </Dialog>
     </>
   );
@@ -104,7 +113,7 @@ const calculatePosition = (lat: number, lon: number, bounds: Bounds) => {
   return { x, y };
 };
 
-function createChildButton(name: string, mapBounds: Bounds, childBounds: Bounds) {
+function createChildButton(mapData: MapInfo[string], name: string, mapBounds: Bounds, childBounds: Bounds, openChild: (childMapData: MapInfo[string], childName: string) => void) {
 
   let upperLeft = calculatePosition(childBounds.upperLeftLat, childBounds.upperLeftLon, mapBounds);
 
@@ -125,6 +134,7 @@ function createChildButton(name: string, mapBounds: Bounds, childBounds: Bounds)
       width: width,
       height: height
     }} 
+    onClick={() => {openChild(mapData, name)}}
     />
     <Tooltip
       id={name}
@@ -152,9 +162,10 @@ function createChildButton(name: string, mapBounds: Bounds, childBounds: Bounds)
 type MapViewerProps  = {
   mapData: MapInfo[string];
   name: string;
+  openChild: (childMapData: MapInfo[string], childName: string) => void;
 }
 
-const MapViewer: React.FC<MapViewerProps> = ({ mapData, name }) => {
+const MapViewer: React.FC<MapViewerProps> = ({ mapData, name, openChild }) => {
 
   const {state, actions} = useContext(context)
 
@@ -207,7 +218,12 @@ const MapViewer: React.FC<MapViewerProps> = ({ mapData, name }) => {
             );
           })}
           {Object.keys(state.settingsTabs.mapHierarchy).includes(name) ? 
-          createChildButton(state.settingsTabs.mapHierarchy[name], mapData.bounds, state.settingsTabs.mapInfo[state.settingsTabs.mapHierarchy[name]].bounds)
+          createChildButton(
+            state.settingsTabs.mapInfo[state.settingsTabs.mapHierarchy[name]], 
+            state.settingsTabs.mapHierarchy[name], 
+            mapData.bounds, 
+            state.settingsTabs.mapInfo[state.settingsTabs.mapHierarchy[name]].bounds, 
+            openChild)
           : null}
         </TransformComponent>
         <Controls {...utils}/>
