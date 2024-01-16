@@ -5,7 +5,7 @@ import pmap from 'p-map';
 import { type Preset, assertChartConfig  } from '@tsconline/shared';
 
 export async function loadPresets(): Promise<Preset[]> {
-  // Build the list of presets from the filesystem:
+  // Build the list of presets from the filesystem: 
   let chartconfig_paths = await glob(`public/presets/*-*/config.json`);
   // this needs to be included to work on certain window machines
   chartconfig_paths = chartconfig_paths.map(path => path.replace(/\\/g, '/'))
