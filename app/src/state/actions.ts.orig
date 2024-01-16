@@ -15,6 +15,7 @@ import {
 } from "@tsconline/shared";
 import { state, State } from "./state";
 import { fetcher, devSafeUrl } from "../util";
+import { xmlToJson, jsonToXml } from "./settingsParser";
 import { ConstructionOutlined } from "@mui/icons-material";
 
 export const setTab = action("setTab", (newval: number) => {
@@ -29,6 +30,69 @@ export const resetSettings = action("resetSettings", () => {
   };
 });
 
+<<<<<<< Updated upstream
+export const setChart = action("setChart", async (newval: number): Promise<boolean> => {
+  resetSettings()
+  //set the settings tab back to time
+  setSettingsTabsSelected(0)
+  if (state.presets.length <= newval) {
+    state.chart = null;
+    console.log("unknown preset selected")
+    return false;
+  }
+  let tempColumns: ColumnInfo | null;
+  state.chart = state.presets[newval]!;
+  //process decrypted file
+  const datapacks = state.presets[newval]!.datapacks.map(data => data.split(".")[0] + ".txt")
+  const res = await fetcher(`/datapackinfo/${datapacks.join(" ")}`, {
+    method: "GET"
+  })
+  // get the columns and map info
+  const reply = await res.json()
+  // console.log("reply of columns: ", JSON.stringify(columns, null, 2))
+  // console.log("reply of maps: ", JSON.stringify(maps, null, 2))
+  try {
+    // console.log(reply)
+    assertMapInfo(reply.mapInfo)
+    assertColumnInfo(reply.columnInfo)
+    assertMapHierarchy(reply.mapHierarchy)
+    setMapInfo(reply.mapInfo)
+    setSettingsColumns(reply.columnInfo)
+    setMapHierarchy(reply.mapHierarchy)
+  } catch (e) {
+    if (isServerResponseError(reply)) {
+      console.log("Server failed to send datapack info with error: ", reply.error)
+    } else {
+      console.log("Failed to fetch datapack info with error: ", e)
+    }
+    resetState()
+    return false
+  }
+
+  // Grab the settings for this chart if there are any:
+  if (state.chart.settings) {
+    // console.log(state.chart.settings);
+    const response = await fetcher(state.chart.settings);
+    const xml = await response.text();
+    if (typeof xml === "string" && xml.match(/<TSCreator/)) {
+      // Call the xmlToJsonParser function here
+      const jsonSettings = xmlToJson(xml);
+      runInAction(() => (state.settingsJSON = jsonSettings)); // Save the parsed JSON to the state.settingsJSON
+
+      //start of column parser to display in app
+      // console.log("Parsed JSON Object:\n", jsonSettings);
+      let temp =
+        jsonSettings["class datastore.RootColumn:Chart Root"][
+          "class datastore.RootColumn:Chart Title"
+        ];
+    } else {
+      console.log(
+        "WARNING: grabbed settings from server at url: ",
+        devSafeUrl(state.chart.settings),
+        ", but it was either not a string or did not have a <TSCreator tag in it"
+      );
+      console.log("The returned settingsXML was: ", xml);
+=======
 export const setChart = action(
   "setChart",
   async (newval: number): Promise<boolean> => {
@@ -54,14 +118,12 @@ export const setChart = action(
     // console.log("reply of columns: ", JSON.stringify(columns, null, 2))
     // console.log("reply of maps: ", JSON.stringify(maps, null, 2))
     try {
-      // console.log(reply)
-    assertMapInfo(reply.mapInfo);
+      assertMapInfo(reply.mapInfo);
       assertColumnInfo(reply.columnInfo);
       assertMapHierarchy(reply.mapHierarchy);
       setMapInfo(reply.mapInfo);
       setSettingsColumns(reply.columnInfo);
-      setMapHierarchy(reply.mapHierarchy)
-  } catch (e) {
+    } catch (e) {
       if (isServerResponseError(reply)) {
         console.log(
           "Server failed to send datapack info with error: ",
@@ -72,6 +134,7 @@ export const setChart = action(
       }
       resetState();
       return false;
+>>>>>>> Stashed changes
     }
 
     // Grab the settings for this chart if there are any:
@@ -271,6 +334,10 @@ export const updateSettings = action("updateSettings", () => {
   if ("settingsTabs" in jsonSettings) {
     const settingsTabs = jsonSettings as any;
   }
+<<<<<<< Updated upstream
+=======
+  //console.log(jsonSettings);
+>>>>>>> Stashed changes
   const xmlSettings = jsonToXml(jsonSettings); // Convert JSON to XML using jsonToXml function
 
   //console.log("Updated settingsXML:\n", xmlSettings); // Print the updated XML
@@ -396,16 +463,29 @@ export const toggleSettingsTabColumn = action(
     let curcol: ColumnInfo | null = state.settingsTabs.columns;
     const orig = curcol;
     // Walk down the path of parents in the tree of columns
-    console.log("name: ", name)
+<<<<<<< Updated upstream
+    // console.log("name: ", name)
     let i = 1
     for (const item of parents) {
-      console.log("item ", i, ": ", item);
+      // console.log("item ", i, ": ", item);
       i++
+=======
+    console.log("name: ", name);
+    let i = 1;
+    for (const item of parents) {
+      console.log("item ", i, ": ", item);
+      i++;
+>>>>>>> Stashed changes
     }
     i = 1;
     for (const p of parents) {
-      console.log("accessing ", p, " of count: ", i)
+<<<<<<< Updated upstream
+      // console.log("accessing ", p, " of count: ", i)
       i++
+=======
+      console.log("accessing ", p, " of count: ", i);
+      i++;
+>>>>>>> Stashed changes
       if (!curcol) {
         console.log(
           "WARNING: tried to access path at parent ",

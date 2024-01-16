@@ -69,7 +69,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                 switch (header) {
                     case 'HEADER-MAP INFO':
                         if (!info || info.length < 4)  {
-                            throw new Error(error)
+                            throw new Error(`${error}: HEADER-MAP INFO isn't properly formatted`)
                         }
                         mapname = String(info[1])
                         map.img = `/${assetconfigs.imagesDirectory}/${String(info[2])}`
@@ -77,19 +77,44 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                         break;
                     case 'HEADER-COORD':
                         if (!info || info.length < 6) {
-                            throw new Error(error)
+                            throw new Error(`${error}: HEADER-COORD isn't properly formatted`)
                         }
                         // TODO: coordtype can be multiple things, so won't always be called upperLeftLon
                         map.coordtype = String(info[1])
-                        map.bounds.upperLeftLon = Number(info[2])
-                        map.bounds.upperLeftLat = Number(info[3])
-                        map.bounds.lowerRightLon = Number(info[4])
-                        map.bounds.lowerRightLat = Number(info[5])
+                        switch (map.coordtype) {
+                            case 'RECTANGULAR':
+                                map.bounds = {
+                                    upperLeftLon: Number(info[2]),
+                                    upperLeftLat: Number(info[3]),
+                                    lowerRightLon: Number(info[4]),
+                                    lowerRightLat: Number(info[5])
+                                }
+                                // map.bounds.upperLeftLon = Number(info[2])
+                                // map.bounds.upperLeftLat = Number(info[3])
+                                // map.bounds.lowerRightLon = Number(info[4])
+                                // map.bounds.lowerRightLat = Number(info[5])
+                                break
+                            case 'VERTICAL PERSPECTIVE':
+                                map.bounds = {
+                                    centerLat: Number(info[2]),
+                                    centerLon: Number(info[3]),
+                                    height: Number(info[4]),
+                                    scale: Number(info[5])
+                                }
+                                // map.bounds.centerLat = Number(info[2])
+                                // map.bounds.centerLon = Number(info[3])
+                                // map.bounds.height = Number(info[4])
+                                // map.bounds.scale = Number(info[5])
+                                break
+                            default:
+                                throw new Error(`Unrecognized coordtype: ${map.coordtype}`)
+
+                        }
                         break;
                     //TODO: Can this have multiple parents?
                     case 'HEADER-PARENT MAP':
                         if (!info || info.length < 7) {
-                            throw new Error(error)
+                            throw new Error(`${error}: HEADER-PARENT MAP isn't properly formatted`)
                         }
                         // TODO: coordtype can be multiple things, so won't always be called upperLeftLon
                         map.parent = {
@@ -139,7 +164,8 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                             // console.log(info)
                             for (let j = 1; j < info.length; j++) {
                                 if (!settingsNames[j] || !settingsNames[j]!.label) {
-                                    throw new Error(error)
+                                    // throw new Error(`${error}: no settings names exist`)
+                                    continue
                                 }
                                 switch (settingsNames[j]!.label) {
                                     case 'NAME':
@@ -190,7 +216,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                 }
             });
             //if reached here map has been properly processed
-            console.log(map)
+            //console.log(map)
             mapInfo[mapname] = map
         })
     } catch (e) {

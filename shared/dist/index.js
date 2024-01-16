@@ -24,6 +24,8 @@ export function assertChartRequest(o) {
         throw new Error('ChartRequest must be an object');
     if (typeof o.settings !== 'string')
         throw new Error('ChartRequest must have a settings string');
+    if (typeof o.columnSettings !== 'string')
+        throw new Error('ChartRequest must have a columnSettings string');
     if (!Array.isArray(o.datapacks))
         throw new Error('ChartRequest must have a datapacks array');
 }
@@ -99,30 +101,66 @@ export function assertMapInfo(o) {
             if (typeof map.parent.coordtype !== 'string') {
                 throw new Error(`MapInfo' parent value for key '${key}' must have a 'coordtype' string property`);
             }
-            assertBounds(map.parent.bounds);
+            assertBounds(map.parent.coordtype, map.parent.bounds);
         }
         if (typeof map.coordtype !== 'string') {
             throw new Error(`MapInfo' value for key '${key}' must have a 'coordtype' string property`);
         }
-        assertBounds(map.bounds);
+        assertBounds(map.coordtype, map.bounds);
         assertMapPoints(map.mapPoints);
     }
 }
-function assertBounds(bounds) {
-    if (typeof bounds !== 'object' || bounds === null) {
-        throw new Error('Bounds must be a non-null object');
+export function isRectBounds(bounds) {
+    return 'upperLeftLon' in bounds && 'upperLeftLat' in bounds && 'lowerRightLat' in bounds && 'lowerRightLon' in bounds;
+}
+export function isVertBounds(bounds) {
+    return 'centerLat' in bounds && 'centerLon' in bounds && 'height' in bounds && 'scale' in bounds;
+}
+export function assertBounds(coordtype, bounds) {
+    switch (coordtype) {
+        case 'RECTANGULAR':
+            assertRectBounds(bounds);
+            break;
+        case 'VERTICAL PERSPECTIVE':
+            assertVertBounds(bounds);
+            break;
+        default:
+            throw new Error(`Unrecognized coordtype: ${coordtype}`);
+            break;
     }
-    if (typeof bounds.upperLeftLon !== 'number') {
-        throw new Error('Bounds must have an upperLeftLon number property');
+}
+function assertVertBounds(vertBounds) {
+    if (typeof vertBounds !== 'object' || vertBounds === null) {
+        throw new Error('VertBounds must be a non-null object');
     }
-    if (typeof bounds.upperLeftLat !== 'number') {
-        throw new Error('Bounds must have an upperLeftLat number property');
+    if (typeof vertBounds.centerLat !== 'number') {
+        throw new Error('VertBounds must have a centerLat number property');
     }
-    if (typeof bounds.lowerRightLon !== 'number') {
-        throw new Error('Bounds must have a lowerRightLon number property');
+    if (typeof vertBounds.centerLon !== 'number') {
+        throw new Error('VertBounds must have an centerLon number property');
     }
-    if (typeof bounds.lowerRightLat !== 'number') {
-        throw new Error('Bounds must have a lowerRightLat number property');
+    if (typeof vertBounds.height !== 'number') {
+        throw new Error('VertBounds must have a height number property');
+    }
+    if (typeof vertBounds.scale !== 'number') {
+        throw new Error('VertBounds must have a scale number property');
+    }
+}
+function assertRectBounds(rectBounds) {
+    if (typeof rectBounds !== 'object' || rectBounds === null) {
+        throw new Error('RectBounds must be a non-null object');
+    }
+    if (typeof rectBounds.upperLeftLon !== 'number') {
+        throw new Error('RectBounds must have an upperLeftLon number property');
+    }
+    if (typeof rectBounds.upperLeftLat !== 'number') {
+        throw new Error('RectBounds must have an upperLeftLat number property');
+    }
+    if (typeof rectBounds.lowerRightLon !== 'number') {
+        throw new Error('RectBounds must have a lowerRightLon number property');
+    }
+    if (typeof rectBounds.lowerRightLat !== 'number') {
+        throw new Error('RectBounds must have a lowerRightLat number property');
     }
 }
 export function assertMapPoints(o) {

@@ -1,14 +1,17 @@
 import { IconButton, Dialog, DialogContent, Button, List, Box, ListItem, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
 import { useTheme } from "@mui/material/styles"
-import type { MapPoints, MapInfo } from '@tsconline/shared'
+import type { MapHierarchy, Bounds, MapPoints, MapInfo, RectBounds} from '@tsconline/shared'
 import { devSafeUrl } from '../util'
 import AddIcon from '@mui/icons-material/Add'
 import RemoveIcon from '@mui/icons-material/Remove'
-import React, { useState, useRef, useEffect } from "react"
+import React, { useState, useRef, useEffect, useContext } from "react"
+import { context } from '../state';
 import { observer } from "mobx-react-lite"
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
+import { TransformWrapper, TransformComponent, useTransformEffect } from "react-zoom-pan-pinch"
 import { TSCButton } from './TSCButton'
 import { Tooltip } from 'react-tooltip'
+import { isRectBounds, isVertBounds } from '@tsconline/shared'
+import { calculateRectPosition, calculateVertPosition, calculateRectButton } from '../coordinates'
 import 'react-tooltip/dist/react-tooltip.css'
 
 import './TSCMaps.css'
@@ -23,7 +26,6 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo })
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleRowClick = (name: string) => {
-    console.log('Clicked on map:', name);
     setSelectedMap(name);
     setIsDialogOpen(true);
   };
@@ -58,10 +60,9 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo })
           })}
         </List>
       </Box>
-      <Dialog open={isDialogOpen} onClose={handleCloseDialog} 
-        maxWidth={false}
-        >
-        {selectedMap ? <MapDialog mapData={mapInfo[selectedMap]} /> : null}
+
+      <Dialog open={isDialogOpen} onClose={handleCloseDialog} maxWidth={false}>
+        {selectedMap ? <MapDialog name={selectedMap} /> : null}
       </Dialog>
     </div>
   );
@@ -70,51 +71,89 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo })
 /**
  * The map interface that will be recursive so that we can create "multiple" windows.
  */
-const MapDialog = ({ mapData }: {mapData: MapInfo[string]; }) => {
+const MapDialog = ({ name }: {name: string;}) => {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [childName, setChildName] = useState(name)
 
   const handleCloseDialog = () => {
     setDialogOpen(false);
   };
+  const openChild = (childName: string) => {
+    setDialogOpen(true)
+    setChildName(childName)
+  }
 
   return (
     <>
-      <MapViewer mapData={mapData}/>
-      <Dialog open={dialogOpen} onClose={handleCloseDialog}>
-        <MapViewer mapData={mapData}/>
+      <MapViewer openChild={openChild} name={name} />
+      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth={false} >
+        <MapDialog name={childName}/>
       </Dialog>
     </>
   );
 }
 
-type MapViewerProps  = {
-  mapData: MapInfo[string];
+
+function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Bounds, openChild: (childName: string) => void) {
+  if (isRectBounds(childBounds) && isRectBounds(mapBounds)) {
+    const { midpoint, upperLeft, width, height } = calculateRectButton(childBounds, mapBounds)
+    return (
+      <>
+      <Button
+      data-tooltip-id={name}
+      style={{
+        border: "0.5px solid yellow",
+        position: 'absolute',
+        left: `calc(${upperLeft.x}% - ${width / 2}px`,
+        top: `calc(${upperLeft.y}% - ${height / 2}px`,
+        width: width,
+        height: height
+      }} 
+      onClick={() => {openChild(name)}}
+      />
+      <Tooltip
+        id={name}
+        place="bottom"
+        className="tooltip"
+      >
+        <div>
+        <h3 className="header">{`${name}`}</h3>
+        <ul>
+            <li>Latitude: {midpoint.x}</li>
+            <li>Longitude: {midpoint.y}</li>
+            {/* <li>Default: {mapPoint.default || '--'}</li>
+            <li>Minimum Age: {mapPoint.minage || '--'}</li>
+            <li>Maximum Age: {mapPoint.maxage || '--'}</li> */}
+            {/* <li>Note: {mapPoint.note || '--'}</li> */}
+        </ul>
+        </div>
+      </Tooltip>
+      </>
+  )
+  } else {
+    console.log('map and child bounds are not rectbounds')
+    console.log(`mapBounds not recognized, mapBounds are ${JSON.stringify(mapBounds, null, 2)}`)
+    console.log(`childBounds not recognized, childBounds are ${JSON.stringify(childBounds, null, 2)}`)
+    return
+  }
+
 }
 
-const zoomButtonStyle = {
-  height: '20px',
-  width: '100px',
-  margin: '5px'
+
+
+type MapProps  = {
+  name: string;
+  openChild: (childName: string) => void;
 }
 
+const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
+  const {state, actions} = useContext(context)
+  const [imageLoaded, setImageLoaded] = useState(false)
+  const imageRef = useRef<HTMLImageElement | null>(null)
 
-const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
-
-  const calculatePosition = (lat: number, lon: number) => {
-    const {upperLeftLat, upperLeftLon, lowerRightLat, lowerRightLon} = mapData.bounds
-
-    const latRange = Math.abs(upperLeftLat - lowerRightLat);
-    const lonRange = Math.abs(upperLeftLon - lowerRightLon);
-
-    let normalizedLat = (lat - Math.min(upperLeftLat, lowerRightLat)) / latRange;
-    let normalizedLon = (lon - Math.min(upperLeftLon, lowerRightLon)) / lonRange;
-
-    let x = normalizedLon * 100;
-    let y = normalizedLat * 100;
-    y = 100 - y;
-
-    return { x, y };
-  };
+  const mapInfo: MapInfo = state.settingsTabs.mapInfo
+  const mapData: MapInfo[string] = mapInfo[name]
+  const mapHierarchy: MapHierarchy = state.settingsTabs.mapHierarchy
 
   const Controls = (
     { 
@@ -129,9 +168,9 @@ const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
     }
   ) => (
     <div className="controls">
-      <TSCButton style={zoomButtonStyle} onClick={() => zoomIn()}>zoom in</TSCButton>
-      <TSCButton style={zoomButtonStyle} onClick={() => zoomOut()}>zoom out</TSCButton>
-      <TSCButton style={zoomButtonStyle} onClick={() => resetTransform()}>reset</TSCButton>
+      <TSCButton className="zoom-button" onClick={() => zoomIn()}>zoom in</TSCButton>
+      <TSCButton className="zoom-button" onClick={() => zoomOut()}>zoom out</TSCButton>
+      <TSCButton className="zoom-button" onClick={() => resetTransform()}>reset</TSCButton>
     </div>
   );
 
@@ -141,19 +180,31 @@ const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
       disabled: true 
     }}
     minScale={1} 
-    maxScale={2}
+    maxScale={3}
     limitToBounds={true}
     >
       {(utils) => (
       <>
         <TransformComponent >
           <img
+          ref={imageRef}
           src={devSafeUrl(mapData.img)}
           alt="Map" 
           className="map"
+          onLoad={() => setImageLoaded(true)}
           />
-          {Object.entries(mapData.mapPoints).map(([name, point]) => {
-            const position = calculatePosition(point.lat, point.lon);
+          {imageLoaded && Object.entries(mapData.mapPoints).map(([name, point]) => {
+            if (!imageRef || !imageRef.current) return
+            let position = {x: 0, y: 0}
+            if(isRectBounds(mapData.bounds)) {
+              position = calculateRectPosition(point.lat, point.lon, mapData.bounds);
+            } else if (isVertBounds(mapData.bounds)) {
+              const rect = imageRef.current.getBoundingClientRect()
+              position = calculateVertPosition(point.lat, point.lon, rect.height, rect.width, mapData.bounds);
+            } else {
+              console.log(`Bounds is not in the correct format `, JSON.stringify(mapData.bounds, null, 2))
+              return null
+            }
             return (
               <MapPointButton 
               key={name} 
@@ -163,6 +214,13 @@ const MapViewer: React.FC<MapViewerProps> = ({ mapData }) => {
               name={name}/>
             );
           })}
+          {Object.keys(mapHierarchy).includes(name) ? 
+          createChildMapButton(
+            mapHierarchy[name], 
+            mapData.bounds, 
+            mapInfo[mapHierarchy[name]].bounds, 
+            openChild)
+          : null}
         </TransformComponent>
         <Controls {...utils}/>
       </>
@@ -174,24 +232,49 @@ type MapPointButtonProps = {
   mapPoint: MapPoints[string],
   x: number,
   y: number,
-  name: string
+  name: string,
 }
 
-const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name}) => {
+const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name }) => {
+  const [clicked, setClicked] = useState(false)
+  const theme = useTheme()
+
+  // below is the hook for grabbing the scale from map image scaling
+  // commented out because the positioning of the tooltip is seperate from
+  // the map stack hierarchy
+
+  // const [position, setPosition] = useState({scale: 1, x: 0, y: 0})
+  // useTransformEffect(({ state, instance }) => {
+  //   console.log(state); // { previousScale: 1, scale: 1, positionX: 0, positionY: 0 }
+  //   setPosition({scale: state.scale, x: state.positionX, y: state.positionY})
+  //   return () => {
+  //     // unmount
+  //   };
+  // })
+
   return (
     <>
       <Button
         className="map-point"
         style={{
           position: 'absolute',
+          backgroundColor: `${clicked ? theme.palette.selection.dark : 'red'}`,
           left: `calc(${x}% - 10px)`,
           top: `calc(${y}% - 10px)`,
         }}
         data-tooltip-id={name}
+        onClick={() => {
+          setClicked(!clicked)
+        }}
       />
       <Tooltip
         id={name}
         place="bottom"
+        globalCloseEvents={{
+          scroll: true,
+          resize: true,
+          clickOutsideAnchor: true
+        }}
         className="tooltip"
       >
         <div>
