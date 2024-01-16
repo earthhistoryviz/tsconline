@@ -26,100 +26,116 @@ export const resetSettings = action("resetSettings", () => {
   state.settings = {
     topStageKey: "",
     baseStageKey: "",
-    unitsPerMY: 2
-  }
+    unitsPerMY: 2,
+  };
 });
 
-export const setChart = action("setChart", async (newval: number): Promise<boolean> => {
-  resetSettings()
-  //set the settings tab back to time
-  setSettingsTabsSelected(0)
-  if (state.presets.length <= newval) {
-    state.chart = null;
-    console.log("unknown preset selected")
-    return false;
-  }
-  let tempColumns: ColumnInfo | null;
-  state.chart = state.presets[newval]!;
-  //process decrypted file
-  const datapacks = state.presets[newval]!.datapacks.map(data => data.split(".")[0] + ".txt")
-  const res = await fetcher(`/datapackinfo/${datapacks.join(" ")}`, {
-    method: "GET"
-  })
-  // get the columns and map info
-  const reply = await res.json()
-  // console.log("reply of columns: ", JSON.stringify(columns, null, 2))
-  // console.log("reply of maps: ", JSON.stringify(maps, null, 2))
-  try {
-    // console.log(reply)
-    assertMapInfo(reply.mapInfo)
-    assertColumnInfo(reply.columnInfo)
-    assertMapHierarchy(reply.mapHierarchy)
-    setMapInfo(reply.mapInfo)
-    setSettingsColumns(reply.columnInfo)
-    setMapHierarchy(reply.mapHierarchy)
+export const setChart = action(
+  "setChart",
+  async (newval: number): Promise<boolean> => {
+    resetSettings();
+    //set the settings tab back to time
+    setSettingsTabsSelected(0);
+    if (state.presets.length <= newval) {
+      state.chart = null;
+      console.log("unknown preset selected");
+      return false;
+    }
+    let tempColumns: ColumnInfo | null;
+    state.chart = state.presets[newval]!;
+    //process decrypted file
+    const datapacks = state.presets[newval]!.datapacks.map(
+      (data) => data.split(".")[0] + ".txt"
+    );
+    const res = await fetcher(`/datapackinfo/${datapacks.join(" ")}`, {
+      method: "GET",
+    });
+    // get the columns and map info
+    const reply = await res.json();
+    // console.log("reply of columns: ", JSON.stringify(columns, null, 2))
+    // console.log("reply of maps: ", JSON.stringify(maps, null, 2))
+    try {
+      // console.log(reply)
+    assertMapInfo(reply.mapInfo);
+      assertColumnInfo(reply.columnInfo);
+      assertMapHierarchy(reply.mapHierarchy);
+      setMapInfo(reply.mapInfo);
+      setSettingsColumns(reply.columnInfo);
+      setMapHierarchy(reply.mapHierarchy)
   } catch (e) {
-    if (isServerResponseError(reply)) {
-      console.log("Server failed to send datapack info with error: ", reply.error)
-    } else {
-      console.log("Failed to fetch datapack info with error: ", e)
+      if (isServerResponseError(reply)) {
+        console.log(
+          "Server failed to send datapack info with error: ",
+          reply.error
+        );
+      } else {
+        console.log("Failed to fetch datapack info with error: ", e);
+      }
+      resetState();
+      return false;
     }
-    resetState()
-    return false
-  }
 
-  // Grab the settings for this chart if there are any:
-  if (state.chart.settings) {
-    // console.log(state.chart.settings);
-    const response = await fetcher(state.chart.settings);
-    const xml = await response.text();
-    if (typeof xml === "string" && xml.match(/<TSCreator/)) {
-      // Call the xmlToJsonParser function here
-      const jsonSettings = xmlToJson(xml);
-      runInAction(() => (state.settingsJSON = jsonSettings)); // Save the parsed JSON to the state.settingsJSON
+    // Grab the settings for this chart if there are any:
+    if (state.chart.settings) {
+      // const settingsName = state.chart.settings.split("/")[3];
+      const res = await fetcher(`/settingsJson/${settingsName}`, {
+        method: "GET",
+      });
+      const settingsJson = JSON.parse(await res.text());
+      console.log("recieved settings JSON object at set Chart", settingsJson);
+      //console.log( settingsJson);
+      //if (typeof xml === "string" && xml.match(/<TSCreator/)) {
+      if (true) {
+        runInAction(() => (state.settingsJSON = settingsJson)); // Save the parsed JSON to the state.settingsJSON
 
-      //start of column parser to display in app
-      // console.log("Parsed JSON Object:\n", jsonSettings);
-      let temp =
-        jsonSettings["class datastore.RootColumn:Chart Root"][
-          "class datastore.RootColumn:Chart Title"
-        ];
-    } else {
-      console.log(
-        "WARNING: grabbed settings from server at url: ",
-        devSafeUrl(state.chart.settings),
-        ", but it was either not a string or did not have a <TSCreator tag in it"
-      );
-      console.log("The returned settingsXML was: ", xml);
+        //start of column parser to display in app
+        // console.log("Parsed JSON Object:\n", jsonSettings);
+        // let temp =
+        //   settingsJson["class datastore.RootColumn:Chart Root"][
+        //     "class datastore.RootColumn:Chart Title"
+        //   ];
+      } else {
+        console.log(
+          "WARNING: grabbed settings from server at url: ",
+          devSafeUrl(state.chart.settings),
+          ", but it was either not a string or did not have a <TSCreator tag in it"
+        );
+        console.log("The returned settingsXML was: ", xml);
+      }
     }
+    return true;
   }
-  return true
-});
-
+);
 
 /**
  * Sets the geological top stages and the base stages
  * Assuming the given stages includes the stages[TOP] = 0
  */
-export const setGeologicalStages = action("setGeologicalStages", (stages: GeologicalStages) => {
-  let top = stages['TOP']
-  let geologicalTopStages: GeologicalStages = {"Present": 0}
-  Object.keys(stages).map((key) => {
-    geologicalTopStages[key] = top 
-    top = stages[key]
-  })
-  delete stages['TOP']
-  delete geologicalTopStages['TOP']
-  state.settingsTabs.geologicalTopStages = geologicalTopStages 
-  state.settingsTabs.geologicalBaseStages = stages
-});
+export const setGeologicalStages = action(
+  "setGeologicalStages",
+  (stages: GeologicalStages) => {
+    let top = stages["TOP"];
+    let geologicalTopStages: GeologicalStages = { Present: 0 };
+    Object.keys(stages).map((key) => {
+      geologicalTopStages[key] = top;
+      top = stages[key];
+    });
+    delete stages["TOP"];
+    delete geologicalTopStages["TOP"];
+    state.settingsTabs.geologicalTopStages = geologicalTopStages;
+    state.settingsTabs.geologicalBaseStages = stages;
+  }
+);
 
 export const setAllTabs = action("setAllTabs", (newval: boolean) => {
   state.showAllTabs = newval;
 });
-export const setShowPresetInfo = action("setShowPresetInfo", (newval: boolean) => {
-  state.showPresetInfo= newval;
-});
+export const setShowPresetInfo = action(
+  "setShowPresetInfo",
+  (newval: boolean) => {
+    state.showPresetInfo = newval;
+  }
+);
 /**
  * Removes cache in public dir on server
  */
@@ -129,53 +145,57 @@ export const removeCache = action("removeCache", async () => {
   });
   // check if we successfully removed cache
   try {
-    assertSuccessfulServerResponse(response)
-    console.log(`Server successfully deleted cache with message: ${response.message}`)
+    assertSuccessfulServerResponse(response);
+    console.log(
+      `Server successfully deleted cache with message: ${response.message}`
+    );
   } catch (e) {
     if (isServerResponseError(response)) {
-      console.log("Server could not remove cache with error: ", response.error)
+      console.log("Server could not remove cache with error: ", response.error);
     } else {
-      console.log("Server responded with an unknown response with error: ", e)
+      console.log("Server responded with an unknown response with error: ", e);
     }
   }
-})
+});
 
 /**
  * Resets state
  * Only implementation is used when we remove cache
  */
 export const resetState = action("resetState", () => {
-  setChartLoading(true)
-  setChart(0)
-  setChartHash("")
-  setChartPath("")
-  setAllTabs(false)
-  setUseCache(true)
-  setTab(0)
-  setShowPresetInfo(false)
-  setSettingsTabsSelected('time')
-  setSettingsColumns({})
-  setMapInfo({})
-  state.settingsTabs.columnSelected = null
-  state.settingsXML = ""
-  state.settingsJSON = {}
-})
+  setChartLoading(true);
+  setChart(0);
+  setChartHash("");
+  setChartPath("");
+  setAllTabs(false);
+  setUseCache(true);
+  setUsePreset(true);
+  setTab(0);
+  setShowPresetInfo(false);
+  setSettingsTabsSelected("time");
+  setSettingsColumns({});
+  setMapInfo({});
+  state.settingsTabs.columnSelected = null;
+  state.settingsXML = "";
+  state.settingsJSON = {};
+});
 
 export const generateChart = action("generateChart", async () => {
   //set the loading screen and make sure the chart isn't up
   setTab(1);
   setAllTabs(true);
-  setChartLoading(true)
-  setChartHash("")
-  setChartPath("")
-  let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
+  setChartLoading(true);
+  setChartHash("");
+  setChartPath("");
+  //let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
   // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
   var datapacks: string[] = [];
   if (state.chart != null) {
     datapacks = state.chart.datapacks;
   }
   const body = JSON.stringify({
-    settings: xmlSettings,
+    settings: JSON.stringify(state.settingsJSON),
+    columnSettings: JSON.stringify(state.settingsTabs.columns),
     datapacks: datapacks,
   });
   console.log("Sending settings to server...");
@@ -189,7 +209,7 @@ export const generateChart = action("generateChart", async () => {
     assertChartInfo(answer);
     setChartHash(answer.hash);
     setChartPath(devSafeUrl(answer.chartpath));
-    await checkPdfStatus()
+    await checkPdfStatus();
   } catch (e: any) {
     if (isServerResponseError(answer)) {
       console.log(
@@ -218,9 +238,12 @@ export const setChartPath = action("setChartPath", (chartpath: string) => {
 export const setMapInfo = action("setMapInfo", (mapInfo: MapInfo) => {
   state.settingsTabs.mapInfo = mapInfo;
 });
-export const setMapHierarchy = action("setMapHierarchy", (mapHierarchy: MapHierarchy) => {
-  state.settingsTabs.mapHierarchy = mapHierarchy;
-});
+export const setMapHierarchy = action(
+  "setMapHierarchy",
+  (mapHierarchy: MapHierarchy) => {
+    state.settingsTabs.mapHierarchy = mapHierarchy;
+  }
+);
 export const setChartHash = action("setChartHash", (charthash: string) => {
   state.chartHash = charthash;
 });
@@ -251,7 +274,7 @@ export const updateSettings = action("updateSettings", () => {
   }
   const xmlSettings = jsonToXml(jsonSettings); // Convert JSON to XML using jsonToXml function
 
-  console.log("Updated settingsXML:\n", xmlSettings); // Print the updated XML
+  //console.log("Updated settingsXML:\n", xmlSettings); // Print the updated XML
 
   state.settingsXML = xmlSettings;
 });
@@ -368,19 +391,21 @@ export function translateTabToIndex(tab: State["settingsTabs"]["selected"]) {
  * name: the name of the toggled column
  * parents: list of names that indicates the path from top to the toggled column
  */
-export const toggleSettingsTabColumn = action("toggleSettingsTabColumn", (name: string, parents: string[]) => {
+export const toggleSettingsTabColumn = action(
+  "toggleSettingsTabColumn",
+  (name: string, parents: string[]) => {
     let curcol: ColumnInfo | null = state.settingsTabs.columns;
-    const orig = curcol
+    const orig = curcol;
     // Walk down the path of parents in the tree of columns
-    // console.log("name: ", name)
+    console.log("name: ", name)
     let i = 1
     for (const item of parents) {
-      // console.log("item ", i, ": ", item);
+      console.log("item ", i, ": ", item);
       i++
     }
-    i = 1
+    i = 1;
     for (const p of parents) {
-      // console.log("accessing ", p, " of count: ", i)
+      console.log("accessing ", p, " of count: ", i)
       i++
       if (!curcol) {
         console.log(
@@ -450,6 +475,9 @@ export const setSettingsColumns = action((temp: ColumnInfo) => {
 export const setUseCache = action((temp: boolean) => {
   state.useCache = temp;
 });
+export const setUsePreset = action((temp: boolean) => {
+  state.useCache = temp;
+});
 
 export const setcolumnSelected = action((name: string, parents: string[]) => {
   state.settingsTabs.columnSelected = { name, parents };
@@ -504,16 +532,16 @@ export const checkPdfStatus = action(async () => {
     pdfReady = await fetchPdfStatus();
     if (!pdfReady) {
       // Wait for some time before checking again
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, 5000));
     }
   }
   setChartLoading(false);
 });
 
-async function fetchPdfStatus(): Promise<boolean>{
+async function fetchPdfStatus(): Promise<boolean> {
   try {
     if (state.chartHash === "") {
-      return false
+      return false;
     }
     const response = await fetcher(`/pdfstatus/${state.chartHash}`, {
       method: "GET",
@@ -524,5 +552,4 @@ async function fetchPdfStatus(): Promise<boolean>{
     console.error("Error checking PDF status", error);
     return false;
   }
-
 }

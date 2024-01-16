@@ -13,6 +13,7 @@ export type ServerResponseError = {
 export type Preset = ChartConfig | ServerResponseError;
 export type ChartRequest = {
     settings: string;
+    columnSettings: string;
     datapacks: string[];
 };
 export declare function assertChartRequest(o: any): asserts o is ChartRequest;

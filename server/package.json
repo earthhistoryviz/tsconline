@@ -23,6 +23,7 @@
     "@tsconline/shared": "workspace:^",
     "@types/cors": "^2.8.13",
     "@types/md5": "^2.3.2",
+    "@xmldom/xmldom": "0.8.10",
     "cors": "^2.8.5",
     "fastify": "^4.17.0",
     "glob": "^10.2.3",

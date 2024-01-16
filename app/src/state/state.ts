@@ -1,7 +1,12 @@
 import { observable } from "mobx";
 
-import type { MapHierarchy, MapInfo, ChartConfig, ColumnInfo, GeologicalStages} from "@tsconline/shared";
-
+import type {
+  MapHierarchy,
+  MapInfo,
+  ChartConfig,
+  ColumnInfo,
+  GeologicalStages,
+} from "@tsconline/shared";
 
 export type State = {
   chartLoading: boolean;
@@ -29,10 +34,11 @@ export type State = {
     unitsPerMY: number;
   };
   useCache: boolean;
+  usePreset: boolean;
 };
 
 export const state = observable<State>({
-  chartLoading: true, 
+  chartLoading: true,
   tab: 0,
   showAllTabs: false,
   showPresetInfo: false,
@@ -41,9 +47,9 @@ export const state = observable<State>({
     columns: {},
     columnSelected: null,
     geologicalTopStages: {},
-    geologicalBaseStages: {} ,
-    mapInfo: {} ,
-    mapHierarchy: {}
+    geologicalBaseStages: {},
+    mapInfo: {},
+    mapHierarchy: {},
   },
   chart: null,
   presets: [],
@@ -57,4 +63,5 @@ export const state = observable<State>({
     unitsPerMY: 2,
   },
   useCache: true,
+  usePreset: true,
 });
