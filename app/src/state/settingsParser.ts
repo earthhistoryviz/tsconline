@@ -2,14 +2,11 @@
 //                                          XML to JSON parser                                       //
 //-------------------------------------------------------------------------------------------------- //
 
-import { TempleBuddhist } from "@mui/icons-material";
 import { state } from "./state";
-import { set } from "mobx";
 
 function processSettings(settingsNode: any): any {
   const settings: any = {};
   const settingNodes = settingsNode.getElementsByTagName("setting");
-  //console.log(settingsNode);
   for (let i = 0; i < settingNodes.length; i++) {
     const settingNode = settingNodes[i];
     const settingName = settingNode.getAttribute("name");
@@ -46,6 +43,10 @@ function processSettings(settingsNode: any): any {
       settings[settingName] = settingValue;
     }
   }
+  // console.log(
+  //   "result of processSettings in xmlToJson under actions...\n",
+  //   settings
+  // );
   // console.log(
   //   "result of processSettings in xmlToJson under actions...\n",
   //   settings
@@ -93,7 +94,6 @@ function processColumn(node: any): any {
           const justificationValue = child.getAttribute("justification");
           const orientationValue = child.getAttribute("orientation");
           const useNamedValue = child.getAttribute("useNamed");
-          //console.log(settingName);
           if (
             settingName === "backgroundColor" ||
             settingName === "customColor"
@@ -126,7 +126,7 @@ function processColumn(node: any): any {
 
 //the main parser
 export function xmlToJson(xml: string): any {
-  // console.log("xml at start of xmlToJson...\n", xml);
+  console.log("xml at start of xmlToJson...\n", xml);
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xml, "text/xml");
   const json: any = {};
@@ -147,7 +147,7 @@ export function xmlToJson(xml: string): any {
         processColumn(rootColumnNode);
     }
   }
-  // console.log("json at end of xmlToJson\n", json);
+  console.log("json at end of xmlToJson\n", json);
   return json;
 }
 
@@ -157,23 +157,9 @@ export function xmlToJson(xml: string): any {
 
 function generateSettingsXml(settings: any, indent: string = ""): string {
   let xml = "";
-  //console.log(settings);
   for (const key in settings) {
     if (Object.prototype.hasOwnProperty.call(settings, key)) {
       const value = settings[key];
-      //console.log(key, value);
-      //TODO: hard coded top age and base age for testing africa and nigeria datapack, change later
-      // if (key === "topAge") {
-      //   xml += `${indent}<setting name="${key}" source="text" unit="Ma">\n`;
-      //   xml += `${indent}${indent}<setting name="stage">Present (0 Ma)</setting>\n`;
-      //   xml += `${indent}${indent}<setting name="text">0.0</setting>\n`;
-      //   xml += `${indent}</setting>\n`;
-      // } else if (key === "baseAge") {
-      //   xml += `${indent}<setting name="${key}" source="text" unit="Ma">\n`;
-      //   xml += `${indent}${indent}<setting name="stage">Lt. Pleist. (0.129 Ma base</setting>\n`;
-      //   xml += `${indent}${indent}<setting name="text">10.0</setting>\n`;
-      //   xml += `${indent}</setting>\n`;
-      // }
       if (typeof value === "object") {
         if (key === "topAge" || key === "baseAge") {
           xml += `${indent}<setting name="${key}" source="${value.source}" unit="${value.unit}">\n`;
@@ -210,9 +196,6 @@ function generateColumnXml(
   indent: string
 ): string {
   let xml = "";
-  //let columns = state.settingsTabs.columns;
-  //console.log("start ", parent, column, stateColumn);
-  //console.log("poop", jsonColumn);
   for (let key in jsonColumn) {
     if (Object.prototype.hasOwnProperty.call(jsonColumn, key)) {
       //for replacing special characters in the key to its xml versions
@@ -336,7 +319,6 @@ function generateColumnXml(
 export function jsonToXml(json: any, version: string = "PRO8.1"): string {
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
-  //console.log("json 2...\n", state.settingsJSON);
   if (json["settings"]) {
     xml += '  <settings version="1.0">\n';
     xml += generateSettingsXml(json["settings"], "    ");
@@ -357,7 +339,6 @@ export function jsonToXml(json: any, version: string = "PRO8.1"): string {
         key !== "settings" &&
         Object.hasOwn(json, key) //maybe not necessary since we are iterating over the keys of json
       ) {
-        //console.log(key);
         xml += `  <column id="${key}">\n`;
         xml += generateColumnXml(
           json[key],
@@ -370,31 +351,6 @@ export function jsonToXml(json: any, version: string = "PRO8.1"): string {
     }
   }
   xml += "</TSCreator>\n";
-  //when the xml file is converted to json, the special characters in xml are
-  //changed back to their original characters. The next code is to change them back
-  //so the java app can have the correct xml format. Currently only works with the
-  //Africa Nigeria map, more edge cases might be considered with other datapacks.
-  // xml = xml.replaceAll("&", "&amp;");
-  // xml = xml.replaceAll(" < ", " &lt; ");
-  // xml = xml.replaceAll(" > ", " &gt; ");
-  // xml = xml.replaceAll(' "', " &quot;");
-  // xml = xml.replaceAll("'", "&apos;");
-  // for (let i = 5; i < xml.length; i++) {
-  //   if (
-  //     xml.at(i) === '"' &&
-  //     xml.at(i - 1) !== "=" &&
-  //     xml.at(i + 1) !== "/" &&
-  //     xml.at(i + 1) !== ">" &&
-  //     xml.at(i + 1) !== ">" &&
-  //     xml.at(i + 1) !== "?" &&
-  //     xml.at(i + 1) !== " "
-  //   ) {
-  //     xml = xml.substring(0, i) + "&quot;" + xml.substring(i + 1, xml.length);
-  //   }
-  //   if (xml.at(i) === "<" && xml.at(i - 1) === "(") {
-  //     xml = xml.substring(0, i) + "&lt;" + xml.substring(i + 1, xml.length);
-  //   }
-  // }
-  console.log("printing final xml...\n", xml);
+  //console.log("printing final xml...\n", xml);
   return xml;
 }

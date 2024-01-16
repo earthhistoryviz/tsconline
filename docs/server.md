@@ -100,7 +100,8 @@ A chart request must be
 
 ```js
 export type ChartRequest = {
-  settings: string, // XML string representing the settings file you want to use to make a chart
+  settings: string, // Json string representing the settings file you want to use to make a chart
+  columnSettings: string, //Json string representing the state of the application when generating, contains the user's changes
   datapacks: string[], // active datapacks to be used on chart
 };
 ```

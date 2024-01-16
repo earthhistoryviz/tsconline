@@ -216,7 +216,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                 }
             });
             //if reached here map has been properly processed
-            console.log(map)
+            //console.log(map)
             mapInfo[mapname] = map
         })
     } catch (e) {
