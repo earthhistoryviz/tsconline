@@ -32,13 +32,14 @@ export const calculateRectButton = (childBounds: RectBounds, parentBounds: RectB
 }
 
 export const calculateVertPosition = (lat: number, lon: number, frameHeight: number, frameWidth: number, bounds: VertBounds) => {
+    console.log(`frameHeight ${frameHeight}`)
+    console.log(`frameWidth ${frameWidth}`)
     lat = toRadians(lat)
     lon = toRadians(lon)
     let centerLat = toRadians(bounds.centerLat)
     let centerLon = toRadians(bounds.centerLon)
     const noOfKmPerPix = bounds.scale / (0.4 * frameWidth); // 10% of the frameWidth (pixels) = scale (Km).
     const noOfPixPerKm = (0.4 * frameWidth) / bounds.scale; // scale (Km) = 10% of the frameWidth (pixels).
-
     const lonOffset = lon - centerLon; // longitude offset from the center
 
     const P = (bounds.height / RADIUS) + 1; // Normalized distance above sphere

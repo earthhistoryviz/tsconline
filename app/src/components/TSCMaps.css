@@ -21,8 +21,8 @@
 }
 .MuiButton-root.map-point {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   padding: 0;
   /* background-color: red; */
