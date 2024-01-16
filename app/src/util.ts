@@ -15,7 +15,6 @@ export function devSafeUrl(url: string) {
       new Error().stack
     );
   }
-  url.replaceAll("/", "%2F");
 
   // vite sets this variable to true if you are running `yarn dev`, but if you
   // are running from the built files in dist/ (i.e. they are served to the
