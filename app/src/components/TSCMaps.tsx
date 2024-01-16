@@ -152,6 +152,12 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
   const mapInfo: MapInfo = state.settingsTabs.mapInfo
   const mapData: MapInfo[string] = mapInfo[name]
   const mapHierarchy: MapHierarchy = state.settingsTabs.mapHierarchy
+  window.onload = () => {
+    const img: HTMLImageElement | null = document.getElementById("map") as HTMLImageElement
+    if (img) {
+      console.log(`Width: ${img.naturalWidth}, Height: ${img.naturalHeight}`)
+    }
+  }
 
   const Controls = (
     { 
@@ -185,6 +191,7 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
       <>
         <TransformComponent >
           <img
+          id="map"
           ref={imageRef}
           src={devSafeUrl(mapData.img)}
           alt="Map" 
@@ -197,8 +204,7 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
             if(isRectBounds(mapData.bounds)) {
               position = calculateRectPosition(point.lat, point.lon, mapData.bounds);
             } else if (isVertBounds(mapData.bounds)) {
-              const rect = imageRef.current.getBoundingClientRect()
-              position = calculateVertPosition(point.lat, point.lon, rect.height, rect.width, mapData.bounds);
+              position = calculateVertPosition(point.lat, point.lon, imageRef.current.naturalHeight, imageRef.current.naturalWidth, mapData.bounds);
             } else {
               console.log(`Bounds is not in the correct format `, JSON.stringify(mapData.bounds, null, 2))
               return null
@@ -257,8 +263,8 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name }) 
         style={{
           position: 'absolute',
           backgroundColor: `${clicked ? theme.palette.selection.dark : 'red'}`,
-          left: `calc(${x}% - 10px)`,
-          top: `calc(${y}% - 10px)`,
+          left: `calc(${x}% - 2.5px)`,
+          top: `calc(${y}% - 2.5px)`,
         }}
         data-tooltip-id={name}
         onClick={() => {
