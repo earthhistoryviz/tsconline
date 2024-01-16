@@ -1,10 +1,8 @@
-import { IconButton, Dialog, DialogContent, Button, List, Box, ListItem, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
+import { Dialog, Button, List, Box, ListItem, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
 import { useTheme } from "@mui/material/styles"
 import type { MapHierarchy, Bounds, MapPoints, MapInfo, RectBounds} from '@tsconline/shared'
 import { devSafeUrl } from '../util'
-import AddIcon from '@mui/icons-material/Add'
-import RemoveIcon from '@mui/icons-material/Remove'
-import React, { useState, useRef, useEffect, useContext } from "react"
+import React, { useState, useRef, useContext } from "react"
 import { context } from '../state';
 import { observer } from "mobx-react-lite"
 import { TransformWrapper, TransformComponent, useTransformEffect } from "react-zoom-pan-pinch"

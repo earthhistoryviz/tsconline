@@ -3,17 +3,16 @@ import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
 import { writeFile, stat } from "fs/promises";
 import { assertChartRequest, type DatapackResponse } from "@tsconline/shared";
-import { deleteDirectory, grabFilepaths } from "./util.js";
+import { deleteDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
 import { grabMapImages, grabMapInfo } from "./mappacks.js";
 import md5 from "md5";
 import assetconfigs from "./index.js";
 import PDFParser from "pdf2json";
 import fs from "fs";
-import path from "path";
 import { readFile } from "fs/promises";
 
-export const fetchSettingsJson = async function fetchDatapackInfo(
+export const fetchSettingsJson = async function fetchSettingsJson(
   request: FastifyRequest<{ Params: { settingFile: string } }>,
   reply: FastifyReply
 ) {

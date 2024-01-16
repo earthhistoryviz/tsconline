@@ -1,5 +1,5 @@
 import { Checkbox, CheckboxProps } from '@mui/material'
-import { useTheme, styled } from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
 
 interface TSCCheckboxProps extends CheckboxProps {
   checked?: boolean,

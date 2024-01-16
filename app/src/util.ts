@@ -29,7 +29,6 @@ export function devSafeUrl(url: string) {
 export async function fetcher(
   ...args: Parameters<typeof fetch>
 ): ReturnType<typeof fetch> {
-  console.log(args[0]);
   if (import.meta.env.DEV) {
     if (typeof args[0] === "string") {
       args[0] = devSafeUrl(args[0]);
