@@ -66,6 +66,7 @@ export async function grabFilepaths(files: string[], topDirectory: string, botDi
         return `${topDirectory}/${filename}/${botDirectory}/.*`
     }).join('|'));
     let paths = await glob(`${topDirectory}/**/*`);
+    paths = paths.map(path => path.replace(/\\/g, '/'))
     paths = paths.filter(path => pattern.test(path));
     return paths 
 }
