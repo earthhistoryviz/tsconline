@@ -55,7 +55,7 @@ export const setChart = action(
     // console.log("reply of maps: ", JSON.stringify(maps, null, 2))
     try {
       // console.log(reply)
-    assertMapInfo(reply.mapInfo);
+      assertMapInfo(reply.mapInfo);
       assertColumnInfo(reply.columnInfo);
       assertMapHierarchy(reply.mapHierarchy);
       setMapInfo(reply.mapInfo);
@@ -82,25 +82,7 @@ export const setChart = action(
       });
       const settingsJson = JSON.parse(await res.text());
       console.log("recieved settings JSON object at set Chart", settingsJson);
-      //console.log( settingsJson);
-      //if (typeof xml === "string" && xml.match(/<TSCreator/)) {
-      if (true) {
-        runInAction(() => (state.settingsJSON = settingsJson)); // Save the parsed JSON to the state.settingsJSON
-
-        //start of column parser to display in app
-        // console.log("Parsed JSON Object:\n", jsonSettings);
-        // let temp =
-        //   settingsJson["class datastore.RootColumn:Chart Root"][
-        //     "class datastore.RootColumn:Chart Title"
-        //   ];
-      } else {
-        console.log(
-          "WARNING: grabbed settings from server at url: ",
-          devSafeUrl(state.chart.settings),
-          ", but it was either not a string or did not have a <TSCreator tag in it"
-        );
-        console.log("The returned settingsXML was: ", xml);
-      }
+      runInAction(() => (state.settingsJSON = settingsJson)); // Save the parsed JSON to the state.settingsJSON
     }
     return true;
   }
@@ -271,11 +253,12 @@ export const updateSettings = action("updateSettings", () => {
   if ("settingsTabs" in jsonSettings) {
     const settingsTabs = jsonSettings as any;
   }
-  const xmlSettings = jsonToXml(jsonSettings); // Convert JSON to XML using jsonToXml function
+  // uncomment later
+  // const xmlSettings = jsonToXml(jsonSettings); // Convert JSON to XML using jsonToXml function
 
   //console.log("Updated settingsXML:\n", xmlSettings); // Print the updated XML
 
-  state.settingsXML = xmlSettings;
+  // state.settingsXML = xmlSettings;
 });
 
 //update the checkboxes
