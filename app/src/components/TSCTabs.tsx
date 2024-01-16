@@ -1,5 +1,5 @@
 import { TabsProps, Tabs, TabProps, Tab} from '@mui/material'
-import { useTheme, styled } from "@mui/material/styles";
+import { styled } from "@mui/material/styles";
 
 interface TSCTabsProps extends TabsProps {
   children?: React.ReactNode;

@@ -1,4 +1,5 @@
-import { jsonToXml, parseDatapacks, xmlToJson } from "./parse.js";
+import { parseDatapacks } from "./parse-datapacks.js";
+import { jsonToXml, xmlToJson } from "./parse-settings.js";
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
 import { writeFile, stat } from "fs/promises";
