@@ -15,7 +15,6 @@ import {
 } from "@tsconline/shared";
 import { state, State } from "./state";
 import { fetcher, devSafeUrl } from "../util";
-import { xmlToJson, jsonToXml } from "./settingsParser";
 import { ConstructionOutlined } from "@mui/icons-material";
 
 export const setTab = action("setTab", (newval: number) => {
@@ -77,7 +76,7 @@ export const setChart = action(
 
     // Grab the settings for this chart if there are any:
     if (state.chart.settings) {
-      // const settingsName = state.chart.settings.split("/")[3];
+      const settingsName = state.chart.settings.split("/")[3];
       const res = await fetcher(`/settingsJson/${settingsName}`, {
         method: "GET",
       });
