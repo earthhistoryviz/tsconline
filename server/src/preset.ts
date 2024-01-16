@@ -1,11 +1,13 @@
 import { readFile } from 'fs/promises';
 import { glob } from 'glob';
+import { normalize } from 'path'
 import pmap from 'p-map';
 import { type Preset, assertChartConfig  } from '@tsconline/shared';
 
 export async function loadPresets(): Promise<Preset[]> {
   // Build the list of presets from the filesystem:
-  const chartconfig_paths = await glob(`public/presets/*-*/config.json`);
+  let chartconfig_paths = await glob(`public/presets/*-*/config.json`);
+  chartconfig_paths = chartconfig_paths.map(path => path.replace(/\\/g, '/'))
   // Sort them alphabetically:
   chartconfig_paths.sort();
   // Load all the configs out of all the files in public/presets:

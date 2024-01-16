@@ -46,10 +46,10 @@ function processSettings(settingsNode: any): any {
       settings[settingName] = settingValue;
     }
   }
-  console.log(
-    "result of processSettings in xmlToJson under actions...\n",
-    settings
-  );
+  // console.log(
+  //   "result of processSettings in xmlToJson under actions...\n",
+  //   settings
+  // );
   return settings;
 }
 
@@ -131,7 +131,7 @@ function processColumn(node: any): any {
 
 //the main parser
 export function xmlToJson(xml: string): any {
-  console.log("xml at start of xmlToJson...\n", xml);
+  // console.log("xml at start of xmlToJson...\n", xml);
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xml, "text/xml");
   const json: any = {};
@@ -152,7 +152,7 @@ export function xmlToJson(xml: string): any {
         processColumn(rootColumnNode);
     }
   }
-  console.log("json at end of xmlToJson\n", json);
+  // console.log("json at end of xmlToJson\n", json);
   return json;
 }
 
@@ -400,6 +400,6 @@ export function jsonToXml(json: any, version: string = "PRO8.1"): string {
   //     xml = xml.substring(0, i) + "&lt;" + xml.substring(i + 1, xml.length);
   //   }
   // }
-  console.log("printing final xml...\n", xml);
+  // console.log("printing final xml...\n", xml);
   return xml;
 }
