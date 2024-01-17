@@ -25,6 +25,7 @@
   height: 10px;
   border-radius: 50%;
   padding: 0;
+  z-index: 2;
   /* background-color: red; */
 }
 .MuiButton-root.map-point:hover {
