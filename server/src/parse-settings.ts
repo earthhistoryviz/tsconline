@@ -154,16 +154,26 @@ export function xmlToJson(xml: string): any {
 //                                          JSON to XML parser                                       //
 //-------------------------------------------------------------------------------------------------- //
 
-function replaceSpecialChars(text: string): string {
+//for escaping special characters in xml (& " ' < >)
+//in text, " ' > do not need to be escaped.
+//in attributes, all 5 need to be escaped.
+//https://stackoverflow.com/questions/1091945/what-characters-do-i-need-to-escape-in-xml-documents
+function replaceSpecialChars(text: string, type: string): string {
   text = text.replaceAll("&", "&amp;");
-  text = text.replaceAll('"', "&quot;");
   text = text.replaceAll("<", " &lt; ");
-  text = text.replaceAll(">", " &gt; ");
-  text = text.replaceAll("'", "&apos;");
+  if (type === "attribute") {
+    text = text.replaceAll('"', "&quot;");
+    text = text.replaceAll("'", "&apos;");
+    text = text.replaceAll(">", " &gt; ");
+  }
+  //edge case for usa alaska mexico datapack
+  if (text.includes("Alaska")) {
+    text = text.replaceAll("&apos;", "'");
+  }
   return text;
 }
 
-function generateSettingsXml(settings: any, indent: string = ""): string {
+function generateSettingsXml(settings: any, indent: string): string {
   let xml = "";
   //console.log(settings);
   for (const key in settings) {
@@ -172,7 +182,7 @@ function generateSettingsXml(settings: any, indent: string = ""): string {
       if (typeof value === "object") {
         if (key === "topAge" || key === "baseAge") {
           xml += `${indent}<setting name="${key}" source="${value.source}" unit="${value.unit}">\n`;
-          xml += `${indent}  <setting name="text">${value.text}</setting>\n`;
+          xml += `${indent}    <setting name="text">${value.text}</setting>\n`;
           xml += `${indent}</setting>\n`;
         } else if (key === "unitsPerMY" || key === "skipEmptyColumns") {
           xml += `${indent}<setting name="${key}" unit="${value.unit}">${value.text}</setting>\n`;
@@ -209,7 +219,7 @@ function generateColumnXml(
   for (let key in jsonColumn) {
     if (Object.prototype.hasOwnProperty.call(jsonColumn, key)) {
       //for replacing special characters in the key to its xml versions
-      let xmlKey = replaceSpecialChars(key);
+      let xmlKey = replaceSpecialChars(key, "attribute");
       //console.log(jsonColumn[key]);
       if (key === "_id") {
         // Skip the 'id' element.
@@ -261,7 +271,7 @@ function generateColumnXml(
         )}>\n`;
       } else if (key === "fonts") {
         xml += `${indent}<fonts>\n`;
-        xml += generateFontsXml(jsonColumn[key], `${indent}  `);
+        xml += generateFontsXml(jsonColumn[key], `${indent}    `);
         xml += `${indent}</fonts>\n`;
       } else if (typeof jsonColumn[key] === "object") {
         xml += `${indent}<column id="${xmlKey}">\n`;
@@ -271,7 +281,7 @@ function generateColumnXml(
             jsonColumn[key],
             stateColumn,
             key,
-            `${indent}  `
+            `${indent}    `
           );
         }
         //recursively go down column settings
@@ -285,7 +295,7 @@ function generateColumnXml(
               jsonColumn[key],
               null,
               temp,
-              `${indent}  `
+              `${indent}    `
             );
           }
           if (stateColumn != null) {
@@ -298,7 +308,7 @@ function generateColumnXml(
                 jsonColumn[key],
                 null,
                 temp,
-                `${indent}  `
+                `${indent}    `
               );
             } else {
               //more children to be had
@@ -306,14 +316,17 @@ function generateColumnXml(
                 jsonColumn[key],
                 stateColumn.children[temp],
                 temp,
-                `${indent}  `
+                `${indent}    `
               );
             }
           }
         }
         xml += `${indent}</column>\n`;
       } else {
-        xml += `${indent}<setting name="${xmlKey}">${replaceSpecialChars(jsonColumn[key])}</setting>\n`;
+        xml += `${indent}<setting name="${xmlKey}">${replaceSpecialChars(
+          jsonColumn[key],
+          "text"
+        )}</setting>\n`;
       }
     }
   }
