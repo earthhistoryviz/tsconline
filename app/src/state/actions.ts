@@ -54,7 +54,6 @@ export const setChart = action(
     // console.log("reply of columns: ", JSON.stringify(columns, null, 2))
     // console.log("reply of maps: ", JSON.stringify(maps, null, 2))
     try {
-      // console.log(reply)
       assertMapInfo(reply.mapInfo);
       assertColumnInfo(reply.columnInfo);
       assertMapHierarchy(reply.mapHierarchy);

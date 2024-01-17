@@ -36,7 +36,7 @@ export function isServerResponseError(o) {
         return false;
     return true;
 }
-// export type ChartResponse = ChartResponseInfo | ServerResponseError;
+// export type ChartResponse = ChartResponseInfo | ServerResponseError
 export function assertChartInfo(o) {
     if (!o || typeof o !== 'object')
         throw new Error('ChartInfo must be an object');
@@ -71,8 +71,8 @@ export function assertMapHierarchy(o) {
     }
     for (const key in o) {
         const map = o[key];
-        if (typeof o[key] !== 'string') {
-            throw new Error(`MapHierarchy value for key '${key}' must be a string object`);
+        if (!Array.isArray(map)) {
+            throw new Error(`MapHierarchy value for key '${key}' must be a string array`);
         }
     }
 }

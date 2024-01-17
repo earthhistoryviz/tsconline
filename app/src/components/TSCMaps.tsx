@@ -185,6 +185,7 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
       {(utils) => (
       <>
         <TransformComponent >
+          <>
           <img
           id="map"
           ref={imageRef}
@@ -213,13 +214,20 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
               name={name}/>
             );
           })}
-          {Object.keys(mapHierarchy).includes(name) ? 
-          createChildMapButton(
-            mapHierarchy[name], 
-            mapData.bounds, 
-            mapInfo[mapHierarchy[name]].parent!.bounds, 
-            openChild)
-          : null}
+          {Object.keys(mapHierarchy).includes(name) && mapHierarchy[name].map((child, index) => {
+            console.log(index)
+            console.log(child)
+            // name is the parentMap
+            // mapHierarchy[name] contains all the children of the parent map
+            // this will call for each child of name
+            return createChildMapButton(
+              child, 
+              mapData.bounds, 
+              mapInfo[mapHierarchy[name][Number(index)]].parent!.bounds, 
+              openChild
+              )
+            })}
+          </>
         </TransformComponent>
         <Controls {...utils}/>
       </>
