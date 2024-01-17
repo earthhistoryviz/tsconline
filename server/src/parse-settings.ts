@@ -154,6 +154,15 @@ export function xmlToJson(xml: string): any {
 //                                          JSON to XML parser                                       //
 //-------------------------------------------------------------------------------------------------- //
 
+function replaceSpecialChars(text: string): string {
+  text = text.replaceAll("&", "&amp;");
+  text = text.replaceAll('"', "&quot;");
+  text = text.replaceAll("<", " &lt; ");
+  text = text.replaceAll(">", " &gt; ");
+  text = text.replaceAll("'", "&apos;");
+  return text;
+}
+
 function generateSettingsXml(settings: any, indent: string = ""): string {
   let xml = "";
   //console.log(settings);
@@ -200,12 +209,7 @@ function generateColumnXml(
   for (let key in jsonColumn) {
     if (Object.prototype.hasOwnProperty.call(jsonColumn, key)) {
       //for replacing special characters in the key to its xml versions
-      let xmlKey = key;
-      xmlKey = key.replaceAll('"', "quot&;");
-      xmlKey = key.replaceAll("&", "&amp;");
-      xmlKey = key.replaceAll("<", " &lt; ");
-      xmlKey = key.replaceAll(">", " &gt; ");
-      xmlKey = key.replaceAll("'", "&apos;");
+      let xmlKey = replaceSpecialChars(key);
       //console.log(jsonColumn[key]);
       if (key === "_id") {
         // Skip the 'id' element.
@@ -309,7 +313,7 @@ function generateColumnXml(
         }
         xml += `${indent}</column>\n`;
       } else {
-        xml += `${indent}<setting name="${xmlKey}">${jsonColumn[key]}</setting>\n`;
+        xml += `${indent}<setting name="${xmlKey}">${replaceSpecialChars(jsonColumn[key])}</setting>\n`;
       }
     }
   }
