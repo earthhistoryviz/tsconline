@@ -4,7 +4,7 @@ import { grabFilepaths } from './util.js'
 import assetconfigs from './index.js';
 import pmap from 'p-map';
 import type { MapHierarchy, MapInfo, MapPoints, Bounds} from '@tsconline/shared'
-import { assertRectBounds, assertVertBounds, assertParentMap } from '@tsconline/shared';
+import { assertMapHierarchy, assertMapInfo, assertRectBounds, assertVertBounds, assertParentMap } from '@tsconline/shared';
 
 /**
  * Finds all map images and puts them in the public directory
@@ -51,7 +51,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                     lowerRightLon: 0,
                     lowerRightLat: 0
                 },
-                mapPoints: {}
+                mapPoints: {},
             }
             let mapname = ""
             let tabSeparated: string[][] = []
@@ -95,9 +95,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                             case 'VERTICAL PERSPECTIVE':
                                 let vertBounds: any = {}
                                 for (let i = 1; i < info.length; i++) {
-                                    if (!headerLabels[i] || !headerLabels[i]!.label) {
-                                        continue
-                                    }
+                                    if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue
                                     switch (headerLabels[i]!.label) {
                                         case 'CENTER LON':
                                         case 'CENTER LONG':
@@ -133,7 +131,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                         let bounds = grabRectBounds(headerLabels, info)
                         assertRectBounds(bounds)
                         for (let i = 1; i < info.length; i++) {
-                            if (!headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue
+                            if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue
                             switch(headerLabels[i]!.label) {
                                 case "PARENT NAME":
                                     parent.name = info[i]
@@ -163,7 +161,6 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                         }
                         // console.log(settingsNames)
                         // grab setting names for the map point
-                        const headers = grabNames(line);
                         let i = index + 1
                         // iterate over the line and depending on the columns above, figure out which
                         // parts of MapPoints to put it in
@@ -175,11 +172,8 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                             let mapPointName = ""
                             // console.log(info)
                             for (let j = 1; j < info.length; j++) {
-                                if (!headers[j] || !headers[j]!.label) {
-                                    // throw new Error(`${error}: no settings names exist`)
-                                    continue
-                                }
-                                switch (headers[j]!.label) {
+                                if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue
+                                switch (headerLabels[j]!.label) {
                                     case 'NAME':
                                         mapPointName = info[j]!
                                         break;
@@ -202,15 +196,43 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                                         mapPoint.note = String(info[j]!)
                                         break;
                                     default:
-                                        throw new Error(`Unrecognized component of DATACOL: ${headers[j]!.label}`)
+                                        throw new Error(`Unrecognized component of DATACOL: ${headerLabels[j]!.label}`)
                                         break;
                                 }
                             }
                             i++
                             info = tabSeparated[i]
                             map.mapPoints[mapPointName] = mapPoint
+                            break
                         }
-                        break;
+                        break
+                    case "HEADER-INFORMATION POINTS":
+                        if (!info || info.length < 4) {
+                            throw new Error(`Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-INFORMATION POINTS does not have proper format`)
+                        }
+                        let infoPoint: any = {}
+                        let name = ""
+                        for (let i = 1; i < info.length; i++) {
+                            if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue
+                            switch (headerLabels[i]!.label) {
+                                case "NAME":
+                                    name = info[i]!
+                                    break
+                                case "LAT":
+                                    infoPoint.lat = Number(info[i])
+                                    break
+                                case "LONG":
+                                case "LON":
+                                    infoPoint.lon = Number(info[i])
+                                    break
+                                case "NOTE":
+                                    infoPoint.note = info[i]
+                                    break
+                            }
+                        }
+                        if (!map.infoPoints) map.infoPoints = {}
+                        map.infoPoints[name] = infoPoint
+                        break
                 }
             }
             // console.log(tabSeparated)
@@ -235,6 +257,8 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
         console.log("grabMapInfo threw error: ", e)
         throw e
     }
+    assertMapInfo(mapInfo)
+    assertMapHierarchy(mapHierarchy)
     return {mapInfo: mapInfo, mapHierarchy: mapHierarchy}
 }
 
@@ -258,9 +282,7 @@ function grabNames(line: string[]) {
 function grabRectBounds(headerLabels: {[key: number] : {label : string}}, info: string[]) {
     let rectBounds: any = {}
     for (let i = 1; i < info.length; i++) {
-        if (!headerLabels[i] || !headerLabels[i]!.label) {
-            continue
-        }
+        if (!headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue
         switch (headerLabels[i]!.label) {
             case 'UPPER LEFT LON':
             case 'UPPER LEFT LONG':
