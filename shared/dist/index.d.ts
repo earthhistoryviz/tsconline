@@ -44,6 +44,13 @@ export type MapPoints = {
         note?: string;
     };
 };
+export type InfoPoints = {
+    [name: string]: {
+        lat: number;
+        lon: number;
+        note?: string;
+    };
+};
 export type MapInfo = {
     [name: string]: {
         img: string;
@@ -52,6 +59,7 @@ export type MapInfo = {
         coordtype: string;
         bounds: Bounds;
         mapPoints: MapPoints;
+        infoPoints?: InfoPoints;
     };
 };
 export type ParentMap = {
@@ -88,6 +96,7 @@ export declare function isVertBounds(bounds: Bounds): bounds is VertBounds;
 export declare function assertBounds(coordtype: string, bounds: any): asserts bounds is Bounds;
 export declare function assertVertBounds(vertBounds: any): asserts vertBounds is VertBounds;
 export declare function assertRectBounds(rectBounds: any): asserts rectBounds is RectBounds;
+export declare function assertInfoPoints(o: any): asserts o is InfoPoints;
 export declare function assertMapPoints(o: any): asserts o is MapPoints;
 export type SuccessfulServerResponse = {
     message: string;

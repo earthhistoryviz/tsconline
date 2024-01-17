@@ -101,8 +101,6 @@ const MapDialog = ({ name }: {name: string;}) => {
 function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Bounds, openChild: (childName: string) => void) {
   if (isRectBounds(childBounds) && isRectBounds(mapBounds)) {
     const { midpoint, upperLeft, width, height } = calculateRectButton(childBounds, mapBounds)
-    console.log(width)
-    console.log(height)
     return (
       <>
       <Button

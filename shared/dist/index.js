@@ -96,6 +96,9 @@ export function assertMapInfo(o) {
         if (typeof map.coordtype !== 'string') {
             throw new Error(`MapInfo' value for key '${key}' must have a 'coordtype' string property`);
         }
+        if ('infoPoints' in map) {
+            assertInfoPoints(map.infoPoints);
+        }
         assertBounds(map.coordtype, map.bounds);
         assertMapPoints(map.mapPoints);
     }
@@ -163,6 +166,26 @@ export function assertRectBounds(rectBounds) {
     }
     if (typeof rectBounds.lowerRightLat !== 'number') {
         throw new Error('RectBounds must have a lowerRightLat number property');
+    }
+}
+export function assertInfoPoints(o) {
+    if (typeof o !== 'object' || o === null) {
+        throw new Error('InfoPoints must be a non-null object');
+    }
+    for (const key in o) {
+        const point = o[key];
+        if (typeof point !== 'object' || point === null) {
+            throw new Error(`InfoPoints' value for key '${key}' must be a non-null object`);
+        }
+        if (typeof point.lat !== 'number') {
+            throw new Error(`InfoPoints' value for key '${key}' must have a 'lat' number property`);
+        }
+        if (typeof point.lon !== 'number') {
+            throw new Error(`InfoPoints' value for key '${key}' must have a 'lon' number property`);
+        }
+        if (point.note !== undefined && typeof point.note !== 'string') {
+            throw new Error(`InfoPoints' value for key '${key}' must have a 'note' string property`);
+        }
     }
 }
 export function assertMapPoints(o) {
