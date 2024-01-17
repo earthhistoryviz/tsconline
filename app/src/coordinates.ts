@@ -19,14 +19,17 @@ export const calculateRectPosition = (lat: number, lon: number, bounds: RectBoun
 };
 
 export const calculateRectButton = (childBounds: RectBounds, parentBounds: RectBounds) => {
-    let upperLeft = calculateRectPosition(childBounds.upperLeftLat, childBounds.upperLeftLon, parentBounds);
+    let upperLeft = calculateRectPosition(childBounds.upperLeftLat, childBounds.upperLeftLon, parentBounds)
+    let lowerRight = calculateRectPosition(childBounds.lowerRightLat, childBounds.lowerRightLon, parentBounds)
 
     let midpoint = { 
       x: (Math.abs(childBounds.upperLeftLon) + Math.abs(childBounds.lowerRightLon)) / 2, 
       y: (Math.abs(childBounds.upperLeftLat) + Math.abs(childBounds.lowerRightLat)) / 2
     }
-    let width = Math.max(childBounds.lowerRightLon, childBounds.upperLeftLon) - Math.min(childBounds.upperLeftLon, childBounds.lowerRightLon)
-    let height = Math.max(childBounds.lowerRightLat, childBounds.upperLeftLat) - Math.min(childBounds.lowerRightLat, childBounds.upperLeftLat)
+    const width = lowerRight.x - upperLeft.x
+    const height = lowerRight.y - upperLeft.y
+    // let width = Math.abs(Math.max(childBounds.lowerRightLon, childBounds.upperLeftLon) - Math.min(childBounds.upperLeftLon, childBounds.lowerRightLon))
+    // let height = Math.abs(Math.max(childBounds.lowerRightLat, childBounds.upperLeftLat) - Math.min(childBounds.lowerRightLat, childBounds.upperLeftLat))
     
     return {midpoint, upperLeft, width, height}
 }
