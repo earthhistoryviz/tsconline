@@ -113,6 +113,7 @@ function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Boun
         width: `${width}%`,
         height: `${height}%`
       }} 
+      data-tooltip-float={true}
       onClick={() => {openChild(name)}}
       />
       <Tooltip
@@ -240,6 +241,7 @@ function getPosition(bounds: Bounds, point: MapPoints[string], width: number, he
 }
 
 function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidth: number, frameHeight: number, isInfo: boolean) {
+  if (!points) return
   return (Object.entries(points).map(([name, point]) => {
     const position = getPosition(bounds, point, frameWidth, frameHeight)
     if (position == null) return
@@ -297,6 +299,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
           top: `calc(${y}% - 5px)`,
         }}
         data-tooltip-id={name}
+        data-tooltip-float={true}
         onClick={() => {
           setClicked(!clicked)
         }}
