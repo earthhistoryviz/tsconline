@@ -52,7 +52,6 @@ export const setChart = action(
     // get the columns and map info
     const reply = await res.json();
     // console.log("reply of columns: ", JSON.stringify(columns, null, 2))
-    // console.log("reply of maps: ", JSON.stringify(maps, null, 2))
     try {
       assertMapInfo(reply.mapInfo);
       assertColumnInfo(reply.columnInfo);

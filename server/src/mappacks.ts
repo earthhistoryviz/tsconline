@@ -172,7 +172,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                             let mapPointName = ""
                             // console.log(info)
                             for (let j = 1; j < info.length; j++) {
-                                if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue
+                                if (!info[j] || !headerLabels || !headerLabels[j] || !headerLabels[j]!.label) continue
                                 switch (headerLabels[j]!.label) {
                                     case 'NAME':
                                         mapPointName = info[j]!
@@ -203,7 +203,6 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                             i++
                             info = tabSeparated[i]
                             map.mapPoints[mapPointName] = mapPoint
-                            break
                         }
                         break
                     case "HEADER-INFORMATION POINTS":
