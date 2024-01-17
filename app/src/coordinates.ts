@@ -2,6 +2,9 @@ import { RectBounds, VertBounds } from '@tsconline/shared'
 
 const RADIUS = 6371 // radius of Earth in kilometers
 
+/**
+ * Calculates positioning given a rectangular bounds
+ */
 export const calculateRectPosition = (lat: number, lon: number, bounds: RectBounds) => {
     const {upperLeftLat, upperLeftLon, lowerRightLat, lowerRightLon} = bounds
 
@@ -23,8 +26,10 @@ export const calculateRectButton = (childBounds: RectBounds, parentBounds: RectB
     let lowerRight = calculateRectPosition(childBounds.lowerRightLat, childBounds.lowerRightLon, parentBounds)
 
     let midpoint = { 
-      x: (Math.abs(childBounds.upperLeftLon) + Math.abs(childBounds.lowerRightLon)) / 2, 
-      y: (Math.abs(childBounds.upperLeftLat) + Math.abs(childBounds.lowerRightLat)) / 2
+        // x: (Math.abs(childBounds.upperLeftLon) + Math.abs(childBounds.lowerRightLon)) / 2, 
+        x: (childBounds.lowerRightLon + childBounds.upperLeftLon) / 2 ,
+        y: (childBounds.lowerRightLat + childBounds.upperLeftLat) / 2 ,
+        // y: (Math.abs(childBounds.upperLeftLat) + Math.abs(childBounds.lowerRightLat)) / 2
     }
     const width = lowerRight.x - upperLeft.x
     const height = lowerRight.y - upperLeft.y

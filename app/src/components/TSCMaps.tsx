@@ -125,8 +125,8 @@ function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Boun
         <div>
         <h3 className="header">{`${name}`}</h3>
         <ul>
-            <li>Latitude: {midpoint.x}</li>
-            <li>Longitude: {midpoint.y}</li>
+            <li>Latitude: {midpoint.y}</li>
+            <li>Longitude: {midpoint.x}</li>
             {/* <li>Default: {mapPoint.default || '--'}</li>
             <li>Minimum Age: {mapPoint.minage || '--'}</li>
             <li>Maximum Age: {mapPoint.maxage || '--'}</li> */}
