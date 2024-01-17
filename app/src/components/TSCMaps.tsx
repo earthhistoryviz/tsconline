@@ -18,6 +18,7 @@ type MapRowComponentProps = {
   mapInfo: MapInfo; 
 };
 
+//overarching map list that has a hidden dialog box that will open on click
 export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
   const theme = useTheme();
   const [selectedMap, setSelectedMap] = useState<string | null>(null);
@@ -66,9 +67,9 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo })
   );
 });
 
-/**
- * The map interface that will be recursive so that we can create "multiple" windows.
- */
+ // The map interface that will be recursive so that we can create "multiple" windows.
+ // Nested dialogs
+ // TODO: possibly a better container than dialog?
 const MapDialog = ({ name }: {name: string;}) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [childName, setChildName] = useState(name)
@@ -92,6 +93,11 @@ const MapDialog = ({ name }: {name: string;}) => {
 }
 
 
+// This will create the rectangular map button for any children
+// name: name of the child mape
+// mapBounds: bounds of the parent map
+// childBounds: bounds of the child within the parent map
+// openChild: function to open the dialog box in the recrusive call 
 function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Bounds, openChild: (childName: string) => void) {
   if (isRectBounds(childBounds) && isRectBounds(mapBounds)) {
     const { midpoint, upperLeft, width, height } = calculateRectButton(childBounds, mapBounds)
@@ -131,7 +137,7 @@ function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Boun
       </>
   )
   } else {
-    console.log('map and child bounds are not rectbounds')
+    console.log('map and/or child bounds are not rectbounds')
     console.log(`mapBounds not recognized, mapBounds are ${JSON.stringify(mapBounds, null, 2)}`)
     console.log(`childBounds not recognized, childBounds are ${JSON.stringify(childBounds, null, 2)}`)
     return
@@ -244,6 +250,11 @@ type MapPointButtonProps = {
   name: string,
 }
 
+// mapPointButton that pulls up the map points on the image
+// mapPoint: the information of the map point
+// x: % from the left
+// y: % from the top
+// name: name of the map point
 const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name }) => {
   const [clicked, setClicked] = useState(false)
   const theme = useTheme()
@@ -267,7 +278,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name }) 
         className="map-point"
         style={{
           position: 'absolute',
-          backgroundColor: `${clicked ? theme.palette.selection.dark : 'red'}`,
+          backgroundColor: `${clicked ? '#29D532' : 'red'}`,
           left: `calc(${x}% - 5px)`,
           top: `calc(${y}% - 5px)`,
         }}
