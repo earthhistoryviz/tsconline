@@ -32,8 +32,6 @@ export const calculateRectButton = (childBounds: RectBounds, parentBounds: RectB
 }
 
 export const calculateVertPosition = (lat: number, lon: number, frameHeight: number, frameWidth: number, bounds: VertBounds) => {
-    console.log(`frameHeight ${frameHeight}`)
-    console.log(`frameWidth ${frameWidth}`)
     lat = toRadians(lat)
     lon = toRadians(lon)
     let centerLat = toRadians(bounds.centerLat)

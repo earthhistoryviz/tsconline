@@ -48,15 +48,16 @@ export type MapInfo = {
     [name: string]: {
         img: string;
         note?: string;
-        parent?: {
-            name: string;
-            coordtype: string;
-            bounds: Bounds;
-        };
+        parent?: ParentMap;
         coordtype: string;
         bounds: Bounds;
         mapPoints: MapPoints;
     };
+};
+export type ParentMap = {
+    name: string;
+    coordtype: string;
+    bounds: Bounds;
 };
 export type MapHierarchy = {
     [parent: string]: string;
@@ -81,9 +82,12 @@ export type VertBounds = {
 };
 export declare function assertMapHierarchy(o: any): asserts o is MapHierarchy;
 export declare function assertMapInfo(o: any): asserts o is MapInfo;
+export declare function assertParentMap(parent: any): asserts parent is ParentMap;
 export declare function isRectBounds(bounds: Bounds): bounds is RectBounds;
 export declare function isVertBounds(bounds: Bounds): bounds is VertBounds;
 export declare function assertBounds(coordtype: string, bounds: any): asserts bounds is Bounds;
+export declare function assertVertBounds(vertBounds: any): asserts vertBounds is VertBounds;
+export declare function assertRectBounds(rectBounds: any): asserts rectBounds is RectBounds;
 export declare function assertMapPoints(o: any): asserts o is MapPoints;
 export type SuccessfulServerResponse = {
     message: string;

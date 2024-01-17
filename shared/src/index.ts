@@ -107,15 +107,16 @@ export type MapInfo = {
   [name: string]: {
     img: string,
     note?: string,
-    parent?: {
-      name: string,
-      coordtype: string,
-      bounds: Bounds
-    },
+    parent?: ParentMap,
     coordtype: string,
     bounds: Bounds,
     mapPoints: MapPoints,
   }
+}
+export type ParentMap = {
+  name: string,
+  coordtype: string,
+  bounds: Bounds
 }
 export type MapHierarchy = {
   [parent: string]: string
@@ -172,16 +173,6 @@ export function assertMapInfo(o: any): asserts o is MapInfo {
       throw new Error(`MapInfo' value for key '${key}' must have a 'note' string property`);
     }
     if ('parent' in map) {
-      if (typeof map.parent! !== 'object') {
-        throw new Error(`MapInfo' value for key '${key}' has an invalid 'parent' property`);
-      }
-      if (typeof map.parent.name !== 'string') {
-        throw new Error(`MapInfo' parent value for key '${key}' must have a 'name' string property`);
-      }
-      if (typeof map.parent.coordtype !== 'string') {
-        throw new Error(`MapInfo' parent value for key '${key}' must have a 'coordtype' string property`);
-      }
-      assertBounds(map.parent.coordtype, map.parent.bounds)
     }
     if (typeof map.coordtype !== 'string') {
       throw new Error(`MapInfo' value for key '${key}' must have a 'coordtype' string property`);
@@ -189,6 +180,19 @@ export function assertMapInfo(o: any): asserts o is MapInfo {
     assertBounds(map.coordtype, map.bounds);
     assertMapPoints(map.mapPoints);
   }
+}
+
+export function assertParentMap(parent: any): asserts parent is ParentMap {
+    if (typeof parent! !== 'object' || parent == null) {
+      throw new Error(`Parent must be a non-nul object`);
+    }
+    if (typeof parent.name !== 'string') {
+      throw new Error(`Parent must have a name string property`);
+    }
+    if (typeof parent.coordtype !== 'string') {
+      throw new Error(`Parent must have a coordtype string property`);
+    }
+    assertBounds(parent.coordtype, parent.bounds)
 }
 
 export function isRectBounds(bounds: Bounds): bounds is RectBounds {
@@ -213,7 +217,7 @@ export function assertBounds(coordtype: string, bounds: any): asserts bounds is 
   }
 }
 
-function assertVertBounds(vertBounds: any): asserts vertBounds is VertBounds {
+export function assertVertBounds(vertBounds: any): asserts vertBounds is VertBounds {
   if (typeof vertBounds !== 'object' || vertBounds === null) {
     throw new Error('VertBounds must be a non-null object');
   }
@@ -231,7 +235,7 @@ function assertVertBounds(vertBounds: any): asserts vertBounds is VertBounds {
   }
 }
 
-function assertRectBounds(rectBounds: any): asserts rectBounds is RectBounds {
+export function assertRectBounds(rectBounds: any): asserts rectBounds is RectBounds {
   if (typeof rectBounds !== 'object' || rectBounds === null) {
     throw new Error('RectBounds must be a non-null object');
   }
