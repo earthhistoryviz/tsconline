@@ -92,16 +92,6 @@ export function assertMapInfo(o) {
             throw new Error(`MapInfo' value for key '${key}' must have a 'note' string property`);
         }
         if ('parent' in map) {
-            if (typeof map.parent !== 'object') {
-                throw new Error(`MapInfo' value for key '${key}' has an invalid 'parent' property`);
-            }
-            if (typeof map.parent.name !== 'string') {
-                throw new Error(`MapInfo' parent value for key '${key}' must have a 'name' string property`);
-            }
-            if (typeof map.parent.coordtype !== 'string') {
-                throw new Error(`MapInfo' parent value for key '${key}' must have a 'coordtype' string property`);
-            }
-            assertBounds(map.parent.coordtype, map.parent.bounds);
         }
         if (typeof map.coordtype !== 'string') {
             throw new Error(`MapInfo' value for key '${key}' must have a 'coordtype' string property`);
@@ -109,6 +99,18 @@ export function assertMapInfo(o) {
         assertBounds(map.coordtype, map.bounds);
         assertMapPoints(map.mapPoints);
     }
+}
+export function assertParentMap(parent) {
+    if (typeof parent !== 'object' || parent == null) {
+        throw new Error(`Parent must be a non-nul object`);
+    }
+    if (typeof parent.name !== 'string') {
+        throw new Error(`Parent must have a name string property`);
+    }
+    if (typeof parent.coordtype !== 'string') {
+        throw new Error(`Parent must have a coordtype string property`);
+    }
+    assertBounds(parent.coordtype, parent.bounds);
 }
 export function isRectBounds(bounds) {
     return 'upperLeftLon' in bounds && 'upperLeftLat' in bounds && 'lowerRightLat' in bounds && 'lowerRightLon' in bounds;
@@ -129,7 +131,7 @@ export function assertBounds(coordtype, bounds) {
             break;
     }
 }
-function assertVertBounds(vertBounds) {
+export function assertVertBounds(vertBounds) {
     if (typeof vertBounds !== 'object' || vertBounds === null) {
         throw new Error('VertBounds must be a non-null object');
     }
@@ -146,7 +148,7 @@ function assertVertBounds(vertBounds) {
         throw new Error('VertBounds must have a scale number property');
     }
 }
-function assertRectBounds(rectBounds) {
+export function assertRectBounds(rectBounds) {
     if (typeof rectBounds !== 'object' || rectBounds === null) {
         throw new Error('RectBounds must be a non-null object');
     }

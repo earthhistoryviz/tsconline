@@ -95,6 +95,8 @@ const MapDialog = ({ name }: {name: string;}) => {
 function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Bounds, openChild: (childName: string) => void) {
   if (isRectBounds(childBounds) && isRectBounds(mapBounds)) {
     const { midpoint, upperLeft, width, height } = calculateRectButton(childBounds, mapBounds)
+    console.log(upperLeft)
+    console.log(width)
     return (
       <>
       <Button
@@ -204,7 +206,7 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
             if(isRectBounds(mapData.bounds)) {
               position = calculateRectPosition(point.lat, point.lon, mapData.bounds);
             } else if (isVertBounds(mapData.bounds)) {
-              position = calculateVertPosition(point.lat, point.lon, imageRef.current.naturalHeight, imageRef.current.naturalWidth, mapData.bounds);
+              position = calculateVertPosition(point.lat, point.lon, imageRef.current.height, imageRef.current.width, mapData.bounds);
             } else {
               console.log(`Bounds is not in the correct format `, JSON.stringify(mapData.bounds, null, 2))
               return null
@@ -222,7 +224,7 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
           createChildMapButton(
             mapHierarchy[name], 
             mapData.bounds, 
-            mapInfo[mapHierarchy[name]].bounds, 
+            mapInfo[mapHierarchy[name]].parent!.bounds, 
             openChild)
           : null}
         </TransformComponent>
@@ -263,8 +265,8 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name }) 
         style={{
           position: 'absolute',
           backgroundColor: `${clicked ? theme.palette.selection.dark : 'red'}`,
-          left: `calc(${x}% - 2.5px)`,
-          top: `calc(${y}% - 2.5px)`,
+          left: `calc(${x}% - 5px)`,
+          top: `calc(${y}% - 5px)`,
         }}
         data-tooltip-id={name}
         onClick={() => {

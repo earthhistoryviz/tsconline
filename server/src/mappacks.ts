@@ -4,6 +4,7 @@ import { grabFilepaths } from './util.js'
 import assetconfigs from './index.js';
 import pmap from 'p-map';
 import type { MapHierarchy, MapInfo, MapPoints, Bounds} from '@tsconline/shared'
+import { assertRectBounds, assertVertBounds, assertParentMap } from '@tsconline/shared';
 
 /**
  * Finds all map images and puts them in the public directory
@@ -63,6 +64,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
              */
             function processLine (line: string[], index: number) {
                 const header = line[0]
+                const headerLabels = grabNames(line)
                 // console.log(`line: ${line}, index ${index}`)
                 let info = tabSeparated[index + 1]
                 switch (header) {
@@ -82,28 +84,38 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                         map.coordtype = String(info[1])
                         switch (map.coordtype) {
                             case 'RECTANGULAR':
-                                map.bounds = {
-                                    upperLeftLon: Number(info[2]),
-                                    upperLeftLat: Number(info[3]),
-                                    lowerRightLon: Number(info[4]),
-                                    lowerRightLat: Number(info[5])
-                                }
+                                const rectBounds = grabRectBounds(headerLabels, info)
+                                assertRectBounds(rectBounds)
+                                map.bounds = rectBounds
                                 // map.bounds.upperLeftLon = Number(info[2])
                                 // map.bounds.upperLeftLat = Number(info[3])
                                 // map.bounds.lowerRightLon = Number(info[4])
                                 // map.bounds.lowerRightLat = Number(info[5])
                                 break
                             case 'VERTICAL PERSPECTIVE':
-                                map.bounds = {
-                                    centerLat: Number(info[2]),
-                                    centerLon: Number(info[3]),
-                                    height: Number(info[4]),
-                                    scale: Number(info[5])
+                                let vertBounds: any = {}
+                                for (let i = 1; i < info.length; i++) {
+                                    if (!headerLabels[i] || !headerLabels[i]!.label) {
+                                        continue
+                                    }
+                                    switch (headerLabels[i]!.label) {
+                                        case 'CENTER LON':
+                                        case 'CENTER LONG':
+                                            vertBounds.centerLon = Number(info[i])
+                                            break;
+                                        case 'CENTER LAT':
+                                            vertBounds.centerLat = Number(info[i])
+                                            break;
+                                        case 'HEIGHT':
+                                            vertBounds.height = Number(info[i])
+                                            break;
+                                        case 'SCALE':
+                                            vertBounds.scale = Number(info[i])
+                                            break;
+                                    }
                                 }
-                                // map.bounds.centerLat = Number(info[2])
-                                // map.bounds.centerLon = Number(info[3])
-                                // map.bounds.height = Number(info[4])
-                                // map.bounds.scale = Number(info[5])
+                                assertVertBounds(vertBounds)
+                                map.bounds = vertBounds 
                                 break
                             default:
                                 throw new Error(`Unrecognized coordtype: ${map.coordtype}`)
@@ -116,16 +128,24 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                             throw new Error(`${error}: HEADER-PARENT MAP isn't properly formatted`)
                         }
                         // TODO: coordtype can be multiple things, so won't always be called upperLeftLon
-                        map.parent = {
-                            name: String(info[1]),
-                            coordtype: String(info[2]) ,
-                            bounds: {
-                                upperLeftLon: Number(info[3]),
-                                upperLeftLat: Number(info[4]),
-                                lowerRightLon: Number(info[5]),
-                                lowerRightLat: Number(info[6])
+                        let parent: any = {}
+                        //TODO: we only assume rect bounds as parent, will need change if not the case
+                        let bounds = grabRectBounds(headerLabels, info)
+                        assertRectBounds(bounds)
+                        for (let i = 1; i < info.length; i++) {
+                            if (!headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue
+                            switch(headerLabels[i]!.label) {
+                                case "PARENT NAME":
+                                    parent.name = info[i]
+                                    break
+                                case "COORDINATE TYPE":
+                                    parent.coordtype = info[i]
+                                    break
                             }
                         }
+                        parent.bounds = bounds
+                        assertParentMap(parent)
+                        map.parent = parent
                         mapHierarchy[map.parent.name] = mapname
                         // map.parent.coordtype = String(info[1])
                         // map.parent.bounds.upperLeftLon = Number(info[2])
@@ -137,20 +157,9 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                         if (!info || info.length < 3) {
                             throw new Error(`Map info file: ${path.basename(map_info)} is not in the correct format`)
                         }
-                        const settingsNames: {
-                            [key: number]: {
-                                label: string
-                            }
-                        } = {}
-                        // get the header columns to see which ones exist
-                        // EX: HEADER-DATACOL	NAME	LAT	LON	DEFAULT ON/OFF	MIN-AGE	MAX-AGE	NOTE
-                        for (let i = 1; i < line.length; i++) {
-                            if (!line[i]) {
-                                break
-                            }
-                            settingsNames[i] = { label: line[i]! }
-                        }
                         // console.log(settingsNames)
+                        // grab setting names for the map point
+                        const headers = grabNames(line);
                         let i = index + 1
                         // iterate over the line and depending on the columns above, figure out which
                         // parts of MapPoints to put it in
@@ -162,11 +171,11 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                             let mapPointName = ""
                             // console.log(info)
                             for (let j = 1; j < info.length; j++) {
-                                if (!settingsNames[j] || !settingsNames[j]!.label) {
+                                if (!headers[j] || !headers[j]!.label) {
                                     // throw new Error(`${error}: no settings names exist`)
                                     continue
                                 }
-                                switch (settingsNames[j]!.label) {
+                                switch (headers[j]!.label) {
                                     case 'NAME':
                                         mapPointName = info[j]!
                                         break;
@@ -189,7 +198,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                                         mapPoint.note = String(info[j]!)
                                         break;
                                     default:
-                                        throw new Error(`Unrecognized component of DATACOL: ${settingsNames[j]!.label}`)
+                                        throw new Error(`Unrecognized component of DATACOL: ${headers[j]!.label}`)
                                         break;
                                 }
                             }
@@ -223,4 +232,47 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
         throw e
     }
     return {mapInfo: mapInfo, mapHierarchy: mapHierarchy}
+}
+
+function grabNames(line: string[]) {
+    const headerLabels: {
+        [key: number]: {
+            label: string
+        }
+    } = {}
+    // get the header columns to see which ones exist
+    // EX: HEADER-DATACOL	NAME	LAT	LON	DEFAULT ON/OFF	MIN-AGE	MAX-AGE	NOTE
+    for (let i = 1; i < line.length; i++) {
+        if (!line[i]) {
+            break
+        }
+        headerLabels[i] = { label: line[i]! }
+    }
+    return headerLabels 
+}
+
+function grabRectBounds(headerLabels: {[key: number] : {label : string}}, info: string[]) {
+    let rectBounds: any = {}
+    for (let i = 1; i < info.length; i++) {
+        if (!headerLabels[i] || !headerLabels[i]!.label) {
+            continue
+        }
+        switch (headerLabels[i]!.label) {
+            case 'UPPER LEFT LON':
+            case 'UPPER LEFT LONG':
+                rectBounds.upperLeftLon = Number(info[i])
+                break;
+            case 'UPPER LEFT LAT':
+                rectBounds.upperLeftLat = Number(info[i])
+                break;
+            case 'LOWER RIGHT LON':
+            case 'LOWER RIGHT LONG':
+                rectBounds.lowerRightLon = Number(info[i])
+                break;
+            case 'LOWER RIGHT LAT':
+                rectBounds.lowerRightLat = Number(info[i])
+                break;
+        }
+    }
+    return rectBounds
 }
