@@ -148,7 +148,7 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
           {imageLoaded && imageRef && imageRef.current && mapData.mapPoints &&
           loadMapPoints(mapData.mapPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false)}
           {imageLoaded && imageRef && imageRef.current && mapData.infoPoints && 
-          loadMapPoints(mapData.infoPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false)}
+          loadMapPoints(mapData.infoPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, true)}
           {Object.keys(mapHierarchy).includes(name) && mapHierarchy[name].map((child, index) => {
             // if the parent exists, use the bounds of the parent on mapData
             // this is because the parent field is the bounds of this map on that parent map
@@ -205,14 +205,22 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
   //     // unmount
   //   };
   // })
+  let pointStyle = {
+    backgroundColor: `${clicked ? '#29D532' : 'red'}`,
+  }
+  if(isInfo) {
+    pointStyle = {
+      backgroundColor: `${'gray'}`,
+    }
+  }
 
   return (
     <>
       <Button
         className="map-point"
         style={{
+          ...pointStyle,
           position: 'absolute',
-          backgroundColor: `${clicked ? '#29D532' : 'red'}`,
           left: `calc(${x}% - 5px)`,
           top: `calc(${y}% - 5px)`,
         }}

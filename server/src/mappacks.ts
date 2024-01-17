@@ -209,28 +209,34 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                         if (!info || info.length < 4) {
                             throw new Error(`Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-INFORMATION POINTS does not have proper format`)
                         }
+                        if (!map.infoPoints) map.infoPoints = {}
                         let infoPoint: any = {}
                         let name = ""
-                        for (let i = 1; i < info.length; i++) {
-                            if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue
-                            switch (headerLabels[i]!.label) {
-                                case "NAME":
-                                    name = info[i]!
-                                    break
-                                case "LAT":
-                                    infoPoint.lat = Number(info[i])
-                                    break
-                                case "LONG":
-                                case "LON":
-                                    infoPoint.lon = Number(info[i])
-                                    break
-                                case "NOTE":
-                                    infoPoint.note = info[i]
-                                    break
+                        let pointIndex = index + 1
+                        while (info && info[0] === 'INFOPT') {
+                            for (let i = 1; i < info.length; i++) {
+                                if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue
+                                switch (headerLabels[i]!.label) {
+                                    case "NAME":
+                                        name = info[i]!
+                                        break
+                                    case "LAT":
+                                        infoPoint.lat = Number(info[i])
+                                        break
+                                    case "LONG":
+                                    case "LON":
+                                        infoPoint.lon = Number(info[i])
+                                        break
+                                    case "NOTE":
+                                        infoPoint.note = info[i]
+                                        break
+                                }
                             }
+                            
+                            pointIndex++
+                            map.infoPoints[name] = infoPoint
+                            info = tabSeparated[pointIndex]
                         }
-                        if (!map.infoPoints) map.infoPoints = {}
-                        map.infoPoints[name] = infoPoint
                         break
                 }
             }
