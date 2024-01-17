@@ -5,7 +5,7 @@ const RADIUS = 6371 // radius of Earth in kilometers
 /**
  * Calculates positioning given a rectangular bounds
  */
-export const calculateRectPosition = (lat: number, lon: number, bounds: RectBounds) => {
+export const calculateRectBoundsPosition = (lat: number, lon: number, bounds: RectBounds) => {
     const {upperLeftLat, upperLeftLon, lowerRightLat, lowerRightLon} = bounds
 
     const latRange = Math.abs(upperLeftLat - lowerRightLat);
@@ -22,8 +22,8 @@ export const calculateRectPosition = (lat: number, lon: number, bounds: RectBoun
 };
 
 export const calculateRectButton = (childBounds: RectBounds, parentBounds: RectBounds) => {
-    let upperLeft = calculateRectPosition(childBounds.upperLeftLat, childBounds.upperLeftLon, parentBounds)
-    let lowerRight = calculateRectPosition(childBounds.lowerRightLat, childBounds.lowerRightLon, parentBounds)
+    let upperLeft = calculateRectBoundsPosition(childBounds.upperLeftLat, childBounds.upperLeftLon, parentBounds)
+    let lowerRight = calculateRectBoundsPosition(childBounds.lowerRightLat, childBounds.lowerRightLon, parentBounds)
 
     let midpoint = { 
         // x: (Math.abs(childBounds.upperLeftLon) + Math.abs(childBounds.lowerRightLon)) / 2, 
@@ -39,7 +39,7 @@ export const calculateRectButton = (childBounds: RectBounds, parentBounds: RectB
     return {midpoint, upperLeft, width, height}
 }
 
-export const calculateVertPosition = (lat: number, lon: number, frameHeight: number, frameWidth: number, bounds: VertBounds) => {
+export const calculateVertBoundsPosition = (lat: number, lon: number, frameHeight: number, frameWidth: number, bounds: VertBounds) => {
     lat = toRadians(lat)
     lon = toRadians(lon)
     let centerLat = toRadians(bounds.centerLat)
