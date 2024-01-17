@@ -198,26 +198,10 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
           className="map"
           onLoad={() => setImageLoaded(true)}
           />
-          {imageLoaded && Object.entries(mapData.mapPoints).map(([name, point]) => {
-            if (!imageRef || !imageRef.current) return
-            let position = {x: 0, y: 0}
-            if(isRectBounds(mapData.bounds)) {
-              position = calculateRectPosition(point.lat, point.lon, mapData.bounds);
-            } else if (isVertBounds(mapData.bounds)) {
-              position = calculateVertPosition(point.lat, point.lon, imageRef.current.height, imageRef.current.width, mapData.bounds);
-            } else {
-              console.log(`Bounds is not in the correct format `, JSON.stringify(mapData.bounds, null, 2))
-              return null
-            }
-            return (
-              <MapPointButton 
-              key={name} 
-              mapPoint={point}
-              x={position.x} 
-              y={position.y} 
-              name={name}/>
-            );
-          })}
+          {imageLoaded && 
+          loadMapPoints(mapData.mapPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false)}
+          {imageLoaded && 
+          loadMapPoints(mapData.infoPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false)}
           {Object.keys(mapHierarchy).includes(name) && mapHierarchy[name].map((child, index) => {
             // if the parent exists, use the bounds of the parent on mapData
             // this is because the parent field is the bounds of this map on that parent map
@@ -241,11 +225,42 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
     </TransformWrapper>
   );
 }
+
+function getPosition(bounds: Bounds, point: MapPoints[string], width: number, height: number) { 
+  let position = {x: 0, y: 0}
+  if(isRectBounds(bounds)) {
+    position = calculateRectPosition(point.lat, point.lon, bounds);
+  } else if (isVertBounds(bounds)) {
+    position = calculateVertPosition(point.lat, point.lon, height, width, bounds);
+  } else {
+    console.log(`Bounds is not in the correct format `, JSON.stringify(bounds, null, 2))
+    return null
+  }
+  return position
+}
+
+function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidth: number, frameHeight: number, isInfo: boolean) {
+  return (Object.entries(points).map(([name, point]) => {
+    const position = getPosition(bounds, point, frameWidth, frameHeight)
+    if (position == null) return
+    return (
+      <MapPointButton 
+      key={name} 
+      mapPoint={point}
+      x={position.x} 
+      y={position.y} 
+      name={name}
+      isInfo={isInfo}/>
+    );
+  }))
+}
+
 type MapPointButtonProps = {
   mapPoint: MapPoints[string],
   x: number,
   y: number,
   name: string,
+  isInfo?: boolean
 }
 
 // mapPointButton that pulls up the map points on the image
@@ -253,7 +268,8 @@ type MapPointButtonProps = {
 // x: % from the left
 // y: % from the top
 // name: name of the map point
-const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name }) => {
+// isInfo: will default to false. is this point an info button?
+const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, isInfo = false}) => {
   const [clicked, setClicked] = useState(false)
   const theme = useTheme()
 
