@@ -146,7 +146,11 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                         parent.bounds = bounds
                         assertParentMap(parent)
                         map.parent = parent
-                        mapHierarchy[map.parent.name] = mapname
+                        if (mapHierarchy[parent.name]) {
+                            mapHierarchy[parent.name]!.push(mapname)
+                        } else {
+                            mapHierarchy[parent!.name] = [mapname]
+                        }
                         // map.parent.coordtype = String(info[1])
                         // map.parent.bounds.upperLeftLon = Number(info[2])
                         // map.parent.bounds.upperLeftLat = Number(info[3])

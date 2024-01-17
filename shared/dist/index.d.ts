@@ -60,7 +60,7 @@ export type ParentMap = {
     bounds: Bounds;
 };
 export type MapHierarchy = {
-    [parent: string]: string;
+    [parent: string]: string[];
 };
 export type DatapackResponse = {
     columnInfo: ColumnInfo;
