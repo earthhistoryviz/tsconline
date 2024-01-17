@@ -95,8 +95,6 @@ const MapDialog = ({ name }: {name: string;}) => {
 function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Bounds, openChild: (childName: string) => void) {
   if (isRectBounds(childBounds) && isRectBounds(mapBounds)) {
     const { midpoint, upperLeft, width, height } = calculateRectButton(childBounds, mapBounds)
-    console.log(upperLeft)
-    console.log(width)
     return (
       <>
       <Button
@@ -154,13 +152,6 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
   const mapInfo: MapInfo = state.settingsTabs.mapInfo
   const mapData: MapInfo[string] = mapInfo[name]
   const mapHierarchy: MapHierarchy = state.settingsTabs.mapHierarchy
-  window.onload = () => {
-    const img: HTMLImageElement | null = document.getElementById("map") as HTMLImageElement
-    if (img) {
-      console.log(`Width: ${img.naturalWidth}, Height: ${img.naturalHeight}`)
-    }
-  }
-
   const Controls = (
     { 
       zoomIn, 
