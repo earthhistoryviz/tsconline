@@ -215,14 +215,16 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
             );
           })}
           {Object.keys(mapHierarchy).includes(name) && mapHierarchy[name].map((child, index) => {
-            console.log(index)
-            console.log(child)
+            // if the parent exists, use the bounds of the parent on mapData
+            // this is because the parent field is the bounds of this map on that parent map
+            const bounds = ! mapData.parent ? mapData.bounds : mapData.parent!.bounds
+
             // name is the parentMap
             // mapHierarchy[name] contains all the children of the parent map
             // this will call for each child of name
             return createChildMapButton(
               child, 
-              mapData.bounds, 
+              bounds, 
               mapInfo[mapHierarchy[name][Number(index)]].parent!.bounds, 
               openChild
               )
