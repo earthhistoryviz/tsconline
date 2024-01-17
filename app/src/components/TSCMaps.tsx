@@ -1,6 +1,6 @@
 import { Dialog, Button, List, Box, ListItem, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
 import { useTheme } from "@mui/material/styles"
-import type { MapHierarchy, Bounds, MapPoints, MapInfo, RectBounds} from '@tsconline/shared'
+import type { InfoPoints, MapHierarchy, Bounds, MapPoints, MapInfo, RectBounds} from '@tsconline/shared'
 import { devSafeUrl } from '../util'
 import React, { useState, useRef, useContext } from "react"
 import { context } from '../state';
@@ -9,7 +9,7 @@ import { TransformWrapper, TransformComponent, useTransformEffect } from "react-
 import { TSCButton } from './TSCButton'
 import { Tooltip } from 'react-tooltip'
 import { isRectBounds, isVertBounds } from '@tsconline/shared'
-import { calculateRectPosition, calculateVertPosition, calculateRectButton } from '../coordinates'
+import { calculateRectBoundsPosition, calculateVertBoundsPosition, calculateRectButton } from '../coordinates'
 import 'react-tooltip/dist/react-tooltip.css'
 
 import './TSCMaps.css'
@@ -92,60 +92,6 @@ const MapDialog = ({ name }: {name: string;}) => {
   );
 }
 
-
-// This will create the rectangular map button for any children
-// name: name of the child mape
-// mapBounds: bounds of the parent map
-// childBounds: bounds of the child within the parent map
-// openChild: function to open the dialog box in the recrusive call 
-function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Bounds, openChild: (childName: string) => void) {
-  if (isRectBounds(childBounds) && isRectBounds(mapBounds)) {
-    const { midpoint, upperLeft, width, height } = calculateRectButton(childBounds, mapBounds)
-    return (
-      <>
-      <Button
-      data-tooltip-id={name}
-      style={{
-        border: "0.5px solid yellow",
-        position: 'absolute',
-        left: `calc(${upperLeft.x}%`,
-        top: `calc(${upperLeft.y}%`,
-        width: `${width}%`,
-        height: `${height}%`
-      }} 
-      data-tooltip-float={true}
-      onClick={() => {openChild(name)}}
-      />
-      <Tooltip
-        id={name}
-        place="bottom"
-        className="tooltip"
-      >
-        <div>
-        <h3 className="header">{`${name}`}</h3>
-        <ul>
-            <li>Latitude: {midpoint.y}</li>
-            <li>Longitude: {midpoint.x}</li>
-            {/* <li>Default: {mapPoint.default || '--'}</li>
-            <li>Minimum Age: {mapPoint.minage || '--'}</li>
-            <li>Maximum Age: {mapPoint.maxage || '--'}</li> */}
-            {/* <li>Note: {mapPoint.note || '--'}</li> */}
-        </ul>
-        </div>
-      </Tooltip>
-      </>
-  )
-  } else {
-    console.log('map and/or child bounds are not rectbounds')
-    console.log(`mapBounds not recognized, mapBounds are ${JSON.stringify(mapBounds, null, 2)}`)
-    console.log(`childBounds not recognized, childBounds are ${JSON.stringify(childBounds, null, 2)}`)
-    return
-  }
-
-}
-
-
-
 type MapProps  = {
   name: string;
   openChild: (childName: string) => void;
@@ -199,9 +145,9 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
           className="map"
           onLoad={() => setImageLoaded(true)}
           />
-          {imageLoaded && 
+          {imageLoaded && imageRef && imageRef.current && mapData.mapPoints &&
           loadMapPoints(mapData.mapPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false)}
-          {imageLoaded && 
+          {imageLoaded && imageRef && imageRef.current && mapData.infoPoints && 
           loadMapPoints(mapData.infoPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false)}
           {Object.keys(mapHierarchy).includes(name) && mapHierarchy[name].map((child, index) => {
             // if the parent exists, use the bounds of the parent on mapData
@@ -227,38 +173,10 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
   );
 }
 
-function getPosition(bounds: Bounds, point: MapPoints[string], width: number, height: number) { 
-  let position = {x: 0, y: 0}
-  if(isRectBounds(bounds)) {
-    position = calculateRectPosition(point.lat, point.lon, bounds);
-  } else if (isVertBounds(bounds)) {
-    position = calculateVertPosition(point.lat, point.lon, height, width, bounds);
-  } else {
-    console.log(`Bounds is not in the correct format `, JSON.stringify(bounds, null, 2))
-    return null
-  }
-  return position
-}
 
-function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidth: number, frameHeight: number, isInfo: boolean) {
-  if (!points) return
-  return (Object.entries(points).map(([name, point]) => {
-    const position = getPosition(bounds, point, frameWidth, frameHeight)
-    if (position == null) return
-    return (
-      <MapPointButton 
-      key={name} 
-      mapPoint={point}
-      x={position.x} 
-      y={position.y} 
-      name={name}
-      isInfo={isInfo}/>
-    );
-  }))
-}
 
 type MapPointButtonProps = {
-  mapPoint: MapPoints[string],
+  mapPoint: MapPoints[string] | InfoPoints[string],
   x: number,
   y: number,
   name: string,
@@ -328,4 +246,94 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
       </Tooltip>
     </>
   )
+}
+
+
+// This will create the rectangular map button for any children
+// name: name of the child mape
+// mapBounds: bounds of the parent map
+// childBounds: bounds of the child within the parent map
+// openChild: function to open the dialog box in the recrusive call 
+function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Bounds, openChild: (childName: string) => void) {
+  if (isRectBounds(childBounds) && isRectBounds(mapBounds)) {
+    const { midpoint, upperLeft, width, height } = calculateRectButton(childBounds, mapBounds)
+    return (
+      <>
+      <Button
+      data-tooltip-id={name}
+      style={{
+        border: "0.5px solid yellow",
+        position: 'absolute',
+        left: `calc(${upperLeft.x}%`,
+        top: `calc(${upperLeft.y}%`,
+        width: `${width}%`,
+        height: `${height}%`
+      }} 
+      data-tooltip-float={true}
+      onClick={() => {openChild(name)}}
+      />
+      <Tooltip
+        id={name}
+        place="bottom"
+        className="tooltip"
+      >
+        <div>
+        <h3 className="header">{`${name}`}</h3>
+        <ul>
+            <li>Latitude: {midpoint.y}</li>
+            <li>Longitude: {midpoint.x}</li>
+            {/* <li>Default: {mapPoint.default || '--'}</li>
+            <li>Minimum Age: {mapPoint.minage || '--'}</li>
+            <li>Maximum Age: {mapPoint.maxage || '--'}</li> */}
+            {/* <li>Note: {mapPoint.note || '--'}</li> */}
+        </ul>
+        </div>
+      </Tooltip>
+      </>
+  )
+  } else {
+    console.log('map and/or child bounds are not rectbounds')
+    console.log(`mapBounds not recognized, mapBounds are ${JSON.stringify(mapBounds, null, 2)}`)
+    console.log(`childBounds not recognized, childBounds are ${JSON.stringify(childBounds, null, 2)}`)
+    return
+  }
+
+}
+
+/**
+ * Gets position {x, y} of a map point based on the width and height
+ * returns as a percentage of the frame
+ */
+function getPositionOfPointBasedOnBounds(bounds: Bounds, point: MapPoints[string] | InfoPoints[string], frameWidth: number, frameHeight: number) { 
+  let position = {x: 0, y: 0}
+  if(isRectBounds(bounds)) {
+    position = calculateRectBoundsPosition(point.lat, point.lon, bounds);
+  } else if (isVertBounds(bounds)) {
+    position = calculateVertBoundsPosition(point.lat, point.lon, frameHeight, frameWidth, bounds);
+  } else {
+    console.log(`Bounds is not in the correct format `, JSON.stringify(bounds, null, 2))
+    return null
+  }
+  return position
+}
+
+/**
+ * Loads map points or info points
+ */
+function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidth: number, frameHeight: number, isInfo: boolean) {
+  if (!points) return
+  return (Object.entries(points).map(([name, point]) => {
+    if (!point) return
+    const position = getPositionOfPointBasedOnBounds(bounds, point, frameWidth, frameHeight)
+    if (position == null) return
+    return (
+      <MapPointButton 
+      key={name} 
+      mapPoint={point}
+      x={position.x} 
+      y={position.y} 
+      name={name}
+      isInfo={isInfo}/>
+    );
+  }))
 }
