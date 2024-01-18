@@ -198,9 +198,6 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
   const theme = useTheme()
 
   // below is the hook for grabbing the scale from map image scaling
-  // commented out because the positioning of the tooltip is seperate from
-  // the map stack hierarchy
-
   const [transform, setTransform] = useState({scale: 1, x: 0, y: 0})
   useTransformEffect(({ state, instance }) => {
     console.log(state); // { previousScale: 1, scale: 1, positionX: 0, positionY: 0 }
@@ -232,7 +229,6 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
           top: `calc(${y}% - ${ICON_SIZE / transform.scale}px)`,
           width: `${ICON_SIZE / transform.scale}px`,
           height: `${ICON_SIZE / transform.scale}px`,
-          // backgroundColor: 'red'
         }}
         data-tooltip-id={name}
         data-tooltip-float={true}
@@ -245,11 +241,6 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
       <Tooltip
         id={name}
         place="bottom"
-        globalCloseEvents={{
-          scroll: true,
-          resize: true,
-          clickOutsideAnchor: true
-        }}
         className="tooltip"
       >
         <div>
@@ -281,8 +272,9 @@ function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Boun
       <>
       <Button
       data-tooltip-id={name}
+      className="child-map"
       style={{
-        border: "0.5px solid yellow",
+        // border: "0.5px solid yellow",
         position: 'absolute',
         left: `calc(${upperLeft.x}%`,
         top: `calc(${upperLeft.y}%`,
