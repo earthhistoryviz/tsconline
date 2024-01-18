@@ -67,7 +67,7 @@ let theme = createTheme({
           main: '#f64747'
         },
         disabled: {
-          main: '#d2d7d3'
+          main: '#95a5a6'
         }
         
     },
