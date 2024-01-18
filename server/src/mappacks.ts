@@ -238,7 +238,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                             info = tabSeparated[pointIndex]
                             map.infoPoints[name] = infoPoint
                         }
-                        console.log(map.infoPoints)
+                        // console.log(map.infoPoints)
                         break
                 }
             }
