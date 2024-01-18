@@ -1,4 +1,4 @@
-import { IconButton, Dialog, Button, List, Box, ListItem, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
+import { IconButton, Dialog, Button, List, Box, ListItemButton, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
 import { useTheme } from "@mui/material/styles"
 import type { InfoPoints, MapHierarchy, Bounds, MapPoints, MapInfo, RectBounds} from '@tsconline/shared'
 import { devSafeUrl } from '../util'
@@ -43,7 +43,7 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo })
         <List>
           {Object.entries(mapInfo).map(([name, map]) => {
             return (
-              <ListItem key={name} 
+              <ListItemButton key={name} 
                 selected={selectedMap === name}
                 onClick={() => handleRowClick(name)} sx={{
                       '&:hover': {
@@ -58,7 +58,7 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo })
                   <Avatar alt={name} src={devSafeUrl(map.img)} />
                 </ListItemAvatar>
                 <ListItemText primary={`${name}`} />
-              </ListItem>
+              </ListItemButton>
             )
           })}
         </List>
