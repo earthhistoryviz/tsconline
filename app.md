@@ -176,3 +176,131 @@ This `Accordion` is styled in `TSCColumns.tsx` and styles the accordion used in 
 `:before` (object): hides any elements placed before the accordion.
 
 ---
+
+### AccordionSummary
+
+This `AccordionSummary` is styled in `TSCColumns.tsx` and styles the accordion 'title' used in `Columns.tsx`.
+
+#### Styles
+
+`expandIcon` (Icon): Set to ArrowForwardIosSharpIcon. The icon that you click to expand or compress the accordion
+
+`fontSize` (number): set to 0.9em
+
+`.MuiAccordionSummary-expandIconWrapper.Mui-expanded` (object): Set to rotate the icon 90 degrees
+
+` .MuiAccordionSummary-content` (object): Set to center items and 0px margin
+
+---
+
+### AccordionDetails
+
+---
+
+This `AccordionDetails` is styled in `TSCColumns.tsx` and styles the accordion 'content' used in `Columns.tsx`. Is a styled version of the `MuiAccordionDetails`
+
+#### Styles
+
+`padding` (number): Set to `theme.spacing(2)`
+
+`border` (number): Set to only above and below
+
+`.MuiAccordionDetails-root` (object): Set to padding "4px 8px 4px"
+
+---
+
+### ColumnContainer
+
+---
+
+This `ColumnContainer` is styled in `TSCColumns.tsx` and styles the box that holds the Accordion used in `Columns.tsx`.
+
+#### Styles
+
+`display` (string): Set to `flex`
+
+`alignItems` (string): Set to center
+
+`padding` (number): Set to padding 0px
+
+---
+
+### TSCIcon
+
+---
+
+This `TSCIcon` displays any sort of icon at default `100px`
+
+#### Props
+
+`src` (string): The URL of the image to be displayed.
+
+`alt` (string): The alternative text for the image.
+
+`size` (number | string): The size of the image. It defaults to "100px" if `not` provided.
+
+`...props` (BoxProps): Any additional BoxProps that can be applied to the underlying Box component.
+
+#### Usage
+
+```js
+import React from "react";
+import { TSCIcon } from "./path-to-your-component";
+
+const MyComponent = () => {
+  return (
+    <TSCIcon
+      src="path/to/icon.png"
+      alt="Icon description"
+      size={32}
+      // additional BoxProps can be passed here
+    />
+  );
+};
+```
+
+### TSCMapList
+
+---
+
+`TSCMapList` is the list of images from a mappack that was sent from the server. Displayed in a MUI list, this has a component hook to set up the hidden dialog that will display `MapViewer`. Recursively will open `MapDialog`. This is used in `server/src/MapPoint.tsx`
+
+#### Props
+
+`mapInfo` (MapInfo): This is the `MapInfo` of the datapacks selected that holds all the information needed. For more information on [MapInfo](shared.md#shared)
+
+#### State
+
+The component uses the `useState` hook to manage two state variables:
+
+`selectedMap`: Keeps track of the currently selected map's name.
+
+`isDialogOpen`: Tracks whether the dialog box that holds the `selectedMap` is open or closed.
+
+#### Event Handlers
+
+`handleRowClick`: Invoked when a map item is clicked. It sets the selectedMap to the clicked map's name and opens the dialog box.
+
+`handleCloseDialog`: Invoked when the dialog box is closed. It resets the selectedMap and closes the dialog box.
+
+### MapDialog
+
+---
+
+`MapDialog` allows for nested dialog windows to recursively open children maps if they exist. By passing `openChild` to `MapViewer` we create endless windows. Since the child is not known until later, we set the nested dialog to the `name` map.
+
+#### Props
+
+`name` (string): The name of the map selected and chosen to display on this map.
+
+#### State
+
+`dialogOpen`: Keeps track of whether the nested dialog is open or closed.
+
+`childName`: Stores the name of the child map to be displayed.
+
+#### Event Handlers
+
+`handleCloseDialog`: Invoked when the close button of the current dialog is clicked. It sets `dialogOpen` to false, closing the dialog.
+
+`openChild`: Invoked when a child map needs to be opened. It sets `dialogOpen` to true and updates `childName` with the name of the child map.
