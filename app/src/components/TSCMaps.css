@@ -19,18 +19,18 @@
   width: 100px;
   margin: 5px;
 }
-.MuiButton-root.map-point {
+.MuiIconButton-root.map-point {
   position: absolute;
-  width: 10px;
-  height: 10px;
   border-radius: 50%;
   padding: 0;
   z-index: 1;
   /* background-color: red; */
 }
-.icon {
+.MuiSvgIcon-root.icon {
   border-radius: 50%;
-  /* background: rgb(153, 152, 152); */
+  object-fit: contain;
+  width: inherit;
+  height: inherit;
   padding: 0;
   margin: 0;
   z-index: 1;

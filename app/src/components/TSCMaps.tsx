@@ -16,6 +16,8 @@ import 'react-tooltip/dist/react-tooltip.css'
 
 import './TSCMaps.css'
 
+const ICON_SIZE = 30
+
 type MapRowComponentProps = {
   mapInfo: MapInfo; 
 };
@@ -199,14 +201,14 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
   // commented out because the positioning of the tooltip is seperate from
   // the map stack hierarchy
 
-  // const [position, setPosition] = useState({scale: 1, x: 0, y: 0})
-  // useTransformEffect(({ state, instance }) => {
-  //   console.log(state); // { previousScale: 1, scale: 1, positionX: 0, positionY: 0 }
-  //   setPosition({scale: state.scale, x: state.positionX, y: state.positionY})
-  //   return () => {
-  //     // unmount
-  //   };
-  // })
+  const [transform, setTransform] = useState({scale: 1, x: 0, y: 0})
+  useTransformEffect(({ state, instance }) => {
+    console.log(state); // { previousScale: 1, scale: 1, positionX: 0, positionY: 0 }
+    setTransform({scale: state.scale, x: state.positionX, y: state.positionY})
+    return () => {
+      // unmount
+    };
+  })
   let pointStyle = {
     color: `${clicked ? '#29D532' : 'red'}`,
   }
@@ -224,8 +226,13 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
         style={{
           ...pointStyle,
           position: 'absolute',
-          left: `calc(${x}% - 5px)`,
-          top: `calc(${y}% - 5px)`,
+          left: `calc(${x}% - ${ICON_SIZE / 2 / transform.scale}px)`,
+          // we take a the full icon_size here to anchor to the
+          // bottom of the icon
+          top: `calc(${y}% - ${ICON_SIZE / transform.scale}px)`,
+          width: `${ICON_SIZE / transform.scale}px`,
+          height: `${ICON_SIZE / transform.scale}px`,
+          // backgroundColor: 'red'
         }}
         data-tooltip-id={name}
         data-tooltip-float={true}
@@ -233,7 +240,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
           setClicked(!clicked)
         }}
       >
-        {isInfo ? getIcon(true) : getIcon(clicked)}
+        {isInfo ? getIcon(true, transform.scale) : getIcon(clicked, transform.scale)}
       </IconButton>
       <Tooltip
         id={name}
@@ -352,9 +359,13 @@ function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidt
   }))
 }
 
-function getIcon(clicked: boolean){
+function getIcon(clicked: boolean, scale: number){
   if (clicked) {
-    return (<LocationOnIcon className="icon" fontSize="medium" />)
+    return (<LocationOnIcon 
+      className="icon"
+      />)
   }
-  return (<LocationOffIcon className="icon" fontSize="medium" />)
+  return (<LocationOffIcon
+    className="icon"
+    />)
 }
