@@ -1,4 +1,4 @@
-import { Dialog, Button, List, Box, ListItem, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
+import { IconButton, Dialog, Button, List, Box, ListItem, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
 import { useTheme } from "@mui/material/styles"
 import type { InfoPoints, MapHierarchy, Bounds, MapPoints, MapInfo, RectBounds} from '@tsconline/shared'
 import { devSafeUrl } from '../util'
@@ -10,6 +10,7 @@ import { TSCButton } from './TSCButton'
 import { Tooltip } from 'react-tooltip'
 import { isRectBounds, isVertBounds } from '@tsconline/shared'
 import { calculateRectBoundsPosition, calculateVertBoundsPosition, calculateRectButton } from '../coordinates'
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import 'react-tooltip/dist/react-tooltip.css'
 
 import './TSCMaps.css'
@@ -206,18 +207,19 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
   //   };
   // })
   let pointStyle = {
-    backgroundColor: `${clicked ? '#29D532' : 'red'}`,
+    color: `${clicked ? '#29D532' : 'red'}`,
   }
   if(isInfo) {
     pointStyle = {
-      backgroundColor: `${'gray'}`,
+      color: `${theme.palette.primary.light}`,
     }
   }
 
   return (
     <>
-      <Button
+      <IconButton
         className="map-point"
+        disableRipple={isInfo}
         style={{
           ...pointStyle,
           position: 'absolute',
@@ -229,7 +231,9 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
         onClick={() => {
           setClicked(!clicked)
         }}
-      />
+      >
+        <LocationOnIcon className="icon" fontSize="medium" />
+      </IconButton>
       <Tooltip
         id={name}
         place="bottom"
@@ -275,7 +279,8 @@ function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Boun
         left: `calc(${upperLeft.x}%`,
         top: `calc(${upperLeft.y}%`,
         width: `${width}%`,
-        height: `${height}%`
+        height: `${height}%`,
+        zIndex: "0"
       }} 
       data-tooltip-float={true}
       onClick={() => {openChild(name)}}
