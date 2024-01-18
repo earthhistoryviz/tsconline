@@ -25,7 +25,7 @@
   height: 10px;
   border-radius: 50%;
   padding: 0;
-  z-index: 2;
+  z-index: 1;
   /* background-color: red; */
 }
 .MuiButton-root.map-point:hover {
@@ -33,7 +33,7 @@
   opacity: 0.6;
 }
 .tooltip {
-  z-index: 1;
+  z-index: 2;
 }
 .header {
   text-align: center;
