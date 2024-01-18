@@ -210,10 +210,10 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                             throw new Error(`Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-INFORMATION POINTS does not have proper format`)
                         }
                         if (!map.infoPoints) map.infoPoints = {}
-                        let infoPoint: any = {}
-                        let name = ""
                         let pointIndex = index + 1
                         while (info && info[0] === 'INFOPT') {
+                            let infoPoint: any = {}
+                            let name = ""
                             for (let i = 1; i < info.length; i++) {
                                 if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue
                                 switch (headerLabels[i]!.label) {
@@ -232,11 +232,13 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                                         break
                                 }
                             }
-                            
                             pointIndex++
-                            map.infoPoints[name] = infoPoint
+                            // console.log(name)
+                            // console.log(infoPoint)
                             info = tabSeparated[pointIndex]
+                            map.infoPoints[name] = infoPoint
                         }
+                        console.log(map.infoPoints)
                         break
                 }
             }
@@ -262,6 +264,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
         console.log("grabMapInfo threw error: ", e)
         throw e
     }
+    // console.log("reply of mapInfo: ", JSON.stringify(mapInfo, null, 2))
     assertMapInfo(mapInfo)
     assertMapHierarchy(mapHierarchy)
     return {mapInfo: mapInfo, mapHierarchy: mapHierarchy}
