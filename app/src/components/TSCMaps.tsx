@@ -1,5 +1,5 @@
-import { IconButton, Dialog, Button, List, Box, ListItemButton, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
-import { useTheme } from "@mui/material/styles"
+import { Drawer, Divider, Typography, IconButton, Dialog, Button, List, Box, ListItemButton, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
+import { styled, useTheme } from "@mui/material/styles"
 import type { InfoPoints, MapHierarchy, Bounds, MapPoints, MapInfo, RectBounds} from '@tsconline/shared'
 import { devSafeUrl } from '../util'
 import React, { useState, useRef, useContext } from "react"
@@ -12,6 +12,7 @@ import { isRectBounds, isVertBounds } from '@tsconline/shared'
 import { calculateRectBoundsPosition, calculateVertBoundsPosition, calculateRectButton } from '../coordinates'
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import 'react-tooltip/dist/react-tooltip.css'
 
 import './TSCMaps.css'
@@ -43,22 +44,15 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo })
         <List>
           {Object.entries(mapInfo).map(([name, map]) => {
             return (
-              <ListItemButton key={name} 
+              <MapListItemButton key={name} 
                 selected={selectedMap === name}
-                onClick={() => handleRowClick(name)} sx={{
-                      '&:hover': {
-                        backgroundColor: theme.palette.primary.main,
-                        cursor: 'pointer'
-                      },
-                      '&.Mui-selected': {
-                        backgroundColor: theme.palette.selection.light,
-                      },
-              }}>
+                onClick={() => handleRowClick(name)} 
+              >
                 <ListItemAvatar>
                   <Avatar alt={name} src={devSafeUrl(map.img)} />
                 </ListItemAvatar>
                 <ListItemText primary={`${name}`} />
-              </ListItemButton>
+              </MapListItemButton>
             )
           })}
         </List>
@@ -71,12 +65,40 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo })
   );
 });
 
+const MapListItemButton = styled(ListItemButton)(({ theme }) => ({
+  '&:hover': {
+    backgroundColor: theme.palette.primary.main,
+    cursor: 'pointer'
+  },
+  '&.Mui-selected': {
+    backgroundColor: theme.palette.selection.light,
+  },
+}))
+
+const LegendTypography = styled(Typography)(({ theme }) => ({
+  color: theme.palette.primary.main
+}))
+
+const LegendArrowDropDown = styled(IconButton)(({ theme }) => ({
+  color: theme.palette.primary.main
+}))
+const DrawerHeader = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  padding: theme.spacing(0, 1),
+  background: theme.palette.navbar.dark,
+  ...theme.mixins.toolbar,
+  justifyContent: 'space-between',
+}));
+
  // The map interface that will be recursive so that we can create "multiple" windows.
  // Nested dialogs
  // TODO: possibly a better container than dialog?
 const MapDialog = ({ name }: {name: string;}) => {
+  const theme = useTheme()
   const [dialogOpen, setDialogOpen] = useState(false);
   const [childName, setChildName] = useState(name)
+  const [legendOpen, setLegendOpen] = useState(false)
 
   const handleCloseDialog = () => {
     setDialogOpen(false);
@@ -84,14 +106,46 @@ const MapDialog = ({ name }: {name: string;}) => {
   const openChild = (childName: string) => {
     setDialogOpen(true)
     setChildName(childName)
+    setLegendOpen(false)
   }
 
+  const openLegend = () => {
+    setLegendOpen(!legendOpen)
+  }
+
+  const legendItems: LegendItem[] = [
+    { color: theme.palette.on.main, label: 'on', icon: LocationOnIcon},
+    { color: theme.palette.off.main, label: 'off', icon: LocationOffIcon}
+  ]
   return (
     <>
-      <MapViewer openChild={openChild} name={name} />
+      <MapViewer openChild={openChild} name={name} openLegend={openLegend}/>
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth={false} >
         <MapDialog name={childName}/>
       </Dialog>
+      <Drawer
+        sx={{
+          flexShrink: 0,
+          height: '20%',
+          '& .MuiDrawer-paper': {
+            border: '0',
+          },
+        }}
+        variant="persistent"
+        anchor="bottom"
+        open={legendOpen}
+      >
+        <DrawerHeader> 
+          <LegendTypography className="legend-title" variant="h6" gutterBottom>
+            Color Legend
+          </LegendTypography>
+          <LegendArrowDropDown onClick={() => {setLegendOpen(false)}}>
+            <ArrowDropDownIcon />
+          </LegendArrowDropDown>
+        </DrawerHeader>
+        <Divider />
+        <Legend items={legendItems}/>
+      </Drawer>
     </>
   );
 }
@@ -99,10 +153,11 @@ const MapDialog = ({ name }: {name: string;}) => {
 type MapProps  = {
   name: string;
   openChild: (childName: string) => void;
+  openLegend: () => void;
 }
 
 // This component is the map itself with the image and buttons within.
-const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
+const MapViewer: React.FC<MapProps> = ({ name, openChild, openLegend }) => {
   const {state, actions} = useContext(context)
   const [imageLoaded, setImageLoaded] = useState(false)
   const imageRef = useRef<HTMLImageElement | null>(null)
@@ -110,6 +165,7 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
   const mapInfo: MapInfo = state.settingsTabs.mapInfo
   const mapData: MapInfo[string] = mapInfo[name]
   const mapHierarchy: MapHierarchy = state.settingsTabs.mapHierarchy
+
   const Controls = (
     { 
       zoomIn, 
@@ -126,6 +182,7 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
       <TSCButton className="zoom-button" onClick={() => zoomIn()}>zoom in</TSCButton>
       <TSCButton className="zoom-button" onClick={() => zoomOut()}>zoom out</TSCButton>
       <TSCButton className="zoom-button" onClick={() => resetTransform()}>reset</TSCButton>
+      <TSCButton className="zoom-button" onClick={() => openLegend()}>legend</TSCButton>
     </div>
   );
 
@@ -199,22 +256,15 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
   const theme = useTheme()
 
   // below is the hook for grabbing the scale from map image scaling
-  const [transform, setTransform] = useState({scale: 1, x: 0, y: 0})
+  const [scale, setScale] = useState(1)
   useTransformEffect(({ state, instance }) => {
     // console.log(state); // { previousScale: 1, scale: 1, positionX: 0, positionY: 0 }
-    setTransform({scale: state.scale, x: state.positionX, y: state.positionY})
+    setScale(state.scale)
     return () => {
       // unmount
     };
   })
-  let pointStyle = {
-    color: `${clicked ? '#2ecc71' : '#f64747'}`,
-  }
-  if(isInfo) {
-    pointStyle = {
-      color: `${theme.palette.primary.light}`,
-    }
-  }
+  const color = isInfo ? `${theme.palette.primary.light}` : `${clicked ? theme.palette.on.main : theme.palette.off.main}`
 
   return (
     <>
@@ -222,14 +272,13 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
         className="map-point"
         disableRipple={isInfo}
         style={{
-          ...pointStyle,
-          position: 'absolute',
-          left: `calc(${x}% - ${ICON_SIZE / 2 / transform.scale}px)`,
+          left: `calc(${x}% - ${ICON_SIZE / 2 / scale}px)`,
           // we take a the full icon_size here to anchor to the
           // bottom of the icon
-          top: `calc(${y}% - ${ICON_SIZE / transform.scale}px)`,
-          width: `${ICON_SIZE / transform.scale}px`,
-          height: `${ICON_SIZE / transform.scale}px`,
+          color: color,
+          top: `calc(${y}% - ${ICON_SIZE / scale}px)`,
+          width: `${ICON_SIZE / scale}px`,
+          height: `${ICON_SIZE / scale}px`,
         }}
         data-tooltip-id={name}
         data-tooltip-float={true}
@@ -278,13 +327,10 @@ function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Boun
       data-tooltip-id={name}
       className="child-map"
       style={{
-        // border: "0.5px solid yellow",
-        position: 'absolute',
         left: `calc(${upperLeft.x}%`,
         top: `calc(${upperLeft.y}%`,
         width: `${width}%`,
         height: `${height}%`,
-        zIndex: "0"
       }} 
       data-tooltip-float={true}
       onClick={() => {openChild(name)}}
@@ -379,4 +425,37 @@ function getIcon(clicked: boolean){
   return (<LocationOffIcon
     className="icon"
     />)
+}
+
+type LegendItem = {
+  color: string;
+  label: string;
+  icon: React.ElementType<any>;
+}
+const DisplayLegendItem = ({ legendItem } : {legendItem: LegendItem}) => {
+  const theme = useTheme()
+  const { color, label, icon: Icon} = legendItem
+  return (<Box display="flex" alignItems="center" mb={1}>
+    <Icon
+    width={20}
+    height={20}
+    color={color}
+    style ={{color: color}}
+    borderRadius={5} mr={1}/>
+    <LegendTypography className="legend-label">{label}</LegendTypography>
+  </Box>)
+}
+
+const Legend = ({items}: {items: LegendItem[]}) => {
+  const theme = useTheme()
+  return (<Box
+  className="legend-container"
+    style={{ 
+      backgroundColor: theme.palette.navbar.dark,
+      columnCount: items.length,
+      }}>
+    {items.map((item, index) => (
+      <DisplayLegendItem key={index} legendItem={item}/>
+    ))}
+  </Box>)
 }

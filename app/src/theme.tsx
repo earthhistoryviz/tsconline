@@ -9,6 +9,8 @@ declare module '@mui/material/styles' {
       selection: Palette['primary'];
       settings: Palette['primary'];
       gradient: Palette['primary'];
+      on: Palette['primary'];
+      off: Palette['primary'];
     }
   
     interface PaletteOptions {
@@ -19,6 +21,8 @@ declare module '@mui/material/styles' {
       selection?: PaletteOptions['primary'];
       settings?: PaletteOptions['primary'];
       gradient?: PaletteOptions['primary'];
+      on?: PaletteOptions['primary'];
+      off?: PaletteOptions['primary'];
     }
   }
 
@@ -54,10 +58,16 @@ let theme = createTheme({
             light: "#B1ADE2",
             main: "#9792E3"
         },
+        on: {
+          main: '#2ecc71'
+        },
+        off: {
+          main: '#f64747'
+        }
+        
     },
     typography: {
         fontFamily: '"Titillium Web", sans-serif',
-        // fontFamily: '"Cinzel", sans-serif',
     },
     components: {
         MuiButton: {
