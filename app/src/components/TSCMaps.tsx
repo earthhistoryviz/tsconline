@@ -11,6 +11,7 @@ import { Tooltip } from 'react-tooltip'
 import { isRectBounds, isVertBounds } from '@tsconline/shared'
 import { calculateRectBoundsPosition, calculateVertBoundsPosition, calculateRectButton } from '../coordinates'
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import LocationOffIcon from '@mui/icons-material/LocationOff';
 import 'react-tooltip/dist/react-tooltip.css'
 
 import './TSCMaps.css'
@@ -232,7 +233,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
           setClicked(!clicked)
         }}
       >
-        <LocationOnIcon className="icon" fontSize="medium" />
+        {isInfo ? getIcon(true) : getIcon(clicked)}
       </IconButton>
       <Tooltip
         id={name}
@@ -349,4 +350,11 @@ function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidt
       isInfo={isInfo}/>
     );
   }))
+}
+
+function getIcon(clicked: boolean){
+  if (clicked) {
+    return (<LocationOnIcon className="icon" fontSize="medium" />)
+  }
+  return (<LocationOffIcon className="icon" fontSize="medium" />)
 }
