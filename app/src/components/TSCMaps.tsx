@@ -101,6 +101,7 @@ type MapProps  = {
   openChild: (childName: string) => void;
 }
 
+// This component is the map itself with the image and buttons within.
 const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
   const {state, actions} = useContext(context)
   const [imageLoaded, setImageLoaded] = useState(false)
@@ -236,7 +237,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
           setClicked(!clicked)
         }}
       >
-        {isInfo ? getIcon(true, transform.scale) : getIcon(clicked, transform.scale)}
+        {isInfo ? getIcon(true) : getIcon(clicked)}
       </IconButton>
       <Tooltip
         id={name}
@@ -260,11 +261,14 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
 }
 
 
-// This will create the rectangular map button for any children
-// name: name of the child mape
-// mapBounds: bounds of the parent map
-// childBounds: bounds of the child within the parent map
-// openChild: function to open the dialog box in the recrusive call 
+/**
+ * This will create the rectangular map button for any children
+ * @param name name of the child map
+ * @param mapBounds bounds of the parent map
+ * @param childBounds bounds of the child within the parent map
+ * @param openChild function to open the dialog box in the recursive call
+ * @returns 
+ */
 function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Bounds, openChild: (childName: string) => void) {
   if (isRectBounds(childBounds) && isRectBounds(mapBounds)) {
     const { midpoint, upperLeft, width, height } = calculateRectButton(childBounds, mapBounds)
@@ -315,7 +319,11 @@ function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Boun
 
 /**
  * Gets position {x, y} of a map point based on the width and height
- * returns as a percentage of the frame
+ * @param bounds Parent map bounds
+ * @param point point within bounds
+ * @param frameWidth frame width
+ * @param frameHeight frame height
+ * @returns x and y as a percentage of the frame from the top and left
  */
 function getPositionOfPointBasedOnBounds(bounds: Bounds, point: MapPoints[string] | InfoPoints[string], frameWidth: number, frameHeight: number) { 
   let position = {x: 0, y: 0}
@@ -331,7 +339,13 @@ function getPositionOfPointBasedOnBounds(bounds: Bounds, point: MapPoints[string
 }
 
 /**
- * Loads map points or info points
+ * Loads map points based on frame and parent bounds
+ * @param points points to be iterated over
+ * @param bounds Parent Bounds that points is within
+ * @param frameWidth frame width
+ * @param frameHeight frame height
+ * @param isInfo is this an info point?
+ * @returns all MapPointButton Components
  */
 function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidth: number, frameHeight: number, isInfo: boolean) {
   if (!points) return
@@ -351,7 +365,12 @@ function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidt
   }))
 }
 
-function getIcon(clicked: boolean, scale: number){
+/**
+ * Depending on if the point was clicked, return a different icon
+ * @param clicked 
+ * @returns 
+ */
+function getIcon(clicked: boolean){
   if (clicked) {
     return (<LocationOnIcon 
       className="icon"
