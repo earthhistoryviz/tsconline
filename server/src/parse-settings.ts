@@ -4,6 +4,11 @@ import { DOMParser } from "@xmldom/xmldom";
 //                                          XML to JSON parser                                       //
 //-------------------------------------------------------------------------------------------------- //
 
+/**
+ *
+ * @param settingsNode DOM node with name settings
+ * @returns json object containing information about the settings of the current node
+ */
 function processSettings(settingsNode: any): any {
   const settings: any = {};
   const settingNodes = settingsNode.getElementsByTagName("setting");
@@ -11,7 +16,6 @@ function processSettings(settingsNode: any): any {
     const settingNode = settingNodes[i];
     const settingName = settingNode.getAttribute("name");
     const nestedSettingsNode = settingNode.getElementsByTagName("setting")[0];
-    //TODO: determine what the value of this is if there isn't a justification value
     const justificationValue = settingNode.getAttribute("justification");
     const settingValue = nestedSettingsNode
       ? nestedSettingsNode.textContent.trim()
@@ -47,7 +51,11 @@ function processSettings(settingsNode: any): any {
   //console.log("result of processSettings in xmlToJson...\n", settings);
   return settings;
 }
-
+/**
+ *
+ * @param fontsNode DOM node with font name, has font settings as children
+ * @returns json object containing the font info
+ */
 function processFonts(fontsNode: any): any {
   const fonts: any = {};
   const fontNodes = fontsNode.getElementsByTagName("font");
@@ -61,7 +69,11 @@ function processFonts(fontsNode: any): any {
   //console.log("result of processFonts in xmlToJson...\n", fonts);
   return fonts;
 }
-
+/**
+ *
+ * @param node DOM node of a column in the settings file, usually starts with the chart root
+ * @returns json object containing the info of the current and children columns
+ */
 function processColumn(node: any): any {
   const result: any = {};
   const nodeAttributes = node.attributes;
@@ -124,9 +136,15 @@ function processColumn(node: any): any {
   return result;
 }
 
-//the main parser
+/**
+ * main parser
+ * @param xml the xml string to be converted into a json object
+ * @returns the json object equivalent of the given xml string
+ */
 export function xmlToJson(xml: string): any {
   //console.log("xml at start of xmlToJson...\n", xml);
+
+  //convert xml to a DOM document using a parser library
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xml, "text/xml");
   const json: any = {};
@@ -154,14 +172,22 @@ export function xmlToJson(xml: string): any {
 //                                          JSON to XML parser                                       //
 //-------------------------------------------------------------------------------------------------- //
 
-//for escaping special characters in xml (& " ' < >)
-//in text, " ' > do not need to be escaped.
-//in attributes, all 5 need to be escaped.
-//https://stackoverflow.com/questions/1091945/what-characters-do-i-need-to-escape-in-xml-documents
-function replaceSpecialChars(text: string, type: string): string {
+/**
+ * for escaping special characters in xml (& " ' < >)
+ * in text, " ' > do not need to be escaped.
+ * in attributes, all 5 need to be escaped.
+ * https://stackoverflow.com/questions/1091945/what-characters-do-i-need-to-escape-in-xml-documents
+ *
+ * @param text the text to replace special chars
+ * @param type number indicating the type of the text param
+ *             0 = attribute
+ *             1 = text
+ * @returns
+ */
+function replaceSpecialChars(text: string, type: number): string {
   text = text.replaceAll("&", "&amp;");
   text = text.replaceAll("<", " &lt; ");
-  if (type === "attribute") {
+  if (type == 0) {
     text = text.replaceAll('"', "&quot;");
     text = text.replaceAll("'", "&apos;");
     text = text.replaceAll(">", " &gt; ");
@@ -173,6 +199,12 @@ function replaceSpecialChars(text: string, type: string): string {
   return text;
 }
 
+/**
+ *
+ * @param settings settings json object
+ * @param indent the amount of indent to place in the xml file
+ * @returns xml string with settings info
+ */
 function generateSettingsXml(settings: any, indent: string): string {
   let xml = "";
   //console.log(settings);
@@ -196,7 +228,12 @@ function generateSettingsXml(settings: any, indent: string): string {
   }
   return xml;
 }
-
+/**
+ *
+ * @param fonts font json object
+ * @param indent the amount of indent to place in the xml file
+ * @returns xml string with settings info
+ */
 function generateFontsXml(fonts: any, indent: string): string {
   let xml = "";
   for (const key in fonts) {
@@ -207,7 +244,14 @@ function generateFontsXml(fonts: any, indent: string): string {
   }
   return xml;
 }
-
+/**
+ *
+ * @param jsonColumn json object with column info
+ * @param stateColumn json object containing the state of the columns
+ * @param parent the parent of the current column
+ * @param indent the amount of indent to place in the xml file
+ * @returns xml string with column info
+ */
 function generateColumnXml(
   jsonColumn: any,
   stateColumn: any | null,
@@ -215,14 +259,12 @@ function generateColumnXml(
   indent: string
 ): string {
   let xml = "";
-  //let columns = state.settingsTabs.columns;
   for (let key in jsonColumn) {
     if (Object.prototype.hasOwnProperty.call(jsonColumn, key)) {
       //for replacing special characters in the key to its xml versions
-      let xmlKey = replaceSpecialChars(key, "attribute");
-      //console.log(jsonColumn[key]);
+      let xmlKey = replaceSpecialChars(key, 0);
+      // Skip the 'id' element.
       if (key === "_id") {
-        // Skip the 'id' element.
         continue;
       } else if (key === "backgroundColor" || key === "customColor") {
         if (jsonColumn[key].useNamed) {
@@ -255,7 +297,6 @@ function generateColumnXml(
         else if (stateColumn === null) {
           xml += `${indent}<setting name="${xmlKey}">${jsonColumn["isSelected"]}</setting>\n`;
         }
-        //let temp = column._id.split(":")[1];
         //check if column is checked or not, and change the isSelected field to true or false
         if (stateColumn && !parent.includes("Chart") && parent != "") {
           //TODO: make initial stateColumn object wh
@@ -290,7 +331,7 @@ function generateColumnXml(
             jsonColumn[key]._id.indexOf(":") + 1,
             jsonColumn[key]._id.length
           );
-          if (stateColumn === null) {
+          if (stateColumn == null) {
             xml += generateColumnXml(
               jsonColumn[key],
               null,
@@ -310,8 +351,9 @@ function generateColumnXml(
                 temp,
                 `${indent}    `
               );
-            } else {
-              //more children to be had
+            }
+            //more children exists
+            else {
               xml += generateColumnXml(
                 jsonColumn[key],
                 stateColumn.children[temp],
@@ -325,14 +367,20 @@ function generateColumnXml(
       } else {
         xml += `${indent}<setting name="${xmlKey}">${replaceSpecialChars(
           jsonColumn[key],
-          "text"
+          1
         )}</setting>\n`;
       }
     }
   }
   return xml;
 }
-//the main parser
+/**
+ *
+ * @param settings the initial json object used to generate a chart that contains the settings info
+ * @param columnSettings json object containing the state of the columns
+ * @param version the version of the jar file (TimeScale Creator)
+ * @returns xml string with the entire settings info
+ */
 export function jsonToXml(
   settings: any,
   columnSettings: any,
