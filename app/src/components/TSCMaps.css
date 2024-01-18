@@ -44,13 +44,15 @@
   border: 1px solid yellow;
 }
 .MuiButton-root.child-map:hover {
-  background-color: lightgrey;
-  border: 1px solid yellow;
-  opacity: 0.1;
+  background-color: rgba(239, 239, 240, 0.2);
+  opacity: 0.9;
 }
 .tooltip {
   z-index: 2;
 }
 .header {
   text-align: center;
+}
+.button-container {
+  border: 1px solid yellow;
 }

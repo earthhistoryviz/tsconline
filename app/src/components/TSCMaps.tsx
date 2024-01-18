@@ -200,14 +200,14 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
   // below is the hook for grabbing the scale from map image scaling
   const [transform, setTransform] = useState({scale: 1, x: 0, y: 0})
   useTransformEffect(({ state, instance }) => {
-    console.log(state); // { previousScale: 1, scale: 1, positionX: 0, positionY: 0 }
+    // console.log(state); // { previousScale: 1, scale: 1, positionX: 0, positionY: 0 }
     setTransform({scale: state.scale, x: state.positionX, y: state.positionY})
     return () => {
       // unmount
     };
   })
   let pointStyle = {
-    color: `${clicked ? '#29D532' : 'red'}`,
+    color: `${clicked ? '#2ecc71' : '#f64747'}`,
   }
   if(isInfo) {
     pointStyle = {
