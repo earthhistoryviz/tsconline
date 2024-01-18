@@ -18,7 +18,6 @@ import 'react-tooltip/dist/react-tooltip.css'
 
 import './TSCMaps.css'
 
-const LIGHT_MODE = true 
 const ICON_SIZE = 30
 const InfoIcon = NotListedLocationIcon 
 const OnIcon = LocationOnIcon 
@@ -81,17 +80,17 @@ const MapListItemButton = styled(ListItemButton)(({ theme }) => ({
 }))
 
 const LegendTypography = styled(Typography)(({ theme }) => ({
-  color: LIGHT_MODE ? theme.palette.navbar.dark : theme.palette.primary.main 
+  color: theme.palette.primary.main 
 }))
 
 const LegendArrowDropDown = styled(IconButton)(({ theme }) => ({
-  color: LIGHT_MODE ? theme.palette.navbar.dark : theme.palette.primary.main 
+  color: theme.palette.primary.main 
 }))
 const DrawerHeader = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   padding: theme.spacing(0, 1),
-  backgroundColor: LIGHT_MODE ? theme.palette.settings.light : theme.palette.navbar.dark ,
+  backgroundColor: theme.palette.navbar.dark ,
   ...theme.mixins.toolbar,
   justifyContent: 'space-between',
 }));
@@ -462,7 +461,7 @@ const Legend = ({items}: {items: LegendItem[]}) => {
   return (<Box
   className="legend-container"
     style={{ 
-      backgroundColor: LIGHT_MODE ? theme.palette.settings.light : theme.palette.navbar.dark,
+      backgroundColor: theme.palette.navbar.dark,
       columnCount: items.length,
       }}>
     {items.map((item, index) => (

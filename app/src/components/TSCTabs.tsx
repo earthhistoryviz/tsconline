@@ -14,7 +14,6 @@ export const TSCTabs = styled((props: TSCTabsProps) => (
   />
   ))(({ theme }) => {
     return {
-      color: theme.palette.secondary.main,
       '& .MuiTabs-indicator': {
         display: 'flex',
         justifyContent: 'center',
@@ -43,7 +42,7 @@ export const TSCTab = styled((props: TabProps) => (
         opacity: 1,
       },
       "&.Mui-selected": {
-        color: theme.palette.selection.main,
+        color: theme.palette.selection.light,
       },
       "&.Mui-focusVisible": {
         backgroundColor: theme.palette.primary.main,
