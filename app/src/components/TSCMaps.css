@@ -35,9 +35,18 @@
   margin: 0;
   z-index: 1;
 }
-.MuiButton-root.map-point:hover {
+.MuiIconButton-root.map-point:hover {
   /* background-color: red; */
-  opacity: 0.6;
+  opacity: 0.7;
+}
+.MuiButton-root.child-map {
+  transition: background-color 0.3s ease, opacity 0.3s ease, border 0.3s ease;
+  border: 1px solid yellow;
+}
+.MuiButton-root.child-map:hover {
+  background-color: lightgrey;
+  border: 1px solid yellow;
+  opacity: 0.1;
 }
 .tooltip {
   z-index: 2;
