@@ -13,11 +13,15 @@ import { calculateRectBoundsPosition, calculateVertBoundsPosition, calculateRect
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import NotListedLocationIcon from '@mui/icons-material/NotListedLocation';
 import 'react-tooltip/dist/react-tooltip.css'
 
 import './TSCMaps.css'
 
 const ICON_SIZE = 30
+const InfoIcon = NotListedLocationIcon
+const OnIcon = LocationOnIcon 
+const OffIcon = LocationOffIcon 
 
 type MapRowComponentProps = {
   mapInfo: MapInfo; 
@@ -114,8 +118,9 @@ const MapDialog = ({ name }: {name: string;}) => {
   }
 
   const legendItems: LegendItem[] = [
-    { color: theme.palette.on.main, label: 'on', icon: LocationOnIcon},
-    { color: theme.palette.off.main, label: 'off', icon: LocationOffIcon}
+    { color: theme.palette.on.main, label: 'On', icon: OnIcon},
+    { color: theme.palette.off.main, label: 'Off', icon: OffIcon},
+    { color: theme.palette.disabled.main, label: 'Info point', icon: InfoIcon}
   ]
   return (
     <>
@@ -264,7 +269,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
       // unmount
     };
   })
-  const color = isInfo ? `${theme.palette.primary.light}` : `${clicked ? theme.palette.on.main : theme.palette.off.main}`
+  const color = isInfo ? `${theme.palette.disabled.main}` : `${clicked ? theme.palette.on.main : theme.palette.off.main}`
 
   return (
     <>
@@ -286,7 +291,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
           setClicked(!clicked)
         }}
       >
-        {isInfo ? getIcon(true) : getIcon(clicked)}
+        {getIcon(isInfo, clicked)}
       </IconButton>
       <Tooltip
         id={name}
@@ -416,13 +421,18 @@ function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidt
  * @param clicked 
  * @returns 
  */
-function getIcon(clicked: boolean){
+function getIcon(isInfo: boolean, clicked: boolean){
+  if (isInfo) {
+    return (<InfoIcon
+      className='icon'
+      />)
+  }
   if (clicked) {
-    return (<LocationOnIcon 
+    return (<OnIcon 
       className="icon"
       />)
   }
-  return (<LocationOffIcon
+  return (<OffIcon
     className="icon"
     />)
 }

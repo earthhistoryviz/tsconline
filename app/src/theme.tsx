@@ -11,6 +11,7 @@ declare module '@mui/material/styles' {
       gradient: Palette['primary'];
       on: Palette['primary'];
       off: Palette['primary'];
+      disabled: Palette['primary'];
     }
   
     interface PaletteOptions {
@@ -23,6 +24,7 @@ declare module '@mui/material/styles' {
       gradient?: PaletteOptions['primary'];
       on?: PaletteOptions['primary'];
       off?: PaletteOptions['primary'];
+      disabled?: PaletteOptions['primary'];
     }
   }
 
@@ -63,6 +65,9 @@ let theme = createTheme({
         },
         off: {
           main: '#f64747'
+        },
+        disabled: {
+          main: '#d2d7d3'
         }
         
     },
