@@ -172,6 +172,10 @@ export function xmlToJson(xml: string): any {
 //                                          JSON to XML parser                                       //
 //-------------------------------------------------------------------------------------------------- //
 
+function extractName(text: string): string {
+  return text.substring(text.indexOf(":") + 1, text.length);
+}
+
 /**
  * for escaping special characters in xml (& " ' < >)
  * in text, " ' > do not need to be escaped.
@@ -207,7 +211,6 @@ function replaceSpecialChars(text: string, type: number): string {
  */
 function generateSettingsXml(settings: any, indent: string): string {
   let xml = "";
-  //console.log(settings);
   for (const key in settings) {
     if (Object.prototype.hasOwnProperty.call(settings, key)) {
       const value = settings[key];
@@ -245,7 +248,7 @@ function generateFontsXml(fonts: any, indent: string): string {
   return xml;
 }
 /**
- *
+ * generates xml string with column info
  * @param jsonColumn json object with column info
  * @param stateColumn json object containing the state of the columns
  * @param parent the parent of the current column
@@ -278,14 +281,18 @@ function generateColumnXml(
       } else if (key === "orientation") {
         xml += `${indent}<setting name="${xmlKey}" orientation="${jsonColumn[key]}"/>\n`;
       } else if (key === "isSelected") {
+        // xml += `${indent}<setting name="${xmlKey}">true</setting>\n`;
+        // continue;
         //extract column name
-        let colName = jsonColumn._id.substring(
-          jsonColumn._id.indexOf(":") + 1,
-          jsonColumn._id.length
-        );
+        let colName = extractName(jsonColumn._id);
+        //console.log(" pog ", colName, stateColumn);
+        //if column isn't in state, then use default given by the original xml
+        if (stateColumn == null || Object.keys(stateColumn).length == 0) {
+          xml += `${indent}<setting name="${xmlKey}">${jsonColumn["isSelected"]}</setting>\n`;
+        }
         //always display these things (the original tsc throws an error if not selected)
         //(but online doesn't have option to deselect them)
-        if (
+        else if (
           colName === "Chart Root" ||
           colName === "Chart Title" ||
           colName === "Ma"
@@ -293,13 +300,18 @@ function generateColumnXml(
           xml += `${indent}<setting name="${xmlKey}">true</setting>\n`;
           continue;
         }
-        //if column isn't in state, then use default given by the original xml
-        else if (stateColumn === null) {
-          xml += `${indent}<setting name="${xmlKey}">${jsonColumn["isSelected"]}</setting>\n`;
-        }
         //check if column is checked or not, and change the isSelected field to true or false
-        if (stateColumn && !parent.includes("Chart") && parent != "") {
-          //TODO: make initial stateColumn object wh
+        else if (stateColumn && !colName.includes("Chart")) {
+          // console.log(colName);
+          console.log(" asdf ", stateColumn);
+          //belgium pack consideration
+          // if (Object.keys(stateColumn).includes('"' + colName + '"')) {
+          //   if (stateColumn['"' + colName + '"'].on) {
+          //     xml += `${indent}<setting name="${xmlKey}">true</setting>\n`;
+          //   } else {
+          //     xml += `${indent}<setting name="${xmlKey}">false</setting>\n`;
+          //   }
+          // }
           if (stateColumn.on) {
             xml += `${indent}<setting name="${xmlKey}">true</setting>\n`;
           } else {
@@ -316,53 +328,50 @@ function generateColumnXml(
         xml += `${indent}</fonts>\n`;
       } else if (typeof jsonColumn[key] === "object") {
         xml += `${indent}<column id="${xmlKey}">\n`;
-        //pass the full state of columns for first iteration
-        if (key === "class datastore.RootColumn:Chart Title") {
-          xml += generateColumnXml(
-            jsonColumn[key],
-            stateColumn,
-            key,
-            `${indent}    `
-          );
-        }
         //recursively go down column settings
-        else {
-          let temp = jsonColumn[key]._id.substring(
-            jsonColumn[key]._id.indexOf(":") + 1,
-            jsonColumn[key]._id.length
-          );
-          if (stateColumn == null) {
-            xml += generateColumnXml(
-              jsonColumn[key],
-              null,
-              temp,
-              `${indent}    `
-            );
+        let currName = extractName(jsonColumn._id);
+        let childName = extractName(jsonColumn[key]._id);
+        //console.log(parent, currName, childName);
+        //TODO: pass the state column of the column itself, not the children array of its parent
+        let params: { one: any; two: any; three: string; four: string } = {
+          one: jsonColumn[key],
+          two: stateColumn,
+          three: currName,
+          four: `${indent}    `,
+        };
+        //first column after the chart root and chart title columns
+        if (currName.includes("Chart") && !childName.includes("Chart")) {
+          params.two = stateColumn[childName];
+        } else if (currName.includes("Chart")) {
+          //keep the current params
+        } else if (stateColumn == null) {
+          params.two = null;
+        } else if (
+          stateColumn.children == null ||
+          stateColumn.children == undefined
+        ) {
+          params.two = null;
+        } else if (stateColumn != null) {
+          if (Object.keys(stateColumn.children).includes(childName)) {
+            params.two = stateColumn.children[childName];
+          } else {
+            params.two = null;
           }
-          if (stateColumn != null) {
-            // reached end of column tree, no more children
-            if (
-              stateColumn.children == null ||
-              stateColumn.children == undefined
-            ) {
-              xml += generateColumnXml(
-                jsonColumn[key],
-                null,
-                temp,
-                `${indent}    `
-              );
-            }
-            //more children exists
-            else {
-              xml += generateColumnXml(
-                jsonColumn[key],
-                stateColumn.children[temp],
-                temp,
-                `${indent}    `
-              );
-            }
+          // reached end of column tree, no more children
+          if (
+            stateColumn.children == null ||
+            stateColumn.children == undefined
+          ) {
+            params.two = null;
           }
         }
+        xml += generateColumnXml(
+          params.one,
+          params.two,
+          params.three,
+          params.four
+        );
+
         xml += `${indent}</column>\n`;
       } else {
         xml += `${indent}<setting name="${xmlKey}">${replaceSpecialChars(
@@ -375,6 +384,9 @@ function generateColumnXml(
   return xml;
 }
 /**
+ * main parser
+ * a major aspect for the parser is that it can only add fields that were part of the initial input settings
+ * for example, if the settings doesn't have "isSelected" fields, it won't add "isSelected" settings in the final xml.
  *
  * @param settings the initial json object used to generate a chart that contains the settings info
  * @param columnSettings json object containing the state of the columns
