@@ -129,7 +129,14 @@ export async function parseDatapacks(
         }
         continue;
       }
-      const parent = line.split("\t:\t")[0];
+      let parent = line.split("\t:\t")[0];
+      //THIS ACTUALLY DOESN'T MATTER ANYMORE BUT I WILL LEAVE IT HERE JUST IN CASE
+      //TODO
+      //to replace quotations surrounding the column name for future parsing access in state.
+      //if this is not done, then the keys in the state for columns have quotations surrounding it
+      //which is not consistent with the equivalent keys found in the parsed settings json object.
+      //ex "North Belgium -- Oostende, Brussels, Antwerp, Campine, Maastrichen" vs
+      //North Belgium -- Oostende, Brussels, Antwerp, Campine, Maastrichen
       let childrenstring = line.split("\t:\t")[1];
       if (!parent || !childrenstring) continue;
       childrenstring = childrenstring!.split("\t\t")[0];
