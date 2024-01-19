@@ -1,4 +1,4 @@
-import { Tooltip, Drawer, Divider, Typography, IconButton, Dialog, Button, List, Box, ListItemButton, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
+import { TooltipProps, Tooltip, Drawer, Divider, Typography, IconButton, Dialog, Button, List, Box, ListItemButton, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
 import { styled, useTheme } from "@mui/material/styles"
 import type { InfoPoints, MapHierarchy, Bounds, MapPoints, MapInfo, RectBounds} from '@tsconline/shared'
 import { devSafeUrl } from '../util'
@@ -93,6 +93,19 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   ...theme.mixins.toolbar,
   justifyContent: 'space-between',
 }));
+
+// TODO: might want to change if it ever updates, weird workaround here, can see this at 
+// changing it with normal styles cannot override since this uses a portal to create outside the DOM
+// https://mui.com/material-ui/guides/interoperability/#global-css
+const MapPointTooltip = styled(({className, ...props}: TooltipProps) => (
+  <Tooltip arrow followCursor classes={{popper: className}} {...props}/>
+))`
+  .MuiTooltip-tooltip {
+    background-color: ${(props) => props.theme.palette.tooltip.main};
+    padding-left: 20px;
+  }
+`
+
 
  // The map interface that will be recursive so that we can create "multiple" windows.
  // Nested dialogs
@@ -272,18 +285,18 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
 
   return (
     <>
-      <Tooltip className="tooltip" title={
-        <div>
-        <h3 className="header">{`${name}`}</h3>
-        <ul>
-            <li>Latitude: {mapPoint.lat}</li>
-            <li>Longitude: {mapPoint.lon}</li>
-            {/* <li>Default: {mapPoint.default || '--'}</li>
-            <li>Minimum Age: {mapPoint.minage || '--'}</li>
-            <li>Maximum Age: {mapPoint.maxage || '--'}</li> */}
-            <li>Note: {mapPoint.note || '--'}</li>
-        </ul>
-        </div>
+      <MapPointTooltip arrow followCursor title={
+        <>
+          <h3 className="header">{`${name}`}</h3>
+          <ul>
+              <li>Latitude: {mapPoint.lat}</li>
+              <li>Longitude: {mapPoint.lon}</li>
+              {/* <li>Default: {mapPoint.default || '--'}</li>
+              <li>Minimum Age: {mapPoint.minage || '--'}</li>
+              <li>Maximum Age: {mapPoint.maxage || '--'}</li> */}
+              <li>Note: {mapPoint.note || '--'}</li>
+          </ul>
+        </>
       }>
       <IconButton
         className="map-point"
@@ -303,7 +316,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
       >
         {getIcon(isInfo, clicked)}
       </IconButton>
-      </Tooltip>
+      </MapPointTooltip>
     </>
   )
 }
@@ -322,18 +335,18 @@ function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Boun
     const { midpoint, upperLeft, width, height } = calculateRectButton(childBounds, mapBounds)
     return (
       <>
-      <Tooltip className="tooltip" title={
-        <div>
-        <h3 className="header">{`${name}`}</h3>
-        <ul>
-            <li>Latitude: {midpoint.y}</li>
-            <li>Longitude: {midpoint.x}</li>
-            {/* <li>Default: {mapPoint.default || '--'}</li>
-            <li>Minimum Age: {mapPoint.minage || '--'}</li>
-            <li>Maximum Age: {mapPoint.maxage || '--'}</li> */}
-            {/* <li>Note: {mapPoint.note || '--'}</li> */}
-        </ul>
-        </div>
+      <MapPointTooltip arrow followCursor title={
+        <>
+          <h3 className="header">{`${name}`}</h3>
+          <ul>
+              <li>Latitude: {midpoint.y}</li>
+              <li>Longitude: {midpoint.x}</li>
+              {/* <li>Default: {mapPoint.default || '--'}</li>
+              <li>Minimum Age: {mapPoint.minage || '--'}</li>
+              <li>Maximum Age: {mapPoint.maxage || '--'}</li> */}
+              {/* <li>Note: {mapPoint.note || '--'}</li> */}
+          </ul>
+        </>
       }>
       <Button
       className="child-map"
@@ -345,7 +358,7 @@ function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Boun
       }} 
       onClick={() => {openChild(name)}}
       />
-      </Tooltip>
+      </MapPointTooltip>
       </>
   )
   } else {
