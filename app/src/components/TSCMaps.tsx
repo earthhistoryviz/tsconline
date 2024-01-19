@@ -1,4 +1,4 @@
-import { Drawer, Divider, Typography, IconButton, Dialog, Button, List, Box, ListItemButton, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
+import { Tooltip, Drawer, Divider, Typography, IconButton, Dialog, Button, List, Box, ListItemButton, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
 import { styled, useTheme } from "@mui/material/styles"
 import type { InfoPoints, MapHierarchy, Bounds, MapPoints, MapInfo, RectBounds} from '@tsconline/shared'
 import { devSafeUrl } from '../util'
@@ -7,7 +7,6 @@ import { context } from '../state';
 import { observer } from "mobx-react-lite"
 import { TransformWrapper, TransformComponent, useTransformEffect } from "react-zoom-pan-pinch"
 import { TSCButton } from './TSCButton'
-import { Tooltip } from 'react-tooltip'
 import { isRectBounds, isVertBounds } from '@tsconline/shared'
 import { calculateRectBoundsPosition, calculateVertBoundsPosition, calculateRectButton } from '../coordinates'
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -273,6 +272,19 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
 
   return (
     <>
+      <Tooltip className="tooltip" title={
+        <div>
+        <h3 className="header">{`${name}`}</h3>
+        <ul>
+            <li>Latitude: {mapPoint.lat}</li>
+            <li>Longitude: {mapPoint.lon}</li>
+            {/* <li>Default: {mapPoint.default || '--'}</li>
+            <li>Minimum Age: {mapPoint.minage || '--'}</li>
+            <li>Maximum Age: {mapPoint.maxage || '--'}</li> */}
+            <li>Note: {mapPoint.note || '--'}</li>
+        </ul>
+        </div>
+      }>
       <IconButton
         className="map-point"
         disableRipple={isInfo}
@@ -285,30 +297,12 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
           width: `${ICON_SIZE / scale}px`,
           height: `${ICON_SIZE / scale}px`,
         }}
-        data-tooltip-id={name}
-        data-tooltip-float={true}
         onClick={() => {
           setClicked(!clicked)
         }}
       >
         {getIcon(isInfo, clicked)}
       </IconButton>
-      <Tooltip
-        id={name}
-        place="bottom"
-        className="tooltip"
-      >
-        <div>
-        <h3 className="header">{`${name}`}</h3>
-        <ul>
-            <li>Latitude: {mapPoint.lat}</li>
-            <li>Longitude: {mapPoint.lon}</li>
-            {/* <li>Default: {mapPoint.default || '--'}</li>
-            <li>Minimum Age: {mapPoint.minage || '--'}</li>
-            <li>Maximum Age: {mapPoint.maxage || '--'}</li> */}
-            <li>Note: {mapPoint.note || '--'}</li>
-        </ul>
-        </div>
       </Tooltip>
     </>
   )
@@ -328,23 +322,7 @@ function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Boun
     const { midpoint, upperLeft, width, height } = calculateRectButton(childBounds, mapBounds)
     return (
       <>
-      <Button
-      data-tooltip-id={name}
-      className="child-map"
-      style={{
-        left: `calc(${upperLeft.x}%`,
-        top: `calc(${upperLeft.y}%`,
-        width: `${width}%`,
-        height: `${height}%`,
-      }} 
-      data-tooltip-float={true}
-      onClick={() => {openChild(name)}}
-      />
-      <Tooltip
-        id={name}
-        place="bottom"
-        className="tooltip"
-      >
+      <Tooltip className="tooltip" title={
         <div>
         <h3 className="header">{`${name}`}</h3>
         <ul>
@@ -356,6 +334,17 @@ function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Boun
             {/* <li>Note: {mapPoint.note || '--'}</li> */}
         </ul>
         </div>
+      }>
+      <Button
+      className="child-map"
+      style={{
+        left: `calc(${upperLeft.x}%`,
+        top: `calc(${upperLeft.y}%`,
+        width: `${width}%`,
+        height: `${height}%`,
+      }} 
+      onClick={() => {openChild(name)}}
+      />
       </Tooltip>
       </>
   )
