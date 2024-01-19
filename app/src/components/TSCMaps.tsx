@@ -13,7 +13,6 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import NotListedLocationIcon from '@mui/icons-material/NotListedLocation';
-import 'react-tooltip/dist/react-tooltip.css'
 
 import './TSCMaps.css'
 
