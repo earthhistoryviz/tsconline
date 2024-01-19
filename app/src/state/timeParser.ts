@@ -55,7 +55,7 @@ export const fetchTimescaleData = async () => {
       const data = await response.json();
       return data.stages;
     } else {
-      console.error('Failed to fetch timescale data. Server responded with:', response.statusText);
+      console.error('Failed to fetch timescale data. Server responds with:', response.statusText);
       return [];
     }
   } catch (error) {
