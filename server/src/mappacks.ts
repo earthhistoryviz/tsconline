@@ -80,7 +80,6 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                         if (!info || info.length < 6) {
                             throw new Error(`${error}: HEADER-COORD isn't properly formatted`)
                         }
-                        // TODO: coordtype can be multiple things, so won't always be called upperLeftLon
                         map.coordtype = String(info[1])
                         switch (map.coordtype) {
                             case 'RECTANGULAR':
@@ -120,12 +119,10 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
 
                         }
                         break;
-                    //TODO: Can this have multiple parents?
                     case 'HEADER-PARENT MAP':
                         if (!info || info.length < 7) {
                             throw new Error(`${error}: HEADER-PARENT MAP isn't properly formatted`)
                         }
-                        // TODO: coordtype can be multiple things, so won't always be called upperLeftLon
                         let parent: any = {}
                         //TODO: we only assume rect bounds as parent, will need change if not the case
                         let bounds = grabRectBounds(headerLabels, info)

@@ -43,8 +43,6 @@ try {
 // so routes.ts can handle this
 export default assetconfigs;
 // this try will run the decryption jar to decrypt all files in the datapack folder
-// TODO: if the datapack is not encrypted, handle it properly. potentially a problem for the decrypt.jar
-// TODO: We might need to make each it's own directory
 try {
   const datapacks = assetconfigs.activeDatapacks.map(
     (datapack) => assetconfigs.datapacksDirectory + "/" + datapack
