@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { fetcher } from '../util'
 
 // import React, { useState, useEffect } from 'react';
 
@@ -22,8 +23,6 @@ import React, { useState, useEffect } from 'react';
 //             })
 //     })
     
-
-
 // }
 
 // function TimeParser() {
@@ -50,18 +49,24 @@ import React, { useState, useEffect } from 'react';
 
 export const fetchTimescaleData = async () => {
   try {
-    const response = await fetch('/timescale');
+    const response = await fetcher('/timescale', {
+      method: "GET"
+    });
+    console.log(response);
     if (response.ok) {
       const data = await response.json();
-      return data.stages;
-    } else {
-      console.error('Failed to fetch timescale data. Server responded with:', response.statusText);
+      console.log(data);
+      return data;
+    }
+    else {
+      console.error('Server responds with:', response.status);
       return [];
     }
   } catch (error) {
     console.error('Error fetching timescale data:', error);
     return [];
   }
+  
 };
 
 export default fetchTimescaleData;
