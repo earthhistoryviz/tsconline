@@ -49,9 +49,6 @@
   background-color: rgba(239, 239, 240, 0.2);
   opacity: 0.9;
 }
-.tooltip {
-  z-index: 2;
-}
 .header {
   text-align: center;
 }
