@@ -15,7 +15,8 @@
     "fastify": "^4.13.0",
     "fs": "^0.0.1-security",
     "nvm": "^0.0.4",
-    "typescript": "^5.0.4"
+    "typescript": "^5.0.4",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@yarnpkg/sdks": "^3.0.0-rc.43"

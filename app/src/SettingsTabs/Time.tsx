@@ -1,6 +1,6 @@
 import { Box, Button, TextField } from "@mui/material";
 import { observer } from "mobx-react-lite";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { actions, state } from "../state";
 import { primary_dark } from "../constant";
 import ForwardIcon from '@mui/icons-material/Forward';
@@ -10,11 +10,22 @@ import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
+import fetchTimescaleData from "../state/timeParser"
 
-const geologicalStages = ["Gelasian (1.8 Ma top)", "Piacenzian (2.58 Ma top)", "Zanclean (3.6 Ma top)", "Messinian (5.335 Ma top)", "Tortonian (7.25 Ma top)", "Serravallian (11.63 Ma top)", "Langhian (13.82 Ma top)", "Burdigalian (15.99 Ma top)"];
+//const geologicalStages = ["Gelasian (1.8 Ma top)", "Piacenzian (2.58 Ma top)", "Zanclean (3.6 Ma top)", "Messinian (5.335 Ma top)", "Tortonian (7.25 Ma top)", "Serravallian (11.63 Ma top)", "Langhian (13.82 Ma top)", "Burdigalian (15.99 Ma top)"];
 
 export const Time = observer(function Time() {
     const navigate = useNavigate();
+    const [timescaleData, setTimescaleData] = useState<string[]>([]);
+
+    useEffect(() => {
+      const loadTimescaleData = async () => {
+        const data = await fetchTimescaleData();
+        setTimescaleData(data);
+      };
+
+      loadTimescaleData();
+    }, []);
 
     const handleButtonClick = () => {
         actions.setTab(1);
@@ -63,7 +74,7 @@ export const Time = observer(function Time() {
           onChange={(event) => actions.setSelectedStage(event.target.value as string)}
           style={{ marginBottom: '10px', width: '100%' }}
         >
-          {geologicalStages.map((stage) => (
+          {timescaleData.map((stage) => (
             <MenuItem key={stage} value={stage}>
               {stage}
             </MenuItem>

@@ -93,8 +93,8 @@ function assertTimescale(val) {
 // Serve timescale data endpoint
 server.get('/timescale', async (_req, res) => {
     try {
-        const timescaleData = readExcelFile('filePath.xlsx'); // Replace with the correct file path
-        timescaleData.forEach((data) => assertTimescale(data)); // Type assertion
+        const timescaleData = readExcelFile('../../default_timescale.xlsx'); // Replace with the correct file path 
+        timescaleData.forEach((data) => assertTimescale(data));
         res.send({ stages: timescaleData });
     }
     catch (error) {

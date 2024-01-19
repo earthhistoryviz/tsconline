@@ -47,7 +47,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["fastify", "npm:4.16.0"],\
             ["fs", "npm:0.0.1-security"],\
             ["nvm", "npm:0.0.4"],\
-            ["typescript", "patch:typescript@npm%3A5.0.4#~builtin<compat/typescript>::version=5.0.4&hash=b5f058"]\
+            ["typescript", "patch:typescript@npm%3A5.0.4#~builtin<compat/typescript>::version=5.0.4&hash=b5f058"],\
+            ["xlsx", "npm:0.18.5"]\
           ],\
           "linkType": "SOFT"\
         }]\
@@ -5833,7 +5834,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["fastify", "npm:4.16.0"],\
             ["fs", "npm:0.0.1-security"],\
             ["nvm", "npm:0.0.4"],\
-            ["typescript", "patch:typescript@npm%3A5.0.4#~builtin<compat/typescript>::version=5.0.4&hash=b5f058"]\
+            ["typescript", "patch:typescript@npm%3A5.0.4#~builtin<compat/typescript>::version=5.0.4&hash=b5f058"],\
+            ["xlsx", "npm:0.18.5"]\
           ],\
           "linkType": "SOFT"\
         }]\

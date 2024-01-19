@@ -4888,6 +4888,7 @@ __metadata:
     fs: ^0.0.1-security
     nvm: ^0.0.4
     typescript: ^5.0.4
+    xlsx: ^0.18.5
   languageName: unknown
   linkType: soft
 

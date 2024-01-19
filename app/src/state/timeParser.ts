@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from 'react';
+
 // import React, { useState, useEffect } from 'react';
 
 
@@ -24,28 +26,43 @@
 
 // }
 
-import React, { useState, useEffect } from 'react';
+// function TimeParser() {
+//     const [stages, setStages] = useState([]);
 
-function TimeParser() {
-    const [stages, setStages] = useState([]);
+//     useEffect(() => {
+//         async function fetchData() {
+//             try {
+//                 const response = await fetch('/timescale');
+//                 if (!response.ok) {
+//                     throw new Error('Network response was not ok');
+//                 }
+//                 const jsonData = await response.json();
+//                 const fetchedStages = jsonData.stages || [];
+//                 setStages(fetchedStages);
+//             } catch (error) {
+//                 console.error('Error fetching data:', error);
+//             }
+//         }
 
-    useEffect(() => {
-        async function fetchData() {
-            try {
-                const response = await fetch('/timescale');
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                const jsonData = await response.json();
-                const fetchedStages = jsonData.stages || [];
-                setStages(fetchedStages);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        }
+//         fetchData();
+//     }, []);
+// }
 
-        fetchData();
-    }, []);
-}
+export const fetchTimescaleData = async () => {
+  try {
+    const response = await fetch('/timescale');
+    if (response.ok) {
+      const data = await response.json();
+      return data.stages;
+    } else {
+      console.error('Failed to fetch timescale data. Server responded with:', response.statusText);
+      return [];
+    }
+  } catch (error) {
+    console.error('Error fetching timescale data:', error);
+    return [];
+  }
+};
 
-export default TimeParser;
+export default fetchTimescaleData;
+  

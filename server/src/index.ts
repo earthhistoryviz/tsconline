@@ -95,8 +95,7 @@ server.get('/presets', async (_request, reply) => {
 })
 
 type Timescale = {
-  // Define the structure of your Timescale type here
-  // For instance:
+  // Define the structure of Timescale type here
   key: string;
   value: number;
   // Add other properties based on your actual Timescale structure
@@ -113,8 +112,8 @@ function assertTimescale(val: any): asserts val is Timescale {
 // Serve timescale data endpoint
 server.get('/timescale', async (_req, res) => {
   try {
-    const timescaleData: any[] = readExcelFile('filePath.xlsx'); // Replace with the correct file path
-    timescaleData.forEach((data) => assertTimescale(data)); // Type assertion
+    const timescaleData: any[] = readExcelFile('../../default_timescale.xlsx'); // Replace with the correct file path 
+    timescaleData.forEach((data) => assertTimescale(data));
 
     res.send({ stages: timescaleData });
   } catch (error) {
