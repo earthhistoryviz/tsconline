@@ -60,9 +60,7 @@ export function assertColumnInfo(o) {
         if (!Array.isArray(columnInfo.parents)) {
             throw new Error(`ColumnInfo' value for key '${key}' must have a 'parents' string array`);
         }
-        if (columnInfo.children) {
-            assertColumnInfo(columnInfo.children);
-        }
+        assertColumnInfo(columnInfo.children);
     }
 }
 export function assertMapHierarchy(o) {
