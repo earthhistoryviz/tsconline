@@ -109,7 +109,6 @@ export const Time = observer(function Time() {
 
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
         <FormGroup>
-          {/* TODO: change below checkboxes to TSCChecbok once we implement settings*/}
           <FormControlLabel control={<TSCCheckbox />} label="Add MouseOver info (popups)" />
           <FormControlLabel control={<TSCCheckbox />} label="Enabled Global Priority Filtering for block columns" />
           <FormControlLabel control={<TSCCheckbox />} label="Enabled stage background for event columns" />
