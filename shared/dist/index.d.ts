@@ -26,7 +26,7 @@ export declare function assertChartInfo(o: any): asserts o is ChartResponseInfo;
 export type ColumnInfo = {
     [name: string]: {
         on: boolean;
-        children: ColumnInfo | null;
+        children: ColumnInfo;
         parents: string[];
     };
 };

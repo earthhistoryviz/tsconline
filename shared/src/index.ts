@@ -61,7 +61,7 @@ export function assertChartInfo(o: any): asserts o is ChartResponseInfo {
 export type ColumnInfo = {
   [name: string]: {
     on: boolean,
-    children: ColumnInfo | null,
+    children: ColumnInfo,
     parents: string[],
   }
 }
@@ -83,9 +83,7 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
     if (!Array.isArray(columnInfo.parents)) {
       throw new Error(`ColumnInfo' value for key '${key}' must have a 'parents' string array`)
     }
-    if (columnInfo.children) {
-      assertColumnInfo(columnInfo.children)
-    }
+    assertColumnInfo(columnInfo.children)
   }
 }
 

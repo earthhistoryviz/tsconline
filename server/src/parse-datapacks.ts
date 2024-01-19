@@ -23,31 +23,28 @@ function recursive(
   parents: string[],
   lastparent: string,
   children: string[],
-  stateSettings: any,
+  columnInfo: ColumnInfo,
   allEntries: any
 ) {
-  //if somehow the data at this point is _METACOLUMN_OFF, remove it
-  const index = lastparent.indexOf("_METACOLUMN_OFF");
-  if (index != -1) {
-    lastparent = lastparent.slice(0, index);
-  }
-  stateSettings[lastparent] = {
+  // taking this out for now for @Jaqui's task
+  // //if somehow the data at this point is _METACOLUMN_OFF, remove it
+  // const index = lastparent.indexOf("_METACOLUMN_OFF");
+  // if (index != -1) {
+  //   lastparent = lastparent.slice(0, index);
+  // }
+  columnInfo[lastparent] = {
     on: true,
     children: {},
     parents: parents,
   };
   const newParents = [...parents, lastparent];
-  // console.log("lastparent: ", lastparent)
-  // console.log("children: ", children)
-  // console.log("stateSettings: ", stateSettings)
-  // console.log("parents: ", parents)
   children.forEach((child) => {
     if (child && allEntries.get(child)) {
       recursive(
         newParents,
         child,
         allEntries.get(child),
-        stateSettings[lastparent].children,
+        columnInfo[lastparent]!.children,
         allEntries
       );
     } else if (!allEntries.get(child)) {
@@ -55,7 +52,7 @@ function recursive(
         newParents,
         child,
         [],
-        stateSettings[lastparent].children,
+        columnInfo[lastparent]!.children,
         allEntries
       );
     }
@@ -81,7 +78,7 @@ export async function parseDatapacks(
   if (decrypt_paths.length == 0) return { columns: {} };
   // let fileSettingsMap: { [filePath: string]: ColumnInfo } = {};
   let decryptedfiles: String = "";
-  let settings: ColumnInfo = {};
+  let columnInfo: ColumnInfo = {};
   //put all contents into one string for parsing
   await pmap(decrypt_paths, async (decryptedfile) => {
     const contents = (await readFile(decryptedfile)).toString();
@@ -99,7 +96,7 @@ export async function parseDatapacks(
       if (!line.includes("\t:\t")) {
         if (line.includes(":") && line.split(":")[0]!.includes("age units")) {
           //create MA setting since this doesn't follow the standard format of "\t:\t"
-          settings["MA"] = {
+          columnInfo["MA"] = {
             on: true,
             children: {},
             parents: [],
@@ -133,7 +130,7 @@ export async function parseDatapacks(
     // should have already processed it.
     allEntries.forEach((children, parent) => {
       if (!isChild.has(parent)) {
-        recursive([], parent, children, settings, allEntries);
+        recursive([], parent, children, columnInfo, allEntries);
       }
     });
     // console.log(JSON.stringify(settings, null, 2));
@@ -145,5 +142,5 @@ export async function parseDatapacks(
       e
     );
   }
-  return { columns: settings };
+  return { columns: columnInfo };
 }
