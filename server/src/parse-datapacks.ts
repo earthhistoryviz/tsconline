@@ -11,28 +11,6 @@ import { grabFilepaths } from "./util.js";
  * At the moment, is not currently working
  */
 function spliceArrayAtFirstSpecialMatch(array: string[]): string[] {
-  const regexQuotePattern = /href=["'][^"']*["']/;
-  // const regexSpacePattern = /\s+/;
-  const metaColumnOffIndex = array.findIndex(
-    (item) => item === "_METACOLUMN_OFF"
-  );
-  // const spaceIndex = array.findIndex(item => regexSpacePattern.test(item))
-  const quoteIndex = array.findIndex((item) => regexQuotePattern.test(item));
-
-  // Determine the first index where either condition is met
-  let indices = [metaColumnOffIndex, quoteIndex].filter(
-    (index) => index !== -1
-  );
-  const firstIndex = indices.length > 0 ? Math.min(...indices) : -1;
-  if (firstIndex !== -1) {
-    return array.slice(0, firstIndex);
-  }
-  // if (array.length > 2 && array[array.length - 1] !== "" && array[array.length - 2] !== "") {
-  //     array = array.slice(0, -2);
-  // }
-  if (array[array.length - 1]!.trim() === "") {
-    return array.slice(0, -1);
-  }
   return array;
 }
 
