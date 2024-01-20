@@ -9,7 +9,7 @@ import { TransformWrapper, TransformComponent, useTransformEffect } from "react-
 import { TSCButton } from './TSCButton'
 import { isRectBounds, isVertBounds } from '@tsconline/shared'
 import { calculateRectBoundsPosition, calculateVertBoundsPosition, calculateRectButton } from '../coordinates'
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import CloseIcon from '@mui/icons-material/Close';
 import NotListedLocationIcon from '@mui/icons-material/NotListedLocation';
 import LocationOnTwoToneIcon from '@mui/icons-material/LocationOnTwoTone';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
@@ -158,12 +158,12 @@ const MapDialog = ({ name }: {name: string;}) => {
         open={legendOpen}
       >
         <DrawerHeader> 
+          <LegendArrowDropDown onClick={() => {setLegendOpen(false)}}>
+            <CloseIcon fontSize="small"/>
+          </LegendArrowDropDown>
           <LegendTypography className="legend-title" variant="h6" gutterBottom>
             Color Legend
           </LegendTypography>
-          <LegendArrowDropDown onClick={() => {setLegendOpen(false)}}>
-            <ArrowDropDownIcon />
-          </LegendArrowDropDown>
         </DrawerHeader>
         <Divider />
         <Legend items={legendItems}/>

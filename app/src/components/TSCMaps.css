@@ -59,7 +59,8 @@
   margin-left: 15px;
 }
 .MuiTypography-root.legend-title {
-  margin-left: 15px;
+  margin-right: 15px;
+  margin-bottom: 0px;
 }
 .MuiBox-root.legend-item-container {
   display: flex;
