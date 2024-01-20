@@ -1,11 +1,115 @@
 // Shared types between app and server (i.e. messages they send back and forth)
 
+export type SuccessfulServerResponse = {
+  message: string
+}
+
+export type ServerResponse = SuccessfulServerResponse | ServerResponseError
+
+export type Preset = ChartConfig | ServerResponseError
+
 export type ChartConfig = {
   img: string, // path to image
   title: string,
   description: string,
   settings: string, // path to base settings file
   datapacks: string[], // active datapack names
+}
+
+export type ChartRequest = {
+  settings: string, // JSON string representing the settings file you want to use to make a chart
+  columnSettings: string, //Json string representing the state of the application when generating, contains the user's changes
+  datapacks: string[], // active datapacks to be used on chart
+}
+
+export type ServerResponseError = {
+  error: string, // any time an error is thrown on the server side
+}
+
+export type ColumnInfo = {
+  [name: string]: {
+    on: boolean,
+    children: ColumnInfo,
+    parents: string[],
+  }
+}
+
+export type ChartResponseInfo = {
+  chartpath: string, // path to the chart
+  hash: string // hash for where it is stored
+}
+
+export type GeologicalStages = {
+  [key: string]: number
+}
+
+export type MapPoints = {
+  [name: string]: {
+    lat: number
+    lon: number
+    default?: string
+    minage?: number
+    maxage?: number
+    note?: string
+  }
+}
+
+export type InfoPoints = {
+  [name: string]: {
+    lat: number,
+    lon: number,
+    note?: string 
+  }
+}
+
+export type MapInfo = {
+  [name: string]: {
+    img: string,
+    note?: string,
+    parent?: ParentMap,
+    coordtype: string,
+    bounds: Bounds,
+    mapPoints: MapPoints,
+    infoPoints?: InfoPoints
+  }
+}
+
+export type ParentMap = {
+  name: string,
+  coordtype: string,
+  bounds: Bounds
+}
+export type MapHierarchy = {
+  [parent: string]: string[]
+}
+
+export type DatapackResponse = { 
+  columnInfo: ColumnInfo,
+  mapInfo: MapInfo,
+  mapHierarchy: MapHierarchy
+} 
+
+export type Bounds = RectBounds | VertBounds
+
+export type RectBounds = {
+  upperLeftLon: number,
+  upperLeftLat: number,
+  lowerRightLon: number,
+  lowerRightLat: number,
+}
+
+export type VertBounds = {
+  centerLat: number,
+  centerLon: number,
+  height: number,
+  scale: number,
+}
+
+export function assertDatapackResponse(o: any): asserts o is DatapackResponse {
+  if (typeof o !== 'object') throw new Error('DatapackResponse must be a non-null object')
+  assertColumnInfo(o.columnInfo)
+  assertMapInfo(o.mapInfo)
+  assertMapHierarchy(o.mapHierarchy)
 }
 
 export function assertChartConfig(o: any): asserts o is ChartConfig {
@@ -22,17 +126,8 @@ export function assertChartConfigArray(o: any): asserts o is ChartConfig[] {
   for (const c of o) assertChartConfig(c)
 }
 
-export type ServerResponseError = {
-  error: string, // any time an error is thrown on the server side
-}
 
-export type Preset = ChartConfig | ServerResponseError
 
-export type ChartRequest = {
-  settings: string, // JSON string representing the settings file you want to use to make a chart
-  columnSettings: string, //Json string representing the state of the application when generating, contains the user's changes
-  datapacks: string[], // active datapacks to be used on chart
-}
 export function assertChartRequest(o: any): asserts o is ChartRequest {
   if (typeof o !== 'object') throw new Error('ChartRequest must be an object')
   if (typeof o.settings !== 'string') throw new Error('ChartRequest must have a settings string')
@@ -40,10 +135,6 @@ export function assertChartRequest(o: any): asserts o is ChartRequest {
   if (!Array.isArray(o.datapacks)) throw new Error('ChartRequest must have a datapacks array')
 }
 
-export type ChartResponseInfo = {
-  chartpath: string, // path to the chart
-  hash: string // hash for where it is stored
-}
 export function isServerResponseError(o: any): o is ServerResponseError {
   if (!o || typeof o !== 'object') return false
   if (typeof o.error !== 'string') return false
@@ -58,13 +149,6 @@ export function assertChartInfo(o: any): asserts o is ChartResponseInfo {
   if (typeof o.hash !== 'string') throw new Error('ChartInfo must have a hash string')
 }
 
-export type ColumnInfo = {
-  [name: string]: {
-    on: boolean,
-    children: ColumnInfo,
-    parents: string[],
-  }
-}
 
 export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   if (typeof o !== 'object' || o === null) {
@@ -88,66 +172,6 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
 }
 
 
-export type GeologicalStages = {
-  [key: string]: number
-}
-export type MapPoints = {
-  [name: string]: {
-    lat: number
-    lon: number
-    default?: string
-    minage?: number
-    maxage?: number
-    note?: string
-  }
-}
-export type InfoPoints = {
-  [name: string]: {
-    lat: number,
-    lon: number,
-    note?: string 
-  }
-}
-export type MapInfo = {
-  [name: string]: {
-    img: string,
-    note?: string,
-    parent?: ParentMap,
-    coordtype: string,
-    bounds: Bounds,
-    mapPoints: MapPoints,
-    infoPoints?: InfoPoints
-  }
-}
-export type ParentMap = {
-  name: string,
-  coordtype: string,
-  bounds: Bounds
-}
-export type MapHierarchy = {
-  [parent: string]: string[]
-}
-
-export type DatapackResponse = { 
-  columnInfo: ColumnInfo,
-  mapInfo: MapInfo,
-  mapHierarchy: MapHierarchy
-} 
-export type Bounds = RectBounds | VertBounds
-
-export type RectBounds = {
-  upperLeftLon: number,
-  upperLeftLat: number,
-  lowerRightLon: number,
-  lowerRightLat: number,
-}
-
-export type VertBounds = {
-  centerLat: number,
-  centerLon: number,
-  height: number,
-  scale: number,
-}
 
 export function assertMapHierarchy(o: any): asserts o is MapHierarchy {
   if (typeof o !== 'object' || o === null) {
@@ -313,10 +337,6 @@ export function assertMapPoints(o: any): asserts o is MapPoints {
     }
   }
 }
-export type SuccessfulServerResponse = {
-  message: string
-}
-export type ServerResponse = SuccessfulServerResponse | ServerResponseError
 export function assertSuccessfulServerResponse(o: any): asserts o is SuccessfulServerResponse {
   if (!o || typeof o !== 'object') throw new Error (`SuccessfulServerResponse must be a non-null object`)
   if (typeof o.message !== 'string') throw new Error(`SuccessfulServerResponse must have a 'message' string property`)

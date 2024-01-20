@@ -1,3 +1,8 @@
+export type SuccessfulServerResponse = {
+    message: string;
+};
+export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
+export type Preset = ChartConfig | ServerResponseError;
 export type ChartConfig = {
     img: string;
     title: string;
@@ -5,24 +10,14 @@ export type ChartConfig = {
     settings: string;
     datapacks: string[];
 };
-export declare function assertChartConfig(o: any): asserts o is ChartConfig;
-export declare function assertChartConfigArray(o: any): asserts o is ChartConfig[];
-export type ServerResponseError = {
-    error: string;
-};
-export type Preset = ChartConfig | ServerResponseError;
 export type ChartRequest = {
     settings: string;
     columnSettings: string;
     datapacks: string[];
 };
-export declare function assertChartRequest(o: any): asserts o is ChartRequest;
-export type ChartResponseInfo = {
-    chartpath: string;
-    hash: string;
+export type ServerResponseError = {
+    error: string;
 };
-export declare function isServerResponseError(o: any): o is ServerResponseError;
-export declare function assertChartInfo(o: any): asserts o is ChartResponseInfo;
 export type ColumnInfo = {
     [name: string]: {
         on: boolean;
@@ -30,7 +25,10 @@ export type ColumnInfo = {
         parents: string[];
     };
 };
-export declare function assertColumnInfo(o: any): asserts o is ColumnInfo;
+export type ChartResponseInfo = {
+    chartpath: string;
+    hash: string;
+};
 export type GeologicalStages = {
     [key: string]: number;
 };
@@ -88,6 +86,13 @@ export type VertBounds = {
     height: number;
     scale: number;
 };
+export declare function assertDatapackResponse(o: any): asserts o is DatapackResponse;
+export declare function assertChartConfig(o: any): asserts o is ChartConfig;
+export declare function assertChartConfigArray(o: any): asserts o is ChartConfig[];
+export declare function assertChartRequest(o: any): asserts o is ChartRequest;
+export declare function isServerResponseError(o: any): o is ServerResponseError;
+export declare function assertChartInfo(o: any): asserts o is ChartResponseInfo;
+export declare function assertColumnInfo(o: any): asserts o is ColumnInfo;
 export declare function assertMapHierarchy(o: any): asserts o is MapHierarchy;
 export declare function assertMapInfo(o: any): asserts o is MapInfo;
 export declare function assertParentMap(parent: any): asserts parent is ParentMap;
@@ -98,8 +103,4 @@ export declare function assertVertBounds(vertBounds: any): asserts vertBounds is
 export declare function assertRectBounds(rectBounds: any): asserts rectBounds is RectBounds;
 export declare function assertInfoPoints(o: any): asserts o is InfoPoints;
 export declare function assertMapPoints(o: any): asserts o is MapPoints;
-export type SuccessfulServerResponse = {
-    message: string;
-};
-export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 export declare function assertSuccessfulServerResponse(o: any): asserts o is SuccessfulServerResponse;
