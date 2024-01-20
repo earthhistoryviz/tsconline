@@ -21,6 +21,14 @@ const InfoIcon = NotListedLocationIcon
 const OnIcon = LocationOnTwoToneIcon 
 const OffIcon = LocationOffIcon 
 
+const ChildMapIcon = () => {
+  return (
+    <div className="child-map-icon-container">
+      <div className='child-map-icon'/>
+    </div>
+  );
+};
+
 // TODO: might want to change if it ever updates, weird workaround here, can see this at 
 // changing it with normal styles cannot override since this uses a portal to create outside the DOM
 // https://mui.com/material-ui/guides/interoperability/#global-css
@@ -59,6 +67,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   ...theme.mixins.toolbar,
   justifyContent: 'space-between',
 }));
+
 
 type MapRowComponentProps = {
   mapInfo: MapInfo; 
@@ -133,7 +142,8 @@ const MapDialog = ({ name }: {name: string;}) => {
   const legendItems: LegendItem[] = [
     { color: theme.palette.on.main, label: 'On', icon: OnIcon},
     { color: theme.palette.off.main, label: 'Off', icon: OffIcon},
-    { color: theme.palette.disabled.main, label: 'Info point', icon: InfoIcon}
+    { color: theme.palette.disabled.main, label: 'Info point', icon: InfoIcon},
+    { color: 'transparent', label: 'Child Map', icon: ChildMapIcon}
   ]
   return (
     <>
@@ -144,7 +154,7 @@ const MapDialog = ({ name }: {name: string;}) => {
       <Drawer
         className="legend-drawer"
         variant="persistent"
-        anchor="bottom"
+        anchor="left"
         open={legendOpen}
       >
         <DrawerHeader> 
@@ -170,7 +180,7 @@ type MapProps  = {
 
 // This component is the map itself with the image and buttons within.
 const MapViewer: React.FC<MapProps> = ({ name, openChild, openLegend }) => {
-  const {state, actions} = useContext(context)
+  const {state} = useContext(context)
   const [imageLoaded, setImageLoaded] = useState(false)
   const imageRef = useRef<HTMLImageElement | null>(null)
 
@@ -330,7 +340,7 @@ type LegendItem = {
 const DisplayLegendItem = ({ legendItem } : {legendItem: LegendItem}) => {
   const theme = useTheme()
   const { color, label, icon: Icon} = legendItem
-  return (<Box display="flex" alignItems="center" mb={1}>
+  return (<Box className="legend-item-container">
     <Icon
     width={20}
     height={20}
@@ -347,7 +357,7 @@ const Legend = ({items}: {items: LegendItem[]}) => {
   className="legend-container"
     style={{ 
       backgroundColor: theme.palette.navbar.dark,
-      columnCount: items.length,
+      // columnCount: items.length,
       }}>
     {items.map((item, index) => (
       <DisplayLegendItem key={index} legendItem={item}/>
