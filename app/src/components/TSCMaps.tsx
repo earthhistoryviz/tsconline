@@ -9,16 +9,16 @@ import { TransformWrapper, TransformComponent, useTransformEffect } from "react-
 import { TSCButton } from './TSCButton'
 import { isRectBounds, isVertBounds } from '@tsconline/shared'
 import { calculateRectBoundsPosition, calculateVertBoundsPosition, calculateRectButton } from '../coordinates'
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import LocationOffIcon from '@mui/icons-material/LocationOff';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import NotListedLocationIcon from '@mui/icons-material/NotListedLocation';
+import LocationOnTwoToneIcon from '@mui/icons-material/LocationOnTwoTone';
+import LocationOffIcon from '@mui/icons-material/LocationOff';
 
 import './TSCMaps.css'
 
 const ICON_SIZE = 30
 const InfoIcon = NotListedLocationIcon 
-const OnIcon = LocationOnIcon 
+const OnIcon = LocationOnTwoToneIcon 
 const OffIcon = LocationOffIcon 
 
 type MapRowComponentProps = {
@@ -140,13 +140,7 @@ const MapDialog = ({ name }: {name: string;}) => {
         <MapDialog name={childName}/>
       </Dialog>
       <Drawer
-        sx={{
-          flexShrink: 0,
-          height: '20%',
-          '& .MuiDrawer-paper': {
-            border: '0',
-          },
-        }}
+        className="legend-drawer"
         variant="persistent"
         anchor="bottom"
         open={legendOpen}
@@ -229,7 +223,7 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild, openLegend }) => {
           loadMapPoints(mapData.infoPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, true)}
           {Object.keys(mapHierarchy).includes(name) && mapHierarchy[name].map((child, index) => {
             // if the parent exists, use the bounds of the parent on mapData
-            // this is because the parent field is the bounds of this map on that parent map
+            // this is because the child's parent field is the bounds of this map on that parent map
             const bounds = ! mapData.parent ? mapData.bounds : mapData.parent!.bounds
 
             // name is the parentMap
@@ -284,7 +278,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
 
   return (
     <>
-      <MapPointTooltip arrow followCursor title={
+      <MapPointTooltip title={
         <>
           <h3 className="header">{`${name}`}</h3>
           <ul>
@@ -333,8 +327,7 @@ function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Boun
   if (isRectBounds(childBounds) && isRectBounds(mapBounds)) {
     const { midpoint, upperLeft, width, height } = calculateRectButton(childBounds, mapBounds)
     return (
-      <>
-      <MapPointTooltip arrow followCursor title={
+      <MapPointTooltip key={name} title={
         <>
           <h3 className="header">{`${name}`}</h3>
           <ul>
@@ -358,7 +351,6 @@ function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Boun
       onClick={() => {openChild(name)}}
       />
       </MapPointTooltip>
-      </>
   )
   } else {
     console.log('map and/or child bounds are not rectbounds')
@@ -452,7 +444,7 @@ const DisplayLegendItem = ({ legendItem } : {legendItem: LegendItem}) => {
     height={20}
     color={color}
     style ={{color: color}}
-    borderRadius={5} mr={1}/>
+    mr={1}/>
     <LegendTypography className="legend-label">{label}</LegendTypography>
   </Box>)
 }

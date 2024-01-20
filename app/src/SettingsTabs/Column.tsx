@@ -1,11 +1,9 @@
 import { observer } from "mobx-react-lite";
 import React, { useContext, useState } from "react";
-import { styled } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
-import Checkbox from "@mui/material/Checkbox";
 import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
-import { Button, TextField, Box } from "@mui/material";
+import { Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from '@mui/material/styles';
 import { ColumnContainer, AccordionDetails, TSCCheckbox, AccordionSummary, Accordion} from '../components'
@@ -37,9 +35,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({name, details
 
   return (
     <Accordion expanded={open} onChange={() => setOpen(!open)} >
-      <AccordionSummary aria-controls="panel-content" id="panel-header"
-        // sx={{backgroundColor: theme.palette.background.default}}
-      >
+      <AccordionSummary aria-controls="panel-content" id="panel-header">
         {checkbox}
       </AccordionSummary>
       <AccordionDetails>
