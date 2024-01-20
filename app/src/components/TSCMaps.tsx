@@ -21,6 +21,45 @@ const InfoIcon = NotListedLocationIcon
 const OnIcon = LocationOnTwoToneIcon 
 const OffIcon = LocationOffIcon 
 
+// TODO: might want to change if it ever updates, weird workaround here, can see this at 
+// changing it with normal styles cannot override since this uses a portal to create outside the DOM
+// https://mui.com/material-ui/guides/interoperability/#global-css
+const MapPointTooltip = styled(({className, ...props}: TooltipProps) => (
+  <Tooltip arrow followCursor classes={{popper: className}} {...props}/>
+))`
+  .MuiTooltip-tooltip {
+    background-color: ${(props) => props.theme.palette.tooltip.main};
+    padding-left: 20px;
+  }
+`
+
+const MapListItemButton = styled(ListItemButton)(({ theme }) => ({
+  '&:hover': {
+    backgroundColor: theme.palette.primary.main,
+    cursor: 'pointer'
+  },
+  '&.Mui-selected': {
+    backgroundColor: theme.palette.selection.light,
+  },
+}))
+
+const LegendTypography = styled(Typography)(({ theme }) => ({
+  color: theme.palette.primary.main 
+}))
+
+const LegendArrowDropDown = styled(IconButton)(({ theme }) => ({
+  color: theme.palette.primary.main 
+}))
+
+const DrawerHeader = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  padding: theme.spacing(0, 1),
+  backgroundColor: theme.palette.navbar.dark ,
+  ...theme.mixins.toolbar,
+  justifyContent: 'space-between',
+}));
+
 type MapRowComponentProps = {
   mapInfo: MapInfo; 
 };
@@ -67,43 +106,6 @@ export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo })
   );
 });
 
-const MapListItemButton = styled(ListItemButton)(({ theme }) => ({
-  '&:hover': {
-    backgroundColor: theme.palette.primary.main,
-    cursor: 'pointer'
-  },
-  '&.Mui-selected': {
-    backgroundColor: theme.palette.selection.light,
-  },
-}))
-
-const LegendTypography = styled(Typography)(({ theme }) => ({
-  color: theme.palette.primary.main 
-}))
-
-const LegendArrowDropDown = styled(IconButton)(({ theme }) => ({
-  color: theme.palette.primary.main 
-}))
-const DrawerHeader = styled('div')(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  padding: theme.spacing(0, 1),
-  backgroundColor: theme.palette.navbar.dark ,
-  ...theme.mixins.toolbar,
-  justifyContent: 'space-between',
-}));
-
-// TODO: might want to change if it ever updates, weird workaround here, can see this at 
-// changing it with normal styles cannot override since this uses a portal to create outside the DOM
-// https://mui.com/material-ui/guides/interoperability/#global-css
-const MapPointTooltip = styled(({className, ...props}: TooltipProps) => (
-  <Tooltip arrow followCursor classes={{popper: className}} {...props}/>
-))`
-  .MuiTooltip-tooltip {
-    background-color: ${(props) => props.theme.palette.tooltip.main};
-    padding-left: 20px;
-  }
-`
 
 
  // The map interface that will be recursive so that we can create "multiple" windows.
@@ -183,9 +185,9 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild, openLegend }) => {
       resetTransform, 
       ...rest 
     } : {
-      zoomIn: any,
-      zoomOut: any,
-      resetTransform: any,
+      zoomIn: () => void,
+      zoomOut: () => void,
+      resetTransform: () => void,
     }
   ) => (
     <div className="controls">
@@ -217,11 +219,17 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild, openLegend }) => {
           className="map"
           onLoad={() => setImageLoaded(true)}
           />
+
+          {/* Load all the map points */}
           {imageLoaded && imageRef && imageRef.current && mapData.mapPoints &&
           loadMapPoints(mapData.mapPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false)}
+
+          {/* Load all the info points */}
           {imageLoaded && imageRef && imageRef.current && mapData.infoPoints && 
           loadMapPoints(mapData.infoPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, true)}
-          {Object.keys(mapHierarchy).includes(name) && mapHierarchy[name].map((child, index) => {
+
+          {/* Load all the child maps*/}
+          {Object.keys(mapHierarchy).includes(name) && mapHierarchy[name].map(child => {
             // if the parent exists, use the bounds of the parent on mapData
             // this is because the child's parent field is the bounds of this map on that parent map
             const bounds = ! mapData.parent ? mapData.bounds : mapData.parent!.bounds
@@ -232,7 +240,7 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild, openLegend }) => {
             return createChildMapButton(
               child, 
               bounds, 
-              mapInfo[mapHierarchy[name][Number(index)]].parent!.bounds, 
+              mapInfo[child].parent!.bounds, 
               openChild
               )
             })}
@@ -312,6 +320,39 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
       </MapPointTooltip>
     </>
   )
+}
+
+type LegendItem = {
+  color: string;
+  label: string;
+  icon: React.ElementType<any>;
+}
+const DisplayLegendItem = ({ legendItem } : {legendItem: LegendItem}) => {
+  const theme = useTheme()
+  const { color, label, icon: Icon} = legendItem
+  return (<Box display="flex" alignItems="center" mb={1}>
+    <Icon
+    width={20}
+    height={20}
+    color={color}
+    style ={{color: color}}
+    mr={1}/>
+    <LegendTypography className="legend-label">{label}</LegendTypography>
+  </Box>)
+}
+
+const Legend = ({items}: {items: LegendItem[]}) => {
+  const theme = useTheme()
+  return (<Box
+  className="legend-container"
+    style={{ 
+      backgroundColor: theme.palette.navbar.dark,
+      columnCount: items.length,
+      }}>
+    {items.map((item, index) => (
+      <DisplayLegendItem key={index} legendItem={item}/>
+    ))}
+  </Box>)
 }
 
 
@@ -428,37 +469,4 @@ function getIcon(isInfo: boolean, clicked: boolean){
   return (<OffIcon
     className="icon"
     />)
-}
-
-type LegendItem = {
-  color: string;
-  label: string;
-  icon: React.ElementType<any>;
-}
-const DisplayLegendItem = ({ legendItem } : {legendItem: LegendItem}) => {
-  const theme = useTheme()
-  const { color, label, icon: Icon} = legendItem
-  return (<Box display="flex" alignItems="center" mb={1}>
-    <Icon
-    width={20}
-    height={20}
-    color={color}
-    style ={{color: color}}
-    mr={1}/>
-    <LegendTypography className="legend-label">{label}</LegendTypography>
-  </Box>)
-}
-
-const Legend = ({items}: {items: LegendItem[]}) => {
-  const theme = useTheme()
-  return (<Box
-  className="legend-container"
-    style={{ 
-      backgroundColor: theme.palette.navbar.dark,
-      columnCount: items.length,
-      }}>
-    {items.map((item, index) => (
-      <DisplayLegendItem key={index} legendItem={item}/>
-    ))}
-  </Box>)
 }
