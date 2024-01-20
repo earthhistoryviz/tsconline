@@ -6,7 +6,7 @@ import { writeFile, stat } from "fs/promises";
 import { assertDatapackResponse, assertChartRequest, type DatapackResponse } from "@tsconline/shared";
 import { deleteDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
-import { grabMapImages, grabMapInfo } from "./mappacks.js";
+import { grabMapImages, grabMapInfo } from "./map-packs.js";
 import md5 from "md5";
 import assetconfigs from "./index.js";
 import PDFParser from "pdf2json";
