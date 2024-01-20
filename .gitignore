@@ -1,5 +1,9 @@
 secrets.env
 
+app
+server
+node_modules
+assets
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
