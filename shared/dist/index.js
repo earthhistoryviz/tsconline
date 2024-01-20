@@ -1,4 +1,11 @@
 // Shared types between app and server (i.e. messages they send back and forth)
+export function assertDatapackResponse(o) {
+    if (typeof o !== 'object')
+        throw new Error('DatapackResponse must be a non-null object');
+    assertColumnInfo(o.columnInfo);
+    assertMapInfo(o.mapInfo);
+    assertMapHierarchy(o.mapHierarchy);
+}
 export function assertChartConfig(o) {
     if (typeof o !== 'object')
         throw new Error('ChartConfig must be an object');

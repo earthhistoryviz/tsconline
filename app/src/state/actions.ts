@@ -5,17 +5,13 @@ import {
   type ColumnInfo,
   type MapHierarchy,
   type GeologicalStages,
-  type SuccessfulServerResponse,
   assertChartInfo,
-  assertMapInfo,
-  assertColumnInfo,
-  assertMapHierarchy,
   assertSuccessfulServerResponse,
   isServerResponseError,
+  assertDatapackResponse,
 } from "@tsconline/shared";
 import { state, State } from "./state";
 import { fetcher, devSafeUrl } from "../util";
-import { ConstructionOutlined } from "@mui/icons-material";
 
 export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;
@@ -52,9 +48,7 @@ export const setChart = action(
     const reply = await res.json();
     // console.log("reply of mapInfo: ", JSON.stringify(reply.mapInfo, null, 2))
     try {
-      assertMapInfo(reply.mapInfo);
-      assertColumnInfo(reply.columnInfo);
-      assertMapHierarchy(reply.mapHierarchy);
+      assertDatapackResponse(reply)
       setMapInfo(reply.mapInfo);
       setSettingsColumns(reply.columnInfo);
       setMapHierarchy(reply.mapHierarchy)

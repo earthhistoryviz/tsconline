@@ -3,7 +3,7 @@ import { jsonToXml, xmlToJson } from "./parse-settings.js";
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
 import { writeFile, stat } from "fs/promises";
-import { assertColumnInfo, assertMapHierarchy, assertMapInfo, assertChartRequest, type DatapackResponse } from "@tsconline/shared";
+import { assertDatapackResponse, assertChartRequest, type DatapackResponse } from "@tsconline/shared";
 import { deleteDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
 import { grabMapImages, grabMapInfo } from "./mappacks.js";
@@ -26,6 +26,7 @@ export const fetchSettingsJson = async function fetchSettingsJson(
   const settingJson = await xmlToJson(contents);
   reply.send(settingJson);
 };
+
 // Handles getting the columns for the files specified in the url
 // Currently Returns ColumnSettings and Stages if they exist
 // TODO: ADD ASSERTS
@@ -43,16 +44,14 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(
       assetconfigs.decryptionDirectory,
       filesSplit
     );
-    assertColumnInfo(columns)
     const { mapInfo, mapHierarchy } = await grabMapInfo(filesSplit);
-    assertMapInfo(mapInfo)
-    assertMapHierarchy(mapHierarchy)
     await grabMapImages(filesSplit, assetconfigs.imagesDirectory);
     const datapackResponse: DatapackResponse = {
       columnInfo: columns,
       mapInfo: mapInfo,
       mapHierarchy: mapHierarchy,
     };
+    assertDatapackResponse(datapackResponse)
     reply.send(datapackResponse);
   } catch (e) {
     reply.send({ error: e });
