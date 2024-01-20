@@ -3,7 +3,7 @@ import path from 'path';
 import { grabFilepaths } from './util.js'
 import assetconfigs from './index.js';
 import pmap from 'p-map';
-import type { MapHierarchy, MapInfo, MapPoints, Bounds} from '@tsconline/shared'
+import type { MapHierarchy, MapInfo, MapPoints } from '@tsconline/shared'
 import { assertInfoPoints, assertMapHierarchy, assertMapInfo, assertRectBounds, assertVertBounds, assertParentMap } from '@tsconline/shared';
 
 /**
