@@ -40,7 +40,6 @@ export const setChart = action(
       console.log("unknown preset selected");
       return false;
     }
-    let tempColumns: ColumnInfo | null;
     state.chart = state.presets[newval]!;
     //process decrypted file
     const datapacks = state.presets[newval]!.datapacks.map(
