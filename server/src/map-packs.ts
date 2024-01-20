@@ -34,7 +34,7 @@ export async function grabMapImages(datapacks: string[], destination: string) {
 }
 
 export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInfo, mapHierarchy: MapHierarchy}> {
-    const map_info_paths = await grabFilepaths(datapacks, assetconfigs.decryptionDirectory, "mappacks")
+    const map_info_paths = await grabFilepaths(datapacks, assetconfigs.decryptionDirectory, "map-packs")
     let mapInfo: MapInfo = {}
     let mapHierarchy: MapHierarchy = {}
     try {
