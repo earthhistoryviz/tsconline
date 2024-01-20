@@ -3,7 +3,7 @@ import { jsonToXml, xmlToJson } from "./parse-settings.js";
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
 import { writeFile, stat } from "fs/promises";
-import { assertChartRequest, type DatapackResponse } from "@tsconline/shared";
+import { assertColumnInfo, assertMapHierarchy, assertMapInfo, assertChartRequest, type DatapackResponse } from "@tsconline/shared";
 import { deleteDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
 import { grabMapImages, grabMapInfo } from "./mappacks.js";
@@ -26,7 +26,6 @@ export const fetchSettingsJson = async function fetchSettingsJson(
   const settingJson = await xmlToJson(contents);
   reply.send(settingJson);
 };
-
 // Handles getting the columns for the files specified in the url
 // Currently Returns ColumnSettings and Stages if they exist
 // TODO: ADD ASSERTS
@@ -37,14 +36,17 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(
   deleteDirectory(assetconfigs.imagesDirectory);
   const { files } = request.params;
   //TODO check if files exist. probably check this in the glob of parse Datapacks
-  console.log("getting decrypted info for files: ", files);
+  console.log("Getting decrypted info for files: ", files);
   const filesSplit = files.split(" ");
   try {
     const { columns } = await parseDatapacks(
       assetconfigs.decryptionDirectory,
       filesSplit
     );
+    assertColumnInfo(columns)
     const { mapInfo, mapHierarchy } = await grabMapInfo(filesSplit);
+    assertMapInfo(mapInfo)
+    assertMapHierarchy(mapHierarchy)
     await grabMapImages(filesSplit, assetconfigs.imagesDirectory);
     const datapackResponse: DatapackResponse = {
       columnInfo: columns,
