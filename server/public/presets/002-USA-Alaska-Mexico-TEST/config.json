@@ -1,9 +1,0 @@
-{
-  "img": "Alaska_3848.82.jpg",
-  "title": "USA, Alaska, Mexico Map Pack",
-  "description": "Test Map Pack. Currently used for dev purposes",
-  "settings": "settings.tsc",
-  "datapacks": [
-    "USA-Alaska-Mexico_Encrypted_GTS2020.mdpk"
-  ]
-}

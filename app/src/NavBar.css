@@ -1,8 +1,0 @@
-.navbar {
-    display: flex
-    justify-content: flex-start;
-}
-
-.nabvar div:last-child {
-    margin-left: auto;
-}
