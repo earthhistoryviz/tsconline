@@ -4,7 +4,7 @@ import { grabFilepaths } from './util.js'
 import assetconfigs from './index.js';
 import pmap from 'p-map';
 import type { MapHierarchy, MapInfo, MapPoints } from '@tsconline/shared'
-import { assertInfoPoints, assertMapHierarchy, assertMapInfo, assertRectBounds, assertVertBounds, assertParentMap } from '@tsconline/shared';
+import { assertMapPoints, assertInfoPoints, assertMapHierarchy, assertMapInfo, assertRectBounds, assertVertBounds, assertParentMap } from '@tsconline/shared';
 
 /**
  * Finds all map images and puts them in the public directory
@@ -194,6 +194,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                             info = tabSeparated[i]
                             map.mapPoints[mapPointName] = mapPoint
                         }
+                        assertMapPoints(map.mapPoints)
                         break
                     case "HEADER-INFORMATION POINTS":
                         if (!info || info.length < 4) {
