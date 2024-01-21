@@ -14,6 +14,7 @@ import LocationOnTwoToneIcon from '@mui/icons-material/LocationOnTwoTone';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import './MapViewer.css'
+import { observer } from 'mobx-react-lite'
 
 const ICON_SIZE = 30
 const InfoIcon = NotListedLocationIcon 
@@ -64,177 +65,174 @@ const DrawerHeader = styled('div')(({ theme }) => ({
  // The map interface that will be recursive so that we can create "multiple" windows.
  // Nested dialogs
  // TODO: possibly a better container than dialog?
-export const MapDialog = ({ name }: {name: string;}) => {
-  const theme = useTheme()
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [childName, setChildName] = useState(name)
-  const [legendOpen, setLegendOpen] = useState(false)
+export const MapDialog = observer(function MapDialog({ name }: {name: string;}) {
+    if (!name) return null
+    const { state, actions } = useContext(context)
+    const theme = useTheme()
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [childName, setChildName] = useState("")
 
-  const handleCloseDialog = () => {
-    setDialogOpen(false);
-  };
-  const openChild = (childName: string) => {
-    setDialogOpen(true)
-    setChildName(childName)
-    setLegendOpen(false)
-  }
-
-  const openLegend = () => {
-    setLegendOpen(!legendOpen)
-  }
-
-  const legendItems: LegendItem[] = [
-    { color: theme.palette.on.main, label: 'On', icon: OnIcon},
-    { color: theme.palette.off.main, label: 'Off', icon: OffIcon},
-    { color: theme.palette.disabled.main, label: 'Info point', icon: InfoIcon},
-    { color: 'transparent', label: 'Child Map', icon: ChildMapIcon}
-  ]
-  return (
-    <>
-      <MapViewer openChild={openChild} name={name} openLegend={openLegend}/>
-      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth={false} >
-        <MapDialog name={childName}/>
-      </Dialog>
-      <Drawer
-        className="legend-drawer"
-        variant="persistent"
-        anchor="left"
-        open={legendOpen}
-      >
-        <DrawerHeader> 
-          <LegendArrowDropDown onClick={() => {setLegendOpen(false)}}>
-            <CloseIcon fontSize="small"/>
-          </LegendArrowDropDown>
-          <LegendTypography className="legend-title" variant="h6" gutterBottom>
-            Color Legend
-          </LegendTypography>
-        </DrawerHeader>
-        <Divider />
-        <Legend items={legendItems}/>
-      </Drawer>
-    </>
-  );
-}
-//overarching map list that has a hidden dialog box that will open on click
-
-
-type MapProps  = {
-  name: string;
-  openChild: (childName: string) => void;
-  openLegend: () => void;
-}
-
-// This component is the map itself with the image and buttons within.
-const MapViewer: React.FC<MapProps> = ({ name, openChild, openLegend }) => {
-  const {state} = useContext(context)
-  const [imageLoaded, setImageLoaded] = useState(false)
-  const imageRef = useRef<HTMLImageElement | null>(null)
-  const [isFullscreen, setIsFullscreen] = useState(false)
-  const mapViewerRef = useRef<HTMLDivElement | null>(null)
-
-  // useEffect needed to know when fullscreen changes i.e escape, button, pressing child maps
-  useEffect(() => {
-  // Add event listener when the component mounts
-  document.addEventListener('fullscreenchange', handleFullscreenChange);
-
-  // Remove event listener when the component unmounts
-  return () => {
-    document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  };
-}, []);
-
-  const handleFullscreenChange = () => {
-    if (document.fullscreenElement) {
-      setIsFullscreen(true)
-    } else {
-      setIsFullscreen(false)
+    const handleCloseDialog = () => {
+        actions.setIsLegendOpen(false)
+        setDialogOpen(false);
+    };
+    const openChild = (childName: string) => {
+        setDialogOpen(true)
+        setChildName(childName)
+        actions.setIsLegendOpen(false)
     }
-  }
 
-  const mapInfo: MapInfo = state.settingsTabs.mapInfo
-  const mapData: MapInfo[string] = mapInfo[name]
-  const mapHierarchy: MapHierarchy = state.settingsTabs.mapHierarchy
+    const legendItems: LegendItem[] = [
+        { color: theme.palette.on.main, label: 'On', icon: OnIcon},
+        { color: theme.palette.off.main, label: 'Off', icon: OffIcon},
+        { color: theme.palette.disabled.main, label: 'Info point', icon: InfoIcon},
+        { color: 'transparent', label: 'Child Map', icon: ChildMapIcon}
+    ]
+    return (
+        <>
+        <MapViewer openChild={openChild} name={name} />
+        <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth={false} >
+            <MapDialog name={childName}/>
+        </Dialog>
+        <Drawer
+            className="legend-drawer"
+            variant="persistent"
+            anchor="left"
+            open={state.settingsTabs.isLegendOpen}
+        >
+            <DrawerHeader> 
+            <LegendArrowDropDown onClick={() => {actions.setIsLegendOpen(false)}}>
+                <CloseIcon fontSize="small"/>
+            </LegendArrowDropDown>
+            <LegendTypography className="legend-title" variant="h6" gutterBottom>
+                Color Legend
+            </LegendTypography>
+            </DrawerHeader>
+            <Divider />
+            <Legend items={legendItems}/>
+        </Drawer>
+        </>
+    );
+    })
+    //overarching map list that has a hidden dialog box that will open on click
 
-  const Controls = (
-    { 
-      mapViewer,
-      zoomIn, 
-      zoomOut, 
-      resetTransform, 
-      ...rest 
-    } : {
-      mapViewer: HTMLDivElement,
-      zoomIn: () => void,
-      zoomOut: () => void,
-      resetTransform: () => void,
+
+    type MapProps  = {
+    name: string;
+    openChild: (childName: string) => void;
     }
-  ) => (
-    <>
-      <div className="controls">
-        <TSCButton className="zoom-button" onClick={() => zoomIn()}>zoom in</TSCButton>
-        <TSCButton className="zoom-button" onClick={() => zoomOut()}>zoom out</TSCButton>
-        <TSCButton className="zoom-button" onClick={() => resetTransform()}>reset</TSCButton>
-        <TSCButton className="zoom-button" onClick={() => openLegend()}>legend</TSCButton>
-      </div>
-      <div className="fullscreen">
-        <IconButton className="fullscreen-icon-button" onClick={() => {
-          if (document.fullscreenElement) {
-            document.exitFullscreen()
-          } else {
-            mapViewer.requestFullscreen()
-          }
-          }}>
-          <FullscreenIcon className="fullscreen-icon"/>
-        </IconButton>
-      </div>
-    </>
-  );
 
-  const fullscreenImgStyle = {
+    // This component is the map itself with the image and buttons within.
+const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
+    const { state, actions } = useContext(context)
+    const [imageLoaded, setImageLoaded] = useState(false)
+    const imageRef = useRef<HTMLImageElement | null>(null)
+    const [isFullscreen, setIsFullscreen] = useState(false)
+    const mapViewerRef = useRef<HTMLDivElement | null>(null)
+
+    // useEffect needed to know when fullscreen changes i.e escape, button, pressing child maps
+    useEffect(() => {
+    // Add event listener when the component mounts
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+    // Remove event listener when the component unmounts
+    return () => {
+        document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+    }, []);
+
+    const handleFullscreenChange = () => {
+        if (document.fullscreenElement) {
+        setIsFullscreen(true)
+        } else {
+        setIsFullscreen(false)
+        }
+    }
+
+    const mapInfo: MapInfo = state.settingsTabs.mapInfo
+    const mapData: MapInfo[string] = mapInfo[name]
+    const mapHierarchy: MapHierarchy = state.settingsTabs.mapHierarchy
+
+    const Controls = (
+        { 
+        mapViewer,
+        zoomIn, 
+        zoomOut, 
+        resetTransform, 
+        ...rest 
+        } : {
+        mapViewer: HTMLDivElement,
+        zoomIn: () => void,
+        zoomOut: () => void,
+        resetTransform: () => void,
+        }
+    ) => (
+        <>
+        <div className="controls">
+            <TSCButton className="zoom-button" onClick={() => zoomIn()}>zoom in</TSCButton>
+            <TSCButton className="zoom-button" onClick={() => zoomOut()}>zoom out</TSCButton>
+            <TSCButton className="zoom-button" onClick={() => resetTransform()}>reset</TSCButton>
+            <TSCButton className="zoom-button" onClick={() => actions.setIsLegendOpen(!state.settingsTabs.isLegendOpen)}>legend</TSCButton>
+        </div>
+        <div className="fullscreen">
+            <IconButton className="fullscreen-icon-button" onClick={() => {
+            if (document.fullscreenElement) {
+                document.exitFullscreen()
+            } else {
+                mapViewer.requestFullscreen()
+            }
+            }}>
+            <FullscreenIcon className="fullscreen-icon"/>
+            </IconButton>
+        </div>
+        </>
+);
+
+const fullscreenImgStyle = {
     maxWidth: "100vw",
     height: "100vh",
     maxHeight: "100vh"
-  }
-  return (
+}
+return (
     <TransformWrapper 
     doubleClick={{
-      disabled: true 
+    disabled: true 
     }}
     minScale={1} 
     maxScale={3}
     limitToBounds={true}
     >
-      {(utils) => (
-      <div ref={mapViewerRef} className="map-viewer">
+    {(utils) => (
+    <div ref={mapViewerRef} className="map-viewer">
         <TransformComponent >
-          <>
-          <img
-          id="map"
-          ref={imageRef}
-          style={
+        <>
+        <img
+        id="map"
+        ref={imageRef}
+        style={
             /* 
             we need to conditionally have styles because 
             when fullscreened:   we fit the height of the image to max viewport height
             when unfullscreened: we use normal css ~90 viewport height
             */
             isFullscreen ? fullscreenImgStyle : undefined
-          }
-          src={devSafeUrl(mapData.img)}
-          alt="Map" 
-          className="map"
-          onLoad={() => setImageLoaded(true)}
-          />
+        }
+        src={devSafeUrl(mapData.img)}
+        alt="Map" 
+        className="map"
+        onLoad={() => setImageLoaded(true)}
+        />
 
-          {/* Load all the map points */}
-          {imageLoaded && imageRef && imageRef.current && mapData.mapPoints &&
-          loadMapPoints(mapData.mapPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false)}
+        {/* Load all the map points */}
+        {imageLoaded && imageRef && imageRef.current && mapData.mapPoints &&
+        loadMapPoints(mapData.mapPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false)}
 
-          {/* Load all the info points */}
-          {imageLoaded && imageRef && imageRef.current && mapData.infoPoints && 
-          loadMapPoints(mapData.infoPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, true)}
+        {/* Load all the info points */}
+        {imageLoaded && imageRef && imageRef.current && mapData.infoPoints && 
+        loadMapPoints(mapData.infoPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, true)}
 
-          {/* Load all the child maps*/}
-          {Object.keys(mapHierarchy).includes(name) && mapHierarchy[name].map(child => {
+        {/* Load all the child maps*/}
+        {Object.keys(mapHierarchy).includes(name) && mapHierarchy[name].map(child => {
             // if the parent exists, use the bounds of the parent on mapData
             // this is because the child's parent field is the bounds of this map on that parent map
             const bounds = ! mapData.parent ? mapData.bounds : mapData.parent!.bounds
@@ -243,19 +241,19 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild, openLegend }) => {
             // mapHierarchy[name] contains all the children of the parent map
             // this will call for each child of name
             return createChildMapButton(
-              child, 
-              bounds, 
-              mapInfo[child].parent!.bounds, 
-              openChild,
-              )
+            child, 
+            bounds, 
+            mapInfo[child].parent!.bounds, 
+            openChild,
+            )
             })}
-          </>
+        </>
         </TransformComponent>
         {mapViewerRef && mapViewerRef.current && <Controls mapViewer={mapViewerRef.current as HTMLDivElement} {...utils}/>}
-      </div>
-      )}
+    </div>
+    )}
     </TransformWrapper>
-  );
+);
 }
 
 

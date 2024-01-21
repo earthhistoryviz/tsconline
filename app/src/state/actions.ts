@@ -17,6 +17,10 @@ export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;
 });
 
+export const setIsLegendOpen = action("setIsLegendOpen", (newval: boolean) => {
+  state.settingsTabs.isLegendOpen = newval;
+});
+
 export const setSelectedMap = action("setSelectedMap", (newMap: string | null) => {
   state.settingsTabs.selectedMap = newMap
 })

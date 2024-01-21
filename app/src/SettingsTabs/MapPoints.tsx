@@ -56,6 +56,7 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
   };
   const handleCloseDialog = () => {
     setIsDialogOpen(false)
+    actions.setIsLegendOpen(false)
     actions.setSelectedMap(null)
   }
 

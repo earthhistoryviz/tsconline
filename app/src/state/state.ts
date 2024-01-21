@@ -22,6 +22,7 @@ export type State = {
     mapInfo: MapInfo;
     mapHierarchy: MapHierarchy;
     selectedMap: string | null;
+    isLegendOpen: boolean;
   };
   chart: ChartConfig | null;
   presets: ChartConfig[];
@@ -51,7 +52,8 @@ export const state = observable<State>({
     geologicalBaseStages: {},
     mapInfo: {},
     mapHierarchy: {},
-    selectedMap: null
+    selectedMap: null,
+    isLegendOpen: false
   },
   chart: null,
   presets: [],
