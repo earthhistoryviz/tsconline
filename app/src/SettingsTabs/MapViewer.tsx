@@ -397,6 +397,7 @@ function createChildMapButton(
         </>
       }>
       <Button
+      disableRipple={true}
       className="child-map"
       style={{
         left: `calc(${upperLeft.x}%`,
