@@ -10,20 +10,34 @@
   justify-content: center;
   z-index: 1;
 }
+/* TODO: possibly if the user has a window open, the width can never go smaller than all the buttons*/
+/* as a result these might need to be scaled with the windows, because*/
+/* weird scrolling happens if the window tries to be smaller than these buttons*/
+.MuiButton-root.bottom-button {
+  height: 20px;
+  width: 100px;
+  margin: 5px;
+}
 .MuiSvgIcon-root.fullscreen-icon {
   color: white;
   width: inherit;
   height: inherit;
   object-fit: contain;
 }
-.fullscreen-icon-button {
+.MuiIconButton-root.icon-view-button {
   width: 35px;
   height: 35px;
 }
-.fullscreen {
+.view-buttons {
   position: absolute;
   top: 10px;
   left: calc(100% - 50px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  gap: 10px;
 }
 .map-viewer {
   display: flex;
@@ -35,14 +49,6 @@
   min-height: none;
   max-width: 90vw;
   max-height: 90vh;
-}
-/* TODO: possibly if the user has a window open, the width can never go smaller than all the buttons*/
-/* as a result these might need to be scaled with the windows, because*/
-/* weird scrolling happens if the window tries to be smaller than these buttons*/
-.MuiButton-root.zoom-button {
-  height: 20px;
-  width: 100px;
-  margin: 5px;
 }
 .MuiIconButton-root.map-point {
   position: absolute;
