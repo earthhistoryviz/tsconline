@@ -1,12 +1,11 @@
-import { TooltipProps, Tooltip, Drawer, Divider, Typography, IconButton, Dialog, Button, List, Box, ListItemButton, ListItemAvatar, ListItemText, Avatar} from '@mui/material'
+import { TooltipProps, Tooltip, Drawer, Divider, Typography, IconButton, Dialog, Button, Box } from '@mui/material'
 import { styled, useTheme } from "@mui/material/styles"
-import type { InfoPoints, MapHierarchy, Bounds, MapPoints, MapInfo, RectBounds} from '@tsconline/shared'
+import type { InfoPoints, MapHierarchy, Bounds, MapPoints, MapInfo} from '@tsconline/shared'
 import { devSafeUrl } from '../util'
 import React, { useEffect, useState, useRef, useContext } from "react"
 import { context } from '../state';
-import { observer } from "mobx-react-lite"
 import { TransformWrapper, TransformComponent, useTransformEffect } from "react-zoom-pan-pinch"
-import { TSCButton } from './TSCButton'
+import { TSCButton } from '../components'
 import { isRectBounds, isVertBounds } from '@tsconline/shared'
 import { calculateRectBoundsPosition, calculateVertBoundsPosition, calculateRectButton } from '../coordinates'
 import CloseIcon from '@mui/icons-material/Close';
@@ -14,10 +13,7 @@ import NotListedLocationIcon from '@mui/icons-material/NotListedLocation';
 import LocationOnTwoToneIcon from '@mui/icons-material/LocationOnTwoTone';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
-import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
-
-import './TSCMaps.css'
-import { ImageProps } from 'react-bootstrap'
+import './MapViewer.css'
 
 const ICON_SIZE = 30
 const InfoIcon = NotListedLocationIcon 
@@ -44,15 +40,6 @@ const MapPointTooltip = styled(({className, ...props}: TooltipProps) => (
   }
 `
 
-const MapListItemButton = styled(ListItemButton)(({ theme }) => ({
-  '&:hover': {
-    backgroundColor: theme.palette.primary.main,
-    cursor: 'pointer'
-  },
-  '&.Mui-selected': {
-    backgroundColor: theme.palette.selection.light,
-  },
-}))
 
 const LegendTypography = styled(Typography)(({ theme }) => ({
   color: theme.palette.primary.main 
@@ -72,58 +59,12 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 }));
 
 
-type MapRowComponentProps = {
-  mapInfo: MapInfo; 
-};
-
-//overarching map list that has a hidden dialog box that will open on click
-export const TSCMapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
-  const theme = useTheme();
-  const [selectedMap, setSelectedMap] = useState<string | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  const handleRowClick = (name: string) => {
-    setSelectedMap(name);
-    setIsDialogOpen(true);
-  };
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false)
-    setSelectedMap(null)
-  }
-
-  return (
-    <div style={{minHeight: '100vh'}}>
-      <Box>
-        <List>
-          {Object.entries(mapInfo).map(([name, map]) => {
-            return (
-              <MapListItemButton key={name} 
-                selected={selectedMap === name}
-                onClick={() => handleRowClick(name)} 
-              >
-                <ListItemAvatar>
-                  <Avatar alt={name} src={devSafeUrl(map.img)} />
-                </ListItemAvatar>
-                <ListItemText primary={`${name}`} />
-              </MapListItemButton>
-            )
-          })}
-        </List>
-      </Box>
-
-      <Dialog open={isDialogOpen} onClose={handleCloseDialog} maxWidth={false}>
-        {selectedMap ? <MapDialog name={selectedMap} /> : null}
-      </Dialog>
-    </div>
-  );
-});
-
 
 
  // The map interface that will be recursive so that we can create "multiple" windows.
  // Nested dialogs
  // TODO: possibly a better container than dialog?
-const MapDialog = ({ name }: {name: string;}) => {
+export const MapDialog = ({ name }: {name: string;}) => {
   const theme = useTheme()
   const [dialogOpen, setDialogOpen] = useState(false);
   const [childName, setChildName] = useState(name)
@@ -174,6 +115,8 @@ const MapDialog = ({ name }: {name: string;}) => {
     </>
   );
 }
+//overarching map list that has a hidden dialog box that will open on click
+
 
 type MapProps  = {
   name: string;
