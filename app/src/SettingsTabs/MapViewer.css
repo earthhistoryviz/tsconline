@@ -75,8 +75,7 @@
   z-index: 0;
 }
 .MuiButton-root.child-map:hover {
-  background-color: rgba(239, 239, 240, 0.2);
-  opacity: 0.9;
+  background-color: rgba(239, 239, 240, 0.05);
 }
 .header {
   text-align: center;

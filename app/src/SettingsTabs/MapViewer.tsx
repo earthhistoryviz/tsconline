@@ -68,20 +68,22 @@ const DrawerHeader = styled('div')(({ theme }) => ({
  // The map interface that will be recursive so that we can create "multiple" windows.
  // Nested dialogs
  // TODO: possibly a better container than dialog?
-export const MapDialog = observer(function MapDialog({ name }: {name: string;}) {
+export const MapDialog = observer(function MapDialog({ name, isFacies=false }: {name: string; isFacies: boolean;}) {
     if (!name) return null
     const { state, actions } = useContext(context)
     const theme = useTheme()
     const [dialogOpen, setDialogOpen] = useState(false);
     const [childName, setChildName] = useState("")
+    const [isChildFacies, setIsChildFacies] = useState(false)
 
     const handleCloseDialog = () => {
         actions.setIsLegendOpen(false)
         setDialogOpen(false);
     };
-    const openChild = (childName: string) => {
+    const openChild = (childName: string, isFacies: boolean) => {
         setDialogOpen(true)
         setChildName(childName)
+        setIsChildFacies(isFacies)
         actions.setIsLegendOpen(false)
     }
 
@@ -93,9 +95,9 @@ export const MapDialog = observer(function MapDialog({ name }: {name: string;}) 
     ]
     return (
         <>
-        <MapViewer openChild={openChild} name={name} />
+        <MapViewer openChild={openChild} name={name} isFacies={isFacies}/>
         <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth={false} >
-            <MapDialog name={childName}/>
+            <MapDialog name={childName} isFacies={isChildFacies}/>
         </Dialog>
         <Drawer
             className="legend-drawer"
@@ -122,11 +124,12 @@ export const MapDialog = observer(function MapDialog({ name }: {name: string;}) 
 
     type MapProps  = {
     name: string;
-    openChild: (childName: string) => void;
+    openChild: (childName: string, isFacies: boolean) => void;
+    isFacies: boolean
     }
 
     // This component is the map itself with the image and buttons within.
-const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
+const MapViewer: React.FC<MapProps> = ({ name, openChild, isFacies }) => {
     const { state, actions } = useContext(context)
     const [imageLoaded, setImageLoaded] = useState(false)
     const imageRef = useRef<HTMLImageElement | null>(null)
@@ -171,6 +174,7 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
     ) => (
         <>
         <div className="controls">
+            {!isFacies && <TSCButton className="bottom-button" onClick={() => {openChild(name, true)}}>Facies</TSCButton>}
             <TSCButton className="bottom-button" onClick={() => actions.setIsLegendOpen(!state.settingsTabs.isLegendOpen)}>legend</TSCButton>
         </div>
         <div className="view-buttons">
@@ -378,7 +382,7 @@ function createChildMapButton(
   name: string,
   mapBounds: Bounds,
   childBounds: Bounds,
-  openChild: (childName: string) => void,
+  openChild: (childName: string, isFacies: boolean) => void,
   ) {
   if (isRectBounds(childBounds) && isRectBounds(mapBounds)) {
     const { midpoint, upperLeft, width, height } = calculateRectButton(childBounds, mapBounds)
@@ -406,7 +410,8 @@ function createChildMapButton(
         height: `${height}%`,
       }} 
       onClick={() => {
-        openChild(name)
+        // call the new child as a regular map, with no facies
+        openChild(name, false)
         if (document.fullscreenElement) {
           document.exitFullscreen()
         }
