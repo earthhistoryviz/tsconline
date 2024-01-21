@@ -48,11 +48,11 @@ export const setChart = action(
     const reply = await res.json();
     // console.log("reply of mapInfo: ", JSON.stringify(reply.mapInfo, null, 2))
     try {
-      assertDatapackResponse(reply)
+      assertDatapackResponse(reply);
       setMapInfo(reply.mapInfo);
       setSettingsColumns(reply.columnInfo);
-      setMapHierarchy(reply.mapHierarchy)
-  } catch (e) {
+      setMapHierarchy(reply.mapHierarchy);
+    } catch (e) {
       if (isServerResponseError(reply)) {
         console.log(
           "Server failed to send datapack info with error: ",
@@ -370,16 +370,16 @@ export const toggleSettingsTabColumn = action(
     let curcol: ColumnInfo | null = state.settingsTabs.columns;
     const orig = curcol;
     // Walk down the path of parents in the tree of columns
-    console.log("name: ", name)
-    let i = 1
+    console.log("name: ", name);
+    let i = 1;
     for (const item of parents) {
       console.log("item ", i, ": ", item);
-      i++
+      i++;
     }
     i = 1;
     for (const p of parents) {
-      console.log("accessing ", p, " of count: ", i)
-      i++
+      console.log("accessing ", p, " of count: ", i);
+      i++;
       if (!curcol) {
         console.log(
           "WARNING: tried to access path at parent ",
@@ -416,6 +416,7 @@ export const toggleSettingsTabColumn = action(
     // setSettingsTabsColumns(orig)
     // console.log(JSON.stringify(curcol[name], null, 2));
     setcolumnSelected(name, parents);
+    console.log("the selected column: ", name);
     // console.log("state after my change: ", state);
     //if the column is unchecked, then no need to check the parents
     if (!curcol[name].on) {
