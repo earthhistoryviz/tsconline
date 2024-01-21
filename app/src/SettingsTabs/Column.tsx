@@ -5,8 +5,16 @@ import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
 import { Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from '@mui/material/styles';
-import { ColumnContainer, AccordionDetails, TSCCheckbox, AccordionSummary, Accordion} from '../components'
+import { useTheme } from "@mui/material/styles";
+import {
+  ColumnContainer,
+  AccordionDetails,
+  TSCCheckbox,
+  AccordionSummary,
+  Accordion,
+  TSCButton,
+} from "../components";
+import { generateChart, setcolumnSelected } from "../state/actions";
 
 //types for recursively creation accordions
 type ColumnAccordionProps = {
@@ -14,45 +22,93 @@ type ColumnAccordionProps = {
   details: ColumnInfo[string];
   onToggle: (name: string, parents: string[]) => void;
 };
-// component for column accordion recursion creation 
-const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({name, details, onToggle}) => {
-  const theme = useTheme();
-  const [open, setOpen] = useState(true);
-  const hasChildren = details.children && Object.keys(details.children).length > 0;
-  const checkbox = (
-    <ColumnContainer>
-        <TSCCheckbox checked={details.on} onChange={
-          () => { onToggle(name, details.parents)
-        }} 
-        />
-        <Typography sx={{ fontSize: "0.97rem"}}>{name}</Typography>
-    </ColumnContainer>
-  )
-  // if there are no children, don't make an accordion
-  if (!hasChildren) {
-    return checkbox
-  }
+// component for column accordion recursion creation
+const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
+  ({ name, details, onToggle }) => {
+    const theme = useTheme();
+    const [open, setOpen] = useState(true);
 
-  return (
-    <Accordion expanded={open} onChange={() => setOpen(!open)} >
-      <AccordionSummary aria-controls="panel-content" id="panel-header">
-        {checkbox}
-      </AccordionSummary>
-      <AccordionDetails>
-        <div>
-          {details.children && Object.entries(details.children).map(([childName, childDetails]) => (
-            <ColumnAccordion 
-              key={childName} 
-              name={childName} 
-              details={childDetails} 
-              onToggle={onToggle}
+    const toggleAccordion = (open: boolean) => {
+      setOpen((open) => !open);
+    };
+    function clickColumnName() {
+      toggleAccordion;
+      setcolumnSelected(name, details.parents);
+    }
+    const hasChildren =
+      details.children && Object.keys(details.children).length > 0;
+    function thing(name: string, parents: string[]) {
+      setcolumnSelected(name, parents);
+      setOpen(open);
+      console.log(open);
+    }
+    const columnName = (
+      <div>
+        <Typography sx={{ fontSize: "0.97rem" }}>{name}</Typography>
+      </div>
+    );
+    function selected(item: HTMLElement) {
+      item.style.backgroundColor = "lighblue";
+    }
+    const checkbox = (
+      <div>
+        <ColumnContainer>
+          <div
+            style={{ display: "flex" }}
+            onClick={() => setcolumnSelected(name, details.parents)}
+          >
+            <TSCCheckbox
+              checked={details.on}
+              onChange={() => {
+                onToggle(name, details.parents);
+              }}
+              //style={{ backgroundColor: "lightblue" }}
             />
-          ))}
-        </div>
-      </AccordionDetails>
-    </Accordion>
-  );
-});
+            {columnName}
+          </div>
+        </ColumnContainer>
+      </div>
+    );
+
+    // if there are no children, don't make an accordion
+    if (!hasChildren) {
+      return checkbox;
+    }
+
+    return (
+      <Accordion expanded={open} onChange={() => toggleAccordion(open)}>
+        <AccordionSummary aria-controls="panel-content" id="panel-header">
+          <div
+            onClick={() => {
+              toggleAccordion(open);
+              setcolumnSelected(name, details.parents);
+            }}
+            //style={{ backgroundColor: "lightblue" }}
+          >
+            {checkbox}
+          </div>
+        </AccordionSummary>
+        <AccordionDetails>
+          <div>
+            {details.children &&
+              Object.entries(details.children).map(
+                ([childName, childDetails]) => (
+                  <div>
+                    <ColumnAccordion
+                      key={childName}
+                      name={childName}
+                      details={childDetails}
+                      onToggle={onToggle}
+                    />
+                  </div>
+                )
+              )}
+          </div>
+        </AccordionDetails>
+      </Accordion>
+    );
+  }
+);
 
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
@@ -78,7 +134,6 @@ export const Column = observer(function Column() {
     actions.setTab(1);
     actions.setAllTabs(true);
 
-
     actions.updateSettings();
 
     actions.generateChart();
@@ -87,25 +142,38 @@ export const Column = observer(function Column() {
   };
 
   return (
-    <div style={{ display: "flex", justifyContent: "center", minHeight: '100vh'}}>
+    <div
+      style={{ display: "flex", justifyContent: "center", minHeight: "100vh" }}
+    >
       <Box
         sx={{
           border: `1px solid gray`,
-          borderRadius: '4px',
+          borderRadius: "4px",
           zIndex: 0,
-          padding: '10px'
+          padding: "10px",
         }}
       >
+        <TSCButton
+          style={{
+            width: "auto",
+            height: "auto",
+            fontSize: "0.85rem",
+          }}
+          onClick={generateChart}
+        >
+          Generate
+        </TSCButton>
         <Accordion
           expanded={open}
           onChange={handleChange}
-          style={{minWidth: '70vh'}}
+          style={{ minWidth: "70vh" }}
         >
-          <AccordionSummary aria-controls="panel1d-content" id="panel1d-header"
-          >
-            <Typography sx={{ fontSize: "1.2rem", marginLeft: "15px" }}>TimeScale Creator GTS2020 Chart</Typography>
+          <AccordionSummary aria-controls="panel1d-content" id="panel1d-header">
+            <Typography sx={{ fontSize: "1.2rem", marginLeft: "15px" }}>
+              TimeScale Creator GTS2020 Chart
+            </Typography>
           </AccordionSummary>
-          <AccordionDetails >
+          <AccordionDetails>
             {renderColumns(state.settingsTabs.columns)}
           </AccordionDetails>
         </Accordion>
