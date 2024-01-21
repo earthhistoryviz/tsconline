@@ -7,7 +7,7 @@ import { styled } from "@mui/material/styles"
 import { devSafeUrl } from '../util'
 import { observer } from "mobx-react-lite"
 import React, { useState } from "react"
-import { MapDialog } from './MapViewer'
+import { MapViewer } from './MapViewer'
 import './MapPoints.css'
 
 const MapListItemButton = styled(ListItemButton)(({ theme }) => ({
@@ -47,19 +47,21 @@ type MapRowComponentProps = {
 
 const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
   const { state, actions } = useContext(context)
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleRowClick = (name: string) => {
     actions.setSelectedMap(name);
-    setIsDialogOpen(true);
+    actions.setIsMapViewerOpen(true)
 
   };
   // this dialog is seperate from the one inside map dialogs
   // this must be the case 
   const handleCloseDialog = () => {
-    setIsDialogOpen(false)
-    actions.setIsLegendOpen(false)
-    actions.setSelectedMap(null)
+    const lastMap = actions.popMapHistory()
+    if (lastMap) {
+      actions.openLastMap(lastMap)
+    } else {
+      actions.closeMapViewer()
+    }
   }
 
   return (
@@ -82,8 +84,8 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
         </List>
       </Box>
 
-      <Dialog open={isDialogOpen} keepMounted onClose={handleCloseDialog} maxWidth={false}>
-        {state.settingsTabs.selectedMap ? <MapDialog name={state.settingsTabs.selectedMap} /> : null}
+      <Dialog open={state.settingsTabs.isMapViewerOpen} keepMounted onClose={handleCloseDialog} maxWidth={false}>
+        {state.settingsTabs.selectedMap ? <MapViewer name={state.settingsTabs.selectedMap} isFacies={state.settingsTabs.isFacies}/> : null}
       </Dialog>
     </div>
   );

@@ -62,28 +62,15 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   justifyContent: 'space-between',
 }));
 
-function ValueLabelComponent(props: SliderValueLabelProps) {
-  const { children, value } = props;
-
-  return (
-    <Tooltip enterTouchDelay={0} placement="bottom" title={value}>
-      {children}
-    </Tooltip>
-  );
-}
-
-
-
-
  // The map interface that will be recursive so that we can create "multiple" windows.
  // Nested dialogs
  // TODO: possibly a better container than dialog?
 export const MapDialog = observer(function MapDialog({ name, isFacies=false }: {name: string; isFacies?: boolean;}) {
-    if (!name) return null
     const { actions } = useContext(context)
     const [dialogOpen, setDialogOpen] = useState(false);
     const [childName, setChildName] = useState("")
     const [isChildFacies, setIsChildFacies] = useState(false)
+    if (!name || name.length == 0) return null
 
     const handleCloseDialog = () => {
         actions.setIsLegendOpen(false)
@@ -98,7 +85,7 @@ export const MapDialog = observer(function MapDialog({ name, isFacies=false }: {
 
     return (
         <>
-        <MapViewer openChild={openChild} name={name} isFacies={isFacies}/>
+        <MapViewer name={name} isFacies={isFacies}/>
         <Dialog keepMounted open={dialogOpen} onClose={handleCloseDialog} maxWidth={false} >
             <MapDialog name={childName} isFacies={isChildFacies}/>
         </Dialog>
@@ -110,12 +97,11 @@ export const MapDialog = observer(function MapDialog({ name, isFacies=false }: {
 
     type MapProps  = {
     name: string;
-    openChild: (childName: string, isFacies: boolean) => void;
     isFacies: boolean
     }
 
     // This component is the map itself with the image and buttons within.
-const MapViewer: React.FC<MapProps> = observer(({ name, openChild, isFacies }) => {
+export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
     const { state, actions } = useContext(context)
     const theme = useTheme()
     const [imageLoaded, setImageLoaded] = useState(false)
@@ -134,12 +120,17 @@ const MapViewer: React.FC<MapProps> = observer(({ name, openChild, isFacies }) =
     };
     }, []);
 
+
     const handleFullscreenChange = () => {
         if (document.fullscreenElement) {
         setIsFullscreen(true)
         } else {
         setIsFullscreen(false)
         }
+    }
+    const openChildMap = (childMap: string) => {
+      // call the new child as a regular map, with no facies
+      actions.openNextMap(name, isFacies, childMap, false)
     }
 
     const mapInfo: MapInfo = state.settingsTabs.mapInfo
@@ -161,7 +152,7 @@ const MapViewer: React.FC<MapProps> = observer(({ name, openChild, isFacies }) =
     ) => (
         <>
         <div className="controls">
-            {!isFacies && <TSCButton className="bottom-button" onClick={() => {openChild(name, true)}}>Facies</TSCButton>}
+            {!isFacies && <TSCButton className="bottom-button" onClick={() => { actions.openNextMap(name, false, name, true)}}>Facies</TSCButton>}
             <TSCButton className="bottom-button" onClick={() => actions.setIsLegendOpen(!state.settingsTabs.isLegendOpen)}>legend</TSCButton>
         </div>
         <div className="view-buttons">
@@ -255,7 +246,7 @@ return (
               child, 
               bounds, 
               mapInfo[child].parent!.bounds, 
-              openChild,
+              openChildMap
               )
               })}
         </>
@@ -388,24 +379,24 @@ const Legend = ({items}: {items: LegendItem[]}) => {
 
 /**
  * This will create the rectangular map button for any children
- * @param name name of the child map
+ * @param childName name of the child map
  * @param mapBounds bounds of the parent map
  * @param childBounds bounds of the child within the parent map
- * @param openChild function to open the dialog box in the recursive call
+ * @param openChildMap opens the child map by changing the state
  * @returns 
  */
 function createChildMapButton(
-  name: string,
+  childName: string,
   mapBounds: Bounds,
   childBounds: Bounds,
-  openChild: (childName: string, isFacies: boolean) => void,
+  openChildMap: (childMap: string) => void
   ) {
   if (isRectBounds(childBounds) && isRectBounds(mapBounds)) {
     const { midpoint, upperLeft, width, height } = calculateRectButton(childBounds, mapBounds)
     return (
-      <MapPointTooltip key={name} title={
+      <MapPointTooltip key={childName} title={
         <>
-          <h3 className="header">{`${name}`}</h3>
+          <h3 className="header">{`${childName}`}</h3>
           <ul>
               <li>Latitude: {midpoint.y}</li>
               <li>Longitude: {midpoint.x}</li>
@@ -426,11 +417,7 @@ function createChildMapButton(
         height: `${height}%`,
       }} 
       onClick={() => {
-        // call the new child as a regular map, with no facies
-        openChild(name, false)
-        if (document.fullscreenElement) {
-          document.exitFullscreen()
-        }
+        openChildMap(childName)
       }}
       />
       </MapPointTooltip>
