@@ -120,3 +120,56 @@
   justify-content: center;
   display: flex;
 }
+.facies-buttons {
+  position: absolute;
+  top: 20px;
+  left: calc(50% - 100px);
+  width: 200px;
+}
+
+.age-slider .MuiSlider-track {
+  border: none;
+}
+
+.age-slider .MuiSlider-thumb {
+  height: 16px;
+  width: 16px;
+  background-color: #fff;
+  border: 2px solid currentColor;
+}
+
+.age-slider .MuiSlider-thumb:focus,
+.age-slider .MuiSlider-thumb:hover,
+.age-slider .MuiSlider-thumb.Mui-active,
+.age-slider .MuiSlider-thumb.Mui-focusVisible {
+  box-shadow: inherit;
+}
+
+.age-slider .MuiSlider-thumb::before {
+  display: none;
+}
+
+.age-slider .MuiSlider-valueLabel {
+  line-height: 1.2;
+  font-size: 12px;
+  background: unset;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50% 0% 50% 50%;
+  background-color: black;
+  transform-origin: bottom left;
+  transform: translateX(50%) rotate(-45deg) scale(0);
+}
+
+.age-slider .MuiSlider-valueLabel::before {
+  display: none;
+}
+
+.age-slider .MuiSlider-valueLabel.MuiSlider-valueLabelOpen {
+  transform: translatex(50%) translateY(170%) rotate(-45deg) scale(1);
+}
+
+.age-slider .MuiSlider-valueLabel > * {
+  transform: rotate(45deg);
+}

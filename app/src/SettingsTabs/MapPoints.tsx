@@ -82,7 +82,7 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
         </List>
       </Box>
 
-      <Dialog open={isDialogOpen} onClose={handleCloseDialog} maxWidth={false}>
+      <Dialog open={isDialogOpen} keepMounted onClose={handleCloseDialog} maxWidth={false}>
         {state.settingsTabs.selectedMap ? <MapDialog name={state.settingsTabs.selectedMap} /> : null}
       </Dialog>
     </div>

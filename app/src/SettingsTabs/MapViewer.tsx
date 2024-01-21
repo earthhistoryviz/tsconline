@@ -1,4 +1,4 @@
-import { TooltipProps, Tooltip, Drawer, Divider, Typography, IconButton, Dialog, Button, Box } from '@mui/material'
+import { SliderValueLabelProps, Slider, TooltipProps, Tooltip, Drawer, Divider, Typography, IconButton, Dialog, Button, Box } from '@mui/material'
 import { styled, useTheme } from "@mui/material/styles"
 import type { InfoPoints, MapHierarchy, Bounds, MapPoints, MapInfo} from '@tsconline/shared'
 import { devSafeUrl } from '../util'
@@ -62,13 +62,23 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   justifyContent: 'space-between',
 }));
 
+function ValueLabelComponent(props: SliderValueLabelProps) {
+  const { children, value } = props;
+
+  return (
+    <Tooltip enterTouchDelay={0} placement="bottom" title={value}>
+      {children}
+    </Tooltip>
+  );
+}
+
 
 
 
  // The map interface that will be recursive so that we can create "multiple" windows.
  // Nested dialogs
  // TODO: possibly a better container than dialog?
-export const MapDialog = observer(function MapDialog({ name, isFacies=false }: {name: string; isFacies: boolean;}) {
+export const MapDialog = observer(function MapDialog({ name, isFacies=false }: {name: string; isFacies?: boolean;}) {
     if (!name) return null
     const { state, actions } = useContext(context)
     const theme = useTheme()
@@ -96,7 +106,7 @@ export const MapDialog = observer(function MapDialog({ name, isFacies=false }: {
     return (
         <>
         <MapViewer openChild={openChild} name={name} isFacies={isFacies}/>
-        <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth={false} >
+        <Dialog keepMounted open={dialogOpen} onClose={handleCloseDialog} maxWidth={false} >
             <MapDialog name={childName} isFacies={isChildFacies}/>
         </Dialog>
         <Drawer
@@ -197,6 +207,10 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild, isFacies }) => {
                 <YoutubeSearchedForIcon className="fullscreen-icon"/>
             </IconButton>
         </div>
+        {isFacies && 
+        <div className="facies-buttons">
+            <Slider className="age-slider" defaultValue={50} aria-label="Default" valueLabelDisplay="auto" />
+        </div>}
         </>
 );
 
