@@ -2,7 +2,7 @@ import { TooltipProps, Tooltip, Drawer, Divider, Typography, IconButton, Dialog,
 import { styled, useTheme } from "@mui/material/styles"
 import type { InfoPoints, MapHierarchy, Bounds, MapPoints, MapInfo, RectBounds} from '@tsconline/shared'
 import { devSafeUrl } from '../util'
-import React, { useState, useRef, useContext } from "react"
+import React, { useEffect, useState, useRef, useContext } from "react"
 import { context } from '../state';
 import { observer } from "mobx-react-lite"
 import { TransformWrapper, TransformComponent, useTransformEffect } from "react-zoom-pan-pinch"
@@ -13,8 +13,11 @@ import CloseIcon from '@mui/icons-material/Close';
 import NotListedLocationIcon from '@mui/icons-material/NotListedLocation';
 import LocationOnTwoToneIcon from '@mui/icons-material/LocationOnTwoTone';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
+import FullscreenIcon from '@mui/icons-material/Fullscreen';
+import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
 
 import './TSCMaps.css'
+import { ImageProps } from 'react-bootstrap'
 
 const ICON_SIZE = 30
 const InfoIcon = NotListedLocationIcon 
@@ -183,6 +186,27 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild, openLegend }) => {
   const {state} = useContext(context)
   const [imageLoaded, setImageLoaded] = useState(false)
   const imageRef = useRef<HTMLImageElement | null>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const mapViewerRef = useRef<HTMLDivElement | null>(null)
+
+  // useEffect needed to know when fullscreen changes i.e escape, button, pressing child maps
+  useEffect(() => {
+  // Add event listener when the component mounts
+  document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+  // Remove event listener when the component unmounts
+  return () => {
+    document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  };
+}, []);
+
+  const handleFullscreenChange = () => {
+    if (document.fullscreenElement) {
+      setIsFullscreen(true)
+    } else {
+      setIsFullscreen(false)
+    }
+  }
 
   const mapInfo: MapInfo = state.settingsTabs.mapInfo
   const mapData: MapInfo[string] = mapInfo[name]
@@ -190,24 +214,44 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild, openLegend }) => {
 
   const Controls = (
     { 
+      mapViewer,
       zoomIn, 
       zoomOut, 
       resetTransform, 
       ...rest 
     } : {
+      mapViewer: HTMLDivElement,
       zoomIn: () => void,
       zoomOut: () => void,
       resetTransform: () => void,
     }
   ) => (
-    <div className="controls">
-      <TSCButton className="zoom-button" onClick={() => zoomIn()}>zoom in</TSCButton>
-      <TSCButton className="zoom-button" onClick={() => zoomOut()}>zoom out</TSCButton>
-      <TSCButton className="zoom-button" onClick={() => resetTransform()}>reset</TSCButton>
-      <TSCButton className="zoom-button" onClick={() => openLegend()}>legend</TSCButton>
-    </div>
+    <>
+      <div className="controls">
+        <TSCButton className="zoom-button" onClick={() => zoomIn()}>zoom in</TSCButton>
+        <TSCButton className="zoom-button" onClick={() => zoomOut()}>zoom out</TSCButton>
+        <TSCButton className="zoom-button" onClick={() => resetTransform()}>reset</TSCButton>
+        <TSCButton className="zoom-button" onClick={() => openLegend()}>legend</TSCButton>
+      </div>
+      <div className="fullscreen">
+        <IconButton className="fullscreen-icon-button" onClick={() => {
+          if (document.fullscreenElement) {
+            document.exitFullscreen()
+          } else {
+            mapViewer.requestFullscreen()
+          }
+          }}>
+          <FullscreenIcon className="fullscreen-icon"/>
+        </IconButton>
+      </div>
+    </>
   );
 
+  const fullscreenImgStyle = {
+    maxWidth: "100vw",
+    height: "100vh",
+    maxHeight: "100vh"
+  }
   return (
     <TransformWrapper 
     doubleClick={{
@@ -218,12 +262,20 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild, openLegend }) => {
     limitToBounds={true}
     >
       {(utils) => (
-      <>
+      <div ref={mapViewerRef} className="map-viewer">
         <TransformComponent >
           <>
           <img
           id="map"
           ref={imageRef}
+          style={
+            /* 
+            we need to conditionally have styles because 
+            when fullscreened:   we fit the height of the image to max viewport height
+            when unfullscreened: we use normal css ~90 viewport height
+            */
+            isFullscreen ? fullscreenImgStyle : undefined
+          }
           src={devSafeUrl(mapData.img)}
           alt="Map" 
           className="map"
@@ -251,13 +303,13 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild, openLegend }) => {
               child, 
               bounds, 
               mapInfo[child].parent!.bounds, 
-              openChild
+              openChild,
               )
             })}
           </>
         </TransformComponent>
-        <Controls {...utils}/>
-      </>
+        {mapViewerRef && mapViewerRef.current && <Controls mapViewer={mapViewerRef.current as HTMLDivElement} {...utils}/>}
+      </div>
       )}
     </TransformWrapper>
   );
@@ -344,7 +396,6 @@ const DisplayLegendItem = ({ legendItem } : {legendItem: LegendItem}) => {
     <Icon
     width={20}
     height={20}
-    color={color}
     style ={{color: color}}
     mr={1}/>
     <LegendTypography className="legend-label">{label}</LegendTypography>
@@ -374,7 +425,12 @@ const Legend = ({items}: {items: LegendItem[]}) => {
  * @param openChild function to open the dialog box in the recursive call
  * @returns 
  */
-function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Bounds, openChild: (childName: string) => void) {
+function createChildMapButton(
+  name: string,
+  mapBounds: Bounds,
+  childBounds: Bounds,
+  openChild: (childName: string) => void,
+  ) {
   if (isRectBounds(childBounds) && isRectBounds(mapBounds)) {
     const { midpoint, upperLeft, width, height } = calculateRectButton(childBounds, mapBounds)
     return (
@@ -399,7 +455,12 @@ function createChildMapButton(name: string, mapBounds: Bounds, childBounds: Boun
         width: `${width}%`,
         height: `${height}%`,
       }} 
-      onClick={() => {openChild(name)}}
+      onClick={() => {
+        openChild(name)
+        if (document.fullscreenElement) {
+          document.exitFullscreen()
+        }
+      }}
       />
       </MapPointTooltip>
   )
