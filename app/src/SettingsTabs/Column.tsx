@@ -44,7 +44,9 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
     }
     const columnName = (
       <div>
-        <Typography sx={{ fontSize: "0.97rem" }}>{name}</Typography>
+        <Typography sx={{ fontSize: "0.97rem" }} style={{ padding: "10px" }}>
+          {name}
+        </Typography>
       </div>
     );
     function selected(item: HTMLElement) {
