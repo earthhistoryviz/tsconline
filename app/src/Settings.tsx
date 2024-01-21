@@ -5,7 +5,7 @@ import { observer } from "mobx-react-lite";
 import { Column } from "./SettingsTabs/Column";
 import { Time } from "./SettingsTabs/Time";
 import { Font } from "./SettingsTabs/Font";
-import { MapPoint } from "./SettingsTabs/MapPoint";
+import { MapPoints } from "./SettingsTabs/MapPoints";
 import { useTheme } from '@mui/material/styles';
 import { TSCTabs, TSCTab } from './components';
 
@@ -43,7 +43,7 @@ export const Settings = observer(function Settings() {
       case "font":
         return <Font />;
       case "mappoints":
-        return <MapPoint />;
+        return <MapPoints />;
     }
   }
 

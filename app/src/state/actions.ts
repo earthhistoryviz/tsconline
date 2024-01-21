@@ -17,6 +17,10 @@ export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;
 });
 
+export const setSelectedMap = action("setSelectedMap", (newMap: string | null) => {
+  state.settingsTabs.selectedMap = newMap
+})
+
 export const resetSettings = action("resetSettings", () => {
   state.settings = {
     topStageKey: "",
