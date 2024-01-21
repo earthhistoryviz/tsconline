@@ -13,6 +13,9 @@ import NotListedLocationIcon from '@mui/icons-material/NotListedLocation';
 import LocationOnTwoToneIcon from '@mui/icons-material/LocationOnTwoTone';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
+import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import ZoomOutIcon from '@mui/icons-material/ZoomOut';
+import YoutubeSearchedForIcon from '@mui/icons-material/YoutubeSearchedFor';
 import './MapViewer.css'
 import { observer } from 'mobx-react-lite'
 
@@ -159,7 +162,6 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
         zoomIn, 
         zoomOut, 
         resetTransform, 
-        ...rest 
         } : {
         mapViewer: HTMLDivElement,
         zoomIn: () => void,
@@ -169,13 +171,10 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
     ) => (
         <>
         <div className="controls">
-            <TSCButton className="zoom-button" onClick={() => zoomIn()}>zoom in</TSCButton>
-            <TSCButton className="zoom-button" onClick={() => zoomOut()}>zoom out</TSCButton>
-            <TSCButton className="zoom-button" onClick={() => resetTransform()}>reset</TSCButton>
-            <TSCButton className="zoom-button" onClick={() => actions.setIsLegendOpen(!state.settingsTabs.isLegendOpen)}>legend</TSCButton>
+            <TSCButton className="bottom-button" onClick={() => actions.setIsLegendOpen(!state.settingsTabs.isLegendOpen)}>legend</TSCButton>
         </div>
-        <div className="fullscreen">
-            <IconButton className="fullscreen-icon-button" onClick={() => {
+        <div className="view-buttons">
+            <IconButton className="icon-view-button" onClick={() => {
             if (document.fullscreenElement) {
                 document.exitFullscreen()
             } else {
@@ -183,6 +182,15 @@ const MapViewer: React.FC<MapProps> = ({ name, openChild }) => {
             }
             }}>
             <FullscreenIcon className="fullscreen-icon"/>
+            </IconButton>
+            <IconButton className="icon-view-button" onClick={() => zoomIn()}>
+                <ZoomInIcon className="fullscreen-icon"/>
+            </IconButton>
+            <IconButton className="icon-view-button" onClick={() => zoomOut()}>
+                <ZoomOutIcon className="fullscreen-icon"/>
+            </IconButton>
+            <IconButton className="icon-view-button" onClick={() => resetTransform()}>
+                <YoutubeSearchedForIcon className="fullscreen-icon"/>
             </IconButton>
         </div>
         </>

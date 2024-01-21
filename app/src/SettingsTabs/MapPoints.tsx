@@ -54,6 +54,8 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
     setIsDialogOpen(true);
 
   };
+  // this dialog is seperate from the one inside map dialogs
+  // this must be the case 
   const handleCloseDialog = () => {
     setIsDialogOpen(false)
     actions.setIsLegendOpen(false)
