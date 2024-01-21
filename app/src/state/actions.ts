@@ -16,6 +16,35 @@ import { fetcher, devSafeUrl } from "../util";
 export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;
 });
+export const closeMapViewer = () => {
+  setIsLegendOpen(false)
+  setSelectedMap(null)
+  setIsMapViewerOpen(false)
+}
+export const openLastMap = (lastMap: {name: string, isFacies: boolean}) => {
+  setSelectedMap(lastMap.name)
+  setIsFacies(lastMap.isFacies)
+}
+export const openNextMap = (parent: string, isParentFacies: boolean, child: string, isChildFacies: boolean) => {
+  pushMapToMapHistory(parent, isParentFacies)
+  setIsFacies(isChildFacies)
+  setSelectedMap(child)
+}
+export const setIsFacies = action("setIsFacies", (newval: boolean) => {
+  state.settingsTabs.isFacies = newval;
+});
+
+export const setIsMapViewerOpen = action("setIsMapViewerOpen", (newval: boolean) => {
+  state.settingsTabs.isMapViewerOpen = newval;
+});
+
+export const pushMapToMapHistory = action("pushMapToMapHistory", (name: string, isFacies: boolean) => {
+  state.settingsTabs.mapHistory.push({name, isFacies})
+})
+
+export const popMapHistory = action("popMapHistory", () => {
+  return state.settingsTabs.mapHistory.pop()
+})
 
 export const setIsLegendOpen = action("setIsLegendOpen", (newval: boolean) => {
   state.settingsTabs.isLegendOpen = newval;

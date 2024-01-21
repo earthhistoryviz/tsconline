@@ -23,6 +23,12 @@ export type State = {
     mapHierarchy: MapHierarchy;
     selectedMap: string | null;
     isLegendOpen: boolean;
+    isMapViewerOpen: boolean;
+    isFacies: boolean;
+    mapHistory: {
+      name: string,
+      isFacies: boolean
+    }[]
   };
   chart: ChartConfig | null;
   presets: ChartConfig[];
@@ -53,7 +59,10 @@ export const state = observable<State>({
     mapInfo: {},
     mapHierarchy: {},
     selectedMap: null,
-    isLegendOpen: false
+    isLegendOpen: false,
+    isMapViewerOpen: false,
+    isFacies: false,
+    mapHistory: []
   },
   chart: null,
   presets: [],
