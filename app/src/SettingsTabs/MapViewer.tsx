@@ -80,8 +80,7 @@ function ValueLabelComponent(props: SliderValueLabelProps) {
  // TODO: possibly a better container than dialog?
 export const MapDialog = observer(function MapDialog({ name, isFacies=false }: {name: string; isFacies?: boolean;}) {
     if (!name) return null
-    const { state, actions } = useContext(context)
-    const theme = useTheme()
+    const { actions } = useContext(context)
     const [dialogOpen, setDialogOpen] = useState(false);
     const [childName, setChildName] = useState("")
     const [isChildFacies, setIsChildFacies] = useState(false)
@@ -97,35 +96,12 @@ export const MapDialog = observer(function MapDialog({ name, isFacies=false }: {
         actions.setIsLegendOpen(false)
     }
 
-    const legendItems: LegendItem[] = [
-        { color: theme.palette.on.main, label: 'On', icon: OnIcon},
-        { color: theme.palette.off.main, label: 'Off', icon: OffIcon},
-        { color: theme.palette.disabled.main, label: 'Info point', icon: InfoIcon},
-        { color: 'transparent', label: 'Child Map', icon: ChildMapIcon}
-    ]
     return (
         <>
         <MapViewer openChild={openChild} name={name} isFacies={isFacies}/>
         <Dialog keepMounted open={dialogOpen} onClose={handleCloseDialog} maxWidth={false} >
             <MapDialog name={childName} isFacies={isChildFacies}/>
         </Dialog>
-        <Drawer
-            className="legend-drawer"
-            variant="persistent"
-            anchor="left"
-            open={state.settingsTabs.isLegendOpen}
-        >
-            <DrawerHeader> 
-            <LegendArrowDropDown onClick={() => {actions.setIsLegendOpen(false)}}>
-                <CloseIcon fontSize="small"/>
-            </LegendArrowDropDown>
-            <LegendTypography className="legend-title" variant="h6" gutterBottom>
-                Color Legend
-            </LegendTypography>
-            </DrawerHeader>
-            <Divider />
-            <Legend items={legendItems}/>
-        </Drawer>
         </>
     );
     })
@@ -139,8 +115,9 @@ export const MapDialog = observer(function MapDialog({ name, isFacies=false }: {
     }
 
     // This component is the map itself with the image and buttons within.
-const MapViewer: React.FC<MapProps> = ({ name, openChild, isFacies }) => {
+const MapViewer: React.FC<MapProps> = observer(({ name, openChild, isFacies }) => {
     const { state, actions } = useContext(context)
+    const theme = useTheme()
     const [imageLoaded, setImageLoaded] = useState(false)
     const imageRef = useRef<HTMLImageElement | null>(null)
     const [isFullscreen, setIsFullscreen] = useState(false)
@@ -219,7 +196,15 @@ const fullscreenImgStyle = {
     height: "100vh",
     maxHeight: "100vh"
 }
+
+  const legendItems: LegendItem[] = [
+      { color: theme.palette.on.main, label: 'On', icon: OnIcon},
+      { color: theme.palette.off.main, label: 'Off', icon: OffIcon},
+      { color: theme.palette.disabled.main, label: 'Info point', icon: InfoIcon},
+      { color: 'transparent', label: 'Child Map', icon: ChildMapIcon}
+  ]
 return (
+  <div ref={mapViewerRef} className="map-viewer">
     <TransformWrapper 
     doubleClick={{
     disabled: true 
@@ -229,58 +214,75 @@ return (
     limitToBounds={true}
     >
     {(utils) => (
-    <div ref={mapViewerRef} className="map-viewer">
-        <TransformComponent >
+    <>
+        <TransformComponent>
         <>
-        <img
-        id="map"
-        ref={imageRef}
-        style={
-            /* 
-            we need to conditionally have styles because 
-            when fullscreened:   we fit the height of the image to max viewport height
-            when unfullscreened: we use normal css ~90 viewport height
-            */
-            isFullscreen ? fullscreenImgStyle : undefined
-        }
-        src={devSafeUrl(mapData.img)}
-        alt="Map" 
-        className="map"
-        onLoad={() => setImageLoaded(true)}
-        />
+          <img
+          id="map"
+          ref={imageRef}
+          style={
+              /* 
+              we need to conditionally have styles because 
+              when fullscreened:   we fit the height of the image to max viewport height
+              when unfullscreened: we use normal css ~90 viewport height
+              */
+              isFullscreen ? fullscreenImgStyle : undefined
+          }
+          src={devSafeUrl(mapData.img)}
+          alt="Map" 
+          className="map"
+          onLoad={() => setImageLoaded(true)}
+          />
 
-        {/* Load all the map points */}
-        {imageLoaded && imageRef && imageRef.current && mapData.mapPoints &&
-        loadMapPoints(mapData.mapPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false)}
+          {/* Load all the map points */}
+          {imageLoaded && imageRef && imageRef.current && mapData.mapPoints &&
+          loadMapPoints(mapData.mapPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false)}
 
-        {/* Load all the info points */}
-        {imageLoaded && imageRef && imageRef.current && mapData.infoPoints && 
-        loadMapPoints(mapData.infoPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, true)}
+          {/* Load all the info points */}
+          {imageLoaded && imageRef && imageRef.current && mapData.infoPoints && 
+          loadMapPoints(mapData.infoPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, true)}
 
-        {/* Load all the child maps*/}
-        {Object.keys(mapHierarchy).includes(name) && mapHierarchy[name].map(child => {
-            // if the parent exists, use the bounds of the parent on mapData
-            // this is because the child's parent field is the bounds of this map on that parent map
-            const bounds = ! mapData.parent ? mapData.bounds : mapData.parent!.bounds
+          {/* Load all the child maps*/}
+          {Object.keys(mapHierarchy).includes(name) && mapHierarchy[name].map(child => {
+              // if the parent exists, use the bounds of the parent on mapData
+              // this is because the child's parent field is the bounds of this map on that parent map
+              const bounds = ! mapData.parent ? mapData.bounds : mapData.parent!.bounds
 
-            // name is the parentMap
-            // mapHierarchy[name] contains all the children of the parent map
-            // this will call for each child of name
-            return createChildMapButton(
-            child, 
-            bounds, 
-            mapInfo[child].parent!.bounds, 
-            openChild,
-            )
-            })}
+              // name is the parentMap
+              // mapHierarchy[name] contains all the children of the parent map
+              // this will call for each child of name
+              return createChildMapButton(
+              child, 
+              bounds, 
+              mapInfo[child].parent!.bounds, 
+              openChild,
+              )
+              })}
         </>
         </TransformComponent>
         {mapViewerRef && mapViewerRef.current && <Controls mapViewer={mapViewerRef.current as HTMLDivElement} {...utils}/>}
-    </div>
+    </>
     )}
     </TransformWrapper>
-);
-}
+    <Drawer
+        className="legend-drawer"
+        variant="persistent"
+        anchor="left"
+        open={state.settingsTabs.isLegendOpen}
+    >
+        <DrawerHeader> 
+        <LegendArrowDropDown onClick={() => {actions.setIsLegendOpen(false)}}>
+            <CloseIcon fontSize="small"/>
+        </LegendArrowDropDown>
+        <LegendTypography className="legend-title" variant="h6" gutterBottom>
+            Color Legend
+        </LegendTypography>
+        </DrawerHeader>
+        <Divider />
+        <Legend items={legendItems}/>
+    </Drawer>
+  </div>
+)})
 
 
 
