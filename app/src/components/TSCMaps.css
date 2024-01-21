@@ -10,10 +10,35 @@
   justify-content: center;
   z-index: 1;
 }
-.map {
-  height: 500px;
-  width: auto;
+.MuiSvgIcon-root.fullscreen-icon {
+  color: white;
+  width: inherit;
+  height: inherit;
+  object-fit: contain;
 }
+.fullscreen-icon-button {
+  width: 35px;
+  height: 35px;
+}
+.fullscreen {
+  position: absolute;
+  top: 10px;
+  left: calc(100% - 50px);
+}
+.map-viewer {
+  display: flex;
+  align-items: center; 
+  justify-content: center;
+}
+.map {
+  min-width: none;
+  min-height: none;
+  max-width: 90vw;
+  max-height: 90vh;
+}
+/* TODO: possibly if the user has a window open, the width can never go smaller than all the buttons*/
+/* as a result these might need to be scaled with the windows, because*/
+/* weird scrolling happens if the window tries to be smaller than these buttons*/
 .MuiButton-root.zoom-button {
   height: 20px;
   width: 100px;
@@ -24,7 +49,6 @@
   border-radius: 50%;
   padding: 0;
   z-index: 1;
-  /* background-color: red; */
 }
 .MuiSvgIcon-root.icon {
   border-radius: 50%;
@@ -36,7 +60,6 @@
   z-index: 1;
 }
 .MuiIconButton-root.map-point:hover {
-  /* background-color: red; */
   opacity: 0.7;
 }
 .MuiButton-root.child-map {
@@ -55,30 +78,40 @@
 .button-container {
   border: 1px solid yellow;
 }
-.legend {
-  position: absolute;
-  top: 5px;
-  /* left: 80%;
-  transform: translateX(-50%); */
-  left: 10%;
-  background-color: transparent;
-  display: flex;
-  justify-content: left;
-  align-content: center;
-  text-align: center;
-  z-index: 1;
-}
 .MuiTypography-root.legend-label {
   margin-left: 15px;
 }
 .MuiTypography-root.legend-title {
-  margin-left: 15px;
+  margin-right: 15px;
+  margin-bottom: 0px;
+}
+.MuiBox-root.legend-item-container {
+  display: flex;
+  margin-bottom: 40px;
+  margin-left: 10px;
+  align-items: center;
 }
 .MuiBox-root.legend-container {
   padding-left: 4%;
   padding-bottom: 10px;
   padding-top: 20px;
+  height: 100%;
+  /* width: 100%; */
 }
-.legend-drawer  {
-  border: 0;
+.MuiDrawer-docked.legend-drawer > .MuiDrawer-paper {
+  border: 0px;
+}
+.child-map-icon {
+  width: 12px;
+  height: 12px;
+  margin-left: 2px;
+  border: 1px solid yellow;
+  background-color: transparent;
+}
+.child-map-icon-container {
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  display: flex;
 }
