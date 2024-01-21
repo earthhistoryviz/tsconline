@@ -3,8 +3,8 @@ import path from 'path';
 import { grabFilepaths } from './util.js'
 import assetconfigs from './index.js';
 import pmap from 'p-map';
-import type { MapHierarchy, MapInfo, MapPoints, Bounds} from '@tsconline/shared'
-import { assertMapHierarchy, assertMapInfo, assertRectBounds, assertVertBounds, assertParentMap } from '@tsconline/shared';
+import type { MapHierarchy, MapInfo, MapPoints } from '@tsconline/shared'
+import { assertMapPoints, assertInfoPoints, assertMapHierarchy, assertMapInfo, assertRectBounds, assertVertBounds, assertParentMap } from '@tsconline/shared';
 
 /**
  * Finds all map images and puts them in the public directory
@@ -86,10 +86,6 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                                 const rectBounds = grabRectBounds(headerLabels, info)
                                 assertRectBounds(rectBounds)
                                 map.bounds = rectBounds
-                                // map.bounds.upperLeftLon = Number(info[2])
-                                // map.bounds.upperLeftLat = Number(info[3])
-                                // map.bounds.lowerRightLon = Number(info[4])
-                                // map.bounds.lowerRightLat = Number(info[5])
                                 break
                             case 'VERTICAL PERSPECTIVE':
                                 let vertBounds: any = {}
@@ -156,7 +152,6 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                         if (!info || info.length < 3) {
                             throw new Error(`Map info file: ${path.basename(map_info)} is not in the correct format`)
                         }
-                        // console.log(settingsNames)
                         // grab setting names for the map point
                         let i = index + 1
                         // iterate over the line and depending on the columns above, figure out which
@@ -167,7 +162,6 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                                 lon: 0
                             }
                             let mapPointName = ""
-                            // console.log(info)
                             for (let j = 1; j < info.length; j++) {
                                 if (!info[j] || !headerLabels || !headerLabels[j] || !headerLabels[j]!.label) continue
                                 switch (headerLabels[j]!.label) {
@@ -194,13 +188,13 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                                         break;
                                     default:
                                         throw new Error(`Unrecognized component of DATACOL: ${headerLabels[j]!.label}`)
-                                        break;
                                 }
                             }
                             i++
                             info = tabSeparated[i]
                             map.mapPoints[mapPointName] = mapPoint
                         }
+                        assertMapPoints(map.mapPoints)
                         break
                     case "HEADER-INFORMATION POINTS":
                         if (!info || info.length < 4) {
@@ -230,12 +224,10 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                                 }
                             }
                             pointIndex++
-                            // console.log(name)
-                            // console.log(infoPoint)
                             info = tabSeparated[pointIndex]
                             map.infoPoints[name] = infoPoint
                         }
-                        // console.log(map.infoPoints)
+                        assertInfoPoints(map.infoPoints)
                         break
                 }
             }
