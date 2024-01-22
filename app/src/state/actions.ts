@@ -18,10 +18,7 @@ export const setTab = action("setTab", (newval: number) => {
 });
 export const exitMapViewer = action("exitMapViewer", () => {
   state.settingsTabs.mapHistory = []
-  setIsFacies(false)
-  setIsMapViewerOpen(false)
-  setIsLegendOpen(false)
-  setSelectedMap(null)
+  closeMapViewer()
 })
 export const goBackInMapHistory = () => {
   const lastMap = popMapHistory()
@@ -32,6 +29,7 @@ export const goBackInMapHistory = () => {
   }
 }
 export const closeMapViewer = () => {
+  setIsFacies(false)
   setIsLegendOpen(false)
   setSelectedMap(null)
   setIsMapViewerOpen(false)
