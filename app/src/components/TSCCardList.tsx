@@ -99,13 +99,6 @@ const AvatarLogo = styled(Avatar)(() => ({
   boxShadow: "0 4px 12px 0 rgba(0,0,0,0.24)",
   borderRadius: "1rem",
 }));
-const ClickableCard = styled(ButtonBase)(() => ({
-  display: 'block',
-  textAlign: 'inherit',
-  width: '100%',
-  // '&:hover': {
-  // },
-}));
 
 // const StyledDivBrand = styled("div")(({ theme }) => ({
 //   fontFamily: theme.typography.fontFamily,
@@ -141,7 +134,6 @@ export const TSCCardList = ({
   generateChart?: () => void;
 }) => {
   return (
-    // <ClickableCard onClick={onClick}>
     <StyledRoot color = {color}>
     <CardMediaCover image={img} />
     <StyledContent color={color}>
@@ -179,6 +171,5 @@ export const TSCCardList = ({
       </Box>
     </StyledContent>
   </StyledRoot>
-  // </ClickableCard>
   );
 };

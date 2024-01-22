@@ -1,4 +1,4 @@
-import { SliderValueLabelProps, Slider, TooltipProps, Tooltip, Drawer, Divider, Typography, IconButton, Dialog, Button, Box } from '@mui/material'
+import { TextField, SliderValueLabelProps, Slider, TooltipProps, Tooltip, Drawer, Divider, Typography, IconButton, Dialog, Button, Box } from '@mui/material'
 import { styled, useTheme } from "@mui/material/styles"
 import type { InfoPoints, MapHierarchy, Bounds, MapPoints, MapInfo} from '@tsconline/shared'
 import { devSafeUrl } from '../util'
@@ -51,6 +51,10 @@ const LegendTypography = styled(Typography)(({ theme }) => ({
 
 const LegendArrowDropDown = styled(IconButton)(({ theme }) => ({
   color: theme.palette.primary.main 
+}))
+
+const DrawerContainer = styled('div')(( {theme} ) => ({
+  backgroundColor: theme.palette.navbar.dark,
 }))
 
 const DrawerHeader = styled('div')(({ theme }) => ({
@@ -156,10 +160,6 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
               <YoutubeSearchedForIcon className="icon-button"/>
           </IconButton>
         </div>
-        {isFacies && 
-        <div className="facies-buttons">
-            <Slider className="age-slider" defaultValue={50} aria-label="Default" valueLabelDisplay="auto" />
-        </div>}
         </>
 );
 
@@ -254,8 +254,27 @@ return (
         <Divider />
         <Legend items={legendItems}/>
     </Drawer>
+    <Drawer 
+    className="facies-button-container"
+    variant="persistent"
+    anchor="bottom"
+    open={state.settingsTabs.isFacies}>
+      <FaciesControls/>
+    </Drawer>
   </div>
 )})
+
+const AgeSlider = () => (
+  <div className="age-slider-container">
+    <TextField style={{color: "white"}} variant="outlined"/>
+    <Slider className="age-slider" defaultValue={50} aria-label="Default" valueLabelDisplay="auto" />
+  </div>
+)
+const FaciesControls = () => (
+  <DrawerContainer className="facies-buttons">
+    <AgeSlider/>
+  </DrawerContainer>
+)
 
 
 
@@ -358,10 +377,9 @@ const DisplayLegendItem = ({ legendItem } : {legendItem: LegendItem}) => {
 const Legend = ({items}: {items: LegendItem[]}) => {
   const theme = useTheme()
   return (<Box
-  className="legend-container"
+    className="legend-container"
     style={{ 
       backgroundColor: theme.palette.navbar.dark,
-      // columnCount: items.length,
       }}>
     {items.map((item, index) => (
       <DisplayLegendItem key={index} legendItem={item}/>
