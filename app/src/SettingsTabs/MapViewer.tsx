@@ -104,6 +104,7 @@ export const MapDialog = observer(function MapDialog({ name, isFacies=false }: {
 export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
     const { state, actions } = useContext(context)
     const theme = useTheme()
+    // we need this so it refreshes the components that require image loading
     const [imageLoaded, setImageLoaded] = useState(false)
     const imageRef = useRef<HTMLImageElement | null>(null)
     const [isFullscreen, setIsFullscreen] = useState(false)
@@ -130,6 +131,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
     }
     const openChildMap = (childMap: string) => {
       // call the new child as a regular map, with no facies
+      setImageLoaded(false)
       actions.openNextMap(name, isFacies, childMap, false)
     }
 
@@ -222,7 +224,7 @@ return (
           src={devSafeUrl(mapData.img)}
           alt="Map" 
           className="map"
-          onLoad={() => setImageLoaded(true)}
+          onLoad={() => {setImageLoaded(true)}}
           />
 
           {/* Load all the map points */}
@@ -462,6 +464,8 @@ function getPositionOfPointBasedOnBounds(bounds: Bounds, point: MapPoints[string
  * @returns all MapPointButton Components
  */
 function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidth: number, frameHeight: number, isInfo: boolean) {
+  console.log(frameWidth)
+  console.log(frameHeight)
   if (!points) return
   return (Object.entries(points).map(([name, point]) => {
     if (!point) return

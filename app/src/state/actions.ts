@@ -30,7 +30,7 @@ export const openNextMap = (parent: string, isParentFacies: boolean, child: stri
   setIsFacies(isChildFacies)
   setSelectedMap(child)
 }
-export const setIsFacies = action("setIsFacies", (newval: boolean) => {
+const setIsFacies = action("setIsFacies", (newval: boolean) => {
   state.settingsTabs.isFacies = newval;
 });
 
@@ -38,7 +38,7 @@ export const setIsMapViewerOpen = action("setIsMapViewerOpen", (newval: boolean)
   state.settingsTabs.isMapViewerOpen = newval;
 });
 
-export const pushMapToMapHistory = action("pushMapToMapHistory", (name: string, isFacies: boolean) => {
+const pushMapToMapHistory = action("pushMapToMapHistory", (name: string, isFacies: boolean) => {
   state.settingsTabs.mapHistory.push({name, isFacies})
 })
 

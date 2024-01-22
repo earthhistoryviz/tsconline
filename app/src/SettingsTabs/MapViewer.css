@@ -47,6 +47,7 @@
 .map {
   min-width: none;
   min-height: none;
+  height: 90vh;
   max-width: 90vw;
   max-height: 90vh;
 }
