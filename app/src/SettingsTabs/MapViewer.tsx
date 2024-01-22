@@ -16,8 +16,9 @@ import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import YoutubeSearchedForIcon from '@mui/icons-material/YoutubeSearchedFor';
-import './MapViewer.css'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { observer } from 'mobx-react-lite'
+import './MapViewer.css'
 
 const ICON_SIZE = 30
 const InfoIcon = NotListedLocationIcon 
@@ -44,7 +45,6 @@ const MapPointTooltip = styled(({className, ...props}: TooltipProps) => (
   }
 `
 
-
 const LegendTypography = styled(Typography)(({ theme }) => ({
   color: theme.palette.primary.main 
 }))
@@ -62,38 +62,6 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   justifyContent: 'space-between',
 }));
 
- // The map interface that will be recursive so that we can create "multiple" windows.
- // Nested dialogs
- // TODO: possibly a better container than dialog?
-export const MapDialog = observer(function MapDialog({ name, isFacies=false }: {name: string; isFacies?: boolean;}) {
-    const { actions } = useContext(context)
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [childName, setChildName] = useState("")
-    const [isChildFacies, setIsChildFacies] = useState(false)
-    if (!name || name.length == 0) return null
-
-    const handleCloseDialog = () => {
-        actions.setIsLegendOpen(false)
-        setDialogOpen(false);
-    };
-    const openChild = (childName: string, isFacies: boolean) => {
-        setDialogOpen(true)
-        setChildName(childName)
-        setIsChildFacies(isFacies)
-        actions.setIsLegendOpen(false)
-    }
-
-    return (
-        <>
-        <MapViewer name={name} isFacies={isFacies}/>
-        <Dialog keepMounted open={dialogOpen} onClose={handleCloseDialog} maxWidth={false} >
-            <MapDialog name={childName} isFacies={isChildFacies}/>
-        </Dialog>
-        </>
-    );
-    })
-    //overarching map list that has a hidden dialog box that will open on click
-
 
     type MapProps  = {
     name: string;
@@ -106,9 +74,8 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
     const theme = useTheme()
     // we need this so it refreshes the components that require image loading
     const [imageLoaded, setImageLoaded] = useState(false)
-    const imageRef = useRef<HTMLImageElement | null>(null)
     const [isFullscreen, setIsFullscreen] = useState(false)
-    const mapViewerRef = useRef<HTMLDivElement | null>(null)
+    const imageRef = useRef<HTMLImageElement | null>(null)
 
     // useEffect needed to know when fullscreen changes i.e escape, button, pressing child maps
     useEffect(() => {
@@ -153,6 +120,11 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
         }
     ) => (
         <>
+        <div className="exit-buttons">
+          <IconButton className="icon-view-button" onClick={actions.goBackInMapHistory}>
+            <ArrowBackIcon className="icon-button"/>
+          </IconButton>
+        </div>
         <div className="controls">
             {!isFacies && <TSCButton className="bottom-button" onClick={() => { actions.openNextMap(name, false, name, true)}}>Facies</TSCButton>}
             <TSCButton className="bottom-button" onClick={() => actions.setIsLegendOpen(!state.settingsTabs.isLegendOpen)}>legend</TSCButton>
@@ -165,16 +137,16 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
                 mapViewer.requestFullscreen()
             }
             }}>
-            <FullscreenIcon className="fullscreen-icon"/>
+            <FullscreenIcon className="icon-button"/>
             </IconButton>
             <IconButton className="icon-view-button" onClick={() => zoomIn()}>
-                <ZoomInIcon className="fullscreen-icon"/>
+                <ZoomInIcon className="icon-button"/>
             </IconButton>
             <IconButton className="icon-view-button" onClick={() => zoomOut()}>
-                <ZoomOutIcon className="fullscreen-icon"/>
+                <ZoomOutIcon className="icon-button"/>
             </IconButton>
             <IconButton className="icon-view-button" onClick={() => resetTransform()}>
-                <YoutubeSearchedForIcon className="fullscreen-icon"/>
+                <YoutubeSearchedForIcon className="icon-button"/>
             </IconButton>
         </div>
         {isFacies && 
@@ -197,7 +169,7 @@ const fullscreenImgStyle = {
       { color: 'transparent', label: 'Child Map', icon: ChildMapIcon}
   ]
 return (
-  <div ref={mapViewerRef} className="map-viewer">
+  <div ref={(ref) => {actions.setMapViewerRef(ref)}} className="map-viewer">
     <TransformWrapper 
     doubleClick={{
     disabled: true 
@@ -229,11 +201,11 @@ return (
 
           {/* Load all the map points */}
           {imageLoaded && imageRef && imageRef.current && mapData.mapPoints &&
-          loadMapPoints(mapData.mapPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false)}
+          loadMapPoints(mapData.mapPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false, state.settingsTabs.mapViewerRef)}
 
           {/* Load all the info points */}
           {imageLoaded && imageRef && imageRef.current && mapData.infoPoints && 
-          loadMapPoints(mapData.infoPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, true)}
+          loadMapPoints(mapData.infoPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, true, state.settingsTabs.mapViewerRef)}
 
           {/* Load all the child maps*/}
           {Object.keys(mapHierarchy).includes(name) && mapHierarchy[name].map(child => {
@@ -253,7 +225,7 @@ return (
               })}
         </>
         </TransformComponent>
-        {mapViewerRef && mapViewerRef.current && <Controls mapViewer={mapViewerRef.current as HTMLDivElement} {...utils}/>}
+        {state.settingsTabs.mapViewerRef && <Controls mapViewer={state.settingsTabs.mapViewerRef} {...utils}/>}
     </>
     )}
     </TransformWrapper>
@@ -284,7 +256,8 @@ type MapPointButtonProps = {
   x: number,
   y: number,
   name: string,
-  isInfo?: boolean
+  isInfo?: boolean,
+  container: HTMLDivElement | null
 }
 
 // mapPointButton that pulls up the map points on the image
@@ -293,7 +266,7 @@ type MapPointButtonProps = {
 // y: % from the top
 // name: name of the map point
 // isInfo: will default to false. is this point an info button?
-const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, isInfo = false}) => {
+const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, isInfo = false, container}) => {
   const [clicked, setClicked] = useState(false)
   const theme = useTheme()
 
@@ -306,11 +279,18 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
       // unmount
     };
   })
+  const popperProps = {
+    container: document.fullscreenElement ? container : document.body
+  }
   const color = isInfo ? `${theme.palette.disabled.main}` : `${clicked ? theme.palette.on.main : theme.palette.off.main}`
 
   return (
     <>
-      <MapPointTooltip title={
+      <MapPointTooltip 
+      PopperProps={
+        popperProps
+      }
+      title={
         <>
           <h3 className="header">{`${name}`}</h3>
           <ul>
@@ -463,9 +443,7 @@ function getPositionOfPointBasedOnBounds(bounds: Bounds, point: MapPoints[string
  * @param isInfo is this an info point?
  * @returns all MapPointButton Components
  */
-function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidth: number, frameHeight: number, isInfo: boolean) {
-  console.log(frameWidth)
-  console.log(frameHeight)
+function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidth: number, frameHeight: number, isInfo: boolean, mapViewerRef: HTMLDivElement | null) {
   if (!points) return
   return (Object.entries(points).map(([name, point]) => {
     if (!point) return
@@ -478,7 +456,8 @@ function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidt
       x={position.x} 
       y={position.y} 
       name={name}
-      isInfo={isInfo}/>
+      isInfo={isInfo}
+      container={mapViewerRef}/>
     );
   }))
 }

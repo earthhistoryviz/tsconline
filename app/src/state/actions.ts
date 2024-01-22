@@ -16,6 +16,17 @@ import { fetcher, devSafeUrl } from "../util";
 export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;
 });
+export const goBackInMapHistory = () => {
+  const lastMap = popMapHistory()
+  if (lastMap) {
+    openLastMap(lastMap)
+  } else {
+    closeMapViewer()
+  }
+}
+export const setMapViewerRef = action("setMapViewerRef", (newval: HTMLDivElement | null) => {
+  state.settingsTabs.mapViewerRef = newval
+})
 export const closeMapViewer = () => {
   setIsLegendOpen(false)
   setSelectedMap(null)

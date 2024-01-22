@@ -53,16 +53,6 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
     actions.setIsMapViewerOpen(true)
 
   };
-  // this dialog is seperate from the one inside map dialogs
-  // this must be the case 
-  const handleCloseDialog = () => {
-    const lastMap = actions.popMapHistory()
-    if (lastMap) {
-      actions.openLastMap(lastMap)
-    } else {
-      actions.closeMapViewer()
-    }
-  }
 
   return (
     <div className="map=list">
@@ -84,7 +74,7 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
         </List>
       </Box>
 
-      <Dialog open={state.settingsTabs.isMapViewerOpen} keepMounted onClose={handleCloseDialog} maxWidth={false}>
+      <Dialog open={state.settingsTabs.isMapViewerOpen} keepMounted onClose={actions.goBackInMapHistory} maxWidth={false}>
         {state.settingsTabs.selectedMap ? <MapViewer name={state.settingsTabs.selectedMap} isFacies={state.settingsTabs.isFacies}/> : null}
       </Dialog>
     </div>

@@ -25,6 +25,7 @@ export type State = {
     isLegendOpen: boolean;
     isMapViewerOpen: boolean;
     isFacies: boolean;
+    mapViewerRef: HTMLDivElement | null;
     mapHistory: {
       name: string,
       isFacies: boolean
@@ -62,6 +63,7 @@ export const state = observable<State>({
     isLegendOpen: false,
     isMapViewerOpen: false,
     isFacies: false,
+    mapViewerRef: null,
     mapHistory: []
   },
   chart: null,
