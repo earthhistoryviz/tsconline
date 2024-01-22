@@ -74,8 +74,11 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
     const theme = useTheme()
     // we need this so it refreshes the components that require image loading
     const [imageLoaded, setImageLoaded] = useState(false)
+    // this is needed to change image styles on fullscreen change
     const [isFullscreen, setIsFullscreen] = useState(false)
+    // used to get the proper bounds of the element
     const imageRef = useRef<HTMLImageElement | null>(null)
+    // used for attaching tooltip and fullscreening
     const mapViewerRef = useRef<HTMLDivElement | null>(null)
 
     // useEffect needed to know when fullscreen changes i.e escape, button, pressing child maps
