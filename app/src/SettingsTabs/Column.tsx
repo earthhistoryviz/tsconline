@@ -3,9 +3,10 @@ import React, { useContext, useState } from "react";
 import Typography from "@mui/material/Typography";
 import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
-import { Box } from "@mui/material";
+import { Box, ToggleButton } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
+import SettingsSharpIcon from "@mui/icons-material/SettingsSharp";
 import {
   ColumnContainer,
   AccordionDetails,
@@ -15,6 +16,23 @@ import {
   TSCButton,
 } from "../components";
 import { generateChart, setcolumnSelected } from "../state/actions";
+
+const ColumnMenu: React.FC<{
+  name: string;
+  parents: string[];
+}> = ({ name, parents }) => {
+  return (
+    <div
+      style={{
+        width: "200px",
+        height: "200px",
+        backgroundColor: "lightblue",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    ></div>
+  );
+};
 
 //types for recursively creation accordions
 type ColumnAccordionProps = {
@@ -56,7 +74,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
       <div>
         <ColumnContainer>
           <div
-            style={{ display: "flex" }}
+            style={{ display: "flex", cursor: "pointer" }}
             onClick={() => setcolumnSelected(name, details.parents)}
           >
             <TSCCheckbox
@@ -117,7 +135,7 @@ export const Column = observer(function Column() {
   const theme = useTheme();
   const { state, actions } = useContext(context);
   const [open, setOpen] = useState(true);
-
+  const [openMenu, setOpenMenu] = useState(false);
   const handleChange = () => {
     setOpen(!open);
   };
@@ -142,7 +160,6 @@ export const Column = observer(function Column() {
 
     navigate("/chart");
   };
-
   return (
     <div
       style={{ display: "flex", justifyContent: "center", minHeight: "100vh" }}
@@ -180,6 +197,34 @@ export const Column = observer(function Column() {
           </AccordionDetails>
         </Accordion>
       </Box>
+      <div>
+        <div style={{ display: "flex", flexDirection: "row", width: "200px" }}>
+          <ToggleButton
+            value="check"
+            selected={openMenu}
+            onChange={() => {
+              setOpen(!openMenu);
+            }}
+            size="small"
+          >
+            <SettingsSharpIcon />
+          </ToggleButton>
+          <div
+            style={{
+              display: "flex",
+              flexGrow: "1",
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "pink",
+            }}
+          >
+            <Typography>Settings</Typography>
+          </div>
+        </div>
+
+        {state.settingsTabs.columnSelected &&
+          ColumnMenu(state.settingsTabs.columnSelected)}
+      </div>
     </div>
   );
 });
