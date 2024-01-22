@@ -7,6 +7,7 @@ import { readFile, writeFile, stat } from 'fs/promises';
 import md5 from 'md5';
 import { mkdirp } from 'mkdirp';
 import XLSX from 'xlsx';
+import fs from 'fs';
 import { assertChartRequest } from '@tsconline/shared';
 import { loadPresets } from './preset.js';
 import { assertAssetConfig } from './types.js';
@@ -33,7 +34,7 @@ function readExcelFile(filePath) {
     // Convert sheet to JSON
     const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
     // Log the converted JSON data to the console
-    console.log(jsonData);
+    // console.log(jsonData);
     /*
       const columnData: string[] = jsonData
         .filter((row: string[]) => row.length >= 3) // Filter rows with at least 3 columns
@@ -83,18 +84,33 @@ server.get('/presets', async (_request, reply) => {
     reply.send(chartconfigs);
 });
 function assertTimescale(val) {
-    if (!val || typeof val !== 'object')
+    if (!val || typeof val !== 'object') {
+        console.error('Received invalid object:', val);
         throw new Error('Must be an object');
+    }
     // Additional checks for required keys, types, etc.
     if (typeof val.key !== 'string' || typeof val.value !== 'number') {
+        console.error('Invalid Timescale object:', val);
         throw new Error('Invalid Timescale object');
     }
 }
 // Serve timescale data endpoint
 server.get('/timescale', async (_req, res) => {
     try {
-        const timescaleData = readExcelFile('../../default_timescale.xlsx'); // Replace with the correct file path 
+        const filePath = '../default_timescale.xlsx';
+        // Check if the file exists
+        if (!fs.existsSync(filePath)) {
+            console.error('Error: Excel file not found');
+            res.status(404).send({ error: 'Excel file not found' });
+            return;
+        }
+        let timescaleData = readExcelFile(filePath);
+        timescaleData = timescaleData.map(([period, series, stage, ma, color]) => ({
+            key: stage || '',
+            value: parseFloat(ma) || 0,
+        }));
         timescaleData.forEach((data) => assertTimescale(data));
+        console.log(timescaleData);
         res.send({ stages: timescaleData });
     }
     catch (error) {
