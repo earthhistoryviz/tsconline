@@ -131,24 +131,27 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
             <TSCButton className="bottom-button" onClick={() => actions.setIsLegendOpen(!state.settingsTabs.isLegendOpen)}>legend</TSCButton>
         </div>
         <div className="view-buttons">
-            <IconButton className="icon-view-button" onClick={() => {
-            if (document.fullscreenElement) {
-                document.exitFullscreen()
-            } else {
-                mapViewer.requestFullscreen()
-            }
-            }}>
-            <FullscreenIcon className="icon-button"/>
-            </IconButton>
-            <IconButton className="icon-view-button" onClick={() => zoomIn()}>
-                <ZoomInIcon className="icon-button"/>
-            </IconButton>
-            <IconButton className="icon-view-button" onClick={() => zoomOut()}>
-                <ZoomOutIcon className="icon-button"/>
-            </IconButton>
-            <IconButton className="icon-view-button" onClick={() => resetTransform()}>
-                <YoutubeSearchedForIcon className="icon-button"/>
-            </IconButton>
+          <IconButton className="close-icon-view-button" onClick={() => actions.exitMapViewer()}>
+            <CloseIcon className="icon-button"/>
+          </IconButton>
+          <IconButton className="icon-view-button" onClick={() => {
+          if (document.fullscreenElement) {
+              document.exitFullscreen()
+          } else {
+              mapViewer.requestFullscreen()
+          }
+          }}>
+          <FullscreenIcon className="icon-button"/>
+          </IconButton>
+          <IconButton className="icon-view-button" onClick={() => zoomIn()}>
+              <ZoomInIcon className="icon-button"/>
+          </IconButton>
+          <IconButton className="icon-view-button" onClick={() => zoomOut()}>
+              <ZoomOutIcon className="icon-button"/>
+          </IconButton>
+          <IconButton className="icon-view-button" onClick={() => resetTransform()}>
+              <YoutubeSearchedForIcon className="icon-button"/>
+          </IconButton>
         </div>
         {isFacies && 
         <div className="facies-buttons">
