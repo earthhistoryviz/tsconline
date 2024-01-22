@@ -24,9 +24,6 @@ export const goBackInMapHistory = () => {
     closeMapViewer()
   }
 }
-export const setMapViewerRef = action("setMapViewerRef", (newval: HTMLDivElement | null) => {
-  state.settingsTabs.mapViewerRef = newval
-})
 export const closeMapViewer = () => {
   setIsLegendOpen(false)
   setSelectedMap(null)

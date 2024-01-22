@@ -76,6 +76,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
     const [imageLoaded, setImageLoaded] = useState(false)
     const [isFullscreen, setIsFullscreen] = useState(false)
     const imageRef = useRef<HTMLImageElement | null>(null)
+    const mapViewerRef = useRef<HTMLDivElement | null>(null)
 
     // useEffect needed to know when fullscreen changes i.e escape, button, pressing child maps
     useEffect(() => {
@@ -169,7 +170,7 @@ const fullscreenImgStyle = {
       { color: 'transparent', label: 'Child Map', icon: ChildMapIcon}
   ]
 return (
-  <div ref={(ref) => {actions.setMapViewerRef(ref)}} className="map-viewer">
+  <div ref={mapViewerRef} className="map-viewer">
     <TransformWrapper 
     doubleClick={{
     disabled: true 
@@ -201,11 +202,11 @@ return (
 
           {/* Load all the map points */}
           {imageLoaded && imageRef && imageRef.current && mapData.mapPoints &&
-          loadMapPoints(mapData.mapPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false, state.settingsTabs.mapViewerRef)}
+          loadMapPoints(mapData.mapPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false, mapViewerRef.current)}
 
           {/* Load all the info points */}
           {imageLoaded && imageRef && imageRef.current && mapData.infoPoints && 
-          loadMapPoints(mapData.infoPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, true, state.settingsTabs.mapViewerRef)}
+          loadMapPoints(mapData.infoPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, true, mapViewerRef.current)}
 
           {/* Load all the child maps*/}
           {Object.keys(mapHierarchy).includes(name) && mapHierarchy[name].map(child => {
@@ -219,13 +220,14 @@ return (
               return createChildMapButton(
               child, 
               bounds, 
+              mapViewerRef.current,
               mapInfo[child].parent!.bounds, 
               openChildMap
               )
               })}
         </>
         </TransformComponent>
-        {state.settingsTabs.mapViewerRef && <Controls mapViewer={state.settingsTabs.mapViewerRef} {...utils}/>}
+        {mapViewerRef && mapViewerRef.current && <Controls mapViewer={mapViewerRef.current as HTMLDivElement} {...utils}/>}
     </>
     )}
     </TransformWrapper>
@@ -279,8 +281,11 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
       // unmount
     };
   })
+  // IMPORTANT: this is needed when fullscreened because the tooltips are appended to the document.body
+  // normally. When in fullscreen the document.body is in the background and therefore you can't see
+  // the tooltip. To "hack" around this, we append to the fullscreened element which we pass as container
   const popperProps = {
-    container: document.fullscreenElement ? container : document.body
+    container: container && document.fullscreenElement ? container : document.body
   }
   const color = isInfo ? `${theme.palette.disabled.main}` : `${clicked ? theme.palette.on.main : theme.palette.off.main}`
 
@@ -370,13 +375,23 @@ const Legend = ({items}: {items: LegendItem[]}) => {
 function createChildMapButton(
   childName: string,
   mapBounds: Bounds,
+  container: HTMLDivElement | null,
   childBounds: Bounds,
   openChildMap: (childMap: string) => void
   ) {
   if (isRectBounds(childBounds) && isRectBounds(mapBounds)) {
     const { midpoint, upperLeft, width, height } = calculateRectButton(childBounds, mapBounds)
+    // IMPORTANT: this is needed when fullscreened because the tooltips are appended to the document.body
+    // normally. When in fullscreen the document.body is in the background and therefore you can't see
+    // the tooltip. To "hack" around this, we append to the fullscreened element which we pass as container
+    const popperProps = {
+      container: container && document.fullscreenElement ? container : document.body
+    }
     return (
-      <MapPointTooltip key={childName} title={
+      <MapPointTooltip 
+      PopperProps={popperProps}
+      key={childName}
+      title={
         <>
           <h3 className="header">{`${childName}`}</h3>
           <ul>
@@ -441,9 +456,10 @@ function getPositionOfPointBasedOnBounds(bounds: Bounds, point: MapPoints[string
  * @param frameWidth frame width
  * @param frameHeight frame height
  * @param isInfo is this an info point?
+ * @param container this is the container that the fullscreen tooltip will attach to
  * @returns all MapPointButton Components
  */
-function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidth: number, frameHeight: number, isInfo: boolean, mapViewerRef: HTMLDivElement | null) {
+function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidth: number, frameHeight: number, isInfo: boolean, container: HTMLDivElement | null) {
   if (!points) return
   return (Object.entries(points).map(([name, point]) => {
     if (!point) return
@@ -457,7 +473,7 @@ function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidt
       y={position.y} 
       name={name}
       isInfo={isInfo}
-      container={mapViewerRef}/>
+      container={container}/>
     );
   }))
 }
