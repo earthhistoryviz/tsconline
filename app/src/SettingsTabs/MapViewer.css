@@ -22,7 +22,10 @@
   color: white;
   width: inherit;
   height: inherit;
-  object-fit: contain;
+ }
+.MuiIconButton-root.close-icon-view-button {
+  width: 35px;
+  height: 35px;
 }
 .MuiIconButton-root.icon-view-button {
   width: 35px;
