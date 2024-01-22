@@ -201,7 +201,9 @@ export const fetchChart = async function fetchChart(
     // Add datapacks:
     `-d ${datapacks.join(" ")} ` +
     // Tell it where to save chart
-    `-o ${chart_filepath} `;
+    `-o ${chart_filepath} ` +
+    // Turn off JOptionPane for default age
+    `-a`;
 
   // Exec Java command and send final reply to browser
   await new Promise<void>((resolve, _reject) => {
