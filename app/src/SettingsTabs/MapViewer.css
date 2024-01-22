@@ -18,7 +18,7 @@
   width: 100px;
   margin: 5px;
 }
-.MuiSvgIcon-root.fullscreen-icon {
+.MuiSvgIcon-root.icon-button {
   color: white;
   width: inherit;
   height: inherit;
@@ -27,6 +27,16 @@
 .MuiIconButton-root.icon-view-button {
   width: 35px;
   height: 35px;
+}
+.exit-buttons {
+  position: absolute;
+  top: 15px;
+  left: calc(0% + 18px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  gap: 10px;
 }
 .view-buttons {
   position: absolute;
