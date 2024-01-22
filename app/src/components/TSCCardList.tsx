@@ -116,6 +116,12 @@ const StyledDivDate = styled("div")(({ theme }) => ({
   borderRadius: 12,
 }));
 
+const ClickableCard = styled(ButtonBase)(() => ({
+    display: 'block',
+    textAlign: 'inherit',
+    width: '100%',
+}));
+
 export const TSCCardList = ({
   color,
   img,
@@ -134,6 +140,7 @@ export const TSCCardList = ({
   generateChart?: () => void;
 }) => {
   return (
+      <ClickableCard onClick={onInfoClick}>
     <StyledRoot color = {color}>
     <CardMediaCover image={img} />
     <StyledContent color={color}>
@@ -171,5 +178,6 @@ export const TSCCardList = ({
       </Box>
     </StyledContent>
   </StyledRoot>
+      </ClickableCard>
   );
 };
