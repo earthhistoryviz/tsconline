@@ -16,7 +16,7 @@ export const Help = observer(function Help() {
         <div style={{
           margin:'0',
           position:'absolute',
-          top:'25%',
+          top:'10%',
           left:"25%",
           right:"25%",
           alignItems:'center',
