@@ -144,6 +144,13 @@
 }
 .age-slider-container {
   width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.MuiFormControl-root.age-input-form {
+  margin: 10px;
+  top: 10px;
 }
 
 .age-slider .MuiSlider-track {
