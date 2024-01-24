@@ -11,6 +11,12 @@ import { grabFilepaths } from "./util.js";
  * At the moment, is not currently working
  */
 function spliceArrayAtFirstSpecialMatch(array: string[]): string[] {
+  for (var i = 0; i < array.length; i++) {
+    if (array[i]?.includes("METACOLUMN") || ((array[i]?.includes("[For details click")) && (i == array.length - 1)) || array[i]?.includes("TITLE") || (!array[i])) {
+      array.splice(i, 1);
+      i = i - 1;
+    }
+  }
   return array;
 }
 
@@ -118,6 +124,8 @@ export async function parseDatapacks(
       let children = spliceArrayAtFirstSpecialMatch(
         childrenstring!.split("\t")
       );
+
+
       allEntries.set(parent, children);
     }
     //if the entry is a child, add it to a set.
@@ -137,8 +145,8 @@ export async function parseDatapacks(
   } catch (e: any) {
     console.log(
       "ERROR: failed to read columns for path " +
-        decryptedfiles +
-        ".  Error was: ",
+      decryptedfiles +
+      ".  Error was: ",
       e
     );
   }
