@@ -26,11 +26,13 @@ const ColumnMenu: React.FC<{
       style={{
         width: "200px",
         height: "200px",
-        backgroundColor: "lightblue",
+        background: "lightgray",
         display: "flex",
         flexDirection: "column",
       }}
-    ></div>
+    >
+      <Typography>{name}</Typography>
+    </div>
   );
 };
 
@@ -67,9 +69,6 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
         </Typography>
       </div>
     );
-    function selected(item: HTMLElement) {
-      item.style.backgroundColor = "lighblue";
-    }
     const checkbox = (
       <div>
         <ColumnContainer>
@@ -149,6 +148,21 @@ export const Column = observer(function Column() {
       />
     ));
   }
+  function showMenu() {
+    let menu = document.getElementById("ColumnMenu");
+    let label = document.getElementById("ColumnMenuLabel");
+    if (menu !== null && label !== null) {
+      if (!openMenu) {
+        menu.style.display = "flex";
+        label.style.display = "flex";
+        setOpenMenu(true);
+      } else {
+        menu.style.display = "none";
+        label.style.display = "none";
+        setOpenMenu(false);
+      }
+    }
+  }
   const navigate = useNavigate();
   const handleButtonClick = () => {
     actions.setTab(1);
@@ -197,33 +211,39 @@ export const Column = observer(function Column() {
           </AccordionDetails>
         </Accordion>
       </Box>
-      <div>
-        <div style={{ display: "flex", flexDirection: "row", width: "200px" }}>
-          <ToggleButton
-            value="check"
-            selected={openMenu}
-            onChange={() => {
-              setOpen(!openMenu);
-            }}
-            size="small"
-          >
-            <SettingsSharpIcon />
-          </ToggleButton>
+      <div >
+        <div style={{ display: "flex", flexDirection: "row", width: "200px", }}>
+          <div style={{ backgroundColor: "lightgray" }}>
+            <ToggleButton
+              value="check"
+              selected={openMenu}
+              onChange={() => {
+                showMenu();
+              }}
+              size="small"
+              style={{ float: "left", zIndex: "1" }}
+            >
+              <SettingsSharpIcon />
+            </ToggleButton>
+          </div>
+
           <div
+            id="ColumnMenuLabel"
             style={{
-              display: "flex",
-              flexGrow: "1",
+              display: "none",
               justifyContent: "center",
               alignItems: "center",
-              backgroundColor: "pink",
+              flexGrow: "1",
+              backgroundColor: "lightgray",
             }}
           >
             <Typography>Settings</Typography>
           </div>
         </div>
-
-        {state.settingsTabs.columnSelected &&
-          ColumnMenu(state.settingsTabs.columnSelected)}
+        <div id="ColumnMenu" style={{ display: "none" }}>
+          {state.settingsTabs.columnSelected &&
+            ColumnMenu(state.settingsTabs.columnSelected)}
+        </div>
       </div>
     </div>
   );
