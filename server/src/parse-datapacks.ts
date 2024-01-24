@@ -39,6 +39,7 @@ function recursive(
   //   lastparent = lastparent.slice(0, index);
   // }
   columnInfo[lastparent] = {
+    editName: lastparent,
     on: true,
     children: {},
     parents: parents,
@@ -103,6 +104,7 @@ export async function parseDatapacks(
         if (line.includes(":") && line.split(":")[0]!.includes("age units")) {
           //create MA setting since this doesn't follow the standard format of "\t:\t"
           columnInfo["MA"] = {
+            editName: "MA",
             on: true,
             children: {},
             parents: [],

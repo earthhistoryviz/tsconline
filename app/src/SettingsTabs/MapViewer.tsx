@@ -1,11 +1,11 @@
-import { TextField, SliderValueLabelProps, Slider, TooltipProps, Tooltip, Drawer, Divider, Typography, IconButton, Dialog, Button, Box } from '@mui/material'
+import { FormHelperText, OutlinedInput, FormControl, Slider, TooltipProps, Tooltip, Drawer, Divider, Typography, IconButton, Dialog, Button, Box } from '@mui/material'
 import { styled, useTheme } from "@mui/material/styles"
 import type { InfoPoints, MapHierarchy, Bounds, MapPoints, MapInfo} from '@tsconline/shared'
 import { devSafeUrl } from '../util'
 import React, { useEffect, useState, useRef, useContext } from "react"
 import { context } from '../state';
 import { TransformWrapper, TransformComponent, useTransformEffect } from "react-zoom-pan-pinch"
-import { TSCButton } from '../components'
+import { TSCTextField, TSCButton } from '../components'
 import { isRectBounds, isVertBounds } from '@tsconline/shared'
 import { calculateRectBoundsPosition, calculateVertBoundsPosition, calculateRectButton } from '../coordinates'
 import CloseIcon from '@mui/icons-material/Close';
@@ -266,7 +266,7 @@ return (
 
 const AgeSlider = () => (
   <div className="age-slider-container">
-    <TextField style={{color: "white"}} variant="outlined"/>
+    <TSCTextField className="age-input-form" helperText="Enter Age"/>
     <Slider className="age-slider" defaultValue={50} aria-label="Default" valueLabelDisplay="auto" />
   </div>
 )
