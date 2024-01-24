@@ -20,6 +20,7 @@ export type ServerResponseError = {
 };
 export type ColumnInfo = {
     [name: string]: {
+        editName: string;
         on: boolean;
         children: ColumnInfo;
         parents: string[];
