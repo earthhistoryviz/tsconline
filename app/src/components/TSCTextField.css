@@ -1,0 +1,35 @@
+
+.white-outlined-form .MuiTextField-root {
+  color: white;
+}
+
+.white-outlined-form .MuiInputLabel-root {
+  color: white;
+}
+
+.white-outlined-form .MuiInputLabel-root.Mui-focused {
+  color: white;
+}
+
+.white-outlined-form .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    border-color: white;
+}
+.white-outlined-form .MuiOutlinedInput-root .MuiInputBase-input {
+  color: white; 
+}
+
+.white-outlined-form .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+  border-color: white;
+}
+
+.white-outlined-form .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: white;
+}
+
+.white-outlined-form .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: white;
+}
+
+.white-outlined-form .MuiFormHelperText-root {
+  color: white;
+}
