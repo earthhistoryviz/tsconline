@@ -1,9 +1,9 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import Typography from "@mui/material/Typography";
 import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
-import { Box, ToggleButton } from "@mui/material";
+import { Box, Button, TextField, ToggleButton } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
 import SettingsSharpIcon from "@mui/icons-material/SettingsSharp";
@@ -15,24 +15,67 @@ import {
   Accordion,
   TSCButton,
 } from "../components";
-import { generateChart, setcolumnSelected } from "../state/actions";
+import {
+  generateChart,
+  setcolumnSelected,
+  updateColumnName,
+  updateEditName,
+} from "../state/actions";
 
-const ColumnMenu: React.FC<{
+type ColumnMenuProps = {
   name: string;
   parents: string[];
-}> = ({ name, parents }) => {
-  return (
-    <div
-      style={{
-        width: "200px",
-        height: "200px",
-        backgroundColor: "lightblue",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    ></div>
-  );
 };
+
+const ColumnMenu: React.FC<ColumnMenuProps> = observer(
+  ({ name, parents }) => {
+    let [editName, setEditName] = useState(name);
+    return (
+      <div
+        style={{
+          width: "300px",
+          height: "300px",
+          backgroundColor: "lightblue",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <Typography style={{ padding: "5px" }}>Edit Title</Typography>
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          <TextField
+            hiddenLabel
+            id="editNameTextField"
+            value={editName}
+            onChange={(event) => {
+              setEditName(event.target.value);
+            }}
+            variant="filled"
+            size="small"
+          />
+          <div
+            style={{
+              display: "flex",
+              flexGrow: "1",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Button
+              color="secondary"
+              variant="contained"
+              onClick={() => {
+                //console.log(editName);
+                //updateColumnName(editName);
+              }}
+            >
+              Confirm
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+);
 
 //types for recursively creation accordions
 type ColumnAccordionProps = {
@@ -50,26 +93,22 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
       setOpen((open) => !open);
     };
     function clickColumnName() {
-      toggleAccordion;
       setcolumnSelected(name, details.parents);
     }
     const hasChildren =
       details.children && Object.keys(details.children).length > 0;
-    function thing(name: string, parents: string[]) {
-      setcolumnSelected(name, parents);
-      setOpen(open);
-      console.log(open);
-    }
+
     const columnName = (
       <div>
-        <Typography sx={{ fontSize: "0.97rem" }} style={{ padding: "10px" }}>
+        <Typography
+          className="ColumnName"
+          sx={{ fontSize: "0.97rem" }}
+          style={{ padding: "6px" }}
+        >
           {name}
         </Typography>
       </div>
     );
-    function selected(item: HTMLElement) {
-      item.style.backgroundColor = "lighblue";
-    }
     const checkbox = (
       <div>
         <ColumnContainer>
@@ -82,7 +121,6 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
               onChange={() => {
                 onToggle(name, details.parents);
               }}
-              //style={{ backgroundColor: "lightblue" }}
             />
             {columnName}
           </div>
@@ -101,9 +139,8 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
           <div
             onClick={() => {
               toggleAccordion(open);
-              setcolumnSelected(name, details.parents);
+              //setcolumnSelected(name, details.parents);
             }}
-            //style={{ backgroundColor: "lightblue" }}
           >
             {checkbox}
           </div>
@@ -148,6 +185,31 @@ export const Column = observer(function Column() {
         onToggle={actions.toggleSettingsTabColumn}
       />
     ));
+  }
+  function renderColumnMenu() {
+    if (state.settingsTabs.columnSelected !== null) {
+      return (
+        <ColumnMenu
+          name={state.settingsTabs.columnSelected.name}
+          parents={state.settingsTabs.columnSelected?.parents}
+        />
+      );
+    }
+  }
+  function showMenu() {
+    let menu = document.getElementById("ColumnMenu");
+    let label = document.getElementById("ColumnMenuLabel");
+    if (menu !== null && label !== null) {
+      if (!openMenu) {
+        menu.style.display = "flex";
+        label.style.display = "flex";
+        setOpenMenu(true);
+      } else {
+        menu.style.display = "none";
+        label.style.display = "none";
+        setOpenMenu(false);
+      }
+    }
   }
   const navigate = useNavigate();
   const handleButtonClick = () => {
@@ -198,32 +260,36 @@ export const Column = observer(function Column() {
         </Accordion>
       </Box>
       <div>
-        <div style={{ display: "flex", flexDirection: "row", width: "200px" }}>
-          <ToggleButton
-            value="check"
-            selected={openMenu}
-            onChange={() => {
-              setOpen(!openMenu);
-            }}
-            size="small"
-          >
-            <SettingsSharpIcon />
-          </ToggleButton>
+        <div style={{ display: "flex", flexDirection: "row", width: "300px" }}>
+          <div style={{ backgroundColor: "lightgray" }}>
+            <ToggleButton
+              value="check"
+              selected={openMenu}
+              onChange={() => {
+                showMenu();
+              }}
+              size="small"
+            >
+              <SettingsSharpIcon />
+            </ToggleButton>
+          </div>
+
           <div
+            id="ColumnMenuLabel"
             style={{
-              display: "flex",
-              flexGrow: "1",
+              display: "none",
               justifyContent: "center",
               alignItems: "center",
-              backgroundColor: "pink",
+              flexGrow: "1",
+              backgroundColor: "lightblue",
             }}
           >
             <Typography>Settings</Typography>
           </div>
         </div>
-
-        {state.settingsTabs.columnSelected &&
-          ColumnMenu(state.settingsTabs.columnSelected)}
+        <div id="ColumnMenu" style={{ display: "none" }}>
+          {state.settingsTabs.columnSelected && renderColumnMenu()}
+        </div>
       </div>
     </div>
   );

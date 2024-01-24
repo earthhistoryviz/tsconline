@@ -140,12 +140,11 @@ export const TSCCardList = ({
   generateChart?: () => void;
 }) => {
   return (
-      <ClickableCard onClick={onInfoClick}>
     <StyledRoot color = {color}>
-    <CardMediaCover image={img} />
+    <CardMediaCover image={img} onClick={onInfoClick}/>
     <StyledContent color={color}>
       <Box position="relative" zIndex={1}>
-        <Grid container alignItems="center" spacing={2}>
+        <Grid container alignItems="center" spacing={2} onClick={onInfoClick}>
           <Grid item>
             <AvatarLogo src={logo} />
           </Grid>
@@ -169,7 +168,7 @@ export const TSCCardList = ({
               Generate
             </TSCButton>
           </Grid>
-          <Grid item xs>
+          <Grid item xs onClick={onInfoClick}>
             <Box display="flex" justifyContent="flex-end">
               <StyledDivDate>{date}</StyledDivDate>
             </Box>
@@ -178,6 +177,5 @@ export const TSCCardList = ({
       </Box>
     </StyledContent>
   </StyledRoot>
-      </ClickableCard>
   );
 };
