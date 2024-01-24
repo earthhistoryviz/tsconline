@@ -15,17 +15,19 @@ import fetchTimescaleData from "../state/timeParser"
 //const geologicalStages = ["Gelasian (1.8 Ma top)", "Piacenzian (2.58 Ma top)", "Zanclean (3.6 Ma top)", "Messinian (5.335 Ma top)", "Tortonian (7.25 Ma top)", "Serravallian (11.63 Ma top)", "Langhian (13.82 Ma top)", "Burdigalian (15.99 Ma top)"];
 
 export const Time = observer(function Time() {
-    const navigate = useNavigate();
-    const [timescaleData, setTimescaleData] = useState<string[]>([]);
+  const navigate = useNavigate();
+  const [timescaleData, setTimescaleData] = useState<string[]>([]);
 
-    useEffect(() => {
-      const loadTimescaleData = async () => {
-        const data = await fetchTimescaleData();
-        setTimescaleData(data);
-      };
-
-      loadTimescaleData();
-    }, []);
+  // Fetch timescale data when the component is rendered
+  const loadTimescaleData = async () => {
+    try {
+      const data = await fetchTimescaleData();
+      setTimescaleData(data);
+    } catch (error) {
+      console.error('Error loading timescale data:', error);
+    }
+  };
+  loadTimescaleData();
 
     const handleButtonClick = () => {
         actions.setTab(1);
