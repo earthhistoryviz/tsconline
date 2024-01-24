@@ -17,55 +17,69 @@ export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;
 });
 export const exitMapViewer = action("exitMapViewer", () => {
-  state.settingsTabs.mapHistory = []
-  closeMapViewer()
-})
+  state.settingsTabs.mapHistory = [];
+  closeMapViewer();
+});
 export const goBackInMapHistory = () => {
-  const lastMap = popMapHistory()
+  const lastMap = popMapHistory();
   if (lastMap) {
-    openLastMap(lastMap)
+    openLastMap(lastMap);
   } else {
-    closeMapViewer()
+    closeMapViewer();
   }
-}
+};
 export const closeMapViewer = () => {
-  setIsFacies(false)
-  setIsLegendOpen(false)
-  setSelectedMap(null)
-  setIsMapViewerOpen(false)
-}
-export const openLastMap = (lastMap: {name: string, isFacies: boolean}) => {
-  setSelectedMap(lastMap.name)
-  setIsFacies(lastMap.isFacies)
-}
-export const openNextMap = (parent: string, isParentFacies: boolean, child: string, isChildFacies: boolean) => {
-  pushMapToMapHistory(parent, isParentFacies)
-  setIsFacies(isChildFacies)
-  setSelectedMap(child)
-}
+  setIsFacies(false);
+  setIsLegendOpen(false);
+  setSelectedMap(null);
+  setIsMapViewerOpen(false);
+};
+export const openLastMap = (lastMap: { name: string; isFacies: boolean }) => {
+  setSelectedMap(lastMap.name);
+  setIsFacies(lastMap.isFacies);
+};
+export const openNextMap = (
+  parent: string,
+  isParentFacies: boolean,
+  child: string,
+  isChildFacies: boolean
+) => {
+  pushMapToMapHistory(parent, isParentFacies);
+  setIsFacies(isChildFacies);
+  setSelectedMap(child);
+};
 const setIsFacies = action("setIsFacies", (newval: boolean) => {
   state.settingsTabs.isFacies = newval;
 });
 
-export const setIsMapViewerOpen = action("setIsMapViewerOpen", (newval: boolean) => {
-  state.settingsTabs.isMapViewerOpen = newval;
-});
+export const setIsMapViewerOpen = action(
+  "setIsMapViewerOpen",
+  (newval: boolean) => {
+    state.settingsTabs.isMapViewerOpen = newval;
+  }
+);
 
-const pushMapToMapHistory = action("pushMapToMapHistory", (name: string, isFacies: boolean) => {
-  state.settingsTabs.mapHistory.push({name, isFacies})
-})
+const pushMapToMapHistory = action(
+  "pushMapToMapHistory",
+  (name: string, isFacies: boolean) => {
+    state.settingsTabs.mapHistory.push({ name, isFacies });
+  }
+);
 
 export const popMapHistory = action("popMapHistory", () => {
-  return state.settingsTabs.mapHistory.pop()
-})
+  return state.settingsTabs.mapHistory.pop();
+});
 
 export const setIsLegendOpen = action("setIsLegendOpen", (newval: boolean) => {
   state.settingsTabs.isLegendOpen = newval;
 });
 
-export const setSelectedMap = action("setSelectedMap", (newMap: string | null) => {
-  state.settingsTabs.selectedMap = newMap
-})
+export const setSelectedMap = action(
+  "setSelectedMap",
+  (newMap: string | null) => {
+    state.settingsTabs.selectedMap = newMap;
+  }
+);
 
 export const resetSettings = action("resetSettings", () => {
   state.settings = {
@@ -420,7 +434,7 @@ export const toggleSettingsTabColumn = action(
     let curcol: ColumnInfo | null = state.settingsTabs.columns;
     const orig = curcol;
     // Walk down the path of parents in the tree of columns
-    console.log("name: ", name);
+    //console.log("name: ", name);
     let i = 1;
     for (const item of parents) {
       console.log("item ", i, ": ", item);
@@ -466,7 +480,7 @@ export const toggleSettingsTabColumn = action(
     // setSettingsTabsColumns(orig)
     // console.log(JSON.stringify(curcol[name], null, 2));
     setcolumnSelected(name, parents);
-    console.log("the selected column: ", name);
+    //console.log("the selected column: ", name);
     // console.log("state after my change: ", state);
     //if the column is unchecked, then no need to check the parents
     if (!curcol[name].on) {
@@ -505,6 +519,50 @@ export const setUsePreset = action((temp: boolean) => {
 
 export const setcolumnSelected = action((name: string, parents: string[]) => {
   state.settingsTabs.columnSelected = { name, parents };
+  console.log("selected: ", name);
+});
+
+export const updateEditName = action((newName: string) => {
+  if (!state.settingsTabs.columnSelected) {
+    console.log("WARNING: the user hasn't selected a column.");
+    return;
+  }
+  let curcol: ColumnInfo | null = state.settingsTabs.columns;
+  let oldName = state.settingsTabs.columnSelected.name;
+  let parents = state.settingsTabs.columnSelected.parents;
+  // Walk down the path of parents in the tree of columns
+  for (const p of parents) {
+    if (!curcol) {
+      console.log(
+        "WARNING: tried to access path at parent ",
+        p,
+        " from path ",
+        parents,
+        " in settings tabs column list, but children was null at this level."
+      );
+      return;
+    }
+    curcol = curcol[p]["children"];
+  }
+  if (!curcol) {
+    console.log(
+      "WARNING: tried to access path at ",
+      oldName,
+      "settings tabs column list, but children was null at this level."
+    );
+    return;
+  }
+  if (!curcol[oldName]) {
+    console.log(
+      "WARNING: tried to access name ",
+      oldName,
+      " from path ",
+      parents,
+      " in settings tabs column list, but object[name] was null here."
+    );
+    return;
+  }
+  curcol[oldName].editName = newName;
 });
 
 export const updateColumnName = action((newName: string) => {
@@ -550,6 +608,7 @@ export const updateColumnName = action((newName: string) => {
   curcol[newName] = curcol[oldName];
   delete curcol[oldName];
 });
+
 export const checkPdfStatus = action(async () => {
   let pdfReady = false;
   while (!pdfReady) {
