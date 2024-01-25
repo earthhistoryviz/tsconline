@@ -500,7 +500,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
           // we take a the full icon_size here to anchor to the
           // bottom of the icon
           color: color,
-          top: `calc(${y}% - ${state.mapState.isFacies ? iconSize / 2 / scale : iconSize / scale}px)`,
+          top: `calc(${y}% - ${!isInfo && state.mapState.isFacies ? iconSize / 2 / scale : iconSize / scale}px)`,
           width: `${iconSize / scale}px`,
           height: `${iconSize / scale}px`,
         }}
