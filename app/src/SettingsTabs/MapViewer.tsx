@@ -111,12 +111,12 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
     const openChildMap = (childMap: string) => {
       // call the new child as a regular map, with no facies
       setImageLoaded(false)
-      actions.openNextMap(name, isFacies, childMap, false)
+      actions.openNextMap({name, isFacies, faciesOptions: state.mapState.currentFaciesOptions}, childMap, false)
     }
 
-    const mapInfo: MapInfo = state.settingsTabs.mapInfo
+    const mapInfo: MapInfo = state.mapState.mapInfo
     const mapData: MapInfo[string] = mapInfo[name]
-    const mapHierarchy: MapHierarchy = state.settingsTabs.mapHierarchy
+    const mapHierarchy: MapHierarchy = state.mapState.mapHierarchy
 
     const Controls = (
         { 
@@ -138,8 +138,8 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
           </IconButton>
         </div>
         <div className="controls">
-            {!isFacies && <TSCButton className="bottom-button" onClick={() => { actions.openNextMap(name, false, name, true)}}>Facies</TSCButton>}
-            <TSCButton className="bottom-button" onClick={() => actions.setIsLegendOpen(!state.settingsTabs.isLegendOpen)}>legend</TSCButton>
+            {!isFacies && <TSCButton className="bottom-button" onClick={() => { actions.openNextMap({name, isFacies: false, faciesOptions: state.mapState.currentFaciesOptions}, name, true )}}>Facies</TSCButton>}
+            <TSCButton className="bottom-button" onClick={() => actions.setIsLegendOpen(!state.mapState.isLegendOpen)}>legend</TSCButton>
             {isFacies && <TSCButton className="bottom-button" onClick={() => { setFacieOptions(!faciesOptions) }}>Options</TSCButton>}
         </div>
         <div className="view-buttons">
@@ -213,11 +213,11 @@ return (
 
           {/* Load all the map points */}
           {imageLoaded && imageRef && imageRef.current && mapData.mapPoints &&
-          loadMapPoints(mapData.mapPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false, mapViewerRef.current, state.settingsTabs.isFacies)}
+          loadMapPoints(mapData.mapPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false, mapViewerRef.current, state.mapState.isFacies)}
 
           {/* Load all the info points */}
           {imageLoaded && imageRef && imageRef.current && mapData.infoPoints && 
-          loadMapPoints(mapData.infoPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, true, mapViewerRef.current, state.settingsTabs.isFacies)}
+          loadMapPoints(mapData.infoPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, true, mapViewerRef.current, state.mapState.isFacies)}
 
           {/* Load all the child maps*/}
           {Object.keys(mapHierarchy).includes(name) && mapHierarchy[name].map(child => {
@@ -246,7 +246,7 @@ return (
         className="drawer"
         variant="persistent"
         anchor="left"
-        open={state.settingsTabs.isLegendOpen}
+        open={state.mapState.isLegendOpen}
     >
         <DrawerHeader> 
         <ColoredIconButton onClick={() => {actions.setIsLegendOpen(false)}}>
@@ -263,7 +263,7 @@ return (
     className="facies-button-container drawer"
     variant="persistent"
     anchor="bottom"
-    open={state.settingsTabs.isFacies && faciesOptions}>
+    open={state.mapState.isFacies && faciesOptions}>
       <DrawerHeader>
        <TypographyText className="facies-options-title" variant="h6" gutterBottom>
          Facies Options
@@ -277,9 +277,8 @@ return (
   </div>
 )})
 
-const FaciesControls = () => {
-  const [faciesAge, setFaciesAge] = useState(0)
-  const [dotSize, setDotSize] = useState(1)
+const FaciesControls = observer(() => {
+  const { state, actions } = useContext(context)
   return (
   <ColoredDiv className="facies-buttons">
     <div className="dot-controls">
@@ -289,25 +288,25 @@ const FaciesControls = () => {
           className="dot-input-form"
           placeholder="Dot Size"
           max={20}
-          min={0}
-          value={dotSize}
+          min={1}
+          value={state.mapState.currentFaciesOptions.dotSize}
           onChange={(
             _event: React.FocusEvent<HTMLInputElement, Element> | React.PointerEvent<Element> | React.KeyboardEvent<Element>,
             val: number | undefined) => {
-            if (!val || val < 0 || val > 9999999) {
+            if (!val || val < 1 || val > 20) {
               return
             }
-            setDotSize(val as number)
+            actions.setDotSize(val as number)
           }}
           />
         <Slider 
         id="dot-size-slider"
         className="slider" 
-        value={dotSize}
+        value={state.mapState.currentFaciesOptions.dotSize}
         max={20}
-        min={0}
+        min={1}
         onChange={(event: Event, val: number | number[]) => {
-          setDotSize(val as number)
+          actions.setDotSize(val as number)
         }}
         aria-label="Default"
         valueLabelDisplay="auto" />
@@ -322,14 +321,14 @@ const FaciesControls = () => {
         placeholder="Age"
         max={9999999}
         min={0}
-        value={faciesAge}
+        value={state.mapState.currentFaciesOptions.faciesAge}
         onChange={(
           _event: React.FocusEvent<HTMLInputElement, Element> | React.PointerEvent<Element> | React.KeyboardEvent<Element>,
           val: number | undefined) => {
           if (!val || val < 0 || val > 9999999) {
             return
           }
-          setFaciesAge(val as number)
+          actions.setFaciesAge(val as number)
         }}
         />
         <Slider 
@@ -338,9 +337,9 @@ const FaciesControls = () => {
         name="Facies-Age-Slider"
         max={9999999}
         min={0}
-        value={faciesAge}
+        value={state.mapState.currentFaciesOptions.faciesAge}
         onChange={(event: Event, val: number | number[]) => {
-          setFaciesAge(val as number)
+          actions.setFaciesAge(val as number)
         }}
         aria-label="Default"
         valueLabelDisplay="auto" />
@@ -348,7 +347,7 @@ const FaciesControls = () => {
     </div>
   </ColoredDiv>
   )
-}
+})
 
 
 
