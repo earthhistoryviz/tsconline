@@ -213,11 +213,25 @@ return (
 
           {/* Load all the map points */}
           {imageLoaded && imageRef && imageRef.current && mapData.mapPoints &&
-          loadMapPoints(mapData.mapPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false, mapViewerRef.current, state.mapState.isFacies)}
+          loadMapPoints(
+            mapData.mapPoints,
+            mapData.bounds, 
+            imageRef.current.width, 
+            imageRef.current.height, 
+            false, 
+            mapViewerRef.current, 
+            )}
 
           {/* Load all the info points */}
           {imageLoaded && imageRef && imageRef.current && mapData.infoPoints && 
-          loadMapPoints(mapData.infoPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, true, mapViewerRef.current, state.mapState.isFacies)}
+          loadMapPoints(
+            mapData.infoPoints, 
+            mapData.bounds, 
+            imageRef.current.width, 
+            imageRef.current.height, 
+            true, 
+            mapViewerRef.current, 
+            )}
 
           {/* Load all the child maps*/}
           {Object.keys(mapHierarchy).includes(name) && mapHierarchy[name].map(child => {
@@ -358,7 +372,6 @@ type MapPointButtonProps = {
   name: string,
   isInfo?: boolean,
   container: HTMLDivElement | null,
-  isFacies: boolean
 }
 
 // mapPointButton that pulls up the map points on the image
@@ -367,9 +380,10 @@ type MapPointButtonProps = {
 // y: % from the top
 // name: name of the map point
 // isInfo: will default to false. is this point an info button?
-const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, isInfo = false, container, isFacies}) => {
+const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y, name, isInfo = false, container}) => {
   const [clicked, setClicked] = useState(false)
   const theme = useTheme()
+  const { state } = useContext(context)
 
   // below is the hook for grabbing the scale from map image scaling
   const [scale, setScale] = useState(1)
@@ -388,6 +402,9 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
   }
   const color = isInfo ? `${theme.palette.disabled.main}` : `${clicked ? theme.palette.on.main : theme.palette.off.main}`
 
+  // scale only if it isn't an info point and in facies mode
+  const iconSize = !isInfo && state.mapState.isFacies ? ICON_SIZE + state.mapState.currentFaciesOptions.dotSize * 2 : ICON_SIZE
+
   /**
    * Depending on if the point was clicked, return a different icon
    * @param clicked 
@@ -400,11 +417,11 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
       className='icon'
       />)
     }
-    if (isFacies) {
+    if (state.mapState.isFacies) {
       return (
         <svg
-          width={`${ICON_SIZE / scale}px`}
-          height={`${ICON_SIZE / scale}px`}
+          width={`${iconSize / scale}px`}
+          height={`${iconSize / scale}px`}
           viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg"
         >
@@ -464,13 +481,13 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
         className="map-point"
         disableRipple={isInfo}
         style={{
-          left: `calc(${x}% - ${ICON_SIZE / 2 / scale}px)`,
+          left: `calc(${x}% - ${iconSize / 2 / scale}px)`,
           // we take a the full icon_size here to anchor to the
           // bottom of the icon
           color: color,
-          top: `calc(${y}% - ${ICON_SIZE / scale}px)`,
-          width: `${ICON_SIZE / scale}px`,
-          height: `${ICON_SIZE / scale}px`,
+          top: `calc(${y}% - ${state.mapState.isFacies ? iconSize / 2 / scale : iconSize / scale}px)`,
+          width: `${iconSize / scale}px`,
+          height: `${iconSize / scale}px`,
         }}
         onClick={() => {
           setClicked(!clicked)
@@ -481,7 +498,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
       </MapPointTooltip>
     </>
   )
-}
+})
 
 type LegendItem = {
   color: string;
@@ -610,7 +627,14 @@ function getPositionOfPointBasedOnBounds(bounds: Bounds, point: MapPoints[string
  * @param container this is the container that the fullscreen tooltip will attach to
  * @returns all MapPointButton Components
  */
-function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidth: number, frameHeight: number, isInfo: boolean, container: HTMLDivElement | null, isFacies: boolean) {
+function loadMapPoints(
+  points: MapPoints | InfoPoints,
+  bounds: Bounds, 
+  frameWidth: number, 
+  frameHeight: number, 
+  isInfo: boolean, 
+  container: HTMLDivElement | null
+  ) {
   if (!points) return
   return (Object.entries(points).map(([name, point]) => {
     if (!point) return
@@ -625,7 +649,7 @@ function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidt
       name={name}
       isInfo={isInfo}
       container={container}
-      isFacies={isFacies}/>
+      />
     );
   }))
 }
