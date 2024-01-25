@@ -139,8 +139,8 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
         </div>
         <div className="controls">
             {!isFacies && <TSCButton className="bottom-button" onClick={() => { actions.openNextMap({name, isFacies: false, faciesOptions: state.mapState.currentFaciesOptions}, name, true )}}>Facies</TSCButton>}
-            <TSCButton className="bottom-button" onClick={() => actions.setIsLegendOpen(!state.mapState.isLegendOpen)}>legend</TSCButton>
             {isFacies && <TSCButton className="bottom-button" onClick={() => { setFacieOptions(!faciesOptions) }}>Options</TSCButton>}
+            <TSCButton className="bottom-button" onClick={() => actions.setIsLegendOpen(!state.mapState.isLegendOpen)}>legend</TSCButton>
         </div>
         <div className="view-buttons">
           <IconButton className="close-icon-view-button" onClick={() => actions.exitMapViewer()}>
