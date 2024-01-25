@@ -50,8 +50,10 @@ export const Time = observer(function Time() {
           style={{ marginBottom: '10px', width: '100%' }}
         /> */}
         <FormControl style={{ marginBottom: '10px', width: '100%' }}>
-        <InputLabel>Top Age/Stage Name</InputLabel> 
+        <InputLabel htmlFor="top-age-selector">Top Age/Stage Name</InputLabel> 
         <Select
+          inputProps={{ id: 'top-age-selector' }}
+          name="top-age-stage-name"
           label="Top Age/Stage Name"
           type="string"
           value={state.settings.topStageKey} 
@@ -70,9 +72,11 @@ export const Time = observer(function Time() {
         </Select>
         </FormControl>
         <FormControl style={{ marginBottom: '10px', width: '100%' }}>
-        <InputLabel>Base Age/Stage Name</InputLabel> 
+        <InputLabel htmlFor="base-age-selector">Base Age/Stage Name</InputLabel> 
         <Select
           label="Base Age/Stage Name"
+          inputProps={{ id: 'base-age-selector' }}
+          name="base-age-stage-name"
           type="string"
           value={state.settings.baseStageKey} 
           onChange={(event) => {
@@ -92,6 +96,7 @@ export const Time = observer(function Time() {
         <TextField
           label="Vertical Scale (cm/Ma)"
           type="number"
+          name="vertical-scale-text-field"
           value={state.settings.unitsPerMY}
           onChange={(event) => actions.setUnitsPerMY(parseFloat(event.target.value))}
           style={{ marginBottom: '20px', width: '100%' }}
@@ -109,13 +114,34 @@ export const Time = observer(function Time() {
 
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
         <FormGroup>
-          <FormControlLabel control={<TSCCheckbox />} label="Add MouseOver info (popups)" />
-          <FormControlLabel control={<TSCCheckbox />} label="Enabled Global Priority Filtering for block columns" />
-          <FormControlLabel control={<TSCCheckbox />} label="Enabled stage background for event columns" />
-          <FormControlLabel control={<TSCCheckbox />} label="Enable legend for the chart" />
-          <FormControlLabel control={<TSCCheckbox />} label="Do not auto-indent lithology patterns" />
-          <FormControlLabel control={<TSCCheckbox />} label="Conserve Chart Space in Family Tree Plotting" />
-          <FormControlLabel control={<TSCCheckbox />} label="Hide block labels based on priority" />
+          <FormControlLabel 
+          name="mouse-over-info-checkbox"
+          control={<TSCCheckbox />} 
+          label="Add MouseOver info (popups)" />
+          <FormControlLabel
+          name="global-priority-checkbox"
+          control={<TSCCheckbox />}
+          label="Enabled Global Priority Filtering for block columns" />
+          <FormControlLabel
+          name="stage-background-checkbox"
+          control={<TSCCheckbox />} 
+          label="Enabled stage background for event columns" />
+          <FormControlLabel 
+          name="enable-legend-checkbox"
+          control={<TSCCheckbox />} 
+          label="Enable legend for the chart" />
+          <FormControlLabel 
+          control={<TSCCheckbox />} 
+          name="lithology-auto-indent-checkbox"
+          label="Do not auto-indent lithology patterns" />
+          <FormControlLabel 
+          name="conserve-chart-checkbox"
+          control={<TSCCheckbox />} 
+          label="Conserve Chart Space in Family Tree Plotting" />
+          <FormControlLabel 
+          name="hide-block-labels-checkbox"
+          control={<TSCCheckbox />} 
+          label="Hide block labels based on priority" />
         </FormGroup>
       </div>
       </div>

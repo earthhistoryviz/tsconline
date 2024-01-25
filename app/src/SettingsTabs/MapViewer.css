@@ -117,7 +117,7 @@
   height: 100%;
   /* width: 100%; */
 }
-.MuiDrawer-docked.legend-drawer > .MuiDrawer-paper {
+.MuiDrawer-docked.drawer > .MuiDrawer-paper {
   border: 0px;
 }
 /* .MuiDrawer-docked.facies-button-container > .MuiDrawer-paper {
@@ -148,8 +148,10 @@
   justify-content: center;
   align-items: center;
 }
-.MuiFormControl-root.age-input-form {
+.age-input-form {
   margin: 10px;
+  margin-right: 20px;
+  width: 100px;
   top: 10px;
 }
 

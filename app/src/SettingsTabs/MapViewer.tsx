@@ -5,7 +5,7 @@ import { devSafeUrl } from '../util'
 import React, { useEffect, useState, useRef, useContext } from "react"
 import { context } from '../state';
 import { TransformWrapper, TransformComponent, useTransformEffect } from "react-zoom-pan-pinch"
-import { TSCTextField, TSCButton } from '../components'
+import { TSCInputAdornment, TSCNumberInput, TSCButton } from '../components'
 import { isRectBounds, isVertBounds } from '@tsconline/shared'
 import { calculateRectBoundsPosition, calculateVertBoundsPosition, calculateRectButton } from '../coordinates'
 import CloseIcon from '@mui/icons-material/Close';
@@ -84,6 +84,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
     const imageRef = useRef<HTMLImageElement | null>(null)
     // used for attaching tooltip and fullscreening
     const mapViewerRef = useRef<HTMLDivElement | null>(null)
+
 
     // useEffect needed to know when fullscreen changes i.e escape, button, pressing child maps
     useEffect(() => {
@@ -238,7 +239,7 @@ return (
     )}
     </TransformWrapper>
     <Drawer
-        className="legend-drawer"
+        className="drawer"
         variant="persistent"
         anchor="left"
         open={state.settingsTabs.isLegendOpen}
@@ -255,7 +256,7 @@ return (
         <Legend items={legendItems}/>
     </Drawer>
     <Drawer 
-    className="facies-button-container"
+    className="facies-button-container drawer"
     variant="persistent"
     anchor="bottom"
     open={state.settingsTabs.isFacies}>
@@ -264,17 +265,39 @@ return (
   </div>
 )})
 
-const AgeSlider = () => (
-  <div className="age-slider-container">
-    <TSCTextField className="age-input-form" helperText="Enter Age"/>
-    <Slider className="age-slider" defaultValue={50} aria-label="Default" valueLabelDisplay="auto" />
-  </div>
-)
-const FaciesControls = () => (
+const FaciesControls = () => {
+  const [faciesAge, setFaciesAge] = useState(0)
+  return (
   <DrawerContainer className="facies-buttons">
-    <AgeSlider/>
+    <div className="age-slider-container">
+      <TSCNumberInput 
+      endAdornment={<TSCInputAdornment>MA</TSCInputAdornment>} 
+      className="age-input-form"
+      name="Facies-Age-Input"
+      placeholder="Age"
+      max={9999999}
+      value={faciesAge}
+      onChange={(event, val) => {
+        if (val < 0 || val > 9999999) {
+          return
+        }
+        setFaciesAge(val as number)
+      }}
+      />
+      <Slider 
+      className="age-slider" 
+      name="Facies-Age-Slider"
+      value={faciesAge}
+      label="controlled"
+      onChange={(event: Event, val: number | number[]) => {
+        setFaciesAge(val as number)
+      }}
+      aria-label="Default"
+      valueLabelDisplay="auto" />
+    </div>
   </DrawerContainer>
-)
+  )
+}
 
 
 
