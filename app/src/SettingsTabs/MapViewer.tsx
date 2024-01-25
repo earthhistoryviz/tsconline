@@ -1,4 +1,4 @@
-import { Box, InputLabel, FormControl, Slider, TooltipProps, Tooltip, Drawer, Divider, Typography, IconButton, Dialog, Button } from '@mui/material'
+import { SvgIconProps, Box, InputLabel, FormControl, Slider, TooltipProps, Tooltip, Drawer, Divider, Typography, IconButton, Dialog, Button, SvgIcon } from '@mui/material'
 import { styled, useTheme } from "@mui/material/styles"
 import type { InfoPoints, MapHierarchy, Bounds, MapPoints, MapInfo} from '@tsconline/shared'
 import { devSafeUrl } from '../util'
@@ -10,10 +10,10 @@ import { isRectBounds, isVertBounds } from '@tsconline/shared'
 import { calculateRectBoundsPosition, calculateVertBoundsPosition, calculateRectButton } from '../coordinates'
 import CloseIcon from '@mui/icons-material/Close';
 import NotListedLocationIcon from '@mui/icons-material/NotListedLocation';
-import LocationOnTwoToneIcon from '@mui/icons-material/LocationOnTwoTone';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import LocationOnSharpIcon from '@mui/icons-material/LocationOnSharp';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import YoutubeSearchedForIcon from '@mui/icons-material/YoutubeSearchedFor';
@@ -21,10 +21,25 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { observer } from 'mobx-react-lite'
 import './MapViewer.css'
 
-const ICON_SIZE = 30
+const ICON_SIZE = 40
 const InfoIcon = NotListedLocationIcon 
-const OnIcon = LocationOnTwoToneIcon 
 const OffIcon = LocationOffIcon 
+const OnIcon = LocationOnSharpIcon 
+
+const BorderedIcon = ({component} : {component: React.ElementType<any>}) => {
+  return (
+    <SvgIcon
+      className="icon"
+      component={component}
+      style={{
+        fontSize: 40, 
+        fill: 'currentColor', 
+        stroke: 'black', 
+        strokeWidth: '1',
+      }}
+    />
+  );
+};
 
 const ChildMapIcon = () => {
   return (
@@ -381,7 +396,7 @@ type MapPointButtonProps = {
 // name: name of the map point
 // isInfo: will default to false. is this point an info button?
 const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y, name, isInfo = false, container}) => {
-  const [clicked, setClicked] = useState(false)
+  const [clicked, setClicked] = useState((mapPoint as MapPoints[string]).default || false)
   const theme = useTheme()
   const { state } = useContext(context)
 
@@ -414,7 +429,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
     if (isInfo) {
       return (
       <InfoIcon
-      className='icon'
+      className="icon"
       />)
     }
     if (state.mapState.isFacies) {
@@ -449,13 +464,13 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
     }
     if (clicked) {
       return (
-      <OnIcon 
-      className="icon"
+      <BorderedIcon 
+      component={OnIcon}
       />)
     }
   return (
-  <OffIcon
-  className="icon"
+  <BorderedIcon
+  component={OffIcon}
   />)
 }
   return (
