@@ -97,7 +97,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
     // this is needed to change image styles on fullscreen change
     const [isFullscreen, setIsFullscreen] = useState(false)
     // this is used to toggle the facies options
-    const [faciesOptions, setFacieOptions] = useState(true)
+    const [faciesOptions, setFaciesOptions] = useState(true)
     // used to get the proper bounds of the element
     const imageRef = useRef<HTMLImageElement | null>(null)
     // used for attaching tooltip and fullscreening
@@ -154,7 +154,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
         </div>
         <div className="controls">
             {!isFacies && <TSCButton className="bottom-button" onClick={() => { actions.openNextMap({name, isFacies: false, faciesOptions: state.mapState.currentFaciesOptions}, name, true )}}>Facies</TSCButton>}
-            {isFacies && <TSCButton className="bottom-button" onClick={() => { setFacieOptions(!faciesOptions) }}>Options</TSCButton>}
+            {isFacies && <TSCButton className="bottom-button" onClick={() => { setFaciesOptions(!faciesOptions) }}>Options</TSCButton>}
             <TSCButton className="bottom-button" onClick={() => actions.setIsLegendOpen(!state.mapState.isLegendOpen)}>legend</TSCButton>
         </div>
         <div className="view-buttons">
@@ -297,7 +297,7 @@ return (
        <TypographyText className="facies-options-title" variant="h6" gutterBottom>
          Facies Options
       </TypographyText> 
-        <ColoredIconButton onClick={() => {setFacieOptions(false)}}>
+        <ColoredIconButton onClick={() => {setFaciesOptions(false)}}>
             <ArrowDropDownIcon fontSize="large"/>
         </ColoredIconButton>
       </DrawerHeader>
@@ -521,7 +521,6 @@ type LegendItem = {
   icon: React.ElementType<any>;
 }
 const DisplayLegendItem = ({ legendItem } : {legendItem: LegendItem}) => {
-  const theme = useTheme()
   const { color, label, icon: Icon} = legendItem
   return (<Box className="legend-item-container">
     <Icon
