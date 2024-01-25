@@ -279,16 +279,49 @@ return (
 
 const FaciesControls = () => {
   const [faciesAge, setFaciesAge] = useState(0)
+  const [dotSize, setDotSize] = useState(1)
   return (
   <ColoredDiv className="facies-buttons">
+    <div className="dot-controls">
+      <TypographyText className="dot-controls-title"> Dot Size </TypographyText>
+      <div className="slider-container">
+          <TSCNumberInput 
+          className="dot-input-form"
+          placeholder="Dot Size"
+          max={20}
+          min={0}
+          value={dotSize}
+          onChange={(
+            _event: React.FocusEvent<HTMLInputElement, Element> | React.PointerEvent<Element> | React.KeyboardEvent<Element>,
+            val: number | undefined) => {
+            if (!val || val < 0 || val > 9999999) {
+              return
+            }
+            setDotSize(val as number)
+          }}
+          />
+        <Slider 
+        id="dot-size-slider"
+        className="slider" 
+        value={dotSize}
+        max={20}
+        min={0}
+        onChange={(event: Event, val: number | number[]) => {
+          setDotSize(val as number)
+        }}
+        aria-label="Default"
+        valueLabelDisplay="auto" />
+      </div>
+    </div>
     <div className="age-controls">
       <TypographyText> Age </TypographyText>
-      <div className="age-input-container">
+      <div className="slider-container">
         <TSCNumberInput 
         endAdornment={<TSCInputAdornment>MA</TSCInputAdornment>} 
         className="age-input-form"
         placeholder="Age"
         max={9999999}
+        min={0}
         value={faciesAge}
         onChange={(
           _event: React.FocusEvent<HTMLInputElement, Element> | React.PointerEvent<Element> | React.KeyboardEvent<Element>,
@@ -301,8 +334,10 @@ const FaciesControls = () => {
         />
         <Slider 
         id="number-input"
-        className="age-slider" 
+        className="slider" 
         name="Facies-Age-Slider"
+        max={9999999}
+        min={0}
         value={faciesAge}
         onChange={(event: Event, val: number | number[]) => {
           setFaciesAge(val as number)
