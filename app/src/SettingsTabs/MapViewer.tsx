@@ -285,12 +285,11 @@ const FaciesControls = () => {
       <TSCNumberInput 
       endAdornment={<TSCInputAdornment>MA</TSCInputAdornment>} 
       className="age-input-form"
-      name="Facies-Age-Input"
       placeholder="Age"
       max={9999999}
       value={faciesAge}
       onChange={(event, val) => {
-        if (val < 0 || val > 9999999) {
+        if (!val || val < 0 || val > 9999999) {
           return
         }
         setFaciesAge(val as number)
@@ -300,7 +299,6 @@ const FaciesControls = () => {
       className="age-slider" 
       name="Facies-Age-Slider"
       value={faciesAge}
-      label="controlled"
       onChange={(event: Event, val: number | number[]) => {
         setFaciesAge(val as number)
       }}
@@ -349,6 +347,29 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
   }
   const color = isInfo ? `${theme.palette.disabled.main}` : `${clicked ? theme.palette.on.main : theme.palette.off.main}`
 
+  /**
+   * Depending on if the point was clicked, return a different icon
+   * @param clicked 
+   * @returns 
+   */
+  function getIcon(){
+    if (isInfo) {
+      return (
+      <InfoIcon
+      className='icon'
+      />)
+    }
+    if (clicked) {
+      return (
+      <OnIcon 
+      className="icon"
+      />)
+    }
+  return (
+  <OffIcon
+  className="icon"
+  />)
+}
   return (
     <>
       <MapPointTooltip 
@@ -384,7 +405,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
           setClicked(!clicked)
         }}
       >
-        {getIcon(isInfo, clicked)}
+        {getIcon()}
       </IconButton>
       </MapPointTooltip>
     </>
@@ -535,25 +556,4 @@ function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidt
       container={container}/>
     );
   }))
-}
-
-/**
- * Depending on if the point was clicked, return a different icon
- * @param clicked 
- * @returns 
- */
-function getIcon(isInfo: boolean, clicked: boolean){
-  if (isInfo) {
-    return (<InfoIcon
-      className='icon'
-      />)
-  }
-  if (clicked) {
-    return (<OnIcon 
-      className="icon"
-      />)
-  }
-  return (<OffIcon
-    className="icon"
-    />)
 }
