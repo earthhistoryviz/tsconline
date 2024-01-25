@@ -141,19 +141,28 @@
   display: flex;
 }
 .facies-buttons {
-  align-items: center;
   justify-content: center;
-  display: flex;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  display: grid;
   height: 100%;
   width: 100%
 }
 .age-controls {
   width: 100%;
+  height: auto;
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+  margin: auto;
+}
+.dot-controls {
+  width: 100%;
   display:flex;
   flex-direction: column;
   align-items: center;
 }
-.age-input-container {
+.slider-container {
   width: 100%;
   display: flex;
   justify-content: center;
@@ -165,33 +174,39 @@
   width: 100px;
   top: 10px;
 }
+.dot-input-form {
+  margin: 10px;
+  margin-right: 20px;
+  width: 40px;
+  top: 10px;
+}
 
-.age-slider .MuiSlider-track {
+.slider .MuiSlider-track {
   border: none;
 }
 
-.age-slider .MuiSlider-thumb {
+.slider .MuiSlider-thumb {
   height: 16px;
   width: 16px;
   background-color: #fff;
   border: 2px solid currentColor;
 }
-.MuiSlider-root.age-slider {
+.MuiSlider-root.slider {
   width: 50%;
 }
 
-.age-slider .MuiSlider-thumb:focus,
-.age-slider .MuiSlider-thumb:hover,
-.age-slider .MuiSlider-thumb.Mui-active,
-.age-slider .MuiSlider-thumb.Mui-focusVisible {
+.slider .MuiSlider-thumb:focus,
+.slider .MuiSlider-thumb:hover,
+.slider .MuiSlider-thumb.Mui-active,
+.slider .MuiSlider-thumb.Mui-focusVisible {
   box-shadow: inherit;
 }
 
-.age-slider .MuiSlider-thumb::before {
+.slider .MuiSlider-thumb::before {
   display: none;
 }
 
-.age-slider .MuiSlider-valueLabel {
+.slider .MuiSlider-valueLabel {
   line-height: 1.2;
   font-size: 12px;
   background: unset;
@@ -204,14 +219,14 @@
   transform: translateX(50%) rotate(-45deg) scale(0);
 }
 
-.age-slider .MuiSlider-valueLabel::before {
+.slider .MuiSlider-valueLabel::before {
   display: none;
 }
 
-.age-slider .MuiSlider-valueLabel.MuiSlider-valueLabelOpen {
+.slider .MuiSlider-valueLabel.MuiSlider-valueLabelOpen {
   transform: translateX(50%) translateY(-100%) rotate(-45deg) scale(1);
 }
 
-.age-slider .MuiSlider-valueLabel > * {
+.slider .MuiSlider-valueLabel > * {
   transform: rotate(45deg);
 }
