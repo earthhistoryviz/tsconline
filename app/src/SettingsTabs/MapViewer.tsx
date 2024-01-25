@@ -20,22 +20,23 @@ import YoutubeSearchedForIcon from '@mui/icons-material/YoutubeSearchedFor';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { observer } from 'mobx-react-lite'
 import './MapViewer.css'
+import { ZoomOut } from '@mui/icons-material'
 
 const ICON_SIZE = 40
 const InfoIcon = NotListedLocationIcon 
 const OffIcon = LocationOffIcon 
 const OnIcon = LocationOnSharpIcon 
 
-const BorderedIcon = ({component} : {component: React.ElementType<any>}) => {
+const BorderedIcon = ({component, className} : {component: React.ElementType<any>, className: string}) => {
   return (
     <SvgIcon
-      className="icon"
+      className={className}
       component={component}
       style={{
         fontSize: 40, 
         fill: 'currentColor', 
         stroke: 'black', 
-        strokeWidth: '1',
+        strokeWidth: '0.5',
       }}
     />
   );
@@ -149,7 +150,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
         <>
         <div className="exit-buttons">
           <IconButton className="icon-view-button" onClick={actions.goBackInMapHistory}>
-            <ArrowBackIcon className="icon-button"/>
+            <BorderedIcon component={ArrowBackIcon} className="icon-button"/>
           </IconButton>
         </div>
         <div className="controls">
@@ -159,7 +160,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
         </div>
         <div className="view-buttons">
           <IconButton className="close-icon-view-button" onClick={() => actions.exitMapViewer()}>
-            <CloseIcon className="icon-button"/>
+            <BorderedIcon component={CloseIcon} className="icon-button"/>
           </IconButton>
           <IconButton className="icon-view-button" onClick={() => {
           if (document.fullscreenElement) {
@@ -168,16 +169,16 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
               mapViewer.requestFullscreen()
           }
           }}>
-          <FullscreenIcon className="icon-button"/>
+            <BorderedIcon component={FullscreenIcon} className="icon-button"/>
           </IconButton>
           <IconButton className="icon-view-button" onClick={() => zoomIn()}>
-              <ZoomInIcon className="icon-button"/>
+            <BorderedIcon component={ZoomInIcon} className="icon-button"/>
           </IconButton>
           <IconButton className="icon-view-button" onClick={() => zoomOut()}>
-              <ZoomOutIcon className="icon-button"/>
+            <BorderedIcon component={ZoomOutIcon} className="icon-button"/>
           </IconButton>
           <IconButton className="icon-view-button" onClick={() => resetTransform()}>
-              <YoutubeSearchedForIcon className="icon-button"/>
+            <BorderedIcon component={YoutubeSearchedForIcon} className="icon-button"/>
           </IconButton>
         </div>
         </>
@@ -465,11 +466,13 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
     if (clicked) {
       return (
       <BorderedIcon 
+      className="icon"
       component={OnIcon}
       />)
     }
   return (
   <BorderedIcon
+      className="icon"
   component={OffIcon}
   />)
 }
