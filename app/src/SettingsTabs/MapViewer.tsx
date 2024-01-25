@@ -1,4 +1,4 @@
-import { FormHelperText, OutlinedInput, FormControl, Slider, TooltipProps, Tooltip, Drawer, Divider, Typography, IconButton, Dialog, Button, Box } from '@mui/material'
+import { Box, InputLabel, FormControl, Slider, TooltipProps, Tooltip, Drawer, Divider, Typography, IconButton, Dialog, Button } from '@mui/material'
 import { styled, useTheme } from "@mui/material/styles"
 import type { InfoPoints, MapHierarchy, Bounds, MapPoints, MapInfo} from '@tsconline/shared'
 import { devSafeUrl } from '../util'
@@ -54,7 +54,7 @@ const ColoredIconButton = styled(IconButton)(({ theme }) => ({
   color: theme.palette.primary.main 
 }))
 
-const DrawerContainer = styled('div')(( {theme} ) => ({
+const ColoredDiv = styled('div')(( {theme} ) => ({
   backgroundColor: theme.palette.navbar.dark,
 }))
 
@@ -280,32 +280,38 @@ return (
 const FaciesControls = () => {
   const [faciesAge, setFaciesAge] = useState(0)
   return (
-  <DrawerContainer className="facies-buttons">
-    <div className="age-slider-container">
-      <TSCNumberInput 
-      endAdornment={<TSCInputAdornment>MA</TSCInputAdornment>} 
-      className="age-input-form"
-      placeholder="Age"
-      max={9999999}
-      value={faciesAge}
-      onChange={(event, val) => {
-        if (!val || val < 0 || val > 9999999) {
-          return
-        }
-        setFaciesAge(val as number)
-      }}
-      />
-      <Slider 
-      className="age-slider" 
-      name="Facies-Age-Slider"
-      value={faciesAge}
-      onChange={(event: Event, val: number | number[]) => {
-        setFaciesAge(val as number)
-      }}
-      aria-label="Default"
-      valueLabelDisplay="auto" />
+  <ColoredDiv className="facies-buttons">
+    <div className="age-controls">
+      <TypographyText> Age </TypographyText>
+      <div className="age-input-container">
+        <TSCNumberInput 
+        endAdornment={<TSCInputAdornment>MA</TSCInputAdornment>} 
+        className="age-input-form"
+        placeholder="Age"
+        max={9999999}
+        value={faciesAge}
+        onChange={(
+          _event: React.FocusEvent<HTMLInputElement, Element> | React.PointerEvent<Element> | React.KeyboardEvent<Element>,
+          val: number | undefined) => {
+          if (!val || val < 0 || val > 9999999) {
+            return
+          }
+          setFaciesAge(val as number)
+        }}
+        />
+        <Slider 
+        id="number-input"
+        className="age-slider" 
+        name="Facies-Age-Slider"
+        value={faciesAge}
+        onChange={(event: Event, val: number | number[]) => {
+          setFaciesAge(val as number)
+        }}
+        aria-label="Default"
+        valueLabelDisplay="auto" />
+      </div>
     </div>
-  </DrawerContainer>
+  </ColoredDiv>
   )
 }
 
@@ -354,6 +360,12 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
    * @returns 
    */
   function getIcon(){
+    if (isInfo) {
+      return (
+      <InfoIcon
+      className='icon'
+      />)
+    }
     if (isFacies) {
       return (
         <svg
@@ -383,12 +395,6 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
           </clipPath>
         </svg>
       )
-    }
-    if (isInfo) {
-      return (
-      <InfoIcon
-      className='icon'
-      />)
     }
     if (clicked) {
       return (
