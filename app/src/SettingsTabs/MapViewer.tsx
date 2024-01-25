@@ -213,11 +213,11 @@ return (
 
           {/* Load all the map points */}
           {imageLoaded && imageRef && imageRef.current && mapData.mapPoints &&
-          loadMapPoints(mapData.mapPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false, mapViewerRef.current)}
+          loadMapPoints(mapData.mapPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false, mapViewerRef.current, state.settingsTabs.isFacies)}
 
           {/* Load all the info points */}
           {imageLoaded && imageRef && imageRef.current && mapData.infoPoints && 
-          loadMapPoints(mapData.infoPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, true, mapViewerRef.current)}
+          loadMapPoints(mapData.infoPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, true, mapViewerRef.current, state.settingsTabs.isFacies)}
 
           {/* Load all the child maps*/}
           {Object.keys(mapHierarchy).includes(name) && mapHierarchy[name].map(child => {
@@ -317,7 +317,8 @@ type MapPointButtonProps = {
   y: number,
   name: string,
   isInfo?: boolean,
-  container: HTMLDivElement | null
+  container: HTMLDivElement | null,
+  isFacies: boolean
 }
 
 // mapPointButton that pulls up the map points on the image
@@ -326,7 +327,7 @@ type MapPointButtonProps = {
 // y: % from the top
 // name: name of the map point
 // isInfo: will default to false. is this point an info button?
-const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, isInfo = false, container}) => {
+const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, isInfo = false, container, isFacies}) => {
   const [clicked, setClicked] = useState(false)
   const theme = useTheme()
 
@@ -353,6 +354,36 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
    * @returns 
    */
   function getIcon(){
+    if (isFacies) {
+      return (
+        <svg
+          width={`${ICON_SIZE / scale}px`}
+          height={`${ICON_SIZE / scale}px`}
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10" 
+            stroke="black"
+            strokeWidth="2"
+            fill="transparent"
+          />
+          <image
+            href={""}
+            x="4"
+            y="4"
+            height="16px"
+            width="16px"
+            clipPath="url(#clipCircle)"
+          />
+          <clipPath id="clipCircle">
+            <circle cx="12" cy="12" r="8" />
+          </clipPath>
+        </svg>
+      )
+    }
     if (isInfo) {
       return (
       <InfoIcon
@@ -539,7 +570,7 @@ function getPositionOfPointBasedOnBounds(bounds: Bounds, point: MapPoints[string
  * @param container this is the container that the fullscreen tooltip will attach to
  * @returns all MapPointButton Components
  */
-function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidth: number, frameHeight: number, isInfo: boolean, container: HTMLDivElement | null) {
+function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidth: number, frameHeight: number, isInfo: boolean, container: HTMLDivElement | null, isFacies: boolean) {
   if (!points) return
   return (Object.entries(points).map(([name, point]) => {
     if (!point) return
@@ -553,7 +584,8 @@ function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidt
       y={position.y} 
       name={name}
       isInfo={isInfo}
-      container={container}/>
+      container={container}
+      isFacies={isFacies}/>
     );
   }))
 }
