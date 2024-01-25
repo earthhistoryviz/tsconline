@@ -15,6 +15,7 @@ import LocationOffIcon from '@mui/icons-material/LocationOff';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import YoutubeSearchedForIcon from '@mui/icons-material/YoutubeSearchedFor';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { observer } from 'mobx-react-lite'
@@ -45,11 +46,11 @@ const MapPointTooltip = styled(({className, ...props}: TooltipProps) => (
   }
 `
 
-const LegendTypography = styled(Typography)(({ theme }) => ({
+const TypographyText = styled(Typography)(({ theme }) => ({
   color: theme.palette.primary.main 
 }))
 
-const LegendArrowDropDown = styled(IconButton)(({ theme }) => ({
+const ColoredIconButton = styled(IconButton)(({ theme }) => ({
   color: theme.palette.primary.main 
 }))
 
@@ -80,6 +81,8 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
     const [imageLoaded, setImageLoaded] = useState(false)
     // this is needed to change image styles on fullscreen change
     const [isFullscreen, setIsFullscreen] = useState(false)
+    // this is used to toggle the facies options
+    const [faciesOptions, setFacieOptions] = useState(true)
     // used to get the proper bounds of the element
     const imageRef = useRef<HTMLImageElement | null>(null)
     // used for attaching tooltip and fullscreening
@@ -137,6 +140,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
         <div className="controls">
             {!isFacies && <TSCButton className="bottom-button" onClick={() => { actions.openNextMap(name, false, name, true)}}>Facies</TSCButton>}
             <TSCButton className="bottom-button" onClick={() => actions.setIsLegendOpen(!state.settingsTabs.isLegendOpen)}>legend</TSCButton>
+            {isFacies && <TSCButton className="bottom-button" onClick={() => { setFacieOptions(!faciesOptions) }}>Options</TSCButton>}
         </div>
         <div className="view-buttons">
           <IconButton className="close-icon-view-button" onClick={() => actions.exitMapViewer()}>
@@ -245,12 +249,12 @@ return (
         open={state.settingsTabs.isLegendOpen}
     >
         <DrawerHeader> 
-        <LegendArrowDropDown onClick={() => {actions.setIsLegendOpen(false)}}>
+        <ColoredIconButton onClick={() => {actions.setIsLegendOpen(false)}}>
             <CloseIcon fontSize="small"/>
-        </LegendArrowDropDown>
-        <LegendTypography className="legend-title" variant="h6" gutterBottom>
+        </ColoredIconButton>
+        <TypographyText className="legend-title" variant="h6" gutterBottom>
             Color Legend
-        </LegendTypography>
+        </TypographyText>
         </DrawerHeader>
         <Divider />
         <Legend items={legendItems}/>
@@ -259,7 +263,15 @@ return (
     className="facies-button-container drawer"
     variant="persistent"
     anchor="bottom"
-    open={state.settingsTabs.isFacies}>
+    open={state.settingsTabs.isFacies && faciesOptions}>
+      <DrawerHeader>
+       <TypographyText className="facies-options-title" variant="h6" gutterBottom>
+         Facies Options
+      </TypographyText> 
+        <ColoredIconButton onClick={() => {setFacieOptions(false)}}>
+            <ArrowDropDownIcon fontSize="large"/>
+        </ColoredIconButton>
+      </DrawerHeader>
       <FaciesControls/>
     </Drawer>
   </div>
@@ -393,7 +405,7 @@ const DisplayLegendItem = ({ legendItem } : {legendItem: LegendItem}) => {
     height={20}
     style ={{color: color}}
     mr={1}/>
-    <LegendTypography className="legend-label">{label}</LegendTypography>
+    <TypographyText className="legend-label">{label}</TypographyText>
   </Box>)
 }
 

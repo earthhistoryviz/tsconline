@@ -104,6 +104,10 @@
   margin-right: 15px;
   margin-bottom: 0px;
 }
+.MuiTypography-root.facies-options-title {
+  margin-left: 50px;
+  margin-bottom: 0px;
+}
 .MuiBox-root.legend-item-container {
   display: flex;
   margin-bottom: 40px;
