@@ -1,5 +1,6 @@
 import { observable } from "mobx";
 
+import { FaciesOptions, MapHistory } from "../types";
 import type {
   MapHierarchy,
   MapInfo,
@@ -19,17 +20,17 @@ export type State = {
     columnSelected: { name: string; parents: string[] } | null;
     geologicalTopStages: GeologicalStages;
     geologicalBaseStages: GeologicalStages;
+  };
+  mapState: {
     mapInfo: MapInfo;
     mapHierarchy: MapHierarchy;
+    currentFaciesOptions: FaciesOptions;
     selectedMap: string | null;
     isLegendOpen: boolean;
     isMapViewerOpen: boolean;
     isFacies: boolean;
-    mapHistory: {
-      name: string,
-      isFacies: boolean
-    }[]
-  };
+    mapHistory: MapHistory[]
+  }
   chart: ChartConfig | null;
   presets: ChartConfig[];
   chartPath: string;
@@ -56,8 +57,14 @@ export const state = observable<State>({
     columnSelected: null,
     geologicalTopStages: {},
     geologicalBaseStages: {},
+  },
+  mapState: {
     mapInfo: {},
     mapHierarchy: {},
+    currentFaciesOptions: {
+      faciesAge: 0,
+      dotSize: 1
+    },
     selectedMap: null,
     isLegendOpen: false,
     isMapViewerOpen: false,

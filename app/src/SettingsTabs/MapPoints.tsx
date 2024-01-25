@@ -25,7 +25,7 @@ export const MapPoints = observer(function MapPoint() {
     const theme = useTheme();
     return (
         <div>
-            { !state.settingsTabs.mapInfo || Object.entries(state.settingsTabs.mapInfo).length === 0 ?
+            { !state.mapState.mapInfo || Object.entries(state.mapState.mapInfo).length === 0 ?
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', minHeight: '100vh'}}>
                     <Typography sx={{
                     fontSize: theme.typography.pxToRem(18),
@@ -34,7 +34,7 @@ export const MapPoints = observer(function MapPoint() {
                     </Typography>
                 </div>
                 :
-                <MapList mapInfo={state.settingsTabs.mapInfo}/>
+                <MapList mapInfo={state.mapState.mapInfo}/>
         }
         </div>
     )
@@ -61,7 +61,7 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
           {Object.entries(mapInfo).map(([name, map]) => {
             return (
               <MapListItemButton key={name} 
-                selected={state.settingsTabs.selectedMap === name}
+                selected={state.mapState.selectedMap === name}
                 onClick={() => handleRowClick(name)} 
               >
                 <ListItemAvatar>
@@ -74,8 +74,8 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
         </List>
       </Box>
 
-      <Dialog open={state.settingsTabs.isMapViewerOpen} keepMounted onClose={actions.goBackInMapHistory} maxWidth={false}>
-        {state.settingsTabs.selectedMap ? <MapViewer name={state.settingsTabs.selectedMap} isFacies={state.settingsTabs.isFacies}/> : null}
+      <Dialog open={state.mapState.isMapViewerOpen} keepMounted onClose={actions.goBackInMapHistory} maxWidth={false}>
+        {state.mapState.selectedMap ? <MapViewer name={state.mapState.selectedMap} isFacies={state.mapState.isFacies}/> : null}
       </Dialog>
     </div>
   );

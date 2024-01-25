@@ -10,6 +10,7 @@ import {
   isServerResponseError,
   assertDatapackResponse,
 } from "@tsconline/shared";
+import { FaciesOptions, MapHistory } from "../types";
 import { state, State } from "./state";
 import { fetcher, devSafeUrl } from "../util";
 
@@ -17,7 +18,7 @@ export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;
 });
 export const exitMapViewer = action("exitMapViewer", () => {
-  state.settingsTabs.mapHistory = [];
+  state.mapState.mapHistory = [];
   closeMapViewer();
 });
 export const goBackInMapHistory = () => {
@@ -33,51 +34,62 @@ export const closeMapViewer = () => {
   setIsLegendOpen(false);
   setSelectedMap(null);
   setIsMapViewerOpen(false);
+  setFaciesOptions({faciesAge: 0, dotSize: 1})
 };
-export const openLastMap = (lastMap: { name: string; isFacies: boolean }) => {
-  setSelectedMap(lastMap.name);
-  setIsFacies(lastMap.isFacies);
+export const openLastMap = (lastMap: MapHistory) => {
+  setSelectedMap(lastMap.name)
+  setIsFacies(lastMap.isFacies)
+  setFaciesOptions(lastMap.faciesOptions)
 };
+export const setFaciesOptions = action("setFaciesOptions", (faciesOptions: FaciesOptions) => {
+  state.mapState.currentFaciesOptions = faciesOptions
+})
 export const openNextMap = (
-  parent: string,
-  isParentFacies: boolean,
+  parentMap: MapHistory,
   child: string,
-  isChildFacies: boolean
+  isChildFacies: boolean,
 ) => {
-  pushMapToMapHistory(parent, isParentFacies);
+  pushMapToMapHistory(parentMap);
   setIsFacies(isChildFacies);
+  setFaciesOptions({faciesAge: 0, dotSize: 1})
   setSelectedMap(child);
 };
 const setIsFacies = action("setIsFacies", (newval: boolean) => {
-  state.settingsTabs.isFacies = newval;
+  state.mapState.isFacies = newval;
 });
 
 export const setIsMapViewerOpen = action(
   "setIsMapViewerOpen",
   (newval: boolean) => {
-    state.settingsTabs.isMapViewerOpen = newval;
+    state.mapState.isMapViewerOpen = newval;
   }
 );
+export const setDotSize = action("setDotSize", (newval: number) => {
+  state.mapState.currentFaciesOptions.dotSize = newval
+})
+export const setFaciesAge = action("setFaciesAge", (newval: number) => {
+  state.mapState.currentFaciesOptions.faciesAge = newval
+})
 
 const pushMapToMapHistory = action(
   "pushMapToMapHistory",
-  (name: string, isFacies: boolean) => {
-    state.settingsTabs.mapHistory.push({ name, isFacies });
+  ({name, isFacies, faciesOptions}: MapHistory) => {
+    state.mapState.mapHistory.push({ name, isFacies, faciesOptions});
   }
 );
 
 export const popMapHistory = action("popMapHistory", () => {
-  return state.settingsTabs.mapHistory.pop();
+  return state.mapState.mapHistory.pop();
 });
 
 export const setIsLegendOpen = action("setIsLegendOpen", (newval: boolean) => {
-  state.settingsTabs.isLegendOpen = newval;
+  state.mapState.isLegendOpen = newval;
 });
 
 export const setSelectedMap = action(
   "setSelectedMap",
   (newMap: string | null) => {
-    state.settingsTabs.selectedMap = newMap;
+    state.mapState.selectedMap = newMap;
   }
 );
 
@@ -272,12 +284,12 @@ export const setChartPath = action("setChartPath", (chartpath: string) => {
   state.chartPath = chartpath;
 });
 export const setMapInfo = action("setMapInfo", (mapInfo: MapInfo) => {
-  state.settingsTabs.mapInfo = mapInfo;
+  state.mapState.mapInfo = mapInfo;
 });
 export const setMapHierarchy = action(
   "setMapHierarchy",
   (mapHierarchy: MapHierarchy) => {
-    state.settingsTabs.mapHierarchy = mapHierarchy;
+    state.mapState.mapHierarchy = mapHierarchy;
   }
 );
 export const setChartHash = action("setChartHash", (charthash: string) => {
