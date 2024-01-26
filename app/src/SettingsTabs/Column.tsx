@@ -27,55 +27,54 @@ type ColumnMenuProps = {
   parents: string[];
 };
 
-const ColumnMenu: React.FC<ColumnMenuProps> = observer(
-  ({ name, parents }) => {
-    let [editName, setEditName] = useState(name);
-    return (
-      <div
-        style={{
-          width: "300px",
-          height: "300px",
-          backgroundColor: "lightblue",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <Typography style={{ padding: "5px" }}>Edit Title</Typography>
-        <div style={{ display: "flex", flexDirection: "row" }}>
-          <TextField
-            hiddenLabel
-            id="editNameTextField"
-            value={editName}
-            onChange={(event) => {
-              setEditName(event.target.value);
-            }}
-            variant="filled"
-            size="small"
-          />
-          <div
-            style={{
-              display: "flex",
-              flexGrow: "1",
-              alignItems: "center",
-              justifyContent: "center",
+const ColumnMenu: React.FC<ColumnMenuProps> = observer(({ name, parents }) => {
+  let temp = useRef("");
+  return (
+    <div
+      style={{
+        width: "300px",
+        height: "300px",
+        backgroundColor: "lightblue",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <Typography style={{ padding: "5px" }}>Edit Title</Typography>
+      <div style={{ display: "flex", flexDirection: "row" }}>
+        <TextField
+          hiddenLabel
+          id="editNameTextField"
+          defaultValue={name}
+          key={name}
+          onChange={(event) => {
+            temp.current = event.target.value;
+          }}
+          variant="filled"
+          size="small"
+        />
+        <div
+          style={{
+            display: "flex",
+            flexGrow: "1",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Button
+            color="secondary"
+            variant="contained"
+            onClick={() => {
+              //console.log(editName);
+              //updateColumnName(editName);
             }}
           >
-            <Button
-              color="secondary"
-              variant="contained"
-              onClick={() => {
-                //console.log(editName);
-                //updateColumnName(editName);
-              }}
-            >
-              Confirm
-            </Button>
-          </div>
+            Confirm
+          </Button>
         </div>
       </div>
-    );
-  }
-);
+    </div>
+  );
+});
 
 //types for recursively creation accordions
 type ColumnAccordionProps = {
@@ -191,7 +190,7 @@ export const Column = observer(function Column() {
       return (
         <ColumnMenu
           name={state.settingsTabs.columnSelected.name}
-          parents={state.settingsTabs.columnSelected?.parents}
+          parents={state.settingsTabs.columnSelected.parents}
         />
       );
     }
