@@ -310,6 +310,7 @@ return (
 const FaciesControls = observer(() => {
   const { state, actions } = useContext(context)
   const ageRange = {min: 0, max: 2000}
+  const dotSizeRange = {min: 1, max: 20}
   const overallAgeMax = 9999999
   return (
   <ColoredDiv className="facies-buttons">
@@ -319,8 +320,8 @@ const FaciesControls = observer(() => {
           <TSCNumberInput 
           className="dot-input-form"
           placeholder="Dot Size"
-          max={20}
-          min={1}
+          max={dotSizeRange.max}
+          min={dotSizeRange.min}
           value={state.mapState.currentFaciesOptions.dotSize}
           onChange={(
             _event: React.FocusEvent<HTMLInputElement, Element> | React.PointerEvent<Element> | React.KeyboardEvent<Element>,
@@ -421,7 +422,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
   const color = isInfo ? `${theme.palette.disabled.main}` : `${clicked ? theme.palette.on.main : theme.palette.off.main}`
 
   // scale only if it isn't an info point and in facies mode
-  const iconSize = !isInfo && state.mapState.isFacies ? ICON_SIZE + state.mapState.currentFaciesOptions.dotSize * 2 : ICON_SIZE
+  const iconSize = !isInfo && state.mapState.isFacies ? ICON_SIZE + state.mapState.currentFaciesOptions.dotSize * 3 : ICON_SIZE
 
   /**
    * Depending on if the point was clicked, return a different icon
@@ -468,12 +469,12 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
           }
             x="-10"
             y="-10"
-            height="40px"
-            width="40px"
+            height="44px"
+            width="44px"
             clipPath="url(#clipCircle)"
           />
           <clipPath id="clipCircle">
-            <circle cx="12" cy="12" r="8" />
+            <circle cx="12" cy="12" r="10" />
           </clipPath>
         </svg>
       )
