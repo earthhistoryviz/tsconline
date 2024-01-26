@@ -11,7 +11,16 @@ export type ChartConfig = {
     datapacks: string[];
 };
 export type Facies = {
-    [name: string]: FaciesTimeBlock[];
+    events: FaciesEvents;
+    minAge: number;
+    maxAge: number;
+};
+export type FaciesEvents = {
+    [event: string]: {
+        faciesTimeBlockArray: FaciesTimeBlock[];
+        minAge: number;
+        maxAge: number;
+    };
 };
 export type FaciesTimeBlock = {
     rockType: string;
@@ -97,6 +106,7 @@ export type VertBounds = {
     scale: number;
 };
 export declare function assertFacies(o: any): asserts o is Facies;
+export declare function assertFaciesEvents(o: any): asserts o is FaciesTimeBlock;
 export declare function assertFaciesTimeBlock(o: any): asserts o is FaciesTimeBlock;
 export declare function assertDatapackResponse(o: any): asserts o is DatapackResponse;
 export declare function assertChartConfig(o: any): asserts o is ChartConfig;

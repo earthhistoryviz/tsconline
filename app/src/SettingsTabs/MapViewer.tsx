@@ -309,7 +309,6 @@ return (
 
 const FaciesControls = observer(() => {
   const { state, actions } = useContext(context)
-  const ageRange = {min: 0, max: 2000}
   const dotSizeRange = {min: 1, max: 20}
   const overallAgeMax = 9999999
   return (
@@ -352,8 +351,8 @@ const FaciesControls = observer(() => {
         endAdornment={<TSCInputAdornment>MA</TSCInputAdornment>} 
         className="age-input-form"
         placeholder="Age"
-        max={ageRange.max}
-        min={ageRange.min}
+        max={state.mapState.facies.maxAge}
+        min={state.mapState.facies.minAge}
         value={state.mapState.currentFaciesOptions.faciesAge}
         onChange={(
           _event: React.FocusEvent<HTMLInputElement, Element> | React.PointerEvent<Element> | React.KeyboardEvent<Element>,
@@ -368,8 +367,8 @@ const FaciesControls = observer(() => {
         id="number-input"
         className="slider" 
         name="Facies-Age-Slider"
-        max={ageRange.max}
-        min={ageRange.min}
+        max={state.mapState.facies.maxAge}
+        min={state.mapState.facies.minAge}
         value={state.mapState.currentFaciesOptions.faciesAge}
         onChange={(event: Event, val: number | number[]) => {
           actions.setFaciesAge(val as number)
@@ -437,17 +436,17 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
       />)
     }
     if (state.mapState.isFacies) {
-      const faciesTimeBlockArray = state.mapState.facies[name]
+      const event = state.mapState.facies.events[name]
       let timeBlock = null
-      if (faciesTimeBlockArray) {
+      if (event && event.faciesTimeBlockArray) {
         let i = 0
-        timeBlock = faciesTimeBlockArray[i]
+        timeBlock = event.faciesTimeBlockArray[i]
         let baseAge = timeBlock.age
         // find the icon relating to the age we're in
         while(baseAge <= state.mapState.currentFaciesOptions.faciesAge) {
           i += 1
-          if (i >= faciesTimeBlockArray.length) break
-          timeBlock = faciesTimeBlockArray[i]
+          if (i >= event.faciesTimeBlockArray.length) break
+          timeBlock = event.faciesTimeBlockArray[i]
           baseAge = timeBlock.age
         }
       }
@@ -488,6 +487,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
       component={OnIcon}
       />)
     }
+  // if none of the above, return an off icon
   return (
   <BorderedIcon
       className="icon"

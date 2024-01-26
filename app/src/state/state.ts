@@ -71,7 +71,11 @@ export const state = observable<State>({
     isLegendOpen: false,
     isMapViewerOpen: false,
     isFacies: false,
-    facies: {},
+    facies: {
+      events: {},
+      minAge: 0,
+      maxAge: 0
+    },
     mapHistory: []
   },
   chart: null,

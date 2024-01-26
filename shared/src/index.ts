@@ -17,7 +17,16 @@ export type ChartConfig = {
 };
 
 export type Facies = {
-  [name: string]: FaciesTimeBlock[]
+  events: FaciesEvents
+  minAge: number, // the aggregate min age in all facies events
+  maxAge: number // the aggregate max age in all facies events
+}
+export type FaciesEvents = {
+  [event: string]:  {
+    faciesTimeBlockArray: FaciesTimeBlock[],
+    minAge: number, // the min age of this specific event
+    maxAge: number // the max age of this specific event
+  }
 }
 export type FaciesTimeBlock = {
   rockType: string,
@@ -119,11 +128,29 @@ export type VertBounds = {
 export function assertFacies(o: any): asserts o is Facies {
   if (!o || typeof o !== "object")
     throw new Error("Facies must be a non-null object");
-  for (const key in o) {
-    if (typeof key !== 'string')
-      throw new Error("Facies 'key' must be of type 'string")
-    for (const timeBlock of o[key]) {
-      assertFaciesTimeBlock(timeBlock)
+  if (!o.events || typeof o.events !== 'object') 
+    throw new Error('Invalid events property in facies object');
+  assertFaciesEvents(o.events)
+  if (typeof o.minAge !== 'number' ) 
+    throw new Error('Facies must have a min age with type number');
+  if (typeof o.maxAge !== 'number' ) 
+    throw new Error('Facies must have a max age with type number');
+}
+export function assertFaciesEvents(o: any): asserts o is FaciesTimeBlock {
+  if (!o || typeof o !== "object")
+    throw new Error("FaciesEvents must be a non-null object");
+  for (const event in o) {
+    if (typeof event !== 'string')
+      throw new Error(`FaciesEvents 'key' ${event} must be of type 'string`)
+      const faciesEvent = o[event]
+    if (typeof faciesEvent.minAge !== 'number')
+      throw new Error(`FaciesEvents value for 'key' ${event} must have a minage be of type 'number'`)
+    if (typeof faciesEvent.maxAge !== 'number')
+      throw new Error(`FaciesEvents value for 'key' ${event} must have a maxage be of type 'number'`)
+    if (!Array.isArray(faciesEvent.faciesTimeBlockArray)) 
+      throw new Error(`FaciesEvents value for 'key' ${event} must have a faciesTimeBlock that is an array`)
+    for (const item of faciesEvent.faciesTimeBlockArray) {
+      assertFaciesTimeBlock(item)
     }
   }
 }
