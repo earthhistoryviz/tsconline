@@ -46,8 +46,8 @@ export async function parseDatapacks(
   });
   try {
     const isChild: Set<string> = new Set();
-    // For facies events that have multi layers, we only use the shallow for displaying
-    // the facies on the map front end
+    // For facies events that have multi layers, or for facies that are abbreviated or generalized,
+    // we change the facies name for the map front end
     let faciesAbbreviations: faciesAbbreviationType = {}
     let lines = decryptedfiles.split("\n");
     const allEntries: Map<string, string[]> = new Map();
@@ -78,7 +78,7 @@ export async function parseDatapacks(
       const newParents = [...parents, lastparent];
       children.forEach((child) => {
         if (!child) return
-        // if it has shallow at the end, this is the parent's map facies label.
+        // if it has a certain suffix at the end, this is the parent's map facies label.
         if (!allEntries.get(child) && ((new RegExp(/ - shallow| - general| - shallow"/)).test(child))) {
           faciesAbbreviations[child] = lastparent
         }
@@ -169,13 +169,15 @@ function processFacies(faciesAbbreviations: faciesAbbreviationType, lines: strin
   let line = lines[i]
   if (!line) return null
   let name = line.split('\t')[0]!
+  // if the facies is one of the select few that use shallow, general, or shallow"
+  // we replace it here
   if (faciesAbbreviations[name]) {
     name = faciesAbbreviations[name]!
   }
   i += 1
   line = lines[i]
   while (line && !line.startsWith('\n')) {
-    if (!line) break
+    // if primary, skip
     if (line.toLowerCase().includes('primary')) {
       i += 1
       line = lines[i]
@@ -183,6 +185,7 @@ function processFacies(faciesAbbreviations: faciesAbbreviationType, lines: strin
     }
     const tabSeperated = line.split('\t')
     if (tabSeperated.length < 4) break
+    // label doesn't exist for TOP or GAP
     if (!tabSeperated[2]) {
       timeBlock.push({rockType: tabSeperated[1]!, age: Number(tabSeperated[3]!)})
     } else {
