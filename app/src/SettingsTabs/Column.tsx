@@ -28,7 +28,8 @@ type ColumnMenuProps = {
 };
 
 const ColumnMenu: React.FC<ColumnMenuProps> = observer(({ name, parents }) => {
-  let temp = useRef("");
+  const { state, actions } = useContext(context);
+  let editName = useRef("");
   return (
     <div
       style={{
@@ -47,7 +48,7 @@ const ColumnMenu: React.FC<ColumnMenuProps> = observer(({ name, parents }) => {
           defaultValue={name}
           key={name}
           onChange={(event) => {
-            temp.current = event.target.value;
+            editName.current = event.target.value;
           }}
           variant="filled"
           size="small"
@@ -64,8 +65,7 @@ const ColumnMenu: React.FC<ColumnMenuProps> = observer(({ name, parents }) => {
             color="secondary"
             variant="contained"
             onClick={() => {
-              //console.log(editName);
-              //updateColumnName(editName);
+              actions.updateEditName(editName.current);
             }}
           >
             Confirm
@@ -104,7 +104,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
           sx={{ fontSize: "0.97rem" }}
           style={{ padding: "6px" }}
         >
-          {name}
+          {details.editName}
         </Typography>
       </div>
     );
@@ -131,7 +131,6 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
     if (!hasChildren) {
       return checkbox;
     }
-
     return (
       <Accordion expanded={open} onChange={() => toggleAccordion(open)}>
         <AccordionSummary aria-controls="panel-content" id="panel-header">
@@ -152,7 +151,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
                   <div key={childName}>
                     <ColumnAccordion
                       key={childName}
-                      name={childName}
+                      name={childDetails.editName}
                       details={childDetails}
                       onToggle={onToggle}
                     />
