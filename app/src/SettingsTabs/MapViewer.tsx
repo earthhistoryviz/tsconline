@@ -1,29 +1,46 @@
-import { FormHelperText, OutlinedInput, FormControl, Slider, TooltipProps, Tooltip, Drawer, Divider, Typography, IconButton, Dialog, Button, Box } from '@mui/material'
+import { SvgIconProps, Box, InputLabel, FormControl, Slider, TooltipProps, Tooltip, Drawer, Divider, Typography, IconButton, Dialog, Button, SvgIcon } from '@mui/material'
 import { styled, useTheme } from "@mui/material/styles"
 import type { InfoPoints, MapHierarchy, Bounds, MapPoints, MapInfo} from '@tsconline/shared'
 import { devSafeUrl } from '../util'
 import React, { useEffect, useState, useRef, useContext } from "react"
 import { context } from '../state';
 import { TransformWrapper, TransformComponent, useTransformEffect } from "react-zoom-pan-pinch"
-import { TSCTextField, TSCButton } from '../components'
+import { TSCInputAdornment, TSCNumberInput, TSCButton } from '../components'
 import { isRectBounds, isVertBounds } from '@tsconline/shared'
 import { calculateRectBoundsPosition, calculateVertBoundsPosition, calculateRectButton } from '../coordinates'
 import CloseIcon from '@mui/icons-material/Close';
 import NotListedLocationIcon from '@mui/icons-material/NotListedLocation';
-import LocationOnTwoToneIcon from '@mui/icons-material/LocationOnTwoTone';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import LocationOnSharpIcon from '@mui/icons-material/LocationOnSharp';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import YoutubeSearchedForIcon from '@mui/icons-material/YoutubeSearchedFor';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { observer } from 'mobx-react-lite'
 import './MapViewer.css'
+import { ZoomOut } from '@mui/icons-material'
 
-const ICON_SIZE = 30
+const ICON_SIZE = 40
 const InfoIcon = NotListedLocationIcon 
-const OnIcon = LocationOnTwoToneIcon 
 const OffIcon = LocationOffIcon 
+const OnIcon = LocationOnSharpIcon 
+
+const BorderedIcon = ({component, className} : {component: React.ElementType<any>, className: string}) => {
+  return (
+    <SvgIcon
+      className={className}
+      component={component}
+      style={{
+        fontSize: 40, 
+        fill: 'currentColor', 
+        stroke: 'black', 
+        strokeWidth: '0.5',
+      }}
+    />
+  );
+};
 
 const ChildMapIcon = () => {
   return (
@@ -45,15 +62,15 @@ const MapPointTooltip = styled(({className, ...props}: TooltipProps) => (
   }
 `
 
-const LegendTypography = styled(Typography)(({ theme }) => ({
+const TypographyText = styled(Typography)(({ theme }) => ({
   color: theme.palette.primary.main 
 }))
 
-const LegendArrowDropDown = styled(IconButton)(({ theme }) => ({
+const ColoredIconButton = styled(IconButton)(({ theme }) => ({
   color: theme.palette.primary.main 
 }))
 
-const DrawerContainer = styled('div')(( {theme} ) => ({
+const ColoredDiv = styled('div')(( {theme} ) => ({
   backgroundColor: theme.palette.navbar.dark,
 }))
 
@@ -80,10 +97,13 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
     const [imageLoaded, setImageLoaded] = useState(false)
     // this is needed to change image styles on fullscreen change
     const [isFullscreen, setIsFullscreen] = useState(false)
+    // this is used to toggle the facies options
+    const [faciesOptions, setFaciesOptions] = useState(true)
     // used to get the proper bounds of the element
     const imageRef = useRef<HTMLImageElement | null>(null)
     // used for attaching tooltip and fullscreening
     const mapViewerRef = useRef<HTMLDivElement | null>(null)
+
 
     // useEffect needed to know when fullscreen changes i.e escape, button, pressing child maps
     useEffect(() => {
@@ -107,12 +127,12 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
     const openChildMap = (childMap: string) => {
       // call the new child as a regular map, with no facies
       setImageLoaded(false)
-      actions.openNextMap(name, isFacies, childMap, false)
+      actions.openNextMap({name, isFacies, faciesOptions: state.mapState.currentFaciesOptions}, childMap, false)
     }
 
-    const mapInfo: MapInfo = state.settingsTabs.mapInfo
+    const mapInfo: MapInfo = state.mapState.mapInfo
     const mapData: MapInfo[string] = mapInfo[name]
-    const mapHierarchy: MapHierarchy = state.settingsTabs.mapHierarchy
+    const mapHierarchy: MapHierarchy = state.mapState.mapHierarchy
 
     const Controls = (
         { 
@@ -130,16 +150,17 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
         <>
         <div className="exit-buttons">
           <IconButton className="icon-view-button" onClick={actions.goBackInMapHistory}>
-            <ArrowBackIcon className="icon-button"/>
+            <BorderedIcon component={ArrowBackIcon} className="icon-button"/>
           </IconButton>
         </div>
         <div className="controls">
-            {!isFacies && <TSCButton className="bottom-button" onClick={() => { actions.openNextMap(name, false, name, true)}}>Facies</TSCButton>}
-            <TSCButton className="bottom-button" onClick={() => actions.setIsLegendOpen(!state.settingsTabs.isLegendOpen)}>legend</TSCButton>
+            {!isFacies && <TSCButton className="bottom-button" onClick={() => { actions.openNextMap({name, isFacies: false, faciesOptions: state.mapState.currentFaciesOptions}, name, true )}}>Facies</TSCButton>}
+            {isFacies && <TSCButton className="bottom-button" onClick={() => { setFaciesOptions(!faciesOptions) }}>Options</TSCButton>}
+            <TSCButton className="bottom-button" onClick={() => actions.setIsLegendOpen(!state.mapState.isLegendOpen)}>legend</TSCButton>
         </div>
         <div className="view-buttons">
           <IconButton className="close-icon-view-button" onClick={() => actions.exitMapViewer()}>
-            <CloseIcon className="icon-button"/>
+            <BorderedIcon component={CloseIcon} className="icon-button"/>
           </IconButton>
           <IconButton className="icon-view-button" onClick={() => {
           if (document.fullscreenElement) {
@@ -148,16 +169,16 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
               mapViewer.requestFullscreen()
           }
           }}>
-          <FullscreenIcon className="icon-button"/>
+            <BorderedIcon component={FullscreenIcon} className="icon-button"/>
           </IconButton>
           <IconButton className="icon-view-button" onClick={() => zoomIn()}>
-              <ZoomInIcon className="icon-button"/>
+            <BorderedIcon component={ZoomInIcon} className="icon-button"/>
           </IconButton>
           <IconButton className="icon-view-button" onClick={() => zoomOut()}>
-              <ZoomOutIcon className="icon-button"/>
+            <BorderedIcon component={ZoomOutIcon} className="icon-button"/>
           </IconButton>
           <IconButton className="icon-view-button" onClick={() => resetTransform()}>
-              <YoutubeSearchedForIcon className="icon-button"/>
+            <BorderedIcon component={YoutubeSearchedForIcon} className="icon-button"/>
           </IconButton>
         </div>
         </>
@@ -208,11 +229,25 @@ return (
 
           {/* Load all the map points */}
           {imageLoaded && imageRef && imageRef.current && mapData.mapPoints &&
-          loadMapPoints(mapData.mapPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, false, mapViewerRef.current)}
+          loadMapPoints(
+            mapData.mapPoints,
+            mapData.bounds, 
+            imageRef.current.width, 
+            imageRef.current.height, 
+            false, 
+            mapViewerRef.current, 
+            )}
 
           {/* Load all the info points */}
           {imageLoaded && imageRef && imageRef.current && mapData.infoPoints && 
-          loadMapPoints(mapData.infoPoints, mapData.bounds, imageRef.current.width, imageRef.current.height, true, mapViewerRef.current)}
+          loadMapPoints(
+            mapData.infoPoints, 
+            mapData.bounds, 
+            imageRef.current.width, 
+            imageRef.current.height, 
+            true, 
+            mapViewerRef.current, 
+            )}
 
           {/* Load all the child maps*/}
           {Object.keys(mapHierarchy).includes(name) && mapHierarchy[name].map(child => {
@@ -238,43 +273,113 @@ return (
     )}
     </TransformWrapper>
     <Drawer
-        className="legend-drawer"
+        className="drawer"
         variant="persistent"
         anchor="left"
-        open={state.settingsTabs.isLegendOpen}
+        open={state.mapState.isLegendOpen}
     >
         <DrawerHeader> 
-        <LegendArrowDropDown onClick={() => {actions.setIsLegendOpen(false)}}>
+        <ColoredIconButton onClick={() => {actions.setIsLegendOpen(false)}}>
             <CloseIcon fontSize="small"/>
-        </LegendArrowDropDown>
-        <LegendTypography className="legend-title" variant="h6" gutterBottom>
+        </ColoredIconButton>
+        <TypographyText className="legend-title" variant="h6" gutterBottom>
             Color Legend
-        </LegendTypography>
+        </TypographyText>
         </DrawerHeader>
         <Divider />
         <Legend items={legendItems}/>
     </Drawer>
     <Drawer 
-    className="facies-button-container"
+    className="facies-button-container drawer"
     variant="persistent"
     anchor="bottom"
-    open={state.settingsTabs.isFacies}>
+    open={state.mapState.isFacies && faciesOptions}>
+      <DrawerHeader>
+       <TypographyText className="facies-options-title" variant="h6" gutterBottom>
+         Facies Options
+      </TypographyText> 
+        <ColoredIconButton onClick={() => {setFaciesOptions(false)}}>
+            <ArrowDropDownIcon fontSize="large"/>
+        </ColoredIconButton>
+      </DrawerHeader>
       <FaciesControls/>
     </Drawer>
   </div>
 )})
 
-const AgeSlider = () => (
-  <div className="age-slider-container">
-    <TSCTextField className="age-input-form" helperText="Enter Age"/>
-    <Slider className="age-slider" defaultValue={50} aria-label="Default" valueLabelDisplay="auto" />
-  </div>
-)
-const FaciesControls = () => (
-  <DrawerContainer className="facies-buttons">
-    <AgeSlider/>
-  </DrawerContainer>
-)
+const FaciesControls = observer(() => {
+  const { state, actions } = useContext(context)
+  const dotSizeRange = {min: 1, max: 20}
+  const overallAgeMax = 9999999
+  return (
+  <ColoredDiv className="facies-buttons">
+    <div className="dot-controls">
+      <TypographyText className="dot-controls-title"> Dot Size </TypographyText>
+      <div className="slider-container">
+          <TSCNumberInput 
+          className="dot-input-form"
+          placeholder="Dot Size"
+          max={dotSizeRange.max}
+          min={dotSizeRange.min}
+          value={state.mapState.currentFaciesOptions.dotSize}
+          onChange={(
+            _event: React.FocusEvent<HTMLInputElement, Element> | React.PointerEvent<Element> | React.KeyboardEvent<Element>,
+            val: number | undefined) => {
+            if (!val || val < 1 || val > 20) {
+              return
+            }
+            actions.setDotSize(val as number)
+          }}
+          />
+        <Slider 
+        id="dot-size-slider"
+        className="slider" 
+        value={state.mapState.currentFaciesOptions.dotSize}
+        max={20}
+        min={1}
+        onChange={(event: Event, val: number | number[]) => {
+          actions.setDotSize(val as number)
+        }}
+        aria-label="Default"
+        valueLabelDisplay="auto" />
+      </div>
+    </div>
+    <div className="age-controls">
+      <TypographyText> Age </TypographyText>
+      <div className="slider-container">
+        <TSCNumberInput 
+        endAdornment={<TSCInputAdornment>MA</TSCInputAdornment>} 
+        className="age-input-form"
+        placeholder="Age"
+        max={state.mapState.facies.maxAge}
+        min={state.mapState.facies.minAge}
+        value={state.mapState.currentFaciesOptions.faciesAge}
+        onChange={(
+          _event: React.FocusEvent<HTMLInputElement, Element> | React.PointerEvent<Element> | React.KeyboardEvent<Element>,
+          val: number | undefined) => {
+          if (!val || val < 0 || val > 9999999) {
+            return
+          }
+          actions.setFaciesAge(val as number)
+        }}
+        />
+        <Slider 
+        id="number-input"
+        className="slider" 
+        name="Facies-Age-Slider"
+        max={state.mapState.facies.maxAge}
+        min={state.mapState.facies.minAge}
+        value={state.mapState.currentFaciesOptions.faciesAge}
+        onChange={(event: Event, val: number | number[]) => {
+          actions.setFaciesAge(val as number)
+        }}
+        aria-label="Default"
+        valueLabelDisplay="auto" />
+      </div>
+    </div>
+  </ColoredDiv>
+  )
+})
 
 
 
@@ -284,7 +389,7 @@ type MapPointButtonProps = {
   y: number,
   name: string,
   isInfo?: boolean,
-  container: HTMLDivElement | null
+  container: HTMLDivElement | null,
 }
 
 // mapPointButton that pulls up the map points on the image
@@ -293,9 +398,10 @@ type MapPointButtonProps = {
 // y: % from the top
 // name: name of the map point
 // isInfo: will default to false. is this point an info button?
-const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, isInfo = false, container}) => {
-  const [clicked, setClicked] = useState(false)
+const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y, name, isInfo = false, container}) => {
+  const [clicked, setClicked] = useState((mapPoint as MapPoints[string]).default || false)
   const theme = useTheme()
+  const { state } = useContext(context)
 
   // below is the hook for grabbing the scale from map image scaling
   const [scale, setScale] = useState(1)
@@ -314,6 +420,80 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
   }
   const color = isInfo ? `${theme.palette.disabled.main}` : `${clicked ? theme.palette.on.main : theme.palette.off.main}`
 
+  // scale only if it isn't an info point and in facies mode
+  const iconSize = !isInfo && state.mapState.isFacies ? ICON_SIZE + state.mapState.currentFaciesOptions.dotSize * 3 : ICON_SIZE
+
+  /**
+   * Depending on if the point was clicked, return a different icon
+   * @param clicked 
+   * @returns 
+   */
+  function getIcon(){
+    if (isInfo) {
+      return (
+      <InfoIcon
+      className="icon"
+      />)
+    }
+    if (state.mapState.isFacies) {
+      const event = state.mapState.facies.locations[name]
+      let timeBlock = null
+      if (event && event.faciesTimeBlockArray) {
+        let i = 0
+        timeBlock = event.faciesTimeBlockArray[i]
+        let baseAge = timeBlock.age
+        // find the icon relating to the age we're in
+        while(baseAge <= state.mapState.currentFaciesOptions.faciesAge) {
+          i += 1
+          if (i >= event.faciesTimeBlockArray.length) break
+          timeBlock = event.faciesTimeBlockArray[i]
+          baseAge = timeBlock.age
+        }
+      }
+      return (
+        <svg
+          width={`${iconSize / scale}px`}
+          height={`${iconSize / scale}px`}
+          viewBox="0 0 24 24"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10" 
+            stroke="black"
+            strokeWidth="1"
+            fill="transparent"
+          />
+          <image
+            href={!timeBlock || !timeBlock.rockType || timeBlock.rockType.toLowerCase().trim() === "top" ? 
+            "" : devSafeUrl(`/public/patterns/${timeBlock.rockType.trim()}.PNG`)
+          }
+            x="-10"
+            y="-10"
+            height="44px"
+            width="44px"
+            clipPath="url(#clipCircle)"
+          />
+          <clipPath id="clipCircle">
+            <circle cx="12" cy="12" r="10" />
+          </clipPath>
+        </svg>
+      )
+    }
+    if (clicked) {
+      return (
+      <BorderedIcon 
+      className="icon"
+      component={OnIcon}
+      />)
+    }
+  // if none of the above, return an off icon
+  return (
+  <BorderedIcon
+      className="icon"
+  component={OffIcon}
+  />)
+}
   return (
     <>
       <MapPointTooltip 
@@ -335,26 +515,27 @@ const MapPointButton: React.FC<MapPointButtonProps> = ({mapPoint, x, y, name, is
       }>
       <IconButton
         className="map-point"
-        disableRipple={isInfo}
+        disableRipple={isInfo || state.mapState.isFacies}
         style={{
-          left: `calc(${x}% - ${ICON_SIZE / 2 / scale}px)`,
+          left: `calc(${x}% - ${iconSize / 2 / scale}px)`,
           // we take a the full icon_size here to anchor to the
           // bottom of the icon
           color: color,
-          top: `calc(${y}% - ${ICON_SIZE / scale}px)`,
-          width: `${ICON_SIZE / scale}px`,
-          height: `${ICON_SIZE / scale}px`,
+          top: `calc(${y}% - ${!isInfo && state.mapState.isFacies ? iconSize / 2 / scale : iconSize / scale}px)`,
+          width: `${iconSize / scale}px`,
+          height: `${iconSize / scale}px`,
         }}
         onClick={() => {
+          if (state.mapState.isFacies) return
           setClicked(!clicked)
         }}
       >
-        {getIcon(isInfo, clicked)}
+        {getIcon()}
       </IconButton>
       </MapPointTooltip>
     </>
   )
-}
+})
 
 type LegendItem = {
   color: string;
@@ -362,7 +543,6 @@ type LegendItem = {
   icon: React.ElementType<any>;
 }
 const DisplayLegendItem = ({ legendItem } : {legendItem: LegendItem}) => {
-  const theme = useTheme()
   const { color, label, icon: Icon} = legendItem
   return (<Box className="legend-item-container">
     <Icon
@@ -370,7 +550,7 @@ const DisplayLegendItem = ({ legendItem } : {legendItem: LegendItem}) => {
     height={20}
     style ={{color: color}}
     mr={1}/>
-    <LegendTypography className="legend-label">{label}</LegendTypography>
+    <TypographyText className="legend-label">{label}</TypographyText>
   </Box>)
 }
 
@@ -483,7 +663,14 @@ function getPositionOfPointBasedOnBounds(bounds: Bounds, point: MapPoints[string
  * @param container this is the container that the fullscreen tooltip will attach to
  * @returns all MapPointButton Components
  */
-function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidth: number, frameHeight: number, isInfo: boolean, container: HTMLDivElement | null) {
+function loadMapPoints(
+  points: MapPoints | InfoPoints,
+  bounds: Bounds, 
+  frameWidth: number, 
+  frameHeight: number, 
+  isInfo: boolean, 
+  container: HTMLDivElement | null
+  ) {
   if (!points) return
   return (Object.entries(points).map(([name, point]) => {
     if (!point) return
@@ -497,28 +684,8 @@ function loadMapPoints(points: MapPoints | InfoPoints, bounds: Bounds, frameWidt
       y={position.y} 
       name={name}
       isInfo={isInfo}
-      container={container}/>
+      container={container}
+      />
     );
   }))
-}
-
-/**
- * Depending on if the point was clicked, return a different icon
- * @param clicked 
- * @returns 
- */
-function getIcon(isInfo: boolean, clicked: boolean){
-  if (isInfo) {
-    return (<InfoIcon
-      className='icon'
-      />)
-  }
-  if (clicked) {
-    return (<OnIcon 
-      className="icon"
-      />)
-  }
-  return (<OffIcon
-    className="icon"
-    />)
 }

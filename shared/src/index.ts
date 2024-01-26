@@ -16,6 +16,24 @@ export type ChartConfig = {
   datapacks: string[]; // active datapack names
 };
 
+export type Facies = {
+  locations: FaciesLocations
+  minAge: number, // the aggregate min age in all facies locations
+  maxAge: number // the aggregate max age in all facies locations
+}
+export type FaciesLocations = {
+  [location: string]:  {
+    faciesTimeBlockArray: FaciesTimeBlock[],
+    minAge: number, // the min age of this specific location
+    maxAge: number // the max age of this specific location
+  }
+}
+export type FaciesTimeBlock = {
+  rockType: string, // rock type that is the name of the png in /public/patterns/
+  label?: string, // the label
+  age: number // the base gge of the facies time block
+}
+
 export type ChartRequest = {
   settings: string; // JSON string representing the settings file you want to use to make a chart
   columnSettings: string; //Json string representing the state of the application when generating, contains the user's changes
@@ -86,6 +104,7 @@ export type MapHierarchy = {
 
 export type DatapackResponse = {
   columnInfo: ColumnInfo;
+  facies: Facies,
   mapInfo: MapInfo;
   mapHierarchy: MapHierarchy;
 };
@@ -106,10 +125,52 @@ export type VertBounds = {
   scale: number;
 };
 
+export function assertFacies(o: any): asserts o is Facies {
+  if (!o || typeof o !== "object")
+    throw new Error("Facies must be a non-null object");
+  if (!o.locations || typeof o.locations !== 'object') 
+    throw new Error('Facies must have a locations property with type object');
+  assertFaciesLocations(o.locations)
+  if (typeof o.minAge !== 'number' ) 
+    throw new Error('Facies must have a min age with type number');
+  if (typeof o.maxAge !== 'number' ) 
+    throw new Error('Facies must have a max age with type number');
+}
+export function assertFaciesLocations(o: any): asserts o is FaciesLocations {
+  if (!o || typeof o !== "object")
+    throw new Error("FaciesLocations must be a non-null object");
+  for (const location in o) {
+    if (typeof location !== 'string')
+      throw new Error(`FaciesLocations 'key' ${location} must be of type 'string`)
+      const faciesLocation = o[location]
+    if (typeof faciesLocation.minAge !== 'number')
+      throw new Error(`FaciesLocation value for 'key' ${location} must have a minage be of type 'number'`)
+    if (typeof faciesLocation.maxAge !== 'number')
+      throw new Error(`FaciesLocation value for 'key' ${location} must have a maxage be of type 'number'`)
+    if (!Array.isArray(faciesLocation.faciesTimeBlockArray)) 
+      throw new Error(`FaciesLocation value for 'key' ${location} must have a faciesTimeBlock that is an array`)
+    for (const item of faciesLocation.faciesTimeBlockArray) {
+      assertFaciesTimeBlock(item)
+    }
+  }
+}
+
+export function assertFaciesTimeBlock(o: any): asserts o is FaciesTimeBlock {
+  if (!o || typeof o !== "object")
+    throw new Error("FaciesTimeBlock must be a non-null object");
+  if (typeof o.rockType !== "string") {
+    throw new Error("FaciesTimeBlock must have a rockType variable of type 'string'")
+  }
+  if ('label' in o && typeof o.label !== "string") 
+    throw new Error("FaciesTimeBlock must have a label variable of type 'string'")
+  if (typeof o.age !== "number") 
+    throw new Error("FaciesTimeBlock must have a time variable of type 'number'")
+}
 export function assertDatapackResponse(o: any): asserts o is DatapackResponse {
-  if (typeof o !== "object")
+  if (!o || typeof o !== "object")
     throw new Error("DatapackResponse must be a non-null object");
   assertColumnInfo(o.columnInfo);
+  assertFacies(o.facies);
   assertMapInfo(o.mapInfo);
   assertMapHierarchy(o.mapHierarchy);
 }
