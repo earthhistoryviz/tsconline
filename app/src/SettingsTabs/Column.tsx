@@ -150,7 +150,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
             {details.children &&
               Object.entries(details.children).map(
                 ([childName, childDetails]) => (
-                  <div>
+                  <div key={childName}>
                     <ColumnAccordion
                       key={childName}
                       name={childName}

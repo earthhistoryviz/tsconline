@@ -465,7 +465,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
           />
           <image
             href={!timeBlock || !timeBlock.rockType || timeBlock.rockType.toLowerCase().trim() === "top" ? 
-            "" : devSafeUrl(`/public/patterns/${timeBlock.rockType.trim()}.png`)
+            "" : devSafeUrl(`/public/patterns/${timeBlock.rockType.trim()}.PNG`)
           }
             x="-10"
             y="-10"
