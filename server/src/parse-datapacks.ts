@@ -14,7 +14,7 @@ function spliceArrayAtFirstSpecialMatch(array: string[]): string[] {
   return array;
 }
 
-type ShallowFaciesType = {
+type faciesAbbreviationType = {
   [child: string]: string
 }
 
@@ -48,7 +48,7 @@ export async function parseDatapacks(
     const isChild: Set<string> = new Set();
     // For facies events that have multi layers, we only use the shallow for displaying
     // the facies on the map front end
-    let shallowFacies: ShallowFaciesType = {}
+    let faciesAbbreviations: faciesAbbreviationType = {}
     let lines = decryptedfiles.split("\n");
     const allEntries: Map<string, string[]> = new Map();
     /**
@@ -79,8 +79,8 @@ export async function parseDatapacks(
       children.forEach((child) => {
         if (!child) return
         // if it has shallow at the end, this is the parent's map facies label.
-        if (!allEntries.get(child) && child.endsWith(" - shallow")) {
-          shallowFacies[child] = lastparent
+        if (!allEntries.get(child) && ((new RegExp(/ - shallow| - general| - shallow"/)).test(child))) {
+          faciesAbbreviations[child] = lastparent
         }
         const children = allEntries.get(child) || []
         recursive(
@@ -145,7 +145,7 @@ export async function parseDatapacks(
     for (let i = 0; i < lines.length; i++) {
       let line = lines[i]
       if (line && line.split('\t')[1] === "facies") {
-        const faciesBlock = processFacies(shallowFacies, lines, i)
+        const faciesBlock = processFacies(faciesAbbreviations, lines, i)
         if (faciesBlock) {
           facies[faciesBlock.name] = faciesBlock.timeBlock
           i = faciesBlock.nextIndex
@@ -164,13 +164,13 @@ export async function parseDatapacks(
   }
   return { columns: columnInfo, facies};
 }
-function processFacies(shallowFacies: ShallowFaciesType, lines: string[], i: number): {name: string, timeBlock: FaciesTimeBlock[], nextIndex: number} | null {
+function processFacies(faciesAbbreviations: faciesAbbreviationType, lines: string[], i: number): {name: string, timeBlock: FaciesTimeBlock[], nextIndex: number} | null {
   let timeBlock: FaciesTimeBlock[] = []
   let line = lines[i]
   if (!line) return null
   let name = line.split('\t')[0]!
-  if (shallowFacies[name]) {
-    name = shallowFacies[name]!
+  if (faciesAbbreviations[name]) {
+    name = faciesAbbreviations[name]!
   }
   i += 1
   line = lines[i]
