@@ -1,6 +1,6 @@
 import { readFile } from "fs/promises";
 import pmap from "p-map";
-import type { ColumnInfo, Facies, FaciesEvents, FaciesTimeBlock } from "@tsconline/shared";
+import type { ColumnInfo, Facies, FaciesLocations } from "@tsconline/shared";
 import { grabFilepaths } from "./util.js";
 
 /**
@@ -38,7 +38,7 @@ export async function parseDatapacks(
   let decryptedfiles: String = "";
   let columnInfo: ColumnInfo = {};
   let facies: Facies = {
-    events: {},
+    locations: {},
     minAge: 999999,
     maxAge: -99999
   }
@@ -58,6 +58,7 @@ export async function parseDatapacks(
      * This is a recursive function meant to instantiate all columns.
      * Datapack is encrypted as <parent>\t:\t<child>\t<child>\t<child>
      * Where children could be parents later on
+     * This is an inline-function because we must update faciesAbbreviations above, to be used later
      */
     function recursive(
       parents: string[],
@@ -146,7 +147,7 @@ export async function parseDatapacks(
       if (line && line.split('\t')[1] === "facies") {
         const processedEvent = processFacies(faciesAbbreviations, lines, i)
         if (processedEvent) {
-          facies.events[processedEvent.name] = processedEvent.faciesEvent
+          facies.locations[processedEvent.name] = processedEvent.faciesEvent
           facies.minAge = Math.min(facies.minAge, processedEvent.faciesEvent.minAge)
           facies.maxAge = Math.max(facies.maxAge, processedEvent.faciesEvent.maxAge)
           i = processedEvent.nextIndex
@@ -163,8 +164,8 @@ export async function parseDatapacks(
   }
   return { columns: columnInfo, facies};
 }
-function processFacies(faciesAbbreviations: faciesAbbreviationType, lines: string[], i: number): {name: string, faciesEvent: FaciesEvents[string], nextIndex: number} | null {
-  let faciesEvent: FaciesEvents[string] = {
+function processFacies(faciesAbbreviations: faciesAbbreviationType, lines: string[], i: number): {name: string, faciesEvent: FaciesLocations[string], nextIndex: number} | null {
+  let faciesEvent: FaciesLocations[string] = {
     faciesTimeBlockArray: [],
     minAge: 999999,
     maxAge: -99999
