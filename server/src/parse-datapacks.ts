@@ -8,11 +8,15 @@ import { grabFilepaths } from "./util.js";
  * This function is meant to catch all strange occurences at the end
  * of the tab seperated decrypted file. Should get rid of METACOLUMN_OFF
  * and any extraneuous info bits that shouldn't be a togglable column.
- * At the moment, is not currently working
+ * At the moment, All strange occurences are removed excepted for those 
+ * 'information and references' which is short and doesn't contains any link. 
+ * should get rid of them too but maybe not by this function.
  */
-function spliceArrayAtFirstSpecialMatch(array: string[]): string[] {
+function spliceArrayAtFirstSpecialMatch(array: string[]) {
   for (var i = 0; i < array.length; i++) {
-    if (array[i]?.includes("METACOLUMN") || ((array[i]?.includes("[For details click")) && (i == array.length - 1)) || array[i]?.includes("TITLE") || (!array[i])) {
+    if (array[i]?.includes("METACOLUMN") || ((array[i]?.includes("<a")) && (i == array.length - 1)) ||
+      ((array[i]?.includes("href")) && (i == array.length - 1)) || ((array[i]?.includes("http")) && (i == array.length - 1))
+      || ((array[i]!.length > 200)) || array[i]?.includes("TITLE") || (!array[i])) {
       array.splice(i, 1);
       i = i - 1;
     }
@@ -71,7 +75,7 @@ export async function parseDatapacks(
       lastparent: string,
       children: string[],
       columnInfo: ColumnInfo,
-      allEntries: Map<string, string[]> 
+      allEntries: Map<string, string[]>
     ) {
       columnInfo[lastparent] = {
         editName: lastparent,
@@ -94,8 +98,8 @@ export async function parseDatapacks(
           columnInfo[lastparent]!.children,
           allEntries
         );
-    });
-  }
+      });
+    }
 
     // First, gather all parents and their direct children
     for (let i = 0; i < lines.length; i++) {
@@ -170,9 +174,9 @@ export async function parseDatapacks(
       e
     );
   }
-  return { columns: columnInfo, facies};
+  return { columns: columnInfo, facies };
 }
-function processFacies(faciesAbbreviations: faciesAbbreviationType, lines: string[], i: number): {name: string, faciesEvent: FaciesLocations[string], nextIndex: number} | null {
+function processFacies(faciesAbbreviations: faciesAbbreviationType, lines: string[], i: number): { name: string, faciesEvent: FaciesLocations[string], nextIndex: number } | null {
   let faciesEvent: FaciesLocations[string] = {
     faciesTimeBlockArray: [],
     minAge: 999999,
@@ -200,14 +204,14 @@ function processFacies(faciesAbbreviations: faciesAbbreviationType, lines: strin
     const age = Number(tabSeperated[3]!)
     // label doesn't exist for TOP or GAP
     if (!tabSeperated[2]) {
-      faciesEvent.faciesTimeBlockArray.push({rockType: tabSeperated[1]!, age})
+      faciesEvent.faciesTimeBlockArray.push({ rockType: tabSeperated[1]!, age })
     } else {
-      faciesEvent.faciesTimeBlockArray.push({rockType: tabSeperated[1]!, label: tabSeperated[2]!, age})
+      faciesEvent.faciesTimeBlockArray.push({ rockType: tabSeperated[1]!, label: tabSeperated[2]!, age })
     }
     faciesEvent.minAge = Math.min(faciesEvent.minAge, age)
     faciesEvent.maxAge = Math.max(faciesEvent.maxAge, age)
     i += 1
     line = lines[i]
   }
-  return {name, faciesEvent, nextIndex: i}
+  return { name, faciesEvent, nextIndex: i }
 }
