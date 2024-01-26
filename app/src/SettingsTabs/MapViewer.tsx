@@ -309,6 +309,8 @@ return (
 
 const FaciesControls = observer(() => {
   const { state, actions } = useContext(context)
+  const ageRange = {min: 0, max: 2000}
+  const overallAgeMax = 9999999
   return (
   <ColoredDiv className="facies-buttons">
     <div className="dot-controls">
@@ -349,8 +351,8 @@ const FaciesControls = observer(() => {
         endAdornment={<TSCInputAdornment>MA</TSCInputAdornment>} 
         className="age-input-form"
         placeholder="Age"
-        max={9999999}
-        min={0}
+        max={ageRange.max}
+        min={ageRange.min}
         value={state.mapState.currentFaciesOptions.faciesAge}
         onChange={(
           _event: React.FocusEvent<HTMLInputElement, Element> | React.PointerEvent<Element> | React.KeyboardEvent<Element>,
@@ -365,8 +367,8 @@ const FaciesControls = observer(() => {
         id="number-input"
         className="slider" 
         name="Facies-Age-Slider"
-        max={9999999}
-        min={0}
+        max={ageRange.max}
+        min={ageRange.min}
         value={state.mapState.currentFaciesOptions.faciesAge}
         onChange={(event: Event, val: number | number[]) => {
           actions.setFaciesAge(val as number)
@@ -434,6 +436,18 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
       />)
     }
     if (state.mapState.isFacies) {
+      const faciesTimeBlockArray = state.mapState.facies[name]
+      let timeBlock = null
+      if (faciesTimeBlockArray) {
+        let i = 0
+        timeBlock = faciesTimeBlockArray[i]
+        let nextTimeBlock = faciesTimeBlockArray[i+1]
+        while(i + 1 < faciesTimeBlockArray.length && nextTimeBlock.age < state.mapState.currentFaciesOptions.faciesAge) {
+          i += 1
+          timeBlock = faciesTimeBlockArray[i]
+          nextTimeBlock = faciesTimeBlockArray[i+1]
+        }
+      }
       return (
         <svg
           width={`${iconSize / scale}px`}
@@ -450,7 +464,9 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
             fill="transparent"
           />
           <image
-            href={""}
+            href={!timeBlock || !timeBlock.rockType || timeBlock.rockType.toLowerCase().trim() === "top" ? 
+            "" : devSafeUrl(`/public/patterns/${timeBlock.rockType}.png`)
+          }
             x="4"
             y="4"
             height="16px"
