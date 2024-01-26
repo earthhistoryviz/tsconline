@@ -72,7 +72,7 @@ export const state = observable<State>({
     isMapViewerOpen: false,
     isFacies: false,
     facies: {
-      events: {},
+      locations: {},
       minAge: 0,
       maxAge: 0
     },

@@ -2,28 +2,28 @@
 export function assertFacies(o) {
     if (!o || typeof o !== "object")
         throw new Error("Facies must be a non-null object");
-    if (!o.events || typeof o.events !== 'object')
-        throw new Error('Invalid events property in facies object');
-    assertFaciesEvents(o.events);
+    if (!o.locations || typeof o.locations !== 'object')
+        throw new Error('Facies must have a locations property with type object');
+    assertFaciesLocations(o.locations);
     if (typeof o.minAge !== 'number')
         throw new Error('Facies must have a min age with type number');
     if (typeof o.maxAge !== 'number')
         throw new Error('Facies must have a max age with type number');
 }
-export function assertFaciesEvents(o) {
+export function assertFaciesLocations(o) {
     if (!o || typeof o !== "object")
-        throw new Error("FaciesEvents must be a non-null object");
-    for (const event in o) {
-        if (typeof event !== 'string')
-            throw new Error(`FaciesEvents 'key' ${event} must be of type 'string`);
-        const faciesEvent = o[event];
-        if (typeof faciesEvent.minAge !== 'number')
-            throw new Error(`FaciesEvents value for 'key' ${event} must have a minage be of type 'number'`);
-        if (typeof faciesEvent.maxAge !== 'number')
-            throw new Error(`FaciesEvents value for 'key' ${event} must have a maxage be of type 'number'`);
-        if (!Array.isArray(faciesEvent.faciesTimeBlockArray))
-            throw new Error(`FaciesEvents value for 'key' ${event} must have a faciesTimeBlock that is an array`);
-        for (const item of faciesEvent.faciesTimeBlockArray) {
+        throw new Error("FaciesLocations must be a non-null object");
+    for (const location in o) {
+        if (typeof location !== 'string')
+            throw new Error(`FaciesLocations 'key' ${location} must be of type 'string`);
+        const faciesLocation = o[location];
+        if (typeof faciesLocation.minAge !== 'number')
+            throw new Error(`FaciesLocation value for 'key' ${location} must have a minage be of type 'number'`);
+        if (typeof faciesLocation.maxAge !== 'number')
+            throw new Error(`FaciesLocation value for 'key' ${location} must have a maxage be of type 'number'`);
+        if (!Array.isArray(faciesLocation.faciesTimeBlockArray))
+            throw new Error(`FaciesLocation value for 'key' ${location} must have a faciesTimeBlock that is an array`);
+        for (const item of faciesLocation.faciesTimeBlockArray) {
             assertFaciesTimeBlock(item);
         }
     }

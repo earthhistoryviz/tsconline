@@ -436,7 +436,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
       />)
     }
     if (state.mapState.isFacies) {
-      const event = state.mapState.facies.events[name]
+      const event = state.mapState.facies.locations[name]
       let timeBlock = null
       if (event && event.faciesTimeBlockArray) {
         let i = 0
