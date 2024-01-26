@@ -453,24 +453,23 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
           width={`${iconSize / scale}px`}
           height={`${iconSize / scale}px`}
           viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
         >
           <circle
             cx="12"
             cy="12"
             r="10" 
             stroke="black"
-            strokeWidth="2"
+            strokeWidth="1"
             fill="transparent"
           />
           <image
             href={!timeBlock || !timeBlock.rockType || timeBlock.rockType.toLowerCase().trim() === "top" ? 
-            "" : devSafeUrl(`/public/patterns/${timeBlock.rockType}.png`)
+            "" : devSafeUrl(`/public/patterns/${timeBlock.rockType.trim()}.png`)
           }
-            x="4"
-            y="4"
-            height="16px"
-            width="16px"
+            x="-10"
+            y="-10"
+            height="40px"
+            width="40px"
             clipPath="url(#clipCircle)"
           />
           <clipPath id="clipCircle">
