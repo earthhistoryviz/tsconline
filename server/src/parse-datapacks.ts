@@ -35,7 +35,6 @@ export async function parseDatapacks(
     "datapacks"
   );
   if (decrypt_paths.length == 0) return { columns: {}, facies: {}};
-  // let fileSettingsMap: { [filePath: string]: ColumnInfo } = {};
   let decryptedfiles: String = "";
   let columnInfo: ColumnInfo = {};
   let facies: Facies = {}
@@ -63,12 +62,6 @@ export async function parseDatapacks(
       columnInfo: ColumnInfo,
       allEntries: Map<string, string[]> 
     ) {
-      // taking this out for now for @Jaqui's task
-      // //if somehow the data at this point is _METACOLUMN_OFF, remove it
-      // const index = lastparent.indexOf("_METACOLUMN_OFF");
-      // if (index != -1) {
-      //   lastparent = lastparent.slice(0, index);
-      // }
       columnInfo[lastparent] = {
         editName: lastparent,
         on: true,
@@ -110,6 +103,7 @@ export async function parseDatapacks(
         continue;
       }
       let parent = line.split("\t:\t")[0];
+
       //THIS ACTUALLY DOESN'T MATTER ANYMORE BUT I WILL LEAVE IT HERE JUST IN CASE
       //TODO
       //to replace quotations surrounding the column name for future parsing access in state.
@@ -117,6 +111,7 @@ export async function parseDatapacks(
       //which is not consistent with the equivalent keys found in the parsed settings json object.
       //ex "North Belgium -- Oostende, Brussels, Antwerp, Campine, Maastrichen" vs
       //North Belgium -- Oostende, Brussels, Antwerp, Campine, Maastrichen
+
       let childrenstring = line.split("\t:\t")[1];
       if (!parent || !childrenstring) continue;
       // childrenstring = childrenstring!.split("\t\t")[0];
@@ -152,8 +147,6 @@ export async function parseDatapacks(
         }
       }
     }
-    // console.log(JSON.stringify(facies, null, 2))
-    // console.log(JSON.stringify(shallowFacies, null, 2));
   } catch (e: any) {
     console.log(
       "ERROR: failed to read columns for path " +
