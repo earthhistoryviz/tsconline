@@ -1,8 +1,31 @@
 // Shared types between app and server (i.e. messages they send back and forth)
+export function assertFacies(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("Facies must be a non-null object");
+    for (const key in o) {
+        if (typeof key !== 'string')
+            throw new Error("Facies 'key' must be of type 'string");
+        for (const timeBlock of o[key]) {
+            assertFaciesTimeBlock(timeBlock);
+        }
+    }
+}
+export function assertFaciesTimeBlock(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("FaciesTimeBlock must be a non-null object");
+    if (typeof o.rockType !== "string") {
+        throw new Error("FaciesTimeBlock must have a rockType variable of type 'string'");
+    }
+    if ('label' in o && typeof o.label !== "string")
+        throw new Error("FaciesTimeBlock must have a label variable of type 'string'");
+    if (typeof o.age !== "number")
+        throw new Error("FaciesTimeBlock must have a time variable of type 'number'");
+}
 export function assertDatapackResponse(o) {
-    if (typeof o !== "object")
+    if (!o || typeof o !== "object")
         throw new Error("DatapackResponse must be a non-null object");
     assertColumnInfo(o.columnInfo);
+    assertFacies(o.facies);
     assertMapInfo(o.mapInfo);
     assertMapHierarchy(o.mapHierarchy);
 }

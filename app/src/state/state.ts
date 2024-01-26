@@ -6,6 +6,7 @@ import type {
   MapInfo,
   ChartConfig,
   ColumnInfo,
+  Facies,
   GeologicalStages,
 } from "@tsconline/shared";
 
@@ -29,6 +30,7 @@ export type State = {
     isLegendOpen: boolean;
     isMapViewerOpen: boolean;
     isFacies: boolean;
+    facies: Facies;
     mapHistory: MapHistory[]
   }
   chart: ChartConfig | null;
@@ -69,6 +71,7 @@ export const state = observable<State>({
     isLegendOpen: false,
     isMapViewerOpen: false,
     isFacies: false,
+    facies: {},
     mapHistory: []
   },
   chart: null,

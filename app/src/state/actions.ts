@@ -4,6 +4,7 @@ import {
   type MapInfo,
   type ColumnInfo,
   type MapHierarchy,
+  type Facies,
   type GeologicalStages,
   assertChartInfo,
   assertSuccessfulServerResponse,
@@ -127,6 +128,7 @@ export const setChart = action(
       assertDatapackResponse(reply);
       setMapInfo(reply.mapInfo);
       setSettingsColumns(reply.columnInfo);
+      setFacies(reply.facies);
       setMapHierarchy(reply.mapHierarchy);
     } catch (e) {
       if (isServerResponseError(reply)) {
@@ -137,7 +139,8 @@ export const setChart = action(
       } else {
         console.log("Failed to fetch datapack info with error: ", e);
       }
-      resetState();
+      // THIS LOOPS FOREVER
+      // resetState();
       return false;
     }
 
@@ -178,6 +181,9 @@ export const setGeologicalStages = action(
 export const setAllTabs = action("setAllTabs", (newval: boolean) => {
   state.showAllTabs = newval;
 });
+const setFacies = action("setFacies", (newval: Facies) => {
+  state.mapState.facies = newval
+}) 
 export const setShowPresetInfo = action(
   "setShowPresetInfo",
   (newval: boolean) => {
@@ -209,6 +215,7 @@ export const removeCache = action("removeCache", async () => {
 /**
  * Resets state
  * Only implementation is used when we remove cache
+ * If error from server, this is really bad. Will loop forever
  */
 export const resetState = action("resetState", () => {
   setChartLoading(true);
