@@ -40,7 +40,7 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(
   console.log("Getting decrypted info for files: ", files);
   const filesSplit = files.split(" ");
   try {
-    const { columns } = await parseDatapacks(
+    const { columns, facies } = await parseDatapacks(
       assetconfigs.decryptionDirectory,
       filesSplit
     );
@@ -48,13 +48,15 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(
     await grabMapImages(filesSplit, assetconfigs.imagesDirectory);
     const datapackResponse: DatapackResponse = {
       columnInfo: columns,
-      mapInfo: mapInfo,
-      mapHierarchy: mapHierarchy,
+      facies,
+      mapInfo,
+      mapHierarchy,
     };
+    // console.log(JSON.stringify(facies, null, 2))
     assertDatapackResponse(datapackResponse)
     reply.send(datapackResponse);
   } catch (e) {
-    reply.send({ error: e });
+    reply.send({ error: `${e}` });
   }
 };
 

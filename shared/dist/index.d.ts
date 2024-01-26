@@ -10,6 +10,23 @@ export type ChartConfig = {
     settings: string;
     datapacks: string[];
 };
+export type Facies = {
+    locations: FaciesLocations;
+    minAge: number;
+    maxAge: number;
+};
+export type FaciesLocations = {
+    [location: string]: {
+        faciesTimeBlockArray: FaciesTimeBlock[];
+        minAge: number;
+        maxAge: number;
+    };
+};
+export type FaciesTimeBlock = {
+    rockType: string;
+    label?: string;
+    age: number;
+};
 export type ChartRequest = {
     settings: string;
     columnSettings: string;
@@ -71,6 +88,7 @@ export type MapHierarchy = {
 };
 export type DatapackResponse = {
     columnInfo: ColumnInfo;
+    facies: Facies;
     mapInfo: MapInfo;
     mapHierarchy: MapHierarchy;
 };
@@ -87,6 +105,9 @@ export type VertBounds = {
     height: number;
     scale: number;
 };
+export declare function assertFacies(o: any): asserts o is Facies;
+export declare function assertFaciesLocations(o: any): asserts o is FaciesLocations;
+export declare function assertFaciesTimeBlock(o: any): asserts o is FaciesTimeBlock;
 export declare function assertDatapackResponse(o: any): asserts o is DatapackResponse;
 export declare function assertChartConfig(o: any): asserts o is ChartConfig;
 export declare function assertChartConfigArray(o: any): asserts o is ChartConfig[];

@@ -1,4 +1,5 @@
 export { TSCCheckbox } from './TSCCheckbox';
+export { TSCNumberInput, TSCInputAdornment } from './TSCNumberInput';
 export { TSCButton } from './TSCButton';
 export { TSCTab, TSCTabs } from './TSCTabs';
 export { TSCTextField } from './TSCTextField';

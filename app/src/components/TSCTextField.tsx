@@ -6,7 +6,6 @@ export const TSCTextField = ( { ...props } : TextFieldProps) => {
         <FormControl className="white-outlined-form">
             <TextField
             {...props}
-            label="Aria"
             variant="outlined"
             />
         </FormControl>

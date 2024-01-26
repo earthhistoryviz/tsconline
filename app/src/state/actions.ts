@@ -4,22 +4,31 @@ import {
   type MapInfo,
   type ColumnInfo,
   type MapHierarchy,
+  type Facies,
   type GeologicalStages,
   assertChartInfo,
   assertSuccessfulServerResponse,
   isServerResponseError,
   assertDatapackResponse,
 } from "@tsconline/shared";
+import { FaciesOptions, MapHistory } from "../types";
 import { state, State } from "./state";
 import { fetcher, devSafeUrl } from "../util";
 
-export const setTab = action("setTab", (newval: number) => {
-  state.tab = newval;
-});
+
+/**
+ * Completely exists the map viewer from any point in the history
+ * Used with the X button on the map
+ */
 export const exitMapViewer = action("exitMapViewer", () => {
-  state.settingsTabs.mapHistory = [];
+  state.mapState.mapHistory = [];
   closeMapViewer();
 });
+
+/**
+ * When user presses back button on the map we pop history and
+ * reload settings
+ */
 export const goBackInMapHistory = () => {
   const lastMap = popMapHistory();
   if (lastMap) {
@@ -28,59 +37,79 @@ export const goBackInMapHistory = () => {
     closeMapViewer();
   }
 };
+
+/**
+ * Close map viewer, and resets all settings, clears history
+ */
 export const closeMapViewer = () => {
   setIsFacies(false);
   setIsLegendOpen(false);
   setSelectedMap(null);
   setIsMapViewerOpen(false);
+  setFaciesOptions({faciesAge: state.mapState.facies.minAge, dotSize: 1})
 };
-export const openLastMap = (lastMap: { name: string; isFacies: boolean }) => {
-  setSelectedMap(lastMap.name);
-  setIsFacies(lastMap.isFacies);
+
+/**
+ * Open the last map signified by the paramters
+ * @param lastMap the last map, most likely popped from popMapHistory()
+ */
+export const openLastMap = (lastMap: MapHistory) => {
+  setSelectedMap(lastMap.name)
+  setIsFacies(lastMap.isFacies)
+  setFaciesOptions(lastMap.faciesOptions)
 };
+
+export const setFaciesOptions = action("setFaciesOptions", (faciesOptions: FaciesOptions) => {
+  state.mapState.currentFaciesOptions = faciesOptions
+})
+
+/**
+ * Open the next map and starts the child with default options
+ * @param parentMap the parent map, contains the options, facies state, and name of map
+ * @param child the name of the child to be opened
+ * @param isChildFacies if the user requests facies or not facies
+ */
 export const openNextMap = (
-  parent: string,
-  isParentFacies: boolean,
+  parentMap: MapHistory,
   child: string,
-  isChildFacies: boolean
+  isChildFacies: boolean,
 ) => {
-  pushMapToMapHistory(parent, isParentFacies);
+  pushMapToMapHistory(parentMap);
   setIsFacies(isChildFacies);
+  setFaciesOptions({faciesAge: state.mapState.facies.minAge, dotSize: 1})
   setSelectedMap(child);
 };
-const setIsFacies = action("setIsFacies", (newval: boolean) => {
-  state.settingsTabs.isFacies = newval;
-});
 
-export const setIsMapViewerOpen = action(
-  "setIsMapViewerOpen",
-  (newval: boolean) => {
-    state.settingsTabs.isMapViewerOpen = newval;
-  }
-);
-
+/**
+ * Push the a map to history
+ */
 const pushMapToMapHistory = action(
   "pushMapToMapHistory",
-  (name: string, isFacies: boolean) => {
-    state.settingsTabs.mapHistory.push({ name, isFacies });
+  ({name, isFacies, faciesOptions}: MapHistory) => {
+    state.mapState.mapHistory.push({ name, isFacies, faciesOptions});
   }
 );
 
+/**
+ * Pop the most recent map that was pushed
+ */
 export const popMapHistory = action("popMapHistory", () => {
-  return state.settingsTabs.mapHistory.pop();
+  return state.mapState.mapHistory.pop();
 });
 
-export const setIsLegendOpen = action("setIsLegendOpen", (newval: boolean) => {
-  state.settingsTabs.isLegendOpen = newval;
-});
-
+/**
+ * Set selected map
+ */
 export const setSelectedMap = action(
   "setSelectedMap",
   (newMap: string | null) => {
-    state.settingsTabs.selectedMap = newMap;
+    state.mapState.selectedMap = newMap;
   }
 );
 
+/**
+ * Resets any user defined settings
+ */
 export const resetSettings = action("resetSettings", () => {
   state.settings = {
     topStageKey: "",
@@ -89,6 +118,11 @@ export const resetSettings = action("resetSettings", () => {
   };
 });
 
+/**
+ * Rests the settings, sets the tabs to 0
+ * sets chart to newval and requests info on the datapacks from the server
+ * If attributed settings, load them.
+ */
 export const setChart = action(
   "setChart",
   async (newval: number): Promise<boolean> => {
@@ -115,6 +149,7 @@ export const setChart = action(
       assertDatapackResponse(reply);
       setMapInfo(reply.mapInfo);
       setSettingsColumns(reply.columnInfo);
+      setFacies(reply.facies);
       setMapHierarchy(reply.mapHierarchy);
     } catch (e) {
       if (isServerResponseError(reply)) {
@@ -125,7 +160,8 @@ export const setChart = action(
       } else {
         console.log("Failed to fetch datapack info with error: ", e);
       }
-      resetState();
+      // THIS LOOPS FOREVER
+      // resetState();
       return false;
     }
 
@@ -163,15 +199,6 @@ export const setGeologicalStages = action(
   }
 );
 
-export const setAllTabs = action("setAllTabs", (newval: boolean) => {
-  state.showAllTabs = newval;
-});
-export const setShowPresetInfo = action(
-  "setShowPresetInfo",
-  (newval: boolean) => {
-    state.showPresetInfo = newval;
-  }
-);
 /**
  * Removes cache in public dir on server
  */
@@ -197,6 +224,7 @@ export const removeCache = action("removeCache", async () => {
 /**
  * Resets state
  * Only implementation is used when we remove cache
+ * If error from server, this is really bad. Will loop forever
  */
 export const resetState = action("resetState", () => {
   setChartLoading(true);
@@ -268,26 +296,6 @@ export const loadPresets = action("loadPresets", (presets: ChartConfig[]) => {
   state.presets = presets;
   setChart(0);
 });
-export const setChartPath = action("setChartPath", (chartpath: string) => {
-  state.chartPath = chartpath;
-});
-export const setMapInfo = action("setMapInfo", (mapInfo: MapInfo) => {
-  state.settingsTabs.mapInfo = mapInfo;
-});
-export const setMapHierarchy = action(
-  "setMapHierarchy",
-  (mapHierarchy: MapHierarchy) => {
-    state.settingsTabs.mapHierarchy = mapHierarchy;
-  }
-);
-export const setChartHash = action("setChartHash", (charthash: string) => {
-  state.chartHash = charthash;
-});
-
-export const settingsXML = action("settingsXML", (xml: string) => {
-  state.settingsXML = xml;
-});
-
 //update
 //TODO: need to overhaul
 export const updateSettings = action("updateSettings", () => {
@@ -368,20 +376,10 @@ export const updateCheckboxSetting = action(
   }
 );
 
-export const setTopStageKey = action("setTopStageKey", (key: string) => {
-  state.settings.topStageKey = key;
-});
-export const setBaseStageKey = action("setBottomStageKey", (key: string) => {
-  state.settings.baseStageKey = key;
-});
 
-export const setUnitsPerMY = action((units: number) => {
-  state.settings.unitsPerMY = units;
-});
-export const setChartLoading = action((value: boolean) => {
-  state.chartLoading = value;
-});
-
+/**
+ * set the settings tab based on a string or number
+ */
 export const setSettingsTabsSelected = action(
   (newtab: number | State["settingsTabs"]["selected"]) => {
     if (typeof newtab === "string") {
@@ -411,6 +409,11 @@ export const setSettingsTabsSelected = action(
   }
 );
 
+/**
+ * The tab name we want to switch to in settings based on a string translated to an index
+ * @param tab the tab to be selected
+ * @returns 
+ */
 export function translateTabToIndex(tab: State["settingsTabs"]["selected"]) {
   switch (tab) {
     case "time":
@@ -507,21 +510,9 @@ export const toggleSettingsTabColumn = action(
   }
 );
 
-export const setSettingsColumns = action((temp: ColumnInfo) => {
-  state.settingsTabs.columns = temp;
-});
-export const setUseCache = action((temp: boolean) => {
-  state.useCache = temp;
-});
-export const setUsePreset = action((temp: boolean) => {
-  state.useCache = temp;
-});
-
-export const setcolumnSelected = action((name: string, parents: string[]) => {
-  state.settingsTabs.columnSelected = { name, parents };
-  console.log("selected: ", name);
-});
-
+/**
+ * Update @Jay
+ */
 export const updateEditName = action((newName: string) => {
   if (!state.settingsTabs.columnSelected) {
     console.log("WARNING: the user hasn't selected a column.");
@@ -565,6 +556,9 @@ export const updateEditName = action((newName: string) => {
   curcol[oldName].editName = newName;
 });
 
+/**
+ * @Jay fill
+ */
 export const updateColumnName = action((newName: string) => {
   if (!state.settingsTabs.columnSelected) {
     console.log("WARNING: the user hasn't selected a column.");
@@ -609,6 +603,10 @@ export const updateColumnName = action((newName: string) => {
   delete curcol[oldName];
 });
 
+/**
+ * Constantly ping the server for the pdf status
+ * TODO DEPRECATE FOR SVGS
+ */
 export const checkPdfStatus = action(async () => {
   let pdfReady = false;
   while (!pdfReady) {
@@ -621,6 +619,10 @@ export const checkPdfStatus = action(async () => {
   setChartLoading(false);
 });
 
+/**
+ * The request for pdf status
+ * @returns 
+ */
 async function fetchPdfStatus(): Promise<boolean> {
   try {
     if (state.chartHash === "") {
@@ -636,3 +638,76 @@ async function fetchPdfStatus(): Promise<boolean> {
     return false;
   }
 }
+
+const setIsFacies = action("setIsFacies", (newval: boolean) => {
+  state.mapState.isFacies = newval;
+});
+export const setTab = action("setTab", (newval: number) => {
+  state.tab = newval;
+});
+export const setSettingsColumns = action((temp: ColumnInfo) => {
+  state.settingsTabs.columns = temp;
+});
+export const setUseCache = action((temp: boolean) => {
+  state.useCache = temp;
+});
+export const setUsePreset = action((temp: boolean) => {
+  state.useCache = temp;
+});
+export const setcolumnSelected = action((name: string, parents: string[]) => {
+  state.settingsTabs.columnSelected = { name, parents };
+  console.log("selected: ", name);
+});
+export const setDotSize = action("setDotSize", (newval: number) => {
+  state.mapState.currentFaciesOptions.dotSize = newval
+})
+export const setFaciesAge = action("setFaciesAge", (newval: number) => {
+  state.mapState.currentFaciesOptions.faciesAge = newval
+})
+export const setIsLegendOpen = action("setIsLegendOpen", (newval: boolean) => {
+  state.mapState.isLegendOpen = newval;
+});
+export const setChartPath = action("setChartPath", (chartpath: string) => {
+  state.chartPath = chartpath;
+});
+export const setMapInfo = action("setMapInfo", (mapInfo: MapInfo) => {
+  state.mapState.mapInfo = mapInfo;
+});
+export const setTopStageKey = action("setTopStageKey", (key: string) => {
+  state.settings.topStageKey = key;
+});
+export const setBaseStageKey = action("setBottomStageKey", (key: string) => {
+  state.settings.baseStageKey = key;
+});
+
+export const setUnitsPerMY = action((units: number) => {
+  state.settings.unitsPerMY = units;
+});
+export const setChartLoading = action((value: boolean) => {
+  state.chartLoading = value;
+});
+export const setMapHierarchy = action(
+  "setMapHierarchy",
+  (mapHierarchy: MapHierarchy) => {
+    state.mapState.mapHierarchy = mapHierarchy;
+  }
+);
+export const setChartHash = action("setChartHash", (charthash: string) => {
+  state.chartHash = charthash;
+});
+
+export const settingsXML = action("settingsXML", (xml: string) => {
+  state.settingsXML = xml;
+});
+export const setAllTabs = action("setAllTabs", (newval: boolean) => {
+  state.showAllTabs = newval;
+});
+const setFacies = action("setFacies", (newval: Facies) => {
+  state.mapState.facies = newval
+}) 
+export const setShowPresetInfo = action("setShowPresetInfo", (newval: boolean) => {
+    state.showPresetInfo = newval;
+});
+export const setIsMapViewerOpen = action("setIsMapViewerOpen", (newval: boolean) => {
+    state.mapState.isMapViewerOpen = newval;
+});
