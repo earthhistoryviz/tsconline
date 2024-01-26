@@ -442,11 +442,13 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
       if (faciesTimeBlockArray) {
         let i = 0
         timeBlock = faciesTimeBlockArray[i]
-        let nextTimeBlock = faciesTimeBlockArray[i+1]
-        while(i + 1 < faciesTimeBlockArray.length && nextTimeBlock.age < state.mapState.currentFaciesOptions.faciesAge) {
+        let baseAge = timeBlock.age
+        // find the icon relating to the age we're in
+        while(baseAge <= state.mapState.currentFaciesOptions.faciesAge) {
           i += 1
+          if (i >= faciesTimeBlockArray.length) break
           timeBlock = faciesTimeBlockArray[i]
-          nextTimeBlock = faciesTimeBlockArray[i+1]
+          baseAge = timeBlock.age
         }
       }
       return (
@@ -513,7 +515,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
       }>
       <IconButton
         className="map-point"
-        disableRipple={isInfo}
+        disableRipple={isInfo || state.mapState.isFacies}
         style={{
           left: `calc(${x}% - ${iconSize / 2 / scale}px)`,
           // we take a the full icon_size here to anchor to the
@@ -524,6 +526,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
           height: `${iconSize / scale}px`,
         }}
         onClick={() => {
+          if (state.mapState.isFacies) return
           setClicked(!clicked)
         }}
       >
