@@ -1,6 +1,6 @@
 import { readFile } from "fs/promises";
 import pmap from "p-map";
-import type { ColumnInfo, Facies, FaciesTimeBlock } from "@tsconline/shared";
+import type { ColumnInfo, Facies, FaciesEvents, FaciesTimeBlock } from "@tsconline/shared";
 import { grabFilepaths } from "./util.js";
 
 /**
@@ -34,10 +34,14 @@ export async function parseDatapacks(
     decrypt_filepath,
     "datapacks"
   );
-  if (decrypt_paths.length == 0) return { columns: {}, facies: {}};
+  if (decrypt_paths.length == 0) throw new Error('Did not find any datapacks');
   let decryptedfiles: String = "";
   let columnInfo: ColumnInfo = {};
-  let facies: Facies = {}
+  let facies: Facies = {
+    events: {},
+    minAge: 999999,
+    maxAge: -99999
+  }
   //put all contents into one string for parsing
   await pmap(decrypt_paths, async (decryptedfile) => {
     const contents = (await readFile(decryptedfile)).toString();
@@ -140,10 +144,12 @@ export async function parseDatapacks(
     for (let i = 0; i < lines.length; i++) {
       let line = lines[i]
       if (line && line.split('\t')[1] === "facies") {
-        const faciesBlock = processFacies(faciesAbbreviations, lines, i)
-        if (faciesBlock) {
-          facies[faciesBlock.name] = faciesBlock.timeBlock
-          i = faciesBlock.nextIndex
+        const processedEvent = processFacies(faciesAbbreviations, lines, i)
+        if (processedEvent) {
+          facies.events[processedEvent.name] = processedEvent.faciesEvent
+          facies.minAge = Math.min(facies.minAge, processedEvent.faciesEvent.minAge)
+          facies.maxAge = Math.max(facies.maxAge, processedEvent.faciesEvent.maxAge)
+          i = processedEvent.nextIndex
         }
       }
     }
@@ -157,8 +163,12 @@ export async function parseDatapacks(
   }
   return { columns: columnInfo, facies};
 }
-function processFacies(faciesAbbreviations: faciesAbbreviationType, lines: string[], i: number): {name: string, timeBlock: FaciesTimeBlock[], nextIndex: number} | null {
-  let timeBlock: FaciesTimeBlock[] = []
+function processFacies(faciesAbbreviations: faciesAbbreviationType, lines: string[], i: number): {name: string, faciesEvent: FaciesEvents[string], nextIndex: number} | null {
+  let faciesEvent: FaciesEvents[string] = {
+    faciesTimeBlockArray: [],
+    minAge: 999999,
+    maxAge: -99999
+  }
   let line = lines[i]
   if (!line) return null
   let name = line.split('\t')[0]!
@@ -178,14 +188,17 @@ function processFacies(faciesAbbreviations: faciesAbbreviationType, lines: strin
     }
     const tabSeperated = line.split('\t')
     if (tabSeperated.length < 4) break
+    const age = Number(tabSeperated[3]!)
     // label doesn't exist for TOP or GAP
     if (!tabSeperated[2]) {
-      timeBlock.push({rockType: tabSeperated[1]!, age: Number(tabSeperated[3]!)})
+      faciesEvent.faciesTimeBlockArray.push({rockType: tabSeperated[1]!, age})
     } else {
-      timeBlock.push({rockType: tabSeperated[1]!, label: tabSeperated[2]!, age: Number(tabSeperated[3]!)})
+      faciesEvent.faciesTimeBlockArray.push({rockType: tabSeperated[1]!, label: tabSeperated[2]!, age})
     }
+    faciesEvent.minAge = Math.min(faciesEvent.minAge, age)
+    faciesEvent.maxAge = Math.max(faciesEvent.maxAge, age)
     i += 1
     line = lines[i]
   }
-  return {name, timeBlock, nextIndex: i}
+  return {name, faciesEvent, nextIndex: i}
 }
