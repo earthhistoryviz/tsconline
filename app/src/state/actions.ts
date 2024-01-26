@@ -15,7 +15,6 @@ import { FaciesOptions, MapHistory } from "../types";
 import { state, State } from "./state";
 import { fetcher, devSafeUrl } from "../util";
 
-
 /**
  * Completely exists the map viewer from any point in the history
  * Used with the X button on the map
@@ -46,7 +45,7 @@ export const closeMapViewer = () => {
   setIsLegendOpen(false);
   setSelectedMap(null);
   setIsMapViewerOpen(false);
-  setFaciesOptions({faciesAge: state.mapState.facies.minAge, dotSize: 1})
+  setFaciesOptions({ faciesAge: state.mapState.facies.minAge, dotSize: 1 });
 };
 
 /**
@@ -54,14 +53,17 @@ export const closeMapViewer = () => {
  * @param lastMap the last map, most likely popped from popMapHistory()
  */
 export const openLastMap = (lastMap: MapHistory) => {
-  setSelectedMap(lastMap.name)
-  setIsFacies(lastMap.isFacies)
-  setFaciesOptions(lastMap.faciesOptions)
+  setSelectedMap(lastMap.name);
+  setIsFacies(lastMap.isFacies);
+  setFaciesOptions(lastMap.faciesOptions);
 };
 
-export const setFaciesOptions = action("setFaciesOptions", (faciesOptions: FaciesOptions) => {
-  state.mapState.currentFaciesOptions = faciesOptions
-})
+export const setFaciesOptions = action(
+  "setFaciesOptions",
+  (faciesOptions: FaciesOptions) => {
+    state.mapState.currentFaciesOptions = faciesOptions;
+  }
+);
 
 /**
  * Open the next map and starts the child with default options
@@ -72,11 +74,11 @@ export const setFaciesOptions = action("setFaciesOptions", (faciesOptions: Facie
 export const openNextMap = (
   parentMap: MapHistory,
   child: string,
-  isChildFacies: boolean,
+  isChildFacies: boolean
 ) => {
   pushMapToMapHistory(parentMap);
   setIsFacies(isChildFacies);
-  setFaciesOptions({faciesAge: state.mapState.facies.minAge, dotSize: 1})
+  setFaciesOptions({ faciesAge: state.mapState.facies.minAge, dotSize: 1 });
   setSelectedMap(child);
 };
 
@@ -85,8 +87,8 @@ export const openNextMap = (
  */
 const pushMapToMapHistory = action(
   "pushMapToMapHistory",
-  ({name, isFacies, faciesOptions}: MapHistory) => {
-    state.mapState.mapHistory.push({ name, isFacies, faciesOptions});
+  ({ name, isFacies, faciesOptions }: MapHistory) => {
+    state.mapState.mapHistory.push({ name, isFacies, faciesOptions });
   }
 );
 
@@ -376,7 +378,6 @@ export const updateCheckboxSetting = action(
   }
 );
 
-
 /**
  * set the settings tab based on a string or number
  */
@@ -412,7 +413,7 @@ export const setSettingsTabsSelected = action(
 /**
  * The tab name we want to switch to in settings based on a string translated to an index
  * @param tab the tab to be selected
- * @returns 
+ * @returns
  */
 export function translateTabToIndex(tab: State["settingsTabs"]["selected"]) {
   switch (tab) {
@@ -554,6 +555,7 @@ export const updateEditName = action((newName: string) => {
     return;
   }
   curcol[oldName].editName = newName;
+  console.log("edited name");
 });
 
 /**
@@ -621,7 +623,7 @@ export const checkPdfStatus = action(async () => {
 
 /**
  * The request for pdf status
- * @returns 
+ * @returns
  */
 async function fetchPdfStatus(): Promise<boolean> {
   try {
@@ -659,11 +661,11 @@ export const setcolumnSelected = action((name: string, parents: string[]) => {
   console.log("selected: ", name);
 });
 export const setDotSize = action("setDotSize", (newval: number) => {
-  state.mapState.currentFaciesOptions.dotSize = newval
-})
+  state.mapState.currentFaciesOptions.dotSize = newval;
+});
 export const setFaciesAge = action("setFaciesAge", (newval: number) => {
-  state.mapState.currentFaciesOptions.faciesAge = newval
-})
+  state.mapState.currentFaciesOptions.faciesAge = newval;
+});
 export const setIsLegendOpen = action("setIsLegendOpen", (newval: boolean) => {
   state.mapState.isLegendOpen = newval;
 });
@@ -703,11 +705,17 @@ export const setAllTabs = action("setAllTabs", (newval: boolean) => {
   state.showAllTabs = newval;
 });
 const setFacies = action("setFacies", (newval: Facies) => {
-  state.mapState.facies = newval
-}) 
-export const setShowPresetInfo = action("setShowPresetInfo", (newval: boolean) => {
+  state.mapState.facies = newval;
+});
+export const setShowPresetInfo = action(
+  "setShowPresetInfo",
+  (newval: boolean) => {
     state.showPresetInfo = newval;
-});
-export const setIsMapViewerOpen = action("setIsMapViewerOpen", (newval: boolean) => {
+  }
+);
+export const setIsMapViewerOpen = action(
+  "setIsMapViewerOpen",
+  (newval: boolean) => {
     state.mapState.isMapViewerOpen = newval;
-});
+  }
+);
