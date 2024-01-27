@@ -439,13 +439,12 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
     if (state.mapState.isFacies) {
       //TODO refactor
       const event = state.mapState.facies.locations[name]
-      let timeBlock = null
       let rockType = "top"
       // facies event exists for this map point
-      if (event && event.faciesTimeBlockArray) {
-        actions.setSelectedMapAgeRange(state.mapState.facies.locations[name].minAge, state.mapState.facies.locations[name].maxAge )
+      if (event && event.faciesTimeBlockArray && event.faciesTimeBlockArray.length > 0) {
+        actions.setSelectedMapAgeRange(event.minAge, event.maxAge )
         let i = 0
-        timeBlock = event.faciesTimeBlockArray[i]
+        let timeBlock = event.faciesTimeBlockArray[i]
         let baseAge = timeBlock.age
         // find the icon relating to the age we're in
         while(baseAge < state.mapState.currentFaciesOptions.faciesAge) {

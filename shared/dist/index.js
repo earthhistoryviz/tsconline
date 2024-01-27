@@ -23,9 +23,9 @@ export function assertFaciesLocations(o) {
             throw new Error(`FaciesLocation value for 'key' ${location} must have a maxage be of type 'number'`);
         if (!Array.isArray(faciesLocation.faciesTimeBlockArray))
             throw new Error(`FaciesLocation value for 'key' ${location} must have a faciesTimeBlock that is an array`);
-        for (const item of faciesLocation.faciesTimeBlockArray) {
+        faciesLocation.faciesTimeBlockArray.forEach((item) => {
             assertFaciesTimeBlock(item);
-        }
+        });
     }
 }
 export function assertFaciesTimeBlock(o) {
