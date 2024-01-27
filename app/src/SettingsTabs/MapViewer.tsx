@@ -351,8 +351,8 @@ const FaciesControls = observer(() => {
         endAdornment={<TSCInputAdornment>MA</TSCInputAdornment>} 
         className="age-input-form"
         placeholder="Age"
-        max={state.mapState.facies.maxAge}
-        min={state.mapState.facies.minAge}
+        max={state.mapState.selectedMapAgeRange.maxAge}
+        min={state.mapState.selectedMapAgeRange.minAge}
         value={state.mapState.currentFaciesOptions.faciesAge}
         onChange={(
           _event: React.FocusEvent<HTMLInputElement, Element> | React.PointerEvent<Element> | React.KeyboardEvent<Element>,
@@ -367,8 +367,8 @@ const FaciesControls = observer(() => {
         id="number-input"
         className="slider" 
         name="Facies-Age-Slider"
-        max={state.mapState.facies.maxAge}
-        min={state.mapState.facies.minAge}
+        max={state.mapState.selectedMapAgeRange.maxAge}
+        min={state.mapState.selectedMapAgeRange.minAge}
         value={state.mapState.currentFaciesOptions.faciesAge}
         onChange={(event: Event, val: number | number[]) => {
           actions.setFaciesAge(val as number)
@@ -401,7 +401,7 @@ type MapPointButtonProps = {
 const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y, name, isInfo = false, container}) => {
   const [clicked, setClicked] = useState((mapPoint as MapPoints[string]).default || false)
   const theme = useTheme()
-  const { state } = useContext(context)
+  const { state, actions } = useContext(context)
 
   // below is the hook for grabbing the scale from map image scaling
   const [scale, setScale] = useState(1)
@@ -423,6 +423,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
   // scale only if it isn't an info point and in facies mode
   const iconSize = !isInfo && state.mapState.isFacies ? ICON_SIZE + state.mapState.currentFaciesOptions.dotSize * 3 : ICON_SIZE
 
+
   /**
    * Depending on if the point was clicked, return a different icon
    * @param clicked 
@@ -439,16 +440,25 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
       //TODO refactor
       const event = state.mapState.facies.locations[name]
       let timeBlock = null
+      let rockType = "top"
+      // facies event exists for this map point
       if (event && event.faciesTimeBlockArray) {
+        actions.setSelectedMapAgeRange(state.mapState.facies.locations[name].minAge, state.mapState.facies.locations[name].maxAge )
         let i = 0
         timeBlock = event.faciesTimeBlockArray[i]
         let baseAge = timeBlock.age
         // find the icon relating to the age we're in
-        while(baseAge <= state.mapState.currentFaciesOptions.faciesAge) {
+        while(baseAge < state.mapState.currentFaciesOptions.faciesAge) {
           i += 1
-          if (i >= event.faciesTimeBlockArray.length) break
+          if (i >= event.faciesTimeBlockArray.length) {
+            // if we hit the end of possible ranges, then an icon
+            // doesn't exist. so we pass top
+            rockType = 'top'
+            break
+          }
           timeBlock = event.faciesTimeBlockArray[i]
           baseAge = timeBlock.age
+          rockType = timeBlock.rockType
         }
       }
       return (
@@ -466,8 +476,8 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
             fill="transparent"
           />
           <image
-            href={!timeBlock || !timeBlock.rockType || timeBlock.rockType.toLowerCase().trim() === "top" ? 
-            "" : devSafeUrl(`/public/patterns/${timeBlock.rockType.trim()}.PNG`)
+            href={rockType.toLowerCase().trim() === "top" ? 
+            "" : devSafeUrl(`/public/patterns/${rockType.trim()}.PNG`)
           }
             x="-10"
             y="-10"

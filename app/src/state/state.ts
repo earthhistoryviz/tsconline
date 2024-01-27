@@ -31,6 +31,10 @@ export type State = {
     isMapViewerOpen: boolean;
     isFacies: boolean;
     facies: Facies;
+    selectedMapAgeRange: {
+      minAge: number,
+      maxAge: number
+    }
     mapHistory: MapHistory[]
   }
   chart: ChartConfig | null;
@@ -73,6 +77,10 @@ export const state = observable<State>({
     isFacies: false,
     facies: {
       locations: {},
+      minAge: 0,
+      maxAge: 0
+    },
+    selectedMapAgeRange: {
       minAge: 0,
       maxAge: 0
     },

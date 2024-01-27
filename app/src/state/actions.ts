@@ -62,8 +62,14 @@ export const setFaciesOptions = action(
   "setFaciesOptions",
   (faciesOptions: FaciesOptions) => {
     state.mapState.currentFaciesOptions = faciesOptions;
+    //map might not exist so put to 0
+    state.mapState.selectedMapAgeRange = {minAge: 0, maxAge: 0}
   }
 );
+export const setSelectedMapAgeRange = action("setSelectedMapAgeRange", (minAge: number, maxAge: number) => {
+  state.mapState.selectedMapAgeRange.minAge = Math.min(state.mapState.selectedMapAgeRange.minAge, minAge)
+  state.mapState.selectedMapAgeRange.maxAge = Math.max(state.mapState.selectedMapAgeRange.maxAge, maxAge)
+})
 
 /**
  * Open the next map and starts the child with default options
@@ -77,9 +83,9 @@ export const openNextMap = (
   isChildFacies: boolean
 ) => {
   pushMapToMapHistory(parentMap);
+  setSelectedMap(child);
   setIsFacies(isChildFacies);
   setFaciesOptions({ faciesAge: state.mapState.facies.minAge, dotSize: 1 });
-  setSelectedMap(child);
 };
 
 /**
