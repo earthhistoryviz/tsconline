@@ -3,7 +3,16 @@ export type FaciesOptions = {
     dotSize: number
 }
 export type MapHistory = {
-    name: string,
-    isFacies: boolean,
-    faciesOptions: FaciesOptions
+    // saved history only concerns the facies
+    // we only push to saved and access saved history
+    // if the map is currently in facies mode
+    savedHistory: {
+        [name: string]: {
+        faciesOptions: FaciesOptions
+        },
+    },
+    accessHistory: {
+        isFacies: boolean,
+        name: string
+    }[]
 }

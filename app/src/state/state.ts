@@ -35,7 +35,7 @@ export type State = {
       minAge: number,
       maxAge: number
     }
-    mapHistory: MapHistory[]
+    mapHistory: MapHistory
   }
   chart: ChartConfig | null;
   presets: ChartConfig[];
@@ -84,7 +84,10 @@ export const state = observable<State>({
       minAge: 0,
       maxAge: 0
     },
-    mapHistory: []
+    mapHistory: {
+      savedHistory: {},
+      accessHistory: []
+    } 
   },
   chart: null,
   presets: [],

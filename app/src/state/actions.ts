@@ -16,54 +16,50 @@ import { state, State } from "./state";
 import { fetcher, devSafeUrl } from "../util";
 
 /**
- * Completely exists the map viewer from any point in the history
- * Used with the X button on the map
- */
-export const exitMapViewer = action("exitMapViewer", () => {
-  state.mapState.mapHistory = [];
-  closeMapViewer();
-});
-
-/**
  * When user presses back button on the map we pop history and
  * reload settings
  */
-export const goBackInMapHistory = () => {
-  const lastMap = popMapHistory();
-  if (lastMap) {
-    openLastMap(lastMap);
+export const goBackInMapHistory = action("goBackInMapHistory", () => {
+  const savedMap = state.mapState.mapHistory.accessHistory.pop();
+  // save settings if they exist
+  saveFaciesOptions(state.mapState.selectedMap, state.mapState.isFacies, state.mapState.currentFaciesOptions)
+  // has user accessed a map previously
+  if (savedMap) {
+    const { name, isFacies } = savedMap
+    setSelectedMap(name);
+    setIsFacies(isFacies);
+    setFaciesOptions(name, isFacies)
   } else {
     closeMapViewer();
   }
-};
+});
 
 /**
  * Close map viewer, and resets all settings, clears history
  */
-export const closeMapViewer = () => {
+export const closeMapViewer = action("closeMapViewer", () => {
+  state.mapState.mapHistory.accessHistory = [];
   setIsFacies(false);
   setIsLegendOpen(false);
   setSelectedMap(null);
   setIsMapViewerOpen(false);
-  setFaciesOptions({ faciesAge: state.mapState.selectedMapAgeRange.minAge, dotSize: 1 });
-};
+  setFaciesOptions(null, false);
+});
 
 /**
- * Open the last map signified by the paramters
- * @param lastMap the last map, most likely popped from popMapHistory()
+ * If the facies options have been saved before, access them. 
+ * Otherwise reset to default settings
  */
-export const openLastMap = (lastMap: MapHistory) => {
-  setSelectedMap(lastMap.name);
-  setIsFacies(lastMap.isFacies);
-  setFaciesOptions(lastMap.faciesOptions);
-};
-
 export const setFaciesOptions = action(
   "setFaciesOptions",
-  (faciesOptions: FaciesOptions) => {
-    state.mapState.currentFaciesOptions = faciesOptions;
-    //map might not exist so put to 0
-    state.mapState.selectedMapAgeRange = {minAge: 0, maxAge: 0}
+  (name: string | null, isFacies: boolean) => {
+  if (isFacies && name && state.mapState.mapHistory.savedHistory[name]) {
+    state.mapState.currentFaciesOptions = state.mapState.mapHistory.savedHistory[name].faciesOptions
+  } else {
+    state.mapState.currentFaciesOptions = { faciesAge: 0, dotSize: 1}
+  }
+  //map might not exist so put to 0
+  state.mapState.selectedMapAgeRange = {minAge: 0, maxAge: 0}
   }
 );
 export const setSelectedMapAgeRange = action("setSelectedMapAgeRange", (minAge: number, maxAge: number) => {
@@ -73,37 +69,32 @@ export const setSelectedMapAgeRange = action("setSelectedMapAgeRange", (minAge: 
 
 /**
  * Open the next map and starts the child with default options
- * @param parentMap the parent map, contains the options, facies state, and name of map
- * @param child the name of the child to be opened
- * @param isChildFacies if the user requests facies or not facies
+ * @param current the current map name
+ * @param isCurrentFacies the state of facies
+ * @param next the name of the child to be opened
+ * @param isNextFacies if the user requests facies or not facies
  */
-export const openNextMap = (
-  parentMap: MapHistory,
-  child: string,
-  isChildFacies: boolean
+export const openNextMap = action("openNextMap", (
+  current: string,
+  isCurrentFacies: boolean,
+  next: string,
+  isNextFacies: boolean
 ) => {
-  pushMapToMapHistory(parentMap);
-  setSelectedMap(child);
-  setIsFacies(isChildFacies);
-  setFaciesOptions({ faciesAge: state.mapState.selectedMapAgeRange.minAge, dotSize: 1 });
-};
+  state.mapState.mapHistory.accessHistory.push({name: current, isFacies: isCurrentFacies})
+  saveFaciesOptions(current, isCurrentFacies, state.mapState.currentFaciesOptions)
+  setSelectedMap(next);
+  setIsFacies(isNextFacies);
+  setFaciesOptions(next, isNextFacies);
+});
 
-/**
- * Push the a map to history
- */
-const pushMapToMapHistory = action(
-  "pushMapToMapHistory",
-  ({ name, isFacies, faciesOptions }: MapHistory) => {
-    state.mapState.mapHistory.push({ name, isFacies, faciesOptions });
+const saveFaciesOptions = action(
+  "saveFaciesOptions",
+  (name: string | null, isFacies: boolean, faciesOptions: FaciesOptions) => {
+    if (isFacies && name) {
+      state.mapState.mapHistory.savedHistory[name] = {faciesOptions}
+    }
   }
 );
-
-/**
- * Pop the most recent map that was pushed
- */
-export const popMapHistory = action("popMapHistory", () => {
-  return state.mapState.mapHistory.pop();
-});
 
 /**
  * Set selected map

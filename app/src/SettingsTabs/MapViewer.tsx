@@ -127,7 +127,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
     const openChildMap = (childMap: string) => {
       // call the new child as a regular map, with no facies
       setImageLoaded(false)
-      actions.openNextMap({name, isFacies, faciesOptions: state.mapState.currentFaciesOptions}, childMap, false)
+      actions.openNextMap(name, isFacies, childMap, false)
     }
 
     const mapInfo: MapInfo = state.mapState.mapInfo
@@ -154,12 +154,12 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
           </IconButton>
         </div>
         <div className="controls">
-            {!isFacies && <TSCButton className="bottom-button" onClick={() => { actions.openNextMap({name, isFacies: false, faciesOptions: state.mapState.currentFaciesOptions}, name, true )}}>Facies</TSCButton>}
+            {!isFacies && <TSCButton className="bottom-button" onClick={() => { actions.openNextMap(name, isFacies, name, true)}}>Facies</TSCButton>}
             {isFacies && <TSCButton className="bottom-button" onClick={() => { setFaciesOptions(!faciesOptions) }}>Options</TSCButton>}
             <TSCButton className="bottom-button" onClick={() => actions.setIsLegendOpen(!state.mapState.isLegendOpen)}>legend</TSCButton>
         </div>
         <div className="view-buttons">
-          <IconButton className="close-icon-view-button" onClick={() => actions.exitMapViewer()}>
+          <IconButton className="close-icon-view-button" onClick={() => actions.closeMapViewer()}>
             <BorderedIcon component={CloseIcon} className="icon-button"/>
           </IconButton>
           <IconButton className="icon-view-button" onClick={() => {
