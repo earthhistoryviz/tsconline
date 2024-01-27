@@ -287,7 +287,7 @@ function generateColumnXml(
           }
         }
         if (!useEditName)
-          xml += `${indent}<setting name="title">${jsonColumn[key]}</setting>\n`;
+          xml += `${indent}<setting name="title">${replaceSpecialChars(jsonColumn[key], 1)}</setting>\n`;
       } else if (key === "backgroundColor" || key === "customColor") {
         if (jsonColumn[key].useNamed) {
           xml += `${indent}<setting name="${xmlKey}" useNamed="${jsonColumn[key].useNamed}">${jsonColumn[key].text}</setting>\n`;

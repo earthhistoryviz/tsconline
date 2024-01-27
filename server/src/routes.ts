@@ -38,7 +38,7 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(
   const { files } = request.params;
   //TODO check if files exist. probably check this in the glob of parse Datapacks
   console.log("Getting decrypted info for files: ", files);
-  const filesSplit = files.split(" ");
+  const filesSplit = files.split(":");
   try {
     const { columns, facies } = await parseDatapacks(
       assetconfigs.decryptionDirectory,
@@ -55,6 +55,7 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(
     // console.log(JSON.stringify(facies, null, 2))
     assertDatapackResponse(datapackResponse)
     reply.send(datapackResponse);
+    console.log("Successfully fetched info for ", filesSplit)
   } catch (e) {
     reply.send({ error: `${e}` });
   }
@@ -178,7 +179,7 @@ export const fetchChart = async function fetchChart(
     return;
   }
   const datapacks = chartrequest.datapacks.map(
-    (datapack) => assetconfigs.datapacksDirectory + "/" + datapack
+    (datapack) => "\"" + assetconfigs.datapacksDirectory + "/" + datapack + "\""
   );
   for (const datapack of chartrequest.datapacks) {
     if (!assetconfigs.activeDatapacks.includes(datapack)) {
