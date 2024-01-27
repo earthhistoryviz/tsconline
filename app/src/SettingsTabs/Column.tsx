@@ -15,12 +15,6 @@ import {
   Accordion,
   TSCButton,
 } from "../components";
-import {
-  generateChart,
-  setcolumnSelected,
-  updateColumnName,
-  updateEditName,
-} from "../state/GeneralActions";
 
 type ColumnMenuProps = {
   name: string;
@@ -86,13 +80,14 @@ type ColumnAccordionProps = {
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
   ({ name, details, onToggle }) => {
     const theme = useTheme();
+    const { actions } = useContext(context)
     const [open, setOpen] = useState(true);
 
     const toggleAccordion = (open: boolean) => {
       setOpen((open) => !open);
     };
     function clickColumnName() {
-      setcolumnSelected(name, details.parents);
+      actions.setcolumnSelected(name, details.parents);
     }
     const hasChildren =
       details.children && Object.keys(details.children).length > 0;
@@ -113,7 +108,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
         <ColumnContainer>
           <div
             style={{ display: "flex", cursor: "pointer" }}
-            onClick={() => setcolumnSelected(name, details.parents)}
+            onClick={() => actions.setcolumnSelected(name, details.parents)}
           >
             <TSCCheckbox
               checked={details.on}
@@ -238,7 +233,7 @@ export const Column = observer(function Column() {
             height: "auto",
             fontSize: "0.85rem",
           }}
-          onClick={generateChart}
+          onClick={actions.generateChart}
         >
           Generate
         </TSCButton>
