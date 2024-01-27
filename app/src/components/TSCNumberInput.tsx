@@ -87,6 +87,10 @@ export const TSCInputAdornment = styled('div')(
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  font-size: 0.875rem;
+  font-family: inherit;
+  font-weight: 400;
+  line-height: 1.5;
   grid-row: 1/3;
   grid-column: 2;
   color: ${theme.palette.primary};
