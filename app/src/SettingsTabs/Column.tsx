@@ -20,7 +20,7 @@ import {
   setcolumnSelected,
   updateColumnName,
   updateEditName,
-} from "../state/actions";
+} from "../state/GeneralActions";
 
 type ColumnMenuProps = {
   name: string;
