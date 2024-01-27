@@ -48,7 +48,7 @@ export const setChart = action(
     const datapacks = state.presets[newval]!.datapacks.map(
       (data) => data.split(".")[0] + ".txt"
     );
-    const res = await fetcher(`/datapackinfo/${datapacks.join(" ")}`, {
+    const res = await fetcher(`/datapackinfo/${datapacks.join(":")}`, {
       method: "GET",
     });
     // get the columns and map info

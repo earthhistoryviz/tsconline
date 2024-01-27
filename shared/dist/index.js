@@ -102,9 +102,6 @@ export function assertColumnInfo(o) {
         if (typeof columnInfo !== "object" || columnInfo === null) {
             throw new Error(`ColumnInfo' value for key '${key}' must be a non-null object`);
         }
-        if (typeof columnInfo.editName !== "string") {
-            throw new Error(`ColumnInfo' value for key '${key}' must have an 'editName' string`);
-        }
         if (typeof columnInfo.on !== "boolean") {
             throw new Error(`ColumnInfo' value for key '${key}' must have an 'on' boolean`);
         }

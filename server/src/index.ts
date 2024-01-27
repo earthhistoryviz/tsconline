@@ -45,7 +45,7 @@ export default assetconfigs;
 // this try will run the decryption jar to decrypt all files in the datapack folder
 try {
   const datapacks = assetconfigs.activeDatapacks.map(
-    (datapack) => assetconfigs.datapacksDirectory + "/" + datapack
+    (datapack) => "\"" + assetconfigs.datapacksDirectory + "/" + datapack + "\""
   );
   const cmd =
     `java -jar ${assetconfigs.decryptionJar} ` +
