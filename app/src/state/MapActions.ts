@@ -4,7 +4,8 @@ import { FaciesOptions } from "../types";
 
 /**
  * When user presses back button on the map we pop history and
- * reload settings
+ * reload settings. Additionally saves facies map settings if
+ * current map is in facies mode.
  */
 export const goBackInMapHistory = action("goBackInMapHistory", () => {
   const savedMap = state.mapState.mapHistory.accessHistory.pop();
@@ -36,6 +37,9 @@ export const closeMapViewer = action("closeMapViewer", () => {
 /**
  * If the facies options have been saved before, access them. 
  * Otherwise reset to default settings
+ * Only saves if isFacies is true and name is not null
+ * @param name the map name the history needs to be saved to
+ * @param isFacies is the map in facies mode
  */
 export const setFaciesOptions = action(
   "setFaciesOptions",
@@ -49,6 +53,11 @@ export const setFaciesOptions = action(
   state.mapState.selectedMapAgeRange = {minAge: 0, maxAge: 0}
   }
 );
+/**
+ * Sets the selected minAge and maxAge of selectedMapAgeRange
+ * @param minAge the minage to compare with the selectedMapAgeRange
+ * @param maxAge the maxage to compare with the selectedMapAgeRange
+ */
 export const setSelectedMapAgeRange = action("setSelectedMapAgeRange", (minAge: number, maxAge: number) => {
   state.mapState.selectedMapAgeRange.minAge = Math.min(state.mapState.selectedMapAgeRange.minAge, minAge)
   state.mapState.selectedMapAgeRange.maxAge = Math.max(state.mapState.selectedMapAgeRange.maxAge, maxAge)
@@ -74,6 +83,12 @@ export const openNextMap = action("openNextMap", (
   setFaciesOptions(next, isNextFacies);
 });
 
+/**
+ * If is a facies map, and name is not null, save the facies settings to history
+ * @param name the name of the map
+ * @param isFacies is the map in facies mode
+ * @param faciesOptions the facies options to save
+ */
 const saveFaciesOptions = action(
   "saveFaciesOptions",
   (name: string | null, isFacies: boolean, faciesOptions: FaciesOptions) => {
