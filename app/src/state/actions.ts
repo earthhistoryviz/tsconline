@@ -45,7 +45,7 @@ export const closeMapViewer = () => {
   setIsLegendOpen(false);
   setSelectedMap(null);
   setIsMapViewerOpen(false);
-  setFaciesOptions({ faciesAge: state.mapState.facies.minAge, dotSize: 1 });
+  setFaciesOptions({ faciesAge: state.mapState.selectedMapAgeRange.minAge, dotSize: 1 });
 };
 
 /**
@@ -85,7 +85,7 @@ export const openNextMap = (
   pushMapToMapHistory(parentMap);
   setSelectedMap(child);
   setIsFacies(isChildFacies);
-  setFaciesOptions({ faciesAge: state.mapState.facies.minAge, dotSize: 1 });
+  setFaciesOptions({ faciesAge: state.mapState.selectedMapAgeRange.minAge, dotSize: 1 });
 };
 
 /**
