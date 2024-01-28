@@ -92,10 +92,8 @@ export async function parseDatapacks(
       children.forEach((child) => {
         if (!child) return
         // if it has a certain suffix at the end, this is the parent's map facies label.
-        if (!allEntries.get(child) && (
-          (/*(new RegExp(/ - shallow$| - shallow"$/)).test(child)) || */
-          (length == 1 && isFacies.has(trimInvisibleCharacters(child))
-          )))) {
+        if (!allEntries.get(child) && 
+          (length == 1 && isFacies.has(trimInvisibleCharacters(child)))) {
           faciesAbbreviations[trimInvisibleCharacters(child)] = trimInvisibleCharacters(lastparent)
           faciesFound = true
         }
