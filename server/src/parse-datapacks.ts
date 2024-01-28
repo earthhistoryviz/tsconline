@@ -1,7 +1,7 @@
 import { readFile } from "fs/promises";
 import pmap from "p-map";
 import type { ColumnInfo, Facies, FaciesLocations } from "@tsconline/shared";
-import { grabFilepaths } from "./util.js";
+import { trimQuotes, trimInvisibleCharacters, grabFilepaths } from "./util.js";
 
 /**
  * TODO:
@@ -62,6 +62,7 @@ export async function parseDatapacks(
     // For facies events that have multi layers, or for facies that are abbreviated or generalized,
     // we change the facies name for the map front end
     let faciesAbbreviations: faciesAbbreviationType = {}
+    let isFacies: Set<string> = new Set();
     let lines = decryptedfiles.split("\n");
     const allEntries: Map<string, string[]> = new Map();
     /**
@@ -69,6 +70,8 @@ export async function parseDatapacks(
      * Datapack is encrypted as <parent>\t:\t<child>\t<child>\t<child>
      * Where children could be parents later on
      * This is an inline-function because we must update faciesAbbreviations above, to be used later
+     * Additionally we return a boolean that tracks whether we have found the corressponding facies
+     * event with the parent
      */
     function recursive(
       parents: string[],
@@ -76,29 +79,40 @@ export async function parseDatapacks(
       children: string[],
       columnInfo: ColumnInfo,
       allEntries: Map<string, string[]>
-    ) {
+    ): boolean {
       columnInfo[lastparent] = {
         editName: lastparent,
         on: true,
         children: {},
         parents: parents,
       };
+      let faciesFound = false
+      const length = children.length
       const newParents = [...parents, lastparent];
       children.forEach((child) => {
         if (!child) return
         // if it has a certain suffix at the end, this is the parent's map facies label.
-        if (!allEntries.get(child) && ((new RegExp(/ - shallow| - general| - shallow"/)).test(child))) {
-          faciesAbbreviations[child] = lastparent
+        if (!allEntries.get(child) && (
+          (/*(new RegExp(/ - shallow$| - shallow"$/)).test(child)) || */
+          (length == 1 && isFacies.has(trimInvisibleCharacters(child))
+          )))) {
+          faciesAbbreviations[trimInvisibleCharacters(child)] = trimInvisibleCharacters(lastparent)
+          faciesFound = true
         }
         const children = allEntries.get(child) || []
-        recursive(
+        faciesFound = recursive(
           newParents,
           child,
           children,
           columnInfo[lastparent]!.children,
           allEntries
-        );
+        ) || faciesFound
+        if (!faciesFound && isFacies.has(trimInvisibleCharacters(child))) {
+          faciesFound = true
+          faciesAbbreviations[trimInvisibleCharacters(child)] = trimInvisibleCharacters(lastparent)
+        }
       });
+      return faciesFound
     }
 
     // First, gather all parents and their direct children
@@ -114,6 +128,10 @@ export async function parseDatapacks(
             children: {},
             parents: [],
           };
+        }
+        const splitLine = line.split('\t')
+        if(splitLine && splitLine.length > 1 && splitLine[1] === 'facies') {
+          isFacies.add(trimInvisibleCharacters(splitLine[0]!))
         }
         continue;
       }
@@ -154,6 +172,7 @@ export async function parseDatapacks(
     //TODO figure out a better way to parse such that we can do both this
     // and find the children/parent nesting situation at the same time
     // at the moment we "go" through the file 4 times. So O(4n)
+    // console.log(faciesAbbreviations)
     for (let i = 0; i < lines.length; i++) {
       let line = lines[i]
       if (line && line.split('\t')[1] === "facies") {
@@ -190,6 +209,7 @@ function processFacies(faciesAbbreviations: faciesAbbreviationType, lines: strin
   if (faciesAbbreviations[name]) {
     name = faciesAbbreviations[name]!
   }
+  name = trimQuotes(name)
   i += 1
   line = lines[i]
   while (line && !line.startsWith('\n')) {
