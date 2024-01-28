@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { grabFilepaths } from './util.js'
+import { grabFilepaths, trimQuotes } from './util.js'
 import assetconfigs from './index.js';
 import pmap from 'p-map';
 import type { MapHierarchy, MapInfo, MapPoints } from '@tsconline/shared'
@@ -166,7 +166,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                                 if (!info[j] || !headerLabels || !headerLabels[j] || !headerLabels[j]!.label) continue
                                 switch (headerLabels[j]!.label) {
                                     case 'NAME':
-                                        mapPointName = info[j]!
+                                        mapPointName = trimQuotes(info[j]!)
                                         break;
                                     case 'LAT':
                                         mapPoint.lat = Number(info[j]!)
