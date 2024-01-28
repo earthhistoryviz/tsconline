@@ -70,3 +70,15 @@ export async function grabFilepaths(files: string[], topDirectory: string, botDi
     paths = paths.filter(path => pattern.test(path));
     return paths 
 }
+
+export function trimInvisibleCharacters(input: string): string {
+  // Replace one or more invisible characters (excluding spaces) with an empty string
+  return input.replace(/[^\S ]+/g, '').trim();
+}
+export function trimQuotes(input: string): string {
+  if (input.startsWith('"') && input.endsWith('"')) {
+    // Trim the first and last character (quotes)
+    return input.slice(1, -1);
+  }
+  return input
+}
