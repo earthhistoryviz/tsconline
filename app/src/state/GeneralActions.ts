@@ -462,54 +462,6 @@ export const updateEditName = action((newName: string) => {
     return;
   }
   curcol[oldName].editName = newName;
-  console.log("edited name");
-});
-
-/**
- * @Jay fill
- */
-export const updateColumnName = action((newName: string) => {
-  if (!state.settingsTabs.columnSelected) {
-    console.log("WARNING: the user hasn't selected a column.");
-    return;
-  }
-  let curcol: ColumnInfo | null = state.settingsTabs.columns;
-  let oldName = state.settingsTabs.columnSelected.name;
-  let parents = state.settingsTabs.columnSelected.parents;
-  // Walk down the path of parents in the tree of columns
-  for (const p of parents) {
-    if (!curcol) {
-      console.log(
-        "WARNING: tried to access path at parent ",
-        p,
-        " from path ",
-        parents,
-        " in settings tabs column list, but children was null at this level."
-      );
-      return;
-    }
-    curcol = curcol[p]["children"];
-  }
-  if (!curcol) {
-    console.log(
-      "WARNING: tried to access path at ",
-      oldName,
-      "settings tabs column list, but children was null at this level."
-    );
-    return;
-  }
-  if (!curcol[oldName]) {
-    console.log(
-      "WARNING: tried to access name ",
-      oldName,
-      " from path ",
-      parents,
-      " in settings tabs column list, but object[name] was null here."
-    );
-    return;
-  }
-  curcol[newName] = curcol[oldName];
-  delete curcol[oldName];
 });
 
 /**
