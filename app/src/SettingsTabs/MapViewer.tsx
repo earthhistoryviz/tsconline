@@ -398,7 +398,7 @@ type MapPointButtonProps = {
 // name: name of the map point
 // isInfo: will default to false. is this point an info button?
 const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y, name, isInfo = false, container}) => {
-  const [clicked, setClicked] = useState((mapPoint as MapPoints[string]).default || false)
+  const [clicked, setClicked] = useState(Boolean((mapPoint as MapPoints[string]).default) || false)
   const theme = useTheme()
   const { state } = useContext(context)
 
@@ -423,35 +423,6 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
   const iconSize = !isInfo && state.mapState.isFacies ? ICON_SIZE + state.mapState.currentFaciesOptions.dotSize * 3 : ICON_SIZE
 
 
-  /**
-   * Depending on if the point was clicked, return a different icon
-   * @param clicked 
-   * @returns 
-   */
-  function getIcon(){
-    if (isInfo) {
-      return (
-      <InfoIcon
-      className="icon"
-      />)
-    }
-    if (state.mapState.isFacies) {
-      return getFaciesIcon(iconSize, scale, name)
-    }
-    if (clicked) {
-      return (
-      <BorderedIcon 
-      className="icon"
-      component={OnIcon}
-      />)
-    }
-  // if none of the above, return an off icon
-  return (
-  <BorderedIcon
-      className="icon"
-  component={OffIcon}
-  />)
-}
   return (
     <>
       <MapPointTooltip 
@@ -488,7 +459,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
           setClicked(!clicked)
         }}
       >
-        {getIcon()}
+        {getIcon(clicked, isInfo, iconSize, scale, name)}
       </IconButton>
       </MapPointTooltip>
     </>
@@ -646,6 +617,41 @@ function loadMapPoints(
       />
     );
   }))
+}
+
+/**
+ * Return the icon based on the parameters
+ * @param clicked if button is clicked
+ * @param isInfo if an info point
+ * @param iconSize icon size
+ * @param scale scale of icon
+ * @param name name of map point
+ * @returns 
+ */
+function getIcon(clicked: boolean, isInfo: boolean, iconSize: number, scale: number, name: string){
+  const { state } = useContext(context)
+  if (isInfo) {
+    return (
+    <InfoIcon
+    className="icon"
+    />)
+  }
+  if (state.mapState.isFacies) {
+    return getFaciesIcon(iconSize, scale, name)
+  }
+  if (clicked) {
+    return (
+    <BorderedIcon 
+    className="icon"
+    component={OnIcon}
+    />)
+  }
+// if none of the above, return an off icon
+return (
+<BorderedIcon
+    className="icon"
+component={OffIcon}
+/>)
 }
 
 /**
