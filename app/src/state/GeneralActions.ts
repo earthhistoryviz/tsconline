@@ -15,7 +15,6 @@ import { FaciesOptions, MapHistory } from "../types";
 import { state, State } from "./state";
 import { fetcher, devSafeUrl } from "../util";
 
-
 /**
  * Resets any user defined settings
  */
@@ -390,7 +389,7 @@ export const toggleSettingsTabColumn = action(
     curcol[name].on = !curcol[name].on;
     // setSettingsTabsColumns(orig)
     // console.log(JSON.stringify(curcol[name], null, 2));
-    setcolumnSelected(name, parents);
+    setcolumnSelected(curcol[name].editName, parents);
     //console.log("the selected column: ", name);
     // console.log("state after my change: ", state);
     //if the column is unchecked, then no need to check the parents
@@ -462,6 +461,7 @@ export const updateEditName = action((newName: string) => {
     return;
   }
   curcol[oldName].editName = newName;
+  console.log("edited name: ", newName);
 });
 
 /**

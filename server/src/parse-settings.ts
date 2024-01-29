@@ -263,8 +263,8 @@ function generateColumnXml(
       let colName = extractName(jsonColumn._id);
       //check if the user has edited the name from the given name
       let xmlKey = replaceSpecialChars(key, 0);
-      //console.log(xmlKey);
       // Skip the 'id' element.
+
       if (key === "_id") {
         continue;
       }
@@ -361,7 +361,7 @@ function generateColumnXml(
         } else if (stateColumn != null) {
           if (Object.keys(stateColumn.children).includes(childName)) {
             if (stateColumn)
-              params.two = stateColumn[colName]?.children[childName];
+              params.two = stateColumn.children[childName];
           } else {
             params.two = null;
           }
@@ -373,6 +373,8 @@ function generateColumnXml(
             params.two = null;
           }
         }
+        //jsonColumn, stateColumn, parent, indent
+      
         xml += generateColumnXml(
           params.one,
           params.two,
