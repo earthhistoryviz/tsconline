@@ -78,7 +78,8 @@ export const state = observable<State>({
     facies: {
       locations: {},
       minAge: 0,
-      maxAge: 0
+      maxAge: 0,
+      aliases: {}
     },
     selectedMapAgeRange: {
       minAge: 0,

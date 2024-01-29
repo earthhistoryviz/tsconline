@@ -24,10 +24,6 @@ function spliceArrayAtFirstSpecialMatch(array: string[]) {
   return array;
 }
 
-type faciesAbbreviationType = {
-  [child: string]: string
-}
-
 /**
  * Main Function...
  * Get columns based on a decrypt_filepath that leads to the decrypted directory
@@ -50,7 +46,8 @@ export async function parseDatapacks(
   let facies: Facies = {
     locations: {},
     minAge: 999999,
-    maxAge: -99999
+    maxAge: -99999,
+    aliases: {}
   }
   //put all contents into one string for parsing
   await pmap(decrypt_paths, async (decryptedfile) => {
@@ -61,7 +58,6 @@ export async function parseDatapacks(
     const isChild: Set<string> = new Set();
     // For facies events that have multi layers, or for facies that are abbreviated or generalized,
     // we change the facies name for the map front end
-    let faciesAbbreviations: faciesAbbreviationType = {}
     let isFacies: Set<string> = new Set();
     let lines = decryptedfiles.split("\n");
     const allEntries: Map<string, string[]> = new Map();
@@ -94,7 +90,7 @@ export async function parseDatapacks(
         // if it has a certain suffix at the end, this is the parent's map facies label.
         if (!allEntries.get(child) && 
           (length == 1 && isFacies.has(trimInvisibleCharacters(child)))) {
-          faciesAbbreviations[trimInvisibleCharacters(child)] = trimInvisibleCharacters(lastparent)
+          facies.aliases[trimInvisibleCharacters(lastparent)] = trimInvisibleCharacters(child)
           faciesFound = true
         }
         const children = allEntries.get(child) || []
@@ -107,7 +103,7 @@ export async function parseDatapacks(
         ) || faciesFound
         if (!faciesFound && isFacies.has(trimInvisibleCharacters(child))) {
           faciesFound = true
-          faciesAbbreviations[trimInvisibleCharacters(child)] = trimInvisibleCharacters(lastparent)
+          facies.aliases[trimInvisibleCharacters(lastparent)] = trimInvisibleCharacters(child)
         }
       });
       return faciesFound
@@ -174,7 +170,7 @@ export async function parseDatapacks(
     for (let i = 0; i < lines.length; i++) {
       let line = lines[i]
       if (line && line.split('\t')[1] === "facies") {
-        const processedEvent = processFacies(faciesAbbreviations, lines, i)
+        const processedEvent = processFacies(lines, i)
         if (processedEvent) {
           facies.locations[processedEvent.name] = processedEvent.faciesEvent
           facies.minAge = Math.min(facies.minAge, processedEvent.faciesEvent.minAge)
@@ -193,7 +189,7 @@ export async function parseDatapacks(
   }
   return { columns: columnInfo, facies };
 }
-function processFacies(faciesAbbreviations: faciesAbbreviationType, lines: string[], i: number): { name: string, faciesEvent: FaciesLocations[string], nextIndex: number } | null {
+function processFacies(lines: string[], i: number): { name: string, faciesEvent: FaciesLocations[string], nextIndex: number } | null {
   let faciesEvent: FaciesLocations[string] = {
     faciesTimeBlockArray: [],
     minAge: 999999,
@@ -201,13 +197,7 @@ function processFacies(faciesAbbreviations: faciesAbbreviationType, lines: strin
   }
   let line = lines[i]
   if (!line) return null
-  let name = line.split('\t')[0]!
-  // if the facies is one of the select few that use shallow, general, or shallow"
-  // we replace it here
-  if (faciesAbbreviations[name]) {
-    name = faciesAbbreviations[name]!
-  }
-  name = trimQuotes(name)
+  let name = trimQuotes(line.split('\t')[0]!)
   i += 1
   line = lines[i]
   while (line && !line.startsWith('\n')) {
