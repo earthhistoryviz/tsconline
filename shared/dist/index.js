@@ -1,4 +1,5 @@
 // Shared types between app and server (i.e. messages they send back and forth)
+import "querystring";
 export function assertFacies(o) {
     if (!o || typeof o !== "object")
         throw new Error("Facies must be a non-null object");
@@ -9,6 +10,14 @@ export function assertFacies(o) {
         throw new Error('Facies must have a min age with type number');
     if (typeof o.maxAge !== 'number')
         throw new Error('Facies must have a max age with type number');
+    if (typeof o.aliases !== 'object')
+        throw new Error('Facies must have a aliases object');
+    for (const alias in o.aliases) {
+        if (typeof alias !== 'string')
+            throw new Error('aliases in Facies object must have keys of type string');
+        if (typeof o.aliases[alias] !== 'string')
+            throw new Error('aliases in Facies object must have indexed values of type string');
+    }
 }
 export function assertFaciesLocations(o) {
     if (!o || typeof o !== "object")

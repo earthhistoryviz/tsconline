@@ -14,6 +14,9 @@ export type Facies = {
     locations: FaciesLocations;
     minAge: number;
     maxAge: number;
+    aliases: {
+        [alias: string]: string;
+    };
 };
 export type FaciesLocations = {
     [location: string]: {

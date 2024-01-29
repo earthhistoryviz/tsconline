@@ -438,7 +438,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
     }
     if (state.mapState.isFacies) {
       //TODO refactor
-      const event = state.mapState.facies.locations[name]
+      let event = state.mapState.facies.locations[name] ? state.mapState.facies.locations[name] : state.mapState.facies.locations[state.mapState.facies.aliases[name]]
       let rockType = "top"
       // facies event exists for this map point
       if (event && event.faciesTimeBlockArray && event.faciesTimeBlockArray.length > 0) {

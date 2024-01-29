@@ -1,5 +1,7 @@
 // Shared types between app and server (i.e. messages they send back and forth)
 
+import { stringify } from "querystring";
+
 export type SuccessfulServerResponse = {
   message: string;
 };
@@ -20,6 +22,9 @@ export type Facies = {
   locations: FaciesLocations
   minAge: number, // the aggregate min age in all facies locations
   maxAge: number // the aggregate max age in all facies locations
+  aliases: {
+    [alias: string]: string
+  }
 }
 export type FaciesLocations = {
   [location: string]:  {
@@ -135,6 +140,14 @@ export function assertFacies(o: any): asserts o is Facies {
     throw new Error('Facies must have a min age with type number');
   if (typeof o.maxAge !== 'number' ) 
     throw new Error('Facies must have a max age with type number');
+  if (typeof o.aliases !== 'object' ) 
+    throw new Error('Facies must have a aliases object');
+  for (const alias in o.aliases) {
+    if (typeof alias !== 'string')
+      throw new Error('aliases in Facies object must have keys of type string');
+    if (typeof o.aliases[alias] !== 'string')
+      throw new Error('aliases in Facies object must have indexed values of type string');
+  }
 }
 export function assertFaciesLocations(o: any): asserts o is FaciesLocations {
   if (!o || typeof o !== "object")
