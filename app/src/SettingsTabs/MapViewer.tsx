@@ -1,4 +1,4 @@
-import { SvgIconProps, Box, InputLabel, FormControl, Slider, TooltipProps, Tooltip, Drawer, Divider, Typography, IconButton, Dialog, Button, SvgIcon } from '@mui/material'
+import { Box, Slider, TooltipProps, Tooltip, Drawer, Divider, Typography, IconButton, Dialog, Button, SvgIcon } from '@mui/material'
 import { styled, useTheme } from "@mui/material/styles"
 import type { InfoPoints, MapHierarchy, Bounds, MapPoints, MapInfo} from '@tsconline/shared'
 import { devSafeUrl } from '../util'
@@ -20,7 +20,6 @@ import YoutubeSearchedForIcon from '@mui/icons-material/YoutubeSearchedFor';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { observer } from 'mobx-react-lite'
 import './MapViewer.css'
-import { ZoomOut } from '@mui/icons-material'
 
 const ICON_SIZE = 40
 const InfoIcon = NotListedLocationIcon 
@@ -401,11 +400,11 @@ type MapPointButtonProps = {
 const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y, name, isInfo = false, container}) => {
   const [clicked, setClicked] = useState((mapPoint as MapPoints[string]).default || false)
   const theme = useTheme()
-  const { state, actions } = useContext(context)
+  const { state } = useContext(context)
 
   // below is the hook for grabbing the scale from map image scaling
   const [scale, setScale] = useState(1)
-  useTransformEffect(({ state, instance }) => {
+  useTransformEffect(({ state }) => {
     // console.log(state); // { previousScale: 1, scale: 1, positionX: 0, positionY: 0 }
     setScale(state.scale)
     return () => {
