@@ -437,58 +437,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(({mapPoint, x, y,
       />)
     }
     if (state.mapState.isFacies) {
-      //TODO refactor
-      let event = state.mapState.facies.locations[name] ? state.mapState.facies.locations[name] : state.mapState.facies.locations[state.mapState.facies.aliases[name]]
-      let rockType = "top"
-      // facies event exists for this map point
-      if (event && event.faciesTimeBlockArray && event.faciesTimeBlockArray.length > 0) {
-        actions.setSelectedMapAgeRange(event.minAge, event.maxAge )
-        let i = 0
-        let timeBlock = event.faciesTimeBlockArray[i]
-        let baseAge = timeBlock.age
-        // find the icon relating to the age we're in
-        while(baseAge < state.mapState.currentFaciesOptions.faciesAge) {
-          i += 1
-          if (i >= event.faciesTimeBlockArray.length) {
-            // if we hit the end of possible ranges, then an icon
-            // doesn't exist. so we pass top
-            rockType = 'top'
-            break
-          }
-          timeBlock = event.faciesTimeBlockArray[i]
-          baseAge = timeBlock.age
-          rockType = timeBlock.rockType
-        }
-      }
-      return (
-        <svg
-          width={`${iconSize / scale}px`}
-          height={`${iconSize / scale}px`}
-          viewBox="0 0 24 24"
-        >
-          <circle
-            cx="12"
-            cy="12"
-            r="10" 
-            stroke="black"
-            strokeWidth="1"
-            fill="transparent"
-          />
-          <image
-            href={rockType.toLowerCase().trim() === "top" ? 
-            "" : devSafeUrl(`/public/patterns/${rockType.trim()}.PNG`)
-          }
-            x="-10"
-            y="-10"
-            height="44px"
-            width="44px"
-            clipPath="url(#clipCircle)"
-          />
-          <clipPath id="clipCircle">
-            <circle cx="12" cy="12" r="10" />
-          </clipPath>
-        </svg>
-      )
+      return getFaciesIcon(iconSize, scale, name)
     }
     if (clicked) {
       return (
@@ -698,4 +647,67 @@ function loadMapPoints(
       />
     );
   }))
+}
+
+/**
+ * This returns a circle containing the image we service from the server depending on the age 
+ * the user selects
+ * @param iconSize the icon size of the circle
+ * @param scale the scale of the circle, scaled from dotSize
+ * @param name the name of the map point
+ * @returns 
+ */
+function getFaciesIcon(iconSize: number, scale: number, name: string) {
+  const { state, actions } = useContext(context)
+  let event = state.mapState.facies.locations[name] ? state.mapState.facies.locations[name] : state.mapState.facies.locations[state.mapState.facies.aliases[name]]
+  let rockType = "top"
+  // facies event exists for this map point
+  if (event && event.faciesTimeBlockArray && event.faciesTimeBlockArray.length > 0) {
+    actions.setSelectedMapAgeRange(event.minAge, event.maxAge )
+    let i = 0
+    let timeBlock = event.faciesTimeBlockArray[i]
+    let baseAge = timeBlock.age
+    // find the icon relating to the age we're in
+    while(baseAge < state.mapState.currentFaciesOptions.faciesAge) {
+      i += 1
+      if (i >= event.faciesTimeBlockArray.length) {
+        // if we hit the end of possible ranges, then an icon
+        // doesn't exist. so we pass top
+        rockType = 'top'
+        break
+      }
+      timeBlock = event.faciesTimeBlockArray[i]
+      baseAge = timeBlock.age
+      rockType = timeBlock.rockType
+    }
+  }
+  return (
+    <svg
+      width={`${iconSize / scale}px`}
+      height={`${iconSize / scale}px`}
+      viewBox="0 0 24 24"
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="10" 
+        stroke="black"
+        strokeWidth="1"
+        fill="transparent"
+      />
+      <image
+        href={rockType.toLowerCase().trim() === "top" ? 
+        "" : devSafeUrl(`/public/patterns/${rockType.trim()}.PNG`)
+      }
+        x="-10"
+        y="-10"
+        height="44px"
+        width="44px"
+        clipPath="url(#clipCircle)"
+      />
+      <clipPath id="clipCircle">
+        <circle cx="12" cy="12" r="10" />
+      </clipPath>
+    </svg>
+    )
 }
