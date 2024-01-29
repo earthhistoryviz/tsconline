@@ -43,7 +43,7 @@ const ColumnMenu: React.FC<ColumnMenuProps> = observer(({ name, parents }) => {
           defaultValue={name}
           key={name}
           onChange={(event) => {
-            actions.updateEditName(event.target.value);
+            editName.current = event.target.value;
           }}
           variant="filled"
           size="small"
@@ -60,11 +60,10 @@ const ColumnMenu: React.FC<ColumnMenuProps> = observer(({ name, parents }) => {
             color="secondary"
             variant="contained"
             onClick={() => {
-              console.log(state.settingsTabs.columnSelected?.name);
-              //updateEditName(state.settingsTabs.columnSelected?.name);
+              actions.updateEditName(editName.current);
             }}
           >
-            Revert
+            Confirm
           </Button>
         </div>
       </div>
@@ -84,7 +83,8 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
     const theme = useTheme();
     const { state, actions } = useContext(context);
     const [open, setOpen] = useState(true);
-
+    //for keeping the original name for array access
+    let ogName = useRef(name);
     const toggleAccordion = (open: boolean) => {
       setOpen((open) => !open);
     };
@@ -93,7 +93,10 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
     }
     let color = "transparent";
     if (state.settingsTabs.columnSelected) {
-      color = state.settingsTabs.columnSelected.name === name ? "lightblue" : "transparent";
+      color =
+        state.settingsTabs.columnSelected.name === name
+          ? "lightblue"
+          : "transparent";
     }
     const hasChildren =
       details.children && Object.keys(details.children).length > 0;
@@ -113,13 +116,17 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
       <div>
         <ColumnContainer>
           <div
-            style={{ display: "flex", cursor: "pointer", backgroundColor: color }}
+            style={{
+              display: "flex",
+              cursor: "pointer",
+              backgroundColor: color,
+            }}
             onClick={() => clickColumnName()}
           >
             <TSCCheckbox
               checked={details.on}
               onChange={() => {
-                onToggle(name, details.parents);
+                onToggle(ogName.current, details.parents);
               }}
             />
             {columnName}
