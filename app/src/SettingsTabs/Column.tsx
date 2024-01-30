@@ -15,6 +15,7 @@ import {
   Accordion,
   TSCButton,
 } from "../components";
+import { updateEditName } from "../state/GeneralActions";
 
 type ColumnMenuProps = {
   name: string;
@@ -80,14 +81,22 @@ type ColumnAccordionProps = {
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
   ({ name, details, onToggle }) => {
     const theme = useTheme();
-    const { actions } = useContext(context)
+    const { state, actions } = useContext(context);
     const [open, setOpen] = useState(true);
-
+    //for keeping the original name for array access
+    let ogName = useRef(name);
     const toggleAccordion = (open: boolean) => {
       setOpen((open) => !open);
     };
     function clickColumnName() {
       actions.setcolumnSelected(name, details.parents);
+    }
+    let color = "transparent";
+    if (state.settingsTabs.columnSelected) {
+      color =
+        state.settingsTabs.columnSelected.name === name
+          ? "lightblue"
+          : "transparent";
     }
     const hasChildren =
       details.children && Object.keys(details.children).length > 0;
@@ -107,13 +116,17 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
       <div>
         <ColumnContainer>
           <div
-            style={{ display: "flex", cursor: "pointer" }}
-            onClick={() => actions.setcolumnSelected(name, details.parents)}
+            style={{
+              display: "flex",
+              cursor: "pointer",
+              backgroundColor: color,
+            }}
+            onClick={() => clickColumnName()}
           >
             <TSCCheckbox
               checked={details.on}
               onChange={() => {
-                onToggle(name, details.parents);
+                onToggle(ogName.current, details.parents);
               }}
             />
             {columnName}

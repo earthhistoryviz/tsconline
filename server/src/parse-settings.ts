@@ -263,8 +263,8 @@ function generateColumnXml(
       let colName = extractName(jsonColumn._id);
       //check if the user has edited the name from the given name
       let xmlKey = replaceSpecialChars(key, 0);
-      //console.log(xmlKey);
       // Skip the 'id' element.
+
       if (key === "_id") {
         continue;
       }
@@ -286,8 +286,12 @@ function generateColumnXml(
             }
           }
         }
-        if (!useEditName)
-          xml += `${indent}<setting name="title">${replaceSpecialChars(jsonColumn[key], 1)}</setting>\n`;
+        if (!useEditName) {
+          xml += `${indent}<setting name="title">${replaceSpecialChars(
+            jsonColumn[key],
+            1
+          )}</setting>\n`;
+        }
       } else if (key === "backgroundColor" || key === "customColor") {
         if (jsonColumn[key].useNamed) {
           xml += `${indent}<setting name="${xmlKey}" useNamed="${jsonColumn[key].useNamed}">${jsonColumn[key].text}</setting>\n`;
@@ -316,16 +320,6 @@ function generateColumnXml(
         }
         //check if column is checked or not, and change the isSelected field to true or false
         else if (stateColumn && !colName.includes("Chart")) {
-          // console.log(colName);
-          //console.log(" asdf ", stateColumn);
-          //belgium pack consideration
-          // if (Object.keys(stateColumn).includes('"' + colName + '"')) {
-          //   if (stateColumn['"' + colName + '"'].on) {
-          //     xml += `${indent}<setting name="${xmlKey}">true</setting>\n`;
-          //   } else {
-          //     xml += `${indent}<setting name="${xmlKey}">false</setting>\n`;
-          //   }
-          // }
           if (stateColumn.on) {
             xml += `${indent}<setting name="${xmlKey}">true</setting>\n`;
           } else {
@@ -345,7 +339,6 @@ function generateColumnXml(
         //recursively go down column settings
         let currName = extractName(jsonColumn._id);
         let childName = extractName(jsonColumn[key]._id);
-        //console.log(parent, currName, childName);
         //TODO: pass the state column of the column itself, not the children array of its parent
         let params: { one: any; two: any; three: string; four: string } = {
           one: jsonColumn[key],
@@ -368,7 +361,7 @@ function generateColumnXml(
         } else if (stateColumn != null) {
           if (Object.keys(stateColumn.children).includes(childName)) {
             if (stateColumn)
-              params.two = stateColumn[colName]?.children[childName];
+              params.two = stateColumn.children[childName];
           } else {
             params.two = null;
           }
@@ -380,6 +373,8 @@ function generateColumnXml(
             params.two = null;
           }
         }
+        //jsonColumn, stateColumn, parent, indent
+      
         xml += generateColumnXml(
           params.one,
           params.two,

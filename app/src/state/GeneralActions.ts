@@ -15,7 +15,6 @@ import { FaciesOptions, MapHistory } from "../types";
 import { state, State } from "./state";
 import { fetcher, devSafeUrl } from "../util";
 
-
 /**
  * Resets any user defined settings
  */
@@ -390,7 +389,7 @@ export const toggleSettingsTabColumn = action(
     curcol[name].on = !curcol[name].on;
     // setSettingsTabsColumns(orig)
     // console.log(JSON.stringify(curcol[name], null, 2));
-    setcolumnSelected(name, parents);
+    setcolumnSelected(curcol[name].editName, parents);
     //console.log("the selected column: ", name);
     // console.log("state after my change: ", state);
     //if the column is unchecked, then no need to check the parents
@@ -462,54 +461,7 @@ export const updateEditName = action((newName: string) => {
     return;
   }
   curcol[oldName].editName = newName;
-  console.log("edited name");
-});
-
-/**
- * @Jay fill
- */
-export const updateColumnName = action((newName: string) => {
-  if (!state.settingsTabs.columnSelected) {
-    console.log("WARNING: the user hasn't selected a column.");
-    return;
-  }
-  let curcol: ColumnInfo | null = state.settingsTabs.columns;
-  let oldName = state.settingsTabs.columnSelected.name;
-  let parents = state.settingsTabs.columnSelected.parents;
-  // Walk down the path of parents in the tree of columns
-  for (const p of parents) {
-    if (!curcol) {
-      console.log(
-        "WARNING: tried to access path at parent ",
-        p,
-        " from path ",
-        parents,
-        " in settings tabs column list, but children was null at this level."
-      );
-      return;
-    }
-    curcol = curcol[p]["children"];
-  }
-  if (!curcol) {
-    console.log(
-      "WARNING: tried to access path at ",
-      oldName,
-      "settings tabs column list, but children was null at this level."
-    );
-    return;
-  }
-  if (!curcol[oldName]) {
-    console.log(
-      "WARNING: tried to access name ",
-      oldName,
-      " from path ",
-      parents,
-      " in settings tabs column list, but object[name] was null here."
-    );
-    return;
-  }
-  curcol[newName] = curcol[oldName];
-  delete curcol[oldName];
+  console.log("edited name: ", newName);
 });
 
 /**
