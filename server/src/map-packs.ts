@@ -234,7 +234,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
             // console.log(tabSeparated)
             if (!tabSeparated ||
                 tabSeparated.length < 1 ||
-                tabSeparated[0]![0] !== 'MAP-VERSION' || 
+                tabSeparated[0]![0]?.trim().toUpperCase() !== 'MAP-VERSION' || 
                 tabSeparated[0]![1] !== '1' ||
                 tabSeparated[0]!.length < 2) {
                 throw new Error (`Map info file: ${path.basename(map_info)} is not in the correct format/version`)
