@@ -1,0 +1,9 @@
+{
+  "img": "australia.png",
+  "title": "Australia",
+  "description": "A Large Australia Map Pack",
+  "settings": "settings.tsc",
+  "datapacks": [
+    "Australia Mappack GTS2016 ENCRYPTED PUBLIC.mdpk"
+  ]
+}
