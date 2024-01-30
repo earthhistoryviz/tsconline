@@ -148,7 +148,7 @@ async function getFacies(filename: string, facies: Facies) {
   let inFaciesBlock = false
   for await (const line of readline) {
     // we reached the end
-    if (!line || trimInvisibleCharacters(line) === '') {
+    if ((!line || trimInvisibleCharacters(line) === '') && inFaciesBlock) {
       inFaciesBlock = false
       if (location.faciesTimeBlockArray.length == 0) {
         location.maxAge = 0
