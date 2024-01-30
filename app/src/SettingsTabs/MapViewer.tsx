@@ -664,7 +664,16 @@ component={OffIcon}
  */
 function getFaciesIcon(iconSize: number, scale: number, name: string) {
   const { state, actions } = useContext(context)
+  // this accounts for facies map points that are recorded as the parent, but they use the children as an 'alias'.
+  // Therefore meaning the child has the facies information but the map point is not called by the child name but is called the parent name
+  // parent -> child -> facies
+  // displayed as parent -> facies
   let event = state.mapState.facies.locations[name] ? state.mapState.facies.locations[name] : state.mapState.facies.locations[state.mapState.facies.aliases[name]]
+  if (name.includes("Amadeus Central")) {
+    console.log('finding')
+    console.log(Object.keys(state.mapState.facies.locations).filter((value) => value.includes("Amadeus")))
+    console.log(Object.keys(state.mapState.facies.aliases).filter((value) => value.includes("Amadeus")))
+  }
   let rockType = "top"
   // facies event exists for this map point
   if (event && event.faciesTimeBlockArray && event.faciesTimeBlockArray.length > 0) {

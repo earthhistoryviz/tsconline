@@ -1,7 +1,7 @@
-import { readFile } from "fs/promises";
-import pmap from "p-map";
-import type { ColumnInfo, Facies, FaciesLocations } from "@tsconline/shared";
+import { createReadStream } from "fs";
+import { ColumnInfo, Facies, FaciesLocations, FaciesTimeBlock, assertFaciesTimeBlock } from "@tsconline/shared";
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths } from "./util.js";
+import { createInterface } from "readline";
 
 /**
  * TODO:
@@ -30,6 +30,9 @@ function spliceArrayAtFirstSpecialMatch(array: string[]) {
  * and an amount of files in a string array that should pop up in that decrypted directory
  * Have not checked edge cases in which a file doesn't show up, will only return any that are correct.
  * Maybe add functionality in the future to check if all the files exist
+ * @param decrypt_filepath the decryption folder location
+ * @param files the files to be parsed
+ * @returns 
  */
 export async function parseDatapacks(
   decrypt_filepath: string,
@@ -41,7 +44,6 @@ export async function parseDatapacks(
     "datapacks"
   );
   if (decrypt_paths.length == 0) throw new Error('Did not find any datapacks');
-  let decryptedfiles: String = "";
   let columnInfo: ColumnInfo = {};
   let facies: Facies = {
     locations: {},
@@ -49,177 +51,226 @@ export async function parseDatapacks(
     maxAge: -99999,
     aliases: {}
   }
-  //put all contents into one string for parsing
-  await pmap(decrypt_paths, async (decryptedfile) => {
-    const contents = (await readFile(decryptedfile)).toString();
-    decryptedfiles = decryptedfiles + "\n" + contents;
-  });
+  const isChild: Set<string> = new Set();
+  const isFacies: Set<string> = new Set();
+  const allEntries: Map<string, string[]> = new Map();
   try {
-    const isChild: Set<string> = new Set();
-    // For facies events that have multi layers, or for facies that are abbreviated or generalized,
-    // we change the facies name for the map front end
-    let isFacies: Set<string> = new Set();
-    let lines = decryptedfiles.split("\n");
-    const allEntries: Map<string, string[]> = new Map();
-    /**
-     * This is a recursive function meant to instantiate all columns.
-     * Datapack is encrypted as <parent>\t:\t<child>\t<child>\t<child>
-     * Where children could be parents later on
-     * This is an inline-function because we must update faciesAbbreviations above, to be used later
-     * Additionally we return a boolean that tracks whether we have found the corressponding facies
-     * event with the parent
-     */
-    function recursive(
-      parents: string[],
-      lastparent: string,
-      children: string[],
-      columnInfo: ColumnInfo,
-      allEntries: Map<string, string[]>
-    ): boolean {
-      columnInfo[lastparent] = {
-        editName: lastparent,
-        on: true,
-        children: {},
-        parents: parents,
-      };
-      let faciesFound = false
-      const length = children.length
-      const newParents = [...parents, lastparent];
-      children.forEach((child) => {
-        if (!child) return
-        // if it has a certain suffix at the end, this is the parent's map facies label.
-        if (!allEntries.get(child) && 
-          (length == 1 && isFacies.has(trimInvisibleCharacters(child)))) {
-          facies.aliases[trimInvisibleCharacters(lastparent)] = trimInvisibleCharacters(child)
-          faciesFound = true
-        }
-        const children = allEntries.get(child) || []
-        faciesFound = recursive(
-          newParents,
-          child,
-          children,
-          columnInfo[lastparent]!.children,
-          allEntries
-        ) || faciesFound
-        if (!faciesFound && isFacies.has(trimInvisibleCharacters(child))) {
-          faciesFound = true
-          facies.aliases[trimInvisibleCharacters(lastparent)] = trimInvisibleCharacters(child)
+    for (let decrypt_path of decrypt_paths) {
+      // First, gather all parents and their direct children
+      await getAllEntries(decrypt_path, allEntries, columnInfo, isFacies, isChild)
+      // only iterate over parents. if we encounter one that is a child, the recursive function
+      // should have already processed it.
+      allEntries.forEach((children, parent) => {
+        // if the parent is not a child
+        if (!isChild.has(parent)) {
+          recursive([], parent, children, columnInfo, allEntries, isFacies, facies);
         }
       });
-      return faciesFound
-    }
-
-    // First, gather all parents and their direct children
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      if (!line) continue;
-      if (!line.includes("\t:\t")) {
-        if (line.includes(":") && line.split(":")[0]!.includes("age units")) {
-          //create MA setting since this doesn't follow the standard format of "\t:\t"
-          columnInfo["MA"] = {
-            editName: "MA",
-            on: true,
-            children: {},
-            parents: [],
-          };
-        }
-        const splitLine = line.split('\t')
-        if(splitLine && splitLine.length > 1 && splitLine[1] === 'facies') {
-          isFacies.add(trimInvisibleCharacters(splitLine[0]!))
-        }
-        continue;
-      }
-      let parent = line.split("\t:\t")[0];
-
-      //THIS ACTUALLY DOESN'T MATTER ANYMORE BUT I WILL LEAVE IT HERE JUST IN CASE
-      //TODO
-      //to replace quotations surrounding the column name for future parsing access in state.
-      //if this is not done, then the keys in the state for columns have quotations surrounding it
-      //which is not consistent with the equivalent keys found in the parsed settings json object.
-      //ex "North Belgium -- Oostende, Brussels, Antwerp, Campine, Maastrichen" vs
-      //North Belgium -- Oostende, Brussels, Antwerp, Campine, Maastrichen
-
-      let childrenstring = line.split("\t:\t")[1];
-      if (!parent || !childrenstring) continue;
-      // childrenstring = childrenstring!.split("\t\t")[0];
-      let children = spliceArrayAtFirstSpecialMatch(
-        childrenstring!.split("\t")
-      );
-
-
-      allEntries.set(parent, children);
-    }
-    //if the entry is a child, add it to a set.
-    allEntries.forEach((children) => {
-      children.forEach((child) => {
-        isChild.add(child);
-      });
-    });
-    // only iterate over parents. if we encounter one that is a child, the recursive function
-    // should have already processed it.
-    allEntries.forEach((children, parent) => {
-      // if the parent is not a child
-      if (!isChild.has(parent)) {
-        recursive([], parent, children, columnInfo, allEntries);
-      }
-    });
-    //TODO figure out a better way to parse such that we can do both this
-    // and find the children/parent nesting situation at the same time
-    // at the moment we "go" through the file 4 times. So O(4n)
-    // console.log(faciesAbbreviations)
-    for (let i = 0; i < lines.length; i++) {
-      let line = lines[i]
-      if (line && line.split('\t')[1] === "facies") {
-        const processedEvent = processFacies(lines, i)
-        if (processedEvent) {
-          facies.locations[processedEvent.name] = processedEvent.faciesEvent
-          facies.minAge = Math.min(facies.minAge, processedEvent.faciesEvent.minAge)
-          facies.maxAge = Math.max(facies.maxAge, processedEvent.faciesEvent.maxAge)
-          i = processedEvent.nextIndex
-        }
-      }
+      //next we get the facies events
+      await getFacies( decrypt_path, facies)
     }
   } catch (e: any) {
     console.log(
       "ERROR: failed to read columns for path " +
-      decryptedfiles +
+      decrypt_paths +
       ".  Error was: ",
       e
     );
   }
   return { columns: columnInfo, facies };
 }
-function processFacies(lines: string[], i: number): { name: string, faciesEvent: FaciesLocations[string], nextIndex: number } | null {
-  let faciesEvent: FaciesLocations[string] = {
+/**
+ * This will populate a mapping of all parents : childen[]
+ * We need this to recursively iterate correctly. We do not want 
+ * @param filename 
+ * @param allEntries 
+ * @param columnInfo 
+ * @param isFacies 
+ * @param isChild 
+ */
+async function getAllEntries(filename: string, allEntries: Map<string, string[]>, columnInfo: ColumnInfo, isFacies: Set<string>, isChild: Set<string>) {
+  const fileStream = createReadStream(filename)
+  const readline = createInterface({ input: fileStream, crlfDelay: Infinity })
+  for await (const line of readline) {
+    if (!line) continue;
+    if (!line.includes("\t:\t")) {
+      if (line.includes(":") && line.split(":")[0]!.includes("age units")) {
+        //create MA setting since this doesn't follow the standard format of "\t:\t"
+        columnInfo["MA"] = {
+          editName: "MA",
+          on: true,
+          children: {},
+          parents: [],
+        };
+      }
+      const splitLine = line.split('\t')
+      if(splitLine && splitLine.length > 1 && splitLine[1] === 'facies') {
+        isFacies.add(trimInvisibleCharacters(splitLine[0]!))
+      }
+      continue;
+    }
+    let parent = line.split("\t:\t")[0];
+
+    //THIS ACTUALLY DOESN'T MATTER ANYMORE BUT I WILL LEAVE IT HERE JUST IN CASE
+    //TODO
+    //to replace quotations surrounding the column name for future parsing access in state.
+    //if this is not done, then the keys in the state for columns have quotations surrounding it
+    //which is not consistent with the equivalent keys found in the parsed settings json object.
+    //ex "North Belgium -- Oostende, Brussels, Antwerp, Campine, Maastrichen" vs
+    //North Belgium -- Oostende, Brussels, Antwerp, Campine, Maastrichen
+
+    let childrenstring = line.split("\t:\t")[1];
+    if (!parent || !childrenstring) continue;
+    // childrenstring = childrenstring!.split("\t\t")[0];
+    let children = spliceArrayAtFirstSpecialMatch(childrenstring!.split("\t"));
+    //if the entry is a child, add it to a set.
+    for (const child of children) {
+      isChild.add(child)
+    }
+    allEntries.set(parent, children);
+  }
+}
+/**
+ * This function will populate the param facies with the correct facies events
+ * using a read stream
+ * @param filename the filename to be parsed
+ * @param facies the facies object containing all of the facies events
+ */
+async function getFacies(filename: string, facies: Facies) {
+  const fileStream = createReadStream(filename)
+  const readline = createInterface({ input: fileStream, crlfDelay: Infinity })
+  let location: FaciesLocations[string] = {
     faciesTimeBlockArray: [],
     minAge: 999999,
     maxAge: -99999
   }
-  let line = lines[i]
-  if (!line) return null
-  let name = trimQuotes(line.split('\t')[0]!)
-  i += 1
-  line = lines[i]
-  while (line && !line.startsWith('\n')) {
-    // if primary, skip
-    if (line.toLowerCase().includes('primary')) {
-      i += 1
-      line = lines[i]
+  let name = ""
+  let inFaciesBlock = false
+  for await (const line of readline) {
+    // we reached the end
+    if (!line || trimInvisibleCharacters(line) === '') {
+      inFaciesBlock = false
+      if (location.faciesTimeBlockArray.length == 0) {
+        location.maxAge = 0
+        location.minAge = 0
+      }
+      facies.locations[name] = location
+      facies.minAge = Math.min(facies.minAge, location.minAge)
+      facies.maxAge = Math.max(facies.maxAge, location.maxAge)
+      //reset the location variable
+      location = {
+        faciesTimeBlockArray: [],
+        minAge: 999999,
+        maxAge: -99999
+      }
       continue
     }
-    const tabSeperated = line.split('\t')
-    if (tabSeperated.length < 4) break
-    const age = Number(tabSeperated[3]!)
-    // label doesn't exist for TOP or GAP
-    if (!tabSeperated[2]) {
-      faciesEvent.faciesTimeBlockArray.push({ rockType: tabSeperated[1]!, age })
-    } else {
-      faciesEvent.faciesTimeBlockArray.push({ rockType: tabSeperated[1]!, label: tabSeperated[2]!, age })
+    // we found a facies event location
+    if (!inFaciesBlock && line.split('\t')[1] === "facies") {
+      name = trimQuotes(line.split('\t')[0]!)
+      inFaciesBlock = true
+    } else if (inFaciesBlock) {
+      let faciesTimeBlock = processFacies(line)
+      if (faciesTimeBlock) {
+        location.faciesTimeBlockArray.push(faciesTimeBlock)
+        location.minAge = Math.min(location.minAge, faciesTimeBlock.age)
+        location.maxAge = Math.max(location.maxAge, faciesTimeBlock.age)
+      }
     }
-    faciesEvent.minAge = Math.min(faciesEvent.minAge, age)
-    faciesEvent.maxAge = Math.max(faciesEvent.maxAge, age)
-    i += 1
-    line = lines[i]
   }
-  return { name, faciesEvent, nextIndex: i }
 }
+/**
+ * Processes a single facies line
+ * @param line the line to be processed
+ * @returns A FaciesTimeBlock object
+ */
+function processFacies(line: string): FaciesTimeBlock | null {
+  let faciesTimeBlock = {}
+  if (line.toLowerCase().includes('primary')) {
+    return null
+  }
+  const tabSeperated = line.split('\t')
+  if (tabSeperated.length < 4) return null
+  const age = Number(tabSeperated[3]!)
+  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeperated[3]! + " is NaN")
+  // label doesn't exist for TOP or GAP
+  if (!tabSeperated[2]) {
+    faciesTimeBlock = { 
+      rockType: tabSeperated[1]!,
+      age
+    }
+  } else {
+    faciesTimeBlock = { 
+      rockType: tabSeperated[1]!,
+      label: tabSeperated[2]!,
+      age
+    }
+  }
+  try {
+    assertFaciesTimeBlock(faciesTimeBlock)
+  } catch (e) {
+    console.log(`Error ${e} found while processing facies, returning null`)
+    return null
+  }
+  return faciesTimeBlock 
+}
+  /**
+   * 
+   * This is a recursive function meant to instantiate all columns.
+   * Datapack is encrypted as <parent>\t:\t<child>\t<child>\t<child>
+   * Where children could be parents later on
+   * This is an inline-function because we must update faciesAbbreviations above, to be used later
+   * Additionally we return a boolean that tracks whether we have found the corressponding facies
+   * event with the parent
+   * @param parents the parents string that lists all the parents of this column
+   * @param currentcolumn the current column we are on
+   * @param children the children of the current column
+   * @param columnInfo the overarching columnInfo object storing all columns
+   * @param allEntries all entries of parent\t:\tchild
+   * @param isFacies the set of all facies event labels
+   * @param facies the facies object
+   * @returns 
+   */
+  function recursive(
+    parents: string[],
+    currentcolumn: string,
+    children: string[],
+    columnInfo: ColumnInfo,
+    allEntries: Map<string, string[]>,
+    isFacies: Set<string>,
+    facies: Facies
+  ): boolean {
+    columnInfo[currentcolumn] = {
+      editName: currentcolumn,
+      on: true,
+      children: {},
+      parents: parents,
+    };
+    let faciesFound = false
+    const length = children.length
+    const newParents = [...parents, currentcolumn];
+    children.forEach((child) => {
+      // if the child is named the same as the parent, this will create an infinite loop
+      if (!child || child === currentcolumn) return
+      // if this is the final child then we store this as a potential alias
+      if (!allEntries.get(child) && (length == 1 && isFacies.has(trimInvisibleCharacters(child)))) {
+        facies.aliases[trimInvisibleCharacters(currentcolumn)] = trimInvisibleCharacters(child)
+        faciesFound = true
+      }
+      const children = allEntries.get(child) || []
+      faciesFound = recursive(
+        newParents,
+        child,
+        children,
+        columnInfo[currentcolumn]!.children,
+        allEntries,
+        isFacies,
+        facies
+      ) || faciesFound
+      if (!faciesFound && isFacies.has(trimInvisibleCharacters(child))) {
+        faciesFound = true
+        facies.aliases[trimInvisibleCharacters(currentcolumn)] = trimInvisibleCharacters(child)
+      }
+    });
+    return faciesFound
+  }

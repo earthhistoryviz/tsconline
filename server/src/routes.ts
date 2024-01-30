@@ -3,7 +3,7 @@ import { jsonToXml, xmlToJson } from "./parse-settings.js";
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
 import { writeFile, stat } from "fs/promises";
-import { assertDatapackResponse, assertChartRequest, type DatapackResponse } from "@tsconline/shared";
+import { assertDatapackResponse, assertChartRequest, type DatapackResponse, assertFacies } from "@tsconline/shared";
 import { deleteDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
 import { grabMapImages, grabMapInfo } from "./map-packs.js";
@@ -46,14 +46,15 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(
     );
     const { mapInfo, mapHierarchy } = await grabMapInfo(filesSplit);
     await grabMapImages(filesSplit, assetconfigs.imagesDirectory);
-    const datapackResponse: DatapackResponse = {
+    const datapackResponse = {
       columnInfo: columns,
       facies,
       mapInfo,
       mapHierarchy,
     };
-    // console.log(JSON.stringify(facies, null, 2))
+    // console.log(JSON.stringify(facies.locations, null, 2))
     assertDatapackResponse(datapackResponse)
+    // console.log(JSON.stringify(facies.locations['Adele 1 lithology']?.minAge, null, 2))
     reply.send(datapackResponse);
     console.log("Successfully fetched info for ", filesSplit)
   } catch (e) {

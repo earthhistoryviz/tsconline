@@ -155,7 +155,7 @@ export function assertFaciesLocations(o: any): asserts o is FaciesLocations {
   for (const location in o) {
     if (typeof location !== 'string')
       throw new Error(`FaciesLocations 'key' ${location} must be of type 'string`)
-      const faciesLocation = o[location]
+    const faciesLocation = o[location]
     if (typeof faciesLocation.minAge !== 'number')
       throw new Error(`FaciesLocation value for 'key' ${location} must have a minage be of type 'number'`)
     if (typeof faciesLocation.maxAge !== 'number')
@@ -177,7 +177,7 @@ export function assertFaciesTimeBlock(o: any): asserts o is FaciesTimeBlock {
   if ('label' in o && typeof o.label !== "string") 
     throw new Error("FaciesTimeBlock must have a label variable of type 'string'")
   if (typeof o.age !== "number") 
-    throw new Error("FaciesTimeBlock must have a time variable of type 'number'")
+    throw new Error("FaciesTimeBlock must have a age variable of valid type 'number'")
 }
 export function assertDatapackResponse(o: any): asserts o is DatapackResponse {
   if (!o || typeof o !== "object")
