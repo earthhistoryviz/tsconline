@@ -46,7 +46,7 @@ export function assertFaciesTimeBlock(o) {
     if ('label' in o && typeof o.label !== "string")
         throw new Error("FaciesTimeBlock must have a label variable of type 'string'");
     if (typeof o.age !== "number")
-        throw new Error("FaciesTimeBlock must have a time variable of type 'number'");
+        throw new Error("FaciesTimeBlock must have a age variable of valid type 'number'");
 }
 export function assertDatapackResponse(o) {
     if (!o || typeof o !== "object")
