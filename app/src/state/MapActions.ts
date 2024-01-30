@@ -26,6 +26,7 @@ export const goBackInMapHistory = action("goBackInMapHistory", () => {
  * Close map viewer, and resets all settings, clears history
  */
 export const closeMapViewer = action("closeMapViewer", () => {
+  saveFaciesOptions(state.mapState.selectedMap, state.mapState.isFacies, state.mapState.currentFaciesOptions)
   state.mapState.mapHistory.accessHistory = [];
   setIsFacies(false);
   setIsLegendOpen(false);

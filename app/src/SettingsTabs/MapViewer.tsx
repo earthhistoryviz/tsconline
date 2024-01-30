@@ -1,6 +1,6 @@
 import { Box, Slider, TooltipProps, Tooltip, Drawer, Divider, Typography, IconButton, Dialog, Button, SvgIcon } from '@mui/material'
 import { styled, useTheme } from "@mui/material/styles"
-import type { InfoPoints, MapHierarchy, Bounds, MapPoints, MapInfo} from '@tsconline/shared'
+import type { Facies, InfoPoints, MapHierarchy, Bounds, MapPoints, MapInfo, FaciesLocations} from '@tsconline/shared'
 import { devSafeUrl } from '../util'
 import React, { useEffect, useState, useRef, useContext } from "react"
 import { context } from '../state';
@@ -20,6 +20,7 @@ import YoutubeSearchedForIcon from '@mui/icons-material/YoutubeSearchedFor';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { observer } from 'mobx-react-lite'
 import './MapViewer.css'
+import { FaciesOptions } from '../types'
 
 const ICON_SIZE = 40
 const InfoIcon = NotListedLocationIcon 
@@ -629,7 +630,7 @@ function loadMapPoints(
  * @returns 
  */
 function getIcon(clicked: boolean, isInfo: boolean, iconSize: number, scale: number, name: string){
-  const { state } = useContext(context)
+  const { state, actions } = useContext(context)
   if (isInfo) {
     return (
     <InfoIcon
@@ -637,7 +638,8 @@ function getIcon(clicked: boolean, isInfo: boolean, iconSize: number, scale: num
     />)
   }
   if (state.mapState.isFacies) {
-    return getFaciesIcon(iconSize, scale, name)
+    const event = state.mapState.facies.locations[name] ? state.mapState.facies.locations[name] : state.mapState.facies.locations[state.mapState.facies.aliases[name]]
+    return getFaciesIcon(iconSize, scale, name, event, state.mapState.currentFaciesOptions, actions.setSelectedMapAgeRange)
   }
   if (clicked) {
     return (
@@ -662,27 +664,26 @@ component={OffIcon}
  * @param name the name of the map point
  * @returns 
  */
-function getFaciesIcon(iconSize: number, scale: number, name: string) {
-  const { state, actions } = useContext(context)
+function getFaciesIcon(
+  iconSize: number,
+  scale: number,
+  name: string,
+  event : FaciesLocations[string] | null,
+  currentFaciesOptions: FaciesOptions,
+  setSelectedMapAgeRange: (min: number, max: number) => void) {
   // this accounts for facies map points that are recorded as the parent, but they use the children as an 'alias'.
   // Therefore meaning the child has the facies information but the map point is not called by the child name but is called the parent name
   // parent -> child -> facies
   // displayed as parent -> facies
-  let event = state.mapState.facies.locations[name] ? state.mapState.facies.locations[name] : state.mapState.facies.locations[state.mapState.facies.aliases[name]]
-  if (name.includes("Amadeus Central")) {
-    console.log('finding')
-    console.log(Object.keys(state.mapState.facies.locations).filter((value) => value.includes("Amadeus")))
-    console.log(Object.keys(state.mapState.facies.aliases).filter((value) => value.includes("Amadeus")))
-  }
   let rockType = "top"
   // facies event exists for this map point
   if (event && event.faciesTimeBlockArray && event.faciesTimeBlockArray.length > 0) {
-    actions.setSelectedMapAgeRange(event.minAge, event.maxAge )
+    setSelectedMapAgeRange(event.minAge, event.maxAge )
     let i = 0
     let timeBlock = event.faciesTimeBlockArray[i]
     let baseAge = timeBlock.age
     // find the icon relating to the age we're in
-    while(baseAge < state.mapState.currentFaciesOptions.faciesAge) {
+    while(baseAge < currentFaciesOptions.faciesAge) {
       i += 1
       if (i >= event.faciesTimeBlockArray.length) {
         // if we hit the end of possible ranges, then an icon
