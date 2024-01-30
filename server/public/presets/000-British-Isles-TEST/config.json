@@ -1,0 +1,9 @@
+{
+  "img": "britain.svg",
+  "title": "British Isles",
+  "description": "British Map Pack",
+  "settings": "settings.tsc",
+  "datapacks": [
+    "BritishMappackPUBLIC_GTS2016_15July2016.mdpk"
+  ]
+}

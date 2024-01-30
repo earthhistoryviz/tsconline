@@ -1,0 +1,9 @@
+{
+  "img": "SouthAmerica.png",
+  "title": "South America",
+  "description": "Large Datapack:)",
+  "settings": "settings.tsc",
+  "datapacks": [
+    "SouthAmericaEncrypted_29Apr2019.mdpk"
+  ]
+}
