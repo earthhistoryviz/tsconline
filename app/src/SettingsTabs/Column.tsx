@@ -218,13 +218,14 @@ export const Column = observer(function Column() {
       style={{ display: "flex", justifyContent: "center", minHeight: "100vh" }}
     >
       <Box
+        className="hide-scrollbar"
         sx={{
           border: `1px solid gray`,
           borderRadius: "4px",
           zIndex: 0,
           padding: "10px",
         }}
-        style={{ overflowX: "scroll", width: "1000px", maxHeight: "80vh" }}
+        style={{ overflowX: "auto", width: "1000px", maxHeight: "80vh" }}
       >
         <TSCButton
           style={{
@@ -252,7 +253,7 @@ export const Column = observer(function Column() {
         </Accordion>
       </Box>
       <div>
-        <div style={{ display: "flex", flexDirection: "row", width: "300px", }}>
+        <div style={{ display: "flex", flexDirection: "row", width: "300px" }}>
           <div style={{ backgroundColor: "lightgray" }}>
             <ToggleButton
               value="check"
