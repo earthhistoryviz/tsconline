@@ -1,6 +1,24 @@
+# Ensure everything is up to date
+yarn install
+cd shared
+yarn build
+cd ..
+
+SESSION_NAME="tsconline"
+# Get PIDs of screen sessions with the name tsconline
+PIDS=$(screen -ls | awk '/[0-9]+\.tsconline/{gsub(/\.tsconline.*/, ""); print $1}')
+
+if [ -n "$PIDS" ]; then
+    echo "Killing existing screen sessions for $SESSION_NAME..."
+    for PID in $PIDS; do
+        kill $PID
+    done
+else
+    echo "No existing screen sessions for $SESSION_NAME found."
+fi
+
 #Start screen session
 # Use Ctrl-a and then n to switch screens
-SESSION_NAME="tsconline"
 screen -dmS $SESSION_NAME
 
 # First window (0th window is created by default)

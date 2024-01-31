@@ -10,6 +10,12 @@ export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 
 export type Preset = ChartConfig | ServerResponseError;
 
+export type DatapackAgeInfo = {
+  useDefaultAge: boolean; //Default Age is not age located in datapack. Should be false if age exists, otherwise true.
+  topAge?: number;
+  bottomAge?: number;
+};
+
 export type ChartConfig = {
   img: string; // path to image
   title: string;
@@ -112,6 +118,7 @@ export type DatapackResponse = {
   facies: Facies,
   mapInfo: MapInfo;
   mapHierarchy: MapHierarchy;
+  datapackAgeInfo: DatapackAgeInfo;
 };
 
 export type Bounds = RectBounds | VertBounds;
@@ -129,6 +136,15 @@ export type VertBounds = {
   height: number;
   scale: number;
 };
+
+export function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo {
+  if (typeof o !== "object") throw new Error("DatapackInfo must be an object");
+  if (typeof o.useDefaultAge !== "boolean") throw new Error("DatapackInfo must have a boolean useDefaultAge");
+  if (o.useDefaultAge === false) {
+    if (typeof o.bottomAge !== "number") throw new Error("DatapackInfo must have a number bottomAge");
+    if (typeof o.topAge !== "number") throw new Error("DatapackInfo must have a number topAge");
+  }
+}
 
 export function assertFacies(o: any): asserts o is Facies {
   if (!o || typeof o !== "object")
@@ -186,6 +202,7 @@ export function assertDatapackResponse(o: any): asserts o is DatapackResponse {
   assertFacies(o.facies);
   assertMapInfo(o.mapInfo);
   assertMapHierarchy(o.mapHierarchy);
+  assertDatapackAgeInfo(o.datapackAgeInfo);
 }
 
 export function assertChartConfig(o: any): asserts o is ChartConfig {

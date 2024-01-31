@@ -3,6 +3,11 @@ export type SuccessfulServerResponse = {
 };
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 export type Preset = ChartConfig | ServerResponseError;
+export type DatapackAgeInfo = {
+    useDefaultAge: boolean;
+    topAge?: number;
+    bottomAge?: number;
+};
 export type ChartConfig = {
     img: string;
     title: string;
@@ -94,6 +99,7 @@ export type DatapackResponse = {
     facies: Facies;
     mapInfo: MapInfo;
     mapHierarchy: MapHierarchy;
+    datapackAgeInfo: DatapackAgeInfo;
 };
 export type Bounds = RectBounds | VertBounds;
 export type RectBounds = {
@@ -108,6 +114,7 @@ export type VertBounds = {
     height: number;
     scale: number;
 };
+export declare function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo;
 export declare function assertFacies(o: any): asserts o is Facies;
 export declare function assertFaciesLocations(o: any): asserts o is FaciesLocations;
 export declare function assertFaciesTimeBlock(o: any): asserts o is FaciesTimeBlock;
