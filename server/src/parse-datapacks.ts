@@ -8,15 +8,17 @@ import { createInterface } from "readline";
  * This function is meant to catch all strange occurences at the end
  * of the tab seperated decrypted file. Should get rid of METACOLUMN_OFF
  * and any extraneuous info bits that shouldn't be a togglable column.
- * At the moment, All strange occurences are removed excepted for those 
- * 'information and references' which is short and doesn't contains any link. 
- * should get rid of them too but maybe not by this function.
+ * At the moment, All strange occurences.
  */
 function spliceArrayAtFirstSpecialMatch(array: string[]) {
+
   for (var i = 0; i < array.length; i++) {
-    if (array[i]?.includes("METACOLUMN") || ((array[i]?.includes("<a")) && (i == array.length - 1)) ||
-      ((array[i]?.includes("href")) && (i == array.length - 1)) || ((array[i]?.includes("http")) && (i == array.length - 1))
-      || ((array[i]!.length > 200)) || array[i]?.includes("TITLE") || (!array[i])) {
+    if (array[i]?.includes("METACOLUMN") || array[i]?.includes("TITLE")) {
+      array.splice(i, 1);
+      i = i - 1;
+    }
+    if (!array[i]) {
+      array.splice(i + 1, 1);
       array.splice(i, 1);
       i = i - 1;
     }
@@ -37,7 +39,7 @@ function spliceArrayAtFirstSpecialMatch(array: string[]) {
 export async function parseDatapacks(
   decrypt_filepath: string,
   files: string[]
-): Promise<{ columns: ColumnInfo, facies: Facies, datapackAgeInfo: DatapackAgeInfo}> {
+): Promise<{ columns: ColumnInfo, facies: Facies, datapackAgeInfo: DatapackAgeInfo }> {
   const decrypt_paths = await grabFilepaths(
     files,
     decrypt_filepath,
@@ -54,7 +56,7 @@ export async function parseDatapacks(
   const isChild: Set<string> = new Set();
   const isFacies: Set<string> = new Set();
   const allEntries: Map<string, string[]> = new Map();
-  let datapackAgeInfo: DatapackAgeInfo = { useDefaultAge: false};
+  let datapackAgeInfo: DatapackAgeInfo = { useDefaultAge: false };
   try {
     for (let decrypt_path of decrypt_paths) {
       // First, gather all parents and their direct children
@@ -68,7 +70,7 @@ export async function parseDatapacks(
         }
       });
       //next we get the facies events
-      await getFacies( decrypt_path, facies)
+      await getFacies(decrypt_path, facies)
     }
   } catch (e: any) {
     console.log(
@@ -78,7 +80,7 @@ export async function parseDatapacks(
       e
     );
   }
-  return { columns: columnInfo, facies, datapackAgeInfo};
+  return { columns: columnInfo, facies, datapackAgeInfo };
 }
 /**
  * This will populate a mapping of all parents : childen[]
@@ -89,8 +91,8 @@ export async function parseDatapacks(
  * @param isFacies 
  * @param isChild 
  */
-async function getAllEntries(filename: string, allEntries: Map<string, string[]>, columnInfo: ColumnInfo, isFacies: Set<string>, isChild: Set<string>): 
-Promise<DatapackAgeInfo> {
+async function getAllEntries(filename: string, allEntries: Map<string, string[]>, columnInfo: ColumnInfo, isFacies: Set<string>, isChild: Set<string>):
+  Promise<DatapackAgeInfo> {
   const fileStream = createReadStream(filename)
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity })
   let topAge: number | null = null;
@@ -122,7 +124,7 @@ Promise<DatapackAgeInfo> {
         };
       }
       const splitLine = line.split('\t')
-      if(splitLine && splitLine.length > 1 && splitLine[1] === 'facies') {
+      if (splitLine && splitLine.length > 1 && splitLine[1] === 'facies') {
         isFacies.add(trimInvisibleCharacters(splitLine[0]!))
       }
       continue;
@@ -147,7 +149,7 @@ Promise<DatapackAgeInfo> {
     }
     allEntries.set(parent, children);
   }
-  let datapackAgeInfo: DatapackAgeInfo = { useDefaultAge: topAge === null || bottomAge === null};
+  let datapackAgeInfo: DatapackAgeInfo = { useDefaultAge: topAge === null || bottomAge === null };
   if (topAge !== null && bottomAge !== null) {
     datapackAgeInfo.topAge = topAge;
     datapackAgeInfo.bottomAge = bottomAge;
@@ -219,12 +221,12 @@ function processFacies(line: string): FaciesTimeBlock | null {
   if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeperated[3]! + " is NaN")
   // label doesn't exist for TOP or GAP
   if (!tabSeperated[2]) {
-    faciesTimeBlock = { 
+    faciesTimeBlock = {
       rockType: tabSeperated[1]!,
       age
     }
   } else {
-    faciesTimeBlock = { 
+    faciesTimeBlock = {
       rockType: tabSeperated[1]!,
       label: tabSeperated[2]!,
       age
@@ -236,65 +238,65 @@ function processFacies(line: string): FaciesTimeBlock | null {
     console.log(`Error ${e} found while processing facies, returning null`)
     return null
   }
-  return faciesTimeBlock 
+  return faciesTimeBlock
 }
-  /**
-   * 
-   * This is a recursive function meant to instantiate all columns.
-   * Datapack is encrypted as <parent>\t:\t<child>\t<child>\t<child>
-   * Where children could be parents later on
-   * This is an inline-function because we must update faciesAbbreviations above, to be used later
-   * Additionally we return a boolean that tracks whether we have found the corressponding facies
-   * event with the parent
-   * @param parents the parents string that lists all the parents of this column
-   * @param currentcolumn the current column we are on
-   * @param children the children of the current column
-   * @param columnInfo the overarching columnInfo object storing all columns
-   * @param allEntries all entries of parent\t:\tchild
-   * @param isFacies the set of all facies event labels
-   * @param facies the facies object
-   * @returns 
-   */
-  function recursive(
-    parents: string[],
-    currentcolumn: string,
-    children: string[],
-    columnInfo: ColumnInfo,
-    allEntries: Map<string, string[]>,
-    isFacies: Set<string>,
-    facies: Facies
-  ): boolean {
-    columnInfo[currentcolumn] = {
-      editName: currentcolumn,
-      on: true,
-      children: {},
-      parents: parents,
-    };
-    let faciesFound = false
-    const length = children.length
-    const newParents = [...parents, currentcolumn];
-    children.forEach((child) => {
-      // if the child is named the same as the parent, this will create an infinite loop
-      if (!child || child === currentcolumn) return
-      // if this is the final child then we store this as a potential alias
-      if (!allEntries.get(child) && (length == 1 && isFacies.has(trimInvisibleCharacters(child)))) {
-        facies.aliases[trimInvisibleCharacters(currentcolumn)] = trimInvisibleCharacters(child)
-        faciesFound = true
-      }
-      const children = allEntries.get(child) || []
-      faciesFound = recursive(
-        newParents,
-        child,
-        children,
-        columnInfo[currentcolumn]!.children,
-        allEntries,
-        isFacies,
-        facies
-      ) || faciesFound
-      if (!faciesFound && isFacies.has(trimInvisibleCharacters(child))) {
-        faciesFound = true
-        facies.aliases[trimInvisibleCharacters(currentcolumn)] = trimInvisibleCharacters(child)
-      }
-    });
-    return faciesFound
-  }
+/**
+ * 
+ * This is a recursive function meant to instantiate all columns.
+ * Datapack is encrypted as <parent>\t:\t<child>\t<child>\t<child>
+ * Where children could be parents later on
+ * This is an inline-function because we must update faciesAbbreviations above, to be used later
+ * Additionally we return a boolean that tracks whether we have found the corressponding facies
+ * event with the parent
+ * @param parents the parents string that lists all the parents of this column
+ * @param currentcolumn the current column we are on
+ * @param children the children of the current column
+ * @param columnInfo the overarching columnInfo object storing all columns
+ * @param allEntries all entries of parent\t:\tchild
+ * @param isFacies the set of all facies event labels
+ * @param facies the facies object
+ * @returns 
+ */
+function recursive(
+  parents: string[],
+  currentcolumn: string,
+  children: string[],
+  columnInfo: ColumnInfo,
+  allEntries: Map<string, string[]>,
+  isFacies: Set<string>,
+  facies: Facies
+): boolean {
+  columnInfo[currentcolumn] = {
+    editName: currentcolumn,
+    on: true,
+    children: {},
+    parents: parents,
+  };
+  let faciesFound = false
+  const length = children.length
+  const newParents = [...parents, currentcolumn];
+  children.forEach((child) => {
+    // if the child is named the same as the parent, this will create an infinite loop
+    if (!child || child === currentcolumn) return
+    // if this is the final child then we store this as a potential alias
+    if (!allEntries.get(child) && (length == 1 && isFacies.has(trimInvisibleCharacters(child)))) {
+      facies.aliases[trimInvisibleCharacters(currentcolumn)] = trimInvisibleCharacters(child)
+      faciesFound = true
+    }
+    const children = allEntries.get(child) || []
+    faciesFound = recursive(
+      newParents,
+      child,
+      children,
+      columnInfo[currentcolumn]!.children,
+      allEntries,
+      isFacies,
+      facies
+    ) || faciesFound
+    if (!faciesFound && isFacies.has(trimInvisibleCharacters(child))) {
+      faciesFound = true
+      facies.aliases[trimInvisibleCharacters(currentcolumn)] = trimInvisibleCharacters(child)
+    }
+  });
+  return faciesFound
+}
