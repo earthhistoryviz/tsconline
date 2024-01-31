@@ -1,24 +1,21 @@
-import { AccordionSummaryProps, AccordionProps, Box } from '@mui/material';
+import { AccordionSummaryProps, AccordionProps, Box } from "@mui/material";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import MuiAccordion from "@mui/material/Accordion";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
-import { useTheme, styled } from '@mui/material/styles'
+import { useTheme, styled } from "@mui/material/styles";
 
 // Define the Accordion component outside the Column component
 export const Accordion = styled((props: AccordionProps) => (
-  <MuiAccordion disableGutters elevation={0} square {...props} />
+  <MuiAccordion disableGutters elevation={0} TransitionProps={{timeout: 0}} square {...props} />
 ))(({ theme }) => ({
-  border: `1px solid ${theme.palette.divider}`,
+  //border: `1px solid ${theme.palette.divider}`,
   "&:not(:last-child)": {
     borderBottom: 0,
   },
   "&:before": {
     display: "none",
   },
-  transitionProps: {
-    timeout: 0
-  }
 }));
 
 // Define the AccordionSummary and AccordionDetails components outside the Column component
@@ -32,34 +29,34 @@ export const AccordionSummary = styled((props: AccordionSummaryProps) => (
   "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
     transform: "rotate(90deg)",
     display: "flex",
-    order: -1, 
+    order: -1,
   },
   "& .MuiAccordionSummary-content": {
     order: 2,
-    flexGrow: 1, 
+    flexGrow: 1,
     alignItems: "center",
-    margin: "0px"
+    margin: "0px",
   },
 }));
 
 export const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
-  padding: theme.spacing(2),
-  borderTop: "1px solid rgba(0, 0, 0, .125)",
-  borderBottom: "1px solid rgba(0, 0, 0, .125)",
+  //padding: theme.spacing(0),
+  //borderTop: "1px solid rgba(0, 0, 0, .125)",
+  //borderBottom: "1px solid rgba(0, 0, 0, .125)",
   "& .MuiAccordionDetails-root": {
-    padding: "4px 8px 4px"
-  }
+    padding: "4px 50px 4px",
+  },
 }));
 
 export const ColumnContainer = styled(Box)(({ theme }) => ({
-  // backgroundColor: theme.palette.background.default, 
-  display: 'flex',
-  alignItems: 'center',
+  // backgroundColor: theme.palette.background.default,
+  display: "flex",
+  alignItems: "center",
   padding: theme.spacing(0),
 }));
-  // listItem: {
-  //   '&:hover': {
-  //     backgroundColor: theme.palette.selection.main,
-  //     cursor: 'pointer'
-  //   },
-  // },
+// listItem: {
+//   '&:hover': {
+//     backgroundColor: theme.palette.selection.main,
+//     cursor: 'pointer'
+//   },
+// },
