@@ -200,17 +200,6 @@ export const fetchChart = async function fetchChart(
   // Call the Java monster...
   //const jarArgs: string[] = ['xvfb-run', '-jar', './jar/TSC.jar', '-node', '-s', `../files/${title}settings.tsc`, '-ss', `../files/${title}settings.tsc`, '-d', `../files/${title}datapack.txt`, '-o', `../files/${title}save.pdf`];
   //const jarArgs: string[] = ['-jar', './jar/TSC.jar', '-d', `./files/${title}datapack.txt`, '-s', `./files/${title}settings.tsc`];
-  console.log(datapacks);
-  const extractedNames = datapacks.map(path => {
-    const parts = path.split('/');
-    const filename = parts.length > 0 ? parts[parts.length - 1] : null;
-    if (!filename) {
-      // Handle the case where filename is not defined
-      return null;
-    }
-    const name = filename.split('.')[0];
-    return name;
-  }).filter((name): name is string => name !== null);
   // extractedNames.forEach(path => {
   //   // Since we've filtered out null values, 'path' is guaranteed to be a string here
   //   const fullPath = `../assets/decrypted/${name}/datapacks`;
