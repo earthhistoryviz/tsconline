@@ -519,7 +519,6 @@ export const setUsePreset = action((temp: boolean) => {
 });
 export const setcolumnSelected = action((name: string, parents: string[]) => {
   state.settingsTabs.columnSelected = { name, parents };
-  console.log("selected: ", name);
 });
 export const setChartPath = action("setChartPath", (chartpath: string) => {
   state.chartPath = chartpath;
