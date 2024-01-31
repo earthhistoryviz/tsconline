@@ -15,7 +15,7 @@ import {
   Accordion,
   TSCButton,
 } from "../components";
-import { updateEditName } from "../state/GeneralActions";
+import "./Column.css";
 
 type ColumnMenuProps = {
   name: string;
@@ -26,15 +26,7 @@ const ColumnMenu: React.FC<ColumnMenuProps> = observer(({ name, parents }) => {
   const { state, actions } = useContext(context);
   let editName = useRef("");
   return (
-    <div
-      style={{
-        width: "300px",
-        height: "300px",
-        backgroundColor: "lightblue",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <div className="column-menu">
       <Typography style={{ padding: "5px" }}>Edit Title</Typography>
       <div style={{ display: "flex", flexDirection: "row" }}>
         <TextField
@@ -48,14 +40,7 @@ const ColumnMenu: React.FC<ColumnMenuProps> = observer(({ name, parents }) => {
           variant="filled"
           size="small"
         />
-        <div
-          style={{
-            display: "flex",
-            flexGrow: "1",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+        <div className="edit-title-button">
           <Button
             color="secondary"
             variant="contained"
@@ -239,6 +224,7 @@ export const Column = observer(function Column() {
           zIndex: 0,
           padding: "10px",
         }}
+        style={{ overflowX: "scroll", width: "1000px", maxHeight: "80vh" }}
       >
         <TSCButton
           style={{
@@ -266,7 +252,7 @@ export const Column = observer(function Column() {
         </Accordion>
       </Box>
       <div>
-        <div style={{ display: "flex", flexDirection: "row", width: "300px" }}>
+        <div style={{ display: "flex", flexDirection: "row", width: "300px", }}>
           <div style={{ backgroundColor: "lightgray" }}>
             <ToggleButton
               value="check"
@@ -279,17 +265,7 @@ export const Column = observer(function Column() {
               <SettingsSharpIcon />
             </ToggleButton>
           </div>
-
-          <div
-            id="ColumnMenuLabel"
-            style={{
-              display: "none",
-              justifyContent: "center",
-              alignItems: "center",
-              flexGrow: "1",
-              backgroundColor: "lightblue",
-            }}
-          >
+          <div id="ColumnMenuLabel" className="column-menu-label">
             <Typography>Settings</Typography>
           </div>
         </div>
