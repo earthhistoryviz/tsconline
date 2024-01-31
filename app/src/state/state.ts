@@ -47,6 +47,7 @@ export type State = {
     topStageKey: string;
     baseStageKey: string;
     unitsPerMY: number;
+    useDefaultAge: boolean;
   };
   useCache: boolean;
   usePreset: boolean;
@@ -100,6 +101,7 @@ export const state = observable<State>({
     topStageKey: "",
     baseStageKey: "",
     unitsPerMY: 2,
+    useDefaultAge: false,
   },
   useCache: true,
   usePreset: true,

@@ -1,5 +1,5 @@
 import { createReadStream } from "fs";
-import { ColumnInfo, Facies, FaciesLocations, FaciesTimeBlock, assertFaciesTimeBlock } from "@tsconline/shared";
+import { ColumnInfo, Facies, FaciesLocations, FaciesTimeBlock, assertFaciesTimeBlock, DatapackAgeInfo } from "@tsconline/shared";
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths } from "./util.js";
 import { createInterface } from "readline";
 
@@ -37,7 +37,7 @@ function spliceArrayAtFirstSpecialMatch(array: string[]) {
 export async function parseDatapacks(
   decrypt_filepath: string,
   files: string[]
-): Promise<{ columns: ColumnInfo, facies: Facies }> {
+): Promise<{ columns: ColumnInfo, facies: Facies, datapackAgeInfo: DatapackAgeInfo}> {
   const decrypt_paths = await grabFilepaths(
     files,
     decrypt_filepath,
@@ -54,10 +54,11 @@ export async function parseDatapacks(
   const isChild: Set<string> = new Set();
   const isFacies: Set<string> = new Set();
   const allEntries: Map<string, string[]> = new Map();
+  let datapackAgeInfo: DatapackAgeInfo = { useDefaultAge: false};
   try {
     for (let decrypt_path of decrypt_paths) {
       // First, gather all parents and their direct children
-      await getAllEntries(decrypt_path, allEntries, columnInfo, isFacies, isChild)
+      datapackAgeInfo = await getAllEntries(decrypt_path, allEntries, columnInfo, isFacies, isChild);
       // only iterate over parents. if we encounter one that is a child, the recursive function
       // should have already processed it.
       allEntries.forEach((children, parent) => {
@@ -77,7 +78,7 @@ export async function parseDatapacks(
       e
     );
   }
-  return { columns: columnInfo, facies };
+  return { columns: columnInfo, facies, datapackAgeInfo};
 }
 /**
  * This will populate a mapping of all parents : childen[]
@@ -88,11 +89,28 @@ export async function parseDatapacks(
  * @param isFacies 
  * @param isChild 
  */
-async function getAllEntries(filename: string, allEntries: Map<string, string[]>, columnInfo: ColumnInfo, isFacies: Set<string>, isChild: Set<string>) {
+async function getAllEntries(filename: string, allEntries: Map<string, string[]>, columnInfo: ColumnInfo, isFacies: Set<string>, isChild: Set<string>): 
+Promise<DatapackAgeInfo> {
   const fileStream = createReadStream(filename)
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity })
+  let topAge: number | null = null;
+  let bottomAge: number | null = null;
   for await (const line of readline) {
     if (!line) continue;
+    if (line.includes("SetTop") || line.includes("SetBase")) {
+      const parts = line.split(':');
+      if (parts.length >= 2) {
+        const key = parts[0] ? parts[0].trim() : null;
+        const value = parts[1] ? parseInt(parts[1].trim(), 10) : NaN;
+        if (!isNaN(value)) {
+          if (key === 'SetTop') {
+            topAge = value;
+          } else if (key === 'SetBase') {
+            bottomAge = value;
+          }
+        }
+      }
+    }
     if (!line.includes("\t:\t")) {
       if (line.includes(":") && line.split(":")[0]!.includes("age units")) {
         //create MA setting since this doesn't follow the standard format of "\t:\t"
@@ -129,6 +147,12 @@ async function getAllEntries(filename: string, allEntries: Map<string, string[]>
     }
     allEntries.set(parent, children);
   }
+  let datapackAgeInfo: DatapackAgeInfo = { useDefaultAge: topAge === null || bottomAge === null};
+  if (topAge !== null && bottomAge !== null) {
+    datapackAgeInfo.topAge = topAge;
+    datapackAgeInfo.bottomAge = bottomAge;
+  }
+  return datapackAgeInfo;
 }
 /**
  * This function will populate the param facies with the correct facies events

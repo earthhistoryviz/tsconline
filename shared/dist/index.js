@@ -1,5 +1,17 @@
 // Shared types between app and server (i.e. messages they send back and forth)
 import "querystring";
+export function assertDatapackAgeInfo(o) {
+    if (typeof o !== "object")
+        throw new Error("DatapackInfo must be an object");
+    if (typeof o.useDefaultAge !== "boolean")
+        throw new Error("DatapackInfo must have a boolean useDefaultAge");
+    if (o.useDefaultAge === false) {
+        if (typeof o.bottomAge !== "number")
+            throw new Error("DatapackInfo must have a number bottomAge");
+        if (typeof o.topAge !== "number")
+            throw new Error("DatapackInfo must have a number topAge");
+    }
+}
 export function assertFacies(o) {
     if (!o || typeof o !== "object")
         throw new Error("Facies must be a non-null object");
@@ -55,6 +67,7 @@ export function assertDatapackResponse(o) {
     assertFacies(o.facies);
     assertMapInfo(o.mapInfo);
     assertMapHierarchy(o.mapHierarchy);
+    assertDatapackAgeInfo(o.datapackAgeInfo);
 }
 export function assertChartConfig(o) {
     if (typeof o !== "object")

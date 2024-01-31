@@ -23,6 +23,7 @@ export const resetSettings = action("resetSettings", () => {
     topStageKey: "",
     baseStageKey: "",
     unitsPerMY: 2,
+    useDefaultAge: false,
   };
 });
 
@@ -171,7 +172,8 @@ export const generateChart = action("generateChart", async () => {
     datapacks: datapacks,
   });
   console.log("Sending settings to server...");
-  const response = await fetcher(`/charts/${state.useCache}`, {
+  console.log(state.settings.useDefaultAge);
+  const response = await fetcher(`/charts/${state.useCache}/${state.settings.useDefaultAge}`, {
     method: "POST",
     body,
   });
@@ -500,6 +502,9 @@ async function fetchPdfStatus(): Promise<boolean> {
   }
 }
 
+export const setUseDefaultAge = action((isChecked) => {
+  state.settings.useDefaultAge = isChecked;
+});
 export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;
 });

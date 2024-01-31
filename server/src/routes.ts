@@ -40,7 +40,7 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(
   console.log("Getting decrypted info for files: ", files);
   const filesSplit = files.split(":");
   try {
-    const { columns, facies } = await parseDatapacks(
+    const { columns, facies, datapackAgeInfo } = await parseDatapacks(
       assetconfigs.decryptionDirectory,
       filesSplit
     );
@@ -51,6 +51,7 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(
       facies,
       mapInfo,
       mapHierarchy,
+      datapackAgeInfo,
     };
     // console.log(JSON.stringify(facies.locations, null, 2))
     assertDatapackResponse(datapackResponse)
@@ -101,11 +102,12 @@ export const fetchPdfStatus = async function fetchPdfStatus(
  * Will return the chart path and the hash the chart was saved with
  */
 export const fetchChart = async function fetchChart(
-  request: FastifyRequest<{ Params: { usecache: string } }>,
+  request: FastifyRequest<{ Params: { usecache: string, useDefaultAge: string } }>,
   reply: FastifyReply
 ) {
   //TODO change this to be in request body
   const usecache = request.params.usecache === "true";
+  const useDefaultAge = request.params.useDefaultAge === "true";
   let chartrequest;
   try {
     chartrequest = JSON.parse(request.body as string);
@@ -198,16 +200,35 @@ export const fetchChart = async function fetchChart(
   // Call the Java monster...
   //const jarArgs: string[] = ['xvfb-run', '-jar', './jar/TSC.jar', '-node', '-s', `../files/${title}settings.tsc`, '-ss', `../files/${title}settings.tsc`, '-d', `../files/${title}datapack.txt`, '-o', `../files/${title}save.pdf`];
   //const jarArgs: string[] = ['-jar', './jar/TSC.jar', '-d', `./files/${title}datapack.txt`, '-s', `./files/${title}settings.tsc`];
+  console.log(datapacks);
+  const extractedNames = datapacks.map(path => {
+    const parts = path.split('/');
+    const filename = parts.length > 0 ? parts[parts.length - 1] : null;
+    if (!filename) {
+      // Handle the case where filename is not defined
+      return null;
+    }
+    const name = filename.split('.')[0];
+    return name;
+  }).filter((name): name is string => name !== null);
+  // extractedNames.forEach(path => {
+  //   // Since we've filtered out null values, 'path' is guaranteed to be a string here
+  //   const fullPath = `../assets/decrypted/${name}/datapacks`;
+  //   const datapackInfo = parseDefaultAges(fullPath);
+  //   console.log(datapackInfo);
+  // });
   const cmd =
-    `java -Xmx512m -XX:MaxDirectMemorySize=64m -XX:MaxRAM=1g -jar ${assetconfigs.activeJar} -node ` +
+    `java -Xmx512m -XX:MaxDirectMemorySize=64m -XX:MaxRAM=1g -jar ${assetconfigs.activeJar} ` +
+    // Turns off GUI (e.g Suggested Age pop-up (defaults to yes if -a flag is not passed))
+    `-node ` +
     // Add settings:
     `-s ${settings_filepath} -ss ${settings_filepath} ` +
     // Add datapacks:
     `-d ${datapacks.join(" ")} ` +
     // Tell it where to save chart
     `-o ${chart_filepath} ` +
-    // Turn off JOptionPane for default age
-    `-a`;
+    // Don't use datapacks suggested age (if useDefaultAge is true then ignore datapack ages)
+    `${useDefaultAge ? '-a' : ''}`;
 
   // Exec Java command and send final reply to browser
   await new Promise<void>((resolve, _reject) => {
