@@ -79,6 +79,9 @@
   margin: 0;
   z-index: 1;
 }
+.transect-lines {
+  position: absolute;
+}
 .MuiIconButton-root.map-point:hover {
   opacity: 0.7;
 }

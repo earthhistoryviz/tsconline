@@ -60,6 +60,14 @@ export type ChartResponseInfo = {
 export type GeologicalStages = {
     [key: string]: number;
 };
+export type Transects = {
+    [name: string]: {
+        startMapPoint: string;
+        endMapPoint: string;
+        on: boolean;
+        note?: string;
+    };
+};
 export type MapPoints = {
     [name: string]: {
         lat: number;
@@ -86,6 +94,7 @@ export type MapInfo = {
         bounds: Bounds;
         mapPoints: MapPoints;
         infoPoints?: InfoPoints;
+        transects?: Transects;
     };
 };
 export type ParentMap = {
@@ -116,6 +125,7 @@ export type VertBounds = {
     height: number;
     scale: number;
 };
+export declare function assertTransects(o: any): asserts o is Transects;
 export declare function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo;
 export declare function assertFacies(o: any): asserts o is Facies;
 export declare function assertFaciesLocations(o: any): asserts o is FaciesLocations;

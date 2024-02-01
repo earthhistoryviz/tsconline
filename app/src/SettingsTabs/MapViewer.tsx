@@ -20,6 +20,7 @@ import type {
   MapPoints,
   MapInfo,
   FaciesLocations,
+  Transects,
 } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
 import React, { useEffect, useState, useRef, useContext } from "react";
@@ -49,6 +50,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { observer } from "mobx-react-lite";
 import "./MapViewer.css";
 import { FaciesOptions } from "../types";
+import Color from "color";
 
 const ICON_SIZE = 40;
 const InfoIcon = NotListedLocationIcon;
@@ -323,6 +325,20 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
                     true,
                     mapViewerRef.current
                   )}
+                {imageLoaded &&
+                  imageRef &&
+                  imageRef.current &&
+                  mapData.mapPoints &&
+                  mapData.transects &&
+                  loadTransects(
+                    mapData.transects,
+                    mapData.mapPoints,
+                    mapData.bounds,
+                    imageRef.current.width,
+                    imageRef.current.height,
+                    theme.palette.on.main,
+                    theme.palette.off.main
+                    )}
 
                 {/* Load all the child maps*/}
                 {Object.keys(mapHierarchy).includes(name) &&
@@ -587,6 +603,43 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
   }
 );
 
+interface TransectLineProps {
+  startPosition: {x: number, y: number},
+  endPosition: {x: number, y: number},
+  transect: Transects[string],
+}
+const TransectLine: React.FC<TransectLineProps> =({startPosition, endPosition, transect}) => {
+  const [on, setOn] = useState(transect.on)
+  const theme = useTheme()
+  function toggleOn() {
+    setOn(!on)
+  }
+  return (
+      <>
+        <line
+          x1={startPosition.x}
+          y1={startPosition.y}
+          x2={endPosition.x}
+          y2={endPosition.y}
+          strokeWidth={10}
+          strokeLinecap="round"
+          stroke={`black`}
+          onClick={toggleOn}
+        />
+        <line
+          x1={startPosition.x}
+          y1={startPosition.y}
+          x2={endPosition.x}
+          y2={endPosition.y}
+          strokeWidth={9}
+          strokeLinecap="round"
+          stroke={`url(#${on ? "clicked" : "not-clicked"})`}
+          onClick={toggleOn}
+        />
+      </>
+  );
+}
+
 type LegendItem = {
   color: string;
   label: string;
@@ -774,6 +827,65 @@ function loadMapPoints(
     );
   });
 }
+function loadTransects(
+  transects: Transects,
+  mapPoints: MapPoints,
+  bounds: Bounds,
+  frameWidth: number,
+  frameHeight: number,
+  onColor: string,
+  offColor: string
+) {
+  return (
+    <svg 
+    className="transect-lines"
+    width={frameWidth}
+    height={frameHeight}
+    >
+    <defs>
+      <linearGradient id={"clicked"} x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color={onColor} />
+        <stop offset="100%" stop-color={Color(onColor).lighten(0.1)} />
+      </linearGradient>
+      <linearGradient id={"not-clicked"} x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color={offColor} />
+        <stop offset="100%" stop-color={Color(offColor).darken(0.1)} />
+      </linearGradient>
+    </defs>
+    {
+    Object.entries(transects).map(([name, transect]) => {
+      if (!mapPoints[transect.startMapPoint]) throw new Error(`MapPoints value for  ${transect.startMapPoint} doesn't exist for given transect ${transect}`)
+      if (!mapPoints[transect.endMapPoint]) throw new Error(`MapPoints value for  ${transect.endMapPoint} doesn't exist for given transect ${transect}`)
+      const start = mapPoints[transect.startMapPoint]
+      const end = mapPoints[transect.endMapPoint]
+      let startPosition = getPositionOfPointBasedOnBounds(
+        bounds,
+        start,
+        frameWidth,
+        frameHeight
+      )
+      if (!startPosition) throw new Error(`MapInfo bounds are neither vertical or rectangular for ${bounds}`)
+      startPosition = {x: startPosition.x * frameWidth / 100, y: startPosition.y * frameHeight / 100}
+      let endPosition = getPositionOfPointBasedOnBounds(
+        bounds,
+        end,
+        frameWidth,
+        frameHeight
+      )
+      if (!endPosition) throw new Error(`MapInfo bounds are neither vertical or rectangular for ${bounds}`)
+      endPosition = {x: endPosition.x * frameWidth / 100, y: endPosition.y * frameHeight / 100}
+      return (
+        <TransectLine
+        key={name}
+        startPosition={startPosition}
+        endPosition={endPosition}
+        transect={transect}
+        />
+      )
+    })}
+    </svg>
+  )
+}
 
 /**
  * Return the icon based on the parameters
@@ -802,7 +914,6 @@ function getIcon(
     return getFaciesIcon(
       iconSize,
       scale,
-      name,
       event,
       state.mapState.currentFaciesOptions,
       actions.setSelectedMapAgeRange
@@ -820,13 +931,11 @@ function getIcon(
  * the user selects
  * @param iconSize the icon size of the circle
  * @param scale the scale of the circle, scaled from dotSize
- * @param name the name of the map point
  * @returns
  */
 function getFaciesIcon(
   iconSize: number,
   scale: number,
-  name: string,
   event: FaciesLocations[string] | null,
   currentFaciesOptions: FaciesOptions,
   setSelectedMapAgeRange: (min: number, max: number) => void
