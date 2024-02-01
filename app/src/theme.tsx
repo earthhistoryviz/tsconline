@@ -23,8 +23,6 @@ declare module '@mui/material/styles' {
       selection?: PaletteOptions['primary'];
       settings?: PaletteOptions['primary'];
       gradient?: PaletteOptions['primary'];
-      onGradient?: PaletteOptions['primary'];
-      offGradient?: PaletteOptions['primary'];
       on?: PaletteOptions['primary'];
       off?: PaletteOptions['primary'];
       disabled?: PaletteOptions['primary'];

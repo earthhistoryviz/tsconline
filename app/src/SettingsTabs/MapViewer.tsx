@@ -86,12 +86,28 @@ const ChildMapIcon = () => {
   );
 };
 
+type TooltipComponentProps = {
+  container: HTMLDivElement | null;
+  className?: string;
+} & TooltipProps;
 // TODO: might want to change if it ever updates, weird workaround here, can see this at
 // changing it with normal styles cannot override since this uses a portal to create outside the DOM
 // https://mui.com/material-ui/guides/interoperability/#global-css
-const MapPointTooltip = styled(({ className, ...props }: TooltipProps) => (
-  <Tooltip arrow followCursor classes={{ popper: className }} {...props} />
-))`
+const MapPointTooltip = styled(({ className, container, ...props }: TooltipComponentProps) => {
+  // IMPORTANT: this is needed when fullscreened because the tooltips are appended to the document.body
+  // normally. When in fullscreen the document.body is in the background and therefore you can't see
+  // the tooltip. To "hack" around this, we append to the fullscreened element which we pass as container
+  const popperProps = {
+    container:
+      container && document.fullscreenElement ? container : document.body,
+  };
+  return <Tooltip
+  arrow
+  followCursor
+  classes={{ popper: className }}
+  PopperProps={popperProps}
+  {...props} />
+})`
   .MuiTooltip-tooltip {
     background-color: ${(props) => props.theme.palette.tooltip.main};
     padding-left: 20px;
@@ -337,7 +353,8 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
                     imageRef.current.width,
                     imageRef.current.height,
                     theme.palette.on.main,
-                    theme.palette.off.main
+                    theme.palette.off.main,
+                    mapViewerRef.current
                     )}
 
                 {/* Load all the child maps*/}
@@ -539,13 +556,6 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
         // unmount
       };
     });
-    // IMPORTANT: this is needed when fullscreened because the tooltips are appended to the document.body
-    // normally. When in fullscreen the document.body is in the background and therefore you can't see
-    // the tooltip. To "hack" around this, we append to the fullscreened element which we pass as container
-    const popperProps = {
-      container:
-        container && document.fullscreenElement ? container : document.body,
-    };
     const color = isInfo
       ? `${theme.palette.disabled.main}`
       : `${clicked ? theme.palette.on.main : theme.palette.off.main}`;
@@ -559,7 +569,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
     return (
       <>
         <MapPointTooltip
-          PopperProps={popperProps}
+          container={container}
           title={
             <>
               <h3 className="header">{`${name}`}</h3>
@@ -604,44 +614,57 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
 );
 
 interface TransectLineProps {
+  name: string,
   startPosition: {x: number, y: number},
   endPosition: {x: number, y: number},
   transect: Transects[string],
   onColor: string,
-  offColor: string
+  offColor: string,
+  container: HTMLDivElement | null,
 }
-const TransectLine: React.FC<TransectLineProps> =({startPosition, endPosition, transect, onColor, offColor}) => {
+const TransectLine: React.FC<TransectLineProps> = observer(({name, startPosition, endPosition, transect, onColor, offColor, container}) => {
   const [on, setOn] = useState(transect.on)
-  const theme = useTheme()
   function toggleOn() {
     setOn(!on)
   }
   return (
-      <>
+      <MapPointTooltip
+      container={container}
+      title={
+        <>
+          <h3 className="header">{`${name}`}</h3>
+          <ul>
+            <li>Note: {transect.note || "--"}</li>
+          </ul>
+        </>
+      }
+      >
+        <g>
         <line
-          x1={startPosition.x}
-          y1={startPosition.y}
-          x2={endPosition.x}
-          y2={endPosition.y}
+          x1={`${startPosition.x}%`}
+          y1={`${startPosition.y}%`}
+          x2={`${endPosition.x}%`}
+          y2={`${endPosition.y}%`}
           strokeWidth={10}
           strokeLinecap="round"
           stroke={`black`}
           // filter={`url(#dropshadow)`}
         />
         <line
-          x1={startPosition.x}
-          y1={startPosition.y}
-          x2={endPosition.x}
-          y2={endPosition.y}
+          x1={`${startPosition.x}%`}
+          y1={`${startPosition.y}%`}
+          x2={`${endPosition.x}%`}
+          y2={`${endPosition.y}%`}
           strokeWidth={9}
           strokeLinecap="round"
           stroke={on ? onColor : offColor}
           // filter={`url(#dropshadow)`}
           onClick={toggleOn}
         />
-      </>
+        </g>
+      </MapPointTooltip>
   );
-}
+})
 
 type LegendItem = {
   color: string;
@@ -694,16 +717,9 @@ function createChildMapButton(
       childBounds,
       mapBounds
     );
-    // IMPORTANT: this is needed when fullscreened because the tooltips are appended to the document.body
-    // normally. When in fullscreen the document.body is in the background and therefore you can't see
-    // the tooltip. To "hack" around this, we append to the fullscreened element which we pass as container
-    const popperProps = {
-      container:
-        container && document.fullscreenElement ? container : document.body,
-    };
     return (
       <MapPointTooltip
-        PopperProps={popperProps}
+        container={container}
         key={childName}
         title={
           <>
@@ -837,7 +853,8 @@ function loadTransects(
   frameWidth: number,
   frameHeight: number,
   onColor: string,
-  offColor: string
+  offColor: string,
+  container: HTMLDivElement | null
 ) {
   return (
     <svg 
@@ -875,7 +892,7 @@ function loadTransects(
         frameHeight
       )
       if (!startPosition) throw new Error(`MapInfo bounds are neither vertical or rectangular for ${bounds}`)
-      startPosition = {x: startPosition.x * frameWidth / 100, y: startPosition.y * frameHeight / 100}
+      // startPosition = {x: startPosition.x * frameWidth / 100, y: startPosition.y * frameHeight / 100}
       let endPosition = getPositionOfPointBasedOnBounds(
         bounds,
         end,
@@ -883,15 +900,17 @@ function loadTransects(
         frameHeight
       )
       if (!endPosition) throw new Error(`MapInfo bounds are neither vertical or rectangular for ${bounds}`)
-      endPosition = {x: endPosition.x * frameWidth / 100, y: endPosition.y * frameHeight / 100}
+      // endPosition = {x: endPosition.x * frameWidth / 100, y: endPosition.y * frameHeight / 100}
       return (
         <TransectLine
         key={name}
+        name={name}
         startPosition={startPosition}
         endPosition={endPosition}
         transect={transect}
         onColor={onColor}
         offColor={offColor}
+        container={container}
         />
       )
     })
