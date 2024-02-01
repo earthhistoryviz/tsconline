@@ -17,7 +17,8 @@ export async function loadPresets(): Promise<Preset[]> {
       const cfg = JSON.parse((await readFile(chartconfig)).toString());
       assertChartConfig(cfg);
       // Prefix the image paths with the proper directory from public:
-      cfg.img = '/' + chartconfig.replace(/config.json$/,cfg.img);
+      cfg.icon = '/' + chartconfig.replace(/config.json$/,cfg.icon);
+      cfg.background = '/' + chartconfig.replace(/config.json$/,cfg.background);
       if (cfg.settings) {
         cfg.settings = '/' + chartconfig.replace(/config.json$/,cfg.settings);
       }

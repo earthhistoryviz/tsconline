@@ -1,5 +1,6 @@
 {
-  "img": "hominid_image.jpeg",
+  "icon": "evolution-icon.png",
+  "background": "hominid_image.jpeg",
   "title": "Hominids and TimeTree",
   "description": "two datapacks",
   "settings": "settings.tsc",

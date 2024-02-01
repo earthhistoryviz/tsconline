@@ -1,5 +1,6 @@
 {
-  "img": "britain.svg",
+  "icon": "britain.svg",
+  "background": "britain-map.jpeg",
   "title": "British Isles",
   "description": "British Map Pack",
   "settings": "settings.tsc",

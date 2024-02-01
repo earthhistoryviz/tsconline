@@ -17,7 +17,8 @@ export type DatapackAgeInfo = {
 };
 
 export type ChartConfig = {
-  img: string; // path to image
+  icon: string; // path to icon image
+  background: string; // path to background image
   title: string;
   description: string;
   settings: string; // path to base settings file
@@ -207,8 +208,10 @@ export function assertDatapackResponse(o: any): asserts o is DatapackResponse {
 
 export function assertChartConfig(o: any): asserts o is ChartConfig {
   if (typeof o !== "object") throw new Error("ChartConfig must be an object");
-  if (typeof o.img !== "string")
-    throw new Error("ChartConfig must have an img string");
+  if (typeof o.icon !== "string")
+    throw new Error("ChartConfig must have an icon string");
+  if (typeof o.background !== "string")
+    throw new Error("ChartConfig must have an background string");
   if (typeof o.title !== "string")
     throw new Error("ChartConfig must have a title string");
   if (typeof o.description !== "string")

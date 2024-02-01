@@ -78,7 +78,7 @@ export const Home = observer(function Home() {
             background:`${Color(theme.palette.navbar.main).darken(0.5)}`
           }}>
             <div className="holds_picture">
-              <img className="chart" src={devSafeUrl(state.chart.img)} />
+              <img className="chart" src={devSafeUrl(state.chart.background)} />
             </div>
             <div className="details" style ={{ fontFamily: theme.typography.fontFamily }}>
               <h2 className="preset_name"style={{color: theme.palette.primary.main}}>{state.chart.title} </h2>
@@ -159,10 +159,10 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({navigate}: {n
             <TSCCardList
               color={theme.palette.navbar.main}
               date={"02.04.2020"}
-              img={
-                devSafeUrl(preset.img)
+              icon={
+                devSafeUrl(preset.icon)
               }
-              logo={devSafeUrl(preset.img)}
+              background={devSafeUrl(preset.background)}
               title={
                 <>
                   {preset.title}
