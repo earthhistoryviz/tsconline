@@ -254,9 +254,10 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
                       ? mapData.bounds
                       : mapData.parent!.bounds;
 
-                    // name is the parentMap
-                    // mapHierarchy[name] contains all the children of the parent map
-                    // this will call for each child of name
+                    // mapInfo[child].parent!.bounds is called this way because 
+                    // the child's parent field stores the bounds of the child map within the parents bounds this way
+                    // in other words the child.parent.bounds is actually the bounds of the child within the parent
+                    // since we are currently in the parent, we need to know the children's bounds this way
                     return createChildMapButton(
                       child,
                       bounds,

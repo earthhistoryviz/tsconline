@@ -222,6 +222,7 @@ const TransectLine: React.FC<TransectLineProps> = observer(({name, startPosition
  * This will create the rectangular map button for any children
  * @param childName name of the child map
  * @param mapBounds bounds of the parent map
+ * @param container the container for the tooltip to attach to
  * @param childBounds bounds of the child within the parent map
  * @param openChildMap opens the child map by changing the state
  * @returns
