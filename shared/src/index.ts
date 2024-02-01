@@ -121,7 +121,7 @@ export type ParentMap = {
   bounds: Bounds; // the bounds associated with the bounds
 };
 export type MapHierarchy = {
-  [parent: string]: string[];
+  [parent: string]: string[]; // keep track of the children maps of the parent
 };
 
 export type DatapackResponse = {
