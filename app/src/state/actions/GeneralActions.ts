@@ -11,9 +11,9 @@ import {
   isServerResponseError,
   assertDatapackResponse,
 } from "@tsconline/shared";
-import { FaciesOptions, MapHistory } from "../types";
-import { state, State } from "./state";
-import { fetcher, devSafeUrl } from "../util";
+import { FaciesOptions, MapHistory } from "../../types";
+import { state, State } from "../state";
+import { fetcher, devSafeUrl } from "../../util";
 
 /**
  * Resets any user defined settings
@@ -172,7 +172,7 @@ export const generateChart = action("generateChart", async () => {
     datapacks: datapacks,
   });
   console.log("Sending settings to server...");
-  console.log(state.settings.useDefaultAge);
+  // console.log(state.settings.useDefaultAge);
   const response = await fetcher(`/charts/${state.useCache}/${state.settings.useDefaultAge}`, {
     method: "POST",
     body,
@@ -349,7 +349,6 @@ export const toggleSettingsTabColumn = action(
     //console.log("name: ", name);
     let i = 1;
     for (const item of parents) {
-      console.log("item ", i, ": ", item);
       i++;
     }
     i = 1;

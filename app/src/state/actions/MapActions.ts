@@ -1,6 +1,6 @@
 import { action } from "mobx";
-import { state } from "./state";
-import { FaciesOptions } from "../types";
+import { state } from "../state";
+import { FaciesOptions } from "../../types";
 
 /**
  * When user presses back button on the map we pop history and
