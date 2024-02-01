@@ -80,6 +80,8 @@
   z-index: 1;
 }
 .transect-lines {
+  width: 100%;
+  height: 100%;
   position: absolute;
 }
 .MuiIconButton-root.map-point:hover {

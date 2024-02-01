@@ -859,8 +859,6 @@ function loadTransects(
   return (
     <svg 
     className="transect-lines"
-    width={frameWidth}
-    height={frameHeight}
     >
     <defs>
       <filter id="dropshadow" x="-1" y="-1" width="3" height="3">
