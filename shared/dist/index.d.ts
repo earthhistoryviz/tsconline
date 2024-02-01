@@ -15,6 +15,7 @@ export type ChartConfig = {
     description: string;
     settings: string;
     datapacks: string[];
+    date: string;
 };
 export type Facies = {
     locations: FaciesLocations;

@@ -23,6 +23,7 @@ export type ChartConfig = {
   description: string;
   settings: string; // path to base settings file
   datapacks: string[]; // active datapack names
+  date: string; // active datapack names
 };
 
 export type Facies = {
@@ -218,6 +219,8 @@ export function assertChartConfig(o: any): asserts o is ChartConfig {
     throw new Error("ChartConfig must have a description string");
   if (typeof o.settings !== "string")
     throw new Error("ChartConfig must have a settings path string");
+  if (typeof o.date !== "string")
+    throw new Error("ChartConfig must have a date string");
   if (!Array.isArray(o.datapacks))
     throw new Error(
       "ChartConfig must have a datapacks array of datapack string names.  "

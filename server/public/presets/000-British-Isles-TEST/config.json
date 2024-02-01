@@ -2,6 +2,7 @@
   "icon": "britain.svg",
   "background": "britain-map.jpeg",
   "title": "British Isles",
+  "date": "01.31.2024",
   "description": "British Map Pack",
   "settings": "settings.tsc",
   "datapacks": [
