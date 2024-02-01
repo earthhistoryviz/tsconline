@@ -1,6 +1,8 @@
 {
-  "img": "AfricaBight_Nigeria_Image.jpg",
-  "title": "TSC2020_InternalDatapack_encrypted more words lorem ipsum more more more",
+  "icon": "TSCreatorLogo.png",
+  "background": "global-map.jpeg",
+  "title": "Internal TSCreator Datapack",
+  "date": "01.31.2024",
   "description": "data pack description",
   "settings": "settings.tsc",
   "datapacks": [

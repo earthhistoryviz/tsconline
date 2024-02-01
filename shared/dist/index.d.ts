@@ -3,12 +3,39 @@ export type SuccessfulServerResponse = {
 };
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 export type Preset = ChartConfig | ServerResponseError;
+export type DatapackAgeInfo = {
+    useDefaultAge: boolean;
+    topAge?: number;
+    bottomAge?: number;
+};
 export type ChartConfig = {
-    img: string;
+    icon: string;
+    background: string;
     title: string;
     description: string;
     settings: string;
     datapacks: string[];
+    date: string;
+};
+export type Facies = {
+    locations: FaciesLocations;
+    minAge: number;
+    maxAge: number;
+    aliases: {
+        [alias: string]: string;
+    };
+};
+export type FaciesLocations = {
+    [location: string]: {
+        faciesTimeBlockArray: FaciesTimeBlock[];
+        minAge: number;
+        maxAge: number;
+    };
+};
+export type FaciesTimeBlock = {
+    rockType: string;
+    label?: string;
+    age: number;
 };
 export type ChartRequest = {
     settings: string;
@@ -20,6 +47,7 @@ export type ServerResponseError = {
 };
 export type ColumnInfo = {
     [name: string]: {
+        editName: string;
         on: boolean;
         children: ColumnInfo;
         parents: string[];
@@ -31,6 +59,14 @@ export type ChartResponseInfo = {
 };
 export type GeologicalStages = {
     [key: string]: number;
+};
+export type Transects = {
+    [name: string]: {
+        startMapPoint: string;
+        endMapPoint: string;
+        on: boolean;
+        note?: string;
+    };
 };
 export type MapPoints = {
     [name: string]: {
@@ -58,6 +94,7 @@ export type MapInfo = {
         bounds: Bounds;
         mapPoints: MapPoints;
         infoPoints?: InfoPoints;
+        transects?: Transects;
     };
 };
 export type ParentMap = {
@@ -70,8 +107,10 @@ export type MapHierarchy = {
 };
 export type DatapackResponse = {
     columnInfo: ColumnInfo;
+    facies: Facies;
     mapInfo: MapInfo;
     mapHierarchy: MapHierarchy;
+    datapackAgeInfo: DatapackAgeInfo;
 };
 export type Bounds = RectBounds | VertBounds;
 export type RectBounds = {
@@ -86,6 +125,11 @@ export type VertBounds = {
     height: number;
     scale: number;
 };
+export declare function assertTransects(o: any): asserts o is Transects;
+export declare function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo;
+export declare function assertFacies(o: any): asserts o is Facies;
+export declare function assertFaciesLocations(o: any): asserts o is FaciesLocations;
+export declare function assertFaciesTimeBlock(o: any): asserts o is FaciesTimeBlock;
 export declare function assertDatapackResponse(o: any): asserts o is DatapackResponse;
 export declare function assertChartConfig(o: any): asserts o is ChartConfig;
 export declare function assertChartConfigArray(o: any): asserts o is ChartConfig[];

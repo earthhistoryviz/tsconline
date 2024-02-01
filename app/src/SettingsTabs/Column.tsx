@@ -1,9 +1,9 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import Typography from "@mui/material/Typography";
 import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
-import { Box, ToggleButton } from "@mui/material";
+import { Box, Button, TextField, ToggleButton } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
 import SettingsSharpIcon from "@mui/icons-material/SettingsSharp";
@@ -15,26 +15,46 @@ import {
   Accordion,
   TSCButton,
 } from "../components";
-import { generateChart, setcolumnSelected } from "../state/actions";
+import "./Column.css";
 
-const ColumnMenu: React.FC<{
+type ColumnMenuProps = {
   name: string;
   parents: string[];
-}> = ({ name, parents }) => {
+};
+
+const ColumnMenu: React.FC<ColumnMenuProps> = observer(({ name, parents }) => {
+  const { state, actions } = useContext(context);
+  let editName = useRef("");
   return (
-    <div
-      style={{
-        width: "200px",
-        height: "200px",
-        background: "lightgray",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <Typography>{name}</Typography>
+    <div className="column-menu">
+      <Typography style={{ padding: "5px" }}>Edit Title</Typography>
+      <div style={{ display: "flex", flexDirection: "row" }}>
+        <TextField
+          hiddenLabel
+          id="editNameTextField"
+          defaultValue={name}
+          key={name}
+          onChange={(event) => {
+            editName.current = event.target.value;
+          }}
+          variant="filled"
+          size="small"
+        />
+        <div className="edit-title-button">
+          <Button
+            color="secondary"
+            variant="contained"
+            onClick={() => {
+              actions.updateEditName(editName.current);
+            }}
+          >
+            Confirm
+          </Button>
+        </div>
+      </div>
     </div>
   );
-};
+});
 
 //types for recursively creation accordions
 type ColumnAccordionProps = {
@@ -46,26 +66,34 @@ type ColumnAccordionProps = {
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
   ({ name, details, onToggle }) => {
     const theme = useTheme();
+    const { state, actions } = useContext(context);
     const [open, setOpen] = useState(true);
-
+    //for keeping the original name for array access
+    let ogName = useRef(name);
     const toggleAccordion = (open: boolean) => {
       setOpen((open) => !open);
     };
     function clickColumnName() {
-      toggleAccordion;
-      setcolumnSelected(name, details.parents);
+      actions.setcolumnSelected(name, details.parents);
+    }
+    let color = "transparent";
+    if (state.settingsTabs.columnSelected) {
+      color =
+        state.settingsTabs.columnSelected.name === name
+          ? "lightblue"
+          : "transparent";
     }
     const hasChildren =
       details.children && Object.keys(details.children).length > 0;
-    function thing(name: string, parents: string[]) {
-      setcolumnSelected(name, parents);
-      setOpen(open);
-      console.log(open);
-    }
+
     const columnName = (
       <div>
-        <Typography sx={{ fontSize: "0.97rem" }} style={{ padding: "10px" }}>
-          {name}
+        <Typography
+          className="ColumnName"
+          sx={{ fontSize: "0.97rem" }}
+          style={{ padding: "6px" }}
+        >
+          {details.editName}
         </Typography>
       </div>
     );
@@ -73,15 +101,18 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
       <div>
         <ColumnContainer>
           <div
-            style={{ display: "flex", cursor: "pointer" }}
-            onClick={() => setcolumnSelected(name, details.parents)}
+            style={{
+              display: "flex",
+              cursor: "pointer",
+              backgroundColor: color,
+            }}
+            onClick={() => clickColumnName()}
           >
             <TSCCheckbox
               checked={details.on}
               onChange={() => {
-                onToggle(name, details.parents);
+                onToggle(ogName.current, details.parents);
               }}
-              //style={{ backgroundColor: "lightblue" }}
             />
             {columnName}
           </div>
@@ -93,16 +124,14 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
     if (!hasChildren) {
       return checkbox;
     }
-
     return (
       <Accordion expanded={open} onChange={() => toggleAccordion(open)}>
         <AccordionSummary aria-controls="panel-content" id="panel-header">
           <div
             onClick={() => {
               toggleAccordion(open);
-              setcolumnSelected(name, details.parents);
+              //setcolumnSelected(name, details.parents);
             }}
-            //style={{ backgroundColor: "lightblue" }}
           >
             {checkbox}
           </div>
@@ -112,10 +141,10 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
             {details.children &&
               Object.entries(details.children).map(
                 ([childName, childDetails]) => (
-                  <div>
+                  <div key={childName}>
                     <ColumnAccordion
                       key={childName}
-                      name={childName}
+                      name={childDetails.editName}
                       details={childDetails}
                       onToggle={onToggle}
                     />
@@ -148,6 +177,16 @@ export const Column = observer(function Column() {
       />
     ));
   }
+  function renderColumnMenu() {
+    if (state.settingsTabs.columnSelected !== null) {
+      return (
+        <ColumnMenu
+          name={state.settingsTabs.columnSelected.name}
+          parents={state.settingsTabs.columnSelected.parents}
+        />
+      );
+    }
+  }
   function showMenu() {
     let menu = document.getElementById("ColumnMenu");
     let label = document.getElementById("ColumnMenuLabel");
@@ -179,12 +218,14 @@ export const Column = observer(function Column() {
       style={{ display: "flex", justifyContent: "center", minHeight: "100vh" }}
     >
       <Box
+        className="hide-scrollbar"
         sx={{
           border: `1px solid gray`,
           borderRadius: "4px",
           zIndex: 0,
           padding: "10px",
         }}
+        style={{ overflowX: "auto", width: "1000px", maxHeight: "80vh" }}
       >
         <TSCButton
           style={{
@@ -192,7 +233,7 @@ export const Column = observer(function Column() {
             height: "auto",
             fontSize: "0.85rem",
           }}
-          onClick={generateChart}
+          onClick={actions.generateChart}
         >
           Generate
         </TSCButton>
@@ -211,8 +252,8 @@ export const Column = observer(function Column() {
           </AccordionDetails>
         </Accordion>
       </Box>
-      <div >
-        <div style={{ display: "flex", flexDirection: "row", width: "200px", }}>
+      <div>
+        <div style={{ display: "flex", flexDirection: "row", width: "300px" }}>
           <div style={{ backgroundColor: "lightgray" }}>
             <ToggleButton
               value="check"
@@ -221,28 +262,16 @@ export const Column = observer(function Column() {
                 showMenu();
               }}
               size="small"
-              style={{ float: "left", zIndex: "1" }}
             >
               <SettingsSharpIcon />
             </ToggleButton>
           </div>
-
-          <div
-            id="ColumnMenuLabel"
-            style={{
-              display: "none",
-              justifyContent: "center",
-              alignItems: "center",
-              flexGrow: "1",
-              backgroundColor: "lightgray",
-            }}
-          >
+          <div id="ColumnMenuLabel" className="column-menu-label">
             <Typography>Settings</Typography>
           </div>
         </div>
         <div id="ColumnMenu" style={{ display: "none" }}>
-          {state.settingsTabs.columnSelected &&
-            ColumnMenu(state.settingsTabs.columnSelected)}
+          {state.settingsTabs.columnSelected && renderColumnMenu()}
         </div>
       </div>
     </div>
