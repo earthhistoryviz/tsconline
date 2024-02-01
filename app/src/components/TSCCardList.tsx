@@ -5,6 +5,7 @@ import { styled, useTheme } from "@mui/material/styles";
 import { Button,Grid, Box, Avatar, ButtonBase, CardMedia, IconButton } from "@mui/material";
 import InfoIcon from '@mui/icons-material/Info';
 import {TSCButton} from './TSCButton'
+import './TSCCardList.css'
 const defaultColor = "#747f84";
 
 const StyledRoot = styled("div")(
@@ -31,7 +32,7 @@ const StyledRoot = styled("div")(
       },
       "& .MuiAvatar-root": {
         transform: "scale(1.1)",
-        boxShadow: "0 6px 20px 0 rgba(0,0,0,0.38)",
+        filter: "drop-shadow(0px 6px 12px rgba(0, 0, 0, 0.75))",
       },
     },
   })
@@ -124,16 +125,16 @@ const ClickableCard = styled(ButtonBase)(() => ({
 
 export const TSCCardList = ({
   color,
-  img,
-  logo,
+  icon,
+  background,
   title,
   date,
   onInfoClick,
   generateChart
 }: {
   color?: string;
-  img: string;
-  logo: string;
+  icon: string;
+  background: string;
   title: React.ReactNode;
   date: string;
   onInfoClick?: () => void;
@@ -141,12 +142,12 @@ export const TSCCardList = ({
 }) => {
   return (
     <StyledRoot color = {color}>
-    <CardMediaCover image={img} onClick={onInfoClick}/>
+    <CardMediaCover image={background} onClick={onInfoClick}/>
     <StyledContent color={color}>
       <Box position="relative" zIndex={1}>
         <Grid container alignItems="center" spacing={2} onClick={onInfoClick}>
           <Grid item>
-            <AvatarLogo src={logo} />
+            <AvatarLogo className="no-border avatar-box-shadow" src={icon} />
           </Grid>
           <Grid item xs>
             <StyledH2>{title}</StyledH2>

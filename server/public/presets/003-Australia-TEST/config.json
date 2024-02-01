@@ -1,5 +1,6 @@
 {
-  "img": "australia.png",
+  "icon": "australia-flag.svg",
+  "background": "australia.png",
   "title": "Australia",
   "description": "A Large Australia Map Pack",
   "settings": "settings.tsc",

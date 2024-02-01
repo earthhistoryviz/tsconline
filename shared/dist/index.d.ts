@@ -9,7 +9,8 @@ export type DatapackAgeInfo = {
     bottomAge?: number;
 };
 export type ChartConfig = {
-    img: string;
+    icon: string;
+    background: string;
     title: string;
     description: string;
     settings: string;

@@ -1,5 +1,6 @@
 {
-  "img": "Belgium_Map_Nov2012.png",
+  "icon": "belgium-flag.png",
+  "background": "Belgium_Map_Nov2012.png",
   "title": "Belgium",
   "description": "map pack dev pack",
   "settings": "settings.tsc",

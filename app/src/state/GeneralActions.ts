@@ -502,7 +502,7 @@ async function fetchPdfStatus(): Promise<boolean> {
   }
 }
 
-export const setUseDefaultAge = action((isChecked) => {
+export const setUseDefaultAge = action((isChecked: boolean) => {
   state.settings.useDefaultAge = isChecked;
 });
 export const setTab = action("setTab", (newval: number) => {

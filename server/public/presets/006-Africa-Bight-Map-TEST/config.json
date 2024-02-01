@@ -1,5 +1,6 @@
 {
-  "img": "AfricaBight.png",
+  "icon": "africa-icon.png",
+  "background": "AfricaBight.png",
   "title": "Africa Bight",
   "description": "simple map pack dev pack",
   "settings": "settings.tsc",

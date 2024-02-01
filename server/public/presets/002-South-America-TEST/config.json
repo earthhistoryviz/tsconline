@@ -1,5 +1,6 @@
 {
-  "img": "SouthAmerica.png",
+  "icon": "south-america-icon.png",
+  "background": "SouthAmerica.png",
   "title": "South America",
   "description": "Large Datapack:)",
   "settings": "settings.tsc",

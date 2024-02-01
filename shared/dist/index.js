@@ -72,8 +72,10 @@ export function assertDatapackResponse(o) {
 export function assertChartConfig(o) {
     if (typeof o !== "object")
         throw new Error("ChartConfig must be an object");
-    if (typeof o.img !== "string")
-        throw new Error("ChartConfig must have an img string");
+    if (typeof o.icon !== "string")
+        throw new Error("ChartConfig must have an icon string");
+    if (typeof o.background !== "string")
+        throw new Error("ChartConfig must have an background string");
     if (typeof o.title !== "string")
         throw new Error("ChartConfig must have a title string");
     if (typeof o.description !== "string")
