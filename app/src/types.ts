@@ -16,3 +16,8 @@ export type MapHistory = {
         name: string
     }[]
 }
+export type LegendItem = {
+  color: string;
+  label: string;
+  icon: React.ElementType<any>;
+};
