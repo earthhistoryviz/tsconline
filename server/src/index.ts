@@ -45,7 +45,7 @@ export default assetconfigs;
 // this try will run the decryption jar to decrypt all files in the datapack folder
 try {
   const datapacks = assetconfigs.activeDatapacks.map(
-    (datapack) => assetconfigs.datapacksDirectory + "/" + datapack
+    (datapack) => "\"" + assetconfigs.datapacksDirectory + "/" + datapack + "\""
   );
   const cmd =
     `java -jar ${assetconfigs.decryptionJar} ` +
@@ -129,8 +129,8 @@ server.get<{ Params: { hash: string } }>(
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
-server.post<{ Params: { usecache: string } }>(
-  "/charts/:usecache",
+server.post<{ Params: { usecache: string, useDefaultAge: string } }>(
+  "/charts/:usecache/:useDefaultAge",
   routes.fetchChart
 );
 

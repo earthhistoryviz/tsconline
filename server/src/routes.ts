@@ -3,7 +3,7 @@ import { jsonToXml, xmlToJson } from "./parse-settings.js";
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
 import { writeFile, stat } from "fs/promises";
-import { assertDatapackResponse, assertChartRequest, type DatapackResponse } from "@tsconline/shared";
+import { assertDatapackResponse, assertChartRequest, type DatapackResponse, assertFacies } from "@tsconline/shared";
 import { deleteDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
 import { grabMapImages, grabMapInfo } from "./map-packs.js";
@@ -38,23 +38,28 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(
   const { files } = request.params;
   //TODO check if files exist. probably check this in the glob of parse Datapacks
   console.log("Getting decrypted info for files: ", files);
-  const filesSplit = files.split(" ");
+  const filesSplit = files.split(":");
   try {
-    const { columns } = await parseDatapacks(
+    const { columns, facies, datapackAgeInfo } = await parseDatapacks(
       assetconfigs.decryptionDirectory,
       filesSplit
     );
     const { mapInfo, mapHierarchy } = await grabMapInfo(filesSplit);
     await grabMapImages(filesSplit, assetconfigs.imagesDirectory);
-    const datapackResponse: DatapackResponse = {
+    const datapackResponse = {
       columnInfo: columns,
-      mapInfo: mapInfo,
-      mapHierarchy: mapHierarchy,
+      facies,
+      mapInfo,
+      mapHierarchy,
+      datapackAgeInfo,
     };
+    // console.log(JSON.stringify(facies.locations, null, 2))
     assertDatapackResponse(datapackResponse)
+    // console.log(JSON.stringify(facies.locations['Adele 1 lithology']?.minAge, null, 2))
     reply.send(datapackResponse);
+    console.log("Successfully fetched info for ", filesSplit)
   } catch (e) {
-    reply.send({ error: e });
+    reply.send({ error: `${e}` });
   }
 };
 
@@ -97,11 +102,12 @@ export const fetchPdfStatus = async function fetchPdfStatus(
  * Will return the chart path and the hash the chart was saved with
  */
 export const fetchChart = async function fetchChart(
-  request: FastifyRequest<{ Params: { usecache: string } }>,
+  request: FastifyRequest<{ Params: { usecache: string, useDefaultAge: string } }>,
   reply: FastifyReply
 ) {
   //TODO change this to be in request body
   const usecache = request.params.usecache === "true";
+  const useDefaultAge = request.params.useDefaultAge === "true";
   let chartrequest;
   try {
     chartrequest = JSON.parse(request.body as string);
@@ -176,7 +182,7 @@ export const fetchChart = async function fetchChart(
     return;
   }
   const datapacks = chartrequest.datapacks.map(
-    (datapack) => assetconfigs.datapacksDirectory + "/" + datapack
+    (datapack) => "\"" + assetconfigs.datapacksDirectory + "/" + datapack + "\""
   );
   for (const datapack of chartrequest.datapacks) {
     if (!assetconfigs.activeDatapacks.includes(datapack)) {
@@ -194,16 +200,24 @@ export const fetchChart = async function fetchChart(
   // Call the Java monster...
   //const jarArgs: string[] = ['xvfb-run', '-jar', './jar/TSC.jar', '-node', '-s', `../files/${title}settings.tsc`, '-ss', `../files/${title}settings.tsc`, '-d', `../files/${title}datapack.txt`, '-o', `../files/${title}save.pdf`];
   //const jarArgs: string[] = ['-jar', './jar/TSC.jar', '-d', `./files/${title}datapack.txt`, '-s', `./files/${title}settings.tsc`];
+  // extractedNames.forEach(path => {
+  //   // Since we've filtered out null values, 'path' is guaranteed to be a string here
+  //   const fullPath = `../assets/decrypted/${name}/datapacks`;
+  //   const datapackInfo = parseDefaultAges(fullPath);
+  //   console.log(datapackInfo);
+  // });
   const cmd =
-    `java -Xmx512m -XX:MaxDirectMemorySize=64m -XX:MaxRAM=1g -jar ${assetconfigs.activeJar} -node ` +
+    `java -Xmx512m -XX:MaxDirectMemorySize=64m -XX:MaxRAM=1g -jar ${assetconfigs.activeJar} ` +
+    // Turns off GUI (e.g Suggested Age pop-up (defaults to yes if -a flag is not passed))
+    `-node ` +
     // Add settings:
     `-s ${settings_filepath} -ss ${settings_filepath} ` +
     // Add datapacks:
     `-d ${datapacks.join(" ")} ` +
     // Tell it where to save chart
     `-o ${chart_filepath} ` +
-    // Turn off JOptionPane for default age
-    `-a`;
+    // Don't use datapacks suggested age (if useDefaultAge is true then ignore datapack ages)
+    `${useDefaultAge ? '-a' : ''}`;
 
   // Exec Java command and send final reply to browser
   await new Promise<void>((resolve, _reject) => {

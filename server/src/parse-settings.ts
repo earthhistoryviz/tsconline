@@ -1,3 +1,4 @@
+import type { ColumnInfo } from "@tsconline/shared";
 import { DOMParser } from "@xmldom/xmldom";
 
 //-------------------------------------------------------------------------------------------------- //
@@ -48,7 +49,6 @@ function processSettings(settingsNode: any): any {
       settings[settingName] = settingValue;
     }
   }
-  //console.log("result of processSettings in xmlToJson...\n", settings);
   return settings;
 }
 /**
@@ -66,7 +66,6 @@ function processFonts(fontsNode: any): any {
     const fontInfo = { inheritable: inheritable === "true" };
     fonts[fontFunction] = fontInfo;
   }
-  //console.log("result of processFonts in xmlToJson...\n", fonts);
   return fonts;
 }
 /**
@@ -142,8 +141,6 @@ function processColumn(node: any): any {
  * @returns the json object equivalent of the given xml string
  */
 export function xmlToJson(xml: string): any {
-  //console.log("xml at start of xmlToJson...\n", xml);
-
   //convert xml to a DOM document using a parser library
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xml, "text/xml");
@@ -164,7 +161,6 @@ export function xmlToJson(xml: string): any {
         processColumn(rootColumnNode);
     }
   }
-  //console.log("json at end of xmlToJson\n", json);
   return json;
 }
 
@@ -264,11 +260,38 @@ function generateColumnXml(
   let xml = "";
   for (let key in jsonColumn) {
     if (Object.prototype.hasOwnProperty.call(jsonColumn, key)) {
-      //for replacing special characters in the key to its xml versions
+      let colName = extractName(jsonColumn._id);
+      //check if the user has edited the name from the given name
       let xmlKey = replaceSpecialChars(key, 0);
       // Skip the 'id' element.
+
       if (key === "_id") {
         continue;
+      }
+
+      if (key === "title") {
+        let useEditName = false;
+        if (
+          colName !== "Chart Root" &&
+          colName !== "Chart Title" &&
+          colName !== "Ma"
+        ) {
+          if (stateColumn && stateColumn !== undefined) {
+            if (
+              stateColumn.editName !== undefined &&
+              stateColumn.editName !== colName
+            ) {
+              xml += `${indent}<setting name="title">${stateColumn.editName}</setting>\n`;
+              useEditName = true;
+            }
+          }
+        }
+        if (!useEditName) {
+          xml += `${indent}<setting name="title">${replaceSpecialChars(
+            jsonColumn[key],
+            1
+          )}</setting>\n`;
+        }
       } else if (key === "backgroundColor" || key === "customColor") {
         if (jsonColumn[key].useNamed) {
           xml += `${indent}<setting name="${xmlKey}" useNamed="${jsonColumn[key].useNamed}">${jsonColumn[key].text}</setting>\n`;
@@ -281,13 +304,8 @@ function generateColumnXml(
       } else if (key === "orientation") {
         xml += `${indent}<setting name="${xmlKey}" orientation="${jsonColumn[key]}"/>\n`;
       } else if (key === "isSelected") {
-        // xml += `${indent}<setting name="${xmlKey}">true</setting>\n`;
-        // continue;
-        //extract column name
-        let colName = extractName(jsonColumn._id);
-        //console.log(" pog ", colName, stateColumn);
         //if column isn't in state, then use default given by the original xml
-        if (stateColumn == null || Object.keys(stateColumn).length == 0) {
+        if (stateColumn == undefined || Object.keys(stateColumn).length == 0) {
           xml += `${indent}<setting name="${xmlKey}">${jsonColumn["isSelected"]}</setting>\n`;
         }
         //always display these things (the original tsc throws an error if not selected)
@@ -302,16 +320,6 @@ function generateColumnXml(
         }
         //check if column is checked or not, and change the isSelected field to true or false
         else if (stateColumn && !colName.includes("Chart")) {
-          // console.log(colName);
-          console.log(" asdf ", stateColumn);
-          //belgium pack consideration
-          // if (Object.keys(stateColumn).includes('"' + colName + '"')) {
-          //   if (stateColumn['"' + colName + '"'].on) {
-          //     xml += `${indent}<setting name="${xmlKey}">true</setting>\n`;
-          //   } else {
-          //     xml += `${indent}<setting name="${xmlKey}">false</setting>\n`;
-          //   }
-          // }
           if (stateColumn.on) {
             xml += `${indent}<setting name="${xmlKey}">true</setting>\n`;
           } else {
@@ -331,7 +339,6 @@ function generateColumnXml(
         //recursively go down column settings
         let currName = extractName(jsonColumn._id);
         let childName = extractName(jsonColumn[key]._id);
-        //console.log(parent, currName, childName);
         //TODO: pass the state column of the column itself, not the children array of its parent
         let params: { one: any; two: any; three: string; four: string } = {
           one: jsonColumn[key],
@@ -341,7 +348,7 @@ function generateColumnXml(
         };
         //first column after the chart root and chart title columns
         if (currName.includes("Chart") && !childName.includes("Chart")) {
-          params.two = stateColumn[childName];
+          if (stateColumn) params.two = stateColumn[childName];
         } else if (currName.includes("Chart")) {
           //keep the current params
         } else if (stateColumn == null) {
@@ -353,7 +360,8 @@ function generateColumnXml(
           params.two = null;
         } else if (stateColumn != null) {
           if (Object.keys(stateColumn.children).includes(childName)) {
-            params.two = stateColumn.children[childName];
+            if (stateColumn)
+              params.two = stateColumn.children[childName];
           } else {
             params.two = null;
           }
@@ -365,6 +373,8 @@ function generateColumnXml(
             params.two = null;
           }
         }
+        //jsonColumn, stateColumn, parent, indent
+      
         xml += generateColumnXml(
           params.one,
           params.two,
@@ -429,6 +439,5 @@ export function jsonToXml(
     }
   }
   xml += "</TSCreator>\n";
-  //console.log("xml at the end of json to xml", xml, "asdfasdf");
   return xml;
 }
