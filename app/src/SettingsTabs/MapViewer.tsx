@@ -607,8 +607,10 @@ interface TransectLineProps {
   startPosition: {x: number, y: number},
   endPosition: {x: number, y: number},
   transect: Transects[string],
+  onColor: string,
+  offColor: string
 }
-const TransectLine: React.FC<TransectLineProps> =({startPosition, endPosition, transect}) => {
+const TransectLine: React.FC<TransectLineProps> =({startPosition, endPosition, transect, onColor, offColor}) => {
   const [on, setOn] = useState(transect.on)
   const theme = useTheme()
   function toggleOn() {
@@ -624,7 +626,7 @@ const TransectLine: React.FC<TransectLineProps> =({startPosition, endPosition, t
           strokeWidth={10}
           strokeLinecap="round"
           stroke={`black`}
-          onClick={toggleOn}
+          // filter={`url(#dropshadow)`}
         />
         <line
           x1={startPosition.x}
@@ -633,7 +635,8 @@ const TransectLine: React.FC<TransectLineProps> =({startPosition, endPosition, t
           y2={endPosition.y}
           strokeWidth={9}
           strokeLinecap="round"
-          stroke={`url(#${on ? "clicked" : "not-clicked"})`}
+          stroke={on ? onColor : offColor}
+          // filter={`url(#dropshadow)`}
           onClick={toggleOn}
         />
       </>
@@ -843,15 +846,22 @@ function loadTransects(
     height={frameHeight}
     >
     <defs>
-      <linearGradient id={"clicked"} x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stop-color={onColor} />
-        <stop offset="100%" stop-color={Color(onColor).lighten(0.1)} />
-      </linearGradient>
-      <linearGradient id={"not-clicked"} x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stop-color={offColor} />
-        <stop offset="100%" stop-color={Color(offColor).darken(0.1)} />
-      </linearGradient>
+      <filter id="dropshadow" x="-1" y="-1" width="3" height="3">
+        {/* <feFlood flood-color="black" flood-opacity="0.2" result="flood" /> */}
+        {/* <feComposite in="flood" in2="SourceGraphic" operator="in" result="mask" /> */}
+        <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+        <feOffset dx="1" dy="1" result="offsetblur"/>
+        <feComponentTransfer>
+          <feFuncA type="linear" slope="0.5"/>
+        </feComponentTransfer>
+        <feMerge> 
+          <feMergeNode in="offsetblur"/>
+          {/* <feMergeNode in="flood"/> */}
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
     </defs>
+      <g filter="url(#dropshadow)">
     {
     Object.entries(transects).map(([name, transect]) => {
       if (!mapPoints[transect.startMapPoint]) throw new Error(`MapPoints value for  ${transect.startMapPoint} doesn't exist for given transect ${transect}`)
@@ -880,9 +890,13 @@ function loadTransects(
         startPosition={startPosition}
         endPosition={endPosition}
         transect={transect}
+        onColor={onColor}
+        offColor={offColor}
         />
       )
-    })}
+    })
+    }
+    </g>
     </svg>
   )
 }
