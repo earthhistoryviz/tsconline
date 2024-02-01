@@ -158,7 +158,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({navigate}: {n
             <Grid item key={index} style={{ marginRight: '16px', marginLeft: '16px'}}>
             <TSCCardList
               color={theme.palette.navbar.main}
-              date={"02.04.2020"}
+              date={preset.date}
               icon={
                 devSafeUrl(preset.icon)
               }

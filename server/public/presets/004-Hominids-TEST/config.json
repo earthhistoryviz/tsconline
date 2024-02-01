@@ -2,6 +2,7 @@
   "icon": "evolution-icon.png",
   "background": "hominid_image.jpeg",
   "title": "Hominids and TimeTree",
+  "date": "01.31.2024",
   "description": "two datapacks",
   "settings": "settings.tsc",
   "datapacks": [

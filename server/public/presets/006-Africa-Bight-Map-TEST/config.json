@@ -2,6 +2,7 @@
   "icon": "africa-icon.png",
   "background": "AfricaBight.png",
   "title": "Africa Bight",
+  "date": "01.31.2024",
   "description": "simple map pack dev pack",
   "settings": "settings.tsc",
   "datapacks": [

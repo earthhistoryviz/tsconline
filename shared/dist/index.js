@@ -82,6 +82,8 @@ export function assertChartConfig(o) {
         throw new Error("ChartConfig must have a description string");
     if (typeof o.settings !== "string")
         throw new Error("ChartConfig must have a settings path string");
+    if (typeof o.date !== "string")
+        throw new Error("ChartConfig must have a date string");
     if (!Array.isArray(o.datapacks))
         throw new Error("ChartConfig must have a datapacks array of datapack string names.  ");
 }
