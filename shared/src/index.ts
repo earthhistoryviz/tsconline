@@ -75,6 +75,14 @@ export type GeologicalStages = {
   [key: string]: number;
 };
 
+export type Transects = {
+  [name: string]: {
+    startMapPoint: string;
+    endMapPoint: string;
+    on: boolean;
+    note?: string;
+  }
+}
 export type MapPoints = {
   [name: string]: {
     lat: number;
@@ -96,20 +104,21 @@ export type InfoPoints = {
 
 export type MapInfo = {
   [name: string]: {
-    img: string;
-    note?: string;
-    parent?: ParentMap;
-    coordtype: string;
-    bounds: Bounds;
-    mapPoints: MapPoints;
-    infoPoints?: InfoPoints;
+    img: string; // the image corresponding to the map image
+    note?: string; // any notes on the map
+    parent?: ParentMap; // the parent map this map exists in
+    coordtype: string; // the coord type of the map
+    bounds: Bounds; // the bounds associated with the coordtype
+    mapPoints: MapPoints; // the map points associated with the map
+    infoPoints?: InfoPoints; // informational points
+    transects?: Transects; // transects that connect map points
   };
 };
 
 export type ParentMap = {
-  name: string;
-  coordtype: string;
-  bounds: Bounds;
+  name: string; // the name of the parent map
+  coordtype: string; // the coord type of the parent map
+  bounds: Bounds; // the bounds associated with the bounds
 };
 export type MapHierarchy = {
   [parent: string]: string[];
@@ -139,12 +148,26 @@ export type VertBounds = {
   scale: number;
 };
 
+export function assertTransects(o: any): asserts o is Transects {
+  if (!o || typeof o !== "object") throw new Error("Transects must be a non-null object");
+  for (const key in o) {
+    if (typeof key !== 'string')  throw new Error(`Transects key ${key} must be a string`);
+    const transect = o[key]
+    if (typeof transect.startMapPoint !== 'string')  throw new Error(`Transects key ${key} value of startMapPoint must be a string`);
+    if (typeof transect.endMapPoint !== 'string')  throw new Error(`Transects key ${key} value of endMapPoint must be a string`);
+    if (typeof transect.on !== 'boolean')  throw new Error(`Transects key ${key} value of on must be a boolean`);
+    if ('note' in transect && typeof transect.note !== 'string')  throw new Error(`Transects key ${key} value of note must be a string`);
+  }
+}
+
 export function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo {
-  if (typeof o !== "object") throw new Error("DatapackInfo must be an object");
-  if (typeof o.useDefaultAge !== "boolean") throw new Error("DatapackInfo must have a boolean useDefaultAge");
+  if (typeof o !== "object") throw new Error("DatapackAgeInfo must be an object");
+  if (typeof o.useDefaultAge !== "boolean") throw new Error("DatapackAgeInfo must have a boolean useDefaultAge");
+  if ('bottomAge' in o && typeof o.bottomAge !== 'number') throw new Error("DatapackAgeInfo must have a number bottomAge");
+  if ('topAge' in o && typeof o.topAge !== 'number') throw new Error("DatapackAgeInfo must have a number topAge");
   if (o.useDefaultAge === false) {
-    if (typeof o.bottomAge !== "number") throw new Error("DatapackInfo must have a number bottomAge");
-    if (typeof o.topAge !== "number") throw new Error("DatapackInfo must have a number topAge");
+    if (typeof o.bottomAge !== "number") throw new Error("DatapackAgeInfo must have a number bottomAge");
+    if (typeof o.topAge !== "number") throw new Error("DatapackAgeInfo must have a number topAge");
   }
 }
 
@@ -333,6 +356,9 @@ export function assertMapInfo(o: any): asserts o is MapInfo {
     }
     if ("infoPoints" in map) {
       assertInfoPoints(map.infoPoints);
+    }
+    if ("transects" in map) {
+      assertTransects(map.transects);
     }
     assertBounds(map.coordtype, map.bounds);
     assertMapPoints(map.mapPoints);

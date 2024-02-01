@@ -66,11 +66,12 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                 const header = line[0]
                 const headerLabels = grabNames(line)
                 // console.log(`line: ${line}, index ${index}`)
-                let info = tabSeparated[index + 1]
+                index += 1
+                let info = tabSeparated[index]
                 switch (header) {
                     case 'HEADER-MAP INFO':
                         if (!info || info.length < 4)  {
-                            throw new Error(`${error}: HEADER-MAP INFO isn't properly formatted`)
+                            throw new Error(`Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-MAP INFO does not have proper format`)
                         }
                         mapname = String(info[1])
                         map.img = `/${assetconfigs.imagesDirectory}/${String(info[2])}`
@@ -78,7 +79,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                         break;
                     case 'HEADER-COORD':
                         if (!info || info.length < 6) {
-                            throw new Error(`${error}: HEADER-COORD isn't properly formatted`)
+                            throw new Error(`Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-COORD does not have proper format`)
                         }
                         map.coordtype = String(info[1])
                         switch (map.coordtype) {
@@ -117,7 +118,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                         break;
                     case 'HEADER-PARENT MAP':
                         if (!info || info.length < 7) {
-                            throw new Error(`${error}: HEADER-PARENT MAP isn't properly formatted`)
+                            throw new Error(`Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-PARENT MAP does not have proper format`)
                         }
                         let parent: any = {}
                         //TODO: we only assume rect bounds as parent, will need change if not the case
@@ -150,10 +151,9 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                         break;
                     case 'HEADER-DATACOL':
                         if (!info || info.length < 3) {
-                            throw new Error(`Map info file: ${path.basename(map_info)} is not in the correct format`)
+                            throw new Error(`Map info file: ${path.basename(map_info)} is not in the correct format. HEADER-DATACOL is not in the correct format`)
                         }
                         // grab setting names for the map point
-                        let i = index + 1
                         // iterate over the line and depending on the columns above, figure out which
                         // parts of MapPoints to put it in
                         while (info && info[0] === "DATACOL") {
@@ -190,8 +190,8 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                                         throw new Error(`Unrecognized component of DATACOL: ${headerLabels[j]!.label}`)
                                 }
                             }
-                            i++
-                            info = tabSeparated[i]
+                            index++
+                            info = tabSeparated[index]
                             map.mapPoints[mapPointName] = mapPoint
                         }
                         assertMapPoints(map.mapPoints)
@@ -201,7 +201,6 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                             throw new Error(`Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-INFORMATION POINTS does not have proper format`)
                         }
                         if (!map.infoPoints) map.infoPoints = {}
-                        let pointIndex = index + 1
                         while (info && info[0] === 'INFOPT') {
                             let infoPoint: any = {}
                             let name = ""
@@ -223,15 +222,47 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
                                         break
                                 }
                             }
-                            pointIndex++
-                            info = tabSeparated[pointIndex]
+                            index++
+                            info = tabSeparated[index]
                             map.infoPoints[name] = infoPoint
                         }
                         assertInfoPoints(map.infoPoints)
                         break
+                    case 'HEADER-TRANSECTS':
+                        if (!info) break // we continue if there are no transects even though the header defines header-transects
+                        if (info.length < 4) {
+                            throw new Error(`Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-TRANSECTS does not have proper format`)
+                        }
+                        if (!map.transects) map.transects = {}
+                        while (info && info[0] === 'TRANSECT') {
+                            let transect: any = {}
+                            let name = ""
+                            for (let i = 1; i < info.length; i++) {
+                                if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue
+                                switch (headerLabels[i]!.label) {
+                                    case "NAME":
+                                        name = info[i]!
+                                        break
+                                    case "STARTLOC":
+                                        transect.startMapPoint = info[i]!
+                                        break
+                                    case "ENDLOC":
+                                        transect.endMapPoint = info[i]!
+                                        break
+                                    case "NOTE":
+                                        transect.note = info[i]!
+                                        break
+                                }
+                            }
+                            transect.on = true
+                            index++
+                            info = tabSeparated[index]
+                            map.transects[name] = transect
+                        }
+                        break
+                        
                 }
             }
-            // console.log(tabSeparated)
             if (!tabSeparated ||
                 tabSeparated.length < 1 ||
                 tabSeparated[0]![0]?.trim().toUpperCase() !== 'MAP-VERSION' || 

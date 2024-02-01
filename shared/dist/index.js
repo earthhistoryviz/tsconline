@@ -1,15 +1,36 @@
 // Shared types between app and server (i.e. messages they send back and forth)
 import "querystring";
+export function assertTransects(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("Transects must be a non-null object");
+    for (const key in o) {
+        if (typeof key !== 'string')
+            throw new Error(`Transects key ${key} must be a string`);
+        const transect = o[key];
+        if (typeof transect.startMapPoint !== 'string')
+            throw new Error(`Transects key ${key} value of startMapPoint must be a string`);
+        if (typeof transect.endMapPoint !== 'string')
+            throw new Error(`Transects key ${key} value of endMapPoint must be a string`);
+        if (typeof transect.on !== 'boolean')
+            throw new Error(`Transects key ${key} value of on must be a boolean`);
+        if ('note' in transect && typeof transect.note !== 'string')
+            throw new Error(`Transects key ${key} value of note must be a string`);
+    }
+}
 export function assertDatapackAgeInfo(o) {
     if (typeof o !== "object")
-        throw new Error("DatapackInfo must be an object");
+        throw new Error("DatapackAgeInfo must be an object");
     if (typeof o.useDefaultAge !== "boolean")
-        throw new Error("DatapackInfo must have a boolean useDefaultAge");
+        throw new Error("DatapackAgeInfo must have a boolean useDefaultAge");
+    if ('bottomAge' in o && typeof o.bottomAge !== 'number')
+        throw new Error("DatapackAgeInfo must have a number bottomAge");
+    if ('topAge' in o && typeof o.topAge !== 'number')
+        throw new Error("DatapackAgeInfo must have a number topAge");
     if (o.useDefaultAge === false) {
         if (typeof o.bottomAge !== "number")
-            throw new Error("DatapackInfo must have a number bottomAge");
+            throw new Error("DatapackAgeInfo must have a number bottomAge");
         if (typeof o.topAge !== "number")
-            throw new Error("DatapackInfo must have a number topAge");
+            throw new Error("DatapackAgeInfo must have a number topAge");
     }
 }
 export function assertFacies(o) {
@@ -170,6 +191,9 @@ export function assertMapInfo(o) {
         }
         if ("infoPoints" in map) {
             assertInfoPoints(map.infoPoints);
+        }
+        if ("transects" in map) {
+            assertTransects(map.transects);
         }
         assertBounds(map.coordtype, map.bounds);
         assertMapPoints(map.mapPoints);
