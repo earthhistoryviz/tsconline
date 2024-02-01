@@ -6,10 +6,9 @@ import Toolbar from '@mui/material/Toolbar'
 import { useTheme } from '@mui/material/styles';
 import TSCreatorLogo  from './assets/TSCreatorLogo.png'
 import HomeIcon from '@mui/icons-material/Home';
-import { IconButton, Tabs, Tab } from '@mui/material'
-import { primary_light, secondary } from './constant';
+import { IconButton, Tab } from '@mui/material'
 import { context } from './state';
-import { TSCTabs, TSCTab } from './components'
+import { TSCTabs } from './components'
 
 import "./NavBar.css"
 
