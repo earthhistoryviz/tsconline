@@ -19,7 +19,7 @@ export type State = {
   settingsTabs: {
     selected: "time" | "font" | "column" | "mappoints";
     columns: ColumnInfo | null;
-    columnSelected: { name: string; parents: string[] } | null;
+    columnSelected: string | null;
     geologicalTopStages: GeologicalStages;
     geologicalBaseStages: GeologicalStages;
   };

@@ -39,7 +39,7 @@ const ColumnMenu: React.FC<{}> = observer(() => {
   const name =
     state.settingsTabs.columnSelected === null
       ? ""
-      : state.settingsTabs.columnSelected.name;
+      : state.columnHashMap.get(state.settingsTabs.columnSelected)!.editName;
   function menuContent() {
     return (
       <div>
@@ -61,7 +61,7 @@ const ColumnMenu: React.FC<{}> = observer(() => {
               color="secondary"
               variant="contained"
               onClick={() => {
-                //actions.updateEditName(editName.current);
+                actions.updateEditName(editName.current);
               }}
             >
               Confirm
@@ -215,7 +215,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
     };
 
     function clickColumnName() {
-      //actions.setcolumnSelected(name, details.parents);
+      actions.setcolumnSelected(ogName.current);
       //setSelected(name);
     }
     const hasChildren =
@@ -247,9 +247,9 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
             <TSCCheckbox
               checked={details.on}
               onChange={() => {
-                actions.toggleSettingsTabColumn(name);
-                console.log(name);
-                console.log(state.settingsTabs.columns);
+                actions.toggleSettingsTabColumn(ogName.current);
+                //console.log(name);
+                //console.log(state.settingsTabs.columns);
               }}
             />
             {columnName}
