@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { memo, useContext, useRef, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import Typography from "@mui/material/Typography";
 import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
@@ -204,7 +204,7 @@ type ColumnAccordionProps = {
 };
 
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
-  ({ name, details, }) => {
+  ({ name, details }) => {
     const theme = useTheme();
     const { state, actions } = useContext(context);
     const [open, setOpen] = useState(true);
@@ -247,7 +247,9 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
             <TSCCheckbox
               checked={details.on}
               onChange={() => {
-                //onToggle(ogName.current, details.parents);
+                actions.toggleSettingsTabColumn(name);
+                console.log(name);
+                console.log(state.settingsTabs.columns);
               }}
             />
             {columnName}
