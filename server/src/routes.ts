@@ -9,7 +9,7 @@ import { mkdirp } from "mkdirp";
 import { grabMapImages, grabMapInfo } from "./map-packs.js";
 import md5 from "md5";
 import assetconfigs from "./index.js";
-import PDFParser from "pdf2json";
+import svgson from 'svgson'
 import fs from "fs";
 import { readFile } from "fs/promises";
 
@@ -69,33 +69,23 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(
  * Runs with await
  * TODO: ADD ASSERTS
  */
-export const fetchPdfStatus = async function fetchPdfStatus(
+export const fetchSVGStatus = async function (
   request: FastifyRequest<{ Params: { hash: string } }>,
   reply: FastifyReply
 ) {
   const { hash } = request.params;
-  const isPdfReady = await new Promise((resolve, reject) => {
-    const filepath = `${assetconfigs.chartsDirectory}/${hash}/chart.pdf`;
-    if (!fs.existsSync(filepath)) {
-      return resolve(false);
+  let isSVGReady = false
+  const filepath = `${assetconfigs.chartsDirectory}/${hash}/chart.svg`;
+  try {
+    if (fs.existsSync(filepath)) {
+      if (svgson.parseSync((await readFile(filepath)).toString())) isSVGReady = true
     }
+  } catch (e) {
+    console.log("can't read svg at hash: ", hash)
+  }
 
-    const pdfParser = new PDFParser();
-
-    pdfParser.on("pdfParser_dataError", (errData: any) => {
-      console.error("PDF Parser Error:", errData.parserError);
-      resolve(false);
-    });
-
-    pdfParser.on("pdfParser_dataReady", (_pdfData) => {
-      console.log("Successfully read chart.pdf");
-      resolve(true);
-    });
-
-    pdfParser.loadPDF(filepath);
-  });
-  console.log("reply: ", { ready: isPdfReady });
-  reply.send({ ready: isPdfReady });
+  console.log("reply: ", { ready: isSVGReady });
+  reply.send({ ready: isSVGReady });
 };
 
 /**
@@ -132,7 +122,7 @@ export const fetchChart = async function fetchChart(
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
   const hash = md5(settingsXml + chartrequest.datapacks.join(","));
   const chartdir_urlpath = `/${assetconfigs.chartsDirectory}/${hash}`;
-  const chart_urlpath = chartdir_urlpath + "/chart.pdf";
+  const chart_urlpath = chartdir_urlpath + "/chart.svg";
 
   const chartdir_filepath = chartdir_urlpath.slice(1); // no leading slash
   const chart_filepath = chart_urlpath.slice(1);

@@ -10,6 +10,9 @@ export const ColoredIconButton = styled(IconButton)(({ theme }) => ({
 export const ColoredDiv = styled("div")(({ theme }) => ({
   backgroundColor: theme.palette.navbar.dark,
 }));
+export const GradientDiv = styled("div")(({ theme }) => ({
+  backgroundColor: theme.palette.gradient.main,
+}));
 export const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
   alignItems: "center",
