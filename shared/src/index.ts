@@ -166,7 +166,7 @@ export type ColumnInfo = {
   editName: string;
   on: boolean;
   children: ColumnInfo[];
-  parent: ColumnInfo | null;
+  parent: string;
 };
 
 export type ChartResponseInfo = {
