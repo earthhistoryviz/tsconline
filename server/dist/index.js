@@ -109,6 +109,7 @@ server.get('/timescale', async (_req, res) => {
             key: stage || '',
             value: parseFloat(ma) || 0,
         }));
+        timescaleData = timescaleData.filter(item => item.key && item.key !== 'Stage' && item.key !== 'TOP');
         timescaleData.forEach((data) => assertTimescale(data));
         console.log(timescaleData);
         res.send({ stages: timescaleData });

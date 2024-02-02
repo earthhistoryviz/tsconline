@@ -55,8 +55,10 @@ export const fetchTimescaleData = async () => {
     console.log(response);
     if (response.ok) {
       const data = await response.json();
+      console.log(data);
       return data;
-    } else {
+    }
+    else {
       console.error('Server responds with:', response.status);
       return [];
     }
@@ -64,6 +66,7 @@ export const fetchTimescaleData = async () => {
     console.error('Error fetching timescale data:', error);
     return [];
   }
+  
 };
 
 export default fetchTimescaleData;

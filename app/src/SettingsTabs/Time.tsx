@@ -12,22 +12,33 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import fetchTimescaleData from "../state/timeParser"
 
+export interface TimescaleItem {
+  key: string;
+  value: number;
+}
+
 //const geologicalStages = ["Gelasian (1.8 Ma top)", "Piacenzian (2.58 Ma top)", "Zanclean (3.6 Ma top)", "Messinian (5.335 Ma top)", "Tortonian (7.25 Ma top)", "Serravallian (11.63 Ma top)", "Langhian (13.82 Ma top)", "Burdigalian (15.99 Ma top)"];
 
 export const Time = observer(function Time() {
   const navigate = useNavigate();
-  const [timescaleData, setTimescaleData] = useState<string[]>([]);
+  const [timescaleData, setTimescaleData] = useState<TimescaleItem[]>([]); // Put into state.ts
+  const [loading, setLoading] = useState(true);
 
-  // Fetch timescale data when the component is rendered
-  const loadTimescaleData = async () => {
-    try {
-      const data = await fetchTimescaleData();
-      setTimescaleData(data);
-    } catch (error) {
-      console.error('Error loading timescale data:', error);
-    }
-  };
-  loadTimescaleData();
+  // Importcontexts and map time scale to the state
+
+  useEffect(() => {
+    const loadTimescaleData = async () => {
+      try {
+        const data = await fetchTimescaleData();
+        setTimescaleData(data.stages || []);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error loading timescale data:', error);
+        setLoading(false);
+      }
+    };
+    loadTimescaleData();
+  }, []);
 
     const handleButtonClick = () => {
         actions.setTab(1);
@@ -45,6 +56,10 @@ export const Time = observer(function Time() {
       
         navigate('/chart');
       };
+      // const transformedTimescaleData: TimescaleItem[] = timescaleData.map((item) => ({
+      //   key: item,
+      //   value: parseFloat(item) || 0,
+      // }));
     return (
       <div>
         <Box
@@ -72,13 +87,13 @@ export const Time = observer(function Time() {
         <Select
           label="Stage Name"
           type="string"
-          value={state.settings.selectedStage} 
+          value={state.settings.selectedStage || ''} 
           onChange={(event) => actions.setSelectedStage(event.target.value as string)}
           style={{ marginBottom: '10px', width: '100%' }}
         >
-          {timescaleData.map((stage) => (
-            <MenuItem key={stage} value={stage}>
-              {stage}
+          {timescaleData.map(item => (
+            <MenuItem key={item.key} value={item.value}>
+              {item.key} ({item.value} Ma)
             </MenuItem>
           ))}
         </Select>
