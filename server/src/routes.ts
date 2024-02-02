@@ -17,14 +17,19 @@ export const fetchSettingsJson = async function fetchSettingsJson(
   request: FastifyRequest<{ Params: { settingFile: string } }>,
   reply: FastifyReply
 ) {
-  let { settingFile } = request.params;
-  //TODO: differentiate between preset and user uploaded datpack
-  let setting_filepath: string =
-    "public/presets/" + settingFile + "/settings.tsc";
-  let temp: string = "";
-  const contents = (await readFile(`${setting_filepath}`)).toString();
-  const settingJson = await xmlToJson(contents);
-  reply.send(settingJson);
+  try {
+    let { settingFile } = request.params;
+    //TODO: differentiate between preset and user uploaded datpack
+    let setting_filepath: string =
+      "public/presets/" + settingFile + "/settings.tsc";
+    let temp: string = "";
+    console.log(decodeURIComponent(settingFile))
+    const contents = (await readFile(`${decodeURIComponent(settingFile)}`)).toString();
+    const settingJson = await xmlToJson(contents);
+    reply.send(settingJson);
+  } catch (e) {
+    reply.send({error: e})
+  }
 };
 
 // Handles getting the columns for the files specified in the url
