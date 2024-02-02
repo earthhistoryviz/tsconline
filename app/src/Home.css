@@ -1,120 +1,85 @@
-* { margin: 0; padding: 0; }
+* {
+  margin: 0;
+  padding: 0;
+}
 .body {
-    overflow:hidden
+  min-height: 88vh;
 }
 .whole_page {
-    position: sticky;
-    width: 100%;
-    height: 88vh;
+  position: sticky;
+  width: 100%;
+  min-height: 88vh;
 }
 .top_box {
-    position: sticky;
-    width: 100%;
-    padding-top: 10px; 
-    padding-bottom: 10px;
+  position: sticky;
+  width: 100%;
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 .chart_display {
-    position: sticky;
-    display: flex;
-    flex-grow: 1;
-    flex-direction: row;
-    margin-left: 1%;
-    flex-wrap: wrap;
+  position: sticky;
+  display: flex;
+  flex-grow: 1;
+  flex-direction: row;
+  padding: 1%;
+  flex-wrap: wrap;
 }
 .holds_picture {
-    width: 325px;
-    height: 235px;
-    display: flex;
+  width: 325px;
+  height: 235px;
+  display: flex;
+}
+.presets {
+  padding-top: 40px;
 }
 .chart {
-    width: 100%;
-    height: 100%;
-}
-.button_link {
-    text-decoration: none;
-    margin-left: 25%;
-    width: 20%;
-    height: 15%;
+  width: 100%;
+  height: 100%;
 }
 .details {
-    display: flex;
-    flex-direction: column;
-    margin: auto;
-    padding: 2%;
-    max-width: 60%;
-    min-width: 50%;
-    width: 100%;
-    flex-wrap: wrap;
+  display: flex;
+  flex-direction: column;
+  margin: auto;
+  padding: 2%;
+  max-width: 60%;
+  min-width: 50%;
+  width: 100%;
+  flex-wrap: wrap;
 }
 .preset_name {
-    margin-left: 10%;
-    margin-right: 5%;
-    padding: 2%;
+  margin-left: 10%;
+  margin-right: 5%;
+  padding: 2%;
 }
 .description {
-    margin-left: 10%;
-    margin-right: 5%;
-    padding: 2%;
+  margin-left: 10%;
+  margin-right: 5%;
+  padding: 2%;
 }
-.options {
-    display: flex;
-    height: 42vh;
-    flex-direction: row;
-    flex-wrap: wrap;
-    margin-top: 5%;
-    justify-content: space-evenly;
-    row-gap: 90%;
-    column-gap: 5%;
-    overflow-y: scroll;
-    overflow-x: hidden;
 
-}
-.options>* {
-        flex: 1 1 25%;
-    }
-
-.last-item {
+.MuiButton-root.info-button {
+  margin-left: auto;
   margin-right: auto;
+  width: 325px;
+  height: 75px;
 }
 
-.item {
-    display: flex;
-    width: 50%;
-    height: 50%;
-    flex-wrap: wrap;
-    justify-content: center;
+.bottom-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 20vh;
+}
+.MuiButton-root.remove-cache-button {
+  display: flex;
+  justify-content: center;
+  align-items: auto;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 40px;
 }
 
-@media (max-width: 928px) {
-    .chart_display{
-        justify-content: center;
-    }
-    .holds_picture{
-        display: flex;
-        justify-content: center;
-    }
-    .details{
-        justify-content: center;
-    }
-    .button_link{
-        margin-left: 20%;
-        margin-right: 20%;
-        justify-content: center;
-    }
+.MuiFormControlLabel-root.checkbox {
+  margin-left: 30%;
+  margin-top: 30px;
 }
-
-.panel {
-    text-align: justify;
-    width: 375px;
-}
-
-.header1 {
-    text-align: center;
-    font-size: 15px 
-}
-
-.header2 {
-    text-align: center;
-    font-size: 10px
-}
-

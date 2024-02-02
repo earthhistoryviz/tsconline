@@ -1,0 +1,12 @@
+{
+  "icon": "belgium-flag.png",
+  "background": "Belgium_Map_Nov2012.png",
+  "title": "Belgium",
+  "date": "01.31.2024",
+  "description": "map pack dev pack",
+  "settings": "settings.tsc",
+  "datapacks": [
+    "Belgium_GTS2020.mdpk"
+  ],
+  "type": "MAP-PACK"
+}

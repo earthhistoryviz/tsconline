@@ -1,9 +1,0 @@
-{
-  "img": "marine_genera.jpeg",
-  "title": "Maring Genera",
-  "description": "data pack description",
-  "settings": "settings.tsc",
-  "datapacks": [
-    "assets/datapacks/MarineGenera_GTS2020_ENCRYPTED_23Jan2021.txt"
-  ]
-}

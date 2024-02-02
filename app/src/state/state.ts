@@ -1,62 +1,117 @@
 import { observable } from "mobx";
 
-import type { ChartConfig } from "@tsconline/shared";
-
-export type ColumnSetting = {
-  [name: string]: {
-    on: boolean;
-    children: ColumnSetting | null;
-    parents: string[];
-  };
-};
+import { FaciesOptions, MapHistory } from "../types";
+import type {
+  MapHierarchy,
+  MapInfo,
+  ChartConfig,
+  ColumnInfo,
+  Facies,
+  GeologicalStages,
+  Presets,
+} from "@tsconline/shared";
 
 export type State = {
+  chartLoading: boolean;
   tab: number;
   showAllTabs: boolean;
+  showPresetInfo: boolean;
   settingsTabs: {
     selected: "time" | "font" | "column" | "mappoints";
-    columns: ColumnSetting;
+    columns: ColumnInfo;
     columnSelected: { name: string; parents: string[] } | null;
+    geologicalTopStages: GeologicalStages;
+    geologicalBaseStages: GeologicalStages;
   };
-  chart: ChartConfig | null;
-  presets: ChartConfig[];
+  mapState: {
+    mapInfo: MapInfo;
+    mapHierarchy: MapHierarchy;
+    currentFaciesOptions: FaciesOptions;
+    selectedMap: string | null;
+    isLegendOpen: boolean;
+    isMapViewerOpen: boolean;
+    isFacies: boolean;
+    facies: Facies;
+    selectedMapAgeRange: {
+      minAge: number,
+      maxAge: number
+    }
+    mapHistory: MapHistory
+  };
+  config: {
+    datapacks: string[], // the datapacks used on the server
+    settingsPath: string // the path to the settings file on the server
+  };
+  presets: Presets;
+  selectedPreset: ChartConfig | null;
   chartPath: string;
+  chartHash: string;
   settingsXML: string;
   settingsJSON: any;
   settings: {
-    topAge: number;
-    selectedStage: string | null;
-    baseAge: number;
+    topStageKey: string;
+    baseStageKey: string;
     unitsPerMY: number;
+    useDefaultAge: boolean;
   };
+  useCache: boolean;
+  usePreset: boolean;
 };
 
 export const state = observable<State>({
+  chartLoading: true,
   tab: 0,
   showAllTabs: false,
+  showPresetInfo: false,
   settingsTabs: {
     selected: "time",
-    columns: {
-      Presidents: { on: true, children: null, parents: [] },
-      Society: { on: true, children: null, parents: [] },
-      // "Standard Chronostratigraphy": { on: false, children: null, parents: [] },
-      // "Planetary Time Scale": { on: false, children: null, parents: [] },
-      // "Regional Stages": { on: false, children: null, parents: [] },
-      // "Geomagnetic Polarity": { on: false, children: null, parents: [] },
-      // "Marine Macrofossils": { on: false, children: null, parents: [] },
-      // "Microfossils": { on: false, children: null, parents: [] },
-    },
+    columns: {},
     columnSelected: null,
+    geologicalTopStages: {},
+    geologicalBaseStages: {},
   },
-  chart: null,
-  presets: [],
+  mapState: {
+    mapInfo: {},
+    mapHierarchy: {},
+    currentFaciesOptions: {
+      faciesAge: 0,
+      dotSize: 1
+    },
+    selectedMap: null,
+    isLegendOpen: false,
+    isMapViewerOpen: false,
+    isFacies: false,
+    facies: {
+      locations: {},
+      minAge: 0,
+      maxAge: 0,
+      aliases: {}
+    },
+    selectedMapAgeRange: {
+      minAge: 0,
+      maxAge: 0
+    },
+    mapHistory: {
+      savedHistory: {},
+      accessHistory: []
+    } 
+  },
+  config: {
+    datapacks: [],
+    settingsPath: ""
+  },
+  presets: {},
+  selectedPreset: null,
   chartPath: "",
+  chartHash: "",
   settingsXML: "",
   settingsJSON: {},
   settings: {
-    topAge: 0,
-    selectedStage: null,
-    baseAge: 20,
+    topStageKey: "",
+    baseStageKey: "",
     unitsPerMY: 2,
+    useDefaultAge: false,
   },
+  useCache: true,
+  usePreset: true,
 });

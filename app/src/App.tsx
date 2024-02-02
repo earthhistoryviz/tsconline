@@ -7,10 +7,12 @@ import { Settings } from './Settings'
 import { Chart} from './Chart'
 import { Datapack } from './Datapack'
 import { Help } from './Help';
+import { ThemeProvider } from '@mui/material/styles';
+import theme from './theme'
 
 export default observer(function App() {
   return (
-    <div>
+    <ThemeProvider theme={theme}>
       <NavBar />
       <Toolbar />
       <Routes>
@@ -20,6 +22,6 @@ export default observer(function App() {
         <Route path="/datapack" element={<Datapack/>} />
         <Route path="/help" element={<Help/>} />
       </Routes>
-    </div>
+    </ThemeProvider>
   );
 });

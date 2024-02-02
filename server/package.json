@@ -23,6 +23,7 @@
     "@tsconline/shared": "workspace:^",
     "@types/cors": "^2.8.13",
     "@types/md5": "^2.3.2",
+    "@xmldom/xmldom": "0.8.10",
     "cors": "^2.8.5",
     "fastify": "^4.17.0",
     "glob": "^10.2.3",
@@ -31,6 +32,7 @@
     "nodemon": "^2.0.22",
     "p-map": "^6.0.0",
     "pino-pretty": "^10.0.0",
+    "svgson": "^5.3.1",
     "tsc": "^2.0.4",
     "xlsx": "^0.18.5"
   }

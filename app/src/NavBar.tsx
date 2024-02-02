@@ -3,40 +3,56 @@ import { observer } from 'mobx-react-lite';
 import AppBar from '@mui/material/AppBar' 
 import { Link } from 'react-router-dom'
 import Toolbar from '@mui/material/Toolbar'
-
+import { useTheme } from '@mui/material/styles';
 import TSCreatorLogo  from './assets/TSCreatorLogo.png'
 import HomeIcon from '@mui/icons-material/Home';
-import { IconButton, Tabs, Tab } from '@mui/material'
-import { primary_light, secondary } from './constant';
+import { IconButton, Tab } from '@mui/material'
 import { context } from './state';
+import { TSCTabs } from './components'
 
 import "./NavBar.css"
 
 export const NavBar = observer(function Navbar() {
+  const theme = useTheme()
   const { state, actions } = useContext(context);
   return (
-    <AppBar position="fixed" sx={{background: secondary, display: "flex" }}>
+    <AppBar position="fixed" sx={{background: theme.palette.navbar.dark, display: "flex" }}>
       <Toolbar>
         <Link to="/">
           <IconButton 
             size="large"
-            sx={{color: primary_light}}
+            sx={{
+              color: theme.palette.selection.main,
+              "&:hover": {
+                color: theme.palette.selection.light,
+                opacity: 1,
+              },
+            }}
             value={0}
-            onClick={() => actions.setTab(0)}
+            onClick={() => {
+              actions.setTab(0)
+              actions.setUseCache(true)
+            }}
           >
           <HomeIcon /> 
           </IconButton> 
         </Link>
-        { (!state.showAllTabs) 
-          ? <div onClick={() => actions.setTab(1)}></div> 
-          : <Tabs 
-              textColor="inherit" 
-              value={state.tab} 
-              onChange={(_e, value) => actions.setTab(value)} 
-              indicatorColor="secondary"
-              TabIndicatorProps={{
-                style: {
-                  backgroundColor: primary_light
+        { state.showAllTabs && (
+          <TSCTabs 
+              value={state.tab !== 0 ? state.tab : false} 
+              onChange={(_e, value) =>  {
+                actions.setTab(value)
+              }} 
+              //override the TSCTabs since it has the dark navbar
+              sx={{
+                '& .MuiTab-root': {  
+                  color: theme.palette.primary.main,
+                  '&:hover': {
+                    color: theme.palette.selection.light, 
+                  },
+                },
+                '& .Mui-selected': { 
+                  color: theme.palette.selection.main,
                 }
               }}
             >
@@ -44,8 +60,8 @@ export const NavBar = observer(function Navbar() {
               <Tab value={2} label="Settings" to="/settings" component={Link} />
               <Tab value={3} label="Datapack" to="/datapack" component={Link} />
               <Tab value={4} label="Help" to="/help" component={Link} />
-            </Tabs>
-        }
+            </TSCTabs>
+        )}
         <div style={{ flexGrow: 3 }} />
         <div style={{ flexGrow: 2 }} />
         <img src={TSCreatorLogo} width="4%" height="4%" />

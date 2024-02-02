@@ -2,11 +2,14 @@
 //                                          XML to JSON parser                                       //
 //-------------------------------------------------------------------------------------------------- //
 
-import { ColumnSetting, state } from "./state";
+import { TempleBuddhist } from "@mui/icons-material";
+import { state } from "./state";
+import { set } from "mobx";
 
 function processSettings(settingsNode: any): any {
   const settings: any = {};
   const settingNodes = settingsNode.getElementsByTagName("setting");
+  //console.log(settingsNode);
   for (let i = 0; i < settingNodes.length; i++) {
     const settingNode = settingNodes[i];
     const settingName = settingNode.getAttribute("name");
@@ -15,10 +18,24 @@ function processSettings(settingsNode: any): any {
     const settingValue = nestedSettingsNode
       ? nestedSettingsNode.textContent.trim()
       : settingNode.textContent.trim();
-
-    if (settingName === "topAge" || settingName === "baseAge") {
+    //when the setting object is created, it looks like the nested objects in topAge and baseAge
+    //are taken out and created as standalone setting options. This should not happen,
+    //so skip when the setting name is text.
+    if (settingName === "text") {
+      continue;
+    } else if (settingName === "topAge" || settingName === "baseAge") {
       settings[settingName] = {
         source: "text",
+        unit: "Ma",
+        text: settingValue,
+      };
+    }
+    //these two tags have units, so make an object storing its unit and value
+    else if (
+      settingName === "unitsPerMY" ||
+      settingName === "skipEmptyColumns"
+    ) {
+      settings[settingName] = {
         unit: "Ma",
         text: settingValue,
       };
@@ -29,6 +46,10 @@ function processSettings(settingsNode: any): any {
       settings[settingName] = settingValue;
     }
   }
+  // console.log(
+  //   "result of processSettings in xmlToJson under actions...\n",
+  //   settings
+  // );
   return settings;
 }
 
@@ -52,6 +73,11 @@ function processColumn(node: any): any {
   if (nodeAttributes.length > 0) {
     for (let i = 0; i < nodeAttributes.length; i++) {
       const attribute = nodeAttributes[i];
+      if (attribute.value.includes("INIOPTERYGIA")) {
+        console.log(
+          `attribute.name: ${attribute.name}\nattribute.value: ${attribute.value}`
+        );
+      }
       result[`_${attribute.name}`] = attribute.value;
     }
   }
@@ -61,10 +87,8 @@ function processColumn(node: any): any {
   if (childNodes.length > 0) {
     for (let i = 0; i < childNodes.length; i++) {
       const child = childNodes[i];
-
       if (child.nodeType === Node.ELEMENT_NODE) {
         const childName = child.getAttribute("id");
-
         if (child.nodeName === "column") {
           result[childName] = processColumn(child);
         } else if (child.nodeName === "fonts") {
@@ -72,9 +96,25 @@ function processColumn(node: any): any {
         } else if (child.nodeName === "setting") {
           const settingName = child.getAttribute("name");
           const justificationValue = child.getAttribute("justification");
-
-          if (justificationValue !== null) {
+          const orientationValue = child.getAttribute("orientation");
+          const useNamedValue = child.getAttribute("useNamed");
+          //console.log(settingName);
+          if (
+            settingName === "backgroundColor" ||
+            settingName === "customColor"
+          ) {
+            if (useNamedValue !== null) {
+              result[settingName] = {
+                useNamed: useNamedValue,
+                text: child.textContent.trim(),
+              };
+            } else {
+              result[settingName] = child.textContent.trim();
+            }
+          } else if (justificationValue !== null) {
             result[settingName] = justificationValue;
+          } else if (orientationValue !== null) {
+            result[settingName] = orientationValue;
           } else {
             const textContent = child.textContent.trim();
             if (textContent) {
@@ -91,6 +131,7 @@ function processColumn(node: any): any {
 
 //the main parser
 export function xmlToJson(xml: string): any {
+  // console.log("xml at start of xmlToJson...\n", xml);
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xml, "text/xml");
   const json: any = {};
@@ -111,7 +152,7 @@ export function xmlToJson(xml: string): any {
         processColumn(rootColumnNode);
     }
   }
-
+  // console.log("json at end of xmlToJson\n", json);
   return json;
 }
 
@@ -121,9 +162,11 @@ export function xmlToJson(xml: string): any {
 
 function generateSettingsXml(settings: any, indent: string = ""): string {
   let xml = "";
+  //console.log(settings);
   for (const key in settings) {
     if (Object.prototype.hasOwnProperty.call(settings, key)) {
       const value = settings[key];
+      //console.log(key, value);
       //TODO: hard coded top age and base age for testing africa and nigeria datapack, change later
       // if (key === "topAge") {
       //   xml += `${indent}<setting name="${key}" source="text" unit="Ma">\n`;
@@ -137,9 +180,13 @@ function generateSettingsXml(settings: any, indent: string = ""): string {
       //   xml += `${indent}</setting>\n`;
       // }
       if (typeof value === "object") {
-        xml += `${indent}<setting name="${key}" source="${value.source}" unit="${value.unit}">\n`;
-        xml += `${indent}  <setting name="text">${value.text}</setting>\n`;
-        xml += `${indent}</setting>\n`;
+        if (key === "topAge" || key === "baseAge") {
+          xml += `${indent}<setting name="${key}" source="${value.source}" unit="${value.unit}">\n`;
+          xml += `${indent}  <setting name="text">${value.text}</setting>\n`;
+          xml += `${indent}</setting>\n`;
+        } else if (key === "unitsPerMY" || key === "skipEmptyColumns") {
+          xml += `${indent}<setting name="${key}" unit="${value.unit}">${value.text}</setting>\n`;
+        }
       } else if (key === "justification") {
         xml += `${indent}<setting justification="${value}" name="${key}"/>\n`;
       } else {
@@ -161,64 +208,151 @@ function generateFontsXml(fonts: any, indent: string): string {
   return xml;
 }
 
-function generateColumnXml(column: any, indent: string): string {
+function generateColumnXml(
+  jsonColumn: any,
+  stateColumn: any | null,
+  parent: string,
+  indent: string
+): string {
   let xml = "";
-  let columns = state.settingsTabs.columns;
-  for (const key in column) {
-    //console.log(key);
-    if (Object.prototype.hasOwnProperty.call(column, key)) {
+  //let columns = state.settingsTabs.columns;
+  //console.log("start ", parent, column, stateColumn);
+  //console.log("poop", jsonColumn);
+  for (let key in jsonColumn) {
+    if (Object.prototype.hasOwnProperty.call(jsonColumn, key)) {
+      //for replacing special characters in the key to its xml versions
+      let xmlKey = key;
+      xmlKey = key.replaceAll('"', "quot&;");
+      xmlKey = key.replaceAll("&", "&amp;");
+      xmlKey = key.replaceAll("<", " &lt; ");
+      xmlKey = key.replaceAll(">", " &gt; ");
+      xmlKey = key.replaceAll("'", "&apos;");
       //console.log(key);
-      if (key === "id") {
+      if (key === "_id") {
         // Skip the 'id' element.
         continue;
+      } else if (key === "backgroundColor" || key === "customColor") {
+        if (jsonColumn[key].useNamed) {
+          xml += `${indent}<setting name="${xmlKey}" useNamed="${jsonColumn[key].useNamed}">${jsonColumn[key].text}</setting>\n`;
+        } else {
+          xml += `${indent}<setting name="${xmlKey}"/>\n`;
+        }
+      } else if (key === "customColor") {
+      } else if (key === "justification") {
+        xml += `${indent}<setting justification="${jsonColumn[key]}" name="${xmlKey}"/>\n`;
+      } else if (key === "orientation") {
+        xml += `${indent}<setting name="${xmlKey}" orientation="${jsonColumn[key]}"/>\n`;
+      } else if (key === "isSelected") {
+        //extract column name
+        let colName = jsonColumn._id.substring(
+          jsonColumn._id.indexOf(":") + 1,
+          jsonColumn._id.length
+        );
+        //always display these things (the original tsc throws an error if not selected)
+        //(but online doesn't have option to deselect them)
+        if (
+          colName === "Chart Root" ||
+          colName === "Chart Title" ||
+          colName === "Ma"
+        ) {
+          xml += `${indent}<setting name="${xmlKey}">true</setting>\n`;
+          continue;
+        }
+        //if column isn't in state, then use default given by the original xml
+        else if (stateColumn === null) {
+          xml += `${indent}<setting name="${xmlKey}">${jsonColumn["isSelected"]}</setting>\n`;
+        }
+        //let temp = column._id.split(":")[1];
+        //check if column is checked or not, and change the isSelected field to true or false
+        if (stateColumn && !parent.includes("Chart") && parent != "") {
+          //console.log("inside on", column._id);
+          //console.log(stateColumn.on);
+          if (stateColumn.on) {
+            xml += `${indent}<setting name="${xmlKey}">true</setting>\n`;
+          } else {
+            xml += `${indent}<setting name="${xmlKey}">false</setting>\n`;
+          }
+        }
       } else if (key.startsWith("_")) {
-        xml += `${indent}<${key.slice(1)}>${column[key]}</${key.slice(1)}>\n`;
+        xml += `${indent}<${xmlKey.slice(1)}>${jsonColumn[key]}</${xmlKey.slice(
+          1
+        )}>\n`;
       } else if (key === "fonts") {
         xml += `${indent}<fonts>\n`;
-        xml += generateFontsXml(column[key], `${indent}  `);
+        xml += generateFontsXml(jsonColumn[key], `${indent}  `);
         xml += `${indent}</fonts>\n`;
-      } else if (typeof column[key] === "object") {
-        xml += `${indent}<column id="${key}">\n`;
-        xml += generateColumnXml(column[key], `${indent}  `);
-        xml += `${indent}</column>\n`;
-      } else {
-        if (`${key}` === "isSelected") {
-          //extract column name
-          let temp = column._id.substring(
-            column._id.indexOf(":") + 1,
-            column._id.length
+      } else if (typeof jsonColumn[key] === "object") {
+        xml += `${indent}<column id="${xmlKey}">\n`;
+        //pass the full state of columns for first iteration
+        if (key === "class datastore.RootColumn:Chart Title") {
+          xml += generateColumnXml(
+            jsonColumn[key],
+            stateColumn,
+            key,
+            `${indent}  `
           );
-          console.log(temp);
-          //check if column is checked or not, and change the isSelected field to true or false
-          if (columns[temp]) {
-            console.log(columns[temp].on);
-            if (columns[temp].on) {
-              xml += `${indent}<setting name="${key}">true</setting>\n`;
+        }
+        //recursively go down column settings
+        else {
+          let temp = jsonColumn[key]._id.substring(
+            jsonColumn[key]._id.indexOf(":") + 1,
+            jsonColumn[key]._id.length
+          );
+          if (stateColumn === null) {
+            xml += generateColumnXml(
+              jsonColumn[key],
+              null,
+              temp,
+              `${indent}  `
+            );
+          }
+          if (stateColumn != null) {
+            // reached end of column tree, no more children
+            if (
+              stateColumn.children == null ||
+              stateColumn.children == undefined
+            ) {
+              xml += generateColumnXml(
+                jsonColumn[key],
+                null,
+                temp,
+                `${indent}  `
+              );
             } else {
-              xml += `${indent}<setting name="${key}">false</setting>\n`;
+              //more children to be had
+              xml += generateColumnXml(
+                jsonColumn[key],
+                stateColumn.children[temp],
+                temp,
+                `${indent}  `
+              );
             }
           }
-        } else
-          xml += `${indent}<setting name="${key}">${column[key]}</setting>\n`;
+        }
+        xml += `${indent}</column>\n`;
+      } else {
+        xml += `${indent}<setting name="${xmlKey}">${jsonColumn[key]}</setting>\n`;
       }
     }
   }
   return xml;
 }
 //the main parser
-export function jsonToXml(json: any, version: string = "PRO8.0"): string {
+export function jsonToXml(json: any, version: string = "PRO8.1"): string {
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
-
+  //console.log("json 2...\n", state.settingsJSON);
   if (json["settings"]) {
     xml += '  <settings version="1.0">\n';
     xml += generateSettingsXml(json["settings"], "    ");
     xml += "  </settings>\n";
   }
-
-  if (json["id"]) {
+  //the top level doesn't have _id so it usually doesn't proc, but
+  //procs if used for a child
+  if (json["_id"]) {
     xml += `  <column id="${json["id"]}">\n`;
-    xml += generateColumnXml(json, "    ");
+    let temp = state.settingsTabs.columns;
+    xml += generateColumnXml(json, temp, "", "    ");
     xml += "  </column>\n";
   }
   //generate columns
@@ -226,11 +360,16 @@ export function jsonToXml(json: any, version: string = "PRO8.0"): string {
     for (const key in json) {
       if (
         key !== "settings" &&
-        key !== "id" &&
-        Object.prototype.hasOwnProperty.call(json, key)
+        Object.hasOwn(json, key) //maybe not necessary since we are iterating over the keys of json
       ) {
+        //console.log(key);
         xml += `  <column id="${key}">\n`;
-        xml += generateColumnXml(json[key], "    ");
+        xml += generateColumnXml(
+          json[key],
+          state.settingsTabs.columns,
+          "",
+          "    "
+        );
         xml += "  </column>\n";
       }
     }
@@ -240,26 +379,28 @@ export function jsonToXml(json: any, version: string = "PRO8.0"): string {
   //changed back to their original characters. The next code is to change them back
   //so the java app can have the correct xml format. Currently only works with the
   //Africa Nigeria map, more edge cases might be considered with other datapacks.
-  xml = xml.replaceAll("&", "&amp;");
-  xml = xml.replaceAll(" < ", " &lt; ");
-  xml = xml.replaceAll(" > ", " &gt; ");
-  xml = xml.replaceAll(' "', " &quot;");
-  xml = xml.replaceAll("'", "&apos;");
-  for (let i = 5; i < xml.length; i++) {
-    if (
-      xml.at(i) === '"' &&
-      xml.at(i - 1) !== "=" &&
-      xml.at(i + 1) !== "/" &&
-      xml.at(i + 1) !== ">" &&
-      xml.at(i + 1) !== ">" &&
-      xml.at(i + 1) !== "?" &&
-      xml.at(i + 1) !== " "
-    ) {
-      xml = xml.substring(0, i) + "&quot;" + xml.substring(i + 1, xml.length);
-    }
-    if (xml.at(i) === "<" && xml.at(i - 1) === "(") {
-      xml = xml.substring(0, i) + "&lt;" + xml.substring(i + 1, xml.length);
-    }
-  }
+  // xml = xml.replaceAll("&", "&amp;");
+  // xml = xml.replaceAll(" < ", " &lt; ");
+  // xml = xml.replaceAll(" > ", " &gt; ");
+  // xml = xml.replaceAll(' "', " &quot;");
+  // xml = xml.replaceAll("'", "&apos;");
+  // for (let i = 5; i < xml.length; i++) {
+  //   if (
+  //     xml.at(i) === '"' &&
+  //     xml.at(i - 1) !== "=" &&
+  //     xml.at(i + 1) !== "/" &&
+  //     xml.at(i + 1) !== ">" &&
+  //     xml.at(i + 1) !== ">" &&
+  //     xml.at(i + 1) !== "?" &&
+  //     xml.at(i + 1) !== " "
+  //   ) {
+  //     xml = xml.substring(0, i) + "&quot;" + xml.substring(i + 1, xml.length);
+  //   }
+  //   if (xml.at(i) === "<" && xml.at(i - 1) === "(") {
+  //     xml = xml.substring(0, i) + "&lt;" + xml.substring(i + 1, xml.length);
+  //   }
+  // }
+  // console.log("printing final xml...\n", xml);
   return xml;
 }
+

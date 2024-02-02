@@ -1,0 +1,12 @@
+{
+  "icon": "evolution-icon.png",
+  "background": "hominid_image.jpeg",
+  "title": "Hominids and TimeTree",
+  "date": "01.31.2024",
+  "description": "two datapacks",
+  "settings": "settings.tsc",
+  "datapacks": [
+    "Hominids_wImages_GTS2020_Encrypted.dpk",
+    "TimeTree_of_Life_GTS2020_ENCRYPTED_23Jan2020.dpk"
+  ]
+}

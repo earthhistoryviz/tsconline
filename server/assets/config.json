@@ -1,8 +1,18 @@
 {
-  "activeJar": "assets/jars/TSCreatorBASE-8.0_29July2022.jar",
+  "activeJar": "assets/jars/TSCreatorBASE-8.1_29January2024.jar",
   "activeDatapacks": [
-    "assets/datapacks/default.txt",
-    "assets/datapacks/TSC2020_InternalDatapack_encrypted_13Feb2021.txt",
-    "assets/datapacks/MarineGenera_GTS2020_ENCRYPTED_23Jan2021.txt"
-  ]
+    "TSC2020_InternalDatapack_encrypted_13Feb2021.txt",
+    "TimeTree_of_Life_GTS2020_ENCRYPTED_23Jan2020.dpk",
+    "Hominids_wImages_GTS2020_Encrypted.dpk",
+    "Australia Mappack GTS2016 ENCRYPTED PUBLIC.mdpk",
+    "Belgium_GTS2020.mdpk",
+    "SouthAmericaEncrypted_29Apr2019.mdpk",
+    "AfricaBight.map",
+    "BritishMappackPUBLIC_GTS2016_15July2016.mdpk"
+  ],
+  "decryptionJar": "assets/jars/decrypt.jar",
+  "decryptionDirectory": "assets/decrypted",
+  "datapacksDirectory": "assets/datapacks",
+  "chartsDirectory": "public/charts",
+  "imagesDirectory": "public/mapimages"
 }

@@ -1,119 +1,234 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext, useState } from "react";
-import { styled } from "@mui/material/styles";
-import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
-import MuiAccordion, { AccordionProps } from "@mui/material/Accordion";
-import MuiAccordionSummary, {
-  AccordionSummaryProps,
-} from "@mui/material/AccordionSummary";
-import MuiAccordionDetails from "@mui/material/AccordionDetails";
+import React, { memo, useContext, useRef, useState } from "react";
 import Typography from "@mui/material/Typography";
-import Checkbox from "@mui/material/Checkbox";
 import { context } from "../state";
-import { ColumnSetting } from "../state/state";
-import { Button, TextField } from "@mui/material";
+import { ColumnInfo } from "@tsconline/shared";
+import { Box, Button, TextField, ToggleButton } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "@mui/material/styles";
+import SettingsSharpIcon from "@mui/icons-material/SettingsSharp";
+import {
+  ColumnContainer,
+  AccordionDetails,
+  TSCCheckbox,
+  AccordionSummary,
+  Accordion,
+  TSCButton,
+} from "../components";
+import "./Column.css";
 
-// Define the Accordion component outside the Column component
-const Accordion = styled((props: AccordionProps) => (
-  <MuiAccordion disableGutters elevation={0} square {...props} />
-))(({ theme }) => ({
-  border: `1px solid ${theme.palette.divider}`,
-  "&:not(:last-child)": {
-    borderBottom: 0,
-  },
-  "&:before": {
-    display: "none",
-  },
-}));
-
-// Define the AccordionSummary and AccordionDetails components outside the Column component
-const AccordionSummary = styled((props: AccordionSummaryProps) => (
-  <MuiAccordionSummary
-    expandIcon={<ArrowForwardIosSharpIcon sx={{ fontSize: "0.9rem" }} />}
-    {...props}
-  />
-))(({ theme }) => ({
-  backgroundColor:
-    theme.palette.mode === "dark"
-      ? "rgba(255, 255, 255, .05)"
-      : "rgba(0, 0, 0, .03)",
-  flexDirection: "column", // Change to column layout
-  alignItems: "flex-start", // Align headers to the start
-  "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
-    transform: "rotate(90deg)",
-  },
-  "& .MuiAccordionSummary-content": {
-    marginLeft: theme.spacing(1),
-  },
-}));
-
-const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
-  padding: theme.spacing(2),
-  borderTop: "1px solid rgba(0, 0, 0, .125)",
-}));
-
-export const Column = observer(function Column() {
+const ColumnMenu: React.FC<{}> = observer(() => {
   const { state, actions } = useContext(context);
-  const [expanded, setExpanded] = useState<string | false>("panel1");
-  const [columnName, setColumnName] = useState("");
-  const handleChange =
-    (panel: string) => (_event: React.SyntheticEvent, newExpanded: boolean) => {
-      setExpanded(newExpanded ? panel : false);
-    };
-
-  //recursively goes through the column settings state and makes a component
-  //with all of the columns
-  function renderColumns(columnInfo: ColumnSetting, depth: number) {
-    //for indenting child. depth is how far it is from the top
-    let indent = depth * 20 + "px";
-    const divStyle = {
-      marginLeft: indent,
-    };
+  const [openMenu, setOpenMenu] = useState(false);
+  let editName = useRef("");
+  function showMenu() {
+    let menu = document.getElementById("ColumnMenu");
+    let label = document.getElementById("ColumnMenuLabel");
+    if (menu !== null && label !== null) {
+      if (!openMenu) {
+        menu.style.display = "flex";
+        label.style.display = "flex";
+        setOpenMenu(true);
+      } else {
+        menu.style.display = "none";
+        label.style.display = "none";
+        setOpenMenu(false);
+      }
+    }
+  }
+  const name =
+    state.settingsTabs.columnSelected === null
+      ? ""
+      : state.settingsTabs.columnSelected.name;
+  function menuContent() {
     return (
       <div>
-        {Object.entries(columnInfo).map(([columnName, columnData]) => (
-          <div key={columnName}>
-            <label>
-              <Checkbox
-                checked={columnData.on}
-                onChange={() =>
-                  actions.toggleSettingsTabColumn(
-                    columnName,
-                    columnData.parents
-                  )
-                }
-              />
-              {columnName}
-            </label>
-
-            <div style={divStyle}>
-              {columnData.children &&
-                renderColumns(columnData.children, depth + 1)}
-            </div>
+        <Typography style={{ padding: "5px" }}>Edit Title</Typography>
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          <TextField
+            hiddenLabel
+            id="editNameTextField"
+            defaultValue={name}
+            key={name}
+            onChange={(event) => {
+              editName.current = event.target.value;
+            }}
+            variant="filled"
+            size="small"
+          />
+          <div className="edit-title-button">
+            <Button
+              color="secondary"
+              variant="contained"
+              onClick={() => {
+                actions.updateEditName(editName.current);
+              }}
+            >
+              Confirm
+            </Button>
           </div>
-        ))}
+        </div>
       </div>
     );
   }
-  const handleColumnNameChange = (event: { target: { value: string } }) => {
-    setColumnName(event.target.value);
-    actions.updateColumnName(event.target.value);
+  return (
+    <div className={openMenu ? "column-menu" : ""}>
+      <div style={{ display: "flex", flexDirection: "row", width: "300px" }}>
+        <div style={{ backgroundColor: "lightgray" }}>
+          <ToggleButton
+            value="check"
+            selected={openMenu}
+            onChange={() => {
+              showMenu();
+            }}
+            size="small"
+          >
+            <SettingsSharpIcon />
+          </ToggleButton>
+        </div>
+        <div id="ColumnMenuLabel" className="column-menu-label">
+          <Typography>Settings</Typography>
+        </div>
+      </div>
+      <div id="ColumnMenu" style={{ display: "none" }}>
+        {state.settingsTabs.columnSelected && menuContent()}
+      </div>
+    </div>
+  );
+});
+
+//types for recursively creation accordions
+type ColumnAccordionProps = {
+  name: string;
+  details: ColumnInfo[string];
+  onToggle: (name: string, parents: string[]) => void;
+  setSelected: (name: string) => void;
+};
+// component for column accordion recursion creation
+const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
+  ({ name, details, onToggle, setSelected }) => {
+    const theme = useTheme();
+    const { state, actions } = useContext(context);
+    const [open, setOpen] = useState(true);
+    //for keeping the original name for array access
+    let ogName = useRef(name);
+    const toggleAccordion = (open: boolean) => {
+      setOpen((open) => !open);
+    };
+
+    function clickColumnName() {
+      actions.setcolumnSelected(name, details.parents);
+      //setSelected(name);
+    }
+    const hasChildren =
+      details.children && Object.keys(details.children).length > 0;
+    const columnName = (
+      <div>
+        <Typography
+          className="ColumnName"
+          sx={{ fontSize: "0.97rem" }}
+          style={{ padding: "6px" }}
+        >
+          {details.editName}
+        </Typography>
+      </div>
+    );
+    const checkbox = (
+      <div>
+        <ColumnContainer>
+          <div
+            // className={
+            //   selected === name ? "column-selected-color" : "column-base-color"
+            // }
+            style={{
+              display: "flex",
+              cursor: "pointer",
+            }}
+            onClick={() => clickColumnName()}
+          >
+            <TSCCheckbox
+              checked={details.on}
+              onChange={() => {
+                onToggle(ogName.current, details.parents);
+              }}
+            />
+            {columnName}
+          </div>
+        </ColumnContainer>
+      </div>
+    );
+
+    // if there are no children, don't make an accordion
+    if (!hasChildren) {
+      return checkbox;
+    }
+    return (
+      <Accordion expanded={open} onChange={() => toggleAccordion(open)}>
+        <AccordionSummary aria-controls="panel-content" id="panel-header">
+          <div
+            onClick={() => {
+              toggleAccordion(open);
+              //setcolumnSelected(name, details.parents);
+            }}
+          >
+            {checkbox}
+          </div>
+        </AccordionSummary>
+        <AccordionDetails>
+          <div>
+            {details.children &&
+              Object.entries(details.children).map(
+                ([childName, childDetails]) => (
+                  <div id={childName} key={childName}>
+                    <ColumnAccordion
+                      key={childName}
+                      name={childDetails.editName}
+                      details={childDetails}
+                      onToggle={onToggle}
+                      setSelected={setSelected}
+                    />
+                  </div>
+                )
+              )}
+          </div>
+        </AccordionDetails>
+        {/* <div>{console.log("rerender", name)}</div> */}
+      </Accordion>
+    );
+  }
+);
+
+// column with generate button, and accordion columns
+export const Column = observer(function Column() {
+  const theme = useTheme();
+  const { state, actions } = useContext(context);
+  const [open, setOpen] = useState(true);
+  const [openMenu, setOpenMenu] = useState(false);
+  const [selected, setSelected] = useState("");
+  const handleChange = () => {
+    setOpen(!open);
   };
+  const setSelectedWrapper = (name: string) => {
+    setSelected(name);
+  };
+  function renderColumns(columnInfo: ColumnInfo) {
+    return Object.entries(columnInfo).map(([columnName, columnData]) => (
+      <ColumnAccordion
+        key={columnName}
+        name={columnName}
+        details={columnData}
+        onToggle={actions.toggleSettingsTabColumn}
+        setSelected={setSelectedWrapper}
+      />
+    ));
+  }
+  function renderColumnMenu() {
+    return <ColumnMenu />;
+  }
   const navigate = useNavigate();
   const handleButtonClick = () => {
     actions.setTab(1);
     actions.setAllTabs(true);
-
-    // Validate the user input
-    if (
-      isNaN(state.settings.topAge) ||
-      isNaN(state.settings.baseAge) ||
-      isNaN(state.settings.unitsPerMY)
-    ) {
-      // Handle invalid input, show error message, etc.
-      return;
-    }
 
     actions.updateSettings();
 
@@ -121,42 +236,46 @@ export const Column = observer(function Column() {
 
     navigate("/chart");
   };
-
   return (
-    <div style={{ display: "flex", justifyContent: "center" }}>
-      {/*component for selecting column*/}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
+    <div
+      style={{ display: "flex", justifyContent: "center", minHeight: "100vh" }}
+    >
+      <Box
+        className="hide-scrollbar"
+        sx={{
+          border: `1px solid gray`,
+          borderRadius: "4px",
+          zIndex: 0,
+          padding: "10px",
         }}
+        style={{ overflowX: "auto", width: "1000px", maxHeight: "80vh" }}
       >
+        <TSCButton
+          style={{
+            width: "auto",
+            height: "auto",
+            fontSize: "0.85rem",
+          }}
+          onClick={actions.generateChart}
+        >
+          Generate
+        </TSCButton>
         <Accordion
-          expanded={expanded === "panel1"}
-          onChange={handleChange("panel1")}
+          expanded={open}
+          onChange={handleChange}
+          style={{ minWidth: "70vh" }}
         >
           <AccordionSummary aria-controls="panel1d-content" id="panel1d-header">
-            <Typography>TimeScale Creator GTS2020 Chart</Typography>
+            <Typography sx={{ fontSize: "1.2rem", marginLeft: "15px" }}>
+              TimeScale Creator GTS2020 Chart
+            </Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <div>{renderColumns(state.settingsTabs.columns, 1)}</div>
+            {renderColumns(state.settingsTabs.columns)}
           </AccordionDetails>
         </Accordion>
-      </div>
-      {/*component for changing settings for a specific column*/}
-      <div style={{ border: "1px solid black", width: "400px" }}>
-        <div style={{ paddingTop: "20px" }}>
-          <Button onClick={handleButtonClick} variant="outlined">
-            Generate the Chart!
-          </Button>
-        </div>
-        <div style={{ paddingTop: "20px" }}>
-          Edit Title:
-          <br />
-          <TextField></TextField>
-        </div>
-      </div>
+      </Box>
+      {renderColumnMenu()}
     </div>
   );
 });
