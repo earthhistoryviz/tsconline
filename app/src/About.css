@@ -1,0 +1,12 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+.body {
+    min-height: 88vh;
+}
+.whole_page {
+    position: sticky;
+    width: 100%;
+    min-height: 95vh;
+}
