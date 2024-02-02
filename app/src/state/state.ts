@@ -37,10 +37,13 @@ export type State = {
       maxAge: number
     }
     mapHistory: MapHistory
-  }
-  chart: ChartConfig | null;
+  };
+  config: {
+    datapacks: string[], // the datapacks used on the server
+    settingsPath: string // the path to the settings file on the server
+  };
   presets: Presets;
-  totalPresets: number;
+  selectedPreset: ChartConfig | null;
   chartPath: string;
   chartHash: string;
   settingsXML: string;
@@ -93,9 +96,12 @@ export const state = observable<State>({
       accessHistory: []
     } 
   },
-  chart: null,
+  config: {
+    datapacks: [],
+    settingsPath: ""
+  },
   presets: {},
-  totalPresets: 0,
+  selectedPreset: null,
   chartPath: "",
   chartHash: "",
   settingsXML: "",

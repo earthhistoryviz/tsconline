@@ -15,6 +15,7 @@ import { TSCIcon, TSCCheckbox, TSCButton, TSCCardList }  from './components'
 import TSCreatorLogo from './assets/TSCreatorLogo.png'
 
 import "./Home.css"
+import { setSelectedPreset } from './state/actions';
 
 const HeaderContainer = styled('div')(({ theme }) => ({
   display: 'flex',
@@ -77,16 +78,16 @@ export const Home = observer(function Home() {
           // actions.setChart(0)
           actions.setShowPresetInfo(false)
         }}>
-          {!state.chart ? <React.Fragment /> : 
+          {!state.selectedPreset ? <React.Fragment /> : 
           <div className="chart_display" style={{
             background:`${Color(theme.palette.navbar.main).darken(0.5)}`
           }}>
             <div className="holds_picture">
-              <img className="chart" src={devSafeUrl(state.chart.background)} />
+              <img className="chart" src={devSafeUrl(state.selectedPreset.background)} />
             </div>
             <div className="details" style ={{ fontFamily: theme.typography.fontFamily }}>
-              <h2 className="preset_name"style={{color: theme.palette.primary.main}}>{state.chart.title} </h2>
-              <p className="description" style={{color: theme.palette.primary.main}}>{state.chart.description}</p>
+              <h2 className="preset_name"style={{color: theme.palette.primary.main}}>{state.selectedPreset.title} </h2>
+              <p className="description" style={{color: theme.palette.primary.main}}>{state.selectedPreset.description}</p>
                 <TSCButton 
                   className="info-button"
                   onClick={() => {
@@ -175,7 +176,8 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({type, navigat
               }
               onInfoClick={ async () => {
                 // wait to see if we can grab necessary data
-                const success = await actions.setChart(index, type)
+                setSelectedPreset(preset)
+                const success = await actions.setDatapackConfig(preset.datapacks, preset.settings)
                 if (success) {
                   actions.setShowPresetInfo(true)
                 }
@@ -183,7 +185,8 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({type, navigat
               }
             }
               generateChart={async () => {
-                const success = await actions.setChart(index, type)
+                setSelectedPreset(preset)
+                const success = await actions.setDatapackConfig(preset.datapacks, preset.settings)
                 // wait to see if we can grab necessary data
                 if (success) {
                   actions.generateChart()

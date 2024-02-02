@@ -12,7 +12,6 @@ import {
   assertDatapackResponse,
   Presets,
 } from "@tsconline/shared";
-import { FaciesOptions, MapHistory } from "../../types";
 import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
 
@@ -33,22 +32,14 @@ export const resetSettings = action("resetSettings", () => {
  * sets chart to newval and requests info on the datapacks from the server
  * If attributed settings, load them.
  */
-export const setChart = action(
+export const setDatapackConfig = action(
   "setChart",
-  async (newval: number, type: string): Promise<boolean> => {
+  async (datapacks: string[], settingsPath: string): Promise<boolean> => {
     resetSettings();
     //set the settings tab back to time
     setSettingsTabsSelected(0);
-    if (state.totalPresets <= newval) {
-      state.chart = null;
-      console.log("unknown preset selected");
-      return false;
-    }
-    state.chart = state.presets[type][newval]!;
+    state.config.datapacks = datapacks
     //process decrypted file
-    const datapacks = state.chart.datapacks.map(
-      (data) => data.split(".")[0] + ".txt"
-    );
     const res = await fetcher(`/datapackinfo/${datapacks.join(":")}`, {
       method: "GET",
     });
@@ -74,16 +65,25 @@ export const setChart = action(
       // resetState();
       return false;
     }
-
+    state.config.settingsPath = settingsPath 
     // Grab the settings for this chart if there are any:
-    if (state.chart.settings) {
-      const settingsName = state.chart.settings.split("/")[3];
-      const res = await fetcher(`/settingsJson/${settingsName}`, {
+    if (settingsPath && settingsPath.length > 0) {
+      const res = await fetcher(`/settingsJson/${encodeURIComponent(settingsPath)}`, {
         method: "GET",
       });
-      const settingsJson = JSON.parse(await res.text());
-      console.log("recieved settings JSON object at set Chart", settingsJson);
-      runInAction(() => (state.settingsJSON = settingsJson)); // Save the parsed JSON to the state.settingsJSON
+      try {
+        const settingsJson = JSON.parse(await res.text());
+        console.log("recieved settings JSON object at set Chart", settingsJson);
+        runInAction(() => (state.settingsJSON = settingsJson)); // Save the parsed JSON to the state.settingsJSON
+      } catch (e) {
+        if (isServerResponseError(await res.json())) {
+          console.log(`Server error: ${e} while getting settings`)
+        } else {
+          console.log(`error fetching from server with error: ${e}`)
+        }
+      }
+    } else {
+      state.settingsJSON = null
     }
     return true;
   }
@@ -138,7 +138,7 @@ export const removeCache = action("removeCache", async () => {
  */
 export const resetState = action("resetState", () => {
   setChartLoading(true);
-  setChart(0, "BASIC");
+  setDatapackConfig([], "");
   setChartHash("");
   setChartPath("");
   setAllTabs(false);
@@ -163,14 +163,10 @@ export const generateChart = action("generateChart", async () => {
   setChartPath("");
   //let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
   // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
-  var datapacks: string[] = [];
-  if (state.chart != null) {
-    datapacks = state.chart.datapacks;
-  }
   const body = JSON.stringify({
     settings: JSON.stringify(state.settingsJSON),
     columnSettings: JSON.stringify(state.settingsTabs.columns),
-    datapacks: datapacks,
+    datapacks: state.config.datapacks,
   });
   console.log("Sending settings to server...");
   // console.log(state.settings.useDefaultAge);
@@ -205,12 +201,7 @@ export const generateChart = action("generateChart", async () => {
 
 export const loadPresets = action("loadPresets", (presets: Presets) => {
   state.presets = presets;
-  let length = 0
-  Object.entries(presets).map(presetArray => {
-    length += presetArray.length
-  })
-  state.totalPresets = length
-  setChart(0, "BASIC");
+  setDatapackConfig([], "")
 });
 //update
 //TODO: need to overhaul
@@ -559,6 +550,9 @@ export const settingsXML = action("settingsXML", (xml: string) => {
 });
 export const setAllTabs = action("setAllTabs", (newval: boolean) => {
   state.showAllTabs = newval;
+});
+export const setSelectedPreset = action("setSelectedPreset", (newval: ChartConfig | null) => {
+  state.selectedPreset = newval;
 });
 const setFacies = action("setFacies", (newval: Facies) => {
   state.mapState.facies = newval;

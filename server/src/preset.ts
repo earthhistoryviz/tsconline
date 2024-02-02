@@ -19,7 +19,7 @@ export async function loadPresets(): Promise<Presets | ServerResponseError> {
       cfg.icon = '/' + chartconfig.replace(/config.json$/,cfg.icon);
       cfg.background = '/' + chartconfig.replace(/config.json$/,cfg.background);
       if (cfg.settings) {
-        cfg.settings = '/' + chartconfig.replace(/config.json$/,cfg.settings);
+        cfg.settings = chartconfig.replace(/config.json$/,cfg.settings);
       }
       return cfg;
     } catch (e: any) {
