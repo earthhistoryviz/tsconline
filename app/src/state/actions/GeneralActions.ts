@@ -181,6 +181,7 @@ export const generateChart = action("generateChart", async () => {
     setChartHash(answer.hash);
     setChartPath(devSafeUrl(answer.chartpath));
     await checkSVGStatus();
+    state.openSnackbar = true
   } catch (e: any) {
     if (isServerResponseError(answer)) {
       console.log(
@@ -497,6 +498,13 @@ async function fetchSVGStatus(): Promise<boolean> {
     return false;
   }
 }
+
+export const handleCloseSnackbar = action((event: React.SyntheticEvent | Event, reason?: string) => {
+  if (reason === 'clickaway') {
+      return;
+    }
+  state.openSnackbar = false
+});
 
 export const setUseDefaultAge = action((isChecked: boolean) => {
   state.settings.useDefaultAge = isChecked;
