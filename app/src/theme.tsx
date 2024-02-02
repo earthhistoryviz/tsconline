@@ -112,6 +112,10 @@ theme = createTheme(theme, {
     },
     selection : {
       dark: `${Color(theme.palette.selection.main).darken(0.3)}`,
+    },
+    on : {
+      main: theme.palette.on.main,
+      dark: `${Color(theme.palette.on.main).darken(0.3)}`,
     }
   },
 });
