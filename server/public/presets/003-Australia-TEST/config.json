@@ -7,5 +7,6 @@
   "settings": "settings.tsc",
   "datapacks": [
     "Australia Mappack GTS2016 ENCRYPTED PUBLIC.mdpk"
-  ]
+  ],
+  "type": "MAP-PACK"
 }
