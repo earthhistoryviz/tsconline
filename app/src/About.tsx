@@ -15,6 +15,7 @@ import JayPic from "./assets/aboutPictures/JayLee.png"
 import RohanPic from "./assets/aboutPictures/RohanNachnani.jpg"
 import SejalPic from "./assets/aboutPictures/SejalKumar.jpg"
 import AdityaPic from "./assets/aboutPictures/AdityaSivathanu.jpg"
+import AaronPic from "./assets/aboutPictures/AaronAult.jpg"
 
 
 const HeaderContainer = styled('div')(({ theme }) => ({
@@ -45,11 +46,11 @@ const TSCOnlineHeader = () => {
 };
 
 const members = [
-    {name: "Aaron Ault", role: "Member", homeTown: "IDK", timeWorked: "2024 - Present"},
+    {name: "Aaron Ault", role: "Advisor", homeTown: "IDK", timeWorked: "2024 - Present", proPic: AaronPic},
     {name: "Paolo Gumasing", role: "Team Lead", homeTown: "Lafayette, IN", timeWorked: "2023 - Present", proPic: PaoloPic},
     {name: "Jay Lee", role: "Member", homeTown: "Seoul, South Korea", timeWorked: "2023 - Present", proPic: JayPic},
     {name: "Sejal Kumar", role: "Member", homeTown: "Canton, MI", timeWorked: "2023 - Present", proPic: SejalPic},
-    {name: "Aditya Sivathanu", role: "Member", homeTown: "IDK", timeWorked: "2023 - Present", proPic: AdityaPic},
+    {name: "Aditya Sivathanu", role: "Member", homeTown: "West Lafayette, IN", timeWorked: "2023 - Present", proPic: AdityaPic},
     {name: "Leyton Bostre", role: "Member", homeTown: "Long Beach, CA", timeWorked: "2024 - Present", proPic: LeytonPic},
     {name: "Jiaqing Li (Jacqui)", role: "Member", homeTown: "Wuhan, China", timeWorked: "2024 - Present", proPic: JacquiPic},
     {name: "Toby Onyekwere", role: "Member", homeTown: "IDK", timeWorked: "2024 - Present"},
@@ -72,9 +73,9 @@ export const About = observer(function About() {
                     alignSelf: "center",
                     width: "50%"
                 }}>
-                    <h1 style={{fontSize: 48, marginBottom: "1vh"}}>About</h1>
-                    <p style={{fontSize: 22}}>TimeScale Creator Online enables you to explore and create charts of any portion of the geologic time scale from an extensive suite of global and regional events in Earth History.
-                        The internal database suite encompasses over 20,000 biologic, geomagnetic, sea-level, stable isotope, and other events.</p>
+                    <Typography style={{fontSize: 48, marginBottom: "1vh"}}>About</Typography>
+                    <Typography style={{fontSize: 22, marginBottom: "3vh"}}>TimeScale Creator Online enables you to explore and create charts of any portion of the geologic time scale from an extensive suite of global and regional events in Earth History.
+                        The internal database suite encompasses over 20,000 biologic, geomagnetic, sea-level, stable isotope, and other events.</Typography>
                 </div>
             </div>
             <div style={{display: 'flex', justifyContent: 'center', width: '100%'}}>
@@ -83,7 +84,7 @@ export const About = observer(function About() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     alignSelf: "center",
-                    width: "80%",
+                    width: "90%",
                     flexWrap: "wrap"
                 }}>
                     {members.map(function (member) {
