@@ -444,9 +444,7 @@ export const setUseCache = action((temp: boolean) => {
 export const setUsePreset = action((temp: boolean) => {
   state.useCache = temp;
 });
-export const setcolumnSelected = action((name: string, parents: string[]) => {
-  state.settingsTabs.columnSelected = { name, parents };
-});
+
 export const setChartPath = action("setChartPath", (chartpath: string) => {
   state.chartPath = chartpath;
 });
