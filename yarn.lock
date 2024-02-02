@@ -1520,8 +1520,8 @@ __metadata:
     mkdirp: "npm:^3.0.1"
     nodemon: "npm:^2.0.22"
     p-map: "npm:^6.0.0"
-    pdf2json: "npm:^3.0.5"
     pino-pretty: "npm:^10.0.0"
+    svgson: "npm:^5.3.1"
     tsc: "npm:^2.0.4"
     typescript: "npm:^4.9.5"
   languageName: unknown
@@ -1753,7 +1753,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmldom/xmldom@npm:0.8.10, @xmldom/xmldom@npm:^0.8.8":
+"@xmldom/xmldom@npm:0.8.10":
   version: 0.8.10
   resolution: "@xmldom/xmldom@npm:0.8.10"
   checksum: 62400bc5e0e75b90650e33a5ceeb8d94829dd11f9b260962b71a784cd014ddccec3e603fe788af9c1e839fa4648d8c521ebd80d8b752878d3a40edabc9ce7ccf
@@ -2542,6 +2542,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"deep-rename-keys@npm:^0.2.1":
+  version: 0.2.1
+  resolution: "deep-rename-keys@npm:0.2.1"
+  dependencies:
+    kind-of: "npm:^3.0.2"
+    rename-keys: "npm:^1.1.2"
+  checksum: 1a8533e8a1f886e85e06e60ae33c2e68c913d5633c02a7575cb26b067e65aba17267b2a59550c7aeb84a4a949971204b9c647452815c600a80c11f4d5c55b5ec
+  languageName: node
+  linkType: hard
+
 "defer-to-connect@npm:^2.0.0":
   version: 2.0.1
   resolution: "defer-to-connect@npm:2.0.1"
@@ -2784,6 +2794,13 @@ __metadata:
   version: 5.0.1
   resolution: "event-target-shim@npm:5.0.1"
   checksum: 49ff46c3a7facbad3decb31f597063e761785d7fdb3920d4989d7b08c97a61c2f51183e2f3a03130c9088df88d4b489b1b79ab632219901f184f85158508f4c8
+  languageName: node
+  linkType: hard
+
+"eventemitter3@npm:^2.0.0":
+  version: 2.0.3
+  resolution: "eventemitter3@npm:2.0.3"
+  checksum: 828903ea7e5115f1870d3d28508c42c9a93f9bc7ce37a46764f9d055ab3172ec0321cba07948c1eea30c3a64008455de0f92057a404889ec3a2556bbf151d8ff
   languageName: node
   linkType: hard
 
@@ -3452,7 +3469,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"is-buffer@npm:~1.1.6":
+"is-buffer@npm:^1.1.5, is-buffer@npm:~1.1.6":
   version: 1.1.6
   resolution: "is-buffer@npm:1.1.6"
   checksum: f63da109e74bbe8947036ed529d43e4ae0c5fcd0909921dce4917ad3ea212c6a87c29f525ba1d17c0858c18331cf1046d4fc69ef59ed26896b25c8288a627133
@@ -3689,6 +3706,15 @@ __metadata:
   dependencies:
     json-buffer: "npm:3.0.1"
   checksum: fbe6068cb46cfbf37b46f4a80e484a5e9c48c9a1eb09d9cb89382db6e12b801b60f07268ec8d7fa8d49f1f1e77badc5820c3135d478022df42691890a4c37038
+  languageName: node
+  linkType: hard
+
+"kind-of@npm:^3.0.2":
+  version: 3.2.2
+  resolution: "kind-of@npm:3.2.2"
+  dependencies:
+    is-buffer: "npm:^1.1.5"
+  checksum: b6e7eed10f9dea498500e73129c9bf289bc417568658648aecfc2e104aa32683b908e5d349563fc78d6752da0ea60c9ed1dda4b24dd85a0c8fc0c7376dc0acac
   languageName: node
   linkType: hard
 
@@ -4307,17 +4333,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pdf2json@npm:^3.0.5":
-  version: 3.0.5
-  resolution: "pdf2json@npm:3.0.5"
-  dependencies:
-    "@xmldom/xmldom": "npm:^0.8.8"
-  bin:
-    pdf2json: bin/pdf2json.js
-  checksum: 13e93aefcc046931d3e03013174bc135c919e7a033ce578106c75f9c8b9b9e96e9a7bce2db49a7d91a23b1fa20610474acb9620b5510f7fd3ccc9950786dc9c7
-  languageName: node
-  linkType: hard
-
 "picocolors@npm:^1.0.0":
   version: 1.0.0
   resolution: "picocolors@npm:1.0.0"
@@ -4689,6 +4704,13 @@ __metadata:
   version: 0.14.1
   resolution: "regenerator-runtime@npm:0.14.1"
   checksum: 5db3161abb311eef8c45bcf6565f4f378f785900ed3945acf740a9888c792f75b98ecb77f0775f3bf95502ff423529d23e94f41d80c8256e8fa05ed4b07cf471
+  languageName: node
+  linkType: hard
+
+"rename-keys@npm:^1.1.2":
+  version: 1.2.0
+  resolution: "rename-keys@npm:1.2.0"
+  checksum: c1cfe6225231b6cc48b9709e7271b7261664692b0318633d57e68ec0432c5694fc8458ecc291bc38345654034e1540979e1532f6f2d1b276b2c76b641b0aef6f
   languageName: node
   linkType: hard
 
@@ -5173,6 +5195,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"svgson@npm:^5.3.1":
+  version: 5.3.1
+  resolution: "svgson@npm:5.3.1"
+  dependencies:
+    deep-rename-keys: "npm:^0.2.1"
+    xml-reader: "npm:2.4.3"
+  checksum: c0affdf54c5784ee9d24c59b4364cdaee1eee1a22730002ccbf01ad89eb0a34ce23155b4618ed9e62b738836309ec883e642f02f6a8f74d30c9e9bb99fc7a0b8
+  languageName: node
+  linkType: hard
+
 "tar@npm:^6.0.5":
   version: 6.1.14
   resolution: "tar@npm:6.1.14"
@@ -5529,6 +5561,25 @@ __metadata:
   version: 1.0.2
   resolution: "wrappy@npm:1.0.2"
   checksum: 159da4805f7e84a3d003d8841557196034155008f817172d4e986bd591f74aa82aa7db55929a54222309e01079a65a92a9e6414da5a6aa4b01ee44a511ac3ee5
+  languageName: node
+  linkType: hard
+
+"xml-lexer@npm:^0.2.2":
+  version: 0.2.2
+  resolution: "xml-lexer@npm:0.2.2"
+  dependencies:
+    eventemitter3: "npm:^2.0.0"
+  checksum: 12b27c6426a2fcc5d00da0d523e1ebbf77bc3acbaa0b96042626734b165ba026f2ac4c59273fab7f6f2f0db792bc63fb1ee3200de2009e813f2f25f6f122d85f
+  languageName: node
+  linkType: hard
+
+"xml-reader@npm:2.4.3":
+  version: 2.4.3
+  resolution: "xml-reader@npm:2.4.3"
+  dependencies:
+    eventemitter3: "npm:^2.0.0"
+    xml-lexer: "npm:^0.2.2"
+  checksum: 50750dbcc2e4a608c2abb678eacc62594f8ffe115f1ca3a0f3ee685bd6d9a7b8622a8ea3d4bf6cfb4756cea0fec594c327ee62dc64cbd74a64b605c7e8e5109e
   languageName: node
   linkType: hard
 

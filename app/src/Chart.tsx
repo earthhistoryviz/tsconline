@@ -4,6 +4,8 @@ import { context } from "./state";
 import loadingSVG from './assets/loading.svg';
 import { useTheme } from '@mui/material/styles'
 import './Chart.css';
+import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
+import { ColoredDiv, GradientDiv } from "./components";
 
 
 export const Chart = observer(function () {
@@ -11,7 +13,7 @@ export const Chart = observer(function () {
   const theme = useTheme();
 
   return (
-    <div style={{ height: "92vh" }}>
+    <GradientDiv style={{ height: "92vh", width: '100%', display: 'flex', justifyContent: 'center', alignContent: "center" }}>
       {state.chartLoading ? 
         <div className="loading-container" style={{
           fontFamily: theme.typography.fontFamily
@@ -21,8 +23,17 @@ export const Chart = observer(function () {
           <div className="loading-sub">  (this could take more than a minute)</div> 
         </div>
         : 
-        <object data={state.chartPath} type="application/pdf" width="100%" height="100%"></object>
+        <TransformWrapper
+        minScale={0.01}
+        maxScale={3}
+        limitToBounds={false}
+        >
+          <TransformComponent>
+            <img src={state.chartPath}/>
+           {/* <object data={state.chartPath} type="application/svg" width="100%" height="100%"></object> */}
+          </TransformComponent>
+        </TransformWrapper>
       }
-    </div>
+    </GradientDiv>
   );
 });
