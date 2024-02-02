@@ -4,7 +4,7 @@ export function assertPresets(o) {
     if (!o || typeof o !== "object")
         throw new Error("Presets must be a non-null object");
     for (const type in o) {
-        if (typeof type !== 'string')
+        if (typeof type !== "string")
             throw new Error(`Presets key ${type} must be a string`);
         for (const config of o[type]) {
             assertChartConfig(config);
@@ -15,16 +15,16 @@ export function assertTransects(o) {
     if (!o || typeof o !== "object")
         throw new Error("Transects must be a non-null object");
     for (const key in o) {
-        if (typeof key !== 'string')
+        if (typeof key !== "string")
             throw new Error(`Transects key ${key} must be a string`);
         const transect = o[key];
-        if (typeof transect.startMapPoint !== 'string')
+        if (typeof transect.startMapPoint !== "string")
             throw new Error(`Transects key ${key} value of startMapPoint must be a string`);
-        if (typeof transect.endMapPoint !== 'string')
+        if (typeof transect.endMapPoint !== "string")
             throw new Error(`Transects key ${key} value of endMapPoint must be a string`);
-        if (typeof transect.on !== 'boolean')
+        if (typeof transect.on !== "boolean")
             throw new Error(`Transects key ${key} value of on must be a boolean`);
-        if ('note' in transect && typeof transect.note !== 'string')
+        if ("note" in transect && typeof transect.note !== "string")
             throw new Error(`Transects key ${key} value of note must be a string`);
     }
 }
@@ -33,9 +33,9 @@ export function assertDatapackAgeInfo(o) {
         throw new Error("DatapackAgeInfo must be an object");
     if (typeof o.useDefaultAge !== "boolean")
         throw new Error("DatapackAgeInfo must have a boolean useDefaultAge");
-    if ('bottomAge' in o && typeof o.bottomAge !== 'number')
+    if ("bottomAge" in o && typeof o.bottomAge !== "number")
         throw new Error("DatapackAgeInfo must have a number bottomAge");
-    if ('topAge' in o && typeof o.topAge !== 'number')
+    if ("topAge" in o && typeof o.topAge !== "number")
         throw new Error("DatapackAgeInfo must have a number topAge");
     if (o.useDefaultAge === false) {
         if (typeof o.bottomAge !== "number")
@@ -47,32 +47,32 @@ export function assertDatapackAgeInfo(o) {
 export function assertFacies(o) {
     if (!o || typeof o !== "object")
         throw new Error("Facies must be a non-null object");
-    if (!o.locations || typeof o.locations !== 'object')
-        throw new Error('Facies must have a locations property with type object');
+    if (!o.locations || typeof o.locations !== "object")
+        throw new Error("Facies must have a locations property with type object");
     assertFaciesLocations(o.locations);
-    if (typeof o.minAge !== 'number')
-        throw new Error('Facies must have a min age with type number');
-    if (typeof o.maxAge !== 'number')
-        throw new Error('Facies must have a max age with type number');
-    if (typeof o.aliases !== 'object')
-        throw new Error('Facies must have a aliases object');
+    if (typeof o.minAge !== "number")
+        throw new Error("Facies must have a min age with type number");
+    if (typeof o.maxAge !== "number")
+        throw new Error("Facies must have a max age with type number");
+    if (typeof o.aliases !== "object")
+        throw new Error("Facies must have a aliases object");
     for (const alias in o.aliases) {
-        if (typeof alias !== 'string')
-            throw new Error('aliases in Facies object must have keys of type string');
-        if (typeof o.aliases[alias] !== 'string')
-            throw new Error('aliases in Facies object must have indexed values of type string');
+        if (typeof alias !== "string")
+            throw new Error("aliases in Facies object must have keys of type string");
+        if (typeof o.aliases[alias] !== "string")
+            throw new Error("aliases in Facies object must have indexed values of type string");
     }
 }
 export function assertFaciesLocations(o) {
     if (!o || typeof o !== "object")
         throw new Error("FaciesLocations must be a non-null object");
     for (const location in o) {
-        if (typeof location !== 'string')
+        if (typeof location !== "string")
             throw new Error(`FaciesLocations 'key' ${location} must be of type 'string`);
         const faciesLocation = o[location];
-        if (typeof faciesLocation.minAge !== 'number')
+        if (typeof faciesLocation.minAge !== "number")
             throw new Error(`FaciesLocation value for 'key' ${location} must have a minage be of type 'number'`);
-        if (typeof faciesLocation.maxAge !== 'number')
+        if (typeof faciesLocation.maxAge !== "number")
             throw new Error(`FaciesLocation value for 'key' ${location} must have a maxage be of type 'number'`);
         if (!Array.isArray(faciesLocation.faciesTimeBlockArray))
             throw new Error(`FaciesLocation value for 'key' ${location} must have a faciesTimeBlock that is an array`);
@@ -87,7 +87,7 @@ export function assertFaciesTimeBlock(o) {
     if (typeof o.rockType !== "string") {
         throw new Error("FaciesTimeBlock must have a rockType variable of type 'string'");
     }
-    if ('label' in o && typeof o.label !== "string")
+    if ("label" in o && typeof o.label !== "string")
         throw new Error("FaciesTimeBlock must have a label variable of type 'string'");
     if (typeof o.age !== "number")
         throw new Error("FaciesTimeBlock must have a age variable of valid type 'number'");
@@ -116,7 +116,7 @@ export function assertChartConfig(o) {
         throw new Error("ChartConfig must have a settings path string");
     if (typeof o.date !== "string")
         throw new Error("ChartConfig must have a date string");
-    if ('type' in o && typeof o.type !== "string")
+    if ("type" in o && typeof o.type !== "string")
         throw new Error("ChartConfig variable 'type' must be a string");
     if (!Array.isArray(o.datapacks))
         throw new Error("ChartConfig must have a datapacks array of datapack string names.  ");

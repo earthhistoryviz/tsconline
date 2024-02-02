@@ -20,6 +20,103 @@ export type ChartConfig = {
     date: string;
     type?: string;
 };
+export type ChartInfo = {
+    settings: ChartSettingsInfo;
+    "class datastore.RootColumn:Chart Root": [name: ColumnPrototypeInfo];
+};
+export type ChartSettingsInfo = {
+    topAge: {
+        source: string;
+        unit: string;
+        text: number;
+    };
+    baseAge: {
+        source: string;
+        unit: string;
+        text: number;
+    };
+    unitsPerMY: {
+        unit: string;
+        text: number;
+    };
+    skipEmptyColumns: {
+        unit: string;
+        text: boolean;
+    };
+    variableColors: string;
+    noIndentPattern: boolean;
+    negativeChk: boolean;
+    doPopups: boolean;
+    enEventColBG: boolean;
+    enChartLegend: boolean;
+    enPriority: boolean;
+    enHideBlockLable: boolean;
+};
+export type ColumnPrototypeInfo = {
+    _id: string;
+    title: string;
+    useNamedColor: boolean;
+    placeHolder: boolean;
+    drawTitle: boolean;
+    drawAgeLabel: boolean;
+    drawUncertaintyLabel: boolean;
+    isSelected: boolean;
+    width: number;
+    pad: number;
+    "age pad": number;
+    backgroundColor: {
+        useNamed: boolean;
+        text: string;
+    };
+    fonts: FontsInfo;
+};
+export type FontsInfo = {
+    "Column Header": {
+        inheritable: boolean;
+    };
+    "Age Label": {
+        inheritable: boolean;
+    };
+    "Uncertainty Label": {
+        inheritable: boolean;
+    };
+    "Zone Column Label": {
+        inheritable: boolean;
+    };
+    "Sequence Column Label": {
+        inheritable: boolean;
+    };
+    "Event Column Label": {
+        inheritable: boolean;
+    };
+    "Popup Body": {
+        inheritable: boolean;
+    };
+    "Ruler Label": {
+        inheritable: boolean;
+    };
+    "Point Column Scale Label": {
+        inheritable: boolean;
+    };
+    "Range Label": {
+        inheritable: boolean;
+    };
+    "Ruler Tick Mark Label": {
+        inheritable: boolean;
+    };
+    "Legend Title": {
+        inheritable: boolean;
+    };
+    "Legend Column Name": {
+        inheritable: boolean;
+    };
+    "Legend Column Source": {
+        inheritable: boolean;
+    };
+    "Range Box Label": {
+        inheritable: boolean;
+    };
+};
 export type Facies = {
     locations: FaciesLocations;
     minAge: number;
@@ -49,12 +146,11 @@ export type ServerResponseError = {
     error: string;
 };
 export type ColumnInfo = {
-    [name: string]: {
-        editName: string;
-        on: boolean;
-        children: ColumnInfo;
-        parents: string[];
-    };
+    name: string;
+    editName: string;
+    on: boolean;
+    children: ColumnInfo[];
+    parent: ColumnInfo | null;
 };
 export type ChartResponseInfo = {
     chartpath: string;
