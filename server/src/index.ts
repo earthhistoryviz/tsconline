@@ -24,7 +24,7 @@ const server = fastify({
 });
 
 // Load up all the chart configs found in presets:
-const chartconfigs = await loadPresets();
+const presets = await loadPresets();
 // Load the current asset config:
 let assetconfigs: AssetConfig;
 try {
@@ -106,7 +106,7 @@ server.post("/removecache", async (request, reply) => {
 // TODO: make this a websocket so we can try to report progress
 // Note the "_" on the front of "request" tells TS that we aren't going to use it
 server.get("/presets", async (_request, reply) => {
-  reply.send(chartconfigs);
+  reply.send(presets);
 });
 
 //fetches json object of requested settings file

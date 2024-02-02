@@ -7,5 +7,6 @@
   "settings": "settings.tsc",
   "datapacks": [
     "SouthAmericaEncrypted_29Apr2019.mdpk"
-  ]
+  ],
+  "type": "MAP-PACK"
 }

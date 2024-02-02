@@ -10,6 +10,7 @@ import {
   assertSuccessfulServerResponse,
   isServerResponseError,
   assertDatapackResponse,
+  Presets,
 } from "@tsconline/shared";
 import { FaciesOptions, MapHistory } from "../../types";
 import { state, State } from "../state";
@@ -34,18 +35,18 @@ export const resetSettings = action("resetSettings", () => {
  */
 export const setChart = action(
   "setChart",
-  async (newval: number): Promise<boolean> => {
+  async (newval: number, type: string): Promise<boolean> => {
     resetSettings();
     //set the settings tab back to time
     setSettingsTabsSelected(0);
-    if (state.presets.length <= newval) {
+    if (state.totalPresets <= newval) {
       state.chart = null;
       console.log("unknown preset selected");
       return false;
     }
-    state.chart = state.presets[newval]!;
+    state.chart = state.presets[type][newval]!;
     //process decrypted file
-    const datapacks = state.presets[newval]!.datapacks.map(
+    const datapacks = state.chart.datapacks.map(
       (data) => data.split(".")[0] + ".txt"
     );
     const res = await fetcher(`/datapackinfo/${datapacks.join(":")}`, {
@@ -137,7 +138,7 @@ export const removeCache = action("removeCache", async () => {
  */
 export const resetState = action("resetState", () => {
   setChartLoading(true);
-  setChart(0);
+  setChart(0, "BASIC");
   setChartHash("");
   setChartPath("");
   setAllTabs(false);
@@ -202,9 +203,14 @@ export const generateChart = action("generateChart", async () => {
   }
 });
 
-export const loadPresets = action("loadPresets", (presets: ChartConfig[]) => {
+export const loadPresets = action("loadPresets", (presets: Presets) => {
   state.presets = presets;
-  setChart(0);
+  let length = 0
+  Object.entries(presets).map(presetArray => {
+    length += presetArray.length
+  })
+  state.totalPresets = length
+  setChart(0, "BASIC");
 });
 //update
 //TODO: need to overhaul

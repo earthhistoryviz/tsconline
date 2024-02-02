@@ -53,7 +53,11 @@ export const Home = observer(function Home() {
       background: theme.palette.gradient.main,
     }}>
       <TSCOnlineHeader/>
-      <TSCPresetHighlights navigate={navigate}/>
+      {Object.entries(state.presets).map(([type, configArray]) => {
+        return (
+          <TSCPresetHighlights key={type} navigate={navigate} configArray={configArray} type={type}/>
+        )
+      })}
       <div className="bottom-button">
         <TSCButton
           className="remove-cache-button"
@@ -114,7 +118,7 @@ export const Home = observer(function Home() {
   );
 });
 
-const TSCPresetHighlights = observer(function TSCPresetHighlights({navigate}: {navigate: Function}) {
+const TSCPresetHighlights = observer(function TSCPresetHighlights({type, navigate, configArray}: {type: string, navigate: Function, configArray: ChartConfig[]}) {
   const { state, actions } = useContext(context);
   const theme = useTheme()
   const [expanded, setExpanded] = useState(true);
@@ -144,7 +148,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({navigate}: {n
           backgroundColor: 'rgba(0, 0, 0, 0.04)', 
         }}
       >
-        <Typography sx={{ fontSize: "1.5rem"}}>BASIC PRESETS</Typography>
+        <Typography sx={{ fontSize: "1.5rem"}}>{`${type} PRESETS`}</Typography>
       </AccordionSummary>
       <AccordionDetails>
         <Grid className="presets" container style={{
@@ -154,7 +158,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({navigate}: {n
           width: "auto",
           paddingBottom: "9vh",
         }}>
-          {state.presets.map((preset, index) => (
+          {configArray.map((preset, index) => (
             <Grid item key={index} style={{ marginRight: '16px', marginLeft: '16px'}}>
             <TSCCardList
               color={theme.palette.navbar.main}
@@ -171,7 +175,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({navigate}: {n
               }
               onInfoClick={ async () => {
                 // wait to see if we can grab necessary data
-                const success = await actions.setChart(index)
+                const success = await actions.setChart(index, type)
                 if (success) {
                   actions.setShowPresetInfo(true)
                 }
@@ -179,7 +183,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({navigate}: {n
               }
             }
               generateChart={async () => {
-                const success = await actions.setChart(index)
+                const success = await actions.setChart(index, type)
                 // wait to see if we can grab necessary data
                 if (success) {
                   actions.generateChart()
