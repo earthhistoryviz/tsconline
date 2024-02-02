@@ -8,6 +8,7 @@ import type {
   ColumnInfo,
   Facies,
   GeologicalStages,
+  Presets,
 } from "@tsconline/shared";
 
 export type State = {
@@ -38,7 +39,8 @@ export type State = {
     mapHistory: MapHistory
   }
   chart: ChartConfig | null;
-  presets: ChartConfig[];
+  presets: Presets;
+  totalPresets: number;
   chartPath: string;
   chartHash: string;
   settingsXML: string;
@@ -92,7 +94,8 @@ export const state = observable<State>({
     } 
   },
   chart: null,
-  presets: [],
+  presets: {},
+  totalPresets: 0,
   chartPath: "",
   chartHash: "",
   settingsXML: "",

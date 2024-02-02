@@ -7,5 +7,6 @@
   "settings": "settings.tsc",
   "datapacks": [
     "Belgium_GTS2020.mdpk"
-  ]
+  ],
+  "type": "MAP-PACK"
 }

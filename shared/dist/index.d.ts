@@ -2,7 +2,9 @@ export type SuccessfulServerResponse = {
     message: string;
 };
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
-export type Preset = ChartConfig | ServerResponseError;
+export type Presets = {
+    [type: string]: ChartConfig[];
+};
 export type DatapackAgeInfo = {
     useDefaultAge: boolean;
     topAge?: number;
@@ -16,6 +18,7 @@ export type ChartConfig = {
     settings: string;
     datapacks: string[];
     date: string;
+    type?: string;
 };
 export type Facies = {
     locations: FaciesLocations;
@@ -125,6 +128,7 @@ export type VertBounds = {
     height: number;
     scale: number;
 };
+export declare function assertPresets(o: any): asserts o is Presets;
 export declare function assertTransects(o: any): asserts o is Transects;
 export declare function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo;
 export declare function assertFacies(o: any): asserts o is Facies;

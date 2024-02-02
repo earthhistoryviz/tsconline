@@ -7,5 +7,6 @@
   "settings": "settings.tsc",
   "datapacks": [
     "AfricaBight.map"
-  ]
+  ],
+  "type": "MAP-PACK"
 }

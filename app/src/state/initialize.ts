@@ -1,4 +1,4 @@
-import { assertChartConfigArray, isServerResponseError } from '@tsconline/shared';
+import { assertChartConfigArray, assertPresets, isServerResponseError } from '@tsconline/shared';
 import { actions } from './index'
 import { fetcher } from '../util';
 
@@ -9,7 +9,7 @@ export async function initialize() {
   const presets = await response.json();
   try {
     // console.log('Received response from server for presets: ', presets);
-    assertChartConfigArray(presets);
+    assertPresets(presets);
     actions.loadPresets(presets);
     console.log('Presets loaded');
   } catch(e: any) {

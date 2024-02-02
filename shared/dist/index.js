@@ -1,5 +1,16 @@
 // Shared types between app and server (i.e. messages they send back and forth)
 import "querystring";
+export function assertPresets(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("Presets must be a non-null object");
+    for (const type in o) {
+        if (typeof type !== 'string')
+            throw new Error(`Presets key ${type} must be a string`);
+        for (const config of o[type]) {
+            assertChartConfig(config);
+        }
+    }
+}
 export function assertTransects(o) {
     if (!o || typeof o !== "object")
         throw new Error("Transects must be a non-null object");
@@ -105,6 +116,8 @@ export function assertChartConfig(o) {
         throw new Error("ChartConfig must have a settings path string");
     if (typeof o.date !== "string")
         throw new Error("ChartConfig must have a date string");
+    if ('type' in o && typeof o.type !== "string")
+        throw new Error("ChartConfig variable 'type' must be a string");
     if (!Array.isArray(o.datapacks))
         throw new Error("ChartConfig must have a datapacks array of datapack string names.  ");
 }

@@ -8,7 +8,9 @@ export type SuccessfulServerResponse = {
 
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 
-export type Preset = ChartConfig | ServerResponseError;
+export type Presets = {
+  [type: string]: ChartConfig[]
+};
 
 export type DatapackAgeInfo = {
   useDefaultAge: boolean; //Default Age is not age located in datapack. Should be false if age exists, otherwise true.
@@ -24,6 +26,7 @@ export type ChartConfig = {
   settings: string; // path to base settings file
   datapacks: string[]; // active datapack names
   date: string; // active datapack names
+  type?: string; // type of preset
 };
 
 export type Facies = {
@@ -148,6 +151,15 @@ export type VertBounds = {
   scale: number;
 };
 
+export function assertPresets(o: any): asserts o is Presets {
+  if (!o || typeof o !== "object") throw new Error("Presets must be a non-null object");
+  for (const type in o) {
+    if (typeof type !== 'string')  throw new Error(`Presets key ${type} must be a string`);
+    for (const config of o[type]) {
+      assertChartConfig(config)
+    }
+  }
+}
 export function assertTransects(o: any): asserts o is Transects {
   if (!o || typeof o !== "object") throw new Error("Transects must be a non-null object");
   for (const key in o) {
@@ -244,6 +256,8 @@ export function assertChartConfig(o: any): asserts o is ChartConfig {
     throw new Error("ChartConfig must have a settings path string");
   if (typeof o.date !== "string")
     throw new Error("ChartConfig must have a date string");
+  if ('type' in o && typeof o.type !== "string")
+    throw new Error("ChartConfig variable 'type' must be a string");
   if (!Array.isArray(o.datapacks))
     throw new Error(
       "ChartConfig must have a datapacks array of datapack string names.  "
