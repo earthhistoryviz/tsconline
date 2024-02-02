@@ -20,10 +20,6 @@ export const fetchSettingsJson = async function fetchSettingsJson(
   try {
     let { settingFile } = request.params;
     //TODO: differentiate between preset and user uploaded datpack
-    let setting_filepath: string =
-      "public/presets/" + settingFile + "/settings.tsc";
-    let temp: string = "";
-    console.log(decodeURIComponent(settingFile))
     const contents = (await readFile(`${decodeURIComponent(settingFile)}`)).toString();
     const settingJson = await xmlToJson(contents);
     reply.send(settingJson);
