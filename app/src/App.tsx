@@ -12,6 +12,7 @@ import theme from './theme'
 import { Alert, Slide, Snackbar } from '@mui/material';
 import { useContext } from 'react';
 import { context } from './state';
+import {About} from "./About";
 
 export default observer(function App() {
   const { state, actions } = useContext(context)
@@ -25,6 +26,7 @@ export default observer(function App() {
         <Route path="/chart" element={<Chart/>} />
         <Route path="/datapack" element={<Datapack/>} />
         <Route path="/help" element={<Help/>} />
+        <Route path="/about" element={<About/>} />
       </Routes>
       <Snackbar
       open={state.openSnackbar}
