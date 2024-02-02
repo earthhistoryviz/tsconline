@@ -83,7 +83,7 @@ export const About = observer(function About() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     alignSelf: "center",
-                    width: "60%",
+                    width: "80%",
                     flexWrap: "wrap"
                 }}>
                     {members.map(function (member) {
