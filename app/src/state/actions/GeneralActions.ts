@@ -22,7 +22,9 @@ import { initializeColumnHashMap } from "./ColumnActions";
  */
 export const resetSettings = action("resetSettings", () => {
   state.settings = {
+    topStageAge: 0,
     topStageKey: "",
+    baseStageAge: 0,
     baseStageKey: "",
     unitsPerMY: 2,
     useDefaultAge: false,
@@ -439,6 +441,12 @@ export const setMapHierarchy = action(
 );
 export const setChartHash = action("setChartHash", (charthash: string) => {
   state.chartHash = charthash;
+});
+export const setTopStageAge = action("setTopStageAge", (age: number) => {
+  state.settings.topStageAge = age;
+});
+export const setBaseStageAge = action("setBaseStageAge", (age: number) => {
+  state.settings.baseStageAge = age;
 });
 
 export const settingsXML = action("settingsXML", (xml: string) => {
