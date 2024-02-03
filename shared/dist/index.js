@@ -157,18 +157,17 @@ export function assertColumnInfo(o) {
     if (typeof o !== "object" || o === null) {
         throw new Error("ColumnInfo must be a non-null object");
     }
-    for (const key in o) {
-        const columnInfo = o[key];
-        if (typeof columnInfo !== "object" || columnInfo === null) {
-            throw new Error(`ColumnInfo' value for key '${key}' must be a non-null object`);
+    if (typeof o.on !== "boolean") {
+        throw new Error(`ColumnInfo' must have an 'on' boolean`);
+    }
+    if (o.parent != null && typeof o.parent !== 'string') {
+        throw new Error(`ColumnInfo' must have a 'parent' string or be null`);
+    }
+    for (const child of o.children) {
+        if (child === null || typeof child !== 'object') {
+            throw new Error(`'ColumnInfo' must have a children array with all values non-null: ${child}`);
         }
-        if (typeof columnInfo.on !== "boolean") {
-            throw new Error(`ColumnInfo' value for key '${key}' must have an 'on' boolean`);
-        }
-        if (!Array.isArray(columnInfo.parents)) {
-            throw new Error(`ColumnInfo' value for key '${key}' must have a 'parents' string array`);
-        }
-        assertColumnInfo(columnInfo.children);
+        assertColumnInfo(child);
     }
 }
 export function assertMapHierarchy(o) {

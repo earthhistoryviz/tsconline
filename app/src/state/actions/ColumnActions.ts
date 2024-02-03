@@ -19,7 +19,7 @@ export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
 
 export const toggleSettingsTabColumn = action((name: string) => {
   let curcol: ColumnInfo;
-  console.log(name);
+  console.log(JSON.stringify(Object.keys(state.columnHashMap), null, 2))
   if (state.columnHashMap.get(name) === undefined) {
     console.log(
       "WARNING: tried to get",
@@ -30,15 +30,8 @@ export const toggleSettingsTabColumn = action((name: string) => {
   } else curcol = state.columnHashMap.get(name)!;
   //toggle current column, save it, and move to parent
   curcol.on = !curcol.on;
-  console.log(curcol.on);
   let checkStatus = curcol.on;
-  if (curcol.parent === null) {
-    console.log(
-      "WARNING: tried to access parent of ",
-      curcol.name,
-      "but is null"
-    );
-  }
+  if(curcol.parent == null) return
   if (state.columnHashMap.get(curcol.parent) === undefined) {
     console.log(
       "WARNING: tried to get",
@@ -46,17 +39,13 @@ export const toggleSettingsTabColumn = action((name: string) => {
       "in state.columnHashMap, but is undefined"
     );
     return;
-  } else curcol = state.columnHashMap.get(curcol.parent)!;
-  while (curcol.name != "Chart Root") {
+  } else curcol = state.columnHashMap.get(curcol.parent!)!;
+  while (curcol) {
     if (!curcol.on && checkStatus === true) {
       curcol.on = true;
     }
     if (curcol.parent === null) {
-      console.log(
-        "WARNING: tried to access parent of ",
-        curcol.name,
-        "but is null"
-      );
+      break
     }
     if (state.columnHashMap.get(curcol.parent) === undefined) {
       console.log(
@@ -65,7 +54,7 @@ export const toggleSettingsTabColumn = action((name: string) => {
         "in state.columnHashMap, but is undefined"
       );
       return;
-    } else curcol = state.columnHashMap.get(curcol.parent)!;
+    } else curcol = state.columnHashMap.get(curcol.parent!)!;
   }
 });
 
