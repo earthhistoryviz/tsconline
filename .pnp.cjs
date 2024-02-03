@@ -2037,8 +2037,8 @@ const RAW_RUNTIME_STATE =
           ["mkdirp", "npm:3.0.1"],\
           ["nodemon", "npm:2.0.22"],\
           ["p-map", "npm:6.0.0"],\
-          ["pdf2json", "npm:3.0.5"],\
           ["pino-pretty", "npm:10.0.0"],\
+          ["svgson", "npm:5.3.1"],\
           ["tsc", "npm:2.0.4"],\
           ["typescript", "patch:typescript@npm%3A4.9.5#optional!builtin<compat/typescript>::version=4.9.5&hash=289587"]\
         ],\
@@ -3232,6 +3232,17 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["deep-rename-keys", [\
+      ["npm:0.2.1", {\
+        "packageLocation": "./.yarn/cache/deep-rename-keys-npm-0.2.1-d94db74aa4-1a8533e8a1.zip/node_modules/deep-rename-keys/",\
+        "packageDependencies": [\
+          ["deep-rename-keys", "npm:0.2.1"],\
+          ["kind-of", "npm:3.2.2"],\
+          ["rename-keys", "npm:1.2.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["defer-to-connect", [\
       ["npm:2.0.1", {\
         "packageLocation": "./.yarn/cache/defer-to-connect-npm-2.0.1-9005cc8c60-8a9b50d2f2.zip/node_modules/defer-to-connect/",\
@@ -3459,6 +3470,15 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./.yarn/cache/event-target-shim-npm-5.0.1-cb48709025-49ff46c3a7.zip/node_modules/event-target-shim/",\
         "packageDependencies": [\
           ["event-target-shim", "npm:5.0.1"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["eventemitter3", [\
+      ["npm:2.0.3", {\
+        "packageLocation": "./.yarn/cache/eventemitter3-npm-2.0.3-71d4ac3a65-828903ea7e.zip/node_modules/eventemitter3/",\
+        "packageDependencies": [\
+          ["eventemitter3", "npm:2.0.3"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -4481,6 +4501,16 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["kind-of", [\
+      ["npm:3.2.2", {\
+        "packageLocation": "./.yarn/cache/kind-of-npm-3.2.2-7deaffa5f9-b6e7eed10f.zip/node_modules/kind-of/",\
+        "packageDependencies": [\
+          ["kind-of", "npm:3.2.2"],\
+          ["is-buffer", "npm:1.1.6"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["light-my-request", [\
       ["npm:5.9.1", {\
         "packageLocation": "./.yarn/cache/light-my-request-npm-5.9.1-9158cb184d-3a0545a4c9.zip/node_modules/light-my-request/",\
@@ -5166,16 +5196,6 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
-    ["pdf2json", [\
-      ["npm:3.0.5", {\
-        "packageLocation": "./.yarn/cache/pdf2json-npm-3.0.5-e908f47640-13e93aefcc.zip/node_modules/pdf2json/",\
-        "packageDependencies": [\
-          ["pdf2json", "npm:3.0.5"],\
-          ["@xmldom/xmldom", "npm:0.8.10"]\
-        ],\
-        "linkType": "HARD"\
-      }]\
-    ]],\
     ["picocolors", [\
       ["npm:1.0.0", {\
         "packageLocation": "./.yarn/cache/picocolors-npm-1.0.0-d81e0b1927-a2e8092dd8.zip/node_modules/picocolors/",\
@@ -5690,6 +5710,15 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./.yarn/cache/regenerator-runtime-npm-0.14.1-a6c97c609a-5db3161abb.zip/node_modules/regenerator-runtime/",\
         "packageDependencies": [\
           ["regenerator-runtime", "npm:0.14.1"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["rename-keys", [\
+      ["npm:1.2.0", {\
+        "packageLocation": "./.yarn/cache/rename-keys-npm-1.2.0-9db8c0bcf5-c1cfe62252.zip/node_modules/rename-keys/",\
+        "packageDependencies": [\
+          ["rename-keys", "npm:1.2.0"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -6211,6 +6240,17 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["svgson", [\
+      ["npm:5.3.1", {\
+        "packageLocation": "./.yarn/cache/svgson-npm-5.3.1-27a05df429-c0affdf54c.zip/node_modules/svgson/",\
+        "packageDependencies": [\
+          ["svgson", "npm:5.3.1"],\
+          ["deep-rename-keys", "npm:0.2.1"],\
+          ["xml-reader", "npm:2.4.3"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["tar", [\
       ["npm:6.1.13", {\
         "packageLocation": "./.yarn/cache/tar-npm-6.1.13-3234e72781-add2c3c6d0.zip/node_modules/tar/",\
@@ -6605,6 +6645,27 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./.yarn/cache/wrappy-npm-1.0.2-916de4d4b3-159da4805f.zip/node_modules/wrappy/",\
         "packageDependencies": [\
           ["wrappy", "npm:1.0.2"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["xml-lexer", [\
+      ["npm:0.2.2", {\
+        "packageLocation": "./.yarn/cache/xml-lexer-npm-0.2.2-2f39294af4-12b27c6426.zip/node_modules/xml-lexer/",\
+        "packageDependencies": [\
+          ["xml-lexer", "npm:0.2.2"],\
+          ["eventemitter3", "npm:2.0.3"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["xml-reader", [\
+      ["npm:2.4.3", {\
+        "packageLocation": "./.yarn/cache/xml-reader-npm-2.4.3-055f084aa6-50750dbcc2.zip/node_modules/xml-reader/",\
+        "packageDependencies": [\
+          ["xml-reader", "npm:2.4.3"],\
+          ["eventemitter3", "npm:2.0.3"],\
+          ["xml-lexer", "npm:0.2.2"]\
         ],\
         "linkType": "HARD"\
       }]\

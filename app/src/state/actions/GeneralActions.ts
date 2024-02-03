@@ -189,7 +189,8 @@ export const generateChart = action("generateChart", async () => {
     assertChartInfo(answer);
     setChartHash(answer.hash);
     setChartPath(devSafeUrl(answer.chartpath));
-    await checkPdfStatus();
+    await checkSVGStatus();
+    state.openSnackbar = true
   } catch (e: any) {
     if (isServerResponseError(answer)) {
       console.log(
@@ -346,11 +347,11 @@ export function translateTabToIndex(tab: State["settingsTabs"]["selected"]) {
  * Constantly ping the server for the pdf status
  * TODO DEPRECATE FOR SVGS
  */
-export const checkPdfStatus = action(async () => {
-  let pdfReady = false;
-  while (!pdfReady) {
-    pdfReady = await fetchPdfStatus();
-    if (!pdfReady) {
+export const checkSVGStatus = action(async () => {
+  let SVGReady = false;
+  while (!SVGReady) {
+    SVGReady = await fetchSVGStatus();
+    if (!SVGReady) {
       // Wait for some time before checking again
       await new Promise((resolve) => setTimeout(resolve, 5000));
     }
@@ -362,21 +363,28 @@ export const checkPdfStatus = action(async () => {
  * The request for pdf status
  * @returns
  */
-async function fetchPdfStatus(): Promise<boolean> {
+async function fetchSVGStatus(): Promise<boolean> {
   try {
     if (state.chartHash === "") {
       return false;
     }
-    const response = await fetcher(`/pdfstatus/${state.chartHash}`, {
+    const response = await fetcher(`/svgstatus/${state.chartHash}`, {
       method: "GET",
     });
     const data = await response.json();
     return data.ready;
   } catch (error) {
-    console.error("Error checking PDF status", error);
+    console.error("Error checking SVG status", error);
     return false;
   }
 }
+
+export const handleCloseSnackbar = action((event: React.SyntheticEvent | Event, reason?: string) => {
+  if (reason === 'clickaway') {
+      return;
+    }
+  state.openSnackbar = false
+});
 
 export const setUseDefaultAge = action((isChecked: boolean) => {
   state.settings.useDefaultAge = isChecked;
