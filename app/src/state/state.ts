@@ -18,11 +18,12 @@ export type State = {
   showPresetInfo: boolean;
   settingsTabs: {
     selected: "time" | "font" | "column" | "mappoints";
-    columns: ColumnInfo;
-    columnSelected: { name: string; parents: string[] } | null;
+    columns: ColumnInfo | null;
+    columnSelected: string | null;
     geologicalTopStages: GeologicalStages;
     geologicalBaseStages: GeologicalStages;
   };
+  columnHashMap: Map<string, ColumnInfo>
   mapState: {
     mapInfo: MapInfo;
     mapHierarchy: MapHierarchy;
@@ -66,11 +67,12 @@ export const state = observable<State>({
   showPresetInfo: false,
   settingsTabs: {
     selected: "time",
-    columns: {},
+    columns: null,
     columnSelected: null,
     geologicalTopStages: {},
     geologicalBaseStages: {},
   },
+  columnHashMap: new Map<string, ColumnInfo>(),
   mapState: {
     mapInfo: {},
     mapHierarchy: {},

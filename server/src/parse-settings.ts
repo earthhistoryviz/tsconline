@@ -360,8 +360,7 @@ function generateColumnXml(
           params.two = null;
         } else if (stateColumn != null) {
           if (Object.keys(stateColumn.children).includes(childName)) {
-            if (stateColumn)
-              params.two = stateColumn.children[childName];
+            if (stateColumn) params.two = stateColumn.children[childName];
           } else {
             params.two = null;
           }
@@ -374,7 +373,7 @@ function generateColumnXml(
           }
         }
         //jsonColumn, stateColumn, parent, indent
-      
+
         xml += generateColumnXml(
           params.one,
           params.two,
@@ -406,7 +405,7 @@ function generateColumnXml(
 export function jsonToXml(
   settings: any,
   columnSettings: any,
-  version: string = "PRO8.1"
+  version: string = "PRO8.0"
 ): string {
   //console.log("in json to xml", settings);
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;

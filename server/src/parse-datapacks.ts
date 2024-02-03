@@ -46,7 +46,21 @@ export async function parseDatapacks(
     "datapacks"
   );
   if (decrypt_paths.length == 0) throw new Error('Did not find any datapacks');
-  let columnInfo: ColumnInfo = {};
+  let columnInfo: ColumnInfo = {
+    name: "Chart Title",
+    editName: "Chart Title",
+    on: true,
+    children: [],
+    parent: ""
+  };
+  const MA: ColumnInfo = {
+    name:"MA",
+    editName: "MA",
+    on: true,
+    children: [],
+    parent: columnInfo.name
+  }
+  columnInfo.children.push(MA)
   let facies: Facies = {
     locations: {},
     minAge: 999999,
@@ -66,7 +80,7 @@ export async function parseDatapacks(
       allEntries.forEach((children, parent) => {
         // if the parent is not a child
         if (!isChild.has(parent)) {
-          recursive([], parent, children, columnInfo, allEntries, isFacies, facies);
+          recursive(columnInfo.name, parent, children, columnInfo.children, allEntries, isFacies, facies);
         }
       });
       //next we get the facies events
@@ -114,15 +128,6 @@ async function getAllEntries(filename: string, allEntries: Map<string, string[]>
       }
     }
     if (!line.includes("\t:\t")) {
-      if (line.includes(":") && line.split(":")[0]!.includes("age units")) {
-        //create MA setting since this doesn't follow the standard format of "\t:\t"
-        columnInfo["MA"] = {
-          editName: "MA",
-          on: true,
-          children: {},
-          parents: [],
-        };
-      }
       const splitLine = line.split('\t')
       if (splitLine && splitLine.length > 1 && splitLine[1] === 'facies') {
         isFacies.add(trimInvisibleCharacters(splitLine[0]!))
@@ -258,44 +263,44 @@ function processFacies(line: string): FaciesTimeBlock | null {
  * @returns 
  */
 function recursive(
-  parents: string[],
-  currentcolumn: string,
-  children: string[],
-  columnInfo: ColumnInfo,
+  parent: string | null,
+  currentColumn: string,
+  childrenStrings: string[],
+  childrenArray: ColumnInfo[],
   allEntries: Map<string, string[]>,
   isFacies: Set<string>,
   facies: Facies
 ): boolean {
-  columnInfo[currentcolumn] = {
-    editName: currentcolumn,
+  const currentColumnInfo = {
+    name: currentColumn,
+    editName: currentColumn,
     on: true,
-    children: {},
-    parents: parents,
-  };
+    children: [],
+    parent: parent,
+  }
+  childrenArray.push(currentColumnInfo)
   let faciesFound = false
-  const length = children.length
-  const newParents = [...parents, currentcolumn];
-  children.forEach((child) => {
+  childrenStrings.forEach((child) => {
     // if the child is named the same as the parent, this will create an infinite loop
-    if (!child || child === currentcolumn) return
+    if (!child || child === currentColumn) return
     // if this is the final child then we store this as a potential alias
-    if (!allEntries.get(child) && (length == 1 && isFacies.has(trimInvisibleCharacters(child)))) {
-      facies.aliases[trimInvisibleCharacters(currentcolumn)] = trimInvisibleCharacters(child)
+    if (!allEntries.get(child) && (childrenStrings.length == 1 && isFacies.has(trimInvisibleCharacters(child)))) {
+      facies.aliases[trimInvisibleCharacters(currentColumn)] = trimInvisibleCharacters(child)
       faciesFound = true
     }
     const children = allEntries.get(child) || []
     faciesFound = recursive(
-      newParents,
-      child,
-      children,
-      columnInfo[currentcolumn]!.children,
-      allEntries,
-      isFacies,
-      facies
+      currentColumn, // the current column becomes the parent
+      child, // the child is now the current column
+      children, // the children that allEntries has or [] if this child is the parent to no children
+      currentColumnInfo.children, // the array to push all the new children into
+      allEntries, // the mapping of all parents to children
+      isFacies, // the set of all facies event names
+      facies // the facies object used to garner aliases for map point usage
     ) || faciesFound
     if (!faciesFound && isFacies.has(trimInvisibleCharacters(child))) {
       faciesFound = true
-      facies.aliases[trimInvisibleCharacters(currentcolumn)] = trimInvisibleCharacters(child)
+      facies.aliases[trimInvisibleCharacters(currentColumn)] = trimInvisibleCharacters(child)
     }
   });
   return faciesFound

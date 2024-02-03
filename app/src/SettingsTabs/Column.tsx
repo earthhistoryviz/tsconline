@@ -1,12 +1,11 @@
 import { observer } from "mobx-react-lite";
-import React, { memo, useContext, useRef, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import Typography from "@mui/material/Typography";
 import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
 import { Box, Button, TextField, ToggleButton } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
-import SettingsSharpIcon from "@mui/icons-material/SettingsSharp";
 import {
   ColumnContainer,
   AccordionDetails,
@@ -16,97 +15,15 @@ import {
   TSCButton,
 } from "../components";
 import "./Column.css";
+import { ColumnMenu } from "./ColumnMenu";
 
-const ColumnMenu: React.FC<{}> = observer(() => {
-  const { state, actions } = useContext(context);
-  const [openMenu, setOpenMenu] = useState(false);
-  let editName = useRef("");
-  function showMenu() {
-    let menu = document.getElementById("ColumnMenu");
-    let label = document.getElementById("ColumnMenuLabel");
-    if (menu !== null && label !== null) {
-      if (!openMenu) {
-        menu.style.display = "flex";
-        label.style.display = "flex";
-        setOpenMenu(true);
-      } else {
-        menu.style.display = "none";
-        label.style.display = "none";
-        setOpenMenu(false);
-      }
-    }
-  }
-  const name =
-    state.settingsTabs.columnSelected === null
-      ? ""
-      : state.settingsTabs.columnSelected.name;
-  function menuContent() {
-    return (
-      <div>
-        <Typography style={{ padding: "5px" }}>Edit Title</Typography>
-        <div style={{ display: "flex", flexDirection: "row" }}>
-          <TextField
-            hiddenLabel
-            id="editNameTextField"
-            defaultValue={name}
-            key={name}
-            onChange={(event) => {
-              editName.current = event.target.value;
-            }}
-            variant="filled"
-            size="small"
-          />
-          <div className="edit-title-button">
-            <Button
-              color="secondary"
-              variant="contained"
-              onClick={() => {
-                actions.updateEditName(editName.current);
-              }}
-            >
-              Confirm
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  return (
-    <div className={openMenu ? "column-menu" : ""}>
-      <div style={{ display: "flex", flexDirection: "row", width: "300px" }}>
-        <div style={{ backgroundColor: "lightgray" }}>
-          <ToggleButton
-            value="check"
-            selected={openMenu}
-            onChange={() => {
-              showMenu();
-            }}
-            size="small"
-          >
-            <SettingsSharpIcon />
-          </ToggleButton>
-        </div>
-        <div id="ColumnMenuLabel" className="column-menu-label">
-          <Typography>Settings</Typography>
-        </div>
-      </div>
-      <div id="ColumnMenu" style={{ display: "none" }}>
-        {state.settingsTabs.columnSelected && menuContent()}
-      </div>
-    </div>
-  );
-});
-
-//types for recursively creation accordions
 type ColumnAccordionProps = {
   name: string;
-  details: ColumnInfo[string];
-  onToggle: (name: string, parents: string[]) => void;
-  setSelected: (name: string) => void;
+  details: ColumnInfo;
 };
-// component for column accordion recursion creation
+
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
-  ({ name, details, onToggle, setSelected }) => {
+  ({ name, details }) => {
     const theme = useTheme();
     const { state, actions } = useContext(context);
     const [open, setOpen] = useState(true);
@@ -117,7 +34,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
     };
 
     function clickColumnName() {
-      actions.setcolumnSelected(name, details.parents);
+      actions.setcolumnSelected(ogName.current);
       //setSelected(name);
     }
     const hasChildren =
@@ -134,7 +51,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
       </div>
     );
     const checkbox = (
-      <div>
+      <>
         <ColumnContainer>
           <div
             // className={
@@ -149,13 +66,15 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
             <TSCCheckbox
               checked={details.on}
               onChange={() => {
-                onToggle(ogName.current, details.parents);
+                actions.toggleSettingsTabColumn(ogName.current);
+                //console.log(name);
+                //console.log(state.settingsTabs.columns);
               }}
             />
             {columnName}
           </div>
         </ColumnContainer>
-      </div>
+      </>
     );
 
     // if there are no children, don't make an accordion
@@ -175,7 +94,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
           </div>
         </AccordionSummary>
         <AccordionDetails>
-          <div>
+          <>
             {details.children &&
               Object.entries(details.children).map(
                 ([childName, childDetails]) => (
@@ -184,13 +103,11 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
                       key={childName}
                       name={childDetails.editName}
                       details={childDetails}
-                      onToggle={onToggle}
-                      setSelected={setSelected}
                     />
                   </div>
                 )
               )}
-          </div>
+          </>
         </AccordionDetails>
         {/* <div>{console.log("rerender", name)}</div> */}
       </Accordion>
@@ -211,17 +128,17 @@ export const Column = observer(function Column() {
   const setSelectedWrapper = (name: string) => {
     setSelected(name);
   };
-  function renderColumns(columnInfo: ColumnInfo) {
-    return Object.entries(columnInfo).map(([columnName, columnData]) => (
-      <ColumnAccordion
-        key={columnName}
-        name={columnName}
-        details={columnData}
-        onToggle={actions.toggleSettingsTabColumn}
-        setSelected={setSelectedWrapper}
-      />
-    ));
-  }
+  // function renderColumns(columnInfo: ColumnInfo) {
+  //   return Object.entries(columnInfo.children).map(([columnName, columnData]) => (
+  //     <ColumnAccordion
+  //       key={columnName}
+  //       name={columnName}
+  //       details={columnData}
+  //       onToggle={actions.toggleSettingsTabColumn}
+  //       setSelected={setSelectedWrapper}
+  //     />
+  //   ));
+  // }
   function renderColumnMenu() {
     return <ColumnMenu />;
   }
@@ -260,20 +177,11 @@ export const Column = observer(function Column() {
         >
           Generate
         </TSCButton>
-        <Accordion
-          expanded={open}
-          onChange={handleChange}
-          style={{ minWidth: "70vh" }}
-        >
-          <AccordionSummary aria-controls="panel1d-content" id="panel1d-header">
-            <Typography sx={{ fontSize: "1.2rem", marginLeft: "15px" }}>
-              TimeScale Creator GTS2020 Chart
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            {renderColumns(state.settingsTabs.columns)}
-          </AccordionDetails>
-        </Accordion>
+            {state.settingsTabs.columns &&
+              <ColumnAccordion 
+              name={state.settingsTabs.columns.name}
+              details={state.settingsTabs.columns}
+              />}
       </Box>
       {renderColumnMenu()}
     </div>
