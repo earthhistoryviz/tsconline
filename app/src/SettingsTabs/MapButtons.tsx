@@ -1,9 +1,9 @@
 import { Box, Button, IconButton, SvgIcon, Tooltip, TooltipProps, styled, useTheme } from "@mui/material";
 import { FaciesOptions, LegendItem } from "../types";
-import { Bounds, FaciesLocations, InfoPoints, MapPoints, Transects, isRectBounds, isVertBounds } from "@tsconline/shared";
+import { Bounds, ColumnInfo, FaciesLocations, InfoPoints, MapPoints, Transects, isRectBounds, isVertBounds } from "@tsconline/shared";
 import { useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
-import { context } from "../state";
+import { actions, context } from "../state";
 import { useTransformEffect } from "react-zoom-pan-pinch";
 import { calculateRectBoundsPosition, calculateRectButton, calculateVertBoundsPosition } from "../coordinates";
 import NotListedLocationIcon from "@mui/icons-material/NotListedLocation";
@@ -91,11 +91,10 @@ type MapPointButtonProps = {
 // isInfo: will default to false. is this point an info button?
 const MapPointButton: React.FC<MapPointButtonProps> = observer(
   ({ mapPoint, x, y, name, isInfo = false, container }) => {
-    const [clicked, setClicked] = useState(
-      Boolean((mapPoint as MapPoints[string]).default) || false
-    );
     const theme = useTheme();
     const { state } = useContext(context);
+    const column = state.settingsTabs.columnHashMap.get(name)
+    const clicked = column ? column.on : false
 
     // below is the hook for grabbing the scale from map image scaling
     const [scale, setScale] = useState(1);
@@ -106,7 +105,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
         // unmount
       };
     });
-    const color = isInfo || !state.columnHashMap.get(name)
+    const color = isInfo || !column
       ? `${theme.palette.disabled.main}`
       : `${clicked ? theme.palette.on.main : theme.palette.off.main}`;
 
@@ -152,10 +151,10 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
             }}
             onClick={() => {
               if (state.mapState.isFacies) return;
-              setClicked(!clicked);
+              actions.toggleSettingsTabColumn(name)
             }}
           >
-            {getIcon(clicked, isInfo, iconSize, scale, name)}
+            {getIcon(clicked, isInfo, iconSize, scale, name, column)}
           </IconButton>
         </MapPointTooltip>
       </>
@@ -463,10 +462,11 @@ function getIcon(
   isInfo: boolean,
   iconSize: number,
   scale: number,
-  name: string
+  name: string,
+  column: ColumnInfo | undefined
 ) {
   const { state, actions } = useContext(context);
-  if (isInfo || !state.columnHashMap.get(name)) {
+  if (isInfo || !column) {
     return <InfoIcon className="icon" />;
   }
   if (state.mapState.isFacies) {

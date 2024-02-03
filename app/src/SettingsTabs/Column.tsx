@@ -144,13 +144,8 @@ export const Column = observer(function Column() {
   }
   const navigate = useNavigate();
   const handleButtonClick = () => {
-    actions.setTab(1);
-    actions.setAllTabs(true);
-
-    actions.updateSettings();
-
+    // actions.updateSettings();
     actions.generateChart();
-
     navigate("/chart");
   };
   return (
@@ -173,7 +168,7 @@ export const Column = observer(function Column() {
             height: "auto",
             fontSize: "0.85rem",
           }}
-          onClick={actions.generateChart}
+          onClick={handleButtonClick}
         >
           Generate
         </TSCButton>

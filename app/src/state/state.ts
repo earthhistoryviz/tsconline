@@ -22,8 +22,8 @@ export type State = {
     columnSelected: string | null;
     geologicalTopStages: GeologicalStages;
     geologicalBaseStages: GeologicalStages;
+    columnHashMap: Map<string, ColumnInfo>;
   };
-  columnHashMap: Map<string, ColumnInfo>
   mapState: {
     mapInfo: MapInfo;
     mapHierarchy: MapHierarchy;
@@ -71,8 +71,8 @@ export const state = observable<State>({
     columnSelected: null,
     geologicalTopStages: {},
     geologicalBaseStages: {},
+    columnHashMap: new Map<string, ColumnInfo>(),
   },
-  columnHashMap: new Map<string, ColumnInfo>(),
   mapState: {
     mapInfo: {},
     mapHierarchy: {},
