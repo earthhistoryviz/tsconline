@@ -47,62 +47,12 @@ export const setDatapackConfig = action(
     // get the columns and map info
     const reply = await res.json();
     // console.log("reply of mapInfo: ", JSON.stringify(reply.mapInfo, null, 2))
-    console.log(reply.columnInfo);
     try {
-      let temp: ColumnInfo = {
-        name: "Chart Root",
-        editName: "Chart Root",
-        on: true,
-        parent: "",
-        children: [
-          {
-            name: "Chart Title",
-            editName: "Chart Title",
-            on: true,
-            parent: "Chart Root",
-
-            children: [
-              {
-                name: "Ma",
-                editName: "Ma",
-                on: true,
-                parent: "Chart Title",
-                children: [],
-              },
-              {
-                name: "Central Africa Cenozoic",
-                editName: "Central Africa Cenozoic",
-                on: true,
-                parent: "Chart Title",
-                children: [
-                  {
-                    name: "Nigeria Coast",
-                    editName: "Nigeria Coast",
-                    on: true,
-                    children: [],
-                    parent: "Central Africa Cenozoic",
-                  },
-                  {
-                    name: "South Atlantic",
-                    editName: "South Atlantic",
-                    on: true,
-                    children: [],
-                    parent: "Central Africa Cenozoic",
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
       assertDatapackResponse(reply);
       setMapInfo(reply.mapInfo);
-      setSettingsColumns(temp);
-      //setSettingsColumns(reply.columnInfo);
+      setSettingsColumns(reply.columnInfo);
       //fill in hashmap with column info for easier & faster access
       initializeColumnHashMap(state.settingsTabs.columns!);
-      console.log(state.columnHashMap);
-      //initalizeColumnHashMap(reply.columnInfo);
       setFacies(reply.facies);
       setMapHierarchy(reply.mapHierarchy);
     } catch (e) {
@@ -141,7 +91,6 @@ export const setDatapackConfig = action(
     } else {
       state.settingsJSON = null;
     }
-    console.log(state.settingsJSON);
     return true;
   }
 );

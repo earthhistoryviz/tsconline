@@ -51,7 +51,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
       </div>
     );
     const checkbox = (
-      <div>
+      <>
         <ColumnContainer>
           <div
             // className={
@@ -74,7 +74,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
             {columnName}
           </div>
         </ColumnContainer>
-      </div>
+      </>
     );
 
     // if there are no children, don't make an accordion
@@ -94,7 +94,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
           </div>
         </AccordionSummary>
         <AccordionDetails>
-          <div>
+          <>
             {details.children &&
               Object.entries(details.children).map(
                 ([childName, childDetails]) => (
@@ -107,7 +107,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
                   </div>
                 )
               )}
-          </div>
+          </>
         </AccordionDetails>
         {/* <div>{console.log("rerender", name)}</div> */}
       </Accordion>
@@ -128,11 +128,6 @@ export const Column = observer(function Column() {
   const setSelectedWrapper = (name: string) => {
     setSelected(name);
   };
-  function renderColumns(columnInfo: ColumnInfo) {
-    return columnInfo.children.map((child, index) => (
-      <ColumnAccordion key={child.name} name={child.name} details={child} />
-    ));
-  }
   // function renderColumns(columnInfo: ColumnInfo) {
   //   return Object.entries(columnInfo.children).map(([columnName, columnData]) => (
   //     <ColumnAccordion
@@ -182,21 +177,11 @@ export const Column = observer(function Column() {
         >
           Generate
         </TSCButton>
-        <Accordion
-          expanded={open}
-          onChange={handleChange}
-          style={{ minWidth: "70vh" }}
-        >
-          <AccordionSummary aria-controls="panel1d-content" id="panel1d-header">
-            <Typography sx={{ fontSize: "1.2rem", marginLeft: "15px" }}>
-              TimeScale Creator GTS2020 Chart
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
             {state.settingsTabs.columns &&
-              renderColumns(state.settingsTabs.columns)}
-          </AccordionDetails>
-        </Accordion>
+              <ColumnAccordion 
+              name={state.settingsTabs.columns.name}
+              details={state.settingsTabs.columns}
+              />}
       </Box>
       {renderColumnMenu()}
     </div>

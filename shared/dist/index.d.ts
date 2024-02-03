@@ -150,7 +150,7 @@ export type ColumnInfo = {
     editName: string;
     on: boolean;
     children: ColumnInfo[];
-    parent: string;
+    parent: string | null;
 };
 export type ChartResponseInfo = {
     chartpath: string;
