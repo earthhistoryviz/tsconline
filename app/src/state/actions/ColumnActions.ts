@@ -19,7 +19,6 @@ export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
 
 export const toggleSettingsTabColumn = action((name: string) => {
   let curcol: ColumnInfo;
-  console.log(JSON.stringify(Object.keys(state.columnHashMap), null, 2))
   if (state.columnHashMap.get(name) === undefined) {
     console.log(
       "WARNING: tried to get",
@@ -31,7 +30,7 @@ export const toggleSettingsTabColumn = action((name: string) => {
   //toggle current column, save it, and move to parent
   curcol.on = !curcol.on;
   let checkStatus = curcol.on;
-  if(curcol.parent == null) return
+  if(!curcol.parent) return
   if (state.columnHashMap.get(curcol.parent) === undefined) {
     console.log(
       "WARNING: tried to get",
@@ -44,9 +43,7 @@ export const toggleSettingsTabColumn = action((name: string) => {
     if (!curcol.on && checkStatus === true) {
       curcol.on = true;
     }
-    if (curcol.parent === null) {
-      break
-    }
+    if (!curcol.parent) break
     if (state.columnHashMap.get(curcol.parent) === undefined) {
       console.log(
         "WARNING: tried to get",

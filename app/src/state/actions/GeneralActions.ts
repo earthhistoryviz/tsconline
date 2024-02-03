@@ -190,7 +190,7 @@ export const generateChart = action("generateChart", async () => {
     setChartHash(answer.hash);
     setChartPath(devSafeUrl(answer.chartpath));
     await checkSVGStatus();
-    state.openSnackbar = true
+    setOpenSnackbar(true)
   } catch (e: any) {
     if (isServerResponseError(answer)) {
       console.log(
@@ -379,7 +379,7 @@ async function fetchSVGStatus(): Promise<boolean> {
   }
 }
 
-export const handleCloseSnackbar = action((event: React.SyntheticEvent | Event, reason?: string) => {
+export const handleCloseSnackbar = action("handleCloseSnackbar", (event: React.SyntheticEvent | Event, reason?: string) => {
   if (reason === 'clickaway') {
       return;
     }
@@ -452,3 +452,6 @@ export const setShowPresetInfo = action(
     state.showPresetInfo = newval;
   }
 );
+export const setOpenSnackbar = action("setOpenSnackbar", (show: boolean) => {
+  state.openSnackbar = show
+})
