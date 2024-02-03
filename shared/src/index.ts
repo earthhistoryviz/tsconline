@@ -16,6 +16,13 @@ export type DatapackParsingPack = {
 export type DatapackInfoIndex = {
   [name: string]: DatapackParsingPack
 }
+export type MapPackIndex = {
+  [name: string]: MapPack
+}
+export type MapPack = {
+  mapInfo: MapInfo;
+  mapHierarchy: MapHierarchy
+}
 export type SVGStatus = {
   ready: boolean
 }
@@ -263,6 +270,21 @@ export type VertBounds = {
   scale: number;
 };
 
+export function assertMapPackIndex(o: any): asserts o is MapPackIndex {
+  if (!o || typeof o !== "object")
+    throw new Error("MapPackIndex must be a non-null object");
+  for (const key in o) {
+    if (typeof key !== 'string')
+      throw new Error(`MapPackIndex key value ${key} is not a string`)
+    assertMapPack(o[key])
+  }
+}
+export function assertMapPack(o: any): asserts o is MapPack {
+  if (!o || typeof o !== "object")
+    throw new Error("MapPack must be a non-null object");
+  assertMapInfo(o.mapInfo)
+  assertMapHierarchy(o.mapHierarchy)
+}
 export function assertPresets(o: any): asserts o is Presets {
   if (!o || typeof o !== "object")
     throw new Error("Presets must be a non-null object");

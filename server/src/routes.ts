@@ -6,9 +6,9 @@ import { writeFile, stat } from "fs/promises";
 import { assertDatapackResponse, assertChartRequest, type DatapackResponse, assertFacies, ColumnInfo } from "@tsconline/shared";
 import { deleteDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
-import { grabMapImages, grabMapInfo } from "./map-packs.js";
+import { grabMapImages } from "./parse-map-packs.js";
 import md5 from "md5";
-import { assetconfigs, datapackInfoIndex } from "./index.js";
+import { assetconfigs, datapackInfoIndex, mapPackIndex } from "./index.js";
 import svgson from 'svgson'
 import fs from "fs";
 import { readFile } from "fs/promises";
@@ -61,23 +61,28 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(
       ],
       parent: null
     }
-    let facies, datapackAgeInfo;
+    let facies, datapackAgeInfo, mapInfo, mapHierarchy;
     // add everything together
     // uses preparsed data on server start and appends items together
     for (const file of filesSplit) {
-      if (!file || !datapackInfoIndex[file]) throw new Error(`File requested doesn't exist on server: ${file}`)
+      if (!file || !datapackInfoIndex[file] || !mapPackIndex[file]) throw new Error(`File requested doesn't exist on server: ${file}`)
       const datapackParsingPack = datapackInfoIndex[file]!
       // concat the children array of root to the array created in preparsed array
       // we can't do Object.assign here because it will overwrite the array rather than concat it
       columnInfo.children = columnInfo.children.concat(datapackParsingPack.columnInfoArray)
       // concat all facies
       if (!facies) facies = datapackParsingPack.facies
-      else { Object.assign(facies, datapackParsingPack.facies) }
+      else Object.assign(facies, datapackParsingPack.facies)
       // concat datapackAgeInfo objects together
       if (!datapackAgeInfo) datapackAgeInfo = datapackParsingPack.datapackAgeInfo
       else Object.assign(datapackAgeInfo, datapackParsingPack.datapackAgeInfo)
+
+      const mapPack = mapPackIndex[file]!
+      if (!mapInfo) mapInfo = mapPack.mapInfo
+      else Object.assign(mapInfo, mapPack.mapInfo)
+      if (!mapHierarchy) mapHierarchy = mapPack.mapHierarchy
+      else Object.assign(mapHierarchy, mapPack.mapHierarchy)
     }
-    const { mapInfo, mapHierarchy } = await grabMapInfo(filesSplit);
     await grabMapImages(filesSplit, assetconfigs.imagesDirectory);
     const datapackResponse = {
       columnInfo,

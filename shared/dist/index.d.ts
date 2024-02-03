@@ -10,6 +10,13 @@ export type DatapackParsingPack = {
 export type DatapackInfoIndex = {
     [name: string]: DatapackParsingPack;
 };
+export type MapPackIndex = {
+    [name: string]: MapPack;
+};
+export type MapPack = {
+    mapInfo: MapInfo;
+    mapHierarchy: MapHierarchy;
+};
 export type SVGStatus = {
     ready: boolean;
 };
@@ -235,6 +242,8 @@ export type VertBounds = {
     height: number;
     scale: number;
 };
+export declare function assertMapPackIndex(o: any): asserts o is MapPackIndex;
+export declare function assertMapPack(o: any): asserts o is MapPack;
 export declare function assertPresets(o: any): asserts o is Presets;
 export declare function assertTransects(o: any): asserts o is Transects;
 export declare function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo;
