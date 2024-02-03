@@ -8,6 +8,8 @@ import { loadPresets } from "./preset.js";
 import { AssetConfig, assertAssetConfig } from "./types.js";
 import { deleteDirectory } from "./util.js";
 import * as routes from "./routes.js";
+import { DatapackInfoIndex, assertDatapackInfoIndex } from "@tsconline/shared";
+import { parseDatapacks } from "./parse-datapacks.js";
 
 const server = fastify({
   logger: false,
@@ -26,7 +28,7 @@ const server = fastify({
 // Load up all the chart configs found in presets:
 const presets = await loadPresets();
 // Load the current asset config:
-let assetconfigs: AssetConfig;
+export let assetconfigs: AssetConfig;
 try {
   const contents = JSON.parse(
     (await readFile("assets/config.json")).toString()
@@ -40,8 +42,6 @@ try {
   );
   process.exit(1);
 }
-// so routes.ts can handle this
-export default assetconfigs;
 // this try will run the decryption jar to decrypt all files in the datapack folder
 try {
   const datapacks = assetconfigs.activeDatapacks.map(
@@ -67,6 +67,28 @@ try {
   );
   process.exit(1);
 }
+
+export let datapackInfoIndex: DatapackInfoIndex = {}
+try {
+  console.log(`\nParsing datapacks: ${assetconfigs.activeDatapacks}\n`)
+  for (const datapack of assetconfigs.activeDatapacks) {
+    parseDatapacks(assetconfigs.decryptionDirectory, [datapack])
+    .then(
+      (datapackParsingPack) => {
+        datapackInfoIndex[datapack] = datapackParsingPack
+        console.log(`Successfully parsed ${datapack}`)
+      }
+    )
+  }
+} catch (e) {
+  console.log(
+    "ERROR: Failed to parse activeDatapacks in AssetConfig with error: ",
+    e
+  );
+  process.exit(1);
+}
+assertDatapackInfoIndex(datapackInfoIndex)
+// to service from routes.ts
 
 // Serve the main app from /
 // @ts-ignore

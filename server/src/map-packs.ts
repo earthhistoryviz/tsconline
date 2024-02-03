@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { grabFilepaths, trimQuotes } from './util.js'
-import assetconfigs from './index.js';
+import { assetconfigs } from './index.js';
 import pmap from 'p-map';
 import type { MapHierarchy, MapInfo, MapPoints } from '@tsconline/shared'
 import { assertMapPoints, assertInfoPoints, assertMapHierarchy, assertMapInfo, assertRectBounds, assertVertBounds, assertParentMap } from '@tsconline/shared';
