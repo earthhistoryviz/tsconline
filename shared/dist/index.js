@@ -1,4 +1,19 @@
 // Shared types between app and server (i.e. messages they send back and forth)
+export function assertMapPackIndex(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("MapPackIndex must be a non-null object");
+    for (const key in o) {
+        if (typeof key !== 'string')
+            throw new Error(`MapPackIndex key value ${key} is not a string`);
+        assertMapPack(o[key]);
+    }
+}
+export function assertMapPack(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("MapPack must be a non-null object");
+    assertMapInfo(o.mapInfo);
+    assertMapHierarchy(o.mapHierarchy);
+}
 export function assertPresets(o) {
     if (!o || typeof o !== "object")
         throw new Error("Presets must be a non-null object");

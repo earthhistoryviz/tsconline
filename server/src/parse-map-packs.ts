@@ -3,7 +3,7 @@ import path from 'path';
 import { grabFilepaths, trimQuotes } from './util.js'
 import { assetconfigs } from './index.js';
 import pmap from 'p-map';
-import type { MapHierarchy, MapInfo, MapPoints } from '@tsconline/shared'
+import type { MapHierarchy, MapInfo, MapPack, MapPoints } from '@tsconline/shared'
 import { assertMapPoints, assertInfoPoints, assertMapHierarchy, assertMapInfo, assertRectBounds, assertVertBounds, assertParentMap } from '@tsconline/shared';
 
 /**
@@ -33,7 +33,7 @@ export async function grabMapImages(datapacks: string[], destination: string) {
     return compiled_images
 }
 
-export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInfo, mapHierarchy: MapHierarchy}> {
+export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
     const map_info_paths = await grabFilepaths(datapacks, assetconfigs.decryptionDirectory, "map-packs")
     let mapInfo: MapInfo = {}
     let mapHierarchy: MapHierarchy = {}
@@ -287,7 +287,7 @@ export async function grabMapInfo(datapacks: string[]): Promise<{mapInfo: MapInf
     // console.log("reply of mapInfo: ", JSON.stringify(mapInfo, null, 2))
     assertMapInfo(mapInfo)
     assertMapHierarchy(mapHierarchy)
-    return {mapInfo: mapInfo, mapHierarchy: mapHierarchy}
+    return {mapInfo, mapHierarchy}
 }
 
 function grabNames(line: string[]) {

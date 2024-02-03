@@ -1,15 +1,16 @@
-import fastify, { FastifyRequest } from "fastify";
+import fastify from "fastify";
 import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
-import { exec, ChildProcess } from "child_process";
+import { exec } from "child_process";
 import { readFile } from "fs/promises";
 import { loadPresets } from "./preset.js";
 import { AssetConfig, assertAssetConfig } from "./types.js";
 import { deleteDirectory } from "./util.js";
 import * as routes from "./routes.js";
-import { DatapackInfoIndex, assertDatapackInfoIndex } from "@tsconline/shared";
+import { DatapackInfoIndex, MapPackIndex, assertDatapackInfoIndex, assertMapPackIndex } from "@tsconline/shared";
 import { parseDatapacks } from "./parse-datapacks.js";
+import { parseMapPacks } from "./parse-map-packs.js";
 
 const server = fastify({
   logger: false,
@@ -69,6 +70,7 @@ try {
 }
 
 export let datapackInfoIndex: DatapackInfoIndex = {}
+export let mapPackIndex: MapPackIndex = {}
 try {
   console.log(`\nParsing datapacks: ${assetconfigs.activeDatapacks}\n`)
   for (const datapack of assetconfigs.activeDatapacks) {
@@ -79,17 +81,20 @@ try {
         console.log(`Successfully parsed ${datapack}`)
       }
     )
+    parseMapPacks([datapack])
+    .then((mapPack) => {
+      mapPackIndex[datapack] = mapPack
+    })
   }
 } catch (e) {
   console.log(
-    "ERROR: Failed to parse activeDatapacks in AssetConfig with error: ",
+    "ERROR: Failed to parse datapacks of activeDatapacks in AssetConfig with error: ",
     e
   );
   process.exit(1);
 }
 assertDatapackInfoIndex(datapackInfoIndex)
-// to service from routes.ts
-
+assertMapPackIndex(mapPackIndex)
 // Serve the main app from /
 // @ts-ignore
 server.register(fastifyStatic, {
