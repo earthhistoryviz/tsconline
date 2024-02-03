@@ -11,6 +11,7 @@ import {
   isServerResponseError,
   assertDatapackResponse,
   Presets,
+  assertSVGStatus,
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
@@ -349,12 +350,17 @@ export function translateTabToIndex(tab: State["settingsTabs"]["selected"]) {
  */
 export const checkSVGStatus = action(async () => {
   let SVGReady = false;
-  while (!SVGReady) {
-    SVGReady = await fetchSVGStatus();
-    if (!SVGReady) {
-      // Wait for some time before checking again
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+  try {
+    while (!SVGReady) {
+      SVGReady = await fetchSVGStatus();
+      if (!SVGReady) {
+        // Wait for some time before checking again
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+      }
     }
+  } catch(e) {
+    console.log(`Error fetching svg status: ${e}`)
+    return
   }
   setChartLoading(false);
 });
@@ -364,19 +370,15 @@ export const checkSVGStatus = action(async () => {
  * @returns
  */
 async function fetchSVGStatus(): Promise<boolean> {
-  try {
-    if (state.chartHash === "") {
-      return false;
-    }
-    const response = await fetcher(`/svgstatus/${state.chartHash}`, {
-      method: "GET",
-    });
-    const data = await response.json();
-    return data.ready;
-  } catch (error) {
-    console.error("Error checking SVG status", error);
+  if (state.chartHash === "") {
     return false;
   }
+  const response = await fetcher(`/svgstatus/${state.chartHash}`, {
+    method: "GET",
+  });
+  const data = await response.json();
+  assertSVGStatus(data)
+  return data.ready;
 }
 
 export const handleCloseSnackbar = action("handleCloseSnackbar", (event: React.SyntheticEvent | Event, reason?: string) => {

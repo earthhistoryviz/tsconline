@@ -1,12 +1,15 @@
 // Shared types between app and server (i.e. messages they send back and forth)
 
-import { stringify } from "querystring";
 
 export type SuccessfulServerResponse = {
   message: string;
 };
 
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
+
+export type SVGStatus = {
+  ready: boolean
+}
 
 export type Presets = {
   [type: string]: ChartConfig[];
@@ -677,5 +680,16 @@ export function assertSuccessfulServerResponse(
   if (typeof o.message !== "string")
     throw new Error(
       `SuccessfulServerResponse must have a 'message' string property`
+    );
+}
+
+export function assertSVGStatus(
+  o: any
+): asserts o is SVGStatus {
+  if (!o || typeof o !== "object")
+    throw new Error(`SVGStatus must be a non-null object`);
+  if (typeof o.ready !== "boolean")
+    throw new Error(
+      `SVGStatus must have a 'ready' boolean property`
     );
 }

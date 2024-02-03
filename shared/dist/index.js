@@ -1,5 +1,4 @@
 // Shared types between app and server (i.e. messages they send back and forth)
-import "querystring";
 export function assertPresets(o) {
     if (!o || typeof o !== "object")
         throw new Error("Presets must be a non-null object");
@@ -336,5 +335,11 @@ export function assertSuccessfulServerResponse(o) {
         throw new Error(`SuccessfulServerResponse must be a non-null object`);
     if (typeof o.message !== "string")
         throw new Error(`SuccessfulServerResponse must have a 'message' string property`);
+}
+export function assertSVGStatus(o) {
+    if (!o || typeof o !== "object")
+        throw new Error(`SVGStatus must be a non-null object`);
+    if (typeof o.ready !== "boolean")
+        throw new Error(`SVGStatus must have a 'ready' boolean property`);
 }
 //# sourceMappingURL=index.js.map

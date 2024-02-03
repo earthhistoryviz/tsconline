@@ -5,11 +5,10 @@ import { observer } from 'mobx-react-lite';
 import ForwardIcon from '@mui/icons-material/Forward';
 import { useNavigate } from 'react-router-dom';
 import { ChartConfig } from '@tsconline/shared';
-import { primary_light, primary_dark, secondary } from './constant';
 import { devSafeUrl } from './util';
 import { context } from './state';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Drawer, Accordion, AccordionSummary, AccordionDetails, Box, Button, List, ListItem,FormGroup, FormControlLabel, Checkbox, FormControl, CardActions, Card, Grid, Container, CardContent, Typography, CardMedia } from '@mui/material';
+import { Drawer, Accordion, AccordionSummary, AccordionDetails, FormControlLabel, Grid, Typography } from '@mui/material';
 import { useTheme, styled } from '@mui/material/styles';
 import { TSCIcon, TSCCheckbox, TSCButton, TSCCardList }  from './components'
 import TSCreatorLogo from './assets/TSCreatorLogo.png'
