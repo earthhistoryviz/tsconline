@@ -10,7 +10,7 @@ const EditNameField: React.FC<{}> = observer(({}) => {
   const name =
     state.settingsTabs.columnSelected === null
       ? ""
-      : state.columnHashMap.get(state.settingsTabs.columnSelected)!.editName;
+      : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.editName;
   return (
     <div>
       <Typography style={{ padding: "5px" }}>Edit Title</Typography>
