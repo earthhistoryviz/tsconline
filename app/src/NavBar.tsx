@@ -53,17 +53,17 @@ export const NavBar = observer(function Navbar() {
                 },
                 '& .Mui-selected': { 
                   color: theme.palette.selection.main,
-                }
+                },
               }}
             >
               <Tab value={1} label="Chart" to="/chart" component={Link}/>
               <Tab value={2} label="Settings" to="/settings" component={Link} />
               <Tab value={3} label="Datapack" to="/datapack" component={Link} />
-              <Tab value={4} label="Help" to="/help" component={Link} />
+              <Tab value={4} label="Help" to="/help" component={Link}/>
+              <Tab value={5} label="About" to="/about" component={Link} />
             </TSCTabs>
         )}
-        <div style={{ flexGrow: 3 }} />
-        <div style={{ flexGrow: 2 }} />
+        <div style={{ flexGrow: 1 }} />
         <img src={TSCreatorLogo} width="4%" height="4%" />
       </Toolbar>
     </AppBar>
