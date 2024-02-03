@@ -377,7 +377,15 @@ async function fetchSVGStatus(): Promise<boolean> {
     method: "GET",
   });
   const data = await response.json();
-  assertSVGStatus(data)
+  try {
+    assertSVGStatus(data)
+  } catch(e) {
+    let msg = `Error fetching SVG status with error ${e}`
+    if (isServerResponseError(data)) {
+      msg = `While fetching SVG status, server responded with error ${data.error}`
+    }
+    throw new Error(msg)
+  }
   return data.ready;
 }
 
