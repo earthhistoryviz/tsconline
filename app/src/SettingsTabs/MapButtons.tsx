@@ -106,7 +106,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
         // unmount
       };
     });
-    const color = isInfo
+    const color = isInfo || !state.columnHashMap.get(name)
       ? `${theme.palette.disabled.main}`
       : `${clicked ? theme.palette.on.main : theme.palette.off.main}`;
 
@@ -466,7 +466,7 @@ function getIcon(
   name: string
 ) {
   const { state, actions } = useContext(context);
-  if (isInfo) {
+  if (isInfo || !state.columnHashMap.get(name)) {
     return <InfoIcon className="icon" />;
   }
   if (state.mapState.isFacies) {
