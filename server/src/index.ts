@@ -123,8 +123,8 @@ server.get<{ Params: { files: string } }>(
 
 // checks chart.pdf-status
 server.get<{ Params: { hash: string } }>(
-  "/pdfstatus/:hash",
-  routes.fetchPdfStatus
+  "/svgstatus/:hash",
+  routes.fetchSVGStatus
 );
 
 // generates chart and sends to proper directory

@@ -57,6 +57,7 @@ export type State = {
   };
   useCache: boolean;
   usePreset: boolean;
+  openSnackbar: boolean;
 };
 
 export const state = observable<State>({
@@ -116,4 +117,5 @@ export const state = observable<State>({
   },
   useCache: true,
   usePreset: true,
+  openSnackbar: false,
 });
