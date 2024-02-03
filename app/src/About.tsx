@@ -89,7 +89,7 @@ export const About = observer(function About() {
                 }}>
                     {members.map(function (member) {
                         return (
-                            <AboutCard name={member.name} role={member.role} homeTown={member.homeTown}
+                            <AboutCard key={member.name} name={member.name} role={member.role} homeTown={member.homeTown}
                                        timeWorked={member.timeWorked} proPic={member.proPic}/>
                         )
                     })}
