@@ -2,6 +2,9 @@ export type SuccessfulServerResponse = {
     message: string;
 };
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
+export type SVGStatus = {
+    ready: boolean;
+};
 export type Presets = {
     [type: string]: ChartConfig[];
 };
@@ -248,3 +251,4 @@ export declare function assertRectBounds(rectBounds: any): asserts rectBounds is
 export declare function assertInfoPoints(o: any): asserts o is InfoPoints;
 export declare function assertMapPoints(o: any): asserts o is MapPoints;
 export declare function assertSuccessfulServerResponse(o: any): asserts o is SuccessfulServerResponse;
+export declare function assertSVGStatus(o: any): asserts o is SVGStatus;

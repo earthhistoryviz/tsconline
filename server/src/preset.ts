@@ -31,7 +31,6 @@ export async function loadPresets(): Promise<Presets | ServerResponseError> {
   let presets: Presets = {"BASIC": []}
   try {
     parsedConfigs.map((chartconfig) => {
-      console.log(chartconfig)
       assertChartConfig(chartconfig)
       if ('type' in chartconfig) {
         if (!presets[chartconfig.type!]) presets[chartconfig.type!] = []

@@ -75,7 +75,12 @@ export const fetchSVGStatus = async function (
 ) {
   const { hash } = request.params;
   let isSVGReady = false
-  const filepath = `${assetconfigs.chartsDirectory}/${hash}/chart.svg`;
+  const directory = `${assetconfigs.chartsDirectory}/${hash}`
+  const filepath = `${directory}/chart.svg`;
+  if (!fs.existsSync(directory)) {
+    reply.send({error: `No directory exists at hash: ${directory}`})
+    return
+  }
   try {
     if (fs.existsSync(filepath)) {
       if (svgson.parseSync((await readFile(filepath)).toString())) isSVGReady = true
