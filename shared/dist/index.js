@@ -62,6 +62,26 @@ export function assertFacies(o) {
             throw new Error("aliases in Facies object must have indexed values of type string");
     }
 }
+export function assertDatapackParsingPack(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("DatapackParsingPack must be a non-null object");
+    if (!Array.isArray(o.columnInfoArray))
+        throw new Error(`DatapackParsingPack must have a columnInfoArray array of ColumnInfos`);
+    for (const key in o.columnInfoArray) {
+        assertColumnInfo(o.columnInfoArray[key]);
+    }
+    assertFacies(o.facies);
+    assertDatapackAgeInfo(o.datapackAgeInfo);
+}
+export function assertDatapackInfoIndex(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("DatapackInfoIndex must be a non-null object");
+    for (const key in o) {
+        if (typeof key !== "string")
+            throw new Error(`DatapackInfoIndex 'key' ${location} must be of type 'string`);
+        assertDatapackParsingPack(o[key]);
+    }
+}
 export function assertFaciesLocations(o) {
     if (!o || typeof o !== "object")
         throw new Error("FaciesLocations must be a non-null object");

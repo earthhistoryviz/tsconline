@@ -7,6 +7,15 @@ export type SuccessfulServerResponse = {
 
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 
+export type DatapackParsingPack = {
+  columnInfoArray: ColumnInfo[],
+  facies: Facies,
+  datapackAgeInfo: DatapackAgeInfo
+}
+
+export type DatapackInfoIndex = {
+  [name: string]: DatapackParsingPack
+}
 export type SVGStatus = {
   ready: boolean
 }
@@ -323,6 +332,28 @@ export function assertFacies(o: any): asserts o is Facies {
       throw new Error(
         "aliases in Facies object must have indexed values of type string"
       );
+  }
+}
+export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingPack {
+  if (!o || typeof o !== "object")
+    throw new Error("DatapackParsingPack must be a non-null object")
+  if (!Array.isArray(o.columnInfoArray))
+    throw new Error(`DatapackParsingPack must have a columnInfoArray array of ColumnInfos`)
+  for (const key in o.columnInfoArray) {
+    assertColumnInfo(o.columnInfoArray[key])
+  }
+  assertFacies(o.facies)
+  assertDatapackAgeInfo(o.datapackAgeInfo)
+}
+export function assertDatapackInfoIndex(o: any): asserts o is DatapackInfoIndex {
+  if (!o || typeof o !== "object")
+    throw new Error("DatapackInfoIndex must be a non-null object")
+  for (const key in o) {
+    if (typeof key !== "string")
+      throw new Error(
+        `DatapackInfoIndex 'key' ${location} must be of type 'string`
+      );
+    assertDatapackParsingPack(o[key])
   }
 }
 export function assertFaciesLocations(o: any): asserts o is FaciesLocations {

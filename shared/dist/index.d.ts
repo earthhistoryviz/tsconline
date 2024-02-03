@@ -2,6 +2,14 @@ export type SuccessfulServerResponse = {
     message: string;
 };
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
+export type DatapackParsingPack = {
+    columnInfoArray: ColumnInfo[];
+    facies: Facies;
+    datapackAgeInfo: DatapackAgeInfo;
+};
+export type DatapackInfoIndex = {
+    [name: string]: DatapackParsingPack;
+};
 export type SVGStatus = {
     ready: boolean;
 };
@@ -231,6 +239,8 @@ export declare function assertPresets(o: any): asserts o is Presets;
 export declare function assertTransects(o: any): asserts o is Transects;
 export declare function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo;
 export declare function assertFacies(o: any): asserts o is Facies;
+export declare function assertDatapackParsingPack(o: any): asserts o is DatapackParsingPack;
+export declare function assertDatapackInfoIndex(o: any): asserts o is DatapackInfoIndex;
 export declare function assertFaciesLocations(o: any): asserts o is FaciesLocations;
 export declare function assertFaciesTimeBlock(o: any): asserts o is FaciesTimeBlock;
 export declare function assertDatapackResponse(o: any): asserts o is DatapackResponse;

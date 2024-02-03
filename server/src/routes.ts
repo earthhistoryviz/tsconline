@@ -3,12 +3,12 @@ import { jsonToXml, xmlToJson } from "./parse-settings.js";
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
 import { writeFile, stat } from "fs/promises";
-import { assertDatapackResponse, assertChartRequest, type DatapackResponse, assertFacies } from "@tsconline/shared";
+import { assertDatapackResponse, assertChartRequest, type DatapackResponse, assertFacies, ColumnInfo } from "@tsconline/shared";
 import { deleteDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
 import { grabMapImages, grabMapInfo } from "./map-packs.js";
 import md5 from "md5";
-import assetconfigs from "./index.js";
+import { assetconfigs, datapackInfoIndex } from "./index.js";
 import svgson from 'svgson'
 import fs from "fs";
 import { readFile } from "fs/promises";
@@ -41,14 +41,42 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(
   console.log("Getting decrypted info for files: ", files);
   const filesSplit = files.split(":");
   try {
-    const { columns, facies, datapackAgeInfo } = await parseDatapacks(
-      assetconfigs.decryptionDirectory,
-      filesSplit
-    );
+    // the default overarching variable for the columnInfo
+    let columnInfo: ColumnInfo = {
+      name: "Root", // if you change this, change parse-datapacks.ts :69
+      editName: "Chart Title",
+      on: true,
+      children: [
+        {
+          name: "MA",
+          editName: "MA",
+          on: true,
+          children: [],
+          parent: "Root"// if you change this, change parse-datapacks.ts :69
+        }
+      ],
+      parent: null
+    }
+    let facies, datapackAgeInfo;
+    // add everything together
+    // uses preparsed data on server start and appends items together
+    for (const file of filesSplit) {
+      if (!file || !datapackInfoIndex[file]) throw new Error(`File requested doesn't exist on server: ${file}`)
+      const datapackParsingPack = datapackInfoIndex[file]!
+      // concat the children array of root to the array created in preparsed array
+      // we can't do Object.assign here because it will overwrite the array rather than concat it
+      columnInfo.children = columnInfo.children.concat(datapackParsingPack.columnInfoArray)
+      // concat all facies
+      if (!facies) facies = datapackParsingPack.facies
+      else { Object.assign(facies, datapackParsingPack.facies) }
+      // concat datapackAgeInfo objects together
+      if (!datapackAgeInfo) datapackAgeInfo = datapackParsingPack.datapackAgeInfo
+      else Object.assign(datapackAgeInfo, datapackParsingPack.datapackAgeInfo)
+    }
     const { mapInfo, mapHierarchy } = await grabMapInfo(filesSplit);
     await grabMapImages(filesSplit, assetconfigs.imagesDirectory);
     const datapackResponse = {
-      columnInfo: columns,
+      columnInfo,
       facies,
       mapInfo,
       mapHierarchy,

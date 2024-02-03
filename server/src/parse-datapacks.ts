@@ -1,5 +1,5 @@
 import { createReadStream } from "fs";
-import { ColumnInfo, Facies, FaciesLocations, FaciesTimeBlock, assertFaciesTimeBlock, DatapackAgeInfo } from "@tsconline/shared";
+import { ColumnInfo, Facies, FaciesLocations, FaciesTimeBlock, assertFaciesTimeBlock, DatapackAgeInfo, DatapackParsingPack } from "@tsconline/shared";
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths } from "./util.js";
 import { createInterface } from "readline";
 
@@ -39,28 +39,14 @@ function spliceArrayAtFirstSpecialMatch(array: string[]) {
 export async function parseDatapacks(
   decrypt_filepath: string,
   files: string[]
-): Promise<{ columns: ColumnInfo, facies: Facies, datapackAgeInfo: DatapackAgeInfo }> {
+): Promise<DatapackParsingPack> {
   const decrypt_paths = await grabFilepaths(
     files,
     decrypt_filepath,
     "datapacks"
   );
   if (decrypt_paths.length == 0) throw new Error('Did not find any datapacks');
-  let columnInfo: ColumnInfo = {
-    name: "Chart Title",
-    editName: "Chart Title",
-    on: true,
-    children: [],
-    parent: ""
-  };
-  const MA: ColumnInfo = {
-    name:"MA",
-    editName: "MA",
-    on: true,
-    children: [],
-    parent: columnInfo.name
-  }
-  columnInfo.children.push(MA)
+  let columnInfoArray: ColumnInfo[] = []
   let facies: Facies = {
     locations: {},
     minAge: 999999,
@@ -74,13 +60,13 @@ export async function parseDatapacks(
   try {
     for (let decrypt_path of decrypt_paths) {
       // First, gather all parents and their direct children
-      datapackAgeInfo = await getAllEntries(decrypt_path, allEntries, columnInfo, isFacies, isChild);
+      datapackAgeInfo = await getAllEntries(decrypt_path, allEntries, isFacies, isChild);
       // only iterate over parents. if we encounter one that is a child, the recursive function
       // should have already processed it.
       allEntries.forEach((children, parent) => {
         // if the parent is not a child
         if (!isChild.has(parent)) {
-          recursive(columnInfo.name, parent, children, columnInfo.children, allEntries, isFacies, facies);
+          recursive("Root", parent, children, columnInfoArray, allEntries, isFacies, facies);
         }
       });
       //next we get the facies events
@@ -94,7 +80,7 @@ export async function parseDatapacks(
       e
     );
   }
-  return { columns: columnInfo, facies, datapackAgeInfo };
+  return { columnInfoArray, facies, datapackAgeInfo };
 }
 /**
  * This will populate a mapping of all parents : childen[]
@@ -105,7 +91,7 @@ export async function parseDatapacks(
  * @param isFacies 
  * @param isChild 
  */
-async function getAllEntries(filename: string, allEntries: Map<string, string[]>, columnInfo: ColumnInfo, isFacies: Set<string>, isChild: Set<string>):
+async function getAllEntries(filename: string, allEntries: Map<string, string[]>, isFacies: Set<string>, isChild: Set<string>):
   Promise<DatapackAgeInfo> {
   const fileStream = createReadStream(filename)
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity })
