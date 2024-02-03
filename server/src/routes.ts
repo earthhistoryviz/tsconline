@@ -37,6 +37,10 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(
 ) {
   deleteDirectory(assetconfigs.imagesDirectory);
   const { files } = request.params;
+  if (!files) {
+    reply.send("Error: no files requested")
+    return
+  }
   //TODO check if files exist. probably check this in the glob of parse Datapacks
   console.log("Getting decrypted info for files: ", files);
   const filesSplit = files.split(":");
