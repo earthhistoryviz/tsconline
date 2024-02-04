@@ -197,6 +197,9 @@ export function assertColumnInfo(o) {
     if (o.parent != null && typeof o.parent !== 'string') {
         throw new Error(`ColumnInfo' must have a 'parent' string or be null`);
     }
+    if (o.info != null && typeof o.info != 'string') {
+        throw new Error(`ColumnInfo' must have a 'info' string or be null`);
+    }
     for (const child of o.children) {
         if (child === null || typeof child !== 'object') {
             throw new Error(`'ColumnInfo' must have a children array with all values non-null: ${child}`);

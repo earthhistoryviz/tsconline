@@ -24,7 +24,7 @@ export const fetchSettingsJson = async function fetchSettingsJson(
     const settingJson = await xmlToJson(contents);
     reply.send(settingJson);
   } catch (e) {
-    reply.send({error: e})
+    reply.send({ error: e })
   }
 };
 
@@ -49,12 +49,14 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(
     let columnInfo: ColumnInfo = {
       name: "Root", // if you change this, change parse-datapacks.ts :69
       editName: "Chart Title",
+      info: "",
       on: true,
       children: [
         {
           name: "MA",
           editName: "MA",
           on: true,
+          info: "",
           children: [],
           parent: "Root"// if you change this, change parse-datapacks.ts :69
         }
@@ -116,7 +118,7 @@ export const fetchSVGStatus = async function (
   const filepath = `${directory}/chart.svg`;
   // if hash doesn't exist reply with error
   if (!fs.existsSync(directory)) {
-    reply.send({error: `No directory exists at hash: ${directory}`})
+    reply.send({ error: `No directory exists at hash: ${directory}` })
     return
   }
   try {
