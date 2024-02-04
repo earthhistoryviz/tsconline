@@ -184,6 +184,7 @@ export type ColumnInfo = {
   name: string;
   editName: string;
   on: boolean;
+  info: string;
   children: ColumnInfo[];
   parent: string | null;
 };
@@ -499,6 +500,11 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   if (o.parent != null && typeof o.parent !== 'string') {
     throw new Error(
       `ColumnInfo' must have a 'parent' string or be null`
+    );
+  }
+  if (o.info != null && typeof o.info != 'string') {
+    throw new Error(
+      `ColumnInfo' must have a 'info' string or be null`
     );
   }
   for (const child of o.children) {

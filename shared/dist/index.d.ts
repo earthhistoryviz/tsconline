@@ -167,6 +167,7 @@ export type ColumnInfo = {
     name: string;
     editName: string;
     on: boolean;
+    info: string;
     children: ColumnInfo[];
     parent: string | null;
 };

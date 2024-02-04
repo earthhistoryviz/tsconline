@@ -8,21 +8,29 @@ import { createInterface } from "readline";
  * This function is meant to catch all strange occurences at the end
  * of the tab seperated decrypted file. Should get rid of METACOLUMN_OFF
  * and any extraneuous info bits that shouldn't be a togglable column.
- * At the moment, All strange occurences.
+ * 
  */
 function spliceArrayAtFirstSpecialMatch(array: string[]) {
 
+  let ref = "";
+  let metacolumn = "";
   for (var i = 0; i < array.length; i++) {
     if (array[i]?.includes("METACOLUMN") || array[i]?.includes("TITLE")) {
+      if (array[i]?.includes("METACOLUMN")) {
+        metacolumn = array[i]!;
+      }
       array.splice(i, 1);
       i = i - 1;
     }
     if (!array[i]) {
+      ref = array[i + 1]!;
       array.splice(i + 1, 1);
       array.splice(i, 1);
       i = i - 1;
     }
   }
+  array.push(metacolumn);
+  array.push(ref);
   return array;
 }
 
@@ -66,8 +74,10 @@ export async function parseDatapacks(
       allEntries.forEach((children, parent) => {
         // if the parent is not a child
         if (!isChild.has(parent)) {
+
           recursive("Root", parent, children, columnInfoArray, allEntries, isFacies, facies);
         }
+
       });
       //next we get the facies events
       await getFacies(decrypt_path, facies)
@@ -261,9 +271,22 @@ function recursive(
     name: currentColumn,
     editName: currentColumn,
     on: true,
+    info: "",
     children: [],
     parent: parent,
   }
+  let ref = childrenStrings.pop();
+  let metacolumn = childrenStrings.pop();
+  if (metacolumn) {
+    currentColumnInfo.on = false;
+  }
+  if (ref) {
+    currentColumnInfo.info = ref;
+  }
+
+  //console.log(currentColumnInfo.info);
+  //console.log(currentColumnInfo.on);
+
   childrenArray.push(currentColumnInfo)
   let faciesFound = false
   childrenStrings.forEach((child) => {
