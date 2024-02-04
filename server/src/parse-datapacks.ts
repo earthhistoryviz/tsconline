@@ -205,6 +205,15 @@ async function getFacies(filename: string, facies: Facies) {
       }
     }
   }
+  if (inFaciesBlock) {
+    if (location.faciesTimeBlockArray.length == 0) {
+      location.maxAge = 0
+      location.minAge = 0
+    }
+    facies.locations[name] = location
+    facies.minAge = Math.min(facies.minAge, location.minAge)
+    facies.maxAge = Math.max(facies.maxAge, location.maxAge)
+  }
 }
 /**
  * Processes a single facies line
