@@ -3,6 +3,11 @@ import { ColumnInfo, Facies, FaciesLocations, FaciesTimeBlock, assertFaciesTimeB
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths } from "./util.js";
 import { createInterface } from "readline";
 
+type ParsedColumnEntry = {
+  children: string[],
+  on: boolean,
+  info: string
+}
 /**
  * TODO:
  * This function is meant to catch all strange occurences at the end
@@ -10,10 +15,15 @@ import { createInterface } from "readline";
  * and any extraneuous info bits that shouldn't be a togglable column.
  * 
  */
-function spliceArrayAtFirstSpecialMatch(array: string[]) {
+function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
 
   let ref = "";
   let metacolumn = "";
+  let ParsedColumnEntry: ParsedColumnEntry = {
+    children: [],
+    on: true,
+    info: ""
+  }
   for (var i = 0; i < array.length; i++) {
     if (array[i]?.includes("METACOLUMN") || array[i]?.includes("TITLE")) {
       if (array[i]?.includes("METACOLUMN")) {
@@ -29,9 +39,13 @@ function spliceArrayAtFirstSpecialMatch(array: string[]) {
       i = i - 1;
     }
   }
-  array.push(metacolumn);
-  array.push(ref);
-  return array;
+  ParsedColumnEntry.children = array;
+  if (metacolumn) {
+    ParsedColumnEntry.on = false;
+  }
+  ParsedColumnEntry.info = ref;
+
+  return ParsedColumnEntry;
 }
 
 /**
@@ -63,7 +77,7 @@ export async function parseDatapacks(
   }
   const isChild: Set<string> = new Set();
   const isFacies: Set<string> = new Set();
-  const allEntries: Map<string, string[]> = new Map();
+  const allEntries: Map<string, ParsedColumnEntry> = new Map();
   let datapackAgeInfo: DatapackAgeInfo = { useDefaultAge: false };
   try {
     for (let decrypt_path of decrypt_paths) {
@@ -101,7 +115,7 @@ export async function parseDatapacks(
  * @param isFacies 
  * @param isChild 
  */
-async function getAllEntries(filename: string, allEntries: Map<string, string[]>, isFacies: Set<string>, isChild: Set<string>):
+async function getAllEntries(filename: string, allEntries: Map<string, ParsedColumnEntry>, isFacies: Set<string>, isChild: Set<string>):
   Promise<DatapackAgeInfo> {
   const fileStream = createReadStream(filename)
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity })
@@ -143,12 +157,12 @@ async function getAllEntries(filename: string, allEntries: Map<string, string[]>
     let childrenstring = line.split("\t:\t")[1];
     if (!parent || !childrenstring) continue;
     // childrenstring = childrenstring!.split("\t\t")[0];
-    let children = spliceArrayAtFirstSpecialMatch(childrenstring!.split("\t"));
+    let parsedChildren = spliceArrayAtFirstSpecialMatch(childrenstring!.split("\t"));
     //if the entry is a child, add it to a set.
-    for (const child of children) {
+    for (const child of parsedChildren.children) {
       isChild.add(child)
     }
-    allEntries.set(parent, children);
+    allEntries.set(parent, parsedChildren);
   }
   let datapackAgeInfo: DatapackAgeInfo = { useDefaultAge: topAge === null || bottomAge === null };
   if (topAge !== null && bottomAge !== null) {
@@ -270,9 +284,9 @@ function processFacies(line: string): FaciesTimeBlock | null {
 function recursive(
   parent: string | null,
   currentColumn: string,
-  childrenStrings: string[],
+  childrenStrings: ParsedColumnEntry | never[],
   childrenArray: ColumnInfo[],
-  allEntries: Map<string, string[]>,
+  allEntries: Map<string, ParsedColumnEntry>,
   isFacies: Set<string>,
   facies: Facies
 ): boolean {
@@ -284,42 +298,47 @@ function recursive(
     children: [],
     parent: parent,
   }
-  let ref = childrenStrings.pop();
-  let metacolumn = childrenStrings.pop();
-  if (metacolumn) {
-    currentColumnInfo.on = false;
-  }
-  if (ref) {
-    currentColumnInfo.info = ref;
-  }
-
-  //console.log(currentColumnInfo.info);
-  //console.log(currentColumnInfo.on);
-
-  childrenArray.push(currentColumnInfo)
   let faciesFound = false
-  childrenStrings.forEach((child) => {
-    // if the child is named the same as the parent, this will create an infinite loop
-    if (!child || child === currentColumn) return
-    // if this is the final child then we store this as a potential alias
-    if (!allEntries.get(child) && (childrenStrings.length == 1 && isFacies.has(trimInvisibleCharacters(child)))) {
-      facies.aliases[trimInvisibleCharacters(currentColumn)] = trimInvisibleCharacters(child)
-      faciesFound = true
-    }
-    const children = allEntries.get(child) || []
-    faciesFound = recursive(
-      currentColumn, // the current column becomes the parent
-      child, // the child is now the current column
-      children, // the children that allEntries has or [] if this child is the parent to no children
-      currentColumnInfo.children, // the array to push all the new children into
-      allEntries, // the mapping of all parents to children
-      isFacies, // the set of all facies event names
-      facies // the facies object used to garner aliases for map point usage
-    ) || faciesFound
-    if (!faciesFound && isFacies.has(trimInvisibleCharacters(child))) {
-      faciesFound = true
-      facies.aliases[trimInvisibleCharacters(currentColumn)] = trimInvisibleCharacters(child)
-    }
-  });
-  return faciesFound
+  if (isParsedColumnEntry(childrenStrings)) {
+    currentColumnInfo.on = childrenStrings.on;
+
+
+    currentColumnInfo.info = childrenStrings.info;
+
+
+    childrenArray.push(currentColumnInfo)
+
+    childrenStrings.children.forEach((child) => {
+      // if the child is named the same as the parent, this will create an infinite loop
+      if (!child || child === currentColumn) return
+      // if this is the final child then we store this as a potential alias
+      if (!allEntries.get(child) && (childrenStrings.children.length == 1 && isFacies.has(trimInvisibleCharacters(child)))) {
+        facies.aliases[trimInvisibleCharacters(currentColumn)] = trimInvisibleCharacters(child)
+        faciesFound = true
+      }
+      const children = allEntries.get(child) || []
+      faciesFound = recursive(
+        currentColumn, // the current column becomes the parent
+        child, // the child is now the current column
+        children, // the children that allEntries has or [] if this child is the parent to no children
+        currentColumnInfo.children, // the array to push all the new children into
+        allEntries, // the mapping of all parents to children
+        isFacies, // the set of all facies event names
+        facies // the facies object used to garner aliases for map point usage
+      ) || faciesFound
+      if (!faciesFound && isFacies.has(trimInvisibleCharacters(child))) {
+        faciesFound = true
+        facies.aliases[trimInvisibleCharacters(currentColumn)] = trimInvisibleCharacters(child)
+      }
+    });
+  }
+  return faciesFound;
+
+}
+
+/*
+ * Type guard function
+ */
+function isParsedColumnEntry(o: ParsedColumnEntry | never[]): o is ParsedColumnEntry {
+  return (o as ParsedColumnEntry).children !== undefined;
 }
