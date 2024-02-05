@@ -2,7 +2,7 @@ import fastify from "fastify";
 import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
-import { exec } from "child_process";
+import { execSync } from "child_process";
 import { readFile } from "fs/promises";
 import { loadPresets } from "./preset.js";
 import { AssetConfig, assertAssetConfig } from "./types.js";
@@ -55,12 +55,8 @@ try {
     // Tell it where to send the datapacks
     `-dest ${assetconfigs.decryptionDirectory} `;
   console.log("Calling Java decrypt.jar: ", cmd);
-  exec(cmd, function (error, stdout, stderror) {
-    console.log("Decryption finished");
-    console.log("Decryption error param: " + error);
-    console.log("Decryption stdout: " + stdout.toString());
-    console.log("Decryption stderr: " + stderror.toString());
-  });
+  execSync(cmd)
+  console.log("Finished decryption")
 } catch (e: any) {
   console.log(
     "ERROR: Failed to decrypt activeDatapacks in AssetConfig with error: ",

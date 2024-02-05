@@ -53,7 +53,7 @@ export async function parseDatapacks(
     decrypt_filepath,
     "datapacks"
   );
-  if (decrypt_paths.length == 0) throw new Error('Did not find any datapacks');
+  if (decrypt_paths.length == 0) throw new Error(`Did not find any datapacks for ${files}`);
   let columnInfoArray: ColumnInfo[] = []
   let facies: Facies = {
     locations: {},
