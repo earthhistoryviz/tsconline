@@ -169,7 +169,7 @@ export const Time = observer(function Time() {
           label="Hide block labels based on priority" />
           <FormControlLabel
           name="use-suggested-age-spans"
-          control={<TSCCheckbox onChange={(e) => actions.setUseDefaultAge(e.target.checked)}/>}
+          control={<TSCCheckbox onChange={(e) => actions.setuseDatapackSuggestedAge(e.target.checked)}/>}
           label="Do not use the Data-Pack's suggested age span" />
         </FormGroup>
       </div>
