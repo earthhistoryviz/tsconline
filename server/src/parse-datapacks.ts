@@ -78,7 +78,7 @@ export async function parseDatapacks(
   const isChild: Set<string> = new Set();
   const isFacies: Set<string> = new Set();
   const allEntries: Map<string, ParsedColumnEntry> = new Map();
-  let datapackAgeInfo: DatapackAgeInfo = { useDefaultAge: false };
+  let datapackAgeInfo: DatapackAgeInfo = { useDatapackSuggestedAge: false };
   try {
     for (let decrypt_path of decrypt_paths) {
       // First, gather all parents and their direct children
@@ -164,7 +164,7 @@ async function getAllEntries(filename: string, allEntries: Map<string, ParsedCol
     }
     allEntries.set(parent, parsedChildren);
   }
-  let datapackAgeInfo: DatapackAgeInfo = { useDefaultAge: topAge === null || bottomAge === null };
+  let datapackAgeInfo: DatapackAgeInfo = { useDatapackSuggestedAge: topAge != null && bottomAge != null };
   if (topAge !== null && bottomAge !== null) {
     datapackAgeInfo.topAge = topAge;
     datapackAgeInfo.bottomAge = bottomAge;

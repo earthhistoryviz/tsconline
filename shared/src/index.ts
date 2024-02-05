@@ -32,7 +32,7 @@ export type Presets = {
 };
 
 export type DatapackAgeInfo = {
-  useDefaultAge: boolean; //Default Age is not age located in datapack. Should be false if age exists, otherwise true.
+  useDatapackSuggestedAge: boolean; //Default Age is not age located in datapack. Should be false if age exists, otherwise true.
   topAge?: number;
   bottomAge?: number;
 };
@@ -322,13 +322,9 @@ export function assertTransects(o: any): asserts o is Transects {
 export function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo {
   if (typeof o !== "object")
     throw new Error("DatapackAgeInfo must be an object");
-  if (typeof o.useDefaultAge !== "boolean")
-    throw new Error("DatapackAgeInfo must have a boolean useDefaultAge");
-  if ("bottomAge" in o && typeof o.bottomAge !== "number")
-    throw new Error("DatapackAgeInfo must have a number bottomAge");
-  if ("topAge" in o && typeof o.topAge !== "number")
-    throw new Error("DatapackAgeInfo must have a number topAge");
-  if (o.useDefaultAge === false) {
+  if (typeof o.useDatapackSuggestedAge !== "boolean")
+    throw new Error("DatapackAgeInfo must have a boolean useDatapackSuggestedAge");
+  if (o.useDatapackSuggestedAge === true) {
     if (typeof o.bottomAge !== "number")
       throw new Error("DatapackAgeInfo must have a number bottomAge");
     if (typeof o.topAge !== "number")

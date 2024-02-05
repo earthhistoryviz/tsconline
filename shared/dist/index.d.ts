@@ -24,7 +24,7 @@ export type Presets = {
     [type: string]: ChartConfig[];
 };
 export type DatapackAgeInfo = {
-    useDefaultAge: boolean;
+    useDatapackSuggestedAge: boolean;
     topAge?: number;
     bottomAge?: number;
 };

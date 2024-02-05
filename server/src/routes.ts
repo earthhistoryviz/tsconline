@@ -138,12 +138,12 @@ export const fetchSVGStatus = async function (
  * Will return the chart path and the hash the chart was saved with
  */
 export const fetchChart = async function fetchChart(
-  request: FastifyRequest<{ Params: { usecache: string, useDefaultAge: string } }>,
+  request: FastifyRequest<{ Params: { usecache: string, useDatapackSuggestedAge: string } }>,
   reply: FastifyReply
 ) {
   //TODO change this to be in request body
   const usecache = request.params.usecache === "true";
-  const useDefaultAge = request.params.useDefaultAge === "true";
+  const useDatapackSuggestedAge = request.params.useDatapackSuggestedAge === "true";
   let chartrequest;
   try {
     chartrequest = JSON.parse(request.body as string);
@@ -252,8 +252,8 @@ export const fetchChart = async function fetchChart(
     `-d ${datapacks.join(" ")} ` +
     // Tell it where to save chart
     `-o ${chart_filepath} ` +
-    // Don't use datapacks suggested age (if useDefaultAge is true then ignore datapack ages)
-    `${useDefaultAge ? '-a' : ''}`;
+    // Don't use datapacks suggested age (if useDatapackSuggestedAge is true then ignore datapack ages)
+    `${useDatapackSuggestedAge ? '-a' : ''}`;
 
   // Exec Java command and send final reply to browser
   await new Promise<void>((resolve, _reject) => {

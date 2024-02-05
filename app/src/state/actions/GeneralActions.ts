@@ -27,7 +27,7 @@ export const resetSettings = action("resetSettings", () => {
     baseStageAge: 0,
     baseStageKey: "",
     unitsPerMY: 2,
-    useDefaultAge: false,
+    useDatapackSuggestedAge: false,
   };
 });
 
@@ -71,6 +71,7 @@ export const setDatapackConfig = action(
       // resetState();
       return false;
     }
+    state.settings.useDatapackSuggestedAge = reply.datapackAgeInfo.useDatapackSuggestedAge;
     state.config.settingsPath = settingsPath;
     // Grab the settings for this chart if there are any:
     if (settingsPath && settingsPath.length > 0) {
@@ -178,9 +179,8 @@ export const generateChart = action("generateChart", async () => {
     datapacks: state.config.datapacks,
   });
   console.log("Sending settings to server...");
-  // console.log(state.settings.useDefaultAge);
   const response = await fetcher(
-    `/charts/${state.useCache}/${state.settings.useDefaultAge}`,
+    `/charts/${state.useCache}/${state.settings.useDatapackSuggestedAge}`,
     {
       method: "POST",
       body,
@@ -398,8 +398,8 @@ export const handleCloseSnackbar = action("handleCloseSnackbar", (event: React.S
   state.openSnackbar = false
 });
 
-export const setUseDefaultAge = action((isChecked: boolean) => {
-  state.settings.useDefaultAge = isChecked;
+export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
+  state.settings.useDatapackSuggestedAge = isChecked;
 });
 export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;
