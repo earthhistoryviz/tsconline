@@ -284,7 +284,7 @@ function processFacies(line: string): FaciesTimeBlock | null {
 function recursive(
   parent: string | null,
   currentColumn: string,
-  childrenStrings: ParsedColumnEntry | never[],
+  parsedChildrenColumn: ParsedColumnEntry | null,
   childrenArray: ColumnInfo[],
   allEntries: Map<string, ParsedColumnEntry>,
   isFacies: Set<string>,
@@ -298,25 +298,27 @@ function recursive(
     children: [],
     parent: parent,
   }
-  let faciesFound = false
-  if (isParsedColumnEntry(childrenStrings)) {
-    currentColumnInfo.on = childrenStrings.on;
+  let faciesFound = false;
+
+  if (parsedChildrenColumn) {
+    currentColumnInfo.on = parsedChildrenColumn.on;
 
 
-    currentColumnInfo.info = childrenStrings.info;
+    currentColumnInfo.info = parsedChildrenColumn.info;
+  }
 
+  childrenArray.push(currentColumnInfo);
 
-    childrenArray.push(currentColumnInfo)
-
-    childrenStrings.children.forEach((child) => {
+  if (parsedChildrenColumn) {
+    parsedChildrenColumn.children.forEach((child) => {
       // if the child is named the same as the parent, this will create an infinite loop
       if (!child || child === currentColumn) return
       // if this is the final child then we store this as a potential alias
-      if (!allEntries.get(child) && (childrenStrings.children.length == 1 && isFacies.has(trimInvisibleCharacters(child)))) {
+      if (!allEntries.get(child) && (parsedChildrenColumn.children.length == 1 && isFacies.has(trimInvisibleCharacters(child)))) {
         facies.aliases[trimInvisibleCharacters(currentColumn)] = trimInvisibleCharacters(child)
         faciesFound = true
       }
-      const children = allEntries.get(child) || []
+      const children = allEntries.get(child) || null
       faciesFound = recursive(
         currentColumn, // the current column becomes the parent
         child, // the child is now the current column
@@ -336,9 +338,3 @@ function recursive(
 
 }
 
-/*
- * Type guard function
- */
-function isParsedColumnEntry(o: ParsedColumnEntry | never[]): o is ParsedColumnEntry {
-  return (o as ParsedColumnEntry).children !== undefined;
-}
