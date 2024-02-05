@@ -284,7 +284,7 @@ function processFacies(line: string): FaciesTimeBlock | null {
 function recursive(
   parent: string | null,
   currentColumn: string,
-  parsedChildrenColumn: ParsedColumnEntry | null,
+  parsedColumnEntry: ParsedColumnEntry | null,
   childrenArray: ColumnInfo[],
   allEntries: Map<string, ParsedColumnEntry>,
   isFacies: Set<string>,
@@ -300,21 +300,21 @@ function recursive(
   }
   let faciesFound = false;
 
-  if (parsedChildrenColumn) {
-    currentColumnInfo.on = parsedChildrenColumn.on;
+  if (parsedColumnEntry) {
+    currentColumnInfo.on = parsedColumnEntry.on;
 
 
-    currentColumnInfo.info = parsedChildrenColumn.info;
+    currentColumnInfo.info = parsedColumnEntry.info;
   }
 
   childrenArray.push(currentColumnInfo);
 
-  if (parsedChildrenColumn) {
-    parsedChildrenColumn.children.forEach((child) => {
+  if (parsedColumnEntry) {
+    parsedColumnEntry.children.forEach((child) => {
       // if the child is named the same as the parent, this will create an infinite loop
       if (!child || child === currentColumn) return
       // if this is the final child then we store this as a potential alias
-      if (!allEntries.get(child) && (parsedChildrenColumn.children.length == 1 && isFacies.has(trimInvisibleCharacters(child)))) {
+      if (!allEntries.get(child) && (parsedColumnEntry.children.length == 1 && isFacies.has(trimInvisibleCharacters(child)))) {
         facies.aliases[trimInvisibleCharacters(currentColumn)] = trimInvisibleCharacters(child)
         faciesFound = true
       }
