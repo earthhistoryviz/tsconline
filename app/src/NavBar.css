@@ -6,3 +6,6 @@
 .nabvar div:last-child {
   margin-left: auto;
 }
+.MuiTab-root.tab-space {
+  margin-right: 10%;
+}

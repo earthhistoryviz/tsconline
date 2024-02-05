@@ -18,10 +18,11 @@ export type State = {
   showPresetInfo: boolean;
   settingsTabs: {
     selected: "time" | "font" | "column" | "mappoints";
-    columns: ColumnInfo;
-    columnSelected: { name: string; parents: string[] } | null;
+    columns: ColumnInfo | null;
+    columnSelected: string | null;
     geologicalTopStages: GeologicalStages;
     geologicalBaseStages: GeologicalStages;
+    columnHashMap: Map<string, ColumnInfo>;
   };
   mapState: {
     mapInfo: MapInfo;
@@ -49,10 +50,12 @@ export type State = {
   settingsXML: string;
   settingsJSON: any;
   settings: {
+    topStageAge: number;
     topStageKey: string;
+    baseStageAge: number;
     baseStageKey: string;
     unitsPerMY: number;
-    useDefaultAge: boolean;
+    useDatapackSuggestedAge: boolean;
   };
   useCache: boolean;
   usePreset: boolean;
@@ -66,10 +69,11 @@ export const state = observable<State>({
   showPresetInfo: false,
   settingsTabs: {
     selected: "time",
-    columns: {},
+    columns: null,
     columnSelected: null,
     geologicalTopStages: {},
     geologicalBaseStages: {},
+    columnHashMap: new Map<string, ColumnInfo>(),
   },
   mapState: {
     mapInfo: {},
@@ -108,10 +112,12 @@ export const state = observable<State>({
   settingsXML: "",
   settingsJSON: {},
   settings: {
+    topStageAge: 0,
     topStageKey: "",
+    baseStageAge: 0,
     baseStageKey: "",
     unitsPerMY: 2,
-    useDefaultAge: false,
+    useDatapackSuggestedAge: false,
   },
   useCache: true,
   usePreset: true,

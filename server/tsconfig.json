@@ -7,5 +7,5 @@
   },
   "include": [ 
     "./src/**/*" 
-  ]
+, "src/parse-map-packs.ts"  ]
 }

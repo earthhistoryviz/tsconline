@@ -1,10 +1,24 @@
 // Shared types between app and server (i.e. messages they send back and forth)
-import "querystring";
+export function assertMapPackIndex(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("MapPackIndex must be a non-null object");
+    for (const key in o) {
+        if (typeof key !== 'string')
+            throw new Error(`MapPackIndex key value ${key} is not a string`);
+        assertMapPack(o[key]);
+    }
+}
+export function assertMapPack(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("MapPack must be a non-null object");
+    assertMapInfo(o.mapInfo);
+    assertMapHierarchy(o.mapHierarchy);
+}
 export function assertPresets(o) {
     if (!o || typeof o !== "object")
         throw new Error("Presets must be a non-null object");
     for (const type in o) {
-        if (typeof type !== 'string')
+        if (typeof type !== "string")
             throw new Error(`Presets key ${type} must be a string`);
         for (const config of o[type]) {
             assertChartConfig(config);
@@ -15,29 +29,25 @@ export function assertTransects(o) {
     if (!o || typeof o !== "object")
         throw new Error("Transects must be a non-null object");
     for (const key in o) {
-        if (typeof key !== 'string')
+        if (typeof key !== "string")
             throw new Error(`Transects key ${key} must be a string`);
         const transect = o[key];
-        if (typeof transect.startMapPoint !== 'string')
+        if (typeof transect.startMapPoint !== "string")
             throw new Error(`Transects key ${key} value of startMapPoint must be a string`);
-        if (typeof transect.endMapPoint !== 'string')
+        if (typeof transect.endMapPoint !== "string")
             throw new Error(`Transects key ${key} value of endMapPoint must be a string`);
-        if (typeof transect.on !== 'boolean')
+        if (typeof transect.on !== "boolean")
             throw new Error(`Transects key ${key} value of on must be a boolean`);
-        if ('note' in transect && typeof transect.note !== 'string')
+        if ("note" in transect && typeof transect.note !== "string")
             throw new Error(`Transects key ${key} value of note must be a string`);
     }
 }
 export function assertDatapackAgeInfo(o) {
     if (typeof o !== "object")
         throw new Error("DatapackAgeInfo must be an object");
-    if (typeof o.useDefaultAge !== "boolean")
-        throw new Error("DatapackAgeInfo must have a boolean useDefaultAge");
-    if ('bottomAge' in o && typeof o.bottomAge !== 'number')
-        throw new Error("DatapackAgeInfo must have a number bottomAge");
-    if ('topAge' in o && typeof o.topAge !== 'number')
-        throw new Error("DatapackAgeInfo must have a number topAge");
-    if (o.useDefaultAge === false) {
+    if (typeof o.useDatapackSuggestedAge !== "boolean")
+        throw new Error("DatapackAgeInfo must have a boolean useDatapackSuggestedAge");
+    if (o.useDatapackSuggestedAge === true) {
         if (typeof o.bottomAge !== "number")
             throw new Error("DatapackAgeInfo must have a number bottomAge");
         if (typeof o.topAge !== "number")
@@ -47,32 +57,52 @@ export function assertDatapackAgeInfo(o) {
 export function assertFacies(o) {
     if (!o || typeof o !== "object")
         throw new Error("Facies must be a non-null object");
-    if (!o.locations || typeof o.locations !== 'object')
-        throw new Error('Facies must have a locations property with type object');
+    if (!o.locations || typeof o.locations !== "object")
+        throw new Error("Facies must have a locations property with type object");
     assertFaciesLocations(o.locations);
-    if (typeof o.minAge !== 'number')
-        throw new Error('Facies must have a min age with type number');
-    if (typeof o.maxAge !== 'number')
-        throw new Error('Facies must have a max age with type number');
-    if (typeof o.aliases !== 'object')
-        throw new Error('Facies must have a aliases object');
+    if (typeof o.minAge !== "number")
+        throw new Error("Facies must have a min age with type number");
+    if (typeof o.maxAge !== "number")
+        throw new Error("Facies must have a max age with type number");
+    if (typeof o.aliases !== "object")
+        throw new Error("Facies must have a aliases object");
     for (const alias in o.aliases) {
-        if (typeof alias !== 'string')
-            throw new Error('aliases in Facies object must have keys of type string');
-        if (typeof o.aliases[alias] !== 'string')
-            throw new Error('aliases in Facies object must have indexed values of type string');
+        if (typeof alias !== "string")
+            throw new Error("aliases in Facies object must have keys of type string");
+        if (typeof o.aliases[alias] !== "string")
+            throw new Error("aliases in Facies object must have indexed values of type string");
+    }
+}
+export function assertDatapackParsingPack(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("DatapackParsingPack must be a non-null object");
+    if (!Array.isArray(o.columnInfoArray))
+        throw new Error(`DatapackParsingPack must have a columnInfoArray array of ColumnInfos`);
+    for (const key in o.columnInfoArray) {
+        assertColumnInfo(o.columnInfoArray[key]);
+    }
+    assertFacies(o.facies);
+    assertDatapackAgeInfo(o.datapackAgeInfo);
+}
+export function assertDatapackInfoIndex(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("DatapackInfoIndex must be a non-null object");
+    for (const key in o) {
+        if (typeof key !== "string")
+            throw new Error(`DatapackInfoIndex 'key' ${location} must be of type 'string`);
+        assertDatapackParsingPack(o[key]);
     }
 }
 export function assertFaciesLocations(o) {
     if (!o || typeof o !== "object")
         throw new Error("FaciesLocations must be a non-null object");
     for (const location in o) {
-        if (typeof location !== 'string')
+        if (typeof location !== "string")
             throw new Error(`FaciesLocations 'key' ${location} must be of type 'string`);
         const faciesLocation = o[location];
-        if (typeof faciesLocation.minAge !== 'number')
+        if (typeof faciesLocation.minAge !== "number")
             throw new Error(`FaciesLocation value for 'key' ${location} must have a minage be of type 'number'`);
-        if (typeof faciesLocation.maxAge !== 'number')
+        if (typeof faciesLocation.maxAge !== "number")
             throw new Error(`FaciesLocation value for 'key' ${location} must have a maxage be of type 'number'`);
         if (!Array.isArray(faciesLocation.faciesTimeBlockArray))
             throw new Error(`FaciesLocation value for 'key' ${location} must have a faciesTimeBlock that is an array`);
@@ -87,7 +117,7 @@ export function assertFaciesTimeBlock(o) {
     if (typeof o.rockType !== "string") {
         throw new Error("FaciesTimeBlock must have a rockType variable of type 'string'");
     }
-    if ('label' in o && typeof o.label !== "string")
+    if ("label" in o && typeof o.label !== "string")
         throw new Error("FaciesTimeBlock must have a label variable of type 'string'");
     if (typeof o.age !== "number")
         throw new Error("FaciesTimeBlock must have a age variable of valid type 'number'");
@@ -116,7 +146,7 @@ export function assertChartConfig(o) {
         throw new Error("ChartConfig must have a settings path string");
     if (typeof o.date !== "string")
         throw new Error("ChartConfig must have a date string");
-    if ('type' in o && typeof o.type !== "string")
+    if ("type" in o && typeof o.type !== "string")
         throw new Error("ChartConfig variable 'type' must be a string");
     if (!Array.isArray(o.datapacks))
         throw new Error("ChartConfig must have a datapacks array of datapack string names.  ");
@@ -157,18 +187,20 @@ export function assertColumnInfo(o) {
     if (typeof o !== "object" || o === null) {
         throw new Error("ColumnInfo must be a non-null object");
     }
-    for (const key in o) {
-        const columnInfo = o[key];
-        if (typeof columnInfo !== "object" || columnInfo === null) {
-            throw new Error(`ColumnInfo' value for key '${key}' must be a non-null object`);
+    if (typeof o.on !== "boolean") {
+        throw new Error(`ColumnInfo' must have an 'on' boolean`);
+    }
+    if (o.parent != null && typeof o.parent !== 'string') {
+        throw new Error(`ColumnInfo' must have a 'parent' string or be null`);
+    }
+    if (o.info != null && typeof o.info != 'string') {
+        throw new Error(`ColumnInfo' must have a 'info' string or be null`);
+    }
+    for (const child of o.children) {
+        if (child === null || typeof child !== 'object') {
+            throw new Error(`'ColumnInfo' must have a children array with all values non-null: ${child}`);
         }
-        if (typeof columnInfo.on !== "boolean") {
-            throw new Error(`ColumnInfo' value for key '${key}' must have an 'on' boolean`);
-        }
-        if (!Array.isArray(columnInfo.parents)) {
-            throw new Error(`ColumnInfo' value for key '${key}' must have a 'parents' string array`);
-        }
-        assertColumnInfo(columnInfo.children);
+        assertColumnInfo(child);
     }
 }
 export function assertMapHierarchy(o) {
@@ -337,5 +369,11 @@ export function assertSuccessfulServerResponse(o) {
         throw new Error(`SuccessfulServerResponse must be a non-null object`);
     if (typeof o.message !== "string")
         throw new Error(`SuccessfulServerResponse must have a 'message' string property`);
+}
+export function assertSVGStatus(o) {
+    if (!o || typeof o !== "object")
+        throw new Error(`SVGStatus must be a non-null object`);
+    if (typeof o.ready !== "boolean")
+        throw new Error(`SVGStatus must have a 'ready' boolean property`);
 }
 //# sourceMappingURL=index.js.map

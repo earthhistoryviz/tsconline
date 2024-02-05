@@ -29,3 +29,11 @@
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
+
+.column-selected-color {
+  background-color: lightblue;
+}
+
+.column-base-color {
+  background-color: transparent;
+}

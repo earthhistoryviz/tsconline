@@ -3,12 +3,12 @@ import { jsonToXml, xmlToJson } from "./parse-settings.js";
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
 import { writeFile, stat } from "fs/promises";
-import { assertDatapackResponse, assertChartRequest, type DatapackResponse, assertFacies } from "@tsconline/shared";
+import { assertDatapackResponse, assertChartRequest, type DatapackResponse, assertFacies, ColumnInfo } from "@tsconline/shared";
 import { deleteDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
-import { grabMapImages, grabMapInfo } from "./map-packs.js";
+import { grabMapImages } from "./parse-map-packs.js";
 import md5 from "md5";
-import assetconfigs from "./index.js";
+import { assetconfigs, datapackInfoIndex, mapPackIndex } from "./index.js";
 import svgson from 'svgson'
 import fs from "fs";
 import { readFile } from "fs/promises";
@@ -24,7 +24,7 @@ export const fetchSettingsJson = async function fetchSettingsJson(
     const settingJson = await xmlToJson(contents);
     reply.send(settingJson);
   } catch (e) {
-    reply.send({error: e})
+    reply.send({ error: e })
   }
 };
 
@@ -37,18 +37,57 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(
 ) {
   deleteDirectory(assetconfigs.imagesDirectory);
   const { files } = request.params;
+  if (!files) {
+    reply.send("Error: no files requested")
+    return
+  }
   //TODO check if files exist. probably check this in the glob of parse Datapacks
   console.log("Getting decrypted info for files: ", files);
   const filesSplit = files.split(":");
   try {
-    const { columns, facies, datapackAgeInfo } = await parseDatapacks(
-      assetconfigs.decryptionDirectory,
-      filesSplit
-    );
-    const { mapInfo, mapHierarchy } = await grabMapInfo(filesSplit);
+    // the default overarching variable for the columnInfo
+    let columnInfo: ColumnInfo = {
+      name: "Root", // if you change this, change parse-datapacks.ts :69
+      editName: "Chart Title",
+      info: "",
+      on: true,
+      children: [
+        {
+          name: "MA",
+          editName: "MA",
+          on: true,
+          info: "",
+          children: [],
+          parent: "Root"// if you change this, change parse-datapacks.ts :69
+        }
+      ],
+      parent: null
+    }
+    let facies, datapackAgeInfo, mapInfo, mapHierarchy;
+    // add everything together
+    // uses preparsed data on server start and appends items together
+    for (const file of filesSplit) {
+      if (!file || !datapackInfoIndex[file] || !mapPackIndex[file]) throw new Error(`File requested doesn't exist on server: ${file}`)
+      const datapackParsingPack = datapackInfoIndex[file]!
+      // concat the children array of root to the array created in preparsed array
+      // we can't do Object.assign here because it will overwrite the array rather than concat it
+      columnInfo.children = columnInfo.children.concat(datapackParsingPack.columnInfoArray)
+      // concat all facies
+      if (!facies) facies = datapackParsingPack.facies
+      else Object.assign(facies, datapackParsingPack.facies)
+      // concat datapackAgeInfo objects together
+      if (!datapackAgeInfo) datapackAgeInfo = datapackParsingPack.datapackAgeInfo
+      else Object.assign(datapackAgeInfo, datapackParsingPack.datapackAgeInfo)
+
+      const mapPack = mapPackIndex[file]!
+      if (!mapInfo) mapInfo = mapPack.mapInfo
+      else Object.assign(mapInfo, mapPack.mapInfo)
+      if (!mapHierarchy) mapHierarchy = mapPack.mapHierarchy
+      else Object.assign(mapHierarchy, mapPack.mapHierarchy)
+    }
     await grabMapImages(filesSplit, assetconfigs.imagesDirectory);
     const datapackResponse = {
-      columnInfo: columns,
+      columnInfo,
       facies,
       mapInfo,
       mapHierarchy,
@@ -75,7 +114,13 @@ export const fetchSVGStatus = async function (
 ) {
   const { hash } = request.params;
   let isSVGReady = false
-  const filepath = `${assetconfigs.chartsDirectory}/${hash}/chart.svg`;
+  const directory = `${assetconfigs.chartsDirectory}/${hash}`
+  const filepath = `${directory}/chart.svg`;
+  // if hash doesn't exist reply with error
+  if (!fs.existsSync(directory)) {
+    reply.send({ error: `No directory exists at hash: ${directory}` })
+    return
+  }
   try {
     if (fs.existsSync(filepath)) {
       if (svgson.parseSync((await readFile(filepath)).toString())) isSVGReady = true
@@ -93,12 +138,12 @@ export const fetchSVGStatus = async function (
  * Will return the chart path and the hash the chart was saved with
  */
 export const fetchChart = async function fetchChart(
-  request: FastifyRequest<{ Params: { usecache: string, useDefaultAge: string } }>,
+  request: FastifyRequest<{ Params: { usecache: string, useDatapackSuggestedAge: string } }>,
   reply: FastifyReply
 ) {
   //TODO change this to be in request body
   const usecache = request.params.usecache === "true";
-  const useDefaultAge = request.params.useDefaultAge === "true";
+  const useDatapackSuggestedAge = request.params.useDatapackSuggestedAge === "true";
   let chartrequest;
   try {
     chartrequest = JSON.parse(request.body as string);
@@ -207,8 +252,8 @@ export const fetchChart = async function fetchChart(
     `-d ${datapacks.join(" ")} ` +
     // Tell it where to save chart
     `-o ${chart_filepath} ` +
-    // Don't use datapacks suggested age (if useDefaultAge is true then ignore datapack ages)
-    `${useDefaultAge ? '-a' : ''}`;
+    // Don't use datapacks suggested age (if useDatapackSuggestedAge is true then ignore datapack ages)
+    `${useDatapackSuggestedAge ? '-a' : ''}`;
 
   // Exec Java command and send final reply to browser
   await new Promise<void>((resolve, _reject) => {

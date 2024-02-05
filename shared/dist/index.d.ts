@@ -2,11 +2,29 @@ export type SuccessfulServerResponse = {
     message: string;
 };
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
+export type DatapackParsingPack = {
+    columnInfoArray: ColumnInfo[];
+    facies: Facies;
+    datapackAgeInfo: DatapackAgeInfo;
+};
+export type DatapackInfoIndex = {
+    [name: string]: DatapackParsingPack;
+};
+export type MapPackIndex = {
+    [name: string]: MapPack;
+};
+export type MapPack = {
+    mapInfo: MapInfo;
+    mapHierarchy: MapHierarchy;
+};
+export type SVGStatus = {
+    ready: boolean;
+};
 export type Presets = {
     [type: string]: ChartConfig[];
 };
 export type DatapackAgeInfo = {
-    useDefaultAge: boolean;
+    useDatapackSuggestedAge: boolean;
     topAge?: number;
     bottomAge?: number;
 };
@@ -19,6 +37,103 @@ export type ChartConfig = {
     datapacks: string[];
     date: string;
     type?: string;
+};
+export type ChartInfo = {
+    settings: ChartSettingsInfo;
+    "class datastore.RootColumn:Chart Root": [name: ColumnPrototypeInfo];
+};
+export type ChartSettingsInfo = {
+    topAge: {
+        source: string;
+        unit: string;
+        text: number;
+    };
+    baseAge: {
+        source: string;
+        unit: string;
+        text: number;
+    };
+    unitsPerMY: {
+        unit: string;
+        text: number;
+    };
+    skipEmptyColumns: {
+        unit: string;
+        text: boolean;
+    };
+    variableColors: string;
+    noIndentPattern: boolean;
+    negativeChk: boolean;
+    doPopups: boolean;
+    enEventColBG: boolean;
+    enChartLegend: boolean;
+    enPriority: boolean;
+    enHideBlockLable: boolean;
+};
+export type ColumnPrototypeInfo = {
+    _id: string;
+    title: string;
+    useNamedColor: boolean;
+    placeHolder: boolean;
+    drawTitle: boolean;
+    drawAgeLabel: boolean;
+    drawUncertaintyLabel: boolean;
+    isSelected: boolean;
+    width: number;
+    pad: number;
+    "age pad": number;
+    backgroundColor: {
+        useNamed: boolean;
+        text: string;
+    };
+    fonts: FontsInfo;
+};
+export type FontsInfo = {
+    "Column Header": {
+        inheritable: boolean;
+    };
+    "Age Label": {
+        inheritable: boolean;
+    };
+    "Uncertainty Label": {
+        inheritable: boolean;
+    };
+    "Zone Column Label": {
+        inheritable: boolean;
+    };
+    "Sequence Column Label": {
+        inheritable: boolean;
+    };
+    "Event Column Label": {
+        inheritable: boolean;
+    };
+    "Popup Body": {
+        inheritable: boolean;
+    };
+    "Ruler Label": {
+        inheritable: boolean;
+    };
+    "Point Column Scale Label": {
+        inheritable: boolean;
+    };
+    "Range Label": {
+        inheritable: boolean;
+    };
+    "Ruler Tick Mark Label": {
+        inheritable: boolean;
+    };
+    "Legend Title": {
+        inheritable: boolean;
+    };
+    "Legend Column Name": {
+        inheritable: boolean;
+    };
+    "Legend Column Source": {
+        inheritable: boolean;
+    };
+    "Range Box Label": {
+        inheritable: boolean;
+    };
 };
 export type Facies = {
     locations: FaciesLocations;
@@ -49,12 +164,12 @@ export type ServerResponseError = {
     error: string;
 };
 export type ColumnInfo = {
-    [name: string]: {
-        editName: string;
-        on: boolean;
-        children: ColumnInfo;
-        parents: string[];
-    };
+    name: string;
+    editName: string;
+    on: boolean;
+    info: string;
+    children: ColumnInfo[];
+    parent: string | null;
 };
 export type ChartResponseInfo = {
     chartpath: string;
@@ -128,10 +243,14 @@ export type VertBounds = {
     height: number;
     scale: number;
 };
+export declare function assertMapPackIndex(o: any): asserts o is MapPackIndex;
+export declare function assertMapPack(o: any): asserts o is MapPack;
 export declare function assertPresets(o: any): asserts o is Presets;
 export declare function assertTransects(o: any): asserts o is Transects;
 export declare function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo;
 export declare function assertFacies(o: any): asserts o is Facies;
+export declare function assertDatapackParsingPack(o: any): asserts o is DatapackParsingPack;
+export declare function assertDatapackInfoIndex(o: any): asserts o is DatapackInfoIndex;
 export declare function assertFaciesLocations(o: any): asserts o is FaciesLocations;
 export declare function assertFaciesTimeBlock(o: any): asserts o is FaciesTimeBlock;
 export declare function assertDatapackResponse(o: any): asserts o is DatapackResponse;
@@ -152,3 +271,4 @@ export declare function assertRectBounds(rectBounds: any): asserts rectBounds is
 export declare function assertInfoPoints(o: any): asserts o is InfoPoints;
 export declare function assertMapPoints(o: any): asserts o is MapPoints;
 export declare function assertSuccessfulServerResponse(o: any): asserts o is SuccessfulServerResponse;
+export declare function assertSVGStatus(o: any): asserts o is SVGStatus;

@@ -1,13 +1,16 @@
-import fastify, { FastifyRequest } from "fastify";
+import fastify from "fastify";
 import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
-import { exec, ChildProcess } from "child_process";
-import { readFile } from "fs/promises";
-import { loadPresets } from "./preset.js";
-import { AssetConfig, assertAssetConfig } from "./types.js";
+import { execSync } from "child_process";
+// import { readFile } from "fs/promises";
+// import { loadPresets } from "./preset.js";
+// import { AssetConfig, assertAssetConfig } from "./types.js";
 import { deleteDirectory } from "./util.js";
 import * as routes from "./routes.js";
+import { DatapackInfoIndex, MapPackIndex, assertDatapackInfoIndex, assertMapPackIndex } from "@tsconline/shared";
+import { parseDatapacks } from "./parse-datapacks.js";
+import { parseMapPacks } from "./parse-map-packs.js";
 import { exec } from 'child_process';
 import { readFile, writeFile, stat } from 'fs/promises';
 import md5 from 'md5';
@@ -60,7 +63,7 @@ function readExcelFile(filePath: string) {
 // Load up all the chart configs found in presets:
 const presets = await loadPresets();
 // Load the current asset config:
-let assetconfigs: AssetConfig;
+export let assetconfigs: AssetConfig;
 try {
   const contents = JSON.parse(
     (await readFile("assets/config.json")).toString()
@@ -74,8 +77,6 @@ try {
   );
   process.exit(1);
 }
-// so routes.ts can handle this
-export default assetconfigs;
 // this try will run the decryption jar to decrypt all files in the datapack folder
 try {
   const datapacks = assetconfigs.activeDatapacks.map(
@@ -88,12 +89,8 @@ try {
     // Tell it where to send the datapacks
     `-dest ${assetconfigs.decryptionDirectory} `;
   console.log("Calling Java decrypt.jar: ", cmd);
-  exec(cmd, function (error, stdout, stderror) {
-    console.log("Decryption finished");
-    console.log("Decryption error param: " + error);
-    console.log("Decryption stdout: " + stdout.toString());
-    console.log("Decryption stderr: " + stderror.toString());
-  });
+  execSync(cmd)
+  console.log("Finished decryption")
 } catch (e: any) {
   console.log(
     "ERROR: Failed to decrypt activeDatapacks in AssetConfig with error: ",
@@ -102,6 +99,32 @@ try {
   process.exit(1);
 }
 
+export let datapackInfoIndex: DatapackInfoIndex = {}
+export let mapPackIndex: MapPackIndex = {}
+try {
+  console.log(`\nParsing datapacks: ${assetconfigs.activeDatapacks}\n`)
+  for (const datapack of assetconfigs.activeDatapacks) {
+    parseDatapacks(assetconfigs.decryptionDirectory, [datapack])
+    .then(
+      (datapackParsingPack) => {
+        datapackInfoIndex[datapack] = datapackParsingPack
+        console.log(`Successfully parsed ${datapack}`)
+      }
+    )
+    parseMapPacks([datapack])
+    .then((mapPack) => {
+      mapPackIndex[datapack] = mapPack
+    })
+  }
+} catch (e) {
+  console.log(
+    "ERROR: Failed to parse datapacks of activeDatapacks in AssetConfig with error: ",
+    e
+  );
+  process.exit(1);
+}
+assertDatapackInfoIndex(datapackInfoIndex)
+assertMapPackIndex(mapPackIndex)
 // Serve the main app from /
 // @ts-ignore
 server.register(fastifyStatic, {
@@ -163,13 +186,10 @@ server.get<{ Params: { hash: string } }>(
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
-server.post<{ Params: { usecache: string, useDefaultAge: string } }>(
-  "/charts/:usecache/:useDefaultAge",
+server.post<{ Params: { usecache: string, useDatapackSuggestedAge: string } }>(
+  "/charts/:usecache/:useDatapackSuggestedAge",
   routes.fetchChart
 );
-server.get('/presets', async (_request, reply) => {
-  reply.send(chartconfigs);
-})
 
 type Timescale = {
   key: string;

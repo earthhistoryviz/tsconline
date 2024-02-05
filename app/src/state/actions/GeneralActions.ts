@@ -11,19 +11,23 @@ import {
   isServerResponseError,
   assertDatapackResponse,
   Presets,
+  assertSVGStatus,
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
+import { initializeColumnHashMap } from "./ColumnActions";
 
 /**
  * Resets any user defined settings
  */
 export const resetSettings = action("resetSettings", () => {
   state.settings = {
+    topStageAge: 0,
     topStageKey: "",
+    baseStageAge: 0,
     baseStageKey: "",
     unitsPerMY: 2,
-    useDefaultAge: false,
+    useDatapackSuggestedAge: false,
   };
 });
 
@@ -38,7 +42,7 @@ export const setDatapackConfig = action(
     resetSettings();
     //set the settings tab back to time
     setSettingsTabsSelected(0);
-    state.config.datapacks = datapacks
+    state.config.datapacks = datapacks;
     //process decrypted file
     const res = await fetcher(`/datapackinfo/${datapacks.join(":")}`, {
       method: "GET",
@@ -50,6 +54,8 @@ export const setDatapackConfig = action(
       assertDatapackResponse(reply);
       setMapInfo(reply.mapInfo);
       setSettingsColumns(reply.columnInfo);
+      //fill in hashmap with column info for easier & faster access
+      initializeColumnHashMap(state.settingsTabs.columns!);
       setFacies(reply.facies);
       setMapHierarchy(reply.mapHierarchy);
     } catch (e) {
@@ -65,25 +71,29 @@ export const setDatapackConfig = action(
       // resetState();
       return false;
     }
-    state.config.settingsPath = settingsPath 
+    state.settings.useDatapackSuggestedAge = reply.datapackAgeInfo.useDatapackSuggestedAge;
+    state.config.settingsPath = settingsPath;
     // Grab the settings for this chart if there are any:
     if (settingsPath && settingsPath.length > 0) {
-      const res = await fetcher(`/settingsJson/${encodeURIComponent(settingsPath)}`, {
-        method: "GET",
-      });
+      const res = await fetcher(
+        `/settingsJson/${encodeURIComponent(settingsPath)}`,
+        {
+          method: "GET",
+        }
+      );
       try {
         const settingsJson = JSON.parse(await res.text());
         console.log("recieved settings JSON object at set Chart", settingsJson);
         runInAction(() => (state.settingsJSON = settingsJson)); // Save the parsed JSON to the state.settingsJSON
       } catch (e) {
         if (isServerResponseError(await res.json())) {
-          console.log(`Server error: ${e} while getting settings`)
+          console.log(`Server error: ${e} while getting settings`);
         } else {
-          console.log(`error fetching from server with error: ${e}`)
+          console.log(`error fetching from server with error: ${e}`);
         }
       }
     } else {
-      state.settingsJSON = null
+      state.settingsJSON = null;
     }
     return true;
   }
@@ -147,7 +157,7 @@ export const resetState = action("resetState", () => {
   setTab(0);
   setShowPresetInfo(false);
   setSettingsTabsSelected("time");
-  setSettingsColumns({});
+  setSettingsColumns(null);
   setMapInfo({});
   state.settingsTabs.columnSelected = null;
   state.settingsXML = "";
@@ -169,11 +179,13 @@ export const generateChart = action("generateChart", async () => {
     datapacks: state.config.datapacks,
   });
   console.log("Sending settings to server...");
-  // console.log(state.settings.useDefaultAge);
-  const response = await fetcher(`/charts/${state.useCache}/${state.settings.useDefaultAge}`, {
-    method: "POST",
-    body,
-  });
+  const response = await fetcher(
+    `/charts/${state.useCache}/${state.settings.useDatapackSuggestedAge}`,
+    {
+      method: "POST",
+      body,
+    }
+  );
   const answer = await response.json();
   // will check if pdf is loaded
   try {
@@ -181,7 +193,7 @@ export const generateChart = action("generateChart", async () => {
     setChartHash(answer.hash);
     setChartPath(devSafeUrl(answer.chartpath));
     await checkSVGStatus();
-    state.openSnackbar = true
+    setOpenSnackbar(true)
   } catch (e: any) {
     if (isServerResponseError(answer)) {
       console.log(
@@ -202,7 +214,7 @@ export const generateChart = action("generateChart", async () => {
 
 export const loadPresets = action("loadPresets", (presets: Presets) => {
   state.presets = presets;
-  setDatapackConfig([], "")
+  setDatapackConfig([], "");
 });
 //update
 //TODO: need to overhaul
@@ -215,12 +227,12 @@ export const updateSettings = action("updateSettings", () => {
   }
   state.settingsJSON["settingsTabs"] = state.settingsTabs;
   const jsonSettings = state.settingsJSON;
-  if ("settings" in jsonSettings) {
-    const settings = jsonSettings.settings as any;
-    settings["topAge"]["stage"] = state.settingsTabs.columns[topStageKey];
-    settings["baseAge"]["stage"] = state.settingsTabs.columns[baseStageKey];
-    settings["unitsPerMY"] = (unitsPerMY * 30).toString();
-  }
+  // if ("settings" in jsonSettings) {
+  //   const settings = jsonSettings.settings as any;
+  //   settings["topAge"]["stage"] = state.settingsTabs.columns[topStageKey];
+  //   settings["baseAge"]["stage"] = state.settingsTabs.columns[baseStageKey];
+  //   settings["unitsPerMY"] = (unitsPerMY * 30).toString();
+  // }
   if ("settingsTabs" in jsonSettings) {
     const settingsTabs = jsonSettings as any;
   }
@@ -333,135 +345,6 @@ export function translateTabToIndex(tab: State["settingsTabs"]["selected"]) {
       return 3;
   }
 }
-/*
- * toggles the "on" state for a column that had its checkbox clicked
- * name: the name of the toggled column
- * parents: list of names that indicates the path from top to the toggled column
- */
-export const toggleSettingsTabColumn = action(
-  "toggleSettingsTabColumn",
-  (name: string, parents: string[]) => {
-    let curcol: ColumnInfo | null = state.settingsTabs.columns;
-    const orig = curcol;
-    // Walk down the path of parents in the tree of columns
-    //console.log("name: ", name);
-    let i = 1;
-    for (const item of parents) {
-      i++;
-    }
-    i = 1;
-    for (const p of parents) {
-      console.log("accessing ", p, " of count: ", i);
-      i++;
-      if (!curcol) {
-        console.log(
-          "WARNING: tried to access path at parent ",
-          p,
-          " from path ",
-          parents,
-          " in settings tabs column list, but children was null at this level."
-        );
-        return;
-      }
-      curcol = curcol[p]["children"];
-    }
-    // console.log(JSON.stringify(curcol[name], null, 2));
-    //need this to check if curcol is null for typescript to be happy in future operations
-    if (!curcol) {
-      console.log(
-        "WARNING: tried to access path at ",
-        name,
-        "settings tabs column list, but children was null at this level."
-      );
-      return;
-    }
-    if (!curcol[name]) {
-      console.log(
-        "WARNING: tried to access name ",
-        name,
-        " from path ",
-        parents,
-        " in settings tabs column list, but object[name] was null here."
-      );
-      return;
-    }
-    curcol[name].on = !curcol[name].on;
-    // setSettingsTabsColumns(orig)
-    // console.log(JSON.stringify(curcol[name], null, 2));
-    setcolumnSelected(curcol[name].editName, parents);
-    //console.log("the selected column: ", name);
-    // console.log("state after my change: ", state);
-    //if the column is unchecked, then no need to check the parents
-    if (!curcol[name].on) {
-      //updateSettings();
-      return;
-    }
-    //since column is checked, toggle parents on if they were previously off
-    curcol = state.settingsTabs.columns;
-    for (const p of parents) {
-      if (!curcol) {
-        console.log(
-          "WARNING: tried to access path at parent ",
-          p,
-          " from path ",
-          parents,
-          " in settings tabs column list, but children was null at this level."
-        );
-        return;
-      }
-      if (!curcol[p].on) curcol[p].on = true;
-      curcol = curcol[p]["children"];
-    }
-    //updateSettings();
-  }
-);
-
-/**
- * Update @Jay
- */
-export const updateEditName = action((newName: string) => {
-  if (!state.settingsTabs.columnSelected) {
-    console.log("WARNING: the user hasn't selected a column.");
-    return;
-  }
-  let curcol: ColumnInfo | null = state.settingsTabs.columns;
-  let oldName = state.settingsTabs.columnSelected.name;
-  let parents = state.settingsTabs.columnSelected.parents;
-  // Walk down the path of parents in the tree of columns
-  for (const p of parents) {
-    if (!curcol) {
-      console.log(
-        "WARNING: tried to access path at parent ",
-        p,
-        " from path ",
-        parents,
-        " in settings tabs column list, but children was null at this level."
-      );
-      return;
-    }
-    curcol = curcol[p]["children"];
-  }
-  if (!curcol) {
-    console.log(
-      "WARNING: tried to access path at ",
-      oldName,
-      "settings tabs column list, but children was null at this level."
-    );
-    return;
-  }
-  if (!curcol[oldName]) {
-    console.log(
-      "WARNING: tried to access name ",
-      oldName,
-      " from path ",
-      parents,
-      " in settings tabs column list, but object[name] was null here."
-    );
-    return;
-  }
-  curcol[oldName].editName = newName;
-  console.log("edited name: ", newName);
-});
 
 /**
  * Constantly ping the server for the pdf status
@@ -469,12 +352,17 @@ export const updateEditName = action((newName: string) => {
  */
 export const checkSVGStatus = action(async () => {
   let SVGReady = false;
-  while (!SVGReady) {
-    SVGReady = await fetchSVGStatus();
-    if (!SVGReady) {
-      // Wait for some time before checking again
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+  try {
+    while (!SVGReady) {
+      SVGReady = await fetchSVGStatus();
+      if (!SVGReady) {
+        // Wait for some time before checking again
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+      }
     }
+  } catch(e) {
+    console.log(`Error fetching svg status: ${e}`)
+    return
   }
   setChartLoading(false);
 });
@@ -484,35 +372,39 @@ export const checkSVGStatus = action(async () => {
  * @returns
  */
 async function fetchSVGStatus(): Promise<boolean> {
-  try {
-    if (state.chartHash === "") {
-      return false;
-    }
-    const response = await fetcher(`/svgstatus/${state.chartHash}`, {
-      method: "GET",
-    });
-    const data = await response.json();
-    return data.ready;
-  } catch (error) {
-    console.error("Error checking SVG status", error);
+  if (state.chartHash === "") {
     return false;
   }
+  const response = await fetcher(`/svgstatus/${state.chartHash}`, {
+    method: "GET",
+  });
+  const data = await response.json();
+  try {
+    assertSVGStatus(data)
+  } catch(e) {
+    let msg = `Error fetching SVG status with error ${e}`
+    if (isServerResponseError(data)) {
+      msg = `While fetching SVG status, server responded with error ${data.error}`
+    }
+    throw new Error(msg)
+  }
+  return data.ready;
 }
 
-export const handleCloseSnackbar = action((event: React.SyntheticEvent | Event, reason?: string) => {
+export const handleCloseSnackbar = action("handleCloseSnackbar", (event: React.SyntheticEvent | Event, reason?: string) => {
   if (reason === 'clickaway') {
       return;
     }
   state.openSnackbar = false
 });
 
-export const setUseDefaultAge = action((isChecked: boolean) => {
-  state.settings.useDefaultAge = isChecked;
+export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
+  state.settings.useDatapackSuggestedAge = isChecked;
 });
 export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;
 });
-export const setSettingsColumns = action((temp: ColumnInfo) => {
+export const setSettingsColumns = action((temp: ColumnInfo | null) => {
   state.settingsTabs.columns = temp;
 });
 export const setUseCache = action((temp: boolean) => {
@@ -521,9 +413,7 @@ export const setUseCache = action((temp: boolean) => {
 export const setUsePreset = action((temp: boolean) => {
   state.useCache = temp;
 });
-export const setcolumnSelected = action((name: string, parents: string[]) => {
-  state.settingsTabs.columnSelected = { name, parents };
-});
+
 export const setChartPath = action("setChartPath", (chartpath: string) => {
   state.chartPath = chartpath;
 });
@@ -552,6 +442,12 @@ export const setMapHierarchy = action(
 export const setChartHash = action("setChartHash", (charthash: string) => {
   state.chartHash = charthash;
 });
+export const setTopStageAge = action("setTopStageAge", (age: number) => {
+  state.settings.topStageAge = age;
+});
+export const setBaseStageAge = action("setBaseStageAge", (age: number) => {
+  state.settings.baseStageAge = age;
+});
 
 export const settingsXML = action("settingsXML", (xml: string) => {
   state.settingsXML = xml;
@@ -559,9 +455,12 @@ export const settingsXML = action("settingsXML", (xml: string) => {
 export const setAllTabs = action("setAllTabs", (newval: boolean) => {
   state.showAllTabs = newval;
 });
-export const setSelectedPreset = action("setSelectedPreset", (newval: ChartConfig | null) => {
-  state.selectedPreset = newval;
-});
+export const setSelectedPreset = action(
+  "setSelectedPreset",
+  (newval: ChartConfig | null) => {
+    state.selectedPreset = newval;
+  }
+);
 const setFacies = action("setFacies", (newval: Facies) => {
   state.mapState.facies = newval;
 });
@@ -571,3 +470,6 @@ export const setShowPresetInfo = action(
     state.showPresetInfo = newval;
   }
 );
+export const setOpenSnackbar = action("setOpenSnackbar", (show: boolean) => {
+  state.openSnackbar = show
+})

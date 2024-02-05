@@ -95,6 +95,19 @@ export const Time = observer(function Time() {
             </MenuItem>
           ))}
         </Select>
+        <TextField
+          label="Top Age"
+          type="number"
+          name="vertical-scale-text-field"
+          value={state.settings.topStageAge}
+          onChange={(event) => {
+            const age = parseFloat(event.target.value)
+            if (age >= 0 && age <= state.settings.baseStageAge) {
+              actions.setTopStageAge(age)
+            }
+          }}
+          style={{ marginBottom: '20px', width: '100%' }}
+        />
         </FormControl>
         <FormControl style={{ marginBottom: '10px', width: '100%' }}>
         <InputLabel htmlFor="base-age-selector">Base Age/Stage Name</InputLabel> 
@@ -107,7 +120,6 @@ export const Time = observer(function Time() {
           onChange={(event) => {
             // console.log("event.target.value: " , event.target.value)
             actions.setBaseStageKey(event.target.value)
-            actions.updateSettings()
           }}
           style={{ marginBottom: '10px', width: '100%' }}
         >
@@ -117,6 +129,19 @@ export const Time = observer(function Time() {
             </MenuItem>
           ))}
         </Select>
+        <TextField
+          label="Base Age"
+          type="number"
+          name="vertical-scale-text-field"
+          value={state.settings.baseStageAge}
+          onChange={(event) => {
+            const age = parseFloat(event.target.value)
+            if (age >= 0 && state.settings.topStageAge <= age) {
+              actions.setBaseStageAge(age)
+            }
+          }}
+          style={{ marginBottom: '20px', width: '100%' }}
+        />
         </FormControl>
         <TextField
           label="Vertical Scale (cm/Ma)"
@@ -169,7 +194,7 @@ export const Time = observer(function Time() {
           label="Hide block labels based on priority" />
           <FormControlLabel
           name="use-suggested-age-spans"
-          control={<TSCCheckbox onChange={(e) => actions.setUseDefaultAge(e.target.checked)}/>}
+          control={<TSCCheckbox onChange={(e) => actions.setuseDatapackSuggestedAge(e.target.checked)}/>}
           label="Do not use the Data-Pack's suggested age span" />
         </FormGroup>
       </div>
