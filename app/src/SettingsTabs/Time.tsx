@@ -12,6 +12,7 @@ import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import fetchTimescaleData from "../state/timeParser"
+import theme from "../theme";
 
 export interface TimescaleItem {
   key: string;
@@ -116,16 +117,13 @@ export const Time = observer(function Time() {
           inputProps={{ id: 'base-age-selector' }}
           name="base-age-stage-name"
           type="string"
-          value={state.settings.baseStageKey} 
-          onChange={(event) => {
-            // console.log("event.target.value: " , event.target.value)
-            actions.setBaseStageKey(event.target.value)
-          }}
+          value={state.settings.selectedStage || ''} 
+          onChange={(event) => actions.setSelectedStage(event.target.value as string)}
           style={{ marginBottom: '10px', width: '100%' }}
         >
-          {state.settingsTabs.geologicalTopStages && Object.keys(state.settingsTabs.geologicalBaseStages).map((key) => (
-            <MenuItem value={key} key={key}>
-              {`${key} (${state.settingsTabs.geologicalBaseStages[key]} Ma base)`}
+          {timescaleData.map(item => (
+            <MenuItem key={item.key} value={item.value}>
+              {item.key} ({item.value} Ma)
             </MenuItem>
           ))}
         </Select>

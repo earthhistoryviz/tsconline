@@ -22,6 +22,7 @@ import { initializeColumnHashMap } from "./ColumnActions";
  */
 export const resetSettings = action("resetSettings", () => {
   state.settings = {
+    selectedStage: "",
     topStageAge: 0,
     topStageKey: "",
     baseStageAge: 0,
@@ -426,7 +427,9 @@ export const setTopStageKey = action("setTopStageKey", (key: string) => {
 export const setBaseStageKey = action("setBottomStageKey", (key: string) => {
   state.settings.baseStageKey = key;
 });
-
+export const setSelectedStage = action("setSelectedStage", (key: string) => {
+  state.settings.selectedStage = key;
+});
 export const setUnitsPerMY = action((units: number) => {
   state.settings.unitsPerMY = units;
 });

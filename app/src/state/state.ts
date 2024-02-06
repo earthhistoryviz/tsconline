@@ -50,6 +50,7 @@ export type State = {
   settingsXML: string;
   settingsJSON: any;
   settings: {
+    selectedStage: string;
     topStageAge: number;
     topStageKey: string;
     baseStageAge: number;
@@ -118,6 +119,7 @@ export const state = observable<State>({
     baseStageKey: "",
     unitsPerMY: 2,
     useDatapackSuggestedAge: false,
+    selectedStage: ""
   },
   useCache: true,
   usePreset: true,
