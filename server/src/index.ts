@@ -3,7 +3,6 @@ import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
 import { execSync } from "child_process";
-import { readFile } from "fs/promises";
 import { loadPresets } from "./preset.js";
 import { AssetConfig, assertAssetConfig } from "./types.js";
 import { deleteDirectory } from "./util.js";
@@ -11,6 +10,15 @@ import * as routes from "./routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
 import fastifyCompress from "@fastify/compress";
 import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
+import { exec } from 'child_process';
+import { readFile, writeFile, stat } from 'fs/promises';
+import md5 from 'md5';
+import { mkdirp } from 'mkdirp';
+import fs from 'fs';
+import { fetchTimescale } from "./routes.js";
+
+import { assertChartRequest } from '@tsconline/shared';
+//import  { decrypt, readAndDecryptFile } from './decrypt.js';
 
 const server = fastify({
   logger: false,
