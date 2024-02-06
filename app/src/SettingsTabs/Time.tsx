@@ -38,73 +38,80 @@ export const Time = observer(function Time() {
           onChange={(event) => actions.setTopAge(parseFloat(event.target.value))}
           style={{ marginBottom: '10px', width: '100%' }}
         /> */}
-        <FormControl style={{ marginBottom: "10px", width: "100%" }}>
-          <InputLabel htmlFor="top-age-selector">Top Age/Stage Name</InputLabel>
-          <Select
-            inputProps={{ id: "top-age-selector" }}
-            name="top-age-stage-name"
-            label="Top Age/Stage Name"
-            type="string"
-            value={state.settings.topStageKey}
-            onChange={(event) => {
-              // console.log("event.target.value: " , event.target.value)
-              actions.setTopStageKey(event.target.value);
-            }}
-            style={{ marginBottom: "10px", width: "100%" }}>
-            {Object.keys(state.settingsTabs.geologicalTopStages).length > 1 &&
-              Object.keys(state.settingsTabs.geologicalTopStages).map((key) => (
-                <MenuItem value={key} key={key}>
-                  {`${key} (${state.settingsTabs.geologicalTopStages[key]} Ma top)`}
-                </MenuItem>
-              ))}
-          </Select>
-          <TextField
-            label="Top Age"
-            type="number"
-            name="vertical-scale-text-field"
-            value={state.settings.topStageAge}
-            onChange={(event) => {
-              const age = parseFloat(event.target.value);
-              if (age >= 0 && age <= state.settings.baseStageAge) {
-                actions.setTopStageAge(age);
-              }
-            }}
-            style={{ marginBottom: "20px", width: "100%" }}
-          />
+        <FormControl style={{ marginBottom: '10px', width: '100%' }}>
+        <InputLabel htmlFor="top-age-selector">Top Age/Stage Name</InputLabel> 
+        <Select
+          inputProps={{ id: 'top-age-selector' }}
+          name="top-age-stage-name"
+          label="Top Age/Stage Name"
+          type="string"
+          value={state.settings.selectedTopStage || ''} 
+          onChange={(event) => {
+            const selectedValue = event.target.value;
+            const previousValue = previousValues[selectedValue];
+            const selectedAge = previousValue !== undefined && previousValue !== null ? previousValue.toString() : '0.000';
+            actions.setSelectedTopStage(selectedValue);
+            actions.setTopStageAge(isNaN(parseFloat(selectedAge)) ? 0 : parseFloat(selectedAge));
+          }}
+          style={{ marginBottom: '10px', width: '100%' }}
+        >
+          {timescaleData.map(item => (
+              <MenuItem key={item.key} value={item.value}>
+                {item.key} ({previousValues[item.key] !== null ? previousValues[item.key] : '0.000'} Ma)
+            </MenuItem>
+          ))}
+        </Select>
+        <TextField
+          label="Top Age"
+          type="number"
+          name="vertical-scale-text-field"
+          value={state.settings.selectedTopStage ? state.settings.selectedTopStage : state.settings.topStageAge.toString()}
+          onChange={(event) => {
+            const age = parseFloat(event.target.value)
+            if (age >= 0 && age <= state.settings.baseStageAge) {
+              actions.setSelectedTopStage(event.target.value);
+              actions.setTopStageAge(age);
+            }
+          }}
+          style={{ marginBottom: '20px', width: '100%' }}
+        />
         </FormControl>
-        <FormControl style={{ marginBottom: "10px", width: "100%" }}>
-          <InputLabel htmlFor="base-age-selector">Base Age/Stage Name</InputLabel>
-          <Select
-            label="Base Age/Stage Name"
-            inputProps={{ id: "base-age-selector" }}
-            name="base-age-stage-name"
-            type="string"
-            value={state.settings.baseStageKey}
-            onChange={(event) => {
-              // console.log("event.target.value: " , event.target.value)
-              actions.setBaseStageKey(event.target.value);
-            }}
-            style={{ marginBottom: "10px", width: "100%" }}>
-            {state.settingsTabs.geologicalTopStages &&
-              Object.keys(state.settingsTabs.geologicalBaseStages).map((key) => (
-                <MenuItem value={key} key={key}>
-                  {`${key} (${state.settingsTabs.geologicalBaseStages[key]} Ma base)`}
-                </MenuItem>
-              ))}
-          </Select>
-          <TextField
-            label="Base Age"
-            type="number"
-            name="vertical-scale-text-field"
-            value={state.settings.baseStageAge}
-            onChange={(event) => {
-              const age = parseFloat(event.target.value);
-              if (age >= 0 && state.settings.topStageAge <= age) {
-                actions.setBaseStageAge(age);
-              }
-            }}
-            style={{ marginBottom: "20px", width: "100%" }}
-          />
+        <FormControl style={{ marginBottom: '10px', width: '100%' }}>
+        <InputLabel htmlFor="base-age-selector">Base Age/Stage Name</InputLabel> 
+        <Select
+          label="Base Age/Stage Name"
+          inputProps={{ id: 'base-age-selector' }}
+          name="base-age-stage-name"
+          type="string"
+          value={state.settings.selectedBaseStage || ''}
+          onChange={(event) => {
+            const selectedValue = event.target.value;
+            const selectedAge = (timescaleData.find(item => item.key === selectedValue)?.value || '0').toString();
+            actions.setSelectedBaseStage(selectedValue);
+            actions.setBaseStageAge(isNaN(parseInt(selectedAge)) ? 0 : parseInt(selectedAge));
+          }}
+          style={{ marginBottom: '10px', width: '100%' }}
+        >
+          {timescaleData.map(item => (
+            <MenuItem key={item.key} value={item.value}>
+              {item.key} ({item.value} Ma)
+            </MenuItem>
+          ))}
+        </Select>
+        <TextField
+          label="Base Age"
+          type="number"
+          name="vertical-scale-text-field"
+          value={state.settings.selectedBaseStage ? state.settings.selectedBaseStage : state.settings.baseStageAge.toString()}
+          onChange={(event) => {
+            const age = parseFloat(event.target.value)
+            if (age >= 0 && state.settings.topStageAge <= age) {
+              actions.setSelectedBaseStage(event.target.value);
+              actions.setBaseStageAge(age)
+            }
+          }}
+          style={{ marginBottom: '20px', width: '100%' }}
+        />
         </FormControl>
         <TextField
           label="Vertical Scale (cm/Ma)"

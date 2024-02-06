@@ -52,13 +52,17 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
  */
 export const resetSettings = action("resetSettings", () => {
   state.settings = {
+    selectedStage: "",
     topStageAge: 0,
     topStageKey: "",
     baseStageAge: 0,
     baseStageKey: "",
     unitsPerMY: 2,
+    useDatapackSuggestedAge: false,
     mouseOverPopupsEnabled: false,
-    datapackContainsSuggAge: false
+    datapackContainsSuggAge: false,
+    selectedBaseStage: "",
+    selectedTopStage: ""
   };
 });
 
@@ -516,7 +520,15 @@ export const setTopStageKey = action("setTopStageKey", (key: string) => {
 export const setBaseStageKey = action("setBottomStageKey", (key: string) => {
   state.settings.baseStageKey = key;
 });
-
+export const setSelectedTopStage = action("setSelectedTopStage", (key: string) => {
+  state.settings.selectedTopStage = key;
+});
+export const setSelectedBaseStage = action("setSelectedBaseStage", (key: string) => {
+  state.settings.selectedBaseStage = key;
+});
+export const setSelectedStage = action("setSelectedStage", (key: string) => {
+  state.settings.selectedStage = key;
+});
 export const setUnitsPerMY = action((units: number) => {
   state.settings.unitsPerMY = units;
 });
