@@ -9,6 +9,8 @@ import type {
   Facies,
   GeologicalStages,
   Presets,
+  DatapackIndex,
+  MapPackIndex,
 } from "@tsconline/shared";
 
 export type State = {
@@ -45,6 +47,8 @@ export type State = {
     settingsPath: string // the path to the settings file on the server
   };
   presets: Presets;
+  datapackIndex: DatapackIndex;
+  mapPackIndex: MapPackIndex;
   selectedPreset: ChartConfig | null;
   chartPath: string;
   chartHash: string;
@@ -108,6 +112,8 @@ export const state = observable<State>({
     settingsPath: ""
   },
   presets: {},
+  datapackIndex: {},
+  mapPackIndex: {},
   selectedPreset: null,
   chartPath: "",
   chartHash: "",

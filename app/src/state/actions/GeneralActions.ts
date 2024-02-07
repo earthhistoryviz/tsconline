@@ -12,6 +12,13 @@ import {
   assertDatapackResponse,
   Presets,
   assertSVGStatus,
+  IndexResponse,
+  assertDatapackAgeInfo,
+  assertFacies,
+  assertMapHierarchy,
+  assertColumnInfo,
+  assertMapInfo,
+  DatapackAgeInfo,
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
@@ -31,6 +38,11 @@ export const resetSettings = action("resetSettings", () => {
   };
 });
 
+export const loadIndexResponse = action("loadIndexResponse", (response: IndexResponse) => {
+  state.mapPackIndex = response.mapPackIndex
+  state.datapackIndex = response.datapackIndex
+})
+
 /**
  * Rests the settings, sets the tabs to 0
  * sets chart to newval and requests info on the datapacks from the server
@@ -42,37 +54,79 @@ export const setDatapackConfig = action(
     resetSettings();
     //set the settings tab back to time
     setSettingsTabsSelected(0);
-    state.config.datapacks = datapacks;
-    //process decrypted file
-    const res = await fetcher(`/datapackinfo/${datapacks.join(":")}`, {
-      method: "GET",
-    });
-    // get the columns and map info
-    const reply = await res.json();
-    // console.log("reply of mapInfo: ", JSON.stringify(reply.mapInfo, null, 2))
-    try {
-      assertDatapackResponse(reply);
-      setMapInfo(reply.mapInfo);
-      setSettingsColumns(reply.columnInfo);
-      //fill in hashmap with column info for easier & faster access
-      initializeColumnHashMap(state.settingsTabs.columns!);
-      setFacies(reply.facies);
-      setMapHierarchy(reply.mapHierarchy);
-    } catch (e) {
-      if (isServerResponseError(reply)) {
-        console.log(
-          "Server failed to send datapack info with error: ",
-          reply.error
-        );
-      } else {
-        console.log("Failed to fetch datapack info with error: ", e);
-      }
-      // THIS LOOPS FOREVER
-      // resetState();
-      return false;
+    let facies: Facies = {
+      locations: {},
+      minAge: 0,
+      maxAge: 0,
+      aliases: {}
     }
-    state.settings.useDatapackSuggestedAge = reply.datapackAgeInfo.useDatapackSuggestedAge;
+    let datapackAgeInfo: DatapackAgeInfo = {
+      useDatapackSuggestedAge: false,
+    }
+    let mapInfo: MapInfo = {}
+    let mapHierarchy: MapHierarchy = {}
+    let columnInfo: ColumnInfo;
+    try {
+      // the default overarching variable for the columnInfo
+      columnInfo = {
+        name: "Root", // if you change this, change parse-datapacks.ts :69
+        editName: "Chart Title",
+        info: "",
+        on: true,
+        children: [
+          {
+            name: "Ma",
+            editName: "Ma",
+            on: true,
+            info: "",
+            children: [],
+            parent: "Root"// if you change this, change parse-datapacks.ts :69
+          }
+        ],
+        parent: null
+      }
+      // add everything together
+      // uses preparsed data on server start and appends items together
+      for (const datapack of datapacks) {
+        if (!datapack || !state.datapackIndex[datapack] || !state.mapPackIndex[datapack]) throw new Error(`File requested doesn't exist on server: ${datapack}`)
+        const datapackParsingPack = state.datapackIndex[datapack]!
+        // concat the children array of root to the array created in preparsed array
+        // we can't do Object.assign here because it will overwrite the array rather than concat it
+        columnInfo.children = columnInfo.children.concat(datapackParsingPack.columnInfoArray)
+        // concat all facies
+        if (!facies) facies = datapackParsingPack.facies
+        // TODO: correctly fix this so that facies are not replacing max/min on multiple datapacks
+        else Object.assign(facies, datapackParsingPack.facies)
+        // concat datapackAgeInfo objects together
+        if (!datapackAgeInfo) datapackAgeInfo = datapackParsingPack.datapackAgeInfo
+        else Object.assign(datapackAgeInfo, datapackParsingPack.datapackAgeInfo)
+
+        const mapPack = state.mapPackIndex[datapack]!
+        if (!mapInfo) mapInfo = mapPack.mapInfo
+        else Object.assign(mapInfo, mapPack.mapInfo)
+        if (!mapHierarchy) mapHierarchy = mapPack.mapHierarchy
+        else Object.assign(mapHierarchy, mapPack.mapHierarchy)
+      }
+      assertFacies(facies)
+      assertDatapackAgeInfo(datapackAgeInfo)
+      assertMapHierarchy(mapHierarchy)
+      assertColumnInfo(columnInfo)
+      assertMapInfo(mapInfo)
+    } catch(e) {
+      console.log(`Error occured while changing datapack information on the website with indexes (setDatapackConfig): ${e} with datapacks ${datapacks}`)
+      return false
+    }
+    state.mapState.facies = facies
+    state.settings.useDatapackSuggestedAge = datapackAgeInfo.useDatapackSuggestedAge
+    state.mapState.mapHierarchy = mapHierarchy
+    state.settingsTabs.columns = columnInfo
+    state.mapState.mapInfo = mapInfo
+    state.config.datapacks = datapacks;
     state.config.settingsPath = settingsPath;
+    initializeColumnHashMap(columnInfo)
+    await fetcher(`/mapimages/${datapacks.join(':')}`, {
+      method: "POST"
+    })
     // Grab the settings for this chart if there are any:
     if (settingsPath && settingsPath.length > 0) {
       const res = await fetcher(

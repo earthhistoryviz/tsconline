@@ -8,7 +8,7 @@ import { deleteDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
 import { grabMapImages } from "./parse-map-packs.js";
 import md5 from "md5";
-import { assetconfigs, datapackInfoIndex, mapPackIndex } from "./index.js";
+import { assetconfigs } from "./index.js";
 import svgson from 'svgson'
 import fs from "fs";
 import { readFile } from "fs/promises";
@@ -31,7 +31,7 @@ export const fetchSettingsJson = async function fetchSettingsJson(
 // Handles getting the columns for the files specified in the url
 // Currently Returns ColumnSettings and Stages if they exist
 // TODO: ADD ASSERTS
-export const fetchDatapackInfo = async function fetchDatapackInfo(
+export const refreshMapImages = async function refreshMapImages(
   request: FastifyRequest<{ Params: { files: string } }>,
   reply: FastifyReply
 ) {
@@ -41,66 +41,9 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(
     reply.send("Error: no files requested")
     return
   }
-  //TODO check if files exist. probably check this in the glob of parse Datapacks
-  console.log("Getting decrypted info for files: ", files);
+  console.log("Getting map images for files: ", files);
   const filesSplit = files.split(":");
-  try {
-    // the default overarching variable for the columnInfo
-    let columnInfo: ColumnInfo = {
-      name: "Root", // if you change this, change parse-datapacks.ts :69
-      editName: "Chart Title",
-      info: "",
-      on: true,
-      children: [
-        {
-          name: "Ma",
-          editName: "Ma",
-          on: true,
-          info: "",
-          children: [],
-          parent: "Root"// if you change this, change parse-datapacks.ts :69
-        }
-      ],
-      parent: null
-    }
-    let facies, datapackAgeInfo, mapInfo, mapHierarchy;
-    // add everything together
-    // uses preparsed data on server start and appends items together
-    for (const file of filesSplit) {
-      if (!file || !datapackInfoIndex[file] || !mapPackIndex[file]) throw new Error(`File requested doesn't exist on server: ${file}`)
-      const datapackParsingPack = datapackInfoIndex[file]!
-      // concat the children array of root to the array created in preparsed array
-      // we can't do Object.assign here because it will overwrite the array rather than concat it
-      columnInfo.children = columnInfo.children.concat(datapackParsingPack.columnInfoArray)
-      // concat all facies
-      if (!facies) facies = datapackParsingPack.facies
-      else Object.assign(facies, datapackParsingPack.facies)
-      // concat datapackAgeInfo objects together
-      if (!datapackAgeInfo) datapackAgeInfo = datapackParsingPack.datapackAgeInfo
-      else Object.assign(datapackAgeInfo, datapackParsingPack.datapackAgeInfo)
-
-      const mapPack = mapPackIndex[file]!
-      if (!mapInfo) mapInfo = mapPack.mapInfo
-      else Object.assign(mapInfo, mapPack.mapInfo)
-      if (!mapHierarchy) mapHierarchy = mapPack.mapHierarchy
-      else Object.assign(mapHierarchy, mapPack.mapHierarchy)
-    }
-    await grabMapImages(filesSplit, assetconfigs.imagesDirectory);
-    const datapackResponse = {
-      columnInfo,
-      facies,
-      mapInfo,
-      mapHierarchy,
-      datapackAgeInfo,
-    };
-    // console.log(JSON.stringify(facies.locations, null, 2))
-    assertDatapackResponse(datapackResponse)
-    // console.log(JSON.stringify(facies.locations['Adele 1 lithology']?.minAge, null, 2))
-    reply.send(datapackResponse);
-    console.log("Successfully fetched info for ", filesSplit)
-  } catch (e) {
-    reply.send({ error: `${e}` });
-  }
+  await grabMapImages(filesSplit, assetconfigs.imagesDirectory);
 };
 
 /**
