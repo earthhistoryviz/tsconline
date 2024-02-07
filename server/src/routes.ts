@@ -53,8 +53,8 @@ export const fetchDatapackInfo = async function fetchDatapackInfo(
       on: true,
       children: [
         {
-          name: "MA",
-          editName: "MA",
+          name: "Ma",
+          editName: "Ma",
           on: true,
           info: "",
           children: [],
