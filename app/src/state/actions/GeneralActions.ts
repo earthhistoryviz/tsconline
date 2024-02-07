@@ -147,6 +147,7 @@ export const removeCache = action("removeCache", async () => {
  * If error from server, this is really bad. Will loop forever
  */
 export const resetState = action("resetState", () => {
+  setChartMade(true);
   setChartLoading(true);
   setDatapackConfig([], "");
   setChartHash("");
@@ -168,6 +169,7 @@ export const generateChart = action("generateChart", async () => {
   //set the loading screen and make sure the chart isn't up
   setTab(1);
   setAllTabs(true);
+  setChartMade(true);
   setChartLoading(true);
   setChartHash("");
   setChartPath("");
@@ -433,6 +435,11 @@ export const setUnitsPerMY = action((units: number) => {
 export const setChartLoading = action((value: boolean) => {
   state.chartLoading = value;
 });
+
+export const setChartMade = action((value: boolean) => {
+  state.madeChart = value;
+});
+
 export const setMapHierarchy = action(
   "setMapHierarchy",
   (mapHierarchy: MapHierarchy) => {
