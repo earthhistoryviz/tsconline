@@ -80,11 +80,6 @@ function processColumn(node: any): any {
   if (nodeAttributes.length > 0) {
     for (let i = 0; i < nodeAttributes.length; i++) {
       const attribute = nodeAttributes[i];
-      if (attribute.value.includes("INIOPTERYGIA")) {
-        console.log(
-          `attribute.name: ${attribute.name}\nattribute.value: ${attribute.value}`
-        );
-      }
       result[`_${attribute.name}`] = attribute.value;
     }
   }
@@ -390,8 +385,8 @@ export function jsonToXml(
   columnSettings: any,
   version: string = "PRO8.0"
 ): string {
-  console.log(columnSettings);
-  console.log("in json to xml", settings);
+  // console.log(columnSettings);
+  // console.log("in json to xml", settings);
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
   //console.log("json 2...\n", state.settingsJSON);
