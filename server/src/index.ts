@@ -8,7 +8,7 @@ import { loadPresets } from "./preset.js";
 import { AssetConfig, assertAssetConfig } from "./types.js";
 import { deleteDirectory } from "./util.js";
 import * as routes from "./routes.js";
-import { DatapackIndex, MapPackIndex, assertDatapackIndex, assertIndexResponse, assertMapPackIndex } from "@tsconline/shared";
+import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
 import { parseDatapacks } from "./parse-datapacks.js";
 import { parseMapPacks } from "./parse-map-packs.js";
 
@@ -75,11 +75,16 @@ try {
       (datapackParsingPack) => {
         datapackIndex[datapack] = datapackParsingPack
         console.log(`Successfully parsed ${datapack}`)
-      }
-    )
+      })
+    .catch((e) => {
+      console.log(`Cannot create a datapackParsingPack with datapack ${datapack} and error: ${e}`)
+    })
     parseMapPacks([datapack])
     .then((mapPack) => {
       mapPackIndex[datapack] = mapPack
+    })
+    .catch((e) => {
+      console.log(`Cannot create a mapPack with datapack ${datapack} and error: ${e}`)
     })
   }
 } catch (e) {
