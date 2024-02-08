@@ -9,28 +9,28 @@ type ParsedColumnEntry = {
   info: string
 }
 let fontsInfo: FontsInfo = {
-    "Age Label": {
-        bold: false,
-        color: "",
-        fontFace: "Arial",
-        inheritable: false,
-        italic: false,
-        size: 6
-    },
-    "Column Header": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 14},
-    "Event Column Label": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 11},
-    "Legend Column Name": {inheritable: false},
-    "Legend Column Source": {inheritable: false},
-    "Legend Title": {inheritable: false},
-    "Point Column Scale Label": {inheritable: false},
-    "Popup Body": {inheritable: false},
-    "Range Box Label": {inheritable: false},
-    "Range Label": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12},
-    "Ruler Label": {inheritable: false},
-    "Ruler Tick Mark Label": {inheritable: false},
-    "Sequence Column Label": {inheritable: false},
-    "Uncertainty Label": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 5},
-    "Zone Column Label": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12}
+  "Age Label": {
+    bold: false,
+    color: "",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 6
+  },
+  "Column Header": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 14 },
+  "Event Column Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 11 },
+  "Legend Column Name": { inheritable: false },
+  "Legend Column Source": { inheritable: false },
+  "Legend Title": { inheritable: false },
+  "Point Column Scale Label": { inheritable: false },
+  "Popup Body": { inheritable: false },
+  "Range Box Label": { inheritable: false },
+  "Range Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12 },
+  "Ruler Label": { inheritable: false },
+  "Ruler Tick Mark Label": { inheritable: false },
+  "Sequence Column Label": { inheritable: false },
+  "Uncertainty Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 5 },
+  "Zone Column Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12 }
 }
 /**
  * TODO:
@@ -102,6 +102,8 @@ export async function parseDatapacks(
   const isChild: Set<string> = new Set();
   const isFacies: Set<string> = new Set();
   const allEntries: Map<string, ParsedColumnEntry> = new Map();
+  const blocksMap: Map<string, TinyBlock[]> = new Map();
+  //const faciesMap: Map<String, string[]> = new Map();
   let datapackAgeInfo: DatapackAgeInfo = { useDatapackSuggestedAge: false };
   try {
     for (let decrypt_path of decrypt_paths) {
@@ -118,7 +120,7 @@ export async function parseDatapacks(
 
       });
       //next we get the facies events
-      await getFacies(decrypt_path, facies)
+      await getFaciesOrBlock(decrypt_path, facies, blocksMap);
     }
   } catch (e: any) {
     console.log(
@@ -201,7 +203,7 @@ async function getAllEntries(filename: string, allEntries: Map<string, ParsedCol
  * @param filename the filename to be parsed
  * @param facies the facies object containing all of the facies events
  */
-async function getFacies(filename: string, facies: Facies) {
+async function getFaciesOrBlock(filename: string, facies: Facies, blocksMap: Map<string, TinyBlock[]>) {
   const fileStream = createReadStream(filename)
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity })
   let location: FaciesLocations[string] = {
@@ -211,6 +213,10 @@ async function getFacies(filename: string, facies: Facies) {
   }
   let name = ""
   let inFaciesBlock = false
+  let inBlockBlock = false
+  let blockName = ""
+  let tinyBlocks: TinyBlock[] = []
+
   for await (const line of readline) {
     // we reached the end
     if ((!line || trimInvisibleCharacters(line) === '') && inFaciesBlock) {
@@ -242,7 +248,20 @@ async function getFacies(filename: string, facies: Facies) {
         location.maxAge = Math.max(location.maxAge, faciesTimeBlock.age)
       }
     }
+
+    // we found a block
+    if (!inBlockBlock && line.split('\t')[1] === "block") {
+      blockName = trimQuotes(line.split('\t')[0]!)
+      inBlockBlock = true
+    } else if (inBlockBlock) {
+      let tinyBlock = processBlock(line)
+      if (tinyBlock) {
+        tinyBlocks.push(tinyBlock);
+      }
+    }
   }
+  //TODO: store block and its tiny blocks into blockmap, 
+
   if (inFaciesBlock) {
     if (location.faciesTimeBlockArray.length == 0) {
       location.maxAge = 0
@@ -253,6 +272,35 @@ async function getFacies(filename: string, facies: Facies) {
     facies.maxAge = Math.max(facies.maxAge, location.maxAge)
   }
 }
+
+function processBlock(line: string): TinyBlock | null {
+  let currentTinyBlock = {
+    label: "",
+    age: 0,
+    info: "",
+    dashed: false
+  }
+  const tabSeperated = line.split('\t')
+  // if (tabSeperated.length < 4) return null (don't know if it's the same for blocks too)
+  const label = tabSeperated[1]
+  const age = Number(tabSeperated[2]!)
+  const info = tabSeperated[4]
+  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeperated[2]! + " is NaN")
+  const dashed = (tabSeperated[3] === "dashed") ? true : false
+  if (label) {
+    currentTinyBlock.label = label
+  }
+  currentTinyBlock.age = age
+  if (info) {
+    currentTinyBlock.info = info
+  }
+  currentTinyBlock.dashed = dashed
+
+  return currentTinyBlock
+}
+
+
+
 /**
  * Processes a single facies line
  * @param line the line to be processed

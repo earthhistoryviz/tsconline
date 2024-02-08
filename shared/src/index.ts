@@ -208,6 +208,13 @@ export type FaciesTimeBlock = {
   age: number; // the base gge of the facies time block
 };
 
+export type TinyBlock = {
+  label: string,
+  age: number,
+  info?: string,
+  dashed: boolean
+}
+
 export type ChartRequest = {
   settings: string; // JSON string representing the settings file you want to use to make a chart
   datapacks: string[]; // active datapacks to be used on chart
@@ -376,6 +383,19 @@ export function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo {
     if (typeof o.topAge !== "number")
       throw new Error("DatapackAgeInfo must have a number topAge");
   }
+}
+
+export function assertTinyBlock(o: any): asserts o is TinyBlock {
+  if (!o || typeof o !== "object")
+    throw new Error("TinyBlock must be a non-null object");
+  if (typeof o.label !== "string")
+    throw new Error("TinyBlock must have a label with string type")
+  if (typeof o.age !== "number")
+    throw new Error("TinyBlock must have an age with type number")
+  if (o.info !== undefined && typeof o.info !== "string")
+    throw new Error("TinyBlock must have an info with type string or be undefined")
+  if (typeof o.dashed !== "boolean")
+    throw new Error("TinyBlock must have a dashed value with type boolean")
 }
 
 export function assertFacies(o: any): asserts o is Facies {
