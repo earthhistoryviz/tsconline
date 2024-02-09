@@ -376,7 +376,8 @@ function recursive(
   facies: Facies,
   blocksMap: Map<string, SubBlockInfo[]>
 ): boolean {
-  const currentColumnInfo = {
+
+  const currentColumnInfo: ColumnInfo = {
     name: currentColumn,
     editName: currentColumn,
     on: true,
@@ -384,13 +385,13 @@ function recursive(
     info: "",
     children: [],
     parent: parent,
+    minAge: 0,
+    maxAge: 0
   }
   let faciesFound = false;
 
   if (parsedColumnEntry) {
     currentColumnInfo.on = parsedColumnEntry.on;
-
-
     currentColumnInfo.info = parsedColumnEntry.info;
   }
 
@@ -405,6 +406,45 @@ function recursive(
         facies.aliases[trimInvisibleCharacters(currentColumn)] = trimInvisibleCharacters(child)
         faciesFound = true
       }
+      //check if it is a block
+
+      if (parent && blocksMap.has(parent)) {
+
+        const currentBlock: Block = {
+          name: parent,
+          subBlockEvents: [],
+          minAge: 0,
+          maxAge: 0,
+          info: ""
+        }
+        let infoIndex = parsedColumnEntry.children.length - 1
+        let blockInfo = parsedColumnEntry.children[infoIndex]
+        if (blockInfo) {
+          currentBlock.info = blockInfo
+        }
+        let subBlockEvents = blocksMap.get(parent) || null
+        let min = 0;
+        let max = 0;
+        if (subBlockEvents) {
+          min = subBlockEvents[0].age
+          max = subBlockEvents[0].age
+          subBlockEvents.push(subBlockEvents[0])
+          for (let i = 1; i < subBlockEvents.length; i++) {
+            let currentAge = subBlockEvents[i].age
+            min = (currentAge < min) ? currentAge : min
+            max = (currentAge > max) ? currentAge : max
+            subBlockEvents.push(subBlockEvents[i])
+          }
+          currentBlock.minAge = min
+          currentBlock.maxAge = max
+
+        }
+        currentColumnInfo.block = currentBlock
+        currentColumnInfo.minAge = min
+        currentColumnInfo.maxAge = max
+      }
+
+
       const children = allEntries.get(child) || null
       faciesFound = recursive(
         currentColumn, // the current column becomes the parent

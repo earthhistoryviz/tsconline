@@ -232,7 +232,19 @@ export type ColumnInfo = {
   info: string;
   children: ColumnInfo[];
   parent: string | null;
+  block?: Block;
+  minAge: number;
+  maxAge: number;
 };
+//TODO: add assertion function for Block type
+export type Block = {
+  name: string;
+  subBlockEvents: SubBlockInfo[];
+  minAge: number;
+  maxAge: number;
+  info: string;
+
+}
 
 export type ChartResponseInfo = {
   chartpath: string; // path to the chart
