@@ -38,6 +38,14 @@ export const resetSettings = action("resetSettings", () => {
   };
 });
 
+export const uploadDatapack = action("uploadDatapack", (file: File) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  fetcher('/upload', {
+    method: "POST",
+    body: formData
+  })
+})
 export const loadIndexResponse = action("loadIndexResponse", (response: IndexResponse) => {
   state.mapPackIndex = response.mapPackIndex
   state.datapackIndex = response.datapackIndex
