@@ -134,6 +134,8 @@ server.post("/removecache", async (request, reply) => {
 server.get("/presets", async (_request, reply) => {
   reply.send(presets);
 });
+// uploads datapack
+server.post("/upload", routes.uploadDatapack);
 
 //fetches json object of requested settings file
 server.get<{ Params: { settingFile: string } }>(
