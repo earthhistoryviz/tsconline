@@ -13,7 +13,11 @@ export type DatapackParsingPack = {
   datapackAgeInfo: DatapackAgeInfo
 }
 
-export type DatapackInfoIndex = {
+export type IndexResponse = {
+  datapackIndex: DatapackIndex;
+  mapPackIndex: MapPackIndex;
+}
+export type DatapackIndex = {
   [name: string]: DatapackParsingPack
 }
 export type MapPackIndex = {
@@ -364,13 +368,13 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
   assertFacies(o.facies)
   assertDatapackAgeInfo(o.datapackAgeInfo)
 }
-export function assertDatapackInfoIndex(o: any): asserts o is DatapackInfoIndex {
+export function assertDatapackIndex(o: any): asserts o is DatapackIndex {
   if (!o || typeof o !== "object")
-    throw new Error("DatapackInfoIndex must be a non-null object")
+    throw new Error("DatapackIndex must be a non-null object")
   for (const key in o) {
     if (typeof key !== "string")
       throw new Error(
-        `DatapackInfoIndex 'key' ${location} must be of type 'string`
+        `DatapackIndex 'key' ${location} must be of type 'string`
       );
     assertDatapackParsingPack(o[key])
   }
@@ -418,6 +422,12 @@ export function assertFaciesTimeBlock(o: any): asserts o is FaciesTimeBlock {
     throw new Error(
       "FaciesTimeBlock must have a age variable of valid type 'number'"
     );
+}
+export function assertIndexResponse(o: any): asserts o is IndexResponse {
+  if (!o || typeof o !== "object")
+    throw new Error("IndexResponse must be a non-null object");
+  assertDatapackIndex(o.datapackIndex)
+  assertMapPackIndex(o.mapPackIndex)
 }
 export function assertDatapackResponse(o: any): asserts o is DatapackResponse {
   if (!o || typeof o !== "object")

@@ -9,12 +9,15 @@ import type {
   Facies,
   GeologicalStages,
   Presets,
+  DatapackIndex,
+  MapPackIndex,
 } from "@tsconline/shared";
 
 export type State = {
   chartLoading: boolean;
   tab: number;
   showAllTabs: boolean;
+  madeChart: boolean;
   showPresetInfo: boolean;
   settingsTabs: {
     selected: "time" | "font" | "column" | "mappoints";
@@ -44,6 +47,8 @@ export type State = {
     settingsPath: string // the path to the settings file on the server
   };
   presets: Presets;
+  datapackIndex: DatapackIndex;
+  mapPackIndex: MapPackIndex;
   selectedPreset: ChartConfig | null;
   chartPath: string;
   chartHash: string;
@@ -64,9 +69,10 @@ export type State = {
 };
 
 export const state = observable<State>({
-  chartLoading: true,
+  chartLoading: false,
+  madeChart: false,
   tab: 0,
-  showAllTabs: false,
+  showAllTabs: true,
   showPresetInfo: false,
   settingsTabs: {
     selected: "time",
@@ -107,6 +113,8 @@ export const state = observable<State>({
     settingsPath: ""
   },
   presets: {},
+  datapackIndex: {},
+  mapPackIndex: {},
   selectedPreset: null,
   chartPath: "",
   chartHash: "",

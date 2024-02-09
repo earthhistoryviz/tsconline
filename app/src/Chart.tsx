@@ -23,6 +23,7 @@ export const Chart = observer(function () {
           <div className="loading-sub">  (this could take more than a minute)</div> 
         </div>
         : 
+        state.madeChart ? 
         <TransformWrapper
         minScale={0.01}
         maxScale={3}
@@ -33,6 +34,12 @@ export const Chart = observer(function () {
            {/* <object data={state.chartPath} type="application/svg" width="100%" height="100%"></object> */}
           </TransformComponent>
         </TransformWrapper>
+        :
+        <div className="loading-container" style={{
+          fontFamily: theme.typography.fontFamily
+        }}>
+          <div className="loading">  You have not made a chart yet </div> 
+        </div>
       }
     </GradientDiv>
   );

@@ -80,11 +80,6 @@ function processColumn(node: any): any {
   if (nodeAttributes.length > 0) {
     for (let i = 0; i < nodeAttributes.length; i++) {
       const attribute = nodeAttributes[i];
-      if (attribute.value.includes("INIOPTERYGIA")) {
-        console.log(
-          `attribute.name: ${attribute.name}\nattribute.value: ${attribute.value}`
-        );
-      }
       result[`_${attribute.name}`] = attribute.value;
     }
   }
@@ -342,38 +337,21 @@ function generateColumnXml(
         //TODO: pass the state column of the column itself, not the children array of its parent
         let params: { one: any; two: any; three: string; four: string } = {
           one: jsonColumn[key],
-          two: stateColumn,
+          two: null,
           three: currName,
           four: `${indent}    `,
         };
-        //first column after the chart root and chart title columns
-        if (currName.includes("Chart") && !childName.includes("Chart")) {
-          if (stateColumn) params.two = stateColumn[childName];
-        } else if (currName.includes("Chart")) {
-          //keep the current params
-        } else if (stateColumn == null) {
-          params.two = null;
-        } else if (
-          stateColumn.children == null ||
-          stateColumn.children == undefined
-        ) {
-          params.two = null;
+        if (currName == "Chart Root") {
+          params.two = stateColumn;
         } else if (stateColumn != null) {
-          if (Object.keys(stateColumn.children).includes(childName)) {
-            if (stateColumn) params.two = stateColumn.children[childName];
-          } else {
-            params.two = null;
+          for (let i = 0; i < stateColumn.children.length; i++) {
+            if (stateColumn.children[i].name == childName) {
+              params.two = stateColumn.children[i];
+              break;
+            }
           }
-          // reached end of column tree, no more children
-          if (
-            stateColumn.children == null ||
-            stateColumn.children == undefined
-          ) {
-            params.two = null;
-          }
-        }
-        //jsonColumn, stateColumn, parent, indent
-
+        } 
+        
         xml += generateColumnXml(
           params.one,
           params.two,
@@ -407,7 +385,8 @@ export function jsonToXml(
   columnSettings: any,
   version: string = "PRO8.0"
 ): string {
-  //console.log("in json to xml", settings);
+  // console.log(columnSettings);
+  // console.log("in json to xml", settings);
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
   //console.log("json 2...\n", state.settingsJSON);

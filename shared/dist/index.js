@@ -84,12 +84,12 @@ export function assertDatapackParsingPack(o) {
     assertFacies(o.facies);
     assertDatapackAgeInfo(o.datapackAgeInfo);
 }
-export function assertDatapackInfoIndex(o) {
+export function assertDatapackIndex(o) {
     if (!o || typeof o !== "object")
-        throw new Error("DatapackInfoIndex must be a non-null object");
+        throw new Error("DatapackIndex must be a non-null object");
     for (const key in o) {
         if (typeof key !== "string")
-            throw new Error(`DatapackInfoIndex 'key' ${location} must be of type 'string`);
+            throw new Error(`DatapackIndex 'key' ${location} must be of type 'string`);
         assertDatapackParsingPack(o[key]);
     }
 }
@@ -121,6 +121,12 @@ export function assertFaciesTimeBlock(o) {
         throw new Error("FaciesTimeBlock must have a label variable of type 'string'");
     if (typeof o.age !== "number")
         throw new Error("FaciesTimeBlock must have a age variable of valid type 'number'");
+}
+export function assertIndexResponse(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("IndexResponse must be a non-null object");
+    assertDatapackIndex(o.datapackIndex);
+    assertMapPackIndex(o.mapPackIndex);
 }
 export function assertDatapackResponse(o) {
     if (!o || typeof o !== "object")

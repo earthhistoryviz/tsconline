@@ -8,7 +8,7 @@ import { execSync } from "child_process";
 // import { AssetConfig, assertAssetConfig } from "./types.js";
 import { deleteDirectory } from "./util.js";
 import * as routes from "./routes.js";
-import { DatapackInfoIndex, MapPackIndex, assertDatapackInfoIndex, assertMapPackIndex } from "@tsconline/shared";
+import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
 import { parseDatapacks } from "./parse-datapacks.js";
 import { parseMapPacks } from "./parse-map-packs.js";
 import { exec } from 'child_process';
@@ -99,7 +99,7 @@ try {
   process.exit(1);
 }
 
-export let datapackInfoIndex: DatapackInfoIndex = {}
+export let datapackIndex: DatapackIndex = {}
 export let mapPackIndex: MapPackIndex = {}
 try {
   console.log(`\nParsing datapacks: ${assetconfigs.activeDatapacks}\n`)
@@ -107,13 +107,18 @@ try {
     parseDatapacks(assetconfigs.decryptionDirectory, [datapack])
     .then(
       (datapackParsingPack) => {
-        datapackInfoIndex[datapack] = datapackParsingPack
+        datapackIndex[datapack] = datapackParsingPack
         console.log(`Successfully parsed ${datapack}`)
-      }
-    )
+      })
+    .catch((e) => {
+      console.log(`Cannot create a datapackParsingPack with datapack ${datapack} and error: ${e}`)
+    })
     parseMapPacks([datapack])
     .then((mapPack) => {
       mapPackIndex[datapack] = mapPack
+    })
+    .catch((e) => {
+      console.log(`Cannot create a mapPack with datapack ${datapack} and error: ${e}`)
     })
   }
 } catch (e) {
@@ -123,8 +128,6 @@ try {
   );
   process.exit(1);
 }
-assertDatapackInfoIndex(datapackInfoIndex)
-assertMapPackIndex(mapPackIndex)
 // Serve the main app from /
 // @ts-ignore
 server.register(fastifyStatic, {
@@ -165,6 +168,8 @@ server.post("/removecache", async (request, reply) => {
 server.get("/presets", async (_request, reply) => {
   reply.send(presets);
 });
+// uploads datapack
+server.post("/upload", routes.uploadDatapack);
 
 //fetches json object of requested settings file
 server.get<{ Params: { settingFile: string } }>(
@@ -173,9 +178,22 @@ server.get<{ Params: { settingFile: string } }>(
 );
 
 // handles chart columns and age ranges requests
-server.get<{ Params: { files: string } }>(
-  "/datapackinfo/:files",
-  routes.fetchDatapackInfo
+server.post<{ Params: { files: string } }>(
+  "/mapimages/:files",
+  routes.refreshMapImages
+);
+server.get(
+  "/datapackinfoindex",
+  (request, reply) => {
+    if (!datapackIndex || !mapPackIndex) {
+      reply.send({error: "datapackIndex/mapPackIndex is null"})
+    }
+    else {
+      const indexResponse = {datapackIndex, mapPackIndex}
+      assertIndexResponse(indexResponse)
+      reply.send(indexResponse)
+    }
+  }
 );
 
 // checks chart.pdf-status
