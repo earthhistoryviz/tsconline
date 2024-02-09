@@ -62,6 +62,18 @@ export function assertDatapackAgeInfo(o) {
             throw new Error("DatapackAgeInfo must have a number topAge");
     }
 }
+export function assertSubBlockInfo(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("SubBlockInfo must be a non-null object");
+    if (typeof o.label !== "string")
+        throw new Error("SubBlockInfo must have a label with string type");
+    if (typeof o.age !== "number")
+        throw new Error("SubBlockInfo must have an age with type number");
+    if (o.info !== undefined && typeof o.info !== "string")
+        throw new Error("SubBlockInfo must have an info with type string or be undefined");
+    if (typeof o.lineType !== "string")
+        throw new Error("SubBlockInfo must have a lineType value with type string");
+}
 export function assertFacies(o) {
     if (!o || typeof o !== "object")
         throw new Error("Facies must be a non-null object");

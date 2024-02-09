@@ -1,5 +1,5 @@
 import { createReadStream } from "fs";
-import { ColumnInfo, Facies, FaciesLocations, FaciesTimeBlock, assertFaciesTimeBlock, DatapackAgeInfo, DatapackParsingPack, FontsInfo } from "@tsconline/shared";
+import { ColumnInfo, Facies, FaciesLocations, FaciesTimeBlock, assertFaciesTimeBlock, DatapackAgeInfo, DatapackParsingPack, FontsInfo, SubBlockInfo } from "@tsconline/shared";
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths } from "./util.js";
 import { createInterface } from "readline";
 
@@ -102,12 +102,14 @@ export async function parseDatapacks(
   const isChild: Set<string> = new Set();
   const isFacies: Set<string> = new Set();
   const allEntries: Map<string, ParsedColumnEntry> = new Map();
-  const blocksMap: Map<string, TinyBlock[]> = new Map();
+  const blocksMap: Map<string, SubBlockInfo[]> = new Map();
   //const faciesMap: Map<String, string[]> = new Map();
   let datapackAgeInfo: DatapackAgeInfo = { useDatapackSuggestedAge: false };
   try {
     for (let decrypt_path of decrypt_paths) {
-      // First, gather all parents and their direct children
+      //get the facies/blocks first
+      await getFaciesOrBlock(decrypt_path, facies, blocksMap);
+      // Originally the first step, gather all parents and their direct children
       datapackAgeInfo = await getAllEntries(decrypt_path, allEntries, isFacies, isChild);
       // only iterate over parents. if we encounter one that is a child, the recursive function
       // should have already processed it.
@@ -115,12 +117,12 @@ export async function parseDatapacks(
         // if the parent is not a child
         if (!isChild.has(parent)) {
 
-          recursive("Root", parent, children, columnInfoArray, allEntries, isFacies, facies);
+          recursive("Root", parent, children, columnInfoArray, allEntries, isFacies, facies, blocksMap);
         }
 
       });
-      //next we get the facies events
-      await getFaciesOrBlock(decrypt_path, facies, blocksMap);
+      //next we get the facies events(now becomes the first step)
+
     }
   } catch (e: any) {
     console.log(
@@ -203,7 +205,7 @@ async function getAllEntries(filename: string, allEntries: Map<string, ParsedCol
  * @param filename the filename to be parsed
  * @param facies the facies object containing all of the facies events
  */
-async function getFaciesOrBlock(filename: string, facies: Facies, blocksMap: Map<string, TinyBlock[]>) {
+async function getFaciesOrBlock(filename: string, facies: Facies, blocksMap: Map<string, SubBlockInfo[]>) {
   const fileStream = createReadStream(filename)
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity })
   let location: FaciesLocations[string] = {
@@ -215,7 +217,7 @@ async function getFaciesOrBlock(filename: string, facies: Facies, blocksMap: Map
   let inFaciesBlock = false
   let inBlockBlock = false
   let blockName = ""
-  let tinyBlocks: TinyBlock[] = []
+  let SubBlockInfos: SubBlockInfo[] = []
 
   for await (const line of readline) {
     // we reached the end
@@ -236,9 +238,16 @@ async function getFaciesOrBlock(filename: string, facies: Facies, blocksMap: Map
       }
       continue
     }
+    // reached the end and store the key value pairs into blocksMap
+    if ((!line || trimInvisibleCharacters(line) === '') && inBlockBlock) {
+      inBlockBlock = false
+      blocksMap.set(blockName, SubBlockInfos)
+      continue
+    }
+    let tabSeperated = line.split('\t')
     // we found a facies event location
-    if (!inFaciesBlock && line.split('\t')[1] === "facies") {
-      name = trimQuotes(line.split('\t')[0]!)
+    if (!inFaciesBlock && tabSeperated[1] === "facies") {
+      name = trimQuotes(tabSeperated[0]!)
       inFaciesBlock = true
     } else if (inFaciesBlock) {
       let faciesTimeBlock = processFacies(line)
@@ -250,17 +259,18 @@ async function getFaciesOrBlock(filename: string, facies: Facies, blocksMap: Map
     }
 
     // we found a block
-    if (!inBlockBlock && line.split('\t')[1] === "block") {
-      blockName = trimQuotes(line.split('\t')[0]!)
+    if (!inBlockBlock && tabSeperated[1] === "block") {
+      blockName = trimQuotes(tabSeperated[0]!)
       inBlockBlock = true
     } else if (inBlockBlock) {
-      let tinyBlock = processBlock(line)
-      if (tinyBlock) {
-        tinyBlocks.push(tinyBlock);
+      //get a single sub block
+      let SubBlockInfo = processBlock(line)
+      if (SubBlockInfo) {
+
+        SubBlockInfos.push(SubBlockInfo);
       }
     }
   }
-  //TODO: store block and its tiny blocks into blockmap, 
 
   if (inFaciesBlock) {
     if (location.faciesTimeBlockArray.length == 0) {
@@ -273,12 +283,12 @@ async function getFaciesOrBlock(filename: string, facies: Facies, blocksMap: Map
   }
 }
 
-function processBlock(line: string): TinyBlock | null {
-  let currentTinyBlock = {
+function processBlock(line: string): SubBlockInfo | null {
+  let currentSubBlockInfo = {
     label: "",
     age: 0,
     info: "",
-    dashed: false
+    lineType: ""
   }
   const tabSeperated = line.split('\t')
   // if (tabSeperated.length < 4) return null (don't know if it's the same for blocks too)
@@ -286,17 +296,20 @@ function processBlock(line: string): TinyBlock | null {
   const age = Number(tabSeperated[2]!)
   const info = tabSeperated[4]
   if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeperated[2]! + " is NaN")
-  const dashed = (tabSeperated[3] === "dashed") ? true : false
+  const lineType = tabSeperated[3]
   if (label) {
-    currentTinyBlock.label = label
+    currentSubBlockInfo.label = label
   }
-  currentTinyBlock.age = age
+  currentSubBlockInfo.age = age
   if (info) {
-    currentTinyBlock.info = info
+    currentSubBlockInfo.info = info
   }
-  currentTinyBlock.dashed = dashed
+  if (lineType) {
+    currentSubBlockInfo.lineType = lineType
+  }
 
-  return currentTinyBlock
+
+  return currentSubBlockInfo
 }
 
 
@@ -360,7 +373,8 @@ function recursive(
   childrenArray: ColumnInfo[],
   allEntries: Map<string, ParsedColumnEntry>,
   isFacies: Set<string>,
-  facies: Facies
+  facies: Facies,
+  blocksMap: Map<string, SubBlockInfo[]>
 ): boolean {
   const currentColumnInfo = {
     name: currentColumn,
@@ -399,7 +413,8 @@ function recursive(
         currentColumnInfo.children, // the array to push all the new children into
         allEntries, // the mapping of all parents to children
         isFacies, // the set of all facies event names
-        facies // the facies object used to garner aliases for map point usage
+        facies, // the facies object used to garner aliases for map point usage
+        blocksMap
       ) || faciesFound
       if (!faciesFound && isFacies.has(trimInvisibleCharacters(child))) {
         faciesFound = true
