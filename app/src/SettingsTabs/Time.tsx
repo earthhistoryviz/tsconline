@@ -28,6 +28,7 @@ export const Time = observer(function Time() {
 
   // Importcontexts and map time scale to the state
 
+  //TODO move this to initialize
   useEffect(() => {
     const loadTimescaleData = async () => {
       try {
@@ -53,10 +54,6 @@ export const Time = observer(function Time() {
       
         navigate('/chart');
       };
-      // const transformedTimescaleData: TimescaleItem[] = timescaleData.map((item) => ({
-      //   key: item,
-      //   value: parseFloat(item) || 0,
-      // }));
     return (
       <div>
         <Box

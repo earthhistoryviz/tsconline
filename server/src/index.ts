@@ -246,7 +246,6 @@ server.get('/timescale', async (_req, res) => {
     }));
     timescaleData = timescaleData.filter(item => item.key && item.key !== 'Stage' && item.key !== 'TOP');
     timescaleData.forEach((data) => assertTimescale(data));
-    console.log(timescaleData);
     res.send({ stages: timescaleData });
   } catch (error) {
     console.error('Error reading Excel file:', error);
