@@ -208,11 +208,11 @@ export type FaciesTimeBlock = {
   age: number; // the base gge of the facies time block
 };
 
-export type TinyBlock = {
+export type SubBlockInfo = {
   label: string,
   age: number,
   info?: string,
-  dashed: boolean
+  lineType: string
 }
 
 export type ChartRequest = {
@@ -385,17 +385,17 @@ export function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo {
   }
 }
 
-export function assertTinyBlock(o: any): asserts o is TinyBlock {
+export function assertSubBlockInfo(o: any): asserts o is SubBlockInfo {
   if (!o || typeof o !== "object")
-    throw new Error("TinyBlock must be a non-null object");
+    throw new Error("SubBlockInfo must be a non-null object");
   if (typeof o.label !== "string")
-    throw new Error("TinyBlock must have a label with string type")
+    throw new Error("SubBlockInfo must have a label with string type")
   if (typeof o.age !== "number")
-    throw new Error("TinyBlock must have an age with type number")
+    throw new Error("SubBlockInfo must have an age with type number")
   if (o.info !== undefined && typeof o.info !== "string")
-    throw new Error("TinyBlock must have an info with type string or be undefined")
-  if (typeof o.dashed !== "boolean")
-    throw new Error("TinyBlock must have a dashed value with type boolean")
+    throw new Error("SubBlockInfo must have an info with type string or be undefined")
+  if (typeof o.lineType !== "string")
+    throw new Error("SubBlockInfo must have a lineType value with type string")
 }
 
 export function assertFacies(o: any): asserts o is Facies {
