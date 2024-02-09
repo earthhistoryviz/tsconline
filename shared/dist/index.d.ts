@@ -214,6 +214,16 @@ export type ColumnInfo = {
     info: string;
     children: ColumnInfo[];
     parent: string | null;
+    block?: Block;
+    minAge: number;
+    maxAge: number;
+};
+export type Block = {
+    name: string;
+    subBlockEvents: SubBlockInfo[];
+    minAge: number;
+    maxAge: number;
+    info: string;
 };
 export type ChartResponseInfo = {
     chartpath: string;
