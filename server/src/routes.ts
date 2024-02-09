@@ -1,9 +1,8 @@
-import { parseDatapacks } from "./parse-datapacks.js";
 import { jsonToXml, xmlToJson } from "./parse-settings.js";
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
 import { writeFile, stat } from "fs/promises";
-import { assertDatapackResponse, assertChartRequest, type DatapackResponse, assertFacies, ColumnInfo } from "@tsconline/shared";
+import { assertChartRequest } from "@tsconline/shared";
 import { deleteDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
 import { grabMapImages } from "./parse-map-packs.js";
