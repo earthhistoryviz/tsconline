@@ -16,6 +16,7 @@ import RohanPic from "./assets/aboutPictures/RohanNachnani.jpg"
 import SejalPic from "./assets/aboutPictures/SejalKumar.jpg"
 import AdityaPic from "./assets/aboutPictures/AdityaSivathanu.jpg"
 import AaronPic from "./assets/aboutPictures/AaronAult.jpg"
+import TobyPic from "./assets/aboutPictures/TobyOnyekwere.png"
 
 
 const HeaderContainer = styled('div')(({ theme }) => ({
@@ -46,14 +47,14 @@ const TSCOnlineHeader = () => {
 };
 
 const members = [
-    {name: "Aaron Ault", role: "Advisor", homeTown: "IDK", timeWorked: "2024 - Present", proPic: AaronPic},
+    {name: "Aaron Ault", role: "Advisor", homeTown: "IDK", timeWorked: "2008 - Present", proPic: AaronPic},
     {name: "Paolo Gumasing", role: "Team Lead", homeTown: "Lafayette, IN", timeWorked: "2023 - Present", proPic: PaoloPic},
     {name: "Jay Lee", role: "Member", homeTown: "Seoul, South Korea", timeWorked: "2023 - Present", proPic: JayPic},
     {name: "Sejal Kumar", role: "Member", homeTown: "Canton, MI", timeWorked: "2023 - Present", proPic: SejalPic},
     {name: "Aditya Sivathanu", role: "Member", homeTown: "West Lafayette, IN", timeWorked: "2023 - Present", proPic: AdityaPic},
     {name: "Leyton Bostre", role: "Member", homeTown: "Long Beach, CA", timeWorked: "2024 - Present", proPic: LeytonPic},
     {name: "Jiaqing Li (Jacqui)", role: "Member", homeTown: "Wuhan, China", timeWorked: "2024 - Present", proPic: JacquiPic},
-    {name: "Toby Onyekwere", role: "Member", homeTown: "IDK", timeWorked: "2024 - Present"},
+    {name: "Toby Onyekwere", role: "Member", homeTown: "Nigeria", timeWorked: "2024 - Present", proPic: TobyPic},
     {name: "Rohan Nachnani", role: "Member", homeTown: "Bangalore, India", timeWorked: "2024 - Present", proPic: RohanPic}
 ]
 
