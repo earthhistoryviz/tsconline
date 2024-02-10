@@ -170,6 +170,7 @@ export type ServerResponseError = {
 export type ColumnInfo = {
     name: string;
     editName: string;
+    fontsInfo?: FontsInfo;
     on: boolean;
     info: string;
     children: ColumnInfo[];
