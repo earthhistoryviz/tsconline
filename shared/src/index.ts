@@ -13,7 +13,11 @@ export type DatapackParsingPack = {
   datapackAgeInfo: DatapackAgeInfo
 }
 
-export type DatapackInfoIndex = {
+export type IndexResponse = {
+  datapackIndex: DatapackIndex;
+  mapPackIndex: MapPackIndex;
+}
+export type DatapackIndex = {
   [name: string]: DatapackParsingPack
 }
 export type MapPackIndex = {
@@ -271,6 +275,11 @@ export type VertBounds = {
   scale: number;
 };
 
+export type Timescale = {
+  key: string;
+  value: number;
+}
+
 export function assertMapPackIndex(o: any): asserts o is MapPackIndex {
   if (!o || typeof o !== "object")
     throw new Error("MapPackIndex must be a non-null object");
@@ -364,13 +373,13 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
   assertFacies(o.facies)
   assertDatapackAgeInfo(o.datapackAgeInfo)
 }
-export function assertDatapackInfoIndex(o: any): asserts o is DatapackInfoIndex {
+export function assertDatapackIndex(o: any): asserts o is DatapackIndex {
   if (!o || typeof o !== "object")
-    throw new Error("DatapackInfoIndex must be a non-null object")
+    throw new Error("DatapackIndex must be a non-null object")
   for (const key in o) {
     if (typeof key !== "string")
       throw new Error(
-        `DatapackInfoIndex 'key' ${location} must be of type 'string`
+        `DatapackIndex 'key' ${location} must be of type 'string`
       );
     assertDatapackParsingPack(o[key])
   }
@@ -418,6 +427,12 @@ export function assertFaciesTimeBlock(o: any): asserts o is FaciesTimeBlock {
     throw new Error(
       "FaciesTimeBlock must have a age variable of valid type 'number'"
     );
+}
+export function assertIndexResponse(o: any): asserts o is IndexResponse {
+  if (!o || typeof o !== "object")
+    throw new Error("IndexResponse must be a non-null object");
+  assertDatapackIndex(o.datapackIndex)
+  assertMapPackIndex(o.mapPackIndex)
 }
 export function assertDatapackResponse(o: any): asserts o is DatapackResponse {
   if (!o || typeof o !== "object")
@@ -747,4 +762,13 @@ export function assertSVGStatus(
     throw new Error(
       `SVGStatus must have a 'ready' boolean property`
     );
+}
+
+export function assertTimescale(val: any): asserts val is Timescale {
+  if (!val || typeof val !== 'object') {
+    throw new Error('Timescale object must be a non-null object');
+  }
+  if (typeof val.key !== 'string' || typeof val.value !== 'number') {
+    throw new Error(`Timescale object must have 'key' of type string and 'value' of type number`);
+  }
 }

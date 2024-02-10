@@ -7,7 +7,11 @@ export type DatapackParsingPack = {
     facies: Facies;
     datapackAgeInfo: DatapackAgeInfo;
 };
-export type DatapackInfoIndex = {
+export type IndexResponse = {
+    datapackIndex: DatapackIndex;
+    mapPackIndex: MapPackIndex;
+};
+export type DatapackIndex = {
     [name: string]: DatapackParsingPack;
 };
 export type MapPackIndex = {
@@ -243,6 +247,12 @@ export type VertBounds = {
     height: number;
     scale: number;
 };
+
+export type Timescale = {
+    key: string;
+    value: number;
+}
+
 export declare function assertMapPackIndex(o: any): asserts o is MapPackIndex;
 export declare function assertMapPack(o: any): asserts o is MapPack;
 export declare function assertPresets(o: any): asserts o is Presets;
@@ -250,9 +260,10 @@ export declare function assertTransects(o: any): asserts o is Transects;
 export declare function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo;
 export declare function assertFacies(o: any): asserts o is Facies;
 export declare function assertDatapackParsingPack(o: any): asserts o is DatapackParsingPack;
-export declare function assertDatapackInfoIndex(o: any): asserts o is DatapackInfoIndex;
+export declare function assertDatapackIndex(o: any): asserts o is DatapackIndex;
 export declare function assertFaciesLocations(o: any): asserts o is FaciesLocations;
 export declare function assertFaciesTimeBlock(o: any): asserts o is FaciesTimeBlock;
+export declare function assertIndexResponse(o: any): asserts o is IndexResponse;
 export declare function assertDatapackResponse(o: any): asserts o is DatapackResponse;
 export declare function assertChartConfig(o: any): asserts o is ChartConfig;
 export declare function assertChartConfigArray(o: any): asserts o is ChartConfig[];
@@ -272,3 +283,4 @@ export declare function assertInfoPoints(o: any): asserts o is InfoPoints;
 export declare function assertMapPoints(o: any): asserts o is MapPoints;
 export declare function assertSuccessfulServerResponse(o: any): asserts o is SuccessfulServerResponse;
 export declare function assertSVGStatus(o: any): asserts o is SVGStatus;
+export declare function assertTimescale(val: any): asserts val is Timescale;

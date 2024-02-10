@@ -10,7 +10,7 @@
   "scripts": {
     "setup": "yarn && yarn install && yarn build",
     "install": "echo \"Installing packages of all workspaces...\" && yarn workspaces foreach -A --exclude @tsconline/shared --exclude tsconline/mono-repo -p -v run install",
-    "build": "echo \"Building all workspaces...\" && yarn workspace @tsconline/shared run build && echo \"@tsconline/shared successfully built... \" && yarn workspaces foreach -A --exclude @tsconline/shared --exclude tsconline/mono-repo -p -v run build",
+    "build": "echo \"Building all workspaces...\" && yarn workspace @tsconline/shared run build && echo \"@tsconline/shared successfully built... \" && yarn workspaces foreach -A --exclude @tsconline/shared --exclude tsconline/mono-repo -p run build",
     "start": "yarn workspace @tsconline/server start"
   },
   "dependencies": {

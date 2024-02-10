@@ -1,6 +1,9 @@
 import { observable } from "mobx";
 
 import { FaciesOptions, MapHistory } from "../types";
+import fetchTimescaleData from "../state/timeParser"
+import React, { useState, useEffect } from "react";
+
 import type {
   MapHierarchy,
   MapInfo,
@@ -9,13 +12,22 @@ import type {
   Facies,
   GeologicalStages,
   Presets,
+  DatapackIndex,
+  MapPackIndex,
 } from "@tsconline/shared";
+
+export interface TimescaleItem {
+  key: string;
+  value: number;
+};
 
 export type State = {
   chartLoading: boolean;
   tab: number;
   showAllTabs: boolean;
+  madeChart: boolean;
   showPresetInfo: boolean;
+  timescaleData: TimescaleItem[];
   settingsTabs: {
     selected: "time" | "font" | "column" | "mappoints";
     columns: ColumnInfo | null;
@@ -44,6 +56,8 @@ export type State = {
     settingsPath: string // the path to the settings file on the server
   };
   presets: Presets;
+  datapackIndex: DatapackIndex;
+  mapPackIndex: MapPackIndex;
   selectedPreset: ChartConfig | null;
   chartPath: string;
   chartHash: string;
@@ -63,11 +77,35 @@ export type State = {
   openSnackbar: boolean;
 };
 
+export const useTimescaleData = () => {
+  const [timescaleData, setTimescaleData] = useState<TimescaleItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const loadTimescaleData = async () => {
+      try {
+        const data = await fetchTimescaleData();
+        setTimescaleData(data.stages || []);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error loading timescale data:', error);
+        setLoading(false);
+      }
+    };
+    loadTimescaleData();
+  }, []);
+
+  return { timescaleData, loading };
+};
+
 export const state = observable<State>({
-  chartLoading: true,
+  chartLoading: false,
+  madeChart: false,
   tab: 0,
-  showAllTabs: false,
+  showAllTabs: true,
   showPresetInfo: false,
+  timescaleData: [],
+  // loading: true,
   settingsTabs: {
     selected: "time",
     columns: null,
@@ -107,6 +145,8 @@ export const state = observable<State>({
     settingsPath: ""
   },
   presets: {},
+  datapackIndex: {},
+  mapPackIndex: {},
   selectedPreset: null,
   chartPath: "",
   chartHash: "",
