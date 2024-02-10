@@ -11,16 +11,8 @@ import * as routes from "./routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
 import { parseDatapacks } from "./parse-datapacks.js";
 import { parseMapPacks } from "./parse-map-packs.js";
-import { exec } from 'child_process';
-import { readFile, writeFile, stat } from 'fs/promises';
-import md5 from 'md5';
-import { mkdirp } from 'mkdirp';
+import { readFile } from 'fs/promises';
 import XLSX from 'xlsx';
-import fs from 'fs';
-import { assertTimescale } from '@tsconline/shared';
-import { fetchTimescale } from "./routes.js";
-
-import { assertChartRequest } from '@tsconline/shared';
 import { loadPresets } from './preset.js';
 import { AssetConfig, assertAssetConfig } from './types.js';
 //import  { decrypt, readAndDecryptFile } from './decrypt.js';
@@ -204,92 +196,6 @@ server.post<{ Params: { usecache: string, useDatapackSuggestedAge: string } }>(
 // Serve timescale data endpoint
 server.get('/timescale', async (_req, res) => {
   routes.fetchTimescale(_req, res);
-});
-
-server.post('/charts', async (request, reply) => {
-  // const key = Buffer.from('016481d57e032c18f750919bcd7dba2e', 'hex');
-  // const iv = Buffer.from('2e918edf00c37c9c722512e35cf498a4', 'hex');
-  // console.log('key: ', key);
-  // console.log('iv: ', iv);
-  // readAndDecryptFile('assets/datapacks/TimeTree of Life GTS2020.dpk', key, iv);
-
-  let chartrequest;
-  try {
-    chartrequest = JSON.parse(request.body as string);
-    assertChartRequest(chartrequest);
-  } catch (e: any) {
-    console.log('ERROR: chart request is not valid.  Request was: ', chartrequest, '.  Error was: ', e);
-    reply.send({ error: 'ERROR: chart request is not valid.  Error was: '+e.toString() });
-    return;
-  }
-
-  // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
-  const hash = md5(chartrequest.settings + chartrequest.datapacks.join(','));
-  const chartdir_urlpath = '/public/charts/'+hash;
-  const chart_urlpath = chartdir_urlpath+ '/chart.pdf';
-
-  const chartdir_filepath = chartdir_urlpath.slice(1); // no leading slash
-  const chart_filepath = chart_urlpath.slice(1);
-  const settings_filepath = chartdir_filepath + '/settings.tsc';
-
-  // If this setting already has a chart, just return that
-  try {
-    await stat(chart_filepath);
-    console.log('Request for chart that already exists (hash:',hash,'.  Returning cached version');
-    reply.send({ chartpath: chart_urlpath }); // send the browser back the URL equivalent...
-    return;
-  } catch(e: any) { 
-    // Doesn't exist, so make one
-    console.log('Request for chart', chart_urlpath, ': chart does not exist, creating...');
-  }
-
-  // Create the directory and save the settings there for java:
-  try {
-    await mkdirp(chartdir_filepath);
-    await writeFile(settings_filepath, chartrequest.settings);
-    console.log('Successfully created and saved chart settings at',settings_filepath);
-  } catch(e: any) {
-    console.log('ERROR: failed to save settings at',settings_filepath,'  Error was:', e);
-    reply.send({ error: 'ERROR: failed to save settings' });
-    return;
-  }
-  for (const datapack of chartrequest.datapacks) {
-    if (!assetconfigs.activeDatapacks.includes(datapack)) {
-      console.log('ERROR: datapack: ',datapack,' is not included in activeDatapacks')
-      console.log('assetconfig.activeDatapacks:', assetconfigs.activeDatapacks)
-      console.log('chartrequest.datapacks: ', chartrequest.datapacks)
-      reply.send({ error: 'ERROR: failed to load datapacks' });
-      return;
-    }
-  }
-
-
-  // Call the Java monster...
-  //const jarArgs: string[] = ['xvfb-run', '-jar', './jar/TSC.jar', '-node', '-s', `../files/${title}settings.tsc`, '-ss', `../files/${title}settings.tsc`, '-d', `../files/${title}datapack.txt`, '-o', `../files/${title}save.pdf`];
-  //const jarArgs: string[] = ['-jar', './jar/TSC.jar', '-d', `./files/${title}datapack.txt`, '-s', `./files/${title}settings.tsc`];
-  const cmd = `java -Xmx2048m -jar ${assetconfigs.activeJar} -node `
-    // Add settings:
-    + `-s ${settings_filepath} -ss ${settings_filepath} ` 
-    // Add datapacks:
-    + `-d ${chartrequest.datapacks} `
-    // Tell it where to save chart
-    + `-o ${chart_filepath} `;
-
-  
-  // Exec Java command and send final reply to browser
-  await new Promise<void>((resolve, _reject) => {
-    console.log('Calling Java: ', cmd);
-    exec(cmd, function (error, stdout, stderror) {
-      console.log('Java finished, sending reply to browser');
-      console.log("Java error param: " + error);
-      console.log("Java stdout: " + stdout.toString());
-      console.log("Java stderr: " + stderror.toString());
-      console.log('Sending reply to browser: ', { chartpath: chart_urlpath });
-      reply.send({ chartpath: chart_urlpath });
-      resolve();
-    });
-  });
-
 });
 
 // Start the server...
