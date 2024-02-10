@@ -187,16 +187,12 @@ export type ServerResponseError = {
 export type ColumnInfo = {
   name: string;
   editName: string;
-  font: object;
+  fontsInfo?: FontsInfo;
   on: boolean;
   info: string;
   children: ColumnInfo[];
   parent: string | null;
 };
-
-// export type fontOptions = {
-//     fobttype: wtirng;
-// }
 
 export type ChartResponseInfo = {
   chartpath: string; // path to the chart
