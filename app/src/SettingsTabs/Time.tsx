@@ -29,6 +29,7 @@ export const Time = observer(function Time() {
 
   // // Importcontexts and map time scale to the state
 
+  //TODO move this to initialize
   useEffect(() => {
     const calculatePreviousValues = () => {
       const previousValuesMap: Record<string, number | null> = {};
