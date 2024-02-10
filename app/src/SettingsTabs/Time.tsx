@@ -12,7 +12,9 @@ import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import fetchTimescaleData from "../state/timeParser"
-import { useTimescaleData, TimescaleItem } from "../state/state";
+import { useTimescaleData } from "../state/initialize";
+import { TimescaleItem } from '../state/state';
+
 import theme from "../theme";
 
 // export interface TimescaleItem {
@@ -24,27 +26,28 @@ import theme from "../theme";
 
 export const Time = observer(function Time() {
   const navigate = useNavigate();
-  const { timescaleData, loading } = useTimescaleData();
-  const [previousValues, setPreviousValues] = useState<Record<string, number | null>>({});
+  const { timescaleData, loading, previousValues } = useTimescaleData();
+  // const { timescaleData, loading } = useTimescaleData();
+  // const [previousValues, setPreviousValues] = useState<Record<string, number | null>>({});
 
   // // Importcontexts and map time scale to the state
 
   //TODO move this to initialize
-  useEffect(() => {
-    const calculatePreviousValues = () => {
-      const previousValuesMap: Record<string, number | null> = {};
-      timescaleData.forEach((item, index) => {
-        if (index > 0) {
-          previousValuesMap[item.key] = timescaleData[index - 1].value;
-        } else {
-          previousValuesMap[item.key] = null;
-        }
-      });
-      setPreviousValues(previousValuesMap);
-    };
+  // useEffect(() => {
+  //   const calculatePreviousValues = () => {
+  //     const previousValuesMap: Record<string, number | null> = {};
+  //     timescaleData.forEach((item, index) => {
+  //       if (index > 0) {
+  //         previousValuesMap[item.key] = timescaleData[index - 1].value;
+  //       } else {
+  //         previousValuesMap[item.key] = null;
+  //       }
+  //     });
+  //     setPreviousValues(previousValuesMap);
+  //   };
 
-    calculatePreviousValues();
-  }, [timescaleData]);
+  //   calculatePreviousValues();
+  // }, [timescaleData]);
 
     const handleButtonClick = () => {
         actions.setTab(1);

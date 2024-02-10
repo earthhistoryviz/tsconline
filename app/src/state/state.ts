@@ -77,27 +77,6 @@ export type State = {
   openSnackbar: boolean;
 };
 
-export const useTimescaleData = () => {
-  const [timescaleData, setTimescaleData] = useState<TimescaleItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    const loadTimescaleData = async () => {
-      try {
-        const data = await fetchTimescaleData();
-        setTimescaleData(data.stages || []);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error loading timescale data:', error);
-        setLoading(false);
-      }
-    };
-    loadTimescaleData();
-  }, []);
-
-  return { timescaleData, loading };
-};
-
 export const state = observable<State>({
   chartLoading: false,
   madeChart: false,
