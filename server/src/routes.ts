@@ -11,6 +11,9 @@ import { assetconfigs } from "./index.js";
 import svgson from 'svgson'
 import fs from "fs";
 import { readFile } from "fs/promises";
+import { assertTimescale } from "@tsconline/shared";
+import XLSX from 'xlsx';
+
 
 export const uploadDatapack = async function (
   request: FastifyRequest,
@@ -219,4 +222,45 @@ export const fetchChart = async function fetchChart(
     hash: hash,
   });
   reply.send({ chartpath: chart_urlpath, hash: hash });
+};
+
+function readExcelFile(filePath: string) {
+  const workbook = XLSX.readFile(filePath);
+  const sheetName: string = workbook.SheetNames[0] || "";
+  const sheet = workbook.Sheets[sheetName];
+  if (!sheet) return [];
+
+  // Convert sheet to JSON
+  const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+  return jsonData;
+}
+
+export const fetchTimescale = async function (
+  _request: FastifyRequest,
+  reply: FastifyReply
+) {
+  try {
+    const filePath = '../default_timescale.xlsx';
+
+    // Check if the file exists
+    if (!fs.existsSync(filePath)) {
+      console.error('Error: Excel file not found');
+      reply.status(404).send({ error: 'Excel file not found' });
+      return;
+    }
+
+    let timescaleData: any[] = readExcelFile(filePath);
+    timescaleData = timescaleData.map(([period, series, stage, ma, color]) => ({
+      key: stage || '',
+      value: parseFloat(ma) || 0,
+    }));
+    timescaleData = timescaleData.filter(item => item.key && item.key !== 'Stage' && item.key !== 'TOP');
+    timescaleData.forEach(data => assertTimescale(data));
+    console.log(timescaleData);
+    reply.send({ stages: timescaleData });
+  } catch (error) {
+    console.error('Error reading Excel file:', error);
+    reply.status(500).send({ error: 'Internal Server Error' });
+  }
 };

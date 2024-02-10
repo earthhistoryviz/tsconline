@@ -74,8 +74,6 @@ export const useTimescaleData = () => {
     calculatePreviousValues();
   }, [timescaleData]);
 
-  
-
   return { timescaleData, loading, previousValues };
 };
 

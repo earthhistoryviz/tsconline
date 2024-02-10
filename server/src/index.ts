@@ -18,6 +18,7 @@ import { mkdirp } from 'mkdirp';
 import XLSX from 'xlsx';
 import fs from 'fs';
 import { assertTimescale } from '@tsconline/shared';
+import { fetchTimescale } from "./routes.js";
 
 import { assertChartRequest } from '@tsconline/shared';
 import { loadPresets } from './preset.js';
@@ -202,29 +203,7 @@ server.post<{ Params: { usecache: string, useDatapackSuggestedAge: string } }>(
 
 // Serve timescale data endpoint
 server.get('/timescale', async (_req, res) => {
-  try {
-    const filePath = '../default_timescale.xlsx';
-
-    // Check if the file exists
-    if (!fs.existsSync(filePath)) {
-      console.error('Error: Excel file not found');
-      res.status(404).send({ error: 'Excel file not found' });
-      return;
-    }
-
-    let timescaleData: any[] = readExcelFile(filePath);
-    timescaleData = timescaleData.map(([period, series, stage, ma, color]) => ({
-      key: stage || '',
-      value: parseFloat(ma) || 0,
-    }));
-    timescaleData = timescaleData.filter(item => item.key && item.key !== 'Stage' && item.key !== 'TOP');
-    timescaleData.forEach(data => assertTimescale(data));
-    console.log(timescaleData);
-    res.send({ stages: timescaleData });
-  } catch (error) {
-    console.error('Error reading Excel file:', error);
-    res.status(500).send({ error: 'Internal Server Error' });
-  }
+  routes.fetchTimescale(_req, res);
 });
 
 server.post('/charts', async (request, reply) => {
