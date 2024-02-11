@@ -31,6 +31,7 @@ export const Settings = observer(function Settings() {
       style={{
         position: "relative",
         background: theme.palette.settings.light,
+        display: "inline-block", // Adjust display property
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -55,6 +56,7 @@ export const Settings = observer(function Settings() {
             background: "white",
             boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
             padding: "10px",
+            display: "flex", // Adjust display property
           }}
         >
           {state.settingsTabs.selected === "time" && <Time />}
