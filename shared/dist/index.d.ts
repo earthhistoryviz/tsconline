@@ -95,21 +95,46 @@ export type ColumnPrototypeInfo = {
 export type FontsInfo = {
     "Column Header": {
         inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
     };
     "Age Label": {
         inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
     };
     "Uncertainty Label": {
         inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
     };
     "Zone Column Label": {
         inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
     };
     "Sequence Column Label": {
         inheritable: boolean;
     };
     "Event Column Label": {
         inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
     };
     "Popup Body": {
         inheritable: boolean;
@@ -122,6 +147,11 @@ export type FontsInfo = {
     };
     "Range Label": {
         inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
     };
     "Ruler Tick Mark Label": {
         inheritable: boolean;
