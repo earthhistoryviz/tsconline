@@ -106,51 +106,81 @@ export type ColumnPrototypeInfo = {
 };
 
 export type FontsInfo = {
-  "Column Header": {
-    inheritable: boolean;
-  };
-  "Age Label": {
-    inheritable: boolean;
-  };
-  "Uncertainty Label": {
-    inheritable: boolean;
-  };
-  "Zone Column Label": {
-    inheritable: boolean;
-  };
-  "Sequence Column Label": {
-    inheritable: boolean;
-  };
-  "Event Column Label": {
-    inheritable: boolean;
-  };
-  "Popup Body": {
-    inheritable: boolean;
-  };
-  "Ruler Label": {
-    inheritable: boolean;
-  };
-  "Point Column Scale Label": {
-    inheritable: boolean;
-  };
-  "Range Label": {
-    inheritable: boolean;
-  };
-  "Ruler Tick Mark Label": {
-    inheritable: boolean;
-  };
-  "Legend Title": {
-    inheritable: boolean;
-  };
-  "Legend Column Name": {
-    inheritable: boolean;
-  };
-  "Legend Column Source": {
-    inheritable: boolean;
-  };
-  "Range Box Label": {
-    inheritable: boolean;
-  };
+    "Column Header": {
+        inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
+    };
+    "Age Label": {
+        inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
+    };
+    "Uncertainty Label": {
+        inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
+    };
+    "Zone Column Label": {
+        inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
+    };
+    "Sequence Column Label": {
+        inheritable: boolean;
+    };
+    "Event Column Label": {
+        inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
+    };
+    "Popup Body": {
+        inheritable: boolean;
+    };
+    "Ruler Label": {
+        inheritable: boolean;
+    };
+    "Point Column Scale Label": {
+        inheritable: boolean;
+    };
+    "Range Label": {
+        inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
+    };
+    "Ruler Tick Mark Label": {
+        inheritable: boolean;
+    };
+    "Legend Title": {
+        inheritable: boolean;
+    };
+    "Legend Column Name": {
+        inheritable: boolean;
+    };
+    "Legend Column Source": {
+        inheritable: boolean;
+    };
+    "Range Box Label": {
+        inheritable: boolean;
+    };
 };
 
 export type Facies = {
@@ -187,7 +217,7 @@ export type ServerResponseError = {
 export type ColumnInfo = {
   name: string;
   editName: string;
-  fontsInfo?: FontsInfo;
+  fontsInfo: FontsInfo;
   on: boolean;
   info: string;
   children: ColumnInfo[];
