@@ -102,7 +102,7 @@ export async function parseDatapacks(
   const isChild: Set<string> = new Set();
   const isFacies: Set<string> = new Set();
   const allEntries: Map<string, ParsedColumnEntry> = new Map();
-  const blocksMap: Map<string, SubBlockInfo[]> = new Map();
+  const blocksMap: Map<string, Block> = new Map();
   //const faciesMap: Map<String, string[]> = new Map();
   let datapackAgeInfo: DatapackAgeInfo = { useDatapackSuggestedAge: false };
   try {
@@ -205,13 +205,21 @@ async function getAllEntries(filename: string, allEntries: Map<string, ParsedCol
  * @param filename the filename to be parsed
  * @param facies the facies object containing all of the facies events
  */
-async function getFaciesOrBlock(filename: string, facies: Facies, blocksMap: Map<string, SubBlockInfo[]>) {
+async function getFaciesOrBlock(filename: string, facies: Facies, blocksMap: Map<string, Block>) {
   const fileStream = createReadStream(filename)
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity })
   let location: FaciesLocations[string] = {
     faciesTimeBlockArray: [],
     minAge: 999999,
     maxAge: -99999
+  }
+  let block: Block = {
+    name: "",
+    subBlockInfo: [],
+    minAge: 0,
+    maxAge: 0,
+    info: "",
+    on: true,
   }
   let name = ""
   let inFaciesBlock = false
@@ -238,10 +246,39 @@ async function getFaciesOrBlock(filename: string, facies: Facies, blocksMap: Map
       }
       continue
     }
+
+
     // reached the end and store the key value pairs into blocksMap
     if ((!line || trimInvisibleCharacters(line) === '') && inBlockBlock) {
       inBlockBlock = false
-      blocksMap.set(blockName, SubBlockInfos)
+      let min = 0;
+      let max = 0;
+      //find the minage and maxage for current block
+      if (SubBlockInfos) {
+        min = SubBlockInfos[0].age
+        max = SubBlockInfos[0].age
+        block.subBlockInfo = SubBlockInfos
+        for (let i = 1; i < SubBlockInfos.length; i++) {
+          let currentAge = SubBlockInfos[i].age
+          min = (currentAge < min) ? currentAge : min
+          max = (currentAge > max) ? currentAge : max
+        }
+        block.minAge = min
+        block.maxAge = max
+      }
+      //reset block and the temporary array to store subblockinfo
+      block = {
+        name: "",
+        subBlockInfo: [],
+        minAge: 0,
+        maxAge: 0,
+        info: "",
+        on: true,
+      }
+      SubBlockInfos = []
+      //store block into blocksmap
+      blocksMap.set(blockName, block)
+
       continue
     }
     let tabSeperated = line.split('\t')
@@ -261,6 +298,15 @@ async function getFaciesOrBlock(filename: string, facies: Facies, blocksMap: Map
     // we found a block
     if (!inBlockBlock && tabSeperated[1] === "block") {
       blockName = trimQuotes(tabSeperated[0]!)
+      let infoAndOn = tabSeperated[tabSeperated.length - 1]
+      if (infoAndOn) {
+        if (infoAndOn.indexOf("off") == 1) {
+          block.on = false
+          infoAndOn = infoAndOn.slice(3)
+        }
+        block.info = infoAndOn
+        block.name = blockName
+      }
       inBlockBlock = true
     } else if (inBlockBlock) {
       //get a single sub block
@@ -374,8 +420,8 @@ function recursive(
   allEntries: Map<string, ParsedColumnEntry>,
   isFacies: Set<string>,
   facies: Facies,
-  blocksMap: Map<string, SubBlockInfo[]>
-): boolean {
+  blocksMap: Map<string, Block>
+): FaciesFoundAndAgeRange {
 
   const currentColumnInfo: ColumnInfo = {
     name: currentColumn,
@@ -388,7 +434,11 @@ function recursive(
     minAge: 0,
     maxAge: 0
   }
-  let faciesFound = false;
+  let returnValue: FaciesFoundAndAgeRange = {
+    faciesFound: false,
+    minAge: 99999,
+    maxAge: -99999
+  };
 
   if (parsedColumnEntry) {
     currentColumnInfo.on = parsedColumnEntry.on;
@@ -404,49 +454,25 @@ function recursive(
       // if this is the final child then we store this as a potential alias
       if (!allEntries.get(child) && (parsedColumnEntry.children.length == 1 && isFacies.has(trimInvisibleCharacters(child)))) {
         facies.aliases[trimInvisibleCharacters(currentColumn)] = trimInvisibleCharacters(child)
-        faciesFound = true
+        returnValue.faciesFound = true
       }
       //check if it is a block
 
-      if (parent && blocksMap.has(parent)) {
-
-        const currentBlock: Block = {
-          name: parent,
-          subBlockEvents: [],
-          minAge: 0,
-          maxAge: 0,
-          info: ""
-        }
-        let infoIndex = parsedColumnEntry.children.length - 1
-        let blockInfo = parsedColumnEntry.children[infoIndex]
-        if (blockInfo) {
-          currentBlock.info = blockInfo
-        }
-        let subBlockEvents = blocksMap.get(parent) || null
-        let min = 0;
-        let max = 0;
-        if (subBlockEvents) {
-          min = subBlockEvents[0].age
-          max = subBlockEvents[0].age
-          subBlockEvents.push(subBlockEvents[0])
-          for (let i = 1; i < subBlockEvents.length; i++) {
-            let currentAge = subBlockEvents[i].age
-            min = (currentAge < min) ? currentAge : min
-            max = (currentAge > max) ? currentAge : max
-            subBlockEvents.push(subBlockEvents[i])
+      if (currentColumn && blocksMap.has(currentColumn)) {
+        let currentBlock = blocksMap.get(currentColumn)
+        if (currentBlock) {
+          currentColumnInfo.subBlockInfo = currentBlock.subBlockInfo
+          if (!currentBlock.on) {
+            currentColumnInfo.on = false
           }
-          currentBlock.minAge = min
-          currentBlock.maxAge = max
-
+          returnValue.minAge = currentBlock.minAge
+          returnValue.maxAge = currentBlock.maxAge
         }
-        currentColumnInfo.block = currentBlock
-        currentColumnInfo.minAge = min
-        currentColumnInfo.maxAge = max
       }
 
 
       const children = allEntries.get(child) || null
-      faciesFound = recursive(
+      let compareValue: FaciesFoundAndAgeRange = recursive(
         currentColumn, // the current column becomes the parent
         child, // the child is now the current column
         children, // the children that allEntries has or [] if this child is the parent to no children
@@ -455,14 +481,17 @@ function recursive(
         isFacies, // the set of all facies event names
         facies, // the facies object used to garner aliases for map point usage
         blocksMap
-      ) || faciesFound
-      if (!faciesFound && isFacies.has(trimInvisibleCharacters(child))) {
-        faciesFound = true
+      )
+      returnValue.minAge = (compareValue.minAge < returnValue.minAge) ? compareValue.minAge : returnValue.minAge
+      returnValue.maxAge = (compareValue.maxAge > returnValue.maxAge) ? compareValue.maxAge : returnValue.maxAge
+      returnValue.faciesFound = (compareValue.faciesFound) ? true : false
+      if (!returnValue.faciesFound && isFacies.has(trimInvisibleCharacters(child))) {
+        returnValue.faciesFound = true
         facies.aliases[trimInvisibleCharacters(currentColumn)] = trimInvisibleCharacters(child)
       }
     });
   }
-  return faciesFound;
+  return returnValue;
 
 }
 
