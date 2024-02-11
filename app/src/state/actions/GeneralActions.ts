@@ -214,7 +214,6 @@ export const resetState = action("resetState", () => {
   setDatapackConfig([], "");
   setChartHash("");
   setChartPath("");
-  setAllTabs(false);
   setUseCache(true);
   setUsePreset(true);
   setTab(0);
@@ -230,7 +229,6 @@ export const resetState = action("resetState", () => {
 export const generateChart = action("generateChart", async () => {
   //set the loading screen and make sure the chart isn't up
   setTab(1);
-  setAllTabs(true);
   setChartMade(true);
   setChartLoading(true);
   setChartHash("");
@@ -521,9 +519,7 @@ export const setBaseStageAge = action("setBaseStageAge", (age: number) => {
 export const settingsXML = action("settingsXML", (xml: string) => {
   state.settingsXML = xml;
 });
-export const setAllTabs = action("setAllTabs", (newval: boolean) => {
-  state.showAllTabs = newval;
-});
+
 export const setSelectedPreset = action(
   "setSelectedPreset",
   (newval: ChartConfig | null) => {
