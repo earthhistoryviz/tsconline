@@ -232,17 +232,18 @@ export type ColumnInfo = {
   info: string;
   children: ColumnInfo[];
   parent: string | null;
-  block?: Block;
+  subBlockInfo?: SubBlockInfo[]; //subblockinfo
   minAge: number;
   maxAge: number;
 };
 //TODO: add assertion function for Block type
 export type Block = {
   name: string;
-  subBlockEvents: SubBlockInfo[];
+  subBlockInfo: SubBlockInfo[];
   minAge: number;
   maxAge: number;
   info: string;
+  on: boolean;
 
 }
 
