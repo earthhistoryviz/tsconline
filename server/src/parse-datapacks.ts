@@ -254,14 +254,17 @@ async function getFaciesOrBlock(filename: string, facies: Facies, blocksMap: Map
       let min = 0;
       let max = 0;
       //find the minage and maxage for current block
-      if (SubBlockInfos) {
+      if (SubBlockInfos[0]) {
         min = SubBlockInfos[0].age
         max = SubBlockInfos[0].age
         block.subBlockInfo = SubBlockInfos
         for (let i = 1; i < SubBlockInfos.length; i++) {
-          let currentAge = SubBlockInfos[i].age
-          min = (currentAge < min) ? currentAge : min
-          max = (currentAge > max) ? currentAge : max
+          if (SubBlockInfos[i]) {
+            let currentAge = SubBlockInfos[i]!.age
+            min = (currentAge < min) ? currentAge : min
+            max = (currentAge > max) ? currentAge : max
+          }
+
         }
         block.minAge = min
         block.maxAge = max
