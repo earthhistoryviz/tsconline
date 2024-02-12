@@ -12,6 +12,10 @@
   flex-grow: 1;
   background-color: lightblue;
 }
+.column-menu-content {
+  display: none;
+  flex-direction: column;
+}
 .edit-title-button {
   display: flex;
   flex-grow: 1;
