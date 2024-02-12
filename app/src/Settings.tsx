@@ -12,18 +12,10 @@ import { TSCTabs, TSCTab } from "./components";
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
   const theme = useTheme();
-  const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
 
   const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
     actions.setSettingsTabsSelected(newValue);
-  };
-
-  const handleButtonClick = () => {
-    actions.setTab(1);
-    actions.updateSettings();
-    actions.generateChart();
-    navigate("/chart");
   };
 
   const selectedTabIndex = actions.translateTabToIndex(

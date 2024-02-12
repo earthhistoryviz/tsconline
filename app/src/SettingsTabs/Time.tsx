@@ -1,16 +1,13 @@
 import { Box, Button, TextField } from "@mui/material";
 import { observer } from "mobx-react-lite";
-import React from "react";
 import { actions, state } from "../state";
-import { primary_dark } from "../constant";
 import ForwardIcon from "@mui/icons-material/Forward";
 import { useNavigate } from "react-router-dom";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { TSCCheckbox, TSCButton } from "../components";
+import { TSCCheckbox } from "../components";
 import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import Checkbox from "@mui/material/Checkbox";
 
 export const Time = observer(function Time() {
   const theme = useTheme();
