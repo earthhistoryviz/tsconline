@@ -200,7 +200,7 @@ export type ServerResponseError = {
 export type ColumnInfo = {
     name: string;
     editName: string;
-    fontsInfo?: FontsInfo;
+    fontsInfo: FontsInfo;
     on: boolean;
     info: string;
     children: ColumnInfo[];
@@ -296,6 +296,7 @@ export declare function assertChartRequest(o: any): asserts o is ChartRequest;
 export declare function isServerResponseError(o: any): o is ServerResponseError;
 export declare function assertChartInfo(o: any): asserts o is ChartResponseInfo;
 export declare function assertColumnInfo(o: any): asserts o is ColumnInfo;
+export declare function assertFontsInfo(o: any): asserts o is FontsInfo;
 export declare function assertMapHierarchy(o: any): asserts o is MapHierarchy;
 export declare function assertMapInfo(o: any): asserts o is MapInfo;
 export declare function assertParentMap(parent: any): asserts parent is ParentMap;
