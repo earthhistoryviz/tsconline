@@ -38,7 +38,7 @@ export const resetSettings = action("resetSettings", () => {
     baseStageAge: 0,
     baseStageKey: "",
     unitsPerMY: 2,
-    useDatapackSuggestedAge: false,
+    datapackContainsSuggAge: false,
   };
 });
 
@@ -227,8 +227,8 @@ export const setDatapackConfig = action(
       return false;
     }
     state.mapState.facies = facies;
-    state.settings.useDatapackSuggestedAge =
-      datapackAgeInfo.useDatapackSuggestedAge;
+    state.settings.datapackContainsSuggAge =
+      datapackAgeInfo.datapackContainsSuggAge;
     state.mapState.mapHierarchy = mapHierarchy;
     state.settingsTabs.columns = columnInfo;
     state.mapState.mapInfo = mapInfo;
@@ -323,12 +323,14 @@ export const resetState = action("resetState", () => {
   state.settingsJSON = {};
 });
 
-export const showPopup = action("showPopup", () => {
-  if (state.settings.useDatapackSuggestedAge) {
+// Shows the user a popup before chart generation if there are age spans on the datapack
+export const showPopupOnSuggAge = action("showPopupOnSuggAge", () => {
+  if (state.settings.datapackContainsSuggAge) {
     state.userResponded = false;
     setShowSuggestedAgePopup(true);
   } else {
-    generateChart();
+    // Trigger the effect to generate chart and navigate
+    setUserResponded(true);
   }
 });
 
@@ -348,7 +350,7 @@ export const generateChart = action("generateChart", async () => {
   });
   console.log("Sending settings to server...");
   const response = await fetcher(
-    `/charts/${state.useCache}/${state.settings.useDatapackSuggestedAge}`,
+    `/charts/${state.useCache}/${state.useSuggedstedAge}`,
     {
       method: "POST",
       body,
@@ -584,8 +586,8 @@ export const pushError = action("pushError", (text: string) => {
 export const setUserResponded = action((value: boolean) => {
   state.userResponded = value;
 });
-export const setUseDatapackSuggestedAge = action((value: boolean) => {
-  state.settings.useDatapackSuggestedAge = value;
+export const setUseSuggestedAge = action((value: boolean) => {
+  state.useSuggedstedAge = value;
 });
 export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;
