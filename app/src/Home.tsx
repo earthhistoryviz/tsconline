@@ -50,11 +50,12 @@ export const Home = observer(function Home() {
   const theme = useTheme();
   const navigate = useNavigate();
   const handlePopupResponse = (response) => {
-    actions.setUseDatapackSuggestedAge(response);
+    actions.setUseSuggestedAge(response);
     actions.setUserResponded(true);
     actions.setShowSuggestedAgePopup(false);
   };
   const handleCloseDialog = () => {
+    actions.setUseSuggestedAge(true);
     actions.setUserResponded(true);
     actions.setShowSuggestedAgePopup(false);
   };

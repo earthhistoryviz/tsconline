@@ -19,6 +19,7 @@ export type State = {
   madeChart: boolean;
   showSuggestedAgePopup: boolean;
   userResponded: boolean;
+  useSuggedstedAge: boolean;
   settingsTabs: {
     selected: "time" | "font" | "column" | "mappoints";
     columns: ColumnInfo | null;
@@ -60,7 +61,7 @@ export type State = {
     baseStageAge: number;
     baseStageKey: string;
     unitsPerMY: number;
-    useDatapackSuggestedAge: boolean;
+    datapackContainsSuggAge: boolean;
   };
   useCache: boolean;
   usePreset: boolean;
@@ -74,6 +75,7 @@ export const state = observable<State>({
   tab: 0,
   showSuggestedAgePopup: false,
   userResponded: false,
+  useSuggedstedAge: true,
   settingsTabs: {
     selected: "time",
     columns: null,
@@ -126,7 +128,7 @@ export const state = observable<State>({
     baseStageAge: 0,
     baseStageKey: "",
     unitsPerMY: 2,
-    useDatapackSuggestedAge: false,
+    datapackContainsSuggAge: false,
   },
   useCache: true,
   usePreset: true,
