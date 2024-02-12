@@ -166,10 +166,10 @@ export function assertChartConfigArray(o) {
 export function assertChartRequest(o) {
     if (typeof o !== "object")
         throw new Error("ChartRequest must be an object");
-    if (typeof o.settings !== "string")
-        throw new Error("ChartRequest must have a settings string");
-    if (typeof o.columnSettings !== "string")
-        throw new Error("ChartRequest must have a columnSettings string");
+    if (typeof o.settings !== "object")
+        throw new Error("ChartRequest must have a settings object");
+    if (typeof o.columnSettings !== "object")
+        throw new Error("ChartRequest must have a columnSettings object");
     if (!Array.isArray(o.datapacks))
         throw new Error("ChartRequest must have a datapacks array");
 }

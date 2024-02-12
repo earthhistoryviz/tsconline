@@ -1,24 +1,25 @@
 import { action, runInAction } from "mobx";
 import {
-    type ChartConfig,
-    type MapInfo,
-    type ColumnInfo,
-    type MapHierarchy,
-    type Facies,
-    type GeologicalStages,
-    assertChartInfo,
-    assertSuccessfulServerResponse,
-    isServerResponseError,
-    assertDatapackResponse,
-    Presets,
-    assertSVGStatus,
-    IndexResponse,
-    assertDatapackAgeInfo,
-    assertFacies,
-    assertMapHierarchy,
-    assertColumnInfo,
-    assertMapInfo,
-    DatapackAgeInfo, type FontsInfo,
+  type ChartConfig,
+  type MapInfo,
+  type ColumnInfo,
+  type MapHierarchy,
+  type Facies,
+  type GeologicalStages,
+  assertChartInfo,
+  assertSuccessfulServerResponse,
+  isServerResponseError,
+  assertDatapackResponse,
+  Presets,
+  assertSVGStatus,
+  IndexResponse,
+  assertDatapackAgeInfo,
+  assertFacies,
+  assertMapHierarchy,
+  assertColumnInfo,
+  assertMapInfo,
+  DatapackAgeInfo,
+  type FontsInfo,
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
@@ -39,17 +40,20 @@ export const resetSettings = action("resetSettings", () => {
 });
 
 export const uploadDatapack = action("uploadDatapack", (file: File) => {
-  const formData = new FormData()
-  formData.append('file', file)
-  fetcher('/upload', {
+  const formData = new FormData();
+  formData.append("file", file);
+  fetcher("/upload", {
     method: "POST",
-    body: formData
-  })
-})
-export const loadIndexResponse = action("loadIndexResponse", (response: IndexResponse) => {
-  state.mapPackIndex = response.mapPackIndex
-  state.datapackIndex = response.datapackIndex
-})
+    body: formData,
+  });
+});
+export const loadIndexResponse = action(
+  "loadIndexResponse",
+  (response: IndexResponse) => {
+    state.mapPackIndex = response.mapPackIndex;
+    state.datapackIndex = response.datapackIndex;
+  }
+);
 
 /**
  * Rests the settings, sets the tabs to 0
@@ -66,38 +70,73 @@ export const setDatapackConfig = action(
       locations: {},
       minAge: 0,
       maxAge: 0,
-      aliases: {}
-    }
+      aliases: {},
+    };
     let datapackAgeInfo: DatapackAgeInfo = {
       useDatapackSuggestedAge: false,
-    }
-    let mapInfo: MapInfo = {}
-    let mapHierarchy: MapHierarchy = {}
+    };
+    let mapInfo: MapInfo = {};
+    let mapHierarchy: MapHierarchy = {};
     let columnInfo: ColumnInfo;
-      let fontsInfo: FontsInfo = {
-          "Age Label": {
-              bold: false,
-              color: "",
-              fontFace: "Arial",
-              inheritable: false,
-              italic: false,
-              size: 6
-          },
-          "Column Header": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 14},
-          "Event Column Label": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 11},
-          "Legend Column Name": {inheritable: false},
-          "Legend Column Source": {inheritable: false},
-          "Legend Title": {inheritable: false},
-          "Point Column Scale Label": {inheritable: false},
-          "Popup Body": {inheritable: false},
-          "Range Box Label": {inheritable: false},
-          "Range Label": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12},
-          "Ruler Label": {inheritable: false},
-          "Ruler Tick Mark Label": {inheritable: false},
-          "Sequence Column Label": {inheritable: false},
-          "Uncertainty Label": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 5},
-          "Zone Column Label": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12}
-      }
+    let fontsInfo: FontsInfo = {
+      "Age Label": {
+        bold: false,
+        color: "",
+        fontFace: "Arial",
+        inheritable: false,
+        italic: false,
+        size: 6,
+      },
+      "Column Header": {
+        bold: false,
+        color: "#000000",
+        fontFace: "Arial",
+        inheritable: false,
+        italic: false,
+        size: 14,
+      },
+      "Event Column Label": {
+        bold: false,
+        color: "#000000",
+        fontFace: "Arial",
+        inheritable: false,
+        italic: false,
+        size: 11,
+      },
+      "Legend Column Name": { inheritable: false },
+      "Legend Column Source": { inheritable: false },
+      "Legend Title": { inheritable: false },
+      "Point Column Scale Label": { inheritable: false },
+      "Popup Body": { inheritable: false },
+      "Range Box Label": { inheritable: false },
+      "Range Label": {
+        bold: false,
+        color: "#000000",
+        fontFace: "Arial",
+        inheritable: false,
+        italic: false,
+        size: 12,
+      },
+      "Ruler Label": { inheritable: false },
+      "Ruler Tick Mark Label": { inheritable: false },
+      "Sequence Column Label": { inheritable: false },
+      "Uncertainty Label": {
+        bold: false,
+        color: "#000000",
+        fontFace: "Arial",
+        inheritable: false,
+        italic: false,
+        size: 5,
+      },
+      "Zone Column Label": {
+        bold: false,
+        color: "#000000",
+        fontFace: "Arial",
+        inheritable: false,
+        italic: false,
+        size: 12,
+      },
+    };
     try {
       // the default overarching variable for the columnInfo
       columnInfo = {
@@ -114,53 +153,67 @@ export const setDatapackConfig = action(
             on: true,
             info: "",
             children: [],
-            parent: "Root"// if you change this, change parse-datapacks.ts :69
-          }
+            parent: "Root", // if you change this, change parse-datapacks.ts :69
+          },
         ],
-        parent: null
-      }
+        parent: null,
+      };
       // add everything together
       // uses preparsed data on server start and appends items together
       for (const datapack of datapacks) {
-        if (!datapack || !state.datapackIndex[datapack] || !state.mapPackIndex[datapack]) throw new Error(`File requested doesn't exist on server: ${datapack}`)
-        const datapackParsingPack = state.datapackIndex[datapack]!
+        if (
+          !datapack ||
+          !state.datapackIndex[datapack] ||
+          !state.mapPackIndex[datapack]
+        )
+          throw new Error(
+            `File requested doesn't exist on server: ${datapack}`
+          );
+        const datapackParsingPack = state.datapackIndex[datapack]!;
         // concat the children array of root to the array created in preparsed array
         // we can't do Object.assign here because it will overwrite the array rather than concat it
-        columnInfo.children = columnInfo.children.concat(datapackParsingPack.columnInfoArray)
+        columnInfo.children = columnInfo.children.concat(
+          datapackParsingPack.columnInfoArray
+        );
         // concat all facies
-        if (!facies) facies = datapackParsingPack.facies
+        if (!facies) facies = datapackParsingPack.facies;
         // TODO: correctly fix this so that facies are not replacing max/min on multiple datapacks
-        else Object.assign(facies, datapackParsingPack.facies)
+        else Object.assign(facies, datapackParsingPack.facies);
         // concat datapackAgeInfo objects together
-        if (!datapackAgeInfo) datapackAgeInfo = datapackParsingPack.datapackAgeInfo
-        else Object.assign(datapackAgeInfo, datapackParsingPack.datapackAgeInfo)
+        if (!datapackAgeInfo)
+          datapackAgeInfo = datapackParsingPack.datapackAgeInfo;
+        else
+          Object.assign(datapackAgeInfo, datapackParsingPack.datapackAgeInfo);
 
-        const mapPack = state.mapPackIndex[datapack]!
-        if (!mapInfo) mapInfo = mapPack.mapInfo
-        else Object.assign(mapInfo, mapPack.mapInfo)
-        if (!mapHierarchy) mapHierarchy = mapPack.mapHierarchy
-        else Object.assign(mapHierarchy, mapPack.mapHierarchy)
+        const mapPack = state.mapPackIndex[datapack]!;
+        if (!mapInfo) mapInfo = mapPack.mapInfo;
+        else Object.assign(mapInfo, mapPack.mapInfo);
+        if (!mapHierarchy) mapHierarchy = mapPack.mapHierarchy;
+        else Object.assign(mapHierarchy, mapPack.mapHierarchy);
       }
-      assertFacies(facies)
-      assertDatapackAgeInfo(datapackAgeInfo)
-      assertMapHierarchy(mapHierarchy)
-      assertColumnInfo(columnInfo)
-      assertMapInfo(mapInfo)
-    } catch(e) {
-      console.log(`Error occured while changing datapack information on the website with indexes (setDatapackConfig): ${e} with datapacks ${datapacks}`)
-      return false
+      assertFacies(facies);
+      assertDatapackAgeInfo(datapackAgeInfo);
+      assertMapHierarchy(mapHierarchy);
+      assertColumnInfo(columnInfo);
+      assertMapInfo(mapInfo);
+    } catch (e) {
+      console.log(
+        `Error occured while changing datapack information on the website with indexes (setDatapackConfig): ${e} with datapacks ${datapacks}`
+      );
+      return false;
     }
-    state.mapState.facies = facies
-    state.settings.useDatapackSuggestedAge = datapackAgeInfo.useDatapackSuggestedAge
-    state.mapState.mapHierarchy = mapHierarchy
-    state.settingsTabs.columns = columnInfo
-    state.mapState.mapInfo = mapInfo
+    state.mapState.facies = facies;
+    state.settings.useDatapackSuggestedAge =
+      datapackAgeInfo.useDatapackSuggestedAge;
+    state.mapState.mapHierarchy = mapHierarchy;
+    state.settingsTabs.columns = columnInfo;
+    state.mapState.mapInfo = mapInfo;
     state.config.datapacks = datapacks;
     state.config.settingsPath = settingsPath;
-    initializeColumnHashMap(columnInfo)
-    await fetcher(`/mapimages/${datapacks.join(':')}`, {
-      method: "POST"
-    })
+    initializeColumnHashMap(columnInfo);
+    await fetcher(`/mapimages/${datapacks.join(":")}`, {
+      method: "POST",
+    });
     // Grab the settings for this chart if there are any:
     if (settingsPath && settingsPath.length > 0) {
       const res = await fetcher(
@@ -261,9 +314,10 @@ export const generateChart = action("generateChart", async () => {
   setChartPath("");
   //let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
   // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
+  console.log(state.settingsJSON);
   const body = JSON.stringify({
-    settings: JSON.stringify(state.settingsJSON),
-    columnSettings: JSON.stringify(state.settingsTabs.columns),
+    settings: state.settingsJSON,
+    columnSettings: state.settingsTabs.columns,
     datapacks: state.config.datapacks,
   });
   console.log("Sending settings to server...");
@@ -281,7 +335,7 @@ export const generateChart = action("generateChart", async () => {
     setChartHash(answer.hash);
     setChartPath(devSafeUrl(answer.chartpath));
     await checkSVGStatus();
-    setOpenSnackbar(true)
+    setOpenSnackbar(true);
   } catch (e: any) {
     if (isServerResponseError(answer)) {
       console.log(
@@ -448,9 +502,9 @@ export const checkSVGStatus = action(async () => {
         await new Promise((resolve) => setTimeout(resolve, 5000));
       }
     }
-  } catch(e) {
-    console.log(`Error fetching svg status: ${e}`)
-    return
+  } catch (e) {
+    console.log(`Error fetching svg status: ${e}`);
+    return;
   }
   setChartLoading(false);
 });
@@ -468,23 +522,26 @@ async function fetchSVGStatus(): Promise<boolean> {
   });
   const data = await response.json();
   try {
-    assertSVGStatus(data)
-  } catch(e) {
-    let msg = `Error fetching SVG status with error ${e}`
+    assertSVGStatus(data);
+  } catch (e) {
+    let msg = `Error fetching SVG status with error ${e}`;
     if (isServerResponseError(data)) {
-      msg = `While fetching SVG status, server responded with error ${data.error}`
+      msg = `While fetching SVG status, server responded with error ${data.error}`;
     }
-    throw new Error(msg)
+    throw new Error(msg);
   }
   return data.ready;
 }
 
-export const handleCloseSnackbar = action("handleCloseSnackbar", (event: React.SyntheticEvent | Event, reason?: string) => {
-  if (reason === 'clickaway') {
+export const handleCloseSnackbar = action(
+  "handleCloseSnackbar",
+  (event: React.SyntheticEvent | Event, reason?: string) => {
+    if (reason === "clickaway") {
       return;
     }
-  state.openSnackbar = false
-});
+    state.openSnackbar = false;
+  }
+);
 
 export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
   state.settings.useDatapackSuggestedAge = isChecked;
@@ -562,5 +619,5 @@ export const setShowPresetInfo = action(
   }
 );
 export const setOpenSnackbar = action("setOpenSnackbar", (show: boolean) => {
-  state.openSnackbar = show
-})
+  state.openSnackbar = show;
+});
