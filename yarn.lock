@@ -325,7 +325,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ctrl/tinycolor@npm:^4.0.3":
+"@ctrl/tinycolor@npm:^4.0.2":
   version: 4.0.3
   resolution: "@ctrl/tinycolor@npm:4.0.3"
   checksum: a4cee672c74a2c90b53d06c99bb19d47e0512a2b590f3d453dfa67c8de695c235177eb597cdde0c2ec24e27a888702d7afb785a7ec8e6610e01767be73fbfb92
@@ -4203,10 +4203,10 @@ __metadata:
   linkType: hard
 
 "mui-color-input@npm:^2.0.1":
-  version: 2.0.2
-  resolution: "mui-color-input@npm:2.0.2"
+  version: 2.0.1
+  resolution: "mui-color-input@npm:2.0.1"
   dependencies:
-    "@ctrl/tinycolor": "npm:^4.0.3"
+    "@ctrl/tinycolor": "npm:^4.0.2"
   peerDependencies:
     "@emotion/react": ^11.5.0
     "@emotion/styled": ^11.3.0
@@ -4217,7 +4217,7 @@ __metadata:
   peerDependenciesMeta:
     "@types/react":
       optional: true
-  checksum: 1c10964fe970a4612c1b95f832726fe8502836edd6ebb482434ed5b5573fe118f1c4beaaf9b99270590c22e65cd40a1533de621a07553abb0cd294dfed0acf21
+  checksum: 0a0c20253fe55587fecb1930a5111785f76fe91dda4cf08ef8d723717b157741a7fa2bfa1fb255fea6193d899f846c9b38e72408e9c888dbb91e4c987976174f
   languageName: node
   linkType: hard
 
