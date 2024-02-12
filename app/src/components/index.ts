@@ -6,6 +6,7 @@ export { TSCTextField } from './TSCTextField';
 export { TSCCard } from './TSCCard';
 export { TSCIcon } from './TSCIcon';
 export * from './TSCFileUpload';
+export { TSCPopupDialog } from './TSCPopupDialog'
 export * from './TSCComponents'
 export * from './TSCError'
 export { Accordion, AccordionSummary, AccordionDetails, ColumnContainer} from './TSCColumns';

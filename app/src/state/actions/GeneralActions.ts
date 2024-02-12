@@ -323,6 +323,15 @@ export const resetState = action("resetState", () => {
   state.settingsJSON = {};
 });
 
+export const showPopup = action("showPopup", () => {
+  if (state.settings.useDatapackSuggestedAge) {
+    state.userResponded = false;
+    setShowSuggestedAgePopup(true);
+  } else {
+    generateChart();
+  }
+});
+
 export const generateChart = action("generateChart", async () => {
   //set the loading screen and make sure the chart isn't up
   setTab(1);
@@ -572,9 +581,11 @@ export const pushError = action("pushError", (text: string) => {
     errorText: text
   })
 })
-
-export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
-  state.settings.useDatapackSuggestedAge = isChecked;
+export const setUserResponded = action((value: boolean) => {
+  state.userResponded = value;
+});
+export const setUseDatapackSuggestedAge = action((value: boolean) => {
+  state.settings.useDatapackSuggestedAge = value;
 });
 export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;
@@ -635,6 +646,12 @@ export const settingsXML = action("settingsXML", (xml: string) => {
 const setFacies = action("setFacies", (newval: Facies) => {
   state.mapState.facies = newval;
 });
+export const setShowSuggestedAgePopup = action(
+  "setShowSuggestedAgePopup",
+  (show: boolean) => {
+    state.showSuggestedAgePopup = show;
+  }
+);
 export const setOpenSnackbar = action("setOpenSnackbar", (show: boolean) => {
   state.openSnackbar = show;
 });

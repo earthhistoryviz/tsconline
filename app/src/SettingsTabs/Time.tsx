@@ -188,7 +188,7 @@ export const Time = observer(function Time() {
             control={
               <TSCCheckbox
                 onChange={(e) =>
-                  actions.setuseDatapackSuggestedAge(e.target.checked)
+                  actions.setuseDatapackSuggestedAge(!e.target.checked)
                 }
               />
             }

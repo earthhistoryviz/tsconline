@@ -49,7 +49,22 @@ export const Home = observer(function Home() {
   const { state, actions } = useContext(context);
   const theme = useTheme();
   const navigate = useNavigate();
-
+  const handlePopupResponse = (response) => {
+    actions.setUseDatapackSuggestedAge(response);
+    actions.setUserResponded(true);
+    actions.setShowSuggestedAgePopup(false);
+  };
+  const handleCloseDialog = () => {
+    actions.setUserResponded(true);
+    actions.setShowSuggestedAgePopup(false);
+  };
+  useEffect(() => {
+    if (state.userResponded) {
+      actions.setUserResponded(false);
+      actions.generateChart();
+      navigate('/chart');
+    }
+  }, [state.userResponded]);
   return (
     <div
       className="whole_page"
@@ -68,6 +83,14 @@ export const Home = observer(function Home() {
           />
         );
       })}
+      <TSCPopupDialog
+        open={ state.showSuggestedAgePopup }
+        title="Confirmation"
+        message="Do you want to use the datapack suggested age span?"
+        onYes={() => handlePopupResponse(true)}
+        onNo={() => handlePopupResponse(false)}
+        onClose={ handleCloseDialog }
+      />
       <div className="bottom-button">
         <TSCButton
           className="remove-cache-button"
