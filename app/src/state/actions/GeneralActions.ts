@@ -171,6 +171,8 @@ export const setDatapackConfig = action(
         fontsInfo: fontsInfo,
         info: "",
         on: true,
+        minAge: state.settings.topStageAge,
+        maxAge: state.settings.baseStageAge,
         children: [
           {
             name: "Ma",
