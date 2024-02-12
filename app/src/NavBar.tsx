@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { context } from "./state";
 import { observer } from "mobx-react-lite";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import { useTheme } from "@mui/material/styles";
@@ -17,6 +17,7 @@ import "./NavBar.css";
 export const NavBar = observer(function Navbar() {
   const theme = useTheme();
   const { state, actions } = useContext(context);
+  const navigate = useNavigate();
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
 
   const handleSettingsMouseEnter = () => {
@@ -46,6 +47,19 @@ export const NavBar = observer(function Navbar() {
 
     // Close the popover and perform any other necessary actions
     setIsSettingsHovered(false);
+
+    // Navigate to the corresponding route if needed
+    if (tabName === "Chart") {
+      navigate("/chart");
+    } else if (tabName === "Settings") {
+      navigate("/settings");
+    } else if (tabName === "Datapack") {
+      navigate("/datapack");
+    } else if (tabName === "Help") {
+      navigate("/help");
+    } else if (tabName === "About") {
+      navigate("/about");
+    }
   };
 
   return (
@@ -131,11 +145,11 @@ export const NavBar = observer(function Navbar() {
             },
           }}
         >
-          <Tab value={1} label="Chart" to="/chart" component={Link} />
-          <Tab value={2} label="Settings" to="/settings" component={Link} />
-          <Tab value={3} label="Datapack" to="/datapack" component={Link} />
-          <Tab value={4} label="Help" to="/help" component={Link} />
-          <Tab value={5} label="About" to="/about" component={Link} />
+          <Tab value={1} label="Chart" onClick={() => handleTabClick("Chart")} />
+          <Tab value={2} label="Settings" onClick={() => handleTabClick("Settings")} />
+          <Tab value={3} label="Datapack" onClick={() => handleTabClick("Datapack")} />
+          <Tab value={4} label="Help" onClick={() => handleTabClick("Help")} />
+          <Tab value={5} label="About" onClick={() => handleTabClick("About")} />
         </TSCTabs>
 
         {/* Logo */}
