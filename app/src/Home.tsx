@@ -50,13 +50,14 @@ export const Home = observer(function Home() {
   const theme = useTheme();
   const navigate = useNavigate();
   const handlePopupResponse = (response) => {
-    actions.setUseSuggestedAge(response);
+    if (state.setUseSuggestedAge != response) {
+      actions.setUseSuggestedAge(response);
+      actions.setUseCache(false);
+    }
     actions.setUserResponded(true);
     actions.setShowSuggestedAgePopup(false);
   };
   const handleCloseDialog = () => {
-    actions.setUseSuggestedAge(true);
-    actions.setUserResponded(true);
     actions.setShowSuggestedAgePopup(false);
   };
   useEffect(() => {
@@ -86,8 +87,8 @@ export const Home = observer(function Home() {
       })}
       <TSCPopupDialog
         open={ state.showSuggestedAgePopup }
-        title="Confirmation"
-        message="Do you want to use the datapack suggested age span?"
+        title="Suggested Age Span Flags detected"
+        message="Do you want to use the Data-Pack's suggested age span?"
         onYes={() => handlePopupResponse(true)}
         onNo={() => handlePopupResponse(false)}
         onClose={ handleCloseDialog }
