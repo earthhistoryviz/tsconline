@@ -10,7 +10,8 @@ import {
     TextField,
     ToggleButton,
     ToggleButtonGroup,
-    Typography
+    Typography,
+    useTheme
 } from "@mui/material";
 import Modal from "@mui/material/Modal";
 import InputLabel from "@mui/material/InputLabel";
@@ -135,6 +136,7 @@ const FontMenuRow: React.FC<{
 
 export const FontMenu: React.FC<{}> = observer(({}) => {
     const {state, actions} = useContext(context);
+    const theme = useTheme()
     const name =
         state.settingsTabs.columnSelected === null
             ? ""
@@ -161,7 +163,7 @@ export const FontMenu: React.FC<{}> = observer(({}) => {
                         <Typography id="FontOptionsTitle">Font Options
                         for "{name}"</Typography>
                         <div onClick={handleClose}>
-                        <CloseIcon fontSize="large"/>
+                        <CloseIcon sx={{color: theme.palette.primary.main}}/>
                         </div>
                     </div>
                     <Grid container rowSpacing={2} columnSpacing={0}>
