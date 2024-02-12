@@ -19,8 +19,7 @@ import {
   assertMapInfo,
   DatapackAgeInfo,
   type FontsInfo,
-  assertPresets,
-  assertIndexResponse,
+  defaultFontsInfo,
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
@@ -41,27 +40,27 @@ export const resetSettings = action("resetSettings", () => {
 });
 
 export const fetchDatapackInfo = action("fetchPresets", async () => {
-  const response = await fetcher('/datapackinfoindex');
-  const indexResponse = await response.json()
+  const response = await fetcher("/datapackinfoindex");
+  const indexResponse = await response.json();
   try {
-    assertIndexResponse(indexResponse)
-    loadIndexResponse(indexResponse)
-    console.log('Datapacks loaded')
+    assertIndexResponse(indexResponse);
+    loadIndexResponse(indexResponse);
+    console.log("Datapacks loaded");
   } catch (e: any) {
-    displayError(e, indexResponse, 'Failed to fetch DatapackInfo')
+    displayError(e, indexResponse, "Failed to fetch DatapackInfo");
   }
-})
+});
 export const fetchPresets = action("fetchPresets", async () => {
-  const response = await fetcher('/presets');
+  const response = await fetcher("/presets");
   const presets = await response.json();
   try {
     assertPresets(presets);
     loadPresets(presets);
-    console.log('Presets loaded');
+    console.log("Presets loaded");
   } catch (e: any) {
-    displayError(e, presets, 'Failed to retrieve presets')
+    displayError(e, presets, "Failed to retrieve presets");
   }
-})
+});
 
 export const uploadDatapack = action("uploadDatapack", (file: File) => {
   const formData = new FormData();
@@ -102,71 +101,12 @@ export const setDatapackConfig = action(
     let mapInfo: MapInfo = {};
     let mapHierarchy: MapHierarchy = {};
     let columnInfo: ColumnInfo;
-    let fontsInfo: FontsInfo = {
-      "Age Label": {
-        bold: false,
-        color: "",
-        fontFace: "Arial",
-        inheritable: false,
-        italic: false,
-        size: 6,
-      },
-      "Column Header": {
-        bold: false,
-        color: "#000000",
-        fontFace: "Arial",
-        inheritable: false,
-        italic: false,
-        size: 14,
-      },
-      "Event Column Label": {
-        bold: false,
-        color: "#000000",
-        fontFace: "Arial",
-        inheritable: false,
-        italic: false,
-        size: 11,
-      },
-      "Legend Column Name": { inheritable: false },
-      "Legend Column Source": { inheritable: false },
-      "Legend Title": { inheritable: false },
-      "Point Column Scale Label": { inheritable: false },
-      "Popup Body": { inheritable: false },
-      "Range Box Label": { inheritable: false },
-      "Range Label": {
-        bold: false,
-        color: "#000000",
-        fontFace: "Arial",
-        inheritable: false,
-        italic: false,
-        size: 12,
-      },
-      "Ruler Label": { inheritable: false },
-      "Ruler Tick Mark Label": { inheritable: false },
-      "Sequence Column Label": { inheritable: false },
-      "Uncertainty Label": {
-        bold: false,
-        color: "#000000",
-        fontFace: "Arial",
-        inheritable: false,
-        italic: false,
-        size: 5,
-      },
-      "Zone Column Label": {
-        bold: false,
-        color: "#000000",
-        fontFace: "Arial",
-        inheritable: false,
-        italic: false,
-        size: 12,
-      },
-    };
     try {
       // the default overarching variable for the columnInfo
       columnInfo = {
         name: "Root", // if you change this, change parse-datapacks.ts :69
         editName: "Chart Title",
-        fontsInfo: fontsInfo,
+        fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
         info: "",
         on: true,
         minAge: state.settings.topStageAge,
@@ -175,14 +115,14 @@ export const setDatapackConfig = action(
           {
             name: "Ma",
             editName: "Ma",
-            fontsInfo: fontsInfo,
+            fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
             on: true,
             info: "",
             children: [],
             parent: "Root", // if you change this, change parse-datapacks.ts :69
             minAge: state.settings.topStageAge, //tbd
-            maxAge: state.settings.baseStageAge //tbd
-          }
+            maxAge: state.settings.baseStageAge, //tbd
+          },
         ],
         parent: null,
       };
@@ -225,7 +165,11 @@ export const setDatapackConfig = action(
       assertColumnInfo(columnInfo);
       assertMapInfo(mapInfo);
     } catch (e) {
-      displayError(e, null, `Error occured while changing datapack information on the website: ${e} with datapacks ${datapacks}`)
+      displayError(
+        e,
+        null,
+        `Error occured while changing datapack information on the website: ${e} with datapacks ${datapacks}`
+      );
       return false;
     }
     state.mapState.facies = facies;
@@ -253,8 +197,12 @@ export const setDatapackConfig = action(
         console.log("recieved settings JSON object at set Chart", settingsJson);
         runInAction(() => (state.settingsJSON = settingsJson)); // Save the parsed JSON to the state.settingsJSON
       } catch (e) {
-        displayError(e, await res.json(), "Error fetching settings from server")
-        return false
+        displayError(
+          e,
+          await res.json(),
+          "Error fetching settings from server"
+        );
+        return false;
       }
     } else {
       state.settingsJSON = null;
@@ -291,15 +239,15 @@ export const removeCache = action("removeCache", async () => {
     method: "POST",
   });
   // check if we successfully removed cache
-  const msg = await response.json()
+  const msg = await response.json();
   try {
     assertSuccessfulServerResponse(msg);
     console.log(
       `Server successfully deleted cache with message: ${msg.message}`
     );
   } catch (e) {
-    displayError(e, msg, "Server could not remove cache")
-    return
+    displayError(e, msg, "Server could not remove cache");
+    return;
   }
 });
 
@@ -323,6 +271,42 @@ export const resetState = action("resetState", () => {
   state.settingsTabs.columnSelected = null;
   state.settingsXML = "";
   state.settingsJSON = {};
+});
+
+export const generateChart = action("generateChart", async () => {
+  //set the loading screen and make sure the chart isn't up
+  setTab(1);
+  setChartMade(true);
+  setChartLoading(true);
+  setChartHash("");
+  setChartPath("");
+  //let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
+  // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
+  let xmlSettings = jsonToXml(state.settingsJSON, state.settingsTabs.columns);
+  const body = JSON.stringify({
+    settings: xmlSettings,
+    datapacks: state.config.datapacks,
+  });
+  console.log("Sending settings to server...");
+  const response = await fetcher(
+    `/charts/${state.useCache}/${state.settings.useDatapackSuggestedAge}`,
+    {
+      method: "POST",
+      body,
+    }
+  );
+  const answer = await response.json();
+  // will check if pdf is loaded
+  try {
+    assertChartInfo(answer);
+    setChartHash(answer.hash);
+    setChartPath(devSafeUrl(answer.chartpath));
+    await checkSVGStatus();
+    setOpenSnackbar(true);
+  } catch (e: any) {
+    displayError(e, answer, "Failed to fetch chart");
+    return;
+  }
 });
 
 export const loadPresets = action("loadPresets", (presets: Presets) => {
@@ -416,13 +400,15 @@ export const updateCheckboxSetting = action(
  */
 function displayError(error: any, response: any, message: string) {
   if (!response) {
-    pushError(message)
+    pushError(message);
   } else if (isServerResponseError(response)) {
     console.log(`${message} with server response: ${response.error}`);
-    pushError(response.error)
+    pushError(response.error);
   } else {
-    console.log(`${message} with server response: ${response}\n Error: ${error}`)
-    pushError(message)
+    console.log(
+      `${message} with server response: ${response}\n Error: ${error}`
+    );
+    pushError(message);
   }
 }
 
@@ -491,7 +477,7 @@ export const checkSVGStatus = action(async () => {
       }
     }
   } catch (e) {
-    console.log(`Error fetching svg status: ${e}`)
+    console.log(`Error fetching svg status: ${e}`);
     return;
   }
   setChartLoading(false);
@@ -512,7 +498,7 @@ async function fetchSVGStatus(): Promise<boolean> {
   try {
     assertSVGStatus(data);
   } catch (e) {
-    displayError(e, data, `Could not fetch SVG status`)
+    displayError(e, data, `Could not fetch SVG status`);
     let msg = `Error fetching SVG status with error ${e}`;
     throw new Error(msg);
   }
@@ -530,16 +516,17 @@ export const handleCloseSnackbar = action(
 );
 
 export const removeError = action("removeError", (id: number) => {
-  state.errorAlerts = state.errorAlerts.filter((error) => error.id !== id)
-})
+  state.errorAlerts = state.errorAlerts.filter((error) => error.id !== id);
+});
 export const pushError = action("pushError", (text: string) => {
   state.errorAlerts.push({
     id: new Date().getTime(),
-    errorText: text
-  })
-})
-export const setUseSuggestedAge = action((value: boolean) => {
-  state.useSuggedstedAge = value;
+    errorText: text,
+  });
+});
+
+export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
+  state.settings.useDatapackSuggestedAge = isChecked;
 });
 export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;

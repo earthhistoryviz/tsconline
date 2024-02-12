@@ -4,7 +4,7 @@ import {context} from "../state";
 import {
     Box,
     Button,
-    Checkbox,
+    Checkbox, Divider,
     FormControlLabel,
     Grid,
     TextField,
@@ -20,12 +20,12 @@ import Select, {SelectChangeEvent} from "@mui/material/Select";
 import FormatBoldIcon from "@mui/icons-material/FormatBold";
 import FormatItalicIcon from "@mui/icons-material/FormatItalic";
 import {MuiColorInput} from "mui-color-input";
+import CloseIcon from '@mui/icons-material/Close';
 import "./FontMenu.css"
 
 const FontMenuRow: React.FC<{
     target: "Column Header" | "Age Label" | "Uncertainty Label" | "Zone Column Label" | "Event Column Label" | "Range Label",
-    defaultFontSize: number
-}> = observer(({target, defaultFontSize}) => {
+}> = observer(({target}) => {
 
     const {state, actions} = useContext(context);
     const [fontTarget, setFontTarget] = useState(false);
@@ -69,6 +69,7 @@ const FontMenuRow: React.FC<{
                         />
                     }
                     label={target}
+                    id="TargetInput"
                 />
                 <FormControlLabel
                     control={
@@ -156,34 +157,38 @@ export const FontMenu: React.FC<{}> = observer(({}) => {
                 onClose={handleClose}
             >
                 <Box id="FontMenuContainer">
-                    <Typography id="FontOptionsTitle">Font Options
+                    <div id="HeadingContainer">
+                        <Typography id="FontOptionsTitle">Font Options
                         for "{name}"</Typography>
+                        <div onClick={handleClose}>
+                        <CloseIcon fontSize="large"/>
+                        </div>
+                    </div>
                     <Grid container rowSpacing={2} columnSpacing={0}>
                         <Grid item xs={12}>
                             <Typography id="Bold">Change Font</Typography>
-                            <FontMenuRow target="Column Header" defaultFontSize={14}/>
+                            <FontMenuRow target="Column Header"/>
                         </Grid>
+                        <Grid item xs={12}>
+                            <Divider />
+                        </Grid>
+
                         <Grid item xs={12}>
                             <Typography id="AdditionalFontsText">Additional fonts for child
                                 columns</Typography>
-                            <FontMenuRow target="Age Label" defaultFontSize={6}/>
+                            <FontMenuRow target="Age Label"/>
                         </Grid>
                         <Grid item xs={12}>
-                            <FontMenuRow target="Zone Column Label" defaultFontSize={12}/>
+                            <FontMenuRow target="Zone Column Label" />
                         </Grid>
                         <Grid item xs={12}>
-                            <FontMenuRow target="Uncertainty Label" defaultFontSize={5}/>
+                            <FontMenuRow target="Uncertainty Label" />
                         </Grid>
                         <Grid item xs={12}>
-                            <FontMenuRow target="Event Column Label" defaultFontSize={11}/>
+                            <FontMenuRow target="Event Column Label" />
                         </Grid>
                         <Grid item xs={12}>
-                            <FontMenuRow target="Range Label" defaultFontSize={12}/>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <div id="CloseButtonContainer">
-                                <Button variant="contained" onClick={handleClose}>Close</Button>
-                            </div>
+                            <FontMenuRow target="Range Label" />
                         </Grid>
                     </Grid>
                 </Box>
