@@ -15,10 +15,13 @@ export const Settings = observer(function Settings() {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
 
-  const handleTabClick = (selectedTab) => {
+  const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
+    actions.setSettingsTabsSelected(newValue);
+  };
+
+  const handleButtonClick = () => {
     actions.setTab(1);
     actions.setAllTabs(true);
-    actions.setSettingsTabsSelected(selectedTab);
 
     actions.updateSettings();
     actions.generateChart();
@@ -26,25 +29,39 @@ export const Settings = observer(function Settings() {
     navigate("/chart");
   };
 
+  const selectedTabIndex = actions.translateTabToIndex(
+    state.settingsTabs.selected
+  );
+
+  const displayChosenTab = () => {
+    switch (state.settingsTabs.selected) {
+      case "time":
+        return <Time />;
+      case "column":
+        return <Column />;
+      case "font":
+        return <Font />;
+      case "mappoints":
+        return <MapPoints />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div
       style={{
         position: "relative",
         background: theme.palette.settings.light,
-        display: "inline-block", // Adjust display property
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <TSCTabs value={state.settingsTabs.selected} onChange={() => {}} centered>
-        {isHovered && (
-          <>
-            <TSCTab label="Time" onClick={() => handleTabClick("time")} />
-            <TSCTab label="Column" onClick={() => handleTabClick("column")} />
-            <TSCTab label="Font" onClick={() => handleTabClick("font")} />
-            <TSCTab label="Map Points" onClick={() => handleTabClick("mappoints")} />
-          </>
-        )}
+      <TSCTabs value={selectedTabIndex} onChange={handleChange} centered>
+        <TSCTab label="Time" />
+        <TSCTab label="Column" />
+        <TSCTab label="Font" />
+        <TSCTab label="Map Points" />
       </TSCTabs>
       {isHovered && (
         <div
@@ -56,13 +73,9 @@ export const Settings = observer(function Settings() {
             background: "white",
             boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
             padding: "10px",
-            display: "flex", // Adjust display property
           }}
         >
-          {state.settingsTabs.selected === "time" && <Time />}
-          {state.settingsTabs.selected === "column" && <Column />}
-          {state.settingsTabs.selected === "font" && <Font />}
-          {state.settingsTabs.selected === "mappoints" && <MapPoints />}
+          {displayChosenTab()}
         </div>
       )}
     </div>
