@@ -6,8 +6,8 @@ import { Column } from "./SettingsTabs/Column";
 import { Time } from "./SettingsTabs/Time";
 import { Font } from "./SettingsTabs/Font";
 import { MapPoints } from "./SettingsTabs/MapPoints";
-import { useTheme } from '@mui/material/styles';
-import { TSCTabs, TSCTab } from './components';
+import { useTheme } from "@mui/material/styles";
+import { TSCTabs, TSCTab } from "./components";
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
@@ -21,7 +21,6 @@ export const Settings = observer(function Settings() {
 
   const handleButtonClick = () => {
     actions.setTab(1);
-    actions.setAllTabs(true);
     actions.updateSettings();
     actions.generateChart();
     navigate("/chart");
@@ -52,10 +51,22 @@ export const Settings = observer(function Settings() {
     >
       {isHovered && (
         <TSCTabs value={selectedTabIndex} onChange={handleChange} centered>
-          <TSCTab label="Time" onClick={() => actions.setSettingsTabsSelected("time")} />
-          <TSCTab label="Column" onClick={() => actions.setSettingsTabsSelected("column")} />
-          <TSCTab label="Font" onClick={() => actions.setSettingsTabsSelected("font")} />
-          <TSCTab label="Map Points" onClick={() => actions.setSettingsTabsSelected("mappoints")} />
+          <TSCTab
+            label="Time"
+            onClick={() => actions.setSettingsTabsSelected("time")}
+          />
+          <TSCTab
+            label="Column"
+            onClick={() => actions.setSettingsTabsSelected("column")}
+          />
+          <TSCTab
+            label="Font"
+            onClick={() => actions.setSettingsTabsSelected("font")}
+          />
+          <TSCTab
+            label="Map Points"
+            onClick={() => actions.setSettingsTabsSelected("mappoints")}
+          />
         </TSCTabs>
       )}
       {displayChosenTab()}
