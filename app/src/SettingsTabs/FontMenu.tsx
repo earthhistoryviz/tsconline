@@ -59,7 +59,7 @@ const FontMenuRow: React.FC<{
 
     return (
         <div>
-            <div style={{display: "flex", alignItems: "center"}}>
+            <div id="FontRowContainer">
                 <FormControlLabel
                     control={
                         <Checkbox
@@ -83,11 +83,9 @@ const FontMenuRow: React.FC<{
                     }
                     label="Inheritable"
                 />
-                <FormControl sx={{width: "150px", marginRight: "10px"}}>
-                    <InputLabel id="demo-simple-select-label">Font Face</InputLabel>
+                <FormControl id="FontFaceForm">
+                    <InputLabel>Font Face</InputLabel>
                     <Select
-                        labelId="demo-simple-select-label"
-                        id="demo-simple-select"
                         value={fontOpts.fontFace}
                         label="Font Face"
                         onChange={handleChange}
@@ -99,7 +97,7 @@ const FontMenuRow: React.FC<{
                         <MenuItem value={"Verdana"}>Verdana</MenuItem>
                     </Select>
                 </FormControl>
-                <TextField sx={{width: "60px", marginRight: "10px"}} label="Size" variant="outlined"
+                <TextField sx={{width: "60px", marginRight: "10px"}} id="FontSizeInput"label="Size" variant="outlined"
                            value={fontOpts.size}
                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                                actions.setFontSize(target, Number(event.target.value))
@@ -119,7 +117,7 @@ const FontMenuRow: React.FC<{
                         <FormatItalicIcon/>
                     </ToggleButton>
                 </ToggleButtonGroup>
-                <div style={{width: "150px", marginRight: "10px"}}>
+                <div id="ColorInputContainer">
                     <MuiColorInput value={fontOpts.color} size="small" label="Color" format="hex" onChange={handleColor}
                                    disabled={!fontTarget}/>
                 </div>
@@ -133,19 +131,6 @@ const FontMenuRow: React.FC<{
         </div>
     );
 });
-
-
-const style = {
-    position: "absolute" as "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: 870,
-    bgcolor: "background.paper",
-    border: "2px solid #000",
-    boxShadow: 24,
-    p: 4,
-};
 
 export const FontMenu: React.FC<{}> = observer(({}) => {
     const {state, actions} = useContext(context);
@@ -169,19 +154,17 @@ export const FontMenu: React.FC<{}> = observer(({}) => {
             <Modal
                 open={open}
                 onClose={handleClose}
-                aria-labelledby="modal-modal-title"
-                aria-describedby="modal-modal-description"
             >
-                <Box sx={style}>
-                    <Typography style={{marginBottom: "20px", fontWeight: "bold", fontSize: 18}}>Font Options
+                <Box id="FontMenuContainer">
+                    <Typography id="FontOptionsTitle">Font Options
                         for "{name}"</Typography>
                     <Grid container rowSpacing={2} columnSpacing={0}>
                         <Grid item xs={12}>
-                            <Typography style={{fontWeight: "bold"}}>Change Font</Typography>
+                            <Typography id="Bold">Change Font</Typography>
                             <FontMenuRow target="Column Header" defaultFontSize={14}/>
                         </Grid>
                         <Grid item xs={12}>
-                            <Typography style={{marginBottom: "20px", fontWeight: "bold"}}>Additional fonts for child
+                            <Typography id="AdditionalFontsText">Additional fonts for child
                                 columns</Typography>
                             <FontMenuRow target="Age Label" defaultFontSize={6}/>
                         </Grid>
@@ -198,7 +181,7 @@ export const FontMenu: React.FC<{}> = observer(({}) => {
                             <FontMenuRow target="Range Label" defaultFontSize={12}/>
                         </Grid>
                         <Grid item xs={12}>
-                            <div style={{display: 'flex', justifyContent: 'center', marginTop: "10px"}}>
+                            <div id="CloseButtonContainer">
                                 <Button variant="contained" onClick={handleClose}>Close</Button>
                             </div>
                         </Grid>
