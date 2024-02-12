@@ -1,6 +1,6 @@
 import React from 'react';
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
-import "./TSCPopupDialog.css" // Ensure this file path is correct
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { TSCButton } from './TSCButton';
 
 export const TSCPopupDialog = ({ open, title, message, onYes, onNo, onClose }) => {
   return (
@@ -9,7 +9,6 @@ export const TSCPopupDialog = ({ open, title, message, onYes, onNo, onClose }) =
       onClose={onClose} 
       aria-labelledby="yes-no-dialog-title" 
       aria-describedby="yes-no-dialog-description"
-      classes={{ paper: 'dialog' }} // Apply the custom 'dialog' class to the Dialog's paper element
     >
       <DialogTitle id="yes-no-dialog-title">{title}</DialogTitle>
       <DialogContent>
@@ -17,13 +16,13 @@ export const TSCPopupDialog = ({ open, title, message, onYes, onNo, onClose }) =
           {message}
         </DialogContentText>
       </DialogContent>
-      <DialogActions className="dialog-actions"> {/* Use custom actions class */}
-        <Button onClick={onNo} className="dialog-button" color="primary">
+      <DialogActions>
+        <TSCButton onClick={onNo}>
           No
-        </Button>
-        <Button onClick={onYes} className="dialog-button" color="primary" autoFocus>
+        </TSCButton>
+        <TSCButton onClick={onYes}>
           Yes
-        </Button>
+        </TSCButton>
       </DialogActions>
     </Dialog>
   );
