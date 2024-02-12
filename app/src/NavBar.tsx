@@ -18,7 +18,6 @@ export const NavBar = observer(function Navbar() {
   const theme = useTheme();
   const { state, actions } = useContext(context);
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
-  const [isSettingsContentVisible, setIsSettingsContentVisible] = useState(false);
 
   const handleSettingsMouseEnter = () => {
     setIsSettingsHovered(true);
@@ -28,12 +27,25 @@ export const NavBar = observer(function Navbar() {
     setIsSettingsHovered(false);
   };
 
-  const handleSettingsContentMouseEnter = () => {
-    setIsSettingsContentVisible(true);
-  };
+  const handleTabClick = (tabName) => {
+    // Implement specific actions based on the clicked tab
+    switch (tabName) {
+      case "Time":
+        // Execute Time-related logic
+        actions.setTimeLogic();
+        break;
+      case "Column":
+        // Execute Column-related logic
+        actions.setColumnLogic();
+        break;
+      // Add cases for other tabs as needed
 
-  const handleSettingsContentMouseLeave = () => {
-    setIsSettingsContentVisible(false);
+      default:
+        break;
+    }
+
+    // Close the popover and perform any other necessary actions
+    setIsSettingsHovered(false);
   };
 
   return (
@@ -68,7 +80,6 @@ export const NavBar = observer(function Navbar() {
             color: isSettingsHovered ? theme.palette.selection.light : theme.palette.selection.main,
             "&:hover": {
               color: theme.palette.selection.light,
-              opacity: 1,
             },
           }}
           onMouseEnter={handleSettingsMouseEnter}
@@ -79,11 +90,10 @@ export const NavBar = observer(function Navbar() {
 
         {/* Popover with Settings Content */}
         <Popover
-          open={isSettingsContentVisible}
+          open={isSettingsHovered}
           anchorEl={document.getElementById("settings-button")}
           onClose={handleSettingsMouseLeave}
-          onMouseEnter={handleSettingsContentMouseEnter}
-          onMouseLeave={handleSettingsContentMouseLeave}
+          sx={{ pointerEvents: "none" }}
         >
           <div
             style={{
@@ -91,12 +101,14 @@ export const NavBar = observer(function Navbar() {
               flexDirection: "column",
               padding: "10px",
             }}
+            onMouseEnter={handleSettingsMouseEnter}
+            onMouseLeave={handleSettingsMouseLeave}
           >
             {/* Add your Settings content components here */}
-            <Tab label="Time" to="/settings/time" component={Link} />
-            <Tab label="Column" to="/settings/column" component={Link} />
-            <Tab label="Font" to="/settings/font" component={Link} />
-            <Tab label="Map Points" to="/settings/mappoints" component={Link} />
+            <Tab label="Time" onClick={() => handleTabClick("Time")} />
+            <Tab label="Column" onClick={() => handleTabClick("Column")} />
+            <Tab label="Font" onClick={() => handleTabClick("Font")} />
+            <Tab label="Map Points" onClick={() => handleTabClick("MapPoints")} />
           </div>
         </Popover>
 
@@ -129,7 +141,6 @@ export const NavBar = observer(function Navbar() {
         {/* Logo */}
         <div style={{ flexGrow: 1 }} />
         <img src={TSCreatorLogo} alt="TSCreator Logo" width="4%" height="4%" />
-
       </Toolbar>
     </AppBar>
   );
