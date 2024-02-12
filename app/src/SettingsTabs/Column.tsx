@@ -14,7 +14,7 @@ import {
   Accordion,
   TSCButton,
 } from "../components";
-import "./Column.css";
+
 import { ColumnMenu } from "./ColumnMenu";
 
 type ColumnAccordionProps = {
