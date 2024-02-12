@@ -64,6 +64,10 @@ export type State = {
   useCache: boolean;
   usePreset: boolean;
   openSnackbar: boolean;
+  error: {
+    errorState: boolean;
+    errorText: string;
+  }
 };
 
 export const state = observable<State>({
@@ -128,4 +132,8 @@ export const state = observable<State>({
   useCache: true,
   usePreset: true,
   openSnackbar: false,
+  error: {
+    errorState: false,
+    errorText: ""
+  }
 });
