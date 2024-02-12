@@ -8,7 +8,7 @@ import { mkdirp } from "mkdirp";
 import { grabMapImages } from "./parse-map-packs.js";
 import md5 from "md5";
 import { assetconfigs } from "./index.js";
-import svgson from 'svgson'
+import svgson from "svgson";
 import fs from "fs";
 import { readFile } from "fs/promises";
 
@@ -17,7 +17,7 @@ export const uploadDatapack = async function (
   reply: FastifyReply
 ) {
   // const data = await request.saveRequestFiles()
-}
+};
 export const fetchSettingsJson = async function fetchSettingsJson(
   request: FastifyRequest<{ Params: { settingFile: string } }>,
   reply: FastifyReply
@@ -25,11 +25,13 @@ export const fetchSettingsJson = async function fetchSettingsJson(
   try {
     let { settingFile } = request.params;
     //TODO: differentiate between preset and user uploaded datpack
-    const contents = (await readFile(`${decodeURIComponent(settingFile)}`)).toString();
+    const contents = (
+      await readFile(`${decodeURIComponent(settingFile)}`)
+    ).toString();
     const settingJson = await xmlToJson(contents);
     reply.send(settingJson);
   } catch (e) {
-    reply.send({ error: e })
+    reply.send({ error: e });
   }
 };
 
@@ -43,8 +45,8 @@ export const refreshMapImages = async function refreshMapImages(
   deleteDirectory(assetconfigs.imagesDirectory);
   const { files } = request.params;
   if (!files) {
-    reply.send("Error: no files requested")
-    return
+    reply.send("Error: no files requested");
+    return;
   }
   console.log("Getting map images for files: ", files);
   const filesSplit = files.split(":");
@@ -61,20 +63,21 @@ export const fetchSVGStatus = async function (
   reply: FastifyReply
 ) {
   const { hash } = request.params;
-  let isSVGReady = false
-  const directory = `${assetconfigs.chartsDirectory}/${hash}`
+  let isSVGReady = false;
+  const directory = `${assetconfigs.chartsDirectory}/${hash}`;
   const filepath = `${directory}/chart.svg`;
   // if hash doesn't exist reply with error
   if (!fs.existsSync(directory)) {
-    reply.send({ error: `No directory exists at hash: ${directory}` })
-    return
+    reply.send({ error: `No directory exists at hash: ${directory}` });
+    return;
   }
   try {
     if (fs.existsSync(filepath)) {
-      if (svgson.parseSync((await readFile(filepath)).toString())) isSVGReady = true
+      if (svgson.parseSync((await readFile(filepath)).toString()))
+        isSVGReady = true;
     }
   } catch (e) {
-    console.log("can't read svg at hash: ", hash)
+    console.log("can't read svg at hash: ", hash);
   }
 
   console.log("reply: ", { ready: isSVGReady });
@@ -86,12 +89,15 @@ export const fetchSVGStatus = async function (
  * Will return the chart path and the hash the chart was saved with
  */
 export const fetchChart = async function fetchChart(
-  request: FastifyRequest<{ Params: { usecache: string, useDatapackSuggestedAge: string } }>,
+  request: FastifyRequest<{
+    Params: { usecache: string; useDatapackSuggestedAge: string };
+  }>,
   reply: FastifyReply
 ) {
   //TODO change this to be in request body
   const usecache = request.params.usecache === "true";
-  const useDatapackSuggestedAge = request.params.useDatapackSuggestedAge === "true";
+  const useDatapackSuggestedAge =
+    request.params.useDatapackSuggestedAge === "true";
   let chartrequest;
   try {
     chartrequest = JSON.parse(request.body as string);
@@ -109,8 +115,8 @@ export const fetchChart = async function fetchChart(
     return;
   }
   const settingsXml = jsonToXml(
-    JSON.parse(chartrequest.settings),
-    JSON.parse(chartrequest.columnSettings)
+    chartrequest.settings,
+    chartrequest.columnSettings
   );
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
   const hash = md5(settingsXml + chartrequest.datapacks.join(","));
@@ -166,7 +172,7 @@ export const fetchChart = async function fetchChart(
     return;
   }
   const datapacks = chartrequest.datapacks.map(
-    (datapack) => "\"" + assetconfigs.datapacksDirectory + "/" + datapack + "\""
+    (datapack) => '"' + assetconfigs.datapacksDirectory + "/" + datapack + '"'
   );
   for (const datapack of chartrequest.datapacks) {
     if (!assetconfigs.activeDatapacks.includes(datapack)) {
@@ -201,7 +207,7 @@ export const fetchChart = async function fetchChart(
     // Tell it where to save chart
     `-o ${chart_filepath} ` +
     // Don't use datapacks suggested age (if useDatapackSuggestedAge is true then ignore datapack ages)
-    `${useDatapackSuggestedAge ? '-a' : ''}`;
+    `${useDatapackSuggestedAge ? "-a" : ""}`;
 
   // Exec Java command and send final reply to browser
   await new Promise<void>((resolve, _reject) => {
