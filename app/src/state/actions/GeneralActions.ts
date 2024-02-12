@@ -24,6 +24,7 @@ import {
 import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
 import { initializeColumnHashMap } from "./ColumnActions";
+import { jsonToXml } from "../parseSettings";
 
 /**
  * Resets any user defined settings
@@ -314,10 +315,9 @@ export const generateChart = action("generateChart", async () => {
   setChartPath("");
   //let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
   // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
-  console.log(state.settingsJSON);
+  let xmlSettings = jsonToXml(state.settingsJSON, state.settingsTabs.columns);
   const body = JSON.stringify({
-    settings: state.settingsJSON,
-    columnSettings: state.settingsTabs.columns,
+    settings: xmlSettings,
     datapacks: state.config.datapacks,
   });
   console.log("Sending settings to server...");
