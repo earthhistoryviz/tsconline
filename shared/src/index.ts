@@ -552,6 +552,22 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   }
 }
 
+export function assertFontsInfo(o: any): asserts o is FontsInfo {
+    if (typeof o !== "object") throw new Error("FontsInfo must be an object");
+    if (typeof o.bold !== "boolean")
+        throw new Error("FontsInfo must have an bold boolean");
+    if (typeof o.color !== "string")
+        throw new Error("FontsInfo must have a color string");
+    if (typeof o.fontFace !== "string")
+        throw new Error("FontsInfo must have a font face string");
+    if (typeof o.inheritable !== "boolean")
+        throw new Error("FontsInfo must have a inheritable boolean");
+    if (typeof o.italic !== "boolean")
+        throw new Error("FontsInfo must have an italic string");
+    if (typeof o.size !== "number")
+        throw new Error("FontsInfo must have a size number");
+}
+
 export function assertMapHierarchy(o: any): asserts o is MapHierarchy {
   if (typeof o !== "object" || o === null) {
     throw new Error("MapsHierarchy must be a non-null object");

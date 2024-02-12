@@ -1,24 +1,24 @@
 import { action, runInAction } from "mobx";
 import {
-  type ChartConfig,
-  type MapInfo,
-  type ColumnInfo,
-  type MapHierarchy,
-  type Facies,
-  type GeologicalStages,
-  assertChartInfo,
-  assertSuccessfulServerResponse,
-  isServerResponseError,
-  assertDatapackResponse,
-  Presets,
-  assertSVGStatus,
-  IndexResponse,
-  assertDatapackAgeInfo,
-  assertFacies,
-  assertMapHierarchy,
-  assertColumnInfo,
-  assertMapInfo,
-  DatapackAgeInfo,
+    type ChartConfig,
+    type MapInfo,
+    type ColumnInfo,
+    type MapHierarchy,
+    type Facies,
+    type GeologicalStages,
+    assertChartInfo,
+    assertSuccessfulServerResponse,
+    isServerResponseError,
+    assertDatapackResponse,
+    Presets,
+    assertSVGStatus,
+    IndexResponse,
+    assertDatapackAgeInfo,
+    assertFacies,
+    assertMapHierarchy,
+    assertColumnInfo,
+    assertMapInfo,
+    DatapackAgeInfo, type FontsInfo,
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
@@ -74,17 +74,43 @@ export const setDatapackConfig = action(
     let mapInfo: MapInfo = {}
     let mapHierarchy: MapHierarchy = {}
     let columnInfo: ColumnInfo;
+      let fontsInfo: FontsInfo = {
+          "Age Label": {
+              bold: false,
+              color: "",
+              fontFace: "Arial",
+              inheritable: false,
+              italic: false,
+              size: 6
+          },
+          "Column Header": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 14},
+          "Event Column Label": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 11},
+          "Legend Column Name": {inheritable: false},
+          "Legend Column Source": {inheritable: false},
+          "Legend Title": {inheritable: false},
+          "Point Column Scale Label": {inheritable: false},
+          "Popup Body": {inheritable: false},
+          "Range Box Label": {inheritable: false},
+          "Range Label": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12},
+          "Ruler Label": {inheritable: false},
+          "Ruler Tick Mark Label": {inheritable: false},
+          "Sequence Column Label": {inheritable: false},
+          "Uncertainty Label": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 5},
+          "Zone Column Label": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12}
+      }
     try {
       // the default overarching variable for the columnInfo
       columnInfo = {
         name: "Root", // if you change this, change parse-datapacks.ts :69
         editName: "Chart Title",
+        fontsInfo: fontsInfo,
         info: "",
         on: true,
         children: [
           {
             name: "Ma",
             editName: "Ma",
+            fontsInfo: fontsInfo,
             on: true,
             info: "",
             children: [],
