@@ -19,9 +19,10 @@ export const Settings = observer(function Settings() {
     actions.setSettingsTabsSelected(newValue);
   };
 
-  const handleButtonClick = () => {
+  const handleTabClick = (selectedTab) => {
     actions.setTab(1);
     actions.setAllTabs(true);
+    actions.setSettingsTabsSelected(selectedTab);
 
     actions.updateSettings();
     actions.generateChart();
@@ -33,21 +34,6 @@ export const Settings = observer(function Settings() {
     state.settingsTabs.selected
   );
 
-  const displayChosenTab = () => {
-    switch (state.settingsTabs.selected) {
-      case "time":
-        return <Time />;
-      case "column":
-        return <Column />;
-      case "font":
-        return <Font />;
-      case "mappoints":
-        return <MapPoints />;
-      default:
-        return null;
-    }
-  };
-
   return (
     <div
       style={{
@@ -58,10 +44,10 @@ export const Settings = observer(function Settings() {
       onMouseLeave={() => setIsHovered(false)}
     >
       <TSCTabs value={selectedTabIndex} onChange={handleChange} centered>
-        <TSCTab label="Time" />
-        <TSCTab label="Column" />
-        <TSCTab label="Font" />
-        <TSCTab label="Map Points" />
+        <TSCTab label="Time" onClick={() => handleTabClick("time")} />
+        <TSCTab label="Column" onClick={() => handleTabClick("column")} />
+        <TSCTab label="Font" onClick={() => handleTabClick("font")} />
+        <TSCTab label="Map Points" onClick={() => handleTabClick("mappoints")} />
       </TSCTabs>
       {isHovered && (
         <div
@@ -73,9 +59,14 @@ export const Settings = observer(function Settings() {
             background: "white",
             boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
             padding: "10px",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
-          {displayChosenTab()}
+          <div onClick={() => handleTabClick("time")}>Time</div>
+          <div onClick={() => handleTabClick("column")}>Column</div>
+          <div onClick={() => handleTabClick("font")}>Font</div>
+          <div onClick={() => handleTabClick("mappoints")}>Map Points</div>
         </div>
       )}
     </div>
