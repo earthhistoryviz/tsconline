@@ -190,8 +190,8 @@ export type FaciesTimeBlock = {
     age: number;
 };
 export type ChartRequest = {
-    settings: object;
-    columnSettings: object;
+    settings: string;
+    // columnSettings: object;
     datapacks: string[];
 };
 export type ServerResponseError = {

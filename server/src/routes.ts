@@ -114,10 +114,12 @@ export const fetchChart = async function fetchChart(
     });
     return;
   }
-  const settingsXml = jsonToXml(
-    chartrequest.settings,
-    chartrequest.columnSettings
-  );
+  const settingsXml = chartrequest.settings;
+  //console.log(settingsXml);
+  // const settingsXml = jsonToXml(
+  //   chartrequest.settings,
+  //   chartrequest.columnSettings
+  // );
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
   const hash = md5(settingsXml + chartrequest.datapacks.join(","));
   const chartdir_urlpath = `/${assetconfigs.chartsDirectory}/${hash}`;
