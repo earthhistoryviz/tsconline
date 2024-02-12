@@ -1,0 +1,54 @@
+/* Datapack.css */
+
+/* Styles for the main container */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  
+  /* Styles for the heading */
+  .heading {
+    margin: 20px;
+  }
+  
+  /* Styles for the box container */
+  .box-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    border: 1px solid gray;
+    border-radius: 4px;
+    max-width: 600px;
+    margin: 0 auto;
+    margin-top: 20px;
+    width: 100%;
+  }
+  
+  /* Styles for the table */
+  .data-table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  /* Styles for the checkbox cell */
+  .checkbox-cell {
+    padding: 8px;
+  }
+  
+  /* Styles for the name cell with Tooltip */
+  .name-cell {
+    padding: 8px;
+    text-align: left;
+  }
+  
+  /* Styles for the upload button */
+  .upload-button {
+    margin-top: 20px;
+  }
+  

@@ -69,4 +69,3 @@ export const NavBar = observer(function Navbar() {
     </AppBar>
   );
 });
-

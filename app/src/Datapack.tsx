@@ -4,8 +4,10 @@ import { useTheme } from "@mui/material/styles";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { ColumnContainer,TSCCheckbox, InputFileUpload } from "./components";
 import Box from "@mui/material/Box";
+import InfoIcon from "@mui/icons-material/Info";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import "./Datapack.css";
 
 export const Datapack = observer(function Datapack() {
   const theme = useTheme();
@@ -27,48 +29,32 @@ export const Datapack = observer(function Datapack() {
       setSelectedDatapacks([...selectedDatapacks, id]);
     }
   };
+
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        width: "100%",
-        minHeight: "100vh",
-        background: theme.palette.settings.light,
-      }}
-    >
-      <h1 style={{ margin: "20px" }}>TimeScale Creator Datapacks</h1>
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        p={2}
-        border={1}
-        borderRadius={4}
-        borderColor="gray"
-        maxWidth="600px"
-        margin="0 auto"
-        marginTop="20px"
-        style={{
-          width: "100%",
-          backgroundColor: theme.palette.settings.light,
-        }}
-      >
-        <table style={{ borderCollapse: "collapse", width: "100%" }}>
+    <div className="container">
+      <Typography variant="h2" className="heading">
+        TimeScale Creator Datapacks
+      </Typography>
+      <Typography style={{ fontSize: 18, marginBottom: "3vh" }}>
+        Click checkbox to add datapack to your settings
+      </Typography>
+      <Box className="box-container">
+        <table className="data-table">
           <tbody>
             {datapacks.map((datapack) => (
               <tr key={datapack.id}>
-                <td style={{ padding: "8px" }}>
+                <td className="checkbox-cell">
                   <TSCCheckbox
                     checked={selectedDatapacks.includes(datapack.id)}
                     onChange={() => handleCheckboxChange(datapack.id)}
                   />
                 </td>
-                <td style={{ padding: "8px", textAlign: "left" }}>
-                  <Tooltip title={datapack.description} arrow>
+                <td className="name-cell">
+
                     <Typography>{datapack.name}</Typography>
+                  
+                  <Tooltip title={datapack.description} arrow placement="right">
+                    <InfoIcon className="info-icon" />
                   </Tooltip>
                 </td>
               </tr>
@@ -81,7 +67,7 @@ export const Datapack = observer(function Datapack() {
         text="Upload Datapack"
         onChange={() => {}}
         multiple
-        style={{ marginTop: "20px" }}
+        className="upload-button"
       />
     </div>
   );
