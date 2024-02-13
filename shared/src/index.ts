@@ -206,7 +206,6 @@ export type FaciesTimeBlock = {
 
 export type ChartRequest = {
   settings: string; // JSON string representing the settings file you want to use to make a chart
-  columnSettings: string; //Json string representing the state of the application when generating, contains the user's changes
   datapacks: string[]; // active datapacks to be used on chart
 };
 
@@ -502,8 +501,6 @@ export function assertChartRequest(o: any): asserts o is ChartRequest {
   if (typeof o !== "object") throw new Error("ChartRequest must be an object");
   if (typeof o.settings !== "string")
     throw new Error("ChartRequest must have a settings string");
-  if (typeof o.columnSettings !== "string")
-    throw new Error("ChartRequest must have a columnSettings string");
   if (!Array.isArray(o.datapacks))
     throw new Error("ChartRequest must have a datapacks array");
 }
