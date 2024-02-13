@@ -10,7 +10,7 @@ import { context } from './state';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Drawer, Accordion, AccordionSummary, AccordionDetails, FormControlLabel, Grid, Typography } from '@mui/material';
 import { useTheme, styled } from '@mui/material/styles';
-import { TSCIcon, TSCCheckbox, TSCButton, TSCCardList }  from './components'
+import { TSCIcon, TSCCheckbox, TSCButton, TSCCard }  from './components'
 import TSCreatorLogo from './assets/TSCreatorLogo.png'
 
 import "./Home.css"
@@ -160,7 +160,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({type, navigat
         }}>
           {configArray.map((preset, index) => (
             <Grid item key={index} style={{ marginRight: '16px', marginLeft: '16px'}}>
-            <TSCCardList
+            <TSCCard
               color={theme.palette.navbar.main}
               date={preset.date}
               icon={
