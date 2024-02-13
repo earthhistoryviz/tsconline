@@ -1621,6 +1621,7 @@ __metadata:
     node-fetch: "npm:^3.3.0"
     react: "npm:^18.2.0"
     react-bootstrap: "npm:^2.7.4"
+    react-card-flip: "npm:^1.2.2"
     react-dom: "npm:^18.2.0"
     react-router: "npm:^6.8.1"
     react-router-dom: "npm:^6.8.1"
@@ -4723,6 +4724,16 @@ __metadata:
     "@types/react":
       optional: true
   checksum: 49d26c12a3323e9e79ce98be9e11d7ebc3ae50cdea68365910674cfbd5fc183645f4e2ae739ba92d305d5802dd6b0ac3bb8973d3aadc3ccad93465b5dd2667bf
+  languageName: node
+  linkType: hard
+
+"react-card-flip@npm:^1.2.2":
+  version: 1.2.2
+  resolution: "react-card-flip@npm:1.2.2"
+  peerDependencies:
+    react: ^18.2.0
+    react-dom: ^18.2.0
+  checksum: 06bb6eaef48b052f2c58f3d268b9b02e28884f2a62c57d56c52bf71259c0d6a2f2ec566073529d78c9f9e28ae4bc213147ea82a6d928d7ea6aa0b9dd6d10e9c7
   languageName: node
   linkType: hard
 

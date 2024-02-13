@@ -2193,6 +2193,7 @@ const RAW_RUNTIME_STATE =
           ["node-fetch", "npm:3.3.1"],\
           ["react", "npm:18.2.0"],\
           ["react-bootstrap", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:2.7.4"],\
+          ["react-card-flip", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:1.2.2"],\
           ["react-dom", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:18.2.0"],\
           ["react-router", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:6.10.0"],\
           ["react-router-dom", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:6.10.0"],\
@@ -5729,6 +5730,32 @@ const RAW_RUNTIME_STATE =
           ["react-transition-group", "virtual:3dddbe5ff67db514c0b6a4545eb12d30d61ae2cae4bd4d78491651ecc028a3a026d859b193844e4a51b3337520c13b923d00481c11e3e224368210b6bef1f2e3#npm:4.4.5"],\
           ["uncontrollable", "virtual:4067e30015d366f1241193eeff93cc9fa87cd482f9ce0ceb3c45a12cabbfc9d34287b43c4ab17877fab91028c41d8b74e5443e4a1edff3aa2e6eb11f7a1cfad9#npm:7.2.1"],\
           ["warning", "npm:4.0.3"]\
+        ],\
+        "packagePeers": [\
+          "@types/react-dom",\
+          "@types/react",\
+          "react-dom",\
+          "react"\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["react-card-flip", [\
+      ["npm:1.2.2", {\
+        "packageLocation": "./.yarn/cache/react-card-flip-npm-1.2.2-01b6b46544-06bb6eaef4.zip/node_modules/react-card-flip/",\
+        "packageDependencies": [\
+          ["react-card-flip", "npm:1.2.2"]\
+        ],\
+        "linkType": "SOFT"\
+      }],\
+      ["virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:1.2.2", {\
+        "packageLocation": "./.yarn/__virtual__/react-card-flip-virtual-aa1f7bc665/0/cache/react-card-flip-npm-1.2.2-01b6b46544-06bb6eaef4.zip/node_modules/react-card-flip/",\
+        "packageDependencies": [\
+          ["react-card-flip", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:1.2.2"],\
+          ["@types/react", "npm:18.2.0"],\
+          ["@types/react-dom", "npm:18.2.1"],\
+          ["react", "npm:18.2.0"],\
+          ["react-dom", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:18.2.0"]\
         ],\
         "packagePeers": [\
           "@types/react-dom",\
