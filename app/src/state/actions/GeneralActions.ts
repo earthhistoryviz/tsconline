@@ -20,6 +20,8 @@ import {
   assertMapInfo,
   DatapackAgeInfo,
   type FontsInfo,
+  assertPresets,
+  assertIndexResponse,
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
@@ -39,6 +41,30 @@ export const resetSettings = action("resetSettings", () => {
     useDatapackSuggestedAge: false,
   };
 });
+
+export const fetchDatapackInfo = action("fetchPresets", async () => {
+  const response = await fetcher('/datapackinfoindex');
+  const indexResponse = await response.json()
+  try {
+    assertIndexResponse(indexResponse)
+    loadIndexResponse(indexResponse)
+    console.log('Datapacks loaded')
+  } catch(e: any) {
+    displayError(e, indexResponse, 'Failed to fetch DatapackInfo')
+  }
+})
+export const fetchPresets = action("fetchPresets", async () => {
+  const response = await fetcher('/presets');
+  const presets = await response.json();
+  try {
+    // console.log('Received response from server for presets: ', presets);
+    assertPresets(presets);
+    loadPresets(presets);
+    console.log('Presets loaded');
+  } catch(e: any) {
+    displayError(e, presets, 'Failed to retrieve presets')
+  }
+})
 
 export const uploadDatapack = action("uploadDatapack", (file: File) => {
   const formData = new FormData();
