@@ -13,7 +13,7 @@ import { Alert, Slide, Snackbar } from '@mui/material';
 import { useContext } from 'react';
 import { context } from './state';
 import {About} from "./About";
-import { TSCErrorDialog } from './components/TSCErrorDialog';
+import { TSCError } from './components';
 
 export default observer(function App() {
   const { state, actions } = useContext(context)
@@ -29,7 +29,7 @@ export default observer(function App() {
         <Route path="/help" element={<Help/>} />
         <Route path="/about" element={<About/>} />
       </Routes>
-      <TSCErrorDialog/>
+      <TSCError/>
       <Snackbar
       open={state.openSnackbar}
       autoHideDuration={5000}
