@@ -1,6 +1,6 @@
 import { observable } from "mobx";
 
-import { FaciesOptions, MapHistory } from "../types";
+import { ErrorAlert, FaciesOptions, MapHistory } from "../types";
 import type {
   MapHierarchy,
   MapInfo,
@@ -64,10 +64,7 @@ export type State = {
   useCache: boolean;
   usePreset: boolean;
   openSnackbar: boolean;
-  error: {
-    errorState: boolean;
-    errorText: string;
-  }
+  errorAlerts: ErrorAlert[];
 };
 
 export const state = observable<State>({
@@ -132,8 +129,5 @@ export const state = observable<State>({
   useCache: true,
   usePreset: true,
   openSnackbar: false,
-  error: {
-    errorState: false,
-    errorText: ""
-  }
+  errorAlerts: []
 });
