@@ -12,7 +12,6 @@ import { TSCTabs, TSCTab } from "./components";
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
   const theme = useTheme();
-  const [isHovered, setIsHovered] = useState(false);
 
   const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
     actions.setSettingsTabsSelected(newValue);
@@ -36,31 +35,25 @@ export const Settings = observer(function Settings() {
   }
 
   return (
-    <div
-      style={{ background: theme.palette.settings.light }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {isHovered && (
-        <TSCTabs value={selectedTabIndex} onChange={handleChange} centered>
-          <TSCTab
-            label="Time"
-            onClick={() => actions.setSettingsTabsSelected("time")}
-          />
-          <TSCTab
-            label="Column"
-            onClick={() => actions.setSettingsTabsSelected("column")}
-          />
-          <TSCTab
-            label="Font"
-            onClick={() => actions.setSettingsTabsSelected("font")}
-          />
-          <TSCTab
-            label="Map Points"
-            onClick={() => actions.setSettingsTabsSelected("mappoints")}
-          />
-        </TSCTabs>
-      )}
+    <div style={{ background: theme.palette.settings.light }}>
+      <TSCTabs value={selectedTabIndex} onChange={handleChange} centered>
+        <TSCTab
+          label="Time"
+          onClick={() => actions.setSettingsTabsSelected("time")}
+        />
+        <TSCTab
+          label="Column"
+          onClick={() => actions.setSettingsTabsSelected("column")}
+        />
+        <TSCTab
+          label="Font"
+          onClick={() => actions.setSettingsTabsSelected("font")}
+        />
+        <TSCTab
+          label="Map Points"
+          onClick={() => actions.setSettingsTabsSelected("mappoints")}
+        />
+      </TSCTabs>
       {displayChosenTab()}
     </div>
   );
