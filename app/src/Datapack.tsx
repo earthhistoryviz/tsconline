@@ -7,10 +7,29 @@ import Box from "@mui/material/Box";
 import InfoIcon from "@mui/icons-material/Info";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import Button from '@mui/material/Button';
+import { TSCButton } from "./components";
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+
 import "./Datapack.css";
 
 export const Datapack = observer(function Datapack() {
   const theme = useTheme();
+  const [open, setOpen] = useState(false);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+  const handleClose = () => {
+    setOpen(false);
+  };
+  const handleApply = () =>{
+    //add logic here to actually add the datapacks
+    setOpen(false);
+  }
 
   // dummy datapacks data
   const datapacks = [
@@ -35,8 +54,8 @@ export const Datapack = observer(function Datapack() {
       <Typography variant="h2" className="heading">
         TimeScale Creator Datapacks
       </Typography>
-      <Typography style={{ fontSize: 18, marginBottom: "3vh" }}>
-        Click checkbox to add datapack to your settings
+      <Typography style={{ fontSize: 18, marginTop: "1em", marginBottom: "3vh"}}>
+        Add a datapack by clicking the checkbox then hitting apply datapacks
       </Typography>
       <Box className="box-container">
         <table className="data-table">
@@ -50,18 +69,33 @@ export const Datapack = observer(function Datapack() {
                   />
                 </td>
                 <td className="name-cell">
-
+                  <div style = {{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
                     <Typography>{datapack.name}</Typography>
-                  
                   <Tooltip title={datapack.description} arrow placement="right">
                     <InfoIcon className="info-icon" />
                   </Tooltip>
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </Box>
+      <TSCButton onClick={handleClickOpen}>
+        Apply Datapacks
+      </TSCButton>
+      <Dialog open={open} onClose={handleClose}>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to apply the selected changes?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <TSCButton onClick={handleClose}>Cancel</TSCButton>
+          <TSCButton onClick={handleApply}>Apply</TSCButton>
+        </DialogActions>
+      </Dialog>
+
       <InputFileUpload
         startIcon={<CloudUploadIcon />}
         text="Upload Datapack"
