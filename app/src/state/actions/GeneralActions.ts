@@ -20,6 +20,8 @@ import {
   assertMapInfo,
   DatapackAgeInfo,
   type FontsInfo,
+  assertPresets,
+  assertIndexResponse,
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
@@ -39,6 +41,29 @@ export const resetSettings = action("resetSettings", () => {
     useDatapackSuggestedAge: false,
   };
 });
+
+export const fetchDatapackInfo = action("fetchPresets", async () => {
+  const response = await fetcher('/datapackinfoindex');
+  const indexResponse = await response.json()
+  try {
+    assertIndexResponse(indexResponse)
+    loadIndexResponse(indexResponse)
+    console.log('Datapacks loaded')
+  } catch(e: any) {
+    displayError(e, indexResponse, 'Failed to fetch DatapackInfo')
+  }
+})
+export const fetchPresets = action("fetchPresets", async () => {
+  const response = await fetcher('/presets');
+  const presets = await response.json();
+  try {
+    assertPresets(presets);
+    loadPresets(presets);
+    console.log('Presets loaded');
+  } catch(e: any) {
+    displayError(e, presets, 'Failed to retrieve presets')
+  }
+})
 
 export const uploadDatapack = action("uploadDatapack", (file: File) => {
   const formData = new FormData();
@@ -198,9 +223,7 @@ export const setDatapackConfig = action(
       assertColumnInfo(columnInfo);
       assertMapInfo(mapInfo);
     } catch (e) {
-      console.log(
-        `Error occured while changing datapack information on the website with indexes (setDatapackConfig): ${e} with datapacks ${datapacks}`
-      );
+      displayError(e, null, `Error occured while changing datapack information on the website: ${e} with datapacks ${datapacks}`)
       return false;
     }
     state.mapState.facies = facies;
@@ -228,11 +251,8 @@ export const setDatapackConfig = action(
         console.log("recieved settings JSON object at set Chart", settingsJson);
         runInAction(() => (state.settingsJSON = settingsJson)); // Save the parsed JSON to the state.settingsJSON
       } catch (e) {
-        if (isServerResponseError(await res.json())) {
-          console.log(`Server error: ${e} while getting settings`);
-        } else {
-          console.log(`error fetching from server with error: ${e}`);
-        }
+        displayError(e, await res.json(), "Error fetching settings from server")
+        return false
       }
     } else {
       state.settingsJSON = null;
@@ -275,11 +295,8 @@ export const removeCache = action("removeCache", async () => {
       `Server successfully deleted cache with message: ${response.message}`
     );
   } catch (e) {
-    if (isServerResponseError(response)) {
-      console.log("Server could not remove cache with error: ", response.error);
-    } else {
-      console.log("Server responded with an unknown response with error: ", e);
-    }
+    displayError(e, response, "Server could not remove cache")
+    return
   }
 });
 
@@ -337,20 +354,8 @@ export const generateChart = action("generateChart", async () => {
     await checkSVGStatus();
     setOpenSnackbar(true);
   } catch (e: any) {
-    if (isServerResponseError(answer)) {
-      console.log(
-        "ERROR failed to fetch chart with the settings.  Error response from server was: ",
-        answer
-      );
-      return;
-    }
-    console.log(
-      "ERROR: unknown error in fetching chart with settings.  Response from server was: ",
-      answer,
-      ", Error was: ",
-      e
-    );
-    return;
+    displayError(e, answer, "Failed to fetch chart")
+    return
   }
 });
 
@@ -437,6 +442,23 @@ export const updateCheckboxSetting = action(
     console.log(`Updated setting "${stateName}" to ${checked}`);
   }
 );
+/**
+ * Display error to dialog popup
+ * @param error the error thrown
+ * @param response the response from the server if applicable (nullable)
+ * @param message the message to be shown
+ */
+function displayError(error: any, response: any, message: string) {
+  if (!response) {
+    pushError(message)
+  } else if (isServerResponseError(response)) {
+    console.log(`${message} with server response: ${response.error}`);
+    pushError(response.error)
+  } else {
+    console.log(`${message} with server response: ${response}\n Error: ${error}`)
+    pushError(message)
+  }
+}
 
 /**
  * set the settings tab based on a string or number
@@ -503,7 +525,7 @@ export const checkSVGStatus = action(async () => {
       }
     }
   } catch (e) {
-    console.log(`Error fetching svg status: ${e}`);
+    console.log(`Error fetching svg status: ${e}`)
     return;
   }
   setChartLoading(false);
@@ -524,10 +546,8 @@ async function fetchSVGStatus(): Promise<boolean> {
   try {
     assertSVGStatus(data);
   } catch (e) {
+    displayError(e, data, `Could not fetch SVG status`)
     let msg = `Error fetching SVG status with error ${e}`;
-    if (isServerResponseError(data)) {
-      msg = `While fetching SVG status, server responded with error ${data.error}`;
-    }
     throw new Error(msg);
   }
   return data.ready;
@@ -542,6 +562,16 @@ export const handleCloseSnackbar = action(
     state.openSnackbar = false;
   }
 );
+
+export const removeError = action("removeError", (id: number) => {
+  state.errorAlerts = state.errorAlerts.filter((error) => error.id !== id)
+})
+export const pushError = action("pushError", (text: string) => {
+  state.errorAlerts.push({
+    id: new Date().getTime(),
+    errorText: text
+  })
+})
 
 export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
   state.settings.useDatapackSuggestedAge = isChecked;

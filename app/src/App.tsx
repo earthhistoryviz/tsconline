@@ -13,6 +13,7 @@ import { Alert, Slide, Snackbar } from '@mui/material';
 import { useContext } from 'react';
 import { context } from './state';
 import {About} from "./About";
+import { TSCError } from './components';
 
 export default observer(function App() {
   const { state, actions } = useContext(context)
@@ -28,6 +29,9 @@ export default observer(function App() {
         <Route path="/help" element={<Help/>} />
         <Route path="/about" element={<About/>} />
       </Routes>
+      {state.errorAlerts.map((error) => (
+        <TSCError key={error.id} text={error.errorText} id={error.id}/>
+      ))}
       <Snackbar
       open={state.openSnackbar}
       autoHideDuration={5000}
@@ -35,7 +39,6 @@ export default observer(function App() {
       onClose={actions.handleCloseSnackbar}
       >
       <Alert
-        // onClose={actions.handleCloseSnackbar}
         severity="success"
         variant="filled"
         sx={{ width: '100%', backgroundColor: theme.palette.on.dark }}

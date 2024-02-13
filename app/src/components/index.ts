@@ -7,4 +7,5 @@ export { TSCCardList } from './TSCCardList';
 export { TSCIcon } from './TSCIcon';
 export * from './TSCFileUpload';
 export * from './TSCComponents'
+export * from './TSCError'
 export { Accordion, AccordionSummary, AccordionDetails, ColumnContainer} from './TSCColumns';
