@@ -196,7 +196,7 @@ export type FaciesTimeBlock = {
 export type SubBlockInfo = {
     label: string;
     age: number;
-    info?: string;
+    info: string;
     lineType: string;
 };
 export type ChartRequest = {
@@ -305,6 +305,7 @@ export declare function assertTransects(o: any): asserts o is Transects;
 export declare function assertDatapack(o: any): asserts o is Datapack;
 export declare function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo;
 export declare function assertSubBlockInfo(o: any): asserts o is SubBlockInfo;
+export declare function assertBlock(o: any): asserts o is Block;
 export declare function assertFacies(o: any): asserts o is Facies;
 export declare function assertDatapackParsingPack(o: any): asserts o is DatapackParsingPack;
 export declare function assertDatapackIndex(o: any): asserts o is DatapackIndex;

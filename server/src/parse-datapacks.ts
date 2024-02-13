@@ -1,5 +1,5 @@
 import { createReadStream } from "fs";
-import { ColumnInfo, Facies, FaciesLocations, FaciesTimeBlock, assertFaciesTimeBlock, DatapackAgeInfo, DatapackParsingPack, FontsInfo, SubBlockInfo } from "@tsconline/shared";
+import { ColumnInfo, Facies, FaciesLocations, FaciesTimeBlock, assertFaciesTimeBlock, DatapackAgeInfo, DatapackParsingPack, FontsInfo, SubBlockInfo, Block, assertSubBlockInfo } from "@tsconline/shared";
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths } from "./util.js";
 import { createInterface } from "readline";
 
@@ -7,6 +7,11 @@ type ParsedColumnEntry = {
   children: string[],
   on: boolean,
   info: string
+}
+type FaciesFoundAndAgeRange = {
+  faciesFound: boolean,
+  minAge: number,
+  maxAge: number
 }
 let fontsInfo: FontsInfo = {
   "Age Label": {
@@ -121,7 +126,7 @@ export async function parseDatapacks(
         }
 
       });
-      //next we get the facies events(now becomes the first step)
+
 
     }
   } catch (e: any) {
@@ -247,41 +252,10 @@ async function getFaciesOrBlock(filename: string, facies: Facies, blocksMap: Map
       continue
     }
 
-
     // reached the end and store the key value pairs into blocksMap
     if ((!line || trimInvisibleCharacters(line) === '') && inBlockBlock) {
       inBlockBlock = false
-      let min = 0;
-      let max = 0;
-      //find the minage and maxage for current block
-      if (SubBlockInfos[0]) {
-        min = SubBlockInfos[0].age
-        max = SubBlockInfos[0].age
-        block.subBlockInfo = SubBlockInfos
-        for (let i = 1; i < SubBlockInfos.length; i++) {
-          if (SubBlockInfos[i]) {
-            let currentAge = SubBlockInfos[i]!.age
-            min = (currentAge < min) ? currentAge : min
-            max = (currentAge > max) ? currentAge : max
-          }
-
-        }
-        block.minAge = min
-        block.maxAge = max
-      }
-      //reset block and the temporary array to store subblockinfo
-      block = {
-        name: "",
-        subBlockInfo: [],
-        minAge: 0,
-        maxAge: 0,
-        info: "",
-        on: true,
-      }
-      SubBlockInfos = []
-      //store block into blocksmap
-      blocksMap.set(blockName, block)
-
+      addBlockToBlockMap(block, SubBlockInfos, blocksMap, blockName)
       continue
     }
     let tabSeperated = line.split('\t')
@@ -301,15 +275,21 @@ async function getFaciesOrBlock(filename: string, facies: Facies, blocksMap: Map
     // we found a block
     if (!inBlockBlock && tabSeperated[1] === "block") {
       blockName = trimQuotes(tabSeperated[0]!)
-      let infoAndOn = tabSeperated[tabSeperated.length - 1]
-      if (infoAndOn) {
-        if (infoAndOn.indexOf("off") == 1) {
-          block.on = false
-          infoAndOn = infoAndOn.slice(3)
-        }
-        block.info = infoAndOn
-        block.name = blockName
+      let offIndex = tabSeperated.indexOf("off")
+      if (offIndex != -1) {
+        block.on = false
       }
+
+      let info = tabSeperated[tabSeperated.length - 1]
+      const pattern = /\"*\"/
+
+      if (info && pattern.test(info)) {
+
+        block.info = info
+
+      }
+
+
       inBlockBlock = true
     } else if (inBlockBlock) {
       //get a single sub block
@@ -330,8 +310,54 @@ async function getFaciesOrBlock(filename: string, facies: Facies, blocksMap: Map
     facies.minAge = Math.min(facies.minAge, location.minAge)
     facies.maxAge = Math.max(facies.maxAge, location.maxAge)
   }
+  if (inBlockBlock) {
+    addBlockToBlockMap(block, SubBlockInfos, blocksMap, blockName);
+  }
 }
 
+/**
+ * add a block into blocksMap
+ * @param block the block to be added
+ * @param subBlockInfos the subBlockInfo of the block
+ * @param blocksMap the map of blocks
+ * @param blockName the name of the block
+ */
+function addBlockToBlockMap(block: Block, subBlockInfos: SubBlockInfo[], blocksMap: Map<string, Block>, blockName: string) {
+  let min = 0;
+  let max = 0;
+
+  if (subBlockInfos[0]) {
+    min = subBlockInfos[0].age
+    max = subBlockInfos[0].age
+    block.subBlockInfo = subBlockInfos
+    for (let i = 1; i < subBlockInfos.length; i++) {
+      if (subBlockInfos[i]) {
+        let currentAge = subBlockInfos[i]!.age
+        min = Math.min(currentAge, min)
+        max = Math.max(currentAge, max)
+      }
+
+    }
+    block.minAge = min
+    block.maxAge = max
+  }
+  blocksMap.set(blockName, block)
+  block = {
+    name: "",
+    subBlockInfo: [],
+    minAge: 0,
+    maxAge: 0,
+    info: "",
+    on: true,
+  }
+  subBlockInfos = []
+}
+
+/**
+ * Processes a single subBlockInfo line
+ * @param line the line to be processed
+ * @returns A subBlock object
+ */
 function processBlock(line: string): SubBlockInfo | null {
   let currentSubBlockInfo = {
     label: "",
@@ -340,7 +366,7 @@ function processBlock(line: string): SubBlockInfo | null {
     lineType: ""
   }
   const tabSeperated = line.split('\t')
-  // if (tabSeperated.length < 4) return null (don't know if it's the same for blocks too)
+  if (tabSeperated.length < 3) return null
   const label = tabSeperated[1]
   const age = Number(tabSeperated[2]!)
   const info = tabSeperated[4]
@@ -356,9 +382,13 @@ function processBlock(line: string): SubBlockInfo | null {
   if (lineType) {
     currentSubBlockInfo.lineType = lineType
   }
-
-
-  return currentSubBlockInfo
+  try {
+    assertSubBlockInfo(currentSubBlockInfo);
+  } catch (e) {
+    console.log(`Error ${e} found while processing subBlockInfo, returning null`)
+    return null
+  }
+  return currentSubBlockInfo;
 }
 
 
@@ -462,15 +492,19 @@ function recursive(
       //check if it is a block
 
       if (currentColumn && blocksMap.has(currentColumn)) {
-        let currentBlock = blocksMap.get(currentColumn)
-        if (currentBlock) {
-          currentColumnInfo.subBlockInfo = currentBlock.subBlockInfo
-          if (!currentBlock.on) {
-            currentColumnInfo.on = false
-          }
-          returnValue.minAge = currentBlock.minAge
-          returnValue.maxAge = currentBlock.maxAge
-        }
+        let currentBlock = blocksMap.get(currentColumn)!
+
+        currentColumnInfo.subBlockInfo = currentBlock.subBlockInfo
+
+        currentColumnInfo.on = currentBlock.on
+
+        returnValue.minAge = currentBlock.minAge
+        returnValue.maxAge = currentBlock.maxAge
+
+
+
+
+
       }
 
 
@@ -485,9 +519,9 @@ function recursive(
         facies, // the facies object used to garner aliases for map point usage
         blocksMap
       )
-      returnValue.minAge = (compareValue.minAge < returnValue.minAge) ? compareValue.minAge : returnValue.minAge
-      returnValue.maxAge = (compareValue.maxAge > returnValue.maxAge) ? compareValue.maxAge : returnValue.maxAge
-      returnValue.faciesFound = (compareValue.faciesFound) ? true : false
+      returnValue.minAge = Math.min(compareValue.minAge, returnValue.minAge)
+      returnValue.maxAge = Math.max(compareValue.minAge, returnValue.minAge)
+      returnValue.faciesFound = compareValue.faciesFound
       if (!returnValue.faciesFound && isFacies.has(trimInvisibleCharacters(child))) {
         returnValue.faciesFound = true
         facies.aliases[trimInvisibleCharacters(currentColumn)] = trimInvisibleCharacters(child)
