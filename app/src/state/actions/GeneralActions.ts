@@ -57,7 +57,6 @@ export const fetchPresets = action("fetchPresets", async () => {
   const response = await fetcher('/presets');
   const presets = await response.json();
   try {
-    // console.log('Received response from server for presets: ', presets);
     assertPresets(presets);
     loadPresets(presets);
     console.log('Presets loaded');
@@ -451,13 +450,13 @@ export const updateCheckboxSetting = action(
  */
 function displayError(error: any, response: any, message: string) {
   if (!response) {
-    setError(true, message)
+    pushError(message)
   } else if (isServerResponseError(response)) {
     console.log(`${message} with server response: ${response.error}`);
-    setError(true, response.error)
+    pushError(response.error)
   } else {
     console.log(`${message} with server response: ${response}\n Error: ${error}`)
-    setError(true, message)
+    pushError(message)
   }
 }
 
@@ -564,9 +563,14 @@ export const handleCloseSnackbar = action(
   }
 );
 
-export const setError = action("setError", (isError: boolean, text: string) => {
-  state.error.errorState = isError
-  state.error.errorText = text
+export const removeError = action("removeError", (id: number) => {
+  state.errorAlerts = state.errorAlerts.filter((error) => error.id !== id)
+})
+export const pushError = action("pushError", (text: string) => {
+  state.errorAlerts.push({
+    id: new Date().getTime(),
+    errorText: text
+  })
 })
 
 export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {

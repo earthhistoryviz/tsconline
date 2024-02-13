@@ -21,3 +21,7 @@ export type LegendItem = {
   label: string;
   icon: React.ElementType<any>;
 };
+export type ErrorAlert = {
+    id: number,
+    errorText: string
+}

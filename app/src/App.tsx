@@ -29,7 +29,9 @@ export default observer(function App() {
         <Route path="/help" element={<Help/>} />
         <Route path="/about" element={<About/>} />
       </Routes>
-      <TSCError/>
+      {state.errorAlerts.map((error) => (
+        <TSCError key={error.id} text={error.errorText} id={error.id}/>
+      ))}
       <Snackbar
       open={state.openSnackbar}
       autoHideDuration={5000}
