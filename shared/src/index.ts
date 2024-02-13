@@ -110,81 +110,81 @@ export type ColumnPrototypeInfo = {
 };
 
 export type FontsInfo = {
-    "Column Header": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
-    "Age Label": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
-    "Uncertainty Label": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
-    "Zone Column Label": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
-    "Sequence Column Label": {
-        inheritable: boolean;
-    };
-    "Event Column Label": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
-    "Popup Body": {
-        inheritable: boolean;
-    };
-    "Ruler Label": {
-        inheritable: boolean;
-    };
-    "Point Column Scale Label": {
-        inheritable: boolean;
-    };
-    "Range Label": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
-    "Ruler Tick Mark Label": {
-        inheritable: boolean;
-    };
-    "Legend Title": {
-        inheritable: boolean;
-    };
-    "Legend Column Name": {
-        inheritable: boolean;
-    };
-    "Legend Column Source": {
-        inheritable: boolean;
-    };
-    "Range Box Label": {
-        inheritable: boolean;
-    };
+  "Column Header": {
+    inheritable: boolean;
+    fontFace: "Arial" | "Courier" | "Verdana";
+    size: number;
+    bold: boolean;
+    italic: boolean;
+    color: string;
+  };
+  "Age Label": {
+    inheritable: boolean;
+    fontFace: "Arial" | "Courier" | "Verdana";
+    size: number;
+    bold: boolean;
+    italic: boolean;
+    color: string;
+  };
+  "Uncertainty Label": {
+    inheritable: boolean;
+    fontFace: "Arial" | "Courier" | "Verdana";
+    size: number;
+    bold: boolean;
+    italic: boolean;
+    color: string;
+  };
+  "Zone Column Label": {
+    inheritable: boolean;
+    fontFace: "Arial" | "Courier" | "Verdana";
+    size: number;
+    bold: boolean;
+    italic: boolean;
+    color: string;
+  };
+  "Sequence Column Label": {
+    inheritable: boolean;
+  };
+  "Event Column Label": {
+    inheritable: boolean;
+    fontFace: "Arial" | "Courier" | "Verdana";
+    size: number;
+    bold: boolean;
+    italic: boolean;
+    color: string;
+  };
+  "Popup Body": {
+    inheritable: boolean;
+  };
+  "Ruler Label": {
+    inheritable: boolean;
+  };
+  "Point Column Scale Label": {
+    inheritable: boolean;
+  };
+  "Range Label": {
+    inheritable: boolean;
+    fontFace: "Arial" | "Courier" | "Verdana";
+    size: number;
+    bold: boolean;
+    italic: boolean;
+    color: string;
+  };
+  "Ruler Tick Mark Label": {
+    inheritable: boolean;
+  };
+  "Legend Title": {
+    inheritable: boolean;
+  };
+  "Legend Column Name": {
+    inheritable: boolean;
+  };
+  "Legend Column Source": {
+    inheritable: boolean;
+  };
+  "Range Box Label": {
+    inheritable: boolean;
+  };
 };
 
 export type Facies = {
@@ -211,7 +211,7 @@ export type FaciesTimeBlock = {
 export type SubBlockInfo = {
   label: string,
   age: number,
-  info?: string,
+  info: string,
   lineType: string
 }
 
@@ -236,7 +236,7 @@ export type ColumnInfo = {
   minAge: number;
   maxAge: number;
 };
-//TODO: add assertion function for Block type
+
 export type Block = {
   name: string;
   subBlockInfo: SubBlockInfo[];
@@ -379,9 +379,9 @@ export function assertTransects(o: any): asserts o is Transects {
 export function assertDatapack(o: any): asserts o is Datapack {
   if (typeof o !== "object")
     throw new Error("Datapack must be an object");
-  if (typeof o.name !== 'string') 
+  if (typeof o.name !== 'string')
     throw new Error("Datapack must have a field name of type string")
-  if (typeof o.file !== 'string') 
+  if (typeof o.file !== 'string')
     throw new Error("Datapack must have a field file of type string")
 }
 
@@ -405,10 +405,30 @@ export function assertSubBlockInfo(o: any): asserts o is SubBlockInfo {
     throw new Error("SubBlockInfo must have a label with string type")
   if (typeof o.age !== "number")
     throw new Error("SubBlockInfo must have an age with type number")
-  if (o.info !== undefined && typeof o.info !== "string")
-    throw new Error("SubBlockInfo must have an info with type string or be undefined")
+  if (typeof o.info !== "string")
+    throw new Error("SubBlockInfo must have an info with type string")
   if (typeof o.lineType !== "string")
     throw new Error("SubBlockInfo must have a lineType value with type string")
+}
+
+export function assertBlock(o: any): asserts o is Block {
+  if (!o || typeof o !== "object")
+    throw new Error("Block must be a non-null object");
+
+  if (typeof o.name !== "string")
+    throw new Error("Block must have a name with string type")
+  for (const subBlockInfo of o.subBlockInfo) {
+    assertSubBlockInfo(subBlockInfo)
+  }
+  if (typeof o.minAge !== "number")
+    throw new Error("Block must have a minAge with number type")
+  if (typeof o.maxAge !== "number")
+    throw new Error("Block must have a maxAge with number type")
+  if (typeof o.info !== "string")
+    throw new Error("Block must have an info with string type")
+  if (typeof o.name !== "boolean")
+    throw new Error("Block must have an on value with boolean type")
+
 }
 
 export function assertFacies(o: any): asserts o is Facies {
@@ -595,19 +615,19 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
 }
 
 export function assertFontsInfo(o: any): asserts o is FontsInfo {
-    if (typeof o !== "object") throw new Error("FontsInfo must be an object");
-    if (typeof o.bold !== "boolean")
-        throw new Error("FontsInfo must have an bold boolean");
-    if (typeof o.color !== "string")
-        throw new Error("FontsInfo must have a color string");
-    if (typeof o.fontFace !== "string")
-        throw new Error("FontsInfo must have a font face string");
-    if (typeof o.inheritable !== "boolean")
-        throw new Error("FontsInfo must have a inheritable boolean");
-    if (typeof o.italic !== "boolean")
-        throw new Error("FontsInfo must have an italic string");
-    if (typeof o.size !== "number")
-        throw new Error("FontsInfo must have a size number");
+  if (typeof o !== "object") throw new Error("FontsInfo must be an object");
+  if (typeof o.bold !== "boolean")
+    throw new Error("FontsInfo must have an bold boolean");
+  if (typeof o.color !== "string")
+    throw new Error("FontsInfo must have a color string");
+  if (typeof o.fontFace !== "string")
+    throw new Error("FontsInfo must have a font face string");
+  if (typeof o.inheritable !== "boolean")
+    throw new Error("FontsInfo must have a inheritable boolean");
+  if (typeof o.italic !== "boolean")
+    throw new Error("FontsInfo must have an italic string");
+  if (typeof o.size !== "number")
+    throw new Error("FontsInfo must have a size number");
 }
 
 export function assertMapHierarchy(o: any): asserts o is MapHierarchy {
