@@ -1,16 +1,37 @@
-import { Box, Button, IconButton, SvgIcon, Tooltip, TooltipProps, styled, useTheme } from "@mui/material";
+import {
+  Box,
+  Button,
+  IconButton,
+  Tooltip,
+  TooltipProps,
+  styled,
+  useTheme,
+} from "@mui/material";
 import { FaciesOptions, LegendItem } from "../types";
-import { Bounds, ColumnInfo, FaciesLocations, InfoPoints, MapPoints, Transects, isRectBounds, isVertBounds } from "@tsconline/shared";
+import {
+  Bounds,
+  ColumnInfo,
+  FaciesLocations,
+  InfoPoints,
+  MapPoints,
+  Transects,
+  isRectBounds,
+  isVertBounds,
+} from "@tsconline/shared";
 import { useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { actions, context } from "../state";
 import { useTransformEffect } from "react-zoom-pan-pinch";
-import { calculateRectBoundsPosition, calculateRectButton, calculateVertBoundsPosition } from "../coordinates";
+import {
+  calculateRectBoundsPosition,
+  calculateRectButton,
+  calculateVertBoundsPosition,
+} from "../coordinates";
 import NotListedLocationIcon from "@mui/icons-material/NotListedLocation";
 import LocationOffIcon from "@mui/icons-material/LocationOff";
 import LocationOnSharpIcon from "@mui/icons-material/LocationOnSharp";
 import { devSafeUrl } from "../util";
-import { TypographyText } from "../components";
+import { BorderedIcon, TypographyText } from "../components";
 
 const ICON_SIZE = 40;
 const InfoIcon = NotListedLocationIcon;
@@ -25,28 +46,6 @@ export const ChildMapIcon = () => {
   );
 };
 
-export const BorderedIcon = ({
-  component,
-  className,
-}: {
-  component: React.ElementType<any>;
-  className: string;
-}) => {
-  return (
-    <SvgIcon
-      className={className}
-      component={component}
-      style={{
-        fontSize: 40,
-        fill: "currentColor",
-        stroke: "black",
-        strokeWidth: "0.5",
-      }}
-    />
-  );
-};
-
-
 type TooltipComponentProps = {
   container: HTMLDivElement | null;
   className?: string;
@@ -54,21 +53,26 @@ type TooltipComponentProps = {
 // TODO: might want to change if it ever updates, weird workaround here, can see this at
 // changing it with normal styles cannot override since this uses a portal to create outside the DOM
 // https://mui.com/material-ui/guides/interoperability/#global-css
-const MapPointTooltip = styled(({ className, container, ...props }: TooltipComponentProps) => {
-  // IMPORTANT: this is needed when fullscreened because the tooltips are appended to the document.body
-  // normally. When in fullscreen the document.body is in the background and therefore you can't see
-  // the tooltip. To "hack" around this, we append to the fullscreened element which we pass as container
-  const popperProps = {
-    container:
-      container && document.fullscreenElement ? container : document.body,
-  };
-  return <Tooltip
-  arrow
-  followCursor
-  classes={{ popper: className }}
-  PopperProps={popperProps}
-  {...props} />
-})`
+const MapPointTooltip = styled(
+  ({ className, container, ...props }: TooltipComponentProps) => {
+    // IMPORTANT: this is needed when fullscreened because the tooltips are appended to the document.body
+    // normally. When in fullscreen the document.body is in the background and therefore you can't see
+    // the tooltip. To "hack" around this, we append to the fullscreened element which we pass as container
+    const popperProps = {
+      container:
+        container && document.fullscreenElement ? container : document.body,
+    };
+    return (
+      <Tooltip
+        arrow
+        followCursor
+        classes={{ popper: className }}
+        PopperProps={popperProps}
+        {...props}
+      />
+    );
+  }
+)`
   .MuiTooltip-tooltip {
     background-color: ${(props) => props.theme.palette.tooltip.main};
     padding-left: 20px;
@@ -93,8 +97,8 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
   ({ mapPoint, x, y, name, isInfo = false, container }) => {
     const theme = useTheme();
     const { state } = useContext(context);
-    const column = state.settingsTabs.columnHashMap.get(name)
-    const clicked = column ? column.on : false
+    const column = state.settingsTabs.columnHashMap.get(name);
+    const clicked = column ? column.on : false;
 
     // below is the hook for grabbing the scale from map image scaling
     const [scale, setScale] = useState(1);
@@ -105,9 +109,10 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
         // unmount
       };
     });
-    const color = isInfo || !column
-      ? `${theme.palette.disabled.main}`
-      : `${clicked ? theme.palette.on.main : theme.palette.off.main}`;
+    const color =
+      isInfo || !column
+        ? `${theme.palette.disabled.main}`
+        : `${clicked ? theme.palette.on.main : theme.palette.off.main}`;
 
     // scale only if it isn't an info point and in facies mode
     const iconSize =
@@ -151,7 +156,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
             }}
             onClick={() => {
               if (state.mapState.isFacies) return;
-              actions.toggleSettingsTabColumn(name)
+              actions.toggleSettingsTabColumn(name);
             }}
           >
             {getIcon(clicked, isInfo, iconSize, scale, name, column)}
@@ -163,59 +168,69 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
 );
 
 interface TransectLineProps {
-  name: string,
-  startPosition: {x: number, y: number},
-  endPosition: {x: number, y: number},
-  transect: Transects[string],
-  onColor: string,
-  offColor: string,
-  container: HTMLDivElement | null,
+  name: string;
+  startPosition: { x: number; y: number };
+  endPosition: { x: number; y: number };
+  transect: Transects[string];
+  onColor: string;
+  offColor: string;
+  container: HTMLDivElement | null;
 }
 /**
  * This is the clickable Transect line that connects map points together
  * TODO: Currently not connected to the column settings.
  */
-const TransectLine: React.FC<TransectLineProps> = observer(({name, startPosition, endPosition, transect, onColor, offColor, container}) => {
-  const [on, setOn] = useState(transect.on)
-  function toggleOn() {
-    setOn(!on)
-  }
-  return (
+const TransectLine: React.FC<TransectLineProps> = observer(
+  ({
+    name,
+    startPosition,
+    endPosition,
+    transect,
+    onColor,
+    offColor,
+    container,
+  }) => {
+    const [on, setOn] = useState(transect.on);
+    function toggleOn() {
+      setOn(!on);
+    }
+    return (
       <MapPointTooltip
-      container={container}
-      title={
-        <>
-          <h3 className="header">{`${name}`}</h3>
-          <ul>
-            <li>Note: {transect.note || "--"}</li>
-          </ul>
-        </>
-      }
+        container={container}
+        title={
+          <>
+            <h3 className="header">{`${name}`}</h3>
+            <ul>
+              <li>Note: {transect.note || "--"}</li>
+            </ul>
+          </>
+        }
       >
         <g>
-        <line
-          x1={`${startPosition.x}%`}
-          y1={`${startPosition.y}%`}
-          x2={`${endPosition.x}%`}
-          y2={`${endPosition.y}%`}
-          strokeWidth={10}
-          strokeLinecap="round"
-          stroke={`black`}
-        />
-        <line
-          x1={`${startPosition.x}%`}
-          y1={`${startPosition.y}%`}
-          x2={`${endPosition.x}%`}
-          y2={`${endPosition.y}%`}
-          strokeWidth={9}
-          strokeLinecap="round"
-          stroke={on ? onColor : offColor}
-          onClick={toggleOn}
-        />
+          <line
+            x1={`${startPosition.x}%`}
+            y1={`${startPosition.y}%`}
+            x2={`${endPosition.x}%`}
+            y2={`${endPosition.y}%`}
+            strokeWidth={10}
+            strokeLinecap="round"
+            stroke={`black`}
+          />
+          <line
+            x1={`${startPosition.x}%`}
+            y1={`${startPosition.y}%`}
+            x2={`${endPosition.x}%`}
+            y2={`${endPosition.y}%`}
+            strokeWidth={9}
+            strokeLinecap="round"
+            stroke={on ? onColor : offColor}
+            onClick={toggleOn}
+          />
         </g>
       </MapPointTooltip>
-  );
-})
+    );
+  }
+);
 
 /**
  * This will create the rectangular map button for any children
@@ -376,10 +391,10 @@ export function loadMapPoints(
  * @param bounds the bounds of the overarching map
  * @param frameWidth the frameWidth of the current map in px
  * @param frameHeight the frameHeight of the current map in px
- * @param onColor the color when transects are clicked on 
+ * @param onColor the color when transects are clicked on
  * @param offColor the color when trransects are clicked off
  * @param container the container to attach to when fullscreened
- * @returns 
+ * @returns
  */
 export function loadTransects(
   transects: Transects,
@@ -392,60 +407,68 @@ export function loadTransects(
   container: HTMLDivElement | null
 ) {
   return (
-    <svg 
-    className="transect-lines"
-    >
-    <defs>
-      <filter id="dropshadow" x="-1" y="-1" width="3" height="3">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
-        <feOffset dx="1" dy="1" result="offsetblur"/>
-        <feComponentTransfer>
-          <feFuncA type="linear" slope="0.5"/>
-        </feComponentTransfer>
-        <feMerge> 
-          <feMergeNode in="offsetblur"/>
-          <feMergeNode in="SourceGraphic"/>
-        </feMerge>
-      </filter>
-    </defs>
+    <svg className="transect-lines">
+      <defs>
+        <filter id="dropshadow" x="-1" y="-1" width="3" height="3">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
+          <feOffset dx="1" dy="1" result="offsetblur" />
+          <feComponentTransfer>
+            <feFuncA type="linear" slope="0.5" />
+          </feComponentTransfer>
+          <feMerge>
+            <feMergeNode in="offsetblur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
       <g filter="url(#dropshadow)">
-    {
-    Object.entries(transects).map(([name, transect]) => {
-      if (!mapPoints[transect.startMapPoint]) throw new Error(`MapPoints value for  ${transect.startMapPoint} doesn't exist for given transect ${transect}`)
-      if (!mapPoints[transect.endMapPoint]) throw new Error(`MapPoints value for  ${transect.endMapPoint} doesn't exist for given transect ${transect}`)
-      const start = mapPoints[transect.startMapPoint]
-      const end = mapPoints[transect.endMapPoint]
-      let startPosition = getPositionOfPointBasedOnBounds(
-        bounds,
-        start,
-        frameWidth,
-        frameHeight
-      )
-      if (!startPosition) throw new Error(`MapInfo bounds are neither vertical or rectangular for ${bounds}`)
-      let endPosition = getPositionOfPointBasedOnBounds(
-        bounds,
-        end,
-        frameWidth,
-        frameHeight
-      )
-      if (!endPosition) throw new Error(`MapInfo bounds are neither vertical or rectangular for ${bounds}`)
-      return (
-        <TransectLine
-        key={name}
-        name={name}
-        startPosition={startPosition}
-        endPosition={endPosition}
-        transect={transect}
-        onColor={onColor}
-        offColor={offColor}
-        container={container}
-        />
-      )
-    })
-    }
-    </g>
+        {Object.entries(transects).map(([name, transect]) => {
+          if (!mapPoints[transect.startMapPoint])
+            throw new Error(
+              `MapPoints value for  ${transect.startMapPoint} doesn't exist for given transect ${transect}`
+            );
+          if (!mapPoints[transect.endMapPoint])
+            throw new Error(
+              `MapPoints value for  ${transect.endMapPoint} doesn't exist for given transect ${transect}`
+            );
+          const start = mapPoints[transect.startMapPoint];
+          const end = mapPoints[transect.endMapPoint];
+          let startPosition = getPositionOfPointBasedOnBounds(
+            bounds,
+            start,
+            frameWidth,
+            frameHeight
+          );
+          if (!startPosition)
+            throw new Error(
+              `MapInfo bounds are neither vertical or rectangular for ${bounds}`
+            );
+          let endPosition = getPositionOfPointBasedOnBounds(
+            bounds,
+            end,
+            frameWidth,
+            frameHeight
+          );
+          if (!endPosition)
+            throw new Error(
+              `MapInfo bounds are neither vertical or rectangular for ${bounds}`
+            );
+          return (
+            <TransectLine
+              key={name}
+              name={name}
+              startPosition={startPosition}
+              endPosition={endPosition}
+              transect={transect}
+              onColor={onColor}
+              offColor={offColor}
+              container={container}
+            />
+          );
+        })}
+      </g>
     </svg>
-  )
+  );
 }
 
 /**
@@ -575,7 +598,7 @@ const DisplayLegendItem = ({ legendItem }: { legendItem: LegendItem }) => {
 };
 
 /**
- * This is the legend that describes the icons present on the 
+ * This is the legend that describes the icons present on the
  * map viewer. Currently uses a legend item array inherently
  * @returns a component with a header and body of icons
  */

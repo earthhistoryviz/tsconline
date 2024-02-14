@@ -17,7 +17,6 @@ export type State = {
   chartLoading: boolean;
   tab: number;
   madeChart: boolean;
-  showPresetInfo: boolean;
   settingsTabs: {
     selected: "time" | "font" | "column" | "mappoints";
     columns: ColumnInfo | null;
@@ -71,7 +70,6 @@ export const state = observable<State>({
   chartLoading: false,
   madeChart: false,
   tab: 0,
-  showPresetInfo: false,
   settingsTabs: {
     selected: "time",
     columns: null,

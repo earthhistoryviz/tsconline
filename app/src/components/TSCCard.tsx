@@ -13,8 +13,12 @@ import InfoIcon from "@mui/icons-material/Info";
 import { TSCButton } from "./TSCButton";
 import ReactCardFlip from "react-card-flip";
 import "./TSCCard.css";
+import { ChartConfig } from "@tsconline/shared";
+import { devSafeUrl } from "../util";
+import { BorderedIcon } from "./TSCComponents";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
-const text = `
+let text = `
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Aliquam ultrices sagittis orci a scelerisque purus semper eget. Massa id neque aliquam vestibulum morbi. Odio ut enim blandit volutpat maecenas volutpat blandit. Aliquam faucibus purus in massa tempor. Id diam vel quam elementum pulvinar etiam. Ornare massa eget egestas purus viverra accumsan in nisl nisi. Lectus nulla at volutpat diam. Ultrices mi tempus imperdiet nulla malesuada pellentesque elit eget. Lobortis scelerisque fermentum dui faucibus in ornare.
 
 Rhoncus mattis rhoncus urna neque viverra justo nec. Tempor id eu nisl nunc mi ipsum faucibus vitae aliquet. Feugiat nibh sed pulvinar proin gravida. Et tortor at risus viverra adipiscing at in tellus. Tortor pretium viverra suspendisse potenti nullam ac tortor. Aenean pharetra magna ac placerat vestibulum lectus mauris ultrices. Eget est lorem ipsum dolor sit amet consectetur adipiscing elit. Ac odio tempor orci dapibus ultrices in. Phasellus faucibus scelerisque eleifend donec. Praesent tristique magna sit amet purus gravida quis blandit turpis. Blandit cursus risus at ultrices mi.
@@ -23,31 +27,30 @@ Nunc congue nisi vitae suscipit tellus mauris a diam. Velit dignissim sodales ut
 
 Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Posuere ac ut consequat semper viverra nam libero. Ipsum consequat nisl vel pretium lectus quam id leo. Amet mattis vulputate enim nulla aliquet porttitor. Suscipit adipiscing bibendum est ultricies integer quis auctor elit. Neque aliquam vestibulum morbi blandit cursus risus at ultrices. Nunc aliquet bibendum enim facilisis gravida neque convallis a. Non nisi est sit amet facilisis magna etiam tempor. Proin fermentum leo vel orci porta non pulvinar. Quisque sagittis purus sit amet volutpat consequat mauris nunc congue. Elementum integer enim neque volutpat ac tincidunt. Condimentum mattis pellentesque id nibh tortor. Viverra orci sagittis eu volutpat odio facilisis mauris sit.
 
-Volutpat sed cras ornare arcu dui vivamus. Neque convallis a cras semper auctor neque vitae tempus quam. Sed velit dignissim sodales ut. Diam phasellus vestibulum lorem sed risus ultricies tristique nulla. Scelerisque fermentum dui faucibus in ornare quam. Tortor consequat id porta nibh venenatis cras sed felis eget. Bibendum at varius vel pharetra vel turpis nunc eget. Libero volutpat sed cras ornare arcu dui. Aliquet porttitor lacus luctus accumsan tortor posuere. Ligula ullamcorper malesuada proin libero nunc. Neque vitae tempus quam pellentesque nec nam aliquam sem. Duis at tellus at urna condimentum. Lectus urna duis convallis convallis tellus id interdum. Vulputate enim nulla aliquet porttitor lacus luctus accumsan. Commodo nulla facilisi nullam vehicula ipsum a. Ut sem viverra aliquet eget sit amet tellus cras adipiscing.`;
+Volutpat sed cras ornare arcu dui vivamus. Neque convallis a cras semper auctor neque vitae tempus quam. Sed velit dignissim sodales ut. Diam phasellus vestibulum lorem sed risus ultricies tristique nulla. Scelerisque fermentum dui faucibus in ornare quam. Tortor consequat id porta nibh venenatis cras sed felis eget. Bibendum at varius vel pharetra vel turpis nunc eget. Libero volutpat sed cras ornare arcu dui. Aliquet porttitor lacus luctus accumsan tortor posuere. Ligula ullamcorper malesuada proin libero nunc. Neque vitae tempus quam pellentesque nec nam aliquam sem. Duis at tellus at urna condimentum. Lectus urna duis convallis convallis tellus id interdum. Vulputate enim nulla aliquet porttitor lacus luctus accumsan. Commodo nulla facilisi nullam vehicula ipsum a. Ut sem viverra aliquet eget sit amet tellus cras adipiscing.
+`;
 const Title = styled("h2")(({ theme }) => ({
   fontFamily: theme.typography.fontFamily,
   color: theme.palette.background.default,
 }));
 
-const CardBackground = styled("div")(({ theme }) => ({
-  "&:before": {
-    backgroundColor: theme.palette.navbar.main,
-  },
+const CardBackground = styled("div")(({ theme, color }) => ({
+  background: `linear-gradient(to top, ${
+    color || theme.palette.selection.main
+  }, ${Color(color || theme.palette.selection.main)
+    .rotate(24)
+    .lighten(0.12)})`,
+}));
+const HiddenBack = styled("div")(({ theme }) => ({
+  backgroundColor: theme.palette.navbar.main,
 }));
 
-const CardContent = styled("div")(({ theme, color }) => ({
+const CardContent = styled("div")(({ color }) => ({
   boxShadow: `
     -10px 10px 15px -5px ${Color(color).fade(0.5)}, 
       10px 10px 15px -5px ${Color(color).fade(0.5)}, 
       0 10px 15px -5px ${Color(color).fade(0.5)}
     `,
-  "&:before": {
-    background: `linear-gradient(to top, ${
-      color || theme.palette.selection.main
-    }, ${Color(color || theme.palette.selection.main)
-      .rotate(24)
-      .lighten(0.12)})`,
-  },
 }));
 
 const Date = styled("div")(({ theme }) => ({
@@ -57,19 +60,11 @@ const Date = styled("div")(({ theme }) => ({
 
 export const TSCCard = ({
   color,
-  icon,
-  background,
-  title,
-  date,
-  onInfoClick,
+  preset,
   generateChart,
 }: {
   color?: string;
-  icon: string;
-  background: string;
-  title: React.ReactNode;
-  date: string;
-  onInfoClick?: () => void;
+  preset: ChartConfig;
   generateChart?: () => void;
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -79,25 +74,30 @@ export const TSCCard = ({
   return (
     <ReactCardFlip isFlipped={isFlipped} flipDirection="horizontal">
       {/* This is the front card */}
-      <CardBackground className="front-card">
+      <Box className="front-card">
+        <HiddenBack className="hidden-back" />
         <CardMedia
           className="card-media-cover"
-          image={background}
+          image={devSafeUrl(preset.background)}
           onClick={handleFlip}
         />
         <CardContent className="card-content front-card-content" color={color}>
+          <CardBackground className="card-background clip-path" color={color} />
           <Box position="relative" zIndex={1}>
             <Grid
               container
               alignItems="center"
               spacing={2}
-              onClick={onInfoClick}
+              onClick={handleFlip}
             >
               <Grid item>
-                <Avatar className="avatar-logo avatar-box-shadow" src={icon} />
+                <Avatar
+                  className="avatar-logo avatar-box-shadow"
+                  src={devSafeUrl(preset.icon)}
+                />
               </Grid>
               <Grid item xs>
-                <Title className="card-title">{title}</Title>
+                <Title className="card-title">{preset.title}</Title>
               </Grid>
             </Grid>
             <Grid
@@ -109,7 +109,7 @@ export const TSCCard = ({
               wrap="nowrap"
             >
               <Grid item>
-                <IconButton onClick={onInfoClick}>
+                <IconButton onClick={handleFlip}>
                   <InfoIcon />
                 </IconButton>
               </Grid>
@@ -125,29 +125,26 @@ export const TSCCard = ({
                   Generate
                 </TSCButton>
               </Grid>
-              <Grid item xs onClick={onInfoClick}>
+              <Grid item xs onClick={handleFlip}>
                 <Box display="flex" justifyContent="flex-end">
-                  <Date className="date">{date}</Date>
+                  <Date className="date">{preset.date}</Date>
                 </Box>
               </Grid>
             </Grid>
           </Box>
         </CardContent>
-      </CardBackground>
+      </Box>
       {/* This is the back card */}
-      <CardBackground className="back-card">
-        <CardContent
-          className="back-background card-content"
-          color={color}
-          onClick={handleFlip}
-        >
+      <Box className="back-card">
+        <HiddenBack className="hidden-back" />
+        <CardContent className="back-background card-content" color={color}>
+          <CardBackground className="card-background" color={color} />
           <Box className="info-container">
             <CardMedia
               className="info-media"
-              image={background}
-              onClick={handleFlip}
+              image={devSafeUrl(preset.background)}
             />
-            <Title className="info-title">{title}</Title>
+            <Title className="info-title">{preset.title}</Title>
             <Typography
               className="info-description"
               variant="body1"
@@ -155,20 +152,14 @@ export const TSCCard = ({
             >
               {text}
             </Typography>
-            {/* <Grid
-              className="info-grid"
-              container
-              spacing={2}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <Grid item></Grid>
-              <Grid item> */}
-            {/* </Grid>
-            </Grid> */}
           </Box>
         </CardContent>
-      </CardBackground>
+        <div className="overlay-buttons">
+          <IconButton className="icon-button" onClick={handleFlip}>
+            <BorderedIcon className="icon" component={ArrowBackIcon} />
+          </IconButton>
+        </div>
+      </Box>
     </ReactCardFlip>
   );
 };
