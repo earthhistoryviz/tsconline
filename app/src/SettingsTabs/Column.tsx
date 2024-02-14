@@ -3,7 +3,7 @@ import React, { useContext, useRef, useState } from "react";
 import Typography from "@mui/material/Typography";
 import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
-import { Box, Button, TextField, ToggleButton } from "@mui/material";
+import { Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
 import {
@@ -26,7 +26,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
   ({ name, details }) => {
     const theme = useTheme();
     const { state, actions } = useContext(context);
-    const [open, setOpen] = useState(true);
+    const [open, setOpen] = useState(false);
     //for keeping the original name for array access
     let ogName = useRef(name);
     const toggleAccordion = (open: boolean) => {
@@ -50,36 +50,34 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
         </Typography>
       </div>
     );
-    const checkbox = (
-      <>
-        <ColumnContainer>
-          <div
-            // className={
-            //   selected === name ? "column-selected-color" : "column-base-color"
-            // }
-            style={{
-              display: "flex",
-              cursor: "pointer",
-            }}
-            onClick={() => clickColumnName()}
-          >
-            <TSCCheckbox
-              checked={details.on}
-              onChange={() => {
-                actions.toggleSettingsTabColumn(ogName.current);
-                //console.log(name);
-                //console.log(state.settingsTabs.columns);
+    function checkbox(leaf: string) {
+      return (
+        <>
+          <ColumnContainer>
+            <div
+              className={leaf}
+              style={{
+                display: "flex",
+                cursor: "pointer",
               }}
-            />
-            {columnName}
-          </div>
-        </ColumnContainer>
-      </>
-    );
+              onClick={() => clickColumnName()}
+            >
+              <TSCCheckbox
+                checked={details.on}
+                onChange={() => {
+                  actions.toggleSettingsTabColumn(ogName.current);
+                }}
+              />
+              {columnName}
+            </div>
+          </ColumnContainer>
+        </>
+      );
+    }
 
     // if there are no children, don't make an accordion
     if (!hasChildren) {
-      return checkbox;
+      return checkbox("column-leaf");
     }
     return (
       <Accordion expanded={open} onChange={() => toggleAccordion(open)}>
@@ -87,10 +85,9 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
           <div
             onClick={() => {
               toggleAccordion(open);
-              //setcolumnSelected(name, details.parents);
             }}
           >
-            {checkbox}
+            {checkbox("")}
           </div>
         </AccordionSummary>
         <AccordionDetails>
@@ -98,18 +95,15 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
             {details.children &&
               Object.entries(details.children).map(
                 ([childName, childDetails]) => (
-                  <div id={childName} key={childName}>
-                    <ColumnAccordion
-                      key={childName}
-                      name={childDetails.editName}
-                      details={childDetails}
-                    />
-                  </div>
+                  <ColumnAccordion
+                    key={childName}
+                    name={childDetails.editName}
+                    details={childDetails}
+                  />
                 )
               )}
           </>
         </AccordionDetails>
-        {/* <div>{console.log("rerender", name)}</div> */}
       </Accordion>
     );
   }
@@ -128,20 +122,6 @@ export const Column = observer(function Column() {
   const setSelectedWrapper = (name: string) => {
     setSelected(name);
   };
-  // function renderColumns(columnInfo: ColumnInfo) {
-  //   return Object.entries(columnInfo.children).map(([columnName, columnData]) => (
-  //     <ColumnAccordion
-  //       key={columnName}
-  //       name={columnName}
-  //       details={columnData}
-  //       onToggle={actions.toggleSettingsTabColumn}
-  //       setSelected={setSelectedWrapper}
-  //     />
-  //   ));
-  // }
-  function renderColumnMenu() {
-    return <ColumnMenu />;
-  }
   const navigate = useNavigate();
   const handleButtonClick = () => {
     // actions.updateSettings();
@@ -150,35 +130,48 @@ export const Column = observer(function Column() {
   };
   return (
     <div
-      style={{ display: "flex", justifyContent: "center", minHeight: "100vh" }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+      }}
     >
-      <Box
-        className="hide-scrollbar"
-        sx={{
-          border: `1px solid gray`,
-          borderRadius: "4px",
-          zIndex: 0,
-          padding: "10px",
+      <TSCButton
+        style={{
+          margin: "2vh auto 2vh",
+          width: "200px",
+          fontSize: "1rem",
         }}
-        style={{ overflowX: "auto", width: "1000px", maxHeight: "80vh" }}
+        onClick={handleButtonClick}
       >
-        <TSCButton
-          style={{
-            width: "auto",
-            height: "auto",
-            fontSize: "0.85rem",
+        Generate
+      </TSCButton>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          minHeight: "100vh",
+        }}
+      >
+        <Box
+          className="hide-scrollbar"
+          sx={{
+            border: `1px solid gray`,
+            borderRadius: "4px",
+            zIndex: 0,
+            padding: "10px",
           }}
-          onClick={handleButtonClick}
+          style={{ overflowX: "auto", width: "1000px", maxHeight: "80vh" }}
         >
-          Generate
-        </TSCButton>
-            {state.settingsTabs.columns &&
-              <ColumnAccordion 
+          {state.settingsTabs.columns && (
+            <ColumnAccordion
               name={state.settingsTabs.columns.name}
               details={state.settingsTabs.columns}
-              />}
-      </Box>
-      {renderColumnMenu()}
+            />
+          )}
+        </Box>
+        <ColumnMenu />
+      </div>
     </div>
   );
 });
