@@ -1,22 +1,13 @@
 import { observer } from "mobx-react-lite";
 import React, { useContext, useRef, useState } from "react";
 import { context } from "../state";
-import {
-  Box,
-  Button,
-  Checkbox,
-  FormControlLabel,
-  Grid,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-} from "@mui/material";
+import { Button, TextField, ToggleButton, Typography } from "@mui/material";
 import SettingsSharpIcon from "@mui/icons-material/SettingsSharp";
 
-import "./Column.css";
+import "./ColumnMenu.css";
 
 import { FontMenu } from "./FontMenu";
+import theme from "../theme";
 
 const EditNameField: React.FC<{}> = observer(({}) => {
   const { state, actions } = useContext(context);
@@ -76,7 +67,6 @@ export const ColumnMenu: React.FC<{}> = observer(() => {
       }
     }
   }
-
   return (
     <div className={openMenu ? "column-menu" : ""}>
       <div style={{ display: "flex", flexDirection: "row", width: "300px" }}>
@@ -98,7 +88,7 @@ export const ColumnMenu: React.FC<{}> = observer(() => {
       </div>
       <div
         id="ColumnMenuContent"
-        className = "column-menu-content"
+        className="column-menu-content"
         //style={{ display: "flex", flexDirection: "column" }}
       >
         {state.settingsTabs.columnSelected && <EditNameField />}

@@ -17,6 +17,8 @@ import {
 
 import { ColumnMenu } from "./ColumnMenu";
 
+import "./Column.css";
+
 type ColumnAccordionProps = {
   name: string;
   details: ColumnInfo;
@@ -35,7 +37,6 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
 
     function clickColumnName() {
       actions.setcolumnSelected(ogName.current);
-      //setSelected(name);
     }
     const hasChildren =
       details.children && Object.keys(details.children).length > 0;
@@ -55,11 +56,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
         <>
           <ColumnContainer>
             <div
-              className={leaf}
-              style={{
-                display: "flex",
-                cursor: "pointer",
-              }}
+              className={"column-checkbox " + leaf}
               onClick={() => clickColumnName()}
             >
               <TSCCheckbox
@@ -114,54 +111,29 @@ export const Column = observer(function Column() {
   const theme = useTheme();
   const { state, actions } = useContext(context);
   const [open, setOpen] = useState(true);
-  const [openMenu, setOpenMenu] = useState(false);
-  const [selected, setSelected] = useState("");
-  const handleChange = () => {
-    setOpen(!open);
-  };
-  const setSelectedWrapper = (name: string) => {
-    setSelected(name);
-  };
   const navigate = useNavigate();
   const handleButtonClick = () => {
-    // actions.updateSettings();
     actions.generateChart();
     navigate("/chart");
   };
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-      }}
-    >
+    <div className="column-top-level">
       <TSCButton
-        style={{
-          margin: "2vh auto 2vh",
-          width: "200px",
-          fontSize: "1rem",
-        }}
+        id="column-generate-button-top"
+        //className="column-generate-button-top"
         onClick={handleButtonClick}
       >
         Generate
       </TSCButton>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          minHeight: "100vh",
-        }}
-      >
+      <div className="column-accordion-and-menu">
         <Box
-          className="hide-scrollbar"
+          className="hide-scrollbar column-accordion-wrapper"
           sx={{
             border: `1px solid gray`,
             borderRadius: "4px",
             zIndex: 0,
             padding: "10px",
           }}
-          style={{ overflowX: "auto", width: "1000px", maxHeight: "80vh" }}
         >
           {state.settingsTabs.columns && (
             <ColumnAccordion
