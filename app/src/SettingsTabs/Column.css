@@ -1,26 +1,30 @@
-.column-menu {
-  width: 300px;
-  height: 300px;
-  background-color: lightblue;
+.column-top-level {
   display: flex;
   flex-direction: column;
-}
-.column-menu-label {
-  display: none;
-  justify-content: center;
   align-items: center;
-  flex-grow: 1;
-  background-color: lightblue;
 }
-.column-menu-content {
-  display: none;
-  flex-direction: column;
+#column-generate-button-top {
+  margin-top: 1%;
+  margin-bottom: 1%;
+  width: 200px;
+  font-size: 1rem;
 }
-.edit-title-button {
+.column-accordion-and-menu {
   display: flex;
-  flex-grow: 1;
-  align-items: center;
   justify-content: center;
+  min-height: 100vh;
+}
+.column-accordion-wrapper {
+  overflow-x: auto;
+  width: 1000px;
+  max-height: 80vh;
+}
+.column-checkbox {
+  display: flex;
+  cursor: pointer;
+}
+.column-leaf {
+  padding-left: 14.7px;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */

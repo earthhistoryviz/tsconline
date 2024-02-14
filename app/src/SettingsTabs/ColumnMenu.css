@@ -1,0 +1,24 @@
+.column-menu {
+    width: 300px;
+    height: 300px;
+    background-color: lightblue;
+    display: flex;
+    flex-direction: column;
+  }
+  .column-menu-label {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+    background-color: lightblue;
+  }
+  .column-menu-content {
+    display: none;
+    flex-direction: column;
+  }
+  .edit-title-button {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+  }
