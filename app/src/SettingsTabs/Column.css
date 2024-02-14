@@ -23,6 +23,10 @@
   justify-content: center;
 }
 
+.column-leaf {
+  padding-left: 14.7px;
+}
+
 /* Hide scrollbar for Chrome, Safari and Opera */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;

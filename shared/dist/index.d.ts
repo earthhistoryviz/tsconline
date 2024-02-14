@@ -191,7 +191,6 @@ export type FaciesTimeBlock = {
 };
 export type ChartRequest = {
     settings: string;
-    // columnSettings: object;
     datapacks: string[];
 };
 export type ServerResponseError = {
