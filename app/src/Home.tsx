@@ -151,7 +151,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                   preset={preset}
                   generateChart={async () => {
                     const success = await actions.setDatapackConfig(
-                      preset.datapacks,
+                      preset.datapacks.map((datapack) => datapack.file),
                       preset.settings
                     );
                     // wait to see if we can grab necessary data
