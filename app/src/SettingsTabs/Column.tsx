@@ -120,7 +120,6 @@ export const Column = observer(function Column() {
     <div className="column-top-level">
       <TSCButton
         id="column-generate-button-top"
-        //className="column-generate-button-top"
         onClick={handleButtonClick}
       >
         Generate
