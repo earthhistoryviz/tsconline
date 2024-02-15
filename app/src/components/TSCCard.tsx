@@ -8,6 +8,7 @@ import {
   CardMedia,
   IconButton,
   Typography,
+  Tooltip,
 } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
 import { TSCButton } from "./TSCButton";
@@ -17,6 +18,9 @@ import { ChartConfig } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
 import { BorderedIcon } from "./TSCComponents";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import checkIcon from "../assets/icons/check-icon.json";
+import Lottie from "./TSCLottie";
+import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 
 let text = `
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Aliquam ultrices sagittis orci a scelerisque purus semper eget. Massa id neque aliquam vestibulum morbi. Odio ut enim blandit volutpat maecenas volutpat blandit. Aliquam faucibus purus in massa tempor. Id diam vel quam elementum pulvinar etiam. Ornare massa eget egestas purus viverra accumsan in nisl nisi. Lectus nulla at volutpat diam. Ultrices mi tempus imperdiet nulla malesuada pellentesque elit eget. Lobortis scelerisque fermentum dui faucibus in ornare.
@@ -68,8 +72,12 @@ export const TSCCard = ({
   generateChart?: () => void;
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [added, setAdded] = useState(false);
   function handleFlip() {
     setIsFlipped(!isFlipped);
+  }
+  function add() {
+    setAdded(!added);
   }
   return (
     <ReactCardFlip isFlipped={isFlipped} flipDirection="horizontal">
@@ -158,6 +166,23 @@ export const TSCCard = ({
           <IconButton className="icon-button" onClick={handleFlip}>
             <BorderedIcon className="icon" component={ArrowBackIcon} />
           </IconButton>
+        </div>
+        <div className="add-buttons">
+          {added ? (
+            <IconButton className="add-button" onClick={add}>
+              <Lottie playOnClick autoplay animationData={checkIcon} />
+            </IconButton>
+          ) : (
+            <Tooltip arrow title={preset.datapacks}>
+              <IconButton className="add-button" onClick={add}>
+                <BorderedIcon
+                  className="icon"
+                  strokeWidth={0.1}
+                  component={AddOutlinedIcon}
+                />
+              </IconButton>
+            </Tooltip>
+          )}
         </div>
       </Box>
     </ReactCardFlip>

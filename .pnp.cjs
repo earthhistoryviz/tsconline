@@ -2187,6 +2187,7 @@ const RAW_RUNTIME_STATE =
           ["@vitejs/plugin-react", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:3.1.0"],\
           ["clsx", "npm:2.1.0"],\
           ["color", "npm:4.2.3"],\
+          ["lottie-web", "npm:5.12.2"],\
           ["mobx", "npm:6.9.0"],\
           ["mobx-react-lite", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:3.4.3"],\
           ["mui-color-input", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:2.0.2"],\
@@ -4748,6 +4749,15 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["loose-envify", "npm:1.4.0"],\
           ["js-tokens", "npm:4.0.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["lottie-web", [\
+      ["npm:5.12.2", {\
+        "packageLocation": "./.yarn/cache/lottie-web-npm-5.12.2-942dc9e22a-cd377d54a6.zip/node_modules/lottie-web/",\
+        "packageDependencies": [\
+          ["lottie-web", "npm:5.12.2"]\
         ],\
         "linkType": "HARD"\
       }]\

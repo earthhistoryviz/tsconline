@@ -124,6 +124,17 @@
   padding-left: 20px;
   padding-right: 20px;
 }
+.add-buttons {
+  position: absolute;
+  top: 10px;
+  left: calc(100% - 45px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  gap: 10px;
+}
 .overlay-buttons {
   position: absolute;
   top: 10px;
@@ -133,6 +144,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1;
+  gap: 10px;
 }
 .MuiSvgIcon-root.icon {
   color: white;
@@ -142,4 +154,10 @@
 .MuiIconButton-root.icon-button {
   width: 35px;
   height: 35px;
+}
+.MuiIconButton-root.add-button {
+  width: 35px;
+  height: 35px;
+  padding: 0;
+  margin: 0;
 }
