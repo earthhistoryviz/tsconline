@@ -173,7 +173,10 @@ export const TSCCard = ({
               <Lottie playOnClick autoplay animationData={checkIcon} />
             </IconButton>
           ) : (
-            <Tooltip arrow title={preset.datapacks}>
+            <Tooltip
+              arrow
+              title={preset.datapacks.map((datapack) => datapack.name)}
+            >
               <IconButton className="add-button" onClick={add}>
                 <BorderedIcon
                   className="icon"

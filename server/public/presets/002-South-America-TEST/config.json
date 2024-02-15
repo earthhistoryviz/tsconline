@@ -6,7 +6,10 @@
   "description": "Large Datapack:)",
   "settings": "settings.tsc",
   "datapacks": [
-    "SouthAmericaEncrypted_29Apr2019.mdpk"
+    {
+      "name": "South America Map-Pack",
+      "file": "SouthAmericaEncrypted_29Apr2019.mdpk"
+    }
   ],
   "type": "MAP-PACK"
 }

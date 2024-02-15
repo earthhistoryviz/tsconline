@@ -6,7 +6,10 @@
   "description": "map pack dev pack",
   "settings": "settings.tsc",
   "datapacks": [
-    "Belgium_GTS2020.mdpk"
+    {
+      "name": "Belgium Map Pack",
+      "file": "Belgium_GTS2020.mdpk"
+    }
   ],
   "type": "MAP-PACK"
 }
