@@ -207,7 +207,6 @@ function generateSettingsXml(settings: any, indent: string): string {
         //top age and baseage settings can have two children: text and stage
         //the source attribute determines which one is used
         if (key === "topAge" || key === "baseAge") {
-          console.log(value);
           xml += `${indent}<setting name="${key}" source="${value.source}" unit="${value.unit}">\n`;
           xml += `${indent}    <setting name="${value.source}">${value.text}</setting>\n`;
           xml += `${indent}</setting>\n`;

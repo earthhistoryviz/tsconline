@@ -47,7 +47,6 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
     const theme = useTheme();
     const { state, actions } = useContext(context);
     //for keeping the original name for array access
-    let temp = name;
     function clickColumnName() {
       actions.setcolumnSelected(details.name);
     }
