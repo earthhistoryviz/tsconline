@@ -169,7 +169,7 @@ export const Column = observer(function Column() {
       <TSCButton
         id="column-generate-button-top"
         onClick={() => {
-          actions.generateChart();
+          actions.fetchChartFromServer();
           navigate("/chart");
         }}
       >
