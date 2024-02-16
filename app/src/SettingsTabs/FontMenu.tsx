@@ -99,7 +99,7 @@ const FontMenuRow: React.FC<{
                         <MenuItem value={"Verdana"}>Verdana</MenuItem>
                     </Select>
                 </FormControl>
-                <TextField sx={{width: "60px", marginRight: "10px"}} id="FontSizeInput"label="Size" variant="outlined"
+                <TextField sx={{width: "60px", marginRight: "10px", minWidth:"60px"}} id="FontSizeInput"label="Size" variant="outlined"
                            value={fontOpts.size}
                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                                actions.setFontSize(target, Number(event.target.value))
