@@ -42,6 +42,14 @@ export function assertTransects(o) {
             throw new Error(`Transects key ${key} value of note must be a string`);
     }
 }
+export function assertDatapack(o) {
+    if (typeof o !== "object")
+        throw new Error("Datapack must be an object");
+    if (typeof o.name !== 'string')
+        throw new Error("Datapack must have a field name of type string");
+    if (typeof o.file !== 'string')
+        throw new Error("Datapack must have a field file of type string");
+}
 export function assertDatapackAgeInfo(o) {
     if (typeof o !== "object")
         throw new Error("DatapackAgeInfo must be an object");

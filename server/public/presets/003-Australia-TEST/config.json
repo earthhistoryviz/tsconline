@@ -6,7 +6,10 @@
   "description": "A Large Australia Map Pack",
   "settings": "settings.tsc",
   "datapacks": [
-    "Australia Mappack GTS2016 ENCRYPTED PUBLIC.mdpk"
+    {
+      "name": "Australia Map-Pack",
+      "file": "Australia Mappack GTS2016 ENCRYPTED PUBLIC.mdpk"
+    }
   ],
   "type": "MAP-PACK"
 }
