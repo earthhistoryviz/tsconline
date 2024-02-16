@@ -179,7 +179,7 @@ export const TSCCard = ({
             >
               <IconButton className="add-button" onClick={add}>
                 <BorderedIcon
-                  className="icon"
+                  className="add-icon"
                   strokeWidth={0.1}
                   component={AddOutlinedIcon}
                 />
