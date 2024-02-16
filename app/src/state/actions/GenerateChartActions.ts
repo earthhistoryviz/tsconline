@@ -3,9 +3,9 @@ import { state } from "../state";
 import { action } from "mobx";
 import { fetcher, devSafeUrl } from "../../util";
 import { isServerResponseError, assertChartInfo } from "@tsconline/shared";
+import { jsonToXml } from "../parseSettings";
 
 export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate) => {
-  console.log(response);
   if (state.useSuggestedAge != response) {
     state.useSuggestedAge = response;
     console.log(state.useSuggestedAge);
