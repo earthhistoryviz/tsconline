@@ -164,7 +164,7 @@ export const TSCCard = ({
         </CardContent>
         <div className="overlay-buttons">
           <IconButton className="icon-button" onClick={handleFlip}>
-            <BorderedIcon className="icon" component={ArrowBackIcon} />
+            <BorderedIcon className="add-icon" component={ArrowBackIcon} />
           </IconButton>
         </div>
         <div className="add-buttons">
