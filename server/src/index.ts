@@ -39,19 +39,6 @@ const server = fastify({
   }*/
 });
 
-function readExcelFile(filePath: string) {
-  const workbook = XLSX.readFile(filePath);
-  const sheetName: string = workbook.SheetNames[0] || "";
-  const sheet = workbook.Sheets[sheetName];
-  if (!sheet) return [];
-
-  // Convert sheet to JSON
-  const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-  return jsonData;
-}
-
-
 // Load up all the chart configs found in presets:
 const presets = await loadPresets();
 // Load the current asset config:

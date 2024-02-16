@@ -2,7 +2,7 @@ import { assertChartConfigArray, assertIndexResponse, assertPresets, isServerRes
 import { actions } from './index'
 import { fetcher } from '../util';
 import fetchTimescaleData from "../state/timeParser"
-import React, { useState, useEffect } from "react";
+// import React, { useState, useEffect } from "react";
 import { TimescaleItem } from './state';
 
 export async function initialize() {
@@ -35,46 +35,22 @@ export async function initialize() {
     console.log('FAILED to retrieve indexResponse.  Error was: ', e);
     }
   }
+  try {
+    const data = await fetchTimescaleData();
+    const timescaleData: TimescaleItem[] = data.stages || [];
+    const previousValues: Record<string, number | null> = {};
+    timescaleData.forEach((item, index) => {
+      if (index > 0) {
+        previousValues[item.key] = timescaleData[index - 1].value;
+      } else {
+        previousValues[item.key] = null;
+      }
+    });
+
+    return { timescaleData, loading: false, previousValues };
+  } catch (error) {
+    console.error('Error loading timescale data:', error);
+    return { timescaleData: [], loading: false, previousValues: {} };
+  }
 
 }
-
-export const useTimescaleData = () => {
-  const [timescaleData, setTimescaleData] = useState<TimescaleItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  // const { timescaleData, loading } = useTimescaleData();
-  const [previousValues, setPreviousValues] = useState<Record<string, number | null>>({});
-
-  useEffect(() => {
-    const loadTimescaleData = async () => {
-      try {
-        const data = await fetchTimescaleData();
-        setTimescaleData(data.stages || []);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error loading timescale data:', error);
-        setLoading(false);
-      }
-    };
-    loadTimescaleData(); 
-  }, []);
-
-  useEffect(() => {
-    const calculatePreviousValues = () => {
-      const previousValuesMap: Record<string, number | null> = {};
-      timescaleData.forEach((item, index) => {
-        if (index > 0) {
-          previousValuesMap[item.key] = timescaleData[index - 1].value;
-        } else {
-          previousValuesMap[item.key] = null;
-        }
-      });
-      setPreviousValues(previousValuesMap);
-    };
-
-    calculatePreviousValues();
-  }, [timescaleData]);
-
-  return { timescaleData, loading, previousValues };
-};
-
-

@@ -12,7 +12,7 @@ import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import fetchTimescaleData from "../state/timeParser"
-import { useTimescaleData } from "../state/initialize";
+import { initialize } from "../state/initialize";
 import { TimescaleItem } from '../state/state';
 
 import theme from "../theme";
@@ -22,32 +22,21 @@ import theme from "../theme";
 //   value: number;
 // }
 
-// const geologicalStages = ["Gelasian (1.8 Ma top)", "Piacenzian (2.58 Ma top)", "Zanclean (3.6 Ma top)", "Messinian (5.335 Ma top)", "Tortonian (7.25 Ma top)", "Serravallian (11.63 Ma top)", "Langhian (13.82 Ma top)", "Burdigalian (15.99 Ma top)"];
-
 export const Time = observer(function Time() {
   const navigate = useNavigate();
-  const { timescaleData, loading, previousValues } = useTimescaleData();
-  // const { timescaleData, loading } = useTimescaleData();
-  // const [previousValues, setPreviousValues] = useState<Record<string, number | null>>({});
+  const [timescaleData, setTimescaleData] = useState<TimescaleItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [previousValues, setPreviousValues] = useState<Record<string, number | null>>({});
+  useEffect(() => {
+    async function fetchData() {
+      const { timescaleData, loading, previousValues } = await initialize();
+      setTimescaleData(timescaleData);
+      setLoading(loading);
+      setPreviousValues(previousValues);
+    }
 
-  // // Importcontexts and map time scale to the state
-
-  //TODO move this to initialize
-  // useEffect(() => {
-  //   const calculatePreviousValues = () => {
-  //     const previousValuesMap: Record<string, number | null> = {};
-  //     timescaleData.forEach((item, index) => {
-  //       if (index > 0) {
-  //         previousValuesMap[item.key] = timescaleData[index - 1].value;
-  //       } else {
-  //         previousValuesMap[item.key] = null;
-  //       }
-  //     });
-  //     setPreviousValues(previousValuesMap);
-  //   };
-
-  //   calculatePreviousValues();
-  // }, [timescaleData]);
+    fetchData();
+  }, []);
 
     const handleButtonClick = () => {
         actions.setTab(1);
@@ -90,8 +79,14 @@ export const Time = observer(function Time() {
           name="top-age-stage-name"
           label="Top Age/Stage Name"
           type="string"
-          value={state.settings.selectedStage || ''} 
-          onChange={(event) => actions.setSelectedStage(event.target.value as string)}
+          value={state.settings.selectedTopStage || ''} 
+          onChange={(event) => {
+            const selectedValue = event.target.value;
+            const previousValue = previousValues[selectedValue];
+            const selectedAge = previousValue !== undefined && previousValue !== null ? previousValue.toString() : '0.000';
+            actions.setSelectedTopStage(selectedValue);
+            actions.setTopStageAge(isNaN(parseFloat(selectedAge)) ? 0 : parseFloat(selectedAge));
+          }}
           style={{ marginBottom: '10px', width: '100%' }}
         >
           {timescaleData.map(item => (
@@ -104,11 +99,12 @@ export const Time = observer(function Time() {
           label="Top Age"
           type="number"
           name="vertical-scale-text-field"
-          value={state.settings.topStageAge}
+          value={state.settings.selectedTopStage ? state.settings.selectedTopStage : state.settings.topStageAge.toString()}
           onChange={(event) => {
             const age = parseFloat(event.target.value)
             if (age >= 0 && age <= state.settings.baseStageAge) {
-              actions.setTopStageAge(age)
+              actions.setSelectedTopStage(event.target.value);
+              actions.setTopStageAge(age);
             }
           }}
           style={{ marginBottom: '20px', width: '100%' }}
@@ -121,8 +117,13 @@ export const Time = observer(function Time() {
           inputProps={{ id: 'base-age-selector' }}
           name="base-age-stage-name"
           type="string"
-          value={state.settings.selectedStage || ''} 
-          onChange={(event) => actions.setSelectedStage(event.target.value as string)}
+          value={state.settings.selectedBaseStage || ''}
+          onChange={(event) => {
+            const selectedValue = event.target.value;
+            const selectedAge = (timescaleData.find(item => item.key === selectedValue)?.value || '0').toString();
+            actions.setSelectedBaseStage(selectedValue);
+            actions.setBaseStageAge(isNaN(parseInt(selectedAge)) ? 0 : parseInt(selectedAge));
+          }}
           style={{ marginBottom: '10px', width: '100%' }}
         >
           {timescaleData.map(item => (
@@ -135,10 +136,11 @@ export const Time = observer(function Time() {
           label="Base Age"
           type="number"
           name="vertical-scale-text-field"
-          value={state.settings.baseStageAge}
+          value={state.settings.selectedBaseStage ? state.settings.selectedBaseStage : state.settings.baseStageAge.toString()}
           onChange={(event) => {
             const age = parseFloat(event.target.value)
             if (age >= 0 && state.settings.topStageAge <= age) {
+              actions.setSelectedBaseStage(event.target.value);
               actions.setBaseStageAge(age)
             }
           }}

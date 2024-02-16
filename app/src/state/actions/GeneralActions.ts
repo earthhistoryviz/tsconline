@@ -491,6 +491,12 @@ export const setTopStageKey = action("setTopStageKey", (key: string) => {
 export const setBaseStageKey = action("setBottomStageKey", (key: string) => {
   state.settings.baseStageKey = key;
 });
+export const setSelectedTopStage = action("setSelectedTopStage", (key: string) => {
+  state.settings.selectedTopStage = key;
+});
+export const setSelectedBaseStage = action("setSelectedBaseStage", (key: string) => {
+  state.settings.selectedBaseStage = key;
+});
 export const setSelectedStage = action("setSelectedStage", (key: string) => {
   state.settings.selectedStage = key;
 });

@@ -236,6 +236,7 @@ function readExcelFile(filePath: string) {
   return jsonData;
 }
 
+// Serve timescale data endpoint
 export const fetchTimescale = async function (
   _request: FastifyRequest,
   reply: FastifyReply
