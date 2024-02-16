@@ -168,8 +168,6 @@ export function assertChartRequest(o) {
         throw new Error("ChartRequest must be an object");
     if (typeof o.settings !== "string")
         throw new Error("ChartRequest must have a settings string");
-    if (typeof o.columnSettings !== "string")
-        throw new Error("ChartRequest must have a columnSettings string");
     if (!Array.isArray(o.datapacks))
         throw new Error("ChartRequest must have a datapacks array");
 }
@@ -208,6 +206,22 @@ export function assertColumnInfo(o) {
         }
         assertColumnInfo(child);
     }
+}
+export function assertFontsInfo(o) {
+    if (typeof o !== "object")
+        throw new Error("FontsInfo must be an object");
+    if (typeof o.bold !== "boolean")
+        throw new Error("FontsInfo must have an bold boolean");
+    if (typeof o.color !== "string")
+        throw new Error("FontsInfo must have a color string");
+    if (typeof o.fontFace !== "string")
+        throw new Error("FontsInfo must have a font face string");
+    if (typeof o.inheritable !== "boolean")
+        throw new Error("FontsInfo must have a inheritable boolean");
+    if (typeof o.italic !== "boolean")
+        throw new Error("FontsInfo must have an italic string");
+    if (typeof o.size !== "number")
+        throw new Error("FontsInfo must have a size number");
 }
 export function assertMapHierarchy(o) {
     if (typeof o !== "object" || o === null) {

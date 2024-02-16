@@ -1,8 +1,13 @@
 import { observer } from "mobx-react-lite";
-import { useContext, useRef, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import { context } from "../state";
 import { Button, TextField, ToggleButton, Typography } from "@mui/material";
 import SettingsSharpIcon from "@mui/icons-material/SettingsSharp";
+
+import "./ColumnMenu.css";
+
+import { FontMenu } from "./FontMenu";
+import theme from "../theme";
 
 const EditNameField: React.FC<{}> = observer(({}) => {
   const { state, actions } = useContext(context);
@@ -10,7 +15,8 @@ const EditNameField: React.FC<{}> = observer(({}) => {
   const name =
     state.settingsTabs.columnSelected === null
       ? ""
-      : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.editName;
+      : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!
+          .editName;
   return (
     <div>
       <Typography style={{ padding: "5px" }}>Edit Title</Typography>
@@ -45,8 +51,9 @@ const EditNameField: React.FC<{}> = observer(({}) => {
 export const ColumnMenu: React.FC<{}> = observer(() => {
   const { state, actions } = useContext(context);
   const [openMenu, setOpenMenu] = useState(false);
+
   function showMenu() {
-    let menu = document.getElementById("ColumnMenu");
+    let menu = document.getElementById("ColumnMenuContent");
     let label = document.getElementById("ColumnMenuLabel");
     if (menu !== null && label !== null) {
       if (!openMenu) {
@@ -79,8 +86,13 @@ export const ColumnMenu: React.FC<{}> = observer(() => {
           <Typography>Settings</Typography>
         </div>
       </div>
-      <div id="ColumnMenu" style={{ display: "none" }}>
+      <div
+        id="ColumnMenuContent"
+        className="column-menu-content"
+        //style={{ display: "flex", flexDirection: "column" }}
+      >
         {state.settingsTabs.columnSelected && <EditNameField />}
+        {state.settingsTabs.columnSelected && <FontMenu />}
       </div>
     </div>
   );

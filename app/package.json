@@ -12,6 +12,7 @@
   "dependencies": {
     "@emotion/react": "^11.10.6",
     "@emotion/styled": "^11.10.6",
+    "@material-ui/core": "^4.12.4",
     "@mui-treasury/component-flex": "0.1.0-alpha.1",
     "@mui/base": "^5.0.0-beta.33",
     "@mui/icons-material": "^5.11.9",
@@ -24,6 +25,7 @@
     "color": "^4.2.3",
     "mobx": "^6.8.0",
     "mobx-react-lite": "^3.4.0",
+    "mui-color-input": "^2.0.1",
     "node-fetch": "^3.3.0",
     "react": "^18.2.0",
     "react-bootstrap": "^2.7.4",

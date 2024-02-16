@@ -1,5 +1,5 @@
 import { createReadStream } from "fs";
-import { ColumnInfo, Facies, FaciesLocations, FaciesTimeBlock, assertFaciesTimeBlock, DatapackAgeInfo, DatapackParsingPack } from "@tsconline/shared";
+import { ColumnInfo, Facies, FaciesLocations, FaciesTimeBlock, assertFaciesTimeBlock, DatapackAgeInfo, DatapackParsingPack, FontsInfo } from "@tsconline/shared";
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths } from "./util.js";
 import { createInterface } from "readline";
 
@@ -7,6 +7,30 @@ type ParsedColumnEntry = {
   children: string[],
   on: boolean,
   info: string
+}
+let fontsInfo: FontsInfo = {
+    "Age Label": {
+        bold: false,
+        color: "",
+        fontFace: "Arial",
+        inheritable: false,
+        italic: false,
+        size: 6
+    },
+    "Column Header": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 14},
+    "Event Column Label": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 11},
+    "Legend Column Name": {inheritable: false},
+    "Legend Column Source": {inheritable: false},
+    "Legend Title": {inheritable: false},
+    "Point Column Scale Label": {inheritable: false},
+    "Popup Body": {inheritable: false},
+    "Range Box Label": {inheritable: false},
+    "Range Label": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12},
+    "Ruler Label": {inheritable: false},
+    "Ruler Tick Mark Label": {inheritable: false},
+    "Sequence Column Label": {inheritable: false},
+    "Uncertainty Label": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 5},
+    "Zone Column Label": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12}
 }
 /**
  * TODO:
@@ -294,6 +318,7 @@ function recursive(
     name: currentColumn,
     editName: currentColumn,
     on: true,
+    fontsInfo: fontsInfo,
     info: "",
     children: [],
     parent: parent,

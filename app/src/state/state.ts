@@ -1,5 +1,6 @@
 import { observable } from "mobx";
 
+import { ErrorAlert, FaciesOptions, MapHistory } from "../types";
 import { FaciesOptions, MapHistory } from "../types";
 import fetchTimescaleData from "../state/timeParser"
 import React, { useState, useEffect } from "react";
@@ -24,7 +25,6 @@ export interface TimescaleItem {
 export type State = {
   chartLoading: boolean;
   tab: number;
-  showAllTabs: boolean;
   madeChart: boolean;
   showPresetInfo: boolean;
   timescaleData: TimescaleItem[];
@@ -77,13 +77,13 @@ export type State = {
   useCache: boolean;
   usePreset: boolean;
   openSnackbar: boolean;
+  errorAlerts: ErrorAlert[];
 };
 
 export const state = observable<State>({
   chartLoading: false,
   madeChart: false,
   tab: 0,
-  showAllTabs: true,
   showPresetInfo: false,
   timescaleData: [],
   // loading: true,
@@ -148,4 +148,5 @@ export const state = observable<State>({
   useCache: true,
   usePreset: true,
   openSnackbar: false,
+  errorAlerts: []
 });

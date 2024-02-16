@@ -37,8 +37,7 @@ export const NavBar = observer(function Navbar() {
           <HomeIcon /> 
           </IconButton> 
         </Link>
-        { state.showAllTabs && (
-          <TSCTabs 
+        {<TSCTabs 
               value={state.tab !== 0 ? state.tab : false} 
               onChange={(_e, value) =>  {
                 actions.setTab(value)
@@ -62,7 +61,7 @@ export const NavBar = observer(function Navbar() {
               <Tab value={4} label="Help" to="/help" component={Link}/>
               <Tab value={5} label="About" to="/about" component={Link} />
             </TSCTabs>
-        )}
+        }
         <div style={{ flexGrow: 1 }} />
         <img src={TSCreatorLogo} width="4%" height="4%" />
       </Toolbar>

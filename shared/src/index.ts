@@ -106,51 +106,81 @@ export type ColumnPrototypeInfo = {
 };
 
 export type FontsInfo = {
-  "Column Header": {
-    inheritable: boolean;
-  };
-  "Age Label": {
-    inheritable: boolean;
-  };
-  "Uncertainty Label": {
-    inheritable: boolean;
-  };
-  "Zone Column Label": {
-    inheritable: boolean;
-  };
-  "Sequence Column Label": {
-    inheritable: boolean;
-  };
-  "Event Column Label": {
-    inheritable: boolean;
-  };
-  "Popup Body": {
-    inheritable: boolean;
-  };
-  "Ruler Label": {
-    inheritable: boolean;
-  };
-  "Point Column Scale Label": {
-    inheritable: boolean;
-  };
-  "Range Label": {
-    inheritable: boolean;
-  };
-  "Ruler Tick Mark Label": {
-    inheritable: boolean;
-  };
-  "Legend Title": {
-    inheritable: boolean;
-  };
-  "Legend Column Name": {
-    inheritable: boolean;
-  };
-  "Legend Column Source": {
-    inheritable: boolean;
-  };
-  "Range Box Label": {
-    inheritable: boolean;
-  };
+    "Column Header": {
+        inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
+    };
+    "Age Label": {
+        inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
+    };
+    "Uncertainty Label": {
+        inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
+    };
+    "Zone Column Label": {
+        inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
+    };
+    "Sequence Column Label": {
+        inheritable: boolean;
+    };
+    "Event Column Label": {
+        inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
+    };
+    "Popup Body": {
+        inheritable: boolean;
+    };
+    "Ruler Label": {
+        inheritable: boolean;
+    };
+    "Point Column Scale Label": {
+        inheritable: boolean;
+    };
+    "Range Label": {
+        inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
+    };
+    "Ruler Tick Mark Label": {
+        inheritable: boolean;
+    };
+    "Legend Title": {
+        inheritable: boolean;
+    };
+    "Legend Column Name": {
+        inheritable: boolean;
+    };
+    "Legend Column Source": {
+        inheritable: boolean;
+    };
+    "Range Box Label": {
+        inheritable: boolean;
+    };
 };
 
 export type Facies = {
@@ -176,7 +206,6 @@ export type FaciesTimeBlock = {
 
 export type ChartRequest = {
   settings: string; // JSON string representing the settings file you want to use to make a chart
-  columnSettings: string; //Json string representing the state of the application when generating, contains the user's changes
   datapacks: string[]; // active datapacks to be used on chart
 };
 
@@ -187,6 +216,7 @@ export type ServerResponseError = {
 export type ColumnInfo = {
   name: string;
   editName: string;
+  fontsInfo: FontsInfo;
   on: boolean;
   info: string;
   children: ColumnInfo[];
@@ -476,8 +506,6 @@ export function assertChartRequest(o: any): asserts o is ChartRequest {
   if (typeof o !== "object") throw new Error("ChartRequest must be an object");
   if (typeof o.settings !== "string")
     throw new Error("ChartRequest must have a settings string");
-  if (typeof o.columnSettings !== "string")
-    throw new Error("ChartRequest must have a columnSettings string");
   if (!Array.isArray(o.datapacks))
     throw new Error("ChartRequest must have a datapacks array");
 }
@@ -524,6 +552,22 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
     }
     assertColumnInfo(child);
   }
+}
+
+export function assertFontsInfo(o: any): asserts o is FontsInfo {
+    if (typeof o !== "object") throw new Error("FontsInfo must be an object");
+    if (typeof o.bold !== "boolean")
+        throw new Error("FontsInfo must have an bold boolean");
+    if (typeof o.color !== "string")
+        throw new Error("FontsInfo must have a color string");
+    if (typeof o.fontFace !== "string")
+        throw new Error("FontsInfo must have a font face string");
+    if (typeof o.inheritable !== "boolean")
+        throw new Error("FontsInfo must have a inheritable boolean");
+    if (typeof o.italic !== "boolean")
+        throw new Error("FontsInfo must have an italic string");
+    if (typeof o.size !== "number")
+        throw new Error("FontsInfo must have a size number");
 }
 
 export function assertMapHierarchy(o: any): asserts o is MapHierarchy {
@@ -763,6 +807,7 @@ export function assertSVGStatus(
       `SVGStatus must have a 'ready' boolean property`
     );
 }
+
 
 export function assertTimescale(val: any): asserts val is Timescale {
   if (!val || typeof val !== 'object') {

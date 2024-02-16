@@ -95,21 +95,46 @@ export type ColumnPrototypeInfo = {
 export type FontsInfo = {
     "Column Header": {
         inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
     };
     "Age Label": {
         inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
     };
     "Uncertainty Label": {
         inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
     };
     "Zone Column Label": {
         inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
     };
     "Sequence Column Label": {
         inheritable: boolean;
     };
     "Event Column Label": {
         inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
     };
     "Popup Body": {
         inheritable: boolean;
@@ -122,6 +147,11 @@ export type FontsInfo = {
     };
     "Range Label": {
         inheritable: boolean;
+        fontFace: "Arial" | "Courier" | "Verdana";
+        size: number;
+        bold: boolean;
+        italic: boolean;
+        color: string;
     };
     "Ruler Tick Mark Label": {
         inheritable: boolean;
@@ -161,7 +191,6 @@ export type FaciesTimeBlock = {
 };
 export type ChartRequest = {
     settings: string;
-    columnSettings: string;
     datapacks: string[];
 };
 export type ServerResponseError = {
@@ -170,6 +199,7 @@ export type ServerResponseError = {
 export type ColumnInfo = {
     name: string;
     editName: string;
+    fontsInfo: FontsInfo;
     on: boolean;
     info: string;
     children: ColumnInfo[];
@@ -271,6 +301,7 @@ export declare function assertChartRequest(o: any): asserts o is ChartRequest;
 export declare function isServerResponseError(o: any): o is ServerResponseError;
 export declare function assertChartInfo(o: any): asserts o is ChartResponseInfo;
 export declare function assertColumnInfo(o: any): asserts o is ColumnInfo;
+export declare function assertFontsInfo(o: any): asserts o is FontsInfo;
 export declare function assertMapHierarchy(o: any): asserts o is MapHierarchy;
 export declare function assertMapInfo(o: any): asserts o is MapInfo;
 export declare function assertParentMap(parent: any): asserts parent is ParentMap;
