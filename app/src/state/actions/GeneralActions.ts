@@ -25,7 +25,6 @@ import {
 import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
 import { initializeColumnHashMap } from "./ColumnActions";
-import { jsonToXml } from "../parseSettings";
 
 /**
  * Resets any user defined settings
@@ -98,7 +97,7 @@ export const setDatapackConfig = action(
       aliases: {},
     };
     let datapackAgeInfo: DatapackAgeInfo = {
-      useDatapackSuggestedAge: false,
+      datapackContainsSuggAge: false,
     };
     let mapInfo: MapInfo = {};
     let mapHierarchy: MapHierarchy = {};
