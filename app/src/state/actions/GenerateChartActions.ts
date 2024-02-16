@@ -15,11 +15,11 @@ export const handlePopupResponse = action("handlePopupResponse", (response: bool
   navigate("/chart");
 });
 
-export const handleCloseDialog = (navigate) => {
+export const handleCloseDialog = action("handleCloseDialog", (navigate) => {
   state.showSuggestedAgePopup = false;
   fetchChartFromServer();
   navigate("/chart");
-};
+});
 
 // Shows the user a popup before chart generation if there are age spans on the datapack
 export const initiateChartGeneration = action("initiateChartGeneration", (navigate) => {
