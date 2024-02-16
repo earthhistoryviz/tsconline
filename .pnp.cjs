@@ -2190,7 +2190,7 @@ const RAW_RUNTIME_STATE =
           ["lottie-web", "npm:5.12.2"],\
           ["mobx", "npm:6.9.0"],\
           ["mobx-react-lite", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:3.4.3"],\
-          ["mui-color-input", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:2.0.2"],\
+          ["mui-color-input", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:2.0.1"],\
           ["node-fetch", "npm:3.3.1"],\
           ["react", "npm:18.2.0"],\
           ["react-bootstrap", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:2.7.4"],\
@@ -5104,17 +5104,17 @@ const RAW_RUNTIME_STATE =
       }]\
     ]],\
     ["mui-color-input", [\
-      ["npm:2.0.2", {\
-        "packageLocation": "./.yarn/cache/mui-color-input-npm-2.0.2-6a44970428-1c10964fe9.zip/node_modules/mui-color-input/",\
+      ["npm:2.0.1", {\
+        "packageLocation": "./.yarn/cache/mui-color-input-npm-2.0.1-1be37e2e17-0a0c20253f.zip/node_modules/mui-color-input/",\
         "packageDependencies": [\
-          ["mui-color-input", "npm:2.0.2"]\
+          ["mui-color-input", "npm:2.0.1"]\
         ],\
         "linkType": "SOFT"\
       }],\
-      ["virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:2.0.2", {\
-        "packageLocation": "./.yarn/__virtual__/mui-color-input-virtual-fa3fcda557/0/cache/mui-color-input-npm-2.0.2-6a44970428-1c10964fe9.zip/node_modules/mui-color-input/",\
+      ["virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:2.0.1", {\
+        "packageLocation": "./.yarn/__virtual__/mui-color-input-virtual-cb385dac90/0/cache/mui-color-input-npm-2.0.1-1be37e2e17-0a0c20253f.zip/node_modules/mui-color-input/",\
         "packageDependencies": [\
-          ["mui-color-input", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:2.0.2"],\
+          ["mui-color-input", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:2.0.1"],\
           ["@ctrl/tinycolor", "npm:4.0.3"],\
           ["@emotion/react", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:11.10.6"],\
           ["@emotion/styled", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:11.10.6"],\

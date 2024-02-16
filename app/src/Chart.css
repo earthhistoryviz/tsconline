@@ -1,10 +1,9 @@
 .loading-container {
-  display: grid;
-  place-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
   height: 92vh;
-  grid-template-rows: auto 100px 200px 100px auto;
-  text-align: center;
-  position: relative;
   width: 100%;
   gap: 2px;
 }
@@ -17,7 +16,7 @@
 }
 
 .loading {
-  font-size: 48px;
+  font-size: 30px;
   color: black;
   padding: 8px;
   border-radius: 4px;
@@ -25,7 +24,7 @@
   grid-row: 3;
 }
 .loading-sub {
-  font-size: 48px;
+  font-size: 14px;
   color: black;
   padding: 8px;
   border-radius: 4px;
