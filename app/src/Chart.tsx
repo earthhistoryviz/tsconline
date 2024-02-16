@@ -6,6 +6,8 @@ import { useTheme } from "@mui/material/styles";
 import "./Chart.css";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import { GradientDiv } from "./components";
+import TSCLottie from "./components/TSCLottie";
+import LoadingChart from "./LoadingChart";
 
 export const Chart = observer(function () {
   const { state } = useContext(context);
@@ -22,19 +24,7 @@ export const Chart = observer(function () {
       }}
     >
       {state.chartLoading ? (
-        <div
-          className="loading-container"
-          style={{
-            fontFamily: theme.typography.fontFamily,
-          }}
-        >
-          <img src={loadingSVG} alt="LOADING" className="svg-style" />
-          <div className="loading"> L O A D I N G . . . </div>
-          <div className="loading-sub">
-            {" "}
-            (this could take more than a minute)
-          </div>
-        </div>
+        <LoadingChart />
       ) : state.madeChart ? (
         <TransformWrapper minScale={0.01} maxScale={3} limitToBounds={false}>
           <TransformComponent>
