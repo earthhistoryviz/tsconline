@@ -289,13 +289,14 @@ export const removeCache = action("removeCache", async () => {
     method: "POST",
   });
   // check if we successfully removed cache
+  const msg = await response.json()
   try {
-    assertSuccessfulServerResponse(response);
+    assertSuccessfulServerResponse(msg);
     console.log(
-      `Server successfully deleted cache with message: ${response.message}`
+      `Server successfully deleted cache with message: ${msg.message}`
     );
   } catch (e) {
-    displayError(e, response, "Server could not remove cache")
+    displayError(e, msg, "Server could not remove cache")
     return
   }
 });
