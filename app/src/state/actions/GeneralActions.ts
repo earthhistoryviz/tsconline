@@ -534,9 +534,6 @@ export const pushError = action("pushError", (text: string) => {
     errorText: text
   })
 })
-export const setUserResponded = action((value: boolean) => {
-  state.userResponded = value;
-});
 export const setUseSuggestedAge = action((value: boolean) => {
   state.useSuggedstedAge = value;
 });
@@ -599,7 +596,6 @@ export const settingsXML = action("settingsXML", (xml: string) => {
 const setFacies = action("setFacies", (newval: Facies) => {
   state.mapState.facies = newval;
 });
-
 export const setOpenSnackbar = action("setOpenSnackbar", (show: boolean) => {
   state.openSnackbar = show;
 });
