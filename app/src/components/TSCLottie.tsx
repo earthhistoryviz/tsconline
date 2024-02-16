@@ -8,6 +8,7 @@ type LottieIconButtonProps = {
   playOnClick?: boolean;
   width?: number;
   height?: number;
+  speed?: number;
 };
 const Lottie: React.FC<LottieIconButtonProps> = ({
   animationData,
@@ -16,6 +17,7 @@ const Lottie: React.FC<LottieIconButtonProps> = ({
   playOnClick = false,
   width = 35,
   height = 35,
+  speed = 1,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [animationInstance, setAnimationInstance] =
@@ -29,6 +31,7 @@ const Lottie: React.FC<LottieIconButtonProps> = ({
       loop: loop,
       autoplay: autoplay,
     });
+    anim.setSpeed(speed);
     setAnimationInstance(anim);
     return () => anim.destroy();
   }, [ref]);
