@@ -18,7 +18,6 @@ import {
 import { ColumnMenu } from "./ColumnMenu";
 
 import "./Column.css";
-import { ExpandMore } from "@mui/icons-material";
 
 type ColumnAccordionProps = {
   name: string;
@@ -48,9 +47,9 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
     const theme = useTheme();
     const { state, actions } = useContext(context);
     //for keeping the original name for array access
-    let ogName = useRef(name);
+    let temp = name;
     function clickColumnName() {
-      actions.setcolumnSelected(ogName.current);
+      actions.setcolumnSelected(details.name);
     }
     const hasChildren =
       details.children && Object.keys(details.children).length > 0;
@@ -76,7 +75,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
               <TSCCheckbox
                 checked={details.on}
                 onChange={() => {
-                  actions.toggleSettingsTabColumn(ogName.current);
+                  actions.toggleSettingsTabColumn(details.name);
                 }}
               />
               {columnName}
@@ -93,9 +92,9 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
     return (
       <Accordion
         //checks if column name is in expand list
-        expanded={expandedAccordions.includes(stringToHash(ogName.current))}
+        expanded={expandedAccordions.includes(stringToHash(details.name))}
         onChange={() => {
-          accordionClicked(ogName.current);
+          accordionClicked(details.name);
         }}
       >
         <AccordionSummary aria-controls="panel-content" id="panel-header">
@@ -145,7 +144,6 @@ export const Column = observer(function Column() {
         expandedAccordions.filter((number) => number !== stringToHash(name))
       );
     } else setExpandedAccordions([...expandedAccordions, stringToHash(name)]);
-    console.log(expandedAccordions);
   };
   //replaces expanded list with only top level column open
   //which collpases everything
@@ -164,7 +162,6 @@ export const Column = observer(function Column() {
     const newArray: number[] = [];
     newArray.push(stringToHash(state.settingsTabs.columns!.name));
     recurseThroughColumn(newArray, state.settingsTabs.columns!.children);
-    console.log(newArray);
     setExpandedAccordions(newArray);
   };
 
