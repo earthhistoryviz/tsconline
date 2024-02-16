@@ -289,13 +289,14 @@ export const removeCache = action("removeCache", async () => {
     method: "POST",
   });
   // check if we successfully removed cache
+  const msg = await response.json()
   try {
-    assertSuccessfulServerResponse(response);
+    assertSuccessfulServerResponse(msg);
     console.log(
-      `Server successfully deleted cache with message: ${response.message}`
+      `Server successfully deleted cache with message: ${msg.message}`
     );
   } catch (e) {
-    displayError(e, response, "Server could not remove cache")
+    displayError(e, msg, "Server could not remove cache")
     return
   }
 });
@@ -314,7 +315,6 @@ export const resetState = action("resetState", () => {
   setUseCache(true);
   setUsePreset(true);
   setTab(0);
-  setShowPresetInfo(false);
   setSettingsTabsSelected("time");
   setSettingsColumns(null);
   setMapInfo({});
@@ -632,22 +632,9 @@ export const setBaseStageAge = action("setBaseStageAge", (age: number) => {
 export const settingsXML = action("settingsXML", (xml: string) => {
   state.settingsXML = xml;
 });
-
-export const setSelectedPreset = action(
-  "setSelectedPreset",
-  (newval: ChartConfig | null) => {
-    state.selectedPreset = newval;
-  }
-);
 const setFacies = action("setFacies", (newval: Facies) => {
   state.mapState.facies = newval;
 });
-export const setShowPresetInfo = action(
-  "setShowPresetInfo",
-  (newval: boolean) => {
-    state.showPresetInfo = newval;
-  }
-);
 export const setOpenSnackbar = action("setOpenSnackbar", (show: boolean) => {
   state.openSnackbar = show;
 });

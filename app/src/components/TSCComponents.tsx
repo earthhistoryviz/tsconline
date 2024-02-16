@@ -1,4 +1,4 @@
-import { IconButton, Typography, styled } from "@mui/material";
+import { IconButton, SvgIcon, Typography, styled } from "@mui/material";
 
 export const TypographyText = styled(Typography)(({ theme }) => ({
   color: theme.palette.primary.main,
@@ -21,3 +21,25 @@ export const DrawerHeader = styled("div")(({ theme }) => ({
   ...theme.mixins.toolbar,
   justifyContent: "space-between",
 }));
+export const BorderedIcon = ({
+  component,
+  className,
+  strokeWidth,
+}: {
+  component: React.ElementType<any>;
+  className?: string;
+  strokeWidth?: number;
+}) => {
+  return (
+    <SvgIcon
+      className={className}
+      component={component}
+      style={{
+        fontSize: 40,
+        fill: "currentColor",
+        stroke: "black",
+        strokeWidth: strokeWidth || "0.5",
+      }}
+    />
+  );
+};

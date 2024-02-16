@@ -47,10 +47,14 @@ export type ChartConfig = {
   title: string;
   description: string;
   settings: string; // path to base settings file
-  datapacks: string[]; // active datapack names
+  datapacks: Datapack[]; // active datapack names
   date: string; // active datapack names
   type?: string; // type of preset
 };
+export type Datapack = {
+  name: string;
+  file: string;
+}
 
 export type ChartInfo = {
   settings: ChartSettingsInfo;
@@ -351,6 +355,14 @@ export function assertTransects(o: any): asserts o is Transects {
     if ("note" in transect && typeof transect.note !== "string")
       throw new Error(`Transects key ${key} value of note must be a string`);
   }
+}
+export function assertDatapack(o: any): asserts o is Datapack {
+  if (typeof o !== "object")
+    throw new Error("Datapack must be an object");
+  if (typeof o.name !== 'string') 
+    throw new Error("Datapack must have a field name of type string")
+  if (typeof o.file !== 'string') 
+    throw new Error("Datapack must have a field file of type string")
 }
 
 export function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo {
