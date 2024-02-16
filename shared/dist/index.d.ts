@@ -38,9 +38,13 @@ export type ChartConfig = {
     title: string;
     description: string;
     settings: string;
-    datapacks: string[];
+    datapacks: Datapack[];
     date: string;
     type?: string;
+};
+export type Datapack = {
+    name: string;
+    file: string;
 };
 export type ChartInfo = {
     settings: ChartSettingsInfo;
@@ -281,6 +285,7 @@ export declare function assertMapPackIndex(o: any): asserts o is MapPackIndex;
 export declare function assertMapPack(o: any): asserts o is MapPack;
 export declare function assertPresets(o: any): asserts o is Presets;
 export declare function assertTransects(o: any): asserts o is Transects;
+export declare function assertDatapack(o: any): asserts o is Datapack;
 export declare function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo;
 export declare function assertFacies(o: any): asserts o is Facies;
 export declare function assertDatapackParsingPack(o: any): asserts o is DatapackParsingPack;

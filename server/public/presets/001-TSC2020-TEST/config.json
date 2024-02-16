@@ -6,6 +6,9 @@
   "description": "data pack description",
   "settings": "settings.tsc",
   "datapacks": [
-    "TSC2020_InternalDatapack_encrypted_13Feb2021.txt"
+    {
+      "name": "Internal TSCreator Datapack",
+      "file": "TSC2020_InternalDatapack_encrypted_13Feb2021.txt"
+    }
   ]
 }

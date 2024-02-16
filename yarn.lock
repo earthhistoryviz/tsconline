@@ -1615,12 +1615,14 @@ __metadata:
     "@vitejs/plugin-react": "npm:^3.1.0"
     clsx: "npm:^2.1.0"
     color: "npm:^4.2.3"
+    lottie-web: "npm:^5.12.2"
     mobx: "npm:^6.8.0"
     mobx-react-lite: "npm:^3.4.0"
     mui-color-input: "npm:^2.0.1"
     node-fetch: "npm:^3.3.0"
     react: "npm:^18.2.0"
     react-bootstrap: "npm:^2.7.4"
+    react-card-flip: "npm:^1.2.2"
     react-dom: "npm:^18.2.0"
     react-router: "npm:^6.8.1"
     react-router-dom: "npm:^6.8.1"
@@ -3898,6 +3900,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lottie-web@npm:^5.12.2":
+  version: 5.12.2
+  resolution: "lottie-web@npm:5.12.2"
+  checksum: cd377d54a675b37ac9359306b84097ea402dff3d74a2f45e6e0dbcff1df94b3a978e92e48fd34765754bdbb94bd2d8d4da31954d95f156e77489596b235cac91
+  languageName: node
+  linkType: hard
+
 "lowercase-keys@npm:^2.0.0":
   version: 2.0.0
   resolution: "lowercase-keys@npm:2.0.0"
@@ -4723,6 +4732,16 @@ __metadata:
     "@types/react":
       optional: true
   checksum: 49d26c12a3323e9e79ce98be9e11d7ebc3ae50cdea68365910674cfbd5fc183645f4e2ae739ba92d305d5802dd6b0ac3bb8973d3aadc3ccad93465b5dd2667bf
+  languageName: node
+  linkType: hard
+
+"react-card-flip@npm:^1.2.2":
+  version: 1.2.2
+  resolution: "react-card-flip@npm:1.2.2"
+  peerDependencies:
+    react: ^18.2.0
+    react-dom: ^18.2.0
+  checksum: 06bb6eaef48b052f2c58f3d268b9b02e28884f2a62c57d56c52bf71259c0d6a2f2ec566073529d78c9f9e28ae4bc213147ea82a6d928d7ea6aa0b9dd6d10e9c7
   languageName: node
   linkType: hard
 
