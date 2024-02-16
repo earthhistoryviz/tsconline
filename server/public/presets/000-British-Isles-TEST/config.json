@@ -6,7 +6,10 @@
   "description": "British Map Pack",
   "settings": "settings.tsc",
   "datapacks": [
-    "BritishMappackPUBLIC_GTS2016_15July2016.mdpk"
+    {
+      "name": "British Isles Map-Pack",
+      "file": "BritishMappackPUBLIC_GTS2016_15July2016.mdpk"
+    }
   ],
   "type": "MAP-PACK"
 }

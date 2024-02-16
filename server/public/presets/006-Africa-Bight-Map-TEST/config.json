@@ -6,7 +6,10 @@
   "description": "simple map pack dev pack",
   "settings": "settings.tsc",
   "datapacks": [
-    "AfricaBight.map"
+    {
+      "name": "Africa Bight Map Pack",
+      "file": "AfricaBight.map"
+    }
   ],
   "type": "MAP-PACK"
 }

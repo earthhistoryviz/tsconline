@@ -1,22 +1,20 @@
-import {
-  Slider,
-  Drawer,
-  Divider,
-  IconButton,
-} from "@mui/material";
+import { Slider, Drawer, Divider, IconButton } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import type {
-  MapHierarchy,
-  MapInfo,
-} from "@tsconline/shared";
+import type { MapHierarchy, MapInfo } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { context } from "../state";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import {
-  TransformWrapper,
-  TransformComponent,
-} from "react-zoom-pan-pinch";
-import { TSCInputAdornment, TSCNumberInput, TSCButton, DrawerHeader, ColoredIconButton, TypographyText, ColoredDiv } from "../components";
+  TSCInputAdornment,
+  TSCNumberInput,
+  TSCButton,
+  DrawerHeader,
+  ColoredIconButton,
+  TypographyText,
+  ColoredDiv,
+  BorderedIcon,
+} from "../components";
 import CloseIcon from "@mui/icons-material/Close";
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
@@ -26,8 +24,12 @@ import YoutubeSearchedForIcon from "@mui/icons-material/YoutubeSearchedFor";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { observer } from "mobx-react-lite";
 import "./MapViewer.css";
-import { BorderedIcon, Legend, createChildMapButton, loadMapPoints, loadTransects } from "./MapButtons";
-
+import {
+  Legend,
+  createChildMapButton,
+  loadMapPoints,
+  loadTransects,
+} from "./MapButtons";
 
 type MapProps = {
   name: string;
@@ -243,7 +245,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
                     theme.palette.on.main,
                     theme.palette.off.main,
                     mapViewerRef.current
-                    )}
+                  )}
 
                 {/* Load all the child maps*/}
                 {Object.keys(mapHierarchy).includes(name) &&
@@ -254,7 +256,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
                       ? mapData.bounds
                       : mapData.parent!.bounds;
 
-                    // mapInfo[child].parent!.bounds is called this way because 
+                    // mapInfo[child].parent!.bounds is called this way because
                     // the child's parent field stores the bounds of the child map within the parents bounds this way
                     // in other words the child.parent.bounds is actually the bounds of the child within the parent
                     // since we are currently in the parent, we need to know the children's bounds this way
@@ -296,7 +298,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
           </TypographyText>
         </DrawerHeader>
         <Divider />
-        <Legend/>
+        <Legend />
       </Drawer>
       <Drawer
         className="facies-button-container drawer"
@@ -412,4 +414,3 @@ const FaciesControls = observer(() => {
     </ColoredDiv>
   );
 });
-

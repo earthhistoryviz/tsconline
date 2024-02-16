@@ -6,7 +6,13 @@
   "description": "two datapacks",
   "settings": "settings.tsc",
   "datapacks": [
-    "Hominids_wImages_GTS2020_Encrypted.dpk",
-    "TimeTree_of_Life_GTS2020_ENCRYPTED_23Jan2020.dpk"
+    {
+      "name": "Time Tree of Life Datapack",
+      "file": "TimeTree_of_Life_GTS2020_ENCRYPTED_23Jan2020.dpk"
+    },
+    {
+      "name": "Hominids Datapack",
+      "file": "Hominids_wImages_GTS2020_Encrypted.dpk"
+    }
   ]
 }

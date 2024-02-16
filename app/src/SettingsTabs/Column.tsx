@@ -118,10 +118,7 @@ export const Column = observer(function Column() {
   };
   return (
     <div className="column-top-level">
-      <TSCButton
-        id="column-generate-button-top"
-        onClick={handleButtonClick}
-      >
+      <TSCButton id="column-generate-button-top" onClick={handleButtonClick}>
         Generate
       </TSCButton>
       <div className="column-accordion-and-menu">
