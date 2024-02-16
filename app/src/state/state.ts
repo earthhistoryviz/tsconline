@@ -18,8 +18,7 @@ export type State = {
   tab: number;
   madeChart: boolean;
   showSuggestedAgePopup: boolean;
-  userResponded: boolean;
-  useSuggedstedAge: boolean;
+  useSuggestedAge: boolean;
   settingsTabs: {
     selected: "time" | "font" | "column" | "mappoints";
     columns: ColumnInfo | null;
@@ -74,8 +73,7 @@ export const state = observable<State>({
   madeChart: false,
   tab: 0,
   showSuggestedAgePopup: false,
-  userResponded: false,
-  useSuggedstedAge: true,
+  useSuggestedAge: true,
   settingsTabs: {
     selected: "time",
     columns: null,

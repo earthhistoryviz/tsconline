@@ -49,24 +49,6 @@ export const Home = observer(function Home() {
   const { state, actions } = useContext(context);
   const theme = useTheme();
   const navigate = useNavigate();
-  const handlePopupResponse = (response) => {
-    if (state.setUseSuggestedAge != response) {
-      actions.setUseSuggestedAge(response);
-      actions.setUseCache(false);
-    }
-    actions.setUserResponded(true);
-    actions.setShowSuggestedAgePopup(false);
-  };
-  const handleCloseDialog = () => {
-    actions.setShowSuggestedAgePopup(false);
-  };
-  useEffect(() => {
-    if (state.userResponded) {
-      actions.setUserResponded(false);
-      actions.generateChart();
-      navigate('/chart');
-    }
-  }, [state.userResponded]);
   return (
     <div
       className="whole_page"
@@ -77,13 +59,8 @@ export const Home = observer(function Home() {
       <TSCOnlineHeader />
       {Object.entries(state.presets).map(([type, configArray]) => {
         return (
-          <TSCPresetHighlights
-            key={type}
-            navigate={navigate}
-            configArray={configArray}
-            type={type}
-          />
-        );
+          <TSCPresetHighlights key={type} navigate={navigate} configArray={configArray} type={type}/>
+        )
       })}
       <TSCPopupDialog
         open={ state.showSuggestedAgePopup }
