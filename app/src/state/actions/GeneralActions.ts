@@ -6,6 +6,7 @@ import {
   type MapHierarchy,
   type Facies,
   type GeologicalStages,
+  assertChartInfo,
   assertSuccessfulServerResponse,
   isServerResponseError,
   assertDatapackResponse,
@@ -18,8 +19,9 @@ import {
   assertColumnInfo,
   assertMapInfo,
   DatapackAgeInfo,
-  type FontsInfo,
   defaultFontsInfo,
+  assertIndexResponse,
+  assertPresets,
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
