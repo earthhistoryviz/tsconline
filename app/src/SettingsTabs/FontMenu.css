@@ -83,10 +83,12 @@
 @media screen and (max-width: 730px) {
     #FontMenuContainer {
         width: 80%;
+        padding: 15px;
     }
 
     #FontRowContainer {
         display: flex;
         flex-wrap: wrap;
+        row-gap: 8px;
     }
 }
