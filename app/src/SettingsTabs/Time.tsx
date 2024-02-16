@@ -18,7 +18,7 @@ export const Time = observer(function Time() {
 
     actions.updateSettings();
 
-    actions.generateChart();
+    actions.fetchChartFromServer()();
 
     navigate("/chart");
   };
