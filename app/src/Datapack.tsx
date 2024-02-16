@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { observer } from "mobx-react-lite";
 import { useTheme } from "@mui/material/styles";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -7,7 +7,6 @@ import Box from "@mui/material/Box";
 import InfoIcon from "@mui/icons-material/Info";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-import Button from '@mui/material/Button';
 import { TSCButton } from "./components";
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -19,6 +18,7 @@ import "./Datapack.css";
 export const Datapack = observer(function Datapack() {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
+  const [checkedNotApplied, setCheckedNotApplied] = useState(false);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -30,6 +30,19 @@ export const Datapack = observer(function Datapack() {
     //add logic here to actually add the datapacks
     setOpen(false);
   }
+
+  useEffect(() => {
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [checkedNotApplied]);
+
+  const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+    if (checkedNotApplied) {
+      event.preventDefault();
+    }
+  };
 
   // dummy datapacks data
   const datapacks = [
@@ -47,6 +60,7 @@ export const Datapack = observer(function Datapack() {
     } else {
       setSelectedDatapacks([...selectedDatapacks, id]);
     }
+    setCheckedNotApplied(true);
   };
 
   return (
@@ -55,7 +69,7 @@ export const Datapack = observer(function Datapack() {
         TimeScale Creator Datapacks
       </Typography>
       <Typography style={{ fontSize: 18, marginTop: "1em", marginBottom: "3vh"}}>
-        Add a datapack by clicking the checkbox then hitting apply datapacks
+        Add a datapack by clicking the checkbox
       </Typography>
       <Box className="box-container">
         <table className="data-table">
@@ -81,9 +95,6 @@ export const Datapack = observer(function Datapack() {
           </tbody>
         </table>
       </Box>
-      <TSCButton onClick={handleClickOpen}>
-        Apply Datapacks
-      </TSCButton>
       <Dialog open={open} onClose={handleClose}>
         <DialogContent>
           <DialogContentText>
@@ -95,7 +106,7 @@ export const Datapack = observer(function Datapack() {
           <TSCButton onClick={handleApply}>Apply</TSCButton>
         </DialogActions>
       </Dialog>
-
+      
       <InputFileUpload
         startIcon={<CloudUploadIcon />}
         text="Upload Datapack"
