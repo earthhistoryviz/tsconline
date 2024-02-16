@@ -8,7 +8,6 @@ import { jsonToXml } from "../parseSettings";
 export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate) => {
   if (state.useSuggestedAge != response) {
     state.useSuggestedAge = response;
-    console.log(state.useSuggestedAge);
     generalActions.setUseCache(false);
   }
   state.showSuggestedAgePopup = false;
