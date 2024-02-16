@@ -203,9 +203,12 @@ function generateSettingsXml(settings: any, indent: string): string {
     if (Object.prototype.hasOwnProperty.call(settings, key)) {
       const value = settings[key];
       if (typeof value === "object") {
+        //overhaul top age and base age
+        //top age and baseage settings can have two children: text and stage
+        //the source attribute determines which one is used
         if (key === "topAge" || key === "baseAge") {
           xml += `${indent}<setting name="${key}" source="${value.source}" unit="${value.unit}">\n`;
-          xml += `${indent}    <setting name="text">${value.text}</setting>\n`;
+          xml += `${indent}    <setting name="${value.source}">${value.text}</setting>\n`;
           xml += `${indent}</setting>\n`;
         } else if (key === "unitsPerMY" || key === "skipEmptyColumns") {
           xml += `${indent}<setting name="${key}" unit="${value.unit}">${value.text}</setting>\n`;
@@ -347,8 +350,8 @@ function generateColumnXml(
               break;
             }
           }
-        } 
-        
+        }
+
         xml += generateColumnXml(
           params.one,
           params.two,
