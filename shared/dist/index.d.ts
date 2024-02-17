@@ -193,6 +193,12 @@ export type FaciesTimeBlock = {
     label?: string;
     age: number;
 };
+export type SubBlockInfo = {
+    label: string;
+    age: number;
+    info: string;
+    lineType: string;
+};
 export type ChartRequest = {
     settings: string;
     datapacks: string[];
@@ -208,6 +214,17 @@ export type ColumnInfo = {
     info: string;
     children: ColumnInfo[];
     parent: string | null;
+    subBlockInfo?: SubBlockInfo[];
+    minAge: number;
+    maxAge: number;
+};
+export type Block = {
+    name: string;
+    subBlockInfo: SubBlockInfo[];
+    minAge: number;
+    maxAge: number;
+    info: string;
+    on: boolean;
 };
 export type ChartResponseInfo = {
     chartpath: string;
@@ -287,6 +304,8 @@ export declare function assertPresets(o: any): asserts o is Presets;
 export declare function assertTransects(o: any): asserts o is Transects;
 export declare function assertDatapack(o: any): asserts o is Datapack;
 export declare function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo;
+export declare function assertSubBlockInfo(o: any): asserts o is SubBlockInfo;
+export declare function assertBlock(o: any): asserts o is Block;
 export declare function assertFacies(o: any): asserts o is Facies;
 export declare function assertDatapackParsingPack(o: any): asserts o is DatapackParsingPack;
 export declare function assertDatapackIndex(o: any): asserts o is DatapackIndex;
