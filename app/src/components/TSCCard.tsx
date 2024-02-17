@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Color from "color";
-import { styled } from "@mui/material/styles";
+import { styled, useTheme } from "@mui/material/styles";
 import {
   Grid,
   Box,
@@ -9,6 +9,9 @@ import {
   IconButton,
   Typography,
   Tooltip,
+  List,
+  ListItem,
+  ListItemText,
 } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
 import { TSCButton } from "./TSCButton";
@@ -16,10 +19,10 @@ import ReactCardFlip from "react-card-flip";
 import "./TSCCard.css";
 import { ChartConfig } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
-import { BorderedIcon } from "./TSCComponents";
+import { BorderedIcon, StyledScrollbar, Lottie } from ".";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import checkIcon from "../assets/icons/check-icon.json";
-import Lottie from "./TSCLottie";
+import FolderIcon from "@mui/icons-material/Folder";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 
 let text = `
@@ -55,6 +58,11 @@ const CardContent = styled("div")(({ color }) => ({
       10px 10px 15px -5px ${Color(color).fade(0.5)}, 
       0 10px 15px -5px ${Color(color).fade(0.5)}
     `,
+}));
+const Header = styled(Typography)(({ theme }) => ({
+  "&::before": {
+    backgroundColor: theme.palette.selection.main,
+  },
 }));
 
 const Date = styled("div")(({ theme }) => ({
@@ -143,16 +151,62 @@ export const TSCCard = ({
         </CardContent>
       </Box>
       {/* This is the back card */}
-      <Box className="back-card">
-        <HiddenBack className="hidden-back" />
-        <CardContent className="back-background card-content" color={color}>
-          <CardBackground className="card-background" color={color} />
-          <Box className="info-container">
-            <CardMedia
-              className="info-media"
-              image={devSafeUrl(preset.background)}
-            />
-            <Title className="info-title">{preset.title}</Title>
+      <BackCard
+        handleFlip={handleFlip}
+        add={add}
+        added={added}
+        preset={preset}
+        color={color}
+      />
+    </ReactCardFlip>
+  );
+};
+
+const BackCard = ({
+  preset,
+  color,
+  handleFlip,
+  add,
+  added,
+}: {
+  preset: ChartConfig;
+  handleFlip: () => void;
+  add: () => void;
+  added: boolean;
+  color?: string;
+}) => {
+  return (
+    <Box className="back-card">
+      <HiddenBack className="hidden-back" />
+      <CardBackground className="card-background" color={color} />
+      <CardContent className="back-background card-content" color={color}>
+        <StyledScrollbar className="info-container">
+          <CardMedia
+            className="info-media"
+            component="img"
+            image={devSafeUrl(preset.background)}
+          />
+          <Title className="info-title">{preset.title}</Title>
+          <div className="info-text-container">
+            <Header className="header" color="primary">
+              Included Datapacks
+            </Header>
+            <List className="list">
+              {preset.datapacks.map((datapack, index) => (
+                <ListItem className="list-item" key={index}>
+                  <FolderIcon color="primary" />
+                  <ListItemText
+                    className="list-item-text"
+                    primary={
+                      <Typography color="primary">{datapack.name}</Typography>
+                    }
+                  />
+                </ListItem>
+              ))}
+            </List>
+            <Header className="header" color="primary">
+              Additional Info
+            </Header>
             <Typography
               className="info-description"
               variant="body1"
@@ -160,34 +214,29 @@ export const TSCCard = ({
             >
               {text}
             </Typography>
-          </Box>
-        </CardContent>
-        <div className="overlay-buttons">
-          <IconButton className="icon-button" onClick={handleFlip}>
-            <BorderedIcon className="add-icon" component={ArrowBackIcon} />
+          </div>
+        </StyledScrollbar>
+      </CardContent>
+      <div className="overlay-buttons">
+        <IconButton className="icon-button" onClick={handleFlip}>
+          <BorderedIcon className="add-icon" component={ArrowBackIcon} />
+        </IconButton>
+      </div>
+      <div className="add-buttons">
+        {added ? (
+          <IconButton className="add-button" onClick={add}>
+            <Lottie playOnClick autoplay animationData={checkIcon} />
           </IconButton>
-        </div>
-        <div className="add-buttons">
-          {added ? (
-            <IconButton className="add-button" onClick={add}>
-              <Lottie playOnClick autoplay animationData={checkIcon} />
-            </IconButton>
-          ) : (
-            <Tooltip
-              arrow
-              title={preset.datapacks.map((datapack) => datapack.name)}
-            >
-              <IconButton className="add-button" onClick={add}>
-                <BorderedIcon
-                  className="add-icon"
-                  strokeWidth={0.1}
-                  component={AddOutlinedIcon}
-                />
-              </IconButton>
-            </Tooltip>
-          )}
-        </div>
-      </Box>
-    </ReactCardFlip>
+        ) : (
+          <IconButton className="add-button" onClick={add}>
+            <BorderedIcon
+              className="add-icon"
+              strokeWidth={0.1}
+              component={AddOutlinedIcon}
+            />
+          </IconButton>
+        )}
+      </div>
+    </Box>
   );
 };
