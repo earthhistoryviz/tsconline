@@ -1627,6 +1627,7 @@ __metadata:
     react-router: "npm:^6.8.1"
     react-router-dom: "npm:^6.8.1"
     react-zoom-pan-pinch: "npm:^3.3.0"
+    simplebar-react: "npm:^3.2.4"
     typescript: "npm:^4.9.3"
     vite: "npm:^4.1.0"
   languageName: unknown
@@ -1733,6 +1734,22 @@ __metadata:
   dependencies:
     "@types/node": "npm:*"
   checksum: e009a2bfb50e90ca9b7c6e8f648f8464067271fd99116f881073fa6fa76dc8d0133181dd65e6614d5fb1220d671d67b0124aef7d97dc02d7e342ab143a47779d
+  languageName: node
+  linkType: hard
+
+"@types/lodash-es@npm:^4.17.6":
+  version: 4.17.12
+  resolution: "@types/lodash-es@npm:4.17.12"
+  dependencies:
+    "@types/lodash": "npm:*"
+  checksum: 56b9a433348b11c31051c6fa9028540a033a08fb80b400c589d740446c19444d73b217cf1471d4036448ef686a83e8cf2a35d1fadcb3f2105f26701f94aebb07
+  languageName: node
+  linkType: hard
+
+"@types/lodash@npm:*":
+  version: 4.14.202
+  resolution: "@types/lodash@npm:4.14.202"
+  checksum: 1bb9760a5b1dda120132c4b987330d67979c95dbc22612678682cd61b00302e190f4207228f3728580059cdab5582362262e3819aea59960c1017bd2b9fb26f6
   languageName: node
   linkType: hard
 
@@ -2329,6 +2346,13 @@ __metadata:
   version: 5.3.1
   resolution: "camelcase@npm:5.3.1"
   checksum: e6effce26b9404e3c0f301498184f243811c30dfe6d0b9051863bd8e4034d09c8c2923794f280d6827e5aa055f6c434115ff97864a16a963366fb35fd673024b
+  languageName: node
+  linkType: hard
+
+"can-use-dom@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "can-use-dom@npm:0.1.0"
+  checksum: 4b465d2d176a3580428a7d406cb03dd0f05e068b1e1ac500c244eb7dd8c62613c87620c56b4a2c5c68c3d33dfd5a6fd56bde7bfb335dc5882f7489d68013600c
   languageName: node
   linkType: hard
 
@@ -3882,7 +3906,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:^4.17.15":
+"lodash-es@npm:^4.17.21":
+  version: 4.17.21
+  resolution: "lodash-es@npm:4.17.21"
+  checksum: 03f39878ea1e42b3199bd3f478150ab723f93cc8730ad86fec1f2804f4a07c6e30deaac73cad53a88e9c3db33348bb8ceeb274552390e7a75d7849021c02df43
+  languageName: node
+  linkType: hard
+
+"lodash@npm:^4.17.15, lodash@npm:^4.17.21":
   version: 4.17.21
   resolution: "lodash@npm:4.17.21"
   checksum: c08619c038846ea6ac754abd6dd29d2568aa705feb69339e836dfa8d8b09abbb2f859371e86863eda41848221f9af43714491467b5b0299122431e202bb0c532
@@ -5196,6 +5227,29 @@ __metadata:
   dependencies:
     semver: "npm:~7.0.0"
   checksum: 0f9be259b33fe34b9ac949552c62b3d89ed020ec8e2f64d17cbd1c6c09bf38b4352198cb1871fe191a1566ef4722ef90232f2629ea836b63425d7586a8cfa3f2
+  languageName: node
+  linkType: hard
+
+"simplebar-core@npm:^1.2.4":
+  version: 1.2.4
+  resolution: "simplebar-core@npm:1.2.4"
+  dependencies:
+    "@types/lodash-es": "npm:^4.17.6"
+    can-use-dom: "npm:^0.1.0"
+    lodash: "npm:^4.17.21"
+    lodash-es: "npm:^4.17.21"
+  checksum: d3716a37c5e4279152bf79f034044d3e19221e819b337f8faf505fc40695292d62e1c2380b0e10b63bc5d626c05fd88d0d3fd22215c491a6888058cd72c033f2
+  languageName: node
+  linkType: hard
+
+"simplebar-react@npm:^3.2.4":
+  version: 3.2.4
+  resolution: "simplebar-react@npm:3.2.4"
+  dependencies:
+    simplebar-core: "npm:^1.2.4"
+  peerDependencies:
+    react: ">=16.8.0"
+  checksum: d31181ee9282b5b7588c21c7c5e648fcba4ec8243145a6d31906b63644507f1f0ac9f4e4ac7cfdf82d533b46bb5cdda2d0cf1c826b48eca0aee022a09c4ef049
   languageName: node
   linkType: hard
 
