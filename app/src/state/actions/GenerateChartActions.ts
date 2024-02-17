@@ -11,14 +11,12 @@ export const handlePopupResponse = action("handlePopupResponse", (response: bool
     generalActions.setUseCache(false);
   }
   state.showSuggestedAgePopup = false;
-  fetchChartFromServer();
-  navigate("/chart");
+  fetchChartFromServer(navigate);
 });
 
 export const handleCloseDialog = action("handleCloseDialog", (navigate) => {
   state.showSuggestedAgePopup = false;
-  fetchChartFromServer();
-  navigate("/chart");
+  fetchChartFromServer(navigate);
 });
 
 // Shows the user a popup before chart generation if there are age spans on the datapack
@@ -26,12 +24,12 @@ export const initiateChartGeneration = action("initiateChartGeneration", (naviga
   if (state.settings.datapackContainsSuggAge) {
     state.showSuggestedAgePopup = true;
   } else {
-    fetchChartFromServer();
-    navigate("/chart");
+    fetchChartFromServer(navigate);
   }
 });
 
-export const fetchChartFromServer = action("fetchChartFromServer", async () => {
+export const fetchChartFromServer = action("fetchChartFromServer", async (navigate) => {
+  navigate("/chart");
   //set the loading screen and make sure the chart isn't up
   generalActions.setTab(1);
   generalActions.setChartMade(true);
