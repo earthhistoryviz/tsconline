@@ -47,7 +47,7 @@ export const fetchDatapackInfo = action("fetchPresets", async () => {
     assertIndexResponse(indexResponse)
     loadIndexResponse(indexResponse)
     console.log('Datapacks loaded')
-  } catch(e: any) {
+  } catch (e: any) {
     displayError(e, indexResponse, 'Failed to fetch DatapackInfo')
   }
 })
@@ -58,7 +58,7 @@ export const fetchPresets = action("fetchPresets", async () => {
     assertPresets(presets);
     loadPresets(presets);
     console.log('Presets loaded');
-  } catch(e: any) {
+  } catch (e: any) {
     displayError(e, presets, 'Failed to retrieve presets')
   }
 })
@@ -169,6 +169,8 @@ export const setDatapackConfig = action(
         fontsInfo: fontsInfo,
         info: "",
         on: true,
+        minAge: state.settings.topStageAge,
+        maxAge: state.settings.baseStageAge,
         children: [
           {
             name: "Ma",
@@ -178,7 +180,9 @@ export const setDatapackConfig = action(
             info: "",
             children: [],
             parent: "Root", // if you change this, change parse-datapacks.ts :69
-          },
+            minAge: state.settings.topStageAge, //tbd
+            maxAge: state.settings.baseStageAge //tbd
+          }
         ],
         parent: null,
       };
