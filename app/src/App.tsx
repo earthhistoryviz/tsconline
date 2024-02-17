@@ -14,9 +14,12 @@ import { useContext } from 'react';
 import { context } from './state';
 import {About} from "./About";
 import { TSCError } from './components';
+import { TSCPopupDialog } from "./components";
+import { useNavigate } from 'react-router-dom';
 
 export default observer(function App() {
-  const { state, actions } = useContext(context)
+  const { state, actions } = useContext(context);
+  const navigate = useNavigate();
   return (
     <ThemeProvider theme={theme}>
       <NavBar />
@@ -32,6 +35,14 @@ export default observer(function App() {
       {state.errorAlerts.map((error) => (
         <TSCError key={error.id} text={error.errorText} id={error.id}/>
       ))}
+      <TSCPopupDialog
+        open={ state.showSuggestedAgePopup }
+        title="Suggested Age Span Flags detected"
+        message="Do you want to use the Data-Pack's suggested age span?"
+        onYes={() => actions.handlePopupResponse(true, navigate)}
+        onNo={() => actions.handlePopupResponse(false, navigate)}
+        onClose={() => actions.fetchChartFromServer() }
+      />
       <Snackbar
       open={state.openSnackbar}
       autoHideDuration={5000}

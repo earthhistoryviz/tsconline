@@ -90,14 +90,13 @@ export const fetchSVGStatus = async function (
  */
 export const fetchChart = async function fetchChart(
   request: FastifyRequest<{
-    Params: { usecache: string; useDatapackSuggestedAge: string };
+    Params: { usecache: string; useSuggestedAge: string };
   }>,
   reply: FastifyReply
 ) {
   //TODO change this to be in request body
   const usecache = request.params.usecache === "true";
-  const useDatapackSuggestedAge =
-    request.params.useDatapackSuggestedAge === "true";
+  const useSuggestedAge = request.params.useSuggestedAge === "true";
   let chartrequest;
   try {
     chartrequest = JSON.parse(request.body as string);
@@ -208,8 +207,8 @@ export const fetchChart = async function fetchChart(
     `-d ${datapacks.join(" ")} ` +
     // Tell it where to save chart
     `-o ${chart_filepath} ` +
-    // Don't use datapacks suggested age (if useDatapackSuggestedAge is true then ignore datapack ages)
-    `${useDatapackSuggestedAge ? "-a" : ""}`;
+    // Don't use datapacks suggested age (if useSuggestedAge is true then ignore datapack ages)
+    `${!useSuggestedAge ? '-a' : ''}`;
 
   // Exec Java command and send final reply to browser
   await new Promise<void>((resolve, _reject) => {

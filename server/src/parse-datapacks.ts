@@ -107,9 +107,9 @@ export async function parseDatapacks(
   const isChild: Set<string> = new Set();
   const isFacies: Set<string> = new Set();
   const allEntries: Map<string, ParsedColumnEntry> = new Map();
+  let datapackAgeInfo: DatapackAgeInfo = { datapackContainsSuggAge: false };
   const blocksMap: Map<string, Block> = new Map();
   //const faciesMap: Map<String, string[]> = new Map();
-  let datapackAgeInfo: DatapackAgeInfo = { useDatapackSuggestedAge: false };
   try {
     for (let decrypt_path of decrypt_paths) {
       //get the facies/blocks first
@@ -197,7 +197,7 @@ async function getAllEntries(filename: string, allEntries: Map<string, ParsedCol
     }
     allEntries.set(parent, parsedChildren);
   }
-  let datapackAgeInfo: DatapackAgeInfo = { useDatapackSuggestedAge: topAge != null && bottomAge != null };
+  let datapackAgeInfo: DatapackAgeInfo = { datapackContainsSuggAge: topAge != null && bottomAge != null };
   if (topAge !== null && bottomAge !== null) {
     datapackAgeInfo.topAge = topAge;
     datapackAgeInfo.bottomAge = bottomAge;
