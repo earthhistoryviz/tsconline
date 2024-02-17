@@ -26,7 +26,7 @@
     "lottie-web": "^5.12.2",
     "mobx": "^6.8.0",
     "mobx-react-lite": "^3.4.0",
-    "mui-color-input": "^2.0.1",
+    "mui-color-input": "^2.0.2",
     "node-fetch": "^3.3.0",
     "react": "^18.2.0",
     "react-bootstrap": "^2.7.4",
