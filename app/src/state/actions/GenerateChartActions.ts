@@ -10,12 +10,6 @@ export const handlePopupResponse = action("handlePopupResponse", (response: bool
     state.useSuggestedAge = response;
     generalActions.setUseCache(false);
   }
-  state.showSuggestedAgePopup = false;
-  fetchChartFromServer(navigate);
-});
-
-export const handleCloseDialog = action("handleCloseDialog", (navigate) => {
-  state.showSuggestedAgePopup = false;
   fetchChartFromServer(navigate);
 });
 
@@ -29,6 +23,7 @@ export const initiateChartGeneration = action("initiateChartGeneration", (naviga
 });
 
 export const fetchChartFromServer = action("fetchChartFromServer", async (navigate) => {
+  state.showSuggestedAgePopup = false;
   navigate("/chart");
   //set the loading screen and make sure the chart isn't up
   generalActions.setTab(1);

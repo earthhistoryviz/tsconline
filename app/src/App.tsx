@@ -41,7 +41,7 @@ export default observer(function App() {
         message="Do you want to use the Data-Pack's suggested age span?"
         onYes={() => actions.handlePopupResponse(true, navigate)}
         onNo={() => actions.handlePopupResponse(false, navigate)}
-        onClose={() => actions.handleCloseDialog(navigate) }
+        onClose={() => actions.fetchChartFromServer() }
       />
       <Snackbar
       open={state.openSnackbar}
