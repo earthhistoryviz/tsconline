@@ -170,8 +170,8 @@ server.get<{ Params: { hash: string } }>(
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
-server.post<{ Params: { usecache: string, useDatapackSuggestedAge: string } }>(
-  "/charts/:usecache/:useDatapackSuggestedAge",
+server.post<{ Params: { usecache: string, useSuggestedAge: string } }>(
+  "/charts/:usecache/:useSuggestedAge",
   routes.fetchChart
 );
 

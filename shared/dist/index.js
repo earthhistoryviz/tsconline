@@ -53,9 +53,9 @@ export function assertDatapack(o) {
 export function assertDatapackAgeInfo(o) {
     if (typeof o !== "object")
         throw new Error("DatapackAgeInfo must be an object");
-    if (typeof o.useDatapackSuggestedAge !== "boolean")
-        throw new Error("DatapackAgeInfo must have a boolean useDatapackSuggestedAge");
-    if (o.useDatapackSuggestedAge === true) {
+    if (typeof o.datapackContainsSuggAge !== "boolean")
+        throw new Error("DatapackAgeInfo must have a boolean datapackContainsSuggAge");
+    if (o.datapackContainsSuggAge === true) {
         if (typeof o.bottomAge !== "number")
             throw new Error("DatapackAgeInfo must have a number bottomAge");
         if (typeof o.topAge !== "number")

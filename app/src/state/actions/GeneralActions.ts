@@ -6,7 +6,6 @@ import {
   type MapHierarchy,
   type Facies,
   type GeologicalStages,
-  assertChartInfo,
   assertSuccessfulServerResponse,
   isServerResponseError,
   assertDatapackResponse,
@@ -26,7 +25,6 @@ import {
 import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
 import { initializeColumnHashMap } from "./ColumnActions";
-import { jsonToXml } from "../parseSettings";
 
 /**
  * Resets any user defined settings
@@ -38,7 +36,7 @@ export const resetSettings = action("resetSettings", () => {
     baseStageAge: 0,
     baseStageKey: "",
     unitsPerMY: 2,
-    useDatapackSuggestedAge: false,
+    datapackContainsSuggAge: false,
   };
 });
 
@@ -99,7 +97,7 @@ export const setDatapackConfig = action(
       aliases: {},
     };
     let datapackAgeInfo: DatapackAgeInfo = {
-      useDatapackSuggestedAge: false,
+      datapackContainsSuggAge: false,
     };
     let mapInfo: MapInfo = {};
     let mapHierarchy: MapHierarchy = {};
@@ -231,8 +229,8 @@ export const setDatapackConfig = action(
       return false;
     }
     state.mapState.facies = facies;
-    state.settings.useDatapackSuggestedAge =
-      datapackAgeInfo.useDatapackSuggestedAge;
+    state.settings.datapackContainsSuggAge =
+      datapackAgeInfo.datapackContainsSuggAge;
     state.mapState.mapHierarchy = mapHierarchy;
     state.settingsTabs.columns = columnInfo;
     state.mapState.mapInfo = mapInfo;
@@ -325,42 +323,6 @@ export const resetState = action("resetState", () => {
   state.settingsTabs.columnSelected = null;
   state.settingsXML = "";
   state.settingsJSON = {};
-});
-
-export const generateChart = action("generateChart", async () => {
-  //set the loading screen and make sure the chart isn't up
-  setTab(1);
-  setChartMade(true);
-  setChartLoading(true);
-  setChartHash("");
-  setChartPath("");
-  //let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
-  // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
-  let xmlSettings = jsonToXml(state.settingsJSON, state.settingsTabs.columns);
-  const body = JSON.stringify({
-    settings: xmlSettings,
-    datapacks: state.config.datapacks,
-  });
-  console.log("Sending settings to server...");
-  const response = await fetcher(
-    `/charts/${state.useCache}/${state.settings.useDatapackSuggestedAge}`,
-    {
-      method: "POST",
-      body,
-    }
-  );
-  const answer = await response.json();
-  // will check if pdf is loaded
-  try {
-    assertChartInfo(answer);
-    setChartHash(answer.hash);
-    setChartPath(devSafeUrl(answer.chartpath));
-    await checkSVGStatus();
-    setOpenSnackbar(true);
-  } catch (e: any) {
-    displayError(e, answer, "Failed to fetch chart")
-    return
-  }
 });
 
 export const loadPresets = action("loadPresets", (presets: Presets) => {
@@ -576,9 +538,8 @@ export const pushError = action("pushError", (text: string) => {
     errorText: text
   })
 })
-
-export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
-  state.settings.useDatapackSuggestedAge = isChecked;
+export const setUseSuggestedAge = action((value: boolean) => {
+  state.useSuggedstedAge = value;
 });
 export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;

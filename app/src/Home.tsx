@@ -13,7 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useTheme, styled } from "@mui/material/styles";
-import { TSCIcon, TSCButton, TSCCard } from "./components";
+import { TSCIcon, TSCButton, TSCCard, TSCPopupDialog } from "./components";
 import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 
 import "./Home.css";
@@ -49,7 +49,6 @@ export const Home = observer(function Home() {
   const { state, actions } = useContext(context);
   const theme = useTheme();
   const navigate = useNavigate();
-
   return (
     <div
       className="whole_page"
@@ -60,13 +59,13 @@ export const Home = observer(function Home() {
       <TSCOnlineHeader />
       {Object.entries(state.presets).map(([type, configArray]) => {
         return (
-          <TSCPresetHighlights
-            key={type}
-            navigate={navigate}
-            configArray={configArray}
+          <TSCPresetHighlights 
+            key={type} 
+            navigate={navigate} 
+            configArray={configArray} 
             type={type}
           />
-        );
+        )
       })}
       <div className="bottom-button">
         <TSCButton
@@ -156,8 +155,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                     );
                     // wait to see if we can grab necessary data
                     if (success) {
-                      actions.generateChart();
-                      navigate("/chart");
+                      actions.initiateChartGeneration(navigate)
                     }
                     //TODO add an error message saying the data is irregular and can't be loaded
                   }}

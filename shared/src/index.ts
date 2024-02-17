@@ -36,7 +36,7 @@ export type Presets = {
 };
 
 export type DatapackAgeInfo = {
-  useDatapackSuggestedAge: boolean; //Default Age is not age located in datapack. Should be false if age exists, otherwise true.
+  datapackContainsSuggAge: boolean; //Default Age is not age located in datapack. Should be false if age exists, otherwise true.
   topAge?: number;
   bottomAge?: number;
 };
@@ -388,9 +388,9 @@ export function assertDatapack(o: any): asserts o is Datapack {
 export function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo {
   if (typeof o !== "object")
     throw new Error("DatapackAgeInfo must be an object");
-  if (typeof o.useDatapackSuggestedAge !== "boolean")
-    throw new Error("DatapackAgeInfo must have a boolean useDatapackSuggestedAge");
-  if (o.useDatapackSuggestedAge === true) {
+  if (typeof o.datapackContainsSuggAge !== "boolean")
+    throw new Error("DatapackAgeInfo must have a boolean datapackContainsSuggAge");
+  if (o.datapackContainsSuggAge === true) {
     if (typeof o.bottomAge !== "number")
       throw new Error("DatapackAgeInfo must have a number bottomAge");
     if (typeof o.topAge !== "number")
