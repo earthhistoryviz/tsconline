@@ -43,6 +43,94 @@ const EditNameField = observer(() => {
   );
 });
 
+interface ColorResult {
+    hex: string;
+    rgb: RGBColor;
+    hsl: HSLColor;
+}
+
+const ChangeColor: React.FC<{}> = observer(({}) => {
+    const [open, setOpen] = useState(false);
+  const [selectedColor, setSelectedColor] = useState('#000'); // State to keep track of selected color
+  const [currentColor, setCurrentColor] = useState('#000');
+
+  const styleColor = {
+    position: "absolute" as "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    width: 500,
+    bgcolor: "lightgray",
+    border: "2px solid #000",
+    boxShadow: 24,
+    p: 4,
+    alignItems: "center",
+    justifyContent: "center"
+};
+  
+  const handleColorChange = (color: ColorResult) => {
+    setSelectedColor(color.hex);
+  };
+  const handleCurrentChange = (color: string) => {
+    setCurrentColor(color)
+  }
+    const handleOpen = () => {
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
+
+
+    const handleCancel = () => {
+        setOpen(false);
+        setSelectedColor(currentColor);
+    }
+    const styles = {
+        default: {
+          picker: {
+            backgroundColor: 'lightgray',
+            boxShadow: 'none',
+          },
+        },
+      };
+
+    return (
+        <div>
+            <FormLabel id="color-label" style={{ color: 'black', marginTop: '3px', margin: '5px' }}>Background Color:</FormLabel>
+            <Button color="secondary" variant="contained" onClick={handleOpen} style={{backgroundColor: currentColor, width: '60px', height: '30px', margin: '0 10px', marginTop: '1px'}}></Button>
+
+            <Modal
+                open={open}
+                onClose={handleClose}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+            >
+                <Box sx={styleColor}>
+                    <div style={{ display: 'grid', placeItems: 'center' }}>
+                        <Grid 
+                            container rowSpacing={2} columnSpacing={5} 
+                            justifyContent="center" alignItems="center"
+                        >
+                            <Grid item xs={12} style={{ display: 'flex', justifyContent: 'center'}}>
+                                {
+                                    <div>
+                                        <PhotoshopPicker color={selectedColor} onChange={handleColorChange}
+                                            styles={styles} onAccept={() => {handleCurrentChange(selectedColor); handleClose();}} 
+                                            onCancel={() => {handleCancel()} } />
+                                    </div>
+                                
+                                }
+                            </Grid>
+                        </Grid>
+                    </div>  
+                </Box>
+            </Modal>
+        </div>
+    );
+})
+
 export const ColumnMenu = observer(() => {
   const { state } = useContext(context);
   const [openMenu, setOpenMenu] = useState(false);
