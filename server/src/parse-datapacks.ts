@@ -8,6 +8,9 @@ import {
   DatapackAgeInfo,
   DatapackParsingPack,
   FontsInfo,
+  SubBlockInfo,
+  Block,
+  assertSubBlockInfo,
   defaultFontsInfo,
 } from "@tsconline/shared";
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths } from "./util.js";
@@ -17,6 +20,12 @@ type ParsedColumnEntry = {
   children: string[];
   on: boolean;
   info: string;
+};
+
+type FaciesFoundAndAgeRange = {
+  faciesFound: boolean;
+  minAge: number;
+  maxAge: number;
 };
 /**
  * TODO:
