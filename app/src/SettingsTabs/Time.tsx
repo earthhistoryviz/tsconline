@@ -148,7 +148,11 @@ export const Time = observer(function Time() {
         <FormGroup>
           <FormControlLabel
             name="mouse-over-info-checkbox"
-            control={<TSCCheckbox />}
+            control={
+              <TSCCheckbox
+                onChange={(e) => actions.setDoPopups(e.target.checked)}
+              />
+            }
             label="Add MouseOver info (popups)"
           />
           <FormControlLabel

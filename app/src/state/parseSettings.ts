@@ -235,6 +235,8 @@ function generateSettingsXml(
         }
       } else if (key === "justification") {
         xml += `${indent}<setting justification="${value}" name="${key}"/>\n`;
+      } else if (key === "doPopups") {
+        xml += `${indent}<setting name="${key}">${chartSettings.doPopups}</setting>\n`;
       } else {
         xml += `${indent}<setting name="${key}">${value}</setting>\n`;
       }
@@ -406,8 +408,6 @@ export function jsonToXml(
   chartSettings: any,
   version: string = "PRO8.0"
 ): string {
-  // console.log("in json to xml", settings);
-  // console.log(columnSettings);
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
   //console.log("json 2...\n", state.settingsJSON);
