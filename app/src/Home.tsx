@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useContext } from "react";
 import { observer } from "mobx-react-lite";
-import { useNavigate } from "react-router-dom";
+import { NavigateFunction, useNavigate } from "react-router-dom";
 import { ChartConfig } from "@tsconline/shared";
 import { context } from "./state";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -59,13 +59,13 @@ export const Home = observer(function Home() {
       <TSCOnlineHeader />
       {Object.entries(state.presets).map(([type, configArray]) => {
         return (
-          <TSCPresetHighlights 
-            key={type} 
-            navigate={navigate} 
-            configArray={configArray} 
+          <TSCPresetHighlights
+            key={type}
+            navigate={navigate}
+            configArray={configArray}
             type={type}
           />
-        )
+        );
       })}
       <div className="bottom-button">
         <TSCButton
@@ -91,7 +91,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
   configArray,
 }: {
   type: string;
-  navigate: Function;
+  navigate: NavigateFunction;
   configArray: ChartConfig[];
 }) {
   const { state, actions } = useContext(context);
@@ -155,7 +155,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                     );
                     // wait to see if we can grab necessary data
                     if (success) {
-                      actions.initiateChartGeneration(navigate)
+                      actions.initiateChartGeneration(navigate);
                     }
                     //TODO add an error message saying the data is irregular and can't be loaded
                   }}

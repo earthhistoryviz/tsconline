@@ -1,6 +1,6 @@
-import {action, runInAction} from "mobx";
-import {state, State} from "../state";
-import {assertFontsInfo, assertMapHierarchy, ColumnInfo, FontsInfo} from "@tsconline/shared";
+import {action} from "mobx";
+import {state} from "../state";
+import {assertFontsInfo, ColumnInfo} from "@tsconline/shared";
 
 export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
     state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);

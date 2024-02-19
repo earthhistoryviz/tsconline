@@ -19,7 +19,6 @@ export const Time = observer(function Time() {
     actions.updateSettings();
 
     actions.fetchChartFromServer(navigate);
-
   };
   return (
     <div>
@@ -187,7 +186,7 @@ export const Time = observer(function Time() {
             control={
               <TSCCheckbox
                 onChange={(e) =>
-                  actions.setUseSuggestedAge(!e.target.checked)
+                  actions.setuseDatapackSuggestedAge(!e.target.checked)
                 }
               />
             }

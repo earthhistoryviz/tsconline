@@ -1,6 +1,5 @@
 import { action, runInAction } from "mobx";
 import {
-  type ChartConfig,
   type MapInfo,
   type ColumnInfo,
   type MapHierarchy,
@@ -9,7 +8,6 @@ import {
   assertChartInfo,
   assertSuccessfulServerResponse,
   isServerResponseError,
-  assertDatapackResponse,
   Presets,
   assertSVGStatus,
   IndexResponse,
@@ -26,6 +24,7 @@ import {
 import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
 import { initializeColumnHashMap } from "./ColumnActions";
+import { jsonToXml } from "../parseSettings";
 
 /**
  * Resets any user defined settings
@@ -291,7 +290,7 @@ export const generateChart = action("generateChart", async () => {
   });
   console.log("Sending settings to server...");
   const response = await fetcher(
-    `/charts/${state.useCache}/${state.settings.useDatapackSuggestedAge}`,
+    `/charts/${state.useCache}/${state.settings.datapackContainsSuggAge}`,
     {
       method: "POST",
       body,
@@ -400,7 +399,7 @@ export const updateCheckboxSetting = action(
  * @param response the response from the server if applicable (nullable)
  * @param message the message to be shown
  */
-function displayError(error: any, response: any, message: string) {
+export function displayError(error: any, response: any, message: string) {
   if (!response) {
     pushError(message);
   } else if (isServerResponseError(response)) {
@@ -528,7 +527,7 @@ export const pushError = action("pushError", (text: string) => {
 });
 
 export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
-  state.settings.useDatapackSuggestedAge = isChecked;
+  state.settings.datapackContainsSuggAge = isChecked;
 });
 export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;
