@@ -104,7 +104,7 @@ const FontMenuRow: React.FC<{
           </Select>
         </FormControl>
         <TextField
-            className="font-size-container"
+            className="FontSizeContainer"
           label="Size"
           variant="outlined"
           value={fontOpts.size}
