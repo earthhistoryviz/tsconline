@@ -1,4 +1,28 @@
 // Shared types between app and server (i.e. messages they send back and forth)
+export const defaultFontsInfo = {
+    "Age Label": {
+        bold: false,
+        color: "#000000",
+        fontFace: "Arial",
+        inheritable: false,
+        italic: false,
+        size: 6
+    },
+    "Column Header": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 14 },
+    "Event Column Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 11 },
+    "Legend Column Name": { inheritable: false },
+    "Legend Column Source": { inheritable: false },
+    "Legend Title": { inheritable: false },
+    "Point Column Scale Label": { inheritable: false },
+    "Popup Body": { inheritable: false },
+    "Range Box Label": { inheritable: false },
+    "Range Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12 },
+    "Ruler Label": { inheritable: false },
+    "Ruler Tick Mark Label": { inheritable: false },
+    "Sequence Column Label": { inheritable: false },
+    "Uncertainty Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 5 },
+    "Zone Column Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12 }
+};
 export function assertMapPackIndex(o) {
     if (!o || typeof o !== "object")
         throw new Error("MapPackIndex must be a non-null object");
@@ -79,7 +103,7 @@ export function assertBlock(o) {
         throw new Error("Block must be a non-null object");
     if (typeof o.name !== "string")
         throw new Error("Block must have a name with string type");
-    for (const subBlockInfo in o.subBlockInfo) {
+    for (const subBlockInfo of o.subBlockInfo) {
         assertSubBlockInfo(subBlockInfo);
     }
     if (typeof o.minAge !== "number")

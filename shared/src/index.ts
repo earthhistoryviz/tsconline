@@ -187,6 +187,31 @@ export type FontsInfo = {
   };
 };
 
+export const defaultFontsInfo: FontsInfo = {
+    "Age Label": {
+        bold: false,
+        color: "#000000",
+        fontFace: "Arial",
+        inheritable: false,
+        italic: false,
+        size: 6
+    },
+    "Column Header": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 14},
+    "Event Column Label": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 11},
+    "Legend Column Name": {inheritable: false},
+    "Legend Column Source": {inheritable: false},
+    "Legend Title": {inheritable: false},
+    "Point Column Scale Label": {inheritable: false},
+    "Popup Body": {inheritable: false},
+    "Range Box Label": {inheritable: false},
+    "Range Label": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12},
+    "Ruler Label": {inheritable: false},
+    "Ruler Tick Mark Label": {inheritable: false},
+    "Sequence Column Label": {inheritable: false},
+    "Uncertainty Label": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 5},
+    "Zone Column Label": {bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12}
+}
+
 export type Facies = {
   locations: FaciesLocations;
   minAge: number; // the aggregate min age in all facies locations
