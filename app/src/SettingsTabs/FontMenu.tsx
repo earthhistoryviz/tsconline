@@ -103,9 +103,8 @@ const FontMenuRow: React.FC<{
             <MenuItem value={"Verdana"}>Verdana</MenuItem>
           </Select>
         </FormControl>
-        {/* CSS styling doesn't work on TextField */}
         <TextField
-          sx={{ width: "60px", marginRight: "10px", minWidth: "60px" }}
+            className="font-size-container"
           label="Size"
           variant="outlined"
           value={fontOpts.size}
