@@ -236,7 +236,7 @@ function generateSettingsXml(
       } else if (key === "justification") {
         xml += `${indent}<setting justification="${value}" name="${key}"/>\n`;
       } else if (key === "doPopups") {
-        xml += `${indent}<setting name="${key}">${chartSettings.doPopups}</setting>\n`;
+        xml += `${indent}<setting name="${key}">${chartSettings.mouseOverPopupsEnabled}</setting>\n`;
       } else {
         xml += `${indent}<setting name="${key}">${value}</setting>\n`;
       }

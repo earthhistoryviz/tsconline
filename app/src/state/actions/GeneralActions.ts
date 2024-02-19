@@ -317,31 +317,31 @@ export const loadPresets = action("loadPresets", (presets: Presets) => {
 });
 //update
 //TODO: need to overhaul
-// export const updateSettings = action("updateSettings", () => {
-//   const { topStageKey, baseStageKey, unitsPerMY } = state.settings;
-//   // Validate the user input
-//   if (isNaN(unitsPerMY)) {
-//     // Handle invalid input, show error message, etc.
-//     return;
-//   }
-//   state.settingsJSON["settingsTabs"] = state.settingsTabs;
-//   const jsonSettings = state.settingsJSON;
-//   // if ("settings" in jsonSettings) {
-//   //   const settings = jsonSettings.settings as any;
-//   //   settings["topAge"]["stage"] = state.settingsTabs.columns[topStageKey];
-//   //   settings["baseAge"]["stage"] = state.settingsTabs.columns[baseStageKey];
-//   //   settings["unitsPerMY"] = (unitsPerMY * 30).toString();
-//   // }
-//   if ("settingsTabs" in jsonSettings) {
-//     const settingsTabs = jsonSettings as any;
-//   }
-//   // uncomment later
-//   // const xmlSettings = jsonToXml(jsonSettings); // Convert JSON to XML using jsonToXml function
+export const updateSettings = action("updateSettings", () => {
+  const { topStageKey, baseStageKey, unitsPerMY } = state.settings;
+  // Validate the user input
+  if (isNaN(unitsPerMY)) {
+    // Handle invalid input, show error message, etc.
+    return;
+  }
+  state.settingsJSON["settingsTabs"] = state.settingsTabs;
+  const jsonSettings = state.settingsJSON;
+  // if ("settings" in jsonSettings) {
+  //   const settings = jsonSettings.settings as any;
+  //   settings["topAge"]["stage"] = state.settingsTabs.columns[topStageKey];
+  //   settings["baseAge"]["stage"] = state.settingsTabs.columns[baseStageKey];
+  //   settings["unitsPerMY"] = (unitsPerMY * 30).toString();
+  // }
+  if ("settingsTabs" in jsonSettings) {
+    const settingsTabs = jsonSettings as any;
+  }
+  // uncomment later
+  // const xmlSettings = jsonToXml(jsonSettings); // Convert JSON to XML using jsonToXml function
 
-//   //console.log("Updated settingsXML:\n", xmlSettings); // Print the updated XML
+  //console.log("Updated settingsXML:\n", xmlSettings); // Print the updated XML
 
-//   // state.settingsXML = xmlSettings;
-// });
+  // state.settingsXML = xmlSettings;
+});
 
 //update the checkboxes
 // Define settingOptions globally
@@ -560,8 +560,8 @@ export const setUnitsPerMY = action((units: number) => {
   state.settings.unitsPerMY = units;
 });
 
-export const setDoPopups = action((checked: boolean) => {
-  state.settings.doPopups = checked;
+export const setMouseOverPopupsEnabled = action((checked: boolean) => {
+  state.settings.mouseOverPopupsEnabled = checked;
 });
 
 export const setChartLoading = action((value: boolean) => {
