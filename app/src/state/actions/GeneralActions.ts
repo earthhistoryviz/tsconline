@@ -36,6 +36,7 @@ export const resetSettings = action("resetSettings", () => {
     baseStageAge: 0,
     baseStageKey: "",
     unitsPerMY: 2,
+    doPopups: false,
     datapackContainsSuggAge: false,
   };
 });
@@ -558,6 +559,11 @@ export const setBaseStageKey = action("setBottomStageKey", (key: string) => {
 export const setUnitsPerMY = action((units: number) => {
   state.settings.unitsPerMY = units;
 });
+
+export const setDoPopups = action((checked: boolean) => {
+  state.settings.doPopups = checked;
+});
+
 export const setChartLoading = action((value: boolean) => {
   state.chartLoading = value;
 });
