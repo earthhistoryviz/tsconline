@@ -1,11 +1,12 @@
-import * as generalActions from "./GeneralActions.ts";
+import * as generalActions from "./GeneralActions";
 import { state } from "../state";
 import { action } from "mobx";
 import { fetcher, devSafeUrl } from "../../util";
 import { isServerResponseError, assertChartInfo } from "@tsconline/shared";
 import { jsonToXml } from "../parseSettings";
+import { NavigateFunction } from "react-router";
 
-export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate) => {
+export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
   if (state.useSuggestedAge != response) {
     state.useSuggestedAge = response;
     generalActions.setUseCache(false);
@@ -14,7 +15,7 @@ export const handlePopupResponse = action("handlePopupResponse", (response: bool
 });
 
 // Shows the user a popup before chart generation if there are age spans on the datapack
-export const initiateChartGeneration = action("initiateChartGeneration", (navigate) => {
+export const initiateChartGeneration = action("initiateChartGeneration", (navigate: NavigateFunction) => {
   if (state.settings.datapackContainsSuggAge) {
     state.showSuggestedAgePopup = true;
   } else {
@@ -22,7 +23,7 @@ export const initiateChartGeneration = action("initiateChartGeneration", (naviga
   }
 });
 
-export const fetchChartFromServer = action("fetchChartFromServer", async (navigate) => {
+export const fetchChartFromServer = action("fetchChartFromServer", async (navigate: NavigateFunction) => {
   state.showSuggestedAgePopup = false;
   navigate("/chart");
   //set the loading screen and make sure the chart isn't up
@@ -55,7 +56,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
     await generalActions.checkSVGStatus();
     generalActions.setOpenSnackbar(true)
   } catch (e: any) {
-    displayError(e, answer, "Failed to fetch chart")
+    generalActions.displayError(e, answer, "Failed to fetch chart")
     return
   }
 });
