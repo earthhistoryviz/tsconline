@@ -32,6 +32,8 @@
   width: 180px;
 }
 
+.MuiTextField-root.font-size-container { width: 60px; margin-right: 10px; min-width: 60px; }
+
 #HeadingContainer {
   display: flex;
   flex-direction: row;
