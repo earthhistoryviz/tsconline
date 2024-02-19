@@ -173,6 +173,7 @@ export type FontsInfo = {
         inheritable: boolean;
     };
 };
+export declare const defaultFontsInfo: FontsInfo;
 export type Facies = {
     locations: FaciesLocations;
     minAge: number;
