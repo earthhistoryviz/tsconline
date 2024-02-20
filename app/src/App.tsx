@@ -48,7 +48,6 @@ export default observer(function App() {
         autoHideDuration={5000}
         TransitionComponent={Slide}
         onClose={actions.handleCloseSnackbar}
-        style={{ alignItems: "center" }}
       >
         <Alert
           severity="success"
@@ -60,9 +59,7 @@ export default observer(function App() {
             ),
           }}
         >
-          <Typography style={{ textAlign: "center" }}>
-            Chart Successfully Generated!
-          </Typography>
+          <Typography>Chart Successfully Generated!</Typography>
         </Alert>
       </Snackbar>
     </ThemeProvider>
