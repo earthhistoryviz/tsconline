@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useNavigate } from "react-router-dom";
 import Toolbar from "@mui/material/Toolbar";
 import { NavBar } from "./NavBar";
 import { Home } from "./Home";
@@ -13,11 +13,13 @@ import { Alert, Slide, Snackbar, Typography } from "@mui/material";
 import { useContext } from "react";
 import { context } from "./state";
 import { About } from "./About";
-import { TSCError, Lottie } from "./components";
+import { TSCPopupDialog, TSCError, Lottie } from "./components";
 import ChartDoneIcon from "./assets/icons/chart-done.json";
+import "./App.css";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
+  const navigate = useNavigate();
   return (
     <ThemeProvider theme={theme}>
       <NavBar />
@@ -42,7 +44,7 @@ export default observer(function App() {
         onClose={() => actions.fetchChartFromServer(navigate)}
       />
       <Snackbar
-        open={true}
+        open={state.openSnackbar}
         autoHideDuration={5000}
         TransitionComponent={Slide}
         onClose={actions.handleCloseSnackbar}
@@ -51,36 +53,15 @@ export default observer(function App() {
         <Alert
           severity="success"
           variant="filled"
+          className="alert"
           iconMapping={{
             success: (
-              <Lottie
-                animationData={ChartDoneIcon}
-                autoplay
-                loop
-                width={200}
-                height={200}
-              />
+              <Lottie animationData={ChartDoneIcon} speed={0.7} autoplay />
             ),
-          }}
-          sx={{
-            alignItems: "center", // Center align items
-            ".MuiAlert-icon": {
-              // Target the icon specifically if needed for finer control
-              display: "flex",
-              alignItems: "center",
-            },
-            ".MuiAlert-message": {
-              // Ensure the text is also centered if necessary
-              display: "flex",
-              alignItems: "center",
-              flexGrow: 1, // Make the message fill the available space to ensure proper centering
-            },
-            width: "100%",
-            backgroundColor: theme.palette.on.dark,
           }}
         >
           <Typography style={{ textAlign: "center" }}>
-            Chart Generated!
+            Chart Successfully Generated!
           </Typography>
         </Alert>
       </Snackbar>

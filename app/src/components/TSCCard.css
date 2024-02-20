@@ -116,18 +116,18 @@
 }
 .info-container .simplebar-content {
   display: flex;
-  align-items: center;
   position: relative;
   flex-direction: column;
 }
 .MuiTypography-root.info-description {
   padding-left: 12px;
+  white-space: pre-wrap;
   padding-right: 20px;
 }
 .add-buttons {
   position: absolute;
   top: 10px;
-  left: calc(100% - 45px);
+  left: calc(100% - 55px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -147,7 +147,7 @@
   gap: 10px;
 }
 .MuiSvgIcon-root.add-icon {
-  color: lightgray;
+  color: white;
   width: inherit;
   height: inherit;
 }
@@ -156,8 +156,8 @@
   height: 35px;
 }
 .MuiIconButton-root.add-button {
-  width: 35px;
-  height: 35px;
+  width: 45px;
+  height: 45px;
   padding: 0;
   margin: 0;
 }
