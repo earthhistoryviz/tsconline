@@ -9,6 +9,7 @@ type LottieIconButtonProps = {
   width?: number;
   height?: number;
   speed?: number;
+  playOnHover?: boolean;
 };
 const Lottie: React.FC<LottieIconButtonProps> = ({
   animationData,
@@ -18,6 +19,7 @@ const Lottie: React.FC<LottieIconButtonProps> = ({
   width = 35,
   height = 35,
   speed = 1,
+  playOnHover = false,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [animationInstance, setAnimationInstance] =
@@ -40,11 +42,17 @@ const Lottie: React.FC<LottieIconButtonProps> = ({
       animationInstance?.goToAndPlay(0);
     }
   }
+  function onHover() {
+    if (playOnHover) {
+      animationInstance?.goToAndPlay(0);
+    }
+  }
   return (
     <div
       ref={ref}
       style={{ width: `${width}px`, height: `${height}px` }}
       onClick={onClick}
+      onMouseEnter={onHover}
     />
   );
 };

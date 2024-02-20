@@ -3,7 +3,7 @@
   "background": "Belgium_Map_Nov2012.png",
   "title": "Belgium",
   "date": "01.31.2024",
-  "description": "map pack dev pack",
+  "description": "Belgium regional formations with map interface.\n\n20 columns\n\nCompiled by Jane Block in coordination with Belgium Stratigraphic Commission (Noel Vandenberghe, Hance Luc, et al.).\n\nMain sources for lithology descriptions and age calibrations are chapters in:\n\nBultynck, P., and Dejonghe, L., (editors), 2001. Guide to a Revised Lithostratigraphic Scale of Belgium, Geologica Belgica, volume 4. (2) Dejonghe, L. (editor), 2006. Current Status of Chronostratigraphic Units Named from Belgium and Adjacent Areas. Geologica Belgica, volume 9",
   "settings": "settings.tsc",
   "datapacks": [
     {

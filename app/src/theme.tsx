@@ -14,6 +14,7 @@ declare module "@mui/material/styles" {
     disabled: Palette["primary"];
     tooltip: Palette["primary"];
     columnMenu: Palette["primary"];
+    scrollbar: Palette["primary"];
   }
 
   interface PaletteOptions {
@@ -29,6 +30,7 @@ declare module "@mui/material/styles" {
     disabled?: PaletteOptions["primary"];
     tooltip?: PaletteOptions["primary"];
     columnMenu?: PaletteOptions["primary"];
+    scrollbar?: PaletteOptions["primary"];
   }
 }
 
@@ -78,6 +80,9 @@ let theme = createTheme({
     },
     columnMenu: {
       main: "#E0FBFC",
+    },
+    scrollbar: {
+      main: "#7b778a",
     },
   },
   typography: {
