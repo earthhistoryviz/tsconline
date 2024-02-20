@@ -305,7 +305,7 @@ export type VertBounds = {
   scale: number;
 };
 
-export type Timescale = {
+export type TimescaleItem = {
   key: string;
   value: number;
 }
@@ -809,7 +809,7 @@ export function assertSVGStatus(
 }
 
 
-export function assertTimescale(val: any): asserts val is Timescale {
+export function assertTimescale(val: any): asserts val is TimescaleItem {
   if (!val || typeof val !== 'object') {
     throw new Error('Timescale object must be a non-null object');
   }

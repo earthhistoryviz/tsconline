@@ -1,9 +1,9 @@
 import { observable } from "mobx";
 
 import { ErrorAlert, FaciesOptions, MapHistory } from "../types";
-import { FaciesOptions, MapHistory } from "../types";
-import fetchTimescaleData from "../state/timeParser"
+import fetchTimescaleData from "./TimeParser"
 import React, { useState, useEffect } from "react";
+import { TimescaleItem } from '@tsconline/shared';
 
 import type {
   MapHierarchy,
@@ -17,17 +17,13 @@ import type {
   MapPackIndex,
 } from "@tsconline/shared";
 
-export interface TimescaleItem {
-  key: string;
-  value: number;
-};
-
 export type State = {
   chartLoading: boolean;
   tab: number;
   madeChart: boolean;
   showPresetInfo: boolean;
-  timescaleData: TimescaleItem[];
+  GeologicalTopStageAges: TimescaleItem[];
+  GeologicalBaseStageAges: TimescaleItem[];
   settingsTabs: {
     selected: "time" | "font" | "column" | "mappoints";
     columns: ColumnInfo | null;
@@ -71,8 +67,6 @@ export type State = {
     baseStageKey: string;
     unitsPerMY: number;
     useDatapackSuggestedAge: boolean;
-    selectedBaseStage: string;
-    selectedTopStage: string;
   };
   useCache: boolean;
   usePreset: boolean;
@@ -85,8 +79,8 @@ export const state = observable<State>({
   madeChart: false,
   tab: 0,
   showPresetInfo: false,
-  timescaleData: [],
-  // loading: true,
+  GeologicalTopStageAges: [],
+  GeologicalBaseStageAges: [],
   settingsTabs: {
     selected: "time",
     columns: null,
@@ -141,8 +135,6 @@ export const state = observable<State>({
     unitsPerMY: 2,
     useDatapackSuggestedAge: false,
     selectedStage: "",
-    selectedBaseStage: "",
-    selectedTopStage: ""
 
   },
   useCache: true,

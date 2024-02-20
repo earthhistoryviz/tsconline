@@ -19,7 +19,7 @@ import FormControl from "@mui/material/FormControl";
 import Select, {SelectChangeEvent} from "@mui/material/Select";
 import FormatBoldIcon from "@mui/icons-material/FormatBold";
 import FormatItalicIcon from "@mui/icons-material/FormatItalic";
-import {MuiColorInput} from "mui-color-input";
+// import {MuiColorInput} from "mui-color-input";
 import "./FontMenu.css"
 
 const FontMenuRow: React.FC<{
@@ -120,8 +120,8 @@ const FontMenuRow: React.FC<{
                     </ToggleButton>
                 </ToggleButtonGroup>
                 <div style={{width: "150px", marginRight: "10px"}}>
-                    <MuiColorInput value={fontOpts.color} size="small" label="Color" format="hex" onChange={handleColor}
-                                   disabled={!fontTarget}/>
+                    {/* <MuiColorInput value={fontOpts.color} size="small" label="Color" format="hex" onChange={handleColor}
+                                   disabled={!fontTarget}/> */}
                 </div>
                 <Typography sx={{
                     fontWeight: fontOpts.bold ? "bold" : "",

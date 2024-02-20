@@ -238,10 +238,15 @@ function readExcelFile(filePath: string) {
   const sheet = workbook.Sheets[sheetName];
   if (!sheet) return [];
 
-  // Convert sheet to JSON
-  const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+  const jsonData: any[] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-  return jsonData;
+  const dataWithoutFirstRow = jsonData.slice(1);
+
+  if (dataWithoutFirstRow.length > 0) {
+    dataWithoutFirstRow[0] = dataWithoutFirstRow[0].slice(3);
+  }
+
+  return dataWithoutFirstRow;
 }
 
 // Serve timescale data endpoint
@@ -258,16 +263,19 @@ export const fetchTimescale = async function (
       reply.status(404).send({ error: 'Excel file not found' });
       return;
     }
-
+    
     let timescaleData: any[] = readExcelFile(filePath);
     timescaleData = timescaleData.map(([period, series, stage, ma, color]) => ({
-      key: stage || '',
-      value: parseFloat(ma) || 0,
+      key: stage, 
+      value: parseFloat(ma), 
     }));
-    timescaleData = timescaleData.filter(item => item.key && item.key !== 'Stage' && item.key !== 'TOP');
+    timescaleData = timescaleData.filter(item => item.key);
+
+    const GeologicalTopStageAges = timescaleData;
+    const GeologicalBaseStageAges = timescaleData;
+
     timescaleData.forEach(data => assertTimescale(data));
-    console.log(timescaleData);
-    reply.send({ stages: timescaleData });
+    reply.send({ GeologicalTopStageAges, GeologicalBaseStageAges });
   } catch (error) {
     console.error('Error reading Excel file:', error);
     reply.status(500).send({ error: 'Internal Server Error' });

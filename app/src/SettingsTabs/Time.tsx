@@ -10,38 +10,35 @@ import { TSCCheckbox, TSCButton } from '../components'
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
-import fetchTimescaleData from "../state/timeParser"
+import fetchTimescaleData from "../state/TimeParser"
 import { initialize } from "../state/initialize";
-import { TimescaleItem } from '../state/state';
+import { TimescaleItem } from '@tsconline/shared';
 
+import "./Time.css";
 import theme from "../theme";
-
-// export interface TimescaleItem {
-//   key: string;
-//   value: number;
-// }
+import { fetchTimescaleDataAction } from "../state/actions";
 
 export const Time = observer(function Time() {
   const navigate = useNavigate();
-  const [timescaleData, setTimescaleData] = useState<TimescaleItem[]>([]);
+  const [GeologicalTopStageAges, setGeologicalTopStageAges] = useState<TimescaleItem[]>([]);
+  const [GeologicalBaseStageAges, setGeologicalBaseStageAges] = useState<TimescaleItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [previousValues, setPreviousValues] = useState<Record<string, number | null>>({});
+  
+  
   useEffect(() => {
-    async function fetchData() {
-      const { timescaleData, loading, previousValues } = await initialize();
-      setTimescaleData(timescaleData);
-      setLoading(loading);
-      setPreviousValues(previousValues);
-    }
+    const fetchData = async () => {
+        const { GeologicalTopStageAges, GeologicalBaseStageAges, loading } = await fetchTimescaleDataAction();
+        setGeologicalTopStageAges(GeologicalTopStageAges);
+        setGeologicalBaseStageAges(GeologicalBaseStageAges);
+        setLoading(loading);
+    };
 
     fetchData();
-  }, []);
-
+}, []);
     const handleButtonClick = () => {
         actions.setTab(1);
-        actions.setAllTabs(true);
+        // actions.setAllTabs(true);
       
-    
         actions.updateSettings(); 
       
         actions.generateChart();
@@ -51,91 +48,75 @@ export const Time = observer(function Time() {
 
     return (
       <div>
-        <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        p={2}
-        border={1}
-        borderRadius={4}
-        borderColor="gray"
-        maxWidth="600px"
-        margin="0 auto"
-        marginTop="50px"
-      >
-        {/* <TextField
-          label="Top Age (Ma)"
-          type="number"
-          value={state.settings.topAge}
-          onChange={(event) => actions.setTopAge(parseFloat(event.target.value))}
-          style={{ marginBottom: '10px', width: '100%' }}
-        /> */}
-        <FormControl style={{ marginBottom: '10px', width: '100%' }}>
+        <Box className="Box">
+        <FormControl className="FormControlTop">
         <InputLabel htmlFor="top-age-selector">Top Age/Stage Name</InputLabel> 
-        <Select
-          inputProps={{ id: 'top-age-selector' }}
-          name="top-age-stage-name"
-          label="Top Age/Stage Name"
-          type="string"
-          value={state.settings.selectedTopStage || ''} 
-          onChange={(event) => {
-            const selectedValue = event.target.value;
-            const previousValue = previousValues[selectedValue];
-            const selectedAge = previousValue !== undefined && previousValue !== null ? previousValue.toString() : '0.000';
-            actions.setSelectedTopStage(selectedValue);
-            actions.setTopStageAge(isNaN(parseFloat(selectedAge)) ? 0 : parseFloat(selectedAge));
-          }}
-          style={{ marginBottom: '10px', width: '100%' }}
-        >
-          {timescaleData.map(item => (
-              <MenuItem key={item.key} value={item.value}>
-                {item.key} ({previousValues[item.key] !== null ? previousValues[item.key] : '0.000'} Ma)
-            </MenuItem>
+        <Select className="SelectTop"
+            inputProps={{ id: 'top-age-selector' }}
+            name="top-age-stage-name"
+            label="Top Age/Stage Name"
+            value={state.settings.topStageKey} 
+            onChange={(event) => {
+              const selectedValue = event.target.value;
+              const selectedAgeItem = GeologicalTopStageAges.find(item => item.key === selectedValue);
+              const selectedAge = selectedAgeItem?.value?.toString() || '0';
+              const selectedAgeNumber = parseFloat(selectedAge);
+              if (selectedAgeNumber >= 0 && selectedAge <= state.settings.baseStageKey)
+              actions.setSelectedTopStage(selectedValue);
+              actions.setTopStageAge(parseFloat(selectedAge));
+            }}
+          >
+          {GeologicalTopStageAges.map(item => (
+              <MenuItem key={item.key} value={item.key}>
+                  {item.key} ({item.value} Ma)
+              </MenuItem>
           ))}
         </Select>
-        <TextField
+        <TextField className="TopAgeTextField"
           label="Top Age"
           type="number"
           name="vertical-scale-text-field"
-          value={state.settings.selectedTopStage ? state.settings.selectedTopStage : state.settings.topStageAge.toString()}
+          value={state.settings.topStageAge.toString()} 
           onChange={(event) => {
-            const age = parseFloat(event.target.value)
-            if (age >= 0 && age <= state.settings.baseStageAge) {
-              actions.setSelectedTopStage(event.target.value);
+            const age = parseFloat(event.target.value);
+            if (!isNaN(age) && age >= 0 && age <= state.settings.baseStageAge) {
+              actions.setSelectedTopStage(age.toString());
               actions.setTopStageAge(age);
             }
           }}
-          style={{ marginBottom: '20px', width: '100%' }}
+          style={{ marginBottom: '20px', width: '100%' }} // Not working
         />
-        </FormControl>
-        <FormControl style={{ marginBottom: '10px', width: '100%' }}>
+          </FormControl>
+        <FormControl className="FormControlBaseAgeStageName">
         <InputLabel htmlFor="base-age-selector">Base Age/Stage Name</InputLabel> 
-        <Select
+        <Select className="SelectBase"
           label="Base Age/Stage Name"
           inputProps={{ id: 'base-age-selector' }}
           name="base-age-stage-name"
           type="string"
-          value={state.settings.selectedBaseStage || ''}
+          value={state.settings.baseStageKey}
           onChange={(event) => {
             const selectedValue = event.target.value;
-            const selectedAge = (timescaleData.find(item => item.key === selectedValue)?.value || '0').toString();
-            actions.setSelectedBaseStage(selectedValue);
-            actions.setBaseStageAge(isNaN(parseInt(selectedAge)) ? 0 : parseInt(selectedAge));
+            const selectedAgeItem = GeologicalBaseStageAges.find(item => item.key === selectedValue);
+            const selectedAge = selectedAgeItem?.value?.toString() || '0';
+            const selectedAgeNumber = parseFloat(selectedAge);
+            if (selectedAgeNumber >= 0 && selectedAge >= state.settings.topStageKey) {
+              actions.setSelectedBaseStage(selectedValue);
+              actions.setBaseStageAge(isNaN(parseInt(selectedAge)) ? 0 : parseInt(selectedAge));
+            }
           }}
-          style={{ marginBottom: '10px', width: '100%' }}
         >
-          {timescaleData.map(item => (
+          {GeologicalBaseStageAges.map(item => (
             <MenuItem key={item.key} value={item.value}>
               {item.key} ({item.value} Ma)
             </MenuItem>
           ))}
         </Select>
-        <TextField
+        <TextField className="BaseAgeTextField"
           label="Base Age"
           type="number"
           name="vertical-scale-text-field"
-          value={state.settings.selectedBaseStage ? state.settings.selectedBaseStage : state.settings.baseStageAge.toString()}
+          value={state.settings.baseStageKey ? state.settings.baseStageKey : state.settings.baseStageAge.toString()}
           onChange={(event) => {
             const age = parseFloat(event.target.value)
             if (age >= 0 && state.settings.topStageAge <= age) {
@@ -143,10 +124,10 @@ export const Time = observer(function Time() {
               actions.setBaseStageAge(age)
             }
           }}
-          style={{ marginBottom: '20px', width: '100%' }}
+          style={{ marginBottom: '20px', width: '100%' }} // Not working
         />
         </FormControl>
-        <TextField
+        <TextField className="VerticalScale"
           label="Vertical Scale (cm/Ma)"
           type="number"
           name="vertical-scale-text-field"
@@ -154,17 +135,17 @@ export const Time = observer(function Time() {
           onChange={(event) =>
             actions.setUnitsPerMY(parseFloat(event.target.value))
           }
-          style={{ marginBottom: "20px", width: "100%" }}
+          style={{ marginBottom: "20px", width: "100%" }} // Not working
         />
         <Button
+          className="Button"
           sx={{
             backgroundColor: theme.palette.button.main,
-            color: "#FFFFFF",
-            marginTop: "10px",
+            // color: "#FFFFFF",
+            // marginTop: "10px",
           }}
           onClick={handleButtonClick}
           variant="contained"
-          style={{ width: "100%", height: "75px" }}
           endIcon={<ForwardIcon />}
         >
           Make your own chart

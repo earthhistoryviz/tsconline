@@ -3,9 +3,6 @@ import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
 import { execSync } from "child_process";
-// import { readFile } from "fs/promises";
-// import { loadPresets } from "./preset.js";
-// import { AssetConfig, assertAssetConfig } from "./types.js";
 import { deleteDirectory } from "./util.js";
 import * as routes from "./routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
@@ -19,11 +16,9 @@ import XLSX from 'xlsx';
 import fs from 'fs';
 import { assertTimescale } from '@tsconline/shared';
 import { fetchTimescale } from "./routes.js";
-
 import { assertChartRequest } from '@tsconline/shared';
 import { loadPresets } from './preset.js';
 import { AssetConfig, assertAssetConfig } from './types.js';
-//import  { decrypt, readAndDecryptFile } from './decrypt.js';
 
 const server = fastify({
   logger: false,
@@ -189,9 +184,7 @@ server.post<{ Params: { usecache: string, useDatapackSuggestedAge: string } }>(
 );
 
 // Serve timescale data endpoint
-server.get('/timescale', async (_req, res) => {
-  routes.fetchTimescale(_req, res);
-});
+server.get('/timescale', routes.fetchTimescale);
 
 server.post('/charts', async (request, reply) => {
   // const key = Buffer.from('016481d57e032c18f750919bcd7dba2e', 'hex');
@@ -292,9 +285,3 @@ try {
   server.log.error(err);
   process.exit(1);
 }
-
-// //Endpoint to serve the timescale data
-// app.get('/timescale', (req: Request, res: Response) => {
-//   const timescaleData = readExcelFile('path.xlsx'); // what is path.xlsx from the GitHub repo?
-//   res.json({ stages: timescaleData });
-// });

@@ -1,4 +1,5 @@
 import { action, runInAction } from "mobx";
+import { fetchTimescaleData } from '../TimeParser';
 import {
   type ChartConfig,
   type MapInfo,
@@ -81,6 +82,16 @@ export const loadIndexResponse = action(
     state.datapackIndex = response.datapackIndex;
   }
 );
+export const fetchTimescaleDataAction = action("fetchTimescaleData", async () => {
+  try {
+    const data = await fetchTimescaleData();
+    console.log('Time Scale Data Loaded');
+    return data;
+  } catch (error) {
+    console.error('Error fetching timescale data:', error);
+    return { GeologicalBaseStageAges: [], GeologicalTopStageAges: [], loading: false };
+  }
+});
 
 /**
  * Rests the settings, sets the tabs to 0
@@ -603,10 +614,10 @@ export const setBaseStageKey = action("setBottomStageKey", (key: string) => {
   state.settings.baseStageKey = key;
 });
 export const setSelectedTopStage = action("setSelectedTopStage", (key: string) => {
-  state.settings.selectedTopStage = key;
+  state.settings.topStageKey = key;
 });
 export const setSelectedBaseStage = action("setSelectedBaseStage", (key: string) => {
-  state.settings.selectedBaseStage = key;
+  state.settings.baseStageKey = key;
 });
 export const setSelectedStage = action("setSelectedStage", (key: string) => {
   state.settings.selectedStage = key;

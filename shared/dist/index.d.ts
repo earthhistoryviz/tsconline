@@ -278,7 +278,7 @@ export type VertBounds = {
     scale: number;
 };
 
-export type Timescale = {
+export type TimescaleItem = {
     key: string;
     value: number;
 }
