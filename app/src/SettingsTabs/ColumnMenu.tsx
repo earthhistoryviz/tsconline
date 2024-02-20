@@ -98,8 +98,8 @@ const ChangeColor: React.FC<{}> = observer(({}) => {
 
     return (
         <div>
-            <FormLabel id="color-label" style={{ color: 'black', marginTop: '3px', margin: '5px' }}>Background Color:</FormLabel>
-            <Button color="secondary" variant="contained" onClick={handleOpen} style={{backgroundColor: currentColor, width: '60px', height: '30px', margin: '0 10px', marginTop: '1px'}}></Button>
+            <FormLabel id="color-label" className="bg-label">Background Color:   </FormLabel>
+            <Button color="secondary" variant="contained" onClick={handleOpen} className="color-button" style = {{backgroundColor: currentColor}}></Button>
 
             <Modal
                 open={open}
@@ -107,17 +107,17 @@ const ChangeColor: React.FC<{}> = observer(({}) => {
                 aria-labelledby="modal-modal-title"
                 aria-describedby="modal-modal-description"
             >
-                <Box sx={styleColor}>
-                    <div style={{ display: 'grid', placeItems: 'center' }}>
+                <Box className="style-color">
+                    <div className="picker-box">
                         <Grid 
                             container rowSpacing={2} columnSpacing={5} 
                             justifyContent="center" alignItems="center"
                         >
-                            <Grid item xs={12} style={{ display: 'flex', justifyContent: 'center'}}>
+                            <Grid item xs={12} className="color-picker">
                                 {
                                     <div>
                                         <PhotoshopPicker color={selectedColor} onChange={handleColorChange}
-                                            styles={styles} onAccept={() => {handleCurrentChange(selectedColor); handleClose();}} 
+                                            className="photoshop-picker" onAccept={() => {handleCurrentChange(selectedColor); handleClose();}} 
                                             onCancel={() => {handleCancel()} } />
                                     </div>
                                 
@@ -173,8 +173,12 @@ export const ColumnMenu = observer(() => {
         className="column-menu-content"
         //style={{ display: "flex", flexDirection: "column" }}
       >
-        {state.settingsTabs.columnSelected && <EditNameField />}
-        {state.settingsTabs.columnSelected && <FontMenu />}
+        {state.settingsTabs.columnSelected && <>
+                                                        <ChangeColor/>
+                                                        <FontMenu/>
+                                                        <EditNameField/>
+                                                      </>
+                }
       </div>
     </div>
   );
