@@ -60,6 +60,7 @@ export type State = {
     baseStageAge: number;
     baseStageKey: string;
     unitsPerMY: number;
+    mouseOverPopupsEnabled: boolean;
     datapackContainsSuggAge: boolean;
   };
   useCache: boolean;
@@ -126,6 +127,7 @@ export const state = observable<State>({
     baseStageAge: 0,
     baseStageKey: "",
     unitsPerMY: 2,
+    mouseOverPopupsEnabled: false,
     datapackContainsSuggAge: false,
   },
   useCache: true,

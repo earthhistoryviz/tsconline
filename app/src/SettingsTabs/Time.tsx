@@ -15,9 +15,6 @@ export const Time = observer(function Time() {
 
   const handleButtonClick = () => {
     actions.setTab(1);
-
-    actions.updateSettings();
-
     actions.fetchChartFromServer(navigate);
   };
   return (
@@ -53,7 +50,6 @@ export const Time = observer(function Time() {
             onChange={(event) => {
               // console.log("event.target.value: " , event.target.value)
               actions.setTopStageKey(event.target.value);
-              actions.updateSettings();
             }}
             style={{ marginBottom: "10px", width: "100%" }}
           >
@@ -148,7 +144,11 @@ export const Time = observer(function Time() {
         <FormGroup>
           <FormControlLabel
             name="mouse-over-info-checkbox"
-            control={<TSCCheckbox />}
+            control={
+              <TSCCheckbox
+                onChange={(e) => actions.setMouseOverPopupsEnabled(e.target.checked)}
+              />
+            }
             label="Add MouseOver info (popups)"
           />
           <FormControlLabel
