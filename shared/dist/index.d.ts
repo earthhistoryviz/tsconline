@@ -306,6 +306,12 @@ export type VertBounds = {
 };
 export declare function assertColor(o: any): asserts o is Color;
 export declare function assertPatterns(o: any): asserts o is Patterns;
+
+export type TimescaleItem = {
+    key: string;
+    value: number;
+}
+
 export declare function assertMapPackIndex(o: any): asserts o is MapPackIndex;
 export declare function assertMapPack(o: any): asserts o is MapPack;
 export declare function assertPresets(o: any): asserts o is Presets;
@@ -338,3 +344,4 @@ export declare function assertInfoPoints(o: any): asserts o is InfoPoints;
 export declare function assertMapPoints(o: any): asserts o is MapPoints;
 export declare function assertSuccessfulServerResponse(o: any): asserts o is SuccessfulServerResponse;
 export declare function assertSVGStatus(o: any): asserts o is SVGStatus;
+export declare function assertTimescale(val: any): asserts val is TimescaleItem;

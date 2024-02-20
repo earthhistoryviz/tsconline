@@ -3,8 +3,6 @@ import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
 import { execSync } from "child_process";
-import { loadPresets } from "./preset.js";
-import { AssetConfig, assertAssetConfig } from "./types.js";
 import { deleteDirectory } from "./util.js";
 import * as routes from "./routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
@@ -14,11 +12,9 @@ import { exec } from 'child_process';
 import { readFile, writeFile, stat } from 'fs/promises';
 import md5 from 'md5';
 import { mkdirp } from 'mkdirp';
-import fs from 'fs';
-import { fetchTimescale } from "./routes.js";
-
 import { assertChartRequest } from '@tsconline/shared';
-//import  { decrypt, readAndDecryptFile } from './decrypt.js';
+import { loadPresets } from './preset.js';
+import { AssetConfig, assertAssetConfig } from './types.js';
 
 const server = fastify({
   logger: false,
@@ -150,10 +146,13 @@ server.get("/facies-patterns", (_request, reply) => {
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
-server.post<{ Params: { usecache: string; useSuggestedAge: string } }>(
+server.post<{ Params: { usecache: string, useSuggestedAge: string } }>(
   "/charts/:usecache/:useSuggestedAge",
   routes.fetchChart
 );
+
+// Serve timescale data endpoint
+server.get('/timescale', routes.fetchTimescale);
 
 // Start the server...
 try {
@@ -168,9 +167,3 @@ try {
   server.log.error(err);
   process.exit(1);
 }
-
-// //Endpoint to serve the timescale data
-// app.get('/timescale', (req: Request, res: Response) => {
-//   const timescaleData = readExcelFile('path.xlsx'); // what is path.xlsx from the GitHub repo?
-//   res.json({ stages: timescaleData });
-// });

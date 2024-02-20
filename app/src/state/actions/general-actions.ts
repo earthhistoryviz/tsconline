@@ -1,4 +1,6 @@
 import { action, runInAction } from "mobx";
+import { TimescaleItem } from '@tsconline/shared';
+
 import {
   type MapInfo,
   type ColumnInfo,
@@ -52,6 +54,8 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
  */
 export const resetSettings = action("resetSettings", () => {
   state.settings = {
+    // geologicalTopStageAges: [],
+    // geologicalBaseStageAges: [],
     selectedStage: "",
     topStageAge: 0,
     topStageKey: "",
@@ -99,9 +103,37 @@ export const uploadDatapack = action("uploadDatapack", (file: File) => {
     body: formData
   });
 });
-export const loadIndexResponse = action("loadIndexResponse", (response: IndexResponse) => {
-  state.mapPackIndex = response.mapPackIndex;
-  state.datapackIndex = response.datapackIndex;
+export const loadIndexResponse = action(
+  "loadIndexResponse",
+  (response: IndexResponse) => {
+    state.mapPackIndex = response.mapPackIndex;
+    state.datapackIndex = response.datapackIndex;
+  }
+);
+export const fetchTimescaleDataAction = action("fetchTimescaleData", async () => {
+  try {
+    const response = await fetcher('/timescale', { method: "GET" });
+
+    if (response.ok) {
+      const data = await response.json();
+      const stages = data.timescaleData || [];
+      state.geologicalBaseStageAges = [...stages];
+
+      for (let i = 0; i < stages.length; i++) {
+        const item = stages[i];
+        const value = i > 0 ? stages[i - 1].value : 0;
+        state.geologicalTopStageAges.push({ ...item, value });
+      }
+      setGeologicalBaseStageAges(state.geologicalBaseStageAges);
+      setGeologicalTopStageAges(state.geologicalTopStageAges);
+
+      console.log('Time Scale Data Loaded');
+    } else {
+      console.error('Server responds with:', response.status);
+    }
+  } catch (error) {
+    console.error('Error fetching timescale data:', error);
+  }
 });
 
 /**
@@ -521,13 +553,19 @@ export const setBaseStageKey = action("setBottomStageKey", (key: string) => {
   state.settings.baseStageKey = key;
 });
 export const setSelectedTopStage = action("setSelectedTopStage", (key: string) => {
-  state.settings.selectedTopStage = key;
+  state.settings.topStageKey = key;
 });
 export const setSelectedBaseStage = action("setSelectedBaseStage", (key: string) => {
-  state.settings.selectedBaseStage = key;
+  state.settings.baseStageKey = key;
 });
 export const setSelectedStage = action("setSelectedStage", (key: string) => {
   state.settings.selectedStage = key;
+});
+export const setGeologicalBaseStageAges = action("setGeologicalBaseStageAges", (key: TimescaleItem[]) => {
+  state.geologicalBaseStageAges = key;
+});
+export const setGeologicalTopStageAges = action("setGeologicalTopStageAges", (key: TimescaleItem[]) => {
+  state.geologicalTopStageAges = key;
 });
 export const setUnitsPerMY = action((units: number) => {
   state.settings.unitsPerMY = units;
