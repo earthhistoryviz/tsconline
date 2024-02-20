@@ -197,7 +197,11 @@ function replaceSpecialChars(text: string, type: number): string {
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with settings info
  */
-function generateSettingsXml(settings: any, indent: string): string {
+function generateSettingsXml(
+  settings: any,
+  chartSettings: any,
+  indent: string
+): string {
   let xml = "";
   for (const key in settings) {
     if (Object.prototype.hasOwnProperty.call(settings, key)) {
@@ -206,15 +210,33 @@ function generateSettingsXml(settings: any, indent: string): string {
         //overhaul top age and base age
         //top age and baseage settings can have two children: text and stage
         //the source attribute determines which one is used
-        if (key === "topAge" || key === "baseAge") {
-          xml += `${indent}<setting name="${key}" source="${value.source}" unit="${value.unit}">\n`;
-          xml += `${indent}    <setting name="${value.source}">${value.text}</setting>\n`;
+        if (key === "topAge") {
+          xml += `${indent}<setting name="${key}" source="text" unit="${value.unit}">\n`;
+          xml += `${indent}    <setting name="text">${chartSettings.topStageAge}</setting>\n`;
           xml += `${indent}</setting>\n`;
-        } else if (key === "unitsPerMY" || key === "skipEmptyColumns") {
+        } else if (key === "baseAge") {
+          xml += `${indent}<setting name="${key}" source="text" unit="${value.unit}">\n`;
+          //this is a hack, right now the parser gets the chart settings from state which is initialized to zero
+          //so if settings state hasn't changed, use preset value.
+          //later use something other than checking if base stage is zero.
+          if (chartSettings.baseStageAge === 0) {
+            xml += `${indent}    <setting name="text">${value.text}</setting>\n`;
+          } else
+            xml += `${indent}    <setting name="text">${chartSettings.baseStageAge}</setting>\n`;
+          xml += `${indent}</setting>\n`;
+        }
+        //else if (key === "topAge" || key === "baseAge") {
+        //   xml += `${indent}<setting name="${key}" source="${value.source}" unit="${value.unit}">\n`;
+        //   xml += `${indent}    <setting name="${value.source}">${value.text}</setting>\n`;
+        //   xml += `${indent}</setting>\n`;
+        // }
+        else if (key === "unitsPerMY" || key === "skipEmptyColumns") {
           xml += `${indent}<setting name="${key}" unit="${value.unit}">${value.text}</setting>\n`;
         }
       } else if (key === "justification") {
         xml += `${indent}<setting justification="${value}" name="${key}"/>\n`;
+      } else if (key === "doPopups") {
+        xml += `${indent}<setting name="${key}">${chartSettings.mouseOverPopupsEnabled}</setting>\n`;
       } else {
         xml += `${indent}<setting name="${key}">${value}</setting>\n`;
       }
@@ -383,24 +405,22 @@ function generateColumnXml(
 export function jsonToXml(
   settings: any,
   columnSettings: any,
+  chartSettings: any,
   version: string = "PRO8.0"
 ): string {
-  // console.log(columnSettings);
-  // console.log("in json to xml", settings);
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
   //console.log("json 2...\n", state.settingsJSON);
   if (settings["settings"]) {
     xml += '  <settings version="1.0">\n';
-    xml += generateSettingsXml(settings["settings"], "    ");
+    xml += generateSettingsXml(settings["settings"], chartSettings, "    ");
     xml += "  </settings>\n";
   }
   //the top level doesn't have _id so it usually doesn't proc, but
   //procs if used for a child
   if (settings["_id"]) {
     xml += `  <column id="${settings["id"]}">\n`;
-    let temp = columnSettings;
-    xml += generateColumnXml(settings, temp, "", "    ");
+    xml += generateColumnXml(settings, columnSettings, "", "    ");
     xml += "  </column>\n";
   }
   //generate columns
