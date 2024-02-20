@@ -386,6 +386,11 @@ export function assertPatterns(o: any): asserts o is Patterns {
     assertColor(pattern.color);
   }
 }
+export type TimescaleItem = {
+  key: string;
+  value: number;
+}
+
 export function assertMapPackIndex(o: any): asserts o is MapPackIndex {
   if (!o || typeof o !== "object") throw new Error("MapPackIndex must be a non-null object");
   for (const key in o) {
@@ -755,4 +760,13 @@ export function assertSVGStatus(o: any): asserts o is SVGStatus {
  */
 function throwError(obj: string, variable: string, type: string, value: any) {
   throw new Error(`Object '${obj}' must have a '${variable}' ${type} property.\nFound value: ${value}`);
+}
+
+export function assertTimescale(val: any): asserts val is TimescaleItem {
+  if (!val || typeof val !== 'object') {
+    throw new Error('Timescale object must be a non-null object');
+  }
+  if (typeof val.key !== 'string' || typeof val.value !== 'number') {
+    throw new Error(`Timescale object must have 'key' of type string and 'value' of type number`);
+  }
 }
