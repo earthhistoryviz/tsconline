@@ -90,7 +90,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
   navigate: NavigateFunction;
   configArray: ChartConfig[];
 }) {
-  const { state, actions } = useContext(context);
+  const { actions } = useContext(context);
   const theme = useTheme();
   const [expanded, setExpanded] = useState(true);
   const handleAccordionChange = () => {
@@ -99,14 +99,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
   return (
     <>
       <Accordion
-        style={{
-          background: "transparent",
-          marginLeft: "5vh",
-          marginRight: "5vh",
-          border: "1px solid gray",
-          borderRadius: "4px",
-          overflow: "hidden",
-        }}
+        className="preset-highlight"
         onChange={handleAccordionChange}
         expanded={expanded}
       >
@@ -114,33 +107,15 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel1a-content"
           id="panel1a-header"
-          style={{
-            borderBottom: "1px solid rgba(0, 0, 0, 0.20)",
-            backgroundColor: "rgba(0, 0, 0, 0.04)",
-          }}
+          className="preset-summary"
         >
-          <Typography
-            sx={{ fontSize: "1.5rem" }}
-          >{`${type} PRESETS`}</Typography>
+          <Typography className="preset-type-title">{`${type} PRESETS`}</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <StyledScrollbar>
-            <Grid
-              className="presets"
-              container
-              style={{
-                display: "flex",
-                flexWrap: "nowrap",
-                width: "auto",
-                paddingBottom: "9vh",
-              }}
-            >
+            <Grid className="presets" container>
               {configArray.map((preset, index) => (
-                <Grid
-                  item
-                  key={index}
-                  style={{ marginRight: "16px", marginLeft: "16px" }}
-                >
+                <Grid item key={index} className="preset-item">
                   <TSCCard
                     color={theme.palette.navbar.main}
                     preset={preset}
