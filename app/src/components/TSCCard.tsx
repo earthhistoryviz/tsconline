@@ -25,17 +25,6 @@ import checkIcon from "../assets/icons/check-icon.json";
 import FolderIcon from "@mui/icons-material/Folder";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 
-let text = `
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Aliquam ultrices sagittis orci a scelerisque purus semper eget. Massa id neque aliquam vestibulum morbi. Odio ut enim blandit volutpat maecenas volutpat blandit. Aliquam faucibus purus in massa tempor. Id diam vel quam elementum pulvinar etiam. Ornare massa eget egestas purus viverra accumsan in nisl nisi. Lectus nulla at volutpat diam. Ultrices mi tempus imperdiet nulla malesuada pellentesque elit eget. Lobortis scelerisque fermentum dui faucibus in ornare.
-
-Rhoncus mattis rhoncus urna neque viverra justo nec. Tempor id eu nisl nunc mi ipsum faucibus vitae aliquet. Feugiat nibh sed pulvinar proin gravida. Et tortor at risus viverra adipiscing at in tellus. Tortor pretium viverra suspendisse potenti nullam ac tortor. Aenean pharetra magna ac placerat vestibulum lectus mauris ultrices. Eget est lorem ipsum dolor sit amet consectetur adipiscing elit. Ac odio tempor orci dapibus ultrices in. Phasellus faucibus scelerisque eleifend donec. Praesent tristique magna sit amet purus gravida quis blandit turpis. Blandit cursus risus at ultrices mi.
-
-Nunc congue nisi vitae suscipit tellus mauris a diam. Velit dignissim sodales ut eu sem integer vitae justo. Molestie a iaculis at erat. Gravida cum sociis natoque penatibus et magnis dis parturient. Donec enim diam vulputate ut pharetra sit. Ornare lectus sit amet est. Risus in hendrerit gravida rutrum quisque non tellus orci. Mauris pharetra et ultrices neque ornare aenean euismod elementum nisi. At lectus urna duis convallis convallis. Sed turpis tincidunt id aliquet risus feugiat in ante. In fermentum et sollicitudin ac orci phasellus egestas. Curabitur vitae nunc sed velit dignissim sodales ut eu sem. Pretium viverra suspendisse potenti nullam ac.
-
-Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Posuere ac ut consequat semper viverra nam libero. Ipsum consequat nisl vel pretium lectus quam id leo. Amet mattis vulputate enim nulla aliquet porttitor. Suscipit adipiscing bibendum est ultricies integer quis auctor elit. Neque aliquam vestibulum morbi blandit cursus risus at ultrices. Nunc aliquet bibendum enim facilisis gravida neque convallis a. Non nisi est sit amet facilisis magna etiam tempor. Proin fermentum leo vel orci porta non pulvinar. Quisque sagittis purus sit amet volutpat consequat mauris nunc congue. Elementum integer enim neque volutpat ac tincidunt. Condimentum mattis pellentesque id nibh tortor. Viverra orci sagittis eu volutpat odio facilisis mauris sit.
-
-Volutpat sed cras ornare arcu dui vivamus. Neque convallis a cras semper auctor neque vitae tempus quam. Sed velit dignissim sodales ut. Diam phasellus vestibulum lorem sed risus ultricies tristique nulla. Scelerisque fermentum dui faucibus in ornare quam. Tortor consequat id porta nibh venenatis cras sed felis eget. Bibendum at varius vel pharetra vel turpis nunc eget. Libero volutpat sed cras ornare arcu dui. Aliquet porttitor lacus luctus accumsan tortor posuere. Ligula ullamcorper malesuada proin libero nunc. Neque vitae tempus quam pellentesque nec nam aliquam sem. Duis at tellus at urna condimentum. Lectus urna duis convallis convallis tellus id interdum. Vulputate enim nulla aliquet porttitor lacus luctus accumsan. Commodo nulla facilisi nullam vehicula ipsum a. Ut sem viverra aliquet eget sit amet tellus cras adipiscing.
-`;
 const Title = styled("h2")(({ theme }) => ({
   fontFamily: theme.typography.fontFamily,
   color: theme.palette.background.default,
@@ -212,7 +201,7 @@ const BackCard = ({
               variant="body1"
               color="primary"
             >
-              {text}
+              {preset.description}
             </Typography>
           </div>
         </StyledScrollbar>
@@ -225,7 +214,15 @@ const BackCard = ({
       <div className="add-buttons">
         {added ? (
           <IconButton className="add-button" onClick={add}>
-            <Lottie playOnClick autoplay animationData={checkIcon} />
+            <Lottie
+              key={"check"}
+              playOnClick
+              autoplay
+              animationData={checkIcon}
+              width={45}
+              height={45}
+              speed={1.7}
+            />
           </IconButton>
         ) : (
           <IconButton className="add-button" onClick={add}>
