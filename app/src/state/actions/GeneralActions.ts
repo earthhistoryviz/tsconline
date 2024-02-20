@@ -36,7 +36,7 @@ export const resetSettings = action("resetSettings", () => {
     baseStageAge: 0,
     baseStageKey: "",
     unitsPerMY: 2,
-    doPopups: false,
+    mouseOverPopupsEnabled: false,
     datapackContainsSuggAge: false,
   };
 });
@@ -284,7 +284,7 @@ export const generateChart = action("generateChart", async () => {
   setChartPath("");
   //let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
   // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
-  let xmlSettings = jsonToXml(state.settingsJSON, state.settingsTabs.columns);
+  let xmlSettings = jsonToXml(state.settingsJSON, state.settingsTabs.columns, state.settings);
   const body = JSON.stringify({
     settings: xmlSettings,
     datapacks: state.config.datapacks,
