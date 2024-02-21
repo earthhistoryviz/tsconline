@@ -11,7 +11,7 @@ import { FaciesOptions, LegendItem } from "../types";
 import {
   Bounds,
   ColumnInfo,
-  FaciesLocations,
+  Facies,
   InfoPoints,
   MapPoints,
   Transects,
@@ -493,15 +493,12 @@ function getIcon(
     return <InfoIcon className="icon" />;
   }
   if (state.mapState.isFacies) {
-    const event = state.mapState.facies.locations[name]
-      ? state.mapState.facies.locations[name]
-      : state.mapState.facies.locations[state.mapState.facies.aliases[name]];
     return getFaciesIcon(
       iconSize,
       scale,
-      event,
       state.mapState.currentFaciesOptions,
-      actions.setSelectedMapAgeRange
+      actions.setSelectedMapAgeRange,
+      column
     );
   }
   if (clicked) {
@@ -521,9 +518,9 @@ function getIcon(
 function getFaciesIcon(
   iconSize: number,
   scale: number,
-  event: FaciesLocations[string] | null,
   currentFaciesOptions: FaciesOptions,
-  setSelectedMapAgeRange: (min: number, max: number) => void
+  setSelectedMapAgeRange: (min: number, max: number) => void,
+  column: ColumnInfo
 ) {
   // this accounts for facies map points that are recorded as the parent, but they use the children as an 'alias'.
   // Therefore meaning the child has the facies information but the map point is not called by the child name but is called the parent name
@@ -531,27 +528,22 @@ function getFaciesIcon(
   // displayed as parent -> facies
   let rockType = "top";
   // facies event exists for this map point
-  if (
-    event &&
-    event.faciesTimeBlockArray &&
-    event.faciesTimeBlockArray.length > 0
-  ) {
-    setSelectedMapAgeRange(event.minAge, event.maxAge);
+  if (column.subFaciesInfo && column.subFaciesInfo.length > 0) {
+    // sets using min and max
+    setSelectedMapAgeRange(column.minAge, column.maxAge);
     let i = 0;
-    let timeBlock = event.faciesTimeBlockArray[i];
+    let timeBlock = column.subFaciesInfo[i];
     let baseAge = timeBlock.age;
     // find the icon relating to the age we're in
     while (baseAge < currentFaciesOptions.faciesAge) {
       i += 1;
-      if (i >= event.faciesTimeBlockArray.length) {
+      if (i >= column.subFaciesInfo.length) {
         // if we hit the end of possible ranges, then an icon
         // doesn't exist. so we pass top
         rockType = "top";
         break;
       }
-      timeBlock = event.faciesTimeBlockArray[i];
-      baseAge = timeBlock.age;
-      rockType = timeBlock.rockType;
+      ({ age: baseAge, rockType } = column.subFaciesInfo[i]);
     }
   }
   return (

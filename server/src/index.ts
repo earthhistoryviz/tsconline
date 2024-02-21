@@ -8,7 +8,7 @@ import { loadPresets } from "./preset.js";
 import { AssetConfig, assertAssetConfig } from "./types.js";
 import { deleteDirectory } from "./util.js";
 import * as routes from "./routes.js";
-import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
+import { DatapackIndex, MapPackIndex, assertDatapackParsingPack, assertIndexResponse, assertMapPack } from "@tsconline/shared";
 import { parseDatapacks } from "./parse-datapacks.js";
 import { parseMapPacks } from "./parse-map-packs.js";
 
@@ -73,14 +73,17 @@ try {
     parseDatapacks(assetconfigs.decryptionDirectory, [datapack])
     .then(
       (datapackParsingPack) => {
+        assertDatapackParsingPack(datapackParsingPack)
         datapackIndex[datapack] = datapackParsingPack
         console.log(`Successfully parsed ${datapack}`)
       })
     .catch((e) => {
       console.log(`Cannot create a datapackParsingPack with datapack ${datapack} and error: ${e}`)
+      console.log(e)
     })
     parseMapPacks([datapack])
     .then((mapPack) => {
+      assertMapPack(mapPack)
       mapPackIndex[datapack] = mapPack
     })
     .catch((e) => {
@@ -156,8 +159,12 @@ server.get(
     }
     else {
       const indexResponse = {datapackIndex, mapPackIndex}
+      try {
       assertIndexResponse(indexResponse)
       reply.send(indexResponse)
+      } catch(e) {
+        reply.send({error: `${e}`})
+      }
     }
   }
 );
