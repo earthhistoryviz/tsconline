@@ -1,0 +1,18 @@
+name: Default Merge Pipeline
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - TSC-224-CI-CD-Pipeline
+
+jobs:
+  # Testing should go here
+  dummy-job:
+    if: github.event.pull_request.merged == true # Make sure to do this when branch is merged on a pull request and not just closed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Dummy Step
+        run: |
+          echo "This is a dummy pipeline running on a merge to main/master."
