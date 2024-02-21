@@ -2,7 +2,7 @@ name: Default Merge Pipeline
 
 on:
   pull_request:
-    types: [closed]
+    types: [opened, synchronize, reopened, closed]
     branches:
       - TSC-224-CI-CD-Pipeline
 
