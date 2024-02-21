@@ -4,12 +4,17 @@ export type SuccessfulServerResponse = {
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 export type DatapackParsingPack = {
     columnInfoArray: ColumnInfo[];
-    facies: Facies;
     datapackAgeInfo: DatapackAgeInfo;
+    aliases: Aliases;
 };
 export type IndexResponse = {
     datapackIndex: DatapackIndex;
     mapPackIndex: MapPackIndex;
+};
+export type Aliases = {
+    [name: string]: {
+        altname: string;
+    };
 };
 export type DatapackIndex = {
     [name: string]: DatapackParsingPack;
@@ -174,26 +179,6 @@ export type FontsInfo = {
     };
 };
 export declare const defaultFontsInfo: FontsInfo;
-export type Facies = {
-    locations: FaciesLocations;
-    minAge: number;
-    maxAge: number;
-    aliases: {
-        [alias: string]: string;
-    };
-};
-export type FaciesLocations = {
-    [location: string]: {
-        faciesTimeBlockArray: FaciesTimeBlock[];
-        minAge: number;
-        maxAge: number;
-    };
-};
-export type FaciesTimeBlock = {
-    rockType: string;
-    label?: string;
-    age: number;
-};
 export type SubBlockInfo = {
     label: string;
     age: number;
@@ -216,6 +201,21 @@ export type ColumnInfo = {
     children: ColumnInfo[];
     parent: string | null;
     subBlockInfo?: SubBlockInfo[];
+    subFaciesInfo?: SubFaciesInfo[];
+    minAge: number;
+    maxAge: number;
+};
+export type SubFaciesInfo = {
+    rockType: string;
+    label?: string;
+    age: number;
+    info: string;
+};
+export type Facies = {
+    name: string;
+    info: string;
+    on: boolean;
+    subFaciesInfo: SubFaciesInfo[];
     minAge: number;
     maxAge: number;
 };
@@ -279,13 +279,6 @@ export type ParentMap = {
 export type MapHierarchy = {
     [parent: string]: string[];
 };
-export type DatapackResponse = {
-    columnInfo: ColumnInfo;
-    facies: Facies;
-    mapInfo: MapInfo;
-    mapHierarchy: MapHierarchy;
-    datapackAgeInfo: DatapackAgeInfo;
-};
 export type Bounds = RectBounds | VertBounds;
 export type RectBounds = {
     upperLeftLon: number;
@@ -309,11 +302,10 @@ export declare function assertSubBlockInfo(o: any): asserts o is SubBlockInfo;
 export declare function assertBlock(o: any): asserts o is Block;
 export declare function assertFacies(o: any): asserts o is Facies;
 export declare function assertDatapackParsingPack(o: any): asserts o is DatapackParsingPack;
+export declare function assertAliases(o: any): asserts o is Aliases;
 export declare function assertDatapackIndex(o: any): asserts o is DatapackIndex;
-export declare function assertFaciesLocations(o: any): asserts o is FaciesLocations;
-export declare function assertFaciesTimeBlock(o: any): asserts o is FaciesTimeBlock;
+export declare function assertSubFaciesInfo(o: any): asserts o is SubFaciesInfo;
 export declare function assertIndexResponse(o: any): asserts o is IndexResponse;
-export declare function assertDatapackResponse(o: any): asserts o is DatapackResponse;
 export declare function assertChartConfig(o: any): asserts o is ChartConfig;
 export declare function assertChartConfigArray(o: any): asserts o is ChartConfig[];
 export declare function assertChartRequest(o: any): asserts o is ChartRequest;

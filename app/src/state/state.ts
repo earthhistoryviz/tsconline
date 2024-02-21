@@ -11,6 +11,7 @@ import type {
   Presets,
   DatapackIndex,
   MapPackIndex,
+  Aliases,
 } from "@tsconline/shared";
 
 export type State = {
@@ -35,7 +36,7 @@ export type State = {
     isLegendOpen: boolean;
     isMapViewerOpen: boolean;
     isFacies: boolean;
-    facies: Facies;
+    aliases: Aliases;
     selectedMapAgeRange: {
       minAge: number,
       maxAge: number
@@ -94,12 +95,7 @@ export const state = observable<State>({
     isLegendOpen: false,
     isMapViewerOpen: false,
     isFacies: false,
-    facies: {
-      locations: {},
-      minAge: 0,
-      maxAge: 0,
-      aliases: {}
-    },
+    aliases: {},
     selectedMapAgeRange: {
       minAge: 0,
       maxAge: 0

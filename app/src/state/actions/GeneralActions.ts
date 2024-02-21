@@ -20,6 +20,7 @@ import {
   defaultFontsInfo,
   assertIndexResponse,
   assertPresets,
+  Aliases,
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
@@ -41,8 +42,10 @@ export const resetSettings = action("resetSettings", () => {
   };
 });
 
-export const fetchDatapackInfo = action("fetchPresets", async () => {
-  const response = await fetcher("/datapackinfoindex");
+export const fetchDatapackInfo = action("fetchDatapackInfo", async () => {
+  const response = await fetcher("/datapackinfoindex", {
+    method: "GET",
+  });
   const indexResponse = await response.json();
   try {
     assertIndexResponse(indexResponse);
@@ -91,18 +94,13 @@ export const setDatapackConfig = action(
     resetSettings();
     //set the settings tab back to time
     setSettingsTabsSelected(0);
-    let facies: Facies = {
-      locations: {},
-      minAge: 0,
-      maxAge: 0,
-      aliases: {},
-    };
     let datapackAgeInfo: DatapackAgeInfo = {
       datapackContainsSuggAge: false,
     };
     let mapInfo: MapInfo = {};
     let mapHierarchy: MapHierarchy = {};
     let columnInfo: ColumnInfo;
+    let aliases: Aliases = {}
     try {
       // the default overarching variable for the columnInfo
       columnInfo = {
@@ -146,9 +144,9 @@ export const setDatapackConfig = action(
           datapackParsingPack.columnInfoArray
         );
         // concat all facies
-        if (!facies) facies = datapackParsingPack.facies;
+        if (!aliases) aliases = datapackParsingPack.aliases;
         // TODO: correctly fix this so that facies are not replacing max/min on multiple datapacks
-        else Object.assign(facies, datapackParsingPack.facies);
+        else Object.assign(aliases, datapackParsingPack.aliases);
         // concat datapackAgeInfo objects together
         if (!datapackAgeInfo)
           datapackAgeInfo = datapackParsingPack.datapackAgeInfo;
@@ -161,7 +159,6 @@ export const setDatapackConfig = action(
         if (!mapHierarchy) mapHierarchy = mapPack.mapHierarchy;
         else Object.assign(mapHierarchy, mapPack.mapHierarchy);
       }
-      assertFacies(facies);
       assertDatapackAgeInfo(datapackAgeInfo);
       assertMapHierarchy(mapHierarchy);
       assertColumnInfo(columnInfo);
@@ -174,9 +171,9 @@ export const setDatapackConfig = action(
       );
       return false;
     }
-    state.mapState.facies = facies;
     state.settings.datapackContainsSuggAge =
       datapackAgeInfo.datapackContainsSuggAge;
+      state.mapState.aliases = aliases;
     state.mapState.mapHierarchy = mapHierarchy;
     state.settingsTabs.columns = columnInfo;
     state.mapState.mapInfo = mapInfo;
@@ -404,6 +401,7 @@ export function displayError(error: any, response: any, message: string) {
   if (!response) {
     pushError(message);
   } else if (isServerResponseError(response)) {
+    console.log(error)
     console.log(`${message} with server response: ${response.error}`);
     pushError(response.error);
   } else {
@@ -590,9 +588,6 @@ export const setBaseStageAge = action("setBaseStageAge", (age: number) => {
 
 export const settingsXML = action("settingsXML", (xml: string) => {
   state.settingsXML = xml;
-});
-const setFacies = action("setFacies", (newval: Facies) => {
-  state.mapState.facies = newval;
 });
 export const setOpenSnackbar = action("setOpenSnackbar", (show: boolean) => {
   state.openSnackbar = show;
