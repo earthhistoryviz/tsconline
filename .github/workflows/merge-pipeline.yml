@@ -7,12 +7,23 @@ on:
       - TSC-224-CI-CD-Pipeline
 
 jobs:
-  # Testing should go here
-  dummy-job:
-    if: github.event.pull_request.merged == true # Make sure to do this when branch is merged on a pull request and not just closed
+  # This job occurs when a pull request is opened/reopend, or a new commit is pushed to the branch. Meant for testing
+  build-and-test:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == false
     steps:
       - uses: actions/checkout@v2
-      - name: Dummy Step
+      - name: Run Tests
         run: |
-          echo "This is a dummy pipeline running on a merge to main."
+          echo "Running testing"
+
+  # This job occurs when a branch is merged, do deployment commands like updating dev for example
+  deploy:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      - uses: actions/checkout@v2
+      - name: Deploy
+        run: |
+          echo "Running deployment"
