@@ -15,4 +15,4 @@ jobs:
       - uses: actions/checkout@v2
       - name: Dummy Step
         run: |
-          echo "This is a dummy pipeline running on a merge to main/master."
+          echo "This is a dummy pipeline running on a merge to main."
