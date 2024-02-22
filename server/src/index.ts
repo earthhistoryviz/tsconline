@@ -80,7 +80,6 @@ try {
       })
     .catch((e) => {
       console.log(`Cannot create a datapackParsingPack with datapack ${datapack} and error: ${e}`)
-      console.log(e)
     })
     parseMapPacks([datapack])
     .then((mapPack) => {
