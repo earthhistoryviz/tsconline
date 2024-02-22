@@ -5,16 +5,10 @@ export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 export type DatapackParsingPack = {
     columnInfoArray: ColumnInfo[];
     datapackAgeInfo: DatapackAgeInfo;
-    aliases: Aliases;
 };
 export type IndexResponse = {
     datapackIndex: DatapackIndex;
     mapPackIndex: MapPackIndex;
-};
-export type Aliases = {
-    [name: string]: {
-        altname: string;
-    };
 };
 export type DatapackIndex = {
     [name: string]: DatapackParsingPack;
@@ -302,7 +296,6 @@ export declare function assertSubBlockInfo(o: any): asserts o is SubBlockInfo;
 export declare function assertBlock(o: any): asserts o is Block;
 export declare function assertFacies(o: any): asserts o is Facies;
 export declare function assertDatapackParsingPack(o: any): asserts o is DatapackParsingPack;
-export declare function assertAliases(o: any): asserts o is Aliases;
 export declare function assertDatapackIndex(o: any): asserts o is DatapackIndex;
 export declare function assertSubFaciesInfo(o: any): asserts o is SubFaciesInfo;
 export declare function assertIndexResponse(o: any): asserts o is IndexResponse;

@@ -20,7 +20,6 @@ import {
   defaultFontsInfo,
   assertIndexResponse,
   assertPresets,
-  Aliases,
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
@@ -100,7 +99,6 @@ export const setDatapackConfig = action(
     let mapInfo: MapInfo = {};
     let mapHierarchy: MapHierarchy = {};
     let columnInfo: ColumnInfo;
-    let aliases: Aliases = {}
     try {
       // the default overarching variable for the columnInfo
       columnInfo = {
@@ -144,9 +142,6 @@ export const setDatapackConfig = action(
           datapackParsingPack.columnInfoArray
         );
         // concat all facies
-        if (!aliases) aliases = datapackParsingPack.aliases;
-        // TODO: correctly fix this so that facies are not replacing max/min on multiple datapacks
-        else Object.assign(aliases, datapackParsingPack.aliases);
         // concat datapackAgeInfo objects together
         if (!datapackAgeInfo)
           datapackAgeInfo = datapackParsingPack.datapackAgeInfo;
@@ -173,7 +168,6 @@ export const setDatapackConfig = action(
     }
     state.settings.datapackContainsSuggAge =
       datapackAgeInfo.datapackContainsSuggAge;
-      state.mapState.aliases = aliases;
     state.mapState.mapHierarchy = mapHierarchy;
     state.settingsTabs.columns = columnInfo;
     state.mapState.mapInfo = mapInfo;

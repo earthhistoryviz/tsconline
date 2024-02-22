@@ -97,10 +97,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
   ({ mapPoint, x, y, name, isInfo = false, container }) => {
     const theme = useTheme();
     const { state } = useContext(context);
-    const column =
-      state.settingsTabs.columnHashMap.get(
-        state.mapState.aliases[name]?.altname
-      ) || state.settingsTabs.columnHashMap.get(name);
+    const column = state.settingsTabs.columnHashMap.get(name);
     const clicked = column ? column.on : false;
 
     // below is the hook for grabbing the scale from map image scaling
@@ -525,11 +522,6 @@ function getFaciesIcon(
   setSelectedMapAgeRange: (min: number, max: number) => void,
   column: ColumnInfo
 ) {
-  // this accounts for facies map points that are recorded as the parent, but they use the children as an 'alias'.
-  // Therefore meaning the child has the facies information but the map point is not called by the child name but is called the parent name
-  // parent -> child -> facies
-  // displayed as parent -> facies
-  // facies event exists for this map point
   let rockType = getRockTypeForAge(
     column,
     currentFaciesOptions.faciesAge,

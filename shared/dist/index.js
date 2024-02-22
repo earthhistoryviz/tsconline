@@ -144,18 +144,7 @@ export function assertDatapackParsingPack(o) {
     }
     if (typeof o.aliases !== "object")
         throw new Error("DatapackParsingPack must have a aliases object");
-    assertAliases(o.aliases);
     assertDatapackAgeInfo(o.datapackAgeInfo);
-}
-export function assertAliases(o) {
-    if (!o || typeof o !== "object")
-        throw new Error("Aliases must be a non-null object");
-    for (const alias in o.aliases) {
-        if (typeof alias !== "string")
-            throw new Error("Aliases must have keys of type string");
-        if (typeof o.aliases[alias] !== "string")
-            throw new Error("Aliases must have indexed values of type string");
-    }
 }
 export function assertDatapackIndex(o) {
     if (!o || typeof o !== "object")

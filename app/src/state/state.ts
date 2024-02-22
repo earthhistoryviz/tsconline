@@ -6,12 +6,10 @@ import type {
   MapInfo,
   ChartConfig,
   ColumnInfo,
-  Facies,
   GeologicalStages,
   Presets,
   DatapackIndex,
   MapPackIndex,
-  Aliases,
 } from "@tsconline/shared";
 
 export type State = {
@@ -36,7 +34,6 @@ export type State = {
     isLegendOpen: boolean;
     isMapViewerOpen: boolean;
     isFacies: boolean;
-    aliases: Aliases;
     selectedMapAgeRange: {
       minAge: number,
       maxAge: number
@@ -95,7 +92,6 @@ export const state = observable<State>({
     isLegendOpen: false,
     isMapViewerOpen: false,
     isFacies: false,
-    aliases: {},
     selectedMapAgeRange: {
       minAge: 0,
       maxAge: 0
