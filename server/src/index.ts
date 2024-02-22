@@ -8,9 +8,10 @@ import { loadPresets } from "./preset.js";
 import { AssetConfig, assertAssetConfig } from "./types.js";
 import { deleteDirectory } from "./util.js";
 import * as routes from "./routes.js";
-import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
+import { DatapackIndex, MapPackIndex, assertDatapackParsingPack, assertIndexResponse, assertMapPack } from "@tsconline/shared";
 import { parseDatapacks } from "./parse-datapacks.js";
 import { parseMapPacks } from "./parse-map-packs.js";
+import fastifyCompress from "@fastify/compress";
 
 const server = fastify({
   logger: false,
@@ -73,6 +74,7 @@ try {
     parseDatapacks(assetconfigs.decryptionDirectory, [datapack])
     .then(
       (datapackParsingPack) => {
+        assertDatapackParsingPack(datapackParsingPack)
         datapackIndex[datapack] = datapackParsingPack
         console.log(`Successfully parsed ${datapack}`)
       })
@@ -81,6 +83,7 @@ try {
     })
     parseMapPacks([datapack])
     .then((mapPack) => {
+      assertMapPack(mapPack)
       mapPackIndex[datapack] = mapPack
     })
     .catch((e) => {
@@ -115,6 +118,9 @@ server.register(cors, {
   origin: "*",
   methods: ["GET", "POST"],
 });
+
+// @ts-ignore
+server.register(fastifyCompress, {global: true})
 
 // removes the cached public/charts directory
 server.post("/removecache", async (request, reply) => {
@@ -156,8 +162,12 @@ server.get(
     }
     else {
       const indexResponse = {datapackIndex, mapPackIndex}
+      try {
       assertIndexResponse(indexResponse)
       reply.send(indexResponse)
+      } catch(e) {
+        reply.send({error: `${e}`})
+      }
     }
   }
 );

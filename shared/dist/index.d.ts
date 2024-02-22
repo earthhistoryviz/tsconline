@@ -4,7 +4,6 @@ export type SuccessfulServerResponse = {
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 export type DatapackParsingPack = {
     columnInfoArray: ColumnInfo[];
-    facies: Facies;
     datapackAgeInfo: DatapackAgeInfo;
 };
 export type IndexResponse = {
@@ -174,26 +173,6 @@ export type FontsInfo = {
     };
 };
 export declare const defaultFontsInfo: FontsInfo;
-export type Facies = {
-    locations: FaciesLocations;
-    minAge: number;
-    maxAge: number;
-    aliases: {
-        [alias: string]: string;
-    };
-};
-export type FaciesLocations = {
-    [location: string]: {
-        faciesTimeBlockArray: FaciesTimeBlock[];
-        minAge: number;
-        maxAge: number;
-    };
-};
-export type FaciesTimeBlock = {
-    rockType: string;
-    label?: string;
-    age: number;
-};
 export type SubBlockInfo = {
     label: string;
     age: number;
@@ -216,6 +195,21 @@ export type ColumnInfo = {
     children: ColumnInfo[];
     parent: string | null;
     subBlockInfo?: SubBlockInfo[];
+    subFaciesInfo?: SubFaciesInfo[];
+    minAge: number;
+    maxAge: number;
+};
+export type SubFaciesInfo = {
+    rockType: string;
+    label?: string;
+    age: number;
+    info: string;
+};
+export type Facies = {
+    name: string;
+    info: string;
+    on: boolean;
+    subFaciesInfo: SubFaciesInfo[];
     minAge: number;
     maxAge: number;
 };
@@ -279,13 +273,6 @@ export type ParentMap = {
 export type MapHierarchy = {
     [parent: string]: string[];
 };
-export type DatapackResponse = {
-    columnInfo: ColumnInfo;
-    facies: Facies;
-    mapInfo: MapInfo;
-    mapHierarchy: MapHierarchy;
-    datapackAgeInfo: DatapackAgeInfo;
-};
 export type Bounds = RectBounds | VertBounds;
 export type RectBounds = {
     upperLeftLon: number;
@@ -310,10 +297,8 @@ export declare function assertBlock(o: any): asserts o is Block;
 export declare function assertFacies(o: any): asserts o is Facies;
 export declare function assertDatapackParsingPack(o: any): asserts o is DatapackParsingPack;
 export declare function assertDatapackIndex(o: any): asserts o is DatapackIndex;
-export declare function assertFaciesLocations(o: any): asserts o is FaciesLocations;
-export declare function assertFaciesTimeBlock(o: any): asserts o is FaciesTimeBlock;
+export declare function assertSubFaciesInfo(o: any): asserts o is SubFaciesInfo;
 export declare function assertIndexResponse(o: any): asserts o is IndexResponse;
-export declare function assertDatapackResponse(o: any): asserts o is DatapackResponse;
 export declare function assertChartConfig(o: any): asserts o is ChartConfig;
 export declare function assertChartConfigArray(o: any): asserts o is ChartConfig[];
 export declare function assertChartRequest(o: any): asserts o is ChartRequest;

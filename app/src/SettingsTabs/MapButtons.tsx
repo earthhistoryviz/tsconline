@@ -11,7 +11,7 @@ import { FaciesOptions, LegendItem } from "../types";
 import {
   Bounds,
   ColumnInfo,
-  FaciesLocations,
+  Facies,
   InfoPoints,
   MapPoints,
   Transects,
@@ -493,15 +493,12 @@ function getIcon(
     return <InfoIcon className="icon" />;
   }
   if (state.mapState.isFacies) {
-    const event = state.mapState.facies.locations[name]
-      ? state.mapState.facies.locations[name]
-      : state.mapState.facies.locations[state.mapState.facies.aliases[name]];
     return getFaciesIcon(
       iconSize,
       scale,
-      event,
       state.mapState.currentFaciesOptions,
-      actions.setSelectedMapAgeRange
+      actions.setSelectedMapAgeRange,
+      column
     );
   }
   if (clicked) {
@@ -521,39 +518,15 @@ function getIcon(
 function getFaciesIcon(
   iconSize: number,
   scale: number,
-  event: FaciesLocations[string] | null,
   currentFaciesOptions: FaciesOptions,
-  setSelectedMapAgeRange: (min: number, max: number) => void
+  setSelectedMapAgeRange: (min: number, max: number) => void,
+  column: ColumnInfo
 ) {
-  // this accounts for facies map points that are recorded as the parent, but they use the children as an 'alias'.
-  // Therefore meaning the child has the facies information but the map point is not called by the child name but is called the parent name
-  // parent -> child -> facies
-  // displayed as parent -> facies
-  let rockType = "top";
-  // facies event exists for this map point
-  if (
-    event &&
-    event.faciesTimeBlockArray &&
-    event.faciesTimeBlockArray.length > 0
-  ) {
-    setSelectedMapAgeRange(event.minAge, event.maxAge);
-    let i = 0;
-    let timeBlock = event.faciesTimeBlockArray[i];
-    let baseAge = timeBlock.age;
-    // find the icon relating to the age we're in
-    while (baseAge < currentFaciesOptions.faciesAge) {
-      i += 1;
-      if (i >= event.faciesTimeBlockArray.length) {
-        // if we hit the end of possible ranges, then an icon
-        // doesn't exist. so we pass top
-        rockType = "top";
-        break;
-      }
-      timeBlock = event.faciesTimeBlockArray[i];
-      baseAge = timeBlock.age;
-      rockType = timeBlock.rockType;
-    }
-  }
+  let rockType = getRockTypeForAge(
+    column,
+    currentFaciesOptions.faciesAge,
+    setSelectedMapAgeRange
+  );
   return (
     <svg
       width={`${iconSize / scale}px`}
@@ -623,3 +596,24 @@ export const Legend = () => {
     </Box>
   );
 };
+function getRockTypeForAge(
+  column: ColumnInfo,
+  currentAge: number,
+  setSelectedMapAgeRange: (min: number, max: number) => void
+) {
+  if (!column.subFaciesInfo || column.subFaciesInfo.length === 0) {
+    return "TOP"; // Return "TOP" if there's no subFaciesInfo or it's empty
+  }
+  setSelectedMapAgeRange(column.minAge, column.maxAge);
+
+  // Find the nearest time block that does not exceed the current age
+  const suitableBlock = column.subFaciesInfo.find(
+    (timeBlock) => timeBlock.age >= currentAge
+  );
+
+  if (!suitableBlock) {
+    return "TOP";
+  } else {
+    return suitableBlock.rockType;
+  }
+}
