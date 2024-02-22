@@ -4,6 +4,9 @@ import {assertFontsInfo, ColumnInfo} from "@tsconline/shared";
 
 export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
     state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
+  if (columnInfo.name.includes("Gawler Craton")) {
+    console.log(columnInfo.name);
+  }
     for (const childColumn of columnInfo.children) {
         initializeColumnHashMap(childColumn);
     }

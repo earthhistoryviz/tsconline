@@ -51,8 +51,8 @@ function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
     }
     if (!array[i] && i+1 < array.length) {
       ref = array[i + 1]!;
-      array = array.splice(i + 1, 1);
-      array = array.splice(i, 1);
+      array.splice(i + 1, 1);
+      array.splice(i, 1);
       i = i - 1;
     }
   }
@@ -232,7 +232,6 @@ async function getFaciesOrBlock(
     info: "",
     on: true,
   };
-  let name = "";
   let inFaciesBlock = false;
   let inBlockBlock = false;
   let blockName = "";
@@ -306,15 +305,13 @@ function addFaciesToFaciesMap(facies: Facies, faciesMap: Map<string, Facies>) {
     facies.minAge = Math.min(block.age, facies.minAge)
     facies.maxAge = Math.max(block.age, facies.maxAge)
   }
-  faciesMap.set(trimInvisibleCharacters(facies.name), facies)
-  facies = {
-    name: "",
-    subFaciesInfo: [],
-    minAge: 0,
-    maxAge: 0,
-    info: "",
-    on: true,
-  }
+  faciesMap.set(facies.name, JSON.parse(JSON.stringify(facies)))
+  facies.name = ""
+  facies.subFaciesInfo = []
+  facies.minAge = 0
+  facies.maxAge = 0
+  facies.info = ""
+  facies.on = true
 }
 
 /**
@@ -348,14 +345,12 @@ function addBlockToBlockMap(
     block.maxAge = max;
   }
   blocksMap.set(blockName, block);
-  block = {
-    name: "",
-    subBlockInfo: [],
-    minAge: 0,
-    maxAge: 0,
-    info: "",
-    on: true,
-  };
+  block.name = ""
+  block.subBlockInfo = []
+  block.minAge = 0
+  block.maxAge = 0
+  block.info = ""
+  block.on = true
   subBlockInfos = [];
 }
 
@@ -501,7 +496,7 @@ function recursive(
     returnValue.minAge = currentBlock.minAge;
     returnValue.maxAge = currentBlock.maxAge;
   }
-  if (faciesMap.has(trimInvisibleCharacters(currentColumn))) {
+  if (faciesMap.has(currentColumn)) {
     const currentFacies = faciesMap.get(currentColumn)!
     currentColumnInfo.subFaciesInfo = JSON.parse(JSON.stringify(currentFacies.subFaciesInfo))
     returnValue.maxAge, currentColumnInfo.maxAge = Math.max(currentColumnInfo.maxAge, currentFacies.maxAge)
@@ -520,10 +515,10 @@ childrenArray.push(currentColumnInfo);
       // if (
       //   !allEntries.get(child) &&
       //   parsedColumnEntry.children.length == 1 &&
-      //   isFacies.has(trimInvisibleCharacters(child))
+      //   isFacies.has(child)
       // ) {
-      //   aliases[trimInvisibleCharacters(currentColumn)] = {
-      //     altname: trimInvisibleCharacters(child)
+      //   aliases[currentColumn] = {
+      //     altname: child
       //   }
       //   returnValue.faciesFound = true;
       // }
@@ -544,10 +539,10 @@ childrenArray.push(currentColumnInfo);
       );
       returnValue.minAge = Math.min(compareValue.minAge, returnValue.minAge);
       returnValue.maxAge = Math.max(compareValue.minAge, returnValue.minAge);
-      returnValue.faciesFound = compareValue.faciesFound;
+      returnValue.faciesFound = compareValue.faciesFound || returnValue.faciesFound;
       if (
         !returnValue.faciesFound &&
-        isFacies.has(trimInvisibleCharacters(child))
+        faciesMap.has(child)
       ) {
         returnValue.faciesFound = true;
         aliases[trimInvisibleCharacters(currentColumn)] = {
