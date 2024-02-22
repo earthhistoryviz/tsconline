@@ -228,8 +228,6 @@ async function getFaciesOrBlock(
   };
   let inFaciesBlock = false;
   let inBlockBlock = false;
-  let blockName = "";
-  let SubBlockInfos: SubBlockInfo[] = [];
 
   for await (const line of readline) {
     // we reached the end
@@ -241,7 +239,7 @@ async function getFaciesOrBlock(
     // reached the end and store the key value pairs into blocksMap
     if ((!line || trimInvisibleCharacters(line) === "") && inBlockBlock) {
       inBlockBlock = false;
-      addBlockToBlockMap(block, SubBlockInfos, blocksMap, blockName);
+      addBlockToBlockMap(block, blocksMap);
       continue;
     }
     let tabSeperated = line.split("\t");
@@ -262,12 +260,10 @@ async function getFaciesOrBlock(
 
     // we found a block
     if (!inBlockBlock && tabSeperated[1] === "block") {
-      blockName = trimQuotes(tabSeperated[0]!);
-      let offIndex = tabSeperated.indexOf("off");
-      if (offIndex != -1) {
-        block.on = false;
-      }
-
+      block.name = trimQuotes(tabSeperated[0]!);
+      if (tabSeperated[5] && tabSeperated[5] ==="off") {
+        block.on = false
+      } 
       let info = tabSeperated[tabSeperated.length - 1];
       const pattern = /\"*\"/;
 
@@ -278,9 +274,9 @@ async function getFaciesOrBlock(
       inBlockBlock = true;
     } else if (inBlockBlock) {
       //get a single sub block
-      let SubBlockInfo = processBlock(line);
-      if (SubBlockInfo) {
-        SubBlockInfos.push(SubBlockInfo);
+      let subBlockInfo = processBlock(line);
+      if (subBlockInfo) {
+        block.subBlockInfo.push(subBlockInfo);
       }
     }
   }
@@ -289,7 +285,7 @@ async function getFaciesOrBlock(
     addFaciesToFaciesMap(facies, faciesMap)
   }
   if (inBlockBlock) {
-    addBlockToBlockMap(block, SubBlockInfos, blocksMap, blockName);
+    addBlockToBlockMap(block, blocksMap);
   }
 }
 
@@ -310,41 +306,23 @@ function addFaciesToFaciesMap(facies: Facies, faciesMap: Map<string, Facies>) {
 /**
  * add a block into blocksMap
  * @param block the block to be added
- * @param subBlockInfos the subBlockInfo of the block
  * @param blocksMap the map of blocks
- * @param blockName the name of the block
  */
 function addBlockToBlockMap(
   block: Block,
-  subBlockInfos: SubBlockInfo[],
   blocksMap: Map<string, Block>,
-  blockName: string
 ) {
-  let min = 0;
-  let max = 0;
-
-  if (subBlockInfos[0]) {
-    min = subBlockInfos[0].age;
-    max = subBlockInfos[0].age;
-    block.subBlockInfo = subBlockInfos;
-    for (let i = 1; i < subBlockInfos.length; i++) {
-      if (subBlockInfos[i]) {
-        let currentAge = subBlockInfos[i]!.age;
-        min = Math.min(currentAge, min);
-        max = Math.max(currentAge, max);
-      }
-    }
-    block.minAge = min;
-    block.maxAge = max;
+  for (const subBlock of block.subBlockInfo) {
+    block.minAge = Math.min(subBlock.age, block.minAge)
+    block.maxAge = Math.max(subBlock.age, block.maxAge)
   }
-  blocksMap.set(blockName, block);
+  blocksMap.set(block.name, JSON.parse(JSON.stringify(block)));
   block.name = ""
   block.subBlockInfo = []
   block.minAge = 0
   block.maxAge = 0
   block.info = ""
   block.on = true
-  subBlockInfos = [];
 }
 
 /**
@@ -478,11 +456,8 @@ function recursive(
   }
   if (blocksMap.has(currentColumn)) {
     const currentBlock = blocksMap.get(currentColumn)!;
-
     currentColumnInfo.subBlockInfo = JSON.parse(JSON.stringify(currentBlock.subBlockInfo));
-
     currentColumnInfo.on = currentBlock.on;
-
     returnValue.minAge = currentBlock.minAge;
     returnValue.maxAge = currentBlock.maxAge;
   }
