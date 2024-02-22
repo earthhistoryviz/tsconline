@@ -53,20 +53,6 @@ const ChangeColor: React.FC<{}> = observer(({}) => {
     const [open, setOpen] = useState(false);
   const [selectedColor, setSelectedColor] = useState('#000'); // State to keep track of selected color
   const [currentColor, setCurrentColor] = useState('#000');
-
-  const styleColor = {
-    position: "absolute" as "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: 500,
-    bgcolor: "lightgray",
-    border: "2px solid #000",
-    boxShadow: 24,
-    p: 4,
-    alignItems: "center",
-    justifyContent: "center"
-};
   
   const handleColorChange = (color: ColorResult) => {
     setSelectedColor(color.hex);
@@ -87,14 +73,6 @@ const ChangeColor: React.FC<{}> = observer(({}) => {
         setOpen(false);
         setSelectedColor(currentColor);
     }
-    const styles = {
-        default: {
-          picker: {
-            backgroundColor: 'lightgray',
-            boxShadow: 'none',
-          },
-        },
-      };
 
     return (
         <div>
