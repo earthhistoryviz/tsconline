@@ -89,7 +89,6 @@ export async function parseDatapacks(
   let datapackAgeInfo: DatapackAgeInfo = { datapackContainsSuggAge: false };
   const faciesMap: Map<string, Facies> = new Map();
   const blocksMap: Map<string, Block> = new Map();
-  //const faciesMap: Map<String, string[]> = new Map();
   try {
     for (let decrypt_path of decrypt_paths) {
       //get the facies/blocks first
