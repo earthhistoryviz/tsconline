@@ -34,35 +34,33 @@ type FaciesFoundAndAgeRange = {
  *
  */
 function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
-  let ref = "";
-  let metacolumn = "";
-  let ParsedColumnEntry: ParsedColumnEntry = {
+  let parsedColumnEntry: ParsedColumnEntry = {
     children: [],
     on: true,
     info: "",
   };
   for (var i = 0; i < array.length; i++) {
-    if (array[i]?.includes("METACOLUMN") || array[i]?.includes("TITLE")) {
-      if (array[i]?.includes("METACOLUMN")) {
-        metacolumn = array[i]!;
+    if (array[i]?.includes("_METACOLUMN") || array[i]?.includes("TITLE")) {
+      if (array[i]?.includes("_METACOLUMN")) {
+        if (array[i] === "_METACOLUMN_ON") {
+          parsedColumnEntry.on = true
+        } else {
+          parsedColumnEntry.on = false
+        }
       }
       array.splice(i, 1);
       i = i - 1;
     }
     if (!array[i] && i+1 < array.length) {
-      ref = array[i + 1]!;
+      parsedColumnEntry.info = array[i+1]!;
       array.splice(i + 1, 1);
       array.splice(i, 1);
       i = i - 1;
     }
   }
-  ParsedColumnEntry.children = array;
-  if (metacolumn) {
-    ParsedColumnEntry.on = false;
-  }
-  ParsedColumnEntry.info = ref;
+  parsedColumnEntry.children = array;
 
-  return ParsedColumnEntry;
+  return parsedColumnEntry;
 }
 
 /**
@@ -191,11 +189,11 @@ async function getAllEntries(
     allEntries.set(parent, parsedChildren);
   }
   //set the age info if it exists
-  datapackAgeInfo.datapackContainsSuggAge  = topAge != null || bottomAge != null
-  if (topAge)
+  datapackAgeInfo.datapackContainsSuggAge  = topAge != null && bottomAge != null
+  if (topAge && bottomAge) {
     datapackAgeInfo.topAge = topAge
-  if(bottomAge)
     datapackAgeInfo.bottomAge = bottomAge
+  }
 }
 /**
  * This function will populate the param facies with the correct facies events
