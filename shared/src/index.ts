@@ -10,17 +10,11 @@ export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 export type DatapackParsingPack = {
   columnInfoArray: ColumnInfo[];
   datapackAgeInfo: DatapackAgeInfo;
-  aliases: Aliases;
 }
 
 export type IndexResponse = {
   datapackIndex: DatapackIndex;
   mapPackIndex: MapPackIndex;
-}
-export type Aliases = {
-  [name: string]: {
-    altname: string
-  }
 }
 export type DatapackIndex = {
   [name: string]: DatapackParsingPack
@@ -477,20 +471,7 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
   }
   if (typeof o.aliases !== "object")
     throw new Error("DatapackParsingPack must have a aliases object");
-  assertAliases(o.aliases)
   assertDatapackAgeInfo(o.datapackAgeInfo)
-}
-export function assertAliases(o: any): asserts o is Aliases {
-  if (!o || typeof o !== "object")
-    throw new Error("Aliases must be a non-null object")
-  for (const alias in o.aliases) {
-    if (typeof alias !== "string")
-      throw new Error("Aliases must have keys of type string");
-    if (typeof o.aliases[alias] !== "string")
-      throw new Error(
-        "Aliases must have indexed values of type string"
-      );
-  }
 }
 export function assertDatapackIndex(o: any): asserts o is DatapackIndex {
   if (!o || typeof o !== "object")
