@@ -395,7 +395,6 @@ export function displayError(error: any, response: any, message: string) {
   if (!response) {
     pushError(message);
   } else if (isServerResponseError(response)) {
-    console.log(error)
     console.log(`${message} with server response: ${response.error}`);
     pushError(response.error);
   } else {
