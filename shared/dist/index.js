@@ -80,9 +80,9 @@ export function assertDatapackAgeInfo(o) {
     if (typeof o.datapackContainsSuggAge !== "boolean")
         throwError('DatapackAgeInfo', 'datapackContainsSuggAge', 'boolean', o.datapackContainsSuggAge);
     if (o.datapackContainsSuggAge) {
-        if ('bottomAge' in o && typeof o.bottomAge !== "number")
+        if (typeof o.bottomAge !== "number")
             throwError('DatapackAgeInfo', 'bottomAge', 'number', o.bottomAge);
-        if ('topAge' in o && typeof o.topAge !== "number")
+        if (typeof o.topAge !== "number")
             throwError('DatapackAgeInfo', 'topAge', 'number', o.topAge);
     }
 }
