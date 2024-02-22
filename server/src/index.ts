@@ -11,6 +11,7 @@ import * as routes from "./routes.js";
 import { DatapackIndex, MapPackIndex, assertDatapackParsingPack, assertIndexResponse, assertMapPack } from "@tsconline/shared";
 import { parseDatapacks } from "./parse-datapacks.js";
 import { parseMapPacks } from "./parse-map-packs.js";
+import fastifyCompress from "@fastify/compress";
 
 const server = fastify({
   logger: false,
@@ -118,6 +119,9 @@ server.register(cors, {
   origin: "*",
   methods: ["GET", "POST"],
 });
+
+// @ts-ignore
+server.register(fastifyCompress, {global: true})
 
 // removes the cached public/charts directory
 server.post("/removecache", async (request, reply) => {

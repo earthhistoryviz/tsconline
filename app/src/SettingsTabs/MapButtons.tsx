@@ -97,7 +97,10 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
   ({ mapPoint, x, y, name, isInfo = false, container }) => {
     const theme = useTheme();
     const { state } = useContext(context);
-    const column = state.settingsTabs.columnHashMap.get(name);
+    const column =
+      state.settingsTabs.columnHashMap.get(
+        state.mapState.aliases[name]?.altname
+      ) || state.settingsTabs.columnHashMap.get(name);
     const clicked = column ? column.on : false;
 
     // below is the hook for grabbing the scale from map image scaling
@@ -526,26 +529,12 @@ function getFaciesIcon(
   // Therefore meaning the child has the facies information but the map point is not called by the child name but is called the parent name
   // parent -> child -> facies
   // displayed as parent -> facies
-  let rockType = "top";
   // facies event exists for this map point
-  if (column.subFaciesInfo && column.subFaciesInfo.length > 0) {
-    // sets using min and max
-    setSelectedMapAgeRange(column.minAge, column.maxAge);
-    let i = 0;
-    let timeBlock = column.subFaciesInfo[i];
-    let baseAge = timeBlock.age;
-    // find the icon relating to the age we're in
-    while (baseAge < currentFaciesOptions.faciesAge) {
-      i += 1;
-      if (i >= column.subFaciesInfo.length) {
-        // if we hit the end of possible ranges, then an icon
-        // doesn't exist. so we pass top
-        rockType = "top";
-        break;
-      }
-      ({ age: baseAge, rockType } = column.subFaciesInfo[i]);
-    }
-  }
+  let rockType = getRockTypeForAge(
+    column,
+    currentFaciesOptions.faciesAge,
+    setSelectedMapAgeRange
+  );
   return (
     <svg
       width={`${iconSize / scale}px`}
@@ -615,3 +604,24 @@ export const Legend = () => {
     </Box>
   );
 };
+function getRockTypeForAge(
+  column: ColumnInfo,
+  currentAge: number,
+  setSelectedMapAgeRange: (min: number, max: number) => void
+) {
+  if (!column.subFaciesInfo || column.subFaciesInfo.length === 0) {
+    return "TOP"; // Return "TOP" if there's no subFaciesInfo or it's empty
+  }
+  setSelectedMapAgeRange(column.minAge, column.maxAge);
+
+  // Find the nearest time block that does not exceed the current age
+  const suitableBlock = column.subFaciesInfo.find(
+    (timeBlock) => timeBlock.age >= currentAge
+  );
+
+  if (!suitableBlock) {
+    return "TOP";
+  } else {
+    return suitableBlock.rockType;
+  }
+}
