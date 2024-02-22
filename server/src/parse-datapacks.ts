@@ -27,11 +27,10 @@ type FaciesFoundAndAgeRange = {
   maxAge: number;
 };
 /**
- * TODO:
- * This function is meant to catch all strange occurences at the end
- * of the tab seperated decrypted file. Should get rid of METACOLUMN_OFF
- * and any extraneuous info bits that shouldn't be a togglable column.
- *
+ * parses the METACOLUMN and info of the children string
+ * TODO: add TITLEOFF
+ * @param array the children string to parse
+ * @returns the correctly parsed children string array
  */
 function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
   let parsedColumnEntry: ParsedColumnEntry = {
@@ -132,10 +131,11 @@ export async function parseDatapacks(
 /**
  * This will populate a mapping of all parents : childen[]
  * We need this to recursively iterate correctly. We do not want
- * @param filename
- * @param allEntries
- * @param columnInfo
- * @param isChild
+ * 
+ * @param filename the filename to parse
+ * @param allEntries all entries (parent -> [child, child,...])
+ * @param isChild the set of all children
+ * @param datapackAgeInfo the datapack age info
  */
 async function getAllEntries(
   filename: string,
@@ -196,10 +196,11 @@ async function getAllEntries(
   }
 }
 /**
- * This function will populate the param facies with the correct facies events
+ * This function will populate the maps with the parsed entries in the filename
  * using a read stream
- * @param filename the filename to be parsed
- * @param facies the facies object containing all of the facies events
+ * @param filename the filename
+ * @param faciesMap the facies map to add to
+ * @param blocksMap  the blocks map to add to
  */
 async function getFaciesOrBlock(
   filename: string,
@@ -241,7 +242,7 @@ async function getFaciesOrBlock(
       continue;
     }
     let tabSeperated = line.split("\t");
-    // we found a facies event location
+    // we found a facies block
     if (!inFaciesBlock && tabSeperated[1] === "facies") {
       facies.name = trimQuotes(tabSeperated[0]!);
       facies.info = tabSeperated[6] || ""
@@ -287,6 +288,11 @@ async function getFaciesOrBlock(
   }
 }
 
+/**
+ * add a facies object to the map. will reset the facies object.
+ * @param facies the facies objec to add
+ * @param faciesMap the map to add to
+ */
 function addFaciesToFaciesMap(facies: Facies, faciesMap: Map<string, Facies>) {
   for (const block of facies.subFaciesInfo) {
     facies.minAge = Math.min(block.age, facies.minAge)
@@ -302,7 +308,7 @@ function addFaciesToFaciesMap(facies: Facies, faciesMap: Map<string, Facies>) {
 }
 
 /**
- * add a block into blocksMap
+ * add a block into blocksMap. will reset the block var
  * @param block the block to be added
  * @param blocksMap the map of blocks
  */
@@ -406,22 +412,22 @@ function processFacies(line: string): SubFaciesInfo | null {
   }
   return subFaciesInfo;
 }
-/**
- *
- * This is a recursive function meant to instantiate all columns.
- * Datapack is encrypted as <parent>\t:\t<child>\t<child>\t<child>
- * Where children could be parents later on
- * This is an inline-function because we must update faciesAbbreviations above, to be used later
- * Additionally we return a boolean that tracks whether we have found the corressponding facies
- * event with the parent
- * @param parents the parents string that lists all the parents of this column
- * @param currentcolumn the current column we are on
- * @param children the children of the current column
- * @param columnInfo the overarching columnInfo object storing all columns
- * @param allEntries all entries of parent\t:\tchild
- * @param facies the facies object
- * @returns
- */
+ /**
+  * This is a recursive function meant to instantiate all columns.
+  * Datapack is encrypted as <parent>\t:\t<child>\t<child>\t<child>
+  * Where children could be parents later on
+  * Propogates changes to min and max age recursively to give each ColumnInfo
+  * variable the correct min and max age
+  * 
+  * @param parent the parent of the currenColumn
+  * @param currentColumnName the name of the column we are currently making
+  * @param parsedColumnEntry the parsed entry that was parsed in allEntries (could be null)
+  * @param childrenArray the children array to push to ( this is the parent's array )
+  * @param allEntries the allEntries map that has <parent> => [child, child]
+  * @param faciesMap the facies map that has all the facies blocks
+  * @param blocksMap the blocks map that has all the block blocks
+  * @returns 
+  */
 function recursive(
   parent: string | null,
   currentColumn: string,

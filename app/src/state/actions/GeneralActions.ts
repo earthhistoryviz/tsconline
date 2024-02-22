@@ -3,7 +3,6 @@ import {
   type MapInfo,
   type ColumnInfo,
   type MapHierarchy,
-  type Facies,
   type GeologicalStages,
   assertChartInfo,
   assertSuccessfulServerResponse,
@@ -12,7 +11,6 @@ import {
   assertSVGStatus,
   IndexResponse,
   assertDatapackAgeInfo,
-  assertFacies,
   assertMapHierarchy,
   assertColumnInfo,
   assertMapInfo,
@@ -141,7 +139,6 @@ export const setDatapackConfig = action(
         columnInfo.children = columnInfo.children.concat(
           datapackParsingPack.columnInfoArray
         );
-        // concat all facies
         // concat datapackAgeInfo objects together
         if (!datapackAgeInfo)
           datapackAgeInfo = datapackParsingPack.datapackAgeInfo;
