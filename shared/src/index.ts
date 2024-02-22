@@ -469,8 +469,6 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
   for (const key in o.columnInfoArray) {
     assertColumnInfo(o.columnInfoArray[key])
   }
-  if (typeof o.aliases !== "object")
-    throw new Error("DatapackParsingPack must have a aliases object");
   assertDatapackAgeInfo(o.datapackAgeInfo)
 }
 export function assertDatapackIndex(o: any): asserts o is DatapackIndex {
