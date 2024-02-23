@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   IconButton,
+  Theme,
   Tooltip,
   TooltipProps,
   styled,
@@ -11,7 +12,6 @@ import { FaciesOptions, LegendItem } from "../types";
 import {
   Bounds,
   ColumnInfo,
-  Facies,
   InfoPoints,
   MapPoints,
   Transects,
@@ -26,17 +26,18 @@ import {
   calculateRectBoundsPosition,
   calculateRectButton,
   calculateVertBoundsPosition,
-} from "../coordinates";
+} from "../util/coordinates";
 import NotListedLocationIcon from "@mui/icons-material/NotListedLocation";
 import LocationOffIcon from "@mui/icons-material/LocationOff";
 import LocationOnSharpIcon from "@mui/icons-material/LocationOnSharp";
 import { devSafeUrl } from "../util";
 import { BorderedIcon, TypographyText } from "../components";
+import { checkIfDataIsInRange } from "../util/util";
 
 const ICON_SIZE = 40;
 const InfoIcon = NotListedLocationIcon;
-const OffIcon = LocationOffIcon;
-const OnIcon = LocationOnSharpIcon;
+const DisabledIcon = LocationOffIcon;
+const AvailableIcon = LocationOnSharpIcon;
 
 export const ChildMapIcon = () => {
   return (
@@ -99,6 +100,17 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
     const { state } = useContext(context);
     const column = state.settingsTabs.columnHashMap.get(name);
     const clicked = column ? column.on : false;
+    // is an info point if given or doesn't exist in hash map
+    isInfo = isInfo || !column;
+    const disabled = column
+      ? checkIfDataIsInRange(
+          column.minAge,
+          column.maxAge,
+          state.settings.topStageAge,
+          state.settings.baseStageAge
+        )
+      : false;
+    const scaleButton = !isInfo && state.mapState.isFacies;
 
     // below is the hook for grabbing the scale from map image scaling
     const [scale, setScale] = useState(1);
@@ -109,16 +121,15 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
         // unmount
       };
     });
-    const color =
-      isInfo || !column
-        ? `${theme.palette.disabled.main}`
-        : `${clicked ? theme.palette.on.main : theme.palette.off.main}`;
-
+    let color = getColor(theme, disabled, isInfo, clicked);
     // scale only if it isn't an info point and in facies mode
-    const iconSize =
-      !isInfo && state.mapState.isFacies
-        ? ICON_SIZE + state.mapState.currentFaciesOptions.dotSize * 3
-        : ICON_SIZE;
+    const iconSize = scaleButton
+      ? ICON_SIZE + state.mapState.currentFaciesOptions.dotSize * 3
+      : ICON_SIZE;
+    let adjustY = iconSize / scale;
+    if (scaleButton) {
+      adjustY = iconSize / 2 / scale;
+    }
 
     return (
       <>
@@ -146,20 +157,16 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
               // we take a the full icon_size here to anchor to the
               // bottom of the icon
               color: color,
-              top: `calc(${y}% - ${
-                !isInfo && state.mapState.isFacies
-                  ? iconSize / 2 / scale
-                  : iconSize / scale
-              }px)`,
+              top: `calc(${y}% - ${adjustY}px)`,
               width: `${iconSize / scale}px`,
               height: `${iconSize / scale}px`,
             }}
             onClick={() => {
-              if (state.mapState.isFacies) return;
+              if (state.mapState.isFacies || disabled || isInfo) return;
               actions.toggleSettingsTabColumn(name);
             }}
           >
-            {getIcon(clicked, isInfo, iconSize, scale, name, column)}
+            {getIcon(disabled, isInfo, iconSize, scale, column)}
           </IconButton>
         </MapPointTooltip>
       </>
@@ -473,6 +480,7 @@ export function loadTransects(
 
 /**
  * Return the icon based on the parameters
+ * @param disabled if button is disabled i.e out of range of user
  * @param clicked if button is clicked
  * @param isInfo if an info point
  * @param iconSize icon size
@@ -481,31 +489,27 @@ export function loadTransects(
  * @returns
  */
 function getIcon(
-  clicked: boolean,
+  disabled: boolean,
   isInfo: boolean,
   iconSize: number,
   scale: number,
-  name: string,
-  column: ColumnInfo | undefined
+  column?: ColumnInfo
 ) {
   const { state, actions } = useContext(context);
-  if (isInfo || !column) {
+  if (isInfo) {
     return <InfoIcon className="icon" />;
-  }
-  if (state.mapState.isFacies) {
+  } else if (state.mapState.isFacies) {
     return getFaciesIcon(
       iconSize,
       scale,
       state.mapState.currentFaciesOptions,
       actions.setSelectedMapAgeRange,
-      column
+      column!
     );
+  } else if (disabled) {
+    return <BorderedIcon className="icon" component={DisabledIcon} />;
   }
-  if (clicked) {
-    return <BorderedIcon className="icon" component={OnIcon} />;
-  }
-  // if none of the above, return an off icon
-  return <BorderedIcon className="icon" component={OffIcon} />;
+  return <BorderedIcon className="icon" component={AvailableIcon} />;
 }
 
 /**
@@ -578,9 +582,14 @@ const DisplayLegendItem = ({ legendItem }: { legendItem: LegendItem }) => {
 export const Legend = () => {
   const theme = useTheme();
   const legendItems: LegendItem[] = [
-    { color: theme.palette.on.main, label: "On", icon: OnIcon },
-    { color: theme.palette.off.main, label: "Off", icon: OffIcon },
-    { color: theme.palette.disabled.main, label: "Info point", icon: InfoIcon },
+    { color: theme.palette.on.main, label: "On", icon: AvailableIcon },
+    { color: theme.palette.off.main, label: "Off", icon: AvailableIcon },
+    {
+      color: theme.palette.disabled.main,
+      label: "Disabled",
+      icon: DisabledIcon,
+    },
+    { color: theme.palette.info.main, label: "Info point", icon: InfoIcon },
     { color: "transparent", label: "Child Map", icon: ChildMapIcon },
   ];
   return (
@@ -616,4 +625,31 @@ function getRockTypeForAge(
   } else {
     return suitableBlock.rockType;
   }
+}
+/**
+ * Get color based on situation. Defaults to info point
+ * @param theme
+ * @param disabled
+ * @param isInfo
+ * @param clicked
+ * @param column
+ * @returns
+ */
+function getColor(
+  theme: Theme,
+  disabled: boolean,
+  isInfo: boolean,
+  clicked: boolean
+): string {
+  let color = theme.palette.info.main;
+  if (disabled) {
+    color = theme.palette.disabled.main;
+  } else if (!isInfo) {
+    if (clicked) {
+      color = theme.palette.on.main;
+    } else {
+      color = theme.palette.off.main;
+    }
+  }
+  return color;
 }
