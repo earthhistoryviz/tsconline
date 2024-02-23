@@ -1,0 +1,91 @@
+
+.facies-buttons {
+  justify-content: center;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  display: grid;
+  height: 100%;
+  width: 100%
+}
+.age-controls {
+  width: 100%;
+  height: auto;
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+  margin: auto;
+}
+.dot-controls {
+  width: 100%;
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+}
+.slider-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.age-input-form {
+  margin: 10px;
+  margin-right: 20px;
+  width: 100px;
+  top: 10px;
+}
+.dot-input-form {
+  margin: 10px;
+  margin-right: 20px;
+  width: 40px;
+  top: 10px;
+}
+
+.slider .MuiSlider-track {
+  border: none;
+}
+
+.slider .MuiSlider-thumb {
+  height: 16px;
+  width: 16px;
+  background-color: #fff;
+  border: 2px solid currentColor;
+}
+.MuiSlider-root.slider {
+  width: 50%;
+}
+
+.slider .MuiSlider-thumb:focus,
+.slider .MuiSlider-thumb:hover,
+.slider .MuiSlider-thumb.Mui-active,
+.slider .MuiSlider-thumb.Mui-focusVisible {
+  box-shadow: inherit;
+}
+
+.slider .MuiSlider-thumb::before {
+  display: none;
+}
+
+.slider .MuiSlider-valueLabel {
+  line-height: 1.2;
+  font-size: 12px;
+  background: unset;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50% 50% 50% 0%;
+  background-color: black;
+  transform-origin: bottom left;
+  transform: translateX(50%) rotate(-45deg) scale(0);
+}
+
+.slider .MuiSlider-valueLabel::before {
+  display: none;
+}
+
+.slider .MuiSlider-valueLabel.MuiSlider-valueLabelOpen {
+  transform: translateX(50%) translateY(-100%) rotate(-45deg) scale(1);
+}
+
+.slider .MuiSlider-valueLabel > * {
+  transform: rotate(45deg);
+}

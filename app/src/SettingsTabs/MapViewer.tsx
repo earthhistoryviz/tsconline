@@ -1,4 +1,4 @@
-import { Slider, Drawer, Divider, IconButton } from "@mui/material";
+import { Drawer, Divider, IconButton } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import type { MapHierarchy, MapInfo } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
@@ -16,6 +16,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { observer } from "mobx-react-lite";
 import "./MapViewer.css";
 import { Legend, createChildMapButton, loadMapPoints, loadTransects } from "./MapButtons";
+import { FaciesControls } from "./MapControls";
 
 type MapProps = {
   name: string;
@@ -161,58 +162,58 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
               when fullscreened:   we fit the height of the image to max viewport height
               when unfullscreened: we use normal css ~90 viewport height
               */
-                    isFullscreen ? fullscreenImgStyle : undefined
-                  }
-                  src={devSafeUrl(mapData.img)}
-                  alt="Map"
-                  className="map"
-                  onLoad={() => {
-                    setImageLoaded(true);
-                  }}
-                />
+                      isFullscreen ? fullscreenImgStyle : undefined
+                    }
+                    src={devSafeUrl(mapData.img)}
+                    alt="Map"
+                    className="map"
+                    onLoad={() => {
+                      setImageLoaded(true);
+                    }}
+                  />
 
-                {/* Load all the map points */}
-                {imageLoaded &&
-                  imageRef &&
-                  imageRef.current &&
-                  mapData.mapPoints &&
-                  loadMapPoints(
-                    mapData.mapPoints,
-                    mapData.bounds,
-                    imageRef.current.width,
-                    imageRef.current.height,
-                    false,
-                    mapViewerRef.current
-                  )}
+                  {/* Load all the map points */}
+                  {imageLoaded &&
+                    imageRef &&
+                    imageRef.current &&
+                    mapData.mapPoints &&
+                    loadMapPoints(
+                      mapData.mapPoints,
+                      mapData.bounds,
+                      imageRef.current.width,
+                      imageRef.current.height,
+                      false,
+                      mapViewerRef.current
+                    )}
 
-                {/* Load all the info points */}
-                {imageLoaded &&
-                  imageRef &&
-                  imageRef.current &&
-                  mapData.infoPoints &&
-                  loadMapPoints(
-                    mapData.infoPoints,
-                    mapData.bounds,
-                    imageRef.current.width,
-                    imageRef.current.height,
-                    true,
-                    mapViewerRef.current
-                  )}
-                {imageLoaded &&
-                  imageRef &&
-                  imageRef.current &&
-                  mapData.mapPoints &&
-                  mapData.transects &&
-                  loadTransects(
-                    mapData.transects,
-                    mapData.mapPoints,
-                    mapData.bounds,
-                    imageRef.current.width,
-                    imageRef.current.height,
-                    theme.palette.on.main,
-                    theme.palette.off.main,
-                    mapViewerRef.current
-                  )}
+                  {/* Load all the info points */}
+                  {imageLoaded &&
+                    imageRef &&
+                    imageRef.current &&
+                    mapData.infoPoints &&
+                    loadMapPoints(
+                      mapData.infoPoints,
+                      mapData.bounds,
+                      imageRef.current.width,
+                      imageRef.current.height,
+                      true,
+                      mapViewerRef.current
+                    )}
+                  {imageLoaded &&
+                    imageRef &&
+                    imageRef.current &&
+                    mapData.mapPoints &&
+                    mapData.transects &&
+                    loadTransects(
+                      mapData.transects,
+                      mapData.mapPoints,
+                      mapData.bounds,
+                      imageRef.current.width,
+                      imageRef.current.height,
+                      theme.palette.on.main,
+                      theme.palette.off.main,
+                      mapViewerRef.current
+                    )}
 
                 {/* Load all the child maps*/}
                 {Object.keys(mapHierarchy).includes(name) &&
