@@ -497,7 +497,9 @@ function getIcon(
 ) {
   const { state, actions } = useContext(context);
   if (isInfo) {
-    return <InfoIcon className="icon" />;
+    return (
+      <BorderedIcon strokeWidth={0.2} className="icon" component={InfoIcon} />
+    );
   } else if (state.mapState.isFacies) {
     return getFaciesIcon(
       iconSize,
