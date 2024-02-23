@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <TSCreator version="PRO8.1">
     <settings version="1.0">
-        <setting name="topAge" source="stage" unit="Ma">
+        <setting name="topAge" source="text" unit="Ma">
             <setting name="stage">Gelasian (1.8 Ma top)</setting>
-            <setting name="text"/>
+            <setting name="text">0.0</setting>
         </setting>
-        <setting name="baseAge" source="stage" unit="Ma">
+        <setting name="baseAge" source="text" unit="Ma">
             <setting name="stage">Langhian (15.99 Ma base)</setting>
-            <setting name="text"/>
+            <setting name="text"/>16.0</setting>
         </setting>
         <setting name="unitsPerMY" unit="Ma">30.0</setting>
         <setting name="skipEmptyColumns" unit="Ma">true</setting>
