@@ -20,6 +20,7 @@
     "typescript": "^5.0.4"
   },
   "devDependencies": {
-    "@yarnpkg/sdks": "^3.0.0-rc.43"
+    "@yarnpkg/sdks": "^3.0.0-rc.43",
+    "prettier": "^3.2.5"
   }
 }

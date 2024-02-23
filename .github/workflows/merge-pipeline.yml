@@ -2,28 +2,66 @@ name: Default Merge Pipeline
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    types: [opened, synchronize, reopened] # Runs on opening a pr, pushing to a pr, and reopening a pr
     branches:
       - TSC-224-CI-CD-Pipeline
 
 jobs:
-  # This job occurs when a pull request is opened/reopend, or a new commit is pushed to the branch. Meant for testing
   build-and-test:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == false
     steps:
       - uses: actions/checkout@v2
-      - name: Run Tests
-        run: |
-          echo "Running testing"
 
-  # This job occurs when a branch is merged, do deployment commands like updating dev for example
-  deploy:
-    if: github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
-    needs: build-and-test
-    steps:
-      - uses: actions/checkout@v2
-      - name: Deploy
-        run: |
-          echo "Running deployment"
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+       # Cache yarn builds to speed up build process
+      - name: Cache Yarn Dependencies for App
+        uses: actions/cache@v2
+        with:
+          path: |
+            app/.yarn/cache
+            app/node_modules
+          # Create a key bashed on the hash of the contents of yarnlock
+          key: app-yarn-${{ hashFiles('app/yarn.lock') }}
+          # Fallback to any key that starts with app-yarn in case no key matches
+          restore-keys: |
+            app-yarn-
+
+      - name: Cache Yarn Dependencies for Server
+        uses: actions/cache@v2
+        with:
+          path: |
+            server/.yarn/cache
+            server/node_modules
+          key: server-yarn-${{ hashFiles('server/yarn.lock') }}
+          restore-keys: |
+            server-yarn-
+
+      - name: Cache Yarn Dependencies for Shared
+        uses: actions/cache@v2
+        with:
+          path: |
+            shared/.yarn/cache
+            shared/node_modules
+          key: shared-yarn-${{ hashFiles('shared/yarn.lock') }}
+          restore-keys: |
+            shared-yarn-
+
+      - name: Install Dependencies
+        run: yarn install
+
+      - name: Run Prettier with Reviewdog
+        uses: reviewdog/action-prettier@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-check
+          prettier_flags: "--check . --config .prettierrc"
+
+      - name: Build with Vite
+        run: yarn build
+
+      - name: Run Tests
+        run: echo Testing # Test command would go here
