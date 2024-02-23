@@ -29,8 +29,16 @@
   height: 235px;
   display: flex;
 }
-.presets {
+.MuiGrid-root.presets {
+  display: flex;
+  flex-wrap: nowrap;
+  width: auto;
+  padding-bottom: 9vh;
   padding-top: 40px;
+}
+.MuiGrid-root.preset-item {
+  margin-right: 16px;
+  margin-left: 16px;
 }
 .chart {
   width: 100%;
@@ -82,4 +90,20 @@
 .MuiFormControlLabel-root.checkbox {
   margin-left: 30%;
   margin-top: 30px;
+}
+.MuiAccordion-root.Mui-expanded.preset-highlight, .MuiAccordion-root.preset-highlight {
+  background: transparent;
+  margin-left: 5vw;
+  margin-right: 5vw;
+  margin-bottom: 20px;
+  border: 1px solid gray;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.MuiAccordionSummary-root.preset-summary {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.20);
+  background-color: rgba(0, 0, 0, 0.04);
+}
+.MuiTypography-root.preset-type-title {
+  font-size: 1.5rem;
 }

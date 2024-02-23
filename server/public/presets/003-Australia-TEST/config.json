@@ -3,7 +3,7 @@
   "background": "australia.png",
   "title": "Australia",
   "date": "01.31.2024",
-  "description": "A Large Australia Map Pack",
+  "description": "Australian biostratigraphy and basin lithostratigraphy with map interface and reconstructions.\n\n500 columns, includes 125 reconstructions and facies maps\n\n Geoscience Australia has compiled the following: (1) Regional biostratigraphy (70 columns) with complete references, and (2) Detailed lithostratigraphy for all hydrocarbon-rich basins (including oil-gas levels with reference wells) (ca. 300 columns), and we added (3) Precambrian and other Phanerozoic basins (150 columns). Each lithology formation has pop-ups that include URL-links to the GA lexicon, the header for each Phanerozoic basin has links to location maps, and all oil-gas levels are linked to the GA well database.\n\nThis datapack is developed by Geoscience Australia in collaboration with the TSCreator group\n\nContact Andrew Kelman (andrew.kelman@ga.gov.au) for the special Public \"GA-TS_Creator6.3\" that has this Australian dataset pre-installed(available Mar'14)\n\nUpdated and enhanced versions will be posted by GA and TSC-group, especially additional details and transects for basin stratigraphy.",
   "settings": "settings.tsc",
   "datapacks": [
     {

@@ -3,7 +3,6 @@ import {
   type MapInfo,
   type ColumnInfo,
   type MapHierarchy,
-  type Facies,
   type GeologicalStages,
   assertChartInfo,
   assertSuccessfulServerResponse,
@@ -12,7 +11,6 @@ import {
   assertSVGStatus,
   IndexResponse,
   assertDatapackAgeInfo,
-  assertFacies,
   assertMapHierarchy,
   assertColumnInfo,
   assertMapInfo,
@@ -36,12 +34,15 @@ export const resetSettings = action("resetSettings", () => {
     baseStageAge: 0,
     baseStageKey: "",
     unitsPerMY: 2,
+    mouseOverPopupsEnabled: false,
     datapackContainsSuggAge: false,
   };
 });
 
-export const fetchDatapackInfo = action("fetchPresets", async () => {
-  const response = await fetcher("/datapackinfoindex");
+export const fetchDatapackInfo = action("fetchDatapackInfo", async () => {
+  const response = await fetcher("/datapackinfoindex", {
+    method: "GET",
+  });
   const indexResponse = await response.json();
   try {
     assertIndexResponse(indexResponse);
@@ -90,12 +91,6 @@ export const setDatapackConfig = action(
     resetSettings();
     //set the settings tab back to time
     setSettingsTabsSelected(0);
-    let facies: Facies = {
-      locations: {},
-      minAge: 0,
-      maxAge: 0,
-      aliases: {},
-    };
     let datapackAgeInfo: DatapackAgeInfo = {
       datapackContainsSuggAge: false,
     };
@@ -144,10 +139,6 @@ export const setDatapackConfig = action(
         columnInfo.children = columnInfo.children.concat(
           datapackParsingPack.columnInfoArray
         );
-        // concat all facies
-        if (!facies) facies = datapackParsingPack.facies;
-        // TODO: correctly fix this so that facies are not replacing max/min on multiple datapacks
-        else Object.assign(facies, datapackParsingPack.facies);
         // concat datapackAgeInfo objects together
         if (!datapackAgeInfo)
           datapackAgeInfo = datapackParsingPack.datapackAgeInfo;
@@ -160,7 +151,6 @@ export const setDatapackConfig = action(
         if (!mapHierarchy) mapHierarchy = mapPack.mapHierarchy;
         else Object.assign(mapHierarchy, mapPack.mapHierarchy);
       }
-      assertFacies(facies);
       assertDatapackAgeInfo(datapackAgeInfo);
       assertMapHierarchy(mapHierarchy);
       assertColumnInfo(columnInfo);
@@ -173,7 +163,6 @@ export const setDatapackConfig = action(
       );
       return false;
     }
-    state.mapState.facies = facies;
     state.settings.datapackContainsSuggAge =
       datapackAgeInfo.datapackContainsSuggAge;
     state.mapState.mapHierarchy = mapHierarchy;
@@ -283,7 +272,7 @@ export const generateChart = action("generateChart", async () => {
   setChartPath("");
   //let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
   // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
-  let xmlSettings = jsonToXml(state.settingsJSON, state.settingsTabs.columns);
+  let xmlSettings = jsonToXml(state.settingsJSON, state.settingsTabs.columns, state.settings);
   const body = JSON.stringify({
     settings: xmlSettings,
     datapacks: state.config.datapacks,
@@ -558,6 +547,11 @@ export const setBaseStageKey = action("setBottomStageKey", (key: string) => {
 export const setUnitsPerMY = action((units: number) => {
   state.settings.unitsPerMY = units;
 });
+
+export const setMouseOverPopupsEnabled = action((checked: boolean) => {
+  state.settings.mouseOverPopupsEnabled = checked;
+});
+
 export const setChartLoading = action((value: boolean) => {
   state.chartLoading = value;
 });
@@ -584,9 +578,6 @@ export const setBaseStageAge = action("setBaseStageAge", (age: number) => {
 
 export const settingsXML = action("settingsXML", (xml: string) => {
   state.settingsXML = xml;
-});
-const setFacies = action("setFacies", (newval: Facies) => {
-  state.mapState.facies = newval;
 });
 export const setOpenSnackbar = action("setOpenSnackbar", (show: boolean) => {
   state.openSnackbar = show;

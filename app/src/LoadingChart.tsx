@@ -1,5 +1,5 @@
 import { useTheme } from "@mui/material";
-import TSCLottie from "./components/TSCLottie";
+import { Lottie } from "./components";
 import loader from "./assets/icons/loading.json";
 
 const LoadingChart = () => {
@@ -12,7 +12,7 @@ const LoadingChart = () => {
         background: theme.palette.settings.light,
       }}
     >
-      <TSCLottie
+      <Lottie
         animationData={loader}
         autoplay
         loop
