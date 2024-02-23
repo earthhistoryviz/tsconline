@@ -100,10 +100,10 @@ export function assertSubBlockInfo(o) {
         throwError("SubBlockInfo", "label", "string", o.label);
     if (typeof o.age !== "number")
         throwError("SubBlockInfo", "age", "number", o.number);
-    if (typeof o.info !== "string")
-        throwError("SubBlockInfo", "info", "string", o.info);
-    if (typeof o.lineType !== "string")
-        throwError("SubBlockInfo", "lineType", "string", o.lineType);
+    if (typeof o.popup !== "string")
+        throwError("SubBlockInfo", "popup", "string", o.popup);
+    if (typeof o.lineStyle !== "string")
+        throwError("SubBlockInfo", "lineStyle", "string", o.lineStyle);
 }
 export function assertBlock(o) {
     if (!o || typeof o !== "object")
@@ -117,8 +117,8 @@ export function assertBlock(o) {
         throw new Error("Block must have a minAge with number type");
     if (typeof o.maxAge !== "number")
         throw new Error("Block must have a maxAge with number type");
-    if (typeof o.info !== "string")
-        throw new Error("Block must have an info with string type");
+    if (typeof o.popop !== "string")
+        throw new Error("Block must have an popup with string type");
     if (typeof o.name !== "boolean")
         throw new Error("Block must have an on value with boolean type");
 }
