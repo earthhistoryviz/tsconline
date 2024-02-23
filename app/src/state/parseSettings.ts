@@ -2,6 +2,8 @@
 //                                          XML to JSON parser                                       //
 //-------------------------------------------------------------------------------------------------- //
 
+import { ColumnInfo } from "@tsconline/shared";
+
 /**
  *
  * @param settingsNode DOM node with name settings
@@ -15,7 +17,7 @@ function processSettings(settingsNode: any): any {
     const settingName = settingNode.getAttribute("name");
     const nestedSettingsNode = settingNode.getElementsByTagName("setting")[0];
     const justificationValue = settingNode.getAttribute("justification");
-    const settingValue = nestedSettingsNode
+    let settingValue = nestedSettingsNode
       ? nestedSettingsNode.textContent.trim()
       : settingNode.textContent.trim();
     //since we access the elements by tag name, the nested settings of topage and baseage
@@ -23,12 +25,32 @@ function processSettings(settingsNode: any): any {
     if (settingName === "text" || settingName === "stage") {
       continue;
     } else if (settingName === "topAge" || settingName === "baseAge") {
-      console.log(settingNode.getElementsByTagName("setting")[1]);
+      let stage = undefined;
+      let text = undefined;
+      if (nestedSettingsNode.getAttribute("name") === "stage") {
+        stage = settingValue;
+      } else {
+        text = settingValue;
+      }
+      if (settingNode.getElementsByTagName("setting")[1]) {
+        settingValue = settingNode
+          .getElementsByTagName("setting")[1]
+          .textContent.trim();
+        if (
+          settingNode
+            .getElementsByTagName("setting")[1]
+            .getAttribute("name") === "stage"
+        ) {
+          stage = settingValue;
+        } else {
+          text = settingValue;
+        }
+      }
       settings[settingName] = {
         source: settingNode.getAttribute("source"),
         unit: settingNode.getAttribute("unit"),
-        stage: "",
-        text: settingValue,
+        stage: stage,
+        text: text,
       };
     }
     //these two tags have units, so make an object storing its unit and value
@@ -95,15 +117,16 @@ function processColumn(node: any): any {
           const justificationValue = child.getAttribute("justification");
           const orientationValue = child.getAttribute("orientation");
           const useNamedValue = child.getAttribute("useNamed");
-          if (settingName === "backgroundColor" || settingName === "customColor") {
-            if (useNamedValue !== null) {
-              result[settingName] = {
-                useNamed: useNamedValue,
-                text: child.textContent.trim()
-              };
-            } else {
-              result[settingName] = child.textContent.trim();
-            }
+          const standardizedValue = child.getAttribute("standardized");
+          if (
+            settingName === "backgroundColor" ||
+            settingName === "customColor"
+          ) {
+            result[settingName] = {
+              standardized: standardizedValue ? standardizedValue : undefined,
+              useNamed: useNamedValue ? useNamedValue : undefined,
+              text: child.textContent.trim(),
+            };
           } else if (justificationValue) {
             result[settingName] = justificationValue;
           } else if (orientationValue) {
@@ -197,9 +220,7 @@ function generateSettingsXml(settings: any, chartSettings: any, indent: string):
     if (Object.prototype.hasOwnProperty.call(settings, key)) {
       const value = settings[key];
       if (typeof value === "object") {
-        //overhaul top age and base age
-        //top age and baseage settings can have two children: text and stage
-        //the source attribute determines which one is used
+        //TODO: right now it can only do age, implement stage later
         if (key === "topAge") {
           xml += `${indent}<setting name="${key}" source="text" unit="${value.unit}">\n`;
           xml += `${indent}    <setting name="text">${chartSettings.topStageAge}</setting>\n`;
@@ -253,11 +274,14 @@ function generateFontsXml(fonts: any, indent: string): string {
  * generates xml string with column info
  * @param jsonColumn json object with column info
  * @param stateColumn json object containing the state of the columns
- * @param parent the parent of the current column
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with column info
  */
-function generateColumnXml(jsonColumn: any, stateColumn: any | null, parent: string, indent: string): string {
+function generateColumnXml(
+  jsonColumn: any,
+  stateColumn: ColumnInfo | null,
+  indent: string
+): string {
   let xml = "";
   for (let key in jsonColumn) {
     if (Object.prototype.hasOwnProperty.call(jsonColumn, key)) {
@@ -284,8 +308,13 @@ function generateColumnXml(jsonColumn: any, stateColumn: any | null, parent: str
           xml += `${indent}<setting name="title">${replaceSpecialChars(jsonColumn[key], 1)}</setting>\n`;
         }
       } else if (key === "backgroundColor" || key === "customColor") {
-        if (jsonColumn[key].useNamed) {
+        if (jsonColumn[key].standardized && jsonColumn[key].useNamed) {
+          xml += `${indent}<setting name="${xmlKey}" standardized="${jsonColumn[key].standardized}" 
+          useNamed="${jsonColumn[key].useNamed}">${jsonColumn[key].text}</setting>\n`;
+        } else if (jsonColumn[key].useNamed) {
           xml += `${indent}<setting name="${xmlKey}" useNamed="${jsonColumn[key].useNamed}">${jsonColumn[key].text}</setting>\n`;
+        } else if (jsonColumn[key].standardized) {
+          xml += `${indent}<setting name="${xmlKey}" useNamed="${jsonColumn[key].standardized}">${jsonColumn[key].text}</setting>\n`;
         } else {
           xml += `${indent}<setting name="${xmlKey}"/>\n`;
         }
@@ -325,11 +354,10 @@ function generateColumnXml(jsonColumn: any, stateColumn: any | null, parent: str
         let currName = extractName(jsonColumn._id);
         let childName = extractName(jsonColumn[key]._id);
         //TODO: pass the state column of the column itself, not the children array of its parent
-        let params: { one: any; two: any; three: string; four: string } = {
+        let params: { one: any; two: any; three: string } = {
           one: jsonColumn[key],
           two: null,
-          three: currName,
-          four: `${indent}    `
+          three: `${indent}    `,
         };
         if (currName == "Chart Root") {
           params.two = stateColumn;
@@ -342,7 +370,7 @@ function generateColumnXml(jsonColumn: any, stateColumn: any | null, parent: str
           }
         }
 
-        xml += generateColumnXml(params.one, params.two, params.three, params.four);
+        xml += generateColumnXml(params.one, params.two, params.three);
 
         xml += `${indent}</column>\n`;
       } else {
@@ -375,7 +403,7 @@ export function jsonToXml(settings: any, columnSettings: any, chartSettings: any
   //procs if used for a child
   if (settings["_id"]) {
     xml += `  <column id="${settings["id"]}">\n`;
-    xml += generateColumnXml(settings, columnSettings, "", "    ");
+    xml += generateColumnXml(settings, columnSettings, "    ");
     xml += "  </column>\n";
   }
   //generate columns
@@ -386,7 +414,7 @@ export function jsonToXml(settings: any, columnSettings: any, chartSettings: any
         Object.hasOwn(settings, key) //maybe not necessary since we are iterating over the keys of json
       ) {
         xml += `  <column id="${key}">\n`;
-        xml += generateColumnXml(settings[key], columnSettings, "", "    ");
+        xml += generateColumnXml(settings[key], columnSettings, "    ");
         xml += "  </column>\n";
       }
     }
