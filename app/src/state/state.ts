@@ -6,7 +6,6 @@ import type {
   MapInfo,
   ChartConfig,
   ColumnInfo,
-  Facies,
   GeologicalStages,
   Presets,
   DatapackIndex,
@@ -35,7 +34,6 @@ export type State = {
     isLegendOpen: boolean;
     isMapViewerOpen: boolean;
     isFacies: boolean;
-    facies: Facies;
     selectedMapAgeRange: {
       minAge: number,
       maxAge: number
@@ -60,6 +58,7 @@ export type State = {
     baseStageAge: number;
     baseStageKey: string;
     unitsPerMY: number;
+    mouseOverPopupsEnabled: boolean;
     datapackContainsSuggAge: boolean;
   };
   useCache: boolean;
@@ -93,12 +92,6 @@ export const state = observable<State>({
     isLegendOpen: false,
     isMapViewerOpen: false,
     isFacies: false,
-    facies: {
-      locations: {},
-      minAge: 0,
-      maxAge: 0,
-      aliases: {}
-    },
     selectedMapAgeRange: {
       minAge: 0,
       maxAge: 0
@@ -126,6 +119,7 @@ export const state = observable<State>({
     baseStageAge: 0,
     baseStageKey: "",
     unitsPerMY: 2,
+    mouseOverPopupsEnabled: false,
     datapackContainsSuggAge: false,
   },
   useCache: true,

@@ -1,4 +1,7 @@
 import { IconButton, SvgIcon, Typography, styled } from "@mui/material";
+import Color from "color";
+import SimpleBar from "simplebar-react";
+import "simplebar-react/dist/simplebar.min.css";
 
 export const TypographyText = styled(Typography)(({ theme }) => ({
   color: theme.palette.primary.main,
@@ -21,6 +24,23 @@ export const DrawerHeader = styled("div")(({ theme }) => ({
   ...theme.mixins.toolbar,
   justifyContent: "space-between",
 }));
+export const StyledScrollbar = styled(SimpleBar)(({ theme, color }) => {
+  const backgroundColor = color || theme.palette.scrollbar.main;
+  return {
+    height: "100%",
+    width: "100%",
+    "& .simplebar-scrollbar:before": {
+      backgroundColor: backgroundColor,
+    },
+    "& .simplebar-scrollbar.simplebar-visible.simplebar-hover:before": {
+      backgroundColor: `${Color(backgroundColor).lighten(0.15)}`,
+    },
+    "& .simplebar-track": {
+      // this is if we ever decide to make scrollbars "clickable"
+      // cursor: "pointer",
+    },
+  };
+});
 export const BorderedIcon = ({
   component,
   className,

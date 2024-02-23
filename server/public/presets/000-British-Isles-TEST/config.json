@@ -3,7 +3,7 @@
   "background": "britain-map.jpeg",
   "title": "British Isles",
   "date": "01.31.2024",
-  "description": "British Map Pack",
+  "description": "British Isles regional formations with map interface.\n\n 25 columns \n\nApproximately two dozen sub-regions, with each formation linked to the BGS lexicon; compiled in coordination with British Geological Survey, BGS.\n\nThis datapack was developed in conjunction with the British Geological Survey (especially Colin Waters; cnw@bgs.ac.uk) during 2008-2012. Migrated to GTS2020 age model in Jan 2021.\nMain reference = Waters, C.N. et al (16 authors), 2007. Stratigraphical Chart of the United Kingdom: 2 sheets -- Northern Britain & Southern Britain. British Geological Survey, 2 posters.\nNOTE: Each set of columns is separated by a strip 'color of time' of the international-stage divisions to clarify the temporal correlations",
   "settings": "settings.tsc",
   "datapacks": [
     {

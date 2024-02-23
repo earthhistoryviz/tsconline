@@ -9,4 +9,6 @@ export * from './TSCFileUpload';
 export { TSCPopupDialog } from './TSCPopupDialog'
 export * from './TSCComponents'
 export * from './TSCError'
+export * from './TSCComponents'
+export {default as Lottie} from './TSCLottie'
 export { Accordion, AccordionSummary, AccordionDetails, ColumnContainer} from './TSCColumns';

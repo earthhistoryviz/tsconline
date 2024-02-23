@@ -3,7 +3,7 @@
   "background": "SouthAmerica.png",
   "title": "South America",
   "date": "01.31.2024",
-  "description": "Large Datapack:)",
+  "description": "South American Basins with map interfaces -- currently 33 selected basins (with main coverage concentrating on Brazil, Colombia and Venezuela) with lithostratigraphy, transects, and selected biostratigraphy (including ca. 500 images, with large format images in popups). Standardized to GTS2012 age model.\n\n 222 columns including numerous transects\n\nMain compilers: BRAZIL = Marcos dos Santos Filho and Shalli Teixeira (Univ. Vale do Rio dos Sinos, UNISINOS); visiting scholars to Purdue Univ., Autumn 2014); COLOMBIA-VENEZUELA = Estefania Salgado Jauregui (Universidad Nacional de Colombia-Sede Bogotá; visiting scholar to Purdue Univ., Autumn 2015); COORDINATION and ASSEMBLY: Rebecca Bobick (2015-early 2016 as part of her Masters degree at Purdue University). \n",
   "settings": "settings.tsc",
   "datapacks": [
     {

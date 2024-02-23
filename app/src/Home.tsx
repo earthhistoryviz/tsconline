@@ -13,7 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useTheme, styled } from "@mui/material/styles";
-import { TSCIcon, TSCButton, TSCCard, TSCPopupDialog } from "./components";
+import { TSCIcon, TSCButton, TSCCard, StyledScrollbar } from "./components";
 import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 
 import "./Home.css";
@@ -24,10 +24,6 @@ const HeaderContainer = styled("div")(({ theme }) => ({
   justifyContent: "center",
   gap: theme.spacing(2),
   marginBottom: theme.spacing(4),
-}));
-
-const HeaderIcon = styled(TSCIcon)(({ theme }) => ({
-  fontSize: theme.typography.h4.fontSize,
 }));
 
 const HeaderTitle = styled(Typography)(({ theme }) => ({
@@ -94,7 +90,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
   navigate: NavigateFunction;
   configArray: ChartConfig[];
 }) {
-  const { state, actions } = useContext(context);
+  const { actions } = useContext(context);
   const theme = useTheme();
   const [expanded, setExpanded] = useState(true);
   const handleAccordionChange = () => {
@@ -103,14 +99,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
   return (
     <>
       <Accordion
-        style={{
-          background: "transparent",
-          marginLeft: "5vh",
-          marginRight: "5vh",
-          border: "1px solid gray",
-          borderRadius: "4px",
-          overflow: "hidden",
-        }}
+        className="preset-highlight"
         onChange={handleAccordionChange}
         expanded={expanded}
       >
@@ -118,51 +107,35 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel1a-content"
           id="panel1a-header"
-          style={{
-            borderBottom: "1px solid rgba(0, 0, 0, 0.20)",
-            backgroundColor: "rgba(0, 0, 0, 0.04)",
-          }}
+          className="preset-summary"
         >
-          <Typography
-            sx={{ fontSize: "1.5rem" }}
-          >{`${type} PRESETS`}</Typography>
+          <Typography className="preset-type-title">{`${type} PRESETS`}</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <Grid
-            className="presets"
-            container
-            style={{
-              display: "flex",
-              flexWrap: "nowrap",
-              overflowX: "auto",
-              width: "auto",
-              paddingBottom: "9vh",
-            }}
-          >
-            {configArray.map((preset, index) => (
-              <Grid
-                item
-                key={index}
-                style={{ marginRight: "16px", marginLeft: "16px" }}
-              >
-                <TSCCard
-                  color={theme.palette.navbar.main}
-                  preset={preset}
-                  generateChart={async () => {
-                    const success = await actions.setDatapackConfig(
-                      preset.datapacks.map((datapack) => datapack.file),
-                      preset.settings
-                    );
-                    // wait to see if we can grab necessary data
-                    if (success) {
-                      actions.initiateChartGeneration(navigate);
-                    }
-                    //TODO add an error message saying the data is irregular and can't be loaded
-                  }}
-                />
-              </Grid>
-            ))}
-          </Grid>
+          <StyledScrollbar>
+            <Grid className="presets" container>
+              {configArray.map((preset, index) => (
+                <Grid item key={index} className="preset-item">
+                  <TSCCard
+                    color={theme.palette.navbar.main}
+                    preset={preset}
+                    generateChart={async () => {
+                      const success = await actions.setDatapackConfig(
+                        preset.datapacks.map((datapack) => datapack.file),
+                        preset.settings
+                      );
+                      // wait to see if we can grab necessary data
+                      if (success) {
+                        actions.generateChart();
+                        navigate("/chart");
+                      }
+                      //TODO add an error message saying the data is irregular and can't be loaded
+                    }}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          </StyledScrollbar>
         </AccordionDetails>
       </Accordion>
     </>
