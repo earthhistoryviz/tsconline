@@ -57,7 +57,7 @@ jobs:
         run: yarn prettier --check . > prettier-output.txt || true
 
       - name: Review Prettier output with Reviewdog
-        uses: reviewdog/action-setup@v2
+        uses: reviewdog/action-setup@v1
         with:
           reviewdog_version: latest
       - run: cat prettier-output.txt | reviewdog -f=prettier
