@@ -15,40 +15,40 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: '18'
 
-       # Cache yarn builds to speed up build process
-      - name: Cache Yarn Dependencies for App
-        uses: actions/cache@v2
-        with:
-          path: |
-            app/.yarn/cache
-            app/node_modules
-          # Create a key bashed on the hash of the contents of yarnlock
-          key: app-yarn-${{ hashFiles('app/yarn.lock') }}
-          # Fallback to any key that starts with app-yarn in case no key matches
-          restore-keys: |
-            app-yarn-
+      # # Cache yarn builds to speed up build process
+      # - name: Cache Yarn Dependencies for App
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: |
+      #       app/.yarn/cache
+      #       app/node_modules
+      #     # Create a key bashed on the hash of the contents of yarnlock
+      #     key: app-yarn-${{ hashFiles('app/yarn.lock') }}
+      #     # Fallback to any key that starts with app-yarn in case no key matches
+      #     restore-keys: |
+      #       app-yarn-
 
-      - name: Cache Yarn Dependencies for Server
-        uses: actions/cache@v2
-        with:
-          path: |
-            server/.yarn/cache
-            server/node_modules
-          key: server-yarn-${{ hashFiles('server/yarn.lock') }}
-          restore-keys: |
-            server-yarn-
+      # - name: Cache Yarn Dependencies for Server
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: |
+      #       server/.yarn/cache
+      #       server/node_modules
+      #     key: server-yarn-${{ hashFiles('server/yarn.lock') }}
+      #     restore-keys: |
+      #       server-yarn-
 
-      - name: Cache Yarn Dependencies for Shared
-        uses: actions/cache@v2
-        with:
-          path: |
-            shared/.yarn/cache
-            shared/node_modules
-          key: shared-yarn-${{ hashFiles('shared/yarn.lock') }}
-          restore-keys: |
-            shared-yarn-
+      # - name: Cache Yarn Dependencies for Shared
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: |
+      #       shared/.yarn/cache
+      #       shared/node_modules
+      #     key: shared-yarn-${{ hashFiles('shared/yarn.lock') }}
+      #     restore-keys: |
+      #       shared-yarn-
 
       - name: Install Dependencies
         run: yarn install
