@@ -188,8 +188,8 @@ async function getAllEntries(
     allEntries.set(parent, parsedChildren);
   }
   //set the age info if it exists
-  datapackAgeInfo.datapackContainsSuggAge  = topAge != null && bottomAge != null
-  if (topAge && bottomAge) {
+  datapackAgeInfo.datapackContainsSuggAge = topAge != null && bottomAge != null
+  if (topAge != null && bottomAge != null) {
     datapackAgeInfo.topAge = topAge
     datapackAgeInfo.bottomAge = bottomAge
   }
@@ -467,11 +467,13 @@ function recursive(
   if (faciesMap.has(currentColumn)) {
     const currentFacies = faciesMap.get(currentColumn)!
     currentColumnInfo.subFaciesInfo = JSON.parse(JSON.stringify(currentFacies.subFaciesInfo))
-    returnValue.maxAge, currentColumnInfo.maxAge = Math.max(currentColumnInfo.maxAge, currentFacies.maxAge)
-    returnValue.minAge, currentColumnInfo.minAge = Math.min(currentColumnInfo.minAge, currentFacies.minAge)
+    currentColumnInfo.maxAge = Math.max(currentColumnInfo.maxAge, currentFacies.maxAge)
+    currentColumnInfo.minAge = Math.min(currentColumnInfo.minAge, currentFacies.minAge)
     returnValue.subFaciesInfo = currentFacies.subFaciesInfo
     currentColumnInfo.info = currentFacies.info
     currentColumnInfo.on = currentFacies.on
+    returnValue.minAge = currentColumnInfo.minAge
+    returnValue.maxAge = currentColumnInfo.maxAge
   }
 
 childrenArray.push(currentColumnInfo);
@@ -491,7 +493,9 @@ childrenArray.push(currentColumnInfo);
         blocksMap,
       );
       returnValue.minAge = Math.min(compareValue.minAge, returnValue.minAge);
-      returnValue.maxAge = Math.max(compareValue.minAge, returnValue.minAge);
+      returnValue.maxAge = Math.max(compareValue.maxAge, returnValue.maxAge);
+      currentColumnInfo.minAge = returnValue.minAge
+      currentColumnInfo.maxAge = returnValue.maxAge
       returnValue.faciesFound = compareValue.faciesFound || returnValue.faciesFound;
       // we take the first child's facies info
       // this is due to map points taking their first child's facies information
@@ -505,11 +509,12 @@ childrenArray.push(currentColumnInfo);
         faciesMap.has(child)
       ) {
         returnValue.faciesFound = true;
-        if (returnValue.subFaciesInfo)
-          currentColumnInfo.subFaciesInfo = returnValue.subFaciesInfo
+        if (compareValue.subFaciesInfo)
+          currentColumnInfo.subFaciesInfo = compareValue.subFaciesInfo
       }
     });
   }
+  // if (currentColumn === "Central Deep West") console.log(currentColumnInfo);
   return returnValue;
 }
 
