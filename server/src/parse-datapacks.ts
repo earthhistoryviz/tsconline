@@ -514,7 +514,6 @@ childrenArray.push(currentColumnInfo);
       }
     });
   }
-  // if (currentColumn === "Central Deep West") console.log(currentColumnInfo);
   return returnValue;
 }
 
