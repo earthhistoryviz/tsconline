@@ -54,11 +54,10 @@ jobs:
         run: yarn install
 
       - name: Run Prettier with Reviewdog
-        uses: reviewdog/action-prettier@v1
+        uses: EPMatt/reviewdog-action-prettier@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-check
-          prettier_flags: "--check . --config .prettierrc"
 
       - name: Build with Vite
         run: yarn build
