@@ -72,13 +72,13 @@ let theme = createTheme({
       main: "#2ecc71",
     },
     off: {
-      main: "#FFFFFF",
-    },
-    disabled: {
       main: "#f64747",
     },
-    info: {
+    disabled: {
       main: "#95a5a6",
+    },
+    info: {
+      main: "#0891b2",
     },
     tooltip: {
       main: "#231f20",
