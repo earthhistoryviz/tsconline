@@ -53,11 +53,16 @@ jobs:
       - name: Install Dependencies
         run: yarn install
 
-      - name: Run Prettier with Reviewdog
-        uses: EPMatt/reviewdog-action-prettier@v1
+      - name: Run Prettier and output results
+        run: yarn prettier --check . > prettier-output.txt || true
+
+      - name: Review Prettier output with Reviewdog
+        uses: reviewdog/action-setup@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: github-pr-check
+          reviewdog_version: latest
+      - run: cat prettier-output.txt | reviewdog -f=prettier
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build with Vite
         run: yarn build
