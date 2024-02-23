@@ -15,17 +15,20 @@ function processSettings(settingsNode: any): any {
     const settingName = settingNode.getAttribute("name");
     const nestedSettingsNode = settingNode.getElementsByTagName("setting")[0];
     const justificationValue = settingNode.getAttribute("justification");
-    const settingValue = nestedSettingsNode ? nestedSettingsNode.textContent.trim() : settingNode.textContent.trim();
-    //when the setting object is created, it looks like the nested objects in topAge and baseAge
-    //are taken out and created as standalone setting options. This should not happen,
-    //so skip when the setting name is text.
-    if (settingName === "text") {
+    const settingValue = nestedSettingsNode
+      ? nestedSettingsNode.textContent.trim()
+      : settingNode.textContent.trim();
+    //since we access the elements by tag name, the nested settings of topage and baseage
+    //are treated on the same level, so skip when the setting name is text or stage.
+    if (settingName === "text" || settingName === "stage") {
       continue;
     } else if (settingName === "topAge" || settingName === "baseAge") {
+      console.log(settingNode.getElementsByTagName("setting")[1]);
       settings[settingName] = {
-        source: "text",
-        unit: "Ma",
-        text: settingValue
+        source: settingNode.getAttribute("source"),
+        unit: settingNode.getAttribute("unit"),
+        stage: "",
+        text: settingValue,
       };
     }
     //these two tags have units, so make an object storing its unit and value
@@ -34,7 +37,7 @@ function processSettings(settingsNode: any): any {
         unit: "Ma",
         text: settingValue
       };
-    } else if (justificationValue.length !== 0) {
+    } else if (justificationValue) {
       settings[settingName] = justificationValue;
     } else {
       const settingValue = settingNode.textContent.trim();
@@ -101,9 +104,9 @@ function processColumn(node: any): any {
             } else {
               result[settingName] = child.textContent.trim();
             }
-          } else if (justificationValue.length !== 0) {
+          } else if (justificationValue) {
             result[settingName] = justificationValue;
-          } else if (orientationValue.length !== 0) {
+          } else if (orientationValue) {
             result[settingName] = orientationValue;
           } else {
             const textContent = child.textContent.trim();

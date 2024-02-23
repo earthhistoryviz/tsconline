@@ -140,7 +140,10 @@ server.post("/upload", () => {
 });
 
 //fetches json object of requested settings file
-server.get<{ Params: { settingFile: string } }>("/settingsJson/:settingFile", routes.fetchSettingsJson);
+server.get<{ Params: { settingFile: string } }>(
+  "/settingsXml/:settingFile",
+  routes.fetchSettingsXml
+);
 
 // handles chart columns and age ranges requests
 server.post<{ Params: { files: string } }>("/mapimages/:files", routes.refreshMapImages);
