@@ -7,7 +7,7 @@
         </setting>
         <setting name="baseAge" source="text" unit="Ma">
             <setting name="stage">Langhian (15.99 Ma base)</setting>
-            <setting name="text"/>16.0</setting>
+            <setting name="text">16.0</setting>
         </setting>
         <setting name="unitsPerMY" unit="Ma">30.0</setting>
         <setting name="skipEmptyColumns" unit="Ma">true</setting>
