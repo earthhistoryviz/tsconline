@@ -27,7 +27,7 @@
     width: 100%;
 }
 
-.TopAgeTextField {
+.MuiTextField-root.TopAgeTextField {
     margin-bottom: 20px;
     width: 100%;
 } /* Not working */
@@ -37,15 +37,15 @@
     width: 100%;
 }
 
-.BaseAgeTextField {
+.MuiTextField-root.BaseAgeTextField {
     margin-bottom: 20px;
     width: 100%;
-} /* Not working */
+}
 
-.VerticalScale {
+.MuiTextField-root.VerticalScale {
     margin-bottom: 20px;
     width: 100%;
-} /* Not working */
+}
 
 .Button {
     width: 100%;

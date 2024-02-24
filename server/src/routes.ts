@@ -270,12 +270,9 @@ export const fetchTimescale = async function (
       value: parseFloat(ma), 
     }));
     timescaleData = timescaleData.filter(item => item.key);
-
-    const GeologicalTopStageAges = timescaleData;
-    const GeologicalBaseStageAges = timescaleData;
-
     timescaleData.forEach(data => assertTimescale(data));
-    reply.send({ GeologicalTopStageAges, GeologicalBaseStageAges });
+    
+    reply.send({ timescaleData });
   } catch (error) {
     console.error('Error reading Excel file:', error);
     reply.status(500).send({ error: 'Internal Server Error' });

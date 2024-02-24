@@ -1,5 +1,6 @@
 import { action, runInAction } from "mobx";
-import { fetchTimescaleData } from '../TimeParser';
+import { TimescaleItem } from '@tsconline/shared';
+
 import {
   type ChartConfig,
   type MapInfo,
@@ -34,6 +35,8 @@ import { jsonToXml } from "../parseSettings";
  */
 export const resetSettings = action("resetSettings", () => {
   state.settings = {
+    geologicalTopStageAges: [],
+    geologicalBaseStageAges: [],
     selectedStage: "",
     topStageAge: 0,
     topStageKey: "",
@@ -84,12 +87,27 @@ export const loadIndexResponse = action(
 );
 export const fetchTimescaleDataAction = action("fetchTimescaleData", async () => {
   try {
-    const data = await fetchTimescaleData();
-    console.log('Time Scale Data Loaded');
-    return data;
+    const response = await fetcher('/timescale', { method: "GET" });
+
+    if (response.ok) {
+      const data = await response.json();
+      const stages = data.timescaleData || [];
+      state.settings.geologicalBaseStageAges = [...stages];
+
+      for (let i = 0; i < stages.length; i++) {
+        const item = stages[i];
+        const value = i > 0 ? stages[i - 1].value : 0;
+        state.settings.geologicalTopStageAges.push({ ...item, value });
+      }
+      setGeologicalBaseStageAges(state.settings.geologicalBaseStageAges);
+      setGeologicalTopStageAges(state.settings.geologicalTopStageAges);
+
+      console.log('Time Scale Data Loaded');
+    } else {
+      console.error('Server responds with:', response.status);
+    }
   } catch (error) {
     console.error('Error fetching timescale data:', error);
-    return { GeologicalBaseStageAges: [], GeologicalTopStageAges: [], loading: false };
   }
 });
 
@@ -621,6 +639,12 @@ export const setSelectedBaseStage = action("setSelectedBaseStage", (key: string)
 });
 export const setSelectedStage = action("setSelectedStage", (key: string) => {
   state.settings.selectedStage = key;
+});
+export const setGeologicalBaseStageAges = action("setGeologicalBaseStageAges", (key: TimescaleItem[]) => {
+  state.settings.geologicalBaseStageAges = key;
+});
+export const setGeologicalTopStageAges = action("setGeologicalTopStageAges", (key: TimescaleItem[]) => {
+  state.settings.geologicalTopStageAges = key;
 });
 export const setUnitsPerMY = action((units: number) => {
   state.settings.unitsPerMY = units;

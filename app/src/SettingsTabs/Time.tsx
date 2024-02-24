@@ -1,40 +1,21 @@
 import { Box, Button, TextField } from "@mui/material";
 import { observer } from "mobx-react-lite";
-import React, { useState, useEffect } from "react";
 import { actions, state } from "../state";
 import ForwardIcon from "@mui/icons-material/Forward";
 import { useNavigate } from "react-router-dom";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
-import { useTheme } from '@mui/material/styles';
-import { TSCCheckbox, TSCButton } from '../components'
+import { TSCCheckbox } from '../components'
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
-import fetchTimescaleData from "../state/TimeParser"
-import { initialize } from "../state/initialize";
-import { TimescaleItem } from '@tsconline/shared';
-
+import { useContext } from "react";
+import { context } from "../state/index";
 import "./Time.css";
 import theme from "../theme";
-import { fetchTimescaleDataAction } from "../state/actions";
 
 export const Time = observer(function Time() {
   const navigate = useNavigate();
-  const [GeologicalTopStageAges, setGeologicalTopStageAges] = useState<TimescaleItem[]>([]);
-  const [GeologicalBaseStageAges, setGeologicalBaseStageAges] = useState<TimescaleItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const { state } = useContext(context);
   
-  
-  useEffect(() => {
-    const fetchData = async () => {
-        const { GeologicalTopStageAges, GeologicalBaseStageAges, loading } = await fetchTimescaleDataAction();
-        setGeologicalTopStageAges(GeologicalTopStageAges);
-        setGeologicalBaseStageAges(GeologicalBaseStageAges);
-        setLoading(loading);
-    };
-
-    fetchData();
-}, []);
     const handleButtonClick = () => {
         actions.setTab(1);
         // actions.setAllTabs(true);
@@ -58,15 +39,15 @@ export const Time = observer(function Time() {
             value={state.settings.topStageKey} 
             onChange={(event) => {
               const selectedValue = event.target.value;
-              const selectedAgeItem = GeologicalTopStageAges.find(item => item.key === selectedValue);
+              const selectedAgeItem = state.settings.geologicalTopStageAges.find(item => item.key === selectedValue);
               const selectedAge = selectedAgeItem?.value?.toString() || '0';
               const selectedAgeNumber = parseFloat(selectedAge);
               if (selectedAgeNumber >= 0 && selectedAge <= state.settings.baseStageKey)
-              actions.setSelectedTopStage(selectedValue);
-              actions.setTopStageAge(parseFloat(selectedAge));
+                actions.setSelectedTopStage(selectedValue);
+                actions.setTopStageAge(parseFloat(selectedAge));
             }}
           >
-          {GeologicalTopStageAges.map(item => (
+          {state.settings.geologicalTopStageAges.map(item => (
               <MenuItem key={item.key} value={item.key}>
                   {item.key} ({item.value} Ma)
               </MenuItem>
@@ -76,7 +57,7 @@ export const Time = observer(function Time() {
           label="Top Age"
           type="number"
           name="vertical-scale-text-field"
-          value={state.settings.topStageAge.toString()} 
+          value={state.settings.topStageAge.toString()}
           onChange={(event) => {
             const age = parseFloat(event.target.value);
             if (!isNaN(age) && age >= 0 && age <= state.settings.baseStageAge) {
@@ -84,7 +65,6 @@ export const Time = observer(function Time() {
               actions.setTopStageAge(age);
             }
           }}
-          style={{ marginBottom: '20px', width: '100%' }} // Not working
         />
           </FormControl>
         <FormControl className="FormControlBaseAgeStageName">
@@ -93,20 +73,20 @@ export const Time = observer(function Time() {
           label="Base Age/Stage Name"
           inputProps={{ id: 'base-age-selector' }}
           name="base-age-stage-name"
-          type="string"
           value={state.settings.baseStageKey}
           onChange={(event) => {
             const selectedValue = event.target.value;
-            const selectedAgeItem = GeologicalBaseStageAges.find(item => item.key === selectedValue);
+            const selectedAgeItem = state.settings.geologicalBaseStageAges.find(item => item.key === selectedValue);
             const selectedAge = selectedAgeItem?.value?.toString() || '0';
             const selectedAgeNumber = parseFloat(selectedAge);
             if (selectedAgeNumber >= 0 && selectedAge >= state.settings.topStageKey) {
               actions.setSelectedBaseStage(selectedValue);
-              actions.setBaseStageAge(isNaN(parseInt(selectedAge)) ? 0 : parseInt(selectedAge));
+              actions.setTopStageAge(parseFloat(selectedAge));
+              // actions.setBaseStageAge(isNaN(parseInt(selectedAge)) ? 0 : parseInt(selectedAge));
             }
           }}
         >
-          {GeologicalBaseStageAges.map(item => (
+          {state.settings.geologicalBaseStageAges.map(item => (
             <MenuItem key={item.key} value={item.value}>
               {item.key} ({item.value} Ma)
             </MenuItem>
@@ -116,15 +96,14 @@ export const Time = observer(function Time() {
           label="Base Age"
           type="number"
           name="vertical-scale-text-field"
-          value={state.settings.baseStageKey ? state.settings.baseStageKey : state.settings.baseStageAge.toString()}
+          value={state.settings.baseStageKey}
           onChange={(event) => {
             const age = parseFloat(event.target.value)
-            if (age >= 0 && state.settings.topStageAge <= age) {
-              actions.setSelectedBaseStage(event.target.value);
+            if (!isNaN(age) && age >= 0 && state.settings.topStageAge <= age) {
+              actions.setSelectedBaseStage(age.toString());
               actions.setBaseStageAge(age)
             }
           }}
-          style={{ marginBottom: '20px', width: '100%' }} // Not working
         />
         </FormControl>
         <TextField className="VerticalScale"
@@ -135,14 +114,11 @@ export const Time = observer(function Time() {
           onChange={(event) =>
             actions.setUnitsPerMY(parseFloat(event.target.value))
           }
-          style={{ marginBottom: "20px", width: "100%" }} // Not working
         />
         <Button
           className="Button"
           sx={{
             backgroundColor: theme.palette.button.main,
-            // color: "#FFFFFF",
-            // marginTop: "10px",
           }}
           onClick={handleButtonClick}
           variant="contained"

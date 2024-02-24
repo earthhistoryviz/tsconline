@@ -1,7 +1,7 @@
 import { observable } from "mobx";
 
 import { ErrorAlert, FaciesOptions, MapHistory } from "../types";
-import fetchTimescaleData from "./TimeParser"
+// import fetchTimescaleData from "./TimeParser"
 import React, { useState, useEffect } from "react";
 import { TimescaleItem } from '@tsconline/shared';
 
@@ -60,6 +60,8 @@ export type State = {
   settingsXML: string;
   settingsJSON: any;
   settings: {
+    geologicalTopStageAges: TimescaleItem[];
+    geologicalBaseStageAges: TimescaleItem[];
     selectedStage: string;
     topStageAge: number;
     topStageKey: string;
@@ -128,6 +130,8 @@ export const state = observable<State>({
   settingsXML: "",
   settingsJSON: {},
   settings: {
+    geologicalTopStageAges: [],
+    geologicalBaseStageAges: [],
     topStageAge: 0,
     topStageKey: "",
     baseStageAge: 0,
