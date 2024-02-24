@@ -3,111 +3,54 @@ import { useContext, useRef, useState } from "react";
 import { context } from "../state";
 import { Button, TextField, ToggleButton, Typography } from "@mui/material";
 import SettingsSharpIcon from "@mui/icons-material/SettingsSharp";
-import "./ColumnMenu.css";
-import { FontMenu } from "./FontMenu";
+import Modal from "@mui/material/Modal";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import FormControl from "@mui/material/FormControl";
+import Select, {SelectChangeEvent} from "@mui/material/Select";
+import FormatBoldIcon from "@mui/icons-material/FormatBold";
+import FormatItalicIcon from "@mui/icons-material/FormatItalic";
+import ColorPicker from 'material-ui-color-picker'
 
-const EditNameField = observer(() => {
-  const { state, actions } = useContext(context);
-  const editName = useRef("");
-  const name =
-    state.settingsTabs.columnSelected === null
-      ? ""
-      : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.editName;
-  return (
-    <div>
-      <Typography style={{ padding: "5px" }}>Edit Title</Typography>
-      <div style={{ display: "flex", flexDirection: "row" }}>
-        <TextField
-          hiddenLabel
-          id="editNameTextField"
-          defaultValue={name}
-          key={name}
-          onChange={(event) => {
-            editName.current = event.target.value;
-          }}
-          variant="filled"
-          size="small"
-        />
-        <div className="edit-title-button">
-          <Button
-            color="secondary"
-            variant="contained"
-            onClick={() => {
-              actions.updateEditName(editName.current);
-            }}>
-            Confirm
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-});
+import ChangeColor from './ChangeColorMenu'
 
-interface ColorResult {
-    hex: string;
-    rgb: RGBColor;
-    hsl: HSLColor;
-}
-
-const ChangeColor: React.FC<{}> = observer(({}) => {
-    const [open, setOpen] = useState(false);
-  const [selectedColor, setSelectedColor] = useState('#000'); // State to keep track of selected color
-  const [currentColor, setCurrentColor] = useState('#000');
-  
-  const handleColorChange = (color: ColorResult) => {
-    setSelectedColor(color.hex);
-  };
-  const handleCurrentChange = (color: string) => {
-    setCurrentColor(color)
-  }
-    const handleOpen = () => {
-        setOpen(true);
-    };
-
-    const handleClose = () => {
-        setOpen(false);
-    };
-
-
-    const handleCancel = () => {
-        setOpen(false);
-        setSelectedColor(currentColor);
-    }
-
+const EditNameField: React.FC<{}> = observer(({}) => {
+    const {state, actions} = useContext(context);
+    let editName = useRef("");
+    const name =
+        state.settingsTabs.columnSelected === null
+            ? ""
+            : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.editName;
     return (
         <div>
-            <FormLabel id="color-label" className="bg-label">Background Color:   </FormLabel>
-            <Button color="secondary" variant="contained" onClick={handleOpen} className="color-button" style = {{backgroundColor: currentColor}}></Button>
-
-            <Modal
-                open={open}
-                onClose={handleClose}
-                aria-labelledby="modal-modal-title"
-                aria-describedby="modal-modal-description"
-            >
-                <Box className="style-color">
-                    <div className="picker-box">
-                        <Grid 
-                            container rowSpacing={2} columnSpacing={5} 
-                            justifyContent="center" alignItems="center"
-                        >
-                            <Grid item xs={12} className="color-picker">
-                                {
-                                    <div>
-                                        <PhotoshopPicker color={selectedColor} onChange={handleColorChange}
-                                            className="photoshop-picker" onAccept={() => {handleCurrentChange(selectedColor); handleClose();}} 
-                                            onCancel={() => {handleCancel()} } />
-                                    </div>
-                                
-                                }
-                            </Grid>
-                        </Grid>
-                    </div>  
-                </Box>
-            </Modal>
+            <Typography style={{padding: "5px"}}>Edit Title</Typography>
+            <div style={{display: "flex", flexDirection: "row"}}>
+                <TextField
+                    hiddenLabel
+                    id="editNameTextField"
+                    defaultValue={name}
+                    key={name}
+                    onChange={(event) => {
+                        editName.current = event.target.value;
+                    }}
+                    variant="filled"
+                    size="small"
+                />
+                <div className="edit-title-button">
+                    <Button
+                        color="secondary"
+                        variant="contained"
+                        onClick={() => {
+                            actions.updateEditName(editName.current);
+                        }}
+                    >
+                        Confirm
+                    </Button>
+                </div>
+            </div>
         </div>
     );
-})
+});
 
 export const ColumnMenu = observer(() => {
   const { state } = useContext(context);
