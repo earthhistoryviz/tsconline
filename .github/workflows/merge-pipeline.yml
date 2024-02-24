@@ -24,7 +24,7 @@ jobs:
         uses: creyD/prettier_action@v4.3
         with:
           dry: True
-          prettier_options: "--check **/*.{tsx, ts}"
+          prettier_options: "--check **/*.{tsx,ts}"
 
       - name: Build with Vite
         run: yarn build
