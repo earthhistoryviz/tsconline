@@ -20,8 +20,10 @@ jobs:
       - name: Install Dependencies
         run: yarn install
 
-      - name: Lint with Prettier
-        run: yarn prettier .
+      - name: Prettify code
+        uses: creyD/prettier_action@v4.3
+        with:
+          dry: True
 
       - name: Build with Vite
         run: yarn build
