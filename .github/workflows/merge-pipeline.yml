@@ -45,21 +45,9 @@ jobs:
         continue-on-error: true
 
       - name: Report Build Errors
-        uses: actions/github-script@v6
+        uses: thollander/actions-comment-pull-request@v2
         with:
-          script: |
-            const fs = require('fs');
-            const path = 'build.log';
-            if (fs.existsSync(path)) {
-              const output = fs.readFileSync(path, 'utf8');
-              github.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: `### Build Failed\n\`\`\`\n${output}\n\`\`\``,
-              });
-            }
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          filePath: 'build.log'
 
       - name: Run Tests
         run: echo Testing # Test command would go here
