@@ -13,6 +13,22 @@ export const ColoredIconButton = styled(IconButton)(({ theme }) => ({
 export const ColoredDiv = styled("div")(({ theme }) => ({
   backgroundColor: theme.palette.navbar.dark
 }));
+export const TSCInputAdornment = styled("div")(
+  ({ theme }) => `
+  margin-left: auto;
+  margin-right: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-family: inherit;
+  font-weight: 400;
+  line-height: 1.5;
+  grid-row: 1/3;
+  grid-column: 2;
+  color: ${theme.palette.primary.main};
+`
+);
 export const GradientDiv = styled("div")(({ theme }) => ({
   backgroundColor: theme.palette.gradient.main
 }));

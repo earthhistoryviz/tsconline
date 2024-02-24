@@ -16,7 +16,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { observer } from "mobx-react-lite";
 import "./MapViewer.css";
 import { Legend, createChildMapButton, loadMapPoints, loadTransects } from "./MapButtons";
-import { FaciesControls } from "./MapControls";
+import { FaciesControls, HeaderBar } from "./MapControls";
 
 type MapProps = {
   name: string;
@@ -78,8 +78,11 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
     resetTransform: () => void;
   }) => (
     <>
-      <div className="exit-buttons">
-        <IconButton className="icon-view-button" onClick={actions.goBackInMapHistory}>
+      <div className="back-button">
+        <IconButton
+          className="icon-view-button"
+          onClick={actions.goBackInMapHistory}
+        >
           <BorderedIcon component={ArrowBackIcon} className="icon-button" />
         </IconButton>
       </div>
@@ -141,23 +144,26 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
   };
 
   return (
-    <div ref={mapViewerRef} className="map-viewer">
-      <TransformWrapper
-        doubleClick={{
-          disabled: true
-        }}
-        minScale={1}
-        maxScale={3}
-        limitToBounds={true}>
-        {(utils) => (
-          <>
-            <TransformComponent>
-              <>
-                <img
-                  id="map"
-                  ref={imageRef}
-                  style={
-                    /* 
+    <>
+      <HeaderBar isFacies={isFacies} name={name} />
+      <div ref={mapViewerRef} className="map-viewer">
+        <TransformWrapper
+          doubleClick={{
+            disabled: true,
+          }}
+          minScale={1}
+          maxScale={3}
+          limitToBounds={true}
+        >
+          {(utils) => (
+            <>
+              <TransformComponent>
+                <>
+                  <img
+                    id="map"
+                    ref={imageRef}
+                    style={
+                      /* 
               we need to conditionally have styles because 
               when fullscreened:   we fit the height of the image to max viewport height
               when unfullscreened: we use normal css ~90 viewport height

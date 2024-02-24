@@ -7,6 +7,40 @@
   height: 100%;
   width: 100%
 }
+.header-bar {
+  justify-content: center;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  justify-content: center;
+  align-items: center;
+  height: 8vh;
+  z-index: 1;
+  box-shadow: 1px 0px 10px rgba(0, 0, 0, 1);
+}
+.divider {
+  height: 0.05px;
+  width: 100%; 
+  background-color: rgba(197, 197, 197, 0.281); 
+}
+.header-icon {
+  padding-top: 1px;
+  padding-right: 5px;
+}
+.header-title-container {
+  display: flex;
+}
+.MuiTypography-root.map-viewer-header {
+  font-size: 23px;
+}
+.MuiButton-root.legend-button {
+  height: 30px;
+  width: 90px;
+  background-color: transparent;
+}
+.buttons {
+  display: flex;
+}
 .age-controls {
   width: 100%;
   height: auto;
@@ -26,18 +60,16 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  padding-right: 30px;
 }
-.age-input-form {
+.MuiTextField-root.dot-input-form {
   margin: 10px;
   margin-right: 20px;
-  width: 100px;
-  top: 10px;
+  width: 90px;
 }
-.dot-input-form {
-  margin: 10px;
-  margin-right: 20px;
-  width: 40px;
-  top: 10px;
+.MuiTextField-root.age-text-field {
+  padding-right: 20px;
+  width: 123px;
 }
 
 .slider .MuiSlider-track {
@@ -45,8 +77,8 @@
 }
 
 .slider .MuiSlider-thumb {
-  height: 16px;
-  width: 16px;
+  height: 13px;
+  width: 13px;
   background-color: #fff;
   border: 2px solid currentColor;
 }

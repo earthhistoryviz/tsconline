@@ -1,3 +1,6 @@
 .map-list {
   min-height: 100vh;
 }
+.MuiPaper-root.map-dialog {
+    max-height: none;
+}
