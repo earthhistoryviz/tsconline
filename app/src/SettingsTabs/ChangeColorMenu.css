@@ -1,0 +1,36 @@
+.bg-label {
+    color: black;
+    margin-top: 3px;
+    margin: 5px;
+}
+
+.color-button {
+    width: 60px;
+    height: 30px;
+    margin-top: 1px;
+}
+
+.picker-box {
+    display: grid;
+    place-items: center;
+}
+
+.style-color {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    align-items: center;
+    justify-content: center;
+}
+
+.color-picker {
+    display: flex;
+    justify-content: center;
+}
+
+.photoshop-picker {
+    background-color: lightgray;
+    box-shadow: none;
+}
