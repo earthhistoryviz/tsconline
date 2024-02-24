@@ -31,29 +31,32 @@ export const Time = observer(function Time() {
       <div>
         <Box className="Box">
         <FormControl className="FormControlTop">
-        <InputLabel htmlFor="top-age-selector">Top Age/Stage Name</InputLabel> 
-        <Select className="SelectTop"
-            inputProps={{ id: 'top-age-selector' }}
-            name="top-age-stage-name"
-            label="Top Age/Stage Name"
-            value={state.settings.topStageKey} 
-            onChange={(event) => {
-              const selectedValue = event.target.value;
-              const selectedAgeItem = state.settings.geologicalTopStageAges.find(item => item.key === selectedValue);
-              const selectedAge = selectedAgeItem?.value?.toString() || '0';
-              const selectedAgeNumber = parseFloat(selectedAge);
-              if (selectedAgeNumber >= 0 && selectedAge <= state.settings.baseStageKey)
-                actions.setSelectedTopStage(selectedValue);
-                actions.setTopStageAge(parseFloat(selectedAge));
-            }}
-          >
+        <InputLabel htmlFor="top-age-selector">Top Age/Stage Name</InputLabel>
+        <Select
+          className="SelectTop"
+          inputProps={{ id: 'top-age-selector' }}
+          name="top-age-stage-name"
+          label="Top Age/Stage Name"
+          value={state.settings.topStageKey}
+          onChange={(event) => {
+            const selectedValue = event.target.value;
+            const selectedAgeItem = state.settings.geologicalTopStageAges.find(item => item.key === selectedValue);
+            const selectedAge = selectedAgeItem?.value?.toString() || '0';
+            const selectedAgeNumber = parseFloat(selectedAge);
+            if (selectedAgeNumber >= 0 && selectedAgeNumber <= state.settings.baseStageAge) {
+              actions.setSelectedTopStage(selectedValue);
+              actions.setTopStageAge(selectedAgeNumber);
+            }
+          }}
+        >
           {state.settings.geologicalTopStageAges.map(item => (
-              <MenuItem key={item.key} value={item.key}>
-                  {item.key} ({item.value} Ma)
-              </MenuItem>
+            <MenuItem key={item.key} value={item.key}>
+              {item.key} ({item.value} Ma)
+            </MenuItem>
           ))}
         </Select>
-        <TextField className="TopAgeTextField"
+        <TextField
+          className="TopAgeTextField"
           label="Top Age"
           type="number"
           name="vertical-scale-text-field"
@@ -66,10 +69,11 @@ export const Time = observer(function Time() {
             }
           }}
         />
-          </FormControl>
-        <FormControl className="FormControlBaseAgeStageName">
-        <InputLabel htmlFor="base-age-selector">Base Age/Stage Name</InputLabel> 
-        <Select className="SelectBase"
+      </FormControl>
+      <FormControl className="FormControlBaseAgeStageName">
+        <InputLabel htmlFor="base-age-selector">Base Age/Stage Name</InputLabel>
+        <Select
+          className="SelectBase"
           label="Base Age/Stage Name"
           inputProps={{ id: 'base-age-selector' }}
           name="base-age-stage-name"
@@ -79,29 +83,29 @@ export const Time = observer(function Time() {
             const selectedAgeItem = state.settings.geologicalBaseStageAges.find(item => item.key === selectedValue);
             const selectedAge = selectedAgeItem?.value?.toString() || '0';
             const selectedAgeNumber = parseFloat(selectedAge);
-            if (selectedAgeNumber >= 0 && selectedAge >= state.settings.topStageKey) {
+            if (selectedAgeNumber >= 0 && selectedAgeNumber >= state.settings.topStageAge) { 
               actions.setSelectedBaseStage(selectedValue);
-              actions.setTopStageAge(parseFloat(selectedAge));
-              // actions.setBaseStageAge(isNaN(parseInt(selectedAge)) ? 0 : parseInt(selectedAge));
+              actions.setBaseStageAge(selectedAgeNumber);
             }
           }}
         >
           {state.settings.geologicalBaseStageAges.map(item => (
-            <MenuItem key={item.key} value={item.value}>
+            <MenuItem key={item.key} value={item.key}>
               {item.key} ({item.value} Ma)
             </MenuItem>
           ))}
         </Select>
-        <TextField className="BaseAgeTextField"
+        <TextField
+          className="BaseAgeTextField"
           label="Base Age"
           type="number"
           name="vertical-scale-text-field"
-          value={state.settings.baseStageKey}
+          value={state.settings.baseStageAge.toString()}
           onChange={(event) => {
-            const age = parseFloat(event.target.value)
+            const age = parseFloat(event.target.value);
             if (!isNaN(age) && age >= 0 && state.settings.topStageAge <= age) {
               actions.setSelectedBaseStage(age.toString());
-              actions.setBaseStageAge(age)
+              actions.setBaseStageAge(age);
             }
           }}
         />

@@ -1,8 +1,6 @@
 import { observable } from "mobx";
 
 import { ErrorAlert, FaciesOptions, MapHistory } from "../types";
-// import fetchTimescaleData from "./TimeParser"
-import React, { useState, useEffect } from "react";
 import { TimescaleItem } from '@tsconline/shared';
 
 import type {
