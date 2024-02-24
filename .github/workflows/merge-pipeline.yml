@@ -49,7 +49,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            cont path = 'build-failed.log';
+            const path = 'build-failed.log';
             if (fs.existsSync(path)) {
               const output = fs.readFileSync(path, 'utf8');
               github.issues.createComment({
