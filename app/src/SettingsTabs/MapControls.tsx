@@ -1,14 +1,38 @@
 import { observer } from "mobx-react-lite";
-import { useContext } from "react";
+import { ChangeEvent, ChangeEventHandler, useContext } from "react";
 import { context } from "../state";
 import {
   ColoredDiv,
+  Lottie,
   TSCInputAdornment,
-  TSCNumberInput,
+  TSCTextField,
   TypographyText,
 } from "../components";
-import { Slider } from "@mui/material";
+import {
+  Button,
+  Divider,
+  Slider,
+  TextFieldProps,
+  Typography,
+} from "@mui/material";
+import mapPointsAnimationData from "../assets/icons/map-points.json";
+import CategoryIcon from "@mui/icons-material/Category";
+import MapSharpIcon from "@mui/icons-material/MapSharp";
 import "./MapControls.css";
+import { NumericFormat } from "react-number-format";
+
+const AgeTextField = ({ ...props }: TextFieldProps) => (
+  <TSCTextField
+    {...props}
+    className="age-text-field"
+    InputProps={{
+      endAdornment: <TSCInputAdornment>MA</TSCInputAdornment>,
+    }}
+  />
+);
+const DotSizeTextField = ({ ...props }: TextFieldProps) => (
+  <TSCTextField {...props} className="dot-input-form" />
+);
 
 export const FaciesControls = observer(() => {
   const { state, actions } = useContext(context);
@@ -22,23 +46,17 @@ export const FaciesControls = observer(() => {
           Dot Size{" "}
         </TypographyText>
         <div className="slider-container">
-          <TSCNumberInput
-            className="dot-input-form"
-            placeholder="Dot Size"
-            max={dotSizeRange.max}
-            min={dotSizeRange.min}
+          <NumericFormat
             value={state.mapState.currentFaciesOptions.dotSize}
-            onChange={(
-              _event:
-                | React.FocusEvent<HTMLInputElement, Element>
-                | React.PointerEvent<Element>
-                | React.KeyboardEvent<Element>,
-              val: number | undefined
-            ) => {
-              if (!val || val < 1 || val > 20) {
+            customInput={DotSizeTextField}
+            onValueChange={(values) => {
+              let floatValue = values.floatValue;
+              if (!floatValue) {
                 return;
               }
-              actions.setDotSize(val as number);
+              if (floatValue > 20) actions.setDotSize(20);
+              else if (floatValue < 1) actions.setDotSize(1);
+              else actions.setDotSize(floatValue);
             }}
           />
           <Slider
@@ -58,24 +76,14 @@ export const FaciesControls = observer(() => {
       <div className="age-controls">
         <TypographyText> Age </TypographyText>
         <div className="slider-container">
-          <TSCNumberInput
-            endAdornment={<TSCInputAdornment>MA</TSCInputAdornment>}
-            className="age-input-form"
-            placeholder="Age"
-            max={state.mapState.selectedMapAgeRange.maxAge}
-            min={state.mapState.selectedMapAgeRange.minAge}
+          <NumericFormat
             value={state.mapState.currentFaciesOptions.faciesAge}
-            onChange={(
-              _event:
-                | React.FocusEvent<HTMLInputElement, Element>
-                | React.PointerEvent<Element>
-                | React.KeyboardEvent<Element>,
-              val: number | undefined
-            ) => {
-              if (!val || val < 0 || val > 9999999) {
+            customInput={AgeTextField}
+            onValueChange={(values) => {
+              if (!values.floatValue) {
                 return;
               }
-              actions.setFaciesAge(val as number);
+              actions.setFaciesAge(values.floatValue);
             }}
           />
           <Slider
@@ -96,3 +104,48 @@ export const FaciesControls = observer(() => {
     </ColoredDiv>
   );
 });
+type HeaderBarProps = {
+  name: string;
+  isFacies: boolean;
+};
+export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
+  const { state, actions } = useContext(context);
+  return (
+    <ColoredDiv className="header-bar">
+      <div className="header-title-container">
+        <Lottie
+          className="header-icon"
+          animationData={mapPointsAnimationData}
+          width={25}
+          height={25}
+          loop
+          autoplay
+        />
+        <TypographyText className="map-viewer-header" variant="h1">
+          Map Viewer
+        </TypographyText>
+      </div>
+      <Divider className="divider" />
+      <div className="buttons">
+        <Button
+          startIcon={<MapSharpIcon />}
+          className="legend-button"
+          onClick={() => actions.setIsLegendOpen(!state.mapState.isLegendOpen)}
+        >
+          legend
+        </Button>
+        {!isFacies && (
+          <Button
+            startIcon={<CategoryIcon />}
+            className="legend-button"
+            onClick={() => {
+              actions.openNextMap(name, isFacies, name, true);
+            }}
+          >
+            Facies
+          </Button>
+        )}
+      </div>
+    </ColoredDiv>
+  );
+};

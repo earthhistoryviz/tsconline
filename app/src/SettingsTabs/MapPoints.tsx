@@ -80,9 +80,18 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
         </List>
       </Box>
 
-      <Dialog open={state.mapState.isMapViewerOpen} keepMounted onClose={actions.goBackInMapHistory} maxWidth={false}>
+      <Dialog
+        classes={{ paper: "map-dialog" }}
+        open={state.mapState.isMapViewerOpen}
+        keepMounted
+        onClose={actions.goBackInMapHistory}
+        maxWidth={false}
+      >
         {state.mapState.selectedMap ? (
-          <MapViewer name={state.mapState.selectedMap} isFacies={state.mapState.isFacies} />
+          <MapViewer
+            name={state.mapState.selectedMap}
+            isFacies={state.mapState.isFacies}
+          />
         ) : null}
       </Dialog>
     </div>
