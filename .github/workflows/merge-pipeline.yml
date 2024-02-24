@@ -12,11 +12,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: EPMatt/reviewdog-action-prettier@v1
+      
+      - name: Install Node.js
+        uses: actions/setup-node@v2
         with:
-          github_token: ${{ secrets.github_token }}
-          reporter: github-pr-review
-          level: warning
+          node-version: '18'
+          
+      - name: Install Dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Manually Install Reviewdog
+        run: |
+          curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh| sh -s
+          export PATH="$PATH:$HOME/.reviewdog/bin"
+      
+      - name: Run Prettier and Reviewdog
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx prettier "**/*.{js,jsx,ts,tsx}" --check | reviewdog -f=diff -name="prettier" -reporter=github-pr-review -filter-mode=nofilter -fail-on-error=true -level=warning
   
   build-and-test:
     runs-on: ubuntu-latest
