@@ -24,13 +24,12 @@ jobs:
       - name: Manually Install Reviewdog
         run: |
           curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh| sh -s
-          export PATH="$PATH:$HOME/.reviewdog/bin"
       
       - name: Run Prettier and Reviewdog
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          yarn prettier "**/*.{js,jsx,ts,tsx}" --check | reviewdog -f=diff -name="prettier" -reporter=github-pr-review -filter-mode=nofilter -fail-on-error=true -level=warning
+          yarn prettier "**/*.{js,jsx,ts,tsx}" --check | ./bin/reviewdog -f=diff -name="prettier" -reporter=github-pr-review -filter-mode=nofilter -fail-on-error=true -level=warning
   
   build-and-test:
     runs-on: ubuntu-latest
