@@ -41,7 +41,24 @@ jobs:
         run: yarn install
 
       - name: Build with Vite
-        run: yarn build
+        run: yarn build 2>&1 | tee build.log || echo "Build failed" > build-failed.log
+        continue-on-error: true
 
+      - name: Report Build Errors
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            cont path = 'build-failed.log';
+            if (fs.existsSync(path)) {
+              const output = fs.readFileSync(path, 'utf8');
+              github.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `### Build Failed\n\`\`\`\n${output}\n\`\`\``,
+              });
+            }
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Run Tests
         run: echo Testing # Test command would go here

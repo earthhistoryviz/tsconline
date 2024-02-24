@@ -6,7 +6,7 @@ import { isServerResponseError, assertChartInfo } from "@tsconline/shared";
 import { jsonToXml } from "../parseSettings";
 import { NavigateFunction } from "react-router";
 
-export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
+export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate) => {
   if (state.useSuggestedAge != response) {
     state.useSuggestedAge = response;
     generalActions.setUseCache(false);
