@@ -21,10 +21,7 @@ jobs:
         run: yarn install
 
       - name: Lint with Prettier
-        run: yarn prettier . > prettier_output.txt
-
-      - name: Show prettier output
-        run: cat prettier_output.txt
+        run: yarn prettier .
 
       - name: Build with Vite
         run: yarn build
