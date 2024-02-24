@@ -390,7 +390,12 @@ function generateColumnXml(
  * @param version the version of the jar file (TimeScale Creator)
  * @returns xml string with the entire settings info
  */
-export function jsonToXml(settings: any, columnSettings: any, chartSettings: any, version: string = "PRO8.0"): string {
+export function jsonToXml(
+  settings: any,
+  columnSettings: any,
+  chartSettings: any,
+  version: string = "PRO8.1"
+): string {
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
   //console.log("json 2...\n", state.settingsJSON);
