@@ -1,3 +1,4 @@
 app/dist
 app/assets
 app/src/state/parseSettings.ts
+app/src/state/actions/UtilActions.ts
