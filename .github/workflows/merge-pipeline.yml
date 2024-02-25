@@ -16,11 +16,14 @@ jobs:
         run: yarn install
 
       - name: Run ESLint
-        run: yarn eslint **/*.{tsx,ts,css} --quiet --format json --output-file eslint-report.json || echo "::set-output name=failed::true"
+        run: |
+          if ! yarn eslint **/*.{tsx,ts,css} --quiet --format json --output-file eslint-report.json; then
+            echo "eslint_failed=true" >> $GITHUB_ENV
+          fi
         continue-on-error: true
 
       - name: Comment PR on ESLint check failure
-        if: steps.eslint.outputs.failed
+        if: env.eslint_failed == 'true'
         uses: actions/github-script@v5
         with:
           script: |
@@ -46,20 +49,21 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Prettify code
-        id: prettify
         run: |
-          yarn prettier --check **/*.{tsx,ts} || echo "::set-output name=failed::true"
+          if ! yarn prettier --check **/*.{tsx,ts}; then
+            echo "prettify_failed=true" >> $GITHUB_ENV
+          fi
         continue-on-error: true
 
       - name: Comment PR on Prettier check failure
-        if: steps.prettify.outputs.failed
+        if: env.prettify_failed == 'true'
         uses: thollander/actions-comment-pull-request@v2
         with:
           message: |
             🚨 The Prettier check has failed. Please run 'yarn prettier --write' locally and commit the changes.
 
       - name: Check for any failures
-        if: steps.eslint.outputs.failed || steps.prettify.outputs.failed
+        if: env.eslint_failed == 'true' || env.prettify_failed == 'true'
         run: exit 1
 
   build-and-test:
