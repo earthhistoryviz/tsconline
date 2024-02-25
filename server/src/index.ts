@@ -37,7 +37,7 @@ try {
   );
   assertAssetConfig(contents);
   assetconfigs = contents;
-} catch (e: any) {
+} catch (e) {
   console.log(
     "ERROR: Failed to load asset configs from assets/config.json.  Error was: ",
     e
@@ -58,7 +58,7 @@ try {
   console.log("Calling Java decrypt.jar: ", cmd);
   execSync(cmd)
   console.log("Finished decryption")
-} catch (e: any) {
+} catch (e) {
   console.log(
     "ERROR: Failed to decrypt activeDatapacks in AssetConfig with error: ",
     e
@@ -98,14 +98,14 @@ try {
   process.exit(1);
 }
 // Serve the main app from /
-// @ts-ignore
+// @ts-expect-error
 server.register(fastifyStatic, {
   root: process.cwd() + "/../app/dist",
   prefix: "/",
 });
 
 // Serve the generated charts, etc. from server/public/
-// @ts-ignore
+// @ts-expect-error
 server.register(fastifyStatic, {
   root: process.cwd() + "/public",
   prefix: "/public/",
@@ -113,13 +113,13 @@ server.register(fastifyStatic, {
 });
 
 // Helpful for testing locally:
-// @ts-ignore
+// @ts-expect-error
 server.register(cors, {
   origin: "*",
   methods: ["GET", "POST"],
 });
 
-// @ts-ignore
+// @ts-expect-error
 server.register(fastifyCompress, {global: true})
 
 // removes the cached public/charts directory

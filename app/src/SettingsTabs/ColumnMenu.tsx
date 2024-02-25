@@ -6,7 +6,7 @@ import SettingsSharpIcon from "@mui/icons-material/SettingsSharp";
 import "./ColumnMenu.css";
 import { FontMenu } from "./FontMenu";
 
-const EditNameField: React.FC<{}> = observer(({}) => {
+const EditNameField = observer(() => {
   const { state, actions } = useContext(context);
   const editName = useRef("");
   const name =
