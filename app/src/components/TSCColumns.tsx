@@ -17,11 +17,11 @@ export const Accordion = styled((props: AccordionProps) => (
 ))(() => ({
   //border: `1px solid ${theme.palette.divider}`,
   "&:not(:last-child)": {
-    borderBottom: 0,
+    borderBottom: 0
   },
   "&:before": {
-    display: "none",
-  },
+    display: "none"
+  }
 }));
 
 // Define the AccordionSummary and AccordionDetails components outside the Column component
@@ -36,14 +36,14 @@ export const AccordionSummary = styled((props: AccordionSummaryProps) => (
   "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
     transform: "rotate(90deg)",
     display: "flex",
-    order: -1,
+    order: -1
   },
   "& .MuiAccordionSummary-content": {
     order: 2,
     flexGrow: 1,
     alignItems: "center",
-    margin: "0px",
-  },
+    margin: "0px"
+  }
 }));
 
 export const AccordionDetails = styled(MuiAccordionDetails)(() => ({
@@ -51,15 +51,15 @@ export const AccordionDetails = styled(MuiAccordionDetails)(() => ({
   //borderTop: "1px solid rgba(0, 0, 0, .125)",
   //borderBottom: "1px solid rgba(0, 0, 0, .125)",
   "& .MuiAccordionDetails-root": {
-    padding: "4px 50px 4px",
-  },
+    padding: "4px 50px 4px"
+  }
 }));
 
 export const ColumnContainer = styled(Box)(({ theme }) => ({
   // backgroundColor: theme.palette.background.default,
   display: "flex",
   alignItems: "center",
-  padding: theme.spacing(0),
+  padding: theme.spacing(0)
 }));
 // listItem: {
 //   '&:hover': {

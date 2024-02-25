@@ -11,10 +11,10 @@ export const TSCButton: React.FC<ButtonProps> = (props) => {
         backgroundColor: theme.palette.button.main,
         color: "#FFFFFF",
         ":hover": {
-          backgroundColor: theme.palette.button.light,
+          backgroundColor: theme.palette.button.light
         },
         ":active": {
-          backgroundColor: theme.palette.button.dark,
+          backgroundColor: theme.palette.button.dark
         },
         ...props.sx,
       }}

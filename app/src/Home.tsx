@@ -5,13 +5,7 @@ import { NavigateFunction, useNavigate } from "react-router-dom";
 import { ChartConfig } from "@tsconline/shared";
 import { context } from "./state";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Grid,
-  Typography,
-} from "@mui/material";
+import { Accordion, AccordionSummary, AccordionDetails, Grid, Typography } from "@mui/material";
 import { useTheme, styled } from "@mui/material/styles";
 import { TSCIcon, TSCButton, TSCCard, StyledScrollbar } from "./components";
 import TSCreatorLogo from "./assets/TSCreatorLogo.png";
@@ -23,13 +17,13 @@ const HeaderContainer = styled("div")(({ theme }) => ({
   alignItems: "center",
   justifyContent: "center",
   gap: theme.spacing(2),
-  marginBottom: theme.spacing(4),
+  marginBottom: theme.spacing(4)
 }));
 
 const HeaderTitle = styled(Typography)(({ theme }) => ({
   fontWeight: theme.typography.fontWeightBold,
   color: theme.palette.dark.main,
-  fontSize: theme.typography.h2.fontSize,
+  fontSize: theme.typography.h2.fontSize
 }));
 
 const TSCOnlineHeader = () => {
@@ -49,31 +43,22 @@ export const Home = observer(function Home() {
     <div
       className="whole_page"
       style={{
-        background: theme.palette.gradient.main,
-      }}
-    >
+        background: theme.palette.gradient.main
+      }}>
       <TSCOnlineHeader />
       {Object.entries(state.presets).map(([type, configArray]) => {
-        return (
-          <TSCPresetHighlights
-            key={type}
-            navigate={navigate}
-            configArray={configArray}
-            type={type}
-          />
-        );
+        return <TSCPresetHighlights key={type} navigate={navigate} configArray={configArray} type={type} />;
       })}
       <div className="bottom-button">
         <TSCButton
           className="remove-cache-button"
           style={{
-            fontSize: theme.typography.pxToRem(12),
+            fontSize: theme.typography.pxToRem(12)
           }}
           onClick={() => {
             actions.removeCache();
             actions.resetState();
-          }}
-        >
+          }}>
           Remove Cache
         </TSCButton>
       </div>
@@ -84,7 +69,7 @@ export const Home = observer(function Home() {
 const TSCPresetHighlights = observer(function TSCPresetHighlights({
   type,
   navigate,
-  configArray,
+  configArray
 }: {
   type: string;
   navigate: NavigateFunction;
@@ -98,17 +83,12 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
   };
   return (
     <>
-      <Accordion
-        className="preset-highlight"
-        onChange={handleAccordionChange}
-        expanded={expanded}
-      >
+      <Accordion className="preset-highlight" onChange={handleAccordionChange} expanded={expanded}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel1a-content"
           id="panel1a-header"
-          className="preset-summary"
-        >
+          className="preset-summary">
           <Typography className="preset-type-title">{`${type} PRESETS`}</Typography>
         </AccordionSummary>
         <AccordionDetails>

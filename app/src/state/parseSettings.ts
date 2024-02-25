@@ -15,9 +15,7 @@ function processSettings(settingsNode: any): any {
     const settingName = settingNode.getAttribute("name");
     const nestedSettingsNode = settingNode.getElementsByTagName("setting")[0];
     const justificationValue = settingNode.getAttribute("justification");
-    const settingValue = nestedSettingsNode
-      ? nestedSettingsNode.textContent.trim()
-      : settingNode.textContent.trim();
+    const settingValue = nestedSettingsNode ? nestedSettingsNode.textContent.trim() : settingNode.textContent.trim();
     //when the setting object is created, it looks like the nested objects in topAge and baseAge
     //are taken out and created as standalone setting options. This should not happen,
     //so skip when the setting name is text.
@@ -27,17 +25,14 @@ function processSettings(settingsNode: any): any {
       settings[settingName] = {
         source: "text",
         unit: "Ma",
-        text: settingValue,
+        text: settingValue
       };
     }
     //these two tags have units, so make an object storing its unit and value
-    else if (
-      settingName === "unitsPerMY" ||
-      settingName === "skipEmptyColumns"
-    ) {
+    else if (settingName === "unitsPerMY" || settingName === "skipEmptyColumns") {
       settings[settingName] = {
         unit: "Ma",
-        text: settingValue,
+        text: settingValue
       };
     } else if (justificationValue.length !== 0) {
       settings[settingName] = justificationValue;
@@ -97,14 +92,11 @@ function processColumn(node: any): any {
           const justificationValue = child.getAttribute("justification");
           const orientationValue = child.getAttribute("orientation");
           const useNamedValue = child.getAttribute("useNamed");
-          if (
-            settingName === "backgroundColor" ||
-            settingName === "customColor"
-          ) {
+          if (settingName === "backgroundColor" || settingName === "customColor") {
             if (useNamedValue !== null) {
               result[settingName] = {
                 useNamed: useNamedValue,
-                text: child.textContent.trim(),
+                text: child.textContent.trim()
               };
             } else {
               result[settingName] = child.textContent.trim();
@@ -149,8 +141,7 @@ export function xmlToJson(xml: string): any {
 
     const rootColumnNode = tsCreatorNode.getElementsByTagName("column")[0];
     if (rootColumnNode) {
-      json[rootColumnNode.getAttribute("id") || "unknown"] =
-        processColumn(rootColumnNode);
+      json[rootColumnNode.getAttribute("id") || "unknown"] = processColumn(rootColumnNode);
     }
   }
   return json;
@@ -197,11 +188,7 @@ function replaceSpecialChars(text: string, type: number): string {
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with settings info
  */
-function generateSettingsXml(
-  settings: any,
-  chartSettings: any,
-  indent: string
-): string {
+function generateSettingsXml(settings: any, chartSettings: any, indent: string): string {
   let xml = "";
   for (const key in settings) {
     if (Object.prototype.hasOwnProperty.call(settings, key)) {
@@ -221,8 +208,7 @@ function generateSettingsXml(
           //later use something other than checking if base stage is zero.
           if (chartSettings.baseStageAge === 0) {
             xml += `${indent}    <setting name="text">${value.text}</setting>\n`;
-          } else
-            xml += `${indent}    <setting name="text">${chartSettings.baseStageAge}</setting>\n`;
+          } else xml += `${indent}    <setting name="text">${chartSettings.baseStageAge}</setting>\n`;
           xml += `${indent}</setting>\n`;
         }
         //else if (key === "topAge" || key === "baseAge") {
@@ -268,12 +254,7 @@ function generateFontsXml(fonts: any, indent: string): string {
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with column info
  */
-function generateColumnXml(
-  jsonColumn: any,
-  stateColumn: any | null,
-  parent: string,
-  indent: string
-): string {
+function generateColumnXml(jsonColumn: any, stateColumn: any | null, parent: string, indent: string): string {
   let xml = "";
   for (let key in jsonColumn) {
     if (Object.prototype.hasOwnProperty.call(jsonColumn, key)) {
@@ -288,26 +269,16 @@ function generateColumnXml(
 
       if (key === "title") {
         let useEditName = false;
-        if (
-          colName !== "Chart Root" &&
-          colName !== "Chart Title" &&
-          colName !== "Ma"
-        ) {
+        if (colName !== "Chart Root" && colName !== "Chart Title" && colName !== "Ma") {
           if (stateColumn && stateColumn !== undefined) {
-            if (
-              stateColumn.editName !== undefined &&
-              stateColumn.editName !== colName
-            ) {
+            if (stateColumn.editName !== undefined && stateColumn.editName !== colName) {
               xml += `${indent}<setting name="title">${stateColumn.editName}</setting>\n`;
               useEditName = true;
             }
           }
         }
         if (!useEditName) {
-          xml += `${indent}<setting name="title">${replaceSpecialChars(
-            jsonColumn[key],
-            1
-          )}</setting>\n`;
+          xml += `${indent}<setting name="title">${replaceSpecialChars(jsonColumn[key], 1)}</setting>\n`;
         }
       } else if (key === "backgroundColor" || key === "customColor") {
         if (jsonColumn[key].useNamed) {
@@ -327,11 +298,7 @@ function generateColumnXml(
         }
         //always display these things (the original tsc throws an error if not selected)
         //(but online doesn't have option to deselect them)
-        else if (
-          colName === "Chart Root" ||
-          colName === "Chart Title" ||
-          colName === "Ma"
-        ) {
+        else if (colName === "Chart Root" || colName === "Chart Title" || colName === "Ma") {
           xml += `${indent}<setting name="${xmlKey}">true</setting>\n`;
           continue;
         }
@@ -344,9 +311,7 @@ function generateColumnXml(
           }
         }
       } else if (key.startsWith("_")) {
-        xml += `${indent}<${xmlKey.slice(1)}>${jsonColumn[key]}</${xmlKey.slice(
-          1
-        )}>\n`;
+        xml += `${indent}<${xmlKey.slice(1)}>${jsonColumn[key]}</${xmlKey.slice(1)}>\n`;
       } else if (key === "fonts") {
         xml += `${indent}<fonts>\n`;
         xml += generateFontsXml(jsonColumn[key], `${indent}    `);
@@ -361,7 +326,7 @@ function generateColumnXml(
           one: jsonColumn[key],
           two: null,
           three: currName,
-          four: `${indent}    `,
+          four: `${indent}    `
         };
         if (currName == "Chart Root") {
           params.two = stateColumn;
@@ -374,19 +339,11 @@ function generateColumnXml(
           }
         }
 
-        xml += generateColumnXml(
-          params.one,
-          params.two,
-          params.three,
-          params.four
-        );
+        xml += generateColumnXml(params.one, params.two, params.three, params.four);
 
         xml += `${indent}</column>\n`;
       } else {
-        xml += `${indent}<setting name="${xmlKey}">${replaceSpecialChars(
-          jsonColumn[key],
-          1
-        )}</setting>\n`;
+        xml += `${indent}<setting name="${xmlKey}">${replaceSpecialChars(jsonColumn[key], 1)}</setting>\n`;
       }
     }
   }
@@ -402,12 +359,7 @@ function generateColumnXml(
  * @param version the version of the jar file (TimeScale Creator)
  * @returns xml string with the entire settings info
  */
-export function jsonToXml(
-  settings: any,
-  columnSettings: any,
-  chartSettings: any,
-  version: string = "PRO8.0"
-): string {
+export function jsonToXml(settings: any, columnSettings: any, chartSettings: any, version: string = "PRO8.0"): string {
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
   //console.log("json 2...\n", state.settingsJSON);

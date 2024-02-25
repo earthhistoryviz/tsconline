@@ -18,7 +18,7 @@ export const TSCIcon = ({
       alt={alt}
       sx={{
         width: size,
-        height: size,
+        height: size
       }}
     />
   );

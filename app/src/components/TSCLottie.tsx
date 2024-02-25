@@ -19,11 +19,10 @@ const Lottie: React.FC<LottieIconButtonProps> = ({
   width = 35,
   height = 35,
   speed = 1,
-  playOnHover = false,
+  playOnHover = false
 }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const [animationInstance, setAnimationInstance] =
-    useState<AnimationItem | null>(null);
+  const [animationInstance, setAnimationInstance] = useState<AnimationItem | null>(null);
   useEffect(() => {
     if (!ref.current || animationInstance) return;
     const anim = lottie.loadAnimation({
@@ -31,7 +30,7 @@ const Lottie: React.FC<LottieIconButtonProps> = ({
       renderer: "svg",
       animationData: JSON.parse(JSON.stringify(animationData)),
       loop: loop,
-      autoplay: autoplay,
+      autoplay: autoplay
     });
     anim.setSpeed(speed);
     setAnimationInstance(anim);
@@ -48,12 +47,7 @@ const Lottie: React.FC<LottieIconButtonProps> = ({
     }
   }
   return (
-    <div
-      ref={ref}
-      style={{ width: `${width}px`, height: `${height}px` }}
-      onClick={onClick}
-      onMouseEnter={onHover}
-    />
+    <div ref={ref} style={{ width: `${width}px`, height: `${height}px` }} onClick={onClick} onMouseEnter={onHover} />
   );
 };
 

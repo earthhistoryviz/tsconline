@@ -12,8 +12,7 @@ const EditNameField = observer(() => {
   const name =
     state.settingsTabs.columnSelected === null
       ? ""
-      : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!
-          .editName;
+      : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.editName;
   return (
     <div>
       <Typography style={{ padding: "5px" }}>Edit Title</Typography>
@@ -35,8 +34,7 @@ const EditNameField = observer(() => {
             variant="contained"
             onClick={() => {
               actions.updateEditName(editName.current);
-            }}
-          >
+            }}>
             Confirm
           </Button>
         </div>
@@ -74,8 +72,7 @@ export const ColumnMenu = observer(() => {
             onChange={() => {
               showMenu();
             }}
-            size="small"
-          >
+            size="small">
             <SettingsSharpIcon />
           </ToggleButton>
         </div>
