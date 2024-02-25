@@ -91,26 +91,22 @@ jobs:
         uses: actions/github-script@v5
         with:
           script: |
-                const fs = require('fs');
-                const buildReport = JSON.parse(fs.readFileSync('build.log'));
-                let message = `🚨 The build has failed. Please address the following issues:\n\n`;
-                buildReport.forEach(file => {
-                  if (file.messages.length > 0) {
-                    message += `### ${file.filePath.replace(`${process.env.GITHUB_WORKSPACE}/`, '')}\n`;
-                    file.messages.forEach(msg => {
-                      message += `- Line ${msg.line}:${msg.column} ${msg.ruleId} ${msg.message}\n`;
-                    });
-                    message += '\n';
-                  }
-                });
-                message += `Run 'yarn eslint --fix' locally to fix some of these issues automatically.`;
-                const prNumber = context.payload.pull_request.number;
-                github.rest.issues.createComment({
-                  ...context.repo,
-                  issue_number: prNumber,
-                  body: message,
-                });
+            const fs = require('fs');
+            const buildLog = fs.readFileSync('build.log', 'utf8');
+            const prNumber = context.payload.pull_request?.number;
+            if (prNumber) {
+              const message = `🚨 The build has failed. Please check the build logs for more information.\n\n\`\`\`\n${buildLog}\n\`\`\``;
+              github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: prNumber,
+                body: message,
+              });
+            }
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Tests
         run: echo Testing # Test command would go here
+
+      - name: Check for any failures
+        if: env.build_failed == 'true'
+        run: exit 1
