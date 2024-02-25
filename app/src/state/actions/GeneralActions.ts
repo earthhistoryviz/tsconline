@@ -23,6 +23,7 @@ import { fetcher, devSafeUrl } from "../../util";
 import { initializeColumnHashMap } from "./ColumnActions";
 import { jsonToXml } from "../parseSettings";
 import { displayError } from "./UtilActions";
+import { Settings } from "../../types";
 
 /**
  * Resets any user defined settings
@@ -367,7 +368,10 @@ export const updateCheckboxSetting = action(
     if (!settingOption) return;
 
     // Update the checkbox setting in state.settings
-    (state.settings as any)[stateName] = checked;
+    if ((state.settings)[stateName as keyof Settings] !== undefined && typeof (state.settings)[stateName as keyof Settings] ===  "boolean")  {
+      // @ts-expect-error
+      (state.settings)[`${stateName as keyof Settings}`] = checked;
+    }
 
     // Update the checkbox setting in jsonSettings['settings'] if available
     if (state.settingsJSON["settings"]) {
@@ -470,7 +474,7 @@ async function fetchSVGStatus(): Promise<boolean> {
     assertSVGStatus(data);
   } catch (e) {
     displayError(e, data, `Could not fetch SVG status`);
-    let msg = `Error fetching SVG status with error ${e}`;
+    const msg = `Error fetching SVG status with error ${e}`;
     throw new Error(msg);
   }
   return data.ready;

@@ -157,7 +157,7 @@ const FontMenuRow: React.FC<{
   );
 });
 
-export const FontMenu = observer(({}) => {
+export const FontMenu = observer(() => {
   const { state } = useContext(context);
   const theme = useTheme();
   const name =

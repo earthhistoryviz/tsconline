@@ -117,7 +117,7 @@ export async function parseDatapacks(
         }
       });
     }
-  } catch (e: any) {
+  } catch (e) {
     console.log(
       "ERROR: failed to read columns for path " +
         decrypt_paths +
@@ -263,7 +263,7 @@ async function getFaciesOrBlock(
         block.on = false
       } 
       let info = tabSeperated[tabSeperated.length - 1];
-      const pattern = /\"*\"/;
+      const pattern = /"*"/;
 
       if (info && pattern.test(info)) {
         block.info = info;

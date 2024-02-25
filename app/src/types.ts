@@ -25,3 +25,12 @@ export type ErrorAlert = {
     id: number,
     errorText: string
 }
+export type Settings = {
+    topStageAge: number;
+    topStageKey: string;
+    baseStageAge: number;
+    baseStageKey: string;
+    unitsPerMY: number;
+    mouseOverPopupsEnabled: boolean;
+    datapackContainsSuggAge: boolean;
+}

@@ -1,6 +1,6 @@
 import { observable } from "mobx";
 
-import { ErrorAlert, FaciesOptions, MapHistory } from "../types";
+import { ErrorAlert, FaciesOptions, MapHistory, Settings } from "../types";
 import type {
   MapHierarchy,
   MapInfo,
@@ -52,15 +52,7 @@ export type State = {
   chartHash: string;
   settingsXML: string;
   settingsJSON: any;
-  settings: {
-    topStageAge: number;
-    topStageKey: string;
-    baseStageAge: number;
-    baseStageKey: string;
-    unitsPerMY: number;
-    mouseOverPopupsEnabled: boolean;
-    datapackContainsSuggAge: boolean;
-  };
+  settings: Settings;
   useCache: boolean;
   usePreset: boolean;
   openSnackbar: boolean;
