@@ -17,6 +17,7 @@ import SejalPic from "./assets/aboutPictures/SejalKumar.jpg"
 import AdityaPic from "./assets/aboutPictures/AdityaSivathanu.jpg"
 import AaronPic from "./assets/aboutPictures/AaronAult.jpg"
 import TobyPic from "./assets/aboutPictures/TobyOnyekwere.png"
+import RebeccaPic from "./assets/aboutPictures/RebeccaRupp.png"
 
 
 const HeaderContainer = styled('div')(({ theme }) => ({
@@ -55,7 +56,8 @@ const members = [
     {name: "Leyton Bostre", role: "Member", homeTown: "Long Beach, CA", timeWorked: "2024 - Present", proPic: LeytonPic},
     {name: "Jiaqing Li (Jacqui)", role: "Member", homeTown: "Wuhan, China", timeWorked: "2024 - Present", proPic: JacquiPic},
     {name: "Toby Onyekwere", role: "Member", homeTown: "Nigeria", timeWorked: "2024 - Present", proPic: TobyPic},
-    {name: "Rohan Nachnani", role: "Member", homeTown: "Bangalore, India", timeWorked: "2024 - Present", proPic: RohanPic}
+    {name: "Rohan Nachnani", role: "Member", homeTown: "Bangalore, India", timeWorked: "2024 - Present", proPic: RohanPic},
+    {name: "Rebecca Rupp", role: "Member", homeTown: "Houston, Texas", timeWorked: "2024 - Present", proPic: RebeccaPic}
 ]
 
 export const About = observer(function About() {
