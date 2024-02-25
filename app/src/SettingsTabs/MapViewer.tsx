@@ -6,8 +6,6 @@ import React, { useEffect, useState, useRef, useContext } from "react";
 import { context } from "../state";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import {
-  TSCInputAdornment,
-  TSCNumberInput,
   TSCButton,
   DrawerHeader,
   ColoredIconButton,
