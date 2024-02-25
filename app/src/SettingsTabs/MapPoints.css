@@ -5,3 +5,10 @@
     max-height: none;
     overflow: hidden;
 }
+.no-map-points-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    min-height: 100vh;
+}
