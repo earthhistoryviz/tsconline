@@ -235,7 +235,7 @@ async function getFaciesOrBlock(filename: string, faciesMap: Map<string, Facies>
       if (tabSeperated[5] && tabSeperated[5] === "off") {
         block.on = false;
       }
-      let info = tabSeperated[tabSeperated.length - 1];
+      const info = tabSeperated[tabSeperated.length - 1];
       const pattern = /"*"/;
 
       if (info && pattern.test(info)) {
