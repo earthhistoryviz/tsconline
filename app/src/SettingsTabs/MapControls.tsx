@@ -2,6 +2,7 @@ import { observer } from "mobx-react-lite";
 import { ChangeEvent, ChangeEventHandler, useContext } from "react";
 import { context } from "../state";
 import {
+  BorderedIcon,
   ColoredDiv,
   Lottie,
   TSCInputAdornment,
@@ -11,6 +12,7 @@ import {
 import {
   Button,
   Divider,
+  IconButton,
   Slider,
   TextFieldProps,
   Typography,
@@ -18,8 +20,11 @@ import {
 import mapPointsAnimationData from "../assets/icons/map-points.json";
 import CategoryIcon from "@mui/icons-material/Category";
 import MapSharpIcon from "@mui/icons-material/MapSharp";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CloseIcon from "@mui/icons-material/Close";
 import "./MapControls.css";
 import { NumericFormat } from "react-number-format";
+import { faciesHeaderHeight, normHeaderHeight } from "./MapPointConstants";
 
 const AgeTextField = ({ ...props }: TextFieldProps) => (
   <TSCTextField
@@ -37,7 +42,6 @@ const DotSizeTextField = ({ ...props }: TextFieldProps) => (
 export const FaciesControls = observer(() => {
   const { state, actions } = useContext(context);
   const dotSizeRange = { min: 1, max: 20 };
-  const overallAgeMax = 9999999;
   return (
     <ColoredDiv className="facies-buttons">
       <div className="dot-controls">
@@ -54,8 +58,8 @@ export const FaciesControls = observer(() => {
               if (!floatValue) {
                 return;
               }
-              if (floatValue > 20) actions.setDotSize(20);
-              else if (floatValue < 1) actions.setDotSize(1);
+              if (floatValue > dotSizeRange.max) actions.setDotSize(20);
+              else if (floatValue < dotSizeRange.min) actions.setDotSize(1);
               else actions.setDotSize(floatValue);
             }}
           />
@@ -110,22 +114,38 @@ type HeaderBarProps = {
 };
 export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
   const { state, actions } = useContext(context);
+  const headerStyle = {
+    height: `${isFacies ? faciesHeaderHeight : normHeaderHeight}`,
+  };
   return (
-    <ColoredDiv className="header-bar">
+    <ColoredDiv className="header-bar" style={headerStyle}>
       <div className="header-title-container">
-        <Lottie
-          className="header-icon"
-          animationData={mapPointsAnimationData}
-          width={25}
-          height={25}
-          loop
-          autoplay
-        />
-        <TypographyText className="map-viewer-header" variant="h1">
-          Map Viewer
-        </TypographyText>
+        <IconButton
+          className="move-maps-button"
+          onClick={actions.goBackInMapHistory}
+        >
+          <BorderedIcon component={ArrowBackIcon} className="icon-button" />
+        </IconButton>
+        <div className="header-title">
+          <Lottie
+            className="header-icon"
+            animationData={mapPointsAnimationData}
+            width={25}
+            height={25}
+            loop
+            autoplay
+          />
+          <TypographyText className="map-viewer-header" variant="h1">
+            Map Viewer
+          </TypographyText>
+        </div>
+        <IconButton
+          className="move-maps-button"
+          onClick={() => actions.closeMapViewer()}
+        >
+          <BorderedIcon component={CloseIcon} className="icon-button" />
+        </IconButton>
       </div>
-      <Divider className="divider" />
       <div className="buttons">
         <Button
           startIcon={<MapSharpIcon />}
@@ -146,6 +166,12 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
           </Button>
         )}
       </div>
+      {isFacies && (
+        <>
+          <Divider className="divider" />
+          <FaciesControls />
+        </>
+      )}
     </ColoredDiv>
   );
 };
