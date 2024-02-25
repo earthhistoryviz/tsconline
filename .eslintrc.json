@@ -24,10 +24,17 @@
     },
     "overrides": [
         {
-          "files": ["shared/**/*", "app/state/actions/UtilActions.ts", "app/state/parseSettings.ts"],
+          "files": ["shared/**/*", "app/state/actions/UtilActions.ts", "app/state/parseSettings.ts", "app/src/state/state.ts", "app/src/types.ts", 
+          "server/src/parse-settings.ts", "server/src/types.ts", "server/src/parse-map-packs.ts"],
           "rules": {
             "@typescript-eslint/no-explicit-any": "off"
           }
+        },
+        {
+            "files": ["server/src/parse-map-packs.ts"],
+            "rules": {
+                "no-case-declarations": "off"
+            }
         }
       ]
 }
