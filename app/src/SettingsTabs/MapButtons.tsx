@@ -121,7 +121,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
         // unmount
       };
     });
-    let color = getColor(theme, disabled, isInfo, clicked);
+    const color = getColor(theme, disabled, isInfo, clicked);
     // scale only if it isn't an info point and in facies mode
     const iconSize = scaleButton
       ? ICON_SIZE + state.mapState.currentFaciesOptions.dotSize * 3
@@ -440,7 +440,7 @@ export function loadTransects(
             );
           const start = mapPoints[transect.startMapPoint];
           const end = mapPoints[transect.endMapPoint];
-          let startPosition = getPositionOfPointBasedOnBounds(
+          const startPosition = getPositionOfPointBasedOnBounds(
             bounds,
             start,
             frameWidth,
@@ -450,7 +450,7 @@ export function loadTransects(
             throw new Error(
               `MapInfo bounds are neither vertical or rectangular for ${bounds}`
             );
-          let endPosition = getPositionOfPointBasedOnBounds(
+          const endPosition = getPositionOfPointBasedOnBounds(
             bounds,
             end,
             frameWidth,
@@ -528,7 +528,7 @@ function getFaciesIcon(
   setSelectedMapAgeRange: (min: number, max: number) => void,
   column: ColumnInfo
 ) {
-  let rockType = getRockTypeForAge(
+  const rockType = getRockTypeForAge(
     column,
     currentFaciesOptions.faciesAge,
     setSelectedMapAgeRange

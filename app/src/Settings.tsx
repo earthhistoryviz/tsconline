@@ -1,5 +1,4 @@
-import React, { useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useContext } from "react";
 import { context } from "./state";
 import { observer } from "mobx-react-lite";
 import { Column } from "./SettingsTabs/Column";

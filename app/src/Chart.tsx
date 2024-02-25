@@ -1,12 +1,10 @@
 import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "./state";
-import loadingSVG from "./assets/loading.svg";
 import { useTheme } from "@mui/material/styles";
 import "./Chart.css";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import { GradientDiv } from "./components";
-import TSCLottie from "./components/TSCLottie";
 import LoadingChart from "./LoadingChart";
 
 export const Chart = observer(function () {

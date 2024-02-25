@@ -331,7 +331,6 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
 const FaciesControls = observer(() => {
   const { state, actions } = useContext(context);
   const dotSizeRange = { min: 1, max: 20 };
-  const overallAgeMax = 9999999;
   return (
     <ColoredDiv className="facies-buttons">
       <div className="dot-controls">
