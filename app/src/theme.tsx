@@ -87,12 +87,11 @@ let theme = createTheme({
       main: "#E0FBFC"
     },
     scrollbar: {
-      main: "#7b778a",
+      main: "#7b778a"
     },
     error: {
-      main: "#FF0000",
-    },
-
+      main: "#FF0000"
+    }
   },
   typography: {
     fontFamily: '"Titillium Web", sans-serif'

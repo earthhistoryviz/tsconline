@@ -94,7 +94,6 @@ export async function parseDatapacks(decrypt_filepath: string, files: string[]):
         if (!isChild.has(parent)) {
           recursive("Root", parent, children, columnInfoArray, allEntries, faciesMap, blocksMap);
         }
-
       });
     }
   } catch (e) {
@@ -191,7 +190,7 @@ async function getFaciesOrBlock(filename: string, faciesMap: Map<string, Facies>
     minAge: 0,
     maxAge: 0,
     popup: "",
-    on: true,
+    on: true
   };
   let inFaciesBlock = false;
   let inBlockBlock = false;
@@ -229,9 +228,9 @@ async function getFaciesOrBlock(filename: string, faciesMap: Map<string, Facies>
     if (!inBlockBlock && tabSeperated[1] === "block") {
       block.name = trimQuotes(tabSeperated[0]!);
       if (tabSeperated[5] && tabSeperated[5] === "off") {
-        block.on = false
+        block.on = false;
       }
-      let popup = tabSeperated[tabSeperated.length - 1];
+      const popup = tabSeperated[tabSeperated.length - 1];
       const pattern = /"*"/;
 
       if (popup && pattern.test(popup)) {
@@ -311,10 +310,7 @@ function processBlock(line: string): SubBlockInfo | null {
   const label = tabSeperated[1];
   const age = Number(tabSeperated[2]!);
   const popup = tabSeperated[4];
-  if (isNaN(age))
-    throw new Error(
-      "Error processing facies line, age: " + tabSeperated[2]! + " is NaN"
-    );
+  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeperated[2]! + " is NaN");
   const lineStyle = tabSeperated[3];
   if (label) {
     currentSubBlockInfo.label = label;

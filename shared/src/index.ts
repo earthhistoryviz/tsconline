@@ -218,11 +218,11 @@ export const defaultFontsInfo: FontsInfo = {
 };
 
 export type SubBlockInfo = {
-  label: string,
-  age: number,
-  popup: string,
-  lineStyle: string
-}
+  label: string;
+  age: number;
+  popup: string;
+  lineStyle: string;
+};
 
 export type ChartRequest = {
   settings: string; // JSON string representing the settings file you want to use to make a chart
@@ -397,16 +397,11 @@ export function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo {
 }
 
 export function assertSubBlockInfo(o: any): asserts o is SubBlockInfo {
-  if (!o || typeof o !== "object")
-    throw new Error("SubBlockInfo must be a non-null object");
-  if (typeof o.label !== "string")
-    throwError("SubBlockInfo", "label", "string", o.label)
-  if (typeof o.age !== "number")
-    throwError("SubBlockInfo", "age", "number", o.number)
-  if (typeof o.popup !== "string")
-    throwError("SubBlockInfo", "popup", "string", o.popup)
-  if (typeof o.lineStyle !== "string")
-    throwError("SubBlockInfo", "lineStyle", "string", o.lineStyle)
+  if (!o || typeof o !== "object") throw new Error("SubBlockInfo must be a non-null object");
+  if (typeof o.label !== "string") throwError("SubBlockInfo", "label", "string", o.label);
+  if (typeof o.age !== "number") throwError("SubBlockInfo", "age", "number", o.number);
+  if (typeof o.popup !== "string") throwError("SubBlockInfo", "popup", "string", o.popup);
+  if (typeof o.lineStyle !== "string") throwError("SubBlockInfo", "lineStyle", "string", o.lineStyle);
 }
 
 export function assertBlock(o: any): asserts o is Block {
@@ -416,15 +411,10 @@ export function assertBlock(o: any): asserts o is Block {
   for (const subBlockInfo of o.subBlockInfo) {
     assertSubBlockInfo(subBlockInfo);
   }
-  if (typeof o.minAge !== "number")
-    throw new Error("Block must have a minAge with number type")
-  if (typeof o.maxAge !== "number")
-    throw new Error("Block must have a maxAge with number type")
-  if (typeof o.popop !== "string")
-    throw new Error("Block must have an popup with string type")
-  if (typeof o.name !== "boolean")
-    throw new Error("Block must have an on value with boolean type")
-
+  if (typeof o.minAge !== "number") throw new Error("Block must have a minAge with number type");
+  if (typeof o.maxAge !== "number") throw new Error("Block must have a maxAge with number type");
+  if (typeof o.popop !== "string") throw new Error("Block must have an popup with string type");
+  if (typeof o.name !== "boolean") throw new Error("Block must have an on value with boolean type");
 }
 
 export function assertFacies(o: any): asserts o is Facies {
