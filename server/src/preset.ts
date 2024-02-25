@@ -23,7 +23,7 @@ export async function loadPresets(): Promise<Presets | ServerResponseError> {
       }
       return cfg;
     } catch (e) {
-      const msg = 'ERROR: failed to read chart config for path '+chartconfig+'.  Error was: ';
+      const msg = "ERROR: failed to read chart config for path " + chartconfig + ".  Error was: ";
       console.log(msg, e);
       return { error: msg + e };
     }

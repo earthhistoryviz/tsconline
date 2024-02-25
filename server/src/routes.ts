@@ -93,14 +93,9 @@ export const fetchChart = async function fetchChart(
     chartrequest = JSON.parse(request.body as string);
     assertChartRequest(chartrequest);
   } catch (e) {
-    console.log(
-      "ERROR: chart request is not valid.  Request was: ",
-      chartrequest,
-      ".  Error was: ",
-      e
-    );
+    console.log("ERROR: chart request is not valid.  Request was: ", chartrequest, ".  Error was: ", e);
     reply.send({
-      error: "ERROR: chart request is not valid.  Error was: " + e,
+      error: "ERROR: chart request is not valid.  Error was: " + e
     });
     return;
   }
@@ -139,17 +134,9 @@ export const fetchChart = async function fetchChart(
   try {
     await mkdirp(chartdir_filepath);
     await writeFile(settings_filepath, settingsXml);
-    console.log(
-      "Successfully created and saved chart settings at",
-      settings_filepath
-    );
+    console.log("Successfully created and saved chart settings at", settings_filepath);
   } catch (e) {
-    console.log(
-      "ERROR: failed to save settings at",
-      settings_filepath,
-      "  Error was:",
-      e
-    );
+    console.log("ERROR: failed to save settings at", settings_filepath, "  Error was:", e);
     reply.send({ error: "ERROR: failed to save settings" });
     return;
   }

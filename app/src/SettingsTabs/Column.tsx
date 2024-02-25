@@ -5,14 +5,7 @@ import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
 import { Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import {
-  ColumnContainer,
-  AccordionDetails,
-  TSCCheckbox,
-  AccordionSummary,
-  Accordion,
-  TSCButton,
-} from "../components";
+import { ColumnContainer, AccordionDetails, TSCCheckbox, AccordionSummary, Accordion, TSCButton } from "../components";
 
 import { ColumnMenu } from "./ColumnMenu";
 
@@ -96,16 +89,14 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
         <AccordionDetails>
           <>
             {details.children &&
-              Object.entries(details.children).map(
-                ([childName, childDetails]) => (
-                  <ColumnAccordion
-                    key={childName}
-                    details={childDetails}
-                    expandedAccordions={expandedAccordions}
-                    accordionClicked={accordionClicked}
-                  />
-                )
-              )}
+              Object.entries(details.children).map(([childName, childDetails]) => (
+                <ColumnAccordion
+                  key={childName}
+                  details={childDetails}
+                  expandedAccordions={expandedAccordions}
+                  accordionClicked={accordionClicked}
+                />
+              ))}
           </>
         </AccordionDetails>
       </Accordion>

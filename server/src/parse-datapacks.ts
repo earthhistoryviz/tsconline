@@ -97,12 +97,7 @@ export async function parseDatapacks(decrypt_filepath: string, files: string[]):
       });
     }
   } catch (e) {
-    console.log(
-      "ERROR: failed to read columns for path " +
-        decrypt_paths +
-        ".  Error was: ",
-      e
-    );
+    console.log("ERROR: failed to read columns for path " + decrypt_paths + ".  Error was: ", e);
   }
   return { columnInfoArray, datapackAgeInfo };
 }

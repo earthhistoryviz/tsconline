@@ -22,13 +22,13 @@ const HeaderContainer = styled("div")(({ theme }) => ({
   alignItems: "center",
   justifyContent: "center",
   gap: theme.spacing(2),
-  marginBottom: theme.spacing(4),
+  marginBottom: theme.spacing(4)
 }));
 
 const HeaderTitle = styled(Typography)(({ theme }) => ({
   fontWeight: theme.typography.fontWeightBold,
   color: theme.palette.dark.main,
-  fontSize: theme.typography.h2.fontSize,
+  fontSize: theme.typography.h2.fontSize
 }));
 
 const TSCOnlineHeader = () => {
@@ -46,71 +46,71 @@ const members = [
     role: "Advisor",
     homeTown: "IDK",
     timeWorked: "2008 - Present",
-    proPic: AaronPic,
+    proPic: AaronPic
   },
   {
     name: "Paolo Gumasing",
     role: "Team Lead",
     homeTown: "Lafayette, IN",
     timeWorked: "2023 - Present",
-    proPic: PaoloPic,
+    proPic: PaoloPic
   },
   {
     name: "Jay Lee",
     role: "Member",
     homeTown: "Seoul, South Korea",
     timeWorked: "2023 - Present",
-    proPic: JayPic,
+    proPic: JayPic
   },
   {
     name: "Sejal Kumar",
     role: "Member",
     homeTown: "Canton, MI",
     timeWorked: "2023 - Present",
-    proPic: SejalPic,
+    proPic: SejalPic
   },
   {
     name: "Aditya Sivathanu",
     role: "Member",
     homeTown: "West Lafayette, IN",
     timeWorked: "2023 - Present",
-    proPic: AdityaPic,
+    proPic: AdityaPic
   },
   {
     name: "Leyton Bostre",
     role: "Member",
     homeTown: "Long Beach, CA",
     timeWorked: "2024 - Present",
-    proPic: LeytonPic,
+    proPic: LeytonPic
   },
   {
     name: "Jiaqing Li (Jacqui)",
     role: "Member",
     homeTown: "Wuhan, China",
     timeWorked: "2024 - Present",
-    proPic: JacquiPic,
+    proPic: JacquiPic
   },
   {
     name: "Toby Onyekwere",
     role: "Member",
     homeTown: "Nigeria",
     timeWorked: "2024 - Present",
-    proPic: TobyPic,
+    proPic: TobyPic
   },
   {
     name: "Rohan Nachnani",
     role: "Member",
     homeTown: "Bangalore, India",
     timeWorked: "2024 - Present",
-    proPic: RohanPic,
+    proPic: RohanPic
   },
   {
     name: "Rebecca Rupp",
     role: "Member",
     homeTown: "Houston, Texas",
     timeWorked: "2024 - Present",
-    proPic: RebeccaPic,
-  },
+    proPic: RebeccaPic
+  }
 ];
 
 export const About = observer(function About() {
@@ -120,18 +120,16 @@ export const About = observer(function About() {
     <div
       className="whole_page"
       style={{
-        background: theme.palette.gradient.main,
-      }}
-    >
+        background: theme.palette.gradient.main
+      }}>
       <TSCOnlineHeader />
       <div
         style={{
           display: "flex",
           justifyContent: "center",
           width: "100%",
-          marginBottom: "1vh",
-        }}
-      >
+          marginBottom: "1vh"
+        }}>
         <div
           style={{
             display: "flex",
@@ -139,18 +137,13 @@ export const About = observer(function About() {
             alignItems: "center",
             justifyContent: "center",
             alignSelf: "center",
-            width: "50%",
-          }}
-        >
-          <Typography style={{ fontSize: 48, marginBottom: "1vh" }}>
-            About
-          </Typography>
+            width: "50%"
+          }}>
+          <Typography style={{ fontSize: 48, marginBottom: "1vh" }}>About</Typography>
           <Typography style={{ fontSize: 22, marginBottom: "3vh" }}>
-            TimeScale Creator Online enables you to explore and create charts of
-            any portion of the geologic time scale from an extensive suite of
-            global and regional events in Earth History. The internal database
-            suite encompasses over 20,000 biologic, geomagnetic, sea-level,
-            stable isotope, and other events.
+            TimeScale Creator Online enables you to explore and create charts of any portion of the geologic time scale
+            from an extensive suite of global and regional events in Earth History. The internal database suite
+            encompasses over 20,000 biologic, geomagnetic, sea-level, stable isotope, and other events.
           </Typography>
         </div>
       </div>
@@ -163,9 +156,8 @@ export const About = observer(function About() {
             justifyContent: "center",
             alignSelf: "center",
             width: "90%",
-            flexWrap: "wrap",
-          }}
-        >
+            flexWrap: "wrap"
+          }}>
           {members.map(function (member) {
             return (
               <AboutCard

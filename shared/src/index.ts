@@ -500,12 +500,12 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   if (typeof o !== "object" || o === null) {
     throw new Error("ColumnInfo must be a non-null object");
   }
-  if (typeof o.name !== "string") throwError('ColumnInfo', 'name', 'string', o.name)
-  if (typeof o.on !== "boolean") throwError('ColumnInfo', 'on', 'boolean', o.on)
-  if (typeof o.info !== 'string') throwError('ColumnInfo', 'info', 'string', o.info)
-  if (o.parent !== null && typeof o.parent !== 'string') throwError('ColumnInfo', 'parent', 'string', o.parent)
-  if (typeof o.minAge !== 'number') throwError('ColumnInfo', 'minAge', 'number', o.minAge)
-  if (typeof o.maxAge !== 'number') throwError('ColumnInfo', 'maxAge', 'number', o.maxAge)
+  if (typeof o.name !== "string") throwError("ColumnInfo", "name", "string", o.name);
+  if (typeof o.on !== "boolean") throwError("ColumnInfo", "on", "boolean", o.on);
+  if (typeof o.info !== "string") throwError("ColumnInfo", "info", "string", o.info);
+  if (o.parent !== null && typeof o.parent !== "string") throwError("ColumnInfo", "parent", "string", o.parent);
+  if (typeof o.minAge !== "number") throwError("ColumnInfo", "minAge", "number", o.minAge);
+  if (typeof o.maxAge !== "number") throwError("ColumnInfo", "maxAge", "number", o.maxAge);
   for (const child of o.children) {
     assertColumnInfo(child);
   }

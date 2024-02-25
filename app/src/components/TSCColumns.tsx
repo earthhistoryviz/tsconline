@@ -7,13 +7,7 @@ import { styled } from "@mui/material/styles";
 
 // Define the Accordion component outside the Column component
 export const Accordion = styled((props: AccordionProps) => (
-  <MuiAccordion
-    disableGutters
-    elevation={0}
-    TransitionProps={{ timeout: 0, unmountOnExit: true }}
-    square
-    {...props}
-  />
+  <MuiAccordion disableGutters elevation={0} TransitionProps={{ timeout: 0, unmountOnExit: true }} square {...props} />
 ))(() => ({
   //border: `1px solid ${theme.palette.divider}`,
   "&:not(:last-child)": {
@@ -26,10 +20,7 @@ export const Accordion = styled((props: AccordionProps) => (
 
 // Define the AccordionSummary and AccordionDetails components outside the Column component
 export const AccordionSummary = styled((props: AccordionSummaryProps) => (
-  <MuiAccordionSummary
-    expandIcon={<ArrowForwardIosSharpIcon sx={{ fontSize: "0.9rem" }} />}
-    {...props}
-  />
+  <MuiAccordionSummary expandIcon={<ArrowForwardIosSharpIcon sx={{ fontSize: "0.9rem" }} />} {...props} />
 ))(() => ({
   display: "flex",
   paddingLeft: "0px",
