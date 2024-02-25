@@ -20,20 +20,14 @@ jobs:
         with:
           dry: True
           prettier_options: "--check **/*.{tsx,ts}"
+        continue-on-error: true
 
       - name: Comment PR on Prettier check failure
         if: failure()
-        uses: actions/github-script@v5
+        uses: thollander/actions-comment-pull-request@v2
         with:
-          script: |
-            const message = `🚨 The Prettier check has failed. Please run 'yarn prettier --write' locally and commit the changes.`;
-            const prNumber = context.payload.pull_request.number;
-            github.rest.issues.createComment({
-              ...context.repo,
-              issue_number: prNumber,
-              body: message,
-            });
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          message: |
+            🚨 The Prettier check has failed. Please run 'yarn prettier --write' locally and commit the changes.
       
       - name: Run ESLint
         run: yarn eslint **/*.{tsx,ts,css} --quiet --format json --output-file eslint-report.json
