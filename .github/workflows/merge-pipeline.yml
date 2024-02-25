@@ -24,11 +24,29 @@ jobs:
 
       - name: Comment PR on ESLint check failure
         if: env.eslint_failed == 'true'
-        uses: thollander/actions-comment-pull-request@v2
+        uses: actions/github-script@v5
         with:
-          message: |
-            🚨 The Prettier check has failed. Please run 'yarn prettier --write' locally and commit the changes.
-          filePath: 'eslint-report.json'
+          script: |
+            const fs = require('fs');
+            const eslintReport = JSON.parse(fs.readFileSync('eslint-report.json'));
+            let message = `🚨 The ESLint check has failed. Please address the following issues:\n\n`;
+            eslintReport.forEach(file => {
+              if (file.messages.length > 0) {
+                message += `### ${file.filePath.replace(`${process.env.GITHUB_WORKSPACE}/`, '')}\n`;
+                file.messages.forEach(msg => {
+                  message += `- Line ${msg.line}:${msg.column} ${msg.ruleId} ${msg.message}\n`;
+                });
+                message += '\n';
+              }
+            });
+            message += `Run 'yarn eslint --fix' locally to fix some of these issues automatically.`;
+            const prNumber = context.payload.pull_request.number;
+            github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: prNumber,
+              body: message,
+            });
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Prettify code
         run: |
@@ -62,16 +80,37 @@ jobs:
         run: yarn install
 
       - name: Build with Vite
-        run: yarn build 2>&1 | tee build.log || echo "build_failed=true" >> $GITHUB_ENV
+        run: |
+          if ! yarn build 2>&1 | tee build.log; then
+            echo "build_failed=true" >> $GITHUB_ENV
+          fi
         continue-on-error: true
 
       - name: Report Build Errors
         if: env.build_failed == 'true'
-        uses: thollander/actions-comment-pull-request@v2
+        uses: actions/github-script@v5
         with:
-          message: |
-            🚨 The build has failed. Please fix these errors.
-          filePath: 'build.log'
+          script: |
+                const fs = require('fs');
+                const buildReport = JSON.parse(fs.readFileSync('build.log'));
+                let message = `🚨 The build has failed. Please address the following issues:\n\n`;
+                buildReport.forEach(file => {
+                  if (file.messages.length > 0) {
+                    message += `### ${file.filePath.replace(`${process.env.GITHUB_WORKSPACE}/`, '')}\n`;
+                    file.messages.forEach(msg => {
+                      message += `- Line ${msg.line}:${msg.column} ${msg.ruleId} ${msg.message}\n`;
+                    });
+                    message += '\n';
+                  }
+                });
+                message += `Run 'yarn eslint --fix' locally to fix some of these issues automatically.`;
+                const prNumber = context.payload.pull_request.number;
+                github.rest.issues.createComment({
+                  ...context.repo,
+                  issue_number: prNumber,
+                  body: message,
+                });
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Tests
         run: echo Testing # Test command would go here
