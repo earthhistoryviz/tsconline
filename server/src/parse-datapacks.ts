@@ -9,7 +9,7 @@ import {
   assertSubBlockInfo,
   defaultFontsInfo,
   SubFaciesInfo,
-  assertSubFaciesInfo,
+  assertSubFaciesInfo
 } from "@tsconline/shared";
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths } from "./util.js";
 import { createInterface } from "readline";
@@ -36,22 +36,22 @@ function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
   let parsedColumnEntry: ParsedColumnEntry = {
     children: [],
     on: true,
-    info: "",
+    info: ""
   };
   for (var i = 0; i < array.length; i++) {
     if (array[i]?.includes("_METACOLUMN") || array[i]?.includes("TITLE")) {
       if (array[i]?.includes("_METACOLUMN")) {
         if (array[i] === "_METACOLUMN_ON") {
-          parsedColumnEntry.on = true
+          parsedColumnEntry.on = true;
         } else {
-          parsedColumnEntry.on = false
+          parsedColumnEntry.on = false;
         }
       }
       array.splice(i, 1);
       i = i - 1;
     }
-    if (!array[i] && i+1 < array.length) {
-      parsedColumnEntry.info = array[i+1]!;
+    if (!array[i] && i + 1 < array.length) {
+      parsedColumnEntry.info = array[i + 1]!;
       array.splice(i + 1, 1);
       array.splice(i, 1);
       i = i - 1;
@@ -72,17 +72,9 @@ function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
  * @param files the files to be parsed
  * @returns
  */
-export async function parseDatapacks(
-  decrypt_filepath: string,
-  files: string[]
-): Promise<DatapackParsingPack> {
-  const decrypt_paths = await grabFilepaths(
-    files,
-    decrypt_filepath,
-    "datapacks"
-  );
-  if (decrypt_paths.length == 0)
-    throw new Error(`Did not find any datapacks for ${files}`);
+export async function parseDatapacks(decrypt_filepath: string, files: string[]): Promise<DatapackParsingPack> {
+  const decrypt_paths = await grabFilepaths(files, decrypt_filepath, "datapacks");
+  if (decrypt_paths.length == 0) throw new Error(`Did not find any datapacks for ${files}`);
   let columnInfoArray: ColumnInfo[] = [];
   const isChild: Set<string> = new Set();
   const allEntries: Map<string, ParsedColumnEntry> = new Map();
@@ -94,26 +86,13 @@ export async function parseDatapacks(
       //get the facies/blocks first
       await getFaciesOrBlock(decrypt_path, faciesMap, blocksMap);
       // Originally the first step, gather all parents and their direct children
-      await getAllEntries(
-        decrypt_path,
-        allEntries,
-        isChild,
-        datapackAgeInfo
-      );
+      await getAllEntries(decrypt_path, allEntries, isChild, datapackAgeInfo);
       // only iterate over parents. if we encounter one that is a child, the recursive function
       // should have already processed it.
       allEntries.forEach((children, parent) => {
         // if the parent is not a child
         if (!isChild.has(parent)) {
-          recursive(
-            "Root",
-            parent,
-            children,
-            columnInfoArray,
-            allEntries,
-            faciesMap,
-            blocksMap,
-          );
+          recursive("Root", parent, children, columnInfoArray, allEntries, faciesMap, blocksMap);
         }
       });
     }
@@ -125,12 +104,12 @@ export async function parseDatapacks(
       e
     );
   }
-  return { columnInfoArray, datapackAgeInfo};
+  return { columnInfoArray, datapackAgeInfo };
 }
 /**
  * This will populate a mapping of all parents : childen[]
  * We need this to recursively iterate correctly. We do not want
- * 
+ *
  * @param filename the filename to parse
  * @param allEntries all entries (parent -> [child, child,...])
  * @param isChild the set of all children
@@ -178,9 +157,7 @@ async function getAllEntries(
     let childrenstring = line.split("\t:\t")[1];
     if (!parent || !childrenstring) continue;
     // childrenstring = childrenstring!.split("\t\t")[0];
-    let parsedChildren = spliceArrayAtFirstSpecialMatch(
-      childrenstring!.split("\t")
-    );
+    let parsedChildren = spliceArrayAtFirstSpecialMatch(childrenstring!.split("\t"));
     //if the entry is a child, add it to a set.
     for (const child of parsedChildren.children) {
       isChild.add(child);
@@ -188,10 +165,10 @@ async function getAllEntries(
     allEntries.set(parent, parsedChildren);
   }
   //set the age info if it exists
-  datapackAgeInfo.datapackContainsSuggAge = topAge != null && bottomAge != null
+  datapackAgeInfo.datapackContainsSuggAge = topAge != null && bottomAge != null;
   if (topAge != null && bottomAge != null) {
-    datapackAgeInfo.topAge = topAge
-    datapackAgeInfo.bottomAge = bottomAge
+    datapackAgeInfo.topAge = topAge;
+    datapackAgeInfo.bottomAge = bottomAge;
   }
 }
 /**
@@ -201,11 +178,7 @@ async function getAllEntries(
  * @param faciesMap the facies map to add to
  * @param blocksMap  the blocks map to add to
  */
-async function getFaciesOrBlock(
-  filename: string,
-  faciesMap: Map<string, Facies>,
-  blocksMap: Map<string, Block>,
-) {
+async function getFaciesOrBlock(filename: string, faciesMap: Map<string, Facies>, blocksMap: Map<string, Block>) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
   let facies: Facies = {
@@ -214,15 +187,15 @@ async function getFaciesOrBlock(
     minAge: 0,
     maxAge: 0,
     info: "",
-    on: true,
-  }
+    on: true
+  };
   let block: Block = {
     name: "",
     subBlockInfo: [],
     minAge: 0,
     maxAge: 0,
     info: "",
-    on: true,
+    on: true
   };
   let inFaciesBlock = false;
   let inBlockBlock = false;
@@ -231,7 +204,7 @@ async function getFaciesOrBlock(
     // we reached the end
     if ((!line || trimInvisibleCharacters(line) === "") && inFaciesBlock) {
       inFaciesBlock = false;
-      addFaciesToFaciesMap(facies, faciesMap)
+      addFaciesToFaciesMap(facies, faciesMap);
       continue;
     }
     // reached the end and store the key value pairs into blocksMap
@@ -244,24 +217,24 @@ async function getFaciesOrBlock(
     // we found a facies block
     if (!inFaciesBlock && tabSeperated[1] === "facies") {
       facies.name = trimQuotes(tabSeperated[0]!);
-      facies.info = tabSeperated[6] || ""
-      if (tabSeperated[5] && (tabSeperated[5] === "off" || tabSeperated[5].length == 0 )) {
-        facies.on = false
+      facies.info = tabSeperated[6] || "";
+      if (tabSeperated[5] && (tabSeperated[5] === "off" || tabSeperated[5].length == 0)) {
+        facies.on = false;
       }
       inFaciesBlock = true;
     } else if (inFaciesBlock) {
       let subFaciesInfo = processFacies(line);
       if (subFaciesInfo) {
-        facies.subFaciesInfo.push(subFaciesInfo)
+        facies.subFaciesInfo.push(subFaciesInfo);
       }
     }
 
     // we found a block
     if (!inBlockBlock && tabSeperated[1] === "block") {
       block.name = trimQuotes(tabSeperated[0]!);
-      if (tabSeperated[5] && tabSeperated[5] ==="off") {
-        block.on = false
-      } 
+      if (tabSeperated[5] && tabSeperated[5] === "off") {
+        block.on = false;
+      }
       let info = tabSeperated[tabSeperated.length - 1];
       const pattern = /"*"/;
 
@@ -280,7 +253,7 @@ async function getFaciesOrBlock(
   }
 
   if (inFaciesBlock) {
-    addFaciesToFaciesMap(facies, faciesMap)
+    addFaciesToFaciesMap(facies, faciesMap);
   }
   if (inBlockBlock) {
     addBlockToBlockMap(block, blocksMap);
@@ -294,16 +267,16 @@ async function getFaciesOrBlock(
  */
 function addFaciesToFaciesMap(facies: Facies, faciesMap: Map<string, Facies>) {
   for (const block of facies.subFaciesInfo) {
-    facies.minAge = Math.min(block.age, facies.minAge)
-    facies.maxAge = Math.max(block.age, facies.maxAge)
+    facies.minAge = Math.min(block.age, facies.minAge);
+    facies.maxAge = Math.max(block.age, facies.maxAge);
   }
-  faciesMap.set(facies.name, JSON.parse(JSON.stringify(facies)))
-  facies.name = ""
-  facies.subFaciesInfo = []
-  facies.minAge = 0
-  facies.maxAge = 0
-  facies.info = ""
-  facies.on = true
+  faciesMap.set(facies.name, JSON.parse(JSON.stringify(facies)));
+  facies.name = "";
+  facies.subFaciesInfo = [];
+  facies.minAge = 0;
+  facies.maxAge = 0;
+  facies.info = "";
+  facies.on = true;
 }
 
 /**
@@ -311,21 +284,18 @@ function addFaciesToFaciesMap(facies: Facies, faciesMap: Map<string, Facies>) {
  * @param block the block to be added
  * @param blocksMap the map of blocks
  */
-function addBlockToBlockMap(
-  block: Block,
-  blocksMap: Map<string, Block>,
-) {
+function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
   for (const subBlock of block.subBlockInfo) {
-    block.minAge = Math.min(subBlock.age, block.minAge)
-    block.maxAge = Math.max(subBlock.age, block.maxAge)
+    block.minAge = Math.min(subBlock.age, block.minAge);
+    block.maxAge = Math.max(subBlock.age, block.maxAge);
   }
   blocksMap.set(block.name, JSON.parse(JSON.stringify(block)));
-  block.name = ""
-  block.subBlockInfo = []
-  block.minAge = 0
-  block.maxAge = 0
-  block.info = ""
-  block.on = true
+  block.name = "";
+  block.subBlockInfo = [];
+  block.minAge = 0;
+  block.maxAge = 0;
+  block.info = "";
+  block.on = true;
 }
 
 /**
@@ -338,17 +308,14 @@ function processBlock(line: string): SubBlockInfo | null {
     label: "",
     age: 0,
     info: "",
-    lineType: "",
+    lineType: ""
   };
   const tabSeperated = line.split("\t");
   if (tabSeperated.length < 3) return null;
   const label = tabSeperated[1];
   const age = Number(tabSeperated[2]!);
   const info = tabSeperated[4];
-  if (isNaN(age))
-    throw new Error(
-      "Error processing facies line, age: " + tabSeperated[2]! + " is NaN"
-    );
+  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeperated[2]! + " is NaN");
   const lineType = tabSeperated[3];
   if (label) {
     currentSubBlockInfo.label = label;
@@ -363,9 +330,7 @@ function processBlock(line: string): SubBlockInfo | null {
   try {
     assertSubBlockInfo(currentSubBlockInfo);
   } catch (e) {
-    console.log(
-      `Error ${e} found while processing subBlockInfo, returning null`
-    );
+    console.log(`Error ${e} found while processing subBlockInfo, returning null`);
     return null;
   }
   return currentSubBlockInfo;
@@ -384,16 +349,13 @@ function processFacies(line: string): SubFaciesInfo | null {
   const tabSeperated = line.split("\t");
   if (tabSeperated.length < 4) return null;
   const age = Number(tabSeperated[3]!);
-  if (isNaN(age))
-    throw new Error(
-      "Error processing facies line, age: " + tabSeperated[3]! + " is NaN"
-    );
+  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeperated[3]! + " is NaN");
   // label doesn't exist for TOP or GAP
   if (!tabSeperated[2]) {
     subFaciesInfo = {
       rockType: tabSeperated[1]!,
       age,
-      info: tabSeperated[3],
+      info: tabSeperated[3]
     };
   } else {
     subFaciesInfo = {
@@ -411,22 +373,22 @@ function processFacies(line: string): SubFaciesInfo | null {
   }
   return subFaciesInfo;
 }
- /**
-  * This is a recursive function meant to instantiate all columns.
-  * Datapack is encrypted as <parent>\t:\t<child>\t<child>\t<child>
-  * Where children could be parents later on
-  * Propogates changes to min and max age recursively to give each ColumnInfo
-  * variable the correct min and max age
-  * 
-  * @param parent the parent of the currenColumn
-  * @param currentColumnName the name of the column we are currently making
-  * @param parsedColumnEntry the parsed entry that was parsed in allEntries (could be null)
-  * @param childrenArray the children array to push to ( this is the parent's array )
-  * @param allEntries the allEntries map that has <parent> => [child, child]
-  * @param faciesMap the facies map that has all the facies blocks
-  * @param blocksMap the blocks map that has all the block blocks
-  * @returns 
-  */
+/**
+ * This is a recursive function meant to instantiate all columns.
+ * Datapack is encrypted as <parent>\t:\t<child>\t<child>\t<child>
+ * Where children could be parents later on
+ * Propogates changes to min and max age recursively to give each ColumnInfo
+ * variable the correct min and max age
+ *
+ * @param parent the parent of the currenColumn
+ * @param currentColumnName the name of the column we are currently making
+ * @param parsedColumnEntry the parsed entry that was parsed in allEntries (could be null)
+ * @param childrenArray the children array to push to ( this is the parent's array )
+ * @param allEntries the allEntries map that has <parent> => [child, child]
+ * @param faciesMap the facies map that has all the facies blocks
+ * @param blocksMap the blocks map that has all the block blocks
+ * @returns
+ */
 function recursive(
   parent: string | null,
   currentColumn: string,
@@ -434,7 +396,7 @@ function recursive(
   childrenArray: ColumnInfo[],
   allEntries: Map<string, ParsedColumnEntry>,
   faciesMap: Map<string, Facies>,
-  blocksMap: Map<string, Block>,
+  blocksMap: Map<string, Block>
 ): FaciesFoundAndAgeRange {
   const currentColumnInfo: ColumnInfo = {
     name: trimInvisibleCharacters(currentColumn),
@@ -445,16 +407,16 @@ function recursive(
     children: [],
     parent: parent,
     minAge: 0,
-    maxAge: 0,
+    maxAge: 0
   };
   let returnValue: FaciesFoundAndAgeRange = {
     faciesFound: false,
     minAge: 99999,
-    maxAge: -99999,
+    maxAge: -99999
   };
 
   if (parsedColumnEntry) {
-    currentColumnInfo.on = parsedColumnEntry.on
+    currentColumnInfo.on = parsedColumnEntry.on;
     currentColumnInfo.info = parsedColumnEntry.info;
   }
   if (blocksMap.has(currentColumn)) {
@@ -465,18 +427,18 @@ function recursive(
     returnValue.maxAge = currentBlock.maxAge;
   }
   if (faciesMap.has(currentColumn)) {
-    const currentFacies = faciesMap.get(currentColumn)!
-    currentColumnInfo.subFaciesInfo = JSON.parse(JSON.stringify(currentFacies.subFaciesInfo))
-    currentColumnInfo.maxAge = Math.max(currentColumnInfo.maxAge, currentFacies.maxAge)
-    currentColumnInfo.minAge = Math.min(currentColumnInfo.minAge, currentFacies.minAge)
-    returnValue.subFaciesInfo = currentFacies.subFaciesInfo
-    currentColumnInfo.info = currentFacies.info
-    currentColumnInfo.on = currentFacies.on
-    returnValue.minAge = currentColumnInfo.minAge
-    returnValue.maxAge = currentColumnInfo.maxAge
+    const currentFacies = faciesMap.get(currentColumn)!;
+    currentColumnInfo.subFaciesInfo = JSON.parse(JSON.stringify(currentFacies.subFaciesInfo));
+    currentColumnInfo.maxAge = Math.max(currentColumnInfo.maxAge, currentFacies.maxAge);
+    currentColumnInfo.minAge = Math.min(currentColumnInfo.minAge, currentFacies.minAge);
+    returnValue.subFaciesInfo = currentFacies.subFaciesInfo;
+    currentColumnInfo.info = currentFacies.info;
+    currentColumnInfo.on = currentFacies.on;
+    returnValue.minAge = currentColumnInfo.minAge;
+    returnValue.maxAge = currentColumnInfo.maxAge;
   }
 
-childrenArray.push(currentColumnInfo);
+  childrenArray.push(currentColumnInfo);
 
   if (parsedColumnEntry) {
     parsedColumnEntry.children.forEach((child) => {
@@ -484,36 +446,31 @@ childrenArray.push(currentColumnInfo);
       if (!child || child === currentColumn) return;
       const children = allEntries.get(child) || null;
       let compareValue: FaciesFoundAndAgeRange = recursive(
-        currentColumn,                  // the current column becomes the parent
-        child,                          // the child is now the current column
-        children,                       // the children that allEntries has or [] if this child is the parent to no children
-        currentColumnInfo.children,     // the array to push all the new children into
-        allEntries,                     // the mapping of all parents to children
+        currentColumn, // the current column becomes the parent
+        child, // the child is now the current column
+        children, // the children that allEntries has or [] if this child is the parent to no children
+        currentColumnInfo.children, // the array to push all the new children into
+        allEntries, // the mapping of all parents to children
         faciesMap,
-        blocksMap,
+        blocksMap
       );
       returnValue.minAge = Math.min(compareValue.minAge, returnValue.minAge);
       returnValue.maxAge = Math.max(compareValue.maxAge, returnValue.maxAge);
-      currentColumnInfo.minAge = returnValue.minAge
-      currentColumnInfo.maxAge = returnValue.maxAge
+      currentColumnInfo.minAge = returnValue.minAge;
+      currentColumnInfo.maxAge = returnValue.maxAge;
       returnValue.faciesFound = compareValue.faciesFound || returnValue.faciesFound;
       // we take the first child's facies info
       // this is due to map points taking their first child's facies information
-      // Therefore meaning the child has the facies information but the map point is not 
+      // Therefore meaning the child has the facies information but the map point is not
       // called by the child name but is called the parent name
       // parent -> child -> facies
       // displayed as parent -> facies
       // facies event exists for this map point
-      if (
-        !returnValue.faciesFound &&
-        faciesMap.has(child)
-      ) {
+      if (!returnValue.faciesFound && faciesMap.has(child)) {
         returnValue.faciesFound = true;
-        if (compareValue.subFaciesInfo)
-          currentColumnInfo.subFaciesInfo = compareValue.subFaciesInfo
+        if (compareValue.subFaciesInfo) currentColumnInfo.subFaciesInfo = compareValue.subFaciesInfo;
       }
     });
   }
   return returnValue;
 }
-

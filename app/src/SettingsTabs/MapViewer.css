@@ -89,7 +89,10 @@
 }
 .MuiButton-root.child-map {
   position: absolute;
-  transition: background-color 0.3s ease, opacity 0.3s ease, border 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    opacity 0.3s ease,
+    border 0.3s ease;
   border: 1px solid yellow;
   z-index: 0;
 }
@@ -151,19 +154,19 @@
   gap: 20px;
   display: grid;
   height: 100%;
-  width: 100%
+  width: 100%;
 }
 .age-controls {
   width: 100%;
   height: auto;
-  display:flex;
+  display: flex;
   flex-direction: column;
   align-items: center;
   margin: auto;
 }
 .dot-controls {
   width: 100%;
-  display:flex;
+  display: flex;
   flex-direction: column;
   align-items: center;
 }

@@ -91,7 +91,8 @@
   margin-left: 30%;
   margin-top: 30px;
 }
-.MuiAccordion-root.Mui-expanded.preset-highlight, .MuiAccordion-root.preset-highlight {
+.MuiAccordion-root.Mui-expanded.preset-highlight,
+.MuiAccordion-root.preset-highlight {
   background: transparent;
   margin-left: 5vw;
   margin-right: 5vw;
@@ -101,7 +102,7 @@
   overflow: hidden;
 }
 .MuiAccordionSummary-root.preset-summary {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.20);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
   background-color: rgba(0, 0, 0, 0.04);
 }
 .MuiTypography-root.preset-type-title {

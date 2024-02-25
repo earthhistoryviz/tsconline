@@ -16,9 +16,7 @@ export const Settings = observer(function Settings() {
     actions.setSettingsTabsSelected(newValue);
   };
 
-  const selectedTabIndex = actions.translateTabToIndex(
-    state.settingsTabs.selected
-  );
+  const selectedTabIndex = actions.translateTabToIndex(state.settingsTabs.selected);
 
   function displayChosenTab() {
     switch (state.settingsTabs.selected) {
@@ -36,22 +34,10 @@ export const Settings = observer(function Settings() {
   return (
     <div style={{ background: theme.palette.settings.light }}>
       <TSCTabs value={selectedTabIndex} onChange={handleChange} centered>
-        <TSCTab
-          label="Time"
-          onClick={() => actions.setSettingsTabsSelected("time")}
-        />
-        <TSCTab
-          label="Column"
-          onClick={() => actions.setSettingsTabsSelected("column")}
-        />
-        <TSCTab
-          label="Font"
-          onClick={() => actions.setSettingsTabsSelected("font")}
-        />
-        <TSCTab
-          label="Map Points"
-          onClick={() => actions.setSettingsTabsSelected("mappoints")}
-        />
+        <TSCTab label="Time" onClick={() => actions.setSettingsTabsSelected("time")} />
+        <TSCTab label="Column" onClick={() => actions.setSettingsTabsSelected("column")} />
+        <TSCTab label="Font" onClick={() => actions.setSettingsTabsSelected("font")} />
+        <TSCTab label="Map Points" onClick={() => actions.setSettingsTabsSelected("mappoints")} />
       </TSCTabs>
       {displayChosenTab()}
     </div>

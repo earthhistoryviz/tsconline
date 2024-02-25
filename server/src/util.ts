@@ -1,84 +1,87 @@
-import fs from 'fs';
-import path from 'path';
-import fsPromises from 'fs/promises';
-import { glob } from 'glob';
+import fs from "fs";
+import path from "path";
+import fsPromises from "fs/promises";
+import { glob } from "glob";
 
 /**
  * Recursively deletes directory INCLUDING directoryPath
  */
 export function deleteDirectory(directoryPath: string): string {
-    // Check if the directory exists
-    if (fs.existsSync(directoryPath)) {
-        fs.readdirSync(directoryPath).forEach((file) => {
-            const currentPath = path.join(directoryPath, file);
+  // Check if the directory exists
+  if (fs.existsSync(directoryPath)) {
+    fs.readdirSync(directoryPath).forEach((file) => {
+      const currentPath = path.join(directoryPath, file);
 
-            // Check if the current path is a directory
-            if (fs.lstatSync(currentPath).isDirectory()) {
-                deleteDirectory(currentPath);
-            } else {
-                // Delete the file
-                fs.unlinkSync(currentPath);
-                console.log(`Deleted file: ${currentPath}`)
-            }
-        });
-        // Delete the now-empty directory
-        fs.rmdirSync(directoryPath);
-        return `Directory ${directoryPath} successfully deleted`
-    } else {
-        return `Directory not found: ${directoryPath}`;
-    }
+      // Check if the current path is a directory
+      if (fs.lstatSync(currentPath).isDirectory()) {
+        deleteDirectory(currentPath);
+      } else {
+        // Delete the file
+        fs.unlinkSync(currentPath);
+        console.log(`Deleted file: ${currentPath}`);
+      }
+    });
+    // Delete the now-empty directory
+    fs.rmdirSync(directoryPath);
+    return `Directory ${directoryPath} successfully deleted`;
+  } else {
+    return `Directory not found: ${directoryPath}`;
+  }
 }
-
 
 /**
  * Copy a directory recursively
  */
 export async function copyDirectory(src: string, destination: string): Promise<void> {
-    try {
-        await fsPromises.mkdir(destination, { recursive: true });
+  try {
+    await fsPromises.mkdir(destination, { recursive: true });
 
-        const entries = await fsPromises.readdir(src, { withFileTypes: true });
+    const entries = await fsPromises.readdir(src, { withFileTypes: true });
 
-        for (const entry of entries) {
-            const srcPath = path.join(src, entry.name);
-            const destPath = path.join(destination, entry.name);
+    for (const entry of entries) {
+      const srcPath = path.join(src, entry.name);
+      const destPath = path.join(destination, entry.name);
 
-            if (entry.isDirectory()) {
-                await copyDirectory(srcPath, destPath);
-            } else {
-                await fsPromises.copyFile(srcPath, destPath);
-            }
-        }
-    } catch (error) {
-        console.error('An error occurred:', error);
-        throw error;
+      if (entry.isDirectory()) {
+        await copyDirectory(srcPath, destPath);
+      } else {
+        await fsPromises.copyFile(srcPath, destPath);
+      }
     }
+  } catch (error) {
+    console.error("An error occurred:", error);
+    throw error;
+  }
 }
 /**
  * Of the form <topDirectory>/<filename>/<botDirectory>
  */
 export async function grabFilepaths(files: string[], topDirectory: string, botDirectory: string): Promise<string[]> {
-    // regular expression for all filenames located in <topDirectory>/<file_name>/<botDirectory>
-    const pattern = new RegExp(files.map(name => {
+  // regular expression for all filenames located in <topDirectory>/<file_name>/<botDirectory>
+  const pattern = new RegExp(
+    files
+      .map((name) => {
         const lastIndex = name.lastIndexOf(".");
         const filename = lastIndex !== -1 ? name.substring(0, lastIndex) : name;
-        return `${topDirectory}/${filename}/${botDirectory}/.*`
-    }).join('|'));
-    let paths = await glob(`${topDirectory}/**/*`);
-    // this needs to be included to work on certain window machines
-    paths = paths.map(path => path.replace(/\\/g, '/'))
-    paths = paths.filter(path => pattern.test(path));
-    return paths 
+        return `${topDirectory}/${filename}/${botDirectory}/.*`;
+      })
+      .join("|")
+  );
+  let paths = await glob(`${topDirectory}/**/*`);
+  // this needs to be included to work on certain window machines
+  paths = paths.map((path) => path.replace(/\\/g, "/"));
+  paths = paths.filter((path) => pattern.test(path));
+  return paths;
 }
 
 export function trimInvisibleCharacters(input: string): string {
   // Replace one or more invisible characters (excluding spaces) with an empty string
-  return input.replace(/[^\S ]+/g, '').trim();
+  return input.replace(/[^\S ]+/g, "").trim();
 }
 export function trimQuotes(input: string): string {
   if (input.startsWith('"') && input.endsWith('"')) {
     // Trim the first and last character (quotes)
     return input.slice(1, -1);
   }
-  return input
+  return input;
 }
