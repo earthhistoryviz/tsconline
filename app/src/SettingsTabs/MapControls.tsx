@@ -29,6 +29,7 @@ import { faciesHeaderHeight, normHeaderHeight } from "./MapPointConstants";
 const AgeTextField = ({ ...props }: TextFieldProps) => (
   <TSCTextField
     {...props}
+    height={"4vh"}
     className="age-text-field"
     InputProps={{
       endAdornment: <TSCInputAdornment>MA</TSCInputAdornment>,
@@ -36,7 +37,7 @@ const AgeTextField = ({ ...props }: TextFieldProps) => (
   />
 );
 const DotSizeTextField = ({ ...props }: TextFieldProps) => (
-  <TSCTextField {...props} className="dot-input-form" />
+  <TSCTextField height={"4vh"} {...props} className="dot-input-form" />
 );
 
 export const FaciesControls = observer(() => {

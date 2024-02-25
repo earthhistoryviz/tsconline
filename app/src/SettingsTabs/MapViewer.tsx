@@ -31,8 +31,6 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   // this is needed to change image styles on fullscreen change
   const [isFullscreen, setIsFullscreen] = useState(false);
-  // this is used to toggle the facies options
-  const [faciesOptions, setFaciesOptions] = useState(true);
   // used to get the proper bounds of the element
   const imageRef = useRef<HTMLImageElement | null>(null);
   // used for attaching tooltip and fullscreening
@@ -81,29 +79,6 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
     resetTransform: () => void;
   }) => (
     <>
-      <div className="controls">
-        {!isFacies && (
-          <TSCButton
-            className="bottom-button"
-            onClick={() => {
-              actions.openNextMap(name, isFacies, name, true);
-            }}>
-            Facies
-          </TSCButton>
-        )}
-        {isFacies && (
-          <TSCButton
-            className="bottom-button"
-            onClick={() => {
-              setFaciesOptions(!faciesOptions);
-            }}>
-            Options
-          </TSCButton>
-        )}
-        <TSCButton className="bottom-button" onClick={() => actions.setIsLegendOpen(!state.mapState.isLegendOpen)}>
-          legend
-        </TSCButton>
-      </div>
       <div className="view-buttons" style={viewButtonStyle}>
         <IconButton
           className="icon-view-button"
@@ -130,7 +105,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
   );
 
   let mapHeight = "90vh";
-  if (isFacies) mapHeight = `calc(100vh - ${faciesHeaderHeight})`;
+  if (isFacies) mapHeight = `calc(100vh - ${faciesHeaderHeight} - 2vh)`;
   else if (isFullscreen) mapHeight = `calc(100vh - ${normHeaderHeight})`;
   const mapStyle = {
     height: mapHeight,
