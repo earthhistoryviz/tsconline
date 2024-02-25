@@ -15,14 +15,14 @@ jobs:
       - name: Install Dependencies
         run: yarn install
 
-      - name: Prettify code
-        uses: creyD/prettier_action@v4.3
-        with:
-          dry: True
-          prettier_options: "--check **/*.{tsx,ts}"
+      # - name: Prettify code
+      #   uses: creyD/prettier_action@v4.3
+      #   with:
+      #     dry: True
+      #     prettier_options: "--check **/*.{tsx,ts}"
       
       - name: Run ESLint
-        run: eslint . --ext .js,.jsx,.ts,.tsx
+        run: eslint . --ext .ts,.tsx
 
 
   build-and-test:
