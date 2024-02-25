@@ -81,6 +81,7 @@ jobs:
 
       - name: Build with Vite
         run: |
+          set -o pipefail
           if ! yarn build 2>&1 | tee build.log; then
             echo "build_failed=true" >> $GITHUB_ENV
           fi
