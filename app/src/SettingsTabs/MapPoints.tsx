@@ -25,15 +25,9 @@ export const MapPoints = observer(function MapPoint() {
   const theme = useTheme();
   return (
     <div>
-      {!state.mapState.mapInfo || Object.entries(state.mapState.mapInfo).length === 0 ? (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            position: "relative",
-            minHeight: "100vh"
-          }}>
+      {!state.mapState.mapInfo ||
+      Object.entries(state.mapState.mapInfo).length === 0 ? (
+        <div className="no-map-points-container">
           <Typography
             sx={{
               fontSize: theme.typography.pxToRem(18)

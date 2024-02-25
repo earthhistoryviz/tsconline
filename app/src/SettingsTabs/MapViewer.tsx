@@ -1,22 +1,34 @@
-import { Drawer, Divider, IconButton } from "@mui/material";
+import { Drawer, Divider, IconButton, Slider } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import type { MapHierarchy, MapInfo } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { context } from "../state";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-import { TSCButton, DrawerHeader, ColoredIconButton, TypographyText, ColoredDiv, BorderedIcon } from "../components";
+import {
+  DrawerHeader,
+  ColoredIconButton,
+  TypographyText,
+  BorderedIcon,
+  ColoredDiv,
+} from "../components";
 import CloseIcon from "@mui/icons-material/Close";
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import YoutubeSearchedForIcon from "@mui/icons-material/YoutubeSearchedFor";
 import { observer } from "mobx-react-lite";
 import "./MapViewer.css";
-import { Legend, createChildMapButton, loadMapPoints, loadTransects } from "./MapButtons";
-import { FaciesControls, HeaderBar } from "./MapControls";
+import {
+  Legend,
+  createChildMapButton,
+  loadMapPoints,
+  loadTransects,
+} from "./MapButtons";
+import { HeaderBar } from "./MapControls";
 import { faciesHeaderHeight, normHeaderHeight } from "./MapPointConstants";
+import { compareVhAndPx } from "../util/util";
+import { setFaciesOptions } from "../state/actions";
 
 type MapProps = {
   name: string;
@@ -64,9 +76,16 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
   const mapData: MapInfo[string] = mapInfo[name];
   const mapHierarchy: MapHierarchy = state.mapState.mapHierarchy;
 
-  const viewButtonStyle = {
-    top: `calc(${isFacies ? faciesHeaderHeight : normHeaderHeight} + 1vh)`,
+  const headerHeight = isFacies ? faciesHeaderHeight : normHeaderHeight;
+  let viewButtonStyle = {
+    top: `calc(${headerHeight} + 1vh)`,
   };
+  // if header is more than 250px due to long monitor veritcally we adjust the view controls accordingly
+  if (compareVhAndPx(headerHeight, 250) === 1) {
+    viewButtonStyle = {
+      top: `calc(250px + 20px)`,
+    };
+  }
   const Controls = ({
     mapViewer,
     zoomIn,
@@ -224,24 +243,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
         <Divider />
         <Legend />
       </Drawer>
-      <Drawer
-        className="facies-button-container drawer"
-        variant="persistent"
-        anchor="bottom"
-        open={state.mapState.isFacies && faciesOptions}>
-        <DrawerHeader>
-          <TypographyText className="facies-options-title" variant="h6" gutterBottom>
-            Facies Options
-          </TypographyText>
-          <ColoredIconButton
-            onClick={() => {
-              setFaciesOptions(false);
-            }}>
-            <ArrowDropDownIcon fontSize="large" />
-          </ColoredIconButton>
-        </DrawerHeader>
-        <FaciesControls />
-      </Drawer>
+    </div>
     </div>
   );
 });

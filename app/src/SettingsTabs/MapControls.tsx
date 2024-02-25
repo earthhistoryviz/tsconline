@@ -29,7 +29,7 @@ import { faciesHeaderHeight, normHeaderHeight } from "./MapPointConstants";
 const AgeTextField = ({ ...props }: TextFieldProps) => (
   <TSCTextField
     {...props}
-    height={"4vh"}
+    height={"40px"}
     className="age-text-field"
     InputProps={{
       endAdornment: <TSCInputAdornment>MA</TSCInputAdornment>,
@@ -37,7 +37,7 @@ const AgeTextField = ({ ...props }: TextFieldProps) => (
   />
 );
 const DotSizeTextField = ({ ...props }: TextFieldProps) => (
-  <TSCTextField height={"4vh"} {...props} className="dot-input-form" />
+  <TSCTextField height={"40px"} {...props} className="dot-input-form" />
 );
 
 export const FaciesControls = observer(() => {
@@ -70,7 +70,7 @@ export const FaciesControls = observer(() => {
             value={state.mapState.currentFaciesOptions.dotSize}
             max={20}
             min={1}
-            onChange={(event: Event, val: number | number[]) => {
+            onChange={(_event: Event, val: number | number[]) => {
               actions.setDotSize(val as number);
             }}
             aria-label="Default"
