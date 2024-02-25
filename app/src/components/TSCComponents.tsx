@@ -46,7 +46,7 @@ export const BorderedIcon = ({
   className,
   strokeWidth,
 }: {
-  component: React.ElementType<any>;
+  component: React.ElementType<object>;
   className?: string;
   strokeWidth?: number;
 }) => {
