@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext, useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { context } from "../state";
 import { Button, TextField, ToggleButton, Typography } from "@mui/material";
 import SettingsSharpIcon from "@mui/icons-material/SettingsSharp";

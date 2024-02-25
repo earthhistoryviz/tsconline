@@ -1,4 +1,3 @@
-import type { ColumnInfo } from "@tsconline/shared";
 import { DOMParser } from "@xmldom/xmldom";
 
 //-------------------------------------------------------------------------------------------------- //
@@ -293,7 +292,6 @@ function generateColumnXml(
         } else {
           xml += `${indent}<setting name="${xmlKey}"/>\n`;
         }
-      } else if (key === "customColor") {
       } else if (key === "justification") {
         xml += `${indent}<setting justification="${jsonColumn[key]}" name="${xmlKey}"/>\n`;
       } else if (key === "orientation") {

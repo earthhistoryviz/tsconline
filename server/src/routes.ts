@@ -12,12 +12,6 @@ import svgson from "svgson";
 import fs from "fs";
 import { readFile } from "fs/promises";
 
-export const uploadDatapack = async function (
-  _request: FastifyRequest,
-  _reply: FastifyReply
-) {
-  // const data = await request.saveRequestFiles()
-};
 export const fetchSettingsJson = async function fetchSettingsJson(
   request: FastifyRequest<{ Params: { settingFile: string } }>,
   reply: FastifyReply

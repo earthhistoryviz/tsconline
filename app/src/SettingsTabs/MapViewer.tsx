@@ -341,9 +341,9 @@ const FaciesControls = observer(() => {
             id="dot-size-slider"
             className="slider"
             value={state.mapState.currentFaciesOptions.dotSize}
-            max={20}
-            min={1}
-            onChange={(event: Event, val: number | number[]) => {
+            max={dotSizeRange.max}
+            min={dotSizeRange.min}
+            onChange={(_event: Event, val: number | number[]) => {
               actions.setDotSize(val as number);
             }}
             aria-label="Default"
