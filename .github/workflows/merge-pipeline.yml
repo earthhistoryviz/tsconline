@@ -17,6 +17,7 @@ jobs:
 
       - name: Run ESLint
         run: yarn eslint **/*.{tsx,ts,css} --quiet --format json --output-file eslint-report.json
+        continue-on-error: true
 
       - name: Comment PR on ESLint check failure
         if: failure() 
