@@ -20,7 +20,12 @@
     "typescript": "^5.0.4"
   },
   "devDependencies": {
+    "@types/eslint": "^8",
+    "@typescript-eslint/eslint-plugin": "^7.0.2",
+    "@typescript-eslint/parser": "^7.0.2",
     "@yarnpkg/sdks": "^3.0.0-rc.43",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.33.2",
     "prettier": "^3.2.5"
   }
 }
