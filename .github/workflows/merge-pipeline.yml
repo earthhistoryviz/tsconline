@@ -28,8 +28,7 @@ jobs:
         with:
           message: |
             🚨 The Prettier check has failed. Please run 'yarn prettier --write' locally and commit the changes.
-          filePath:
-            eslint-report.json
+          filePath: 'eslint-report.json'
 
       - name: Prettify code
         run: |
@@ -63,12 +62,15 @@ jobs:
         run: yarn install
 
       - name: Build with Vite
-        run: yarn build 2>&1 | tee build.log || echo "Build failed" > build-failed.log
+        run: yarn build 2>&1 | tee build.log || echo "build_failed=true" >> $GITHUB_ENV
+        continue-on-error: true
 
       - name: Report Build Errors
-        if: failure()
+        if: env.build_failed == 'true'
         uses: thollander/actions-comment-pull-request@v2
         with:
+          message: |
+            🚨 The build has failed. Please fix these errors.
           filePath: 'build.log'
 
       - name: Run Tests
