@@ -75,9 +75,9 @@ jobs:
 
       - name: Build with Vite
         run: yarn build 2>&1 | tee build.log || echo "Build failed" > build-failed.log
-        continue-on-error: true
 
       - name: Report Build Errors
+        if: failure()
         uses: thollander/actions-comment-pull-request@v2
         with:
           filePath: 'build.log'
