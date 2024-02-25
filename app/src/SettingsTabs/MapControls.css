@@ -117,23 +117,34 @@
   line-height: 1.2;
   font-size: 12px;
   background: unset;
-  padding: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: 50% 50% 50% 0%;
+  width: auto;
+  height: 20px;
   background-color: black;
-  transform-origin: bottom left;
-  transform: translateX(50%) rotate(-45deg) scale(0);
 }
 
 .slider .MuiSlider-valueLabel::before {
   display: none;
 }
-
-.slider .MuiSlider-valueLabel.MuiSlider-valueLabelOpen {
-  transform: translateX(50%) translateY(-100%) rotate(-45deg) scale(1);
+@media screen and (max-width: 700px) {
+.MuiSlider-root.slider {
+  width: 40%;
+}
+  .facies-buttons {
+    gap: 0px;
+  }
+.MuiTextField-root.dot-input-form {
+  padding-right: 5px;
+  padding-left: 5px;
+}
+.MuiTextField-root.age-text-field > .MuiInputBase-root {
+  padding-right: 0;
+}
+.MuiInputBase-root > .MuiInputBase-input {
+  padding-left: 4px;
+}
+.MuiTextField-root.age-text-field {
+  padding-right: 20px;
+  width: 70px;
 }
 
-.slider .MuiSlider-valueLabel > * {
-  transform: rotate(45deg);
 }

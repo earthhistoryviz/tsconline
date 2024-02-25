@@ -1,23 +1,3 @@
-.controls {
-  position: absolute;
-  bottom: 5px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: transparent;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
-}
-/* TODO: possibly if the user has a window open, the width can never go smaller than all the buttons*/
-/* as a result these might need to be scaled with the windows, because*/
-/* weird scrolling happens if the window tries to be smaller than these buttons*/
-.MuiButton-root.bottom-button {
-  height: 20px;
-  width: 100px;
-  margin: 5px;
-}
 .MuiSvgIcon-root.icon-button {
   color: white;
   width: inherit;
@@ -95,10 +75,6 @@
 }
 .MuiTypography-root.legend-title {
   margin-right: 15px;
-  margin-bottom: 0px;
-}
-.MuiTypography-root.facies-options-title {
-  margin-left: 50px;
   margin-bottom: 0px;
 }
 .MuiBox-root.legend-item-container {

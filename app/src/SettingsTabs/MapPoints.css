@@ -3,4 +3,5 @@
 }
 .MuiPaper-root.map-dialog {
     max-height: none;
+    overflow: hidden;
 }
