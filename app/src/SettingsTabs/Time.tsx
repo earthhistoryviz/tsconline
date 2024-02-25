@@ -1,15 +1,12 @@
 import { Box, Button, TextField } from "@mui/material";
 import { observer } from "mobx-react-lite";
-import { actions, state } from "../state";
+import { actions } from "../state";
 import ForwardIcon from "@mui/icons-material/Forward";
 import { useNavigate } from "react-router-dom";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
-import { TSCCheckbox } from '../components'
-import FormGroup from '@mui/material/FormGroup';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
-import { initialize } from "../state/initialize";
-import { TimescaleItem } from '@tsconline/shared';
+import { TSCCheckbox } from "../components";
+import FormGroup from "@mui/material/FormGroup";
+import FormControlLabel from "@mui/material/FormControlLabel";
 
 import { useContext } from "react";
 import { context } from "../state/index";
@@ -17,125 +14,117 @@ import "./Time.css";
 import theme from "../theme";
 
 export const Time = observer(function Time() {
-  const theme = useTheme();
   const navigate = useNavigate();
   const { state } = useContext(context);
 
-  console.log('Base Stage Age:', state.settings.baseStageAge);
-  console.log('Top Stage Age:', state.settings.topStageAge);
-  
-    const handleButtonClick = () => {
-        actions.setTab(1);
-        // actions.setAllTabs(true);
-      
-        actions.updateSettings(); 
-      
-        actions.generateChart();
-      
-        navigate('/chart');
-      };
+  const handleButtonClick = () => {
+    actions.setTab(1);
+    // actions.setAllTabs(true);
 
-    return (
-      <div>
-        <Box className="Box">
+    actions.updateSettings();
+
+    actions.generateChart();
+
+    navigate("/chart");
+  };
+
+  return (
+    <div>
+      <Box className="Box">
         <FormControl className="FormControlTop">
-        <InputLabel htmlFor="top-age-selector">Top Age/Stage Name</InputLabel>
-        <Select
-          className="SelectTop"
-          inputProps={{ id: 'top-age-selector' }}
-          name="top-age-stage-name"
-          label="Top Age/Stage Name"
-          value={state.settings.topStageKey}
-          onChange={(event) => {
-            const selectedValue = event.target.value;
-            const selectedAgeItem = state.geologicalTopStageAges.find(item => item.key === selectedValue);
-            const selectedAge = selectedAgeItem?.value?.toString() || '0';
-            const selectedAgeNumber = parseFloat(selectedAge);
-            if (selectedAgeNumber >= 0 && selectedAgeNumber <= state.settings.baseStageAge) {
-              actions.setSelectedTopStage(selectedValue);
-              actions.setTopStageAge(selectedAgeNumber);
-            }
-          }}
-        >
-          {state.geologicalTopStageAges.map(item => (
-            <MenuItem key={item.key} value={item.key}>
-              {item.key} ({item.value} Ma)
-            </MenuItem>
-          ))}
-        </Select>
-        <TextField
-          className="TopAgeTextField"
-          label="Top Age"
-          type="number"
-          name="vertical-scale-text-field"
-          value={state.settings.topStageAge.toString()}
-          onChange={(event) => {
-            const age = parseFloat(event.target.value);
-            if (!isNaN(age) && age >= 0 && age <= state.settings.baseStageAge) {
-              actions.setSelectedTopStage("N/A");
-              actions.setTopStageAge(age);
-            }
-          }}
-        />
-      </FormControl>
-      <FormControl className="FormControlBaseAgeStageName">
-        <InputLabel htmlFor="base-age-selector">Base Age/Stage Name</InputLabel>
-        <Select
-          className="SelectBase"
-          label="Base Age/Stage Name"
-          inputProps={{ id: 'base-age-selector' }}
-          name="base-age-stage-name"
-          value={state.settings.baseStageKey}
-          onChange={(event) => {
-            const selectedValue = event.target.value;
-            const selectedAgeItem = state.geologicalBaseStageAges.find(item => item.key === selectedValue);
-            const selectedAge = selectedAgeItem?.value?.toString() || '0';
-            const selectedAgeNumber = parseFloat(selectedAge);
-            if (selectedAgeNumber >= 0 && selectedAgeNumber >= state.settings.topStageAge) { 
-              actions.setSelectedBaseStage(selectedValue);
-              actions.setBaseStageAge(selectedAgeNumber);
-            }
-          }}
-        >
-          {state.geologicalBaseStageAges.map(item => (
-            <MenuItem key={item.key} value={item.key}>
-              {item.key} ({item.value} Ma)
-            </MenuItem>
-          ))}
-        </Select>
-        <TextField
-          className="BaseAgeTextField"
-          label="Base Age"
-          type="number"
-          name="vertical-scale-text-field"
-          value={state.settings.baseStageAge.toString()}
-          onChange={(event) => {
-            const age = parseFloat(event.target.value);
-            if (!isNaN(age) && age >= 0 && state.settings.topStageAge <= age) {
-              actions.setSelectedBaseStage("N/A");
-              actions.setBaseStageAge(age);
-            }
-          }}
-        />
+          <InputLabel htmlFor="top-age-selector">Top Age/Stage Name</InputLabel>
+          <Select
+            className="SelectTop"
+            inputProps={{ id: "top-age-selector" }}
+            name="top-age-stage-name"
+            label="Top Age/Stage Name"
+            value={state.settings.topStageKey}
+            onChange={(event) => {
+              const selectedValue = event.target.value;
+              const selectedAgeItem = state.geologicalTopStageAges.find((item) => item.key === selectedValue);
+              const selectedAge = selectedAgeItem?.value?.toString() || "0";
+              const selectedAgeNumber = parseFloat(selectedAge);
+              if (selectedAgeNumber >= 0 && selectedAgeNumber <= state.settings.baseStageAge) {
+                actions.setSelectedTopStage(selectedValue);
+                actions.setTopStageAge(selectedAgeNumber);
+              }
+            }}>
+            {state.geologicalTopStageAges.map((item) => (
+              <MenuItem key={item.key} value={item.key}>
+                {item.key} ({item.value} Ma)
+              </MenuItem>
+            ))}
+          </Select>
+          <TextField
+            className="TopAgeTextField"
+            label="Top Age"
+            type="number"
+            name="vertical-scale-text-field"
+            value={state.settings.topStageAge.toString()}
+            onChange={(event) => {
+              const age = parseFloat(event.target.value);
+              if (!isNaN(age) && age >= 0 && age <= state.settings.baseStageAge) {
+                actions.setSelectedTopStage("N/A");
+                actions.setTopStageAge(age);
+              }
+            }}
+          />
         </FormControl>
-        <TextField className="VerticalScale"
+        <FormControl className="FormControlBaseAgeStageName">
+          <InputLabel htmlFor="base-age-selector">Base Age/Stage Name</InputLabel>
+          <Select
+            className="SelectBase"
+            label="Base Age/Stage Name"
+            inputProps={{ id: "base-age-selector" }}
+            name="base-age-stage-name"
+            value={state.settings.baseStageKey}
+            onChange={(event) => {
+              const selectedValue = event.target.value;
+              const selectedAgeItem = state.geologicalBaseStageAges.find((item) => item.key === selectedValue);
+              const selectedAge = selectedAgeItem?.value?.toString() || "0";
+              const selectedAgeNumber = parseFloat(selectedAge);
+              if (selectedAgeNumber >= 0 && selectedAgeNumber >= state.settings.topStageAge) {
+                actions.setSelectedBaseStage(selectedValue);
+                actions.setBaseStageAge(selectedAgeNumber);
+              }
+            }}>
+            {state.geologicalBaseStageAges.map((item) => (
+              <MenuItem key={item.key} value={item.key}>
+                {item.key} ({item.value} Ma)
+              </MenuItem>
+            ))}
+          </Select>
+          <TextField
+            className="BaseAgeTextField"
+            label="Base Age"
+            type="number"
+            name="vertical-scale-text-field"
+            value={state.settings.baseStageAge.toString()}
+            onChange={(event) => {
+              const age = parseFloat(event.target.value);
+              if (!isNaN(age) && age >= 0 && state.settings.topStageAge <= age) {
+                actions.setSelectedBaseStage("N/A");
+                actions.setBaseStageAge(age);
+              }
+            }}
+          />
+        </FormControl>
+        <TextField
+          className="VerticalScale"
           label="Vertical Scale (cm/Ma)"
           type="number"
           name="vertical-scale-text-field"
           value={state.settings.unitsPerMY}
-          onChange={(event) =>
-            actions.setUnitsPerMY(parseFloat(event.target.value))
-          }
+          onChange={(event) => actions.setUnitsPerMY(parseFloat(event.target.value))}
         />
         <Button
           className="Button"
           sx={{
-            backgroundColor: theme.palette.button.main,
+            backgroundColor: theme.palette.button.main
           }}
           onClick={handleButtonClick}
           variant="contained"
-          endIcon={<ForwardIcon />}
-        >
+          endIcon={<ForwardIcon />}>
           Make your own chart
         </Button>
       </Box>

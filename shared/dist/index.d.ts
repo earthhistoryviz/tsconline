@@ -345,3 +345,5 @@ export declare function assertMapPoints(o: any): asserts o is MapPoints;
 export declare function assertSuccessfulServerResponse(o: any): asserts o is SuccessfulServerResponse;
 export declare function assertSVGStatus(o: any): asserts o is SVGStatus;
 export declare function assertTimescale(val: any): asserts val is TimescaleItem;
+export declare function assertTimescaleDataWithoutHeader(data: any[]): asserts data is any[];
+

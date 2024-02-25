@@ -8,13 +8,10 @@ import * as routes from "./routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
 import fastifyCompress from "@fastify/compress";
 import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
-import { exec } from 'child_process';
-import { readFile, writeFile, stat } from 'fs/promises';
-import md5 from 'md5';
-import { mkdirp } from 'mkdirp';
 import { assertChartRequest } from '@tsconline/shared';
 import { loadPresets } from './preset.js';
 import { AssetConfig, assertAssetConfig } from './types.js';
+import { readFile } from "fs/promises";
 
 const server = fastify({
   logger: false,
@@ -146,13 +143,13 @@ server.get("/facies-patterns", (_request, reply) => {
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
-server.post<{ Params: { usecache: string, useSuggestedAge: string } }>(
+server.post<{ Params: { usecache: string; useSuggestedAge: string } }>(
   "/charts/:usecache/:useSuggestedAge",
   routes.fetchChart
 );
 
 // Serve timescale data endpoint
-server.get('/timescale', routes.fetchTimescale);
+server.get("/timescale", routes.fetchTimescale);
 
 // Start the server...
 try {
