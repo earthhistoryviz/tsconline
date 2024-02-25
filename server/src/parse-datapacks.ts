@@ -33,12 +33,12 @@ type FaciesFoundAndAgeRange = {
  * @returns the correctly parsed children string array
  */
 function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
-  let parsedColumnEntry: ParsedColumnEntry = {
+  const parsedColumnEntry: ParsedColumnEntry = {
     children: [],
     on: true,
     info: ""
   };
-  for (var i = 0; i < array.length; i++) {
+  for (let i = 0; i < array.length; i++) {
     if (array[i]?.includes("_METACOLUMN") || array[i]?.includes("TITLE")) {
       if (array[i]?.includes("_METACOLUMN")) {
         if (array[i] === "_METACOLUMN_ON") {
@@ -75,14 +75,14 @@ function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
 export async function parseDatapacks(decrypt_filepath: string, files: string[]): Promise<DatapackParsingPack> {
   const decrypt_paths = await grabFilepaths(files, decrypt_filepath, "datapacks");
   if (decrypt_paths.length == 0) throw new Error(`Did not find any datapacks for ${files}`);
-  let columnInfoArray: ColumnInfo[] = [];
+  const columnInfoArray: ColumnInfo[] = [];
   const isChild: Set<string> = new Set();
   const allEntries: Map<string, ParsedColumnEntry> = new Map();
-  let datapackAgeInfo: DatapackAgeInfo = { datapackContainsSuggAge: false };
+  const datapackAgeInfo: DatapackAgeInfo = { datapackContainsSuggAge: false };
   const faciesMap: Map<string, Facies> = new Map();
   const blocksMap: Map<string, Block> = new Map();
   try {
-    for (let decrypt_path of decrypt_paths) {
+    for (const decrypt_path of decrypt_paths) {
       //get the facies/blocks first
       await getFaciesOrBlock(decrypt_path, faciesMap, blocksMap);
       // Originally the first step, gather all parents and their direct children
@@ -144,7 +144,7 @@ async function getAllEntries(
     if (!line.includes("\t:\t")) {
       continue;
     }
-    let parent = line.split("\t:\t")[0];
+    const parent = line.split("\t:\t")[0];
 
     //THIS ACTUALLY DOESN'T MATTER ANYMORE BUT I WILL LEAVE IT HERE JUST IN CASE
     //TODO
@@ -154,10 +154,10 @@ async function getAllEntries(
     //ex "North Belgium -- Oostende, Brussels, Antwerp, Campine, Maastrichen" vs
     //North Belgium -- Oostende, Brussels, Antwerp, Campine, Maastrichen
 
-    let childrenstring = line.split("\t:\t")[1];
+    const childrenstring = line.split("\t:\t")[1];
     if (!parent || !childrenstring) continue;
     // childrenstring = childrenstring!.split("\t\t")[0];
-    let parsedChildren = spliceArrayAtFirstSpecialMatch(childrenstring!.split("\t"));
+    const parsedChildren = spliceArrayAtFirstSpecialMatch(childrenstring!.split("\t"));
     //if the entry is a child, add it to a set.
     for (const child of parsedChildren.children) {
       isChild.add(child);
@@ -181,7 +181,7 @@ async function getAllEntries(
 async function getFaciesOrBlock(filename: string, faciesMap: Map<string, Facies>, blocksMap: Map<string, Block>) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
-  let facies: Facies = {
+  const facies: Facies = {
     name: "",
     subFaciesInfo: [],
     minAge: 0,
@@ -189,7 +189,7 @@ async function getFaciesOrBlock(filename: string, faciesMap: Map<string, Facies>
     info: "",
     on: true
   };
-  let block: Block = {
+  const block: Block = {
     name: "",
     subBlockInfo: [],
     minAge: 0,
@@ -213,7 +213,7 @@ async function getFaciesOrBlock(filename: string, faciesMap: Map<string, Facies>
       addBlockToBlockMap(block, blocksMap);
       continue;
     }
-    let tabSeperated = line.split("\t");
+    const tabSeperated = line.split("\t");
     // we found a facies block
     if (!inFaciesBlock && tabSeperated[1] === "facies") {
       facies.name = trimQuotes(tabSeperated[0]!);
@@ -223,7 +223,7 @@ async function getFaciesOrBlock(filename: string, faciesMap: Map<string, Facies>
       }
       inFaciesBlock = true;
     } else if (inFaciesBlock) {
-      let subFaciesInfo = processFacies(line);
+      const subFaciesInfo = processFacies(line);
       if (subFaciesInfo) {
         facies.subFaciesInfo.push(subFaciesInfo);
       }
@@ -245,7 +245,7 @@ async function getFaciesOrBlock(filename: string, faciesMap: Map<string, Facies>
       inBlockBlock = true;
     } else if (inBlockBlock) {
       //get a single sub block
-      let subBlockInfo = processBlock(line);
+      const subBlockInfo = processBlock(line);
       if (subBlockInfo) {
         block.subBlockInfo.push(subBlockInfo);
       }
@@ -304,7 +304,7 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
  * @returns A subBlock object
  */
 function processBlock(line: string): SubBlockInfo | null {
-  let currentSubBlockInfo = {
+  const currentSubBlockInfo = {
     label: "",
     age: 0,
     info: "",
@@ -409,7 +409,7 @@ function recursive(
     minAge: 0,
     maxAge: 0
   };
-  let returnValue: FaciesFoundAndAgeRange = {
+  const returnValue: FaciesFoundAndAgeRange = {
     faciesFound: false,
     minAge: 99999,
     maxAge: -99999
@@ -445,7 +445,7 @@ function recursive(
       // if the child is named the same as the parent, this will create an infinite loop
       if (!child || child === currentColumn) return;
       const children = allEntries.get(child) || null;
-      let compareValue: FaciesFoundAndAgeRange = recursive(
+      const compareValue: FaciesFoundAndAgeRange = recursive(
         currentColumn, // the current column becomes the parent
         child, // the child is now the current column
         children, // the children that allEntries has or [] if this child is the parent to no children

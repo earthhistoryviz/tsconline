@@ -70,8 +70,8 @@ try {
   process.exit(1);
 }
 
-export let datapackIndex: DatapackIndex = {};
-export let mapPackIndex: MapPackIndex = {};
+export const datapackIndex: DatapackIndex = {};
+export const mapPackIndex: MapPackIndex = {};
 try {
   console.log(`\nParsing datapacks: ${assetconfigs.activeDatapacks}\n`);
   for (const datapack of assetconfigs.activeDatapacks) {

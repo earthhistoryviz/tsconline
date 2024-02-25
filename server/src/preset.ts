@@ -28,7 +28,7 @@ export async function loadPresets(): Promise<Presets | ServerResponseError> {
       return { error: msg + e };
     }
   });
-  let presets: Presets = { BASIC: [] };
+  const presets: Presets = { BASIC: [] };
   try {
     parsedConfigs.map((chartconfig) => {
       assertChartConfig(chartconfig);

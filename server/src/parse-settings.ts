@@ -238,11 +238,11 @@ function generateFontsXml(fonts: any, indent: string): string {
  */
 function generateColumnXml(jsonColumn: any, stateColumn: any | null, parent: string, indent: string): string {
   let xml = "";
-  for (let key in jsonColumn) {
+  for (const key in jsonColumn) {
     if (Object.prototype.hasOwnProperty.call(jsonColumn, key)) {
-      let colName = extractName(jsonColumn._id);
+      const colName = extractName(jsonColumn._id);
       //check if the user has edited the name from the given name
-      let xmlKey = replaceSpecialChars(key, 0);
+      const xmlKey = replaceSpecialChars(key, 0);
       // Skip the 'id' element.
 
       if (key === "_id") {
@@ -300,10 +300,10 @@ function generateColumnXml(jsonColumn: any, stateColumn: any | null, parent: str
       } else if (typeof jsonColumn[key] === "object") {
         xml += `${indent}<column id="${xmlKey}">\n`;
         //recursively go down column settings
-        let currName = extractName(jsonColumn._id);
-        let childName = extractName(jsonColumn[key]._id);
+        const currName = extractName(jsonColumn._id);
+        const childName = extractName(jsonColumn[key]._id);
         //TODO: pass the state column of the column itself, not the children array of its parent
-        let params: { one: any; two: any; three: string; four: string } = {
+        const params: { one: any; two: any; three: string; four: string } = {
           one: jsonColumn[key],
           two: null,
           three: currName,
@@ -355,7 +355,7 @@ export function jsonToXml(settings: any, columnSettings: any, version: string = 
   //procs if used for a child
   if (settings["_id"]) {
     xml += `  <column id="${settings["id"]}">\n`;
-    let temp = columnSettings;
+    const temp = columnSettings;
     xml += generateColumnXml(settings, temp, "", "    ");
     xml += "  </column>\n";
   }
