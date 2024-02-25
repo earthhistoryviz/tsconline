@@ -1,17 +1,16 @@
-import React from 'react';
-import { BoxProps, Box } from '@mui/material';
+import React from "react";
+import { BoxProps, Box } from "@mui/material";
 
-export const TSCIcon = ({ 
-        src,
-        alt,
-        size ="100px",
-        ...props
-    }:{
-        src: string,
-        alt?: string,
-        size?: number | string,
-    } & BoxProps
-    ) => {
+export const TSCIcon = ({
+  src,
+  alt,
+  size = "100px",
+  ...props
+}: {
+  src: string;
+  alt?: string;
+  size?: number | string;
+} & BoxProps) => {
   return (
     <Box
       {...props}
@@ -20,7 +19,7 @@ export const TSCIcon = ({
       alt={alt}
       sx={{
         width: size,
-        height: size,
+        height: size
       }}
     />
   );

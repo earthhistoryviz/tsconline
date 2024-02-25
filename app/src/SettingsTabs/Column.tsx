@@ -6,14 +6,7 @@ import { ColumnInfo } from "@tsconline/shared";
 import { Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
-import {
-  ColumnContainer,
-  AccordionDetails,
-  TSCCheckbox,
-  AccordionSummary,
-  Accordion,
-  TSCButton,
-} from "../components";
+import { ColumnContainer, AccordionDetails, TSCCheckbox, AccordionSummary, Accordion, TSCButton } from "../components";
 
 import { ColumnMenu } from "./ColumnMenu";
 
@@ -50,15 +43,10 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
     function clickColumnName() {
       actions.setcolumnSelected(details.name);
     }
-    const hasChildren =
-      details.children && Object.keys(details.children).length > 0;
+    const hasChildren = details.children && Object.keys(details.children).length > 0;
     const columnName = (
       <div>
-        <Typography
-          className="ColumnName"
-          sx={{ fontSize: "0.97rem" }}
-          style={{ padding: "6px" }}
-        >
+        <Typography className="ColumnName" sx={{ fontSize: "0.97rem" }} style={{ padding: "6px" }}>
           {details.editName}
         </Typography>
       </div>
@@ -67,10 +55,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
       return (
         <>
           <ColumnContainer>
-            <div
-              className={"column-checkbox " + leaf}
-              onClick={() => clickColumnName()}
-            >
+            <div className={"column-checkbox " + leaf} onClick={() => clickColumnName()}>
               <TSCCheckbox
                 checked={details.on}
                 onChange={() => {
@@ -94,32 +79,28 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
         expanded={expandedAccordions.includes(stringToHash(details.name))}
         onChange={() => {
           accordionClicked(details.name);
-        }}
-      >
+        }}>
         <AccordionSummary aria-controls="panel-content" id="panel-header">
           <div
             onClick={(event) => {
               //stops accordion from expanding/collapsing when clicking on the name or checkbox
               event.stopPropagation();
-            }}
-          >
+            }}>
             {checkbox("")}
           </div>
         </AccordionSummary>
         <AccordionDetails>
           <>
             {details.children &&
-              Object.entries(details.children).map(
-                ([childName, childDetails], childIndex) => (
-                  <ColumnAccordion
-                    key={childName}
-                    name={childDetails.editName}
-                    details={childDetails}
-                    expandedAccordions={expandedAccordions}
-                    accordionClicked={accordionClicked}
-                  />
-                )
-              )}
+              Object.entries(details.children).map(([childName, childDetails], childIndex) => (
+                <ColumnAccordion
+                  key={childName}
+                  name={childDetails.editName}
+                  details={childDetails}
+                  expandedAccordions={expandedAccordions}
+                  accordionClicked={accordionClicked}
+                />
+              ))}
           </>
         </AccordionDetails>
       </Accordion>
@@ -133,15 +114,13 @@ export const Column = observer(function Column() {
   const navigate = useNavigate();
   //state array of column names that are expanded
   const [expandedAccordions, setExpandedAccordions] = useState<number[]>([
-    stringToHash(state.settingsTabs.columns!.name),
+    stringToHash(state.settingsTabs.columns!.name)
   ]);
   //if column not in expanded list, add it
   //if column in expanded list, remove it
   const accordionClicked = (name: string) => {
     if (expandedAccordions.includes(stringToHash(name))) {
-      setExpandedAccordions(
-        expandedAccordions.filter((number) => number !== stringToHash(name))
-      );
+      setExpandedAccordions(expandedAccordions.filter((number) => number !== stringToHash(name)));
     } else setExpandedAccordions([...expandedAccordions, stringToHash(name)]);
   };
   //replaces expanded list with only top level column open
@@ -170,8 +149,7 @@ export const Column = observer(function Column() {
         id="column-generate-button-top"
         onClick={() => {
           actions.fetchChartFromServer(navigate);
-        }}
-      >
+        }}>
         Generate
       </TSCButton>
       <div className="column-accordion-and-menu">
@@ -181,23 +159,20 @@ export const Column = observer(function Column() {
             border: `1px solid gray`,
             borderRadius: "4px",
             zIndex: 0,
-            padding: "10px",
-          }}
-        >
+            padding: "10px"
+          }}>
           <TSCButton
             id="column-generate-button-top"
             onClick={() => {
               expandAll();
-            }}
-          >
+            }}>
             Expand All
           </TSCButton>
           <TSCButton
             id="column-generate-button-top"
             onClick={() => {
               collapseAll();
-            }}
-          >
+            }}>
             collapse All
           </TSCButton>
           {state.settingsTabs.columns && (

@@ -1,26 +1,25 @@
-import { Button, ButtonProps } from '@mui/material'
+import { Button, ButtonProps } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 
-export const TSCButton: React.FC<ButtonProps>  = ( props ) => {
+export const TSCButton: React.FC<ButtonProps> = (props) => {
   const theme = useTheme();
 
   return (
     <Button
-      {...props} 
+      {...props}
       sx={{
-        backgroundColor: theme.palette.button.main, 
+        backgroundColor: theme.palette.button.main,
         color: "#FFFFFF",
         ":hover": {
-          backgroundColor: theme.palette.button.light,
+          backgroundColor: theme.palette.button.light
         },
         ":active": {
-          backgroundColor: theme.palette.button.dark,
+          backgroundColor: theme.palette.button.dark
         },
-        ...props?.sx,
+        ...props?.sx
       }}
-      variant="contained"
-    >
+      variant="contained">
       {props?.children}
     </Button>
   );
-}
+};

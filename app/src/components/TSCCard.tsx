@@ -11,7 +11,7 @@ import {
   Tooltip,
   List,
   ListItem,
-  ListItemText,
+  ListItemText
 } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
 import { TSCButton } from "./TSCButton";
@@ -27,18 +27,18 @@ import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 
 const Title = styled("h2")(({ theme }) => ({
   fontFamily: theme.typography.fontFamily,
-  color: theme.palette.background.default,
+  color: theme.palette.background.default
 }));
 
 const CardBackground = styled("div")(({ theme, color }) => ({
-  background: `linear-gradient(to top, ${
+  background: `linear-gradient(to top, ${color || theme.palette.selection.main}, ${Color(
     color || theme.palette.selection.main
-  }, ${Color(color || theme.palette.selection.main)
+  )
     .rotate(24)
-    .lighten(0.12)})`,
+    .lighten(0.12)})`
 }));
 const HiddenBack = styled("div")(({ theme }) => ({
-  backgroundColor: theme.palette.navbar.main,
+  backgroundColor: theme.palette.navbar.main
 }));
 
 const CardContent = styled("div")(({ color }) => ({
@@ -46,23 +46,23 @@ const CardContent = styled("div")(({ color }) => ({
     -10px 10px 15px -5px ${Color(color).fade(0.5)}, 
       10px 10px 15px -5px ${Color(color).fade(0.5)}, 
       0 10px 15px -5px ${Color(color).fade(0.5)}
-    `,
+    `
 }));
 const Header = styled(Typography)(({ theme }) => ({
   "&::before": {
-    backgroundColor: theme.palette.selection.main,
-  },
+    backgroundColor: theme.palette.selection.main
+  }
 }));
 
 const Date = styled("div")(({ theme }) => ({
   fontFamily: theme.typography.fontFamily,
-  backgroundColor: theme.palette.text.disabled,
+  backgroundColor: theme.palette.text.disabled
 }));
 
 export const TSCCard = ({
   color,
   preset,
-  generateChart,
+  generateChart
 }: {
   color?: string;
   preset: ChartConfig;
@@ -81,38 +81,19 @@ export const TSCCard = ({
       {/* This is the front card */}
       <Box className="front-card">
         <HiddenBack className="hidden-back" />
-        <CardMedia
-          className="card-media-cover"
-          image={devSafeUrl(preset.background)}
-          onClick={handleFlip}
-        />
+        <CardMedia className="card-media-cover" image={devSafeUrl(preset.background)} onClick={handleFlip} />
         <CardContent className="card-content front-card-content" color={color}>
           <CardBackground className="card-background clip-path" color={color} />
           <Box position="relative" zIndex={1}>
-            <Grid
-              container
-              alignItems="center"
-              spacing={2}
-              onClick={handleFlip}
-            >
+            <Grid container alignItems="center" spacing={2} onClick={handleFlip}>
               <Grid item>
-                <Avatar
-                  className="avatar-logo avatar-box-shadow"
-                  src={devSafeUrl(preset.icon)}
-                />
+                <Avatar className="avatar-logo avatar-box-shadow" src={devSafeUrl(preset.icon)} />
               </Grid>
               <Grid item xs>
                 <Title className="card-title">{preset.title}</Title>
               </Grid>
             </Grid>
-            <Grid
-              container
-              mt={2}
-              alignItems="center"
-              justifyContent="center"
-              spacing={2}
-              wrap="nowrap"
-            >
+            <Grid container mt={2} alignItems="center" justifyContent="center" spacing={2} wrap="nowrap">
               <Grid item>
                 <IconButton onClick={handleFlip}>
                   <InfoIcon />
@@ -123,10 +104,9 @@ export const TSCCard = ({
                   style={{
                     width: "auto",
                     height: "auto",
-                    fontSize: "0.85rem",
+                    fontSize: "0.85rem"
                   }}
-                  onClick={generateChart}
-                >
+                  onClick={generateChart}>
                   Generate
                 </TSCButton>
               </Grid>
@@ -140,13 +120,7 @@ export const TSCCard = ({
         </CardContent>
       </Box>
       {/* This is the back card */}
-      <BackCard
-        handleFlip={handleFlip}
-        add={add}
-        added={added}
-        preset={preset}
-        color={color}
-      />
+      <BackCard handleFlip={handleFlip} add={add} added={added} preset={preset} color={color} />
     </ReactCardFlip>
   );
 };
@@ -156,7 +130,7 @@ const BackCard = ({
   color,
   handleFlip,
   add,
-  added,
+  added
 }: {
   preset: ChartConfig;
   handleFlip: () => void;
@@ -170,11 +144,7 @@ const BackCard = ({
       <CardBackground className="card-background" color={color} />
       <CardContent className="back-background card-content" color={color}>
         <StyledScrollbar className="info-container">
-          <CardMedia
-            className="info-media"
-            component="img"
-            image={devSafeUrl(preset.background)}
-          />
+          <CardMedia className="info-media" component="img" image={devSafeUrl(preset.background)} />
           <Title className="info-title">{preset.title}</Title>
           <div className="info-text-container">
             <Header className="header" color="primary">
@@ -186,9 +156,7 @@ const BackCard = ({
                   <FolderIcon color="primary" />
                   <ListItemText
                     className="list-item-text"
-                    primary={
-                      <Typography color="primary">{datapack.name}</Typography>
-                    }
+                    primary={<Typography color="primary">{datapack.name}</Typography>}
                   />
                 </ListItem>
               ))}
@@ -196,11 +164,7 @@ const BackCard = ({
             <Header className="header" color="primary">
               Additional Info
             </Header>
-            <Typography
-              className="info-description"
-              variant="body1"
-              color="primary"
-            >
+            <Typography className="info-description" variant="body1" color="primary">
               {preset.description}
             </Typography>
           </div>
@@ -214,23 +178,11 @@ const BackCard = ({
       <div className="add-buttons">
         {added ? (
           <IconButton className="add-button" onClick={add}>
-            <Lottie
-              key={"check"}
-              playOnClick
-              autoplay
-              animationData={checkIcon}
-              width={45}
-              height={45}
-              speed={1.7}
-            />
+            <Lottie key={"check"} playOnClick autoplay animationData={checkIcon} width={45} height={45} speed={1.7} />
           </IconButton>
         ) : (
           <IconButton className="add-button" onClick={add}>
-            <BorderedIcon
-              className="add-icon"
-              strokeWidth={0.1}
-              component={AddOutlinedIcon}
-            />
+            <BorderedIcon className="add-icon" strokeWidth={0.1} component={AddOutlinedIcon} />
           </IconButton>
         )}
       </div>

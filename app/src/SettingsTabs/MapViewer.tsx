@@ -13,7 +13,7 @@ import {
   ColoredIconButton,
   TypographyText,
   ColoredDiv,
-  BorderedIcon,
+  BorderedIcon
 } from "../components";
 import CloseIcon from "@mui/icons-material/Close";
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
@@ -24,12 +24,7 @@ import YoutubeSearchedForIcon from "@mui/icons-material/YoutubeSearchedFor";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { observer } from "mobx-react-lite";
 import "./MapViewer.css";
-import {
-  Legend,
-  createChildMapButton,
-  loadMapPoints,
-  loadTransects,
-} from "./MapButtons";
+import { Legend, createChildMapButton, loadMapPoints, loadTransects } from "./MapButtons";
 
 type MapProps = {
   name: string;
@@ -83,7 +78,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
     mapViewer,
     zoomIn,
     zoomOut,
-    resetTransform,
+    resetTransform
   }: {
     mapViewer: HTMLDivElement;
     zoomIn: () => void;
@@ -92,10 +87,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
   }) => (
     <>
       <div className="exit-buttons">
-        <IconButton
-          className="icon-view-button"
-          onClick={actions.goBackInMapHistory}
-        >
+        <IconButton className="icon-view-button" onClick={actions.goBackInMapHistory}>
           <BorderedIcon component={ArrowBackIcon} className="icon-button" />
         </IconButton>
       </div>
@@ -105,8 +97,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
             className="bottom-button"
             onClick={() => {
               actions.openNextMap(name, isFacies, name, true);
-            }}
-          >
+            }}>
             Facies
           </TSCButton>
         )}
@@ -115,23 +106,16 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
             className="bottom-button"
             onClick={() => {
               setFaciesOptions(!faciesOptions);
-            }}
-          >
+            }}>
             Options
           </TSCButton>
         )}
-        <TSCButton
-          className="bottom-button"
-          onClick={() => actions.setIsLegendOpen(!state.mapState.isLegendOpen)}
-        >
+        <TSCButton className="bottom-button" onClick={() => actions.setIsLegendOpen(!state.mapState.isLegendOpen)}>
           legend
         </TSCButton>
       </div>
       <div className="view-buttons">
-        <IconButton
-          className="close-icon-view-button"
-          onClick={() => actions.closeMapViewer()}
-        >
+        <IconButton className="close-icon-view-button" onClick={() => actions.closeMapViewer()}>
           <BorderedIcon component={CloseIcon} className="icon-button" />
         </IconButton>
         <IconButton
@@ -142,8 +126,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
             } else {
               mapViewer.requestFullscreen();
             }
-          }}
-        >
+          }}>
           <BorderedIcon component={FullscreenIcon} className="icon-button" />
         </IconButton>
         <IconButton className="icon-view-button" onClick={() => zoomIn()}>
@@ -152,14 +135,8 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
         <IconButton className="icon-view-button" onClick={() => zoomOut()}>
           <BorderedIcon component={ZoomOutIcon} className="icon-button" />
         </IconButton>
-        <IconButton
-          className="icon-view-button"
-          onClick={() => resetTransform()}
-        >
-          <BorderedIcon
-            component={YoutubeSearchedForIcon}
-            className="icon-button"
-          />
+        <IconButton className="icon-view-button" onClick={() => resetTransform()}>
+          <BorderedIcon component={YoutubeSearchedForIcon} className="icon-button" />
         </IconButton>
       </div>
     </>
@@ -168,19 +145,18 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
   const fullscreenImgStyle = {
     maxWidth: "100vw",
     height: "100vh",
-    maxHeight: "100vh",
+    maxHeight: "100vh"
   };
 
   return (
     <div ref={mapViewerRef} className="map-viewer">
       <TransformWrapper
         doubleClick={{
-          disabled: true,
+          disabled: true
         }}
         minScale={1}
         maxScale={3}
-        limitToBounds={true}
-      >
+        limitToBounds={true}>
         {(utils) => (
           <>
             <TransformComponent>
@@ -252,9 +228,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
                   mapHierarchy[name].map((child) => {
                     // if the parent exists, use the bounds of the parent on mapData
                     // this is because the child's parent field is the bounds of this map on that parent map
-                    const bounds = !mapData.parent
-                      ? mapData.bounds
-                      : mapData.parent!.bounds;
+                    const bounds = !mapData.parent ? mapData.bounds : mapData.parent!.bounds;
 
                     // mapInfo[child].parent!.bounds is called this way because
                     // the child's parent field stores the bounds of the child map within the parents bounds this way
@@ -271,26 +245,17 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
               </>
             </TransformComponent>
             {mapViewerRef && mapViewerRef.current && (
-              <Controls
-                mapViewer={mapViewerRef.current as HTMLDivElement}
-                {...utils}
-              />
+              <Controls mapViewer={mapViewerRef.current as HTMLDivElement} {...utils} />
             )}
           </>
         )}
       </TransformWrapper>
-      <Drawer
-        className="drawer"
-        variant="persistent"
-        anchor="left"
-        open={state.mapState.isLegendOpen}
-      >
+      <Drawer className="drawer" variant="persistent" anchor="left" open={state.mapState.isLegendOpen}>
         <DrawerHeader>
           <ColoredIconButton
             onClick={() => {
               actions.setIsLegendOpen(false);
-            }}
-          >
+            }}>
             <CloseIcon fontSize="small" />
           </ColoredIconButton>
           <TypographyText className="legend-title" variant="h6" gutterBottom>
@@ -304,21 +269,15 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
         className="facies-button-container drawer"
         variant="persistent"
         anchor="bottom"
-        open={state.mapState.isFacies && faciesOptions}
-      >
+        open={state.mapState.isFacies && faciesOptions}>
         <DrawerHeader>
-          <TypographyText
-            className="facies-options-title"
-            variant="h6"
-            gutterBottom
-          >
+          <TypographyText className="facies-options-title" variant="h6" gutterBottom>
             Facies Options
           </TypographyText>
           <ColoredIconButton
             onClick={() => {
               setFaciesOptions(false);
-            }}
-          >
+            }}>
             <ArrowDropDownIcon fontSize="large" />
           </ColoredIconButton>
         </DrawerHeader>
@@ -335,10 +294,7 @@ const FaciesControls = observer(() => {
   return (
     <ColoredDiv className="facies-buttons">
       <div className="dot-controls">
-        <TypographyText className="dot-controls-title">
-          {" "}
-          Dot Size{" "}
-        </TypographyText>
+        <TypographyText className="dot-controls-title"> Dot Size </TypographyText>
         <div className="slider-container">
           <TSCNumberInput
             className="dot-input-form"

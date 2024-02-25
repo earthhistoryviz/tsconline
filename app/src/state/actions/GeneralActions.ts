@@ -17,7 +17,7 @@ import {
   DatapackAgeInfo,
   defaultFontsInfo,
   assertIndexResponse,
-  assertPresets,
+  assertPresets
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
@@ -35,13 +35,13 @@ export const resetSettings = action("resetSettings", () => {
     baseStageKey: "",
     unitsPerMY: 2,
     mouseOverPopupsEnabled: false,
-    datapackContainsSuggAge: false,
+    datapackContainsSuggAge: false
   };
 });
 
 export const fetchDatapackInfo = action("fetchDatapackInfo", async () => {
   const response = await fetcher("/datapackinfoindex", {
-    method: "GET",
+    method: "GET"
   });
   const indexResponse = await response.json();
   try {
@@ -69,16 +69,13 @@ export const uploadDatapack = action("uploadDatapack", (file: File) => {
   formData.append("file", file);
   fetcher("/upload", {
     method: "POST",
-    body: formData,
+    body: formData
   });
 });
-export const loadIndexResponse = action(
-  "loadIndexResponse",
-  (response: IndexResponse) => {
-    state.mapPackIndex = response.mapPackIndex;
-    state.datapackIndex = response.datapackIndex;
-  }
-);
+export const loadIndexResponse = action("loadIndexResponse", (response: IndexResponse) => {
+  state.mapPackIndex = response.mapPackIndex;
+  state.datapackIndex = response.datapackIndex;
+});
 
 /**
  * Rests the settings, sets the tabs to 0
@@ -92,7 +89,7 @@ export const setDatapackConfig = action(
     //set the settings tab back to time
     setSettingsTabsSelected(0);
     let datapackAgeInfo: DatapackAgeInfo = {
-      datapackContainsSuggAge: false,
+      datapackContainsSuggAge: false
     };
     let mapInfo: MapInfo = {};
     let mapHierarchy: MapHierarchy = {};
@@ -117,33 +114,23 @@ export const setDatapackConfig = action(
             children: [],
             parent: "Root", // if you change this, change parse-datapacks.ts :69
             minAge: state.settings.topStageAge, //tbd
-            maxAge: state.settings.baseStageAge, //tbd
-          },
+            maxAge: state.settings.baseStageAge //tbd
+          }
         ],
-        parent: null,
+        parent: null
       };
       // add everything together
       // uses preparsed data on server start and appends items together
       for (const datapack of datapacks) {
-        if (
-          !datapack ||
-          !state.datapackIndex[datapack] ||
-          !state.mapPackIndex[datapack]
-        )
-          throw new Error(
-            `File requested doesn't exist on server: ${datapack}`
-          );
+        if (!datapack || !state.datapackIndex[datapack] || !state.mapPackIndex[datapack])
+          throw new Error(`File requested doesn't exist on server: ${datapack}`);
         const datapackParsingPack = state.datapackIndex[datapack]!;
         // concat the children array of root to the array created in preparsed array
         // we can't do Object.assign here because it will overwrite the array rather than concat it
-        columnInfo.children = columnInfo.children.concat(
-          datapackParsingPack.columnInfoArray
-        );
+        columnInfo.children = columnInfo.children.concat(datapackParsingPack.columnInfoArray);
         // concat datapackAgeInfo objects together
-        if (!datapackAgeInfo)
-          datapackAgeInfo = datapackParsingPack.datapackAgeInfo;
-        else
-          Object.assign(datapackAgeInfo, datapackParsingPack.datapackAgeInfo);
+        if (!datapackAgeInfo) datapackAgeInfo = datapackParsingPack.datapackAgeInfo;
+        else Object.assign(datapackAgeInfo, datapackParsingPack.datapackAgeInfo);
 
         const mapPack = state.mapPackIndex[datapack]!;
         if (!mapInfo) mapInfo = mapPack.mapInfo;
@@ -163,8 +150,7 @@ export const setDatapackConfig = action(
       );
       return false;
     }
-    state.settings.datapackContainsSuggAge =
-      datapackAgeInfo.datapackContainsSuggAge;
+    state.settings.datapackContainsSuggAge = datapackAgeInfo.datapackContainsSuggAge;
     state.mapState.mapHierarchy = mapHierarchy;
     state.settingsTabs.columns = columnInfo;
     state.mapState.mapInfo = mapInfo;
@@ -172,26 +158,19 @@ export const setDatapackConfig = action(
     state.config.settingsPath = settingsPath;
     initializeColumnHashMap(columnInfo);
     await fetcher(`/mapimages/${datapacks.join(":")}`, {
-      method: "POST",
+      method: "POST"
     });
     // Grab the settings for this chart if there are any:
     if (settingsPath && settingsPath.length > 0) {
-      const res = await fetcher(
-        `/settingsJson/${encodeURIComponent(settingsPath)}`,
-        {
-          method: "GET",
-        }
-      );
+      const res = await fetcher(`/settingsJson/${encodeURIComponent(settingsPath)}`, {
+        method: "GET"
+      });
       try {
         const settingsJson = JSON.parse(await res.text());
         console.log("recieved settings JSON object at set Chart", settingsJson);
         runInAction(() => (state.settingsJSON = settingsJson)); // Save the parsed JSON to the state.settingsJSON
       } catch (e) {
-        displayError(
-          e,
-          await res.json(),
-          "Error fetching settings from server"
-        );
+        displayError(e, await res.json(), "Error fetching settings from server");
         return false;
       }
     } else {
@@ -205,36 +184,31 @@ export const setDatapackConfig = action(
  * Sets the geological top stages and the base stages
  * Assuming the given stages includes the stages[TOP] = 0
  */
-export const setGeologicalStages = action(
-  "setGeologicalStages",
-  (stages: GeologicalStages) => {
-    let top = stages["TOP"];
-    let geologicalTopStages: GeologicalStages = { Present: 0 };
-    Object.keys(stages).map((key) => {
-      geologicalTopStages[key] = top;
-      top = stages[key];
-    });
-    delete stages["TOP"];
-    delete geologicalTopStages["TOP"];
-    state.settingsTabs.geologicalTopStages = geologicalTopStages;
-    state.settingsTabs.geologicalBaseStages = stages;
-  }
-);
+export const setGeologicalStages = action("setGeologicalStages", (stages: GeologicalStages) => {
+  let top = stages["TOP"];
+  let geologicalTopStages: GeologicalStages = { Present: 0 };
+  Object.keys(stages).map((key) => {
+    geologicalTopStages[key] = top;
+    top = stages[key];
+  });
+  delete stages["TOP"];
+  delete geologicalTopStages["TOP"];
+  state.settingsTabs.geologicalTopStages = geologicalTopStages;
+  state.settingsTabs.geologicalBaseStages = stages;
+});
 
 /**
  * Removes cache in public dir on server
  */
 export const removeCache = action("removeCache", async () => {
   const response = await fetcher(`/removecache`, {
-    method: "POST",
+    method: "POST"
   });
   // check if we successfully removed cache
   const msg = await response.json();
   try {
     assertSuccessfulServerResponse(msg);
-    console.log(
-      `Server successfully deleted cache with message: ${msg.message}`
-    );
+    console.log(`Server successfully deleted cache with message: ${msg.message}`);
   } catch (e) {
     displayError(e, msg, "Server could not remove cache");
     return;
@@ -275,16 +249,13 @@ export const generateChart = action("generateChart", async () => {
   let xmlSettings = jsonToXml(state.settingsJSON, state.settingsTabs.columns, state.settings);
   const body = JSON.stringify({
     settings: xmlSettings,
-    datapacks: state.config.datapacks,
+    datapacks: state.config.datapacks
   });
   console.log("Sending settings to server...");
-  const response = await fetcher(
-    `/charts/${state.useCache}/${state.settings.datapackContainsSuggAge}`,
-    {
-      method: "POST",
-      body,
-    }
-  );
+  const response = await fetcher(`/charts/${state.useCache}/${state.settings.datapackContainsSuggAge}`, {
+    method: "POST",
+    body
+  });
   const answer = await response.json();
   // will check if pdf is loaded
   try {
@@ -338,50 +309,46 @@ export const settingOptions = [
   {
     name: "enablePriorityFiltering",
     label: "Enable priority filtering",
-    stateName: "enPriority",
+    stateName: "enPriority"
   },
   {
     name: "enableChartLegend",
     label: "Enable chart legend",
-    stateName: "enChartLegend",
+    stateName: "enChartLegend"
   },
   {
     name: "hideBlockLabelsIfCrowded",
     label: "If crowded, hide block labels",
-    stateName: "enHideBlockLable",
+    stateName: "enHideBlockLable"
   },
   {
     name: "skipEmptyColumns",
     label: "Skip empty columns",
-    stateName: "skipEmptyColumns",
-  },
+    stateName: "skipEmptyColumns"
+  }
 ];
 
 // Combined function to update the checkbox settings and individual action functions
-export const updateCheckboxSetting = action(
-  (stateName: string, checked: boolean) => {
-    // Check if the stateName is a valid setting option
-    const settingOption = settingOptions.find(
-      (option) => option.stateName === stateName
-    );
-    if (!settingOption) return;
+export const updateCheckboxSetting = action((stateName: string, checked: boolean) => {
+  // Check if the stateName is a valid setting option
+  const settingOption = settingOptions.find((option) => option.stateName === stateName);
+  if (!settingOption) return;
 
-    // Update the checkbox setting in state.settings
-    (state.settings as any)[stateName] = checked;
+  // Update the checkbox setting in state.settings
+  (state.settings as any)[stateName] = checked;
 
-    // Update the checkbox setting in jsonSettings['settings'] if available
-    if (state.settingsJSON["settings"]) {
-      const settings = state.settingsJSON["settings"];
-      // Check if the current setting is already equal to the new value
-      if (settings[stateName] !== checked) {
-        settings[stateName] = checked;
-      }
+  // Update the checkbox setting in jsonSettings['settings'] if available
+  if (state.settingsJSON["settings"]) {
+    const settings = state.settingsJSON["settings"];
+    // Check if the current setting is already equal to the new value
+    if (settings[stateName] !== checked) {
+      settings[stateName] = checked;
     }
-
-    // Log the updated setting
-    console.log(`Updated setting "${stateName}" to ${checked}`);
   }
-);
+
+  // Log the updated setting
+  console.log(`Updated setting "${stateName}" to ${checked}`);
+});
 /**
  * Display error to dialog popup
  * @param error the error thrown
@@ -395,9 +362,7 @@ export function displayError(error: any, response: any, message: string) {
     console.log(`${message} with server response: ${response.error}`);
     pushError(response.error);
   } else {
-    console.log(
-      `${message} with server response: ${response}\n Error: ${error}`
-    );
+    console.log(`${message} with server response: ${response}\n Error: ${error}`);
     pushError(message);
   }
 }
@@ -405,34 +370,29 @@ export function displayError(error: any, response: any, message: string) {
 /**
  * set the settings tab based on a string or number
  */
-export const setSettingsTabsSelected = action(
-  (newtab: number | State["settingsTabs"]["selected"]) => {
-    if (typeof newtab === "string") {
-      state.settingsTabs.selected = newtab;
-      return;
-    }
-    switch (newtab) {
-      case 0:
-        state.settingsTabs.selected = "time";
-        break;
-      case 1:
-        state.settingsTabs.selected = "column";
-        break;
-      case 2:
-        state.settingsTabs.selected = "font";
-        break;
-      case 3:
-        state.settingsTabs.selected = "mappoints";
-        break;
-      default:
-        console.log(
-          "WARNING: setSettingTabsSelected: received index number that is unknown: ",
-          newtab
-        );
-        state.settingsTabs.selected = "time";
-    }
+export const setSettingsTabsSelected = action((newtab: number | State["settingsTabs"]["selected"]) => {
+  if (typeof newtab === "string") {
+    state.settingsTabs.selected = newtab;
+    return;
   }
-);
+  switch (newtab) {
+    case 0:
+      state.settingsTabs.selected = "time";
+      break;
+    case 1:
+      state.settingsTabs.selected = "column";
+      break;
+    case 2:
+      state.settingsTabs.selected = "font";
+      break;
+    case 3:
+      state.settingsTabs.selected = "mappoints";
+      break;
+    default:
+      console.log("WARNING: setSettingTabsSelected: received index number that is unknown: ", newtab);
+      state.settingsTabs.selected = "time";
+  }
+});
 
 /**
  * The tab name we want to switch to in settings based on a string translated to an index
@@ -482,7 +442,7 @@ async function fetchSVGStatus(): Promise<boolean> {
     return false;
   }
   const response = await fetcher(`/svgstatus/${state.chartHash}`, {
-    method: "GET",
+    method: "GET"
   });
   const data = await response.json();
   try {
@@ -511,7 +471,7 @@ export const removeError = action("removeError", (id: number) => {
 export const pushError = action("pushError", (text: string) => {
   state.errorAlerts.push({
     id: new Date().getTime(),
-    errorText: text,
+    errorText: text
   });
 });
 
@@ -560,12 +520,9 @@ export const setChartMade = action((value: boolean) => {
   state.madeChart = value;
 });
 
-export const setMapHierarchy = action(
-  "setMapHierarchy",
-  (mapHierarchy: MapHierarchy) => {
-    state.mapState.mapHierarchy = mapHierarchy;
-  }
-);
+export const setMapHierarchy = action("setMapHierarchy", (mapHierarchy: MapHierarchy) => {
+  state.mapState.mapHierarchy = mapHierarchy;
+});
 export const setChartHash = action("setChartHash", (charthash: string) => {
   state.chartHash = charthash;
 });
