@@ -295,10 +295,7 @@ function generateColumnXml(
 
       if (key === "title") {
         let useEditName = false;
-        if (
-          colName !== "Chart Root" &&
-          colName !== "Ma"
-        ) {
+        if (colName !== "Chart Root" && colName !== "Ma") {
           if (stateColumn && stateColumn !== undefined) {
             if (stateColumn.editName !== undefined && stateColumn.editName !== colName) {
               xml += `${indent}<setting name="title">${stateColumn.editName}</setting>\n`;
@@ -355,23 +352,21 @@ function generateColumnXml(
         //recursively go down column settings
         let currName = extractName(jsonColumn._id);
         let childName = extractName(jsonColumn[key]._id);
-        let params: { jsonColumn: any; stateColumn: any; indent: string } = {
-          jsonColumn: jsonColumn[key],
-          stateColumn: null,
-          indent: `${indent}    `,
-        };
-        if (currName == "Chart Root") {
-          params.stateColumn = stateColumn;
-        } else if (stateColumn != null) {
+        let childStateColumn = stateColumn;
+        if (currName != "Chart Root" && stateColumn != null) {
           for (let i = 0; i < stateColumn.children.length; i++) {
             if (stateColumn.children[i].name == childName) {
-              params.stateColumn = stateColumn.children[i];
+              childStateColumn = stateColumn.children[i];
               break;
             }
           }
         }
 
-        xml += generateColumnXml(params.jsonColumn, params.stateColumn, params.indent);
+        xml += generateColumnXml(
+          jsonColumn[key],
+          childStateColumn,
+          `${indent}    `
+        );
 
         xml += `${indent}</column>\n`;
       } else {
