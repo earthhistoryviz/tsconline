@@ -22,7 +22,7 @@ jobs:
       #     prettier_options: "--check **/*.{tsx,ts}"
       
       - name: Run ESLint
-        run: eslint . --ext .ts,.tsx
+        run: yarn eslint **/*.{tsx,ts,css} --quiet
 
 
   build-and-test:
