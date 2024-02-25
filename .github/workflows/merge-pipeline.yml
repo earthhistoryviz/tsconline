@@ -16,10 +16,7 @@ jobs:
         run: yarn install
 
       - name: Run ESLint
-        run: |
-          if ! yarn eslint **/*.{tsx,ts,css} --quiet --format json --output-file eslint-report.json; then
-            echo "eslint_failed=true" >> $GITHUB_ENV
-          fi
+        run: yarn lint-check > eslint-output.txt || echo "eslint_failed=true" >> $GITHUB_ENV
         continue-on-error: true
 
       - name: Comment PR on ESLint check failure
@@ -28,18 +25,8 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const eslintReport = JSON.parse(fs.readFileSync('eslint-report.json'));
-            let message = `🚨 The ESLint check has failed. Please address the following issues:\n\n`;
-            eslintReport.forEach(file => {
-              if (file.messages.length > 0) {
-                message += `### ${file.filePath.replace(`${process.env.GITHUB_WORKSPACE}/`, '')}\n`;
-                file.messages.forEach(msg => {
-                  message += `- Line ${msg.line}:${msg.column} ${msg.ruleId} ${msg.message}\n`;
-                });
-                message += '\n';
-              }
-            });
-            message += `Run 'yarn eslint --fix' locally to fix some of these issues automatically.`;
+            const eslintOutput = fs.readFileSync('eslint-output.txt', 'utf8');
+            const message = `🚨 The ESLint check has failed. Please address the following issues:\n\n\`\`\`\n${eslintOutput}\n\`\`\`\nRun 'yarn lint-format' locally to fix some of these issues automatically.`;
             const prNumber = context.payload.pull_request.number;
             github.rest.issues.createComment({
               ...context.repo,
@@ -50,7 +37,7 @@ jobs:
 
       - name: Prettify code
         run: |
-          if ! yarn prettier --check **/*.{tsx,ts}; then
+          if ! yarn prettier-check; then
             echo "prettify_failed=true" >> $GITHUB_ENV
           fi
         continue-on-error: true
