@@ -1,0 +1,3 @@
+app/dist
+app/assets
+app/src/state/parseSettings.ts
