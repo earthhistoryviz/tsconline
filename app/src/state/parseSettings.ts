@@ -220,7 +220,6 @@ function generateSettingsXml(settings: any, chartSettings: any, indent: string):
     if (Object.prototype.hasOwnProperty.call(settings, key)) {
       const value = settings[key];
       if (typeof value === "object") {
-        //TODO: right now it can only do age, implement stage later
         if (key === "topAge") {
           xml += `${indent}<setting name="${key}" source="text" unit="${value.unit}">\n`;
           xml += `${indent}    <setting name="text">${chartSettings.topStageAge}</setting>\n`;
@@ -296,7 +295,10 @@ function generateColumnXml(
 
       if (key === "title") {
         let useEditName = false;
-        if (colName !== "Chart Root" && colName !== "Chart Title" && colName !== "Ma") {
+        if (
+          colName !== "Chart Root" &&
+          colName !== "Ma"
+        ) {
           if (stateColumn && stateColumn !== undefined) {
             if (stateColumn.editName !== undefined && stateColumn.editName !== colName) {
               xml += `${indent}<setting name="title">${stateColumn.editName}</setting>\n`;
@@ -353,24 +355,23 @@ function generateColumnXml(
         //recursively go down column settings
         let currName = extractName(jsonColumn._id);
         let childName = extractName(jsonColumn[key]._id);
-        //TODO: pass the state column of the column itself, not the children array of its parent
-        let params: { one: any; two: any; three: string } = {
-          one: jsonColumn[key],
-          two: null,
-          three: `${indent}    `,
+        let params: { jsonColumn: any; stateColumn: any; indent: string } = {
+          jsonColumn: jsonColumn[key],
+          stateColumn: null,
+          indent: `${indent}    `,
         };
         if (currName == "Chart Root") {
-          params.two = stateColumn;
+          params.stateColumn = stateColumn;
         } else if (stateColumn != null) {
           for (let i = 0; i < stateColumn.children.length; i++) {
             if (stateColumn.children[i].name == childName) {
-              params.two = stateColumn.children[i];
+              params.stateColumn = stateColumn.children[i];
               break;
             }
           }
         }
 
-        xml += generateColumnXml(params.one, params.two, params.three);
+        xml += generateColumnXml(params.jsonColumn, params.stateColumn, params.indent);
 
         xml += `${indent}</column>\n`;
       } else {
