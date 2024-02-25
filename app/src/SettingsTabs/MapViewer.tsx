@@ -339,25 +339,6 @@ const FaciesControls = observer(() => {
           Dot Size{" "}
         </TypographyText>
         <div className="slider-container">
-          <TSCNumberInput
-            className="dot-input-form"
-            placeholder="Dot Size"
-            max={dotSizeRange.max}
-            min={dotSizeRange.min}
-            value={state.mapState.currentFaciesOptions.dotSize}
-            onChange={(
-              _event:
-                | React.FocusEvent<HTMLInputElement, Element>
-                | React.PointerEvent<Element>
-                | React.KeyboardEvent<Element>,
-              val: number | undefined
-            ) => {
-              if (!val || val < 1 || val > 20) {
-                return;
-              }
-              actions.setDotSize(val as number);
-            }}
-          />
           <Slider
             id="dot-size-slider"
             className="slider"
@@ -375,26 +356,6 @@ const FaciesControls = observer(() => {
       <div className="age-controls">
         <TypographyText> Age </TypographyText>
         <div className="slider-container">
-          <TSCNumberInput
-            endAdornment={<TSCInputAdornment>MA</TSCInputAdornment>}
-            className="age-input-form"
-            placeholder="Age"
-            max={state.mapState.selectedMapAgeRange.maxAge}
-            min={state.mapState.selectedMapAgeRange.minAge}
-            value={state.mapState.currentFaciesOptions.faciesAge}
-            onChange={(
-              _event:
-                | React.FocusEvent<HTMLInputElement, Element>
-                | React.PointerEvent<Element>
-                | React.KeyboardEvent<Element>,
-              val: number | undefined
-            ) => {
-              if (!val || val < 0 || val > 9999999) {
-                return;
-              }
-              actions.setFaciesAge(val as number);
-            }}
-          />
           <Slider
             id="number-input"
             className="slider"
