@@ -21,5 +21,13 @@
     ],
     "rules": {
         "react/prop-types": "off"
-    }
+    },
+    "overrides": [
+        {
+          "files": ["shared/**/*", "app/state/actions/UtilActions.ts", "app/state/parseSettings.ts"],
+          "rules": {
+            "@typescript-eslint/no-explicit-any": "off"
+          }
+        }
+      ]
 }
