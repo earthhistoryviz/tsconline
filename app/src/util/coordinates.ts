@@ -11,10 +11,10 @@ export const calculateRectBoundsPosition = (lat: number, lon: number, bounds: Re
     const latRange = Math.abs(upperLeftLat - lowerRightLat);
     const lonRange = Math.abs(upperLeftLon - lowerRightLon);
 
-    let normalizedLat = (lat - Math.min(upperLeftLat, lowerRightLat)) / latRange;
-    let normalizedLon = (lon - Math.min(upperLeftLon, lowerRightLon)) / lonRange;
+    const normalizedLat = (lat - Math.min(upperLeftLat, lowerRightLat)) / latRange;
+    const normalizedLon = (lon - Math.min(upperLeftLon, lowerRightLon)) / lonRange;
 
-    let x = normalizedLon * 100;
+    const x = normalizedLon * 100;
     let y = normalizedLat * 100;
     y = 100 - y;
 
@@ -22,10 +22,10 @@ export const calculateRectBoundsPosition = (lat: number, lon: number, bounds: Re
 };
 
 export const calculateRectButton = (childBounds: RectBounds, parentBounds: RectBounds) => {
-    let upperLeft = calculateRectBoundsPosition(childBounds.upperLeftLat, childBounds.upperLeftLon, parentBounds)
-    let lowerRight = calculateRectBoundsPosition(childBounds.lowerRightLat, childBounds.lowerRightLon, parentBounds)
+    const upperLeft = calculateRectBoundsPosition(childBounds.upperLeftLat, childBounds.upperLeftLon, parentBounds)
+    const lowerRight = calculateRectBoundsPosition(childBounds.lowerRightLat, childBounds.lowerRightLon, parentBounds)
 
-    let midpoint = { 
+    const midpoint = { 
         // x: (Math.abs(childBounds.upperLeftLon) + Math.abs(childBounds.lowerRightLon)) / 2, 
         x: (childBounds.lowerRightLon + childBounds.upperLeftLon) / 2 ,
         y: (childBounds.lowerRightLat + childBounds.upperLeftLat) / 2 ,
@@ -42,8 +42,8 @@ export const calculateRectButton = (childBounds: RectBounds, parentBounds: RectB
 export const calculateVertBoundsPosition = (lat: number, lon: number, frameHeight: number, frameWidth: number, bounds: VertBounds) => {
     lat = toRadians(lat)
     lon = toRadians(lon)
-    let centerLat = toRadians(bounds.centerLat)
-    let centerLon = toRadians(bounds.centerLon)
+    const centerLat = toRadians(bounds.centerLat)
+    const centerLon = toRadians(bounds.centerLon)
     const noOfPixPerKm = (0.4 * frameWidth) / bounds.scale; // scale (Km) = 10% of the frameWidth (pixels).
     const lonOffset = lon - centerLon; // longitude offset from the center
 

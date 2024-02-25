@@ -35,7 +35,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   generalActions.setChartPath("");
   //let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
   // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
-  let xmlSettings = jsonToXml(state.settingsJSON, state.settingsTabs.columns, state.settings);
+  const xmlSettings = jsonToXml(state.settingsJSON, state.settingsTabs.columns, state.settings);
   const body = JSON.stringify({
     settings: xmlSettings,
     datapacks: state.config.datapacks,

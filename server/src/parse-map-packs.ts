@@ -35,13 +35,13 @@ export async function grabMapImages(datapacks: string[], destination: string) {
 
 export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
     const map_info_paths = await grabFilepaths(datapacks, assetconfigs.decryptionDirectory, "map-packs")
-    let mapInfo: MapInfo = {}
-    let mapHierarchy: MapHierarchy = {}
+    const mapInfo: MapInfo = {}
+    const mapHierarchy: MapHierarchy = {}
     try {
         await pmap(map_info_paths, async (map_info) => {
             const contents = (await fs.readFile(map_info)).toString();
             const lines = contents.split(/\n|\r/)
-            let map: MapInfo[string] = {
+            const map: MapInfo[string] = {
                 img: "",
                 coordtype: "",
                 bounds: {
@@ -88,7 +88,7 @@ export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
                                 map.bounds = rectBounds
                                 break
                             case 'VERTICAL PERSPECTIVE':
-                                let vertBounds: any = {}
+                                const vertBounds: any = {}
                                 for (let i = 1; i < info.length; i++) {
                                     if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue
                                     switch (headerLabels[i]!.label) {
@@ -119,9 +119,9 @@ export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
                         if (!info || info.length < 7) {
                             throw new Error(`Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-PARENT MAP does not have proper format`)
                         }
-                        let parent: any = {}
+                        const parent: any = {}
                         //TODO: we only assume rect bounds as parent, will need change if not the case
-                        let bounds = grabRectBounds(headerLabels, info)
+                        const bounds = grabRectBounds(headerLabels, info)
                         assertRectBounds(bounds)
                         for (let i = 1; i < info.length; i++) {
                             if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue
@@ -156,7 +156,7 @@ export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
                         // iterate over the line and depending on the columns above, figure out which
                         // parts of MapPoints to put it in
                         while (info && info[0] === "DATACOL") {
-                            let mapPoint: MapPoints[string] = {
+                            const mapPoint: MapPoints[string] = {
                                 lat: 0,
                                 lon: 0
                             }
@@ -201,7 +201,7 @@ export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
                         }
                         if (!map.infoPoints) map.infoPoints = {}
                         while (info && info[0] === 'INFOPT') {
-                            let infoPoint: any = {}
+                            const infoPoint: any = {}
                             let name = ""
                             for (let i = 1; i < info.length; i++) {
                                 if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue
@@ -234,7 +234,7 @@ export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
                         }
                         if (!map.transects) map.transects = {}
                         while (info && info[0] === 'TRANSECT') {
-                            let transect: any = {}
+                            const transect: any = {}
                             let name = ""
                             for (let i = 1; i < info.length; i++) {
                                 if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue
@@ -307,7 +307,7 @@ function grabNames(line: string[]) {
 }
 
 function grabRectBounds(headerLabels: {[key: number] : {label : string}}, info: string[]) {
-    let rectBounds: any = {}
+    const rectBounds: any = {}
     for (let i = 1; i < info.length; i++) {
         if (!headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue
         switch (headerLabels[i]!.label) {
