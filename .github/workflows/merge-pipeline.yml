@@ -15,20 +15,6 @@ jobs:
       - name: Install Dependencies
         run: yarn install
 
-      - name: Prettify code
-        uses: creyD/prettier_action@v4.3
-        with:
-          dry: True
-          prettier_options: "--check **/*.{tsx,ts}"
-        continue-on-error: true
-
-      - name: Comment PR on Prettier check failure
-        if: failure()
-        uses: thollander/actions-comment-pull-request@v2
-        with:
-          message: |
-            🚨 The Prettier check has failed. Please run 'yarn prettier --write' locally and commit the changes.
-      
       - name: Run ESLint
         run: yarn eslint **/*.{tsx,ts,css} --quiet --format json --output-file eslint-report.json
 
@@ -57,6 +43,21 @@ jobs:
               body: message,
             });
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prettify code
+        uses: creyD/prettier_action@v4.3
+        with:
+          dry: True
+          prettier_options: "--check **/*.{tsx,ts}"
+        continue-on-error: true
+
+      - name: Comment PR on Prettier check failure
+        if: failure()
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            🚨 The Prettier check has failed. Please run 'yarn prettier --write' locally and commit the changes.
+
 
 
   build-and-test:
