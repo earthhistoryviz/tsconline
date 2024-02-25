@@ -370,6 +370,7 @@ export const updateCheckboxSetting = action(
     // Update the checkbox setting in state.settings
     if ((state.settings)[stateName as keyof Settings] !== undefined && typeof (state.settings)[stateName as keyof Settings] ===  "boolean")  {
       // @ts-expect-error
+      // This cannot index by stateName key for some reason so we ignore with error
       (state.settings)[`${stateName as keyof Settings}`] = checked;
     }
 

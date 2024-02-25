@@ -5,7 +5,6 @@ import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
 import { Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "@mui/material/styles";
 import {
   ColumnContainer,
   AccordionDetails,

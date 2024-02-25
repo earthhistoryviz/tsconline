@@ -99,6 +99,7 @@ try {
 }
 // Serve the main app from /
 // @ts-expect-error
+// server.register doesn't accept the proper types. open bug-report asap to fastify
 server.register(fastifyStatic, {
   root: process.cwd() + "/../app/dist",
   prefix: "/",
@@ -106,6 +107,7 @@ server.register(fastifyStatic, {
 
 // Serve the generated charts, etc. from server/public/
 // @ts-expect-error
+// server.register doesn't accept the proper types. open bug-report asap to fastify
 server.register(fastifyStatic, {
   root: process.cwd() + "/public",
   prefix: "/public/",
@@ -114,12 +116,14 @@ server.register(fastifyStatic, {
 
 // Helpful for testing locally:
 // @ts-expect-error
+// server.register doesn't accept the proper types. open bug-report asap to fastify
 server.register(cors, {
   origin: "*",
   methods: ["GET", "POST"],
 });
 
 // @ts-expect-error
+// server.register doesn't accept the proper types. open bug-report asap to fastify
 server.register(fastifyCompress, {global: true})
 
 // removes the cached public/charts directory
@@ -141,7 +145,9 @@ server.get("/presets", async (_request, reply) => {
   reply.send(presets);
 });
 // uploads datapack
-server.post("/upload", routes.uploadDatapack);
+server.post("/upload", () => {
+  console.log("upload")
+});
 
 //fetches json object of requested settings file
 server.get<{ Params: { settingFile: string } }>(
