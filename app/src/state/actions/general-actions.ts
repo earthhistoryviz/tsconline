@@ -1,5 +1,5 @@
 import { action, runInAction } from "mobx";
-import { TimescaleItem } from '@tsconline/shared';
+import { TimescaleItem } from "@tsconline/shared";
 
 import {
   type MapInfo,
@@ -103,16 +103,13 @@ export const uploadDatapack = action("uploadDatapack", (file: File) => {
     body: formData
   });
 });
-export const loadIndexResponse = action(
-  "loadIndexResponse",
-  (response: IndexResponse) => {
-    state.mapPackIndex = response.mapPackIndex;
-    state.datapackIndex = response.datapackIndex;
-  }
-);
+export const loadIndexResponse = action("loadIndexResponse", (response: IndexResponse) => {
+  state.mapPackIndex = response.mapPackIndex;
+  state.datapackIndex = response.datapackIndex;
+});
 export const fetchTimescaleDataAction = action("fetchTimescaleData", async () => {
   try {
-    const response = await fetcher('/timescale', { method: "GET" });
+    const response = await fetcher("/timescale", { method: "GET" });
 
     if (response.ok) {
       const data = await response.json();
@@ -127,12 +124,12 @@ export const fetchTimescaleDataAction = action("fetchTimescaleData", async () =>
       setGeologicalBaseStageAges(state.geologicalBaseStageAges);
       setGeologicalTopStageAges(state.geologicalTopStageAges);
 
-      console.log('Time Scale Data Loaded');
+      console.log("Time Scale Data Loaded");
     } else {
-      console.error('Server responds with:', response.status);
+      console.error("Server responds with:", response.status);
     }
   } catch (error) {
-    console.error('Error fetching timescale data:', error);
+    console.error("Error fetching timescale data:", error);
   }
 });
 

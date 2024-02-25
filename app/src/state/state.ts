@@ -1,7 +1,7 @@
 import { observable } from "mobx";
 
 import { ErrorAlert, FaciesOptions, MapHistory } from "../types";
-import { TimescaleItem } from '@tsconline/shared';
+import { TimescaleItem } from "@tsconline/shared";
 import type {
   MapHierarchy,
   MapInfo,
@@ -152,7 +152,6 @@ export const state = observable<State>({
     useDatapackSuggestedAge: false,
     selectedBaseStage: "",
     selectedTopStage: ""
-
   },
   useCache: true,
   usePreset: true,

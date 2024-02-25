@@ -13,7 +13,9 @@ import fs from "fs";
 import { assertTimescale } from "@tsconline/shared";
 import { parseExcelFile } from "./parse-excel-file.js";
 
-
+// export const uploadDatapack = async function (request: FastifyRequest, reply: FastifyReply) {
+//   // const data = await request.saveRequestFiles()
+// };
 export const fetchSettingsXml = async function fetchSettingsJson(
   request: FastifyRequest<{ Params: { settingFile: string } }>,
   reply: FastifyReply
@@ -94,14 +96,9 @@ export const fetchChart = async function fetchChart(
     chartrequest = JSON.parse(request.body as string);
     assertChartRequest(chartrequest);
   } catch (e) {
-    console.log(
-      "ERROR: chart request is not valid.  Request was: ",
-      chartrequest,
-      ".  Error was: ",
-      e
-    );
+    console.log("ERROR: chart request is not valid.  Request was: ", chartrequest, ".  Error was: ", e);
     reply.send({
-      error: "ERROR: chart request is not valid.  Error was: " + e,
+      error: "ERROR: chart request is not valid.  Error was: " + e
     });
     return;
   }
@@ -199,31 +196,28 @@ export const fetchChart = async function fetchChart(
 };
 
 // Serve timescale data endpoint
-export const fetchTimescale = async function (
-  _request: FastifyRequest,
-  reply: FastifyReply
-) {
+export const fetchTimescale = async function (_request: FastifyRequest, reply: FastifyReply) {
   try {
-    const filePath = '../default_timescale.xlsx';
+    const filePath = assetconfigs.timescaleFilepath;
 
     // Check if the file exists
     if (!fs.existsSync(filePath)) {
-      console.error('Error: Excel file not found');
-      reply.status(404).send({ error: 'Excel file not found' });
+      console.error("Error: Excel file not found");
+      reply.status(404).send({ error: "Excel file not found" });
       return;
     }
     
     let timescaleData: any[] = await parseExcelFile(filePath);
-    timescaleData = timescaleData.map(([period, series, stage, ma, color]) => ({
-      key: stage, 
-      value: parseFloat(ma), 
+    timescaleData = timescaleData.map(([, , stage, ma, ]) => ({
+      key: stage,
+      value: parseFloat(ma)
     }));
-    timescaleData = timescaleData.filter(item => item.key);
-    timescaleData.forEach(data => assertTimescale(data));
-    
+    timescaleData = timescaleData.filter((item) => item.key);
+    timescaleData.forEach((data) => assertTimescale(data));
+
     reply.send({ timescaleData });
   } catch (error) {
-    console.error('Error reading Excel file:', error);
-    reply.status(500).send({ error: 'Internal Server Error' });
+    console.error("Error reading Excel file:", error);
+    reply.status(500).send({ error: "Internal Server Error" });
   }
 };
