@@ -16,10 +16,9 @@ export const TSCButton: React.FC<ButtonProps> = (props) => {
         ":active": {
           backgroundColor: theme.palette.button.dark
         },
-        ...props.sx,
+        ...props.sx
       }}
-      variant="contained"
-    >
+      variant="contained">
       {props.children}
     </Button>
   );

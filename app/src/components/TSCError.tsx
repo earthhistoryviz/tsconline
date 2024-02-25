@@ -10,10 +10,7 @@ type TSCErrorProps = {
 };
 export const TSCError: React.FC<TSCErrorProps> = observer(({ text, id }) => {
   const { actions } = useContext(context);
-  function handleCloseError(
-    _event: React.SyntheticEvent | Event,
-    reason?: string
-  ) {
+  function handleCloseError(_event: React.SyntheticEvent | Event, reason?: string) {
     if (reason === "clickaway") return;
     actions.removeError(id);
   }
@@ -26,8 +23,7 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ text, id }) => {
         <IconButton size="small" color="inherit" onClick={handleCloseError}>
           <CloseIcon fontSize="small" />
         </IconButton>
-      }
-    >
+      }>
       <Alert onClose={handleCloseError} severity="error" sx={{ width: "100%" }}>
         <AlertTitle> Error</AlertTitle>
         {text}

@@ -42,10 +42,7 @@ try {
   assertAssetConfig(contents);
   assetconfigs = contents;
 } catch (e) {
-  console.log(
-    "ERROR: Failed to load asset configs from assets/config.json.  Error was: ",
-    e
-  );
+  console.log("ERROR: Failed to load asset configs from assets/config.json.  Error was: ", e);
   process.exit(1);
 }
 // this try will run the decryption jar to decrypt all files in the datapack folder
@@ -60,13 +57,10 @@ try {
     // Tell it where to send the datapacks
     `-dest ${assetconfigs.decryptionDirectory} `;
   console.log("Calling Java decrypt.jar: ", cmd);
-  execSync(cmd)
-  console.log("Finished decryption")
+  execSync(cmd);
+  console.log("Finished decryption");
 } catch (e) {
-  console.log(
-    "ERROR: Failed to decrypt activeDatapacks in AssetConfig with error: ",
-    e
-  );
+  console.log("ERROR: Failed to decrypt activeDatapacks in AssetConfig with error: ", e);
   process.exit(1);
 }
 
@@ -120,7 +114,7 @@ server.register(cors, {
 });
 
 // @ts-expect-error: server.register doesn't accept the proper types. open bug-report asap to fastify
-server.register(fastifyCompress, {global: true})
+server.register(fastifyCompress, { global: true });
 
 // removes the cached public/cts directory
 server.post("/removecache", async (request, reply) => {
@@ -142,7 +136,7 @@ server.get("/presets", async (_request, reply) => {
 });
 // uploads datapack
 server.post("/upload", () => {
-  console.log("upload")
+  console.log("upload");
 });
 
 //fetches json object of requested settings file
