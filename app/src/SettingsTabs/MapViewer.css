@@ -23,27 +23,12 @@
   width: inherit;
   height: inherit;
 }
-.MuiIconButton-root.close-icon-view-button {
-  width: 35px;
-  height: 35px;
-}
 .MuiIconButton-root.icon-view-button {
   width: 35px;
   height: 35px;
 }
-.back-button {
-  position: absolute;
-  top: 9vh;
-  left: calc(0% + 18px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
-  gap: 10px;
-}
 .view-buttons {
   position: absolute;
-  top: 9vh;
   left: calc(100% - 50px);
   display: flex;
   flex-direction: column;

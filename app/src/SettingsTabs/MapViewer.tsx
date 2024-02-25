@@ -12,11 +12,11 @@ import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import YoutubeSearchedForIcon from "@mui/icons-material/YoutubeSearchedFor";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { observer } from "mobx-react-lite";
 import "./MapViewer.css";
 import { Legend, createChildMapButton, loadMapPoints, loadTransects } from "./MapButtons";
 import { FaciesControls, HeaderBar } from "./MapControls";
+import { faciesHeaderHeight, normHeaderHeight } from "./MapPointConstants";
 
 type MapProps = {
   name: string;
@@ -66,6 +66,9 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
   const mapData: MapInfo[string] = mapInfo[name];
   const mapHierarchy: MapHierarchy = state.mapState.mapHierarchy;
 
+  const viewButtonStyle = {
+    top: `calc(${isFacies ? faciesHeaderHeight : normHeaderHeight} + 1vh)`,
+  };
   const Controls = ({
     mapViewer,
     zoomIn,
@@ -78,14 +81,6 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
     resetTransform: () => void;
   }) => (
     <>
-      <div className="back-button">
-        <IconButton
-          className="icon-view-button"
-          onClick={actions.goBackInMapHistory}
-        >
-          <BorderedIcon component={ArrowBackIcon} className="icon-button" />
-        </IconButton>
-      </div>
       <div className="controls">
         {!isFacies && (
           <TSCButton
@@ -109,10 +104,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
           legend
         </TSCButton>
       </div>
-      <div className="view-buttons">
-        <IconButton className="close-icon-view-button" onClick={() => actions.closeMapViewer()}>
-          <BorderedIcon component={CloseIcon} className="icon-button" />
-        </IconButton>
+      <div className="view-buttons" style={viewButtonStyle}>
         <IconButton
           className="icon-view-button"
           onClick={() => {
@@ -137,16 +129,17 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
     </>
   );
 
-  const fullscreenImgStyle = {
-    maxWidth: "100vw",
-    height: "100vh",
-    maxHeight: "100vh"
+  let mapHeight = "90vh";
+  if (isFacies) mapHeight = `calc(100vh - ${faciesHeaderHeight})`;
+  else if (isFullscreen) mapHeight = `calc(100vh - ${normHeaderHeight})`;
+  const mapStyle = {
+    height: mapHeight,
   };
 
   return (
-    <>
+    <div ref={mapViewerRef}>
       <HeaderBar isFacies={isFacies} name={name} />
-      <div ref={mapViewerRef} className="map-viewer">
+      <div className="map-viewer">
         <TransformWrapper
           doubleClick={{
             disabled: true,
@@ -162,14 +155,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
                   <img
                     id="map"
                     ref={imageRef}
-                    style={
-                      /* 
-              we need to conditionally have styles because 
-              when fullscreened:   we fit the height of the image to max viewport height
-              when unfullscreened: we use normal css ~90 viewport height
-              */
-                      isFullscreen ? fullscreenImgStyle : undefined
-                    }
+                    style={mapStyle}
                     src={devSafeUrl(mapData.img)}
                     alt="Map"
                     className="map"

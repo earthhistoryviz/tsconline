@@ -4,19 +4,32 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
   display: grid;
-  height: 100%;
-  width: 100%
+  width: 100%;
 }
 .header-bar {
+  padding-top: 10px;
   justify-content: center;
   display: flex;
   flex-direction: column;
   gap: 5px;
-  justify-content: center;
   align-items: center;
   height: 8vh;
   z-index: 1;
   box-shadow: 1px 0px 10px rgba(0, 0, 0, 1);
+}
+.MuiIconButton-root.move-maps-button {
+  width: 35px;
+  height: 35px;
+  padding-left: 35px;
+  padding-right: 35px;
+}
+.MuiSvgIcon-root.icon-button {
+  color: white;
+  width: inherit;
+  height: inherit;
+}
+.header-title {
+  display: flex;
 }
 .divider {
   height: 0.05px;
@@ -28,7 +41,10 @@
   padding-right: 5px;
 }
 .header-title-container {
+  width: 100%;
   display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 .MuiTypography-root.map-viewer-header {
   font-size: 23px;
@@ -54,6 +70,7 @@
   display:flex;
   flex-direction: column;
   align-items: center;
+  margin: auto;
 }
 .slider-container {
   width: 100%;
@@ -63,9 +80,8 @@
   padding-right: 30px;
 }
 .MuiTextField-root.dot-input-form {
-  margin: 10px;
-  margin-right: 20px;
-  width: 90px;
+  padding-right: 20px;
+  width: 45px;
 }
 .MuiTextField-root.age-text-field {
   padding-right: 20px;
