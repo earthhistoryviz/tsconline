@@ -26,14 +26,7 @@ export const MapPoints = observer(function MapPoint() {
   return (
     <div>
       {!state.mapState.mapInfo || Object.entries(state.mapState.mapInfo).length === 0 ? (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            position: "relative",
-            minHeight: "100vh"
-          }}>
+        <div className="no-map-points-container">
           <Typography
             sx={{
               fontSize: theme.typography.pxToRem(18)
@@ -80,7 +73,12 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
         </List>
       </Box>
 
-      <Dialog open={state.mapState.isMapViewerOpen} keepMounted onClose={actions.goBackInMapHistory} maxWidth={false}>
+      <Dialog
+        classes={{ paper: "map-dialog" }}
+        open={state.mapState.isMapViewerOpen}
+        keepMounted
+        onClose={actions.goBackInMapHistory}
+        maxWidth={false}>
         {state.mapState.selectedMap ? (
           <MapViewer name={state.mapState.selectedMap} isFacies={state.mapState.isFacies} />
         ) : null}

@@ -1,49 +1,14 @@
-.controls {
-  position: absolute;
-  bottom: 5px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: transparent;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
-}
-/* TODO: possibly if the user has a window open, the width can never go smaller than all the buttons*/
-/* as a result these might need to be scaled with the windows, because*/
-/* weird scrolling happens if the window tries to be smaller than these buttons*/
-.MuiButton-root.bottom-button {
-  height: 20px;
-  width: 100px;
-  margin: 5px;
-}
 .MuiSvgIcon-root.icon-button {
   color: white;
   width: inherit;
   height: inherit;
 }
-.MuiIconButton-root.close-icon-view-button {
-  width: 35px;
-  height: 35px;
-}
 .MuiIconButton-root.icon-view-button {
   width: 35px;
   height: 35px;
 }
-.exit-buttons {
-  position: absolute;
-  top: 15px;
-  left: calc(0% + 18px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
-  gap: 10px;
-}
 .view-buttons {
   position: absolute;
-  top: 10px;
   left: calc(100% - 50px);
   display: flex;
   flex-direction: column;
@@ -112,10 +77,6 @@
   margin-right: 15px;
   margin-bottom: 0px;
 }
-.MuiTypography-root.facies-options-title {
-  margin-left: 50px;
-  margin-bottom: 0px;
-}
 .MuiBox-root.legend-item-container {
   display: flex;
   margin-bottom: 40px;
@@ -127,13 +88,11 @@
   padding-bottom: 10px;
   padding-top: 20px;
   height: 100%;
-  /* width: 100%; */
 }
 .MuiDrawer-docked.drawer > .MuiDrawer-paper {
   border: 0px;
+  overflow: hidden;
 }
-/* .MuiDrawer-docked.facies-button-container > .MuiDrawer-paper {
-} */
 .child-map-icon {
   width: 12px;
   height: 12px;
@@ -147,94 +106,4 @@
   align-items: center;
   justify-content: center;
   display: flex;
-}
-.facies-buttons {
-  justify-content: center;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  display: grid;
-  height: 100%;
-  width: 100%;
-}
-.age-controls {
-  width: 100%;
-  height: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: auto;
-}
-.dot-controls {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.slider-container {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.age-input-form {
-  margin: 10px;
-  margin-right: 20px;
-  width: 100px;
-  top: 10px;
-}
-.dot-input-form {
-  margin: 10px;
-  margin-right: 20px;
-  width: 40px;
-  top: 10px;
-}
-
-.slider .MuiSlider-track {
-  border: none;
-}
-
-.slider .MuiSlider-thumb {
-  height: 16px;
-  width: 16px;
-  background-color: #fff;
-  border: 2px solid currentColor;
-}
-.MuiSlider-root.slider {
-  width: 50%;
-}
-
-.slider .MuiSlider-thumb:focus,
-.slider .MuiSlider-thumb:hover,
-.slider .MuiSlider-thumb.Mui-active,
-.slider .MuiSlider-thumb.Mui-focusVisible {
-  box-shadow: inherit;
-}
-
-.slider .MuiSlider-thumb::before {
-  display: none;
-}
-
-.slider .MuiSlider-valueLabel {
-  line-height: 1.2;
-  font-size: 12px;
-  background: unset;
-  padding: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: 50% 50% 50% 0%;
-  background-color: black;
-  transform-origin: bottom left;
-  transform: translateX(50%) rotate(-45deg) scale(0);
-}
-
-.slider .MuiSlider-valueLabel::before {
-  display: none;
-}
-
-.slider .MuiSlider-valueLabel.MuiSlider-valueLabelOpen {
-  transform: translateX(50%) translateY(-100%) rotate(-45deg) scale(1);
-}
-
-.slider .MuiSlider-valueLabel > * {
-  transform: rotate(45deg);
 }
