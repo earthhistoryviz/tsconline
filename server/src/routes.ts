@@ -11,12 +11,9 @@ import svgson from "svgson";
 import fs from "fs";
 import { readFile } from "fs/promises";
 
-export const uploadDatapack = async function (
-  request: FastifyRequest,
-  reply: FastifyReply
-) {
-  // const data = await request.saveRequestFiles()
-};
+// export const uploadDatapack = async function (request: FastifyRequest, reply: FastifyReply) {
+//   // const data = await request.saveRequestFiles()
+// };
 export const fetchSettingsXml = async function fetchSettingsJson(
   request: FastifyRequest<{ Params: { settingFile: string } }>,
   reply: FastifyReply
@@ -24,9 +21,7 @@ export const fetchSettingsXml = async function fetchSettingsJson(
   try {
     const { settingFile } = request.params;
     //TODO: differentiate between preset and user uploaded datpack
-    const settingsXml = (
-      await readFile(`${decodeURIComponent(settingFile)}`)
-    ).toString();
+    const settingsXml = (await readFile(`${decodeURIComponent(settingFile)}`)).toString();
     reply.send(settingsXml);
   } catch (e) {
     reply.send({ error: e });

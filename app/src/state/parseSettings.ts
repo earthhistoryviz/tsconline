@@ -17,9 +17,7 @@ function processSettings(settingsNode: any): any {
     const settingName = settingNode.getAttribute("name");
     const nestedSettingsNode = settingNode.getElementsByTagName("setting")[0];
     const justificationValue = settingNode.getAttribute("justification");
-    let settingValue = nestedSettingsNode
-      ? nestedSettingsNode.textContent.trim()
-      : settingNode.textContent.trim();
+    let settingValue = nestedSettingsNode ? nestedSettingsNode.textContent.trim() : settingNode.textContent.trim();
     //since we access the elements by tag name, the nested settings of topage and baseage
     //are treated on the same level, so skip when the setting name is text or stage.
     if (settingName === "text" || settingName === "stage") {
@@ -33,14 +31,8 @@ function processSettings(settingsNode: any): any {
         text = settingValue;
       }
       if (settingNode.getElementsByTagName("setting")[1]) {
-        settingValue = settingNode
-          .getElementsByTagName("setting")[1]
-          .textContent.trim();
-        if (
-          settingNode
-            .getElementsByTagName("setting")[1]
-            .getAttribute("name") === "stage"
-        ) {
+        settingValue = settingNode.getElementsByTagName("setting")[1].textContent.trim();
+        if (settingNode.getElementsByTagName("setting")[1].getAttribute("name") === "stage") {
           stage = settingValue;
         } else {
           text = settingValue;
@@ -50,7 +42,7 @@ function processSettings(settingsNode: any): any {
         source: settingNode.getAttribute("source"),
         unit: settingNode.getAttribute("unit"),
         stage: stage,
-        text: text,
+        text: text
       };
     }
     //these two tags have units, so make an object storing its unit and value
@@ -118,14 +110,11 @@ function processColumn(node: any): any {
           const orientationValue = child.getAttribute("orientation");
           const useNamedValue = child.getAttribute("useNamed");
           const standardizedValue = child.getAttribute("standardized");
-          if (
-            settingName === "backgroundColor" ||
-            settingName === "customColor"
-          ) {
+          if (settingName === "backgroundColor" || settingName === "customColor") {
             result[settingName] = {
               standardized: standardizedValue,
               useNamed: useNamedValue,
-              text: child.textContent.trim(),
+              text: child.textContent.trim()
             };
           } else if (justificationValue) {
             result[settingName] = justificationValue;
@@ -276,11 +265,7 @@ function generateFontsXml(fonts: any, indent: string): string {
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with column info
  */
-function generateColumnXml(
-  jsonColumn: any,
-  stateColumn: ColumnInfo | null,
-  indent: string
-): string {
+function generateColumnXml(jsonColumn: any, stateColumn: ColumnInfo | null, indent: string): string {
   let xml = "";
   for (let key in jsonColumn) {
     if (Object.prototype.hasOwnProperty.call(jsonColumn, key)) {
@@ -326,10 +311,7 @@ function generateColumnXml(
           xml += `${indent}<setting name="${xmlKey}">${jsonColumn["isSelected"]}</setting>\n`;
         }
         //if column isn't in state, then use default given by the original xml
-        else if (
-          stateColumn == undefined ||
-          Object.keys(stateColumn).length == 0
-        ) {
+        else if (stateColumn == undefined || Object.keys(stateColumn).length == 0) {
           xml += `${indent}<setting name="${xmlKey}">${jsonColumn["isSelected"]}</setting>\n`;
         }
         //always display these things (the original tsc throws an error if not selected)
@@ -372,11 +354,7 @@ function generateColumnXml(
           }
         }
 
-        xml += generateColumnXml(
-          jsonColumn[key],
-          childStateColumn,
-          `${indent}    `
-        );
+        xml += generateColumnXml(jsonColumn[key], childStateColumn, `${indent}    `);
 
         xml += `${indent}</column>\n`;
       } else {
@@ -396,12 +374,7 @@ function generateColumnXml(
  * @param version the version of the jar file (TimeScale Creator)
  * @returns xml string with the entire settings info
  */
-export function jsonToXml(
-  settings: any,
-  columnSettings: any,
-  chartSettings: any,
-  version: string = "PRO8.1"
-): string {
+export function jsonToXml(settings: any, columnSettings: any, chartSettings: any, version: string = "PRO8.1"): string {
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
   //console.log("json 2...\n", state.settingsJSON);
