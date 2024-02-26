@@ -38,7 +38,7 @@ const TSCOnlineHeader = () => {
 export const Home = observer(function Home() {
   const { state, actions } = useContext(context);
   const theme = useTheme();
-  let navigate = useNavigate()
+  const navigate = useNavigate();
   return (
     <div
       className="whole_page"
@@ -56,7 +56,7 @@ export const Home = observer(function Home() {
             fontSize: theme.typography.pxToRem(12)
           }}
           onClick={() => {
-            actions.removecache();
+            actions.removeCache();
             actions.resetState();
           }}>
           Remove Cache
