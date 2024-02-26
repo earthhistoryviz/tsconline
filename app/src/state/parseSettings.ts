@@ -282,17 +282,16 @@ function generateColumnXml(
   indent: string
 ): string {
   let xml = "";
+  console.log(stateColumn);
   for (let key in jsonColumn) {
     if (Object.prototype.hasOwnProperty.call(jsonColumn, key)) {
       let colName = extractName(jsonColumn._id);
-      //check if the user has edited the name from the given name
       let xmlKey = replaceSpecialChars(key, 0);
       // Skip the 'id' element.
 
       if (key === "_id") {
         continue;
       }
-
       if (key === "title") {
         let useEditName = false;
         if (colName !== "Chart Root" && colName !== "Ma") {
@@ -341,7 +340,7 @@ function generateColumnXml(
           continue;
         }
         //check if column is checked or not, and change the isSelected field to true or false
-        else if (stateColumn && !colName.includes("Chart")) {
+        else if (stateColumn) {
           if (stateColumn.on) {
             xml += `${indent}<setting name="${xmlKey}">true</setting>\n`;
           } else {
@@ -364,7 +363,10 @@ function generateColumnXml(
           childStateColumn = stateColumn;
         } else if (stateColumn != null) {
           for (let i = 0; i < stateColumn.children.length; i++) {
-            if (stateColumn.children[i].name == childName) {
+            if (
+              stateColumn.children[i].name == childName ||
+              stateColumn.children[i].name.slice(1, -1) == childName //remove surrounding quotation marks
+            ) {
               childStateColumn = stateColumn.children[i];
               break;
             }
