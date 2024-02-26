@@ -323,8 +323,15 @@ function generateColumnXml(
       } else if (key === "orientation") {
         xml += `${indent}<setting name="${xmlKey}" orientation="${jsonColumn[key]}"/>\n`;
       } else if (key === "isSelected") {
+        //use preset value for event columns, remove later when event columns are covered
+        if (jsonColumn._id.includes("EventColumn")) {
+          xml += `${indent}<setting name="${xmlKey}">${jsonColumn["isSelected"]}</setting>\n`;
+        }
         //if column isn't in state, then use default given by the original xml
-        if (stateColumn == undefined || Object.keys(stateColumn).length == 0) {
+        else if (
+          stateColumn == undefined ||
+          Object.keys(stateColumn).length == 0
+        ) {
           xml += `${indent}<setting name="${xmlKey}">${jsonColumn["isSelected"]}</setting>\n`;
         }
         //always display these things (the original tsc throws an error if not selected)
@@ -352,8 +359,10 @@ function generateColumnXml(
         //recursively go down column settings
         let currName = extractName(jsonColumn._id);
         let childName = extractName(jsonColumn[key]._id);
-        let childStateColumn = stateColumn;
-        if (currName != "Chart Root" && stateColumn != null) {
+        let childStateColumn = null;
+        if (currName == "Chart Root") {
+          childStateColumn = stateColumn;
+        } else if (stateColumn != null) {
           for (let i = 0; i < stateColumn.children.length; i++) {
             if (stateColumn.children[i].name == childName) {
               childStateColumn = stateColumn.children[i];
