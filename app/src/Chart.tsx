@@ -18,9 +18,8 @@ export const Chart = observer(function () {
         width: "100%",
         display: "flex",
         justifyContent: "center",
-        alignContent: "center",
-      }}
-    >
+        alignContent: "center"
+      }}>
       {state.chartLoading ? (
         <LoadingChart />
       ) : state.madeChart ? (
@@ -34,9 +33,8 @@ export const Chart = observer(function () {
         <div
           className="loading-container"
           style={{
-            fontFamily: theme.typography.fontFamily,
-          }}
-        >
+            fontFamily: theme.typography.fontFamily
+          }}>
           <div className="loading"> You have not made a chart yet </div>
         </div>
       )}

@@ -9,7 +9,14 @@ export const defaultFontsInfo = {
         size: 6
     },
     "Column Header": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 14 },
-    "Event Column Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 11 },
+    "Event Column Label": {
+        bold: false,
+        color: "#000000",
+        fontFace: "Arial",
+        inheritable: false,
+        italic: false,
+        size: 11
+    },
     "Legend Column Name": { inheritable: false },
     "Legend Column Source": { inheritable: false },
     "Legend Title": { inheritable: false },
@@ -27,7 +34,7 @@ export function assertMapPackIndex(o) {
     if (!o || typeof o !== "object")
         throw new Error("MapPackIndex must be a non-null object");
     for (const key in o) {
-        if (typeof key !== 'string')
+        if (typeof key !== "string")
             throw new Error(`MapPackIndex key value ${key} is not a string`);
         assertMapPack(o[key]);
     }
@@ -69,21 +76,21 @@ export function assertTransects(o) {
 export function assertDatapack(o) {
     if (typeof o !== "object")
         throw new Error("Datapack must be an object");
-    if (typeof o.name !== 'string')
+    if (typeof o.name !== "string")
         throw new Error("Datapack must have a field name of type string");
-    if (typeof o.file !== 'string')
+    if (typeof o.file !== "string")
         throw new Error("Datapack must have a field file of type string");
 }
 export function assertDatapackAgeInfo(o) {
     if (typeof o !== "object")
         throw new Error("DatapackAgeInfo must be an object");
     if (typeof o.datapackContainsSuggAge !== "boolean")
-        throwError('DatapackAgeInfo', 'datapackContainsSuggAge', 'boolean', o.datapackContainsSuggAge);
+        throwError("DatapackAgeInfo", "datapackContainsSuggAge", "boolean", o.datapackContainsSuggAge);
     if (o.datapackContainsSuggAge) {
         if (typeof o.bottomAge !== "number")
-            throwError('DatapackAgeInfo', 'bottomAge', 'number', o.bottomAge);
+            throwError("DatapackAgeInfo", "bottomAge", "number", o.bottomAge);
         if (typeof o.topAge !== "number")
-            throwError('DatapackAgeInfo', 'topAge', 'number', o.topAge);
+            throwError("DatapackAgeInfo", "topAge", "number", o.topAge);
     }
 }
 export function assertSubBlockInfo(o) {
@@ -193,7 +200,7 @@ export function assertChartConfig(o) {
 }
 export function assertChartConfigArray(o) {
     if (!o || !Array.isArray(o))
-        throwError('ChartConfigArray', 'ChartConfigArray', 'array', o);
+        throwError("ChartConfigArray", "ChartConfigArray", "array", o);
     for (const c of o)
         assertChartConfig(c);
 }
@@ -201,9 +208,9 @@ export function assertChartRequest(o) {
     if (typeof o !== "object")
         throw new Error("ChartRequest must be an object");
     if (typeof o.settings !== "string")
-        throwError('ChartRequest', 'settings', 'string', o.settings);
+        throwError("ChartRequest", "settings", "string", o.settings);
     if (!Array.isArray(o.datapacks))
-        throwError('ChartRequest', 'datapacks', 'array', o.datapacks);
+        throwError("ChartRequest", "datapacks", "array", o.datapacks);
 }
 export function isServerResponseError(o) {
     if (!o || typeof o !== "object")
@@ -212,45 +219,43 @@ export function isServerResponseError(o) {
         return false;
     return true;
 }
-// export type ChartResponse = ChartResponseInfo | ServerResponseError
 export function assertChartInfo(o) {
     if (!o || typeof o !== "object")
         throw new Error("ChartInfo must be an object");
     if (typeof o.chartpath !== "string")
-        throwError('ChartInfo', 'chartpath', 'string', o.chartpath);
+        throwError("ChartInfo", "chartpath", "string", o.chartpath);
     if (typeof o.hash !== "string")
-        throwError('ChartInfo', 'hash', 'string', o.hash);
+        throwError("ChartInfo", "hash", "string", o.hash);
 }
 export function assertColumnInfo(o) {
     if (typeof o !== "object" || o === null) {
         throw new Error("ColumnInfo must be a non-null object");
     }
     if (typeof o.name !== "string")
-        throwError('ColumnInfo', 'name', 'string', o.name);
-    // assertFontsInfo(o.fontsInfo)
+        throwError("ColumnInfo", "name", "string", o.name);
     if (typeof o.on !== "boolean")
-        throwError('ColumnInfo', 'on', 'boolean', o.on);
-    if (typeof o.info !== 'string')
-        throwError('ColumnInfo', 'info', 'string', o.info);
-    if (o.parent !== null && typeof o.parent !== 'string')
-        throwError('ColumnInfo', 'parent', 'string', o.parent);
-    if (typeof o.minAge !== 'number')
-        throwError('ColumnInfo', 'minAge', 'number', o.minAge);
-    if (typeof o.maxAge !== 'number')
-        throwError('ColumnInfo', 'maxAge', 'number', o.maxAge);
+        throwError("ColumnInfo", "on", "boolean", o.on);
+    if (typeof o.info !== "string")
+        throwError("ColumnInfo", "info", "string", o.info);
+    if (o.parent !== null && typeof o.parent !== "string")
+        throwError("ColumnInfo", "parent", "string", o.parent);
+    if (typeof o.minAge !== "number")
+        throwError("ColumnInfo", "minAge", "number", o.minAge);
+    if (typeof o.maxAge !== "number")
+        throwError("ColumnInfo", "maxAge", "number", o.maxAge);
     for (const child of o.children) {
         assertColumnInfo(child);
     }
-    if ('subBlockInfo' in o) {
+    if ("subBlockInfo" in o) {
         if (!o.subBlockInfo || !Array.isArray(o.subBlockInfo))
-            throwError('ColumnInfo', 'subBlockInfo', 'array', o.subBlockInfo);
+            throwError("ColumnInfo", "subBlockInfo", "array", o.subBlockInfo);
         for (const block of o.subBlockInfo) {
             assertSubBlockInfo(block);
         }
     }
-    if ('subFaciesInfo' in o) {
+    if ("subFaciesInfo" in o) {
         if (!o.subFaciesInfo || !Array.isArray(o.subFaciesInfo))
-            throwError('ColumnInfo', 'subFaciesInfo', 'array', o.subFaciesInfo);
+            throwError("ColumnInfo", "subFaciesInfo", "array", o.subFaciesInfo);
         for (const block of o.subFaciesInfo) {
             assertSubFaciesInfo(block);
         }
@@ -262,17 +267,17 @@ export function assertFontsInfo(o) {
     for (const key in o) {
         const val = o.key;
         if (typeof val.bold !== "boolean")
-            throwError('FontsInfo', `${key}.bold`, 'boolean', o.bold);
+            throwError("FontsInfo", `${key}.bold`, "boolean", o.bold);
         if (typeof val.color !== "string")
-            throwError('FontsInfo', `${key}.color`, 'string', o.color);
+            throwError("FontsInfo", `${key}.color`, "string", o.color);
         if (typeof val.fontFace !== "string")
-            throwError('FontsInfo', `${key}.fontFace`, 'string', o.fontFace);
+            throwError("FontsInfo", `${key}.fontFace`, "string", o.fontFace);
         if (typeof val.inheritable !== "boolean")
-            throwError('FontsInfo', `${key}.inheritable`, 'boolean', o.inheritable);
+            throwError("FontsInfo", `${key}.inheritable`, "boolean", o.inheritable);
         if (typeof val.italic !== "boolean")
-            throwError('FontsInfo', 'italic', `${key}.boolean`, o.italic);
+            throwError("FontsInfo", "italic", `${key}.boolean`, o.italic);
         if (typeof val.size !== "number")
-            throwError('FontsInfo', 'size', `${key}.number`, o.size);
+            throwError("FontsInfo", "size", `${key}.number`, o.size);
     }
 }
 export function assertMapHierarchy(o) {
@@ -281,7 +286,7 @@ export function assertMapHierarchy(o) {
     for (const key in o) {
         const map = o[key];
         if (!Array.isArray(map))
-            throwError('MapHierarchy', `value for key ${key}`, 'string array', map);
+            throwError("MapHierarchy", `value for key ${key}`, "string array", map);
     }
 }
 export function assertMapInfo(o) {
@@ -298,8 +303,6 @@ export function assertMapInfo(o) {
         }
         if ("note" in map && typeof map.note !== "string") {
             throw new Error(`MapInfo' value for key '${key}' must have a 'note' string property`);
-        }
-        if ("parent" in map) {
         }
         if (typeof map.coordtype !== "string") {
             throw new Error(`MapInfo' value for key '${key}' must have a 'coordtype' string property`);
@@ -327,16 +330,10 @@ export function assertParentMap(parent) {
     assertBounds(parent.coordtype, parent.bounds);
 }
 export function isRectBounds(bounds) {
-    return ("upperLeftLon" in bounds &&
-        "upperLeftLat" in bounds &&
-        "lowerRightLat" in bounds &&
-        "lowerRightLon" in bounds);
+    return "upperLeftLon" in bounds && "upperLeftLat" in bounds && "lowerRightLat" in bounds && "lowerRightLon" in bounds;
 }
 export function isVertBounds(bounds) {
-    return ("centerLat" in bounds &&
-        "centerLon" in bounds &&
-        "height" in bounds &&
-        "scale" in bounds);
+    return "centerLat" in bounds && "centerLon" in bounds && "height" in bounds && "scale" in bounds;
 }
 export function assertBounds(coordtype, bounds) {
     switch (coordtype) {

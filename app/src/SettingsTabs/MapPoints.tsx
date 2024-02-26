@@ -1,16 +1,7 @@
 import { useContext } from "react";
 import { context } from "../state";
 import { useTheme } from "@mui/material/styles";
-import {
-  Typography,
-  Dialog,
-  List,
-  Box,
-  ListItemButton,
-  ListItemAvatar,
-  ListItemText,
-  Avatar,
-} from "@mui/material";
+import { Typography, Dialog, List, Box, ListItemButton, ListItemAvatar, ListItemText, Avatar } from "@mui/material";
 import type { MapInfo } from "@tsconline/shared";
 import { styled } from "@mui/material/styles";
 import { devSafeUrl } from "../util";
@@ -22,11 +13,11 @@ import "./MapPoints.css";
 const MapListItemButton = styled(ListItemButton)(({ theme }) => ({
   "&:hover": {
     backgroundColor: theme.palette.primary.main,
-    cursor: "pointer",
+    cursor: "pointer"
   },
   "&.Mui-selected": {
-    backgroundColor: theme.palette.selection.light,
-  },
+    backgroundColor: theme.palette.selection.light
+  }
 }));
 
 export const MapPoints = observer(function MapPoint() {
@@ -34,22 +25,19 @@ export const MapPoints = observer(function MapPoint() {
   const theme = useTheme();
   return (
     <div>
-      {!state.mapState.mapInfo ||
-      Object.entries(state.mapState.mapInfo).length === 0 ? (
+      {!state.mapState.mapInfo || Object.entries(state.mapState.mapInfo).length === 0 ? (
         <div
           style={{
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
             position: "relative",
-            minHeight: "100vh",
-          }}
-        >
+            minHeight: "100vh"
+          }}>
           <Typography
             sx={{
-              fontSize: theme.typography.pxToRem(18),
-            }}
-          >
+              fontSize: theme.typography.pxToRem(18)
+            }}>
             No Map Points available for this datapack
           </Typography>
         </div>
@@ -81,8 +69,7 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
               <MapListItemButton
                 key={name}
                 selected={state.mapState.selectedMap === name}
-                onClick={() => handleRowClick(name)}
-              >
+                onClick={() => handleRowClick(name)}>
                 <ListItemAvatar>
                   <Avatar alt={name} src={devSafeUrl(map.img)} />
                 </ListItemAvatar>
@@ -93,17 +80,9 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
         </List>
       </Box>
 
-      <Dialog
-        open={state.mapState.isMapViewerOpen}
-        keepMounted
-        onClose={actions.goBackInMapHistory}
-        maxWidth={false}
-      >
+      <Dialog open={state.mapState.isMapViewerOpen} keepMounted onClose={actions.goBackInMapHistory} maxWidth={false}>
         {state.mapState.selectedMap ? (
-          <MapViewer
-            name={state.mapState.selectedMap}
-            isFacies={state.mapState.isFacies}
-          />
+          <MapViewer name={state.mapState.selectedMap} isFacies={state.mapState.isFacies} />
         ) : null}
       </Dialog>
     </div>

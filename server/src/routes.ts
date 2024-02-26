@@ -19,9 +19,7 @@ export const fetchSettingsJson = async function fetchSettingsJson(
   try {
     const { settingFile } = request.params;
     //TODO: differentiate between preset and user uploaded datpack
-    const contents = (
-      await readFile(`${decodeURIComponent(settingFile)}`)
-    ).toString();
+    const contents = (await readFile(`${decodeURIComponent(settingFile)}`)).toString();
     const settingJson = await xmlToJson(contents);
     reply.send(settingJson);
   } catch (e) {
@@ -67,8 +65,7 @@ export const fetchSVGStatus = async function (
   }
   try {
     if (fs.existsSync(filepath)) {
-      if (svgson.parseSync((await readFile(filepath)).toString()))
-        isSVGReady = true;
+      if (svgson.parseSync((await readFile(filepath)).toString())) isSVGReady = true;
     }
   } catch (e) {
     console.log("can't read svg at hash: ", hash);
@@ -96,14 +93,9 @@ export const fetchChart = async function fetchChart(
     chartrequest = JSON.parse(request.body as string);
     assertChartRequest(chartrequest);
   } catch (e) {
-    console.log(
-      "ERROR: chart request is not valid.  Request was: ",
-      chartrequest,
-      ".  Error was: ",
-      e
-    );
+    console.log("ERROR: chart request is not valid.  Request was: ", chartrequest, ".  Error was: ", e);
     reply.send({
-      error: "ERROR: chart request is not valid.  Error was: " + e,
+      error: "ERROR: chart request is not valid.  Error was: " + e
     });
     return;
   }
@@ -126,43 +118,25 @@ export const fetchChart = async function fetchChart(
   try {
     await stat(chart_filepath);
     if (!usecache) {
-      console.log(
-        "Deleting chart filepath since it already exists and cache is not being used"
-      );
+      console.log("Deleting chart filepath since it already exists and cache is not being used");
       deleteDirectory(chart_filepath);
     } else {
-      console.log(
-        "Request for chart that already exists (hash:",
-        hash,
-        ".  Returning cached version"
-      );
+      console.log("Request for chart that already exists (hash:", hash, ".  Returning cached version");
       reply.send({ chartpath: chart_urlpath, hash: hash }); // send the browser back the URL equivalent...
       return;
     }
   } catch (e) {
     // Doesn't exist, so make one
-    console.log(
-      "Request for chart",
-      chart_urlpath,
-      ": chart does not exist, creating..."
-    );
+    console.log("Request for chart", chart_urlpath, ": chart does not exist, creating...");
   }
 
   // Create the directory and save the settings there for java:
   try {
     await mkdirp(chartdir_filepath);
     await writeFile(settings_filepath, settingsXml);
-    console.log(
-      "Successfully created and saved chart settings at",
-      settings_filepath
-    );
+    console.log("Successfully created and saved chart settings at", settings_filepath);
   } catch (e) {
-    console.log(
-      "ERROR: failed to save settings at",
-      settings_filepath,
-      "  Error was:",
-      e
-    );
+    console.log("ERROR: failed to save settings at", settings_filepath, "  Error was:", e);
     reply.send({ error: "ERROR: failed to save settings" });
     return;
   }
@@ -171,11 +145,7 @@ export const fetchChart = async function fetchChart(
   );
   for (const datapack of chartrequest.datapacks) {
     if (!assetconfigs.activeDatapacks.includes(datapack)) {
-      console.log(
-        "ERROR: datapack: ",
-        datapack,
-        " is not included in activeDatapacks"
-      );
+      console.log("ERROR: datapack: ", datapack, " is not included in activeDatapacks");
       console.log("assetconfig.activeDatapacks:", assetconfigs.activeDatapacks);
       console.log("chartrequest.datapacks: ", chartrequest.datapacks);
       reply.send({ error: "ERROR: failed to load datapacks" });
@@ -202,7 +172,7 @@ export const fetchChart = async function fetchChart(
     // Tell it where to save chart
     `-o ${chart_filepath} ` +
     // Don't use datapacks suggested age (if useSuggestedAge is true then ignore datapack ages)
-    `${!useSuggestedAge ? '-a' : ''}`;
+    `${!useSuggestedAge ? "-a" : ""}`;
 
   // Exec Java command and send final reply to browser
   await new Promise<void>((resolve) => {
@@ -217,7 +187,7 @@ export const fetchChart = async function fetchChart(
   });
   console.log("Sending reply to browser: ", {
     chartpath: chart_urlpath,
-    hash: hash,
+    hash: hash
   });
   reply.send({ chartpath: chart_urlpath, hash: hash });
 };
