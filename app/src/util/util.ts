@@ -22,12 +22,14 @@ export function checkIfDataIsInRange(minDataAge: number, maxDataAge: number, use
  */
 export function compareVhAndPx(vh: number | string, px: number | string): number {
     if (typeof vh === "string") {
-        if (vh.length <= 2) throw Error(`vh param in wrong format ${vh}`)
+        if (vh.length <= 2 || vh.slice(-2) !== "vh") throw Error(`vh param in wrong format ${vh}`)
         vh = Number(vh.slice(0, -2))
+        if (isNaN(vh)) throw Error(`vh param in wrong format ${vh}`)
     }
     if (typeof px === "string") {
-        if (px.length <= 2) throw Error(`px param in wrong format ${px}`)
+        if (px.length <= 2 || px.slice(-2) !== "px") throw Error(`px param in wrong format ${px}`)
         px = Number(px.slice(0, -2))
+        if (isNaN(px)) throw Error(`px param in wrong format ${px}`)
     }
     const viewportHeight = window.innerHeight;
     const vhToPx = viewportHeight * (vh / 100);
