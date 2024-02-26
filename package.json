@@ -11,7 +11,11 @@
     "setup": "yarn && yarn install && yarn build",
     "install": "echo \"Installing packages of all workspaces...\" && yarn workspaces foreach -A --exclude @tsconline/shared --exclude tsconline/mono-repo -p -v run install",
     "build": "echo \"Building all workspaces...\" && yarn workspace @tsconline/shared run build && echo \"@tsconline/shared successfully built... \" && yarn workspaces foreach -A --exclude @tsconline/shared --exclude tsconline/mono-repo -p run build",
-    "start": "yarn workspace @tsconline/server start"
+    "start": "yarn workspace @tsconline/server start",
+    "prettier-format": "prettier --write \"**/*.{ts,tsx,css}\"",
+    "prettier-check": "prettier --check \"**/*.{ts,tsx,css}\"",
+    "lint-check": "yarn eslint **/*.{tsx,ts} --quiet --config ./.eslintrc.json",
+    "lint-format": "yarn eslint **/*.{tsx,ts} --fix"
   },
   "dependencies": {
     "fastify": "^4.13.0",
@@ -20,6 +24,12 @@
     "typescript": "^5.0.4"
   },
   "devDependencies": {
-    "@yarnpkg/sdks": "^3.0.0-rc.43"
+    "@types/eslint": "^8",
+    "@typescript-eslint/eslint-plugin": "^7.0.2",
+    "@typescript-eslint/parser": "^7.0.2",
+    "@yarnpkg/sdks": "^3.0.0-rc.43",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.33.2",
+    "prettier": "^3.2.5"
   }
 }

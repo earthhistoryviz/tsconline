@@ -26,9 +26,7 @@ export function devSafeUrl(url: string) {
   return url;
 }
 
-export async function fetcher(
-  ...args: Parameters<typeof fetch>
-): ReturnType<typeof fetch> {
+export async function fetcher(...args: Parameters<typeof fetch>): ReturnType<typeof fetch> {
   if (import.meta.env.DEV) {
     if (typeof args[0] === "string") {
       args[0] = devSafeUrl(args[0]);

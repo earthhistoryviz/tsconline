@@ -11,13 +11,7 @@ type AboutCardProps = {
   timeWorked: string;
   proPic: string | undefined;
 };
-export const AboutCard = ({
-  name,
-  role,
-  homeTown,
-  timeWorked,
-  proPic = defaultProPic,
-}: AboutCardProps) => {
+export const AboutCard = ({ name, role, homeTown, timeWorked, proPic = defaultProPic }: AboutCardProps) => {
   return (
     <Card
       sx={{
@@ -25,9 +19,8 @@ export const AboutCard = ({
         marginLeft: ".5vw",
         marginRight: ".5vw",
         marginTop: ".5vw",
-        marginBottom: ".5vw",
-      }}
-    >
+        marginBottom: ".5vw"
+      }}>
       <CardMedia sx={{ height: 250 }} image={proPic} title={name} />
       <CardContent>
         <Typography gutterBottom variant="h5" component="div">

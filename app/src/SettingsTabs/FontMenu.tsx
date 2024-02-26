@@ -12,7 +12,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Typography,
-  useTheme,
+  useTheme
 } from "@mui/material";
 import Modal from "@mui/material/Modal";
 import InputLabel from "@mui/material/InputLabel";
@@ -39,21 +39,13 @@ const FontMenuRow: React.FC<{
   const [font, setFont] = useState("Arial");
   const [formats, setFormats] = useState(["bold", "italic"]);
 
-  const fontOpts = state.settingsTabs.columnHashMap.get(
-    state.settingsTabs.columnSelected as string
-  )!.fontsInfo[target];
+  const fontOpts = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected as string)!.fontsInfo[target];
   const handleChange = (event: SelectChangeEvent) => {
     if (/Arial|Courier|Verdana/.test(event.target.value)) return;
-    actions.setFontFace(
-      target,
-      event.target.value as "Arial" | "Courier" | "Verdana"
-    );
+    actions.setFontFace(target, event.target.value as "Arial" | "Courier" | "Verdana");
     setFont(event.target.value as string);
   };
-  const handleFormat = (
-    _event: React.MouseEvent<HTMLElement>,
-    newFormats: string[]
-  ) => {
+  const handleFormat = (_event: React.MouseEvent<HTMLElement>, newFormats: string[]) => {
     setFormats(newFormats);
     if (newFormats.includes("bold")) actions.setBold(target, true);
     else actions.setBold(target, false);
@@ -100,8 +92,7 @@ const FontMenuRow: React.FC<{
             label="Font Face"
             onChange={handleChange}
             disabled={!fontTarget}
-            displayEmpty
-          >
+            displayEmpty>
             <MenuItem value={"Arial"}>Arial</MenuItem>
             <MenuItem value={"Courier"}>Courier</MenuItem>
             <MenuItem value={"Verdana"}>Verdana</MenuItem>
@@ -122,8 +113,7 @@ const FontMenuRow: React.FC<{
           onChange={handleFormat}
           aria-label="text formatting"
           sx={{ marginRight: "10px" }}
-          disabled={!fontTarget}
-        >
+          disabled={!fontTarget}>
           <ToggleButton value="bold" aria-label="bold" color="info">
             <FormatBoldIcon />
           </ToggleButton>
@@ -146,10 +136,9 @@ const FontMenuRow: React.FC<{
             fontWeight: fontOpts.bold ? "bold" : "",
             fontStyle: fontOpts.italic ? "italic" : "",
             fontSize: fontOpts.size,
-            color: fontOpts.color,
+            color: fontOpts.color
           }}
-          id={font}
-        >
+          id={font}>
           Sample Text
         </Typography>
       </div>
@@ -163,8 +152,7 @@ export const FontMenu = observer(() => {
   const name =
     state.settingsTabs.columnSelected === null
       ? ""
-      : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!
-          .editName;
+      : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.editName;
   const [open, setOpen] = useState(false);
   const handleOpen = () => {
     setOpen(true);
@@ -182,9 +170,7 @@ export const FontMenu = observer(() => {
       <Modal open={open} onClose={handleClose}>
         <Box id="FontMenuContainer">
           <div id="HeadingContainer">
-            <Typography id="FontOptionsTitle">
-              Font Options for {`"${name}"`}
-            </Typography>
+            <Typography id="FontOptionsTitle">Font Options for {`"${name}"`}</Typography>
             <div onClick={handleClose}>
               <CloseIcon sx={{ color: theme.palette.primary.main }} />
             </div>
@@ -199,9 +185,7 @@ export const FontMenu = observer(() => {
             </Grid>
 
             <Grid item xs={12}>
-              <Typography id="AdditionalFontsText">
-                Additional fonts for child columns
-              </Typography>
+              <Typography id="AdditionalFontsText">Additional fonts for child columns</Typography>
               <FontMenuRow target="Age Label" />
             </Grid>
             <Grid item xs={12}>

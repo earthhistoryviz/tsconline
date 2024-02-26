@@ -9,17 +9,9 @@ const LoadingChart = () => {
       className="loading-container"
       style={{
         fontFamily: theme.typography.fontFamily,
-        background: theme.palette.settings.light,
-      }}
-    >
-      <Lottie
-        animationData={loader}
-        autoplay
-        loop
-        width={200}
-        height={200}
-        speed={0.7}
-      />
+        background: theme.palette.settings.light
+      }}>
+      <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />
       <div>
         <h1 className="loading"> Loading Chart...</h1>
         <p className="loading-sub"> (this could take more than a minute)</p>

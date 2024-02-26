@@ -13,9 +13,7 @@
   color: var(--input-label);
 }
 
-.white-outlined-form
-  .MuiOutlinedInput-root.Mui-focused
-  .MuiOutlinedInput-notchedOutline {
+.white-outlined-form .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
   border-color: var(--input-label);
 }
 .white-outlined-form .MuiOutlinedInput-root .MuiInputBase-input {
@@ -26,15 +24,11 @@
   border-color: var(--input-label);
 }
 
-.white-outlined-form
-  .MuiOutlinedInput-root:hover
-  .MuiOutlinedInput-notchedOutline {
+.white-outlined-form .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
   border-color: var(--input-label);
 }
 
-.white-outlined-form
-  .MuiOutlinedInput-root.Mui-focused
-  .MuiOutlinedInput-notchedOutline {
+.white-outlined-form .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
   border-color: var(--input-label);
 }
 

@@ -1,32 +1,11 @@
-import {
-  Box,
-  Button,
-  IconButton,
-  Theme,
-  Tooltip,
-  TooltipProps,
-  styled,
-  useTheme,
-} from "@mui/material";
+import { Box, Button, IconButton, Theme, Tooltip, TooltipProps, styled, useTheme } from "@mui/material";
 import { FaciesOptions, LegendItem } from "../types";
-import {
-  Bounds,
-  ColumnInfo,
-  InfoPoints,
-  MapPoints,
-  Transects,
-  isRectBounds,
-  isVertBounds,
-} from "@tsconline/shared";
+import { Bounds, ColumnInfo, InfoPoints, MapPoints, Transects, isRectBounds, isVertBounds } from "@tsconline/shared";
 import { useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { actions, context } from "../state";
 import { useTransformEffect } from "react-zoom-pan-pinch";
-import {
-  calculateRectBoundsPosition,
-  calculateRectButton,
-  calculateVertBoundsPosition,
-} from "../util/coordinates";
+import { calculateRectBoundsPosition, calculateRectButton, calculateVertBoundsPosition } from "../util/coordinates";
 import NotListedLocationIcon from "@mui/icons-material/NotListedLocation";
 import LocationOffIcon from "@mui/icons-material/LocationOff";
 import LocationOnSharpIcon from "@mui/icons-material/LocationOnSharp";
@@ -54,26 +33,15 @@ type TooltipComponentProps = {
 // TODO: might want to change if it ever updates, weird workaround here, can see this at
 // changing it with normal styles cannot override since this uses a portal to create outside the DOM
 // https://mui.com/material-ui/guides/interoperability/#global-css
-const MapPointTooltip = styled(
-  ({ className, container, ...props }: TooltipComponentProps) => {
-    // IMPORTANT: this is needed when fullscreened because the tooltips are appended to the document.body
-    // normally. When in fullscreen the document.body is in the background and therefore you can't see
-    // the tooltip. To "hack" around this, we append to the fullscreened element which we pass as container
-    const popperProps = {
-      container:
-        container && document.fullscreenElement ? container : document.body,
-    };
-    return (
-      <Tooltip
-        arrow
-        followCursor
-        classes={{ popper: className }}
-        PopperProps={popperProps}
-        {...props}
-      />
-    );
-  }
-)`
+const MapPointTooltip = styled(({ className, container, ...props }: TooltipComponentProps) => {
+  // IMPORTANT: this is needed when fullscreened because the tooltips are appended to the document.body
+  // normally. When in fullscreen the document.body is in the background and therefore you can't see
+  // the tooltip. To "hack" around this, we append to the fullscreened element which we pass as container
+  const popperProps = {
+    container: container && document.fullscreenElement ? container : document.body
+  };
+  return <Tooltip arrow followCursor classes={{ popper: className }} PopperProps={popperProps} {...props} />;
+})`
   .MuiTooltip-tooltip {
     background-color: ${(props) => props.theme.palette.tooltip.main};
     padding-left: 20px;
@@ -103,12 +71,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
     // is an info point if given or doesn't exist in hash map
     isInfo = isInfo || !column;
     const disabled = column
-      ? checkIfDataIsInRange(
-          column.minAge,
-          column.maxAge,
-          state.settings.topStageAge,
-          state.settings.baseStageAge
-        )
+      ? checkIfDataIsInRange(column.minAge, column.maxAge, state.settings.topStageAge, state.settings.baseStageAge)
       : false;
     const scaleButton = !isInfo && state.mapState.isFacies;
 
@@ -123,9 +86,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
     });
     const color = getColor(theme, disabled, isInfo, clicked);
     // scale only if it isn't an info point and in facies mode
-    const iconSize = scaleButton
-      ? ICON_SIZE + state.mapState.currentFaciesOptions.dotSize * 3
-      : ICON_SIZE;
+    const iconSize = scaleButton ? ICON_SIZE + state.mapState.currentFaciesOptions.dotSize * 3 : ICON_SIZE;
     let adjustY = iconSize / scale;
     if (scaleButton) {
       adjustY = iconSize / 2 / scale;
@@ -147,8 +108,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
                 <li>Note: {mapPoint.note || "--"}</li>
               </ul>
             </>
-          }
-        >
+          }>
           <IconButton
             className="map-point"
             disableRipple={isInfo || state.mapState.isFacies}
@@ -159,13 +119,12 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
               color: color,
               top: `calc(${y}% - ${adjustY}px)`,
               width: `${iconSize / scale}px`,
-              height: `${iconSize / scale}px`,
+              height: `${iconSize / scale}px`
             }}
             onClick={() => {
               if (state.mapState.isFacies || disabled || isInfo) return;
               actions.toggleSettingsTabColumn(name);
-            }}
-          >
+            }}>
             {getIcon(disabled, isInfo, iconSize, scale, column)}
           </IconButton>
         </MapPointTooltip>
@@ -188,15 +147,7 @@ interface TransectLineProps {
  * TODO: Currently not connected to the column settings.
  */
 const TransectLine: React.FC<TransectLineProps> = observer(
-  ({
-    name,
-    startPosition,
-    endPosition,
-    transect,
-    onColor,
-    offColor,
-    container,
-  }) => {
+  ({ name, startPosition, endPosition, transect, onColor, offColor, container }) => {
     const [on, setOn] = useState(transect.on);
     function toggleOn() {
       setOn(!on);
@@ -211,8 +162,7 @@ const TransectLine: React.FC<TransectLineProps> = observer(
               <li>Note: {transect.note || "--"}</li>
             </ul>
           </>
-        }
-      >
+        }>
         <g>
           <line
             x1={`${startPosition.x}%`}
@@ -256,10 +206,7 @@ export function createChildMapButton(
   openChildMap: (childMap: string) => void
 ) {
   if (isRectBounds(childBounds) && isRectBounds(mapBounds)) {
-    const { midpoint, upperLeft, width, height } = calculateRectButton(
-      childBounds,
-      mapBounds
-    );
+    const { midpoint, upperLeft, width, height } = calculateRectButton(childBounds, mapBounds);
     return (
       <MapPointTooltip
         container={container}
@@ -276,8 +223,7 @@ export function createChildMapButton(
               {/* <li>Note: {mapPoint.note || '--'}</li> */}
             </ul>
           </>
-        }
-      >
+        }>
         <Button
           disableRipple={true}
           className="child-map"
@@ -285,7 +231,7 @@ export function createChildMapButton(
             left: `calc(${upperLeft.x}%`,
             top: `calc(${upperLeft.y}%`,
             width: `${width}%`,
-            height: `${height}%`,
+            height: `${height}%`
           }}
           onClick={() => {
             openChildMap(childName);
@@ -295,20 +241,8 @@ export function createChildMapButton(
     );
   } else {
     console.log("map and/or child bounds are not rectbounds");
-    console.log(
-      `mapBounds not recognized, mapBounds are ${JSON.stringify(
-        mapBounds,
-        null,
-        2
-      )}`
-    );
-    console.log(
-      `childBounds not recognized, childBounds are ${JSON.stringify(
-        childBounds,
-        null,
-        2
-      )}`
-    );
+    console.log(`mapBounds not recognized, mapBounds are ${JSON.stringify(mapBounds, null, 2)}`);
+    console.log(`childBounds not recognized, childBounds are ${JSON.stringify(childBounds, null, 2)}`);
     return;
   }
 }
@@ -331,18 +265,9 @@ function getPositionOfPointBasedOnBounds(
   if (isRectBounds(bounds)) {
     position = calculateRectBoundsPosition(point.lat, point.lon, bounds);
   } else if (isVertBounds(bounds)) {
-    position = calculateVertBoundsPosition(
-      point.lat,
-      point.lon,
-      frameHeight,
-      frameWidth,
-      bounds
-    );
+    position = calculateVertBoundsPosition(point.lat, point.lon, frameHeight, frameWidth, bounds);
   } else {
-    console.log(
-      `Bounds is not in the correct format `,
-      JSON.stringify(bounds, null, 2)
-    );
+    console.log(`Bounds is not in the correct format `, JSON.stringify(bounds, null, 2));
     return null;
   }
   return position;
@@ -369,12 +294,7 @@ export function loadMapPoints(
   if (!points) return;
   return Object.entries(points).map(([name, point]) => {
     if (!point) return;
-    const position = getPositionOfPointBasedOnBounds(
-      bounds,
-      point,
-      frameWidth,
-      frameHeight
-    );
+    const position = getPositionOfPointBasedOnBounds(bounds, point, frameWidth, frameHeight);
     if (position == null) return;
     return (
       <MapPointButton
@@ -440,26 +360,10 @@ export function loadTransects(
             );
           const start = mapPoints[transect.startMapPoint];
           const end = mapPoints[transect.endMapPoint];
-          const startPosition = getPositionOfPointBasedOnBounds(
-            bounds,
-            start,
-            frameWidth,
-            frameHeight
-          );
-          if (!startPosition)
-            throw new Error(
-              `MapInfo bounds are neither vertical or rectangular for ${bounds}`
-            );
-          const endPosition = getPositionOfPointBasedOnBounds(
-            bounds,
-            end,
-            frameWidth,
-            frameHeight
-          );
-          if (!endPosition)
-            throw new Error(
-              `MapInfo bounds are neither vertical or rectangular for ${bounds}`
-            );
+          const startPosition = getPositionOfPointBasedOnBounds(bounds, start, frameWidth, frameHeight);
+          if (!startPosition) throw new Error(`MapInfo bounds are neither vertical or rectangular for ${bounds}`);
+          const endPosition = getPositionOfPointBasedOnBounds(bounds, end, frameWidth, frameHeight);
+          if (!endPosition) throw new Error(`MapInfo bounds are neither vertical or rectangular for ${bounds}`);
           return (
             <TransectLine
               key={name}
@@ -488,26 +392,12 @@ export function loadTransects(
  * @param name name of map point
  * @returns
  */
-function getIcon(
-  disabled: boolean,
-  isInfo: boolean,
-  iconSize: number,
-  scale: number,
-  column?: ColumnInfo
-) {
+function getIcon(disabled: boolean, isInfo: boolean, iconSize: number, scale: number, column?: ColumnInfo) {
   const { state, actions } = useContext(context);
   if (isInfo) {
-    return (
-      <BorderedIcon strokeWidth={0.2} className="icon" component={InfoIcon} />
-    );
+    return <BorderedIcon strokeWidth={0.2} className="icon" component={InfoIcon} />;
   } else if (state.mapState.isFacies) {
-    return getFaciesIcon(
-      iconSize,
-      scale,
-      state.mapState.currentFaciesOptions,
-      actions.setSelectedMapAgeRange,
-      column!
-    );
+    return getFaciesIcon(iconSize, scale, state.mapState.currentFaciesOptions, actions.setSelectedMapAgeRange, column!);
   } else if (disabled) {
     return <BorderedIcon className="icon" component={DisabledIcon} />;
   }
@@ -528,31 +418,12 @@ function getFaciesIcon(
   setSelectedMapAgeRange: (min: number, max: number) => void,
   column: ColumnInfo
 ) {
-  const rockType = getRockTypeForAge(
-    column,
-    currentFaciesOptions.faciesAge,
-    setSelectedMapAgeRange
-  );
+  const rockType = getRockTypeForAge(column, currentFaciesOptions.faciesAge, setSelectedMapAgeRange);
   return (
-    <svg
-      width={`${iconSize / scale}px`}
-      height={`${iconSize / scale}px`}
-      viewBox="0 0 24 24"
-    >
-      <circle
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="black"
-        strokeWidth="1"
-        fill="transparent"
-      />
+    <svg width={`${iconSize / scale}px`} height={`${iconSize / scale}px`} viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" stroke="black" strokeWidth="1" fill="transparent" />
       <image
-        href={
-          rockType.toLowerCase().trim() === "top"
-            ? ""
-            : devSafeUrl(`/public/patterns/${rockType.trim()}.PNG`)
-        }
+        href={rockType.toLowerCase().trim() === "top" ? "" : devSafeUrl(`/public/patterns/${rockType.trim()}.PNG`)}
         x="-10"
         y="-10"
         height="44px"
@@ -589,18 +460,17 @@ export const Legend = () => {
     {
       color: theme.palette.disabled.main,
       label: "Disabled",
-      icon: DisabledIcon,
+      icon: DisabledIcon
     },
     { color: theme.palette.info.main, label: "Info point", icon: InfoIcon },
-    { color: "transparent", label: "Child Map", icon: ChildMapIcon },
+    { color: "transparent", label: "Child Map", icon: ChildMapIcon }
   ];
   return (
     <Box
       className="legend-container"
       style={{
-        backgroundColor: theme.palette.navbar.dark,
-      }}
-    >
+        backgroundColor: theme.palette.navbar.dark
+      }}>
       {legendItems.map((item, index) => (
         <DisplayLegendItem key={index} legendItem={item} />
       ))}
@@ -618,9 +488,7 @@ function getRockTypeForAge(
   setSelectedMapAgeRange(column.minAge, column.maxAge);
 
   // Find the nearest time block that does not exceed the current age
-  const suitableBlock = column.subFaciesInfo.find(
-    (timeBlock) => timeBlock.age >= currentAge
-  );
+  const suitableBlock = column.subFaciesInfo.find((timeBlock) => timeBlock.age >= currentAge);
 
   if (!suitableBlock) {
     return "TOP";
@@ -637,12 +505,7 @@ function getRockTypeForAge(
  * @param column
  * @returns
  */
-function getColor(
-  theme: Theme,
-  disabled: boolean,
-  isInfo: boolean,
-  clicked: boolean
-): string {
+function getColor(theme: Theme, disabled: boolean, isInfo: boolean, clicked: boolean): string {
   let color = theme.palette.info.main;
   if (disabled) {
     color = theme.palette.disabled.main;
