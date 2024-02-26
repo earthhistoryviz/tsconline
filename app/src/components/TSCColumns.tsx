@@ -3,7 +3,7 @@ import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import MuiAccordion from "@mui/material/Accordion";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
-import { useTheme, styled } from "@mui/material/styles";
+import { styled } from "@mui/material/styles";
 
 // Define the Accordion component outside the Column component
 export const Accordion = styled((props: AccordionProps) => (
@@ -14,7 +14,7 @@ export const Accordion = styled((props: AccordionProps) => (
     square
     {...props}
   />
-))(({ theme }) => ({
+))(() => ({
   //border: `1px solid ${theme.palette.divider}`,
   "&:not(:last-child)": {
     borderBottom: 0,
@@ -30,7 +30,7 @@ export const AccordionSummary = styled((props: AccordionSummaryProps) => (
     expandIcon={<ArrowForwardIosSharpIcon sx={{ fontSize: "0.9rem" }} />}
     {...props}
   />
-))(({ theme }) => ({
+))(() => ({
   display: "flex",
   paddingLeft: "0px",
   "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
@@ -46,7 +46,7 @@ export const AccordionSummary = styled((props: AccordionSummaryProps) => (
   },
 }));
 
-export const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
+export const AccordionDetails = styled(MuiAccordionDetails)(() => ({
   //padding: theme.spacing(0),
   //borderTop: "1px solid rgba(0, 0, 0, .125)",
   //borderBottom: "1px solid rgba(0, 0, 0, .125)",

@@ -6,7 +6,6 @@ import {
   type GeologicalStages,
   assertChartInfo,
   assertSuccessfulServerResponse,
-  isServerResponseError,
   Presets,
   assertSVGStatus,
   IndexResponse,
@@ -23,6 +22,8 @@ import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
 import { initializeColumnHashMap } from "./ColumnActions";
 import { jsonToXml } from "../parseSettings";
+import { displayError } from "./UtilActions";
+import { Settings } from "../../types";
 
 /**
  * Resets any user defined settings
@@ -48,7 +49,7 @@ export const fetchDatapackInfo = action("fetchDatapackInfo", async () => {
     assertIndexResponse(indexResponse);
     loadIndexResponse(indexResponse);
     console.log("Datapacks loaded");
-  } catch (e: any) {
+  } catch (e) {
     displayError(e, indexResponse, "Failed to fetch DatapackInfo");
   }
 });
@@ -59,7 +60,7 @@ export const fetchPresets = action("fetchPresets", async () => {
     assertPresets(presets);
     loadPresets(presets);
     console.log("Presets loaded");
-  } catch (e: any) {
+  } catch (e) {
     displayError(e, presets, "Failed to retrieve presets");
   }
 });
@@ -209,7 +210,7 @@ export const setGeologicalStages = action(
   "setGeologicalStages",
   (stages: GeologicalStages) => {
     let top = stages["TOP"];
-    let geologicalTopStages: GeologicalStages = { Present: 0 };
+    const geologicalTopStages: GeologicalStages = { Present: 0 };
     Object.keys(stages).map((key) => {
       geologicalTopStages[key] = top;
       top = stages[key];
@@ -272,7 +273,7 @@ export const generateChart = action("generateChart", async () => {
   setChartPath("");
   //let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
   // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
-  let xmlSettings = jsonToXml(state.settingsJSON, state.settingsTabs.columns, state.settings);
+  const xmlSettings = jsonToXml(state.settingsJSON, state.settingsTabs.columns, state.settings);
   const body = JSON.stringify({
     settings: xmlSettings,
     datapacks: state.config.datapacks,
@@ -293,7 +294,7 @@ export const generateChart = action("generateChart", async () => {
     setChartPath(devSafeUrl(answer.chartpath));
     await checkSVGStatus();
     setOpenSnackbar(true);
-  } catch (e: any) {
+  } catch (e) {
     displayError(e, answer, "Failed to fetch chart");
     return;
   }
@@ -306,23 +307,23 @@ export const loadPresets = action("loadPresets", (presets: Presets) => {
 //update
 //TODO: need to overhaul
 export const updateSettings = action("updateSettings", () => {
-  const { topStageKey, baseStageKey, unitsPerMY } = state.settings;
+  const { unitsPerMY } = state.settings;
   // Validate the user input
   if (isNaN(unitsPerMY)) {
     // Handle invalid input, show error message, etc.
     return;
   }
   state.settingsJSON["settingsTabs"] = state.settingsTabs;
-  const jsonSettings = state.settingsJSON;
+  // const jsonSettings = state.settingsJSON;
   // if ("settings" in jsonSettings) {
   //   const settings = jsonSettings.settings as any;
   //   settings["topAge"]["stage"] = state.settingsTabs.columns[topStageKey];
   //   settings["baseAge"]["stage"] = state.settingsTabs.columns[baseStageKey];
   //   settings["unitsPerMY"] = (unitsPerMY * 30).toString();
   // }
-  if ("settingsTabs" in jsonSettings) {
-    const settingsTabs = jsonSettings as any;
-  }
+  // if ("settingsTabs" in jsonSettings) {
+  //   const settingsTabs = jsonSettings as any;
+  // }
   // uncomment later
   // const xmlSettings = jsonToXml(jsonSettings); // Convert JSON to XML using jsonToXml function
 
@@ -367,7 +368,10 @@ export const updateCheckboxSetting = action(
     if (!settingOption) return;
 
     // Update the checkbox setting in state.settings
-    (state.settings as any)[stateName] = checked;
+    if ((state.settings)[stateName as keyof Settings] !== undefined && typeof (state.settings)[stateName as keyof Settings] ===  "boolean")  {
+      // @ts-expect-error: This cannot index by stateName key for some reason so we ignore with error
+      (state.settings)[`${stateName as keyof Settings}`] = checked;
+    }
 
     // Update the checkbox setting in jsonSettings['settings'] if available
     if (state.settingsJSON["settings"]) {
@@ -382,25 +386,6 @@ export const updateCheckboxSetting = action(
     console.log(`Updated setting "${stateName}" to ${checked}`);
   }
 );
-/**
- * Display error to dialog popup
- * @param error the error thrown
- * @param response the response from the server if applicable (nullable)
- * @param message the message to be shown
- */
-export function displayError(error: any, response: any, message: string) {
-  if (!response) {
-    pushError(message);
-  } else if (isServerResponseError(response)) {
-    console.log(`${message} with server response: ${response.error}`);
-    pushError(response.error);
-  } else {
-    console.log(
-      `${message} with server response: ${response}\n Error: ${error}`
-    );
-    pushError(message);
-  }
-}
 
 /**
  * set the settings tab based on a string or number
@@ -489,7 +474,7 @@ async function fetchSVGStatus(): Promise<boolean> {
     assertSVGStatus(data);
   } catch (e) {
     displayError(e, data, `Could not fetch SVG status`);
-    let msg = `Error fetching SVG status with error ${e}`;
+    const msg = `Error fetching SVG status with error ${e}`;
     throw new Error(msg);
   }
   return data.ready;

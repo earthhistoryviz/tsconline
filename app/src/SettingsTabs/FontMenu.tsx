@@ -43,7 +43,11 @@ const FontMenuRow: React.FC<{
     state.settingsTabs.columnSelected as string
   )!.fontsInfo[target];
   const handleChange = (event: SelectChangeEvent) => {
-    actions.setFontFace(target, event.target.value as string);
+    if (/Arial|Courier|Verdana/.test(event.target.value)) return;
+    actions.setFontFace(
+      target,
+      event.target.value as "Arial" | "Courier" | "Verdana"
+    );
     setFont(event.target.value as string);
   };
   const handleFormat = (
@@ -104,7 +108,7 @@ const FontMenuRow: React.FC<{
           </Select>
         </FormControl>
         <TextField
-            className="FontSizeContainer"
+          className="FontSizeContainer"
           label="Size"
           variant="outlined"
           value={fontOpts.size}
@@ -153,8 +157,8 @@ const FontMenuRow: React.FC<{
   );
 });
 
-export const FontMenu: React.FC<{}> = observer(({}) => {
-  const { state, actions } = useContext(context);
+export const FontMenu = observer(() => {
+  const { state } = useContext(context);
   const theme = useTheme();
   const name =
     state.settingsTabs.columnSelected === null
@@ -179,7 +183,7 @@ export const FontMenu: React.FC<{}> = observer(({}) => {
         <Box id="FontMenuContainer">
           <div id="HeadingContainer">
             <Typography id="FontOptionsTitle">
-              Font Options for "{name}"
+              Font Options for {`"${name}"`}
             </Typography>
             <div onClick={handleClose}>
               <CloseIcon sx={{ color: theme.palette.primary.main }} />

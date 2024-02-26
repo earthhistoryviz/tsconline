@@ -28,7 +28,7 @@ export const toggleSettingsTabColumn = action((name: string) => {
     } else curcol = state.settingsTabs.columnHashMap.get(name)!;
     //toggle current column, save it, and move to parent
     curcol.on = !curcol.on;
-    let checkStatus = curcol.on;
+    const checkStatus = curcol.on;
     if (!curcol.parent) return
     if (state.settingsTabs.columnHashMap.get(curcol.parent) === undefined) {
         console.log(
@@ -98,7 +98,7 @@ export const setInheritable = action((target: "Column Header" | "Age Label" | "U
     assertFontsInfo(columnHashMapEntry?.fontsInfo[target])
 });
 
-export const setFontFace = action((target: "Column Header" | "Age Label" | "Uncertainty Label" | "Zone Column Label" | "Event Column Label" | "Range Label", fontFace: string) => {
+export const setFontFace = action((target: "Column Header" | "Age Label" | "Uncertainty Label" | "Zone Column Label" | "Event Column Label" | "Range Label", fontFace: "Arial" | "Courier" | "Verdana") => {
     if (state.settingsTabs.columnSelected === null) {
         throw new Error("state.settingsTabs.columnSelected is null");
     }
@@ -109,7 +109,6 @@ export const setFontFace = action((target: "Column Header" | "Age Label" | "Unce
         throw new Error(`Entry for ${state.settingsTabs.columnSelected} not found in columnHashMap`);
     }
 
-    // @ts-ignore
     columnHashMapEntry.fontsInfo[target].fontFace = fontFace;
     assertFontsInfo(columnHashMapEntry?.fontsInfo[target])
 });

@@ -1,17 +1,14 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext, useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { context } from "../state";
 import { Button, TextField, ToggleButton, Typography } from "@mui/material";
 import SettingsSharpIcon from "@mui/icons-material/SettingsSharp";
-
 import "./ColumnMenu.css";
-
 import { FontMenu } from "./FontMenu";
-import theme from "../theme";
 
-const EditNameField: React.FC<{}> = observer(({}) => {
+const EditNameField = observer(() => {
   const { state, actions } = useContext(context);
-  let editName = useRef("");
+  const editName = useRef("");
   const name =
     state.settingsTabs.columnSelected === null
       ? ""
@@ -48,13 +45,13 @@ const EditNameField: React.FC<{}> = observer(({}) => {
   );
 });
 
-export const ColumnMenu: React.FC<{}> = observer(() => {
-  const { state, actions } = useContext(context);
+export const ColumnMenu = observer(() => {
+  const { state } = useContext(context);
   const [openMenu, setOpenMenu] = useState(false);
 
   function showMenu() {
-    let menu = document.getElementById("ColumnMenuContent");
-    let label = document.getElementById("ColumnMenuLabel");
+    const menu = document.getElementById("ColumnMenuContent");
+    const label = document.getElementById("ColumnMenuLabel");
     if (menu !== null && label !== null) {
       if (!openMenu) {
         menu.style.display = "flex";

@@ -544,8 +544,6 @@ export function isServerResponseError(o: any): o is ServerResponseError {
   return true;
 }
 
-// export type ChartResponse = ChartResponseInfo | ServerResponseError
-
 export function assertChartInfo(o: any): asserts o is ChartResponseInfo {
   if (!o || typeof o !== "object")
     throw new Error("ChartInfo must be an object");
@@ -560,7 +558,6 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
     throw new Error("ColumnInfo must be a non-null object");
   }
   if (typeof o.name !== "string") throwError('ColumnInfo', 'name', 'string', o.name)
-  // assertFontsInfo(o.fontsInfo)
   if (typeof o.on !== "boolean") throwError('ColumnInfo', 'on', 'boolean', o.on)
   if (typeof o.info !== 'string') throwError('ColumnInfo', 'info', 'string', o.info)
   if (o.parent !== null && typeof o.parent !== 'string') throwError('ColumnInfo', 'parent', 'string', o.parent)
@@ -630,8 +627,6 @@ export function assertMapInfo(o: any): asserts o is MapInfo {
       throw new Error(
         `MapInfo' value for key '${key}' must have a 'note' string property`
       );
-    }
-    if ("parent" in map) {
     }
     if (typeof map.coordtype !== "string") {
       throw new Error(

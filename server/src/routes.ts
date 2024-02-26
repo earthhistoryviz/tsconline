@@ -1,4 +1,4 @@
-import { jsonToXml, xmlToJson } from "./parse-settings.js";
+import { xmlToJson } from "./parse-settings.js";
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
 import { writeFile, stat } from "fs/promises";
@@ -12,18 +12,12 @@ import svgson from "svgson";
 import fs from "fs";
 import { readFile } from "fs/promises";
 
-export const uploadDatapack = async function (
-  request: FastifyRequest,
-  reply: FastifyReply
-) {
-  // const data = await request.saveRequestFiles()
-};
 export const fetchSettingsJson = async function fetchSettingsJson(
   request: FastifyRequest<{ Params: { settingFile: string } }>,
   reply: FastifyReply
 ) {
   try {
-    let { settingFile } = request.params;
+    const { settingFile } = request.params;
     //TODO: differentiate between preset and user uploaded datpack
     const contents = (
       await readFile(`${decodeURIComponent(settingFile)}`)
@@ -101,7 +95,7 @@ export const fetchChart = async function fetchChart(
   try {
     chartrequest = JSON.parse(request.body as string);
     assertChartRequest(chartrequest);
-  } catch (e: any) {
+  } catch (e) {
     console.log(
       "ERROR: chart request is not valid.  Request was: ",
       chartrequest,
@@ -109,7 +103,7 @@ export const fetchChart = async function fetchChart(
       e
     );
     reply.send({
-      error: "ERROR: chart request is not valid.  Error was: " + e.toString(),
+      error: "ERROR: chart request is not valid.  Error was: " + e,
     });
     return;
   }
@@ -145,7 +139,7 @@ export const fetchChart = async function fetchChart(
       reply.send({ chartpath: chart_urlpath, hash: hash }); // send the browser back the URL equivalent...
       return;
     }
-  } catch (e: any) {
+  } catch (e) {
     // Doesn't exist, so make one
     console.log(
       "Request for chart",
@@ -162,7 +156,7 @@ export const fetchChart = async function fetchChart(
       "Successfully created and saved chart settings at",
       settings_filepath
     );
-  } catch (e: any) {
+  } catch (e) {
     console.log(
       "ERROR: failed to save settings at",
       settings_filepath,
@@ -211,7 +205,7 @@ export const fetchChart = async function fetchChart(
     `${!useSuggestedAge ? '-a' : ''}`;
 
   // Exec Java command and send final reply to browser
-  await new Promise<void>((resolve, _reject) => {
+  await new Promise<void>((resolve) => {
     console.log("Calling Java: ", cmd);
     exec(cmd, function (error, stdout, stderror) {
       console.log("Java finished, sending reply to browser");

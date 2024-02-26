@@ -1,8 +1,9 @@
 import * as generalActions from "./GeneralActions";
+import { displayError } from "./UtilActions"
 import { state } from "../state";
 import { action } from "mobx";
 import { fetcher, devSafeUrl } from "../../util";
-import { isServerResponseError, assertChartInfo } from "@tsconline/shared";
+import { assertChartInfo } from "@tsconline/shared";
 import { jsonToXml } from "../parseSettings";
 import { NavigateFunction } from "react-router";
 
@@ -34,7 +35,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   generalActions.setChartPath("");
   //let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
   // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
-  let xmlSettings = jsonToXml(state.settingsJSON, state.settingsTabs.columns, state.settings);
+  const xmlSettings = jsonToXml(state.settingsJSON, state.settingsTabs.columns, state.settings);
   const body = JSON.stringify({
     settings: xmlSettings,
     datapacks: state.config.datapacks,
@@ -55,8 +56,8 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
     generalActions.setChartPath(devSafeUrl(answer.chartpath));
     await generalActions.checkSVGStatus();
     generalActions.setOpenSnackbar(true)
-  } catch (e: any) {
-    generalActions.displayError(e, answer, "Failed to fetch chart")
+  } catch (e) {
+    displayError(e, answer, "Failed to fetch chart")
     return
   }
 });

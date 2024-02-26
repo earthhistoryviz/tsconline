@@ -1,11 +1,10 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext, useRef, useState } from "react";
+import React, { useContext, useState } from "react";
 import Typography from "@mui/material/Typography";
 import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
 import { Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "@mui/material/styles";
 import {
   ColumnContainer,
   AccordionDetails,
@@ -20,7 +19,6 @@ import { ColumnMenu } from "./ColumnMenu";
 import "./Column.css";
 
 type ColumnAccordionProps = {
-  name: string;
   details: ColumnInfo;
   expandedAccordions: number[];
   accordionClicked: (name: string) => void;
@@ -34,7 +32,7 @@ function stringToHash(string: string): number {
   if (string.length == 0) return hash;
 
   for (let i = 0; i < string.length; i++) {
-    let char = string.charCodeAt(i);
+    const char = string.charCodeAt(i);
     hash = (hash << 5) - hash + char;
     hash = hash & hash;
   }
@@ -43,9 +41,8 @@ function stringToHash(string: string): number {
 }
 
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
-  ({ name, details, expandedAccordions, accordionClicked }) => {
-    const theme = useTheme();
-    const { state, actions } = useContext(context);
+  ({ details, expandedAccordions, accordionClicked }) => {
+    const { actions } = useContext(context);
     //for keeping the original name for array access
     function clickColumnName() {
       actions.setcolumnSelected(details.name);
@@ -110,10 +107,9 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
           <>
             {details.children &&
               Object.entries(details.children).map(
-                ([childName, childDetails], childIndex) => (
+                ([childName, childDetails]) => (
                   <ColumnAccordion
                     key={childName}
-                    name={childDetails.editName}
                     details={childDetails}
                     expandedAccordions={expandedAccordions}
                     accordionClicked={accordionClicked}
@@ -151,7 +147,7 @@ export const Column = observer(function Column() {
   };
   //helper function for expand all for going through all the columns
   function recurseThroughColumn(array: number[], columns: ColumnInfo[]) {
-    columns.forEach((elem, index) => {
+    columns.forEach((elem) => {
       array.push(stringToHash(elem.name));
       recurseThroughColumn(array, elem.children);
     });
@@ -202,7 +198,6 @@ export const Column = observer(function Column() {
           </TSCButton>
           {state.settingsTabs.columns && (
             <ColumnAccordion
-              name={state.settingsTabs.columns.name}
               details={state.settingsTabs.columns}
               expandedAccordions={expandedAccordions}
               accordionClicked={accordionClicked}
