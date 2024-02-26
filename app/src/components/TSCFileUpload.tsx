@@ -12,7 +12,7 @@ const VisuallyHiddenInput = styled("input")({
   width: 1,
 });
 type InputFileUploadProps = {
-  startIcon: ReactElement<any>;
+  startIcon: ReactElement<object>;
   text: string;
   onChange: ChangeEventHandler<HTMLInputElement>;
   multiple?: boolean;

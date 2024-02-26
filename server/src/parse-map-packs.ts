@@ -39,7 +39,6 @@ export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
     let mapHierarchy: MapHierarchy = {}
     try {
         await pmap(map_info_paths, async (map_info) => {
-            const error = `Map info file: ${path.basename(map_info)} is not in the correct format`
             const contents = (await fs.readFile(map_info)).toString();
             const lines = contents.split(/\n|\r/)
             let map: MapInfo[string] = {

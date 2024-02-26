@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import Color from "color";
-import { styled, useTheme } from "@mui/material/styles";
+import { styled } from "@mui/material/styles";
 import {
   Grid,
   Box,
@@ -8,7 +8,6 @@ import {
   CardMedia,
   IconButton,
   Typography,
-  Tooltip,
   List,
   ListItem,
   ListItemText,

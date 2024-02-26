@@ -44,7 +44,6 @@ export const calculateVertBoundsPosition = (lat: number, lon: number, frameHeigh
     lon = toRadians(lon)
     let centerLat = toRadians(bounds.centerLat)
     let centerLon = toRadians(bounds.centerLon)
-    const noOfKmPerPix = bounds.scale / (0.4 * frameWidth); // 10% of the frameWidth (pixels) = scale (Km).
     const noOfPixPerKm = (0.4 * frameWidth) / bounds.scale; // scale (Km) = 10% of the frameWidth (pixels).
     const lonOffset = lon - centerLon; // longitude offset from the center
 
