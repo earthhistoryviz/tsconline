@@ -123,8 +123,8 @@ function processColumn(node: any): any {
             settingName === "customColor"
           ) {
             result[settingName] = {
-              standardized: standardizedValue ? standardizedValue : undefined,
-              useNamed: useNamedValue ? useNamedValue : undefined,
+              standardized: standardizedValue,
+              useNamed: useNamedValue,
               text: child.textContent.trim(),
             };
           } else if (justificationValue) {
@@ -321,7 +321,7 @@ function generateColumnXml(
       } else if (key === "orientation") {
         xml += `${indent}<setting name="${xmlKey}" orientation="${jsonColumn[key]}"/>\n`;
       } else if (key === "isSelected") {
-        //use preset value for event columns, remove later when event columns are covered
+        //TODO: remove later when event columns are covered
         if (jsonColumn._id.includes("EventColumn")) {
           xml += `${indent}<setting name="${xmlKey}">${jsonColumn["isSelected"]}</setting>\n`;
         }
