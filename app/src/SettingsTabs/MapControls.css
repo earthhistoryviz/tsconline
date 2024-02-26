@@ -1,4 +1,3 @@
-
 .facies-buttons {
   justify-content: center;
   grid-template-columns: repeat(2, 1fr);
@@ -35,8 +34,8 @@
 }
 .divider {
   height: 0.05px;
-  width: 100%; 
-  background-color: rgba(197, 197, 197, 0.281); 
+  width: 100%;
+  background-color: rgba(197, 197, 197, 0.281);
 }
 .header-icon {
   padding-top: 1px;
@@ -62,14 +61,14 @@
 .age-controls {
   width: 100%;
   height: auto;
-  display:flex;
+  display: flex;
   flex-direction: column;
   align-items: center;
   margin: auto;
 }
 .dot-controls {
   width: 100%;
-  display:flex;
+  display: flex;
   flex-direction: column;
   align-items: center;
   margin: auto;
@@ -128,25 +127,24 @@
   display: none;
 }
 @media screen and (max-width: 700px) {
-.MuiSlider-root.slider {
-  width: 40%;
-}
+  .MuiSlider-root.slider {
+    width: 40%;
+  }
   .facies-buttons {
     gap: 0px;
   }
-.MuiTextField-root.dot-input-form {
-  padding-right: 15px;
-  padding-left: 10px;
-}
-.MuiTextField-root.age-text-field > .MuiInputBase-root {
-  padding-right: 0;
-}
-.MuiInputBase-root > .MuiInputBase-input {
-  padding-left: 4px;
-}
-.MuiTextField-root.age-text-field {
-  padding-right: 20px;
-  width: 70px;
-}
-
+  .MuiTextField-root.dot-input-form {
+    padding-right: 15px;
+    padding-left: 10px;
+  }
+  .MuiTextField-root.age-text-field > .MuiInputBase-root {
+    padding-right: 0;
+  }
+  .MuiInputBase-root > .MuiInputBase-input {
+    padding-left: 4px;
+  }
+  .MuiTextField-root.age-text-field {
+    padding-right: 20px;
+    width: 70px;
+  }
 }
