@@ -24,10 +24,9 @@ export const fetchSettingsXml = async function fetchSettingsJson(
   try {
     const { settingFile } = request.params;
     //TODO: differentiate between preset and user uploaded datpack
-    const contents = (
+    const settingsXml = (
       await readFile(`${decodeURIComponent(settingFile)}`)
     ).toString();
-    const settingsXml = contents;
     reply.send(settingsXml);
   } catch (e) {
     reply.send({ error: e });
