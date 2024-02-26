@@ -163,23 +163,16 @@ export const setDatapackConfig = action(
     });
     // Grab the settings for this chart if there are any:
     if (settingsPath && settingsPath.length > 0) {
-      const res = await fetcher(
-        `/settingsXml/${encodeURIComponent(settingsPath)}`,
-        {
-          method: "GET",
-        }
-      );
+      const res = await fetcher(`/settingsXml/${encodeURIComponent(settingsPath)}`, {
+        method: "GET"
+      });
       try {
         const settingsXml = await res.text();
         console.log("recieved settings Xml string at setDatapackConfig");
         const settingsJson = xmlToJson(settingsXml);
         runInAction(() => (state.settingsJSON = settingsJson)); // Save the parsed JSON to the state.settingsJSON
       } catch (e) {
-        displayError(
-          e,
-          null,
-          "Error fetching settings from server"
-        );
+        displayError(e, null, "Error fetching settings from server");
         return false;
       }
     } else {
