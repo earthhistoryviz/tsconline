@@ -17,28 +17,28 @@ export function checkIfDataIsInRange(minDataAge: number, maxDataAge: number, use
  * Compare viewport height and px height
  * returns 1 if vh greater than px, -1 if less, 0 if equal
  * @param vh
- * @param px 
- * @returns 
+ * @param px
+ * @returns
  */
 export function compareVhAndPx(vh: number | string, px: number | string): number {
-    if (typeof vh === "string") {
-        if (vh.length <= 2 || vh.slice(-2) !== "vh") throw Error(`vh param in wrong format ${vh}`)
-        vh = Number(vh.slice(0, -2))
-        if (isNaN(vh)) throw Error(`vh param in wrong format ${vh}`)
-    }
-    if (typeof px === "string") {
-        if (px.length <= 2 || px.slice(-2) !== "px") throw Error(`px param in wrong format ${px}`)
-        px = Number(px.slice(0, -2))
-        if (isNaN(px)) throw Error(`px param in wrong format ${px}`)
-    }
-    const viewportHeight = window.innerHeight;
-    const vhToPx = viewportHeight * (vh / 100);
+  if (typeof vh === "string") {
+    if (vh.length <= 2 || vh.slice(-2) !== "vh") throw Error(`vh param in wrong format ${vh}`);
+    vh = Number(vh.slice(0, -2));
+    if (isNaN(vh)) throw Error(`vh param in wrong format ${vh}`);
+  }
+  if (typeof px === "string") {
+    if (px.length <= 2 || px.slice(-2) !== "px") throw Error(`px param in wrong format ${px}`);
+    px = Number(px.slice(0, -2));
+    if (isNaN(px)) throw Error(`px param in wrong format ${px}`);
+  }
+  const viewportHeight = window.innerHeight;
+  const vhToPx = viewportHeight * (vh / 100);
 
-    if (vhToPx > px) {
-        return 1;
-    } else if (vhToPx < px) {
-        return -1;
-    } else {
-        return 0;
-    }
+  if (vhToPx > px) {
+    return 1;
+  } else if (vhToPx < px) {
+    return -1;
+  } else {
+    return 0;
+  }
 }

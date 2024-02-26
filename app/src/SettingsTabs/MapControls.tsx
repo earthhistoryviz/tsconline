@@ -1,22 +1,8 @@
 import { observer } from "mobx-react-lite";
-import { ChangeEvent, ChangeEventHandler, useContext } from "react";
+import { useContext } from "react";
 import { context } from "../state";
-import {
-  BorderedIcon,
-  ColoredDiv,
-  Lottie,
-  TSCInputAdornment,
-  TSCTextField,
-  TypographyText,
-} from "../components";
-import {
-  Button,
-  Divider,
-  IconButton,
-  Slider,
-  TextFieldProps,
-  Typography,
-} from "@mui/material";
+import { BorderedIcon, ColoredDiv, Lottie, TSCInputAdornment, TSCTextField, TypographyText } from "../components";
+import { Button, Divider, IconButton, Slider, TextFieldProps } from "@mui/material";
 import mapPointsAnimationData from "../assets/icons/map-points.json";
 import CategoryIcon from "@mui/icons-material/Category";
 import MapSharpIcon from "@mui/icons-material/MapSharp";
@@ -32,7 +18,7 @@ const AgeTextField = ({ ...props }: TextFieldProps) => (
     height={"40px"}
     className="age-text-field"
     InputProps={{
-      endAdornment: <TSCInputAdornment>MA</TSCInputAdornment>,
+      endAdornment: <TSCInputAdornment>MA</TSCInputAdornment>
     }}
   />
 );
@@ -46,16 +32,13 @@ export const FaciesControls = observer(() => {
   return (
     <ColoredDiv className="facies-buttons">
       <div className="dot-controls">
-        <TypographyText className="dot-controls-title">
-          {" "}
-          Dot Size{" "}
-        </TypographyText>
+        <TypographyText className="dot-controls-title"> Dot Size </TypographyText>
         <div className="slider-container">
           <NumericFormat
             value={state.mapState.currentFaciesOptions.dotSize}
             customInput={DotSizeTextField}
             onValueChange={(values) => {
-              let floatValue = values.floatValue;
+              const floatValue = values.floatValue;
               if (!floatValue) {
                 return;
               }
@@ -116,34 +99,21 @@ type HeaderBarProps = {
 export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
   const { state, actions } = useContext(context);
   const headerStyle = {
-    height: `${isFacies ? faciesHeaderHeight : normHeaderHeight}`,
+    height: `${isFacies ? faciesHeaderHeight : normHeaderHeight}`
   };
   return (
     <ColoredDiv className="header-bar" style={headerStyle}>
       <div className="header-title-container">
-        <IconButton
-          className="move-maps-button"
-          onClick={actions.goBackInMapHistory}
-        >
+        <IconButton className="move-maps-button" onClick={actions.goBackInMapHistory}>
           <BorderedIcon component={ArrowBackIcon} className="icon-button" />
         </IconButton>
         <div className="header-title">
-          <Lottie
-            className="header-icon"
-            animationData={mapPointsAnimationData}
-            width={25}
-            height={25}
-            loop
-            autoplay
-          />
+          <Lottie className="header-icon" animationData={mapPointsAnimationData} width={25} height={25} loop autoplay />
           <TypographyText className="map-viewer-header" variant="h1">
             Map Viewer
           </TypographyText>
         </div>
-        <IconButton
-          className="move-maps-button"
-          onClick={() => actions.closeMapViewer()}
-        >
+        <IconButton className="move-maps-button" onClick={() => actions.closeMapViewer()}>
           <BorderedIcon component={CloseIcon} className="icon-button" />
         </IconButton>
       </div>
@@ -151,8 +121,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
         <Button
           startIcon={<MapSharpIcon />}
           className="legend-button"
-          onClick={() => actions.setIsLegendOpen(!state.mapState.isLegendOpen)}
-        >
+          onClick={() => actions.setIsLegendOpen(!state.mapState.isLegendOpen)}>
           legend
         </Button>
         {!isFacies && (
@@ -161,8 +130,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
             className="legend-button"
             onClick={() => {
               actions.openNextMap(name, isFacies, name, true);
-            }}
-          >
+            }}>
             Facies
           </Button>
         )}

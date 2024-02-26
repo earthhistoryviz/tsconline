@@ -25,8 +25,7 @@ export const MapPoints = observer(function MapPoint() {
   const theme = useTheme();
   return (
     <div>
-      {!state.mapState.mapInfo ||
-      Object.entries(state.mapState.mapInfo).length === 0 ? (
+      {!state.mapState.mapInfo || Object.entries(state.mapState.mapInfo).length === 0 ? (
         <div className="no-map-points-container">
           <Typography
             sx={{
@@ -79,13 +78,9 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
         open={state.mapState.isMapViewerOpen}
         keepMounted
         onClose={actions.goBackInMapHistory}
-        maxWidth={false}
-      >
+        maxWidth={false}>
         {state.mapState.selectedMap ? (
-          <MapViewer
-            name={state.mapState.selectedMap}
-            isFacies={state.mapState.isFacies}
-          />
+          <MapViewer name={state.mapState.selectedMap} isFacies={state.mapState.isFacies} />
         ) : null}
       </Dialog>
     </div>

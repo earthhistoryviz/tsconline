@@ -21,7 +21,7 @@ const Lottie: React.FC<LottieIconButtonProps> = ({
   height = 35,
   speed = 1,
   playOnHover = false,
-  className,
+  className
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [animationInstance, setAnimationInstance] = useState<AnimationItem | null>(null);

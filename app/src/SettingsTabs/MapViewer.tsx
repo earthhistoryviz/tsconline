@@ -5,13 +5,7 @@ import { devSafeUrl } from "../util";
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { context } from "../state";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-import {
-  DrawerHeader,
-  ColoredIconButton,
-  TypographyText,
-  BorderedIcon,
-  ColoredDiv,
-} from "../components";
+import { DrawerHeader, ColoredIconButton, TypographyText, BorderedIcon, ColoredDiv } from "../components";
 import CloseIcon from "@mui/icons-material/Close";
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
@@ -19,16 +13,10 @@ import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import YoutubeSearchedForIcon from "@mui/icons-material/YoutubeSearchedFor";
 import { observer } from "mobx-react-lite";
 import "./MapViewer.css";
-import {
-  Legend,
-  createChildMapButton,
-  loadMapPoints,
-  loadTransects,
-} from "./MapButtons";
+import { Legend, createChildMapButton, loadMapPoints, loadTransects } from "./MapButtons";
 import { HeaderBar } from "./MapControls";
 import { faciesHeaderHeight, normHeaderHeight } from "./MapPointConstants";
 import { compareVhAndPx } from "../util/util";
-import { setFaciesOptions } from "../state/actions";
 
 type MapProps = {
   name: string;
@@ -78,12 +66,12 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
 
   const headerHeight = isFacies ? faciesHeaderHeight : normHeaderHeight;
   let viewButtonStyle = {
-    top: `calc(${headerHeight} + 1vh)`,
+    top: `calc(${headerHeight} + 1vh)`
   };
   // if header is more than 250px due to long monitor veritcally we adjust the view controls accordingly
   if (compareVhAndPx(headerHeight, 250) === 1) {
     viewButtonStyle = {
-      top: `calc(250px + 20px)`,
+      top: `calc(250px + 20px)`
     };
   }
   const Controls = ({
@@ -127,7 +115,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
   if (isFacies) mapHeight = `calc(100vh - ${faciesHeaderHeight} - 2vh)`;
   else if (isFullscreen) mapHeight = `calc(100vh - ${normHeaderHeight})`;
   const mapStyle = {
-    height: mapHeight,
+    height: mapHeight
   };
 
   return (
@@ -136,12 +124,11 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
       <div className="map-viewer">
         <TransformWrapper
           doubleClick={{
-            disabled: true,
+            disabled: true
           }}
           minScale={1}
           maxScale={3}
-          limitToBounds={true}
-        >
+          limitToBounds={true}>
           {(utils) => (
             <>
               <TransformComponent>
@@ -201,93 +188,49 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
                       mapViewerRef.current
                     )}
 
-                {/* Load all the child maps*/}
-                {Object.keys(mapHierarchy).includes(name) &&
-                  mapHierarchy[name].map((child) => {
-                    // if the parent exists, use the bounds of the parent on mapData
-                    // this is because the child's parent field is the bounds of this map on that parent map
-                    const bounds = !mapData.parent ? mapData.bounds : mapData.parent!.bounds;
+                  {/* Load all the child maps*/}
+                  {Object.keys(mapHierarchy).includes(name) &&
+                    mapHierarchy[name].map((child) => {
+                      // if the parent exists, use the bounds of the parent on mapData
+                      // this is because the child's parent field is the bounds of this map on that parent map
+                      const bounds = !mapData.parent ? mapData.bounds : mapData.parent!.bounds;
 
-                    // mapInfo[child].parent!.bounds is called this way because
-                    // the child's parent field stores the bounds of the child map within the parents bounds this way
-                    // in other words the child.parent.bounds is actually the bounds of the child within the parent
-                    // since we are currently in the parent, we need to know the children's bounds this way
-                    return createChildMapButton(
-                      child,
-                      bounds,
-                      mapViewerRef.current,
-                      mapInfo[child].parent!.bounds,
-                      openChildMap
-                    );
-                  })}
-              </>
-            </TransformComponent>
-            {mapViewerRef && mapViewerRef.current && (
-              <Controls mapViewer={mapViewerRef.current as HTMLDivElement} {...utils} />
-            )}
-          </>
-        )}
-      </TransformWrapper>
-      <Drawer className="drawer" variant="persistent" anchor="left" open={state.mapState.isLegendOpen}>
-        <DrawerHeader>
-          <ColoredIconButton
-            onClick={() => {
-              actions.setIsLegendOpen(false);
-            }}>
-            <CloseIcon fontSize="small" />
-          </ColoredIconButton>
-          <TypographyText className="legend-title" variant="h6" gutterBottom>
-            Color Legend
-          </TypographyText>
-        </DrawerHeader>
-        <Divider />
-        <Legend />
-      </Drawer>
-    </div>
-    </div>
-  );
-});
-
-const FaciesControls = observer(() => {
-  const { state, actions } = useContext(context);
-  const dotSizeRange = { min: 1, max: 20 };
-  return (
-    <ColoredDiv className="facies-buttons">
-      <div className="dot-controls">
-        <TypographyText className="dot-controls-title"> Dot Size </TypographyText>
-        <div className="slider-container">
-          <Slider
-            id="dot-size-slider"
-            className="slider"
-            value={state.mapState.currentFaciesOptions.dotSize}
-            max={dotSizeRange.max}
-            min={dotSizeRange.min}
-            onChange={(_event: Event, val: number | number[]) => {
-              actions.setDotSize(val as number);
-            }}
-            aria-label="Default"
-            valueLabelDisplay="auto"
-          />
-        </div>
+                      // mapInfo[child].parent!.bounds is called this way because
+                      // the child's parent field stores the bounds of the child map within the parents bounds this way
+                      // in other words the child.parent.bounds is actually the bounds of the child within the parent
+                      // since we are currently in the parent, we need to know the children's bounds this way
+                      return createChildMapButton(
+                        child,
+                        bounds,
+                        mapViewerRef.current,
+                        mapInfo[child].parent!.bounds,
+                        openChildMap
+                      );
+                    })}
+                </>
+              </TransformComponent>
+              {mapViewerRef && mapViewerRef.current && (
+                <Controls mapViewer={mapViewerRef.current as HTMLDivElement} {...utils} />
+              )}
+            </>
+          )}
+        </TransformWrapper>
+        <Drawer className="drawer" variant="persistent" anchor="left" open={state.mapState.isLegendOpen}>
+          <DrawerHeader>
+            <ColoredIconButton
+              onClick={() => {
+                actions.setIsLegendOpen(false);
+              }}>
+              <CloseIcon fontSize="small" />
+            </ColoredIconButton>
+            <TypographyText className="legend-title" variant="h6" gutterBottom>
+              Color Legend
+            </TypographyText>
+          </DrawerHeader>
+          <Divider />
+          <Legend />
+        </Drawer>
       </div>
-      <div className="age-controls">
-        <TypographyText> Age </TypographyText>
-        <div className="slider-container">
-          <Slider
-            id="number-input"
-            className="slider"
-            name="Facies-Age-Slider"
-            max={state.mapState.selectedMapAgeRange.maxAge}
-            min={state.mapState.selectedMapAgeRange.minAge}
-            value={state.mapState.currentFaciesOptions.faciesAge}
-            onChange={(event: Event, val: number | number[]) => {
-              actions.setFaciesAge(val as number);
-            }}
-            aria-label="Default"
-            valueLabelDisplay="auto"
-          />
-        </div>
-      </div>
-    </ColoredDiv>
+    </div>
   );
 });
