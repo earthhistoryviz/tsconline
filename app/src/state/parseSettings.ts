@@ -282,7 +282,6 @@ function generateColumnXml(
   indent: string
 ): string {
   let xml = "";
-  console.log(stateColumn);
   for (let key in jsonColumn) {
     if (Object.prototype.hasOwnProperty.call(jsonColumn, key)) {
       let colName = extractName(jsonColumn._id);
