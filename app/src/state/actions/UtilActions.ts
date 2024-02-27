@@ -1,5 +1,5 @@
 import { pushError } from "./GeneralActions";
-import { isServerResponseError } from "@tsconline/shared"
+import { isServerResponseError } from "@tsconline/shared";
 
 /**
  * Display error to dialog popup
@@ -14,9 +14,7 @@ export function displayError(error: any, response: any, message: string) {
     console.log(`${message} with server response: ${response.error}`);
     pushError(response.error);
   } else {
-    console.log(
-      `${message} with server response: ${response}\n Error: ${error}`
-    );
+    console.log(`${message} with server response: ${response}\n Error: ${error}`);
     pushError(message);
   }
 }

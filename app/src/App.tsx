@@ -47,18 +47,14 @@ export default observer(function App() {
         open={state.openSnackbar}
         autoHideDuration={5000}
         TransitionComponent={Slide}
-        onClose={actions.handleCloseSnackbar}
-      >
+        onClose={actions.handleCloseSnackbar}>
         <Alert
           severity="success"
           variant="filled"
           className="alert"
           iconMapping={{
-            success: (
-              <Lottie animationData={ChartDoneIcon} speed={0.7} autoplay />
-            ),
-          }}
-        >
+            success: <Lottie animationData={ChartDoneIcon} speed={0.7} autoplay />
+          }}>
           <Typography>Chart Successfully Generated!</Typography>
         </Alert>
       </Snackbar>

@@ -3,11 +3,19 @@
 }
 
 #Arial {
-  font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+  font-family:
+    Arial,
+    Helvetica Neue,
+    Helvetica,
+    sans-serif;
 }
 
 #Courier {
-  font-family: Courier New, Courier, Lucida Sans Typewriter, Lucida Typewriter,
+  font-family:
+    Courier New,
+    Courier,
+    Lucida Sans Typewriter,
+    Lucida Typewriter,
     monospace;
 }
 
@@ -33,9 +41,9 @@
 }
 
 .MuiTextField-root.FontSizeContainer {
-    width: 60px;
-    margin-right: 10px;
-    min-width: 60px;
+  width: 60px;
+  margin-right: 10px;
+  min-width: 60px;
 }
 
 #HeadingContainer {
