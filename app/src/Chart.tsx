@@ -25,8 +25,7 @@ export const Chart = observer(function () {
       ) : state.madeChart ? (
         <TransformWrapper minScale={0.01} maxScale={3} limitToBounds={false}>
           <TransformComponent>
-            <img src={state.chartPath} />
-            {/* <object data={state.chartPath} type="application/svg" width="100%" height="100%"></object> */}
+            <object data={state.chartPath} type="image/svg+xml" width="100%" height="100%"></object>
           </TransformComponent>
         </TransformWrapper>
       ) : (
