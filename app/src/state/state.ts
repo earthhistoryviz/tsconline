@@ -80,7 +80,8 @@ export const state = observable<State>({
     mapHierarchy: {},
     currentFaciesOptions: {
       faciesAge: 0,
-      dotSize: 1
+      dotSize: 1,
+      presentRockTypes: new Set<string>()
     },
     selectedMap: null,
     isLegendOpen: false,

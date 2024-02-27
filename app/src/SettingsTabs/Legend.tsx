@@ -18,13 +18,14 @@ import "./Legend.css";
 import "@szhsin/react-menu/dist/index.css";
 import "@szhsin/react-menu/dist/transitions/slide.css";
 import { ControlledMenu, MenuCloseEvent, MenuItem, useClick, useMenuState } from "@szhsin/react-menu";
+import { observer } from "mobx-react-lite";
 
 /**
  * This is the legend that describes the icons present on the
  * map viewer. Currently uses a legend item array inherently
  * @returns a component with a header and body of icons
  */
-export const Legend = () => {
+export const Legend = observer(() => {
   // the filters for the facies patterns
   const [searchValue, setSearchValue] = useState("");
   const [filterByPresent, setFilterByPresent] = useState(false);
@@ -36,8 +37,14 @@ export const Legend = () => {
 
   const theme = useTheme();
   const { state } = useContext(context);
-  const filteredPatterns = Object.values(state.mapPatterns).filter((value) => {
-    if (value.formattedName.toLowerCase().includes(searchValue)) return true;
+  let filteredPatterns = Object.values(state.mapPatterns);
+  if (filterByPresent) {
+    filteredPatterns = filteredPatterns.filter((value) => {
+      return state.mapState.currentFaciesOptions.presentRockTypes.has(value.formattedName);
+    });
+  }
+  filteredPatterns = filteredPatterns.filter((value) => {
+    return value.formattedName.toLowerCase().includes(searchValue.toLowerCase());
   });
   // legend icon array
   const legendItems: LegendItem[] = [
@@ -121,7 +128,7 @@ export const Legend = () => {
       </div>
     </StyledScrollbar>
   );
-};
+});
 const DisplayLegendItem = ({ legendItem }: { legendItem: LegendItem }) => {
   const { color, label, icon: Icon } = legendItem;
   return (

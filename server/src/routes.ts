@@ -2,7 +2,7 @@ import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
 import { writeFile, stat } from "fs/promises";
 import { Patterns, assertChartRequest } from "@tsconline/shared";
-import { deleteDirectory, grabFilepaths } from "./util.js";
+import { deleteDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
 import { grabMapImages } from "./parse-map-packs.js";
 import md5 from "md5";
