@@ -1,4 +1,3 @@
-import { xmlToJson } from "./parse-settings.js";
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
 import { writeFile, stat } from "fs/promises";
@@ -12,16 +11,18 @@ import svgson from "svgson";
 import fs from "fs";
 import { readFile } from "fs/promises";
 
-export const fetchSettingsJson = async function fetchSettingsJson(
+// export const uploadDatapack = async function (request: FastifyRequest, reply: FastifyReply) {
+//   // const data = await request.saveRequestFiles()
+// };
+export const fetchSettingsXml = async function fetchSettingsJson(
   request: FastifyRequest<{ Params: { settingFile: string } }>,
   reply: FastifyReply
 ) {
   try {
     const { settingFile } = request.params;
     //TODO: differentiate between preset and user uploaded datpack
-    const contents = (await readFile(`${decodeURIComponent(settingFile)}`)).toString();
-    const settingJson = await xmlToJson(contents);
-    reply.send(settingJson);
+    const settingsXml = (await readFile(`${decodeURIComponent(settingFile)}`)).toString();
+    reply.send(settingsXml);
   } catch (e) {
     reply.send({ error: e });
   }

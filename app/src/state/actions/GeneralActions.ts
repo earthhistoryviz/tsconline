@@ -21,7 +21,7 @@ import {
 import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
 import { initializeColumnHashMap } from "./ColumnActions";
-import { jsonToXml } from "../parseSettings";
+import { jsonToXml, xmlToJson } from "../parseSettings";
 import { displayError } from "./UtilActions";
 import { Settings } from "../../types";
 
@@ -163,15 +163,16 @@ export const setDatapackConfig = action(
     });
     // Grab the settings for this chart if there are any:
     if (settingsPath && settingsPath.length > 0) {
-      const res = await fetcher(`/settingsJson/${encodeURIComponent(settingsPath)}`, {
+      const res = await fetcher(`/settingsXml/${encodeURIComponent(settingsPath)}`, {
         method: "GET"
       });
       try {
-        const settingsJson = JSON.parse(await res.text());
-        console.log("recieved settings JSON object at set Chart", settingsJson);
+        const settingsXml = await res.text();
+        console.log("recieved settings Xml string at setDatapackConfig");
+        const settingsJson = xmlToJson(settingsXml);
         runInAction(() => (state.settingsJSON = settingsJson)); // Save the parsed JSON to the state.settingsJSON
       } catch (e) {
-        displayError(e, await res.json(), "Error fetching settings from server");
+        displayError(e, null, "Error fetching settings from server");
         return false;
       }
     } else {
