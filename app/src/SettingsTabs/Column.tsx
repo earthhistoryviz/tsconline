@@ -8,8 +8,11 @@ import { useNavigate } from "react-router-dom";
 import { ColumnContainer, AccordionDetails, TSCCheckbox, AccordionSummary, Accordion, TSCButton } from "../components";
 
 import { ColumnMenu } from "./ColumnMenu";
-
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import { useTheme } from "@mui/material/styles";
+import { Tooltip } from "@mui/material";
 import "./Column.css";
+import { checkIfDataIsInRange } from "../util/util";
 
 type ColumnAccordionProps = {
   details: ColumnInfo;
@@ -35,7 +38,8 @@ function stringToHash(string: string): number {
 
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
   ({ details, expandedAccordions, accordionClicked }) => {
-    const { actions } = useContext(context);
+    const { actions, state } = useContext(context);
+    const theme = useTheme();
     //for keeping the original name for array access
     function clickColumnName() {
       actions.setcolumnSelected(details.name);
@@ -48,17 +52,55 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
         </Typography>
       </div>
     );
+
+    const dataInrange = checkIfDataIsInRange(
+      details.minAge,
+      details.maxAge,
+      state.settings.topStageAge,
+      state.settings.baseStageAge
+    );
+
     function checkbox(leaf: string) {
+      const tooltipOrCheckBox =
+        !dataInrange && !(details.name === "Ma" || details.name === "Root") ? (
+          <Tooltip
+            title="Data not included in time range"
+            placement="top"
+            arrow
+            slotProps={{
+              popper: {
+                modifiers: [
+                  {
+                    name: "offset",
+                    options: {
+                      offset: [0, -10]
+                    }
+                  }
+                ]
+              }
+            }}>
+            <ErrorOutlineIcon
+              className="error-icon"
+              style={{
+                color: theme.palette.error.main
+              }}
+            />
+          </Tooltip>
+        ) : (
+          <TSCCheckbox
+            checked={details.on}
+            onChange={() => {
+              actions.toggleSettingsTabColumn(details.name);
+            }}
+          />
+        );
+
       return (
         <>
           <ColumnContainer>
             <div className={"column-checkbox " + leaf} onClick={() => clickColumnName()}>
-              <TSCCheckbox
-                checked={details.on}
-                onChange={() => {
-                  actions.toggleSettingsTabColumn(details.name);
-                }}
-              />
+              {tooltipOrCheckBox}
+
               {columnName}
             </div>
           </ColumnContainer>

@@ -7,10 +7,19 @@
  * @returns
  */
 export function checkIfDataIsInRange(minDataAge: number, maxDataAge: number, userTopAge: number, userBaseAge: number) {
-  return !(
-    (minDataAge > userTopAge && minDataAge < userBaseAge) ||
-    (maxDataAge < userBaseAge && maxDataAge > userTopAge)
-  );
+  if (userBaseAge == userTopAge) {
+    return false;
+  }
+
+  // once we finish datapack parsing we should not have any at 99999 and -99999
+  if ((minDataAge == 99999 && maxDataAge == -99999) || (minDataAge == 0 && maxDataAge == 0)) {
+    return true;
+  }
+
+  if (minDataAge <= userTopAge && maxDataAge >= userBaseAge) {
+    return true;
+  }
+  return (minDataAge > userTopAge && minDataAge < userBaseAge) || (maxDataAge < userBaseAge && maxDataAge > userTopAge);
 }
 
 /**
