@@ -1,4 +1,4 @@
-name: Merge Pipeline
+name: Default Merge Pipeline
 
 on:
   pull_request:
@@ -7,42 +7,6 @@ on:
       - main
 
 jobs:
-  check-files:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Check for disallowed files and directories
-        run: |
-          declare -a disallowed_files=(".dpk" ".mdpk" ".txt" ".map" ".java" ".jar" ".DS_Store" "node_modules")
-          disallowed_files_list=""
-          for pattern in "${disallowed_files[@]}"; do
-            files_found=$(find . -type f -name "*$pattern*" -not -path "./.git/*" -not -path "./node_modules/*")
-            if [ ! -z "$files_found" ]; then
-              disallowed_files_list+="$files_found\n"
-            fi
-          done
-          if [ ! -z "$disallowed_files_list" ]; then
-            echo -e "$disallowed_files_list" > disallowed_files_list.txt
-            echo "disallowed_files_present=true" >> $GITHUB_ENV
-          fi
-
-      - name: Comment PR on disallowed files Failure
-        if: env.disallowed_files_present == 'true'
-        uses: actions/github-script@v5
-        with:
-          script: |
-            const fs = require('fs');
-            const disallowed_files_output = fs.readFileSync('disallowed_files_list.txt', 'utf8');
-            const message = `🚨 There are files in your PR you need to remove:\n\n\`\`\`\n${disallowed_files_output}\n\`\`\`\n`;
-            const prNumber = context.payload.pull_request.number;
-            github.rest.issues.createComment({
-              ...context.repo,
-              issue_number: prNumber,
-              body: message,
-            });
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
   code-quality:
     runs-on: ubuntu-latest
     steps:
