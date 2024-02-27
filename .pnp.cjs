@@ -2148,6 +2148,34 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["@szhsin/react-menu", [\
+      ["npm:4.1.0", {\
+        "packageLocation": "./.yarn/cache/@szhsin-react-menu-npm-4.1.0-29e5c8a3a0-34974d9f66.zip/node_modules/@szhsin/react-menu/",\
+        "packageDependencies": [\
+          ["@szhsin/react-menu", "npm:4.1.0"]\
+        ],\
+        "linkType": "SOFT"\
+      }],\
+      ["virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:4.1.0", {\
+        "packageLocation": "./.yarn/__virtual__/@szhsin-react-menu-virtual-c5c94c8fd2/0/cache/@szhsin-react-menu-npm-4.1.0-29e5c8a3a0-34974d9f66.zip/node_modules/@szhsin/react-menu/",\
+        "packageDependencies": [\
+          ["@szhsin/react-menu", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:4.1.0"],\
+          ["@types/react", "npm:18.2.58"],\
+          ["@types/react-dom", "npm:18.2.1"],\
+          ["prop-types", "npm:15.8.1"],\
+          ["react", "npm:18.2.0"],\
+          ["react-dom", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:18.2.0"],\
+          ["react-transition-state", "virtual:c5c94c8fd27b589c36f0d7dca15ae6ebbda51079364e704d1174072421bab0ac58f2967ae57f2f7df6ab35be719bcd4f4b6aca9220fb4a6d00dd0d472ed5a360#npm:2.1.1"]\
+        ],\
+        "packagePeers": [\
+          "@types/react-dom",\
+          "@types/react",\
+          "react-dom",\
+          "react"\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["@szmarczak/http-timer", [\
       ["npm:4.0.6", {\
         "packageLocation": "./.yarn/cache/@szmarczak-http-timer-npm-4.0.6-6ace00d82d-c29df3bcec.zip/node_modules/@szmarczak/http-timer/",\
@@ -2180,6 +2208,7 @@ const RAW_RUNTIME_STATE =
           ["@mui/joy", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:5.0.0-alpha.79"],\
           ["@mui/material", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:5.12.2"],\
           ["@mui/styles", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:5.15.2"],\
+          ["@szhsin/react-menu", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:4.1.0"],\
           ["@tsconline/shared", "workspace:shared"],\
           ["@types/color", "npm:3.0.6"],\
           ["@types/react", "npm:18.2.58"],\
@@ -7650,6 +7679,32 @@ const RAW_RUNTIME_STATE =
           ["dom-helpers", "npm:5.2.1"],\
           ["loose-envify", "npm:1.4.0"],\
           ["prop-types", "npm:15.8.1"],\
+          ["react", "npm:18.2.0"],\
+          ["react-dom", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:18.2.0"]\
+        ],\
+        "packagePeers": [\
+          "@types/react-dom",\
+          "@types/react",\
+          "react-dom",\
+          "react"\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["react-transition-state", [\
+      ["npm:2.1.1", {\
+        "packageLocation": "./.yarn/cache/react-transition-state-npm-2.1.1-02fff96397-992f6a4407.zip/node_modules/react-transition-state/",\
+        "packageDependencies": [\
+          ["react-transition-state", "npm:2.1.1"]\
+        ],\
+        "linkType": "SOFT"\
+      }],\
+      ["virtual:c5c94c8fd27b589c36f0d7dca15ae6ebbda51079364e704d1174072421bab0ac58f2967ae57f2f7df6ab35be719bcd4f4b6aca9220fb4a6d00dd0d472ed5a360#npm:2.1.1", {\
+        "packageLocation": "./.yarn/__virtual__/react-transition-state-virtual-00e2e35b56/0/cache/react-transition-state-npm-2.1.1-02fff96397-992f6a4407.zip/node_modules/react-transition-state/",\
+        "packageDependencies": [\
+          ["react-transition-state", "virtual:c5c94c8fd27b589c36f0d7dca15ae6ebbda51079364e704d1174072421bab0ac58f2967ae57f2f7df6ab35be719bcd4f4b6aca9220fb4a6d00dd0d472ed5a360#npm:2.1.1"],\
+          ["@types/react", "npm:18.2.58"],\
+          ["@types/react-dom", "npm:18.2.1"],\
           ["react", "npm:18.2.0"],\
           ["react-dom", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:18.2.0"]\
         ],\

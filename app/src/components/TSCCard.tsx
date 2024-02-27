@@ -27,7 +27,7 @@ const CardBackground = styled("div")(({ theme, color }) => ({
     .lighten(0.12)})`
 }));
 const HiddenBack = styled("div")(({ theme }) => ({
-  backgroundColor: theme.palette.navbar.main
+  backgroundColor: theme.palette.cardBackground.light
 }));
 
 const CardContent = styled("div")(({ color }) => ({

@@ -43,7 +43,8 @@
   margin-right: 10px;
   line-height: 23px;
 }
-.facies-search {
+.szh-menu__item--hover.filter-menu-item {
+  background-color: black;
 }
 .search-container {
   margin: 10px 20px 5px 30px;
