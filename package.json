@@ -14,8 +14,9 @@
     "start": "yarn workspace @tsconline/server start",
     "prettier-format": "prettier --write \"**/*.{ts,tsx,css}\"",
     "prettier-check": "prettier --check \"**/*.{ts,tsx,css}\"",
-    "lint-check": "yarn eslint **/*.{tsx,ts} --quiet --config ./.eslintrc.json",
-    "lint-format": "yarn eslint **/*.{tsx,ts} --fix"
+    "lint-check": "yarn eslint **/*.{tsx,ts} --quiet --config ./.eslintrc.json --no-cache",
+    "lint-format": "yarn eslint **/*.{tsx,ts} --fix --quiet --config ./.eslintrc.json",
+    "check-quality": "yarn prettier-format && yarn lint-check"
   },
   "dependencies": {
     "fastify": "^4.13.0",
@@ -29,6 +30,8 @@
     "@typescript-eslint/parser": "^7.0.2",
     "@yarnpkg/sdks": "^3.0.0-rc.43",
     "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-check-file": "^2.7.1",
     "eslint-plugin-react": "^7.33.2",
     "prettier": "^3.2.5"
   }
