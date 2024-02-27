@@ -1,7 +1,8 @@
-import { IconButton, SvgIcon, Typography, styled } from "@mui/material";
+import { Divider, DividerProps, IconButton, SvgIcon, Typography, TypographyProps, styled } from "@mui/material";
 import Color from "color";
 import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
+import "./TSCComponents.css"
 
 export const TypographyText = styled(Typography)(({ theme }) => ({
   color: theme.palette.primary.main
@@ -13,6 +14,34 @@ export const ColoredIconButton = styled(IconButton)(({ theme }) => ({
 export const ColoredDiv = styled("div")(({ theme }) => ({
   backgroundColor: theme.palette.navbar.dark
 }));
+
+export const CustomHeader = styled(Typography)(({ theme }) => ({
+  "&::before": {
+    backgroundColor: theme.palette.selection.main,
+    content: '""',
+    left: "0",
+    width: "2px",
+    position: "absolute",
+    height: "20px",
+    borderRadius: "2px"
+  },
+  position: "relative",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "left",
+  fontSize: "1.1rem",
+  paddingLeft: "21px",
+  paddingBottom: "30px"
+}));
+
+type CustomDividerProps = {
+  className?: string
+} & DividerProps
+
+export const CustomDivider: React.FC<CustomDividerProps> = ({className, ...props}) => (
+  <Divider className={`${className} divider`} {...props}/>
+)
+
 export const TSCInputAdornment = styled("div")(
   ({ theme }) => `
   margin-left: auto;
@@ -38,7 +67,6 @@ export const DrawerHeader = styled("div")(({ theme }) => ({
   padding: theme.spacing(0, 1),
   backgroundColor: theme.palette.navbar.dark,
   ...theme.mixins.toolbar,
-  justifyContent: "space-between"
 }));
 export const StyledScrollbar = styled(SimpleBar)(({ theme, color }) => {
   const backgroundColor = color || theme.palette.scrollbar.main;

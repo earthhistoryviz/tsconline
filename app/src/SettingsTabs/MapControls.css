@@ -32,11 +32,6 @@
 .header-title {
   display: flex;
 }
-.divider {
-  height: 0.05px;
-  width: 100%;
-  background-color: rgba(197, 197, 197, 0.281);
-}
 .header-icon {
   padding-top: 1px;
   padding-right: 5px;

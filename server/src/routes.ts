@@ -1,8 +1,8 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
 import { writeFile, stat } from "fs/promises";
-import { assertChartRequest } from "@tsconline/shared";
-import { deleteDirectory } from "./util.js";
+import { Patterns, assertChartRequest } from "@tsconline/shared";
+import { deleteDirectory, grabFilepaths } from "./util.js";
 import { mkdirp } from "mkdirp";
 import { grabMapImages } from "./parse-map-packs.js";
 import md5 from "md5";
@@ -10,10 +10,36 @@ import { assetconfigs } from "./index.js";
 import svgson from "svgson";
 import fs from "fs";
 import { readFile } from "fs/promises";
+import { glob } from "glob";
+import path from "path";
 
-// export const uploadDatapack = async function (request: FastifyRequest, reply: FastifyReply) {
-//   // const data = await request.saveRequestFiles()
-// };
+export const fetchFaciesPatterns = async function fetchFaciesPatterns(_request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const patterns: Patterns = {};
+    const patternsGlobed = await glob(`${assetconfigs.patternsDirectory}/*.PNG`);
+    if (patternsGlobed.length == 0) throw new Error("No patterns found");
+    for (const pattern of patternsGlobed) {
+      const name = path.basename(pattern).split(".")[0];
+      if (!name) {
+        console.error(`Unrecognized pattern file in ${assetconfigs.patternsDirectory} with path ${pattern}`);
+        continue;
+      }
+      // format so it splits all underscores and capitalizes the first letter
+      const formattedName = name.split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+      patterns[name] = {
+        name,
+        formattedName,
+        filePath: `/${pattern}`
+      };
+    }
+    reply.status(200).send({ patterns });
+  } catch (e) {
+    console.error(e)
+    reply.status(404).send({ error: e });
+  }
+};
 export const fetchSettingsXml = async function fetchSettingsJson(
   request: FastifyRequest<{ Params: { settingFile: string } }>,
   reply: FastifyReply
