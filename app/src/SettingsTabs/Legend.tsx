@@ -1,5 +1,5 @@
-import { Autocomplete, Box, IconButton, Typography, useTheme } from "@mui/material";
-import { useState, useContext, ChangeEventHandler, ChangeEvent } from "react";
+import { Box, IconButton, Typography, styled, useTheme } from "@mui/material";
+import { useState, useContext, ChangeEvent, useRef } from "react";
 import {
   StyledScrollbar,
   CustomHeader,
@@ -15,6 +15,9 @@ import { AvailableIcon, DisabledIcon, InfoIcon, ChildMapIcon } from "./MapButton
 import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import "./Legend.css";
+import "@szhsin/react-menu/dist/index.css";
+import "@szhsin/react-menu/dist/transitions/slide.css";
+import { ControlledMenu, MenuCloseEvent, MenuItem, useClick, useMenuState } from "@szhsin/react-menu";
 
 /**
  * This is the legend that describes the icons present on the
@@ -22,12 +25,21 @@ import "./Legend.css";
  * @returns a component with a header and body of icons
  */
 export const Legend = () => {
+  // the filters for the facies patterns
   const [searchValue, setSearchValue] = useState("");
+  const [filterByPresent, setFilterByPresent] = useState(false);
+
+  // for configuring menu with transition and onClose
+  const [menuState, toggleMenu] = useMenuState({ transition: true });
+  const anchorProps = useClick(menuState.state, toggleMenu);
+  const menuRef = useRef(null);
+
   const theme = useTheme();
   const { state } = useContext(context);
   const filteredPatterns = Object.values(state.mapPatterns).filter((value) => {
     if (value.formattedName.toLowerCase().includes(searchValue)) return true;
   });
+  // legend icon array
   const legendItems: LegendItem[] = [
     { color: theme.palette.on.main, label: "On", icon: AvailableIcon },
     { color: theme.palette.off.main, label: "Off", icon: AvailableIcon },
@@ -43,7 +55,7 @@ export const Legend = () => {
     <StyledScrollbar
       className="scrollbar-container"
       style={{
-        backgroundColor: theme.palette.navbar.dark
+        backgroundColor: theme.palette.navbar.main
       }}>
       <CustomHeader className="legend-header" color="primary">
         Map Points
@@ -75,9 +87,24 @@ export const Legend = () => {
             }}
           />
         </div>
-        <IconButton className="filter-button">
+        <IconButton ref={menuRef} className="filter-button" {...anchorProps}>
           <FilterListIcon color="primary" />
         </IconButton>
+        <ControlledMenu
+          {...menuState}
+          menuStyle={{ backgroundColor: theme.palette.menuDropdown.main }}
+          anchorRef={menuRef}
+          onClose={(event: MenuCloseEvent) => {
+            if (event.reason === "click") return;
+            toggleMenu(false);
+          }}>
+          <CustomMenuItem
+            checked={filterByPresent}
+            onClick={() => setFilterByPresent(!filterByPresent)}
+            type="checkbox">
+            <TypographyText>Present in map</TypographyText>
+          </CustomMenuItem>
+        </ControlledMenu>
       </div>
       <CustomDivider />
       <div className="legend-container">
@@ -104,3 +131,11 @@ const DisplayLegendItem = ({ legendItem }: { legendItem: LegendItem }) => {
     </Box>
   );
 };
+const CustomMenuItem = styled(MenuItem)(({ theme }) => ({
+  "&.szh-menu__item--hover": {
+    backgroundColor: theme.palette.menuDropdown.light
+  },
+  "&.szh-menu__item--checked": {
+    color: theme.palette.primary.main
+  }
+}));

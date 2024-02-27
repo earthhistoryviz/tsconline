@@ -97,7 +97,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
               {configArray.map((preset, index) => (
                 <Grid item key={index} className="preset-item">
                   <TSCCard
-                    color={theme.palette.navbar.main}
+                    color={theme.palette.cardBackground.main}
                     preset={preset}
                     generateChart={async () => {
                       const success = await actions.setDatapackConfig(

@@ -1,4 +1,4 @@
-import { Divider, DividerProps, IconButton, SvgIcon, Typography, TypographyProps, styled } from "@mui/material";
+import { Divider, IconButton, SvgIcon, Typography, styled } from "@mui/material";
 import Color from "color";
 import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
@@ -11,7 +11,7 @@ export const ColoredIconButton = styled(IconButton)(({ theme }) => ({
 }));
 
 export const ColoredDiv = styled("div")(({ theme }) => ({
-  backgroundColor: theme.palette.navbar.dark
+  backgroundColor: theme.palette.navbar.main
 }));
 
 export const CustomHeader = styled(Typography)(({ theme }) => ({
@@ -61,7 +61,7 @@ export const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   padding: theme.spacing(0, 1),
-  backgroundColor: theme.palette.navbar.dark,
+  backgroundColor: theme.palette.navbar.main,
   ...theme.mixins.toolbar
 }));
 export const StyledScrollbar = styled(SimpleBar)(({ theme, color }) => {

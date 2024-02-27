@@ -1573,6 +1573,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@szhsin/react-menu@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "@szhsin/react-menu@npm:4.1.0"
+  dependencies:
+    prop-types: "npm:^15.7.2"
+    react-transition-state: "npm:^2.1.0"
+  peerDependencies:
+    react: ">=16.14.0"
+    react-dom: ">=16.14.0"
+  checksum: 34974d9f66e7c0b211981c96cf0c027ed714ed536b6fed236ddd2af9504a141d66200a1b215361bac9df3582aaa5fd67ebced32282cd1cf34b3b5523b57507ad
+  languageName: node
+  linkType: hard
+
 "@szmarczak/http-timer@npm:^4.0.5":
   version: 4.0.6
   resolution: "@szmarczak/http-timer@npm:4.0.6"
@@ -1601,6 +1614,7 @@ __metadata:
     "@mui/joy": "npm:^5.0.0-alpha.79"
     "@mui/material": "npm:^5.12.0"
     "@mui/styles": "npm:^5.15.2"
+    "@szhsin/react-menu": "npm:^4.1.0"
     "@tsconline/shared": "workspace:^"
     "@types/color": "npm:^3.0.6"
     "@types/react": "npm:^18.0.27"
@@ -6279,6 +6293,16 @@ __metadata:
     react: ">=16.6.0"
     react-dom: ">=16.6.0"
   checksum: ca32d3fd2168c976c5d90a317f25d5f5cd723608b415fb3b9006f9d793c8965c619562d0884503a3e44e4b06efbca4fdd1520f30e58ca3e00a0890e637d55419
+  languageName: node
+  linkType: hard
+
+"react-transition-state@npm:^2.1.0":
+  version: 2.1.1
+  resolution: "react-transition-state@npm:2.1.1"
+  peerDependencies:
+    react: ">=16.8.0"
+    react-dom: ">=16.8.0"
+  checksum: 992f6a44070c74bdcbeae4f6a2a5dd2429ab031e74a942822f9f2bd40b938e0efcdfbc0736f3f1a1003399191de9e5659397e99b4e901600cd03cc639579da54
   languageName: node
   linkType: hard
 
