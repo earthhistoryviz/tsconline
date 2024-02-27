@@ -144,7 +144,6 @@ interface TransectLineProps {
 }
 /**
  * This is the clickable Transect line that connects map points together
- * TODO: Currently not connected to the column settings.
  */
 const TransectLine: React.FC<TransectLineProps> = observer(
   ({ name, startPosition, endPosition, transect, onColor, offColor, container }) => {
@@ -397,7 +396,14 @@ function getIcon(disabled: boolean, isInfo: boolean, iconSize: number, scale: nu
   if (isInfo) {
     return <BorderedIcon strokeWidth={0.2} className="icon" component={InfoIcon} />;
   } else if (state.mapState.isFacies) {
-    return getFaciesIcon(iconSize, scale, state.mapState.currentFaciesOptions, actions.setSelectedMapAgeRange, column!);
+    return getFaciesIcon(
+      iconSize,
+      scale,
+      state.mapState.currentFaciesOptions,
+      actions.setSelectedMapAgeRange,
+      actions.pushPresentRockType,
+      column!
+    );
   } else if (disabled) {
     return <BorderedIcon className="icon" component={DisabledIcon} />;
   }
@@ -416,9 +422,15 @@ function getFaciesIcon(
   scale: number,
   currentFaciesOptions: FaciesOptions,
   setSelectedMapAgeRange: (min: number, max: number) => void,
+  pushPresentRockType: (rockType: string) => void,
   column: ColumnInfo
 ) {
-  const rockType = getRockTypeForAge(column, currentFaciesOptions.faciesAge, setSelectedMapAgeRange);
+  const rockType = getRockTypeForAge(
+    column,
+    currentFaciesOptions.faciesAge,
+    setSelectedMapAgeRange,
+    pushPresentRockType
+  );
   return (
     <svg width={`${iconSize / scale}px`} height={`${iconSize / scale}px`} viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="10" stroke="black" strokeWidth="1" fill="transparent" />
@@ -447,7 +459,8 @@ function getFaciesIcon(
 function getRockTypeForAge(
   column: ColumnInfo,
   currentAge: number,
-  setSelectedMapAgeRange: (min: number, max: number) => void
+  setSelectedMapAgeRange: (min: number, max: number) => void,
+  pushPresentRockType: (rockType: string) => void
 ) {
   if (!column.subFaciesInfo || column.subFaciesInfo.length === 0) {
     return "TOP"; // Return "TOP" if there's no subFaciesInfo or it's empty
@@ -460,6 +473,7 @@ function getRockTypeForAge(
   if (!suitableBlock) {
     return "TOP";
   } else {
+    pushPresentRockType(suitableBlock.rockType);
     return suitableBlock.rockType;
   }
 }
