@@ -4,11 +4,17 @@
         "es2021": true,
         "node": true
     },
+    "settings": {
+        "react": {
+          "version": "detect"
+        }
+    },
     "extends": [
         "eslint:recommended",
         "plugin:@typescript-eslint/recommended",
         "plugin:react/recommended",
-        "plugin:react/jsx-runtime"
+        "plugin:react/jsx-runtime",
+        "prettier"
     ],
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
@@ -22,7 +28,7 @@
     "rules": {
         "react/prop-types": "off"
     },
-    "overrides": [
+    "overrides": [     
         {
           "files": ["shared/**/*", "app/state/actions/UtilActions.ts", "app/state/parseSettings.ts", "app/src/state/state.ts", "app/src/types.ts", 
           "server/src/parse-settings.ts", "server/src/types.ts", "server/src/parse-map-packs.ts"],
