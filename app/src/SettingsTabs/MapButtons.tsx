@@ -1,4 +1,4 @@
-import { Box, Button, IconButton, Theme, Tooltip, TooltipProps, styled, useTheme } from "@mui/material";
+import { Box, Button, IconButton, Theme, Tooltip, TooltipProps, Typography, styled, useTheme } from "@mui/material";
 import { FaciesOptions, LegendItem } from "../types";
 import { Bounds, ColumnInfo, InfoPoints, MapPoints, Transects, isRectBounds, isVertBounds } from "@tsconline/shared";
 import { useContext, useState } from "react";
@@ -10,8 +10,9 @@ import NotListedLocationIcon from "@mui/icons-material/NotListedLocation";
 import LocationOffIcon from "@mui/icons-material/LocationOff";
 import LocationOnSharpIcon from "@mui/icons-material/LocationOnSharp";
 import { devSafeUrl } from "../util";
-import { BorderedIcon, TypographyText } from "../components";
+import { BorderedIcon, CustomDivider, CustomHeader, StyledScrollbar, TypographyText } from "../components";
 import { checkIfDataIsInRange } from "../util/util";
+import './MapButtons.css'
 
 const ICON_SIZE = 40;
 const InfoIcon = NotListedLocationIcon;
@@ -454,29 +455,59 @@ const DisplayLegendItem = ({ legendItem }: { legendItem: LegendItem }) => {
  */
 export const Legend = () => {
   const theme = useTheme();
+  const { state } = useContext(context)
   const legendItems: LegendItem[] = [
     { color: theme.palette.on.main, label: "On", icon: AvailableIcon },
     { color: theme.palette.off.main, label: "Off", icon: AvailableIcon },
     {
       color: theme.palette.disabled.main,
-      label: "Disabled",
+      label: "Data not in selected range",
       icon: DisabledIcon
     },
     { color: theme.palette.info.main, label: "Info point", icon: InfoIcon },
     { color: "transparent", label: "Child Map", icon: ChildMapIcon }
   ];
   return (
-    <Box
-      className="legend-container"
+    <StyledScrollbar
+      className="scrollbar-container"
       style={{
         backgroundColor: theme.palette.navbar.dark
       }}>
+      <CustomHeader className="legend-header" color="primary">
+        Map Points
+      </CustomHeader>
+      <CustomDivider/>
+        <div className="legend-container">
       {legendItems.map((item, index) => (
         <DisplayLegendItem key={index} legendItem={item} />
       ))}
-    </Box>
+        </div>
+      <CustomHeader className="legend-header" color="primary">
+        Facies Patterns
+      </CustomHeader>
+      <CustomDivider/>
+      <div className="legend-container">
+      {Object.entries(state.mapPatterns).map(([index, value]) => {
+        return (
+          <div className="facies-pattern-container" key={index}>
+          <img className="legend-pattern" src={devSafeUrl(value.filePath)}/>
+          <Typography className="facies-pattern" color="primary">
+            {value.formattedName}
+          </Typography>
+          </div>
+          )
+        })}
+      </div>
+    </StyledScrollbar>
   );
 };
+/**
+ * We must parse over the array to find the suitable rocktype given the user defined age
+ * @param column 
+ * @param currentAge 
+ * @param setSelectedMapAgeRange 
+ * @returns 
+ */
 function getRockTypeForAge(
   column: ColumnInfo,
   currentAge: number,

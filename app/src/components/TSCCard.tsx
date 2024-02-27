@@ -8,7 +8,7 @@ import ReactCardFlip from "react-card-flip";
 import "./TSCCard.css";
 import { ChartConfig } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
-import { BorderedIcon, StyledScrollbar, Lottie } from ".";
+import { BorderedIcon, StyledScrollbar, Lottie, CustomHeader } from ".";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import checkIcon from "../assets/icons/check-icon.json";
 import FolderIcon from "@mui/icons-material/Folder";
@@ -36,11 +36,6 @@ const CardContent = styled("div")(({ color }) => ({
       10px 10px 15px -5px ${Color(color).fade(0.5)}, 
       0 10px 15px -5px ${Color(color).fade(0.5)}
     `
-}));
-const Header = styled(Typography)(({ theme }) => ({
-  "&::before": {
-    backgroundColor: theme.palette.selection.main
-  }
 }));
 
 const Date = styled("div")(({ theme }) => ({
@@ -136,9 +131,9 @@ const BackCard = ({
           <CardMedia className="info-media" component="img" image={devSafeUrl(preset.background)} />
           <Title className="info-title">{preset.title}</Title>
           <div className="info-text-container">
-            <Header className="header" color="primary">
+            <CustomHeader color="primary">
               Included Datapacks
-            </Header>
+            </CustomHeader>
             <List className="list">
               {preset.datapacks.map((datapack, index) => (
                 <ListItem className="list-item" key={index}>
@@ -150,9 +145,9 @@ const BackCard = ({
                 </ListItem>
               ))}
             </List>
-            <Header className="header" color="primary">
+            <CustomHeader color="primary">
               Additional Info
-            </Header>
+            </CustomHeader>
             <Typography className="info-description" variant="body1" color="primary">
               {preset.description}
             </Typography>

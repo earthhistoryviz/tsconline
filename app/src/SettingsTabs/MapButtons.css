@@ -1,0 +1,45 @@
+.legend-pattern {
+    width: 100px;
+    height: 50px;
+    border: 1px solid #8f8f8f;
+    margin-bottom: 5px;
+    border-radius: 2px;
+    object-fit: fill;
+  grid-column: 1;
+}
+.scrollbar-container {
+  padding-bottom: 10px;
+  padding-top: 20px;
+  height: 100%;
+}
+.legend-container {
+  padding-left: 30px;
+  padding-top: 30px;
+}
+.MuiTypography-root.legend-header {
+  margin-left: 15px;
+  padding-bottom: 20px;
+  font-size: 1.5rem;
+}
+.MuiTypography-root.legend-header:before {
+  background-color: darkgray;
+  height: 30px;
+}
+.MuiTypography-root.legend-title {
+  margin-right: 15px;
+  margin-left: 10px;
+  margin-bottom: 0px;
+  font-size: 1.6rem;
+}
+.facies-pattern-container {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  margin-bottom: 10px;
+  align-items: center;
+}
+.MuiTypography-root.facies-pattern {
+  grid-column: 2;
+  padding-left: 30px;
+  margin-right: 10px;
+  line-height: 23px;
+}

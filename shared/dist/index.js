@@ -30,6 +30,21 @@ export const defaultFontsInfo = {
     "Uncertainty Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 5 },
     "Zone Column Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12 }
 };
+export function assertPatterns(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("Patterns must be a non-null object");
+    for (const key in o) {
+        if (typeof key !== "string")
+            throwError("Patterns", "key", "string", key);
+        const pattern = o[key];
+        if (typeof pattern.name !== "string")
+            throwError("Patterns", "name", "string", pattern.name);
+        if (typeof pattern.formattedName !== "string")
+            throwError("Patterns", "formattedName", "string", pattern.formattedName);
+        if (typeof pattern.filePath !== "string")
+            throwError("Patterns", "filePath", "string", pattern.filePath);
+    }
+}
 export function assertMapPackIndex(o) {
     if (!o || typeof o !== "object")
         throw new Error("MapPackIndex must be a non-null object");
@@ -443,6 +458,13 @@ export function assertSVGStatus(o) {
     if (typeof o.ready !== "boolean")
         throw new Error(`SVGStatus must have a 'ready' boolean property`);
 }
+/**
+ * throws an error `Object '${obj}' must have a '${variable}' ${type} property.\nFound value: ${value}`
+ * @param obj
+ * @param variable
+ * @param type
+ * @param value
+ */
 function throwError(obj, variable, type, value) {
     throw new Error(`Object '${obj}' must have a '${variable}' ${type} property.\nFound value: ${value}`);
 }
