@@ -25,9 +25,10 @@ export const fetchFaciesPatterns = async function fetchFaciesPatterns(_request: 
         continue;
       }
       // format so it splits all underscores and capitalizes the first letter
-      const formattedName = name.split('_')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
+      const formattedName = name
+        .split("_")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
       patterns[name] = {
         name,
         formattedName,
@@ -36,7 +37,7 @@ export const fetchFaciesPatterns = async function fetchFaciesPatterns(_request: 
     }
     reply.status(200).send({ patterns });
   } catch (e) {
-    console.error(e)
+    console.error(e);
     reply.status(404).send({ error: e });
   }
 };
