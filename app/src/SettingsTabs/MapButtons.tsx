@@ -71,7 +71,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
     // is an info point if given or doesn't exist in hash map
     isInfo = isInfo || !column;
     const disabled = column
-      ? checkIfDataIsInRange(column.minAge, column.maxAge, state.settings.topStageAge, state.settings.baseStageAge)
+      ? !checkIfDataIsInRange(column.minAge, column.maxAge, state.settings.topStageAge, state.settings.baseStageAge)
       : false;
     const scaleButton = !isInfo && state.mapState.isFacies;
 
