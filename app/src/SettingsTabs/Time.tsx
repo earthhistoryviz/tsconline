@@ -30,8 +30,7 @@ export const Time = observer(function Time() {
         borderColor="gray"
         maxWidth="600px"
         margin="0 auto"
-        marginTop="50px"
-      >
+        marginTop="50px">
         {/* <TextField
           label="Top Age (Ma)"
           type="number"
@@ -51,8 +50,7 @@ export const Time = observer(function Time() {
               // console.log("event.target.value: " , event.target.value)
               actions.setTopStageKey(event.target.value);
             }}
-            style={{ marginBottom: "10px", width: "100%" }}
-          >
+            style={{ marginBottom: "10px", width: "100%" }}>
             {Object.keys(state.settingsTabs.geologicalTopStages).length > 1 &&
               Object.keys(state.settingsTabs.geologicalTopStages).map((key) => (
                 <MenuItem value={key} key={key}>
@@ -75,9 +73,7 @@ export const Time = observer(function Time() {
           />
         </FormControl>
         <FormControl style={{ marginBottom: "10px", width: "100%" }}>
-          <InputLabel htmlFor="base-age-selector">
-            Base Age/Stage Name
-          </InputLabel>
+          <InputLabel htmlFor="base-age-selector">Base Age/Stage Name</InputLabel>
           <Select
             label="Base Age/Stage Name"
             inputProps={{ id: "base-age-selector" }}
@@ -88,16 +84,13 @@ export const Time = observer(function Time() {
               // console.log("event.target.value: " , event.target.value)
               actions.setBaseStageKey(event.target.value);
             }}
-            style={{ marginBottom: "10px", width: "100%" }}
-          >
+            style={{ marginBottom: "10px", width: "100%" }}>
             {state.settingsTabs.geologicalTopStages &&
-              Object.keys(state.settingsTabs.geologicalBaseStages).map(
-                (key) => (
-                  <MenuItem value={key} key={key}>
-                    {`${key} (${state.settingsTabs.geologicalBaseStages[key]} Ma base)`}
-                  </MenuItem>
-                )
-              )}
+              Object.keys(state.settingsTabs.geologicalBaseStages).map((key) => (
+                <MenuItem value={key} key={key}>
+                  {`${key} (${state.settingsTabs.geologicalBaseStages[key]} Ma base)`}
+                </MenuItem>
+              ))}
           </Select>
           <TextField
             label="Base Age"
@@ -118,37 +111,28 @@ export const Time = observer(function Time() {
           type="number"
           name="vertical-scale-text-field"
           value={state.settings.unitsPerMY}
-          onChange={(event) =>
-            actions.setUnitsPerMY(parseFloat(event.target.value))
-          }
+          onChange={(event) => actions.setUnitsPerMY(parseFloat(event.target.value))}
           style={{ marginBottom: "20px", width: "100%" }}
         />
         <Button
           sx={{
             backgroundColor: theme.palette.button.main,
             color: "#FFFFFF",
-            marginTop: "10px",
+            marginTop: "10px"
           }}
           onClick={handleButtonClick}
           variant="contained"
           style={{ width: "100%", height: "75px" }}
-          endIcon={<ForwardIcon />}
-        >
+          endIcon={<ForwardIcon />}>
           Make your own chart
         </Button>
       </Box>
 
-      <div
-        style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}
-      >
+      <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
         <FormGroup>
           <FormControlLabel
             name="mouse-over-info-checkbox"
-            control={
-              <TSCCheckbox
-                onChange={(e) => actions.setMouseOverPopupsEnabled(e.target.checked)}
-              />
-            }
+            control={<TSCCheckbox onChange={(e) => actions.setMouseOverPopupsEnabled(e.target.checked)} />}
             label="Add MouseOver info (popups)"
           />
           <FormControlLabel
@@ -183,13 +167,7 @@ export const Time = observer(function Time() {
           />
           <FormControlLabel
             name="use-suggested-age-spans"
-            control={
-              <TSCCheckbox
-                onChange={(e) =>
-                  actions.setuseDatapackSuggestedAge(!e.target.checked)
-                }
-              />
-            }
+            control={<TSCCheckbox onChange={(e) => actions.setuseDatapackSuggestedAge(!e.target.checked)} />}
             label="Do not use the Data-Pack's suggested age span"
           />
         </FormGroup>

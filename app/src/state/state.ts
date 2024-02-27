@@ -9,7 +9,7 @@ import type {
   GeologicalStages,
   Presets,
   DatapackIndex,
-  MapPackIndex,
+  MapPackIndex
 } from "@tsconline/shared";
 
 export type State = {
@@ -35,14 +35,14 @@ export type State = {
     isMapViewerOpen: boolean;
     isFacies: boolean;
     selectedMapAgeRange: {
-      minAge: number,
-      maxAge: number
-    }
-    mapHistory: MapHistory
+      minAge: number;
+      maxAge: number;
+    };
+    mapHistory: MapHistory;
   };
   config: {
-    datapacks: string[], // the datapacks used on the server
-    settingsPath: string // the path to the settings file on the server
+    datapacks: string[]; // the datapacks used on the server
+    settingsPath: string; // the path to the settings file on the server
   };
   presets: Presets;
   datapackIndex: DatapackIndex;
@@ -71,7 +71,7 @@ export const state = observable<State>({
     columnSelected: null,
     geologicalTopStages: {},
     geologicalBaseStages: {},
-    columnHashMap: new Map<string, ColumnInfo>(),
+    columnHashMap: new Map<string, ColumnInfo>()
   },
   mapState: {
     mapInfo: {},
@@ -91,7 +91,7 @@ export const state = observable<State>({
     mapHistory: {
       savedHistory: {},
       accessHistory: []
-    } 
+    }
   },
   config: {
     datapacks: [],
@@ -112,7 +112,7 @@ export const state = observable<State>({
     baseStageKey: "",
     unitsPerMY: 2,
     mouseOverPopupsEnabled: false,
-    datapackContainsSuggAge: false,
+    datapackContainsSuggAge: false
   },
   useCache: true,
   usePreset: true,

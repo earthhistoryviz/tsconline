@@ -18,25 +18,22 @@ export const Chart = observer(function () {
         width: "100%",
         display: "flex",
         justifyContent: "center",
-        alignContent: "center",
-      }}
-    >
+        alignContent: "center"
+      }}>
       {state.chartLoading ? (
         <LoadingChart />
       ) : state.madeChart ? (
         <TransformWrapper minScale={0.01} maxScale={3} limitToBounds={false}>
           <TransformComponent>
-            <img src={state.chartPath} />
-            {/* <object data={state.chartPath} type="application/svg" width="100%" height="100%"></object> */}
+            <object data={state.chartPath} type="image/svg+xml" width="100%" height="100%"></object>
           </TransformComponent>
         </TransformWrapper>
       ) : (
         <div
           className="loading-container"
           style={{
-            fontFamily: theme.typography.fontFamily,
-          }}
-        >
+            fontFamily: theme.typography.fontFamily
+          }}>
           <div className="loading"> You have not made a chart yet </div>
         </div>
       )}

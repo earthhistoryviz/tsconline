@@ -1,5 +1,5 @@
 import * as generalActions from "./GeneralActions";
-import { displayError } from "./UtilActions"
+import { displayError } from "./UtilActions";
 import { state } from "../state";
 import { action } from "mobx";
 import { fetcher, devSafeUrl } from "../../util";
@@ -38,16 +38,13 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   const xmlSettings = jsonToXml(state.settingsJSON, state.settingsTabs.columns, state.settings);
   const body = JSON.stringify({
     settings: xmlSettings,
-    datapacks: state.config.datapacks,
+    datapacks: state.config.datapacks
   });
   console.log("Sending settings to server...");
-  const response = await fetcher(
-    `/charts/${state.useCache}/${state.useSuggestedAge}`,
-    {
-      method: "POST",
-      body,
-    }
-  );
+  const response = await fetcher(`/charts/${state.useCache}/${state.useSuggestedAge}`, {
+    method: "POST",
+    body
+  });
   const answer = await response.json();
   // will check if pdf is loaded
   try {
@@ -55,9 +52,9 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
     generalActions.setChartHash(answer.hash);
     generalActions.setChartPath(devSafeUrl(answer.chartpath));
     await generalActions.checkSVGStatus();
-    generalActions.setOpenSnackbar(true)
+    generalActions.setOpenSnackbar(true);
   } catch (e) {
-    displayError(e, answer, "Failed to fetch chart")
-    return
+    displayError(e, answer, "Failed to fetch chart");
+    return;
   }
 });

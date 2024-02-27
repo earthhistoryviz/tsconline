@@ -1,0 +1,100 @@
+name: Default Merge Pipeline
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened] # Runs on opening a pr, pushing to a pr, and reopening a pr
+    branches:
+      - main
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: yarn install
+
+      - name: Run ESLint
+        run: yarn lint-check > eslint-output.txt || echo "eslint_failed=true" >> $GITHUB_ENV
+        continue-on-error: true
+
+      - name: Comment PR on ESLint check failure
+        if: env.eslint_failed == 'true'
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const fs = require('fs');
+            const eslintOutput = fs.readFileSync('eslint-output.txt', 'utf8');
+            const message = `🚨 The ESLint check has failed. Please address the following issues:\n\n\`\`\`\n${eslintOutput}\n\`\`\`\nRun 'yarn lint-format' locally to fix some of these issues automatically.`;
+            const prNumber = context.payload.pull_request.number;
+            github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: prNumber,
+              body: message,
+            });
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prettify code
+        run: |
+          if ! yarn prettier-check; then
+            echo "prettify_failed=true" >> $GITHUB_ENV
+          fi
+        continue-on-error: true
+
+      - name: Comment PR on Prettier check failure
+        if: env.prettify_failed == 'true'
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            🚨 The Prettier check has failed. Please run 'yarn prettier-format' locally and commit the changes.
+
+      - name: Check for any failures
+        if: env.eslint_failed == 'true' || env.prettify_failed == 'true'
+        run: exit 1
+
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: yarn install
+
+      - name: Build with Vite
+        run: |
+          set -o pipefail
+          if ! yarn build 2>&1 | tee build.log; then
+            echo "build_failed=true" >> $GITHUB_ENV
+          fi
+        continue-on-error: true
+
+      - name: Report Build Errors
+        if: env.build_failed == 'true'
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const fs = require('fs');
+            const buildLog = fs.readFileSync('build.log', 'utf8');
+            const prNumber = context.payload.pull_request?.number;
+            if (prNumber) {
+              const message = `🚨 The build has failed. Please check the build logs for more information.\n\n\`\`\`\n${buildLog}\n\`\`\``;
+              github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: prNumber,
+                body: message,
+              });
+            }
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Tests
+        run: echo Testing # Test command would go here
+
+      - name: Check for any failures
+        if: env.build_failed == 'true'
+        run: exit 1
