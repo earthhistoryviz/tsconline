@@ -358,7 +358,8 @@ export function assertPatterns(o: any): asserts o is Patterns {
     if (typeof key !== "string") throwError("Patterns", "key", "string", key);
     const pattern = o[key];
     if (typeof pattern.name !== "string") throwError("Patterns", "name", "string", pattern.name);
-    if (typeof pattern.formattedName !== "string") throwError("Patterns", "formattedName", "string", pattern.formattedName);
+    if (typeof pattern.formattedName !== "string")
+      throwError("Patterns", "formattedName", "string", pattern.formattedName);
     if (typeof pattern.filePath !== "string") throwError("Patterns", "filePath", "string", pattern.filePath);
   }
 }

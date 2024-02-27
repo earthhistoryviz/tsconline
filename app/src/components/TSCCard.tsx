@@ -131,9 +131,7 @@ const BackCard = ({
           <CardMedia className="info-media" component="img" image={devSafeUrl(preset.background)} />
           <Title className="info-title">{preset.title}</Title>
           <div className="info-text-container">
-            <CustomHeader color="primary">
-              Included Datapacks
-            </CustomHeader>
+            <CustomHeader color="primary">Included Datapacks</CustomHeader>
             <List className="list">
               {preset.datapacks.map((datapack, index) => (
                 <ListItem className="list-item" key={index}>
@@ -145,9 +143,7 @@ const BackCard = ({
                 </ListItem>
               ))}
             </List>
-            <CustomHeader color="primary">
-              Additional Info
-            </CustomHeader>
+            <CustomHeader color="primary">Additional Info</CustomHeader>
             <Typography className="info-description" variant="body1" color="primary">
               {preset.description}
             </Typography>

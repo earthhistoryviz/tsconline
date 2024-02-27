@@ -2,7 +2,6 @@ import { Divider, DividerProps, IconButton, SvgIcon, Typography, TypographyProps
 import Color from "color";
 import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
-import "./TSCComponents.css"
 
 export const TypographyText = styled(Typography)(({ theme }) => ({
   color: theme.palette.primary.main
@@ -34,14 +33,11 @@ export const CustomHeader = styled(Typography)(({ theme }) => ({
   paddingBottom: "30px"
 }));
 
-type CustomDividerProps = {
-  className?: string
-} & DividerProps
-
-export const CustomDivider: React.FC<CustomDividerProps> = ({className, ...props}) => (
-  <Divider className={`${className} divider`} {...props}/>
-)
-
+export const CustomDivider = styled(Divider)(() => ({
+  height: "0.05px",
+  width: "100%",
+  backgroundColor: "rgba(197, 197, 197, 0.281)"
+}));
 export const TSCInputAdornment = styled("div")(
   ({ theme }) => `
   margin-left: auto;
@@ -66,7 +62,7 @@ export const DrawerHeader = styled("div")(({ theme }) => ({
   alignItems: "center",
   padding: theme.spacing(0, 1),
   backgroundColor: theme.palette.navbar.dark,
-  ...theme.mixins.toolbar,
+  ...theme.mixins.toolbar
 }));
 export const StyledScrollbar = styled(SimpleBar)(({ theme, color }) => {
   const backgroundColor = color || theme.palette.scrollbar.main;

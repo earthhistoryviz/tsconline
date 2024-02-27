@@ -30,17 +30,17 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   try {
     const response = await fetcher("/facies-patterns");
     if (response.ok) {
-      const { patterns } = await response.json() 
-      assertPatterns(patterns)
-      state.mapPatterns = patterns
-      console.log("Successfully fetched Map Patterns")
+      const { patterns } = await response.json();
+      assertPatterns(patterns);
+      state.mapPatterns = patterns;
+      console.log("Successfully fetched Map Patterns");
     } else {
-      displayError(null, response, `Server responded with ${response.status}`)
+      displayError(null, response, `Server responded with ${response.status}`);
     }
   } catch (e) {
-    displayError(e, null, "Error fetching the facies patterns")
+    displayError(e, null, "Error fetching the facies patterns");
   }
-})
+});
 /**
  * Resets any user defined settings
  */

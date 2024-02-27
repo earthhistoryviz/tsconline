@@ -1,7 +1,15 @@
 import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "../state";
-import { BorderedIcon, ColoredDiv, CustomDivider, Lottie, TSCInputAdornment, TSCTextField, TypographyText } from "../components";
+import {
+  BorderedIcon,
+  ColoredDiv,
+  CustomDivider,
+  Lottie,
+  TSCInputAdornment,
+  TSCTextField,
+  TypographyText
+} from "../components";
 import { Button, IconButton, Slider, TextFieldProps } from "@mui/material";
 import mapPointsAnimationData from "../assets/icons/map-points.json";
 import CategoryIcon from "@mui/icons-material/Category";
@@ -137,7 +145,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
       </div>
       {isFacies && (
         <>
-          <CustomDivider/>
+          <CustomDivider />
           <FaciesControls />
         </>
       )}
