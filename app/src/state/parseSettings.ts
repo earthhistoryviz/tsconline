@@ -2,6 +2,8 @@
 //                                          XML to JSON parser                                       //
 //-------------------------------------------------------------------------------------------------- //
 
+import { ColumnInfo } from "@tsconline/shared";
+
 /**
  *
  * @param settingsNode DOM node with name settings
@@ -15,17 +17,32 @@ function processSettings(settingsNode: any): any {
     const settingName = settingNode.getAttribute("name");
     const nestedSettingsNode = settingNode.getElementsByTagName("setting")[0];
     const justificationValue = settingNode.getAttribute("justification");
-    const settingValue = nestedSettingsNode ? nestedSettingsNode.textContent.trim() : settingNode.textContent.trim();
-    //when the setting object is created, it looks like the nested objects in topAge and baseAge
-    //are taken out and created as standalone setting options. This should not happen,
-    //so skip when the setting name is text.
-    if (settingName === "text") {
+    let settingValue = nestedSettingsNode ? nestedSettingsNode.textContent.trim() : settingNode.textContent.trim();
+    //since we access the elements by tag name, the nested settings of topage and baseage
+    //are treated on the same level, so skip when the setting name is text or stage.
+    if (settingName === "text" || settingName === "stage") {
       continue;
     } else if (settingName === "topAge" || settingName === "baseAge") {
+      let stage = undefined;
+      let text = undefined;
+      if (nestedSettingsNode.getAttribute("name") === "stage") {
+        stage = settingValue;
+      } else {
+        text = settingValue;
+      }
+      if (settingNode.getElementsByTagName("setting")[1]) {
+        settingValue = settingNode.getElementsByTagName("setting")[1].textContent.trim();
+        if (settingNode.getElementsByTagName("setting")[1].getAttribute("name") === "stage") {
+          stage = settingValue;
+        } else {
+          text = settingValue;
+        }
+      }
       settings[settingName] = {
-        source: "text",
-        unit: "Ma",
-        text: settingValue
+        source: settingNode.getAttribute("source"),
+        unit: settingNode.getAttribute("unit"),
+        stage: stage,
+        text: text
       };
     }
     //these two tags have units, so make an object storing its unit and value
@@ -34,7 +51,7 @@ function processSettings(settingsNode: any): any {
         unit: "Ma",
         text: settingValue
       };
-    } else if (justificationValue.length !== 0) {
+    } else if (justificationValue) {
       settings[settingName] = justificationValue;
     } else {
       const settingValue = settingNode.textContent.trim();
@@ -92,18 +109,16 @@ function processColumn(node: any): any {
           const justificationValue = child.getAttribute("justification");
           const orientationValue = child.getAttribute("orientation");
           const useNamedValue = child.getAttribute("useNamed");
+          const standardizedValue = child.getAttribute("standardized");
           if (settingName === "backgroundColor" || settingName === "customColor") {
-            if (useNamedValue !== null) {
-              result[settingName] = {
-                useNamed: useNamedValue,
-                text: child.textContent.trim()
-              };
-            } else {
-              result[settingName] = child.textContent.trim();
-            }
-          } else if (justificationValue.length !== 0) {
+            result[settingName] = {
+              standardized: standardizedValue,
+              useNamed: useNamedValue,
+              text: child.textContent.trim()
+            };
+          } else if (justificationValue) {
             result[settingName] = justificationValue;
-          } else if (orientationValue.length !== 0) {
+          } else if (orientationValue) {
             result[settingName] = orientationValue;
           } else {
             const textContent = child.textContent.trim();
@@ -194,9 +209,6 @@ function generateSettingsXml(settings: any, chartSettings: any, indent: string):
     if (Object.prototype.hasOwnProperty.call(settings, key)) {
       const value = settings[key];
       if (typeof value === "object") {
-        //overhaul top age and base age
-        //top age and baseage settings can have two children: text and stage
-        //the source attribute determines which one is used
         if (key === "topAge") {
           xml += `${indent}<setting name="${key}" source="text" unit="${value.unit}">\n`;
           xml += `${indent}    <setting name="text">${chartSettings.topStageAge}</setting>\n`;
@@ -250,26 +262,23 @@ function generateFontsXml(fonts: any, indent: string): string {
  * generates xml string with column info
  * @param jsonColumn json object with column info
  * @param stateColumn json object containing the state of the columns
- * @param parent the parent of the current column
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with column info
  */
-function generateColumnXml(jsonColumn: any, stateColumn: any | null, parent: string, indent: string): string {
+function generateColumnXml(jsonColumn: any, stateColumn: ColumnInfo | null, indent: string): string {
   let xml = "";
   for (let key in jsonColumn) {
     if (Object.prototype.hasOwnProperty.call(jsonColumn, key)) {
       let colName = extractName(jsonColumn._id);
-      //check if the user has edited the name from the given name
       let xmlKey = replaceSpecialChars(key, 0);
       // Skip the 'id' element.
 
       if (key === "_id") {
         continue;
       }
-
       if (key === "title") {
         let useEditName = false;
-        if (colName !== "Chart Root" && colName !== "Chart Title" && colName !== "Ma") {
+        if (colName !== "Chart Root" && colName !== "Ma") {
           if (stateColumn && stateColumn !== undefined) {
             if (stateColumn.editName !== undefined && stateColumn.editName !== colName) {
               xml += `${indent}<setting name="title">${stateColumn.editName}</setting>\n`;
@@ -281,8 +290,13 @@ function generateColumnXml(jsonColumn: any, stateColumn: any | null, parent: str
           xml += `${indent}<setting name="title">${replaceSpecialChars(jsonColumn[key], 1)}</setting>\n`;
         }
       } else if (key === "backgroundColor" || key === "customColor") {
-        if (jsonColumn[key].useNamed) {
+        if (jsonColumn[key].standardized && jsonColumn[key].useNamed) {
+          xml += `${indent}<setting name="${xmlKey}" standardized="${jsonColumn[key].standardized}" 
+          useNamed="${jsonColumn[key].useNamed}">${jsonColumn[key].text}</setting>\n`;
+        } else if (jsonColumn[key].useNamed) {
           xml += `${indent}<setting name="${xmlKey}" useNamed="${jsonColumn[key].useNamed}">${jsonColumn[key].text}</setting>\n`;
+        } else if (jsonColumn[key].standardized) {
+          xml += `${indent}<setting name="${xmlKey}" useNamed="${jsonColumn[key].standardized}">${jsonColumn[key].text}</setting>\n`;
         } else {
           xml += `${indent}<setting name="${xmlKey}"/>\n`;
         }
@@ -292,8 +306,12 @@ function generateColumnXml(jsonColumn: any, stateColumn: any | null, parent: str
       } else if (key === "orientation") {
         xml += `${indent}<setting name="${xmlKey}" orientation="${jsonColumn[key]}"/>\n`;
       } else if (key === "isSelected") {
+        //TODO: remove later when event columns are covered
+        if (jsonColumn._id.includes("EventColumn")) {
+          xml += `${indent}<setting name="${xmlKey}">${jsonColumn["isSelected"]}</setting>\n`;
+        }
         //if column isn't in state, then use default given by the original xml
-        if (stateColumn == undefined || Object.keys(stateColumn).length == 0) {
+        else if (stateColumn == undefined || Object.keys(stateColumn).length == 0) {
           xml += `${indent}<setting name="${xmlKey}">${jsonColumn["isSelected"]}</setting>\n`;
         }
         //always display these things (the original tsc throws an error if not selected)
@@ -303,7 +321,7 @@ function generateColumnXml(jsonColumn: any, stateColumn: any | null, parent: str
           continue;
         }
         //check if column is checked or not, and change the isSelected field to true or false
-        else if (stateColumn && !colName.includes("Chart")) {
+        else if (stateColumn) {
           if (stateColumn.on) {
             xml += `${indent}<setting name="${xmlKey}">true</setting>\n`;
           } else {
@@ -321,25 +339,22 @@ function generateColumnXml(jsonColumn: any, stateColumn: any | null, parent: str
         //recursively go down column settings
         let currName = extractName(jsonColumn._id);
         let childName = extractName(jsonColumn[key]._id);
-        //TODO: pass the state column of the column itself, not the children array of its parent
-        let params: { one: any; two: any; three: string; four: string } = {
-          one: jsonColumn[key],
-          two: null,
-          three: currName,
-          four: `${indent}    `
-        };
+        let childStateColumn = null;
         if (currName == "Chart Root") {
-          params.two = stateColumn;
+          childStateColumn = stateColumn;
         } else if (stateColumn != null) {
           for (let i = 0; i < stateColumn.children.length; i++) {
-            if (stateColumn.children[i].name == childName) {
-              params.two = stateColumn.children[i];
+            if (
+              stateColumn.children[i].name == childName ||
+              stateColumn.children[i].name.slice(1, -1) == childName //remove surrounding quotation marks
+            ) {
+              childStateColumn = stateColumn.children[i];
               break;
             }
           }
         }
 
-        xml += generateColumnXml(params.one, params.two, params.three, params.four);
+        xml += generateColumnXml(jsonColumn[key], childStateColumn, `${indent}    `);
 
         xml += `${indent}</column>\n`;
       } else {
@@ -359,7 +374,7 @@ function generateColumnXml(jsonColumn: any, stateColumn: any | null, parent: str
  * @param version the version of the jar file (TimeScale Creator)
  * @returns xml string with the entire settings info
  */
-export function jsonToXml(settings: any, columnSettings: any, chartSettings: any, version: string = "PRO8.0"): string {
+export function jsonToXml(settings: any, columnSettings: any, chartSettings: any, version: string = "PRO8.1"): string {
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
   //console.log("json 2...\n", state.settingsJSON);
@@ -372,7 +387,7 @@ export function jsonToXml(settings: any, columnSettings: any, chartSettings: any
   //procs if used for a child
   if (settings["_id"]) {
     xml += `  <column id="${settings["id"]}">\n`;
-    xml += generateColumnXml(settings, columnSettings, "", "    ");
+    xml += generateColumnXml(settings, columnSettings, "    ");
     xml += "  </column>\n";
   }
   //generate columns
@@ -383,7 +398,7 @@ export function jsonToXml(settings: any, columnSettings: any, chartSettings: any
         Object.hasOwn(settings, key) //maybe not necessary since we are iterating over the keys of json
       ) {
         xml += `  <column id="${key}">\n`;
-        xml += generateColumnXml(settings[key], columnSettings, "", "    ");
+        xml += generateColumnXml(settings[key], columnSettings, "    ");
         xml += "  </column>\n";
       }
     }
