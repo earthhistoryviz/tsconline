@@ -88,6 +88,9 @@ let theme = createTheme({
     },
     scrollbar: {
       main: "#7b778a"
+    },
+    error: {
+      main: "#FF0000"
     }
   },
   typography: {

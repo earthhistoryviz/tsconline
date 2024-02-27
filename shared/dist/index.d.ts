@@ -176,8 +176,8 @@ export declare const defaultFontsInfo: FontsInfo;
 export type SubBlockInfo = {
     label: string;
     age: number;
-    info: string;
-    lineType: string;
+    popup: string;
+    lineStyle: string;
 };
 export type ChartRequest = {
     settings: string;
@@ -218,7 +218,7 @@ export type Block = {
     subBlockInfo: SubBlockInfo[];
     minAge: number;
     maxAge: number;
-    info: string;
+    popup: string;
     on: boolean;
 };
 export type ChartResponseInfo = {

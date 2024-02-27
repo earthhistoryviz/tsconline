@@ -189,7 +189,7 @@ async function getFaciesOrBlock(filename: string, faciesMap: Map<string, Facies>
     subBlockInfo: [],
     minAge: 0,
     maxAge: 0,
-    info: "",
+    popup: "",
     on: true
   };
   let inFaciesBlock = false;
@@ -230,11 +230,11 @@ async function getFaciesOrBlock(filename: string, faciesMap: Map<string, Facies>
       if (tabSeperated[5] && tabSeperated[5] === "off") {
         block.on = false;
       }
-      const info = tabSeperated[tabSeperated.length - 1];
+      const popup = tabSeperated[tabSeperated.length - 1];
       const pattern = /"*"/;
 
-      if (info && pattern.test(info)) {
-        block.info = info;
+      if (popup && pattern.test(popup)) {
+        block.popup = popup;
       }
 
       inBlockBlock = true;
@@ -289,7 +289,7 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
   block.subBlockInfo = [];
   block.minAge = 0;
   block.maxAge = 0;
-  block.info = "";
+  block.popup = "";
   block.on = true;
 }
 
@@ -302,25 +302,25 @@ function processBlock(line: string): SubBlockInfo | null {
   const currentSubBlockInfo = {
     label: "",
     age: 0,
-    info: "",
-    lineType: ""
+    popup: "",
+    lineStyle: ""
   };
   const tabSeperated = line.split("\t");
   if (tabSeperated.length < 3) return null;
   const label = tabSeperated[1];
   const age = Number(tabSeperated[2]!);
-  const info = tabSeperated[4];
+  const popup = tabSeperated[4];
   if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeperated[2]! + " is NaN");
-  const lineType = tabSeperated[3];
+  const lineStyle = tabSeperated[3];
   if (label) {
     currentSubBlockInfo.label = label;
   }
   currentSubBlockInfo.age = age;
-  if (info) {
-    currentSubBlockInfo.info = info;
+  if (popup) {
+    currentSubBlockInfo.popup = popup;
   }
-  if (lineType) {
-    currentSubBlockInfo.lineType = lineType;
+  if (lineStyle) {
+    currentSubBlockInfo.lineStyle = lineStyle;
   }
   try {
     assertSubBlockInfo(currentSubBlockInfo);
