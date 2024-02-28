@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened] # Runs on opening a pr, pushing to a pr, and reopening a pr
     branches:
-      - TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow
+      - TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow # This needs to be changed to main
 
 jobs:
   check-files:
@@ -16,11 +16,13 @@ jobs:
         run: |
           declare -a disallowed_files=(".dpk" ".mdpk" ".txt" ".map" ".java" ".jar" ".DS_Store" "node_modules")
           disallowed_files_list=""
-          committed_files=$(git ls-files)
-          for pattern in "${committed_files[@]}"; do
-            if [[ "$file" == *$pattern* ]]; then
-              disallowed_files_list+="$file\n"
-            fi
+          for commit_hash in $(git log TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow..HEAD --pretty=format:%H); do # This needs to be changed to main
+              changed_files=$(git show --name-only --pretty=format: $commit_hash | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store)$')
+              for file in $changed_files; do
+                  if [[ " ${disallowed_files[*]} " == *"$file"* ]]; then
+                      disallowed_files_list+="$file\n"
+                  fi
+              done
           done
           if [ ! -z "$disallowed_files_list" ]; then
             echo -e "$disallowed_files_list" > disallowed_files_list.txt
