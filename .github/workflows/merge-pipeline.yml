@@ -16,10 +16,10 @@ jobs:
         run: |
           declare -a disallowed_files=(".dpk" ".mdpk" ".txt" ".map" ".java" ".jar" ".DS_Store" "node_modules")
           disallowed_files_list=""
-          for pattern in "${disallowed_files[@]}"; do
-            files_found=$(find . -type f -name "*$pattern*" -not -path "./.git/*" -not -path "./node_modules/*")
-            if [ ! -z "$files_found" ]; then
-              disallowed_files_list+="$files_found\n"
+          committed_files=$(git ls-files)
+          for pattern in "${committed_files[@]}"; do
+            if [[ "$file" == *$pattern* ]]; then
+              disallowed_files_list+="$file\n"
             fi
           done
           if [ ! -z "$disallowed_files_list" ]; then
@@ -42,6 +42,10 @@ jobs:
               body: message,
             });
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for any failures
+        if: env.disallowed_files_present == 'true'
+        run: exit 1
 
   code-quality:
     runs-on: ubuntu-latest
