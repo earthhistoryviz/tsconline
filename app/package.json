@@ -36,6 +36,7 @@
     "react-router": "^6.8.1",
     "react-router-dom": "^6.8.1",
     "react-zoom-pan-pinch": "^3.3.0",
+    "simplebar-core": "^1.2.4",
     "simplebar-react": "^3.2.4"
   },
   "devDependencies": {

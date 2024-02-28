@@ -15,7 +15,7 @@ import { observer } from "mobx-react-lite";
 import "./MapViewer.css";
 import { createChildMapButton, loadMapPoints, loadTransects } from "./MapButtons";
 import { HeaderBar } from "./MapControls";
-import { faciesHeaderHeight, normHeaderHeight } from "./MapPointConstants";
+import { FACIES_HEADER_HEIGHT, LEGEND_HEADER_HEIGHT, NORM_HEADER_HEIGHT } from "./MapPointConstants";
 import { compareVhAndPx } from "../util/util";
 import { Legend } from "./Legend";
 
@@ -65,7 +65,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
   const mapData: MapInfo[string] = mapInfo[name];
   const mapHierarchy: MapHierarchy = state.mapState.mapHierarchy;
 
-  const headerHeight = isFacies ? faciesHeaderHeight : normHeaderHeight;
+  const headerHeight = isFacies ? FACIES_HEADER_HEIGHT : NORM_HEADER_HEIGHT;
   let viewButtonStyle = {
     top: `calc(${headerHeight} + 1vh)`
   };
@@ -76,8 +76,8 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
     };
   }
   let mapHeight = "90vh";
-  if (isFacies) mapHeight = `calc(100vh - ${faciesHeaderHeight} - 2vh)`;
-  else if (isFullscreen) mapHeight = `calc(100vh - ${normHeaderHeight})`;
+  if (isFacies) mapHeight = `calc(100vh - ${FACIES_HEADER_HEIGHT} - 2vh)`;
+  else if (isFullscreen) mapHeight = `calc(100vh - ${NORM_HEADER_HEIGHT})`;
   const mapStyle = {
     height: mapHeight
   };
@@ -184,7 +184,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
           )}
         </TransformWrapper>
         <Drawer className="drawer" variant="persistent" anchor="left" open={state.mapState.isLegendOpen}>
-          <DrawerHeader>
+          <DrawerHeader style={{ height: LEGEND_HEADER_HEIGHT }}>
             <ColoredIconButton
               onClick={() => {
                 actions.setIsLegendOpen(false);

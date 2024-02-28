@@ -2229,6 +2229,7 @@ const RAW_RUNTIME_STATE =
           ["react-router", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:6.10.0"],\
           ["react-router-dom", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:6.10.0"],\
           ["react-zoom-pan-pinch", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:3.3.0"],\
+          ["simplebar-core", "npm:1.2.4"],\
           ["simplebar-react", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:3.2.4"],\
           ["typescript", "patch:typescript@npm%3A4.9.5#optional!builtin<compat/typescript>::version=4.9.5&hash=289587"],\
           ["vite", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:4.3.2"]\

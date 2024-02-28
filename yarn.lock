@@ -1635,6 +1635,7 @@ __metadata:
     react-router: "npm:^6.8.1"
     react-router-dom: "npm:^6.8.1"
     react-zoom-pan-pinch: "npm:^3.3.0"
+    simplebar-core: "npm:^1.2.4"
     simplebar-react: "npm:^3.2.4"
     typescript: "npm:^4.9.3"
     vite: "npm:^4.1.0"
