@@ -1,12 +1,56 @@
-name: Default Merge Pipeline
+name: Merge Pipeline
 
 on:
   pull_request:
     types: [opened, synchronize, reopened] # Runs on opening a pr, pushing to a pr, and reopening a pr
     branches:
-      - main
+      - TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow # This needs to be changed to main
 
 jobs:
+  check-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 
+
+      - name: Check for disallowed files and directories
+        run: |
+          declare -a disallowed_files=(".dpk" ".mdpk" ".txt" ".map" ".java" ".jar" ".DS_Store" "node_modules")
+          disallowed_files_list=""
+          for commit_hash in $(git log TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow..HEAD --pretty=format:%H); do # This needs to be changed to main
+              changed_files=$(git show --name-only --pretty=format: $commit_hash | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store)$')
+              for file in $changed_files; do
+                  if [[ " ${disallowed_files[*]} " == *"$file"* ]]; then
+                      disallowed_files_list+="$file\n"
+                  fi
+              done
+          done
+          if [ ! -z "$disallowed_files_list" ]; then
+            echo -e "$disallowed_files_list" > disallowed_files_list.txt
+            echo "disallowed_files_present=true" >> $GITHUB_ENV
+          fi
+
+      - name: Comment PR on disallowed files Failure
+        if: env.disallowed_files_present == 'true'
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const fs = require('fs');
+            const disallowed_files_output = fs.readFileSync('disallowed_files_list.txt', 'utf8');
+            const message = `🚨 There are files in your PR you need to remove:\n\n\`\`\`\n${disallowed_files_output}\n\`\`\`\n`;
+            const prNumber = context.payload.pull_request.number;
+            github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: prNumber,
+              body: message,
+            });
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for any failures
+        if: env.disallowed_files_present == 'true'
+        run: exit 1
+
   code-quality:
     runs-on: ubuntu-latest
     steps:
