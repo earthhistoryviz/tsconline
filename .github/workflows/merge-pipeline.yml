@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened] # Runs on opening a pr, pushing to a pr, and reopening a pr
     branches:
-      - main
+      - TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow
 
 jobs:
   check-files:
