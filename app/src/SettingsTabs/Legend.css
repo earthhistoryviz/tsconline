@@ -7,18 +7,32 @@
   object-fit: fill;
   grid-column: 1;
 }
-.scrollbar-container {
-  padding-bottom: 10px;
-  padding-top: 20px;
-  height: 100%;
+.MuiTypography-root.legend-label {
+  margin-left: 15px;
+}
+.MuiIconButton-root.scroll-top {
+  position: absolute;
+  left: calc(50% - 20px);
+  width: 40px;
+  height: 40px;
+  z-index: 1;
+}
+.MuiBox-root.legend-item-container {
+  display: flex;
+  margin-bottom: 20px;
+  align-items: center;
 }
 .legend-container {
-  padding-left: 30px;
-  padding-top: 30px;
+  margin-top: 10px;
+  margin-left: 30px;
+}
+.facies-container {
+  min-height: 69vh;
 }
 .MuiTypography-root.legend-header {
   margin-left: 15px;
-  padding-bottom: 20px;
+  padding-bottom: 10px;
+  padding-top: 10px;
   font-size: 1.5rem;
 }
 .MuiTypography-root.legend-header:before {
