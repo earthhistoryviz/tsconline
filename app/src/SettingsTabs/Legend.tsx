@@ -6,7 +6,8 @@ import {
   CustomDivider,
   TypographyText,
   TSCTextField,
-  TSCInputAdornment
+  TSCInputAdornment,
+  Lottie
 } from "../components";
 import { context } from "../state";
 import { LegendItem } from "../types";
@@ -20,6 +21,7 @@ import "@szhsin/react-menu/dist/transitions/slide.css";
 import { ControlledMenu, MenuCloseEvent, MenuItem, useClick, useMenuState } from "@szhsin/react-menu";
 import { observer } from "mobx-react-lite";
 import SimpleBarCore from "simplebar-core";
+import ArrowUpIcon from "../assets/icons/arrow-up.json";
 import { LEGEND_HEADER_HEIGHT } from "./MapPointConstants";
 
 /**
@@ -78,16 +80,14 @@ export const Legend = observer(() => {
 
   return (
     <>
-      {isScrolled && (
-        <IconButton
-          className="scroll-top"
-          style={{ top: `calc(${LEGEND_HEADER_HEIGHT} + 1vh)` }}
-          onClick={() => {
-            scrollRef.current?.contentWrapperEl?.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-          }}>
-          <FilterListIcon color="primary" />
-        </IconButton>
-      )}
+      <IconButton
+        className={`scroll-top ${isScrolled ? "show" : ""}`}
+        style={{ top: `calc(${LEGEND_HEADER_HEIGHT} + 1vh)` }}
+        onClick={() => {
+          scrollRef.current?.contentWrapperEl?.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+        }}>
+        <Lottie key="legend-arrow-up" width="inherit" height="inherit" animationData={ArrowUpIcon} playOnHover />
+      </IconButton>
       <StyledScrollbar
         ref={scrollRef}
         style={{
