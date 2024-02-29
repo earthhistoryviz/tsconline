@@ -1,7 +1,7 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
 import { writeFile, stat } from "fs/promises";
-import { Patterns, assertChartRequest } from "@tsconline/shared";
+import { Patterns, assertChartRequest, assertPatterns } from "@tsconline/shared";
 import { deleteDirectory, rgbToHex } from "./util.js";
 import { mkdirp } from "mkdirp";
 import { grabMapImages } from "./parse-map-packs.js";
@@ -47,11 +47,14 @@ export const fetchFaciesPatterns = async function fetchFaciesPatterns(_request: 
         name,
         formattedName,
         filePath: `/${pattern}`,
-        color: color.name,
-        hex: color.value,
-        rgb: color.rgb
+        color: {
+          name: color.name,
+          hex: color.value,
+          rgb: color.rgb
+        }
       };
     }
+    assertPatterns(patterns);
     reply.status(200).send({ patterns });
   } catch (e) {
     console.error(e);
