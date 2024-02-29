@@ -52,6 +52,10 @@ export const Legend = observer(() => {
       setColorFilter(new Set([...colorFilter, color]));
     }
   }
+  function clearFilter() {
+    setColorFilter(new Set<string>())
+    setFilterByPresent(false)
+  }
 
   // allows us to track how far the user scrolls
   useEffect(() => {
@@ -123,6 +127,7 @@ export const Legend = observer(() => {
         </CustomHeader>
         <div className="search-container">
           <FaciesSearchBar searchValue={searchValue} setSearchValue={setSearchValue} />
+          <div className="filters">
           <FilterMenu
             style={menuStyle}
             colors={colors}
@@ -131,6 +136,10 @@ export const Legend = observer(() => {
             setFilterByPresent={setFilterByPresent}
             toggleColor={toggleColor}
           />
+          <Button onClick={() => clearFilter()} className="filter-button">
+            <TypographyText>Clear Filter</TypographyText>
+          </Button>
+          </div>
         </div>
         <CustomDivider />
         <FaciesPatterns patterns={filteredPatterns} />
