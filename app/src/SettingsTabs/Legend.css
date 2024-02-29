@@ -85,9 +85,17 @@
 .MuiTextField-root.search-bar {
   width: 230px;
 }
-.MuiIconButton-root.filter-button {
+.MuiIconButton-root.filter-button, .MuiButton-root.filter-button {
   margin-left: 6px;
   margin-top: 5px;
+}
+.MuiButton-root.filter-button {
+  margin-right: 10px;
+}
+.filters {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
 }
 .MuiSvgIcon-root {
   margin-right: 8px;
