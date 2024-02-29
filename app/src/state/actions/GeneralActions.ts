@@ -546,3 +546,6 @@ export const settingsXML = action("settingsXML", (xml: string) => {
 export const setOpenSnackbar = action("setOpenSnackbar", (show: boolean) => {
   state.openSnackbar = show;
 });
+export const setIsFullscreen = action("setIsFullscreen", (newval: boolean) => {
+  state.isFullscreen = newval;
+});

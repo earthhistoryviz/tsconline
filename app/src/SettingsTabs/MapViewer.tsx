@@ -30,8 +30,6 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
   const theme = useTheme();
   // we need this so it refreshes the components that require image loading
   const [imageLoaded, setImageLoaded] = useState(false);
-  // this is needed to change image styles on fullscreen change
-  const [isFullscreen, setIsFullscreen] = useState(false);
   // used to get the proper bounds of the element
   const imageRef = useRef<HTMLImageElement | null>(null);
   // used for attaching tooltip and fullscreening
@@ -50,9 +48,9 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
 
   const handleFullscreenChange = () => {
     if (document.fullscreenElement) {
-      setIsFullscreen(true);
+      actions.setIsFullscreen(true);
     } else {
-      setIsFullscreen(false);
+      actions.setIsFullscreen(false);
     }
   };
   const openChildMap = (childMap: string) => {
@@ -77,7 +75,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
   }
   let mapHeight = "90vh";
   if (isFacies) mapHeight = `calc(100vh - ${FACIES_HEADER_HEIGHT} - 2vh)`;
-  else if (isFullscreen) mapHeight = `calc(100vh - ${NORM_HEADER_HEIGHT})`;
+  else if (state.isFullscreen) mapHeight = `calc(100vh - ${NORM_HEADER_HEIGHT})`;
   const mapStyle = {
     height: mapHeight
   };

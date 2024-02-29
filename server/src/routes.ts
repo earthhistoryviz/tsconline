@@ -2,7 +2,7 @@ import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
 import { writeFile, stat } from "fs/promises";
 import { Patterns, assertChartRequest } from "@tsconline/shared";
-import { deleteDirectory } from "./util.js";
+import { deleteDirectory, rgbToHex } from "./util.js";
 import { mkdirp } from "mkdirp";
 import { grabMapImages } from "./parse-map-packs.js";
 import md5 from "md5";
@@ -12,16 +12,30 @@ import fs from "fs";
 import { readFile } from "fs/promises";
 import { glob } from "glob";
 import path from "path";
+import { getColorFromURL } from "color-thief-node";
+import nearestColor from "nearest-color";
+import { assertColors } from "./types.js";
 
 export const fetchFaciesPatterns = async function fetchFaciesPatterns(_request: FastifyRequest, reply: FastifyReply) {
   try {
     const patterns: Patterns = {};
     const patternsGlobed = await glob(`${assetconfigs.patternsDirectory}/*.PNG`);
+    const colors = JSON.parse((await readFile(assetconfigs.colors)).toString());
+    assertColors(colors);
+    const nearest = nearestColor.from(colors);
     if (patternsGlobed.length == 0) throw new Error("No patterns found");
     for (const pattern of patternsGlobed) {
       const name = path.basename(pattern).split(".")[0];
+      const dominant = await getColorFromURL(pattern);
+      const color = nearest(rgbToHex(dominant[0], dominant[1], dominant[2]));
       if (!name) {
         console.error(`Unrecognized pattern file in ${assetconfigs.patternsDirectory} with path ${pattern}`);
+        continue;
+      }
+      if (!color) {
+        console.error(
+          `Unrecognized color in ${assetconfigs.patternsDirectory} with path ${pattern} with color ${color}`
+        );
         continue;
       }
       // format so it splits all underscores and capitalizes the first letter
@@ -32,7 +46,10 @@ export const fetchFaciesPatterns = async function fetchFaciesPatterns(_request: 
       patterns[name] = {
         name,
         formattedName,
-        filePath: `/${pattern}`
+        filePath: `/${pattern}`,
+        color: color.name,
+        hex: color.value,
+        rgb: color.rgb
       };
     }
     reply.status(200).send({ patterns });

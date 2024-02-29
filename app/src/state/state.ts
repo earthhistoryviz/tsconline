@@ -19,6 +19,7 @@ export type State = {
   madeChart: boolean;
   showSuggestedAgePopup: boolean;
   useSuggestedAge: boolean;
+  isFullscreen: boolean;
   settingsTabs: {
     selected: "time" | "font" | "column" | "mappoints";
     columns: ColumnInfo | null;
@@ -67,6 +68,7 @@ export const state = observable<State>({
   tab: 0,
   showSuggestedAgePopup: false,
   useSuggestedAge: true,
+  isFullscreen: false,
   settingsTabs: {
     selected: "time",
     columns: null,

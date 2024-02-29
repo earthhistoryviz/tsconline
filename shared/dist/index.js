@@ -43,6 +43,18 @@ export function assertPatterns(o) {
             throwError("Patterns", "formattedName", "string", pattern.formattedName);
         if (typeof pattern.filePath !== "string")
             throwError("Patterns", "filePath", "string", pattern.filePath);
+        if (typeof pattern.color !== "string")
+            throwError("Patterns", "color", "string", pattern.color);
+        if (typeof pattern.hex !== "string")
+            throwError("Patterns", "hex", "string", pattern.hex);
+        if (typeof pattern.rgb !== "object")
+            throwError("Patterns", "rgb", "object", pattern.rgb);
+        if (typeof pattern.rgb.r !== "number")
+            throwError("Patterns", "r", "object", pattern.rgb.r);
+        if (typeof pattern.rgb.g !== "number")
+            throwError("Patterns", "g", "object", pattern.rgb.g);
+        if (typeof pattern.rgb.b !== "number")
+            throwError("Patterns", "b", "object", pattern.rgb.b);
     }
 }
 export function assertMapPackIndex(o) {

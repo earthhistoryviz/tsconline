@@ -15,5 +15,6 @@
   "datapacksDirectory": "assets/datapacks",
   "chartsDirectory": "public/charts",
   "imagesDirectory": "public/mapimages",
-  "patternsDirectory": "public/patterns"
+  "patternsDirectory": "public/patterns",
+  "colors": "assets/colors.json"
 }
