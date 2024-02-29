@@ -30,6 +30,22 @@ export const defaultFontsInfo = {
     "Uncertainty Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 5 },
     "Zone Column Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12 }
 };
+export function assertColor(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("Color must be a non-null object");
+    if (typeof o.name !== "string")
+        throwError("Color", "name", "string", o.color);
+    if (typeof o.hex !== "string")
+        throwError("Color", "hex", "string", o.hex);
+    if (typeof o.rgb !== "object")
+        throwError("Color", "rgb", "object", o.rgb);
+    if (typeof o.rgb.r !== "number")
+        throwError("Color", "r", "number", o.rgb.r);
+    if (typeof o.rgb.g !== "number")
+        throwError("Color", "g", "number", o.rgb.g);
+    if (typeof o.rgb.b !== "number")
+        throwError("Color", "b", "number", o.rgb.b);
+}
 export function assertPatterns(o) {
     if (!o || typeof o !== "object")
         throw new Error("Patterns must be a non-null object");
@@ -43,18 +59,7 @@ export function assertPatterns(o) {
             throwError("Patterns", "formattedName", "string", pattern.formattedName);
         if (typeof pattern.filePath !== "string")
             throwError("Patterns", "filePath", "string", pattern.filePath);
-        if (typeof pattern.color !== "string")
-            throwError("Patterns", "color", "string", pattern.color);
-        if (typeof pattern.hex !== "string")
-            throwError("Patterns", "hex", "string", pattern.hex);
-        if (typeof pattern.rgb !== "object")
-            throwError("Patterns", "rgb", "object", pattern.rgb);
-        if (typeof pattern.rgb.r !== "number")
-            throwError("Patterns", "r", "number", pattern.rgb.r);
-        if (typeof pattern.rgb.g !== "number")
-            throwError("Patterns", "g", "number", pattern.rgb.g);
-        if (typeof pattern.rgb.b !== "number")
-            throwError("Patterns", "b", "number", pattern.rgb.b);
+        assertColor(pattern.color);
     }
 }
 export function assertMapPackIndex(o) {

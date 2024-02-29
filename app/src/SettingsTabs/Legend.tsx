@@ -24,7 +24,7 @@ import ColorLensIcon from "@mui/icons-material/ColorLens";
 import SimpleBarCore from "simplebar-core";
 import ArrowUpIcon from "../assets/icons/arrow-up.json";
 import { LEGEND_HEADER_HEIGHT } from "./MapPointConstants";
-import { Patterns } from "@tsconline/shared";
+import { Color, Patterns } from "@tsconline/shared";
 import { compareStrings } from "../util/util";
 
 /**
@@ -57,7 +57,7 @@ export const Legend = observer(() => {
   function clearFilter() {
     setColorFilter(new Set<string>());
     setFilterByPresent(false);
-    setAlphabeticalSort(false)
+    setAlphabeticalSort(false);
   }
 
   // allows us to track how far the user scrolls
@@ -74,12 +74,16 @@ export const Legend = observer(() => {
     };
   });
   const colors = new Set<string>();
+  const colorHash = new Map<string, Color>();
   const filteredPatterns = Object.values(state.mapPatterns).filter((value) => {
     const isPresent = !filterByPresent || state.mapState.currentFaciesOptions.presentRockTypes.has(value.formattedName);
     const matchesSearch = value.formattedName.toLowerCase().includes(searchValue.toLowerCase());
-    const hasColor = colorFilter.size == 0 || colorFilter.has(value.color);
+    const hasColor = colorFilter.size == 0 || colorFilter.has(value.color.name);
     // load these to display all available colors for the certain context
-    if (isPresent && matchesSearch) colors.add(value.color);
+    if (isPresent && matchesSearch) {
+      colors.add(value.color.name);
+      colorHash.set(value.color.name, value.color);
+    }
     return isPresent && matchesSearch && hasColor;
   });
   if (alphabeticalSort) {
@@ -139,6 +143,7 @@ export const Legend = observer(() => {
               style={menuStyle}
               colors={colors}
               colorFilter={colorFilter}
+              colorHash={colorHash}
               filterByPresent={filterByPresent}
               alphabeticalSort={alphabeticalSort}
               setAlphabeticalSort={setAlphabeticalSort}
@@ -161,6 +166,7 @@ type FilterMenuProps = {
   style: React.CSSProperties;
   colors: Set<string>;
   colorFilter: Set<string>;
+  colorHash: Map<string, Color>;
   filterByPresent: boolean;
   alphabeticalSort: boolean;
   setAlphabeticalSort: (sort: boolean) => void;
@@ -175,6 +181,7 @@ const FilterMenu: React.FC<FilterMenuProps> = observer(
     filterByPresent,
     colorFilter,
     alphabeticalSort,
+    colorHash,
     setAlphabeticalSort,
     setFilterByPresent,
     toggleColor
@@ -214,7 +221,13 @@ const FilterMenu: React.FC<FilterMenuProps> = observer(
             <TypographyText>Present in map</TypographyText>
           </CustomMenuItem>
           <MenuDivider />
-          <ColorSubMenu style={style} colors={colors} colorFilter={colorFilter} toggleColor={toggleColor} />
+          <ColorSubMenu
+            colorHash={colorHash}
+            style={style}
+            colors={colors}
+            colorFilter={colorFilter}
+            toggleColor={toggleColor}
+          />
         </ControlledMenu>
       </>
     );
@@ -252,15 +265,26 @@ type ColorSubMenuProps = {
   style: React.CSSProperties;
   colors: Set<string>;
   colorFilter: Set<string>;
+  colorHash: Map<string, Color>;
   toggleColor: (color: string) => void;
 };
 
-const ColorSubMenu: React.FC<ColorSubMenuProps> = ({ style, colors, colorFilter, toggleColor }) => {
+const ColorSubMenu: React.FC<ColorSubMenuProps> = ({ colorHash, style, colors, colorFilter, toggleColor }) => {
   return (
     <CustomSubMenu className="color-menu" menuStyle={style} label={SubMenuIcon}>
       {Array.from(colors).map((color) => (
-        <CustomMenuItem key={color} checked={colorFilter.has(color)} onClick={() => toggleColor(color)} type="checkbox">
-          <TypographyText>{color}</TypographyText>
+        <CustomMenuItem
+          className="sub-menu-item"
+          key={color}
+          checked={colorFilter.has(color)}
+          onClick={() => toggleColor(color)}
+          type="checkbox">
+          <>
+            <TypographyText key={color} className="color-text">
+              {color}
+            </TypographyText>
+            <div className="colored-box" style={{ backgroundColor: colorHash.get(color)?.hex }} />
+          </>
         </CustomMenuItem>
       ))}
     </CustomSubMenu>

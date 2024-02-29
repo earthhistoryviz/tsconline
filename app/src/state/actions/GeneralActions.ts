@@ -39,6 +39,7 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
     }
   } catch (e) {
     displayError(e, null, "Error fetching the facies patterns");
+    console.error(e);
   }
 });
 /**

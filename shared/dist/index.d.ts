@@ -28,13 +28,16 @@ export type Patterns = {
         name: string;
         formattedName: string;
         filePath: string;
-        color: string;
-        hex: string;
-        rgb: {
-            r: number;
-            g: number;
-            b: number;
-        };
+        color: Color;
+    };
+};
+export type Color = {
+    name: string;
+    hex: string;
+    rgb: {
+        r: number;
+        g: number;
+        b: number;
     };
 };
 export type Presets = {
@@ -300,6 +303,7 @@ export type VertBounds = {
     height: number;
     scale: number;
 };
+export declare function assertColor(o: any): asserts o is Color;
 export declare function assertPatterns(o: any): asserts o is Patterns;
 export declare function assertMapPackIndex(o: any): asserts o is MapPackIndex;
 export declare function assertMapPack(o: any): asserts o is MapPack;

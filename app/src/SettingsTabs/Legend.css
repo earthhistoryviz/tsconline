@@ -13,6 +13,10 @@
 .MuiTypography-root.legend-label {
   margin-left: 15px;
 }
+.colored-box {
+  width: 10px;
+  height: 10px;
+}
 .MuiIconButton-root.scroll-top {
   position: absolute;
   left: calc(50% - var(--icon-size) / 2);
@@ -34,6 +38,12 @@
   pointer-events: auto;
   transform: translateY(0);
   transition-delay: 0s;
+}
+.szh-menu__item.sub-menu-item {
+  justify-content: space-between;
+}
+.MuiTypography-root.color-text {
+  margin-right: 13px;
 }
 
 .MuiBox-root.legend-item-container {
