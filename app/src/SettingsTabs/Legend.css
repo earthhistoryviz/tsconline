@@ -85,7 +85,8 @@
 .MuiTextField-root.search-bar {
   width: 230px;
 }
-.MuiIconButton-root.filter-button, .MuiButton-root.filter-button {
+.MuiIconButton-root.filter-button,
+.MuiButton-root.filter-button {
   margin-left: 6px;
   margin-top: 5px;
 }
@@ -102,4 +103,7 @@
 }
 .szh-menu__submenu.color-menu > .szh-menu__item {
   padding-left: 16px;
+}
+.szh-menu-container.menu > .szh-menu {
+  z-index: 1300;
 }
