@@ -50,11 +50,11 @@ export function assertPatterns(o) {
         if (typeof pattern.rgb !== "object")
             throwError("Patterns", "rgb", "object", pattern.rgb);
         if (typeof pattern.rgb.r !== "number")
-            throwError("Patterns", "r", "object", pattern.rgb.r);
+            throwError("Patterns", "r", "number", pattern.rgb.r);
         if (typeof pattern.rgb.g !== "number")
-            throwError("Patterns", "g", "object", pattern.rgb.g);
+            throwError("Patterns", "g", "number", pattern.rgb.g);
         if (typeof pattern.rgb.b !== "number")
-            throwError("Patterns", "b", "object", pattern.rgb.b);
+            throwError("Patterns", "b", "number", pattern.rgb.b);
     }
 }
 export function assertMapPackIndex(o) {

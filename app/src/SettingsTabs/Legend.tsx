@@ -18,13 +18,14 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import "./Legend.css";
 import "@szhsin/react-menu/dist/index.css";
 import "@szhsin/react-menu/dist/transitions/slide.css";
-import { ControlledMenu, Menu, MenuDivider, MenuItem, SubMenu, useClick, useMenuState } from "@szhsin/react-menu";
+import { ControlledMenu, MenuDivider, MenuItem, SubMenu, useClick, useMenuState } from "@szhsin/react-menu";
 import { observer } from "mobx-react-lite";
 import ColorLensIcon from "@mui/icons-material/ColorLens";
 import SimpleBarCore from "simplebar-core";
 import ArrowUpIcon from "../assets/icons/arrow-up.json";
 import { LEGEND_HEADER_HEIGHT } from "./MapPointConstants";
 import { Patterns } from "@tsconline/shared";
+import { compareStrings } from "../util/util";
 
 /**
  * This is the legend that describes the icons present on the
@@ -35,6 +36,7 @@ export const Legend = observer(() => {
   // the filters for the facies patterns
   const [searchValue, setSearchValue] = useState("");
   const [filterByPresent, setFilterByPresent] = useState(false);
+  const [alphabeticalSort, setAlphabeticalSort] = useState(false);
   const [colorFilter, setColorFilter] = useState<Set<string>>(new Set<string>());
 
   //scroll state
@@ -53,14 +55,15 @@ export const Legend = observer(() => {
     }
   }
   function clearFilter() {
-    setColorFilter(new Set<string>())
-    setFilterByPresent(false)
+    setColorFilter(new Set<string>());
+    setFilterByPresent(false);
+    setAlphabeticalSort(false)
   }
 
   // allows us to track how far the user scrolls
   useEffect(() => {
     const scrollEl = scrollRef.current?.contentWrapperEl;
-    function handleScroll(_event: Event) {
+    function handleScroll() {
       if (scrollEl) {
         setIsScrolled(scrollEl.scrollTop > window.innerHeight * 0.8);
       }
@@ -79,6 +82,11 @@ export const Legend = observer(() => {
     if (isPresent && matchesSearch) colors.add(value.color);
     return isPresent && matchesSearch && hasColor;
   });
+  if (alphabeticalSort) {
+    filteredPatterns.sort((a, b) => {
+      return compareStrings(a.formattedName, b.formattedName);
+    });
+  }
   // legend icon array
   const legendItems: LegendItem[] = [
     { color: theme.palette.on.main, label: "On", icon: AvailableIcon },
@@ -92,7 +100,6 @@ export const Legend = observer(() => {
     { color: "transparent", label: "Child Map", icon: ChildMapIcon }
   ];
   const menuStyle = {
-    zIndex: 1300,
     color: theme.palette.primary.main,
     backgroundColor: theme.palette.menuDropdown.main
   };
@@ -128,17 +135,19 @@ export const Legend = observer(() => {
         <div className="search-container">
           <FaciesSearchBar searchValue={searchValue} setSearchValue={setSearchValue} />
           <div className="filters">
-          <FilterMenu
-            style={menuStyle}
-            colors={colors}
-            colorFilter={colorFilter}
-            filterByPresent={filterByPresent}
-            setFilterByPresent={setFilterByPresent}
-            toggleColor={toggleColor}
-          />
-          <Button onClick={() => clearFilter()} className="filter-button">
-            <TypographyText>Clear Filter</TypographyText>
-          </Button>
+            <FilterMenu
+              style={menuStyle}
+              colors={colors}
+              colorFilter={colorFilter}
+              filterByPresent={filterByPresent}
+              alphabeticalSort={alphabeticalSort}
+              setAlphabeticalSort={setAlphabeticalSort}
+              setFilterByPresent={setFilterByPresent}
+              toggleColor={toggleColor}
+            />
+            <Button onClick={() => clearFilter()} className="filter-button">
+              <TypographyText>Clear Filter</TypographyText>
+            </Button>
           </div>
         </div>
         <CustomDivider />
@@ -153,12 +162,23 @@ type FilterMenuProps = {
   colors: Set<string>;
   colorFilter: Set<string>;
   filterByPresent: boolean;
+  alphabeticalSort: boolean;
+  setAlphabeticalSort: (sort: boolean) => void;
   setFilterByPresent: (set: boolean) => void;
   toggleColor: (color: string) => void;
 };
 
 const FilterMenu: React.FC<FilterMenuProps> = observer(
-  ({ style, colors, filterByPresent, colorFilter, setFilterByPresent, toggleColor }) => {
+  ({
+    style,
+    colors,
+    filterByPresent,
+    colorFilter,
+    alphabeticalSort,
+    setAlphabeticalSort,
+    setFilterByPresent,
+    toggleColor
+  }) => {
     // for configuring menu with transition and onClose
     const [menuState, toggleMenu] = useMenuState({ transition: true });
     const anchorProps = useClick(menuState.state, toggleMenu);
@@ -181,6 +201,12 @@ const FilterMenu: React.FC<FilterMenuProps> = observer(
             if (event.reason === "click") return;
             toggleMenu(false);
           }}>
+          <CustomMenuItem
+            checked={alphabeticalSort}
+            onClick={() => setAlphabeticalSort(!alphabeticalSort)}
+            type="checkbox">
+            <TypographyText>Sort A-Z</TypographyText>
+          </CustomMenuItem>
           <CustomMenuItem
             checked={filterByPresent}
             onClick={() => setFilterByPresent(!filterByPresent)}
