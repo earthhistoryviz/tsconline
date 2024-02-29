@@ -28,6 +28,13 @@ export type Patterns = {
         name: string;
         formattedName: string;
         filePath: string;
+        color: string;
+        hex: string;
+        rgb: {
+            r: number;
+            g: number;
+            b: number;
+        };
     };
 };
 export type Presets = {

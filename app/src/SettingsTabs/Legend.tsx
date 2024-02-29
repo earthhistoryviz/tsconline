@@ -1,5 +1,5 @@
-import { Box, IconButton, Typography, styled, useTheme } from "@mui/material";
-import { useState, useContext, ChangeEvent, useRef, useEffect } from "react";
+import { Box, Button, IconButton, Typography, styled, useTheme } from "@mui/material";
+import React, { useState, useContext, ChangeEvent, useRef, useEffect } from "react";
 import {
   StyledScrollbar,
   CustomHeader,
@@ -18,11 +18,13 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import "./Legend.css";
 import "@szhsin/react-menu/dist/index.css";
 import "@szhsin/react-menu/dist/transitions/slide.css";
-import { ControlledMenu, MenuCloseEvent, MenuItem, useClick, useMenuState } from "@szhsin/react-menu";
+import { ControlledMenu, Menu, MenuDivider, MenuItem, SubMenu, useClick, useMenuState } from "@szhsin/react-menu";
 import { observer } from "mobx-react-lite";
+import ColorLensIcon from "@mui/icons-material/ColorLens";
 import SimpleBarCore from "simplebar-core";
 import ArrowUpIcon from "../assets/icons/arrow-up.json";
 import { LEGEND_HEADER_HEIGHT } from "./MapPointConstants";
+import { Patterns } from "@tsconline/shared";
 
 /**
  * This is the legend that describes the icons present on the
@@ -33,11 +35,7 @@ export const Legend = observer(() => {
   // the filters for the facies patterns
   const [searchValue, setSearchValue] = useState("");
   const [filterByPresent, setFilterByPresent] = useState(false);
-
-  // for configuring menu with transition and onClose
-  const [menuState, toggleMenu] = useMenuState({ transition: true });
-  const anchorProps = useClick(menuState.state, toggleMenu);
-  const menuRef = useRef(null);
+  const [colorFilter, setColorFilter] = useState<Set<string>>(new Set<string>());
 
   //scroll state
   const [isScrolled, setIsScrolled] = useState(false);
@@ -45,6 +43,15 @@ export const Legend = observer(() => {
 
   const theme = useTheme();
   const { state } = useContext(context);
+
+  function toggleColor(color: string) {
+    if (colorFilter.has(color)) {
+      colorFilter.delete(color);
+      setColorFilter(new Set(colorFilter));
+    } else {
+      setColorFilter(new Set([...colorFilter, color]));
+    }
+  }
 
   // allows us to track how far the user scrolls
   useEffect(() => {
@@ -59,11 +66,14 @@ export const Legend = observer(() => {
       scrollEl?.removeEventListener("scroll", handleScroll);
     };
   });
-  let filteredPatterns = Object.values(state.mapPatterns);
-  filteredPatterns = filteredPatterns.filter((value) => {
+  const colors = new Set<string>();
+  const filteredPatterns = Object.values(state.mapPatterns).filter((value) => {
     const isPresent = !filterByPresent || state.mapState.currentFaciesOptions.presentRockTypes.has(value.formattedName);
     const matchesSearch = value.formattedName.toLowerCase().includes(searchValue.toLowerCase());
-    return isPresent && matchesSearch;
+    const hasColor = colorFilter.size == 0 || colorFilter.has(value.color);
+    // load these to display all available colors for the certain context
+    if (isPresent && matchesSearch) colors.add(value.color);
+    return isPresent && matchesSearch && hasColor;
   });
   // legend icon array
   const legendItems: LegendItem[] = [
@@ -77,6 +87,11 @@ export const Legend = observer(() => {
     { color: theme.palette.info.main, label: "Info point", icon: InfoIcon },
     { color: "transparent", label: "Child Map", icon: ChildMapIcon }
   ];
+  const menuStyle = {
+    zIndex: 1300,
+    color: theme.palette.primary.main,
+    backgroundColor: theme.palette.menuDropdown.main
+  };
 
   return (
     <>
@@ -107,59 +122,143 @@ export const Legend = observer(() => {
           Facies Patterns
         </CustomHeader>
         <div className="search-container">
-          <div className="facies-search">
-            <TSCTextField
-              className="search-bar"
-              value={searchValue}
-              onChange={(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-                setSearchValue(event.target.value);
-              }}
-              InputProps={{
-                startAdornment: (
-                  <TSCInputAdornment>
-                    {" "}
-                    <SearchIcon />
-                  </TSCInputAdornment>
-                )
-              }}
-            />
-          </div>
-          <IconButton ref={menuRef} className="filter-button" {...anchorProps}>
-            <FilterListIcon color="primary" />
-          </IconButton>
-          <ControlledMenu
-            {...menuState}
-            menuStyle={{ backgroundColor: theme.palette.menuDropdown.main }}
-            anchorRef={menuRef}
-            onClose={(event: MenuCloseEvent) => {
-              if (event.reason === "click") return;
-              toggleMenu(false);
-            }}>
-            <CustomMenuItem
-              checked={filterByPresent}
-              onClick={() => setFilterByPresent(!filterByPresent)}
-              type="checkbox">
-              <TypographyText>Present in map</TypographyText>
-            </CustomMenuItem>
-          </ControlledMenu>
+          <FaciesSearchBar searchValue={searchValue} setSearchValue={setSearchValue} />
+          <FilterMenu
+            style={menuStyle}
+            colors={colors}
+            colorFilter={colorFilter}
+            filterByPresent={filterByPresent}
+            setFilterByPresent={setFilterByPresent}
+            toggleColor={toggleColor}
+          />
         </div>
         <CustomDivider />
-        <div className="legend-container facies-container">
-          {filteredPatterns.map(({ name, formattedName, filePath }) => {
-            return (
-              <div className="facies-pattern-container" key={name}>
-                <img className="legend-pattern" src={devSafeUrl(filePath)} />
-                <Typography className="facies-pattern" color="primary">
-                  {formattedName}
-                </Typography>
-              </div>
-            );
-          })}
-        </div>
+        <FaciesPatterns patterns={filteredPatterns} />
       </StyledScrollbar>
     </>
   );
 });
+
+type FilterMenuProps = {
+  style: React.CSSProperties;
+  colors: Set<string>;
+  colorFilter: Set<string>;
+  filterByPresent: boolean;
+  setFilterByPresent: (set: boolean) => void;
+  toggleColor: (color: string) => void;
+};
+
+const FilterMenu: React.FC<FilterMenuProps> = observer(
+  ({ style, colors, filterByPresent, colorFilter, setFilterByPresent, toggleColor }) => {
+    // for configuring menu with transition and onClose
+    const [menuState, toggleMenu] = useMenuState({ transition: true });
+    const anchorProps = useClick(menuState.state, toggleMenu);
+    const menuRef = useRef(null);
+    const { state } = useContext(context);
+    console.log(state.isFullscreen);
+    return (
+      <>
+        <IconButton ref={menuRef} className="filter-button" {...anchorProps}>
+          <FilterListIcon color="primary" />
+        </IconButton>
+        <ControlledMenu
+          {...menuState}
+          viewScroll="close"
+          portal={!state.isFullscreen}
+          className="menu"
+          menuStyle={style}
+          anchorRef={menuRef}
+          onClose={(event) => {
+            if (event.reason === "click") return;
+            toggleMenu(false);
+          }}>
+          <CustomMenuItem
+            checked={filterByPresent}
+            onClick={() => setFilterByPresent(!filterByPresent)}
+            type="checkbox">
+            <TypographyText>Present in map</TypographyText>
+          </CustomMenuItem>
+          <MenuDivider />
+          <ColorSubMenu style={style} colors={colors} colorFilter={colorFilter} toggleColor={toggleColor} />
+        </ControlledMenu>
+      </>
+    );
+  }
+);
+
+type FaciesSearchBarProps = {
+  searchValue: string;
+  setSearchValue: (search: string) => void;
+};
+
+const FaciesSearchBar: React.FC<FaciesSearchBarProps> = ({ searchValue, setSearchValue }) => {
+  return (
+    <div className="facies-search">
+      <TSCTextField
+        className="search-bar"
+        value={searchValue}
+        onChange={(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+          setSearchValue(event.target.value);
+        }}
+        InputProps={{
+          startAdornment: (
+            <TSCInputAdornment>
+              {" "}
+              <SearchIcon />
+            </TSCInputAdornment>
+          )
+        }}
+      />
+    </div>
+  );
+};
+
+type ColorSubMenuProps = {
+  style: React.CSSProperties;
+  colors: Set<string>;
+  colorFilter: Set<string>;
+  toggleColor: (color: string) => void;
+};
+
+const ColorSubMenu: React.FC<ColorSubMenuProps> = ({ style, colors, colorFilter, toggleColor }) => {
+  return (
+    <CustomSubMenu className="color-menu" menuStyle={style} label={SubMenuIcon}>
+      {Array.from(colors).map((color) => (
+        <CustomMenuItem key={color} checked={colorFilter.has(color)} onClick={() => toggleColor(color)} type="checkbox">
+          <TypographyText>{color}</TypographyText>
+        </CustomMenuItem>
+      ))}
+    </CustomSubMenu>
+  );
+};
+
+type FaciesPatternsProps = {
+  patterns: Patterns[string][];
+};
+const FaciesPatterns: React.FC<FaciesPatternsProps> = ({ patterns }) => {
+  return (
+    <div className="legend-container facies-container">
+      {patterns.map(({ name, formattedName, filePath }) => {
+        return (
+          <div className="facies-pattern-container" key={name}>
+            <img className="legend-pattern" src={devSafeUrl(filePath)} />
+            <Typography className="facies-pattern" color="primary">
+              {formattedName}
+            </Typography>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const SubMenuIcon = () => (
+  <>
+    <ColorLensIcon className="color-lens-icon" />
+    <TypographyText>Color</TypographyText>
+  </>
+);
+
 const DisplayLegendItem = ({ legendItem }: { legendItem: LegendItem }) => {
   const { color, label, icon: Icon } = legendItem;
   return (
@@ -169,6 +268,14 @@ const DisplayLegendItem = ({ legendItem }: { legendItem: LegendItem }) => {
     </Box>
   );
 };
+const CustomSubMenu = styled(SubMenu)(({ theme }) => ({
+  "&.szh-menu__submenu > .szh-menu__item--hover": {
+    backgroundColor: theme.palette.menuDropdown.light
+  },
+  "&.szh-menu__submenu > .szh-menu__item--checked": {
+    color: theme.palette.primary.main
+  }
+}));
 const CustomMenuItem = styled(MenuItem)(({ theme }) => ({
   "&.szh-menu__item--hover": {
     backgroundColor: theme.palette.menuDropdown.light

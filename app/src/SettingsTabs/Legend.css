@@ -1,3 +1,6 @@
+:root {
+  --icon-size: 50px;
+}
 .legend-pattern {
   width: 100px;
   height: 50px;
@@ -11,7 +14,6 @@
   margin-left: 15px;
 }
 .MuiIconButton-root.scroll-top {
-  --icon-size: 50px;
   position: absolute;
   left: calc(50% - var(--icon-size) / 2);
   width: var(--icon-size);
@@ -74,9 +76,6 @@
   margin-right: 10px;
   line-height: 23px;
 }
-.szh-menu__item--hover.filter-menu-item {
-  background-color: black;
-}
 .search-container {
   margin: 10px 20px 5px 30px;
   display: flex;
@@ -89,4 +88,10 @@
 .MuiIconButton-root.filter-button {
   margin-left: 6px;
   margin-top: 5px;
+}
+.MuiSvgIcon-root {
+  margin-right: 8px;
+}
+.szh-menu__submenu.color-menu > .szh-menu__item {
+  padding-left: 16px;
 }
