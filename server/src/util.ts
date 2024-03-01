@@ -5,6 +5,9 @@ import { glob } from "glob";
 
 /**
  * Recursively deletes directory INCLUDING directoryPath
+ *
+ * @param directoryPath
+ * @returns
  */
 export function deleteDirectory(directoryPath: string): string {
   // Check if the directory exists
@@ -30,7 +33,9 @@ export function deleteDirectory(directoryPath: string): string {
 }
 
 /**
- * Copy a directory recursively
+ * copy a directory from src to destination recursively
+ * @param src
+ * @param destination
  */
 export async function copyDirectory(src: string, destination: string): Promise<void> {
   try {
@@ -54,7 +59,11 @@ export async function copyDirectory(src: string, destination: string): Promise<v
   }
 }
 /**
- * Of the form <topDirectory>/<filename>/<botDirectory>
+ * Globs files of the form <topDirectory>/<filename>/<botDirectory>
+ * @param files
+ * @param topDirectory
+ * @param botDirectory
+ * @returns
  */
 export async function grabFilepaths(files: string[], topDirectory: string, botDirectory: string): Promise<string[]> {
   // regular expression for all filenames located in <topDirectory>/<file_name>/<botDirectory>
@@ -74,14 +83,43 @@ export async function grabFilepaths(files: string[], topDirectory: string, botDi
   return paths;
 }
 
+/**
+ * Replace one or more invisible characters (excluding spaces) with an empty string
+ * @param input
+ * @returns
+ */
 export function trimInvisibleCharacters(input: string): string {
-  // Replace one or more invisible characters (excluding spaces) with an empty string
   return input.replace(/[^\S ]+/g, "").trim();
 }
+/**
+ * trim the first and last character (most likely quotes) (will not check if it is though)
+ * @param input
+ * @returns
+ */
 export function trimQuotes(input: string): string {
   if (input.startsWith('"') && input.endsWith('"')) {
-    // Trim the first and last character (quotes)
     return input.slice(1, -1);
   }
   return input;
+}
+/**
+ * number to base 16
+ * @param c
+ * @returns
+ */
+function componentToHex(c: number) {
+  const hex = c.toString(16);
+  return hex.length == 1 ? "0" + hex : hex;
+}
+
+/**
+ * Converts rgb of three numbers to hex code
+ * @param r
+ * @param g
+ * @param b
+ * @returns
+ */
+export function rgbToHex(r: number, g: number, b: number) {
+  if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) throw new Error("Invalid rgb value");
+  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }
