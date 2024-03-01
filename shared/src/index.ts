@@ -479,7 +479,7 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
 export function assertDatapackIndex(o: any): asserts o is DatapackIndex {
   if (!o || typeof o !== "object") throw new Error("DatapackIndex must be a non-null object");
   for (const key in o) {
-    const pack = o[key]
+    const pack = o[key];
     assertDatapackParsingPack(pack);
   }
 }
