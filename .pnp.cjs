@@ -1130,38 +1130,6 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./.yarn/cache/@humanwhocodes-object-schema-npm-2.0.2-77b42018f9-ef915e3e2f.zip/node_modules/@humanwhocodes/object-schema/",\
         "packageDependencies": [\
           ["@humanwhocodes/object-schema", "npm:2.0.2"]\
-          ["@floating-ui/utils", "npm:0.2.1"]\
-        ],\
-        "linkType": "HARD"\
-      }]\
-    ]],\
-    ["@gar/promisify", [\
-      ["npm:1.1.3", {\
-        "packageLocation": "./.yarn/cache/@gar-promisify-npm-1.1.3-ac1a325862-052dd23214.zip/node_modules/@gar/promisify/",\
-        "packageDependencies": [\
-          ["@gar/promisify", "npm:1.1.3"]\
-        ],\
-        "linkType": "HARD"\
-      }]\
-    ]],\
-    ["@icons/material", [\
-      ["npm:0.2.4", {\
-        "packageLocation": "./.yarn/cache/@icons-material-npm-0.2.4-7c2363ec33-6c248fdb2d.zip/node_modules/@icons/material/",\
-        "packageDependencies": [\
-          ["@icons/material", "npm:0.2.4"]\
-        ],\
-        "linkType": "SOFT"\
-      }],\
-      ["virtual:b924018802874fd39dcb63915920181d02987a45cafd23058186cfa2dde2a6ee400c86764546c33ba85b907eb0e3fa316f18b83a9660868579098daad5c6e3da#npm:0.2.4", {\
-        "packageLocation": "./.yarn/__virtual__/@icons-material-virtual-e5b9352cc8/0/cache/@icons-material-npm-0.2.4-7c2363ec33-6c248fdb2d.zip/node_modules/@icons/material/",\
-        "packageDependencies": [\
-          ["@icons/material", "virtual:b924018802874fd39dcb63915920181d02987a45cafd23058186cfa2dde2a6ee400c86764546c33ba85b907eb0e3fa316f18b83a9660868579098daad5c6e3da#npm:0.2.4"],\
-          ["@types/react", "npm:18.2.0"],\
-          ["react", "npm:18.2.0"]\
-        ],\
-        "packagePeers": [\
-          "@types/react",\
-          "react"\
         ],\
         "linkType": "HARD"\
       }]\
