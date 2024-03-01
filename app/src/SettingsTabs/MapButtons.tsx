@@ -1,5 +1,5 @@
-import { Box, Button, IconButton, Theme, Tooltip, TooltipProps, styled, useTheme } from "@mui/material";
-import { FaciesOptions, LegendItem } from "../types";
+import { Button, IconButton, Theme, Tooltip, TooltipProps, styled, useTheme } from "@mui/material";
+import { FaciesOptions } from "../types";
 import { Bounds, ColumnInfo, InfoPoints, MapPoints, Transects, isRectBounds, isVertBounds } from "@tsconline/shared";
 import { useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
@@ -10,13 +10,13 @@ import NotListedLocationIcon from "@mui/icons-material/NotListedLocation";
 import LocationOffIcon from "@mui/icons-material/LocationOff";
 import LocationOnSharpIcon from "@mui/icons-material/LocationOnSharp";
 import { devSafeUrl } from "../util";
-import { BorderedIcon, TypographyText } from "../components";
+import { BorderedIcon } from "../components";
 import { checkIfDataIsInRange } from "../util/util";
 
 const ICON_SIZE = 40;
-const InfoIcon = NotListedLocationIcon;
-const DisabledIcon = LocationOffIcon;
-const AvailableIcon = LocationOnSharpIcon;
+export const InfoIcon = NotListedLocationIcon;
+export const DisabledIcon = LocationOffIcon;
+export const AvailableIcon = LocationOnSharpIcon;
 
 export const ChildMapIcon = () => {
   return (
@@ -144,7 +144,6 @@ interface TransectLineProps {
 }
 /**
  * This is the clickable Transect line that connects map points together
- * TODO: Currently not connected to the column settings.
  */
 const TransectLine: React.FC<TransectLineProps> = observer(
   ({ name, startPosition, endPosition, transect, onColor, offColor, container }) => {
@@ -397,7 +396,14 @@ function getIcon(disabled: boolean, isInfo: boolean, iconSize: number, scale: nu
   if (isInfo) {
     return <BorderedIcon strokeWidth={0.2} className="icon" component={InfoIcon} />;
   } else if (state.mapState.isFacies) {
-    return getFaciesIcon(iconSize, scale, state.mapState.currentFaciesOptions, actions.setSelectedMapAgeRange, column!);
+    return getFaciesIcon(
+      iconSize,
+      scale,
+      state.mapState.currentFaciesOptions,
+      actions.setSelectedMapAgeRange,
+      actions.pushPresentRockType,
+      column!
+    );
   } else if (disabled) {
     return <BorderedIcon className="icon" component={DisabledIcon} />;
   }
@@ -416,9 +422,15 @@ function getFaciesIcon(
   scale: number,
   currentFaciesOptions: FaciesOptions,
   setSelectedMapAgeRange: (min: number, max: number) => void,
+  pushPresentRockType: (rockType: string) => void,
   column: ColumnInfo
 ) {
-  const rockType = getRockTypeForAge(column, currentFaciesOptions.faciesAge, setSelectedMapAgeRange);
+  const rockType = getRockTypeForAge(
+    column,
+    currentFaciesOptions.faciesAge,
+    setSelectedMapAgeRange,
+    pushPresentRockType
+  );
   return (
     <svg width={`${iconSize / scale}px`} height={`${iconSize / scale}px`} viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="10" stroke="black" strokeWidth="1" fill="transparent" />
@@ -437,50 +449,18 @@ function getFaciesIcon(
   );
 }
 
-const DisplayLegendItem = ({ legendItem }: { legendItem: LegendItem }) => {
-  const { color, label, icon: Icon } = legendItem;
-  return (
-    <Box className="legend-item-container">
-      <Icon width={20} height={20} style={{ color: color }} mr={1} />
-      <TypographyText className="legend-label">{label}</TypographyText>
-    </Box>
-  );
-};
-
 /**
- * This is the legend that describes the icons present on the
- * map viewer. Currently uses a legend item array inherently
- * @returns a component with a header and body of icons
+ * We must parse over the array to find the suitable rocktype given the user defined age
+ * @param column
+ * @param currentAge
+ * @param setSelectedMapAgeRange
+ * @returns
  */
-export const Legend = () => {
-  const theme = useTheme();
-  const legendItems: LegendItem[] = [
-    { color: theme.palette.on.main, label: "On", icon: AvailableIcon },
-    { color: theme.palette.off.main, label: "Off", icon: AvailableIcon },
-    {
-      color: theme.palette.disabled.main,
-      label: "Disabled",
-      icon: DisabledIcon
-    },
-    { color: theme.palette.info.main, label: "Info point", icon: InfoIcon },
-    { color: "transparent", label: "Child Map", icon: ChildMapIcon }
-  ];
-  return (
-    <Box
-      className="legend-container"
-      style={{
-        backgroundColor: theme.palette.navbar.dark
-      }}>
-      {legendItems.map((item, index) => (
-        <DisplayLegendItem key={index} legendItem={item} />
-      ))}
-    </Box>
-  );
-};
 function getRockTypeForAge(
   column: ColumnInfo,
   currentAge: number,
-  setSelectedMapAgeRange: (min: number, max: number) => void
+  setSelectedMapAgeRange: (min: number, max: number) => void,
+  pushPresentRockType: (rockType: string) => void
 ) {
   if (!column.subFaciesInfo || column.subFaciesInfo.length === 0) {
     return "TOP"; // Return "TOP" if there's no subFaciesInfo or it's empty
@@ -493,6 +473,7 @@ function getRockTypeForAge(
   if (!suitableBlock) {
     return "TOP";
   } else {
+    pushPresentRockType(suitableBlock.rockType);
     return suitableBlock.rockType;
   }
 }

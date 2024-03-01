@@ -16,6 +16,8 @@ declare module "@mui/material/styles" {
     columnMenu: Palette["primary"];
     scrollbar: Palette["primary"];
     info: Palette["primary"];
+    cardBackground: Palette["primary"];
+    menuDropdown: Palette["primary"];
   }
 
   interface PaletteOptions {
@@ -33,6 +35,8 @@ declare module "@mui/material/styles" {
     columnMenu?: PaletteOptions["primary"];
     scrollbar?: PaletteOptions["primary"];
     info?: PaletteOptions["primary"];
+    cardBackground?: PaletteOptions["primary"];
+    menuDropdown?: PaletteOptions["primary"];
   }
 }
 
@@ -60,9 +64,7 @@ let theme = createTheme({
       main: "#001A23"
     },
     navbar: {
-      light: "#6693C9",
-      main: "#27476E",
-      dark: "#16262E"
+      main: "#16262E"
     },
     selection: {
       light: "#B1ADE2",
@@ -87,10 +89,16 @@ let theme = createTheme({
       main: "#E0FBFC"
     },
     scrollbar: {
-      main: "#7b778a"
+      main: "#78716c"
     },
     error: {
       main: "#FF0000"
+    },
+    cardBackground: {
+      main: "#27476E"
+    },
+    menuDropdown: {
+      main: "#343F46"
     }
   },
   typography: {
@@ -108,6 +116,19 @@ let theme = createTheme({
 });
 theme = createTheme(theme, {
   palette: {
+    menuDropdown: {
+      light: `${Color(theme.palette.menuDropdown.main).lighten(0.3)}`,
+      main: theme.palette.menuDropdown.main
+    },
+    cardBackground: {
+      light: `${Color(theme.palette.cardBackground.main).lighten(0.3)}`,
+      main: theme.palette.cardBackground.main
+    },
+    navbar: {
+      light: `${Color(theme.palette.navbar.main).lighten(0.3)}`,
+      main: theme.palette.navbar.main,
+      dark: `${Color(theme.palette.navbar.main).darken(0.3)}`
+    },
     gradient: {
       main: `linear-gradient(to top, 
               ${Color(theme.palette.altbackground.main).lighten(0.3)}, 

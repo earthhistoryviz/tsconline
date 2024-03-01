@@ -1,6 +1,7 @@
 import { action } from "mobx";
 import { state } from "../state";
 import { FaciesOptions } from "../../types";
+import { setIsFullscreen } from "./GeneralActions";
 
 /**
  * When user presses back button on the map we pop history and
@@ -33,6 +34,7 @@ export const closeMapViewer = action("closeMapViewer", () => {
   setSelectedMap(null);
   setIsMapViewerOpen(false);
   setFaciesOptions(null, false);
+  setIsFullscreen(false);
 });
 
 /**
@@ -46,7 +48,7 @@ export const setFaciesOptions = action("setFaciesOptions", (name: string | null,
   if (isFacies && name && state.mapState.mapHistory.savedHistory[name]) {
     state.mapState.currentFaciesOptions = state.mapState.mapHistory.savedHistory[name].faciesOptions;
   } else {
-    state.mapState.currentFaciesOptions = { faciesAge: 0, dotSize: 1 };
+    state.mapState.currentFaciesOptions = { faciesAge: 0, dotSize: 1, presentRockTypes: new Set<string>() };
   }
   //map might not exist so put to 0
   state.mapState.selectedMapAgeRange = { minAge: 0, maxAge: 0 };
@@ -106,7 +108,11 @@ export const setIsMapViewerOpen = action("setIsMapViewerOpen", (newval: boolean)
 export const setDotSize = action("setDotSize", (newval: number) => {
   state.mapState.currentFaciesOptions.dotSize = newval;
 });
+export const pushPresentRockType = action("pushPresentRockType", (rockType: string) => {
+  state.mapState.currentFaciesOptions.presentRockTypes.add(rockType);
+});
 export const setFaciesAge = action("setFaciesAge", (newval: number) => {
+  state.mapState.currentFaciesOptions.presentRockTypes.clear();
   state.mapState.currentFaciesOptions.faciesAge = newval;
 });
 export const setIsLegendOpen = action("setIsLegendOpen", (newval: boolean) => {

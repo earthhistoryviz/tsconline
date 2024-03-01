@@ -51,3 +51,14 @@ export function compareVhAndPx(vh: number | string, px: number | string): number
     return 0;
   }
 }
+
+/**
+ * Returns -1 if a < b, 1 if a > b, 0 if a = b (alphabetically sort a-z)
+ * @param a
+ * @param b
+ */
+export function compareStrings(a: string, b: string) {
+  if (a < b) return -1;
+  if (a > b) return 1;
+  return 0;
+}
