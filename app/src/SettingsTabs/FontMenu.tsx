@@ -26,20 +26,15 @@ import CloseIcon from "@mui/icons-material/Close";
 import "./FontMenu.css";
 
 const FontMenuRow: React.FC<{
-  target:
-    | "Column Header"
-    | "Age Label"
-    | "Uncertainty Label"
-    | "Zone Column Label"
-    | "Event Column Label"
-    | "Range Label";
+  target: "Column Header" | "Age Label" | "Uncertainty Label" | "Zone Column Label" | "Sequence Column Label" | "Event Column Label" | "Popup Body" | "Ruler Label" | "Point Column Scale Label" | "Range Label" | "Ruler Tick Mark Label" | "Legend Title" | "Legend Column Name" | "Legend Column Source" | "Range Box Label";
 }> = observer(({ target }) => {
   const { state, actions } = useContext(context);
   const [fontTarget, setFontTarget] = useState(false);
   const [font, setFont] = useState("Arial");
-  const [formats, setFormats] = useState(["bold", "italic"]);
-
-  const fontOpts = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected as string)!.fontsInfo[target];
+  const [formats, setFormats] = useState([""]);
+  const fontOpts = state.settingsTabs.columnHashMap.get(
+    state.settingsTabs.columnSelected as string
+  )!.fontsInfo[target];
   const handleChange = (event: SelectChangeEvent) => {
     if (/Arial|Courier|Verdana/.test(event.target.value)) return;
     actions.setFontFace(target, event.target.value as "Arial" | "Courier" | "Verdana");
@@ -126,7 +121,7 @@ const FontMenuRow: React.FC<{
             value={fontOpts.color}
             size="small"
             label="Color"
-            format="hex"
+            format="rgb"
             onChange={handleColor}
             disabled={!fontTarget}
           />
@@ -183,7 +178,6 @@ export const FontMenu = observer(() => {
             <Grid item xs={12}>
               <Divider />
             </Grid>
-
             <Grid item xs={12}>
               <Typography id="AdditionalFontsText">Additional fonts for child columns</Typography>
               <FontMenuRow target="Age Label" />
@@ -194,12 +188,39 @@ export const FontMenu = observer(() => {
             <Grid item xs={12}>
               <FontMenuRow target="Uncertainty Label" />
             </Grid>
+              <Grid item xs={12}>
+                  <FontMenuRow target="Ruler Label" />
+              </Grid>
+              <Grid item xs={12}>
+                  <FontMenuRow target="Sequence Column Label" />
+              </Grid>
             <Grid item xs={12}>
               <FontMenuRow target="Event Column Label" />
             </Grid>
             <Grid item xs={12}>
               <FontMenuRow target="Range Label" />
             </Grid>
+              <Grid item xs={12}>
+                  <FontMenuRow target="Range Box Label" />
+              </Grid>
+              <Grid item xs={12}>
+                  <FontMenuRow target="Popup Body" />
+              </Grid>
+              <Grid item xs={12}>
+                  <FontMenuRow target="Point Column Scale Label" />
+              </Grid>
+              <Grid item xs={12}>
+                  <FontMenuRow target="Ruler Tick Mark Label" />
+              </Grid>
+              <Grid item xs={12}>
+                  <FontMenuRow target="Legend Title" />
+              </Grid>
+              <Grid item xs={12}>
+                  <FontMenuRow target="Legend Column Name" />
+              </Grid>
+              <Grid item xs={12}>
+                  <FontMenuRow target="Legend Column Source" />
+              </Grid>
           </Grid>
         </Box>
       </Modal>
