@@ -5,6 +5,7 @@ import { Column } from "./SettingsTabs/Column";
 import { Time } from "./SettingsTabs/Time";
 import { Font } from "./SettingsTabs/Font";
 import { MapPoints } from "./SettingsTabs/MapPoints";
+import { Datapacks } from "./SettingsTabs/Datapack";
 import { useTheme } from "@mui/material/styles";
 import { TSCTabs, TSCTab } from "./components";
 
@@ -28,6 +29,8 @@ export const Settings = observer(function Settings() {
         return <Font />;
       case "mappoints":
         return <MapPoints />;
+      case "datapacks":
+        return <Datapacks />;
     }
   }
 
@@ -38,6 +41,7 @@ export const Settings = observer(function Settings() {
         <TSCTab label="Column" onClick={() => actions.setSettingsTabsSelected("column")} />
         <TSCTab label="Font" onClick={() => actions.setSettingsTabsSelected("font")} />
         <TSCTab label="Map Points" onClick={() => actions.setSettingsTabsSelected("mappoints")} />
+        <TSCTab label="Datapacks" onClick={() => actions.setSettingsTabsSelected("datapacks")} />
       </TSCTabs>
       {displayChosenTab()}
     </div>
