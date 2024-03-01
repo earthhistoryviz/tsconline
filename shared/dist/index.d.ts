@@ -34,11 +34,7 @@ export type Patterns = {
 export type Color = {
     name: string;
     hex: string;
-    rgb: {
-        r: number;
-        g: number;
-        b: number;
-    };
+    rgb: RGB;
 };
 export type Presets = {
     [type: string]: ChartConfig[];
@@ -194,8 +190,14 @@ export type SubBlockInfo = {
     label: string;
     age: number;
     popup: string;
-    lineStyle: string;
+    lineStyle: "solid" | "dashed" | "dotted";
+    color: RGB;
 };
+export type RGB = {
+    r: number;
+    g: number;
+    b: number;
+}
 export type ChartRequest = {
     settings: string;
     datapacks: string[];
@@ -231,12 +233,15 @@ export type Facies = {
     maxAge: number;
 };
 export type Block = {
-    name: string;
+    title: string;
     subBlockInfo: SubBlockInfo[];
+    width: number;
     minAge: number;
     maxAge: number;
     popup: string;
     on: boolean;
+    notitle: boolean;
+    color: RGB;
 };
 export type ChartResponseInfo = {
     chartpath: string;
