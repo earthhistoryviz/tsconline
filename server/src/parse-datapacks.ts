@@ -6,6 +6,7 @@ import {
   DatapackParsingPack,
   SubBlockInfo,
   Block,
+  RGB,
   assertSubBlockInfo,
   defaultFontsInfo,
   SubFaciesInfo,
@@ -197,12 +198,15 @@ export async function getFaciesOrBlock(
     on: true
   };
   const block: Block = {
-    name: "",
+    title: "",
     subBlockInfo: [],
+    width: 100,
     minAge: Number.MAX_VALUE,
     maxAge: Number.MIN_VALUE,
     popup: "",
-    on: true
+    on: true,
+    notitle: false,
+    color: { r: 255, g: 255, b: 255 }
   };
   let inFaciesBlock = false;
   let inBlockBlock = false;
@@ -238,7 +242,19 @@ export async function getFaciesOrBlock(
 
     // we found a block
     if (!inBlockBlock && tabSeperated[1] === "block") {
-      block.name = trimQuotes(tabSeperated[0]!);
+      block.title = trimQuotes(tabSeperated[0]!);
+      if (tabSeperated[2]) {
+        block.width = Number(tabSeperated[2])
+      }
+      if (tabSeperated[3]) {
+        const rgb = tabSeperated[3].split('/')
+        block.color.r = Number(rgb[0]!);
+        block.color.g = Number(rgb[1]!);
+        block.color.b = Number(rgb[2]!);
+      }
+      if (tabSeperated[4] && tabSeperated[4] === "notitle") {
+        block.notitle = true;
+      }
       if (tabSeperated[5] && tabSeperated[5] === "off") {
         block.on = false;
       }
@@ -252,7 +268,7 @@ export async function getFaciesOrBlock(
       inBlockBlock = true;
     } else if (inBlockBlock) {
       //get a single sub block
-      const subBlockInfo = processBlock(line);
+      const subBlockInfo = processBlock(line, block.color);
       if (subBlockInfo) {
         block.subBlockInfo.push(subBlockInfo);
       }
@@ -296,13 +312,15 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
     block.minAge = Math.min(subBlock.age, block.minAge);
     block.maxAge = Math.max(subBlock.age, block.maxAge);
   }
-  blocksMap.set(block.name, JSON.parse(JSON.stringify(block)));
-  block.name = "";
+  blocksMap.set(block.title, JSON.parse(JSON.stringify(block)));
+  block.title = "";
   block.subBlockInfo = [];
   block.minAge = Number.MAX_VALUE;
   block.maxAge = Number.MIN_VALUE;
   block.popup = "";
   block.on = true;
+  block.width = 100;
+  block.color = { r: 255, g: 255, b: 255 }
 }
 
 /**
@@ -310,12 +328,13 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
  * @param line the line to be processed
  * @returns A subBlock object
  */
-function processBlock(line: string): SubBlockInfo | null {
+function processBlock(line: string, defaultColor: RGB): SubBlockInfo | null {
   const currentSubBlockInfo = {
     label: "",
     age: 0,
     popup: "",
-    lineStyle: ""
+    lineStyle: "solid",
+    color: defaultColor //if Block has color, set to that. If not, set to white
   };
   const tabSeperated = line.split("\t");
   if (tabSeperated.length < 3) return null;
@@ -324,6 +343,7 @@ function processBlock(line: string): SubBlockInfo | null {
   const popup = tabSeperated[4];
   if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeperated[2]! + " is NaN");
   const lineStyle = tabSeperated[3];
+  const color = tabSeperated[5];
   if (label) {
     currentSubBlockInfo.label = label;
   }
@@ -332,7 +352,22 @@ function processBlock(line: string): SubBlockInfo | null {
     currentSubBlockInfo.popup = popup;
   }
   if (lineStyle) {
-    currentSubBlockInfo.lineStyle = lineStyle;
+    switch (lineStyle) {
+      case "dashed": {
+        currentSubBlockInfo.lineStyle = "dashed";
+        break;
+      }
+      case "dotted": {
+        currentSubBlockInfo.lineStyle = "dotted";
+        break;
+      }
+    }
+  }
+  if (color) {
+    const rgbSeperated = line.split("/");
+    currentSubBlockInfo.color.r = Number(rgbSeperated[0]!);
+    currentSubBlockInfo.color.g = Number(rgbSeperated[1]!);
+    currentSubBlockInfo.color.b = Number(rgbSeperated[2]!);
   }
   try {
     assertSubBlockInfo(currentSubBlockInfo);
