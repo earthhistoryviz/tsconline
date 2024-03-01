@@ -16,6 +16,7 @@
 .colored-box {
   width: 10px;
   height: 10px;
+  border-radius: 5px;
 }
 .MuiIconButton-root.scroll-top {
   position: absolute;

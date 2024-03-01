@@ -89,7 +89,7 @@ let theme = createTheme({
       main: "#E0FBFC"
     },
     scrollbar: {
-      main: "#7b778a"
+      main: "#78716c"
     },
     error: {
       main: "#FF0000"

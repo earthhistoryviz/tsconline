@@ -116,10 +116,11 @@ export const Legend = observer(() => {
         onClick={() => {
           scrollRef.current?.contentWrapperEl?.scrollTo({ top: 0, left: 0, behavior: "smooth" });
         }}>
-        <Lottie key="legend-arrow-up" width="inherit" height="inherit" animationData={ArrowUpIcon} playOnHover />
+        <Lottie key="legend-arrow-up" width="inherit" height="inherit" animationData={ArrowUpIcon} playOnClick />
       </IconButton>
       <StyledScrollbar
         ref={scrollRef}
+        autoHide={false}
         style={{
           height: `calc(100vh - ${LEGEND_HEADER_HEIGHT})`,
           backgroundColor: theme.palette.navbar.main

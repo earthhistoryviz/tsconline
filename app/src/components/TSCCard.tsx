@@ -127,7 +127,7 @@ const BackCard = ({
       <HiddenBack className="hidden-back" />
       <CardBackground className="card-background" color={color} />
       <CardContent className="back-background card-content" color={color}>
-        <StyledScrollbar className="info-container">
+        <StyledScrollbar className="info-container" autoHide={false}>
           <CardMedia className="info-media" component="img" image={devSafeUrl(preset.background)} />
           <Title className="info-title">{preset.title}</Title>
           <div className="info-text-container">
