@@ -248,12 +248,50 @@ function generateSettingsXml(settings: any, chartSettings: any, indent: string):
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with settings info
  */
-function generateFontsXml(fonts: any, indent: string): string {
+function generateFontsXml(fonts: any, colName:string, stateColumn:any, indent: string): string {
+
+    let defInfo = JSON.parse(JSON.stringify(defaultFontsInfo));
+    if(colName === "Chart Root" || colName === "Facies" || colName === "Members" || colName === "Facies Label" || colName === "Series Label") {
+        let newStateColumn = {}
+        if(stateColumn) {
+            newStateColumn = JSON.parse(JSON.stringify(stateColumn));
+        }
+        if(colName === "Facies") {
+            console.log(colName, fonts, newStateColumn)
+        }
+        return ""
+    }
+    let newStateColumn = JSON.parse(JSON.stringify(stateColumn));
   let xml = "";
   for (const key in fonts) {
     if (Object.prototype.hasOwnProperty.call(fonts, key)) {
-      const inheritable = fonts[key].inheritable;
-      xml += `${indent}<font function="${key}" inheritable="${inheritable}"/>\n`;
+        const inheritable = fonts[key].inheritable;
+        if(JSON.stringify(newStateColumn[key]) === JSON.stringify(defInfo[key])){
+            xml += `${indent}<font function="${key}" inheritable="${inheritable}"/>\n`;
+        } else {
+            xml += `${indent}<font function="${key}" inheritable="${inheritable}">`;
+            for(let fKey in newStateColumn[key]) {
+                // console.log("compare", newStateColumn[key][fKey], defInfo[key][fKey])
+                if(JSON.stringify(newStateColumn[key][fKey]) !== JSON.stringify(defInfo[key][fKey])) {
+                    if(fKey === "fontFace") {
+                        xml += `font-family: ${newStateColumn[key][fKey]};`;
+                    }
+                    if(fKey === "size") {
+                        xml += `font-size: ${newStateColumn[key][fKey]}px;`;
+                    }
+                    if(fKey === "italic") {
+                        xml += `font-style: italic;`;
+                    }
+                    if(fKey === "bold") {
+                        xml += `font-weight: bold;`;
+                    }
+                    if(fKey === "color") {
+                        xml += `fill: ${newStateColumn[key][fKey]};`;
+                    }
+                }
+            }
+            xml += `</font>\n`;
+        }
     }
   }
   return xml;
@@ -268,11 +306,14 @@ function generateFontsXml(fonts: any, indent: string): string {
 function generateColumnXml(jsonColumn: any, stateColumn: ColumnInfo | null, indent: string): string {
   let xml = "";
   for (let key in jsonColumn) {
+      // console.log("key", key)
     if (Object.prototype.hasOwnProperty.call(jsonColumn, key)) {
       let colName = extractName(jsonColumn._id);
       let xmlKey = replaceSpecialChars(key, 0);
       // Skip the 'id' element.
-
+        if(colName === "Chart Root") {
+            console.log(JSON.parse(JSON.stringify(stateColumn)))
+        }
       if (key === "_id") {
         continue;
       }
@@ -332,8 +373,11 @@ function generateColumnXml(jsonColumn: any, stateColumn: ColumnInfo | null, inde
         xml += `${indent}<${xmlKey.slice(1)}>${jsonColumn[key]}</${xmlKey.slice(1)}>\n`;
       } else if (key === "fonts") {
         xml += `${indent}<fonts>\n`;
-        xml += generateFontsXml(jsonColumn[key], `${indent}    `);
+        // if(colName === "Chart Title")
+        //     console.log(colName, JSON.parse(JSON.stringify(stateColumn.fontsInfo)))
+        xml += generateFontsXml(jsonColumn[key], colName, stateColumn?.fontsInfo, `${indent}    `);
         xml += `${indent}</fonts>\n`;
+        // console.log("xml", xml)
       } else if (typeof jsonColumn[key] === "object") {
         xml += `${indent}<column id="${xmlKey}">\n`;
         //recursively go down column settings

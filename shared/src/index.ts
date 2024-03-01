@@ -169,7 +169,12 @@ export type FontsInfo = {
     color: string;
   };
   "Sequence Column Label": {
-    inheritable: boolean;
+      inheritable: boolean;
+      fontFace: "Arial" | "Courier" | "Verdana";
+      size: number;
+      bold: boolean;
+      italic: boolean;
+      color: string;
   };
   "Event Column Label": {
     inheritable: boolean;
@@ -180,13 +185,28 @@ export type FontsInfo = {
     color: string;
   };
   "Popup Body": {
-    inheritable: boolean;
+      inheritable: boolean;
+      fontFace: "Arial" | "Courier" | "Verdana";
+      size: number;
+      bold: boolean;
+      italic: boolean;
+      color: string;
   };
   "Ruler Label": {
-    inheritable: boolean;
+      inheritable: boolean;
+      fontFace: "Arial" | "Courier" | "Verdana";
+      size: number;
+      bold: boolean;
+      italic: boolean;
+      color: string;
   };
   "Point Column Scale Label": {
-    inheritable: boolean;
+      inheritable: boolean;
+      fontFace: "Arial" | "Courier" | "Verdana";
+      size: number;
+      bold: boolean;
+      italic: boolean;
+      color: string;
   };
   "Range Label": {
     inheritable: boolean;
@@ -197,52 +217,91 @@ export type FontsInfo = {
     color: string;
   };
   "Ruler Tick Mark Label": {
-    inheritable: boolean;
+      inheritable: boolean;
+      fontFace: "Arial" | "Courier" | "Verdana";
+      size: number;
+      bold: boolean;
+      italic: boolean;
+      color: string;
   };
   "Legend Title": {
-    inheritable: boolean;
+      inheritable: boolean;
+      fontFace: "Arial" | "Courier" | "Verdana";
+      size: number;
+      bold: boolean;
+      italic: boolean;
+      color: string;
   };
   "Legend Column Name": {
-    inheritable: boolean;
+      inheritable: boolean;
+      fontFace: "Arial" | "Courier" | "Verdana";
+      size: number;
+      bold: boolean;
+      italic: boolean;
+      color: string;
   };
   "Legend Column Source": {
-    inheritable: boolean;
+      inheritable: boolean;
+      fontFace: "Arial" | "Courier" | "Verdana";
+      size: number;
+      bold: boolean;
+      italic: boolean;
+      color: string;
   };
   "Range Box Label": {
-    inheritable: boolean;
+      inheritable: boolean;
+      fontFace: "Arial" | "Courier" | "Verdana";
+      size: number;
+      bold: boolean;
+      italic: boolean;
+      color: string;
   };
 };
 
 export const defaultFontsInfo: FontsInfo = {
-  "Age Label": {
-    bold: false,
-    color: "#000000",
-    fontFace: "Arial",
-    inheritable: false,
-    italic: false,
-    size: 6
-  },
-  "Column Header": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 14 },
-  "Event Column Label": {
-    bold: false,
-    color: "#000000",
-    fontFace: "Arial",
-    inheritable: false,
-    italic: false,
-    size: 11
-  },
-  "Legend Column Name": { inheritable: false },
-  "Legend Column Source": { inheritable: false },
-  "Legend Title": { inheritable: false },
-  "Point Column Scale Label": { inheritable: false },
-  "Popup Body": { inheritable: false },
-  "Range Box Label": { inheritable: false },
-  "Range Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12 },
-  "Ruler Label": { inheritable: false },
-  "Ruler Tick Mark Label": { inheritable: false },
-  "Sequence Column Label": { inheritable: false },
-  "Uncertainty Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 5 },
-  "Zone Column Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12 }
+    "Age Label": {
+        bold: false,
+        color: "rgb(0, 0, 0)",
+        fontFace: "Arial",
+        inheritable: false,
+        italic: false,
+        size: 6
+    },
+    "Column Header": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 14},
+    "Event Column Label": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 11},
+    "Legend Column Name": {bold: true, color: "rgb(0, 0, 0)", fontFace: "Verdana", inheritable: false, italic: false, size: 12},
+    "Legend Column Source":{bold: false, color: "rgb(0, 0, 0)", fontFace: "Verdana", inheritable: false, italic: true, size: 12},
+    "Legend Title": {bold: true, color: "rgb(0, 0, 0)", fontFace: "Verdana", inheritable: false, italic: false, size: 14},
+    "Point Column Scale Label": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 6},
+    "Popup Body": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12},
+    "Range Box Label": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: true, size: 14},
+    "Range Label": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12},
+    "Ruler Label": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12},
+    "Ruler Tick Mark Label": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 7},
+    "Sequence Column Label": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12},
+    "Uncertainty Label": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: true, size: 5},
+    "Zone Column Label": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12}
+}
+
+export type Facies = {
+  locations: FaciesLocations;
+  minAge: number; // the aggregate min age in all facies locations
+  maxAge: number; // the aggregate max age in all facies locations
+  aliases: {
+    [alias: string]: string;
+  };
+};
+export type FaciesLocations = {
+  [location: string]: {
+    faciesTimeBlockArray: FaciesTimeBlock[];
+    minAge: number; // the min age of this specific location
+    maxAge: number; // the max age of this specific location
+  };
+};
+export type FaciesTimeBlock = {
+  rockType: string; // rock type that is the name of the png in /public/patterns/
+  label?: string; // the label
+  age: number; // the base gge of the facies time block
 };
 
 export type SubBlockInfo = {
