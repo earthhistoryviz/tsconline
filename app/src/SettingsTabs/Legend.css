@@ -1,0 +1,120 @@
+:root {
+  --icon-size: 50px;
+}
+.legend-pattern {
+  width: 100px;
+  height: 50px;
+  border: 1px solid #8f8f8f;
+  margin-bottom: 5px;
+  border-radius: 2px;
+  object-fit: fill;
+  grid-column: 1;
+}
+.MuiTypography-root.legend-label {
+  margin-left: 15px;
+}
+.colored-box {
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+}
+.MuiIconButton-root.scroll-top {
+  position: absolute;
+  left: calc(50% - var(--icon-size) / 2);
+  width: var(--icon-size);
+  height: var(--icon-size);
+  z-index: 1;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.5s ease,
+    visibility 0s 0.5s,
+    transform 0.5s ease;
+  transform: translateY(-2px);
+}
+.MuiIconButton-root.scroll-top.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition-delay: 0s;
+}
+.szh-menu__item.sub-menu-item {
+  justify-content: space-between;
+}
+.MuiTypography-root.color-text {
+  margin-right: 13px;
+}
+
+.MuiBox-root.legend-item-container {
+  display: flex;
+  margin-bottom: 20px;
+  align-items: center;
+}
+.legend-container {
+  margin-top: 10px;
+  margin-left: 30px;
+}
+.facies-container {
+  min-height: 69vh;
+}
+.MuiTypography-root.legend-header {
+  margin-left: 15px;
+  padding-bottom: 10px;
+  padding-top: 10px;
+  font-size: 1.5rem;
+}
+.MuiTypography-root.legend-header:before {
+  background-color: darkgray;
+  height: 30px;
+}
+.MuiTypography-root.legend-title {
+  margin-right: 15px;
+  margin-left: 10px;
+  margin-bottom: 0px;
+  font-size: 1.6rem;
+}
+.facies-pattern-container {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  margin-bottom: 10px;
+  align-items: center;
+}
+.MuiTypography-root.facies-pattern {
+  grid-column: 2;
+  padding-left: 30px;
+  margin-right: 10px;
+  line-height: 23px;
+}
+.search-container {
+  margin: 10px 20px 5px 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.MuiTextField-root.search-bar {
+  width: 230px;
+}
+.MuiIconButton-root.filter-button,
+.MuiButton-root.filter-button {
+  margin-left: 6px;
+  margin-top: 5px;
+}
+.MuiButton-root.filter-button {
+  margin-right: 10px;
+}
+.filters {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+.MuiSvgIcon-root {
+  margin-right: 8px;
+}
+.szh-menu__submenu.color-menu > .szh-menu__item {
+  padding-left: 16px;
+}
+.szh-menu-container.menu > .szh-menu {
+  z-index: 1300;
+}

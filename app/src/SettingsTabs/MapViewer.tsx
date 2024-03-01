@@ -13,10 +13,11 @@ import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import YoutubeSearchedForIcon from "@mui/icons-material/YoutubeSearchedFor";
 import { observer } from "mobx-react-lite";
 import "./MapViewer.css";
-import { Legend, createChildMapButton, loadMapPoints, loadTransects } from "./MapButtons";
+import { createChildMapButton, loadMapPoints, loadTransects } from "./MapButtons";
 import { HeaderBar } from "./MapControls";
-import { faciesHeaderHeight, normHeaderHeight } from "./MapPointConstants";
+import { FACIES_HEADER_HEIGHT, LEGEND_HEADER_HEIGHT, NORM_HEADER_HEIGHT } from "./MapPointConstants";
 import { compareVhAndPx } from "../util/util";
+import { Legend } from "./Legend";
 
 type MapProps = {
   name: string;
@@ -29,8 +30,6 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
   const theme = useTheme();
   // we need this so it refreshes the components that require image loading
   const [imageLoaded, setImageLoaded] = useState(false);
-  // this is needed to change image styles on fullscreen change
-  const [isFullscreen, setIsFullscreen] = useState(false);
   // used to get the proper bounds of the element
   const imageRef = useRef<HTMLImageElement | null>(null);
   // used for attaching tooltip and fullscreening
@@ -49,9 +48,9 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
 
   const handleFullscreenChange = () => {
     if (document.fullscreenElement) {
-      setIsFullscreen(true);
+      actions.setIsFullscreen(true);
     } else {
-      setIsFullscreen(false);
+      actions.setIsFullscreen(false);
     }
   };
   const openChildMap = (childMap: string) => {
@@ -64,7 +63,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
   const mapData: MapInfo[string] = mapInfo[name];
   const mapHierarchy: MapHierarchy = state.mapState.mapHierarchy;
 
-  const headerHeight = isFacies ? faciesHeaderHeight : normHeaderHeight;
+  const headerHeight = isFacies ? FACIES_HEADER_HEIGHT : NORM_HEADER_HEIGHT;
   let viewButtonStyle = {
     top: `calc(${headerHeight} + 1vh)`
   };
@@ -74,46 +73,9 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
       top: `calc(250px + 20px)`
     };
   }
-  const Controls = ({
-    mapViewer,
-    zoomIn,
-    zoomOut,
-    resetTransform
-  }: {
-    mapViewer: HTMLDivElement;
-    zoomIn: () => void;
-    zoomOut: () => void;
-    resetTransform: () => void;
-  }) => (
-    <>
-      <div className="view-buttons" style={viewButtonStyle}>
-        <IconButton
-          className="icon-view-button"
-          onClick={() => {
-            if (document.fullscreenElement) {
-              document.exitFullscreen();
-            } else {
-              mapViewer.requestFullscreen();
-            }
-          }}>
-          <BorderedIcon component={FullscreenIcon} className="icon-button" />
-        </IconButton>
-        <IconButton className="icon-view-button" onClick={() => zoomIn()}>
-          <BorderedIcon component={ZoomInIcon} className="icon-button" />
-        </IconButton>
-        <IconButton className="icon-view-button" onClick={() => zoomOut()}>
-          <BorderedIcon component={ZoomOutIcon} className="icon-button" />
-        </IconButton>
-        <IconButton className="icon-view-button" onClick={() => resetTransform()}>
-          <BorderedIcon component={YoutubeSearchedForIcon} className="icon-button" />
-        </IconButton>
-      </div>
-    </>
-  );
-
   let mapHeight = "90vh";
-  if (isFacies) mapHeight = `calc(100vh - ${faciesHeaderHeight} - 2vh)`;
-  else if (isFullscreen) mapHeight = `calc(100vh - ${normHeaderHeight})`;
+  if (isFacies) mapHeight = `calc(100vh - ${FACIES_HEADER_HEIGHT} - 2vh)`;
+  else if (state.isFullscreen) mapHeight = `calc(100vh - ${NORM_HEADER_HEIGHT})`;
   const mapStyle = {
     height: mapHeight
   };
@@ -210,21 +172,25 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
                 </>
               </TransformComponent>
               {mapViewerRef && mapViewerRef.current && (
-                <Controls mapViewer={mapViewerRef.current as HTMLDivElement} {...utils} />
+                <Controls
+                  mapViewer={mapViewerRef.current as HTMLDivElement}
+                  {...utils}
+                  viewButtonStyle={viewButtonStyle}
+                />
               )}
             </>
           )}
         </TransformWrapper>
         <Drawer className="drawer" variant="persistent" anchor="left" open={state.mapState.isLegendOpen}>
-          <DrawerHeader>
+          <DrawerHeader style={{ height: LEGEND_HEADER_HEIGHT }}>
             <ColoredIconButton
               onClick={() => {
                 actions.setIsLegendOpen(false);
               }}>
-              <CloseIcon fontSize="small" />
+              <CloseIcon fontSize="medium" />
             </ColoredIconButton>
             <TypographyText className="legend-title" variant="h6" gutterBottom>
-              Color Legend
+              LEGEND
             </TypographyText>
           </DrawerHeader>
           <Divider />
@@ -234,3 +200,41 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
     </div>
   );
 });
+const Controls = ({
+  mapViewer,
+  zoomIn,
+  zoomOut,
+  resetTransform,
+  viewButtonStyle
+}: {
+  mapViewer: HTMLDivElement;
+  zoomIn: () => void;
+  zoomOut: () => void;
+  resetTransform: () => void;
+  viewButtonStyle: { top: string };
+}) => (
+  <>
+    <div className="view-buttons" style={viewButtonStyle}>
+      <IconButton
+        className="icon-view-button"
+        onClick={() => {
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+          } else {
+            mapViewer.requestFullscreen();
+          }
+        }}>
+        <BorderedIcon component={FullscreenIcon} className="icon-button" />
+      </IconButton>
+      <IconButton className="icon-view-button" onClick={() => zoomIn()}>
+        <BorderedIcon component={ZoomInIcon} className="icon-button" />
+      </IconButton>
+      <IconButton className="icon-view-button" onClick={() => zoomOut()}>
+        <BorderedIcon component={ZoomOutIcon} className="icon-button" />
+      </IconButton>
+      <IconButton className="icon-view-button" onClick={() => resetTransform()}>
+        <BorderedIcon component={YoutubeSearchedForIcon} className="icon-button" />
+      </IconButton>
+    </div>
+  </>
+);

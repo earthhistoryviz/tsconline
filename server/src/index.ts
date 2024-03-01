@@ -161,6 +161,8 @@ server.get("/datapackinfoindex", (request, reply) => {
 // checks chart.pdf-status
 server.get<{ Params: { hash: string } }>("/svgstatus/:hash", routes.fetchSVGStatus);
 
+server.get("/facies-patterns", routes.fetchFaciesPatterns);
+
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
 server.post<{ Params: { usecache: string; useSuggestedAge: string } }>(

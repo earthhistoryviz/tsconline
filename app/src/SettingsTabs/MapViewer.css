@@ -70,28 +70,9 @@
 .button-container {
   border: 1px solid yellow;
 }
-.MuiTypography-root.legend-label {
-  margin-left: 15px;
-}
-.MuiTypography-root.legend-title {
-  margin-right: 15px;
-  margin-bottom: 0px;
-}
-.MuiBox-root.legend-item-container {
-  display: flex;
-  margin-bottom: 40px;
-  margin-left: 10px;
-  align-items: center;
-}
-.MuiBox-root.legend-container {
-  padding-left: 4%;
-  padding-bottom: 10px;
-  padding-top: 20px;
-  height: 100%;
-}
 .MuiDrawer-docked.drawer > .MuiDrawer-paper {
   border: 0px;
-  overflow: hidden;
+  width: 300px;
 }
 .child-map-icon {
   width: 12px;

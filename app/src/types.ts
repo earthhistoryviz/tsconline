@@ -1,6 +1,7 @@
 export type FaciesOptions = {
   faciesAge: number;
   dotSize: number;
+  presentRockTypes: Set<string>;
 };
 export type MapHistory = {
   // saved history only concerns the facies

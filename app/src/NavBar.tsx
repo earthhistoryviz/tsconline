@@ -16,7 +16,7 @@ export const NavBar = observer(function Navbar() {
   const theme = useTheme();
   const { state, actions } = useContext(context);
   return (
-    <AppBar position="fixed" sx={{ background: theme.palette.navbar.dark, display: "flex" }}>
+    <AppBar position="fixed" sx={{ background: theme.palette.navbar.main, display: "flex" }}>
       <Toolbar>
         <Link to="/">
           <IconButton
