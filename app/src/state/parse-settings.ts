@@ -2,7 +2,7 @@
 //                                          XML to JSON parser                                       //
 //-------------------------------------------------------------------------------------------------- //
 
-import { ColumnInfo, defaultFontsInfo } from "@tsconline/shared";
+import { ColumnInfo, PresetColumnInfo, defaultFontsInfo } from "@tsconline/shared";
 
 /**
  *
@@ -300,18 +300,36 @@ function generateFontsXml(fonts: any, colName: string, stateColumn: any, indent:
   }
   return xml;
 }
+
+function columnIsChild(columns: PresetColumnInfo[], name: string) {
+  for (let i = 0; i < columns.length; i++) {
+    if (name === columns[i]._id) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function getChildColumn(columns: PresetColumnInfo[], name: string) {
+  for (let i = 0; i < columns.length; i++) {
+    if (name === columns[i]._id) {
+      return columns[i];
+    }
+  }
+}
+
 /**
  * generates xml string with column info
- * @param jsonColumn json object with column info
+ * @param presetColumn json object with column info
  * @param stateColumn json object containing the state of the columns
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with column info
  */
-function generateColumnXml(jsonColumn: any, stateColumn: ColumnInfo | null, indent: string): string {
+function generateColumnXml(presetColumn: PresetColumnInfo, stateColumn: ColumnInfo | null, indent: string): string {
   let xml = "";
-  for (let key in jsonColumn) {
-    if (Object.prototype.hasOwnProperty.call(jsonColumn, key)) {
-      let colName = extractName(jsonColumn._id);
+  for (let key in presetColumn) {
+    if (Object.prototype.hasOwnProperty.call(presetColumn, key)) {
+      let colName = extractName(presetColumn._id);
       let xmlKey = replaceSpecialChars(key, 0);
       // Skip the 'id' element.
       if (key === "_id") {
@@ -328,32 +346,33 @@ function generateColumnXml(jsonColumn: any, stateColumn: ColumnInfo | null, inde
           }
         }
         if (!useEditName) {
-          xml += `${indent}<setting name="title">${replaceSpecialChars(jsonColumn[key], 1)}</setting>\n`;
+          xml += `${indent}<setting name="title">${replaceSpecialChars(presetColumn[key], 1)}</setting>\n`;
         }
       } else if (key === "backgroundColor" || key === "customColor") {
-        if (jsonColumn[key].standardized && jsonColumn[key].useNamed) {
-          xml += `${indent}<setting name="${xmlKey}" standardized="${jsonColumn[key].standardized}" 
-          useNamed="${jsonColumn[key].useNamed}">${jsonColumn[key].text}</setting>\n`;
-        } else if (jsonColumn[key].useNamed) {
-          xml += `${indent}<setting name="${xmlKey}" useNamed="${jsonColumn[key].useNamed}">${jsonColumn[key].text}</setting>\n`;
-        } else if (jsonColumn[key].standardized) {
-          xml += `${indent}<setting name="${xmlKey}" useNamed="${jsonColumn[key].standardized}">${jsonColumn[key].text}</setting>\n`;
+        if (presetColumn[key].standardized && presetColumn[key].useNamed) {
+          xml += `${indent}<setting name="${xmlKey}" standardized="${presetColumn[key].standardized}" 
+          useNamed="${presetColumn[key].useNamed}">${presetColumn[key].text}</setting>\n`;
+        } else if (presetColumn[key].useNamed) {
+          xml += `${indent}<setting name="${xmlKey}" useNamed="${presetColumn[key].useNamed}">${presetColumn[key].text}</setting>\n`;
+        } else if (presetColumn[key].standardized) {
+          xml += `${indent}<setting name="${xmlKey}" useNamed="${presetColumn[key].standardized}">${presetColumn[key].text}</setting>\n`;
         } else {
           xml += `${indent}<setting name="${xmlKey}"/>\n`;
         }
       } else if (key === "customColor") {
-      } else if (key === "justification") {
-        xml += `${indent}<setting justification="${jsonColumn[key]}" name="${xmlKey}"/>\n`;
-      } else if (key === "orientation") {
-        xml += `${indent}<setting name="${xmlKey}" orientation="${jsonColumn[key]}"/>\n`;
-      } else if (key === "isSelected") {
+      // } else if (key === "justification") {
+      //   xml += `${indent}<setting justification="${presetColumn.justification}" name="${xmlKey}"/>\n`;
+      // } else if (key === "orientation") {
+      //   xml += `${indent}<setting name="${xmlKey}" orientation="${presetColumn[key]}"/>\n`;
+      // 
+    } else if (key === "isSelected") {
         //TODO: remove later when event columns are covered
-        if (jsonColumn._id.includes("EventColumn")) {
-          xml += `${indent}<setting name="${xmlKey}">${jsonColumn["isSelected"]}</setting>\n`;
+        if (presetColumn._id.includes("EventColumn")) {
+          xml += `${indent}<setting name="${xmlKey}">${presetColumn["isSelected"]}</setting>\n`;
         }
         //if column isn't in state, then use default given by the original xml
         else if (stateColumn == undefined || Object.keys(stateColumn).length == 0) {
-          xml += `${indent}<setting name="${xmlKey}">${jsonColumn["isSelected"]}</setting>\n`;
+          xml += `${indent}<setting name="${xmlKey}">${presetColumn["isSelected"]}</setting>\n`;
         }
         //always display these things (the original tsc throws an error if not selected)
         //(but online doesn't have option to deselect them)
@@ -369,17 +388,19 @@ function generateColumnXml(jsonColumn: any, stateColumn: ColumnInfo | null, inde
             xml += `${indent}<setting name="${xmlKey}">false</setting>\n`;
           }
         }
-      } else if (key.startsWith("_")) {
-        xml += `${indent}<${xmlKey.slice(1)}>${jsonColumn[key]}</${xmlKey.slice(1)}>\n`;
-      } else if (key === "fonts") {
+      // } else if (key.startsWith("_")) {
+      //   xml += `${indent}<${xmlKey.slice(1)}>${presetColumn[key]}</${xmlKey.slice(1)}>\n`;
+      // 
+    } 
+      else if (key === "fonts") {
         xml += `${indent}<fonts>\n`;
-        xml += generateFontsXml(jsonColumn[key], colName, stateColumn?.fontsInfo, `${indent}    `);
+        xml += generateFontsXml(presetColumn[key], colName, stateColumn?.fontsInfo, `${indent}    `);
         xml += `${indent}</fonts>\n`;
-      } else if (typeof jsonColumn[key] === "object") {
+      } else if (columnIsChild(presetColumn.children, key)) {
         xml += `${indent}<column id="${xmlKey}">\n`;
         //recursively go down column settings
-        let currName = extractName(jsonColumn._id);
-        let childName = extractName(jsonColumn[key]._id);
+        let currName = extractName(presetColumn._id);
+        let childName = extractName(key);
         let childStateColumn = null;
         if (currName == "Chart Root") {
           childStateColumn = stateColumn;
@@ -395,12 +416,13 @@ function generateColumnXml(jsonColumn: any, stateColumn: ColumnInfo | null, inde
           }
         }
 
-        xml += generateColumnXml(jsonColumn[key], childStateColumn, `${indent}    `);
+        xml += generateColumnXml(getChildColumn(presetColumn.children, key)!, childStateColumn, `${indent}    `);
 
         xml += `${indent}</column>\n`;
-      } else {
-        xml += `${indent}<setting name="${xmlKey}">${replaceSpecialChars(jsonColumn[key], 1)}</setting>\n`;
-      }
+      } 
+      // else {
+      //   xml += `${indent}<setting name="${xmlKey}">${replaceSpecialChars(presetColumn[key], 1)}</setting>\n`;
+      // }
     }
   }
   return xml;

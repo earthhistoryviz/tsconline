@@ -86,7 +86,7 @@ export type Datapack = {
 
 export type PresetChartInfo = {
   settings: PresetChartSettingsInfo;
-  "class datastore.RootColumn:Chart Root": PresetColumnInfo;
+  "class datastore.RootColumn:Chart Root": PresetColumnInfo[];
 };
 
 export type PresetChartSettingsInfo = {
@@ -137,6 +137,11 @@ export type PresetColumnInfo = {
     useNamed?: boolean;
     text: string;
   };
+  customColor: {
+    standardized?: boolean;
+    useNamed?: boolean;
+    text: string;
+  };
   fonts: FontsInfo;
 };
 
@@ -165,7 +170,39 @@ export type FontsInfo = {
   "Legend Column Name": FontLabelOptions;
   "Legend Column Source": FontLabelOptions;
   "Range Box Label": FontLabelOptions;
+  columnType?: PresetZoneColumnInfo | PresetEventColumnInfo | PresetRangeColumnInfo | PresetRulerColumnInfo | PresetSequenceColumnInfo | [[name: string, text: string]];
+  children: PresetColumnInfo[];
 };
+
+export type PresetZoneColumnInfo = {
+  crunchOuterMargin?: number;
+  crunchInnerMargin?: number;
+  crunchAscendWidth?: number;
+  crunchOneSideSpaceUse?: number;
+  autoFlip?: boolean;
+  orientation?: "vertical" | "normal";
+}
+
+export type PresetEventColumnInfo = {
+  type?: string;
+  rangeSort?: string;
+}
+
+export type PresetRangeColumnInfo = {
+  rangeSort?: string;
+}
+
+export type PresetRulerColumnInfo = {
+  justification?: "left" | "right";
+}
+
+export type PresetSequenceColumnInfo = {
+  labelMarginLeft?: number;
+  labelMarginRight?: number;
+  graphStyle?: string;
+  drawNameLabel?: boolean;
+  type?: string;
+}
 
 export const defaultFontsInfo: FontsInfo = defaultFontsInfoConstant;
 
