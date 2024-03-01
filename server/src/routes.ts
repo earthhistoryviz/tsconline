@@ -58,7 +58,7 @@ export const fetchFaciesPatterns = async function fetchFaciesPatterns(_request: 
     reply.status(200).send({ patterns });
   } catch (e) {
     console.error(e);
-    reply.status(404).send({ error: e });
+    reply.status(500).send({ error: e });
   }
 };
 export const fetchSettingsXml = async function fetchSettingsJson(

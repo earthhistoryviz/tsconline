@@ -368,13 +368,15 @@ export function assertColor(o: any): asserts o is Color {
   if (typeof o.hex !== "string") throwError("Color", "hex", "string", o.hex);
   if (typeof o.rgb !== "object") throwError("Color", "rgb", "object", o.rgb);
   if (typeof o.rgb.r !== "number") throwError("Color", "r", "number", o.rgb.r);
+  if (o.rgb.r < 0 || o.rgb.r > 255) throwError("Color", "r", "number between 0 and 255", o.rgb.r);
   if (typeof o.rgb.g !== "number") throwError("Color", "g", "number", o.rgb.g);
+  if (o.rgb.g < 0 || o.rgb.g > 255) throwError("Color", "g", "number between 0 and 255", o.rgb.g);
   if (typeof o.rgb.b !== "number") throwError("Color", "b", "number", o.rgb.b);
+  if (o.rgb.b < 0 || o.rgb.b > 255) throwError("Color", "b", "number between 0 and 255", o.rgb.b);
 }
 export function assertPatterns(o: any): asserts o is Patterns {
   if (!o || typeof o !== "object") throw new Error("Patterns must be a non-null object");
   for (const key in o) {
-    if (typeof key !== "string") throwError("Patterns", "key", "string", key);
     const pattern = o[key];
     if (typeof pattern.name !== "string") throwError("Patterns", "name", "string", pattern.name);
     if (typeof pattern.formattedName !== "string")
@@ -386,7 +388,6 @@ export function assertPatterns(o: any): asserts o is Patterns {
 export function assertMapPackIndex(o: any): asserts o is MapPackIndex {
   if (!o || typeof o !== "object") throw new Error("MapPackIndex must be a non-null object");
   for (const key in o) {
-    if (typeof key !== "string") throw new Error(`MapPackIndex key value ${key} is not a string`);
     assertMapPack(o[key]);
   }
 }
@@ -398,7 +399,6 @@ export function assertMapPack(o: any): asserts o is MapPack {
 export function assertPresets(o: any): asserts o is Presets {
   if (!o || typeof o !== "object") throw new Error("Presets must be a non-null object");
   for (const type in o) {
-    if (typeof type !== "string") throw new Error(`Presets key ${type} must be a string`);
     for (const config of o[type]) {
       assertChartConfig(config);
     }
@@ -407,7 +407,6 @@ export function assertPresets(o: any): asserts o is Presets {
 export function assertTransects(o: any): asserts o is Transects {
   if (!o || typeof o !== "object") throw new Error("Transects must be a non-null object");
   for (const key in o) {
-    if (typeof key !== "string") throw new Error(`Transects key ${key} must be a string`);
     const transect = o[key];
     if (typeof transect.startMapPoint !== "string")
       throw new Error(`Transects key ${key} value of startMapPoint must be a string`);
@@ -472,16 +471,16 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
   if (!o || typeof o !== "object") throw new Error("DatapackParsingPack must be a non-null object");
   if (!Array.isArray(o.columnInfoArray))
     throw new Error(`DatapackParsingPack must have a columnInfoArray array of ColumnInfos`);
-  for (const key in o.columnInfoArray) {
-    assertColumnInfo(o.columnInfoArray[key]);
+  for (const columnInfo of o.columnInfoArray) {
+    assertColumnInfo(columnInfo);
   }
   assertDatapackAgeInfo(o.datapackAgeInfo);
 }
 export function assertDatapackIndex(o: any): asserts o is DatapackIndex {
   if (!o || typeof o !== "object") throw new Error("DatapackIndex must be a non-null object");
   for (const key in o) {
-    if (typeof key !== "string") throw new Error(`DatapackIndex 'key' ${location} must be of type 'string`);
-    assertDatapackParsingPack(o[key]);
+    const pack = o[key]
+    assertDatapackParsingPack(pack);
   }
 }
 
@@ -500,13 +499,13 @@ export function assertIndexResponse(o: any): asserts o is IndexResponse {
 
 export function assertChartConfig(o: any): asserts o is ChartConfig {
   if (typeof o !== "object") throw new Error("ChartConfig must be an object");
-  if (typeof o.icon !== "string") throw new Error("ChartConfig must have an icon string");
-  if (typeof o.background !== "string") throw new Error("ChartConfig must have an background string");
-  if (typeof o.title !== "string") throw new Error("ChartConfig must have a title string");
-  if (typeof o.description !== "string") throw new Error("ChartConfig must have a description string");
-  if (typeof o.settings !== "string") throw new Error("ChartConfig must have a settings path string");
-  if (typeof o.date !== "string") throw new Error("ChartConfig must have a date string");
-  if ("type" in o && typeof o.type !== "string") throw new Error("ChartConfig variable 'type' must be a string");
+  if (typeof o.icon !== "string") throwError("ChartConfig", "icon", "string", o.icon);
+  if (typeof o.background !== "string") throwError("ChartConfig", "background", "string", o.background);
+  if (typeof o.title !== "string") throwError("ChartConfig", "title", "string", o.title);
+  if (typeof o.description !== "string") throwError("ChartConfig", "description", "string", o.description);
+  if (typeof o.settings !== "string") throwError("ChartConfig", "settings", "string", o.settings);
+  if (typeof o.date !== "string") throwError("ChartConfig", "date", "string", o.date);
+  if ("type" in o && typeof o.type !== "string") throwError("ChartConfig", "type", "string", o.type);
   if (!Array.isArray(o.datapacks))
     throw new Error("ChartConfig must have a datapacks array of datapack string names.  ");
 }
@@ -646,7 +645,6 @@ export function assertBounds(coordtype: string, bounds: any): asserts bounds is 
       break;
     default:
       throw new Error(`Unrecognized coordtype: ${coordtype}`);
-      break;
   }
 }
 
