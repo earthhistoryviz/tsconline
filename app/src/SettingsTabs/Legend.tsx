@@ -192,7 +192,6 @@ const FilterMenu: React.FC<FilterMenuProps> = observer(
     const anchorProps = useClick(menuState.state, toggleMenu);
     const menuRef = useRef(null);
     const { state } = useContext(context);
-    console.log(state.isFullscreen);
     return (
       <>
         <IconButton ref={menuRef} className="filter-button" {...anchorProps}>
