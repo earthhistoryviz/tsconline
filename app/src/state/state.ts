@@ -9,7 +9,8 @@ import type {
   GeologicalStages,
   Presets,
   DatapackIndex,
-  MapPackIndex
+  MapPackIndex,
+  Patterns
 } from "@tsconline/shared";
 
 export type State = {
@@ -18,6 +19,7 @@ export type State = {
   madeChart: boolean;
   showSuggestedAgePopup: boolean;
   useSuggestedAge: boolean;
+  isFullscreen: boolean;
   settingsTabs: {
     selected: "time" | "font" | "column" | "mappoints";
     columns: ColumnInfo | null;
@@ -47,6 +49,7 @@ export type State = {
   presets: Presets;
   datapackIndex: DatapackIndex;
   mapPackIndex: MapPackIndex;
+  mapPatterns: Patterns;
   selectedPreset: ChartConfig | null;
   chartPath: string;
   chartHash: string;
@@ -65,6 +68,7 @@ export const state = observable<State>({
   tab: 0,
   showSuggestedAgePopup: false,
   useSuggestedAge: true,
+  isFullscreen: false,
   settingsTabs: {
     selected: "time",
     columns: null,
@@ -78,7 +82,8 @@ export const state = observable<State>({
     mapHierarchy: {},
     currentFaciesOptions: {
       faciesAge: 0,
-      dotSize: 1
+      dotSize: 1,
+      presentRockTypes: new Set<string>()
     },
     selectedMap: null,
     isLegendOpen: false,
@@ -100,6 +105,7 @@ export const state = observable<State>({
   presets: {},
   datapackIndex: {},
   mapPackIndex: {},
+  mapPatterns: {},
   selectedPreset: null,
   chartPath: "",
   chartHash: "",

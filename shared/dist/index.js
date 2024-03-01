@@ -30,12 +30,46 @@ export const defaultFontsInfo = {
     "Uncertainty Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 5 },
     "Zone Column Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12 }
 };
+export function assertColor(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("Color must be a non-null object");
+    if (typeof o.name !== "string")
+        throwError("Color", "name", "string", o.color);
+    if (typeof o.hex !== "string")
+        throwError("Color", "hex", "string", o.hex);
+    if (typeof o.rgb !== "object")
+        throwError("Color", "rgb", "object", o.rgb);
+    if (typeof o.rgb.r !== "number")
+        throwError("Color", "r", "number", o.rgb.r);
+    if (o.rgb.r < 0 || o.rgb.r > 255)
+        throwError("Color", "r", "number between 0 and 255", o.rgb.r);
+    if (typeof o.rgb.g !== "number")
+        throwError("Color", "g", "number", o.rgb.g);
+    if (o.rgb.g < 0 || o.rgb.g > 255)
+        throwError("Color", "g", "number between 0 and 255", o.rgb.g);
+    if (typeof o.rgb.b !== "number")
+        throwError("Color", "b", "number", o.rgb.b);
+    if (o.rgb.b < 0 || o.rgb.b > 255)
+        throwError("Color", "b", "number between 0 and 255", o.rgb.b);
+}
+export function assertPatterns(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("Patterns must be a non-null object");
+    for (const key in o) {
+        const pattern = o[key];
+        if (typeof pattern.name !== "string")
+            throwError("Patterns", "name", "string", pattern.name);
+        if (typeof pattern.formattedName !== "string")
+            throwError("Patterns", "formattedName", "string", pattern.formattedName);
+        if (typeof pattern.filePath !== "string")
+            throwError("Patterns", "filePath", "string", pattern.filePath);
+        assertColor(pattern.color);
+    }
+}
 export function assertMapPackIndex(o) {
     if (!o || typeof o !== "object")
         throw new Error("MapPackIndex must be a non-null object");
     for (const key in o) {
-        if (typeof key !== "string")
-            throw new Error(`MapPackIndex key value ${key} is not a string`);
         assertMapPack(o[key]);
     }
 }
@@ -49,8 +83,6 @@ export function assertPresets(o) {
     if (!o || typeof o !== "object")
         throw new Error("Presets must be a non-null object");
     for (const type in o) {
-        if (typeof type !== "string")
-            throw new Error(`Presets key ${type} must be a string`);
         for (const config of o[type]) {
             assertChartConfig(config);
         }
@@ -60,8 +92,6 @@ export function assertTransects(o) {
     if (!o || typeof o !== "object")
         throw new Error("Transects must be a non-null object");
     for (const key in o) {
-        if (typeof key !== "string")
-            throw new Error(`Transects key ${key} must be a string`);
         const transect = o[key];
         if (typeof transect.startMapPoint !== "string")
             throw new Error(`Transects key ${key} value of startMapPoint must be a string`);
@@ -146,8 +176,8 @@ export function assertDatapackParsingPack(o) {
         throw new Error("DatapackParsingPack must be a non-null object");
     if (!Array.isArray(o.columnInfoArray))
         throw new Error(`DatapackParsingPack must have a columnInfoArray array of ColumnInfos`);
-    for (const key in o.columnInfoArray) {
-        assertColumnInfo(o.columnInfoArray[key]);
+    for (const columnInfo of o.columnInfoArray) {
+        assertColumnInfo(columnInfo);
     }
     assertDatapackAgeInfo(o.datapackAgeInfo);
 }
@@ -155,9 +185,8 @@ export function assertDatapackIndex(o) {
     if (!o || typeof o !== "object")
         throw new Error("DatapackIndex must be a non-null object");
     for (const key in o) {
-        if (typeof key !== "string")
-            throw new Error(`DatapackIndex 'key' ${location} must be of type 'string`);
-        assertDatapackParsingPack(o[key]);
+        const pack = o[key];
+        assertDatapackParsingPack(pack);
     }
 }
 export function assertSubFaciesInfo(o) {
@@ -182,19 +211,19 @@ export function assertChartConfig(o) {
     if (typeof o !== "object")
         throw new Error("ChartConfig must be an object");
     if (typeof o.icon !== "string")
-        throw new Error("ChartConfig must have an icon string");
+        throwError("ChartConfig", "icon", "string", o.icon);
     if (typeof o.background !== "string")
-        throw new Error("ChartConfig must have an background string");
+        throwError("ChartConfig", "background", "string", o.background);
     if (typeof o.title !== "string")
-        throw new Error("ChartConfig must have a title string");
+        throwError("ChartConfig", "title", "string", o.title);
     if (typeof o.description !== "string")
-        throw new Error("ChartConfig must have a description string");
+        throwError("ChartConfig", "description", "string", o.description);
     if (typeof o.settings !== "string")
-        throw new Error("ChartConfig must have a settings path string");
+        throwError("ChartConfig", "settings", "string", o.settings);
     if (typeof o.date !== "string")
-        throw new Error("ChartConfig must have a date string");
+        throwError("ChartConfig", "date", "string", o.date);
     if ("type" in o && typeof o.type !== "string")
-        throw new Error("ChartConfig variable 'type' must be a string");
+        throwError("ChartConfig", "type", "string", o.type);
     if (!Array.isArray(o.datapacks))
         throw new Error("ChartConfig must have a datapacks array of datapack string names.  ");
 }
@@ -345,7 +374,6 @@ export function assertBounds(coordtype, bounds) {
             break;
         default:
             throw new Error(`Unrecognized coordtype: ${coordtype}`);
-            break;
     }
 }
 export function assertVertBounds(vertBounds) {
@@ -443,6 +471,13 @@ export function assertSVGStatus(o) {
     if (typeof o.ready !== "boolean")
         throw new Error(`SVGStatus must have a 'ready' boolean property`);
 }
+/**
+ * throws an error `Object '${obj}' must have a '${variable}' ${type} property.\nFound value: ${value}`
+ * @param obj
+ * @param variable
+ * @param type
+ * @param value
+ */
 function throwError(obj, variable, type, value) {
     throw new Error(`Object '${obj}' must have a '${variable}' ${type} property.\nFound value: ${value}`);
 }
