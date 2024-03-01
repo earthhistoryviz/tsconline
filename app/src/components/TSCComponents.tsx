@@ -1,4 +1,4 @@
-import { IconButton, SvgIcon, Typography, styled } from "@mui/material";
+import { Divider, IconButton, SvgIcon, Typography, styled } from "@mui/material";
 import Color from "color";
 import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
@@ -11,7 +11,32 @@ export const ColoredIconButton = styled(IconButton)(({ theme }) => ({
 }));
 
 export const ColoredDiv = styled("div")(({ theme }) => ({
-  backgroundColor: theme.palette.navbar.dark
+  backgroundColor: theme.palette.navbar.main
+}));
+
+export const CustomHeader = styled(Typography)(({ theme }) => ({
+  "&::before": {
+    backgroundColor: theme.palette.selection.main,
+    content: '""',
+    left: "0",
+    width: "2px",
+    position: "absolute",
+    height: "20px",
+    borderRadius: "2px"
+  },
+  position: "relative",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "left",
+  fontSize: "1.1rem",
+  paddingLeft: "21px",
+  paddingBottom: "30px"
+}));
+
+export const CustomDivider = styled(Divider)(() => ({
+  height: "0.05px",
+  width: "100%",
+  backgroundColor: "rgba(197, 197, 197, 0.281)"
 }));
 export const TSCInputAdornment = styled("div")(
   ({ theme }) => `
@@ -36,9 +61,7 @@ export const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   padding: theme.spacing(0, 1),
-  backgroundColor: theme.palette.navbar.dark,
-  ...theme.mixins.toolbar,
-  justifyContent: "space-between"
+  backgroundColor: theme.palette.navbar.main
 }));
 export const StyledScrollbar = styled(SimpleBar)(({ theme, color }) => {
   const backgroundColor = color || theme.palette.scrollbar.main;
@@ -52,6 +75,7 @@ export const StyledScrollbar = styled(SimpleBar)(({ theme, color }) => {
       backgroundColor: `${Color(backgroundColor).lighten(0.15)}`
     },
     "& .simplebar-track": {
+      backgroundColor: Color(backgroundColor).darken(0.8).alpha(0.3).string()
       // this is if we ever decide to make scrollbars "clickable"
       // cursor: "pointer",
     }

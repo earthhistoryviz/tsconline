@@ -16,7 +16,8 @@ import {
   DatapackAgeInfo,
   defaultFontsInfo,
   assertIndexResponse,
-  assertPresets
+  assertPresets,
+  assertPatterns
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
@@ -25,6 +26,22 @@ import { jsonToXml, xmlToJson } from "../parseSettings";
 import { displayError } from "./UtilActions";
 import { Settings } from "../../types";
 
+export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
+  try {
+    const response = await fetcher("/facies-patterns");
+    if (response.ok) {
+      const { patterns } = await response.json();
+      assertPatterns(patterns);
+      state.mapPatterns = patterns;
+      console.log("Successfully fetched Map Patterns");
+    } else {
+      displayError(null, response, `Server responded with ${response.status}`);
+    }
+  } catch (e) {
+    displayError(e, null, "Error fetching the facies patterns");
+    console.error(e);
+  }
+});
 /**
  * Resets any user defined settings
  */
@@ -529,4 +546,7 @@ export const settingsXML = action("settingsXML", (xml: string) => {
 });
 export const setOpenSnackbar = action("setOpenSnackbar", (show: boolean) => {
   state.openSnackbar = show;
+});
+export const setIsFullscreen = action("setIsFullscreen", (newval: boolean) => {
+  state.isFullscreen = newval;
 });
