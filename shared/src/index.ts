@@ -84,7 +84,7 @@ export type Datapack = {
 
 export type PresetChartInfo = {
   settings: PresetChartSettingsInfo;
-  "class datastore.RootColumn:Chart Root": PresetColumnInfo;
+  "class datastore.RootColumn:Chart Root": PresetColumnInfo[];
 };
 
 export type PresetChartSettingsInfo = {
@@ -135,16 +135,45 @@ export type PresetColumnInfo = {
     useNamed?: boolean;
     text: string;
   };
+  customColor: {
+    standardized?: boolean;
+    useNamed?: boolean;
+    text: string;
+  };
   fonts: FontsInfo;
-  //simplest, to access by name have to iterate through the array
+  columnType?: PresetZoneColumnInfo | PresetEventColumnInfo | PresetRangeColumnInfo | PresetRulerColumnInfo | PresetSequenceColumnInfo | [[name: string, text: string]];
   children: PresetColumnInfo[];
-  //access by name good, ordering isn't maintained, can't access by index
-  children2: { [name: string]: PresetColumnInfo };
-  //access by index good, access by name = iterate, maintain order
-  children3: [[name: string, column: PresetColumnInfo]];
-  //access by index good, access by name = iterate, maintain order
-  children4: [{ name: string; column: PresetColumnInfo }];
 };
+
+export type PresetZoneColumnInfo = {
+  crunchOuterMargin?: number;
+  crunchInnerMargin?: number;
+  crunchAscendWidth?: number;
+  crunchOneSideSpaceUse?: number;
+  autoFlip?: boolean;
+  orientation?: "vertical" | "normal";
+}
+
+export type PresetEventColumnInfo = {
+  type?: string;
+  rangeSort?: string;
+}
+
+export type PresetRangeColumnInfo = {
+  rangeSort?: string;
+}
+
+export type PresetRulerColumnInfo = {
+  justification?: "left" | "right";
+}
+
+export type PresetSequenceColumnInfo = {
+  labelMarginLeft?: number;
+  labelMarginRight?: number;
+  graphStyle?: string;
+  drawNameLabel?: boolean;
+  type?: string;
+}
 
 export type FontsInfo = {
   "Column Header": {
