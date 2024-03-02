@@ -173,7 +173,7 @@ async function getAllEntries(
  * @param faciesMap the facies map to add to
  * @param blocksMap  the blocks map to add to
  */
-async function getFaciesOrBlock(filename: string, faciesMap: Map<string, Facies>, blocksMap: Map<string, Block>) {
+export async function getFaciesOrBlock(filename: string, faciesMap: Map<string, Facies>, blocksMap: Map<string, Block>) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
   const facies: Facies = {

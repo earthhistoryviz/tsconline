@@ -1,0 +1,11 @@
+Bonaparte Basin Lithostratigraphy	:	Ord Basin	Onshore Carlton Shelf
+
+Ord Basin	facies	500	234/221/221		off	"info"
+Mahoney Group	PRIMARY			"info"
+	TOP		374.64	"info"
+	Sandstone	Glass Hill Sandstone	376.11	"info"
+
+Onshore Carlton Shelf	facies	500	234/221/221		off	"info"
+Kulshill Group	PRIMARY			"info"
+	TOP		311.59	"info"
+	Sandstone	Border Creek Formation	315.00	"info"

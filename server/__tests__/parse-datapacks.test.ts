@@ -13,8 +13,10 @@ jest.mock("@tsconline/shared", () => ({
     if (fonts.font !== "Arial") throw new Error("Invalid font");
   })
 }));
-import { parseDatapacks, processFacies } from "../src/parse-datapacks";
+import { getFaciesOrBlock, parseDatapacks, processFacies } from "../src/parse-datapacks";
 import { readFileSync } from "fs";
+import { Block, Facies } from "@tsconline/shared";
+import exp from "constants";
 const key = JSON.parse(readFileSync("server/__tests__/__data__/column-keys.json").toString());
 
 describe("general parse-datapacks tests", () => {
@@ -53,4 +55,42 @@ describe("process facies line tests", () =>{
     const line = "\trockType\tlabel\tbadNumber\tinfo"
     expect(() => processFacies(line)).toThrow("Error processing facies line, age: badNumber is NaN")
   })
+})
+
+describe("getFaciesOrBlock", () => {
+  it("should create maps of correct size", async () => {
+    const file = "server/__tests__/__data__/parse-datapacks-test-2.txt";
+    const faciesMap = new Map<string, Facies>();
+    const blockMap = new Map<string, Block>();
+    await getFaciesOrBlock(file, faciesMap, blockMap)
+    expect(faciesMap.size).toBe(1)
+    expect(blockMap.size).toBe(1)
+  })
+  it("should create correct faciesMap", async () => {
+    const file = "server/__tests__/__data__/parse-datapacks-test-3.txt";
+    const faciesMap = new Map<string, Facies>();
+    const blockMap = new Map<string, Block>();
+    await getFaciesOrBlock(file, faciesMap, blockMap)
+    const expectedFaciesMap = new Map<string, Facies>();
+    for (const val in key["facies-or-block-test-1-key"]) {
+      expectedFaciesMap.set(val, key["facies-or-block-test-1-key"][val]);
+    }
+    expect(faciesMap.size).toBe(2)
+    expect(blockMap.size).toBe(0)
+    expect(faciesMap).toEqual(expectedFaciesMap)
+  })
+  it("should create correct blockMap", async () => {
+    const file = "server/__tests__/__data__/parse-datapacks-test-4.txt";
+    const faciesMap = new Map<string, Facies>();
+    const blockMap = new Map<string, Block>();
+    await getFaciesOrBlock(file, faciesMap, blockMap)
+    const expectedFaciesMap = new Map<string, Facies>();
+    // TODO: fix this case where linestyle is being processed as a color
+    for (const val in key["facies-or-block-test-2-key"]) {
+      expectedFaciesMap.set(val, key["facies-or-block-test-2-key"][val]);
+    }
+    expect(blockMap.size).toBe(2)
+    expect(faciesMap.size).toBe(0)
+    expect(blockMap).toEqual(expectedFaciesMap)
+  });
 })
