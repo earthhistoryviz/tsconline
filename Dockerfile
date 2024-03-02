@@ -6,7 +6,7 @@ RUN apt-get update && \
 
 
 # Download Java    
-RUN apt-get install -y openjdk-8-jdk
+RUN apt-get install -y openjdk-17-jdk
 RUN apt-get install -y apt-utils
 RUN apt-get install -y git
 RUN apt-get install -y curl
