@@ -5,6 +5,7 @@ on:
     types: [opened, synchronize, reopened] # Runs on opening a pr, pushing to a pr, and reopening a pr
     branches:
       - main
+      - TSC-252-add-testing-of-datapack-parsing-verify-columninfo
 
 jobs:
   code-quality:
