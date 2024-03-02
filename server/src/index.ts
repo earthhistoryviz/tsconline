@@ -114,7 +114,8 @@ server.get<{ Params: { settingFile: string } }>("/settingsXml/:settingFile", rou
 
 // handles chart columns and age ranges requests
 server.post<{ Params: { files: string } }>("/mapimages/:files", routes.refreshMapImages);
-server.get("/datapackinfoindex", (request, reply) => {
+
+server.get("/datapackinfoindex", (_request, reply) => {
   if (!datapackIndex || !mapPackIndex) {
     reply.send({ error: "datapackIndex/mapPackIndex is null" });
   } else {
@@ -133,9 +134,10 @@ server.get<{ Params: { hash: string } }>("/svgstatus/:hash", routes.fetchSVGStat
 
 server.get("/facies-patterns", (_request, reply) => {
   if (!patterns || Object.keys(patterns).length === 0) {
-    reply.status(500).send({ error: "Server isn't able to load patterns" });
+    reply.status(500).send({ error: "Server isn't able to load facies patterns" });
+  } else {
+    reply.status(200).send({ patterns });
   }
-  reply.status(200).send({ patterns });
 });
 
 // generates chart and sends to proper directory
