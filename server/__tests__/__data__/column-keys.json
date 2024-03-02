@@ -205,8 +205,8 @@
         }
     },
     "facies-or-block-test-1-key": {
-        "Ord Basin": {
-            "name": "Ord Basin",
+        "FaciesOne": {
+            "name": "FaciesOne",
             "subFaciesInfo": [
                 {
                 "rockType": "TOP",
@@ -214,19 +214,19 @@
                 "info": "\"info\""
                 },
                 {
-                "rockType": "Sandstone",
-                "label": "Glass Hill Sandstone",
+                "rockType": "RockTypeOne",
+                "label": "RockTypeOneLabel",
                 "age": 376.11,
-                "info": "\"info\""
+                "info": "\"info for RockTypeOne\""
                 }
             ],
             "minAge": 374.64,
             "maxAge": 376.11,
-            "info": "\"info\"",
+            "info": "\"FaciesOne info\"",
             "on": false
         },
-        "Onshore Carlton Shelf": {
-            "name": "Onshore Carlton Shelf",
+        "FaciesTwo": {
+            "name": "FaciesTwo",
             "subFaciesInfo": [
                 {
                 "rockType": "TOP",
@@ -234,15 +234,15 @@
                 "info": "\"info\""
                 },
                 {
-                "rockType": "Sandstone",
-                "label": "Border Creek Formation",
+                "rockType": "RockTypeTwo",
+                "label": "RockTypeTwoLabel",
                 "age": 315,
-                "info": "\"info\""
+                "info": "\"info for RockTypeTwo\""
                 }
             ],
             "minAge": 311.59,
             "maxAge": 315,
-            "info": "\"info\"",
+            "info": "\"FaciesTwo info\"",
             "on": false
         }
     },
