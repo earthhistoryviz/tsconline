@@ -1,66 +1,15 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
-import { writeFile, stat } from "fs/promises";
-import { Patterns, assertChartRequest, assertPatterns } from "@tsconline/shared";
-import { deleteDirectory, rgbToHex } from "./util.js";
+import { writeFile, stat, readFile } from "fs/promises";
+import { assertChartRequest } from "@tsconline/shared";
+import { deleteDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
 import { grabMapImages } from "./parse-map-packs.js";
 import md5 from "md5";
 import { assetconfigs } from "./index.js";
 import svgson from "svgson";
 import fs from "fs";
-import { readFile } from "fs/promises";
-import { glob } from "glob";
-import path from "path";
-import { getColorFromURL } from "color-thief-node";
-import nearestColor from "nearest-color";
-import { assertColors } from "./types.js";
 
-export const fetchFaciesPatterns = async function fetchFaciesPatterns(_request: FastifyRequest, reply: FastifyReply) {
-  try {
-    const patterns: Patterns = {};
-    const patternsGlobed = await glob(`${assetconfigs.patternsDirectory}/*.PNG`);
-    const colors = JSON.parse((await readFile(assetconfigs.colors)).toString());
-    assertColors(colors);
-    const nearest = nearestColor.from(colors);
-    if (patternsGlobed.length == 0) throw new Error("No patterns found");
-    for (const pattern of patternsGlobed) {
-      const name = path.basename(pattern).split(".")[0];
-      const dominant = await getColorFromURL(pattern);
-      const color = nearest(rgbToHex(dominant[0], dominant[1], dominant[2]));
-      if (!name) {
-        console.error(`Unrecognized pattern file in ${assetconfigs.patternsDirectory} with path ${pattern}`);
-        continue;
-      }
-      if (!color) {
-        console.error(
-          `Unrecognized color in ${assetconfigs.patternsDirectory} with path ${pattern} with color ${color}`
-        );
-        continue;
-      }
-      // format so it splits all underscores and capitalizes the first letter
-      const formattedName = name
-        .split("_")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
-      patterns[name] = {
-        name,
-        formattedName,
-        filePath: `/${pattern}`,
-        color: {
-          name: color.name,
-          hex: color.value,
-          rgb: color.rgb
-        }
-      };
-    }
-    assertPatterns(patterns);
-    reply.status(200).send({ patterns });
-  } catch (e) {
-    console.error(e);
-    reply.status(500).send({ error: e });
-  }
-};
 export const fetchSettingsXml = async function fetchSettingsJson(
   request: FastifyRequest<{ Params: { settingFile: string } }>,
   reply: FastifyReply
