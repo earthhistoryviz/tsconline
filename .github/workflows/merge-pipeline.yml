@@ -93,6 +93,10 @@ jobs:
             }
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Check for any build failures
+        if: env.build_failures == 'true'
+        run: exit 1
+
       - name: Run Tests
         run: |
           set -o pipefail
@@ -119,6 +123,6 @@ jobs:
             }
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check for any failures
-        if: env.build_failed == 'true'
+      - name: Check for any test failures
+        if: env.test_failed == 'true'
         run: exit 1
