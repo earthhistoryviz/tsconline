@@ -94,10 +94,17 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Tests
-        run: if ! yarn test-all; then
+        run: if ! yarn test-all > test_output.log 2>&1; then
               echo "build_failed=true" >> $GITHUB_ENV
               fi
 
       - name: Check for any failures
         if: env.build_failed == 'true'
         run: exit 1
+
+      - name: Upload Test Output Log
+        if: failure() && env.build_failed == 'true'
+        uses: actions/upload-artifact@v2
+        with:
+          name: failed-test-output
+          path: test_output.log
