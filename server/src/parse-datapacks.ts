@@ -336,13 +336,13 @@ function processBlock(line: string): SubBlockInfo | null {
  * @param line the line to be processed
  * @returns A FaciesTimeBlock object
  */
-function processFacies(line: string): SubFaciesInfo | null {
+export function processFacies(line: string): SubFaciesInfo | null {
   let subFaciesInfo = {};
   if (line.toLowerCase().includes("primary")) {
     return null;
   }
   const tabSeperated = line.split("\t");
-  if (tabSeperated.length < 4) return null;
+  if (tabSeperated.length < 4 || tabSeperated.length > 5) return null;
   const age = Number(tabSeperated[3]!);
   if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeperated[3]! + " is NaN");
   // label doesn't exist for TOP or GAP

@@ -1,5 +1,5 @@
 { 
-    "parse-datapacks-test-1-key": {
+    "general-parse-datapacks-test-1-key": {
         "columnInfoArray": [
         {
             "name": "Central Africa Cenozoic",
@@ -103,7 +103,7 @@
             "datapackContainsSuggAge": false
         }
     },
-    "parse-datapacks-test-2-key": {
+    "general-parse-datapacks-test-2-key": {
         "columnInfoArray": [
         {
             "name": "Central Africa Cenozoic",
