@@ -16,16 +16,19 @@
     "prettier-check": "prettier --check \"**/*.{ts,tsx,css}\"",
     "lint-check": "yarn eslint **/*.{tsx,ts} --quiet --config ./.eslintrc.json --no-cache",
     "lint-format": "yarn eslint **/*.{tsx,ts} --fix --quiet --config ./.eslintrc.json",
-    "check-quality": "yarn prettier-format && yarn lint-check"
+    "check-quality": "yarn prettier-format && yarn lint-check",
+    "test": "jest"
   },
   "dependencies": {
     "fastify": "^4.13.0",
     "fs": "^0.0.1-security",
     "nvm": "^0.0.4",
+    "ts-node": "^10.9.2",
     "typescript": "^5.0.4"
   },
   "devDependencies": {
     "@types/eslint": "^8",
+    "@types/jest": "^29.5.12",
     "@typescript-eslint/eslint-plugin": "^7.0.2",
     "@typescript-eslint/parser": "^7.0.2",
     "@yarnpkg/sdks": "^3.0.0-rc.43",
@@ -33,6 +36,8 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-check-file": "^2.7.1",
     "eslint-plugin-react": "^7.33.2",
-    "prettier": "^3.2.5"
+    "jest": "^29.7.0",
+    "prettier": "^3.2.5",
+    "ts-jest": "^29.1.2"
   }
 }
