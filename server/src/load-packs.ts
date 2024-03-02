@@ -17,6 +17,13 @@ import path from "path";
 import { assertColors } from "./types.js";
 import { rgbToHex } from "./util.js";
 
+/**
+ * Loads all the indexes for the active datapacks and mapPacks (if they exist)
+ * will stop parsing if an error is thrown
+ * will keep parsed datapacks that don't have errors
+ * @param datapackIndex the datapackIndex to load
+ * @param mapPackIndex the mapPackIndex to load
+ */
 export async function loadIndexes(datapackIndex: DatapackIndex, mapPackIndex: MapPackIndex) {
   console.log(`\nParsing datapacks: ${assetconfigs.activeDatapacks}\n`);
   for (const datapack of assetconfigs.activeDatapacks) {
@@ -39,6 +46,10 @@ export async function loadIndexes(datapackIndex: DatapackIndex, mapPackIndex: Ma
       });
   }
 }
+/**
+ * Loads all the facies patterns from the patterns directory
+ * @returns Patterns
+ */
 export async function loadFaciesPatterns() {
   try {
     const patterns: Patterns = {};

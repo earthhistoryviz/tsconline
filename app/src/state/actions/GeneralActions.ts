@@ -29,13 +29,14 @@ import { Settings } from "../../types";
 export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   try {
     const response = await fetcher("/facies-patterns");
+    const patternJson = await response.json();
     if (response.ok) {
-      const { patterns } = await response.json();
+      const { patterns } = patternJson;
       assertPatterns(patterns);
       state.mapPatterns = patterns;
       console.log("Successfully fetched Map Patterns");
     } else {
-      displayError(null, response, `Server responded with ${response.status}`);
+      displayError(null, patternJson, `Server responded with ${response.status}`);
     }
   } catch (e) {
     displayError(e, null, "Error fetching the facies patterns");
