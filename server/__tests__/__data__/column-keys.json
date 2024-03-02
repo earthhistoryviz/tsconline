@@ -1,0 +1,106 @@
+{ 
+    "parse-datapacks-test-1-key": {
+        "columnInfoArray": [
+        {
+            "name": "Central Africa Cenozoic",
+            "editName": "Central Africa Cenozoic",
+            "on": true,
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "info": "",
+            "children": [
+            {
+                "name": "Nigeria Coast",
+                "editName": "Nigeria Coast",
+                "on": true,
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "info": "",
+                "children": [],
+                "parent": "Central Africa Cenozoic",
+                "minAge": 0,
+                "maxAge": 10,
+                "subFaciesInfo": [
+                {
+                    "rockType": "TOP",
+                    "age": 0,
+                    "info": "0"
+                },
+                {
+                    "rockType": "Sandstone",
+                    "label": "Delta",
+                    "age": 5,
+                    "info": "5"
+                },
+                {
+                    "rockType": "Claystone",
+                    "label": "ProDelta",
+                    "age": 10,
+                    "info": "10"
+                }
+                ]
+            },
+            {
+                "name": "South Atlantic",
+                "editName": "South Atlantic",
+                "on": true,
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "info": "",
+                "children": [],
+                "parent": "Central Africa Cenozoic",
+                "minAge": 0,
+                "maxAge": 10,
+                "subFaciesInfo": [
+                {
+                    "rockType": "TOP",
+                    "age": 0,
+                    "info": "0"
+                },
+                {
+                    "rockType": "Shallow-marine marl",
+                    "label": "Deep marine",
+                    "age": 5,
+                    "info": "5"
+                },
+                {
+                    "rockType": "Lava",
+                    "label": "Ocean crust",
+                    "age": 10,
+                    "info": "10"
+                }
+                ]
+            }
+            ],
+            "parent": "Root",
+            "minAge": 0,
+            "maxAge": 10,
+            "subFaciesInfo": [
+            {
+                "rockType": "TOP",
+                "age": 0,
+                "info": "0"
+            },
+            {
+                "rockType": "Sandstone",
+                "label": "Delta",
+                "age": 5,
+                "info": "5"
+            },
+            {
+                "rockType": "Claystone",
+                "label": "ProDelta",
+                "age": 10,
+                "info": "10"
+            }
+            ]
+        }
+        ],
+        "datapackAgeInfo": {
+            "datapackContainsSuggAge": false
+        }
+    }
+}
