@@ -94,9 +94,12 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Tests
-        run: if ! yarn test-all > test_output.log 2>&1; then
+        run: |
+          set -o pipefail
+          if ! yarn test-all > test_output.log 2>&1; then
               echo "build_failed=true" >> $GITHUB_ENV
               fi
+        continue-on-error: true
       
       - name: Upload Test Output Log
         if: failure() && env.build_failed == 'true'
