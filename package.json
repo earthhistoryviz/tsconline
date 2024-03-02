@@ -22,6 +22,7 @@
     "test-clear-cache": "jest --clearCache"
   },
   "dependencies": {
+    "@types/node": "^20.11.24",
     "fastify": "^4.13.0",
     "fs": "^0.0.1-security",
     "nvm": "^0.0.4",
