@@ -156,6 +156,7 @@ export const setDatapackConfig = action(
         fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
         info: "",
         on: true,
+        enableTitle: true,
         minAge: state.settings.topStageAge,
         maxAge: state.settings.baseStageAge,
         children: [
@@ -164,6 +165,7 @@ export const setDatapackConfig = action(
             editName: "Ma",
             fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
             on: true,
+            enableTitle: true,
             info: "",
             children: [],
             parent: "Root", // if you change this, change parse-datapacks.ts :69
