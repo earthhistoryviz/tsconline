@@ -14,6 +14,7 @@ jest.mock("@tsconline/shared", () => ({
   })
 }));
 import { ParsedColumnEntry, getAllEntries, getFaciesOrBlock, parseDatapacks, processFacies } from "../src/parse-datapacks";
+// @ts-expect-error - no type for fs found but i know it exists, might want to investigate this more later
 import { readFileSync } from "fs";
 import { Block, DatapackAgeInfo, Facies } from "@tsconline/shared";
 const key = JSON.parse(readFileSync("server/__tests__/__data__/column-keys.json").toString());
