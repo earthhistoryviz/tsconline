@@ -49,7 +49,10 @@ export type State = {
   presets: Presets;
   datapackIndex: DatapackIndex;
   mapPackIndex: MapPackIndex;
-  mapPatterns: Patterns;
+  mapPatterns: {
+    patterns: Patterns;
+    sortedPatterns: Patterns[string][];
+  };
   selectedPreset: ChartConfig | null;
   chartPath: string;
   chartHash: string;
@@ -105,7 +108,10 @@ export const state = observable<State>({
   presets: {},
   datapackIndex: {},
   mapPackIndex: {},
-  mapPatterns: {},
+  mapPatterns: {
+    patterns: {},
+    sortedPatterns: []
+  },
   selectedPreset: null,
   chartPath: "",
   chartHash: "",

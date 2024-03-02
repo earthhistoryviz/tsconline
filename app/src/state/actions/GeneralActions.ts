@@ -25,6 +25,7 @@ import { initializeColumnHashMap } from "./ColumnActions";
 import { jsonToXml, xmlToJson } from "../parseSettings";
 import { displayError } from "./UtilActions";
 import { Settings } from "../../types";
+import { compareStrings } from "../../util/util";
 
 export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   try {
@@ -33,7 +34,10 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
     if (response.ok) {
       const { patterns } = patternJson;
       assertPatterns(patterns);
-      state.mapPatterns = patterns;
+      state.mapPatterns = {
+        patterns,
+        sortedPatterns: Object.values(patterns).sort((a, b) => compareStrings(a.name, b.name))
+      };
       console.log("Successfully fetched Map Patterns");
     } else {
       displayError(null, patternJson, `Server responded with ${response.status}`);
