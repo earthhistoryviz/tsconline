@@ -94,7 +94,9 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Tests
-        run: echo yarn test-all
+        run: if ! yarn build 2>&1 | tee build.log; then
+              echo "build_failed=true" >> $GITHUB_ENV
+              fi
 
       - name: Check for any failures
         if: env.build_failed == 'true'
