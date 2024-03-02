@@ -179,16 +179,16 @@ async function getFaciesOrBlock(filename: string, faciesMap: Map<string, Facies>
   const facies: Facies = {
     name: "",
     subFaciesInfo: [],
-    minAge: 0,
-    maxAge: 0,
+    minAge: Number.MAX_VALUE,
+    maxAge: Number.MIN_VALUE,
     info: "",
     on: true
   };
   const block: Block = {
     name: "",
     subBlockInfo: [],
-    minAge: 0,
-    maxAge: 0,
+    minAge: Number.MAX_VALUE,
+    maxAge: Number.MIN_VALUE,
     popup: "",
     on: true
   };
@@ -268,8 +268,8 @@ function addFaciesToFaciesMap(facies: Facies, faciesMap: Map<string, Facies>) {
   faciesMap.set(facies.name, JSON.parse(JSON.stringify(facies)));
   facies.name = "";
   facies.subFaciesInfo = [];
-  facies.minAge = 0;
-  facies.maxAge = 0;
+  facies.minAge = Number.MAX_VALUE;
+  facies.maxAge = Number.MIN_VALUE;
   facies.info = "";
   facies.on = true;
 }
@@ -287,8 +287,8 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
   blocksMap.set(block.name, JSON.parse(JSON.stringify(block)));
   block.name = "";
   block.subBlockInfo = [];
-  block.minAge = 0;
-  block.maxAge = 0;
+  block.minAge = Number.MAX_VALUE;
+  block.maxAge = Number.MIN_VALUE;
   block.popup = "";
   block.on = true;
 }
@@ -407,8 +407,8 @@ function recursive(
     info: "",
     children: [],
     parent: parent,
-    minAge: 0,
-    maxAge: 0
+    minAge: Number.MAX_VALUE,
+    maxAge: Number.MIN_VALUE 
   };
   const returnValue: FaciesFoundAndAgeRange = {
     faciesFound: false,
@@ -424,8 +424,10 @@ function recursive(
     const currentBlock = blocksMap.get(currentColumn)!;
     currentColumnInfo.subBlockInfo = JSON.parse(JSON.stringify(currentBlock.subBlockInfo));
     currentColumnInfo.on = currentBlock.on;
-    returnValue.minAge = currentBlock.minAge;
-    returnValue.maxAge = currentBlock.maxAge;
+    currentColumnInfo.minAge = Math.min(currentBlock.minAge, currentColumnInfo.minAge);
+    currentColumnInfo.maxAge = Math.max(currentBlock.maxAge, currentColumnInfo.maxAge);
+    returnValue.minAge = currentColumnInfo.minAge;
+    returnValue.maxAge = currentColumnInfo.maxAge;
   }
   if (faciesMap.has(currentColumn)) {
     const currentFacies = faciesMap.get(currentColumn)!;

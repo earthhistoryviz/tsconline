@@ -102,5 +102,106 @@
         "datapackAgeInfo": {
             "datapackContainsSuggAge": false
         }
+    },
+    "parse-datapacks-test-2-key": {
+        "columnInfoArray": [
+        {
+            "name": "Central Africa Cenozoic",
+            "editName": "Central Africa Cenozoic",
+            "on": true,
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "info": "",
+            "children": [
+            {
+                "name": "Aussie stages",
+                "editName": "Aussie stages",
+                "on": false,
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "info": "",
+                "children": [],
+                "parent": "Central Africa Cenozoic",
+                "minAge": 419.2,
+                "maxAge": 433.35,
+                "subBlockInfo": [
+                {
+                    "label": "TOP",
+                    "age": 419.2,
+                    "popup": "",
+                    "lineStyle": ""
+                },
+                {
+                    "label": "Melbournian",
+                    "age": 433.35,
+                    "popup": "Base of Sheinwoodian ICS Stage  (GeoWhen entry)",
+                    "lineStyle": ""
+                }
+                ]
+            },
+            {
+                "name": "South Atlantic",
+                "editName": "South Atlantic",
+                "on": true,
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "info": "",
+                "children": [],
+                "parent": "Central Africa Cenozoic",
+                "minAge": 0,
+                "maxAge": 10,
+                "subFaciesInfo": [
+                {
+                    "rockType": "TOP",
+                    "age": 0,
+                    "info": ""
+                },
+                {
+                    "rockType": "Shallow-marine marl",
+                    "label": "Deep marine",
+                    "age": 5,
+                    "info": ""
+                },
+                {
+                    "rockType": "Lava",
+                    "label": "Ocean crust",
+                    "age": 10,
+                    "info": ""
+                }
+                ]
+            }
+            ],
+            "parent": "Root",
+            "minAge": 0,
+            "maxAge": 433.35,
+            "subFaciesInfo": [
+            {
+                "rockType": "TOP",
+                "age": 0,
+                "info": ""
+            },
+            {
+                "rockType": "Shallow-marine marl",
+                "label": "Deep marine",
+                "age": 5,
+                "info": ""
+            },
+            {
+                "rockType": "Lava",
+                "label": "Ocean crust",
+                "age": 10,
+                "info": ""
+            }
+            ]
+        }
+        ],
+        "datapackAgeInfo": {
+            "datapackContainsSuggAge": true,
+            "topAge": 0,
+            "bottomAge": 5
+        }
     }
 }
