@@ -73,7 +73,7 @@ function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
  * @returns
  */
 export async function parseDatapacks(decrypt_filepath: string, files: string[]): Promise<DatapackParsingPack> {
-  throw new Error("")
+  throw new Error("");
   const decrypt_paths = await grabFilepaths(files, decrypt_filepath, "datapacks");
   if (decrypt_paths.length == 0) throw new Error(`Did not find any datapacks for ${files}`);
   const columnInfoArray: ColumnInfo[] = [];
