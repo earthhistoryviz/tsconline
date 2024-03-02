@@ -17,6 +17,11 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
+      - name: Add known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H dev.geolex.org >> ~/.ssh/known_hosts
+
       - name: Deploy to server
         run: |
           ssh deployuser@dev.geolex.org << 'EOF'
