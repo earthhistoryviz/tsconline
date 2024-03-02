@@ -179,16 +179,16 @@ async function getFaciesOrBlock(filename: string, faciesMap: Map<string, Facies>
   const facies: Facies = {
     name: "",
     subFaciesInfo: [],
-    minAge: 0,
-    maxAge: 0,
+    minAge: Number.MAX_VALUE,
+    maxAge: Number.MIN_VALUE,
     info: "",
     on: true
   };
   const block: Block = {
     name: "",
     subBlockInfo: [],
-    minAge: 0,
-    maxAge: 0,
+    minAge: Number.MAX_VALUE,
+    maxAge: Number.MIN_VALUE,
     popup: "",
     on: true
   };
@@ -268,8 +268,8 @@ function addFaciesToFaciesMap(facies: Facies, faciesMap: Map<string, Facies>) {
   faciesMap.set(facies.name, JSON.parse(JSON.stringify(facies)));
   facies.name = "";
   facies.subFaciesInfo = [];
-  facies.minAge = 0;
-  facies.maxAge = 0;
+  facies.minAge = Number.MAX_VALUE;
+  facies.maxAge = Number.MIN_VALUE;
   facies.info = "";
   facies.on = true;
 }
@@ -287,8 +287,8 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
   blocksMap.set(block.name, JSON.parse(JSON.stringify(block)));
   block.name = "";
   block.subBlockInfo = [];
-  block.minAge = 0;
-  block.maxAge = 0;
+  block.minAge = Number.MAX_VALUE;
+  block.maxAge = Number.MIN_VALUE;
   block.popup = "";
   block.on = true;
 }
@@ -336,13 +336,13 @@ function processBlock(line: string): SubBlockInfo | null {
  * @param line the line to be processed
  * @returns A FaciesTimeBlock object
  */
-function processFacies(line: string): SubFaciesInfo | null {
+export function processFacies(line: string): SubFaciesInfo | null {
   let subFaciesInfo = {};
   if (line.toLowerCase().includes("primary")) {
     return null;
   }
   const tabSeperated = line.split("\t");
-  if (tabSeperated.length < 4) return null;
+  if (tabSeperated.length < 4 || tabSeperated.length > 5) return null;
   const age = Number(tabSeperated[3]!);
   if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeperated[3]! + " is NaN");
   // label doesn't exist for TOP or GAP
@@ -350,15 +350,21 @@ function processFacies(line: string): SubFaciesInfo | null {
     subFaciesInfo = {
       rockType: tabSeperated[1]!,
       age,
-      info: tabSeperated[3]
+      info: ""
     };
   } else {
     subFaciesInfo = {
       rockType: tabSeperated[1]!,
       label: tabSeperated[2]!,
       age,
-      info: tabSeperated[3]
+      info: ""
     };
+  }
+  if (tabSeperated[4]) {
+    subFaciesInfo = {
+      ...subFaciesInfo,
+      info: tabSeperated[4]
+    }
   }
   try {
     assertSubFaciesInfo(subFaciesInfo);
@@ -401,8 +407,8 @@ function recursive(
     info: "",
     children: [],
     parent: parent,
-    minAge: 0,
-    maxAge: 0
+    minAge: Number.MAX_VALUE,
+    maxAge: Number.MIN_VALUE 
   };
   const returnValue: FaciesFoundAndAgeRange = {
     faciesFound: false,
@@ -418,8 +424,10 @@ function recursive(
     const currentBlock = blocksMap.get(currentColumn)!;
     currentColumnInfo.subBlockInfo = JSON.parse(JSON.stringify(currentBlock.subBlockInfo));
     currentColumnInfo.on = currentBlock.on;
-    returnValue.minAge = currentBlock.minAge;
-    returnValue.maxAge = currentBlock.maxAge;
+    currentColumnInfo.minAge = Math.min(currentBlock.minAge, currentColumnInfo.minAge);
+    currentColumnInfo.maxAge = Math.max(currentBlock.maxAge, currentColumnInfo.maxAge);
+    returnValue.minAge = currentColumnInfo.minAge;
+    returnValue.maxAge = currentColumnInfo.maxAge;
   }
   if (faciesMap.has(currentColumn)) {
     const currentFacies = faciesMap.get(currentColumn)!;
