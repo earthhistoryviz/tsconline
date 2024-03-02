@@ -108,7 +108,7 @@ export function trimQuotes(input: string): string {
  * @returns
  */
 export function componentToHex(c: number) {
-  if (c < 0 || c > 255) throw new Error("Invalid hex value")
+  if (c < 0 || c > 255) throw new Error("Invalid hex value");
   const hex = c.toString(16);
   return hex.length == 1 ? "0" + hex : hex;
 }

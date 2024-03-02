@@ -203,5 +203,97 @@
             "topAge": 0,
             "bottomAge": 5
         }
+    },
+    "facies-or-block-test-1-key": {
+        "Ord Basin": {
+            "name": "Ord Basin",
+            "subFaciesInfo": [
+                {
+                "rockType": "TOP",
+                "age": 374.64,
+                "info": "\"info\""
+                },
+                {
+                "rockType": "Sandstone",
+                "label": "Glass Hill Sandstone",
+                "age": 376.11,
+                "info": "\"info\""
+                }
+            ],
+            "minAge": 374.64,
+            "maxAge": 376.11,
+            "info": "\"info\"",
+            "on": false
+        },
+        "Onshore Carlton Shelf": {
+            "name": "Onshore Carlton Shelf",
+            "subFaciesInfo": [
+                {
+                "rockType": "TOP",
+                "age": 311.59,
+                "info": "\"info\""
+                },
+                {
+                "rockType": "Sandstone",
+                "label": "Border Creek Formation",
+                "age": 315,
+                "info": "\"info\""
+                }
+            ],
+            "minAge": 311.59,
+            "maxAge": 315,
+            "info": "\"info\"",
+            "on": false
+        }
+    },
+    "facies-or-block-test-2-key": {
+        "Block Child 1": {
+            "name": "Block Child 1",
+            "subBlockInfo": [
+                {
+                "label": "Sub Block Top",
+                "age": 0,
+                "popup": "",
+                "lineStyle": ""
+                },
+                {
+                "label": "Sub Block 1",
+                "age": 201.36,
+                "popup": "",
+                "lineStyle": ""
+                }
+            ],
+            "minAge": 0,
+            "maxAge": 201.36,
+            "popup": "",
+            "on": true
+        },
+        "Block Child 2": {
+            "name": "Block Child 2",
+            "subBlockInfo": [
+                {
+                "label": "Sub Block Top",
+                "age": 0,
+                "popup": "info",
+                "lineStyle": ""
+                },
+                {
+                "label": "Sub Block 2",
+                "age": 23.03,
+                "popup": "info",
+                "lineStyle": "222/255/0"
+                },
+                {
+                "label": "Sub Block 3",
+                "age": 32.02,
+                "popup": "info",
+                "lineStyle": ""
+                }
+            ],
+            "minAge": 0,
+            "maxAge": 32.02,
+            "popup": "",
+            "on": false
+        }
     }
 }
