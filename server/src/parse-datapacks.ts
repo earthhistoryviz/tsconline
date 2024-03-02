@@ -14,7 +14,7 @@ import {
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths } from "./util.js";
 import { createInterface } from "readline";
 
-type ParsedColumnEntry = {
+export type ParsedColumnEntry = {
   children: string[];
   on: boolean;
   info: string;
@@ -110,7 +110,7 @@ export async function parseDatapacks(decrypt_filepath: string, files: string[]):
  * @param isChild the set of all children
  * @param datapackAgeInfo the datapack age info
  */
-async function getAllEntries(
+export async function getAllEntries(
   filename: string,
   allEntries: Map<string, ParsedColumnEntry>,
   isChild: Set<string>,

@@ -93,7 +93,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Tests
-        run: echo Testing # Test command would go here
+        run: echo yarn test-all
 
       - name: Check for any failures
         if: env.build_failed == 'true'

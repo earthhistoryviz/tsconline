@@ -18,7 +18,7 @@
     "lint-format": "yarn eslint **/*.{tsx,ts} --fix --quiet --config ./.eslintrc.json",
     "check-quality": "yarn prettier-format && yarn lint-check",
     "test-all": "jest",
-    "test-specific": "jest -t",
+    "test": "jest -t",
     "test-clear-cache": "jest --clearCache"
   },
   "dependencies": {
