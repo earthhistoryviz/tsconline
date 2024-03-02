@@ -350,15 +350,21 @@ function processFacies(line: string): SubFaciesInfo | null {
     subFaciesInfo = {
       rockType: tabSeperated[1]!,
       age,
-      info: tabSeperated[3]
+      info: ""
     };
   } else {
     subFaciesInfo = {
       rockType: tabSeperated[1]!,
       label: tabSeperated[2]!,
       age,
-      info: tabSeperated[3]
+      info: ""
     };
+  }
+  if (tabSeperated[4]) {
+    subFaciesInfo = {
+      ...subFaciesInfo,
+      info: tabSeperated[4]
+    }
   }
   try {
     assertSubFaciesInfo(subFaciesInfo);

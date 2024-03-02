@@ -1,7 +1,7 @@
 import * as utilModule from "../src/util";
 jest.mock("./util.js", () => ({
   ...utilModule,
-  grabFilepaths: jest.fn().mockImplementation((files, decrypt_filepath, datapacks) => {
+  grabFilepaths: jest.fn().mockImplementation((_files, decrypt_filepath) => {
     return Promise.resolve([`server/__tests__/__data__/${decrypt_filepath}`]);
   })
 }));
