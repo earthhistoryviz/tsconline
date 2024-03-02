@@ -1,0 +1,16 @@
+age units:	Ma
+SetTop:	0
+SetBase:	5
+SetScale:	6
+
+Central Africa Cenozoic	:	Aussie stages	South Atlantic
+
+Aussie stages	block	120	197/217/234	notitle	off
+	TOP	419.2
+	Melbournian	433.35		Base of Sheinwoodian ICS Stage  (GeoWhen entry)
+
+
+South Atlantic	facies	210
+	TOP		0
+	Shallow-marine marl	Deep marine	5
+	Lava	Ocean crust	10
