@@ -19,7 +19,7 @@ jobs:
 
       - name: Deploy to server
         run: |
-          ssh deployuser@TSC-online-dev << 'EOF'
+          ssh deployuser@dev.geolex.org << 'EOF'
           cd /home/aaron/tsconline
           GIT_SSH_COMMAND="ssh -i /home/deployuser/.ssh/gh-geolex -o IdentitiesOnly=yes" git pull
           docker-compose yarn
