@@ -114,4 +114,51 @@ describe("getAllEntries tests", () => {
       info: ""});
     expect(entriesMap).toEqual(expectedEntriesMap);
   })
+  it("should create correct entries map with meta and title", async () => {
+    const file = "server/__tests__/__data__/get-all-entries-test-2.txt";
+    const entriesMap = new Map<string, ParsedColumnEntry>();
+    const datapackAgeInfo: DatapackAgeInfo = { datapackContainsSuggAge: false}
+    const isChild = new Set<string>
+    await getAllEntries(file, entriesMap, isChild, datapackAgeInfo)
+    const expectedEntriesMap = new Map<string, ParsedColumnEntry>();
+    expectedEntriesMap.set("Parent 1", {
+      children: ["Child 11", "Child 12"],
+      on: false,
+      info: ""
+    }
+    );
+    expectedEntriesMap.set("Parent 2", {
+      children: ["Child 21", "Child 22"],
+      on: true,
+      info: ""});
+    expect(entriesMap).toEqual(expectedEntriesMap);
+  })
+  it("should create correct entries map with meta and title and info", async () => {
+    const file = "server/__tests__/__data__/get-all-entries-test-3.txt";
+    const entriesMap = new Map<string, ParsedColumnEntry>();
+    const datapackAgeInfo: DatapackAgeInfo = { datapackContainsSuggAge: false}
+    const isChild = new Set<string>
+    await getAllEntries(file, entriesMap, isChild, datapackAgeInfo)
+    const expectedEntriesMap = new Map<string, ParsedColumnEntry>();
+    expectedEntriesMap.set("Parent 1", {
+      children: ["Child 11", "Child 12"],
+      on: false,
+      info: "info"
+    }
+    );
+    expectedEntriesMap.set("Parent 2", {
+      children: ["Child 21", "Child 22"],
+      on: false,
+      info: "info2"});
+    expect(entriesMap).toEqual(expectedEntriesMap);
+  })
+  it("should create correct datapackAgeInfo", async () => {
+    const file = "server/__tests__/__data__/get-all-entries-test-4.txt";
+    const entriesMap = new Map<string, ParsedColumnEntry>();
+    const datapackAgeInfo: DatapackAgeInfo = { datapackContainsSuggAge: false}
+    const isChild = new Set<string>
+    await getAllEntries(file, entriesMap, isChild, datapackAgeInfo)
+    const correctDatapackInfo = { datapackContainsSuggAge: true , topAge: 100, bottomAge: 200}
+    expect(datapackAgeInfo).toEqual(correctDatapackInfo);
+  })
 })
