@@ -14,20 +14,16 @@ jobs:
         with:
           fetch-depth: 0 
 
+      - name: Fetch specific branch
+        run: git fetch origin TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow:TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow
+
       - name: Check for disallowed files and directories
         run: |
-          declare -a disallowed_files=(".dpk" ".mdpk" ".txt" ".map" ".java" ".jar" ".DS_Store" "node_modules")
-          disallowed_files_list=""
-          for commit_hash in $(git log TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow..HEAD --pretty=format:%H); do # This needs to be changed to main
-              changed_files=$(git show --name-only --pretty=format: $commit_hash | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store)$')
-              for file in $changed_files; do
-                  if [[ " ${disallowed_files[*]} " == *"$file"* ]]; then
-                      disallowed_files_list+="$file\n"
-                  fi
-              done
-          done
-          if [ ! -z "$disallowed_files_list" ]; then
-            echo -e "$disallowed_files_list" > disallowed_files_list.txt
+          if git diff --name-only TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow...HEAD | grep -E 'node_modules/'; then
+            echo "node_modules folder detected, please remove" > disallowed_files.txt
+          fi  
+          git diff --name-only TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow...HEAD | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store)$' >> disallowed_files.txt || true
+          if [ -s disallowed_files.txt ]; then
             echo "disallowed_files_present=true" >> $GITHUB_ENV
           fi
 
@@ -37,7 +33,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const disallowed_files_output = fs.readFileSync('disallowed_files_list.txt', 'utf8');
+            const disallowed_files_output = fs.readFileSync('disallowed_files.txt', 'utf8');
             const message = `🚨 There are files in your PR you need to remove:\n\n\`\`\`\n${disallowed_files_output}\n\`\`\`\n`;
             const prNumber = context.payload.pull_request.number;
             github.rest.issues.createComment({
