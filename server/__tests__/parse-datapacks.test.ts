@@ -16,7 +16,6 @@ jest.mock("@tsconline/shared", () => ({
 import { getFaciesOrBlock, parseDatapacks, processFacies } from "../src/parse-datapacks";
 import { readFileSync } from "fs";
 import { Block, Facies } from "@tsconline/shared";
-import exp from "constants";
 const key = JSON.parse(readFileSync("server/__tests__/__data__/column-keys.json").toString());
 
 describe("general parse-datapacks tests", () => {
@@ -30,67 +29,67 @@ describe("general parse-datapacks tests", () => {
   });
 });
 
-describe("process facies line tests", () =>{
+describe("process facies line tests", () => {
   it("should process facies line for top label of age 100", () => {
-    const line = "\ttop\t\t100"
-    expect(processFacies(line)).toEqual({rockType: "top", age: 100, info: ""})
-  })
+    const line = "\ttop\t\t100";
+    expect(processFacies(line)).toEqual({ rockType: "top", age: 100, info: "" });
+  });
   it("should process facies line standard", () => {
-    const line = "\trockType\tlabel\t100\tinfo"
-    expect(processFacies(line)).toEqual({rockType: "rockType",label: "label", age: 100, info: "info"})
-  })
+    const line = "\trockType\tlabel\t100\tinfo";
+    expect(processFacies(line)).toEqual({ rockType: "rockType", label: "label", age: 100, info: "info" });
+  });
   it("should process facies and return null on small line", () => {
-    const line = "\tsome bad line\t"
-    expect(processFacies(line)).toBeNull()
-  })
+    const line = "\tsome bad line\t";
+    expect(processFacies(line)).toBeNull();
+  });
   it("should process facies and return null on large line", () => {
-    const line = "\tsome bad line\t\t\t\t"
-    expect(processFacies(line)).toBeNull()
-  })
+    const line = "\tsome bad line\t\t\t\t";
+    expect(processFacies(line)).toBeNull();
+  });
   it("should process facies and return null on empty line", () => {
-    const line = ""
-    expect(processFacies(line)).toBeNull()
-  })
+    const line = "";
+    expect(processFacies(line)).toBeNull();
+  });
   it("should process facies and throw error on bad number", () => {
-    const line = "\trockType\tlabel\tbadNumber\tinfo"
-    expect(() => processFacies(line)).toThrow("Error processing facies line, age: badNumber is NaN")
-  })
-})
+    const line = "\trockType\tlabel\tbadNumber\tinfo";
+    expect(() => processFacies(line)).toThrow("Error processing facies line, age: badNumber is NaN");
+  });
+});
 
 describe("getFaciesOrBlock", () => {
   it("should create maps of correct size", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-2.txt";
     const faciesMap = new Map<string, Facies>();
     const blockMap = new Map<string, Block>();
-    await getFaciesOrBlock(file, faciesMap, blockMap)
-    expect(faciesMap.size).toBe(1)
-    expect(blockMap.size).toBe(1)
-  })
+    await getFaciesOrBlock(file, faciesMap, blockMap);
+    expect(faciesMap.size).toBe(1);
+    expect(blockMap.size).toBe(1);
+  });
   it("should create correct faciesMap", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-3.txt";
     const faciesMap = new Map<string, Facies>();
     const blockMap = new Map<string, Block>();
-    await getFaciesOrBlock(file, faciesMap, blockMap)
+    await getFaciesOrBlock(file, faciesMap, blockMap);
     const expectedFaciesMap = new Map<string, Facies>();
     for (const val in key["facies-or-block-test-1-key"]) {
       expectedFaciesMap.set(val, key["facies-or-block-test-1-key"][val]);
     }
-    expect(faciesMap.size).toBe(2)
-    expect(blockMap.size).toBe(0)
-    expect(faciesMap).toEqual(expectedFaciesMap)
-  })
+    expect(faciesMap.size).toBe(2);
+    expect(blockMap.size).toBe(0);
+    expect(faciesMap).toEqual(expectedFaciesMap);
+  });
   it("should create correct blockMap", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-4.txt";
     const faciesMap = new Map<string, Facies>();
     const blockMap = new Map<string, Block>();
-    await getFaciesOrBlock(file, faciesMap, blockMap)
+    await getFaciesOrBlock(file, faciesMap, blockMap);
     const expectedFaciesMap = new Map<string, Facies>();
     // TODO: fix this case where linestyle is being processed as a color
     for (const val in key["facies-or-block-test-2-key"]) {
       expectedFaciesMap.set(val, key["facies-or-block-test-2-key"][val]);
     }
-    expect(blockMap.size).toBe(2)
-    expect(faciesMap.size).toBe(0)
-    expect(blockMap).toEqual(expectedFaciesMap)
+    expect(blockMap.size).toBe(2);
+    expect(faciesMap.size).toBe(0);
+    expect(blockMap).toEqual(expectedFaciesMap);
   });
-})
+});

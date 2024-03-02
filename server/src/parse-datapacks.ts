@@ -173,7 +173,11 @@ async function getAllEntries(
  * @param faciesMap the facies map to add to
  * @param blocksMap  the blocks map to add to
  */
-export async function getFaciesOrBlock(filename: string, faciesMap: Map<string, Facies>, blocksMap: Map<string, Block>) {
+export async function getFaciesOrBlock(
+  filename: string,
+  faciesMap: Map<string, Facies>,
+  blocksMap: Map<string, Block>
+) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
   const facies: Facies = {
@@ -364,7 +368,7 @@ export function processFacies(line: string): SubFaciesInfo | null {
     subFaciesInfo = {
       ...subFaciesInfo,
       info: tabSeperated[4]
-    }
+    };
   }
   try {
     assertSubFaciesInfo(subFaciesInfo);
@@ -408,7 +412,7 @@ function recursive(
     children: [],
     parent: parent,
     minAge: Number.MAX_VALUE,
-    maxAge: Number.MIN_VALUE 
+    maxAge: Number.MIN_VALUE
   };
   const returnValue: FaciesFoundAndAgeRange = {
     faciesFound: false,
