@@ -30,15 +30,6 @@ export const defaultFontsInfo = {
     "Uncertainty Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 5 },
     "Zone Column Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12 }
 };
-export function assertColor(o) {
-    if (!o || typeof o !== "object")
-        throw new Error("Color must be a non-null object");
-    if (typeof o.name !== "string")
-        throwError("Color", "name", "string", o.color);
-    if (typeof o.hex !== "string")
-        throwError("Color", "hex", "string", o.hex);
-    assertRGB(o.rgb);
-}
 export function assertRGB(o) {
     if (!o || typeof o !== "object")
         throw new Error("RGB must be a non-null object");
@@ -54,6 +45,15 @@ export function assertRGB(o) {
         throwError("RGB", "b", "number", o.b);
     if (o.b < 0 || o.b > 255)
         throwError("RGB", "b", "number between 0 and 255", o.b);
+}
+export function assertColor(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("Color must be a non-null object");
+    if (typeof o.name !== "string")
+        throwError("Color", "name", "string", o.color);
+    if (typeof o.hex !== "string")
+        throwError("Color", "hex", "string", o.hex);
+    assertRGB(o.rgb);
 }
 export function assertPatterns(o) {
     if (!o || typeof o !== "object")
@@ -137,14 +137,13 @@ export function assertSubBlockInfo(o) {
         throwError("SubBlockInfo", "popup", "string", o.popup);
     if (o.lineStyle !== "solid" && o.lineStyle !== "dotted" && o.lineStyle !== "dashed")
         throwError("SubBlockInfo", "lineStyle", "solid, dotted or dashed", o.lineStyle);
-    assertRGB(o.color);
+    assertRGB(o.rgb);
 }
 export function assertBlock(o) {
     if (!o || typeof o !== "object")
         throw new Error("Block must be a non-null object");
     if (typeof o.title !== "string")
         throwError("Block", "title", "string", o.title);
-
     for (const subBlockInfo of o.subBlockInfo) {
         assertSubBlockInfo(subBlockInfo);
     }
@@ -156,9 +155,11 @@ export function assertBlock(o) {
         throwError("Block", "popup", "string", o.popop);
     if (typeof o.on !== "boolean")
         throwError("Block", "on", "boolean", o.on);
-    if (typeof o.notitle !== "boolean")
-        throwError("Block", "notitle", "boolean", o.notitle);
-    assertRGB(o.color)
+    if (typeof o.enableTitle !== "boolean")
+        throwError("Block", "enableTitle", "boolean", o.enableTitle);
+    if (typeof o.width !== "number")
+        throwError("Block", "width", "number", o.width);
+    assertRGB(o.rgb);
 }
 export function assertFacies(o) {
     if (!o || typeof o !== "object")

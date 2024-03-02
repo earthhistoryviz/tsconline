@@ -8,17 +8,24 @@ import {
   Block,
   RGB,
   assertSubBlockInfo,
+  assertRGB,
   defaultFontsInfo,
   SubFaciesInfo,
   assertSubFaciesInfo
 } from "@tsconline/shared";
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters } from "./util.js";
 import { createInterface } from "readline";
-
+const patternForWidth = /\d+/
+const patternForColor = /\d+\/\d+\/\d+/
+const patternForLineStyle = /solid | dashed | dotted/
+const patternForOn = /on | off/
+const patternForNoTitle = /notitle/
+const patternForPopup = /"*"/;
 export type ParsedColumnEntry = {
   children: string[];
   on: boolean;
   info: string;
+  enableTitle: boolean;
 };
 
 type FaciesFoundAndAgeRange = {
@@ -37,16 +44,24 @@ function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
   const parsedColumnEntry: ParsedColumnEntry = {
     children: [],
     on: true,
-    info: ""
+    info: "",
+    enableTitle: true
   };
   for (let i = 0; i < array.length; i++) {
-    if (array[i]?.includes("_METACOLUMN") || array[i]?.includes("TITLE")) {
-      if (array[i]?.includes("_METACOLUMN")) {
-        if (array[i] === "_METACOLUMN_ON") {
-          parsedColumnEntry.on = true;
-        } else {
-          parsedColumnEntry.on = false;
-        }
+    if (array[i]?.includes("METACOLUMN")) {
+      if (array[i] === "_METACOLUMN_ON") {
+        parsedColumnEntry.on = true;
+      } else {
+        parsedColumnEntry.on = false;
+      }
+      array.splice(i, 1);
+      i = i - 1;
+    }
+    if (array[i]?.includes("TITLE")) {
+      if (array[i] === "_TITLE_ON") {
+        parsedColumnEntry.enableTitle = true;
+      } else {
+        parsedColumnEntry.enableTitle = false;
       }
       array.splice(i, 1);
       i = i - 1;
@@ -59,7 +74,6 @@ function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
     }
   }
   parsedColumnEntry.children = array;
-
   return parsedColumnEntry;
 }
 
@@ -205,8 +219,8 @@ export async function getFaciesOrBlock(
     maxAge: Number.MIN_VALUE,
     popup: "",
     on: true,
-    notitle: false,
-    color: { r: 255, g: 255, b: 255 }
+    enableTitle: true,
+    rgb: { r: 255, g: 255, b: 255 }
   };
   let inFaciesBlock = false;
   let inBlockBlock = false;
@@ -243,32 +257,41 @@ export async function getFaciesOrBlock(
     // we found a block
     if (!inBlockBlock && tabSeperated[1] === "block") {
       block.title = trimQuotes(tabSeperated[0]!);
-      if (tabSeperated[2]) {
-        block.width = Number(tabSeperated[2])
-      }
-      if (tabSeperated[3]) {
-        const rgb = tabSeperated[3].split('/')
-        block.color.r = Number(rgb[0]!);
-        block.color.g = Number(rgb[1]!);
-        block.color.b = Number(rgb[2]!);
-      }
-      if (tabSeperated[4] && tabSeperated[4] === "notitle") {
-        block.notitle = true;
-      }
-      if (tabSeperated[5] && tabSeperated[5] === "off") {
-        block.on = false;
-      }
-      const popup = tabSeperated[tabSeperated.length - 1];
-      const pattern = /"*"/;
 
-      if (popup && pattern.test(popup)) {
-        block.popup = popup;
+      for (const item in tabSeperated) {
+        if (patternForWidth.test(item)) {
+          block.width = Number(item);
+        } else if (patternForColor.test(item)) {
+          const rgbSeperated = item.split("/");
+          block.rgb.r = Number(rgbSeperated[0]!);
+          block.rgb.g = Number(rgbSeperated[1]!);
+          block.rgb.b = Number(rgbSeperated[2]!);
+
+        } else if (patternForNoTitle.test(item)) {
+          block.enableTitle = true;
+        } else if (patternForOn.test(item)) {
+          if (item === "off") block.on = false;
+        } else if (patternForPopup.test(item)) {
+          block.popup = item;
+        }
+      }
+      if (isNaN(block.width)) {
+        console.log(`Error found while processing block width, setting width to 100`);
+        block.width = 100;
+      }
+      try {
+        assertRGB(block.rgb);
+      } catch (e) {
+        console.log(`Error ${e} found while processing block rgb, setting rgb to white`);
+        block.rgb.r = 255;
+        block.rgb.g = 255;
+        block.rgb.b = 255;
       }
 
       inBlockBlock = true;
     } else if (inBlockBlock) {
       //get a single sub block
-      const subBlockInfo = processBlock(line, block.color);
+      const subBlockInfo = processBlock(line, block.rgb);
       if (subBlockInfo) {
         block.subBlockInfo.push(subBlockInfo);
       }
@@ -320,7 +343,8 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
   block.popup = "";
   block.on = true;
   block.width = 100;
-  block.color = { r: 255, g: 255, b: 255 }
+  block.enableTitle = true;
+  block.rgb = { r: 255, g: 255, b: 255 };
 }
 
 /**
@@ -334,16 +358,17 @@ function processBlock(line: string, defaultColor: RGB): SubBlockInfo | null {
     age: 0,
     popup: "",
     lineStyle: "solid",
-    color: defaultColor //if Block has color, set to that. If not, set to white
+    rgb: defaultColor //if Block has color, set to that. If not, set to white
   };
   const tabSeperated = line.split("\t");
   if (tabSeperated.length < 3) return null;
+
   const label = tabSeperated[1];
   const age = Number(tabSeperated[2]!);
   const popup = tabSeperated[4];
-  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeperated[2]! + " is NaN");
+  if (isNaN(age)) throw new Error("Error processing block line, age: " + tabSeperated[2]! + " is NaN");
   const lineStyle = tabSeperated[3];
-  const color = tabSeperated[5];
+  const rgb = tabSeperated[5];
   if (label) {
     currentSubBlockInfo.label = label;
   }
@@ -363,11 +388,11 @@ function processBlock(line: string, defaultColor: RGB): SubBlockInfo | null {
       }
     }
   }
-  if (color) {
-    const rgbSeperated = line.split("/");
-    currentSubBlockInfo.color.r = Number(rgbSeperated[0]!);
-    currentSubBlockInfo.color.g = Number(rgbSeperated[1]!);
-    currentSubBlockInfo.color.b = Number(rgbSeperated[2]!);
+  if (rgb && patternForColor.test(rgb)) {
+    const rgbSeperated = rgb.split("/");
+    currentSubBlockInfo.rgb.r = Number(rgbSeperated[0]!);
+    currentSubBlockInfo.rgb.g = Number(rgbSeperated[1]!);
+    currentSubBlockInfo.rgb.b = Number(rgbSeperated[2]!);
   }
   try {
     assertSubBlockInfo(currentSubBlockInfo);
@@ -450,6 +475,7 @@ function recursive(
     name: trimInvisibleCharacters(currentColumn),
     editName: currentColumn,
     on: true,
+    enableTitle: true,
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
     info: "",
     children: [],
@@ -466,6 +492,7 @@ function recursive(
   if (parsedColumnEntry) {
     currentColumnInfo.on = parsedColumnEntry.on;
     currentColumnInfo.info = parsedColumnEntry.info;
+    currentColumnInfo.enableTitle = parsedColumnEntry.enableTitle;
   }
   if (blocksMap.has(currentColumn)) {
     const currentBlock = blocksMap.get(currentColumn)!;
@@ -473,6 +500,7 @@ function recursive(
     currentColumnInfo.on = currentBlock.on;
     currentColumnInfo.minAge = Math.min(currentBlock.minAge, currentColumnInfo.minAge);
     currentColumnInfo.maxAge = Math.max(currentBlock.maxAge, currentColumnInfo.maxAge);
+    currentColumnInfo.enableTitle = currentBlock.enableTitleitle;
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
   }
