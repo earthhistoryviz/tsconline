@@ -13,19 +13,13 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0 
-      
-      - name: List all branches
-        run: git branch -a
-        
-      - name: Show recent commits
-        run: git log --oneline -n 5
 
       - name: Fetch specific branch
         run: git fetch origin TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow:TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow
 
       - name: Check for disallowed files and directories
         run: |
-          # Needs to be changed to main
+          set -x
           git diff --name-only TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow...HEAD | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store)$' > disallowed_files.txt
           if [ -s disallowed_files.txt ]; then
             echo "disallowed_files_present=true" >> $GITHUB_ENV
