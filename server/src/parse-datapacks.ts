@@ -11,7 +11,7 @@ import {
   SubFaciesInfo,
   assertSubFaciesInfo
 } from "@tsconline/shared";
-import { trimQuotes, trimInvisibleCharacters, grabFilepaths } from "./util.js";
+import { trimQuotes, trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters } from "./util.js";
 import { createInterface } from "readline";
 
 export type ParsedColumnEntry = {
@@ -96,8 +96,16 @@ export async function parseDatapacks(decrypt_filepath: string, files: string[]):
         }
       });
     }
+    if (
+      columnInfoArray.length == 1 &&
+      columnInfoArray[0]!.name.length == 0 &&
+      columnInfoArray[0]!.maxAge == Number.MIN_VALUE &&
+      columnInfoArray[0]!.minAge == Number.MAX_VALUE
+    )
+      throw new Error(`No columns found for path ${decrypt_paths}`);
   } catch (e) {
-    console.log("ERROR: failed to read columns for path " + decrypt_paths + ".  Error was: ", e);
+    console.log("ERROR: failed to read columns for path " + decrypt_paths + ". ", e);
+    return { columnInfoArray: [], datapackAgeInfo: { datapackContainsSuggAge: false } };
   }
   return { columnInfoArray, datapackAgeInfo };
 }
@@ -150,7 +158,7 @@ export async function getAllEntries(
     //North Belgium -- Oostende, Brussels, Antwerp, Campine, Maastrichen
 
     const childrenstring = line.split("\t:\t")[1];
-    if (!parent || !childrenstring) continue;
+    if (!parent || !hasVisibleCharacters(parent) || !childrenstring || !hasVisibleCharacters(childrenstring)) continue;
     // childrenstring = childrenstring!.split("\t\t")[0];
     const parsedChildren = spliceArrayAtFirstSpecialMatch(childrenstring!.split("\t"));
     //if the entry is a child, add it to a set.

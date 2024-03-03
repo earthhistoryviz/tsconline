@@ -25,13 +25,29 @@ import { Block, DatapackAgeInfo, Facies } from "@tsconline/shared";
 const key = JSON.parse(readFileSync("server/__tests__/__data__/column-keys.json").toString());
 
 describe("general parse-datapacks tests", () => {
+  /**
+   * Parses the general Africa Bight map pack
+   */
   it("should parse africa general datapack", async () => {
     const datapacks = await parseDatapacks("parse-datapacks-test-1.txt", []);
     expect(datapacks).toEqual(key["general-parse-datapacks-test-1-key"]);
   });
+
+  /**
+   * Parses a custom simple pack of both facies and block
+   * Checks both datapack ages and columnInfo values
+   */
   it("should parse africa general datapack with datapack age and blocks", async () => {
     const datapacks = await parseDatapacks("parse-datapacks-test-2.txt", []);
     expect(datapacks).toEqual(key["general-parse-datapacks-test-2-key"]);
+  });
+
+  /**
+   * Given a bad file, return empty array and default datapackAgeInfo
+   */
+  it("should not parse bad file return empty array", async () => {
+    const datapacks = await parseDatapacks("bad-data.txt", []);
+    expect(datapacks).toEqual({ columnInfoArray: [], datapackAgeInfo: { datapackContainsSuggAge: false } });
   });
 });
 
@@ -63,49 +79,92 @@ describe("process facies line tests", () => {
 });
 
 describe("getFaciesOrBlock tests", () => {
-  it("should create maps of correct size", async () => {
+  let faciesMap: Map<string, Facies>,
+    blockMap: Map<string, Block>,
+    expectedFaciesMap: Map<string, Facies>,
+    expectedBlockMap: Map<string, Block>;
+  beforeEach(() => {
+    faciesMap = new Map<string, Facies>();
+    blockMap = new Map<string, Block>();
+    expectedFaciesMap = new Map<string, Facies>();
+    expectedBlockMap = new Map<string, Block>();
+  });
+
+  /**
+   * Checks both map creation with a simple facies and block
+   */
+  it("should create both maps correctly", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-2.txt";
-    const faciesMap = new Map<string, Facies>();
-    const blockMap = new Map<string, Block>();
     await getFaciesOrBlock(file, faciesMap, blockMap);
+    expectedFaciesMap.set(
+      key["facies-or-block-test-3-key"]["Facies 1"].name,
+      key["facies-or-block-test-3-key"]["Facies 1"]
+    );
+    expectedBlockMap.set(
+      key["facies-or-block-test-3-key"]["Block 1"].name,
+      key["facies-or-block-test-3-key"]["Block 1"]
+    );
     expect(faciesMap.size).toBe(1);
     expect(blockMap.size).toBe(1);
+    expect(faciesMap).toEqual(expectedFaciesMap);
+    expect(blockMap).toEqual(expectedBlockMap);
   });
-  it("should create correct faciesMap", async () => {
+
+  /**
+   * This test checks for the correct creation of the faciesMap
+   */
+  it("should create correct faciesMap only", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-3.txt";
-    const faciesMap = new Map<string, Facies>();
-    const blockMap = new Map<string, Block>();
     await getFaciesOrBlock(file, faciesMap, blockMap);
-    const expectedFaciesMap = new Map<string, Facies>();
     for (const val in key["facies-or-block-test-1-key"]) {
       expectedFaciesMap.set(val, key["facies-or-block-test-1-key"][val]);
     }
     expect(faciesMap.size).toBe(2);
     expect(blockMap.size).toBe(0);
     expect(faciesMap).toEqual(expectedFaciesMap);
+    expect(blockMap).toEqual(expectedBlockMap);
   });
-  it("should create correct blockMap", async () => {
+
+  /**
+   * This test checks for the correct creation of the blockMap
+   * TODO: @Jacqui fix this case where linestyle is being processed as a color
+   */
+  it("should create correct blockMap only", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-4.txt";
-    const faciesMap = new Map<string, Facies>();
-    const blockMap = new Map<string, Block>();
     await getFaciesOrBlock(file, faciesMap, blockMap);
-    const expectedFaciesMap = new Map<string, Facies>();
-    // TODO: fix this case where linestyle is being processed as a color
     for (const val in key["facies-or-block-test-2-key"]) {
-      expectedFaciesMap.set(val, key["facies-or-block-test-2-key"][val]);
+      expectedBlockMap.set(val, key["facies-or-block-test-2-key"][val]);
     }
     expect(blockMap.size).toBe(2);
     expect(faciesMap.size).toBe(0);
-    expect(blockMap).toEqual(expectedFaciesMap);
+    expect(blockMap).toEqual(expectedBlockMap);
+    expect(faciesMap).toEqual(expectedFaciesMap);
+  });
+
+  /**
+   * Given a bad file, the maps should not be initialized
+   */
+  it("should not initialize maps on bad file", async () => {
+    const file = "server/__tests__/__data__/bad-data.txt";
+    await getFaciesOrBlock(file, faciesMap, blockMap);
+    expect(faciesMap.size).toBe(0);
+    expect(blockMap.size).toBe(0);
   });
 });
 
 describe("getAllEntries tests", () => {
+  let entriesMap: Map<string, ParsedColumnEntry>, datapackAgeInfo: DatapackAgeInfo, isChild: Set<string>;
+  beforeEach(() => {
+    entriesMap = new Map<string, ParsedColumnEntry>();
+    datapackAgeInfo = { datapackContainsSuggAge: false };
+    isChild = new Set<string>();
+  });
+
+  /**
+   * Most basic test with only parents and children
+   */
   it("should create correct basic entries map", async () => {
     const file = "server/__tests__/__data__/get-all-entries-test-1.txt";
-    const entriesMap = new Map<string, ParsedColumnEntry>();
-    const datapackAgeInfo: DatapackAgeInfo = { datapackContainsSuggAge: false };
-    const isChild = new Set<string>();
     await getAllEntries(file, entriesMap, isChild, datapackAgeInfo);
     const expectedEntriesMap = new Map<string, ParsedColumnEntry>();
     expectedEntriesMap.set("Parent 1", {
@@ -120,11 +179,12 @@ describe("getAllEntries tests", () => {
     });
     expect(entriesMap).toEqual(expectedEntriesMap);
   });
+
+  /**
+   * Just checks for the correct creation of the entries map with _METACOLUMN_OFF and _TITLE_OFF
+   */
   it("should create correct entries map with meta and title", async () => {
     const file = "server/__tests__/__data__/get-all-entries-test-2.txt";
-    const entriesMap = new Map<string, ParsedColumnEntry>();
-    const datapackAgeInfo: DatapackAgeInfo = { datapackContainsSuggAge: false };
-    const isChild = new Set<string>();
     await getAllEntries(file, entriesMap, isChild, datapackAgeInfo);
     const expectedEntriesMap = new Map<string, ParsedColumnEntry>();
     expectedEntriesMap.set("Parent 1", {
@@ -139,11 +199,13 @@ describe("getAllEntries tests", () => {
     });
     expect(entriesMap).toEqual(expectedEntriesMap);
   });
+
+  /**
+   * This test checks for the correct creation of the entries map with _METACOLUMN_OFF, _TITLE_OFF, and info
+   * alone and all togther
+   */
   it("should create correct entries map with meta and title and info", async () => {
     const file = "server/__tests__/__data__/get-all-entries-test-3.txt";
-    const entriesMap = new Map<string, ParsedColumnEntry>();
-    const datapackAgeInfo: DatapackAgeInfo = { datapackContainsSuggAge: false };
-    const isChild = new Set<string>();
     await getAllEntries(file, entriesMap, isChild, datapackAgeInfo);
     const expectedEntriesMap = new Map<string, ParsedColumnEntry>();
     expectedEntriesMap.set("Parent 1", {
@@ -156,15 +218,31 @@ describe("getAllEntries tests", () => {
       on: false,
       info: "info2"
     });
+    expectedEntriesMap.set("Parent 3", {
+      children: ["Child 31", "Child 32"],
+      on: true,
+      info: "info3"
+    });
     expect(entriesMap).toEqual(expectedEntriesMap);
   });
+
+  /**
+   * Simply checks for the correct creation of the datapackAgeInfo object
+   * Given SetTopAge and SetBaseAge headers
+   */
   it("should create correct datapackAgeInfo", async () => {
     const file = "server/__tests__/__data__/get-all-entries-test-4.txt";
-    const entriesMap = new Map<string, ParsedColumnEntry>();
-    const datapackAgeInfo: DatapackAgeInfo = { datapackContainsSuggAge: false };
-    const isChild = new Set<string>();
     await getAllEntries(file, entriesMap, isChild, datapackAgeInfo);
     const correctDatapackInfo = { datapackContainsSuggAge: true, topAge: 100, bottomAge: 200 };
     expect(datapackAgeInfo).toEqual(correctDatapackInfo);
+  });
+
+  /**
+   * Bad file should not initialize maps
+   */
+  it("should not initialize maps on bad file", async () => {
+    const file = "server/__tests__/__data__/bad-data.txt";
+    await getAllEntries(file, entriesMap, isChild, datapackAgeInfo);
+    expect(entriesMap.size).toBe(0);
   });
 });
