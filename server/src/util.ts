@@ -107,7 +107,8 @@ export function trimQuotes(input: string): string {
  * @param c
  * @returns
  */
-function componentToHex(c: number) {
+export function componentToHex(c: number) {
+  if (c < 0 || c > 255) throw new Error("Invalid hex value");
   const hex = c.toString(16);
   return hex.length == 1 ? "0" + hex : hex;
 }
@@ -122,4 +123,13 @@ function componentToHex(c: number) {
 export function rgbToHex(r: number, g: number, b: number) {
   if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) throw new Error("Invalid rgb value");
   return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
+
+/**
+ * Checks if the string given has visible characters
+ * @param input
+ * @returns
+ */
+export function hasVisibleCharacters(input: string): boolean {
+  return !/^\s*$/.test(input);
 }
