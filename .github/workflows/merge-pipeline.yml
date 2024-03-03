@@ -92,9 +92,36 @@ jobs:
             }
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run Tests
-        run: echo Testing # Test command would go here
-
-      - name: Check for any failures
+      - name: Check for any build failures
         if: env.build_failed == 'true'
+        run: exit 1
+
+      - name: Run Tests
+        run: |
+          set -o pipefail
+          if ! yarn test-all > test_output.log 2>&1; then
+              echo "test_failed=true" >> $GITHUB_ENV
+              fi
+        continue-on-error: true
+      
+      - name: Report Test Errors
+        if: env.test_failed == 'true'
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const fs = require('fs');
+            const testLog = fs.readFileSync('test_output.log', 'utf8');
+            const prNumber = context.payload.pull_request?.number;
+            if (prNumber) {
+              const message = `🚨 Jest tests have failed. Please check the test logs for more information.\n\n\`\`\`\n${testLog}\n\`\`\``;
+              github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: prNumber,
+                body: message,
+              });
+            }
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for any test failures
+        if: env.test_failed == 'true'
         run: exit 1
