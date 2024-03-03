@@ -3,7 +3,7 @@ import path from "path";
 import { grabFilepaths, trimQuotes } from "./util.js";
 import { assetconfigs } from "./index.js";
 import pmap from "p-map";
-import type { MapHierarchy, MapInfo, MapPack, MapPoints } from "@tsconline/shared";
+import { MapHierarchy, MapInfo, MapPack, MapPoints, assertTransects } from "@tsconline/shared";
 import {
   assertMapPoints,
   assertInfoPoints,
@@ -14,6 +14,11 @@ import {
   assertParentMap
 } from "@tsconline/shared";
 
+type HeaderLabels = {
+  [key: number]: {
+    label: string;
+  };
+};
 /**
  * Finds all map images and puts them in the public directory
  * For access from fastify server servicing
@@ -105,25 +110,7 @@ export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
                 map.bounds = rectBounds;
                 break;
               case "VERTICAL PERSPECTIVE":
-                const vertBounds: any = {};
-                for (let i = 1; i < info.length; i++) {
-                  if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue;
-                  switch (headerLabels[i]!.label) {
-                    case "CENTER LON":
-                    case "CENTER LONG":
-                      vertBounds.centerLon = Number(info[i]);
-                      break;
-                    case "CENTER LAT":
-                      vertBounds.centerLat = Number(info[i]);
-                      break;
-                    case "HEIGHT":
-                      vertBounds.height = Number(info[i]);
-                      break;
-                    case "SCALE":
-                      vertBounds.scale = Number(info[i]);
-                      break;
-                  }
-                }
+                const vertBounds = grabVertBounds(headerLabels, info);
                 assertVertBounds(vertBounds);
                 map.bounds = vertBounds;
                 break;
@@ -137,22 +124,7 @@ export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
                 `Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-PARENT MAP does not have proper format`
               );
             }
-            const parent: any = {};
-            //TODO: we only assume rect bounds as parent, will need change if not the case
-            const bounds = grabRectBounds(headerLabels, info);
-            assertRectBounds(bounds);
-            for (let i = 1; i < info.length; i++) {
-              if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue;
-              switch (headerLabels[i]!.label) {
-                case "PARENT NAME":
-                  parent.name = info[i];
-                  break;
-                case "COORDINATE TYPE":
-                  parent.coordtype = info[i];
-                  break;
-              }
-            }
-            parent.bounds = bounds;
+            const parent = grabParent(headerLabels, info);
             assertParentMap(parent);
             map.parent = parent;
             if (mapHierarchy[parent.name]) {
@@ -176,42 +148,10 @@ export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
             // iterate over the line and depending on the columns above, figure out which
             // parts of MapPoints to put it in
             while (info && info[0] === "DATACOL") {
-              const mapPoint: MapPoints[string] = {
-                lat: 0,
-                lon: 0
-              };
-              let mapPointName = "";
-              for (let j = 1; j < info.length; j++) {
-                if (!info[j] || !headerLabels || !headerLabels[j] || !headerLabels[j]!.label) continue;
-                switch (headerLabels[j]!.label) {
-                  case "NAME":
-                    mapPointName = trimQuotes(info[j]!);
-                    break;
-                  case "LAT":
-                    mapPoint.lat = Number(info[j]!);
-                    break;
-                  case "LON":
-                    mapPoint.lon = Number(info[j]!);
-                    break;
-                  case "DEFAULT ON/OFF":
-                    mapPoint.default = String(info[j]!);
-                    break;
-                  case "MIN-AGE":
-                    mapPoint.minage = Number(info[j]!);
-                    break;
-                  case "MAX-AGE":
-                    mapPoint.maxage = Number(info[j]!);
-                    break;
-                  case "NOTE":
-                    mapPoint.note = String(info[j]!);
-                    break;
-                  default:
-                    throw new Error(`Unrecognized component of DATACOL: ${headerLabels[j]!.label}`);
-                }
-              }
+              const {mapName, mapPoint} = grabMapPoints(headerLabels, info);
               index++;
               info = tabSeparated[index];
-              map.mapPoints[mapPointName] = mapPoint;
+              map.mapPoints[mapName] = mapPoint;
             }
             assertMapPoints(map.mapPoints);
             break;
@@ -223,26 +163,7 @@ export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
             }
             if (!map.infoPoints) map.infoPoints = {};
             while (info && info[0] === "INFOPT") {
-              const infoPoint: any = {};
-              let name = "";
-              for (let i = 1; i < info.length; i++) {
-                if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue;
-                switch (headerLabels[i]!.label) {
-                  case "NAME":
-                    name = info[i]!;
-                    break;
-                  case "LAT":
-                    infoPoint.lat = Number(info[i]);
-                    break;
-                  case "LONG":
-                  case "LON":
-                    infoPoint.lon = Number(info[i]);
-                    break;
-                  case "NOTE":
-                    infoPoint.note = info[i];
-                    break;
-                }
-              }
+              const {name, infoPoint} = grabInfoPoints(headerLabels, info)
               index++;
               info = tabSeparated[index];
               map.infoPoints[name] = infoPoint;
@@ -258,30 +179,12 @@ export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
             }
             if (!map.transects) map.transects = {};
             while (info && info[0] === "TRANSECT") {
-              const transect: any = {};
-              let name = "";
-              for (let i = 1; i < info.length; i++) {
-                if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue;
-                switch (headerLabels[i]!.label) {
-                  case "NAME":
-                    name = info[i]!;
-                    break;
-                  case "STARTLOC":
-                    transect.startMapPoint = info[i]!;
-                    break;
-                  case "ENDLOC":
-                    transect.endMapPoint = info[i]!;
-                    break;
-                  case "NOTE":
-                    transect.note = info[i]!;
-                    break;
-                }
-              }
-              transect.on = true;
+              const {transect, name} = grabTransects(headerLabels, info);
               index++;
               info = tabSeparated[index];
               map.transects[name] = transect;
             }
+            assertTransects(map.transects);
             break;
         }
       }
@@ -331,7 +234,7 @@ function grabNames(line: string[]) {
   return headerLabels;
 }
 
-function grabRectBounds(headerLabels: { [key: number]: { label: string } }, info: string[]) {
+function grabRectBounds(headerLabels: HeaderLabels, info: string[]) {
   const rectBounds: any = {};
   for (let i = 1; i < info.length; i++) {
     if (!headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue;
@@ -353,4 +256,128 @@ function grabRectBounds(headerLabels: { [key: number]: { label: string } }, info
     }
   }
   return rectBounds;
+}
+function grabVertBounds(headerLabels: HeaderLabels, info: string[]) {
+  const vertBounds: any = {};
+  for (let i = 1; i < info.length; i++) {
+    if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue;
+    switch (headerLabels[i]!.label) {
+      case "CENTER LON":
+      case "CENTER LONG":
+        vertBounds.centerLon = Number(info[i]);
+        break;
+      case "CENTER LAT":
+        vertBounds.centerLat = Number(info[i]);
+        break;
+      case "HEIGHT":
+        vertBounds.height = Number(info[i]);
+        break;
+      case "SCALE":
+        vertBounds.scale = Number(info[i]);
+        break;
+    }
+  }
+  return vertBounds;
+}
+
+function grabTransects(headerLabels: HeaderLabels, info: string[]) {
+  const transect: any = {}
+  let name = ""
+  for (let i = 1; i < info.length; i++) {
+    if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue;
+    switch (headerLabels[i]!.label) {
+      case "NAME":
+        name = info[i]!;
+        break;
+      case "STARTLOC":
+        transect.startMapPoint = info[i]!;
+        break;
+      case "ENDLOC":
+        transect.endMapPoint = info[i]!;
+        break;
+      case "NOTE":
+        transect.note = info[i]!;
+        break;
+    }
+  }
+  transect.on = true;
+  return {transect, name}
+}
+
+function grabInfoPoints(headerLabels: HeaderLabels, info: string[]) {
+  const infoPoint: any = {};
+  let name = ""
+  for (let i = 1; i < info.length; i++) {
+    if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue;
+    switch (headerLabels[i]!.label) {
+      case "NAME":
+        name = info[i]!;
+        break;
+      case "LAT":
+        infoPoint.lat = Number(info[i]);
+        break;
+      case "LONG":
+      case "LON":
+        infoPoint.lon = Number(info[i]);
+        break;
+      case "NOTE":
+        infoPoint.note = info[i];
+        break;
+    }
+  }
+  return {infoPoint, name};
+}
+
+function grabMapPoints(headerLabels: HeaderLabels, info: string[]) {
+  let mapPoint: any = {}
+  let mapName = ""
+  for (let j = 1; j < info.length; j++) {
+    if (!info[j] || !headerLabels || !headerLabels[j] || !headerLabels[j]!.label) continue;
+    switch (headerLabels[j]!.label) {
+      case "NAME":
+        mapName = trimQuotes(info[j]!);
+        break;
+      case "LAT":
+        mapPoint.lat = Number(info[j]!);
+        break;
+      case "LON":
+        mapPoint.lon = Number(info[j]!);
+        break;
+      case "DEFAULT ON/OFF":
+        mapPoint.default = String(info[j]!);
+        break;
+      case "MIN-AGE":
+        mapPoint.minage = Number(info[j]!);
+        break;
+      case "MAX-AGE":
+        mapPoint.maxage = Number(info[j]!);
+        break;
+      case "NOTE":
+        mapPoint.note = String(info[j]!);
+        break;
+      default:
+        throw new Error(`Unrecognized component of DATACOL: ${headerLabels[j]!.label}`);
+    }
+  }
+  return {mapName, mapPoint}
+}
+
+function grabParent(headerLabels: HeaderLabels, info: string[]) {
+  const parent: any = {};
+  //TODO: we only assume rect bounds as parent, will need change if not the case
+  const bounds = grabRectBounds(headerLabels, info);
+  parent.bounds = bounds;
+  assertRectBounds(bounds);
+  for (let i = 1; i < info.length; i++) {
+    if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue;
+    switch (headerLabels[i]!.label) {
+      case "PARENT NAME":
+        parent.name = info[i];
+        break;
+      case "COORDINATE TYPE":
+        parent.coordtype = info[i];
+        break;
+    }
+  }
+  return parent
 }
