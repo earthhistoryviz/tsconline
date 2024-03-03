@@ -93,7 +93,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for any build failures
-        if: env.build_failures == 'true'
+        if: env.build_failed == 'true'
         run: exit 1
 
       - name: Run Tests
