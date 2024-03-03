@@ -258,26 +258,21 @@ export async function getFaciesOrBlock(
     if (!inBlockBlock && tabSeperated[1] === "block") {
       block.title = trimQuotes(tabSeperated[0]!);
 
-      for (const item in tabSeperated) {
-        if (patternForWidth.test(item)) {
-          block.width = Number(item);
-        } else if (patternForColor.test(item)) {
-          const rgbSeperated = item.split("/");
-          block.rgb.r = Number(rgbSeperated[0]!);
-          block.rgb.g = Number(rgbSeperated[1]!);
-          block.rgb.b = Number(rgbSeperated[2]!);
+      if (tabSeperated[2]) {
+        block.width = Number(tabSeperated[2]);
 
-        } else if (patternForNoTitle.test(item)) {
-          block.enableTitle = true;
-        } else if (patternForOn.test(item)) {
-          if (item === "off") block.on = false;
-        } else if (patternForPopup.test(item)) {
-          block.popup = item;
-        }
       }
       if (isNaN(block.width)) {
         console.log(`Error found while processing block width, setting width to 100`);
         block.width = 100;
+      }
+
+      if (tabSeperated[3] && patternForColor.test(tabSeperated[3])) {
+
+        const rgbSeperated = tabSeperated[3].split("/");
+        block.rgb.r = Number(rgbSeperated[0]!);
+        block.rgb.g = Number(rgbSeperated[1]!);
+        block.rgb.b = Number(rgbSeperated[2]!);
       }
       try {
         assertRGB(block.rgb);
@@ -286,6 +281,17 @@ export async function getFaciesOrBlock(
         block.rgb.r = 255;
         block.rgb.g = 255;
         block.rgb.b = 255;
+      }
+
+      if (tabSeperated[4] && tabSeperated[4] === "notitle") {
+        block.enableTitle = false;
+      }
+      if (tabSeperated[5] && tabSeperated[5] === "off") {
+        block.on = false;
+      }
+
+      if (tabSeperated[5] && patternForPopup.test(tabSeperated[5])) {
+        block.popup = tabSeperated[5];
       }
 
       inBlockBlock = true;
@@ -352,7 +358,7 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
  * @param line the line to be processed
  * @returns A subBlock object
  */
-function processBlock(line: string, defaultColor: RGB): SubBlockInfo | null {
+export function processBlock(line: string, defaultColor: RGB): SubBlockInfo | null {
   const currentSubBlockInfo = {
     label: "",
     age: 0,
@@ -362,7 +368,6 @@ function processBlock(line: string, defaultColor: RGB): SubBlockInfo | null {
   };
   const tabSeperated = line.split("\t");
   if (tabSeperated.length < 3) return null;
-
   const label = tabSeperated[1];
   const age = Number(tabSeperated[2]!);
   const popup = tabSeperated[4];
@@ -376,7 +381,7 @@ function processBlock(line: string, defaultColor: RGB): SubBlockInfo | null {
   if (popup) {
     currentSubBlockInfo.popup = popup;
   }
-  if (lineStyle) {
+  if (lineStyle && patternForLineStyle.test(lineStyle)) {
     switch (lineStyle) {
       case "dashed": {
         currentSubBlockInfo.lineStyle = "dashed";
@@ -388,6 +393,7 @@ function processBlock(line: string, defaultColor: RGB): SubBlockInfo | null {
       }
     }
   }
+
   if (rgb && patternForColor.test(rgb)) {
     const rgbSeperated = rgb.split("/");
     currentSubBlockInfo.rgb.r = Number(rgbSeperated[0]!);
