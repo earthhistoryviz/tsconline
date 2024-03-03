@@ -12,19 +12,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0 
+          fetch-depth: 2 
 
       - name: Check for disallowed files and directories
         run: |
           declare -a disallowed_files=(".dpk" ".mdpk" ".txt" ".map" ".java" ".jar" ".DS_Store" "node_modules")
           disallowed_files_list=""
-          for commit_hash in $(git log TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow..HEAD --pretty=format:%H); do # This needs to be changed to main
-              changed_files=$(git show --name-only --pretty=format: $commit_hash | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store)$')
-              for file in $changed_files; do
-                  if [[ " ${disallowed_files[*]} " == *"$file"* ]]; then
-                      disallowed_files_list+="$file\n"
-                  fi
-              done
+          changed_files=$(git diff --name-only -r TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store)$)
+          for file in $changed_files; do
+              if [[ " ${disallowed_files[*]} " == *"$file"* ]]; then
+                  disallowed_files_list+="$file\n"
+              fi
           done
           if [ ! -z "$disallowed_files_list" ]; then
             echo -e "$disallowed_files_list" > disallowed_files_list.txt
