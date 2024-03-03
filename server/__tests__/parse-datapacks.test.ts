@@ -18,7 +18,8 @@ import {
   getAllEntries,
   getFaciesOrBlock,
   parseDatapacks,
-  processFacies
+  processFacies,
+  processBlock
 } from "../src/parse-datapacks";
 import { readFileSync } from "fs";
 import { Block, DatapackAgeInfo, Facies } from "@tsconline/shared";
@@ -75,6 +76,46 @@ describe("process facies line tests", () => {
   it("should process facies and throw error on bad number", () => {
     const line = "\trockType\tlabel\tbadNumber\tinfo";
     expect(() => processFacies(line)).toThrow("Error processing facies line, age: badNumber is NaN");
+  });
+});
+
+describe("process blocks line tests", () => {
+  it("should process block line for top label of age 100 with default color and default lineStyle", () => {
+    const defaultColor = { r: 255, g: 255, b: 255 }
+    const line = "\tTOP\t100\t\t";
+    expect(processBlock(line, defaultColor)).toEqual({
+      label: "TOP",
+      age: 100,
+      popup: "",
+      lineStyle: "solid",
+      rgb: defaultColor
+    });
+  });
+  it("should process block line standard", () => {
+    const defaultColor = { r: 255, g: 255, b: 255 }
+    const line = "\tlabel\t100\tpopup\tdotted\t23/45/67";
+    expect(processBlock(line, defaultColor)).toEqual({
+      label: "label",
+      age: 100,
+      popup: "popup",
+      lineStyle: "dotted",
+      rgb: { r: 23, g: 45, b: 67 }
+    });
+  });
+  it("should process block and return null on small line", () => {
+    const defaultColor = { r: 255, g: 255, b: 255 }
+    const line = "\tsome bad line\t";
+    expect(processBlock(line, defaultColor)).toBeNull();
+  });
+  it("should process block and return null on empty line", () => {
+    const line = "";
+    const defaultColor = { r: 255, g: 255, b: 255 }
+    expect(processBlock(line, defaultColor)).toBeNull();
+  });
+  it("should process block and throw error on bad number", () => {
+    const defaultColor = { r: 255, g: 255, b: 255 }
+    const line = "\tlabel\tbadNumber\tpopup\tdotted\t23/45/67";
+    expect(() => processBlock(line, defaultColor)).toThrow("Error processing block line, age: badNumber is NaN");
   });
 });
 
