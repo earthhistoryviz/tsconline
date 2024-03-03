@@ -19,10 +19,10 @@ jobs:
 
       - name: Check for disallowed files and directories
         run: |
-          set -x
-          git diff --name-only TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow...HEAD | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store)$' > disallowed_files.txt;
+          git diff --name-only TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow...HEAD | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store)$' > disallowed_files.txt
           if [ -s disallowed_files.txt ]; then
-            echo "disallowed_files_present=true" >> $GITHUB_ENV;
+            echo "disallowed_files_present=true" >> $GITHUB_ENV
+          fi
 
       - name: Comment PR on disallowed files Failure
         if: env.disallowed_files_present == 'true'
