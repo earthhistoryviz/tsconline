@@ -6,6 +6,5 @@
     "allowJs": true
   },
   "include": [ 
-    "./src/**/*" 
-, "src/parse-map-packs.ts"  ]
+    "./src/**/*"]
 }
