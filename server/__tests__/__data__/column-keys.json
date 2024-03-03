@@ -295,5 +295,54 @@
             "popup": "",
             "on": false
         }
+    },
+    "facies-or-block-test-3-key": {
+        "Facies 1": {
+            "name": "Child 2",
+            "subFaciesInfo": [
+                {
+                "rockType": "TOP",
+                "age": 0,
+                "info": ""
+                },
+                {
+                "rockType": "Child 2 SubFaciesInfo 1",
+                "label": "Child 2 SubFaciesInfo 1 Label",
+                "age": 5,
+                "info": ""
+                },
+                {
+                "rockType": "Child 2 SubFaciesInfo 2",
+                "label": "Child 2 SubFaciesInfo 2 Label",
+                "age": 10,
+                "info": ""
+                }
+            ],
+            "minAge": 0,
+            "maxAge": 10,
+            "info": "",
+            "on": true
+        },
+        "Block 1": {
+            "name": "Child 1",
+            "subBlockInfo": [
+                {
+                "label": "TOP",
+                "age": 419.2,
+                "popup": "",
+                "lineStyle": ""
+                },
+                {
+                "label": "Child 1 SubBlock",
+                "age": 433.35,
+                "popup": "Child 1 SubBlock Info",
+                "lineStyle": ""
+                }
+            ],
+            "minAge": 419.2,
+            "maxAge": 433.35,
+            "popup": "",
+            "on": false
+        }
     }
 }
