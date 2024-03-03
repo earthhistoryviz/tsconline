@@ -8,16 +8,9 @@ import { loadPresets } from "./preset.js";
 import { AssetConfig, assertAssetConfig } from "./types.js";
 import { deleteDirectory } from "./util.js";
 import * as routes from "./routes.js";
-import {
-  DatapackIndex,
-  MapPackIndex,
-  assertDatapackParsingPack,
-  assertIndexResponse,
-  assertMapPack
-} from "@tsconline/shared";
-import { parseDatapacks } from "./parse-datapacks.js";
-import { parseMapPacks } from "./parse-map-packs.js";
+import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
 import fastifyCompress from "@fastify/compress";
+import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
 
 const server = fastify({
   logger: false,
@@ -64,33 +57,10 @@ try {
   process.exit(1);
 }
 
-export const datapackIndex: DatapackIndex = {};
-export const mapPackIndex: MapPackIndex = {};
-try {
-  console.log(`\nParsing datapacks: ${assetconfigs.activeDatapacks}\n`);
-  for (const datapack of assetconfigs.activeDatapacks) {
-    parseDatapacks(assetconfigs.decryptionDirectory, [datapack])
-      .then((datapackParsingPack) => {
-        assertDatapackParsingPack(datapackParsingPack);
-        datapackIndex[datapack] = datapackParsingPack;
-        console.log(`Successfully parsed ${datapack}`);
-      })
-      .catch((e) => {
-        console.log(`Cannot create a datapackParsingPack with datapack ${datapack} and error: ${e}`);
-      });
-    parseMapPacks([datapack])
-      .then((mapPack) => {
-        assertMapPack(mapPack);
-        mapPackIndex[datapack] = mapPack;
-      })
-      .catch((e) => {
-        console.log(`Cannot create a mapPack with datapack ${datapack} and error: ${e}`);
-      });
-  }
-} catch (e) {
-  console.log("ERROR: Failed to parse datapacks of activeDatapacks in AssetConfig with error: ", e);
-  process.exit(1);
-}
+const datapackIndex: DatapackIndex = {};
+const mapPackIndex: MapPackIndex = {};
+const patterns = await loadFaciesPatterns();
+await loadIndexes(datapackIndex, mapPackIndex);
 // Serve the main app from /
 // @ts-expect-error: server.register doesn't accept the proper types. open bug-report asap to fastify
 server.register(fastifyStatic, {
@@ -144,7 +114,8 @@ server.get<{ Params: { settingFile: string } }>("/settingsXml/:settingFile", rou
 
 // handles chart columns and age ranges requests
 server.post<{ Params: { files: string } }>("/mapimages/:files", routes.refreshMapImages);
-server.get("/datapackinfoindex", (request, reply) => {
+
+server.get("/datapackinfoindex", (_request, reply) => {
   if (!datapackIndex || !mapPackIndex) {
     reply.send({ error: "datapackIndex/mapPackIndex is null" });
   } else {
@@ -161,7 +132,13 @@ server.get("/datapackinfoindex", (request, reply) => {
 // checks chart.pdf-status
 server.get<{ Params: { hash: string } }>("/svgstatus/:hash", routes.fetchSVGStatus);
 
-server.get("/facies-patterns", routes.fetchFaciesPatterns);
+server.get("/facies-patterns", (_request, reply) => {
+  if (!patterns || Object.keys(patterns).length === 0) {
+    reply.status(500).send({ error: "Server isn't able to load facies patterns" });
+  } else {
+    reply.status(200).send({ patterns });
+  }
+});
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
