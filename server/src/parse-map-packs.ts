@@ -148,7 +148,7 @@ export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
             // iterate over the line and depending on the columns above, figure out which
             // parts of MapPoints to put it in
             while (info && info[0] === "DATACOL") {
-              const {mapName, mapPoint} = grabMapPoints(headerLabels, info);
+              const { mapName, mapPoint } = grabMapPoints(headerLabels, info);
               index++;
               info = tabSeparated[index];
               map.mapPoints[mapName] = mapPoint;
@@ -163,7 +163,7 @@ export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
             }
             if (!map.infoPoints) map.infoPoints = {};
             while (info && info[0] === "INFOPT") {
-              const {name, infoPoint} = grabInfoPoints(headerLabels, info)
+              const { name, infoPoint } = grabInfoPoints(headerLabels, info);
               index++;
               info = tabSeparated[index];
               map.infoPoints[name] = infoPoint;
@@ -179,7 +179,7 @@ export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
             }
             if (!map.transects) map.transects = {};
             while (info && info[0] === "TRANSECT") {
-              const {transect, name} = grabTransects(headerLabels, info);
+              const { transect, name } = grabTransects(headerLabels, info);
               index++;
               info = tabSeparated[index];
               map.transects[name] = transect;
@@ -281,8 +281,8 @@ function grabVertBounds(headerLabels: HeaderLabels, info: string[]) {
 }
 
 function grabTransects(headerLabels: HeaderLabels, info: string[]) {
-  const transect: any = {}
-  let name = ""
+  const transect: any = {};
+  let name = "";
   for (let i = 1; i < info.length; i++) {
     if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue;
     switch (headerLabels[i]!.label) {
@@ -301,12 +301,12 @@ function grabTransects(headerLabels: HeaderLabels, info: string[]) {
     }
   }
   transect.on = true;
-  return {transect, name}
+  return { transect, name };
 }
 
 function grabInfoPoints(headerLabels: HeaderLabels, info: string[]) {
   const infoPoint: any = {};
-  let name = ""
+  let name = "";
   for (let i = 1; i < info.length; i++) {
     if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!.label) continue;
     switch (headerLabels[i]!.label) {
@@ -325,12 +325,12 @@ function grabInfoPoints(headerLabels: HeaderLabels, info: string[]) {
         break;
     }
   }
-  return {infoPoint, name};
+  return { infoPoint, name };
 }
 
 function grabMapPoints(headerLabels: HeaderLabels, info: string[]) {
-  let mapPoint: any = {}
-  let mapName = ""
+  let mapPoint: any = {};
+  let mapName = "";
   for (let j = 1; j < info.length; j++) {
     if (!info[j] || !headerLabels || !headerLabels[j] || !headerLabels[j]!.label) continue;
     switch (headerLabels[j]!.label) {
@@ -359,7 +359,7 @@ function grabMapPoints(headerLabels: HeaderLabels, info: string[]) {
         throw new Error(`Unrecognized component of DATACOL: ${headerLabels[j]!.label}`);
     }
   }
-  return {mapName, mapPoint}
+  return { mapName, mapPoint };
 }
 
 function grabParent(headerLabels: HeaderLabels, info: string[]) {
@@ -379,5 +379,5 @@ function grabParent(headerLabels: HeaderLabels, info: string[]) {
         break;
     }
   }
-  return parent
+  return parent;
 }

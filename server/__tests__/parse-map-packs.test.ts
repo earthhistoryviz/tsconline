@@ -2,8 +2,8 @@ import * as utilModule from "../src/util";
 import { readFileSync } from "fs";
 jest.mock("./util.js", () => ({
   ...utilModule,
-  grabFilepaths: jest.fn().mockImplementation((files) => {
-    return Promise.resolve([`server/__tests__/__data__/${files[0]}`]);
+  grabFilepaths: jest.fn().mockImplementation((files: string[]) => {
+    return Promise.resolve(files.map((file) => `server/__tests__/__data__/${file}`));
   })
 }));
 jest.mock("./index.js", () => ({
@@ -58,5 +58,37 @@ describe("parseMapPacks tests", () => {
   it("should parse everything", async () => {
     const mapPacks = await parseMapPacks(["parse-map-packs-test-3.txt"]);
     expect(mapPacks).toEqual(key["map-pack-key-3"]);
+  });
+
+  /**
+   * parses two packs with same parent "World map"
+   */
+  it("should parse two packs with same parent", async () => {
+    const mapPacks = await parseMapPacks(["parse-map-packs-test-2.txt", "parse-map-packs-test-3.txt"]);
+    const expected = {
+      mapInfo: { ...key["map-pack-key-2"]["mapInfo"], ...key["map-pack-key-3"]["mapInfo"] },
+      mapHierarchy: { "World Map": ["Belgium", "MAP TITLE TEST"] }
+    };
+    expect(mapPacks).toEqual(expected);
+  });
+
+  /**
+   * parses three packs with same parent "World map" (not parse-map-packs-test-1)
+   */
+  it("should parse all packs", async () => {
+    const mapPacks = await parseMapPacks([
+      "parse-map-packs-test-1.txt",
+      "parse-map-packs-test-2.txt",
+      "parse-map-packs-test-3.txt"
+    ]);
+    const expected = {
+      mapInfo: {
+        ...key["map-pack-key-1"]["mapInfo"],
+        ...key["map-pack-key-2"]["mapInfo"],
+        ...key["map-pack-key-3"]["mapInfo"]
+      },
+      mapHierarchy: { "World Map": ["Belgium", "MAP TITLE TEST"] }
+    };
+    expect(mapPacks).toEqual(expected);
   });
 });
