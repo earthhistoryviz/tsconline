@@ -12,22 +12,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 2 
+          fetch-depth: 0 
 
       - name: Check for disallowed files and directories
         run: |
-          declare -a disallowed_files=(".dpk" ".mdpk" ".txt" ".map" ".java" ".jar" ".DS_Store" "node_modules")
-          disallowed_files_list=""
-          changed_files=$(git diff --name-only -r TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store)$)
-          for file in $changed_files; do
-              if [[ " ${disallowed_files[*]} " == *"$file"* ]]; then
-                  disallowed_files_list+="$file\n"
-              fi
-          done
-          if [ ! -z "$disallowed_files_list" ]; then
-            echo -e "$disallowed_files_list" > disallowed_files_list.txt
+          # Needs to be changed to main
+          git diff --name-only TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow...HEAD | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store)$' > disallowed_files.txt
+          if [ -s disallowed_files_list.txt ]; then
             echo "disallowed_files_present=true" >> $GITHUB_ENV
-          fi
 
       - name: Comment PR on disallowed files Failure
         if: env.disallowed_files_present == 'true'
