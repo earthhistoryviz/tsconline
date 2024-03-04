@@ -30,7 +30,7 @@ export const NavBar = observer(function Navbar() {
   return (
     <AppBar position="fixed" sx={{ background: theme.palette.navbar.dark, display: "flex" }}>
       <Toolbar>
-        <Button
+        <Buttond
           onClick={handleHomeClick}
           sx={{ color: theme.palette.primary.main, marginRight: "5px" }}
         >
