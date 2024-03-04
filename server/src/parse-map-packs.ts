@@ -242,6 +242,9 @@ function grabRectBounds(headerLabels: string[], info: string[]) {
   for (let i = 1; i < info.length; i++) {
     if (!headerLabels || !headerLabels[i]) continue;
     switch (headerLabels[i]!) {
+      case "COORDINATE TYPE":
+      case "PARENT NAME":
+        break;
       case "UPPER LEFT LON":
       case "UPPER LEFT LONG":
         rectBounds.upperLeftLon = Number(info[i]);
@@ -256,6 +259,8 @@ function grabRectBounds(headerLabels: string[], info: string[]) {
       case "LOWER RIGHT LAT":
         rectBounds.lowerRightLat = Number(info[i]);
         break;
+      default:
+        throw new Error(`Unrecognized component of RECTANGULAR BOUNDS: ${headerLabels[i]!}`);
     }
   }
   return rectBounds;
@@ -265,6 +270,9 @@ export function grabVertBounds(headerLabels: string[], info: string[]) {
   for (let i = 1; i < info.length; i++) {
     if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!) continue;
     switch (headerLabels[i]!) {
+      case "COORDINATE TYPE":
+      case "PARENT NAME":
+        break;
       case "CENTER LON":
       case "CENTER LONG":
         vertBounds.centerLon = Number(info[i]);
@@ -278,6 +286,8 @@ export function grabVertBounds(headerLabels: string[], info: string[]) {
       case "SCALE":
         vertBounds.scale = Number(info[i]);
         break;
+      default:
+        throw new Error(`Unrecognized component of VERTICAL PERSPECTIVE: ${headerLabels[i]!}`);
     }
   }
   return vertBounds;
@@ -301,6 +311,8 @@ function grabTransects(headerLabels: string[], info: string[]) {
       case "NOTE":
         transect.note = info[i]!;
         break;
+      default:
+        throw new Error(`Unrecognized component of TRANSECT: ${headerLabels[i]!}`);
     }
   }
   transect.on = true;
@@ -326,6 +338,8 @@ function grabInfoPoints(headerLabels: string[], info: string[]) {
       case "NOTE":
         infoPoint.note = info[i];
         break;
+      default:
+        throw new Error(`Unrecognized component of INFOOPT: ${headerLabels[i]!}`);
     }
   }
   return { infoPoint, name };
@@ -380,6 +394,20 @@ export function grabParent(headerLabels: string[], info: string[]) {
       case "COORDINATE TYPE":
         parent.coordtype = info[i];
         break;
+      case "UPPER LEFT LON":
+      case "UPPER LEFT LONG":
+      case "UPPER LEFT LAT":
+      case "LOWER RIGHT LON":
+      case "LOWER RIGHT LONG":
+      case "LOWER RIGHT LAT":
+      case "CENTER LON":
+      case "CENTER LONG":
+      case "CENTER LAT":
+      case "HEIGHT":
+      case "SCALE":
+        break;
+      default:
+        throw new Error(`Unrecognized component of PARENT MAP: ${headerLabels[i]!}`);
     }
   }
   return parent;

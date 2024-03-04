@@ -97,6 +97,9 @@ const headerDatacolMinInfo = ["DATACOL", "POINT NAME", "1", "2"];
 const headerInfoPointsHeaders = ["HEADER-INFORMATION POINTS", "NAME", "LAT", "LON", "NOTE"];
 const headerInfoPointsInfo = ["INFOPT", "POINT NAME", "1", "2", "NOTE"];
 
+const headerTransectsHeaders = ["HEADER-TRANSECTS", "NAME", "STARTLOC", "ENDLOC", "NOTE"];
+const headerTransectsInfo = ["TRANSECT", "TRANSECT 1", "START", "END", "NOTE"];
+
 describe("parseMapPacks tests", () => {
   it("should parse africa general map pack", async () => {
     const mapPacks = await parseMapPacks(["parse-map-packs-test-1.txt"]);
@@ -473,6 +476,13 @@ describe("processLine tests", () => {
       const tabSeparated = [headerDatacolMinHeaders, headerDatacolMinInfo.slice(0, -1)];
       expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
     });
+
+    it("should throw error on bad unrecognized header", () => {
+      const testHeaders = [...headerDatacolMaxHeaders];
+      testHeaders[1] = "BAD HEADER";
+      const tabSeparated = [testHeaders, headerDatacolMaxInfo];
+      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
+    })
   });
 
   describe("HEADER-INFORMATION POINTS tests", () => {
@@ -541,6 +551,9 @@ describe("processLine tests", () => {
       expect(mapHierarchy).toEqual({});
     });
 
+    /**
+     * should process a HEADER-INFORMATION POINTS with no note
+     */
     it("should generate info points with no note", () => {
       const tabSeparated = [headerInfoPointsHeaders.slice(0, -1), headerInfoPointsInfo.slice(0, -1)];
       const expectedMap = {
@@ -575,4 +588,117 @@ describe("processLine tests", () => {
       expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
     });
   });
+
+  describe("HEADER-TRANSECTS tests", () => {
+
+    /**
+     * should process a standard HEADER-TRANSECTS
+     */
+    it("should process a HEADER-TRANSECTS", () => {
+      const tabSeparated = [headerTransectsHeaders, headerTransectsInfo];
+      const expectedMap = {
+        name: "",
+        img: "",
+        coordtype: "",
+        bounds: {
+          upperLeftLon: 0,
+          upperLeftLat: 0,
+          lowerRightLon: 0,
+          lowerRightLat: 0
+        },
+        mapPoints: {},
+        transects: {
+          "TRANSECT 1": {
+            startMapPoint: "START",
+            endMapPoint: "END",
+            on: true,
+            note: "NOTE"
+          }
+        }
+      };
+      processLine(index, tabSeparated, "test", map, mapHierarchy);
+      expect(map).toEqual(expectedMap);
+      expect(mapHierarchy).toEqual({});
+    })
+
+    it("should process a HEADER-TRANSECTS with no note", () => {
+      const tabSeparated = [headerTransectsHeaders.slice(0, -1), headerTransectsInfo.slice(0, -1)];
+      const expectedMap = {
+        name: "",
+        img: "",
+        coordtype: "",
+        bounds: {
+          upperLeftLon: 0,
+          upperLeftLat: 0,
+          lowerRightLon: 0,
+          lowerRightLat: 0
+        },
+        mapPoints: {},
+        transects: {
+          "TRANSECT 1": {
+            startMapPoint: "START",
+            endMapPoint: "END",
+            on: true
+          }
+        }
+      };
+      processLine(index, tabSeparated, "test", map, mapHierarchy);
+      expect(map).toEqual(expectedMap);
+      expect(mapHierarchy).toEqual({});
+    })
+
+    /**
+     * should process a HEADER-TRANSECTS with 3 transects
+     */
+    it("should process multiple transects", () => {
+      const secondTransect = [...headerTransectsInfo];
+      const thirdTransect = [...headerTransectsInfo];
+      secondTransect[1] = "TRANSECT 2";
+      thirdTransect[1] = "TRANSECT 3";
+      const tabSeparated = [headerTransectsHeaders, headerTransectsInfo, secondTransect, thirdTransect];
+      const expectedMap = {
+        name: "",
+        img: "",
+        coordtype: "",
+        bounds: {
+          upperLeftLon: 0,
+          upperLeftLat: 0,
+          lowerRightLon: 0,
+          lowerRightLat: 0
+        },
+        mapPoints: {},
+        transects: {
+          "TRANSECT 1": {
+            startMapPoint: "START",
+            endMapPoint: "END",
+            on: true,
+            note: "NOTE"
+          },
+          "TRANSECT 2": {
+            startMapPoint: "START",
+            endMapPoint: "END",
+            on: true,
+            note: "NOTE"
+          },
+          "TRANSECT 3": {
+            startMapPoint: "START",
+            endMapPoint: "END",
+            on: true,
+            note: "NOTE"
+          }
+        }
+      };
+      processLine(index, tabSeparated, "test", map, mapHierarchy);
+      expect(map).toEqual(expectedMap);
+      expect(mapHierarchy).toEqual({});
+    })
+
+    /**
+     * should throw error on bad info size (note can possibly be empty so we slice 2)
+     */
+    it("should throw error on bad info size", () => {
+      const tabSeparated = [headerTransectsHeaders, headerTransectsInfo.slice(0, -2)];
+      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
+    })
+  })
 });
