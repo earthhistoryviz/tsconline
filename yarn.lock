@@ -1581,6 +1581,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@szhsin/react-menu@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "@szhsin/react-menu@npm:4.1.0"
+  dependencies:
+    prop-types: "npm:^15.7.2"
+    react-transition-state: "npm:^2.1.0"
+  peerDependencies:
+    react: ">=16.14.0"
+    react-dom: ">=16.14.0"
+  checksum: 34974d9f66e7c0b211981c96cf0c027ed714ed536b6fed236ddd2af9504a141d66200a1b215361bac9df3582aaa5fd67ebced32282cd1cf34b3b5523b57507ad
+  languageName: node
+  linkType: hard
+
 "@szmarczak/http-timer@npm:^4.0.5":
   version: 4.0.6
   resolution: "@szmarczak/http-timer@npm:4.0.6"
@@ -4920,6 +4933,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-transition-state@npm:^2.1.0":
+  version: 2.1.1
+  resolution: "react-transition-state@npm:2.1.1"
+  peerDependencies:
+    react: ">=16.8.0"
+    react-dom: ">=16.8.0"
+  checksum: 992f6a44070c74bdcbeae4f6a2a5dd2429ab031e74a942822f9f2bd40b938e0efcdfbc0736f3f1a1003399191de9e5659397e99b4e901600cd03cc639579da54
+  languageName: node
+  linkType: hard
+
 "react-zoom-pan-pinch@npm:^3.3.0":
   version: 3.3.0
   resolution: "react-zoom-pan-pinch@npm:3.3.0"
@@ -5648,6 +5671,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "tsconline-monorepo@workspace:."
   dependencies:
+    "@szhsin/react-menu": "npm:^4.1.0"
     "@yarnpkg/sdks": "npm:^3.0.0-rc.43"
     fastify: "npm:^4.13.0"
     fs: "npm:^0.0.1-security"
