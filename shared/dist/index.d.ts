@@ -272,6 +272,7 @@ export type InfoPoints = {
 };
 export type MapInfo = {
     [name: string]: {
+        name: string;
         img: string;
         note?: string;
         parent?: ParentMap;

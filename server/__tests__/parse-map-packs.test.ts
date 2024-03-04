@@ -49,8 +49,26 @@ jest.mock("@tsconline/shared", () => ({
   assertTransects: jest.fn().mockReturnValue(true)
 }));
 
-import { grabParent, grabVertBounds, parseMapPacks } from "../src/parse-map-packs";
+import { grabParent, grabVertBounds, parseMapPacks, processLine } from "../src/parse-map-packs";
+import { MapHierarchy, MapInfo } from "@tsconline/shared";
 const key = JSON.parse(readFileSync("server/__tests__/__data__/map-pack-keys.json").toString());
+
+const vertBoundsHeaders = ["HEADER-COORD", "COORDINATE TYPE", "CENTER LAT", "CENTER LON", "HEIGHT", "SCALE"];
+const vertBoundsInfo = ["COORD", "VERTICAL PERSPECTIVE", "1", "2", "3", "4"];
+
+const parentHeaders = [
+  "HEADER-PARENT MAP",
+  "PARENT NAME",
+  "COORDINATE TYPE",
+  "UPPER LEFT LON",
+  "UPPER LEFT LAT",
+  "LOWER RIGHT LON",
+  "LOWER RIGHT LAT"
+];
+const parentsInfo = ["PARENT MAP", "PARENT NAME", "RECTANGULAR", "1", "2", "3", "4"];
+
+const headerMapHeaders = ["HEADER-MAP INFO", "MAP NAME", "IMAGE", "NOTE"];
+const headerMapInfo = ["MAP INFO", "MAP TITLE TEST", "IMAGE", "NOTE"];
 
 describe("parseMapPacks tests", () => {
   it("should parse africa general map pack", async () => {
@@ -114,18 +132,11 @@ describe("parseMapPacks tests", () => {
 });
 
 describe("grab from headers and info tests", () => {
+  /**
+   * Standard parent map
+   */
   it("should return the parent map", () => {
-    const headerLabels = [
-      "HEADER-PARENT",
-      "PARENT NAME",
-      "COORDINATE TYPE",
-      "UPPER LEFT LON",
-      "UPPER LEFT LAT",
-      "LOWER RIGHT LON",
-      "LOWER RIGHT LAT"
-    ];
-    const info = ["PARENT MAP", "PARENT NAME", "RECTANGULAR", "1", "2", "3", "4"];
-    const parent = grabParent(headerLabels, info);
+    const parent = grabParent(parentHeaders, parentsInfo);
     expect(parent).toEqual({
       name: "PARENT NAME",
       coordtype: "RECTANGULAR",
@@ -138,26 +149,107 @@ describe("grab from headers and info tests", () => {
     });
   });
 
+  /**
+   * standard vert bounds with center lon
+   */
   it("should return vert bounds with CENTER LON", () => {
-    const headerLabels = ["HEADER-COORD", "COORDINATE TYPE", "CENTER LAT", "CENTER LON", "HEIGHT", "SCALE"];
-    const info = ["COORD", "VERTICAL PERSPECTIVE", "1", "2", "3", "4"];
-    const parent = grabVertBounds(headerLabels, info);
-    expect(parent).toEqual({
+    const vertBounds = grabVertBounds(vertBoundsHeaders, vertBoundsInfo);
+    expect(vertBounds).toEqual({
       centerLat: 1,
       centerLon: 2,
       height: 3,
       scale: 4
     });
   });
+
+  /**
+   * standard vert bounds with center long
+   */
   it("should return vert bounds with CENTER LONG", () => {
-    const headerLabels = ["HEADER-COORD", "COORDINATE TYPE", "CENTER LAT", "CENTER LONG", "HEIGHT", "SCALE"];
-    const info = ["COORD", "VERTICAL PERSPECTIVE", "1", "2", "3", "4"];
-    const parent = grabVertBounds(headerLabels, info);
-    expect(parent).toEqual({
+    vertBoundsHeaders[3] = "CENTER LONG";
+    const vertBounds = grabVertBounds(vertBoundsHeaders, vertBoundsInfo);
+    expect(vertBounds).toEqual({
       centerLat: 1,
       centerLon: 2,
       height: 3,
       scale: 4
     });
+  });
+});
+
+describe("processLine tests", () => {
+  let map: MapInfo[string], mapHierarchy: MapHierarchy, index: number;
+  beforeEach(() => {
+    index = 0;
+    map = {
+      name: "",
+      img: "",
+      coordtype: "",
+      bounds: {
+        upperLeftLon: 0,
+        upperLeftLat: 0,
+        lowerRightLon: 0,
+        lowerRightLat: 0
+      },
+      mapPoints: {}
+    };
+    mapHierarchy = {};
+  });
+
+  /**
+   * Should parse and fill out map info header correctly
+   */
+  it("should process a HEADER-MAP INFO", async () => {
+    const tabSeparated = [headerMapHeaders, headerMapInfo];
+    const expectedMap = {
+      name: "MAP TITLE TEST",
+      img: "/imagesDirectory/IMAGE",
+      coordtype: "",
+      note: "NOTE",
+      bounds: {
+        upperLeftLon: 0,
+        upperLeftLat: 0,
+        lowerRightLon: 0,
+        lowerRightLat: 0
+      },
+      mapPoints: {}
+    };
+    const expectedMapHierarchy = {};
+    processLine(index, tabSeparated, "test", map, mapHierarchy);
+    expect(map).toEqual(expectedMap);
+    expect(mapHierarchy).toEqual(expectedMapHierarchy);
+  });
+
+  /**
+   * Map with a parent fills map and map hierarchy correctly
+   */
+  it("should process a HEADER-PARENT", async () => {
+    const tabSeparated = [parentHeaders, parentsInfo];
+    const expectedMap = {
+      name: "",
+      img: "",
+      coordtype: "",
+      parent: {
+        name: "PARENT NAME",
+        coordtype: "RECTANGULAR",
+        bounds: {
+          upperLeftLon: 1,
+          upperLeftLat: 2,
+          lowerRightLon: 3,
+          lowerRightLat: 4
+        }
+      },
+      bounds: {
+        upperLeftLon: 0,
+        upperLeftLat: 0,
+        lowerRightLon: 0,
+        lowerRightLat: 0
+      },
+      mapPoints: {}
+    };
+    const expectedMapHierarchy = { [parentsInfo[1]!]: [""] };
+    processLine(index, tabSeparated, "test", map, mapHierarchy);
+    expect(map).toEqual(expectedMap);
+    expect(mapHierarchy).toEqual(expectedMapHierarchy);
   });
 });

@@ -326,6 +326,7 @@ export type InfoPoints = {
 
 export type MapInfo = {
   [name: string]: {
+    name: string;
     img: string; // the image corresponding to the map image
     note?: string; // any notes on the map
     parent?: ParentMap; // the parent map this map exists in
@@ -594,6 +595,7 @@ export function assertMapInfo(o: any): asserts o is MapInfo {
     if (typeof map !== "object" || map === null) {
       throw new Error(`MapInfo' value for key '${key}' must be a non-null object`);
     }
+    if (typeof map.name !== "string") throwError("MapInfo", "name", "string", map.name);
     if (typeof map.img !== "string") {
       throw new Error(`MapInfo' value for key '${key}' must have an 'img' string property`);
     }
