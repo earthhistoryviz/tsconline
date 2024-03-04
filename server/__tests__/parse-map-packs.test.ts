@@ -16,6 +16,20 @@ jest.mock("p-map", () => ({
     }
   })
 }));
+jest.mock("path", () => ({
+  _esModule: true,
+  default: {
+    basename: jest.fn().mockImplementation((path: string) => {
+      if (path.indexOf(".") !== -1) {
+        if (path.indexOf("/") !== -1) {
+          return path.slice(path.lastIndexOf("/") + 1, path.indexOf("."));
+        }
+        return path.slice(0, path.indexOf("."));
+      }
+      return path;
+    })
+  }
+}));
 jest.mock("fs/promises", () => ({
   _esModule: true,
   default: {
@@ -35,7 +49,7 @@ jest.mock("@tsconline/shared", () => ({
   assertTransects: jest.fn().mockReturnValue(true)
 }));
 
-import { parseMapPacks } from "../src/parse-map-packs";
+import { grabParent, grabVertBounds, parseMapPacks } from "../src/parse-map-packs";
 const key = JSON.parse(readFileSync("server/__tests__/__data__/map-pack-keys.json").toString());
 
 describe("parseMapPacks tests", () => {
@@ -90,5 +104,60 @@ describe("parseMapPacks tests", () => {
       mapHierarchy: { "World Map": ["Belgium", "MAP TITLE TEST"] }
     };
     expect(mapPacks).toEqual(expected);
+  });
+
+  it("should return empty if bad data", async () => {
+    await expect(parseMapPacks(["bad-data.txt"])).rejects.toThrow(
+      new Error("Map info file: bad-data is not in the correct format/version")
+    );
+  });
+});
+
+describe("grab from headers and info tests", () => {
+  it("should return the parent map", () => {
+    const headerLabels = [
+      "HEADER-PARENT",
+      "PARENT NAME",
+      "COORDINATE TYPE",
+      "UPPER LEFT LON",
+      "UPPER LEFT LAT",
+      "LOWER RIGHT LON",
+      "LOWER RIGHT LAT"
+    ];
+    const info = ["PARENT MAP", "PARENT NAME", "RECTANGULAR", "1", "2", "3", "4"];
+    const parent = grabParent(headerLabels, info);
+    expect(parent).toEqual({
+      name: "PARENT NAME",
+      coordtype: "RECTANGULAR",
+      bounds: {
+        upperLeftLon: 1,
+        upperLeftLat: 2,
+        lowerRightLon: 3,
+        lowerRightLat: 4
+      }
+    });
+  });
+
+  it("should return vert bounds with CENTER LON", () => {
+    const headerLabels = ["HEADER-COORD", "COORDINATE TYPE", "CENTER LAT", "CENTER LON", "HEIGHT", "SCALE"];
+    const info = ["COORD", "VERTICAL PERSPECTIVE", "1", "2", "3", "4"];
+    const parent = grabVertBounds(headerLabels, info);
+    expect(parent).toEqual({
+      centerLat: 1,
+      centerLon: 2,
+      height: 3,
+      scale: 4
+    });
+  });
+  it("should return vert bounds with CENTER LONG", () => {
+    const headerLabels = ["HEADER-COORD", "COORDINATE TYPE", "CENTER LAT", "CENTER LONG", "HEIGHT", "SCALE"];
+    const info = ["COORD", "VERTICAL PERSPECTIVE", "1", "2", "3", "4"];
+    const parent = grabVertBounds(headerLabels, info);
+    expect(parent).toEqual({
+      centerLat: 1,
+      centerLon: 2,
+      height: 3,
+      scale: 4
+    });
   });
 });
