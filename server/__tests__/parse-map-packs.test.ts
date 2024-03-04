@@ -56,6 +56,9 @@ const key = JSON.parse(readFileSync("server/__tests__/__data__/map-pack-keys.jso
 const vertBoundsHeaders = ["HEADER-COORD", "COORDINATE TYPE", "CENTER LAT", "CENTER LON", "HEIGHT", "SCALE"];
 const vertBoundsInfo = ["COORD", "VERTICAL PERSPECTIVE", "1", "2", "3", "4"];
 
+const rectBoundsHeaders = ["HEADER-COORD", "COORDINATE TYPE", "UPPER LEFT LON", "UPPER LEFT LAT", "LOWER RIGHT LON", "LOWER RIGHT LAT"];
+const rectBoundsInfo = ["COORD", "RECTANGULAR", "1", "2", "3", "4"];
+
 const parentHeaders = [
   "HEADER-PARENT MAP",
   "PARENT NAME",
@@ -196,60 +199,147 @@ describe("processLine tests", () => {
     mapHierarchy = {};
   });
 
-  /**
-   * Should parse and fill out map info header correctly
-   */
-  it("should process a HEADER-MAP INFO", async () => {
-    const tabSeparated = [headerMapHeaders, headerMapInfo];
-    const expectedMap = {
-      name: "MAP TITLE TEST",
-      img: "/imagesDirectory/IMAGE",
-      coordtype: "",
-      note: "NOTE",
-      bounds: {
-        upperLeftLon: 0,
-        upperLeftLat: 0,
-        lowerRightLon: 0,
-        lowerRightLat: 0
-      },
-      mapPoints: {}
-    };
-    const expectedMapHierarchy = {};
-    processLine(index, tabSeparated, "test", map, mapHierarchy);
-    expect(map).toEqual(expectedMap);
-    expect(mapHierarchy).toEqual(expectedMapHierarchy);
+  describe("HEADER-MAP INFO tests", () => {
+    /**
+     * Should parse and fill out map info header correctly
+     */
+    it("should process a HEADER-MAP INFO", async () => {
+      const tabSeparated = [headerMapHeaders, headerMapInfo];
+      const expectedMap = {
+        name: "MAP TITLE TEST",
+        img: "/imagesDirectory/IMAGE",
+        coordtype: "",
+        note: "NOTE",
+        bounds: {
+          upperLeftLon: 0,
+          upperLeftLat: 0,
+          lowerRightLon: 0,
+          lowerRightLat: 0
+        },
+        mapPoints: {}
+      };
+      const expectedMapHierarchy = {};
+      processLine(index, tabSeparated, "test", map, mapHierarchy);
+      expect(map).toEqual(expectedMap);
+      expect(mapHierarchy).toEqual(expectedMapHierarchy);
+    });
+
+    /**
+     * should throw error on bad header size
+     */
+    it("should throw error on bad info size", () => {
+      const tabSeparated = [headerMapHeaders, headerMapInfo.slice(0, -1)];
+      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow()
+    })
   });
 
-  /**
-   * Map with a parent fills map and map hierarchy correctly
-   */
-  it("should process a HEADER-PARENT", async () => {
-    const tabSeparated = [parentHeaders, parentsInfo];
-    const expectedMap = {
-      name: "",
-      img: "",
-      coordtype: "",
-      parent: {
-        name: "PARENT NAME",
+  describe("HEADER-COORD tests", () => {
+    /**
+     * Process a standard vertical perspective boundary
+     */
+    it("should process a HEADER-COORD with vertical perspective", async () => {
+      const tabSeparated = [vertBoundsHeaders, vertBoundsInfo];
+      const expectedMap = {
+        name: "",
+        img: "",
+        coordtype: "VERTICAL PERSPECTIVE",
+        bounds: {
+          centerLat: 1,
+          centerLon: 2,
+          height: 3,
+          scale: 4
+        },
+        mapPoints: {}
+      };
+      processLine(index, tabSeparated, "test", map, mapHierarchy);
+      expect(map).toEqual(expectedMap);
+      expect(mapHierarchy).toEqual({});
+    })
+
+    /**
+     * should process a HEADER-COORD with standard rectangular bounds
+     */
+    it("should process a HEADER-COORD with rectangular bounds", async () => {
+      const tabSeparated = [rectBoundsHeaders, rectBoundsInfo];
+      const expectedMap = {
+        name: "",
+        img: "",
         coordtype: "RECTANGULAR",
         bounds: {
           upperLeftLon: 1,
           upperLeftLat: 2,
           lowerRightLon: 3,
           lowerRightLat: 4
-        }
-      },
-      bounds: {
-        upperLeftLon: 0,
-        upperLeftLat: 0,
-        lowerRightLon: 0,
-        lowerRightLat: 0
-      },
-      mapPoints: {}
-    };
-    const expectedMapHierarchy = { [parentsInfo[1]!]: [""] };
-    processLine(index, tabSeparated, "test", map, mapHierarchy);
-    expect(map).toEqual(expectedMap);
-    expect(mapHierarchy).toEqual(expectedMapHierarchy);
+        },
+        mapPoints: {}
+      };
+      processLine(index, tabSeparated, "test", map, mapHierarchy);
+      expect(map).toEqual(expectedMap);
+      expect(mapHierarchy).toEqual({});
+    })
+
+    /**
+     * should throw error on bad coordtype
+     */
+    it("should throw error on bad coordtype", () => {
+      const testRectBoundsInfo = [...rectBoundsInfo];
+      testRectBoundsInfo[1] = "BAD COORDINATE TYPE";
+      const tabSeparated = [rectBoundsHeaders, testRectBoundsInfo];
+      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow()
+    }) 
+
+    /**
+     * should throw error on bad header size
+     */
+    it("should throw error on bad info size", () => {
+      const tabSeparated = [rectBoundsHeaders, rectBoundsInfo.slice(0, -1)];
+      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow()
+    })
+  })
+
+  describe("HEADER-PARENT tests", () => {
+    /**
+     * Map with a parent fills map and map hierarchy correctly
+     */
+    it("should process a HEADER-PARENT", async () => {
+      const tabSeparated = [parentHeaders, parentsInfo];
+      const mapTest = {...map}
+      mapTest.name = "MAP TEST HEADER-PARENT";
+      const expectedMap = {
+        name: "MAP TEST HEADER-PARENT",
+        img: "",
+        coordtype: "",
+        parent: {
+          name: "PARENT NAME",
+          coordtype: "RECTANGULAR",
+          bounds: {
+            upperLeftLon: 1,
+            upperLeftLat: 2,
+            lowerRightLon: 3,
+            lowerRightLat: 4
+          }
+        },
+        bounds: {
+          upperLeftLon: 0,
+          upperLeftLat: 0,
+          lowerRightLon: 0,
+          lowerRightLat: 0
+        },
+        mapPoints: {}
+      };
+      const expectedMapHierarchy = { [parentsInfo[1]!]: ["MAP TEST HEADER-PARENT"] };
+      processLine(index, tabSeparated, "test", mapTest, mapHierarchy);
+      expect(mapTest).toEqual(expectedMap);
+      expect(mapHierarchy).toEqual(expectedMapHierarchy);
+    });
+
+    /**
+     * should throw error on bad info size
+     */
+    it("should throw error on bad info size", () => {
+      const tabSeparated = [parentHeaders, parentsInfo.slice(0, -1)];
+      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow()
+    })
   });
+
 });
