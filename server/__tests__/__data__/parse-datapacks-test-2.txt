@@ -1,0 +1,16 @@
+age units:	Ma
+SetTop:	0
+SetBase:	5
+SetScale:	6
+
+Parent 1	:	Child 1	Child 2
+
+Child 1	block	120	197/217/234	notitle	off
+	TOP	419.2
+	Child 1 SubBlock	433.35		Child 1 SubBlock Info
+
+
+Child 2	facies	210
+	TOP		0
+	Child 2 SubFaciesInfo 1	Child 2 SubFaciesInfo 1 Label	5
+	Child 2 SubFaciesInfo 2	Child 2 SubFaciesInfo 2 Label	10
