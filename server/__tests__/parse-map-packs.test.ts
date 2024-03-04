@@ -56,7 +56,14 @@ const key = JSON.parse(readFileSync("server/__tests__/__data__/map-pack-keys.jso
 const vertBoundsHeaders = ["HEADER-COORD", "COORDINATE TYPE", "CENTER LAT", "CENTER LON", "HEIGHT", "SCALE"];
 const vertBoundsInfo = ["COORD", "VERTICAL PERSPECTIVE", "1", "2", "3", "4"];
 
-const rectBoundsHeaders = ["HEADER-COORD", "COORDINATE TYPE", "UPPER LEFT LON", "UPPER LEFT LAT", "LOWER RIGHT LON", "LOWER RIGHT LAT"];
+const rectBoundsHeaders = [
+  "HEADER-COORD",
+  "COORDINATE TYPE",
+  "UPPER LEFT LON",
+  "UPPER LEFT LAT",
+  "LOWER RIGHT LON",
+  "LOWER RIGHT LAT"
+];
 const rectBoundsInfo = ["COORD", "RECTANGULAR", "1", "2", "3", "4"];
 
 const parentHeaders = [
@@ -72,6 +79,23 @@ const parentsInfo = ["PARENT MAP", "PARENT NAME", "RECTANGULAR", "1", "2", "3", 
 
 const headerMapHeaders = ["HEADER-MAP INFO", "MAP NAME", "IMAGE", "NOTE"];
 const headerMapInfo = ["MAP INFO", "MAP TITLE TEST", "IMAGE", "NOTE"];
+
+const headerDatacolMaxHeaders = [
+  "HEADER-DATACOL",
+  "NAME",
+  "LAT",
+  "LON",
+  "DEFAULT ON/OFF",
+  "MIN-AGE",
+  "MAX-AGE",
+  "NOTE"
+];
+const headerDatacolMaxInfo = ["DATACOL", "POINT NAME", "1", "2", "ON", "3", "4", "NOTE"];
+const headerDatacolMinHeaders = ["HEADER-DATACOL", "NAME", "LAT", "LON"];
+const headerDatacolMinInfo = ["DATACOL", "POINT NAME", "1", "2"];
+
+const headerInfoPointsHeaders = ["HEADER-INFORMATION POINTS", "NAME", "LAT", "LON", "NOTE"];
+const headerInfoPointsInfo = ["INFOPT", "POINT NAME", "1", "2", "NOTE"];
 
 describe("parseMapPacks tests", () => {
   it("should parse africa general map pack", async () => {
@@ -229,8 +253,8 @@ describe("processLine tests", () => {
      */
     it("should throw error on bad info size", () => {
       const tabSeparated = [headerMapHeaders, headerMapInfo.slice(0, -1)];
-      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow()
-    })
+      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
+    });
   });
 
   describe("HEADER-COORD tests", () => {
@@ -254,7 +278,7 @@ describe("processLine tests", () => {
       processLine(index, tabSeparated, "test", map, mapHierarchy);
       expect(map).toEqual(expectedMap);
       expect(mapHierarchy).toEqual({});
-    })
+    });
 
     /**
      * should process a HEADER-COORD with standard rectangular bounds
@@ -276,7 +300,7 @@ describe("processLine tests", () => {
       processLine(index, tabSeparated, "test", map, mapHierarchy);
       expect(map).toEqual(expectedMap);
       expect(mapHierarchy).toEqual({});
-    })
+    });
 
     /**
      * should throw error on bad coordtype
@@ -285,17 +309,17 @@ describe("processLine tests", () => {
       const testRectBoundsInfo = [...rectBoundsInfo];
       testRectBoundsInfo[1] = "BAD COORDINATE TYPE";
       const tabSeparated = [rectBoundsHeaders, testRectBoundsInfo];
-      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow()
-    }) 
+      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
+    });
 
     /**
      * should throw error on bad header size
      */
     it("should throw error on bad info size", () => {
       const tabSeparated = [rectBoundsHeaders, rectBoundsInfo.slice(0, -1)];
-      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow()
-    })
-  })
+      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
+    });
+  });
 
   describe("HEADER-PARENT tests", () => {
     /**
@@ -303,7 +327,7 @@ describe("processLine tests", () => {
      */
     it("should process a HEADER-PARENT", async () => {
       const tabSeparated = [parentHeaders, parentsInfo];
-      const mapTest = {...map}
+      const mapTest = { ...map };
       mapTest.name = "MAP TEST HEADER-PARENT";
       const expectedMap = {
         name: "MAP TEST HEADER-PARENT",
@@ -338,8 +362,217 @@ describe("processLine tests", () => {
      */
     it("should throw error on bad info size", () => {
       const tabSeparated = [parentHeaders, parentsInfo.slice(0, -1)];
-      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow()
-    })
+      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
+    });
   });
 
+  describe("HEADER-DATACOL tests", () => {
+    /**
+     * should process a HEADER-DATACOL with max amount of headers
+     */
+    it("should process a HEADER-DATACOL with max amount of headers", async () => {
+      const tabSeparated = [headerDatacolMaxHeaders, headerDatacolMaxInfo];
+      const expectedMap = {
+        name: "",
+        img: "",
+        coordtype: "",
+        bounds: {
+          upperLeftLon: 0,
+          upperLeftLat: 0,
+          lowerRightLon: 0,
+          lowerRightLat: 0
+        },
+        mapPoints: {
+          "POINT NAME": {
+            lat: 1,
+            lon: 2,
+            default: "ON",
+            minage: 3,
+            maxage: 4,
+            note: "NOTE"
+          }
+        }
+      };
+      processLine(index, tabSeparated, "test", map, mapHierarchy);
+      expect(map).toEqual(expectedMap);
+      expect(mapHierarchy).toEqual({});
+    });
+
+    /**
+     * should process a HEADER-DATACOL with min amount of headers
+     */
+    it("should process a HEADER-DATACOL with min amount of headers", async () => {
+      const tabSeparated = [headerDatacolMinHeaders, headerDatacolMinInfo];
+      const expectedMap = {
+        name: "",
+        img: "",
+        coordtype: "",
+        bounds: {
+          upperLeftLon: 0,
+          upperLeftLat: 0,
+          lowerRightLon: 0,
+          lowerRightLat: 0
+        },
+        mapPoints: {
+          "POINT NAME": {
+            lat: 1,
+            lon: 2
+          }
+        }
+      };
+      processLine(index, tabSeparated, "test", map, mapHierarchy);
+      expect(map).toEqual(expectedMap);
+      expect(mapHierarchy).toEqual({});
+    });
+
+    /**
+     * Two points should be added to mapPoints
+     */
+    it("should prcoess a HEADER-DATACOL with multiple points", async () => {
+      const secondPoint = [...headerDatacolMaxInfo];
+      secondPoint[1] = "POINT NAME 2";
+      const tabSeperated = [headerDatacolMaxHeaders, headerDatacolMaxInfo, secondPoint];
+      const expectedMap = {
+        name: "",
+        img: "",
+        coordtype: "",
+        bounds: {
+          upperLeftLon: 0,
+          upperLeftLat: 0,
+          lowerRightLon: 0,
+          lowerRightLat: 0
+        },
+        mapPoints: {
+          "POINT NAME": {
+            lat: 1,
+            lon: 2,
+            default: "ON",
+            minage: 3,
+            maxage: 4,
+            note: "NOTE"
+          },
+          "POINT NAME 2": {
+            lat: 1,
+            lon: 2,
+            default: "ON",
+            minage: 3,
+            maxage: 4,
+            note: "NOTE"
+          }
+        }
+      };
+      processLine(index, tabSeperated, "test", map, mapHierarchy);
+      expect(map).toEqual(expectedMap);
+      expect(mapHierarchy).toEqual({});
+    });
+
+    /**
+     * should throw error on bad header size
+     */
+    it("should throw error on bad info size", () => {
+      const tabSeparated = [headerDatacolMinHeaders, headerDatacolMinInfo.slice(0, -1)];
+      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
+    });
+  });
+
+  describe("HEADER-INFORMATION POINTS tests", () => {
+    /**
+     * should process a standard HEADER-INFORMATION POINTS
+     */
+    it("should process a HEADER-INFORMATION POINTS", () => {
+      const tabSeparated = [headerInfoPointsHeaders, headerInfoPointsInfo];
+      const expectedMap = {
+        name: "",
+        img: "",
+        coordtype: "",
+        bounds: {
+          upperLeftLon: 0,
+          upperLeftLat: 0,
+          lowerRightLon: 0,
+          lowerRightLat: 0
+        },
+        mapPoints: {},
+        infoPoints: {
+          "POINT NAME": {
+            lat: 1,
+            lon: 2,
+            note: "NOTE"
+          }
+        }
+      };
+      processLine(index, tabSeparated, "test", map, mapHierarchy);
+      expect(map).toEqual(expectedMap);
+      expect(mapHierarchy).toEqual({});
+    });
+
+    /**
+     * should process a HEADER-INFORMATION POINTS with multiple points
+     */
+    it("should process multiple info points", () => {
+      const secondPoint = [...headerInfoPointsInfo];
+      secondPoint[1] = "POINT NAME 2";
+      const tabSeparated = [headerInfoPointsHeaders, headerInfoPointsInfo, secondPoint];
+      const expectedMap = {
+        name: "",
+        img: "",
+        coordtype: "",
+        bounds: {
+          upperLeftLon: 0,
+          upperLeftLat: 0,
+          lowerRightLon: 0,
+          lowerRightLat: 0
+        },
+        mapPoints: {},
+        infoPoints: {
+          "POINT NAME": {
+            lat: 1,
+            lon: 2,
+            note: "NOTE"
+          },
+          "POINT NAME 2": {
+            lat: 1,
+            lon: 2,
+            note: "NOTE"
+          }
+        }
+      };
+      processLine(index, tabSeparated, "test", map, mapHierarchy);
+      expect(map).toEqual(expectedMap);
+      expect(mapHierarchy).toEqual({});
+    });
+
+    it("should generate info points with no note", () => {
+      const tabSeparated = [headerInfoPointsHeaders.slice(0, -1), headerInfoPointsInfo.slice(0, -1)];
+      const expectedMap = {
+        name: "",
+        img: "",
+        coordtype: "",
+        bounds: {
+          upperLeftLon: 0,
+          upperLeftLat: 0,
+          lowerRightLon: 0,
+          lowerRightLat: 0
+        },
+        mapPoints: {},
+        infoPoints: {
+          "POINT NAME": {
+            lat: 1,
+            lon: 2
+          }
+        }
+      };
+      processLine(index, tabSeparated, "test", map, mapHierarchy);
+      expect(map).toEqual(expectedMap);
+      expect(mapHierarchy).toEqual({});
+    });
+
+    /**
+     * should throw error on bad header size
+     * we slice two because note is optional
+     */
+    it("should throw error on bad info size", () => {
+      const tabSeparated = [headerInfoPointsHeaders, headerInfoPointsInfo.slice(0, -2)];
+      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
+    });
+  });
 });

@@ -174,7 +174,7 @@ export function processLine(
       // map.parent.bounds.lowerRightLat = Number(info[5])
       break;
     case "HEADER-DATACOL":
-      if (!info || info.length < 3) {
+      if (!info || info.length < 4) {
         throw new Error(
           `Map info file: ${path.basename(map_info)} is not in the correct format. HEADER-DATACOL is not in the correct format`
         );
