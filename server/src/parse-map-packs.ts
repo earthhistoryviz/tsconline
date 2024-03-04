@@ -52,6 +52,7 @@ export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
     const contents = (await fs.readFile(map_info)).toString();
     const lines = contents.split(/\n|\r/);
     const map: MapInfo[string] = {
+      name: "",
       img: "",
       coordtype: "",
       bounds: {
@@ -62,7 +63,6 @@ export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
       },
       mapPoints: {}
     };
-    let mapname = "";
     let tabSeparated: string[][] = [];
     lines.forEach((line) => {
       tabSeparated.push(line.split("\t"));
@@ -73,115 +73,6 @@ export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
     /**
      * Process the line and update the map variable accordingly
      */
-    function processLine(line: string[], index: number) {
-      const header = line[0];
-      const headerLabels = grabNames(line);
-      // console.log(`line: ${line}, index ${index}`)
-      index += 1;
-      let info = tabSeparated[index];
-      switch (header) {
-        case "HEADER-MAP INFO":
-          if (!info || info.length < 4) {
-            throw new Error(
-              `Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-MAP INFO does not have proper format`
-            );
-          }
-          mapname = String(info[1]);
-          map.img = `/${assetconfigs.imagesDirectory}/${String(info[2])}`;
-          map.note = String(info[3]);
-          break;
-        case "HEADER-COORD":
-          if (!info || info.length < 6) {
-            throw new Error(
-              `Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-COORD does not have proper format`
-            );
-          }
-          map.coordtype = String(info[1]);
-          switch (map.coordtype) {
-            case "RECTANGULAR":
-              const rectBounds = grabRectBounds(headerLabels, info);
-              assertRectBounds(rectBounds);
-              map.bounds = rectBounds;
-              break;
-            case "VERTICAL PERSPECTIVE":
-              const vertBounds = grabVertBounds(headerLabels, info);
-              assertVertBounds(vertBounds);
-              map.bounds = vertBounds;
-              break;
-            default:
-              throw new Error(`Unrecognized coordtype: ${map.coordtype}`);
-          }
-          break;
-        case "HEADER-PARENT MAP":
-          if (!info || info.length < 7) {
-            throw new Error(
-              `Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-PARENT MAP does not have proper format`
-            );
-          }
-          const parent = grabParent(headerLabels, info);
-          assertParentMap(parent);
-          map.parent = parent;
-          if (mapHierarchy[parent.name]) {
-            mapHierarchy[parent.name]!.push(mapname);
-          } else {
-            mapHierarchy[parent!.name] = [mapname];
-          }
-          // map.parent.coordtype = String(info[1])
-          // map.parent.bounds.upperLeftLon = Number(info[2])
-          // map.parent.bounds.upperLeftLat = Number(info[3])
-          // map.parent.bounds.lowerRightLon = Number(info[4])
-          // map.parent.bounds.lowerRightLat = Number(info[5])
-          break;
-        case "HEADER-DATACOL":
-          if (!info || info.length < 3) {
-            throw new Error(
-              `Map info file: ${path.basename(map_info)} is not in the correct format. HEADER-DATACOL is not in the correct format`
-            );
-          }
-          // grab setting names for the map point
-          // iterate over the line and depending on the columns above, figure out which
-          // parts of MapPoints to put it in
-          while (info && info[0] === "DATACOL") {
-            const { mapName, mapPoint } = grabMapPoints(headerLabels, info);
-            index++;
-            info = tabSeparated[index];
-            map.mapPoints[mapName] = mapPoint;
-          }
-          assertMapPoints(map.mapPoints);
-          break;
-        case "HEADER-INFORMATION POINTS":
-          if (!info || info.length < 4) {
-            throw new Error(
-              `Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-INFORMATION POINTS does not have proper format`
-            );
-          }
-          if (!map.infoPoints) map.infoPoints = {};
-          while (info && info[0] === "INFOPT") {
-            const { name, infoPoint } = grabInfoPoints(headerLabels, info);
-            index++;
-            info = tabSeparated[index];
-            map.infoPoints[name] = infoPoint;
-          }
-          assertInfoPoints(map.infoPoints);
-          break;
-        case "HEADER-TRANSECTS":
-          if (!info) break; // we continue if there are no transects even though the header defines header-transects
-          if (info.length < 4) {
-            throw new Error(
-              `Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-TRANSECTS does not have proper format`
-            );
-          }
-          if (!map.transects) map.transects = {};
-          while (info && info[0] === "TRANSECT") {
-            const { transect, name } = grabTransects(headerLabels, info);
-            index++;
-            info = tabSeparated[index];
-            map.transects[name] = transect;
-          }
-          assertTransects(map.transects);
-          break;
-      }
-    }
     if (
       !tabSeparated ||
       tabSeparated.length < 1 ||
@@ -194,17 +85,143 @@ export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
     tabSeparated.forEach((line, index) => {
       if (!line || !line[0]) return;
       if (line[0]!.startsWith("HEADER-")) {
-        processLine(line, index);
+        processLine(index, tabSeparated, map_info, map, mapHierarchy);
       }
     });
     //if reached here map has been properly processed
     //console.log(map)
-    mapInfo[mapname] = map;
+    mapInfo[map.name] = map;
   });
   // console.log("reply of mapInfo: ", JSON.stringify(mapInfo, null, 2))
   assertMapInfo(mapInfo);
   assertMapHierarchy(mapHierarchy);
   return { mapInfo, mapHierarchy };
+}
+
+/**
+ * process a line in the datapack file seperated by tabs and changes the map variable accordingly
+ * @param line the line seperated by tabs
+ * @param index the index of of the line in the file
+ * @param tabSeparated the entire file seperated by tabs
+ * @param map_info the path of the map info file
+ * @param map the map variable to change
+ * @param mapHierarchy the mapHierarchy variable to change
+ */
+export function processLine(
+  index: number,
+  tabSeparated: string[][],
+  map_info: string,
+  map: MapInfo[string],
+  mapHierarchy: MapHierarchy
+) {
+  if (!tabSeparated[index] || !tabSeparated[index]![0]) return;
+  const line = tabSeparated[index]!;
+  const header = line[0];
+  const headerLabels = grabNames(line);
+  index += 1;
+  let info = tabSeparated[index];
+  switch (header) {
+    case "HEADER-MAP INFO":
+      if (!info || info.length < 4) {
+        throw new Error(
+          `Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-MAP INFO does not have proper format`
+        );
+      }
+      map.name = String(info[1]);
+      map.img = `/${assetconfigs.imagesDirectory}/${String(info[2])}`;
+      map.note = String(info[3]);
+      break;
+    case "HEADER-COORD":
+      if (!info || info.length < 6) {
+        throw new Error(
+          `Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-COORD does not have proper format`
+        );
+      }
+      map.coordtype = String(info[1]);
+      switch (map.coordtype) {
+        case "RECTANGULAR":
+          const rectBounds = grabRectBounds(headerLabels, info);
+          assertRectBounds(rectBounds);
+          map.bounds = rectBounds;
+          break;
+        case "VERTICAL PERSPECTIVE":
+          const vertBounds = grabVertBounds(headerLabels, info);
+          assertVertBounds(vertBounds);
+          map.bounds = vertBounds;
+          break;
+        default:
+          throw new Error(`Unrecognized coordtype: ${map.coordtype}`);
+      }
+      break;
+    case "HEADER-PARENT MAP":
+      if (!info || info.length < 7) {
+        throw new Error(
+          `Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-PARENT MAP does not have proper format`
+        );
+      }
+      const parent = grabParent(headerLabels, info);
+      assertParentMap(parent);
+      map.parent = parent;
+      if (mapHierarchy[parent.name]) {
+        mapHierarchy[parent.name]!.push(map.name);
+      } else {
+        mapHierarchy[parent!.name] = [map.name];
+      }
+      // map.parent.coordtype = String(info[1])
+      // map.parent.bounds.upperLeftLon = Number(info[2])
+      // map.parent.bounds.upperLeftLat = Number(info[3])
+      // map.parent.bounds.lowerRightLon = Number(info[4])
+      // map.parent.bounds.lowerRightLat = Number(info[5])
+      break;
+    case "HEADER-DATACOL":
+      if (!info || info.length < 3) {
+        throw new Error(
+          `Map info file: ${path.basename(map_info)} is not in the correct format. HEADER-DATACOL is not in the correct format`
+        );
+      }
+      // grab setting names for the map point
+      // iterate over the line and depending on the columns above, figure out which
+      // parts of MapPoints to put it in
+      while (info && info[0] === "DATACOL") {
+        const { mapName, mapPoint } = grabMapPoints(headerLabels, info);
+        index++;
+        info = tabSeparated[index];
+        map.mapPoints[mapName] = mapPoint;
+      }
+      assertMapPoints(map.mapPoints);
+      break;
+    case "HEADER-INFORMATION POINTS":
+      if (!info || info.length < 4) {
+        throw new Error(
+          `Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-INFORMATION POINTS does not have proper format`
+        );
+      }
+      if (!map.infoPoints) map.infoPoints = {};
+      while (info && info[0] === "INFOPT") {
+        const { name, infoPoint } = grabInfoPoints(headerLabels, info);
+        index++;
+        info = tabSeparated[index];
+        map.infoPoints[name] = infoPoint;
+      }
+      assertInfoPoints(map.infoPoints);
+      break;
+    case "HEADER-TRANSECTS":
+      if (!info) break; // we continue if there are no transects even though the header defines header-transects
+      if (info.length < 4) {
+        throw new Error(
+          `Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-TRANSECTS does not have proper format`
+        );
+      }
+      if (!map.transects) map.transects = {};
+      while (info && info[0] === "TRANSECT") {
+        const { transect, name } = grabTransects(headerLabels, info);
+        index++;
+        info = tabSeparated[index];
+        map.transects[name] = transect;
+      }
+      assertTransects(map.transects);
+      break;
+  }
 }
 
 function grabNames(line: string[]) {
