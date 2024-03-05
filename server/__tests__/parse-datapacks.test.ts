@@ -8,6 +8,7 @@ jest.mock("./util.js", () => ({
 jest.mock("@tsconline/shared", () => ({
   assertSubFaciesInfo: jest.fn().mockImplementation(() => true),
   assertSubBlockInfo: jest.fn().mockImplementation(() => true),
+  assertRGB: jest.fn().mockImplementation(() => true),
   defaultFontsInfo: { font: "Arial" },
   assertFontsInfo: jest.fn().mockImplementation((fonts) => {
     if (fonts.font !== "Arial") throw new Error("Invalid font");
@@ -19,7 +20,9 @@ import {
   getFaciesOrBlock,
   parseDatapacks,
   processFacies,
-  processBlock
+  processBlock,
+  spliceArrayAtFirstSpecialMatch,
+
 } from "../src/parse-datapacks";
 import { readFileSync } from "fs";
 import { Block, DatapackAgeInfo, Facies } from "@tsconline/shared";
@@ -52,6 +55,19 @@ describe("general parse-datapacks tests", () => {
   });
 });
 
+describe("splice column entry tests", () => {
+  it("should splice line and store 3 children. On should be false, info should be 'popup', enableTitle should be false", () => {
+    const array = ["child1", "child2", "child3", "_METACOLUMN_OFF", "_TITLE_OFF", "", "popup"];
+    expect(spliceArrayAtFirstSpecialMatch(array)).toEqual({ children: ["child1", "child2", "child3"], on: false, info: "popup", enableTitle: false });
+  });
+  it("should splice line and store 3 children. On should be true, info should be empty, enableTitle should be true", () => {
+    const array = ["child1", "child2", "child3", "_METACOLUMN_ON", "_TITLE_ON"];
+    expect(spliceArrayAtFirstSpecialMatch(array)).toEqual({ children: ["child1", "child2", "child3"], on: true, info: "", enableTitle: true });
+  });
+});
+
+
+
 describe("process facies line tests", () => {
   it("should process facies line for top label of age 100", () => {
     const line = "\ttop\t\t100";
@@ -82,7 +98,7 @@ describe("process facies line tests", () => {
 describe("process blocks line tests", () => {
   it("should process block line for top label of age 100 with default color and default lineStyle", () => {
     const defaultColor = { r: 255, g: 255, b: 255 }
-    const line = "\tTOP\t100\t\t";
+    const line = " \tTOP\t100\t\t";
     expect(processBlock(line, defaultColor)).toEqual({
       label: "TOP",
       age: 100,
@@ -93,7 +109,7 @@ describe("process blocks line tests", () => {
   });
   it("should process block line standard", () => {
     const defaultColor = { r: 255, g: 255, b: 255 }
-    const line = "\tlabel\t100\tpopup\tdotted\t23/45/67";
+    const line = " \tlabel\t100\tdotted\tpopup\t23/45/67";
     expect(processBlock(line, defaultColor)).toEqual({
       label: "label",
       age: 100,
@@ -102,9 +118,31 @@ describe("process blocks line tests", () => {
       rgb: { r: 23, g: 45, b: 67 }
     });
   });
+  it("should process block and replace bad color with default color", () => {
+    const defaultColor = { r: 255, g: 255, b: 255 }
+    const line = " \tlabel\t100\tdotted\tpopup\tbadcolor";
+    expect(processBlock(line, defaultColor)).toEqual({
+      label: "label",
+      age: 100,
+      popup: "popup",
+      lineStyle: "dotted",
+      rgb: { r: 255, g: 255, b: 255 }
+    });
+  });
+  it("should process block and replace bad linestyle with default linestyle", () => {
+    const defaultColor = { r: 255, g: 255, b: 255 }
+    const line = " \tlabel\t100\tbadlinestyle\tpopup\t23/45/67";
+    expect(processBlock(line, defaultColor)).toEqual({
+      label: "label",
+      age: 100,
+      popup: "popup",
+      lineStyle: "solid",
+      rgb: { r: 23, g: 45, b: 67 }
+    });
+  });
   it("should process block and return null on small line", () => {
     const defaultColor = { r: 255, g: 255, b: 255 }
-    const line = "\tsome bad line\t";
+    const line = " \tsome bad line";
     expect(processBlock(line, defaultColor)).toBeNull();
   });
   it("should process block and return null on empty line", () => {
@@ -114,7 +152,7 @@ describe("process blocks line tests", () => {
   });
   it("should process block and throw error on bad number", () => {
     const defaultColor = { r: 255, g: 255, b: 255 }
-    const line = "\tlabel\tbadNumber\tpopup\tdotted\t23/45/67";
+    const line = " \tlabel\tbadNumber\tdotted\tpopup\t23/45/67";
     expect(() => processBlock(line, defaultColor)).toThrow("Error processing block line, age: badNumber is NaN");
   });
 });
@@ -211,12 +249,14 @@ describe("getAllEntries tests", () => {
     expectedEntriesMap.set("Parent 1", {
       children: ["Child 11", "Child 12"],
       on: true,
-      info: ""
+      info: "",
+      enableTitle: true
     });
     expectedEntriesMap.set("Parent 2", {
       children: ["Child 21", "Child 22"],
       on: true,
-      info: ""
+      info: "",
+      enableTitle: true
     });
     expect(entriesMap).toEqual(expectedEntriesMap);
   });
@@ -231,12 +271,14 @@ describe("getAllEntries tests", () => {
     expectedEntriesMap.set("Parent 1", {
       children: ["Child 11", "Child 12"],
       on: false,
-      info: ""
+      info: "",
+      enableTitle: false
     });
     expectedEntriesMap.set("Parent 2", {
       children: ["Child 21", "Child 22"],
       on: true,
-      info: ""
+      info: "",
+      enableTitle: true
     });
     expect(entriesMap).toEqual(expectedEntriesMap);
   });
@@ -252,17 +294,20 @@ describe("getAllEntries tests", () => {
     expectedEntriesMap.set("Parent 1", {
       children: ["Child 11", "Child 12"],
       on: false,
-      info: "info"
+      info: "info",
+      enableTitle: false
     });
     expectedEntriesMap.set("Parent 2", {
       children: ["Child 21", "Child 22"],
       on: false,
-      info: "info2"
+      info: "info2",
+      enableTitle: true
     });
     expectedEntriesMap.set("Parent 3", {
       children: ["Child 31", "Child 32"],
       on: true,
-      info: "info3"
+      info: "info3",
+      enableTitle: true
     });
     expect(entriesMap).toEqual(expectedEntriesMap);
   });
