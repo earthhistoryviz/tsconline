@@ -322,6 +322,16 @@ describe("processLine tests", () => {
       const tabSeparated = [rectBoundsHeaders, rectBoundsInfo.slice(0, -1)];
       expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
     });
+
+    /**
+     * this changes instead of CENTER LON, BAD HEADER
+     */
+    it("should throw error on bad header for vertbounds", () => {
+      const testVertBoundsHeaders = [...vertBoundsHeaders];
+      testVertBoundsHeaders[3] = "BAD HEADER";
+      const tabSeparated = [testVertBoundsHeaders, vertBoundsInfo];
+      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
+    });
   });
 
   describe("HEADER-PARENT tests", () => {
@@ -365,6 +375,26 @@ describe("processLine tests", () => {
      */
     it("should throw error on bad info size", () => {
       const tabSeparated = [parentHeaders, parentsInfo.slice(0, -1)];
+      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
+    });
+
+    /**
+     * needs to be rectangular
+     */
+    it("should throw error on bad coordtype", () => {
+      const testParentsInfo = [...parentsInfo];
+      testParentsInfo[2] = "BAD COORDINATE TYPE";
+      const tabSeparated = [parentHeaders, testParentsInfo];
+      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
+    });
+
+    /**
+     * bad coord headers (not in the correct format/version through lon or lat)
+     */
+    it("should throw error on bad coord headers", () => {
+      const testParentHeaders = [...parentHeaders];
+      testParentHeaders[3] = "BAD COORD HEADER";
+      const tabSeparated = [testParentHeaders, parentsInfo];
       expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
     });
   });
@@ -477,12 +507,15 @@ describe("processLine tests", () => {
       expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
     });
 
+    /**
+     * bad header (not in the correct format/version)
+     */
     it("should throw error on bad unrecognized header", () => {
       const testHeaders = [...headerDatacolMaxHeaders];
       testHeaders[1] = "BAD HEADER";
       const tabSeparated = [testHeaders, headerDatacolMaxInfo];
       expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
-    })
+    });
   });
 
   describe("HEADER-INFORMATION POINTS tests", () => {
@@ -587,10 +620,19 @@ describe("processLine tests", () => {
       const tabSeparated = [headerInfoPointsHeaders, headerInfoPointsInfo.slice(0, -2)];
       expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
     });
+
+    /**
+     * should throw error on bad header
+     */
+    it("should throw error on bad header", () => {
+      const testHeaders = [...headerInfoPointsHeaders];
+      testHeaders[2] = "BAD HEADER";
+      const tabSeparated = [testHeaders, headerInfoPointsInfo];
+      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
+    });
   });
 
   describe("HEADER-TRANSECTS tests", () => {
-
     /**
      * should process a standard HEADER-TRANSECTS
      */
@@ -619,8 +661,11 @@ describe("processLine tests", () => {
       processLine(index, tabSeparated, "test", map, mapHierarchy);
       expect(map).toEqual(expectedMap);
       expect(mapHierarchy).toEqual({});
-    })
+    });
 
+    /**
+     * should process a HEADER-TRANSECTS with no note
+     */
     it("should process a HEADER-TRANSECTS with no note", () => {
       const tabSeparated = [headerTransectsHeaders.slice(0, -1), headerTransectsInfo.slice(0, -1)];
       const expectedMap = {
@@ -645,7 +690,7 @@ describe("processLine tests", () => {
       processLine(index, tabSeparated, "test", map, mapHierarchy);
       expect(map).toEqual(expectedMap);
       expect(mapHierarchy).toEqual({});
-    })
+    });
 
     /**
      * should process a HEADER-TRANSECTS with 3 transects
@@ -691,7 +736,7 @@ describe("processLine tests", () => {
       processLine(index, tabSeparated, "test", map, mapHierarchy);
       expect(map).toEqual(expectedMap);
       expect(mapHierarchy).toEqual({});
-    })
+    });
 
     /**
      * should throw error on bad info size (note can possibly be empty so we slice 2)
@@ -699,6 +744,16 @@ describe("processLine tests", () => {
     it("should throw error on bad info size", () => {
       const tabSeparated = [headerTransectsHeaders, headerTransectsInfo.slice(0, -2)];
       expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
-    })
-  })
+    });
+
+    /**
+     * should throw error on bad header
+     */
+    it("should throw error on bad header", () => {
+      const testHeaders = [...headerTransectsHeaders];
+      testHeaders[2] = "BAD HEADER";
+      const tabSeparated = [testHeaders, headerTransectsInfo];
+      expect(() => processLine(index, tabSeparated, "test", map, mapHierarchy)).toThrow();
+    });
+  });
 });

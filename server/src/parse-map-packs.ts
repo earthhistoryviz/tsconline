@@ -346,7 +346,7 @@ function grabInfoPoints(headerLabels: string[], info: string[]) {
 }
 
 function grabMapPoints(headerLabels: string[], info: string[]) {
-  let mapPoint: any = {};
+  const mapPoint: any = {};
   let mapName = "";
   for (let j = 1; j < info.length; j++) {
     if (!info[j] || !headerLabels || !headerLabels[j] || !headerLabels[j]!) continue;
@@ -393,6 +393,8 @@ export function grabParent(headerLabels: string[], info: string[]) {
         break;
       case "COORDINATE TYPE":
         parent.coordtype = info[i];
+        if (parent.coordtype !== "RECTANGULAR")
+          throw new Error(`Unrecognized coordtype for parent: ${parent.coordtype}`);
         break;
       case "UPPER LEFT LON":
       case "UPPER LEFT LONG":
