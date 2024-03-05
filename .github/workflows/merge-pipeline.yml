@@ -22,7 +22,7 @@ jobs:
           if git diff --name-only TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow...HEAD | grep -E 'node_modules/'; then
             echo "node_modules folder detected, please remove" > disallowed_files.txt
           fi  
-          git diff --name-only TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow...HEAD | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store)$' >> disallowed_files.txt
+          git diff --name-only TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow...HEAD | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store)$' >> disallowed_files.txt || true
           if [ -s disallowed_files.txt ]; then
             echo "disallowed_files_present=true" >> $GITHUB_ENV
           fi
