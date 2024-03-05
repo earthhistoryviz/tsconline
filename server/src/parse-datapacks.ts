@@ -17,8 +17,8 @@ import { trimQuotes, trimInvisibleCharacters, grabFilepaths, hasVisibleCharacter
 import { createInterface } from "readline";
 const patternForWidth = /\d+/
 const patternForColor = /\d+\/\d+\/\d+/
-const patternForLineStyle = /solid | dashed | dotted/
-const patternForOn = /on | off/
+const patternForLineStyle = /solid|dashed|dotted/
+const patternForOn = /on|off/
 const patternForNoTitle = /notitle/
 const patternForPopup = /"*"/;
 export type ParsedColumnEntry = {
@@ -40,7 +40,7 @@ type FaciesFoundAndAgeRange = {
  * @param array the children string to parse
  * @returns the correctly parsed children string array
  */
-function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
+export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
   const parsedColumnEntry: ParsedColumnEntry = {
     children: [],
     on: true,
@@ -381,7 +381,9 @@ export function processBlock(line: string, defaultColor: RGB): SubBlockInfo | nu
   if (popup) {
     currentSubBlockInfo.popup = popup;
   }
+
   if (lineStyle && patternForLineStyle.test(lineStyle)) {
+
     switch (lineStyle) {
       case "dashed": {
         currentSubBlockInfo.lineStyle = "dashed";
@@ -399,6 +401,14 @@ export function processBlock(line: string, defaultColor: RGB): SubBlockInfo | nu
     currentSubBlockInfo.rgb.r = Number(rgbSeperated[0]!);
     currentSubBlockInfo.rgb.g = Number(rgbSeperated[1]!);
     currentSubBlockInfo.rgb.b = Number(rgbSeperated[2]!);
+  }
+  try {
+    assertRGB(currentSubBlockInfo.rgb);
+  } catch (e) {
+    console.log(`Error ${e} found while processing block rgb, setting rgb to white`);
+    currentSubBlockInfo.rgb.r = 255;
+    currentSubBlockInfo.rgb.g = 255;
+    currentSubBlockInfo.rgb.b = 255;
   }
   try {
     assertSubBlockInfo(currentSubBlockInfo);
@@ -506,7 +516,7 @@ function recursive(
     currentColumnInfo.on = currentBlock.on;
     currentColumnInfo.minAge = Math.min(currentBlock.minAge, currentColumnInfo.minAge);
     currentColumnInfo.maxAge = Math.max(currentBlock.maxAge, currentColumnInfo.maxAge);
-    currentColumnInfo.enableTitle = currentBlock.enableTitleitle;
+    currentColumnInfo.enableTitle = currentBlock.enableTitle;
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
   }
