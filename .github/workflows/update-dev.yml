@@ -3,7 +3,7 @@ name: Update dev
 on:
   push:
     branches:
-      - TSC-227-add-ssh-to-update-dev-and-add-files-to-workflow
+      - main
 
 jobs:
   deploy:
