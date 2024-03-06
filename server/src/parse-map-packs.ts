@@ -19,19 +19,19 @@ import {
  * For access from fastify server servicing
  */
 export async function grabMapImages(datapacks: string[], destination: string) {
-  const image_paths = await grabFilepaths(datapacks, assetconfigs.decryptionDirectory, "MapImages");
-  const compiled_images: string[] = [];
+  const imagePaths = await grabFilepaths(datapacks, assetconfigs.decryptionDirectory, "MapImages");
+  const compiledImages: string[] = [];
   try {
     // recursive: true ensures if it already exists, we continue with no error
     await fs.mkdir(destination, { recursive: true });
     await pmap(
-      image_paths,
+      imagePaths,
       async (image_path) => {
         const fileName = path.basename(image_path);
         const destPath = path.join(destination, fileName);
         try {
           await fs.copyFile(image_path, destPath);
-          compiled_images.push(`/${destPath}`);
+          compiledImages.push(`/${destPath}`);
         } catch (e) {
           console.log("Error copying image file, file could already exist. Resulting Error: ", e);
         }
@@ -41,15 +41,15 @@ export async function grabMapImages(datapacks: string[], destination: string) {
   } catch (e) {
     console.log("Error processing image paths for datapacks: ", datapacks, " \n", "With error: ", e);
   }
-  return compiled_images;
+  return compiledImages;
 }
 
 export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
-  const map_info_paths = await grabFilepaths(datapacks, assetconfigs.decryptionDirectory, "map-packs");
+  const mapInfoPaths = await grabFilepaths(datapacks, assetconfigs.decryptionDirectory, "map-packs");
   const mapInfo: MapInfo = {};
   const mapHierarchy: MapHierarchy = {};
   try {
-    await pmap(map_info_paths, async (map_info) => {
+    await pmap(mapInfoPaths, async (map_info) => {
       const contents = (await fs.readFile(map_info)).toString();
       const lines = contents.split(/\n|\r/);
       const map: MapInfo[string] = {

@@ -104,36 +104,36 @@ export const fetchChart = async function fetchChart(
   // );
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
   const hash = md5(settingsXml + chartrequest.datapacks.join(","));
-  const chartdir_urlpath = `/${assetconfigs.chartsDirectory}/${hash}`;
-  const chart_urlpath = chartdir_urlpath + "/chart.svg";
+  const chartDirUrlPath = `/${assetconfigs.chartsDirectory}/${hash}`;
+  const chartUrlPath = chartDirUrlPath + "/chart.svg";
 
-  const chartdir_filepath = chartdir_urlpath.slice(1); // no leading slash
-  const chart_filepath = chart_urlpath.slice(1);
-  const settings_filepath = chartdir_filepath + "/settings.tsc";
+  const chartDirFilePath = chartDirUrlPath.slice(1); // no leading slash
+  const chartFilePath = chartUrlPath.slice(1);
+  const settingsFilePath = chartDirFilePath + "/settings.tsc";
 
   // If this setting already has a chart, just return that
   try {
-    await stat(chart_filepath);
+    await stat(chartFilePath);
     if (!usecache) {
       console.log("Deleting chart filepath since it already exists and cache is not being used");
-      deleteDirectory(chart_filepath);
+      deleteDirectory(chartFilePath);
     } else {
       console.log("Request for chart that already exists (hash:", hash, ".  Returning cached version");
-      reply.send({ chartpath: chart_urlpath, hash: hash }); // send the browser back the URL equivalent...
+      reply.send({ chartpath: chartUrlPath, hash: hash }); // send the browser back the URL equivalent...
       return;
     }
   } catch (e) {
     // Doesn't exist, so make one
-    console.log("Request for chart", chart_urlpath, ": chart does not exist, creating...");
+    console.log("Request for chart", chartUrlPath, ": chart does not exist, creating...");
   }
 
   // Create the directory and save the settings there for java:
   try {
-    await mkdirp(chartdir_filepath);
-    await writeFile(settings_filepath, settingsXml);
-    console.log("Successfully created and saved chart settings at", settings_filepath);
+    await mkdirp(chartDirFilePath);
+    await writeFile(settingsFilePath, settingsXml);
+    console.log("Successfully created and saved chart settings at", settingsFilePath);
   } catch (e) {
-    console.log("ERROR: failed to save settings at", settings_filepath, "  Error was:", e);
+    console.log("ERROR: failed to save settings at", settingsFilePath, "  Error was:", e);
     reply.send({ error: "ERROR: failed to save settings" });
     return;
   }
@@ -163,11 +163,11 @@ export const fetchChart = async function fetchChart(
     // Turns off GUI (e.g Suggested Age pop-up (defaults to yes if -a flag is not passed))
     `-node ` +
     // Add settings:
-    `-s ${settings_filepath} -ss ${settings_filepath} ` +
+    `-s ${settingsFilePath} -ss ${settingsFilePath} ` +
     // Add datapacks:
     `-d ${datapacks.join(" ")} ` +
     // Tell it where to save chart
-    `-o ${chart_filepath} ` +
+    `-o ${chartFilePath} ` +
     // Don't use datapacks suggested age (if useSuggestedAge is true then ignore datapack ages)
     `${!useSuggestedAge ? "-a" : ""}`;
 
@@ -183,8 +183,8 @@ export const fetchChart = async function fetchChart(
     });
   });
   console.log("Sending reply to browser: ", {
-    chartpath: chart_urlpath,
+    chartpath: chartUrlPath,
     hash: hash
   });
-  reply.send({ chartpath: chart_urlpath, hash: hash });
+  reply.send({ chartpath: chartUrlPath, hash: hash });
 };
