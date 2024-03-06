@@ -287,18 +287,17 @@ export function assertFontsInfo(o) {
     if (typeof o !== "object")
         throw new Error("FontsInfo must be an object");
     for (const key in o) {
-        const val = o.key;
-        if (typeof val.bold !== "boolean")
+        if (typeof o.bold !== "boolean")
             throwError("FontsInfo", `${key}.bold`, "boolean", o.bold);
-        if (typeof val.color !== "string")
+        if (typeof o.color !== "string")
             throwError("FontsInfo", `${key}.color`, "string", o.color);
-        if (typeof val.fontFace !== "string")
+        if (typeof o.fontFace !== "string")
             throwError("FontsInfo", `${key}.fontFace`, "string", o.fontFace);
-        if (typeof val.inheritable !== "boolean")
+        if (typeof o.inheritable !== "boolean")
             throwError("FontsInfo", `${key}.inheritable`, "boolean", o.inheritable);
-        if (typeof val.italic !== "boolean")
+        if (typeof o.italic !== "boolean")
             throwError("FontsInfo", "italic", `${key}.boolean`, o.italic);
-        if (typeof val.size !== "number")
+        if (typeof o.size !== "number")
             throwError("FontsInfo", "size", `${key}.number`, o.size);
     }
 }

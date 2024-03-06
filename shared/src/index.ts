@@ -169,12 +169,12 @@ export type FontsInfo = {
     color: string;
   };
   "Sequence Column Label": {
-      inheritable: boolean;
-      fontFace: "Arial" | "Courier" | "Verdana";
-      size: number;
-      bold: boolean;
-      italic: boolean;
-      color: string;
+    inheritable: boolean;
+    fontFace: "Arial" | "Courier" | "Verdana";
+    size: number;
+    bold: boolean;
+    italic: boolean;
+    color: string;
   };
   "Event Column Label": {
     inheritable: boolean;
@@ -185,28 +185,28 @@ export type FontsInfo = {
     color: string;
   };
   "Popup Body": {
-      inheritable: boolean;
-      fontFace: "Arial" | "Courier" | "Verdana";
-      size: number;
-      bold: boolean;
-      italic: boolean;
-      color: string;
+    inheritable: boolean;
+    fontFace: "Arial" | "Courier" | "Verdana";
+    size: number;
+    bold: boolean;
+    italic: boolean;
+    color: string;
   };
   "Ruler Label": {
-      inheritable: boolean;
-      fontFace: "Arial" | "Courier" | "Verdana";
-      size: number;
-      bold: boolean;
-      italic: boolean;
-      color: string;
+    inheritable: boolean;
+    fontFace: "Arial" | "Courier" | "Verdana";
+    size: number;
+    bold: boolean;
+    italic: boolean;
+    color: string;
   };
   "Point Column Scale Label": {
-      inheritable: boolean;
-      fontFace: "Arial" | "Courier" | "Verdana";
-      size: number;
-      bold: boolean;
-      italic: boolean;
-      color: string;
+    inheritable: boolean;
+    fontFace: "Arial" | "Courier" | "Verdana";
+    size: number;
+    bold: boolean;
+    italic: boolean;
+    color: string;
   };
   "Range Label": {
     inheritable: boolean;
@@ -217,80 +217,149 @@ export type FontsInfo = {
     color: string;
   };
   "Ruler Tick Mark Label": {
-      inheritable: boolean;
-      fontFace: "Arial" | "Courier" | "Verdana";
-      size: number;
-      bold: boolean;
-      italic: boolean;
-      color: string;
+    inheritable: boolean;
+    fontFace: "Arial" | "Courier" | "Verdana";
+    size: number;
+    bold: boolean;
+    italic: boolean;
+    color: string;
   };
   "Legend Title": {
-      inheritable: boolean;
-      fontFace: "Arial" | "Courier" | "Verdana";
-      size: number;
-      bold: boolean;
-      italic: boolean;
-      color: string;
+    inheritable: boolean;
+    fontFace: "Arial" | "Courier" | "Verdana";
+    size: number;
+    bold: boolean;
+    italic: boolean;
+    color: string;
   };
   "Legend Column Name": {
-      inheritable: boolean;
-      fontFace: "Arial" | "Courier" | "Verdana";
-      size: number;
-      bold: boolean;
-      italic: boolean;
-      color: string;
+    inheritable: boolean;
+    fontFace: "Arial" | "Courier" | "Verdana";
+    size: number;
+    bold: boolean;
+    italic: boolean;
+    color: string;
   };
   "Legend Column Source": {
-      inheritable: boolean;
-      fontFace: "Arial" | "Courier" | "Verdana";
-      size: number;
-      bold: boolean;
-      italic: boolean;
-      color: string;
+    inheritable: boolean;
+    fontFace: "Arial" | "Courier" | "Verdana";
+    size: number;
+    bold: boolean;
+    italic: boolean;
+    color: string;
   };
   "Range Box Label": {
-      inheritable: boolean;
-      fontFace: "Arial" | "Courier" | "Verdana";
-      size: number;
-      bold: boolean;
-      italic: boolean;
-      color: string;
+    inheritable: boolean;
+    fontFace: "Arial" | "Courier" | "Verdana";
+    size: number;
+    bold: boolean;
+    italic: boolean;
+    color: string;
   };
 };
 
 export const defaultFontsInfo: FontsInfo = {
-    "Age Label": {
-        bold: false,
-        color: "rgb(0, 0, 0)",
-        fontFace: "Arial",
-        inheritable: false,
-        italic: false,
-        size: 6
-    },
-    "Column Header": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 14},
-    "Event Column Label": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 11},
-    "Legend Column Name": {bold: true, color: "rgb(0, 0, 0)", fontFace: "Verdana", inheritable: false, italic: false, size: 12},
-    "Legend Column Source":{bold: false, color: "rgb(0, 0, 0)", fontFace: "Verdana", inheritable: false, italic: true, size: 12},
-    "Legend Title": {bold: true, color: "rgb(0, 0, 0)", fontFace: "Verdana", inheritable: false, italic: false, size: 14},
-    "Point Column Scale Label": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 6},
-    "Popup Body": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12},
-    "Range Box Label": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: true, size: 14},
-    "Range Label": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12},
-    "Ruler Label": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12},
-    "Ruler Tick Mark Label": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 7},
-    "Sequence Column Label": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12},
-    "Uncertainty Label": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: true, size: 5},
-    "Zone Column Label": {bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12}
-}
-
-export type Facies = {
-  locations: FaciesLocations;
-  minAge: number; // the aggregate min age in all facies locations
-  maxAge: number; // the aggregate max age in all facies locations
-  aliases: {
-    [alias: string]: string;
-  };
+  "Age Label": {
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 6
+  },
+  "Column Header": {
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 14
+  },
+  "Event Column Label": {
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 11
+  },
+  "Legend Column Name": {
+    bold: true,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Verdana",
+    inheritable: false,
+    italic: false,
+    size: 12
+  },
+  "Legend Column Source": {
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Verdana",
+    inheritable: false,
+    italic: true,
+    size: 12
+  },
+  "Legend Title": {
+    bold: true,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Verdana",
+    inheritable: false,
+    italic: false,
+    size: 14
+  },
+  "Point Column Scale Label": {
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 6
+  },
+  "Popup Body": { bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12 },
+  "Range Box Label": {
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: true,
+    size: 14
+  },
+  "Range Label": { bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12 },
+  "Ruler Label": { bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12 },
+  "Ruler Tick Mark Label": {
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 7
+  },
+  "Sequence Column Label": {
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 12
+  },
+  "Uncertainty Label": {
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: true,
+    size: 5
+  },
+  "Zone Column Label": {
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 12
+  }
 };
+
 export type FaciesLocations = {
   [location: string]: {
     faciesTimeBlockArray: FaciesTimeBlock[];
@@ -321,10 +390,28 @@ export type ServerResponseError = {
   error: string; // any time an error is thrown on the server side
 };
 
+export type ValidFontOptions =
+  | "Column Header"
+  | "Age Label"
+  | "Uncertainty Label"
+  | "Zone Column Label"
+  | "Sequence Column Label"
+  | "Event Column Label"
+  | "Popup Body"
+  | "Ruler Label"
+  | "Point Column Scale Label"
+  | "Range Label"
+  | "Ruler Tick Mark Label"
+  | "Legend Title"
+  | "Legend Column Name"
+  | "Legend Column Source"
+  | "Range Box Label";
+
 export type ColumnInfo = {
   name: string;
   editName: string;
   fontsInfo: FontsInfo;
+  fontOptions?: Set<ValidFontOptions>;
   on: boolean;
   popup: string;
   children: ColumnInfo[];
@@ -894,13 +981,12 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
 export function assertFontsInfo(o: any): asserts o is FontsInfo {
   if (typeof o !== "object") throw new Error("FontsInfo must be an object");
   for (const key in o) {
-    const val = o.key;
-    if (typeof val.bold !== "boolean") throwError("FontsInfo", `${key}.bold`, "boolean", o.bold);
-    if (typeof val.color !== "string") throwError("FontsInfo", `${key}.color`, "string", o.color);
-    if (typeof val.fontFace !== "string") throwError("FontsInfo", `${key}.fontFace`, "string", o.fontFace);
-    if (typeof val.inheritable !== "boolean") throwError("FontsInfo", `${key}.inheritable`, "boolean", o.inheritable);
-    if (typeof val.italic !== "boolean") throwError("FontsInfo", "italic", `${key}.boolean`, o.italic);
-    if (typeof val.size !== "number") throwError("FontsInfo", "size", `${key}.number`, o.size);
+    if (typeof o.bold !== "boolean") throwError("FontsInfo", `${key}.bold`, "boolean", o.bold);
+    if (typeof o.color !== "string") throwError("FontsInfo", `${key}.color`, "string", o.color);
+    if (typeof o.fontFace !== "string") throwError("FontsInfo", `${key}.fontFace`, "string", o.fontFace);
+    if (typeof o.inheritable !== "boolean") throwError("FontsInfo", `${key}.inheritable`, "boolean", o.inheritable);
+    if (typeof o.italic !== "boolean") throwError("FontsInfo", "italic", `${key}.boolean`, o.italic);
+    if (typeof o.size !== "number") throwError("FontsInfo", "size", `${key}.number`, o.size);
   }
 }
 
