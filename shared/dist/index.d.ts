@@ -120,7 +120,8 @@ export type PresetColumnInfo = {
         text: string;
     };
     fonts: FontsInfo;
-    columnType?: PresetZoneColumnInfo | PresetEventColumnInfo | PresetRangeColumnInfo | PresetRulerColumnInfo | PresetSequenceColumnInfo | [[name: string, text: string]];
+    columnType?: PresetZoneColumnInfo | PresetEventColumnInfo | PresetRangeColumnInfo | PresetRulerColumnInfo | PresetSequenceColumnInfo;
+    catchAll?: [[name: string, text: string]];
     children: PresetColumnInfo[];
 };
 export type PresetZoneColumnInfo = {
