@@ -45,7 +45,7 @@ export type RGB = {
   r: number;
   g: number;
   b: number;
-}
+};
 export type Presets = {
   [type: string]: ChartConfig[];
 };
@@ -374,20 +374,13 @@ export type TimescaleItem = {
 };
 
 export function assertRGB(o: any): asserts o is RGB {
-  if (!o || typeof o !== "object")
-    throw new Error("RGB must be a non-null object");
-  if (typeof o.r !== "number")
-    throwError("RGB", "r", "number", o.r);
-  if (o.r < 0 || o.r > 255)
-    throwError("RGB", "r", "number between 0 and 255", o.r);
-  if (typeof o.g !== "number")
-    throwError("RGB", "g", "number", o.rgb.g);
-  if (o.g < 0 || o.g > 255)
-    throwError("RGB", "g", "number between 0 and 255", o.g);
-  if (typeof o.b !== "number")
-    throwError("RGB", "b", "number", o.b);
-  if (o.b < 0 || o.b > 255)
-    throwError("RGB", "b", "number between 0 and 255", o.b);
+  if (!o || typeof o !== "object") throw new Error("RGB must be a non-null object");
+  if (typeof o.r !== "number") throwError("RGB", "r", "number", o.r);
+  if (o.r < 0 || o.r > 255) throwError("RGB", "r", "number between 0 and 255", o.r);
+  if (typeof o.g !== "number") throwError("RGB", "g", "number", o.rgb.g);
+  if (o.g < 0 || o.g > 255) throwError("RGB", "g", "number between 0 and 255", o.g);
+  if (typeof o.b !== "number") throwError("RGB", "b", "number", o.b);
+  if (o.b < 0 || o.b > 255) throwError("RGB", "b", "number between 0 and 255", o.b);
 }
 
 export function assertColor(o: any): asserts o is Color {
@@ -456,41 +449,29 @@ export function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo {
 }
 
 export function assertSubBlockInfo(o: any): asserts o is SubBlockInfo {
-  if (!o || typeof o !== "object")
-    throw new Error("SubBlockInfo must be a non-null object");
-  if (typeof o.label !== "string")
-    throwError("SubBlockInfo", "label", "string", o.label);
-  if (typeof o.age !== "number")
-    throwError("SubBlockInfo", "age", "number", o.number);
-  if (typeof o.popup !== "string")
-    throwError("SubBlockInfo", "popup", "string", o.popup);
+  if (!o || typeof o !== "object") throw new Error("SubBlockInfo must be a non-null object");
+  if (typeof o.label !== "string") throwError("SubBlockInfo", "label", "string", o.label);
+  if (typeof o.age !== "number") throwError("SubBlockInfo", "age", "number", o.number);
+  if (typeof o.popup !== "string") throwError("SubBlockInfo", "popup", "string", o.popup);
   if (o.lineStyle !== "solid" && o.lineStyle !== "dotted" && o.lineStyle !== "dashed")
     throwError("SubBlockInfo", "lineStyle", "solid, dotted or dashed", o.lineStyle);
   assertRGB(o.rgb);
 }
 
 export function assertBlock(o: any): asserts o is Block {
-  if (!o || typeof o !== "object")
-    throw new Error("Block must be a non-null object");
-  if (typeof o.title !== "string")
-    throwError("Block", "title", "string", o.title);
+  if (!o || typeof o !== "object") throw new Error("Block must be a non-null object");
+  if (typeof o.title !== "string") throwError("Block", "title", "string", o.title);
 
   for (const subBlockInfo of o.subBlockInfo) {
     assertSubBlockInfo(subBlockInfo);
   }
-  if (typeof o.minAge !== "number")
-    throwError("Block", "minAge", "number", o.minAge);
-  if (typeof o.maxAge !== "number")
-    throwError("Block", "maxAge", "number", o.maxAge);
-  if (typeof o.popop !== "string")
-    throwError("Block", "popup", "string", o.popop);
-  if (typeof o.on !== "boolean")
-    throwError("Block", "on", "boolean", o.on);
-  if (typeof o.enableTitle !== "boolean")
-    throwError("Block", "enableTitle", "boolean", o.enableTitle);
-  if (typeof o.width !== "number")
-    throwError("Block", "width", "number", o.width)
-  assertRGB(o.rgb)
+  if (typeof o.minAge !== "number") throwError("Block", "minAge", "number", o.minAge);
+  if (typeof o.maxAge !== "number") throwError("Block", "maxAge", "number", o.maxAge);
+  if (typeof o.popop !== "string") throwError("Block", "popup", "string", o.popop);
+  if (typeof o.on !== "boolean") throwError("Block", "on", "boolean", o.on);
+  if (typeof o.enableTitle !== "boolean") throwError("Block", "enableTitle", "boolean", o.enableTitle);
+  if (typeof o.width !== "number") throwError("Block", "width", "number", o.width);
+  assertRGB(o.rgb);
 }
 
 export function assertFacies(o: any): asserts o is Facies {

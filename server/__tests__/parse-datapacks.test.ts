@@ -9,20 +9,13 @@ jest.mock("@tsconline/shared", () => ({
   assertSubFaciesInfo: jest.fn().mockImplementation(() => true),
   assertSubBlockInfo: jest.fn().mockImplementation(() => true),
   assertRGB: jest.fn().mockImplementation((o) => {
-    if (!o || typeof o !== "object")
-      throw new Error("RGB must be a non-null object");
-    if (typeof o.r !== "number")
-      throw new Error("Invalid rgb");
-    if (o.r < 0 || o.r > 255)
-      throw new Error("Invalid rgb");
-    if (typeof o.g !== "number")
-      throw new Error("Invalid rgb");
-    if (o.g < 0 || o.g > 255)
-      throw new Error("Invalid rgb");
-    if (typeof o.b !== "number")
-      throw new Error("Invalid rgb");
-    if (o.b < 0 || o.b > 255)
-      throw new Error("Invalid rgb");
+    if (!o || typeof o !== "object") throw new Error("RGB must be a non-null object");
+    if (typeof o.r !== "number") throw new Error("Invalid rgb");
+    if (o.r < 0 || o.r > 255) throw new Error("Invalid rgb");
+    if (typeof o.g !== "number") throw new Error("Invalid rgb");
+    if (o.g < 0 || o.g > 255) throw new Error("Invalid rgb");
+    if (typeof o.b !== "number") throw new Error("Invalid rgb");
+    if (o.b < 0 || o.b > 255) throw new Error("Invalid rgb");
   }),
   defaultFontsInfo: { font: "Arial" },
   assertFontsInfo: jest.fn().mockImplementation((fonts) => {
@@ -36,8 +29,7 @@ import {
   parseDatapacks,
   processFacies,
   processBlock,
-  spliceArrayAtFirstSpecialMatch,
-
+  spliceArrayAtFirstSpecialMatch
 } from "../src/parse-datapacks";
 import { readFileSync } from "fs";
 import { Block, DatapackAgeInfo, Facies } from "@tsconline/shared";
@@ -73,15 +65,23 @@ describe("general parse-datapacks tests", () => {
 describe("splice column entry tests", () => {
   it("should splice line and store 3 children. On should be false, info should be 'popup', enableTitle should be false", () => {
     const array = ["child1", "child2", "child3", "_METACOLUMN_OFF", "_TITLE_OFF", "", "popup"];
-    expect(spliceArrayAtFirstSpecialMatch(array)).toEqual({ children: ["child1", "child2", "child3"], on: false, info: "popup", enableTitle: false });
+    expect(spliceArrayAtFirstSpecialMatch(array)).toEqual({
+      children: ["child1", "child2", "child3"],
+      on: false,
+      info: "popup",
+      enableTitle: false
+    });
   });
   it("should splice line and store 3 children. On should be true, info should be empty, enableTitle should be true", () => {
     const array = ["child1", "child2", "child3", "_METACOLUMN_ON", "_TITLE_ON"];
-    expect(spliceArrayAtFirstSpecialMatch(array)).toEqual({ children: ["child1", "child2", "child3"], on: true, info: "", enableTitle: true });
+    expect(spliceArrayAtFirstSpecialMatch(array)).toEqual({
+      children: ["child1", "child2", "child3"],
+      on: true,
+      info: "",
+      enableTitle: true
+    });
   });
 });
-
-
 
 describe("process facies line tests", () => {
   it("should process facies line for top label of age 100", () => {
@@ -112,7 +112,7 @@ describe("process facies line tests", () => {
 
 describe("process blocks line tests", () => {
   it("should process block line for top label of age 100 with default color and default lineStyle", () => {
-    const defaultColor = { r: 255, g: 255, b: 255 }
+    const defaultColor = { r: 255, g: 255, b: 255 };
     const line = " \tTOP\t100\t\t";
     expect(processBlock(line, defaultColor)).toEqual({
       label: "TOP",
@@ -123,7 +123,7 @@ describe("process blocks line tests", () => {
     });
   });
   it("should process block line standard", () => {
-    const defaultColor = { r: 255, g: 255, b: 255 }
+    const defaultColor = { r: 255, g: 255, b: 255 };
     const line = " \tlabel\t100\tdotted\tpopup\t23/45/67";
     expect(processBlock(line, defaultColor)).toEqual({
       label: "label",
@@ -134,7 +134,7 @@ describe("process blocks line tests", () => {
     });
   });
   it("should process block and replace bad color with default color", () => {
-    const defaultColor = { r: 255, g: 255, b: 255 }
+    const defaultColor = { r: 255, g: 255, b: 255 };
     const line = " \tlabel\t100\tdotted\tpopup\tbadcolor";
     expect(processBlock(line, defaultColor)).toEqual({
       label: "label",
@@ -145,7 +145,7 @@ describe("process blocks line tests", () => {
     });
   });
   it("should process block and replace bad linestyle that's in the format of color with default linestyle", () => {
-    const defaultColor = { r: 255, g: 255, b: 255 }
+    const defaultColor = { r: 255, g: 255, b: 255 };
     const line = " \tlabel\t100\t10/10/10\tpopup\t23/45/67";
     expect(processBlock(line, defaultColor)).toEqual({
       label: "label",
@@ -156,7 +156,7 @@ describe("process blocks line tests", () => {
     });
   });
   it("should process block and replace bad linestyle with default linestyle", () => {
-    const defaultColor = { r: 255, g: 255, b: 255 }
+    const defaultColor = { r: 255, g: 255, b: 255 };
     const line = " \tlabel\t100\tbadlinestyle\tpopup\t23/45/67";
     expect(processBlock(line, defaultColor)).toEqual({
       label: "label",
@@ -167,7 +167,7 @@ describe("process blocks line tests", () => {
     });
   });
   it("should process block and replace color with invalid rgb value with default color", () => {
-    const defaultColor = { r: 255, g: 255, b: 255 }
+    const defaultColor = { r: 255, g: 255, b: 255 };
     const line = " \tlabel\t100\tbadlinestyle\tpopup\t999/999/999";
     expect(processBlock(line, defaultColor)).toEqual({
       label: "label",
@@ -178,17 +178,17 @@ describe("process blocks line tests", () => {
     });
   });
   it("should process block and return null on small line", () => {
-    const defaultColor = { r: 255, g: 255, b: 255 }
+    const defaultColor = { r: 255, g: 255, b: 255 };
     const line = " \tsome bad line";
     expect(processBlock(line, defaultColor)).toBeNull();
   });
   it("should process block and return null on empty line", () => {
     const line = "";
-    const defaultColor = { r: 255, g: 255, b: 255 }
+    const defaultColor = { r: 255, g: 255, b: 255 };
     expect(processBlock(line, defaultColor)).toBeNull();
   });
   it("should process block and throw error on bad number", () => {
-    const defaultColor = { r: 255, g: 255, b: 255 }
+    const defaultColor = { r: 255, g: 255, b: 255 };
     const line = " \tlabel\tbadNumber\tdotted\tpopup\t23/45/67";
     expect(() => processBlock(line, defaultColor)).toThrow("Error processing block line, age: badNumber is NaN");
   });
