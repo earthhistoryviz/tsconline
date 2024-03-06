@@ -136,13 +136,23 @@
                                 "label": "TOP",
                                 "age": 419.2,
                                 "popup": "",
-                                "lineStyle": ""
+                                "lineStyle": "solid",
+                                "rgb": {
+                                    "r": 197,
+                                    "g": 217,
+                                    "b": 234
+                                }
                             },
                             {
                                 "label": "Child 1 SubBlock",
                                 "age": 433.35,
                                 "popup": "Child 1 SubBlock Info",
-                                "lineStyle": ""
+                                "lineStyle": "solid",
+                                "rgb": {
+                                    "r": 197,
+                                    "g": 217,
+                                    "b": 234
+                                }
                             }
                         ]
                     },
@@ -154,6 +164,7 @@
                             "font": "Arial"
                         },
                         "info": "",
+                        "enableTitle": true,
                         "children": [],
                         "parent": "Parent 1",
                         "minAge": 0,
@@ -253,52 +264,91 @@
     },
     "facies-or-block-test-2-key": {
         "Block Child 1": {
-            "name": "Block Child 1",
+            "title": "Block Child 1",
             "subBlockInfo": [
                 {
                     "label": "Sub Block Top",
                     "age": 0,
                     "popup": "",
-                    "lineStyle": ""
+                    "lineStyle": "solid",
+                    "rgb": {
+                        "r": 255,
+                        "g": 255,
+                        "b": 255
+                    }
                 },
                 {
                     "label": "Sub Block 1",
                     "age": 201.36,
                     "popup": "",
-                    "lineStyle": ""
+                    "lineStyle": "solid",
+                    "rgb": {
+                        "r": 255,
+                        "g": 255,
+                        "b": 255
+                    }
                 }
             ],
+            "width": 100,
             "minAge": 0,
             "maxAge": 201.36,
             "popup": "",
-            "on": true
+            "on": true,
+            "enableTitle": true,
+            "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+            }
         },
         "Block Child 2": {
-            "name": "Block Child 2",
+            "title": "Block Child 2",
             "subBlockInfo": [
                 {
                     "label": "Sub Block Top",
                     "age": 0,
                     "popup": "info",
-                    "lineStyle": ""
+                    "lineStyle": "solid",
+                    "rgb": {
+                        "r": 255,
+                        "g": 225,
+                        "b": 210
+                    }
                 },
                 {
                     "label": "Sub Block 2",
                     "age": 23.03,
                     "popup": "info",
-                    "lineStyle": "222/255/0"
+                    "lineStyle": "solid",
+                    "rgb": {
+                        "r": 222,
+                        "g": 255,
+                        "b": 0
+                    }
                 },
                 {
                     "label": "Sub Block 3",
                     "age": 32.02,
                     "popup": "info",
-                    "lineStyle": ""
+                    "lineStyle": "solid",
+                    "rgb": {
+                        "r": 255,
+                        "g": 225,
+                        "b": 210
+                    }
                 }
             ],
+            "width": 70,
             "minAge": 0,
             "maxAge": 32.02,
-            "popup": "",
-            "on": false
+            "popup": "\"popup\"",
+            "on": false,
+            "enableTitle": false,
+            "rgb": {
+                "r": 255,
+                "g": 225,
+                "b": 210
+            }
         }
     },
     "facies-or-block-test-3-key": {
@@ -329,25 +379,42 @@
             "on": true
         },
         "Block 1": {
-            "name": "Child 1",
+            "title": "Child 1",
             "subBlockInfo": [
                 {
                     "label": "TOP",
                     "age": 419.2,
                     "popup": "",
-                    "lineStyle": ""
+                    "lineStyle": "solid",
+                    "rgb": {
+                        "r": 197,
+                        "g": 217,
+                        "b": 234
+                    }
                 },
                 {
                     "label": "Child 1 SubBlock",
                     "age": 433.35,
                     "popup": "Child 1 SubBlock Info",
-                    "lineStyle": ""
+                    "lineStyle": "solid",
+                    "rgb": {
+                        "r": 197,
+                        "g": 217,
+                        "b": 234
+                    }
                 }
             ],
+            "width": 120,
             "minAge": 419.2,
             "maxAge": 433.35,
-            "popup": "",
-            "on": false
+            "popup": "\"popup\"",
+            "on": false,
+            "enableTitle": false,
+            "rgb": {
+                "r": 197,
+                "g": 217,
+                "b": 234
+            }
         }
     }
 }

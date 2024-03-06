@@ -267,12 +267,14 @@ export async function getFaciesOrBlock(
         block.width = 100;
       }
 
+
       if (tabSeperated[3] && patternForColor.test(tabSeperated[3])) {
 
         const rgbSeperated = tabSeperated[3].split("/");
         block.rgb.r = Number(rgbSeperated[0]!);
         block.rgb.g = Number(rgbSeperated[1]!);
         block.rgb.b = Number(rgbSeperated[2]!);
+
       }
       try {
         assertRGB(block.rgb);
@@ -290,14 +292,22 @@ export async function getFaciesOrBlock(
         block.on = false;
       }
 
-      if (tabSeperated[5] && patternForPopup.test(tabSeperated[5])) {
-        block.popup = tabSeperated[5];
+      if (tabSeperated[6] && patternForPopup.test(tabSeperated[6])) {
+        block.popup = tabSeperated[6];
+
       }
 
       inBlockBlock = true;
     } else if (inBlockBlock) {
       //get a single sub block
-      const subBlockInfo = processBlock(line, block.rgb);
+
+      //using parameterRGB make sure we don't pass by reference
+      const parameterRGB: RGB = {
+        r: block.rgb.r,
+        g: block.rgb.g,
+        b: block.rgb.b
+      }
+      const subBlockInfo = processBlock(line, parameterRGB);
       if (subBlockInfo) {
         block.subBlockInfo.push(subBlockInfo);
       }
@@ -378,8 +388,10 @@ export function processBlock(line: string, defaultColor: RGB): SubBlockInfo | nu
     currentSubBlockInfo.label = label;
   }
   currentSubBlockInfo.age = age;
+
   if (popup) {
     currentSubBlockInfo.popup = popup;
+
   }
 
   if (lineStyle && patternForLineStyle.test(lineStyle)) {
