@@ -187,8 +187,6 @@ export const fetchTimescaleDataAction = action("fetchTimescaleData", async () =>
 export const setDatapackConfig = action(
   "setChart",
   async (datapacks: string[], settingsPath: string): Promise<boolean> => {
-    //set the settings tab back to time
-    setSettingsTabsSelected(0);
     let datapackAgeInfo: DatapackAgeInfo = {
       datapackContainsSuggAge: false
     };
