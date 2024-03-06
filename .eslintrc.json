@@ -37,6 +37,9 @@
             {
               "**/*.tsx": "PASCAL_CASE",
               "**/*.ts": "KEBAB_CASE"
+            },
+            {
+                "ignoreMiddleExtensions": true
             }
         ]
     },
@@ -52,6 +55,14 @@
             "files": ["server/src/parse-map-packs.ts"],
             "rules": {
                 "no-case-declarations": "off"
+            }
+        },
+        {
+            "files": [
+                "main.tsx"
+            ],
+            "rules": {
+                "check-file/filename-naming-convention": "off"
             }
         }
       ]
