@@ -15,11 +15,8 @@ import {
 } from "@tsconline/shared";
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters } from "./util.js";
 import { createInterface } from "readline";
-const patternForWidth = /\d+/
-const patternForColor = /\d+\/\d+\/\d+/
-const patternForLineStyle = /solid|dashed|dotted/
-const patternForOn = /on|off/
-const patternForNoTitle = /notitle/
+const patternForColor = /\d+\/\d+\/\d+/;
+const patternForLineStyle = /solid|dashed|dotted/;
 const patternForPopup = /"*"/;
 export type ParsedColumnEntry = {
   children: string[];
@@ -260,21 +257,17 @@ export async function getFaciesOrBlock(
 
       if (tabSeperated[2]) {
         block.width = Number(tabSeperated[2]);
-
       }
       if (isNaN(block.width)) {
         console.log(`Error found while processing block width, setting width to 100`);
         block.width = 100;
       }
 
-
       if (tabSeperated[3] && patternForColor.test(tabSeperated[3])) {
-
         const rgbSeperated = tabSeperated[3].split("/");
         block.rgb.r = Number(rgbSeperated[0]!);
         block.rgb.g = Number(rgbSeperated[1]!);
         block.rgb.b = Number(rgbSeperated[2]!);
-
       }
       try {
         assertRGB(block.rgb);
@@ -294,7 +287,6 @@ export async function getFaciesOrBlock(
 
       if (tabSeperated[6] && patternForPopup.test(tabSeperated[6])) {
         block.popup = tabSeperated[6];
-
       }
 
       inBlockBlock = true;
@@ -306,7 +298,7 @@ export async function getFaciesOrBlock(
         r: block.rgb.r,
         g: block.rgb.g,
         b: block.rgb.b
-      }
+      };
       const subBlockInfo = processBlock(line, parameterRGB);
       if (subBlockInfo) {
         block.subBlockInfo.push(subBlockInfo);
@@ -391,11 +383,9 @@ export function processBlock(line: string, defaultColor: RGB): SubBlockInfo | nu
 
   if (popup) {
     currentSubBlockInfo.popup = popup;
-
   }
 
   if (lineStyle && patternForLineStyle.test(lineStyle)) {
-
     switch (lineStyle) {
       case "dashed": {
         currentSubBlockInfo.lineStyle = "dashed";
