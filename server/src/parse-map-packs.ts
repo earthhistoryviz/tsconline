@@ -268,7 +268,7 @@ function grabRectBounds(headerLabels: string[], info: string[]) {
 export function grabVertBounds(headerLabels: string[], info: string[]) {
   const vertBounds: any = {};
   for (let i = 1; i < info.length; i++) {
-    if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!) continue;
+    if (!info[i] || !headerLabels || !headerLabels[i]) continue;
     switch (headerLabels[i]!) {
       case "COORDINATE TYPE":
       case "PARENT NAME":
@@ -297,7 +297,7 @@ function grabTransects(headerLabels: string[], info: string[]) {
   const transect: any = {};
   let name = "";
   for (let i = 1; i < info.length; i++) {
-    if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!) continue;
+    if (!info[i] || !headerLabels || !headerLabels[i]) continue;
     switch (headerLabels[i]!) {
       case "NAME":
         name = info[i]!;
@@ -323,7 +323,7 @@ function grabInfoPoints(headerLabels: string[], info: string[]) {
   const infoPoint: any = {};
   let name = "";
   for (let i = 1; i < info.length; i++) {
-    if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!) continue;
+    if (!info[i] || !headerLabels || !headerLabels[i]) continue;
     switch (headerLabels[i]!) {
       case "NAME":
         name = info[i]!;
@@ -386,7 +386,7 @@ export function grabParent(headerLabels: string[], info: string[]) {
   parent.bounds = bounds;
   assertRectBounds(bounds);
   for (let i = 1; i < info.length; i++) {
-    if (!info[i] || !headerLabels || !headerLabels[i] || !headerLabels[i]!) continue;
+    if (!info[i] || !headerLabels || !headerLabels[i]) continue;
     switch (headerLabels[i]!) {
       case "PARENT NAME":
         parent.name = info[i];
