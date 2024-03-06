@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened] # Runs on opening a pr, pushing to a pr, and reopening a pr
     branches:
-      - main # This needs to be changed to main
+      - main  # This needs to be changed to main 
 
 jobs:
   check-files:
@@ -15,7 +15,7 @@ jobs:
           fetch-depth: 0 
 
       - name: Fetch specific branch
-        run: git fetch origin main:main
+        run: git fetch origin main:main 
 
       - name: Check for disallowed files and directories
         run: |
