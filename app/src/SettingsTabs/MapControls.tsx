@@ -18,7 +18,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CloseIcon from "@mui/icons-material/Close";
 import "./MapControls.css";
 import { NumericFormat } from "react-number-format";
-import { FACIES_HEADER_HEIGHT, NORM_HEADER_HEIGHT } from "./MapPointConstants";
+import { FaciesHeaderHeight, NormHeaderHeight } from "./MapPointConstants";
 
 const AgeTextField = ({ ...props }: TextFieldProps) => (
   <TSCTextField
@@ -107,7 +107,7 @@ type HeaderBarProps = {
 export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
   const { state, actions } = useContext(context);
   const headerStyle = {
-    height: `${isFacies ? FACIES_HEADER_HEIGHT : NORM_HEADER_HEIGHT}`
+    height: `${isFacies ? FaciesHeaderHeight : NormHeaderHeight}`
   };
   return (
     <ColoredDiv className="header-bar" style={headerStyle}>

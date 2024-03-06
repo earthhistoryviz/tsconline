@@ -1,4 +1,4 @@
-import { pushError } from "./GeneralActions";
+import { pushError } from "./general-actions";
 import { isServerResponseError } from "@tsconline/shared";
 
 /**
