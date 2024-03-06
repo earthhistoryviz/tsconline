@@ -21,9 +21,9 @@ import {
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
-import { initializeColumnHashMap } from "./ColumnActions";
-import { jsonToXml, xmlToJson } from "../parseSettings";
-import { displayError } from "./UtilActions";
+import { initializeColumnHashMap } from "./column-actions";
+import { jsonToXml, xmlToJson } from "../parse-settings";
+import { displayError } from "./util-actions";
 import { Settings } from "../../types";
 import { compareStrings } from "../../util/util";
 
