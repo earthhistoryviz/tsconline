@@ -24,17 +24,16 @@ import FormatItalicIcon from "@mui/icons-material/FormatItalic";
 import { MuiColorInput } from "mui-color-input";
 import CloseIcon from "@mui/icons-material/Close";
 import "./FontMenu.css";
+import { ValidFontOptions } from "@tsconline/shared";
 
 const FontMenuRow: React.FC<{
-  target: "Column Header" | "Age Label" | "Uncertainty Label" | "Zone Column Label" | "Sequence Column Label" | "Event Column Label" | "Popup Body" | "Ruler Label" | "Point Column Scale Label" | "Range Label" | "Ruler Tick Mark Label" | "Legend Title" | "Legend Column Name" | "Legend Column Source" | "Range Box Label";
+  target: ValidFontOptions;
 }> = observer(({ target }) => {
   const { state, actions } = useContext(context);
   const [fontTarget, setFontTarget] = useState(false);
   const [font, setFont] = useState("Arial");
   const [formats, setFormats] = useState([""]);
-  const fontOpts = state.settingsTabs.columnHashMap.get(
-    state.settingsTabs.columnSelected as string
-  )!.fontsInfo[target];
+  const fontOpts = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected as string)!.fontsInfo[target];
   const handleChange = (event: SelectChangeEvent) => {
     if (/Arial|Courier|Verdana/.test(event.target.value)) return;
     actions.setFontFace(target, event.target.value as "Arial" | "Courier" | "Verdana");
@@ -141,13 +140,25 @@ const FontMenuRow: React.FC<{
   );
 });
 
-export const FontMenu = observer(() => {
-  const { state } = useContext(context);
+export const FontMenu: React.FC<{}> = observer(() => {
+  const { state, actions } = useContext(context);
   const theme = useTheme();
   const name =
     state.settingsTabs.columnSelected === null
       ? ""
       : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.editName;
+  let fontOptionsSet: Set<ValidFontOptions> = new Set();
+  let defaultFontSet: Set<ValidFontOptions> = new Set([
+    "Age Label",
+    "Zone Column Label",
+    "Uncertainty Label",
+    "Event Column Label",
+    "Range Label"
+  ]);
+  if (state.settingsTabs.columnSelected != null) {
+    fontOptionsSet =
+      state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)?.fontOptions ?? defaultFontSet;
+  }
   const [open, setOpen] = useState(false);
   const handleOpen = () => {
     setOpen(true);
@@ -178,49 +189,12 @@ export const FontMenu = observer(() => {
             <Grid item xs={12}>
               <Divider />
             </Grid>
-            <Grid item xs={12}>
-              <Typography id="AdditionalFontsText">Additional fonts for child columns</Typography>
-              <FontMenuRow target="Age Label" />
-            </Grid>
-            <Grid item xs={12}>
-              <FontMenuRow target="Zone Column Label" />
-            </Grid>
-            <Grid item xs={12}>
-              <FontMenuRow target="Uncertainty Label" />
-            </Grid>
-              <Grid item xs={12}>
-                  <FontMenuRow target="Ruler Label" />
+            {Array.from(fontOptionsSet).map((target, index) => (
+              <Grid item xs={12} key={target}>
+                {index === 0 && <Typography id="AdditionalFontsText">Additional fonts for child columns</Typography>}
+                <FontMenuRow target={target} />
               </Grid>
-              <Grid item xs={12}>
-                  <FontMenuRow target="Sequence Column Label" />
-              </Grid>
-            <Grid item xs={12}>
-              <FontMenuRow target="Event Column Label" />
-            </Grid>
-            <Grid item xs={12}>
-              <FontMenuRow target="Range Label" />
-            </Grid>
-              <Grid item xs={12}>
-                  <FontMenuRow target="Range Box Label" />
-              </Grid>
-              <Grid item xs={12}>
-                  <FontMenuRow target="Popup Body" />
-              </Grid>
-              <Grid item xs={12}>
-                  <FontMenuRow target="Point Column Scale Label" />
-              </Grid>
-              <Grid item xs={12}>
-                  <FontMenuRow target="Ruler Tick Mark Label" />
-              </Grid>
-              <Grid item xs={12}>
-                  <FontMenuRow target="Legend Title" />
-              </Grid>
-              <Grid item xs={12}>
-                  <FontMenuRow target="Legend Column Name" />
-              </Grid>
-              <Grid item xs={12}>
-                  <FontMenuRow target="Legend Column Source" />
-              </Grid>
+            ))}
           </Grid>
         </Box>
       </Modal>

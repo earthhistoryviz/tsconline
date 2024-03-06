@@ -235,6 +235,18 @@ export type FontsInfo = {
     };
 };
 export declare const defaultFontsInfo: FontsInfo;
+export type FaciesLocations = {
+    [location: string]: {
+        faciesTimeBlockArray: FaciesTimeBlock[];
+        minAge: number;
+        maxAge: number;
+    };
+};
+export type FaciesTimeBlock = {
+    rockType: string;
+    label?: string;
+    age: number;
+};
 export type SubBlockInfo = {
     label: string;
     age: number;
@@ -248,10 +260,12 @@ export type ChartRequest = {
 export type ServerResponseError = {
     error: string;
 };
+export type ValidFontOptions = "Column Header" | "Age Label" | "Uncertainty Label" | "Zone Column Label" | "Sequence Column Label" | "Event Column Label" | "Popup Body" | "Ruler Label" | "Point Column Scale Label" | "Range Label" | "Ruler Tick Mark Label" | "Legend Title" | "Legend Column Name" | "Legend Column Source" | "Range Box Label";
 export type ColumnInfo = {
     name: string;
     editName: string;
     fontsInfo: FontsInfo;
+    fontOptions?: Set<ValidFontOptions>;
     on: boolean;
     info: string;
     children: ColumnInfo[];
