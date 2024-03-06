@@ -5,7 +5,7 @@ SetScale:	6
 
 Parent 1	:	Child 1	Child 2
 
-Child 1	block	120	197/217/234	notitle	off
+Child 1	block	120	197/217/234	notitle	off	"popup"
 	TOP	419.2
 	Child 1 SubBlock	433.35		Child 1 SubBlock Info
 

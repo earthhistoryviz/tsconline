@@ -8,7 +8,22 @@ jest.mock("./util.js", () => ({
 jest.mock("@tsconline/shared", () => ({
   assertSubFaciesInfo: jest.fn().mockImplementation(() => true),
   assertSubBlockInfo: jest.fn().mockImplementation(() => true),
-  assertRGB: jest.fn().mockImplementation(() => true),
+  assertRGB: jest.fn().mockImplementation((o) => {
+    if (!o || typeof o !== "object")
+      throw new Error("RGB must be a non-null object");
+    if (typeof o.r !== "number")
+      throw new Error("Invalid rgb");
+    if (o.r < 0 || o.r > 255)
+      throw new Error("Invalid rgb");
+    if (typeof o.g !== "number")
+      throw new Error("Invalid rgb");
+    if (o.g < 0 || o.g > 255)
+      throw new Error("Invalid rgb");
+    if (typeof o.b !== "number")
+      throw new Error("Invalid rgb");
+    if (o.b < 0 || o.b > 255)
+      throw new Error("Invalid rgb");
+  }),
   defaultFontsInfo: { font: "Arial" },
   assertFontsInfo: jest.fn().mockImplementation((fonts) => {
     if (fonts.font !== "Arial") throw new Error("Invalid font");
@@ -129,6 +144,17 @@ describe("process blocks line tests", () => {
       rgb: { r: 255, g: 255, b: 255 }
     });
   });
+  it("should process block and replace bad linestyle that's in the format of color with default linestyle", () => {
+    const defaultColor = { r: 255, g: 255, b: 255 }
+    const line = " \tlabel\t100\t10/10/10\tpopup\t23/45/67";
+    expect(processBlock(line, defaultColor)).toEqual({
+      label: "label",
+      age: 100,
+      popup: "popup",
+      lineStyle: "solid",
+      rgb: { r: 23, g: 45, b: 67 }
+    });
+  });
   it("should process block and replace bad linestyle with default linestyle", () => {
     const defaultColor = { r: 255, g: 255, b: 255 }
     const line = " \tlabel\t100\tbadlinestyle\tpopup\t23/45/67";
@@ -138,6 +164,17 @@ describe("process blocks line tests", () => {
       popup: "popup",
       lineStyle: "solid",
       rgb: { r: 23, g: 45, b: 67 }
+    });
+  });
+  it("should process block and replace color with invalid rgb value with default color", () => {
+    const defaultColor = { r: 255, g: 255, b: 255 }
+    const line = " \tlabel\t100\tbadlinestyle\tpopup\t999/999/999";
+    expect(processBlock(line, defaultColor)).toEqual({
+      label: "label",
+      age: 100,
+      popup: "popup",
+      lineStyle: "solid",
+      rgb: { r: 255, g: 255, b: 255 }
     });
   });
   it("should process block and return null on small line", () => {
@@ -180,7 +217,7 @@ describe("getFaciesOrBlock tests", () => {
       key["facies-or-block-test-3-key"]["Facies 1"]
     );
     expectedBlockMap.set(
-      key["facies-or-block-test-3-key"]["Block 1"].name,
+      key["facies-or-block-test-3-key"]["Block 1"].title,
       key["facies-or-block-test-3-key"]["Block 1"]
     );
     expect(faciesMap.size).toBe(1);
@@ -208,7 +245,7 @@ describe("getFaciesOrBlock tests", () => {
    * This test checks for the correct creation of the blockMap
    * TODO: @Jacqui fix this case where linestyle is being processed as a color
    */
-  it("should create correct blockMap only", async () => {
+  it("should create correct blockMap only, the second block should has max amount of information", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-4.txt";
     await getFaciesOrBlock(file, faciesMap, blockMap);
     for (const val in key["facies-or-block-test-2-key"]) {
