@@ -68,13 +68,13 @@ function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
  * and an amount of files in a string array that should pop up in that decrypted directory
  * Have not checked edge cases in which a file doesn't show up, will only return any that are correct.
  * Maybe add functionality in the future to check if all the files exist
- * @param decrypt_filepath the decryption folder location
+ * @param decryptFilePath the decryption folder location
  * @param files the files to be parsed
  * @returns
  */
-export async function parseDatapacks(decrypt_filepath: string, files: string[]): Promise<DatapackParsingPack> {
-  const decrypt_paths = await grabFilepaths(files, decrypt_filepath, "datapacks");
-  if (decrypt_paths.length == 0) throw new Error(`Did not find any datapacks for ${files}`);
+export async function parseDatapacks(decryptFilePath: string, files: string[]): Promise<DatapackParsingPack> {
+  const decryptPaths = await grabFilepaths(files, decryptFilePath, "datapacks");
+  if (decryptPaths.length == 0) throw new Error(`Did not find any datapacks for ${files}`);
   const columnInfoArray: ColumnInfo[] = [];
   const isChild: Set<string> = new Set();
   const allEntries: Map<string, ParsedColumnEntry> = new Map();
@@ -82,11 +82,11 @@ export async function parseDatapacks(decrypt_filepath: string, files: string[]):
   const faciesMap: Map<string, Facies> = new Map();
   const blocksMap: Map<string, Block> = new Map();
   try {
-    for (const decrypt_path of decrypt_paths) {
+    for (const decryptPath of decryptPaths) {
       //get the facies/blocks first
-      await getFaciesOrBlock(decrypt_path, faciesMap, blocksMap);
+      await getFaciesOrBlock(decryptPath, faciesMap, blocksMap);
       // Originally the first step, gather all parents and their direct children
-      await getAllEntries(decrypt_path, allEntries, isChild, datapackAgeInfo);
+      await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
       // only iterate over parents. if we encounter one that is a child, the recursive function
       // should have already processed it.
       allEntries.forEach((children, parent) => {
@@ -102,9 +102,9 @@ export async function parseDatapacks(decrypt_filepath: string, files: string[]):
       columnInfoArray[0]!.maxAge == Number.MIN_VALUE &&
       columnInfoArray[0]!.minAge == Number.MAX_VALUE
     )
-      throw new Error(`No columns found for path ${decrypt_paths}`);
+      throw new Error(`No columns found for path ${decryptPaths}`);
   } catch (e) {
-    console.log("ERROR: failed to read columns for path " + decrypt_paths + ". ", e);
+    console.log("ERROR: failed to read columns for path " + decryptPaths + ". ", e);
     return { columnInfoArray: [], datapackAgeInfo: { datapackContainsSuggAge: false } };
   }
   return { columnInfoArray, datapackAgeInfo };
