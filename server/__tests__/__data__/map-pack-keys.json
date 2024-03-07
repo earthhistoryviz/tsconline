@@ -1,0 +1,143 @@
+{
+    "map-pack-key-1": {
+        "mapInfo": {
+          "Africa Bight": {
+            "name": "Africa Bight",
+            "img": "/imagesDirectory/AfricaBight.png",
+            "coordtype": "RECTANGULAR",
+            "bounds": {
+              "upperLeftLon": -11,
+              "upperLeftLat": 11,
+              "lowerRightLon": 11,
+              "lowerRightLat": -11
+            },
+            "mapPoints": {
+              "Nigeria Coast": {
+                "lat": 6,
+                "lon": 6
+              },
+              "South Atlantic": {
+                "lat": -5,
+                "lon": -5
+              }
+            },
+            "note": ""
+          }
+      },
+      "mapHierarchy": {}
+    },
+    "map-pack-key-2": {
+        "mapInfo": {
+          "Belgium": {
+            "name": "Belgium",
+            "img": "/imagesDirectory/Belgium_Map_Nov2012.png",
+            "coordtype": "RECTANGULAR",
+            "bounds": {
+              "upperLeftLon": 2.5,
+              "upperLeftLat": 51.55,
+              "lowerRightLon": 6.47,
+              "lowerRightLat": 49.42
+            },
+            "mapPoints": {
+              "Oostende and Flanders borehole": {
+                "lat": 51.22,
+                "lon": 3.07,
+                "minage": 47.86,
+                "maxage": 482.97,
+                "note": "Paleogene, Silurian and Ordovician data"
+              },
+              "Woensdrecht-Kallo": {
+                "lat": 51.33,
+                "lon": 4.3,
+                "minage": 2.2,
+                "maxage": 64.74,
+                "note": "Neogene and Paleogene data"
+              }
+            },
+            "note": "Unknown projection; overlay by us of locations onto regional provinces",
+            "parent": {
+              "name": "World Map",
+              "coordtype": "RECTANGULAR",
+              "bounds": {
+                "upperLeftLon": 2.5,
+                "upperLeftLat": 51.55,
+                "lowerRightLon": 6.47,
+                "lowerRightLat": 49.42
+              }
+            }
+          }
+        },
+        "mapHierarchy": {
+            "World Map": [
+            "Belgium"
+            ]
+        }
+    },
+    "map-pack-key-3": {
+        "mapInfo": {
+            "MAP TITLE TEST": {
+                "name": "MAP TITLE TEST",
+                "img": "/imagesDirectory/maptest.png",
+                "coordtype": "RECTANGULAR",
+                "bounds": {
+                    "upperLeftLat": 7,
+                    "upperLeftLon": -55,
+                    "lowerRightLat": -0.67,
+                    "lowerRightLon": -44.67
+                },
+                "mapPoints": {
+                    "DataCol 1": {
+                        "lat": 6,
+                        "lon": -45
+                    },
+                    "DataCol 2": {
+                        "lat": 5.5,
+                        "lon": -45
+                    }
+                },
+                "note": "map-header-info",   
+                "parent": {
+                    "name": "World Map",
+                    "coordtype": "RECTANGULAR",
+                    "bounds": {
+                    "upperLeftLat": -81.93,
+                    "upperLeftLon": 13.8,
+                    "lowerRightLat": -64.39,
+                    "lowerRightLon": -8.39
+                    }
+                },
+                "transects": {
+                    "Transect 1": {
+                    "startMapPoint": "Transect 1 StartLoc",
+                    "endMapPoint": "Transect 1 EndLoc",
+                    "note": "Transect 1 Info",
+                    "on": true
+                    },
+                    "Transect 2": {
+                    "startMapPoint": "Transect 2 StartLoc",
+                    "endMapPoint": "Transect 2 EndLoc",
+                    "note": "Transect 2 Info",
+                    "on": true
+                    }
+                },
+                "infoPoints": {
+                    "Info Point 1": {
+                    "lat": 40.41,
+                    "lon": -86.93,
+                    "note": "Info Point 1 Note"
+                    },
+                    "Info Point 2": {
+                    "lat": 0,
+                    "lon": 0,
+                    "note": "Info Point 2 Note"
+                    }
+                }
+            }
+        },
+        "mapHierarchy": {
+            "World Map": [
+            "MAP TITLE TEST"
+            ]
+        }
+    }
+}
