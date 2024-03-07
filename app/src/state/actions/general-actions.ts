@@ -69,27 +69,37 @@ export const resetSettings = action("resetSettings", () => {
 });
 
 export const fetchDatapackInfo = action("fetchDatapackInfo", async () => {
-  const response = await fetcher("/datapackinfoindex", {
-    method: "GET"
-  });
-  const indexResponse = await response.json();
   try {
-    assertIndexResponse(indexResponse);
-    loadIndexResponse(indexResponse);
-    console.log("Datapacks loaded");
+    const response = await fetcher("/datapackinfoindex", {
+      method: "GET"
+    });
+    const indexResponse = await response.json();
+    try {
+      assertIndexResponse(indexResponse);
+      loadIndexResponse(indexResponse);
+      console.log("Datapacks loaded");
+    } catch (e) {
+      displayError(e, indexResponse, "Failed to fetch DatapackInfo");
+    }
   } catch (e) {
-    displayError(e, indexResponse, "Failed to fetch DatapackInfo");
+    displayError(e, null, "Could not fetch datapacks from server. Server not responsive.");
+    console.error(e);
   }
 });
 export const fetchPresets = action("fetchPresets", async () => {
-  const response = await fetcher("/presets");
-  const presets = await response.json();
   try {
-    assertPresets(presets);
-    loadPresets(presets);
-    console.log("Presets loaded");
+    const response = await fetcher("/presets");
+    const presets = await response.json();
+    try {
+      assertPresets(presets);
+      loadPresets(presets);
+      console.log("Presets loaded");
+    } catch (e) {
+      displayError(e, presets, "Failed to retrieve presets");
+    }
   } catch (e) {
-    displayError(e, presets, "Failed to retrieve presets");
+    displayError(e, null, "Could not fetch presets from server. Server not responsive.");
+    console.error(e);
   }
 });
 
@@ -511,14 +521,29 @@ export const handleCloseSnackbar = action(
   }
 );
 
-export const removeError = action("removeError", (id: number) => {
-  state.errorAlerts = state.errorAlerts.filter((error) => error.id !== id);
+export const removeError = action("removeError", (id: number, text: string) => {
+  state.errors.errorAlerts = state.errors.errorAlerts.filter((error) => error.id !== id);
+  state.errors.errorAlertIDs.delete(id);
+  state.errors.errorAlertMessages.delete(text);
 });
 export const pushError = action("pushError", (text: string) => {
-  state.errorAlerts.push({
-    id: new Date().getTime(),
-    errorText: text
-  });
+  if (state.errors.errorAlertMessages.has(text)) {
+    state.errors.errorAlertMessages.get(text)!.errorCount++;
+    return;
+  }
+  let id = new Date().getTime();
+  // to prevent error alert id collisions on same millisecond errors
+  while (state.errors.errorAlertIDs.has(id)) {
+    id += Math.random();
+  }
+  const error = {
+    id,
+    errorText: text,
+    errorCount: 1
+  };
+  state.errors.errorAlerts.push(error);
+  state.errors.errorAlertIDs.add(error.id);
+  state.errors.errorAlertMessages.set(text, error);
 });
 
 export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {

@@ -25,6 +25,7 @@ export type LegendItem = {
 export type ErrorAlert = {
   id: number;
   errorText: string;
+  errorCount: number;
 };
 export type Settings = {
   topStageAge: number;
