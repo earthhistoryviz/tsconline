@@ -327,6 +327,8 @@ export function assertMapInfo(o) {
         if (typeof map !== "object" || map === null) {
             throw new Error(`MapInfo' value for key '${key}' must be a non-null object`);
         }
+        if (typeof map.name !== "string")
+            throwError("MapInfo", "name", "string", map.name);
         if (typeof map.img !== "string") {
             throw new Error(`MapInfo' value for key '${key}' must have an 'img' string property`);
         }
