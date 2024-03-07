@@ -48,7 +48,7 @@ export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
   const mapInfoPaths = await grabFilepaths(datapacks, assetconfigs.decryptionDirectory, "map-packs");
   const mapInfo: MapInfo = {};
   const mapHierarchy: MapHierarchy = {};
-  await pmap(map_info_paths, async (map_info) => {
+  await pmap(mapInfoPaths, async (map_info) => {
     const contents = (await fs.readFile(map_info)).toString();
     const lines = contents.split(/\n|\r/);
     const map: MapInfo[string] = {
