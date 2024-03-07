@@ -32,8 +32,8 @@ export default observer(function App() {
         <Route path="/help" element={<Help />} />
         <Route path="/about" element={<About />} />
       </Routes>
-      {state.errorAlerts.map((error) => (
-        <TSCError key={error.id} text={error.errorText} id={error.id} />
+      {state.errors.errorAlerts.map((error, index) => (
+        <TSCError key={error.id} text={error.errorText} id={error.id} index={index} />
       ))}
       <TSCPopupDialog
         open={state.showSuggestedAgePopup}
