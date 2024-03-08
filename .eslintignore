@@ -1,6 +1,6 @@
 app/dist
 app/assets
-app/src/state/parseSettings.ts
-app/src/state/actions/UtilActions.ts
+app/src/state/parse-settings.ts
+app/src/state/actions/util-actions.ts
 server/dist
 shared/dist

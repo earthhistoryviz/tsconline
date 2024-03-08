@@ -1,10 +1,10 @@
-import * as generalActions from "./GeneralActions";
-import { displayError } from "./UtilActions";
+import * as generalActions from "./general-actions";
+import { displayError } from "./util-actions";
 import { state } from "../state";
 import { action } from "mobx";
 import { fetcher, devSafeUrl } from "../../util";
 import { assertChartInfo } from "@tsconline/shared";
-import { jsonToXml } from "../parseSettings";
+import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 
 export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {

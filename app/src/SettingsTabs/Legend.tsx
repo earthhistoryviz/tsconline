@@ -23,7 +23,7 @@ import { observer } from "mobx-react-lite";
 import ColorLensIcon from "@mui/icons-material/ColorLens";
 import SimpleBarCore from "simplebar-core";
 import ArrowUpIcon from "../assets/icons/arrow-up.json";
-import { LEGEND_HEADER_HEIGHT } from "./MapPointConstants";
+import { LegendHeaderHeight } from "./MapPointConstants";
 import { Color, Patterns } from "@tsconline/shared";
 
 /**
@@ -107,7 +107,7 @@ export const Legend = observer(() => {
     <>
       <IconButton
         className={`scroll-top ${isScrolled ? "show" : ""}`}
-        style={{ top: `calc(${LEGEND_HEADER_HEIGHT} + 1vh)` }}
+        style={{ top: `calc(${LegendHeaderHeight} + 1vh)` }}
         onClick={() => {
           scrollRef.current?.contentWrapperEl?.scrollTo({ top: 0, left: 0, behavior: "smooth" });
         }}>
@@ -117,7 +117,7 @@ export const Legend = observer(() => {
         ref={scrollRef}
         autoHide={false}
         style={{
-          height: `calc(100vh - ${LEGEND_HEADER_HEIGHT})`,
+          height: `calc(100vh - ${LegendHeaderHeight})`,
           backgroundColor: theme.palette.navbar.main
         }}>
         <CustomHeader className="legend-header" color="primary">

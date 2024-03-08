@@ -13,7 +13,7 @@ import { devSafeUrl } from "../util";
 import { BorderedIcon } from "../components";
 import { checkIfDataIsInRange } from "../util/util";
 
-const ICON_SIZE = 40;
+const IconSize = 40;
 export const InfoIcon = NotListedLocationIcon;
 export const DisabledIcon = LocationOffIcon;
 export const AvailableIcon = LocationOnSharpIcon;
@@ -86,7 +86,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
     });
     const color = getColor(theme, disabled, isInfo, clicked);
     // scale only if it isn't an info point and in facies mode
-    const iconSize = scaleButton ? ICON_SIZE + state.mapState.currentFaciesOptions.dotSize * 3 : ICON_SIZE;
+    const iconSize = scaleButton ? IconSize + state.mapState.currentFaciesOptions.dotSize * 3 : IconSize;
     let adjustY = iconSize / scale;
     if (scaleButton) {
       adjustY = iconSize / 2 / scale;
