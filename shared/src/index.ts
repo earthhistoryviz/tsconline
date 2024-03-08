@@ -82,12 +82,12 @@ export type Datapack = {
   file: string;
 };
 
-export type PresetChartInfo = {
-  settings: PresetChartSettingsInfo;
-  "class datastore.RootColumn:Chart Root": PresetColumnInfo[];
+export type ChartInfoTSC = {
+  settings?: ChartSettingsInfoTSC;
+  "class datastore.RootColumn:Chart Root"?: ColumnInfoTSC;
 };
 
-export type PresetChartSettingsInfo = {
+export type ChartSettingsInfoTSC = {
   topAge: {
     source: string;
     unit: string;
@@ -118,7 +118,7 @@ export type PresetChartSettingsInfo = {
   enHideBlockLable: boolean;
 };
 
-export type PresetColumnInfo = {
+export type ColumnInfoTSC = {
   _id: string;
   title: string;
   useNamedColor: boolean;
@@ -140,13 +140,13 @@ export type PresetColumnInfo = {
     useNamed?: boolean;
     text: string;
   };
-  fonts: FontsInfo;
-  columnType?: PresetZoneColumnInfo | PresetEventColumnInfo | PresetRangeColumnInfo | PresetRulerColumnInfo | PresetSequenceColumnInfo;
+  fonts?: FontsInfo;
+  columnType?: ZoneColumnInfoTSC | EventColumnInfoTSC | RangeColumnInfoTSC | RulerColumnInfoTSC | SequenceColumnInfoTSC;
   catchAll?: [[name: string, text: string]];
-  children: PresetColumnInfo[];
+  children: ColumnInfoTSC[];
 };
 
-export type PresetZoneColumnInfo = {
+export type ZoneColumnInfoTSC = {
   crunchOuterMargin?: number;
   crunchInnerMargin?: number;
   crunchAscendWidth?: number;
@@ -155,20 +155,20 @@ export type PresetZoneColumnInfo = {
   orientation?: "vertical" | "normal";
 }
 
-export type PresetEventColumnInfo = {
+export type EventColumnInfoTSC = {
   type?: string;
   rangeSort?: string;
 }
 
-export type PresetRangeColumnInfo = {
+export type RangeColumnInfoTSC = {
   rangeSort?: string;
 }
 
-export type PresetRulerColumnInfo = {
+export type RulerColumnInfoTSC = {
   justification?: "left" | "right";
 }
 
-export type PresetSequenceColumnInfo = {
+export type SequenceColumnInfoTSC = {
   labelMarginLeft?: number;
   labelMarginRight?: number;
   graphStyle?: string;
