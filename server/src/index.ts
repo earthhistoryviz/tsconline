@@ -5,7 +5,7 @@ import process from "process";
 import { execSync } from "child_process";
 import { readFile } from "fs/promises";
 import { loadPresets } from "./preset.js";
-import { AssetConfig, assertAssetConfig } from "./types.js";
+import { AssetConfig, DatapackDescriptions, assertAssetConfig, assertDatapackDescriptions } from "./types.js";
 import { deleteDirectory } from "./util.js";
 import * as routes from "./routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
@@ -61,6 +61,25 @@ const datapackIndex: DatapackIndex = {};
 const mapPackIndex: MapPackIndex = {};
 const patterns = await loadFaciesPatterns();
 await loadIndexes(datapackIndex, mapPackIndex);
+
+export let datapackDescription: DatapackDescriptions;
+try{
+  const desc = JSON.parse((await readFile("assets/description.json")).toString());
+  assertDatapackDescriptions(desc);
+  datapackDescription = desc;
+}catch(e){
+  console.log("ERROR: Failed to load datapack descriptions from JSON file. Error was: ", e);
+  process.exit(1);
+}
+
+for (const datapack in datapackIndex) {
+  if (datapackDescription.hasOwnProperty(datapack)) {
+    datapackIndex[datapack].description = datapackDescription[datapack];
+  } else {
+    console.log(`No description found for datapack: ${datapack}`);
+  }
+}
+
 // Serve the main app from /
 // @ts-expect-error: server.register doesn't accept the proper types. open bug-report asap to fastify
 server.register(fastifyStatic, {

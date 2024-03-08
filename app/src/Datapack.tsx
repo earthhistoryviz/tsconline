@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from "react";
 import { observer } from "mobx-react-lite";
 import { useTheme } from "@mui/material/styles";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { TSCCheckbox, InputFileUpload ,TSCButton } from "./components";
+import { TSCCheckbox, InputFileUpload } from "./components";
 import { context, state } from "./state";
 import Box from "@mui/material/Box";
 import InfoIcon from "@mui/icons-material/Info";
@@ -26,9 +26,6 @@ export const Datapack = observer(function Datapack() {
     } else {
       setSelectedDatapacks([...selectedDatapacks, name]);
     }
-  };
-
-  const setDatapackConfigAndUpdate = () => {
     actions.setDatapackConfig(selectedDatapacks, state.config.settingsPath);
   };
 
@@ -67,7 +64,6 @@ export const Datapack = observer(function Datapack() {
             </tbody>
           </table>
         </Box>
-        <TSCButton onClick={setDatapackConfigAndUpdate}>Apply Selected Datapacks</TSCButton>
 
         <InputFileUpload
           startIcon={<CloudUploadIcon />}

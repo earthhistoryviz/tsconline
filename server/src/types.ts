@@ -14,6 +14,18 @@ export type Colors = {
   [color: string]: string;
 };
 
+export type DatapackDescriptions = {
+  [datapack: string]: string;
+}
+
+export function assertDatapackDescriptions(o: any): asserts o is DatapackDescriptions {
+  if (typeof o !== "object" || !o) throw "AssetConfig must be an object";
+  for (const description in o) {
+    if (typeof description !== "string") throw 'Datapack descriptions must have a "datapack" key that is a string';
+    if (typeof o[description] !== "string") throw "Datapack descriptions must have a indexed value with type string";
+  }
+}
+
 export function assertColors(o: any): asserts o is Colors {
   if (typeof o !== "object" || !o) throw "AssetConfig must be an object";
   for (const color in o) {

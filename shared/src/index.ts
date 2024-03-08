@@ -9,6 +9,7 @@ export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 export type DatapackParsingPack = {
   columnInfoArray: ColumnInfo[];
   datapackAgeInfo: DatapackAgeInfo;
+  datapackDescription: DatapackDescriptions;
 };
 
 export type IndexResponse = {
@@ -55,6 +56,11 @@ export type DatapackAgeInfo = {
   topAge?: number;
   bottomAge?: number;
 };
+
+//not sure if this is correct
+export type DatapackDescriptions = {
+  [datapack: string]: string;
+}
 
 export type ChartConfig = {
   icon: string; // path to icon image
