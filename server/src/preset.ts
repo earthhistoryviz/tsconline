@@ -5,13 +5,13 @@ import { type Presets, assertChartConfig, ServerResponseError } from "@tsconline
 
 export async function loadPresets(): Promise<Presets | ServerResponseError> {
   // Build the list of presets from the filesystem:
-  let chartconfig_paths = await glob(`public/presets/*-*/config.json`);
+  let chartConfigPaths = await glob(`public/presets/*-*/config.json`);
   // this needs to be included to work on certain window machines
-  chartconfig_paths = chartconfig_paths.map((path) => path.replace(/\\/g, "/"));
+  chartConfigPaths = chartConfigPaths.map((path) => path.replace(/\\/g, "/"));
   // Sort them alphabetically:
-  chartconfig_paths.sort();
+  chartConfigPaths.sort();
   // Load all the configs out of all the files in public/presets:
-  const parsedConfigs = await pmap(chartconfig_paths, async (chartconfig) => {
+  const parsedConfigs = await pmap(chartConfigPaths, async (chartconfig) => {
     try {
       const cfg = JSON.parse((await readFile(chartconfig)).toString());
       assertChartConfig(cfg);

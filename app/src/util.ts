@@ -1,6 +1,10 @@
 // If you are running in dev mode, prefix URL's with the dev server URL:
 
-const devurl = "http://localhost:3000";
+let devurl: string = "http://localhost:3000";
+if (import.meta.env.VITE_SERVER_URL) {
+  devurl = import.meta.env.VITE_SERVER_URL;
+}
+
 export function devSafeUrl(url: string) {
   if (!url.match(/^\//)) {
     console.log(

@@ -11,8 +11,8 @@ jest.mock("./index.js", () => ({
 }));
 jest.mock("p-map", () => ({
   default: jest.fn().mockImplementation(async (array: string[], callback: (src: string) => Promise<void>) => {
-    for (const map_info of array) {
-      await callback(map_info);
+    for (const mapInfo of array) {
+      await callback(mapInfo);
     }
   })
 }));

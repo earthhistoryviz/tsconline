@@ -1,7 +1,7 @@
 import { action } from "mobx";
 import { state } from "../state";
 import { FaciesOptions } from "../../types";
-import { setIsFullscreen } from "./GeneralActions";
+import { setIsFullscreen } from "./general-actions";
 
 /**
  * When user presses back button on the map we pop history and
