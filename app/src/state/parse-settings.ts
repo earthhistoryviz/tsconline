@@ -2,29 +2,67 @@
 //                                          XML to JSON parser                                       //
 //-------------------------------------------------------------------------------------------------- //
 
-import { ColumnInfo, PresetColumnInfo, defaultFontsInfo } from "@tsconline/shared";
+import { ChartInfoTSC, ChartSettingsInfoTSC, ColumnInfo, ColumnInfoTSC, defaultFontsInfo } from "@tsconline/shared";
+
 
 /**
  *
  * @param settingsNode DOM node with name settings
  * @returns json object containing information about the settings of the current node
  */
+
 function processSettings(settingsNode: any): any {
-  const settings: any = {};
+  let settings: ChartSettingsInfoTSC = {
+    topAge: {
+      source: "",
+      unit: "",
+      stage: undefined,
+      text: undefined
+    },
+    baseAge: {
+      source: "",
+      unit: "",
+      stage: undefined,
+      text: undefined
+    },
+    unitsPerMY: {
+      unit: "",
+      text: 0
+    },
+    skipEmptyColumns: {
+      unit: "",
+      text: false
+    },
+    variableColors: "",
+    noIndentPattern: false,
+    negativeChk: false,
+    doPopups: false,
+    enEventColBG: false,
+    enChartLegend: false,
+    enPriority: false,
+    enHideBlockLable: false
+  };
+  //https://stackoverflow.com/questions/69917159/type-any-is-not-assignable-to-type-never-when-trying-to-set-object-property
+  //TLDR: since properties of settings has different types, can't infer type of property from variable name, so use generics
+  function updateSetting<T extends keyof ChartSettingsInfoTSC>(settingName: T, value: ChartSettingsInfoTSC[T]) {
+    settings[settingName] = value;
+  }
+
   const settingNodes = settingsNode.getElementsByTagName("setting");
   for (let i = 0; i < settingNodes.length; i++) {
     const settingNode = settingNodes[i];
     const settingName = settingNode.getAttribute("name");
     const nestedSettingsNode = settingNode.getElementsByTagName("setting")[0];
-    const justificationValue = settingNode.getAttribute("justification");
     let settingValue = nestedSettingsNode ? nestedSettingsNode.textContent.trim() : settingNode.textContent.trim();
     //since we access the elements by tag name, the nested settings of topage and baseage
     //are treated on the same level, so skip when the setting name is text or stage.
     if (settingName === "text" || settingName === "stage") {
       continue;
-    } else if (settingName === "topAge" || settingName === "baseAge") {
+    } 
+    if (settingName === "topAge" || settingName === "baseAge") {
       let stage = undefined;
       let text = undefined;
+      
       if (nestedSettingsNode.getAttribute("name") === "stage") {
         stage = settingValue;
       } else {
@@ -37,25 +75,21 @@ function processSettings(settingsNode: any): any {
         } else {
           text = settingValue;
         }
-      }
-      settings[settingName] = {
+      } 
+      updateSetting(settingName, {
         source: settingNode.getAttribute("source"),
         unit: settingNode.getAttribute("unit"),
         stage: stage,
         text: text
-      };
+      })
     }
     //these two tags have units, so make an object storing its unit and value
     else if (settingName === "unitsPerMY" || settingName === "skipEmptyColumns") {
-      settings[settingName] = {
-        unit: "Ma",
-        text: settingValue
-      };
-    } else if (justificationValue) {
-      settings[settingName] = justificationValue;
-    } else {
+      updateSetting(settingName, {unit: "Ma", text: settingValue})
+    }
+    else {
       const settingValue = settingNode.textContent.trim();
-      settings[settingName] = settingValue;
+      updateSetting(settingName, settingValue);
     }
   }
   return settings;
@@ -82,14 +116,37 @@ function processFonts(fontsNode: any): any {
  * @param node DOM node of a column in the settings file, usually starts with the chart root
  * @returns json object containing the info of the current and children columns
  */
-function processColumn(node: any): any {
-  const result: any = {};
+function processColumn(node: any): ColumnInfoTSC {
+  const column: ColumnInfoTSC = {
+    _id: "",
+    title: "",
+    useNamedColor: true,
+    placeHolder: true,
+    drawTitle: true,
+    drawAgeLabel: true,
+    drawUncertaintyLabel: true,
+    isSelected: true,
+    width: 0,
+    pad: 0,
+    "age pad": 0,
+    backgroundColor: {
+      text: "",
+    },
+    customColor: {
+      text: "",
+    },
+    children: [],
+  };
+  function updateColumn<T extends keyof ColumnInfoTSC>(settingName: T, value: ColumnInfoTSC[T]) {
+    column[settingName] = value;
+  }
+
   const nodeAttributes = node.attributes;
 
   if (nodeAttributes.length > 0) {
     for (let i = 0; i < nodeAttributes.length; i++) {
       const attribute = nodeAttributes[i];
-      result[`_${attribute.name}`] = attribute.value;
+      updateColumn(attribute.name, attribute.value);
     }
   }
 
@@ -101,37 +158,38 @@ function processColumn(node: any): any {
       if (child.nodeType === node.ELEMENT_NODE) {
         const childName = child.getAttribute("id");
         if (child.nodeName === "column") {
-          result[childName] = processColumn(child);
+          const childTSC = processColumn(child);
+          childTSC._id = childName;
+          column.children.push(childTSC);
         } else if (child.nodeName === "fonts") {
-          result["fonts"] = processFonts(child);
+          column.fonts = processFonts(child);
         } else if (child.nodeName === "setting") {
-          const settingName = child.getAttribute("name");
+          const settingName = child.getAttribute("name") as keyof ColumnInfoTSC;
           const justificationValue = child.getAttribute("justification");
           const orientationValue = child.getAttribute("orientation");
           const useNamedValue = child.getAttribute("useNamed");
           const standardizedValue = child.getAttribute("standardized");
           if (settingName === "backgroundColor" || settingName === "customColor") {
-            result[settingName] = {
+            column[settingName] = {
               standardized: standardizedValue,
               useNamed: useNamedValue,
               text: child.textContent.trim()
             };
           } else if (justificationValue) {
-            result[settingName] = justificationValue;
+            updateColumn(settingName, justificationValue);
           } else if (orientationValue) {
-            result[settingName] = orientationValue;
+            updateColumn(settingName, orientationValue);
           } else {
             const textContent = child.textContent.trim();
             if (textContent) {
-              result[settingName] = textContent;
+              updateColumn(settingName, textContent);
             }
           }
         }
       }
     }
   }
-
-  return result;
+  return column;
 }
 
 /**
@@ -143,23 +201,26 @@ export function xmlToJson(xml: string): any {
   //convert xml to a DOM document using a parser library
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xml, "text/xml");
-  const json: any = {};
+  const settingsTSC: ChartInfoTSC = {
+
+  };
   const tsCreatorNode = xmlDoc.getElementsByTagName("TSCreator")[0];
   if (tsCreatorNode) {
     const settingsNode = tsCreatorNode.getElementsByTagName("settings")[0];
     if (settingsNode) {
       const versionAttr = settingsNode.getAttribute("version");
       if (versionAttr === "1.0") {
-        json["settings"] = processSettings(settingsNode);
+        settingsTSC["settings"] = processSettings(settingsNode);
       }
     }
 
     const rootColumnNode = tsCreatorNode.getElementsByTagName("column")[0];
     if (rootColumnNode) {
-      json[rootColumnNode.getAttribute("id") || "unknown"] = processColumn(rootColumnNode);
+      settingsTSC["class datastore.RootColumn:Chart Root"] = processColumn(rootColumnNode);
+      settingsTSC["class datastore.RootColumn:Chart Root"]._id = "class datastore.RootColumn:Chart Root";
     }
   }
-  return json;
+  return settingsTSC;
 }
 
 //-------------------------------------------------------------------------------------------------- //
@@ -223,11 +284,6 @@ function generateSettingsXml(settings: any, chartSettings: any, indent: string):
           } else xml += `${indent}    <setting name="text">${chartSettings.baseStageAge}</setting>\n`;
           xml += `${indent}</setting>\n`;
         }
-        //else if (key === "topAge" || key === "baseAge") {
-        //   xml += `${indent}<setting name="${key}" source="${value.source}" unit="${value.unit}">\n`;
-        //   xml += `${indent}    <setting name="${value.source}">${value.text}</setting>\n`;
-        //   xml += `${indent}</setting>\n`;
-        // }
         else if (key === "unitsPerMY" || key === "skipEmptyColumns") {
           xml += `${indent}<setting name="${key}" unit="${value.unit}">${value.text}</setting>\n`;
         }
@@ -301,7 +357,7 @@ function generateFontsXml(fonts: any, colName: string, stateColumn: any, indent:
   return xml;
 }
 
-function columnIsChild(columns: PresetColumnInfo[], name: string) {
+function columnIsChild(columns: ColumnInfoTSC[], name: string) {
   for (let i = 0; i < columns.length; i++) {
     if (name === columns[i]._id) {
       return true;
@@ -310,7 +366,7 @@ function columnIsChild(columns: PresetColumnInfo[], name: string) {
   return false;
 }
 
-function getChildColumn(columns: PresetColumnInfo[], name: string) {
+function getChildColumn(columns: ColumnInfoTSC[], name: string) {
   for (let i = 0; i < columns.length; i++) {
     if (name === columns[i]._id) {
       return columns[i];
@@ -325,7 +381,7 @@ function getChildColumn(columns: PresetColumnInfo[], name: string) {
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with column info
  */
-function generateColumnXml(presetColumn: PresetColumnInfo, stateColumn: ColumnInfo | null, indent: string): string {
+function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo | null, indent: string): string {
   let xml = "";
   for (let key in presetColumn) {
     if (Object.prototype.hasOwnProperty.call(presetColumn, key)) {
@@ -359,13 +415,7 @@ function generateColumnXml(presetColumn: PresetColumnInfo, stateColumn: ColumnIn
         } else {
           xml += `${indent}<setting name="${xmlKey}"/>\n`;
         }
-      } else if (key === "customColor") {
-      // } else if (key === "justification") {
-      //   xml += `${indent}<setting justification="${presetColumn.justification}" name="${xmlKey}"/>\n`;
-      // } else if (key === "orientation") {
-      //   xml += `${indent}<setting name="${xmlKey}" orientation="${presetColumn[key]}"/>\n`;
-      // 
-    } else if (key === "isSelected") {
+      } else if (key === "isSelected") {
         //TODO: remove later when event columns are covered
         if (presetColumn._id.includes("EventColumn")) {
           xml += `${indent}<setting name="${xmlKey}">${presetColumn["isSelected"]}</setting>\n`;
@@ -419,10 +469,7 @@ function generateColumnXml(presetColumn: PresetColumnInfo, stateColumn: ColumnIn
         xml += generateColumnXml(getChildColumn(presetColumn.children, key)!, childStateColumn, `${indent}    `);
 
         xml += `${indent}</column>\n`;
-      } 
-      // else {
-      //   xml += `${indent}<setting name="${xmlKey}">${replaceSpecialChars(presetColumn[key], 1)}</setting>\n`;
-      // }
+      }
     }
   }
   return xml;
@@ -431,41 +478,24 @@ function generateColumnXml(presetColumn: PresetColumnInfo, stateColumn: ColumnIn
  * main parser
  * a major aspect for the parser is that it can only add fields that were part of the initial input settings
  * for example, if the settings doesn't have "isSelected" fields, it won't add "isSelected" settings in the final xml.
- *
- * @param settings the initial json object used to generate a chart that contains the settings info
+ * only works for the entire settings file (not individual columns)
+ * @param settings the initial json object created by TSC using the datapack
  * @param columnSettings json object containing the state of the columns
+ * @param chartSettings the chart settings in state such as age
  * @param version the version of the jar file (TimeScale Creator)
  * @returns xml string with the entire settings info
  */
-export function jsonToXml(settings: any, columnSettings: any, chartSettings: any, version: string = "PRO8.1"): string {
+export function jsonToXml(settingsTSC: ChartInfoTSC, columnSettings: ColumnInfo | null, chartSettings: any, version: string = "PRO8.1"): string {
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
-  //console.log("json 2...\n", state.settingsJSON);
-  if (settings["settings"]) {
+  if (settingsTSC["settings"]) {
     xml += '  <settings version="1.0">\n';
-    xml += generateSettingsXml(settings["settings"], chartSettings, "    ");
+    xml += generateSettingsXml(settingsTSC["settings"], chartSettings, "    ");
     xml += "  </settings>\n";
   }
-  //the top level doesn't have _id so it usually doesn't proc, but
-  //procs if used for a child
-  if (settings["_id"]) {
-    xml += `  <column id="${settings["id"]}">\n`;
-    xml += generateColumnXml(settings, columnSettings, "    ");
+    xml += '  <column id="class datastore.RootColumn:Chart Root">\n';
+    xml += generateColumnXml(settingsTSC["class datastore.RootColumn:Chart Root"]!, columnSettings, "    ");
     xml += "  </column>\n";
-  }
-  //generate columns
-  else {
-    for (const key in settings) {
-      if (
-        key !== "settings" &&
-        Object.hasOwn(settings, key) //maybe not necessary since we are iterating over the keys of json
-      ) {
-        xml += `  <column id="${key}">\n`;
-        xml += generateColumnXml(settings[key], columnSettings, "    ");
-        xml += "  </column>\n";
-      }
-    }
-  }
   xml += "</TSCreator>\n";
   return xml;
 }
