@@ -312,9 +312,9 @@ function generateColumnXml(jsonColumn: any, stateColumn: ColumnInfo | null, inde
       let colName = extractName(jsonColumn._id);
       let xmlKey = replaceSpecialChars(key, 0);
       // Skip the 'id' element.
-      if (colName === "Chart Root") {
-        console.log(JSON.parse(JSON.stringify(stateColumn)));
-      }
+      // if (colName === "Chart Root") {
+      //   console.log(JSON.parse(JSON.stringify(stateColumn)));
+      // }
       if (key === "_id") {
         continue;
       }
