@@ -140,15 +140,15 @@ const FontMenuRow: React.FC<{
   );
 });
 
-export const FontMenu: React.FC<{}> = observer(() => {
-  const { state, actions } = useContext(context);
+export const FontMenu: React.FC<object> = observer(() => {
+  const { state } = useContext(context);
   const theme = useTheme();
   const name =
     state.settingsTabs.columnSelected === null
       ? ""
       : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.editName;
   let fontOptionsSet: Set<ValidFontOptions> = new Set();
-  let defaultFontSet: Set<ValidFontOptions> = new Set([
+  const defaultFontSet: Set<ValidFontOptions> = new Set([
     "Age Label",
     "Zone Column Label",
     "Uncertainty Label",
