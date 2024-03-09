@@ -11,7 +11,8 @@ import type {
   Presets,
   DatapackIndex,
   MapPackIndex,
-  Patterns
+  Patterns,
+  ChartInfoTSC
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 
@@ -61,7 +62,7 @@ export type State = {
   chartContent: string;
   chartHash: string;
   settingsXML: string;
-  settingsJSON: any;
+  settingsTSC: ChartInfoTSC;
   settings: {
     selectedStage: string;
     topStageAge: number;
@@ -136,7 +137,7 @@ export const state = observable<State>({
   chartContent: "",
   chartHash: "",
   settingsXML: "",
-  settingsJSON: {},
+  settingsTSC: {},
   settings: {
     selectedStage: "",
     topStageAge: 0,
