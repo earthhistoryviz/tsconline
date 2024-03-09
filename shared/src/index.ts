@@ -1,6 +1,6 @@
 // Shared types between app and server (i.e. messages they send back and forth)
 
-export * from "./settings-types.js"
+export * from "./settings-types.js";
 
 export type SuccessfulServerResponse = {
   message: string;
@@ -83,7 +83,6 @@ export type Datapack = {
   name: string;
   file: string;
 };
-
 
 export type FontsInfo = {
   "Column Header": {
@@ -170,7 +169,7 @@ export const defaultFontsInfo: FontsInfo = {
     fontFace: "Arial",
     inheritable: false,
     italic: false,
-    size: 6,
+    size: 6
   },
   "Column Header": {
     bold: false,
@@ -178,7 +177,7 @@ export const defaultFontsInfo: FontsInfo = {
     fontFace: "Arial",
     inheritable: false,
     italic: false,
-    size: 14,
+    size: 14
   },
   "Event Column Label": {
     bold: false,
@@ -186,7 +185,7 @@ export const defaultFontsInfo: FontsInfo = {
     fontFace: "Arial",
     inheritable: false,
     italic: false,
-    size: 11,
+    size: 11
   },
   "Legend Column Name": { inheritable: false },
   "Legend Column Source": { inheritable: false },
@@ -200,7 +199,7 @@ export const defaultFontsInfo: FontsInfo = {
     fontFace: "Arial",
     inheritable: false,
     italic: false,
-    size: 12,
+    size: 12
   },
   "Ruler Label": { inheritable: false },
   "Ruler Tick Mark Label": { inheritable: false },
@@ -211,7 +210,7 @@ export const defaultFontsInfo: FontsInfo = {
     fontFace: "Arial",
     inheritable: false,
     italic: false,
-    size: 5,
+    size: 5
   },
   "Zone Column Label": {
     bold: false,
@@ -219,8 +218,8 @@ export const defaultFontsInfo: FontsInfo = {
     fontFace: "Arial",
     inheritable: false,
     italic: false,
-    size: 12,
-  },
+    size: 12
+  }
 };
 
 export type SubBlockInfo = {
