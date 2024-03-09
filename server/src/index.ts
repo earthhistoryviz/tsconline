@@ -8,9 +8,8 @@ import * as routes from "./routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
 import fastifyCompress from "@fastify/compress";
 import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
-import { assertChartRequest } from '@tsconline/shared';
-import { loadPresets } from './preset.js';
-import { AssetConfig, assertAssetConfig } from './types.js';
+import { loadPresets } from "./preset.js";
+import { AssetConfig, assertAssetConfig } from "./types.js";
 import { readFile } from "fs/promises";
 
 const server = fastify({

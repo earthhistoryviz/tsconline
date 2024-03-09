@@ -5,13 +5,12 @@ import process from "process";
 import { execSync } from "child_process";
 import { deleteDirectory } from "./util.js";
 import * as routes from "./routes.js";
-import { assertDatapackParsingPack, assertIndexResponse, assertMapPack } from "@tsconline/shared";
-import { parseDatapacks } from "./parse-datapacks.js";
-import { parseMapPacks } from "./parse-map-packs.js";
+import { assertIndexResponse } from "@tsconline/shared";
 import fastifyCompress from "@fastify/compress";
-import { readFile } from "fs/promises";
+import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
 import { assertAssetConfig } from "./types.js";
+import { readFile } from "fs/promises";
 const server = fastify({
     logger: false,
     bodyLimit: 1024 * 1024 * 100 // 10 mb
@@ -54,34 +53,10 @@ catch (e) {
     console.log("ERROR: Failed to decrypt activeDatapacks in AssetConfig with error: ", e);
     process.exit(1);
 }
-export const datapackIndex = {};
-export const mapPackIndex = {};
-try {
-    console.log(`\nParsing datapacks: ${assetconfigs.activeDatapacks}\n`);
-    for (const datapack of assetconfigs.activeDatapacks) {
-        parseDatapacks(assetconfigs.decryptionDirectory, [datapack])
-            .then((datapackParsingPack) => {
-            assertDatapackParsingPack(datapackParsingPack);
-            datapackIndex[datapack] = datapackParsingPack;
-            console.log(`Successfully parsed ${datapack}`);
-        })
-            .catch((e) => {
-            console.log(`Cannot create a datapackParsingPack with datapack ${datapack} and error: ${e}`);
-        });
-        parseMapPacks([datapack])
-            .then((mapPack) => {
-            assertMapPack(mapPack);
-            mapPackIndex[datapack] = mapPack;
-        })
-            .catch((e) => {
-            console.log(`Cannot create a mapPack with datapack ${datapack} and error: ${e}`);
-        });
-    }
-}
-catch (e) {
-    console.log("ERROR: Failed to parse datapacks of activeDatapacks in AssetConfig with error: ", e);
-    process.exit(1);
-}
+const datapackIndex = {};
+const mapPackIndex = {};
+const patterns = await loadFaciesPatterns();
+await loadIndexes(datapackIndex, mapPackIndex);
 // Serve the main app from /
 // @ts-expect-error: server.register doesn't accept the proper types. open bug-report asap to fastify
 server.register(fastifyStatic, {
@@ -129,7 +104,7 @@ server.post("/upload", () => {
 server.get("/settingsXml/:settingFile", routes.fetchSettingsXml);
 // handles chart columns and age ranges requests
 server.post("/mapimages/:files", routes.refreshMapImages);
-server.get("/datapackinfoindex", (request, reply) => {
+server.get("/datapackinfoindex", (_request, reply) => {
     if (!datapackIndex || !mapPackIndex) {
         reply.send({ error: "datapackIndex/mapPackIndex is null" });
     }
@@ -146,6 +121,14 @@ server.get("/datapackinfoindex", (request, reply) => {
 });
 // checks chart.pdf-status
 server.get("/svgstatus/:hash", routes.fetchSVGStatus);
+server.get("/facies-patterns", (_request, reply) => {
+    if (!patterns || Object.keys(patterns).length === 0) {
+        reply.status(500).send({ error: "Server isn't able to load facies patterns" });
+    }
+    else {
+        reply.status(200).send({ patterns });
+    }
+});
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
 server.post("/charts/:usecache/:useSuggestedAge", routes.fetchChart);

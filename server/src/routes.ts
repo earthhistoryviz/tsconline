@@ -206,9 +206,9 @@ export const fetchTimescale = async function (_request: FastifyRequest, reply: F
       reply.status(404).send({ error: "Excel file not found" });
       return;
     }
-    
+
     let timescaleData: any[] = await parseExcelFile(filePath);
-    timescaleData = timescaleData.map(([, , stage, ma, ]) => ({
+    timescaleData = timescaleData.map(([, , stage, ma]) => ({
       key: stage,
       value: parseFloat(ma)
     }));
