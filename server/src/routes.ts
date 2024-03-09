@@ -195,6 +195,11 @@ export const fetchChart = async function fetchChart(
   reply.send({ chartpath: chartUrlPath, hash: hash });
 };
 
+interface TimescaleDataItem {
+  key: string;   // Assuming stage is a string, adjust type if necessary
+  value: number; // Assuming ma is a number, adjust type if necessary
+}
+
 // Serve timescale data endpoint
 export const fetchTimescale = async function (_request: FastifyRequest, reply: FastifyReply) {
   try {
@@ -207,12 +212,12 @@ export const fetchTimescale = async function (_request: FastifyRequest, reply: F
       return;
     }
 
-    let timescaleData: any[] = await parseExcelFile(filePath);
-    timescaleData = timescaleData.map(([, , stage, ma]) => ({
-      key: stage,
-      value: parseFloat(ma)
-    }));
-    timescaleData = timescaleData.filter((item) => item.key);
+    const excelData: string[][] = await parseExcelFile(filePath);
+    const timescaleData: TimescaleDataItem[] = excelData.map(([, , stage, ma, ]) => ({
+      key: stage as string,
+      value: parseFloat(ma as string)
+    })).filter((item) => item.key);
+    // timescaleData = timescaleData.filter((item) => item.key);
     timescaleData.forEach((data) => assertTimescale(data));
 
     reply.send({ timescaleData });
