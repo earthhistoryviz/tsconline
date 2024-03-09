@@ -19,7 +19,7 @@ export async function parseExcelFile(filePath: string) {
 
   if (!dataWithoutHeader || dataWithoutHeader.length === 0) {
     assertTimescaleDataWithoutHeader(dataWithoutHeader);
-    return []; 
+    return [];
   }
 
   if (dataWithoutHeader[0]) {

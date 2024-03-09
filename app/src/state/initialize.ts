@@ -7,4 +7,4 @@ export async function initialize() {
   actions.fetchPresets();
   actions.fetchFaciesPatterns();
   actions.fetchTimescaleDataAction();
-};
+}
