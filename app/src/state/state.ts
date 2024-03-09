@@ -25,8 +25,8 @@ export type State = {
   geologicalTopStageAges: TimescaleItem[];
   geologicalBaseStageAges: TimescaleItem[];
   settingsTabs: {
-    selected: "time" | "font" | "column" | "mappoints" | "datapacks";
-    columns: ColumnInfo | null;
+    selected: "time" | "font" | "column" | "mappoints";
+    columns: ColumnInfo | undefined;
     columnSelected: string | null;
     geologicalTopStages: GeologicalStages;
     geologicalBaseStages: GeologicalStages;
@@ -94,7 +94,7 @@ export const state = observable<State>({
   geologicalBaseStageAges: [],
   settingsTabs: {
     selected: "time",
-    columns: null,
+    columns: undefined,
     columnSelected: null,
     geologicalTopStages: {},
     geologicalBaseStages: {},
