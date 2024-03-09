@@ -16,6 +16,7 @@
 }
 .alert-title {
   display: inline-flex;
+  align-items: center;
 }
 .alert-text {
   margin-left: var(--side-margin);
@@ -52,6 +53,7 @@
 .MuiTypography-root.error-title {
   font-size: 1rem;
   padding-left: 15px;
+  padding-right: 15px;
   font-weight: 600;
 }
 

@@ -13,8 +13,9 @@ type TSCErrorProps = {
   text: string;
   id: number;
   index: number;
+  count: number;
 };
-export const TSCError: React.FC<TSCErrorProps> = observer(({ text, id, index }) => {
+export const TSCError: React.FC<TSCErrorProps> = observer(({ text, id, index, count }) => {
   const { actions } = useContext(context);
   const theme = useTheme();
   const margin = index < 5 ? index * 10 : 40;
@@ -44,6 +45,7 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ text, id, index }) 
               {" "}
               Error
             </Typography>
+            <CountBubble count={count} />
           </div>
           <IconButton className="alert-close" onClick={handleCloseError}>
             <CloseIcon className="alert-close-icon" style={{ color: theme.palette.errorText.main }} />
@@ -63,3 +65,21 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ text, id, index }) 
     </Snackbar>
   );
 });
+
+const CountBubble = ({ count }: {count: number}) => {
+  return (
+    <div style={{
+      minWidth: '15px',
+      minHeight: '10px',
+      borderRadius: '50%',
+      padding: '5px',
+      backgroundColor: 'gray',
+      color: 'white',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <Typography style={{fontSize: "14px"}}>{count > 999 ? '999+' : count} </Typography>
+    </div>
+  );
+};
