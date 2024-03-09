@@ -204,10 +204,12 @@ export const fetchTimescale = async function (_request: FastifyRequest, reply: F
     }
 
     const excelData: string[][] = await parseExcelFile(filePath);
-    const timescaleData: TimescaleItem[] = excelData.map(([, , stage, ma, ]) => ({
-      key: stage as string,
-      value: parseFloat(ma as string)
-    })).filter((item) => item.key);
+    const timescaleData: TimescaleItem[] = excelData
+      .map(([, , stage, ma]) => ({
+        key: stage as string,
+        value: parseFloat(ma as string)
+      }))
+      .filter((item) => item.key);
     timescaleData.forEach((data) => assertTimescale(data));
 
     reply.send({ timescaleData });
