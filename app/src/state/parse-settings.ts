@@ -2,7 +2,7 @@
 //                                          XML to JSON parser                                       //
 //-------------------------------------------------------------------------------------------------- //
 
-import { ChartInfoTSC, ChartSettingsInfoTSC, ColumnInfo, ColumnInfoTSC, defaultFontsInfo } from "@tsconline/shared";
+import { ChartInfoTSC, ChartSettingsInfoTSC, ColumnInfo, ColumnInfoTSC, FontsInfo, defaultFontsInfo } from "@tsconline/shared";
 
 
 /**
@@ -99,16 +99,16 @@ function processSettings(settingsNode: any): any {
  * @param fontsNode DOM node with font name, has font settings as children
  * @returns json object containing the font info
  */
-function processFonts(fontsNode: any): any {
-  const fonts: any = {};
-  const fontNodes = fontsNode.getElementsByTagName("font");
-  for (let i = 0; i < fontNodes.length; i++) {
-    const fontNode = fontNodes[i];
-    const fontFunction = fontNode.getAttribute("function");
-    const inheritable = fontNode.getAttribute("inheritable");
-    const fontInfo = { inheritable: inheritable === "true" };
-    fonts[fontFunction] = fontInfo;
-  }
+function processFonts(fontsNode: any): FontsInfo {
+  const fonts: FontsInfo = defaultFontsInfo;
+  // const fontNodes = fontsNode.getElementsByTagName("font");
+  // for (let i = 0; i < fontNodes.length; i++) {
+  //   const fontNode = fontNodes[i];
+  //   const fontFunction = fontNode.getAttribute("function");
+  //   const inheritable = fontNode.getAttribute("inheritable");
+  //   const fontInfo = { inheritable: inheritable === "true" };
+  //   fonts[fontFunction] = fontInfo;
+  // }
   return fonts;
 }
 /**
@@ -116,7 +116,7 @@ function processFonts(fontsNode: any): any {
  * @param node DOM node of a column in the settings file, usually starts with the chart root
  * @returns json object containing the info of the current and children columns
  */
-function processColumn(node: any): ColumnInfoTSC {
+function processColumn(node: any, id: string): ColumnInfoTSC {
   const column: ColumnInfoTSC = {
     _id: "",
     title: "",
@@ -151,15 +151,15 @@ function processColumn(node: any): ColumnInfoTSC {
   }
 
   const childNodes = node.childNodes;
-
+  column._id = id;
   if (childNodes.length > 0) {
     for (let i = 0; i < childNodes.length; i++) {
       const child = childNodes[i];
       if (child.nodeType === node.ELEMENT_NODE) {
         const childName = child.getAttribute("id");
         if (child.nodeName === "column") {
-          const childTSC = processColumn(child);
-          childTSC._id = childName;
+          //regex to find substring between first period and first colon
+          const childTSC = processColumn(child, childName);
           column.children.push(childTSC);
         } else if (child.nodeName === "fonts") {
           column.fonts = processFonts(child);
@@ -216,7 +216,7 @@ export function xmlToJson(xml: string): any {
 
     const rootColumnNode = tsCreatorNode.getElementsByTagName("column")[0];
     if (rootColumnNode) {
-      settingsTSC["class datastore.RootColumn:Chart Root"] = processColumn(rootColumnNode);
+      settingsTSC["class datastore.RootColumn:Chart Root"] = processColumn(rootColumnNode, "RootColumn");
       settingsTSC["class datastore.RootColumn:Chart Root"]._id = "class datastore.RootColumn:Chart Root";
     }
   }
@@ -381,14 +381,14 @@ function getChildColumn(columns: ColumnInfoTSC[], name: string) {
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with column info
  */
-function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo | null, indent: string): string {
+function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo | undefined, indent: string): string {
   let xml = "";
   for (let key in presetColumn) {
     if (Object.prototype.hasOwnProperty.call(presetColumn, key)) {
       let colName = extractName(presetColumn._id);
       let xmlKey = replaceSpecialChars(key, 0);
       // Skip the 'id' element.
-      if (key === "_id") {
+      if (key === "_id" || key === "id") {
         continue;
       }
       if (key === "title") {
@@ -421,7 +421,7 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo 
           xml += `${indent}<setting name="${xmlKey}">${presetColumn["isSelected"]}</setting>\n`;
         }
         //if column isn't in state, then use default given by the original xml
-        else if (stateColumn == undefined || Object.keys(stateColumn).length == 0) {
+        else if (stateColumn === undefined) {
           xml += `${indent}<setting name="${xmlKey}">${presetColumn["isSelected"]}</setting>\n`;
         }
         //always display these things (the original tsc throws an error if not selected)
@@ -436,6 +436,8 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo 
             xml += `${indent}<setting name="${xmlKey}">true</setting>\n`;
           } else {
             xml += `${indent}<setting name="${xmlKey}">false</setting>\n`;
+            if (stateColumn.name === "Central Africa Cenozoic") {
+            }
           }
         }
       // } else if (key.startsWith("_")) {
@@ -446,29 +448,24 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo 
         xml += `${indent}<fonts>\n`;
         xml += generateFontsXml(presetColumn[key], colName, stateColumn?.fontsInfo, `${indent}    `);
         xml += `${indent}</fonts>\n`;
-      } else if (columnIsChild(presetColumn.children, key)) {
-        xml += `${indent}<column id="${xmlKey}">\n`;
-        //recursively go down column settings
+      }
+      else if (key === "children") {
         let currName = extractName(presetColumn._id);
-        let childName = extractName(key);
-        let childStateColumn = null;
-        if (currName == "Chart Root") {
-          childStateColumn = stateColumn;
-        } else if (stateColumn != null) {
-          for (let i = 0; i < stateColumn.children.length; i++) {
-            if (
-              stateColumn.children[i].name == childName ||
-              stateColumn.children[i].name.slice(1, -1) == childName //remove surrounding quotation marks
-            ) {
-              childStateColumn = stateColumn.children[i];
-              break;
-            }
+        if (currName === "Chart Root") {
+          xml += `${indent}<column id="class datastore.RootColumn:Chart Title">\n`;
+          xml += generateColumnXml(presetColumn.children[0], stateColumn, `${indent}    `);
+          xml += `${indent}</column>\n`;
+        }
+        else {
+          for (let i = 0; i < presetColumn.children.length; i++) {
+            xml += `${indent}<column id="${presetColumn.children[i]._id}">\n`;
+            xml += generateColumnXml(presetColumn.children[i], stateColumn?.children[i], `${indent}    `);
+            xml += `${indent}</column>\n`;
           }
         }
-
-        xml += generateColumnXml(getChildColumn(presetColumn.children, key)!, childStateColumn, `${indent}    `);
-
-        xml += `${indent}</column>\n`;
+      }
+      else {
+        xml += `${indent}<setting name="${xmlKey}">${presetColumn[key as keyof ColumnInfoTSC]}</setting>\n`;
       }
     }
   }
@@ -485,17 +482,17 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo 
  * @param version the version of the jar file (TimeScale Creator)
  * @returns xml string with the entire settings info
  */
-export function jsonToXml(settingsTSC: ChartInfoTSC, columnSettings: ColumnInfo | null, chartSettings: any, version: string = "PRO8.1"): string {
+export function jsonToXml(settingsTSC: ChartInfoTSC, columnSettings: ColumnInfo | undefined, chartSettings: any, version: string = "PRO8.1"): string {
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
   if (settingsTSC["settings"]) {
-    xml += '  <settings version="1.0">\n';
-    xml += generateSettingsXml(settingsTSC["settings"], chartSettings, "    ");
-    xml += "  </settings>\n";
+    xml += '    <settings version="1.0">\n';
+    xml += generateSettingsXml(settingsTSC["settings"], chartSettings, "        ");
+    xml += "    </settings>\n";
   }
-    xml += '  <column id="class datastore.RootColumn:Chart Root">\n';
-    xml += generateColumnXml(settingsTSC["class datastore.RootColumn:Chart Root"]!, columnSettings, "    ");
-    xml += "  </column>\n";
+    xml += '    <column id="class datastore.RootColumn:Chart Root">\n';
+    xml += generateColumnXml(settingsTSC["class datastore.RootColumn:Chart Root"]!, columnSettings, "        ");
+    xml += "    </column>\n";
   xml += "</TSCreator>\n";
   return xml;
 }

@@ -343,7 +343,7 @@ export const resetState = action("resetState", () => {
   setUsePreset(true);
   setTab(0);
   setSettingsTabsSelected("time");
-  setSettingsColumns(null);
+  setSettingsColumns(undefined);
   setMapInfo({});
   state.settingsTabs.columnSelected = null;
   state.settingsXML = "";
@@ -582,7 +582,7 @@ export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
 export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;
 });
-export const setSettingsColumns = action((temp: ColumnInfo | null) => {
+export const setSettingsColumns = action((temp: ColumnInfo | undefined) => {
   state.settingsTabs.columns = temp;
 });
 export const setUseCache = action((temp: boolean) => {
