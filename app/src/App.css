@@ -1,12 +1,12 @@
-.MuiAlert-filled.alert {
+.MuiAlert-filled.success-alert {
   align-items: center;
   width: 100%;
 }
-.MuiAlert-root.alert .MuiAlert-icon {
+.MuiAlert-root.success-alert .MuiAlert-icon {
   display: flex;
   align-items: center;
 }
-.MuiAlert-root.alert .MuiAlert-message {
+.MuiAlert-root.success-alert .MuiAlert-message {
   display: flex;
   align-items: center;
   flex-grow: 1;

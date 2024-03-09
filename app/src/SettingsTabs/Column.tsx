@@ -151,9 +151,8 @@ export const Column = observer(function Column() {
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
   //state array of column names that are expanded
-  const [expandedAccordions, setExpandedAccordions] = useState<number[]>([
-    stringToHash(state.settingsTabs.columns!.name)
-  ]);
+  const accordions = state.settingsTabs.columns ? stringToHash(state.settingsTabs.columns.name) : 0;
+  const [expandedAccordions, setExpandedAccordions] = useState<number[]>([accordions]);
   //if column not in expanded list, add it
   //if column in expanded list, remove it
   const accordionClicked = (name: string) => {
@@ -164,6 +163,7 @@ export const Column = observer(function Column() {
   //replaces expanded list with only top level column open
   //which collpases everything
   const collapseAll = () => {
+    if (!state.settingsTabs.columns) return;
     setExpandedAccordions([stringToHash(state.settingsTabs.columns!.name)]);
   };
   //helper function for expand all for going through all the columns
@@ -176,6 +176,7 @@ export const Column = observer(function Column() {
   //adds every column to the expand list
   const expandAll = () => {
     const newArray: number[] = [];
+    if (!state.settingsTabs.columns) return;
     newArray.push(stringToHash(state.settingsTabs.columns!.name));
     recurseThroughColumn(newArray, state.settingsTabs.columns!.children);
     setExpandedAccordions(newArray);

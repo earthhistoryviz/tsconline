@@ -1,4 +1,4 @@
-import { Alert, AlertTitle, Fade, IconButton, Slide, Snackbar, Typography } from "@mui/material";
+import { Fade, IconButton, Snackbar, Typography, useTheme } from "@mui/material";
 import { context } from "../state";
 import { useContext } from "react";
 import { observer } from "mobx-react-lite";
@@ -7,6 +7,7 @@ import { CustomDivider, StyledScrollbar } from "./TSCComponents";
 import "./TSCError.css";
 import Lottie from "./TSCLottie";
 import ErrorIcon from "../assets/icons/error-icon.json";
+import Color from "color";
 
 type TSCErrorProps = {
   text: string;
@@ -15,7 +16,8 @@ type TSCErrorProps = {
 };
 export const TSCError: React.FC<TSCErrorProps> = observer(({ text, id, index }) => {
   const { actions } = useContext(context);
-  const margin = index < 5 ? index * 15 : 60;
+  const theme = useTheme();
+  const margin = index < 5 ? index * 10 : 40;
   function handleCloseError(_event: React.SyntheticEvent | Event, reason?: string) {
     if (reason === "clickaway") return;
     actions.removeError(id, text);
@@ -23,32 +25,41 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ text, id, index }) 
   return (
     <Snackbar
       open={true}
-      onClose={handleCloseError}
       style={{
         marginBottom: `${margin}px`,
-        zIndex: `${1000 - index}`,
-        boxShadow: "0px 2px 10px 0px rgb(0, 0, 0, 0.2)",
-        transition: "box-shadow 5s ease"
+        zIndex: `${1000 - index}`
       }}
       anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      TransitionComponent={Fade}
-      action={
-        <IconButton size="small" color="inherit" onClick={handleCloseError}>
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      }>
-      <Alert
-        onClose={handleCloseError}
-        icon={<Lottie animationData={ErrorIcon} autoplay width={24} height={24} />}
-        severity="error"
-        className="alert">
-        <Typography className="error-title" variant="h2">
-          {" "}
-          ERROR
-        </Typography>
+      TransitionComponent={Fade}>
+      <div
+        className="alert"
+        style={{
+          backgroundColor: theme.palette.errorAlert.main,
+          border: `1px solid ${Color(theme.palette.errorText.main).lighten(0.4)}`
+        }}>
+        <div className="alert-header">
+          <div className="alert-title">
+            <Lottie animationData={ErrorIcon} autoplay width={20} height={20} />
+            <Typography color={theme.palette.errorText.main} className="error-title" variant="h2">
+              {" "}
+              Error
+            </Typography>
+          </div>
+          <IconButton className="alert-close" onClick={handleCloseError}>
+            <CloseIcon className="alert-close-icon" style={{ color: theme.palette.errorText.main }} />
+          </IconButton>
+        </div>
         <CustomDivider key={`${index} error`} className="divider" />
-        <StyledScrollbar>{text} </StyledScrollbar>
-      </Alert>
+        <div className="alert-text">
+          <StyledScrollbar>
+            {
+              <Typography className="alert-info-text" color={theme.palette.errorText.main}>
+                {text}
+              </Typography>
+            }{" "}
+          </StyledScrollbar>
+        </div>
+      </div>
     </Snackbar>
   );
 });
