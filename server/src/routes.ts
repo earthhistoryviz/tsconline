@@ -1,7 +1,7 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
 import { writeFile, stat, readFile } from "fs/promises";
-import { assertChartRequest } from "@tsconline/shared";
+import { TimescaleItem, assertChartRequest } from "@tsconline/shared";
 import { deleteDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
 import { grabMapImages } from "./parse-map-packs.js";
@@ -9,13 +9,9 @@ import md5 from "md5";
 import { assetconfigs } from "./index.js";
 import svgson from "svgson";
 import fs from "fs";
-// import { assertTimescale } from "@tsconline/shared";
 import { assertTimescale } from "@tsconline/shared";
 import { parseExcelFile } from "./parse-excel-file.js";
 
-// export const uploadDatapack = async function (request: FastifyRequest, reply: FastifyReply) {
-//   // const data = await request.saveRequestFiles()
-// };
 export const fetchSettingsXml = async function fetchSettingsJson(
   request: FastifyRequest<{ Params: { settingFile: string } }>,
   reply: FastifyReply
@@ -195,11 +191,6 @@ export const fetchChart = async function fetchChart(
   reply.send({ chartpath: chartUrlPath, hash: hash });
 };
 
-interface TimescaleDataItem {
-  key: string;   // Assuming stage is a string, adjust type if necessary
-  value: number; // Assuming ma is a number, adjust type if necessary
-}
-
 // Serve timescale data endpoint
 export const fetchTimescale = async function (_request: FastifyRequest, reply: FastifyReply) {
   try {
@@ -213,11 +204,10 @@ export const fetchTimescale = async function (_request: FastifyRequest, reply: F
     }
 
     const excelData: string[][] = await parseExcelFile(filePath);
-    const timescaleData: TimescaleDataItem[] = excelData.map(([, , stage, ma, ]) => ({
+    const timescaleData: TimescaleItem[] = excelData.map(([, , stage, ma, ]) => ({
       key: stage as string,
       value: parseFloat(ma as string)
     })).filter((item) => item.key);
-    // timescaleData = timescaleData.filter((item) => item.key);
     timescaleData.forEach((data) => assertTimescale(data));
 
     reply.send({ timescaleData });
