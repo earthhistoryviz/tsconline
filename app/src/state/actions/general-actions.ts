@@ -277,7 +277,7 @@ export const setDatapackConfig = action(
         const settingsXml = await res.text();
         console.log("recieved settings Xml string at setDatapackConfig");
         const settingsJson = xmlToJson(settingsXml);
-        runInAction(() => (state.settingsJSON = settingsJson)); // Save the parsed JSON to the state.settingsJSON
+        runInAction(() => (state.settingsTSC = settingsJson)); // Save the parsed JSON to the state.settingsJSON
       } catch (e) {
         displayServerError(
           null,
@@ -287,7 +287,7 @@ export const setDatapackConfig = action(
         return false;
       }
     } else {
-      state.settingsJSON = null;
+      state.settingsTSC = {};
     }
     return true;
   }
@@ -347,7 +347,7 @@ export const resetState = action("resetState", () => {
   setMapInfo({});
   state.settingsTabs.columnSelected = null;
   state.settingsXML = "";
-  state.settingsJSON = {};
+  state.settingsTSC = {};
 });
 
 export const loadPresets = action("loadPresets", (presets: Presets) => {
@@ -363,7 +363,7 @@ export const updateSettings = action("updateSettings", () => {
     // Handle invalid input, show error message, etc.
     return;
   }
-  state.settingsJSON["settingsTabs"] = state.settingsTabs;
+  //state.settingsJSON["settingsTabs"] = state.settingsTabs;
   // const jsonSettings = state.settingsJSON;
   // if ("settings" in jsonSettings) {
   //   const settings = jsonSettings.settings as any;
@@ -409,32 +409,32 @@ export const settingOptions = [
 ];
 
 // Combined function to update the checkbox settings and individual action functions
-export const updateCheckboxSetting = action((stateName: string, checked: boolean) => {
-  // Check if the stateName is a valid setting option
-  const settingOption = settingOptions.find((option) => option.stateName === stateName);
-  if (!settingOption) return;
+// export const updateCheckboxSetting = action((stateName: string, checked: boolean) => {
+//   // Check if the stateName is a valid setting option
+//   const settingOption = settingOptions.find((option) => option.stateName === stateName);
+//   if (!settingOption) return;
 
-  // Update the checkbox setting in state.settings
-  if (
-    state.settings[stateName as keyof Settings] !== undefined &&
-    typeof state.settings[stateName as keyof Settings] === "boolean"
-  ) {
-    // @ts-expect-error: This cannot index by stateName key for some reason so we ignore with error
-    state.settings[`${stateName as keyof Settings}`] = checked;
-  }
+//   // Update the checkbox setting in state.settings
+//   if (
+//     state.settings[stateName as keyof Settings] !== undefined &&
+//     typeof state.settings[stateName as keyof Settings] === "boolean"
+//   ) {
+//     // @ts-expect-error: This cannot index by stateName key for some reason so we ignore with error
+//     state.settings[`${stateName as keyof Settings}`] = checked;
+//   }
 
-  // Update the checkbox setting in jsonSettings['settings'] if available
-  if (state.settingsJSON["settings"]) {
-    const settings = state.settingsJSON["settings"];
-    // Check if the current setting is already equal to the new value
-    if (settings[stateName] !== checked) {
-      settings[stateName] = checked;
-    }
-  }
+//   // Update the checkbox setting in jsonSettings['settings'] if available
+//   if (state.settingsJSON["settings"]) {
+//     const settings = state.settingsJSON["settings"];
+//     // Check if the current setting is already equal to the new value
+//     if (settings[stateName] !== checked) {
+//       settings[stateName] = checked;
+//     }
+//   }
 
-  // Log the updated setting
-  console.log(`Updated setting "${stateName}" to ${checked}`);
-});
+//   // Log the updated setting
+//   console.log(`Updated setting "${stateName}" to ${checked}`);
+// });
 
 /**
  * set the settings tab based on a string or number

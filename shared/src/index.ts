@@ -2,7 +2,9 @@
 
 import { defaultFontsInfoConstant } from "./constants.js";
 
-export * from "./settings-types"
+
+export * from "./settings-types.js";
+
 export type SuccessfulServerResponse = {
   message: string;
 };
@@ -84,7 +86,6 @@ export type Datapack = {
   name: string;
   file: string;
 };
-
 export type ChartInfoTSC = {
   settings?: ChartSettingsInfoTSC;
   "class datastore.RootColumn:Chart Root"?: ColumnInfoTSC;
