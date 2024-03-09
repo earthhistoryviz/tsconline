@@ -172,7 +172,7 @@ export function assertColumnInfoTSC(o) {
             throw new Error("ColumnInfoTSC drawNameLabel must have type number");
     }
     if ("children" in o) {
-        throw new Error("ColumnInfoTSC must have children array");
+        throw new Error("ColumnInfoTSC must have children");
     }
     else {
         for (const child in o.children) {

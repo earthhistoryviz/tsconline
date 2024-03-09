@@ -357,7 +357,7 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo 
         if (colName !== "Chart Root" && colName !== "Ma") {
           if (stateColumn && stateColumn !== undefined) {
             if (stateColumn.editName !== undefined && stateColumn.editName !== colName) {
-              xml += `${indent}<setting name="title">${stateColumn.editName}</setting>\n`;
+              xml += `${indent}<setting name="title">${replaceSpecialChars(stateColumn.editName, 1)}</setting>\n`;
               useEditName = true;
             }
           }
@@ -419,7 +419,7 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo 
         }
         else {
           for (let i = 0; i < presetColumn.children.length; i++) {
-            xml += `${indent}<column id="${presetColumn.children[i]._id}">\n`;
+            xml += `${indent}<column id="${replaceSpecialChars(presetColumn.children[i]._id,0)}">\n`;
             xml += generateColumnXml(presetColumn.children[i], stateColumn?.children[i], `${indent}    `);
             xml += `${indent}</column>\n`;
           }

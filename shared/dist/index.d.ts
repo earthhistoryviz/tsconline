@@ -1,4 +1,4 @@
-export * from "./settings-types";
+export * from "./settings-types.js";
 export type SuccessfulServerResponse = {
     message: string;
 };
