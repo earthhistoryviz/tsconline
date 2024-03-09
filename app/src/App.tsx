@@ -51,7 +51,7 @@ export default observer(function App() {
         <Alert
           severity="success"
           variant="filled"
-          className="alert"
+          className="success-alert"
           iconMapping={{
             success: <Lottie animationData={ChartDoneIcon} speed={0.7} autoplay />
           }}>
