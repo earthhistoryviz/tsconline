@@ -1,3 +1,4 @@
+export * from "./settings-types";
 export type SuccessfulServerResponse = {
     message: string;
 };
@@ -62,92 +63,6 @@ export type ChartConfig = {
 export type Datapack = {
     name: string;
     file: string;
-};
-export type ChartInfoTSC = {
-    settings?: ChartSettingsInfoTSC;
-    "class datastore.RootColumn:Chart Root"?: ColumnInfoTSC;
-};
-export type ChartSettingsInfoTSC = {
-    topAge: {
-        source: string;
-        unit: string;
-        stage?: string;
-        text?: number;
-    };
-    baseAge: {
-        source: string;
-        unit: string;
-        stage?: string;
-        text?: number;
-    };
-    unitsPerMY: {
-        unit: string;
-        text: number;
-    };
-    skipEmptyColumns: {
-        unit: string;
-        text: boolean;
-    };
-    variableColors: string;
-    noIndentPattern: boolean;
-    negativeChk: boolean;
-    doPopups: boolean;
-    enEventColBG: boolean;
-    enChartLegend: boolean;
-    enPriority: boolean;
-    enHideBlockLable: boolean;
-};
-export type ColumnInfoTSC = {
-    _id: string;
-    title: string;
-    useNamedColor: boolean;
-    placeHolder: boolean;
-    drawTitle: boolean;
-    drawAgeLabel: boolean;
-    drawUncertaintyLabel: boolean;
-    isSelected: boolean;
-    width: number;
-    pad: number;
-    "age pad": number;
-    backgroundColor: {
-        standardized?: boolean;
-        useNamed?: boolean;
-        text: string;
-    };
-    customColor: {
-        standardized?: boolean;
-        useNamed?: boolean;
-        text: string;
-    };
-    fonts?: FontsInfo;
-    columnType?: ZoneColumnInfoTSC | EventColumnInfoTSC | RangeColumnInfoTSC | RulerColumnInfoTSC | SequenceColumnInfoTSC;
-    catchAll?: [[name: string, text: string]];
-    children: ColumnInfoTSC[];
-};
-export type ZoneColumnInfoTSC = {
-    crunchOuterMargin?: number;
-    crunchInnerMargin?: number;
-    crunchAscendWidth?: number;
-    crunchOneSideSpaceUse?: number;
-    autoFlip?: boolean;
-    orientation?: "vertical" | "normal";
-};
-export type EventColumnInfoTSC = {
-    type?: string;
-    rangeSort?: string;
-};
-export type RangeColumnInfoTSC = {
-    rangeSort?: string;
-};
-export type RulerColumnInfoTSC = {
-    justification?: "left" | "right";
-};
-export type SequenceColumnInfoTSC = {
-    labelMarginLeft?: number;
-    labelMarginRight?: number;
-    graphStyle?: string;
-    drawNameLabel?: boolean;
-    type?: string;
 };
 export type FontsInfo = {
     "Column Header": {

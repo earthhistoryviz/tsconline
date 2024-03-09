@@ -1,4 +1,5 @@
 // Shared types between app and server (i.e. messages they send back and forth)
+export * from "./settings-types";
 export const defaultFontsInfo = {
     "Age Label": {
         bold: false,
