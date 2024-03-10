@@ -1,4 +1,3 @@
-import { assertTimescaleDataWithoutHeader } from "@tsconline/shared";
 import XLSX from "xlsx";
 
 export async function parseExcelFile(filePath: string) {
@@ -14,7 +13,6 @@ export async function parseExcelFile(filePath: string) {
   if (!dataWithoutHeader || dataWithoutHeader.length == 0) {
     throw new Error("No data available after removing header");
   }
-  
+
   return dataWithoutHeader;
 }
-
