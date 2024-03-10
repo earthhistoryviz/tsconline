@@ -9,22 +9,12 @@ export async function parseExcelFile(filePath: string) {
 
   const jsonData: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-  const dataWithoutHeader = jsonData.slice(1);
+  const dataWithoutHeader = jsonData.slice(2);
 
-  // if (dataWithoutHeader.length > 0) {
-  //   dataWithoutHeader[0] = dataWithoutHeader[0].slice(3);
-  // } else {
-  //   assertTimescaleDataWithoutHeader(dataWithoutHeader);
-  // }
-
-  if (!dataWithoutHeader || dataWithoutHeader.length === 0) {
-    assertTimescaleDataWithoutHeader(dataWithoutHeader);
-    return [];
+  if (!dataWithoutHeader || dataWithoutHeader.length == 0) {
+    throw new Error("No data available after removing header");
   }
-
-  if (dataWithoutHeader[0]) {
-    dataWithoutHeader[0] = dataWithoutHeader[0].slice(3);
-  }
-
+  
   return dataWithoutHeader;
 }
+

@@ -363,6 +363,11 @@ export type VertBounds = {
   scale: number;
 };
 
+export type TimescaleItem = {
+  key: string;
+  value: number;
+};
+
 export function assertColor(o: any): asserts o is Color {
   if (!o || typeof o !== "object") throw new Error("Color must be a non-null object");
   if (typeof o.name !== "string") throwError("Color", "name", "string", o.color);
@@ -386,11 +391,6 @@ export function assertPatterns(o: any): asserts o is Patterns {
     assertColor(pattern.color);
   }
 }
-export type TimescaleItem = {
-  key: string;
-  value: number;
-};
-
 export function assertMapPackIndex(o: any): asserts o is MapPackIndex {
   if (!o || typeof o !== "object") throw new Error("MapPackIndex must be a non-null object");
   for (const key in o) {
@@ -764,15 +764,9 @@ function throwError(obj: string, variable: string, type: string, value: any) {
 
 export function assertTimescale(val: any): asserts val is TimescaleItem {
   if (!val || typeof val !== "object") {
-    throw new Error("Timescale object must be a non-null object");
+    throwError("Timescale", "object", "of type object", val);
   }
   if (typeof val.key !== "string" || typeof val.value !== "number") {
-    throw new Error(`Timescale object must have 'key' of type string and 'value' of type number`);
-  }
-}
-
-export function assertTimescaleDataWithoutHeader(data: any[]): asserts data is any[] {
-  if (data.length === 0) {
-    throw new Error("No timescale data to parse");
+    throwError("Timescale", "'key' of type string and 'value' of type number", "", val);
   }
 }

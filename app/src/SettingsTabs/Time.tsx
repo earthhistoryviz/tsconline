@@ -42,11 +42,10 @@ export const Time = observer(function Time() {
             onChange={(event) => {
               const selectedValue = event.target.value;
               const selectedAgeItem = state.geologicalTopStageAges.find((item) => item.key === selectedValue);
-              const selectedAge = selectedAgeItem?.value?.toString() || "0";
-              const selectedAgeNumber = parseFloat(selectedAge);
-              if (selectedAgeNumber >= 0 && selectedAgeNumber <= state.settings.baseStageAge) {
+              const selectedAge = selectedAgeItem?.value || 0;
+              if (selectedAge >= 0 && selectedAge <= state.settings.baseStageAge) {
                 actions.setSelectedTopStage(selectedValue);
-                actions.setTopStageAge(selectedAgeNumber);
+                actions.setTopStageAge(selectedAge);
               }
             }}>
             {state.geologicalTopStageAges.map((item) => (
@@ -81,11 +80,10 @@ export const Time = observer(function Time() {
             onChange={(event) => {
               const selectedValue = event.target.value;
               const selectedAgeItem = state.geologicalBaseStageAges.find((item) => item.key === selectedValue);
-              const selectedAge = selectedAgeItem?.value?.toString() || "0";
-              const selectedAgeNumber = parseFloat(selectedAge);
-              if (selectedAgeNumber >= 0 && selectedAgeNumber >= state.settings.topStageAge) {
+              const selectedAge = selectedAgeItem?.value || 0;
+              if (selectedAge >= 0 && selectedAge >= state.settings.topStageAge) {
                 actions.setSelectedBaseStage(selectedValue);
-                actions.setBaseStageAge(selectedAgeNumber);
+                actions.setBaseStageAge(selectedAge);
               }
             }}>
             {state.geologicalBaseStageAges.map((item) => (
