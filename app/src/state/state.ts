@@ -63,8 +63,6 @@ export type State = {
   settingsXML: string;
   settingsJSON: any;
   settings: {
-    // geologicalTopStageAges: TimescaleItem[];
-    // geologicalBaseStageAges: TimescaleItem[];
     selectedStage: string;
     topStageAge: number;
     topStageKey: string;
@@ -139,8 +137,6 @@ export const state = observable<State>({
   settingsXML: "",
   settingsJSON: {},
   settings: {
-    // geologicalTopStageAges: [],
-    // geologicalBaseStageAges: [],
     selectedStage: "",
     topStageAge: 0,
     topStageKey: "",

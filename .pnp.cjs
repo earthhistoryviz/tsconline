@@ -58,8 +58,7 @@ const RAW_RUNTIME_STATE =
           ["prettier", "npm:3.2.5"],\
           ["ts-jest", "virtual:56199d26d2392209a21349d11441f1e2988343393fe1626496fc474411fec889161d978be128038fa78cc187159c138c3943f93b2531d8228fa826f4ba633a5f#npm:29.1.2"],\
           ["ts-node", "virtual:56199d26d2392209a21349d11441f1e2988343393fe1626496fc474411fec889161d978be128038fa78cc187159c138c3943f93b2531d8228fa826f4ba633a5f#npm:10.9.2"],\
-          ["typescript", "patch:typescript@npm%3A5.0.4#optional!builtin<compat/typescript>::version=5.0.4&hash=b5f058"],\
-          ["xlsx", "npm:0.18.5"]\
+          ["typescript", "patch:typescript@npm%3A5.0.4#optional!builtin<compat/typescript>::version=5.0.4&hash=b5f058"]\
         ],\
         "linkType": "SOFT"\
       }]\
@@ -11825,8 +11824,7 @@ const RAW_RUNTIME_STATE =
           ["prettier", "npm:3.2.5"],\
           ["ts-jest", "virtual:56199d26d2392209a21349d11441f1e2988343393fe1626496fc474411fec889161d978be128038fa78cc187159c138c3943f93b2531d8228fa826f4ba633a5f#npm:29.1.2"],\
           ["ts-node", "virtual:56199d26d2392209a21349d11441f1e2988343393fe1626496fc474411fec889161d978be128038fa78cc187159c138c3943f93b2531d8228fa826f4ba633a5f#npm:10.9.2"],\
-          ["typescript", "patch:typescript@npm%3A5.0.4#optional!builtin<compat/typescript>::version=5.0.4&hash=b5f058"],\
-          ["xlsx", "npm:0.18.5"]\
+          ["typescript", "patch:typescript@npm%3A5.0.4#optional!builtin<compat/typescript>::version=5.0.4&hash=b5f058"]\
         ],\
         "linkType": "SOFT"\
       }]\

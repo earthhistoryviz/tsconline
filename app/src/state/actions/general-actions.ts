@@ -54,8 +54,6 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
  */
 export const resetSettings = action("resetSettings", () => {
   state.settings = {
-    // geologicalTopStageAges: [],
-    // geologicalBaseStageAges: [],
     selectedStage: "",
     topStageAge: 0,
     topStageKey: "",
