@@ -14,7 +14,7 @@ import "./Time.css";
 export const Time = observer(function Time() {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { state, actions } = useContext(context)
+  const { state, actions } = useContext(context);
 
   const handleButtonClick = () => {
     actions.setTab(1);
