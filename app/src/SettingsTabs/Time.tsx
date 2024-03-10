@@ -1,31 +1,24 @@
 import { Box, Button, TextField } from "@mui/material";
 import { observer } from "mobx-react-lite";
-import { actions } from "../state";
 import ForwardIcon from "@mui/icons-material/Forward";
 import { useNavigate } from "react-router-dom";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import { TSCCheckbox } from "../components";
 import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
-
+import { useTheme } from "@mui/material/styles";
 import { useContext } from "react";
 import { context } from "../state/index";
 import "./Time.css";
-import theme from "../theme";
 
 export const Time = observer(function Time() {
+  const theme = useTheme();
   const navigate = useNavigate();
-  const { state } = useContext(context);
+  const { state, actions } = useContext(context)
 
   const handleButtonClick = () => {
     actions.setTab(1);
-    // actions.setAllTabs(true);
-
-    actions.updateSettings();
-
-    actions.generateChart();
-
-    navigate("/chart");
+    actions.fetchChartFromServer(navigate);
   };
 
   return (
