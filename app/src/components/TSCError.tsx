@@ -19,6 +19,12 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ text, id, index, co
   const { actions } = useContext(context);
   const theme = useTheme();
   const margin = index < 5 ? index * 10 : 40;
+  let countDisplay = "";
+  if (count > 1 && count < 1000) {
+    countDisplay = `(${count})`;
+  } else if (count >= 1000) {
+    countDisplay = "(999+)";
+  }
   function handleCloseError(_event: React.SyntheticEvent | Event, reason?: string) {
     if (reason === "clickaway") return;
     actions.removeError(id, text);
@@ -42,10 +48,8 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ text, id, index, co
           <div className="alert-title">
             <Lottie animationData={ErrorIcon} autoplay width={20} height={20} />
             <Typography color={theme.palette.errorText.main} className="error-title" variant="h2">
-              {" "}
-              Error
+              Error {countDisplay}
             </Typography>
-            <CountBubble count={count} />
           </div>
           <IconButton className="alert-close" onClick={handleCloseError}>
             <CloseIcon className="alert-close-icon" style={{ color: theme.palette.errorText.main }} />
@@ -65,21 +69,3 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ text, id, index, co
     </Snackbar>
   );
 });
-
-const CountBubble = ({ count }: {count: number}) => {
-  return (
-    <div style={{
-      minWidth: '15px',
-      minHeight: '10px',
-      borderRadius: '50%',
-      padding: '5px',
-      backgroundColor: 'gray',
-      color: 'white',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}>
-      <Typography style={{fontSize: "14px"}}>{count > 999 ? '999+' : count} </Typography>
-    </div>
-  );
-};

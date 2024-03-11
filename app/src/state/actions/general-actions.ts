@@ -522,13 +522,12 @@ export const handleCloseSnackbar = action(
 );
 
 export const removeError = action("removeError", (id: number, text: string) => {
-  state.errors.errorAlerts = state.errors.errorAlerts.filter((error) => error.id !== id);
   state.errors.errorAlertIDs.delete(id);
-  state.errors.errorAlertMessages.delete(text);
+  state.errors.errorAlerts.delete(text);
 });
 export const pushError = action("pushError", (text: string) => {
-  if (state.errors.errorAlertMessages.has(text)) {
-    state.errors.errorAlertMessages.get(text)!.errorCount++;
+  if (state.errors.errorAlerts.has(text)) {
+    state.errors.errorAlerts.get(text)!.errorCount += 1;
     return;
   }
   let id = new Date().getTime();
@@ -541,9 +540,8 @@ export const pushError = action("pushError", (text: string) => {
     errorText: text,
     errorCount: 1
   };
-  state.errors.errorAlerts.push(error);
   state.errors.errorAlertIDs.add(error.id);
-  state.errors.errorAlertMessages.set(text, error);
+  state.errors.errorAlerts.set(text, error);
 });
 
 export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
