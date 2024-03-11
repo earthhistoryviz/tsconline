@@ -39,6 +39,9 @@ export const Time = observer(function Time() {
               if (selectedAge >= 0 && selectedAge <= state.settings.baseStageAge) {
                 actions.setSelectedTopStage(selectedValue);
                 actions.setTopStageAge(selectedAge);
+              } else {
+                const errorMessage = "Invalid stage name/age input. Please enter a valid stage name/age.";
+                actions.pushError(errorMessage);
               }
             }}>
             {state.geologicalTopStageAges.map((item) => (
@@ -58,6 +61,9 @@ export const Time = observer(function Time() {
               if (!isNaN(age) && age >= 0 && age <= state.settings.baseStageAge) {
                 actions.setSelectedTopStage("N/A");
                 actions.setTopStageAge(age);
+              } else {
+                const errorMessage = "Invalid age input. Please enter a valid age.";
+                actions.pushError(errorMessage);
               }
             }}
           />
@@ -77,6 +83,9 @@ export const Time = observer(function Time() {
               if (selectedAge >= 0 && selectedAge >= state.settings.topStageAge) {
                 actions.setSelectedBaseStage(selectedValue);
                 actions.setBaseStageAge(selectedAge);
+              } else {
+                const errorMessage = "Invalid stage name/age input. Please enter a valid stage name/age.";
+                actions.pushError(errorMessage);
               }
             }}>
             {state.geologicalBaseStageAges.map((item) => (
@@ -96,6 +105,9 @@ export const Time = observer(function Time() {
               if (!isNaN(age) && age >= 0 && state.settings.topStageAge <= age) {
                 actions.setSelectedBaseStage("N/A");
                 actions.setBaseStageAge(age);
+              } else {
+                const errorMessage = "Invalid age input. Please enter a valid age.";
+                actions.pushError(errorMessage);
               }
             }}
           />
