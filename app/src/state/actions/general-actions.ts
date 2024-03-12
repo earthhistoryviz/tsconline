@@ -42,7 +42,7 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
       };
       console.log("Successfully fetched Map Patterns");
     } else {
-      displayError(null, patternJson, `Server responded with ${response.status}`);
+      displayError(null, patternJson, `Server responded with ${response.status}`); // THIS IS THE CODE
     }
   } catch (e) {
     displayError(e, null, "Error fetching the facies patterns");
@@ -108,26 +108,26 @@ export const loadIndexResponse = action("loadIndexResponse", (response: IndexRes
 export const fetchTimescaleDataAction = action("fetchTimescaleData", async () => {
   try {
     const response = await fetcher("/timescale", { method: "GET" });
-
+    const data = await response.json();
     if (response.ok) {
-      const data = await response.json();
       const stages = data.timescaleData || [];
-      state.geologicalBaseStageAges = [...stages];
+      const geologicalBaseStageAges = [...stages];
+      const geologicalTopStageAges = [];
 
       for (let i = 0; i < stages.length; i++) {
         const item = stages[i];
         const value = i > 0 ? stages[i - 1].value : 0;
-        state.geologicalTopStageAges.push({ ...item, value });
+        geologicalTopStageAges.push({ ...item, value });
       }
-      setGeologicalBaseStageAges(state.geologicalBaseStageAges);
-      setGeologicalTopStageAges(state.geologicalTopStageAges);
+      setGeologicalBaseStageAges(geologicalBaseStageAges);
+      setGeologicalTopStageAges(geologicalTopStageAges);
 
       console.log("Time Scale Data Loaded");
     } else {
-      console.error("Server responds with:", response.status);
+      displayError(null, data, `Server responded with ${response.status}`);
     }
   } catch (error) {
-    console.error("Error fetching timescale data:", error);
+    displayError(null, null, "Error fetching timescale data");
   }
 });
 
