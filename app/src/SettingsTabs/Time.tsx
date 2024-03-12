@@ -59,7 +59,7 @@ export const Time = observer(function Time() {
             onChange={(event) => {
               const age = parseFloat(event.target.value);
               if (!isNaN(age) && age >= 0 && age <= state.settings.baseStageAge) {
-                actions.setSelectedTopStage("N/A");
+                actions.setSelectedTopStage("");
                 actions.setTopStageAge(age);
               } else {
                 const errorMessage = "Invalid age input. Please enter a valid age.";
@@ -103,7 +103,7 @@ export const Time = observer(function Time() {
             onChange={(event) => {
               const age = parseFloat(event.target.value);
               if (!isNaN(age) && age >= 0 && state.settings.topStageAge <= age) {
-                actions.setSelectedBaseStage("N/A");
+                actions.setSelectedBaseStage("");
                 actions.setBaseStageAge(age);
               } else {
                 const errorMessage = "Invalid age input. Please enter a valid age.";
