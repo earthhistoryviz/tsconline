@@ -40,7 +40,7 @@ export const Time = observer(function Time() {
                 actions.setSelectedTopStage(selectedValue);
                 actions.setTopStageAge(selectedAge);
               } else {
-                const errorMessage = "Invalid stage name/age input. Please enter a valid stage name/age.";
+                const errorMessage = "Invalid top age/stage name input. Please enter a valid stage name/age.";
                 actions.pushError(errorMessage);
               }
             }}>
@@ -84,7 +84,7 @@ export const Time = observer(function Time() {
                 actions.setSelectedBaseStage(selectedValue);
                 actions.setBaseStageAge(selectedAge);
               } else {
-                const errorMessage = "Invalid stage name/age input. Please enter a valid stage name/age.";
+                const errorMessage = "Invalid base age/stage name input. Please enter a valid stage name/age.";
                 actions.pushError(errorMessage);
               }
             }}>
