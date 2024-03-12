@@ -7,8 +7,8 @@
 .alert {
   width: var(--alert-width);
   height: var(--alert-height);
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: 1fr 5px 60px;
   align-items: flex-start;
   font-size: 0.8rem;
   border-radius: 10px;
@@ -18,7 +18,7 @@
   display: inline-flex;
   align-items: center;
 }
-.alert-text {
+.alert-text .simplebar-content {
   margin-left: var(--side-margin);
   margin-right: var(--side-margin);
   width: calc(var(--alert-width) - 2 * var(--side-margin));
@@ -55,8 +55,4 @@
   padding-left: 15px;
   padding-right: 15px;
   font-weight: 600;
-}
-
-.MuiDivider-root.divider {
-  margin-bottom: 10px;
 }

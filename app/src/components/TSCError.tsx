@@ -55,16 +55,12 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ text, id, index, co
             <CloseIcon className="alert-close-icon" style={{ color: theme.palette.errorText.main }} />
           </IconButton>
         </div>
-        <CustomDivider key={`${index} error`} className="divider" />
-        <div className="alert-text">
-          <StyledScrollbar>
-            {
-              <Typography className="alert-info-text" color={theme.palette.errorText.main}>
-                {text}
-              </Typography>
-            }{" "}
-          </StyledScrollbar>
-        </div>
+        <CustomDivider key={`${index} error`} />
+        <StyledScrollbar className="alert-text">
+          <Typography className="alert-info-text" color={theme.palette.errorText.main}>
+            {text}
+          </Typography>
+        </StyledScrollbar>
       </div>
     </Snackbar>
   );
