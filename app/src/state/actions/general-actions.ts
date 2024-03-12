@@ -82,7 +82,7 @@ export const fetchDatapackInfo = action("fetchDatapackInfo", async () => {
       displayError(e, indexResponse, "Failed to fetch DatapackInfo");
     }
   } catch (e) {
-    displayError(e, null, "Could not fetch datapacks from server. Server not responsive.");
+    displayError(e, null, "Could not contact server and fetch DatapackInfo");
     console.error(e);
   }
 });
