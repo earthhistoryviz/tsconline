@@ -1,6 +1,7 @@
 import { observable } from "mobx";
 
-import { ErrorAlert, FaciesOptions, MapHistory, Settings } from "../types";
+import { ErrorAlert, FaciesOptions, MapHistory } from "../types";
+import { TimescaleItem } from "@tsconline/shared";
 import type {
   MapHierarchy,
   MapInfo,
@@ -20,6 +21,9 @@ export type State = {
   showSuggestedAgePopup: boolean;
   useSuggestedAge: boolean;
   isFullscreen: boolean;
+  showPresetInfo: boolean;
+  geologicalTopStageAges: TimescaleItem[];
+  geologicalBaseStageAges: TimescaleItem[];
   settingsTabs: {
     selected: "time" | "font" | "column" | "mappoints";
     columns: ColumnInfo | null;
@@ -58,7 +62,19 @@ export type State = {
   chartHash: string;
   settingsXML: string;
   settingsJSON: any;
-  settings: Settings;
+  settings: {
+    selectedStage: string;
+    topStageAge: number;
+    topStageKey: string;
+    baseStageAge: number;
+    baseStageKey: string;
+    unitsPerMY: number;
+    useDatapackSuggestedAge: boolean;
+    mouseOverPopupsEnabled: boolean;
+    datapackContainsSuggAge: boolean;
+    selectedBaseStage: string;
+    selectedTopStage: string;
+  };
   useCache: boolean;
   usePreset: boolean;
   openSnackbar: boolean;
@@ -72,6 +88,9 @@ export const state = observable<State>({
   showSuggestedAgePopup: false,
   useSuggestedAge: true,
   isFullscreen: false,
+  showPresetInfo: false,
+  geologicalTopStageAges: [],
+  geologicalBaseStageAges: [],
   settingsTabs: {
     selected: "time",
     columns: null,
@@ -118,13 +137,17 @@ export const state = observable<State>({
   settingsXML: "",
   settingsJSON: {},
   settings: {
+    selectedStage: "",
     topStageAge: 0,
     topStageKey: "",
     baseStageAge: 0,
     baseStageKey: "",
     unitsPerMY: 2,
     mouseOverPopupsEnabled: false,
-    datapackContainsSuggAge: false
+    datapackContainsSuggAge: false,
+    useDatapackSuggestedAge: false,
+    selectedBaseStage: "",
+    selectedTopStage: ""
   },
   useCache: true,
   usePreset: true,
