@@ -483,4 +483,12 @@ export function assertSVGStatus(o) {
 function throwError(obj, variable, type, value) {
     throw new Error(`Object '${obj}' must have a '${variable}' ${type} property.\nFound value: ${value}`);
 }
+export function assertTimescale(val) {
+    if (!val || typeof val !== "object") {
+        throwError("Timescale", "object", "of type object", val);
+    }
+    if (typeof val.key !== "string" || typeof val.value !== "number") {
+        throwError("Timescale", "'key' of type string and 'value' of type number", "", val);
+    }
+}
 //# sourceMappingURL=index.js.map

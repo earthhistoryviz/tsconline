@@ -6,6 +6,7 @@ export type AssetConfig = {
   datapacksDirectory: string;
   chartsDirectory: string;
   imagesDirectory: string;
+  timescaleFilepath: string;
   patternsDirectory: string;
   colors: string;
 };
@@ -36,4 +37,5 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
   for (const [index, ad] of o.activeDatapacks.entries()) {
     if (typeof ad !== "string") throw "AssetConfig activeDatapacks item " + index + " must be a string";
   }
+  if (typeof o.timescaleFilepath !== "string") throw 'AssetConfig must have a "timescaleFilepath" string';
 }
