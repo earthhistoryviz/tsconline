@@ -3,7 +3,7 @@ SetTop:	0
 SetBase:	5
 SetScale:	6
 
-Parent 1	:	Child 1	Child 2
+Parent 1	:	Child 1	Child 2	Child 3
 
 Child 1	block	120	197/217/234	notitle	off	"popup"
 	TOP	419.2
@@ -14,3 +14,8 @@ Child 2	facies	210
 	TOP		0
 	Child 2 SubFaciesInfo 1	Child 2 SubFaciesInfo 1 Label	5
 	Child 2 SubFaciesInfo 2	Child 2 SubFaciesInfo 2 Label	10
+
+Child 3	event	250	100/200/255		on	Child 3 Info
+EVENT
+	SubEventInfo 1	0.02		Child 3 SubEventInfo Popup 1
+	SubEventInfo 2	0.4		Child 3 SubEventInfo Popup 2

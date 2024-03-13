@@ -6,6 +6,7 @@ jest.mock("./util.js", () => ({
   })
 }));
 jest.mock("@tsconline/shared", () => ({
+  assertSubEventInfo: jest.fn().mockImplementation(() => true),
   assertSubFaciesInfo: jest.fn().mockImplementation(() => true),
   assertSubBlockInfo: jest.fn().mockImplementation(() => true),
   assertRGB: jest.fn().mockImplementation((o) => {
@@ -32,7 +33,7 @@ import {
   spliceArrayAtFirstSpecialMatch
 } from "../src/parse-datapacks";
 import { readFileSync } from "fs";
-import { Block, DatapackAgeInfo, Facies, RGB } from "@tsconline/shared";
+import { Block, DatapackAgeInfo, Facies, Event, RGB } from "@tsconline/shared";
 const key = JSON.parse(readFileSync("server/__tests__/__data__/column-keys.json").toString());
 
 describe("general parse-datapacks tests", () => {
@@ -198,36 +199,37 @@ describe("process blocks line tests", () => {
   });
 });
 
-describe("getFaciesOrBlock tests", () => {
+describe("getColumnTypes tests", () => {
   let faciesMap: Map<string, Facies>,
     blockMap: Map<string, Block>,
+    eventMap: Map<string, Event>,
     expectedFaciesMap: Map<string, Facies>,
-    expectedBlockMap: Map<string, Block>;
+    expectedBlockMap: Map<string, Block>,
+    expectedEventMap: Map<string, Event>;
   beforeEach(() => {
     faciesMap = new Map<string, Facies>();
     blockMap = new Map<string, Block>();
+    eventMap = new Map<string, Event>();
     expectedFaciesMap = new Map<string, Facies>();
     expectedBlockMap = new Map<string, Block>();
+    expectedEventMap = new Map<string, Event>();
   });
 
   /**
    * Checks both map creation with a simple facies and block
    */
-  it("should create both maps correctly", async () => {
+  it("should create facies, event, block maps correctly", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-2.txt";
-    await getColumnTypes(file, faciesMap, blockMap);
-    expectedFaciesMap.set(
-      key["facies-or-block-test-3-key"]["Facies 1"].name,
-      key["facies-or-block-test-3-key"]["Facies 1"]
-    );
-    expectedBlockMap.set(
-      key["facies-or-block-test-3-key"]["Block 1"].title,
-      key["facies-or-block-test-3-key"]["Block 1"]
-    );
+    await getColumnTypes(file, faciesMap, blockMap, eventMap);
+    expectedFaciesMap.set(key["column-types-test-3-key"]["Facies 1"].name, key["column-types-test-3-key"]["Facies 1"]);
+    expectedBlockMap.set(key["column-types-test-3-key"]["Block 1"].name, key["column-types-test-3-key"]["Block 1"]);
+    expectedEventMap.set(key["column-types-test-3-key"]["Event 1"].name, key["column-types-test-3-key"]["Event 1"]);
     expect(faciesMap.size).toBe(1);
     expect(blockMap.size).toBe(1);
+    expect(eventMap.size).toBe(1);
     expect(faciesMap).toEqual(expectedFaciesMap);
     expect(blockMap).toEqual(expectedBlockMap);
+    expect(eventMap).toEqual(expectedEventMap);
   });
 
   /**
@@ -235,14 +237,16 @@ describe("getFaciesOrBlock tests", () => {
    */
   it("should create correct faciesMap only", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-3.txt";
-    await getColumnTypes(file, faciesMap, blockMap);
-    for (const val in key["facies-or-block-test-1-key"]) {
-      expectedFaciesMap.set(val, key["facies-or-block-test-1-key"][val]);
+    await getColumnTypes(file, faciesMap, blockMap, eventMap);
+    for (const val in key["column-types-test-1-key"]) {
+      expectedFaciesMap.set(val, key["column-types-test-1-key"][val]);
     }
     expect(faciesMap.size).toBe(2);
     expect(blockMap.size).toBe(0);
+    expect(eventMap.size).toBe(0);
     expect(faciesMap).toEqual(expectedFaciesMap);
     expect(blockMap).toEqual(expectedBlockMap);
+    expect(eventMap).toEqual(expectedEventMap);
   });
 
   /**
@@ -251,14 +255,16 @@ describe("getFaciesOrBlock tests", () => {
    */
   it("should create correct blockMap only, the second block should has max amount of information", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-4.txt";
-    await getColumnTypes(file, faciesMap, blockMap);
-    for (const val in key["facies-or-block-test-2-key"]) {
-      expectedBlockMap.set(val, key["facies-or-block-test-2-key"][val]);
+    await getColumnTypes(file, faciesMap, blockMap, eventMap);
+    for (const val in key["column-types-test-2-key"]) {
+      expectedBlockMap.set(val, key["column-types-test-2-key"][val]);
     }
     expect(blockMap.size).toBe(2);
     expect(faciesMap.size).toBe(0);
+    expect(eventMap.size).toBe(0);
     expect(blockMap).toEqual(expectedBlockMap);
     expect(faciesMap).toEqual(expectedFaciesMap);
+    expect(eventMap).toEqual(expectedEventMap);
   });
 
   /**
@@ -266,7 +272,8 @@ describe("getFaciesOrBlock tests", () => {
    */
   it("should not initialize maps on bad file", async () => {
     const file = "server/__tests__/__data__/bad-data.txt";
-    await getColumnTypes(file, faciesMap, blockMap);
+    await getColumnTypes(file, faciesMap, blockMap, eventMap);
+    expect(eventMap.size).toBe(0);
     expect(faciesMap.size).toBe(0);
     expect(blockMap.size).toBe(0);
   });

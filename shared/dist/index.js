@@ -281,6 +281,11 @@ export function assertColumnInfo(o) {
         throwError("ColumnInfo", "minAge", "number", o.minAge);
     if (typeof o.maxAge !== "number")
         throwError("ColumnInfo", "maxAge", "number", o.maxAge);
+    if (typeof o.width !== "number")
+        throwError("ColumnInfo", "width", "number", o.width);
+    if (typeof o.enableTitle !== "boolean")
+        throwError("ColumnInfo", "enableTitle", "boolean", o.enableTitle);
+    assertRGB(o.rgb);
     for (const child of o.children) {
         assertColumnInfo(child);
     }
