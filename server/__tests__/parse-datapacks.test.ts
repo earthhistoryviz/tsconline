@@ -28,6 +28,7 @@ import {
   getAllEntries,
   getColumnTypes,
   parseDatapacks,
+  processEvent,
   processFacies,
   processBlock,
   spliceArrayAtFirstSpecialMatch
@@ -199,6 +200,45 @@ describe("process blocks line tests", () => {
   });
 });
 
+describe("process event line tests", () => {
+  it("should process standard event line", () => {
+    const line = "\tlabel\t120";
+    expect(processEvent(line)).toEqual({label: "label", age: 120, lineStyle: "solid", popup: ""})
+  })
+  it("should process event line with popup", () => {
+    const line = "\tlabel\t120\t\tpopup";
+    expect(processEvent(line)).toEqual({label: "label", age: 120, lineStyle: "solid", popup: "popup"})
+  })
+  it("should process event line with dashed line", () => {
+    const line = "\tlabel\t140\tdashed\tpopup";
+    expect(processEvent(line)).toEqual({label: "label", age: 140, lineStyle: "dashed", popup: "popup"})
+  })
+  it("should process event line with dotted line", () => {
+    const line = "\tlabel\t160\tdotted\tpopup";
+    expect(processEvent(line)).toEqual({label: "label", age: 160, lineStyle: "dotted", popup: "popup"})
+  })
+  it("should default to solid line on bad linestyle", () => {
+    const line = "\tlabel\t180\tbadLineStyle\tpopup";
+    expect(processEvent(line)).toEqual({label: "label", age: 180, lineStyle: "solid", popup: "popup"})
+  })
+  it("should return null on small line", () => {
+    const line ="\tlabel";
+    expect(processEvent(line)).toBeNull();
+  })
+  it("should return null on large line", () => {
+    const line = "\tlabel\t\t\t\t";
+    expect(processEvent(line)).toBeNull();
+  })
+  it("should return null on empty line", () => {
+    const line = "";
+    expect(processEvent(line)).toBeNull();
+  })
+  it("should throw error on NaN age", () => {
+    const line = "\tlabel\tbadNumber";
+    expect(() => processEvent(line)).toThrow();
+  })
+})
+
 describe("getColumnTypes tests", () => {
   let faciesMap: Map<string, Facies>,
     blockMap: Map<string, Block>,
@@ -267,6 +307,9 @@ describe("getColumnTypes tests", () => {
     expect(eventMap).toEqual(expectedEventMap);
   });
 
+  /**
+   * This checks a file with two events with two sub events each
+   */
   it("should create correct eventMap only", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-5.txt";
     await getColumnTypes(file, faciesMap, blockMap, eventMap);
