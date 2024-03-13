@@ -219,6 +219,9 @@ export type ColumnInfo = {
     subEventInfo?: SubEventInfo[];
     minAge: number;
     maxAge: number;
+    enableTitle: boolean;
+    rgb: RGB;
+    width: number;
 };
 export type SubEventInfo = {
     label: string;

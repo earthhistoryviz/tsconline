@@ -5,6 +5,13 @@
                 "name": "Central Africa Cenozoic",
                 "editName": "Central Africa Cenozoic",
                 "on": true,
+            "enableTitle": true,
+            "width": 100,
+            "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+            },
                 "fontsInfo": {
                     "font": "Arial"
                 },
@@ -15,6 +22,13 @@
                         "name": "Nigeria Coast",
                         "editName": "Nigeria Coast",
                         "on": true,
+                        "enableTitle": true,
+                        "width": 100,
+                        "rgb": {
+                            "r": 255,
+                            "g": 255,
+                            "b": 255
+                        },
                         "fontsInfo": {
                             "font": "Arial"
                         },
@@ -48,6 +62,13 @@
                         "name": "South Atlantic",
                         "editName": "South Atlantic",
                         "on": true,
+                        "enableTitle": true,
+                        "width": 100,
+                        "rgb": {
+                            "r": 255,
+                            "g": 255,
+                            "b": 255
+                        },
                         "fontsInfo": {
                             "font": "Arial"
                         },
@@ -117,6 +138,12 @@
                 },
                 "info": "",
                 "enableTitle": true,
+                "rgb": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                },
+                "width": 100,
                 "children": [
                     {
                         "name": "Child 1",
@@ -128,6 +155,12 @@
                         "info": "",
                         "enableTitle": false,
                         "children": [],
+                        "width": 100,
+                        "rgb": {
+                            "r": 255,
+                            "g": 255,
+                            "b": 255
+                        },
                         "parent": "Parent 1",
                         "minAge": 419.2,
                         "maxAge": 433.35,
@@ -165,6 +198,12 @@
                         },
                         "info": "",
                         "enableTitle": true,
+                        "width": 100,
+                        "rgb": {
+                            "r": 255,
+                            "g": 255,
+                            "b": 255
+                        },
                         "children": [],
                         "parent": "Parent 1",
                         "minAge": 0,
@@ -213,6 +252,153 @@
                     }
                 ]
             }
+        {
+            "name": "Parent 1",
+            "editName": "Parent 1",
+            "on": true,
+            "enableTitle": true,
+            "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+            },
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "info": "",
+            "width": 100,
+            "children": [
+            {
+                "name": "Child 1",
+                "editName": "Child 1",
+                "on": false,
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "info": "",
+                "children": [],
+                "parent": "Parent 1",
+                "minAge": 419.2,
+                "maxAge": 433.35,
+                "enableTitle": true,
+                "width": 100,
+                "rgb": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                },
+                "subBlockInfo": [
+                {
+                    "label": "TOP",
+                    "age": 419.2,
+                    "popup": "",
+                    "lineStyle": ""
+                },
+                {
+                    "label": "Child 1 SubBlock",
+                    "age": 433.35,
+                    "popup": "Child 1 SubBlock Info",
+                    "lineStyle": ""
+                }
+                ]
+            },
+            {
+                "name": "Child 2",
+                "editName": "Child 2",
+                "on": true,
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "info": "",
+                "children": [],
+                "width": 100,
+                "enableTitle": true,
+                "rgb": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                },
+                "parent": "Parent 1",
+                "minAge": 0,
+                "maxAge": 10,
+                "subFaciesInfo": [
+                {
+                    "rockType": "TOP",
+                    "age": 0,
+                    "info": ""
+                },
+                {
+                    "rockType": "Child 2 SubFaciesInfo 1",
+                    "label": "Child 2 SubFaciesInfo 1 Label",
+                    "age": 5,
+                    "info": ""
+                },
+                {
+                    "rockType": "Child 2 SubFaciesInfo 2",
+                    "label": "Child 2 SubFaciesInfo 2 Label",
+                    "age": 10,
+                    "info": ""
+                }
+                ]
+            },
+            {
+                "name": "Child 3",
+                "editName": "Child 3",
+                "on": true,
+                "fontsInfo": {
+                  "font": "Arial"
+                },
+                "info": "Child 3 Info",
+                "children": [],
+                "parent": "Parent 1",
+                "minAge": 0.02,
+                "maxAge": 0.4,
+                "width": 250,
+                "enableTitle": true,
+                "rgb": {
+                  "r": 100,
+                  "g": 200,
+                  "b": 255
+                },
+                "subEventInfo": [
+                  {
+                    "label": "SubEventInfo 1",
+                    "age": 0.02,
+                    "popup": "Child 3 SubEventInfo Popup 1",
+                    "lineStyle": "solid"
+                  },
+                  {
+                    "label": "SubEventInfo 2",
+                    "age": 0.4,
+                    "popup": "Child 3 SubEventInfo Popup 2",
+                    "lineStyle": "solid"
+                  }
+                ]
+              }
+            ],
+            "parent": "Root",
+            "minAge": 0,
+            "maxAge": 433.35,
+            "subFaciesInfo": [
+            {
+                "rockType": "TOP",
+                "age": 0,
+                "info": ""
+            },
+            {
+                "rockType": "Child 2 SubFaciesInfo 1",
+                "label": "Child 2 SubFaciesInfo 1 Label",
+                "age": 5,
+                "info": ""
+            },
+            {
+                "rockType": "Child 2 SubFaciesInfo 2",
+                "label": "Child 2 SubFaciesInfo 2 Label",
+                "age": 10,
+                "info": ""
+            }
+            ]
+        }
         ],
         "datapackAgeInfo": {
             "datapackContainsSuggAge": true,
@@ -220,7 +406,7 @@
             "bottomAge": 5
         }
     },
-    "facies-or-block-test-1-key": {
+    "column-types-test-1-key": {
         "FaciesOne": {
             "name": "FaciesOne",
             "subFaciesInfo": [
@@ -262,7 +448,7 @@
             "on": false
         }
     },
-    "facies-or-block-test-2-key": {
+    "column-types-test-2-key": {
         "Block Child 1": {
             "title": "Block Child 1",
             "subBlockInfo": [
@@ -351,7 +537,7 @@
             }
         }
     },
-    "facies-or-block-test-3-key": {
+    "column-types-test-3-key": {
         "Facies 1": {
             "name": "Child 2",
             "subFaciesInfo": [
@@ -407,6 +593,36 @@
             "width": 120,
             "minAge": 419.2,
             "maxAge": 433.35,
+            "popup": "",
+            "on": false
+        },
+        "Event 1": {
+            "name": "Child 3",
+            "subEventInfo": [
+                {
+                "label": "SubEventInfo 1",
+                "age": 0.02,
+                "popup": "Child 3 SubEventInfo Popup 1",
+                "lineStyle": "solid"
+                },
+                {
+                "label": "SubEventInfo 2",
+                "age": 0.4,
+                "popup": "Child 3 SubEventInfo Popup 2",
+                "lineStyle": "solid"
+                }
+            ],
+            "enableTitle": true,
+            "width": 250,
+            "rgb": {
+                "r": 100,
+                "g": 200,
+                "b": 255
+            },
+            "minAge": 0.02,
+            "maxAge": 0.4,
+            "popup": "Child 3 Info",
+            "on": true
             "popup": "\"popup\"",
             "on": false,
             "enableTitle": false,

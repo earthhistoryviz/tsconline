@@ -107,7 +107,7 @@ export async function parseDatapacks(decryptFilePath: string, files: string[]): 
       allEntries.forEach((children, parent) => {
         // if the parent is not a child
         if (!isChild.has(parent)) {
-          recursive("Root", parent, children, columnInfoArray, allEntries, faciesMap, blocksMap);
+          recursive("Root", parent, children, columnInfoArray, allEntries, faciesMap, blocksMap, eventMap);
         }
       });
     }
@@ -312,6 +312,9 @@ export async function getColumnTypes(
   if (inFaciesBlock) {
     addFaciesToFaciesMap(facies, faciesMap);
   }
+  if (inEventBlock) {
+    addEventToEventMap(event, eventMap);
+  }
   if (inBlockBlock) {
     addBlockToBlockMap(block, blocksMap);
   }
@@ -452,21 +455,21 @@ function processEvent(line: string): SubEventInfo | null {
     label: "",
     age: 0,
     popup: "",
-    lineStyle: ""
+    lineStyle: "solid"
   };
   const tabSeparated = line.split("\t");
   if (tabSeparated.length < 3) return null;
   const label = tabSeparated[1]!;
   const age = Number(tabSeparated[2]!);
+  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeparated[2]! + " is NaN");
   const lineStyle = tabSeparated[3];
   const popup = tabSeparated[4];
-  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeparated[2]! + " is NaN");
   subEventInfo.label = label;
   subEventInfo.age = age;
   if (popup) {
     subEventInfo.popup = popup;
   }
-  if (lineStyle) {
+  if (lineStyle && patternForLineStyle.test(lineStyle)) {
     subEventInfo.lineStyle = lineStyle;
   }
   try {
@@ -609,7 +612,8 @@ function recursive(
   childrenArray: ColumnInfo[],
   allEntries: Map<string, ParsedColumnEntry>,
   faciesMap: Map<string, Facies>,
-  blocksMap: Map<string, Block>
+  blocksMap: Map<string, Block>,
+  eventMap: Map<string, Event>
 ): FaciesFoundAndAgeRange {
   const currentColumnInfo: ColumnInfo = {
     name: trimInvisibleCharacters(currentColumn),
@@ -621,7 +625,14 @@ function recursive(
     children: [],
     parent: parent,
     minAge: Number.MAX_VALUE,
-    maxAge: Number.MIN_VALUE
+    maxAge: Number.MIN_VALUE,
+    width: 100,
+    enableTitle: true,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    }
   };
   const returnValue: FaciesFoundAndAgeRange = {
     faciesFound: false,
@@ -655,6 +666,19 @@ function recursive(
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
   }
+  if (eventMap.has(currentColumn)) {
+    const currentEvent = eventMap.get(currentColumn)!;
+    currentColumnInfo.subEventInfo = currentEvent.subEventInfo;
+    currentColumnInfo.maxAge = Math.max(currentColumnInfo.maxAge, currentEvent.maxAge);
+    currentColumnInfo.minAge = Math.min(currentColumnInfo.minAge, currentEvent.minAge);
+    returnValue.maxAge = currentColumnInfo.maxAge;
+    returnValue.minAge = currentColumnInfo.minAge;
+    currentColumnInfo.rgb = currentEvent.rgb;
+    currentColumnInfo.width = currentEvent.width;
+    currentColumnInfo.enableTitle = currentEvent.enableTitle;
+    currentColumnInfo.info = currentEvent.popup;
+    currentColumnInfo.on = currentEvent.on;
+  }
 
   childrenArray.push(currentColumnInfo);
 
@@ -670,7 +694,8 @@ function recursive(
         currentColumnInfo.children, // the array to push all the new children into
         allEntries, // the mapping of all parents to children
         faciesMap,
-        blocksMap
+        blocksMap,
+        eventMap
       );
       returnValue.minAge = Math.min(compareValue.minAge, returnValue.minAge);
       returnValue.maxAge = Math.max(compareValue.maxAge, returnValue.maxAge);
