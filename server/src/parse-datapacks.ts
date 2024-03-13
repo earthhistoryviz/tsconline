@@ -17,7 +17,6 @@ import { trimQuotes, trimInvisibleCharacters, grabFilepaths, hasVisibleCharacter
 import { createInterface } from "readline";
 const patternForColor = /\d+\/\d+\/\d+/;
 const patternForLineStyle = /solid|dashed|dotted/;
-const patternForPopup = /"*"/;
 export type ParsedColumnEntry = {
   children: string[];
   on: boolean;
@@ -253,53 +252,18 @@ export async function getFaciesOrBlock(
 
     // we found a block
     if (!inBlockBlock && tabSeperated[1] === "block") {
-      block.title = trimQuotes(tabSeperated[0]!);
-
-      if (tabSeperated[2]) {
-        block.width = Number(tabSeperated[2]);
-      }
-      if (isNaN(block.width)) {
-        console.log(`Error found while processing block width, setting width to 100`);
-        block.width = 100;
-      }
-
-      if (tabSeperated[3] && patternForColor.test(tabSeperated[3])) {
-        const rgbSeperated = tabSeperated[3].split("/");
-        block.rgb.r = Number(rgbSeperated[0]!);
-        block.rgb.g = Number(rgbSeperated[1]!);
-        block.rgb.b = Number(rgbSeperated[2]!);
-      }
-      try {
-        assertRGB(block.rgb);
-      } catch (e) {
-        console.log(`Error ${e} found while processing block rgb, setting rgb to white`);
-        block.rgb.r = 255;
-        block.rgb.g = 255;
-        block.rgb.b = 255;
-      }
-
-      if (tabSeperated[4] && tabSeperated[4] === "notitle") {
-        block.enableTitle = false;
-      }
-      if (tabSeperated[5] && tabSeperated[5] === "off") {
-        block.on = false;
-      }
-
-      if (tabSeperated[6] && patternForPopup.test(tabSeperated[6])) {
-        block.popup = tabSeperated[6];
-      }
-
+      setBlockHeader(block, tabSeperated);
       inBlockBlock = true;
     } else if (inBlockBlock) {
       //get a single sub block
 
-      //using parameterRGB make sure we don't pass by reference
-      const parameterRGB: RGB = {
+      //make sure we don't pass by reference
+      const subBlockInfo = processBlock(line, {
         r: block.rgb.r,
         g: block.rgb.g,
         b: block.rgb.b
-      };
-      const subBlockInfo = processBlock(line, parameterRGB);
+      });
+
       if (subBlockInfo) {
         block.subBlockInfo.push(subBlockInfo);
       }
@@ -311,6 +275,49 @@ export async function getFaciesOrBlock(
   }
   if (inBlockBlock) {
     addBlockToBlockMap(block, blocksMap);
+  }
+}
+
+/**
+ * This function will set the header for block
+ * @param block the block
+ * @param tabSeperated the string array which contains all information of the block
+ */
+function setBlockHeader(block: Block, tabSeperated: string[]) {
+  block.title = trimQuotes(tabSeperated[0]!);
+
+  if (tabSeperated[2]) {
+    block.width = Number(tabSeperated[2]);
+    if (isNaN(block.width)) {
+      console.log(`Error found while processing block width, setting width to 100`);
+      block.width = 100;
+    }
+  }
+
+  if (tabSeperated[3] && patternForColor.test(tabSeperated[3])) {
+    const rgbSeperated = tabSeperated[3].split("/");
+    block.rgb.r = Number(rgbSeperated[0]!);
+    block.rgb.g = Number(rgbSeperated[1]!);
+    block.rgb.b = Number(rgbSeperated[2]!);
+    try {
+      assertRGB(block.rgb);
+    } catch (e) {
+      console.log(`Error ${e} found while processing block rgb, setting rgb to white`);
+      block.rgb.r = 255;
+      block.rgb.g = 255;
+      block.rgb.b = 255;
+    }
+  }
+
+  if (tabSeperated[4] && tabSeperated[4] === "notitle") {
+    block.enableTitle = false;
+  }
+  if (tabSeperated[5] && tabSeperated[5] === "off") {
+    block.on = false;
+  }
+
+  if (tabSeperated[6]) {
+    block.popup = tabSeperated[6];
   }
 }
 
@@ -397,21 +404,21 @@ export function processBlock(line: string, defaultColor: RGB): SubBlockInfo | nu
       }
     }
   }
-
   if (rgb && patternForColor.test(rgb)) {
     const rgbSeperated = rgb.split("/");
     currentSubBlockInfo.rgb.r = Number(rgbSeperated[0]!);
     currentSubBlockInfo.rgb.g = Number(rgbSeperated[1]!);
     currentSubBlockInfo.rgb.b = Number(rgbSeperated[2]!);
+    try {
+      assertRGB(currentSubBlockInfo.rgb);
+    } catch (e) {
+      console.log(`Error ${e} found while processing block rgb, setting rgb to white`);
+      currentSubBlockInfo.rgb.r = 255;
+      currentSubBlockInfo.rgb.g = 255;
+      currentSubBlockInfo.rgb.b = 255;
+    }
   }
-  try {
-    assertRGB(currentSubBlockInfo.rgb);
-  } catch (e) {
-    console.log(`Error ${e} found while processing block rgb, setting rgb to white`);
-    currentSubBlockInfo.rgb.r = 255;
-    currentSubBlockInfo.rgb.g = 255;
-    currentSubBlockInfo.rgb.b = 255;
-  }
+
   try {
     assertSubBlockInfo(currentSubBlockInfo);
   } catch (e) {
