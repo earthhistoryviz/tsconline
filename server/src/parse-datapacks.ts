@@ -11,7 +11,10 @@ import {
   assertRGB,
   defaultFontsInfo,
   SubFaciesInfo,
-  assertSubFaciesInfo
+  assertSubFaciesInfo,
+  Event,
+  SubEventInfo,
+  assertSubEventInfo
 } from "@tsconline/shared";
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters } from "./util.js";
 import { createInterface } from "readline";
@@ -92,10 +95,11 @@ export async function parseDatapacks(decryptFilePath: string, files: string[]): 
   const datapackAgeInfo: DatapackAgeInfo = { datapackContainsSuggAge: false };
   const faciesMap: Map<string, Facies> = new Map();
   const blocksMap: Map<string, Block> = new Map();
+  const eventMap: Map<string, Event> = new Map();
   try {
     for (const decryptPath of decryptPaths) {
       //get the facies/blocks first
-      await getFaciesOrBlock(decryptPath, faciesMap, blocksMap);
+      await getColumnTypes(decryptPath, faciesMap, blocksMap, eventMap);
       // Originally the first step, gather all parents and their direct children
       await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
       // only iterate over parents. if we encounter one that is a child, the recursive function
@@ -192,10 +196,11 @@ export async function getAllEntries(
  * @param faciesMap the facies map to add to
  * @param blocksMap  the blocks map to add to
  */
-export async function getFaciesOrBlock(
+export async function getColumnTypes(
   filename: string,
   faciesMap: Map<string, Facies>,
-  blocksMap: Map<string, Block>
+  blocksMap: Map<string, Block>,
+  eventMap: Map<string, Event>
 ) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
@@ -218,28 +223,62 @@ export async function getFaciesOrBlock(
     enableTitle: true,
     rgb: { r: 255, g: 255, b: 255 }
   };
+  const event: Event = {
+    name: "",
+    subEventInfo: [],
+    enableTitle: true,
+    width: 150,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    },
+    minAge: Number.MAX_VALUE,
+    maxAge: Number.MIN_VALUE,
+    popup: "",
+    on: false
+  };
   let inFaciesBlock = false;
   let inBlockBlock = false;
+  let inEventBlock = false;
 
   for await (const line of readline) {
-    // we reached the end
-    if ((!line || trimInvisibleCharacters(line) === "") && inFaciesBlock) {
-      inFaciesBlock = false;
-      addFaciesToFaciesMap(facies, faciesMap);
-      continue;
+    if (!line || trimInvisibleCharacters(line) === "") {
+      // we reached the end and store the key value pairs in to faciesMap
+      if (inFaciesBlock) {
+        inFaciesBlock = false;
+        addFaciesToFaciesMap(facies, faciesMap);
+        continue;
+      }
+      // reached the end and store the key value pairs into blocksMap
+      if (inBlockBlock) {
+        inBlockBlock = false;
+        addBlockToBlockMap(block, blocksMap);
+        continue;
+      }
+      // reached the end and store the key value pairs into eventMap
+      if (inEventBlock) {
+        inEventBlock = false;
+        addEventToEventMap(event, eventMap);
+        continue;
+      }
     }
-    // reached the end and store the key value pairs into blocksMap
-    if ((!line || trimInvisibleCharacters(line) === "") && inBlockBlock) {
-      inBlockBlock = false;
-      addBlockToBlockMap(block, blocksMap);
-      continue;
+    const tabSeparated = line.split("\t");
+    // we found an event block
+    if (!inEventBlock && tabSeparated[1] === "event") {
+      setEventHeaders(event, tabSeparated);
+      inEventBlock = true;
+    } else if (inEventBlock) {
+      const subEventInfo = processEvent(line);
+      if (subEventInfo) {
+        event.subEventInfo.push(subEventInfo);
+      }
     }
-    const tabSeperated = line.split("\t");
     // we found a facies block
-    if (!inFaciesBlock && tabSeperated[1] === "facies") {
-      facies.name = trimQuotes(tabSeperated[0]!);
-      facies.info = tabSeperated[6] || "";
-      if (tabSeperated[5] && (tabSeperated[5] === "off" || tabSeperated[5].length == 0)) {
+    if (!inFaciesBlock && tabSeparated[1] === "facies") {
+      facies.name = trimQuotes(tabSeparated[0]!);
+      facies.info = tabSeparated[6] || "";
+      if (tabSeparated[5] && (tabSeparated[5] === "off" || tabSeparated[5].length == 0)) {
         facies.on = false;
       }
       inFaciesBlock = true;
@@ -322,6 +361,53 @@ function setBlockHeader(block: Block, tabSeperated: string[]) {
 }
 
 /**
+ * Set the appropriate headers for the event object
+ * @param event
+ * @param tabSeparated
+ */
+function setEventHeaders(event: Event, tabSeparated: string[]) {
+  event.name = trimQuotes(tabSeparated[0]!);
+  event.popup = tabSeparated[6] || "";
+  if (tabSeparated[2]) {
+    event.width = Number(tabSeparated[2]!);
+    if (isNaN(event.width)) {
+      console.log(`Error found while processing event width, got: ${event.width} and will be setting width to 150`);
+      event.width = 150;
+    }
+  }
+  if (tabSeparated[3] && patternForColor.test(tabSeparated[3])) {
+    const rgb = tabSeparated[3].split("/");
+    event.rgb.r = Number(rgb[0]!);
+    event.rgb.g = Number(rgb[1]!);
+    event.rgb.b = Number(rgb[2]!);
+  }
+  if (tabSeparated[4] && tabSeparated[4] === "notitle") {
+    event.enableTitle = false;
+  }
+  if (tabSeparated[5] && tabSeparated[5] === "on") {
+    event.on = true;
+  }
+}
+/**
+ * add an event object to the event map and resets event object
+ * @param event
+ * @param eventMap
+ */
+function addEventToEventMap(event: Event, eventMap: Map<string, Event>) {
+  for (const subEvent of event.subEventInfo) {
+    event.minAge = Math.min(subEvent.age, event.minAge);
+    event.maxAge = Math.max(subEvent.age, event.maxAge);
+  }
+  eventMap.set(event.name, JSON.parse(JSON.stringify(event)));
+  event.name = "";
+  event.subEventInfo = [];
+  event.minAge = Number.MAX_VALUE;
+  event.maxAge = Number.MIN_VALUE;
+  event.popup = "";
+  event.on = true;
+}
+
+/**
  * add a facies object to the map. will reset the facies object.
  * @param facies the facies objec to add
  * @param faciesMap the map to add to
@@ -357,11 +443,40 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
   block.maxAge = Number.MIN_VALUE;
   block.popup = "";
   block.on = true;
-  block.width = 100;
   block.enableTitle = true;
   block.rgb = { r: 255, g: 255, b: 255 };
 }
 
+function processEvent(line: string): SubEventInfo | null {
+  const subEventInfo = {
+    label: "",
+    age: 0,
+    popup: "",
+    lineStyle: ""
+  };
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length < 3) return null;
+  const label = tabSeparated[1]!;
+  const age = Number(tabSeparated[2]!);
+  const lineStyle = tabSeparated[3];
+  const popup = tabSeparated[4];
+  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeparated[2]! + " is NaN");
+  subEventInfo.label = label;
+  subEventInfo.age = age;
+  if (popup) {
+    subEventInfo.popup = popup;
+  }
+  if (lineStyle) {
+    subEventInfo.lineStyle = lineStyle;
+  }
+  try {
+    assertSubEventInfo(subEventInfo);
+  } catch (e) {
+    console.log(`Error ${e} found while processing subBlockInfo, returning null`);
+    return null;
+  }
+  return subEventInfo;
+}
 /**
  * Processes a single subBlockInfo line
  * @param line the line to be processed
@@ -375,13 +490,13 @@ export function processBlock(line: string, defaultColor: RGB): SubBlockInfo | nu
     lineStyle: "solid",
     rgb: defaultColor //if Block has color, set to that. If not, set to white
   };
-  const tabSeperated = line.split("\t");
-  if (tabSeperated.length < 3) return null;
-  const label = tabSeperated[1];
-  const age = Number(tabSeperated[2]!);
-  const popup = tabSeperated[4];
-  if (isNaN(age)) throw new Error("Error processing block line, age: " + tabSeperated[2]! + " is NaN");
-  const lineStyle = tabSeperated[3];
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length < 3) return null;
+  const label = tabSeparated[1];
+  const age = Number(tabSeparated[2]!);
+  const popup = tabSeparated[4];
+  if (isNaN(age)) throw new Error("Error processing block line, age: " + tabSeparated[2]! + " is NaN");
+  const lineStyle = tabSeparated[3];
   const rgb = tabSeperated[5];
   if (label) {
     currentSubBlockInfo.label = label;
@@ -438,29 +553,29 @@ export function processFacies(line: string): SubFaciesInfo | null {
   if (line.toLowerCase().includes("primary")) {
     return null;
   }
-  const tabSeperated = line.split("\t");
-  if (tabSeperated.length < 4 || tabSeperated.length > 5) return null;
-  const age = Number(tabSeperated[3]!);
-  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeperated[3]! + " is NaN");
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length < 4 || tabSeparated.length > 5) return null;
+  const age = Number(tabSeparated[3]!);
+  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeparated[3]! + " is NaN");
   // label doesn't exist for TOP or GAP
-  if (!tabSeperated[2]) {
+  if (!tabSeparated[2]) {
     subFaciesInfo = {
-      rockType: tabSeperated[1]!,
+      rockType: tabSeparated[1]!,
       age,
       info: ""
     };
   } else {
     subFaciesInfo = {
-      rockType: tabSeperated[1]!,
-      label: tabSeperated[2]!,
+      rockType: tabSeparated[1]!,
+      label: tabSeparated[2]!,
       age,
       info: ""
     };
   }
-  if (tabSeperated[4]) {
+  if (tabSeparated[4]) {
     subFaciesInfo = {
       ...subFaciesInfo,
-      info: tabSeperated[4]
+      info: tabSeparated[4]
     };
   }
   try {

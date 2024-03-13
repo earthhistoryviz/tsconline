@@ -25,7 +25,7 @@ jest.mock("@tsconline/shared", () => ({
 import {
   ParsedColumnEntry,
   getAllEntries,
-  getFaciesOrBlock,
+  getColumnTypes,
   parseDatapacks,
   processFacies,
   processBlock,
@@ -215,7 +215,7 @@ describe("getFaciesOrBlock tests", () => {
    */
   it("should create both maps correctly", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-2.txt";
-    await getFaciesOrBlock(file, faciesMap, blockMap);
+    await getColumnTypes(file, faciesMap, blockMap);
     expectedFaciesMap.set(
       key["facies-or-block-test-3-key"]["Facies 1"].name,
       key["facies-or-block-test-3-key"]["Facies 1"]
@@ -235,7 +235,7 @@ describe("getFaciesOrBlock tests", () => {
    */
   it("should create correct faciesMap only", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-3.txt";
-    await getFaciesOrBlock(file, faciesMap, blockMap);
+    await getColumnTypes(file, faciesMap, blockMap);
     for (const val in key["facies-or-block-test-1-key"]) {
       expectedFaciesMap.set(val, key["facies-or-block-test-1-key"][val]);
     }
@@ -251,7 +251,7 @@ describe("getFaciesOrBlock tests", () => {
    */
   it("should create correct blockMap only, the second block should has max amount of information", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-4.txt";
-    await getFaciesOrBlock(file, faciesMap, blockMap);
+    await getColumnTypes(file, faciesMap, blockMap);
     for (const val in key["facies-or-block-test-2-key"]) {
       expectedBlockMap.set(val, key["facies-or-block-test-2-key"][val]);
     }
@@ -266,7 +266,7 @@ describe("getFaciesOrBlock tests", () => {
    */
   it("should not initialize maps on bad file", async () => {
     const file = "server/__tests__/__data__/bad-data.txt";
-    await getFaciesOrBlock(file, faciesMap, blockMap);
+    await getColumnTypes(file, faciesMap, blockMap);
     expect(faciesMap.size).toBe(0);
     expect(blockMap.size).toBe(0);
   });

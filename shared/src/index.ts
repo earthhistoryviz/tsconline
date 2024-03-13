@@ -262,9 +262,18 @@ export type ColumnInfo = {
   parent: string | null;
   subBlockInfo?: SubBlockInfo[];
   subFaciesInfo?: SubFaciesInfo[];
+  subEventInfo?: SubEventInfo[];
   minAge: number;
   maxAge: number;
 };
+
+export type SubEventInfo = {
+  label: string;
+  age: number;
+  lineStyle: "solid" | "dashed" | "dotted";
+  popup: string;
+};
+
 export type SubFaciesInfo = {
   rockType: string; // rock type that is the name of the png in /public/patterns/
   label?: string; // the label
@@ -279,6 +288,42 @@ export type Facies = {
   subFaciesInfo: SubFaciesInfo[];
   minAge: number; // the min age of this specific location
   maxAge: number; // the max age of this specific location
+};
+
+export type Event = {
+  name: string;
+  subEventInfo: SubEventInfo[];
+  width: number;
+  rgb: RGB;
+  enableTitle: boolean;
+  minAge: number;
+  maxAge: number;
+  popup: string;
+  on: boolean;
+};
+
+export type RGB = {
+  r: number;
+  g: number;
+  b: number;
+};
+
+export type Block = {
+  name: string;
+  subBlockInfo: SubBlockInfo[];
+  width: number;
+  minAge: number;
+  maxAge: number;
+  popup: string;
+  on: boolean;
+  enableTitle: boolean;
+  rgb: RGB;
+};
+
+export type RGB = {
+  r: number;
+  g: number;
+  b: number;
 };
 
 export type Block = {
@@ -576,8 +621,15 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   if ("subFaciesInfo" in o) {
     if (!o.subFaciesInfo || !Array.isArray(o.subFaciesInfo))
       throwError("ColumnInfo", "subFaciesInfo", "array", o.subFaciesInfo);
-    for (const block of o.subFaciesInfo) {
-      assertSubFaciesInfo(block);
+    for (const facies of o.subFaciesInfo) {
+      assertSubFaciesInfo(facies);
+    }
+  }
+  if ("subEventInfo" in o) {
+    if (!o.subEventInfo || !Array.isArray(o.subEventInfo))
+      throwError("ColumnInfo", "subEventInfo", "array", o.subEventInfo);
+    for (const event of o.subEventInfo) {
+      assertSubEventInfo(event);
     }
   }
 }
