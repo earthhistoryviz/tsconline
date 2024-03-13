@@ -294,8 +294,15 @@ export function assertColumnInfo(o) {
     if ("subFaciesInfo" in o) {
         if (!o.subFaciesInfo || !Array.isArray(o.subFaciesInfo))
             throwError("ColumnInfo", "subFaciesInfo", "array", o.subFaciesInfo);
-        for (const block of o.subFaciesInfo) {
-            assertSubFaciesInfo(block);
+        for (const facies of o.subFaciesInfo) {
+            assertSubFaciesInfo(facies);
+        }
+    }
+    if ("subEventInfo" in o) {
+        if (!o.subEventInfo || !Array.isArray(o.subEventInfo))
+            throwError("ColumnInfo", "subEventInfo", "array", o.subEventInfo);
+        for (const event of o.subEventInfo) {
+            assertSubEventInfo(event);
         }
     }
 }

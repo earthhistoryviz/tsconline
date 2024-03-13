@@ -216,8 +216,15 @@ export type ColumnInfo = {
     parent: string | null;
     subBlockInfo?: SubBlockInfo[];
     subFaciesInfo?: SubFaciesInfo[];
+    subEventInfo?: SubEventInfo[];
     minAge: number;
     maxAge: number;
+};
+export type SubEventInfo = {
+    label: string;
+    age: number;
+    lineStyle: "solid" | "dashed" | "dotted";
+    popup: string;
 };
 export type SubFaciesInfo = {
     rockType: string;
@@ -232,6 +239,22 @@ export type Facies = {
     subFaciesInfo: SubFaciesInfo[];
     minAge: number;
     maxAge: number;
+};
+export type Event = {
+    name: string;
+    subEventInfo: SubEventInfo[];
+    width: number;
+    rgb: RGB;
+    enableTitle: boolean;
+    minAge: number;
+    maxAge: number;
+    popup: string;
+    on: boolean;
+};
+export type RGB = {
+    r: number;
+    g: number;
+    b: number;
 };
 export type Block = {
     title: string;
@@ -314,8 +337,9 @@ export type TimescaleItem = {
     key: string;
     value: number;
 };
-
 export declare function assertRGB(o: any): asserts o is RGB;
+export declare function assertEvent(o: any): asserts o is Event;
+export declare function assertSubEventInfo(o: any): asserts o is SubEventInfo;
 export declare function assertColor(o: any): asserts o is Color;
 export declare function assertPatterns(o: any): asserts o is Patterns;
 export declare function assertMapPackIndex(o: any): asserts o is MapPackIndex;
