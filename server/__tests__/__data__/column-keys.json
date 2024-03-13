@@ -632,5 +632,63 @@
                 "b": 234
             }
         }
+    },
+    "column-types-test-4-key": {
+        "Event 1": {
+            "name": "Event 1",
+            "subEventInfo": [
+                {
+                "label": "Event 1 SubEvent 1",
+                "age": 2,
+                "popup": "Event 1 SubEvent 1 Popup",
+                "lineStyle": "dashed"
+                },
+                {
+                "label": "Event 1 SubEvent 2",
+                "age": 4,
+                "popup": "Event 1 SubEvent 2 Popup",
+                "lineStyle": "solid"
+                }
+            ],
+            "enableTitle": true,
+            "width": 250,
+            "rgb": {
+                "r": 198,
+                "g": 207,
+                "b": 174
+            },
+            "minAge": 2,
+            "maxAge": 4,
+            "popup": "\"Event 1 Popup\"",
+            "on": true
+        },
+        "Event 2": {
+            "name": "Event 2",
+            "subEventInfo": [
+                {
+                "label": "Event 2 SubEvent 1",
+                "age": 5,
+                "popup": "",
+                "lineStyle": "solid"
+                },
+                {
+                "label": "Event 2 SubEvent 2",
+                "age": 6,
+                "popup": "",
+                "lineStyle": "solid"
+                }
+            ],
+            "enableTitle": false,
+            "width": 100,
+            "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+            },
+            "minAge": 5,
+            "maxAge": 6,
+            "popup": "Event 2 Popup",
+            "on": false
+        }
     }
 }

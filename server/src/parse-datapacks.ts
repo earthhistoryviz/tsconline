@@ -407,7 +407,13 @@ function addEventToEventMap(event: Event, eventMap: Map<string, Event>) {
   event.minAge = Number.MAX_VALUE;
   event.maxAge = Number.MIN_VALUE;
   event.popup = "";
-  event.on = true;
+  event.width = 100;
+  event.rgb = {
+    r: 255,
+    g: 255,
+    b: 255
+  }
+  event.on = false;
 }
 
 /**
@@ -450,6 +456,11 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
   block.rgb = { r: 255, g: 255, b: 255 };
 }
 
+/**
+ * process a SubEventInfo
+ * @param line 
+ * @returns 
+ */
 function processEvent(line: string): SubEventInfo | null {
   const subEventInfo = {
     label: "",
