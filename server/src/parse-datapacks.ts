@@ -461,7 +461,7 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
  * @param line 
  * @returns 
  */
-function processEvent(line: string): SubEventInfo | null {
+export function processEvent(line: string): SubEventInfo | null {
   const subEventInfo = {
     label: "",
     age: 0,
@@ -469,7 +469,7 @@ function processEvent(line: string): SubEventInfo | null {
     lineStyle: "solid"
   };
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length < 3) return null;
+  if (tabSeparated.length < 3 || tabSeparated.length > 5) return null;
   const label = tabSeparated[1]!;
   const age = Number(tabSeparated[2]!);
   if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeparated[2]! + " is NaN");
