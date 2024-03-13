@@ -49,7 +49,7 @@ describe("general parse-datapacks tests", () => {
    * Parses a custom simple pack of both facies and block
    * Checks both datapack ages and columnInfo values
    */
-  it("should parse africa general datapack with datapack age and blocks", async () => {
+  it("should parse general datapack with datapack age and blocks, facies, and events", async () => {
     const datapacks = await parseDatapacks("parse-datapacks-test-2.txt", []);
     expect(datapacks).toEqual(key["general-parse-datapacks-test-2-key"]);
   });
@@ -266,6 +266,20 @@ describe("getColumnTypes tests", () => {
     expect(faciesMap).toEqual(expectedFaciesMap);
     expect(eventMap).toEqual(expectedEventMap);
   });
+
+  it("should create correct eventMap only", async () => {
+    const file = "server/__tests__/__data__/parse-datapacks-test-5.txt";
+    await getColumnTypes(file, faciesMap, blockMap, eventMap);
+    for (const val in key["column-types-test-4-key"]) {
+      expectedEventMap.set(val, key["column-types-test-4-key"][val]);
+    }
+    expect(blockMap.size).toBe(0);
+    expect(faciesMap.size).toBe(0);
+    expect(eventMap.size).toBe(2);
+    expect(blockMap).toEqual(expectedBlockMap);
+    expect(faciesMap).toEqual(expectedFaciesMap);
+    expect(eventMap).toEqual(expectedEventMap);
+  })
 
   /**
    * Given a bad file, the maps should not be initialized
