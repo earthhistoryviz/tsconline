@@ -408,7 +408,13 @@
     },
     "column-types-test-1-key": {
         "FaciesOne": {
-            "name": "FaciesOne",
+            "title": "FaciesOne",
+            "width": 100,
+            "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+            },
             "subFaciesInfo": [
                 {
                     "rockType": "TOP",
@@ -424,11 +430,12 @@
             ],
             "minAge": 374.64,
             "maxAge": 376.11,
-            "info": "\"FaciesOne info\"",
+            "enableTitle": true,
+            "popup": "\"FaciesOne info\"",
             "on": false
         },
         "FaciesTwo": {
-            "name": "FaciesTwo",
+            "title": "FaciesTwo",
             "subFaciesInfo": [
                 {
                     "rockType": "TOP",
@@ -443,8 +450,15 @@
                 }
             ],
             "minAge": 311.59,
+            "width": 100,
             "maxAge": 315,
-            "info": "\"FaciesTwo info\"",
+            "enableTitle": true,
+            "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+            },
+            "popup": "\"FaciesTwo info\"",
             "on": false
         }
     },
@@ -539,7 +553,7 @@
     },
     "column-types-test-3-key": {
         "Facies 1": {
-            "name": "Child 2",
+            "title": "Child 2",
             "subFaciesInfo": [
                 {
                     "rockType": "TOP",
@@ -561,7 +575,14 @@
             ],
             "minAge": 0,
             "maxAge": 10,
-            "info": "",
+            "enableTitle": true,
+            "width": 100,
+            "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+            },
+            "popup": "",
             "on": true
         },
         "Block 1": {
@@ -597,7 +618,7 @@
             "on": false
         },
         "Event 1": {
-            "name": "Child 3",
+            "title": "Child 3",
             "subEventInfo": [
                 {
                 "label": "SubEventInfo 1",
@@ -635,7 +656,7 @@
     },
     "column-types-test-4-key": {
         "Event 1": {
-            "name": "Event 1",
+            "title": "Event 1",
             "subEventInfo": [
                 {
                 "label": "Event 1 SubEvent 1",
@@ -663,7 +684,7 @@
             "on": true
         },
         "Event 2": {
-            "name": "Event 2",
+            "title": "Event 2",
             "subEventInfo": [
                 {
                 "label": "Event 2 SubEvent 1",
@@ -679,7 +700,7 @@
                 }
             ],
             "enableTitle": false,
-            "width": 100,
+            "width": 150,
             "rgb": {
                 "r": 255,
                 "g": 255,

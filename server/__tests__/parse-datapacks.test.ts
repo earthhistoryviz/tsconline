@@ -261,9 +261,9 @@ describe("getColumnTypes tests", () => {
   it("should create facies, event, block maps correctly", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-2.txt";
     await getColumnTypes(file, faciesMap, blockMap, eventMap);
-    expectedFaciesMap.set(key["column-types-test-3-key"]["Facies 1"].name, key["column-types-test-3-key"]["Facies 1"]);
+    expectedFaciesMap.set(key["column-types-test-3-key"]["Facies 1"].title, key["column-types-test-3-key"]["Facies 1"]);
     expectedBlockMap.set(key["column-types-test-3-key"]["Block 1"].name, key["column-types-test-3-key"]["Block 1"]);
-    expectedEventMap.set(key["column-types-test-3-key"]["Event 1"].name, key["column-types-test-3-key"]["Event 1"]);
+    expectedEventMap.set(key["column-types-test-3-key"]["Event 1"].title, key["column-types-test-3-key"]["Event 1"]);
     expect(faciesMap.size).toBe(1);
     expect(blockMap.size).toBe(1);
     expect(eventMap.size).toBe(1);
