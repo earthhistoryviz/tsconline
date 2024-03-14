@@ -133,7 +133,7 @@ export const state = observable<State>({
     baseStageKey: "",
     unitsPerMY: 2,
     mouseOverPopupsEnabled: false,
-    datapackContainsSuggAge: false,
+    datapackContainsSuggAge: false
   },
   useCache: true,
   usePreset: true,
