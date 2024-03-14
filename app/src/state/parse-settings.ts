@@ -8,8 +8,10 @@ import {
   ColumnInfo,
   ColumnInfoTSC,
   FontsInfo,
+  assertChartInfoTSC,
   defaultFontsInfo
 } from "@tsconline/shared";
+import { Settings } from "../types";
 
 /**
  *
@@ -109,19 +111,11 @@ function processSettings(settingsNode: any): ChartSettingsInfoTSC {
  */
 function processFonts(fontsNode: any): FontsInfo {
   const fonts: FontsInfo = defaultFontsInfo;
-  // const fontNodes = fontsNode.getElementsByTagName("font");
-  // for (let i = 0; i < fontNodes.length; i++) {
-  //   const fontNode = fontNodes[i];
-  //   const fontFunction = fontNode.getAttribute("function");
-  //   const inheritable = fontNode.getAttribute("inheritable");
-  //   const fontInfo = { inheritable: inheritable === "true" };
-  //   fonts[fontFunction] = fontInfo;
-  // }
   return fonts;
 }
 /**
  *
- * @param node DOM node of a column in the settings file, usually starts with the chart root
+ * @param node DOM node of a column in the settings file, starts with the chart title
  * @returns json object containing the info of the current and children columns
  */
 function processColumn(node: any, id: string): ColumnInfoTSC {
@@ -183,9 +177,20 @@ function processColumn(node: any, id: string): ColumnInfoTSC {
     if (settingName in column) {
       column[settingName] = value;
     } else {
-      let errStr = settingName + " not a key in ColumnInfoTSC, skipping...";
-      throw new Error(errStr);
+      let errStr = settingName + " not a key in ColumnInfoTSC";
+      throw new Error();
     }
+  }
+  function castValue(value: string) {
+    let castValue;
+    if (value === "true") {
+      castValue = true;
+    } else if (value === "false") {
+      castValue = false;
+    } else if (!isNaN(Number(value))) {
+      castValue = Number(value);
+    } else castValue = String(value);
+    return castValue;
   }
 
   const nodeAttributes = node.attributes;
@@ -204,9 +209,8 @@ function processColumn(node: any, id: string): ColumnInfoTSC {
       if (child.nodeType === node.ELEMENT_NODE) {
         const childName = child.getAttribute("id");
         if (child.nodeName === "column") {
-          //regex to find substring between first period and first colon
           const childTSC = processColumn(child, childName);
-          column.children.push(childTSC);
+          column.children!.push(childTSC);
         } else if (child.nodeName === "fonts") {
           column.fonts = processFonts(child);
         } else if (child.nodeName === "setting") {
@@ -217,25 +221,39 @@ function processColumn(node: any, id: string): ColumnInfoTSC {
           const standardizedValue = child.getAttribute("standardized");
           if (settingName === "backgroundColor" || settingName === "customColor") {
             column[settingName] = {
-              standardized: standardizedValue,
-              useNamed: useNamedValue,
+              standardized: standardizedValue === "true",
+              useNamed: useNamedValue === "true",
               text: child.textContent.trim()
             };
           } else if (justificationValue) {
-            updateColumn(settingName, justificationValue);
+            updateColumn(settingName, castValue(justificationValue));
           } else if (orientationValue) {
-            updateColumn(settingName, orientationValue);
-          } else {
+            updateColumn(settingName, castValue(orientationValue));
+          } else if (settingName === "type") {
             const textContent = child.textContent.trim();
-            if (textContent) {
-              updateColumn(settingName, textContent);
-            }
+            if (textContent === 0) {
+              updateColumn(settingName, String(child.getAttribute("type")));
+            } else updateColumn(settingName, String(textContent));
+          } else if (settingName === "pointType") {
+            updateColumn(settingName, child.getAttribute("pointType"));
+          } else {
+            const textContent = castValue(child.textContent.trim());
+            updateColumn(settingName, textContent);
           }
         }
       }
     }
   }
-  return column;
+  //for removing undefined properties
+  function removeUndefined<T extends Object>(obj: T): Partial<T> {
+    return Object.fromEntries(Object.entries(obj).filter(([_, value]) => value !== undefined)) as Partial<T>;
+  }
+  let filteredColumn = removeUndefined(column) as ColumnInfoTSC;
+  //remove children property if it's empty
+  if (filteredColumn.children?.length == 0) {
+    delete filteredColumn.children;
+  }
+  return filteredColumn;
 }
 
 /**
@@ -257,13 +275,13 @@ export function xmlToJson(xml: string): ChartInfoTSC {
         settingsTSC["settings"] = processSettings(settingsNode);
       }
     }
-
     const rootColumnNode = tsCreatorNode.getElementsByTagName("column")[0];
     if (rootColumnNode) {
       settingsTSC["class datastore.RootColumn:Chart Root"] = processColumn(rootColumnNode, "RootColumn");
       settingsTSC["class datastore.RootColumn:Chart Root"]._id = "class datastore.RootColumn:Chart Root";
     }
   }
+  assertChartInfoTSC(settingsTSC);
   return settingsTSC;
 }
 
@@ -419,16 +437,16 @@ function getChildColumn(columns: ColumnInfoTSC[], name: string) {
 
 /**
  * generates xml string with column info
- * @param presetColumn json object with column info
+ * @param columnTSC json object with column info
  * @param stateColumn json object containing the state of the columns
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with column info
  */
-function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo | undefined, indent: string): string {
+function generateColumnXml(columnTSC: ColumnInfoTSC, stateColumn: ColumnInfo | undefined, indent: string): string {
   let xml = "";
-  for (let key in presetColumn) {
-    if (Object.prototype.hasOwnProperty.call(presetColumn, key)) {
-      let colName = extractName(presetColumn._id);
+  for (let key in columnTSC) {
+    if (Object.prototype.hasOwnProperty.call(columnTSC, key)) {
+      let colName = extractName(columnTSC._id);
       let xmlKey = replaceSpecialChars(key, 0);
       // Skip the 'id' element.
       if (key === "_id" || key === "id") {
@@ -445,27 +463,27 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo 
           }
         }
         if (!useEditName) {
-          xml += `${indent}<setting name="title">${replaceSpecialChars(presetColumn[key], 1)}</setting>\n`;
+          xml += `${indent}<setting name="title">${replaceSpecialChars(columnTSC[key], 1)}</setting>\n`;
         }
       } else if (key === "backgroundColor" || key === "customColor") {
-        if (presetColumn[key].standardized && presetColumn[key].useNamed) {
-          xml += `${indent}<setting name="${xmlKey}" standardized="${presetColumn[key].standardized}" 
-          useNamed="${presetColumn[key].useNamed}">${presetColumn[key].text}</setting>\n`;
-        } else if (presetColumn[key].useNamed) {
-          xml += `${indent}<setting name="${xmlKey}" useNamed="${presetColumn[key].useNamed}">${presetColumn[key].text}</setting>\n`;
-        } else if (presetColumn[key].standardized) {
-          xml += `${indent}<setting name="${xmlKey}" useNamed="${presetColumn[key].standardized}">${presetColumn[key].text}</setting>\n`;
+        if (columnTSC[key].standardized && columnTSC[key].useNamed) {
+          xml += `${indent}<setting name="${xmlKey}" standardized="${columnTSC[key].standardized}" 
+          useNamed="${columnTSC[key].useNamed}">${columnTSC[key].text}</setting>\n`;
+        } else if (columnTSC[key].useNamed) {
+          xml += `${indent}<setting name="${xmlKey}" useNamed="${columnTSC[key].useNamed}">${columnTSC[key].text}</setting>\n`;
+        } else if (columnTSC[key].standardized) {
+          xml += `${indent}<setting name="${xmlKey}" useNamed="${columnTSC[key].standardized}">${columnTSC[key].text}</setting>\n`;
         } else {
           xml += `${indent}<setting name="${xmlKey}"/>\n`;
         }
       } else if (key === "isSelected") {
         //TODO: remove later when event columns are covered
-        if (presetColumn._id.includes("EventColumn")) {
-          xml += `${indent}<setting name="${xmlKey}">${presetColumn["isSelected"]}</setting>\n`;
+        if (columnTSC._id.includes("EventColumn")) {
+          xml += `${indent}<setting name="${xmlKey}">${columnTSC["isSelected"]}</setting>\n`;
         }
         //if column isn't in state, then use default given by the original xml
         else if (stateColumn === undefined) {
-          xml += `${indent}<setting name="${xmlKey}">${presetColumn["isSelected"]}</setting>\n`;
+          xml += `${indent}<setting name="${xmlKey}">${columnTSC["isSelected"]}</setting>\n`;
         }
         //always display these things (the original tsc throws an error if not selected)
         //(but online doesn't have option to deselect them)
@@ -484,27 +502,31 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo 
           }
         }
         // } else if (key.startsWith("_")) {
-        //   xml += `${indent}<${xmlKey.slice(1)}>${presetColumn[key]}</${xmlKey.slice(1)}>\n`;
+        //   xml += `${indent}<${xmlKey.slice(1)}>${columnTSC[key]}</${xmlKey.slice(1)}>\n`;
         //
       } else if (key === "fonts") {
         xml += `${indent}<fonts>\n`;
         xml += generateFontsXml(presetColumn[key], colName, stateColumn?.fontsInfo, `${indent}    `);
         xml += `${indent}</fonts>\n`;
       } else if (key === "children") {
-        let currName = extractName(presetColumn._id);
+        let currName = extractName(columnTSC._id);
         if (currName === "Chart Root") {
           xml += `${indent}<column id="class datastore.RootColumn:Chart Title">\n`;
-          xml += generateColumnXml(presetColumn.children[0], stateColumn, `${indent}    `);
+          if (columnTSC.children) {
+            xml += generateColumnXml(columnTSC.children[0], stateColumn, `${indent}    `);
+          }
           xml += `${indent}</column>\n`;
         } else {
-          for (let i = 0; i < presetColumn.children.length; i++) {
-            xml += `${indent}<column id="${replaceSpecialChars(presetColumn.children[i]._id, 0)}">\n`;
-            xml += generateColumnXml(presetColumn.children[i], stateColumn?.children[i], `${indent}    `);
-            xml += `${indent}</column>\n`;
+          if (columnTSC.children) {
+            for (let i = 0; i < columnTSC.children.length; i++) {
+              xml += `${indent}<column id="${replaceSpecialChars(columnTSC.children[i]._id, 0)}">\n`;
+              xml += generateColumnXml(columnTSC.children[i], stateColumn?.children[i], `${indent}    `);
+              xml += `${indent}</column>\n`;
+            }
           }
         }
       } else {
-        xml += `${indent}<setting name="${xmlKey}">${presetColumn[key as keyof ColumnInfoTSC]}</setting>\n`;
+        xml += `${indent}<setting name="${xmlKey}">${columnTSC[key as keyof ColumnInfoTSC]}</setting>\n`;
       }
     }
   }
