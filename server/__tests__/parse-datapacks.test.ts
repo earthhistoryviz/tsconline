@@ -8,6 +8,15 @@ jest.mock("./util.js", () => ({
 jest.mock("@tsconline/shared", () => ({
   assertSubFaciesInfo: jest.fn().mockImplementation(() => true),
   assertSubBlockInfo: jest.fn().mockImplementation(() => true),
+  assertRGB: jest.fn().mockImplementation((o) => {
+    if (!o || typeof o !== "object") throw new Error("RGB must be a non-null object");
+    if (typeof o.r !== "number") throw new Error("Invalid rgb");
+    if (o.r < 0 || o.r > 255) throw new Error("Invalid rgb");
+    if (typeof o.g !== "number") throw new Error("Invalid rgb");
+    if (o.g < 0 || o.g > 255) throw new Error("Invalid rgb");
+    if (typeof o.b !== "number") throw new Error("Invalid rgb");
+    if (o.b < 0 || o.b > 255) throw new Error("Invalid rgb");
+  }),
   defaultFontsInfo: { font: "Arial" },
   assertFontsInfo: jest.fn().mockImplementation((fonts) => {
     if (fonts.font !== "Arial") throw new Error("Invalid font");
@@ -18,10 +27,12 @@ import {
   getAllEntries,
   getFaciesOrBlock,
   parseDatapacks,
-  processFacies
+  processFacies,
+  processBlock,
+  spliceArrayAtFirstSpecialMatch
 } from "../src/parse-datapacks";
 import { readFileSync } from "fs";
-import { Block, DatapackAgeInfo, Facies } from "@tsconline/shared";
+import { Block, DatapackAgeInfo, Facies, RGB } from "@tsconline/shared";
 const key = JSON.parse(readFileSync("server/__tests__/__data__/column-keys.json").toString());
 
 describe("general parse-datapacks tests", () => {
@@ -48,6 +59,36 @@ describe("general parse-datapacks tests", () => {
   it("should not parse bad file return empty array", async () => {
     const datapacks = await parseDatapacks("bad-data.txt", []);
     expect(datapacks).toEqual({ columnInfoArray: [], datapackAgeInfo: { datapackContainsSuggAge: false } });
+  });
+});
+
+describe("splice column entry tests", () => {
+  it("should splice line and store 3 children. On should be false, info should be 'popup', enableTitle should be false", () => {
+    const array = ["child1", "child2", "child3", "_METACOLUMN_OFF", "_TITLE_OFF", "", "popup"];
+    expect(spliceArrayAtFirstSpecialMatch(array)).toEqual({
+      children: ["child1", "child2", "child3"],
+      on: false,
+      info: "popup",
+      enableTitle: false
+    });
+  });
+  it("should splice line and store 3 children. Other fields should be set to default value.", () => {
+    const array = ["child1", "child2", "child3"];
+    expect(spliceArrayAtFirstSpecialMatch(array)).toEqual({
+      children: ["child1", "child2", "child3"],
+      on: true,
+      info: "",
+      enableTitle: true
+    });
+  });
+  it("should splice line and store 3 children. On should be true, info should be empty, enableTitle should be true", () => {
+    const array = ["child1", "child2", "child3", "_METACOLUMN_ON", "_TITLE_ON"];
+    expect(spliceArrayAtFirstSpecialMatch(array)).toEqual({
+      children: ["child1", "child2", "child3"],
+      on: true,
+      info: "",
+      enableTitle: true
+    });
   });
 });
 
@@ -78,6 +119,85 @@ describe("process facies line tests", () => {
   });
 });
 
+describe("process blocks line tests", () => {
+  let defaultColor: RGB;
+  beforeEach(() => {
+    defaultColor = { r: 255, g: 255, b: 255 };
+  });
+  it("should process block line for top label of age 100 with default color and default lineStyle", () => {
+    const line = " \tTOP\t100\t\t";
+    expect(processBlock(line, defaultColor)).toEqual({
+      label: "TOP",
+      age: 100,
+      popup: "",
+      lineStyle: "solid",
+      rgb: defaultColor
+    });
+  });
+  it("should process block line standard", () => {
+    const line = " \tlabel\t100\tdotted\tpopup\t23/45/67";
+    expect(processBlock(line, defaultColor)).toEqual({
+      label: "label",
+      age: 100,
+      popup: "popup",
+      lineStyle: "dotted",
+      rgb: { r: 23, g: 45, b: 67 }
+    });
+  });
+  it("should process block and replace bad color with default color", () => {
+    const line = " \tlabel\t100\tdotted\tpopup\tbadcolor";
+    expect(processBlock(line, defaultColor)).toEqual({
+      label: "label",
+      age: 100,
+      popup: "popup",
+      lineStyle: "dotted",
+      rgb: { r: 255, g: 255, b: 255 }
+    });
+  });
+  it("should process block and replace bad linestyle that's in the format of color with default linestyle", () => {
+    const line = " \tlabel\t100\t10/10/10\tpopup\t23/45/67";
+    expect(processBlock(line, defaultColor)).toEqual({
+      label: "label",
+      age: 100,
+      popup: "popup",
+      lineStyle: "solid",
+      rgb: { r: 23, g: 45, b: 67 }
+    });
+  });
+  it("should process block and replace bad linestyle with default linestyle", () => {
+    const line = " \tlabel\t100\tbadlinestyle\tpopup\t23/45/67";
+    expect(processBlock(line, defaultColor)).toEqual({
+      label: "label",
+      age: 100,
+      popup: "popup",
+      lineStyle: "solid",
+      rgb: { r: 23, g: 45, b: 67 }
+    });
+  });
+  it("should process block and replace color with invalid rgb value with default color", () => {
+    const line = " \tlabel\t100\tbadlinestyle\tpopup\t999/999/999";
+    expect(processBlock(line, defaultColor)).toEqual({
+      label: "label",
+      age: 100,
+      popup: "popup",
+      lineStyle: "solid",
+      rgb: { r: 255, g: 255, b: 255 }
+    });
+  });
+  it("should process block and return null on small line", () => {
+    const line = " \tsome bad line";
+    expect(processBlock(line, defaultColor)).toBeNull();
+  });
+  it("should process block and return null on empty line", () => {
+    const line = "";
+    expect(processBlock(line, defaultColor)).toBeNull();
+  });
+  it("should process block and throw error on bad number", () => {
+    const line = " \tlabel\tbadNumber\tdotted\tpopup\t23/45/67";
+    expect(() => processBlock(line, defaultColor)).toThrow("Error processing block line, age: badNumber is NaN");
+  });
+});
+
 describe("getFaciesOrBlock tests", () => {
   let faciesMap: Map<string, Facies>,
     blockMap: Map<string, Block>,
@@ -101,7 +221,7 @@ describe("getFaciesOrBlock tests", () => {
       key["facies-or-block-test-3-key"]["Facies 1"]
     );
     expectedBlockMap.set(
-      key["facies-or-block-test-3-key"]["Block 1"].name,
+      key["facies-or-block-test-3-key"]["Block 1"].title,
       key["facies-or-block-test-3-key"]["Block 1"]
     );
     expect(faciesMap.size).toBe(1);
@@ -129,7 +249,7 @@ describe("getFaciesOrBlock tests", () => {
    * This test checks for the correct creation of the blockMap
    * TODO: @Jacqui fix this case where linestyle is being processed as a color
    */
-  it("should create correct blockMap only", async () => {
+  it("should create correct blockMap only, the second block should has max amount of information", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-4.txt";
     await getFaciesOrBlock(file, faciesMap, blockMap);
     for (const val in key["facies-or-block-test-2-key"]) {
@@ -170,12 +290,14 @@ describe("getAllEntries tests", () => {
     expectedEntriesMap.set("Parent 1", {
       children: ["Child 11", "Child 12"],
       on: true,
-      info: ""
+      info: "",
+      enableTitle: true
     });
     expectedEntriesMap.set("Parent 2", {
       children: ["Child 21", "Child 22"],
       on: true,
-      info: ""
+      info: "",
+      enableTitle: true
     });
     expect(entriesMap).toEqual(expectedEntriesMap);
   });
@@ -190,12 +312,14 @@ describe("getAllEntries tests", () => {
     expectedEntriesMap.set("Parent 1", {
       children: ["Child 11", "Child 12"],
       on: false,
-      info: ""
+      info: "",
+      enableTitle: false
     });
     expectedEntriesMap.set("Parent 2", {
       children: ["Child 21", "Child 22"],
       on: true,
-      info: ""
+      info: "",
+      enableTitle: true
     });
     expect(entriesMap).toEqual(expectedEntriesMap);
   });
@@ -211,17 +335,20 @@ describe("getAllEntries tests", () => {
     expectedEntriesMap.set("Parent 1", {
       children: ["Child 11", "Child 12"],
       on: false,
-      info: "info"
+      info: "info",
+      enableTitle: false
     });
     expectedEntriesMap.set("Parent 2", {
       children: ["Child 21", "Child 22"],
       on: false,
-      info: "info2"
+      info: "info2",
+      enableTitle: true
     });
     expectedEntriesMap.set("Parent 3", {
       children: ["Child 31", "Child 32"],
       on: true,
-      info: "info3"
+      info: "info3",
+      enableTitle: true
     });
     expect(entriesMap).toEqual(expectedEntriesMap);
   });

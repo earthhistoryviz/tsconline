@@ -6,18 +6,22 @@ import {
   DatapackParsingPack,
   SubBlockInfo,
   Block,
+  RGB,
   assertSubBlockInfo,
+  assertRGB,
   defaultFontsInfo,
   SubFaciesInfo,
   assertSubFaciesInfo
 } from "@tsconline/shared";
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters } from "./util.js";
 import { createInterface } from "readline";
-
+const patternForColor = /\d+\/\d+\/\d+/;
+const patternForLineStyle = /solid|dashed|dotted/;
 export type ParsedColumnEntry = {
   children: string[];
   on: boolean;
   info: string;
+  enableTitle: boolean;
 };
 
 type FaciesFoundAndAgeRange = {
@@ -32,20 +36,28 @@ type FaciesFoundAndAgeRange = {
  * @param array the children string to parse
  * @returns the correctly parsed children string array
  */
-function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
+export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
   const parsedColumnEntry: ParsedColumnEntry = {
     children: [],
     on: true,
-    info: ""
+    info: "",
+    enableTitle: true
   };
   for (let i = 0; i < array.length; i++) {
-    if (array[i]?.includes("_METACOLUMN") || array[i]?.includes("TITLE")) {
-      if (array[i]?.includes("_METACOLUMN")) {
-        if (array[i] === "_METACOLUMN_ON") {
-          parsedColumnEntry.on = true;
-        } else {
-          parsedColumnEntry.on = false;
-        }
+    if (array[i]?.includes("METACOLUMN")) {
+      if (array[i] === "_METACOLUMN_ON") {
+        parsedColumnEntry.on = true;
+      } else {
+        parsedColumnEntry.on = false;
+      }
+      array.splice(i, 1);
+      i = i - 1;
+    }
+    if (array[i]?.includes("TITLE")) {
+      if (array[i] === "_TITLE_ON") {
+        parsedColumnEntry.enableTitle = true;
+      } else {
+        parsedColumnEntry.enableTitle = false;
       }
       array.splice(i, 1);
       i = i - 1;
@@ -58,7 +70,6 @@ function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
     }
   }
   parsedColumnEntry.children = array;
-
   return parsedColumnEntry;
 }
 
@@ -197,12 +208,15 @@ export async function getFaciesOrBlock(
     on: true
   };
   const block: Block = {
-    name: "",
+    title: "",
     subBlockInfo: [],
+    width: 100,
     minAge: Number.MAX_VALUE,
     maxAge: Number.MIN_VALUE,
     popup: "",
-    on: true
+    on: true,
+    enableTitle: true,
+    rgb: { r: 255, g: 255, b: 255 }
   };
   let inFaciesBlock = false;
   let inBlockBlock = false;
@@ -238,21 +252,18 @@ export async function getFaciesOrBlock(
 
     // we found a block
     if (!inBlockBlock && tabSeperated[1] === "block") {
-      block.name = trimQuotes(tabSeperated[0]!);
-      if (tabSeperated[5] && tabSeperated[5] === "off") {
-        block.on = false;
-      }
-      const popup = tabSeperated[tabSeperated.length - 1];
-      const pattern = /"*"/;
-
-      if (popup && pattern.test(popup)) {
-        block.popup = popup;
-      }
-
+      setBlockHeader(block, tabSeperated);
       inBlockBlock = true;
     } else if (inBlockBlock) {
       //get a single sub block
-      const subBlockInfo = processBlock(line);
+
+      //make sure we don't pass by reference
+      const subBlockInfo = processBlock(line, {
+        r: block.rgb.r,
+        g: block.rgb.g,
+        b: block.rgb.b
+      });
+
       if (subBlockInfo) {
         block.subBlockInfo.push(subBlockInfo);
       }
@@ -264,6 +275,49 @@ export async function getFaciesOrBlock(
   }
   if (inBlockBlock) {
     addBlockToBlockMap(block, blocksMap);
+  }
+}
+
+/**
+ * This function will set the header for block
+ * @param block the block
+ * @param tabSeperated the string array which contains all information of the block
+ */
+function setBlockHeader(block: Block, tabSeperated: string[]) {
+  block.title = trimQuotes(tabSeperated[0]!);
+
+  if (tabSeperated[2]) {
+    block.width = Number(tabSeperated[2]);
+    if (isNaN(block.width)) {
+      console.log(`Error found while processing block width, setting width to 100`);
+      block.width = 100;
+    }
+  }
+
+  if (tabSeperated[3] && patternForColor.test(tabSeperated[3])) {
+    const rgbSeperated = tabSeperated[3].split("/");
+    block.rgb.r = Number(rgbSeperated[0]!);
+    block.rgb.g = Number(rgbSeperated[1]!);
+    block.rgb.b = Number(rgbSeperated[2]!);
+    try {
+      assertRGB(block.rgb);
+    } catch (e) {
+      console.log(`Error ${e} found while processing block rgb, setting rgb to white`);
+      block.rgb.r = 255;
+      block.rgb.g = 255;
+      block.rgb.b = 255;
+    }
+  }
+
+  if (tabSeperated[4] && tabSeperated[4] === "notitle") {
+    block.enableTitle = false;
+  }
+  if (tabSeperated[5] && tabSeperated[5] === "off") {
+    block.on = false;
+  }
+
+  if (tabSeperated[6]) {
+    block.popup = tabSeperated[6];
   }
 }
 
@@ -296,13 +350,16 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
     block.minAge = Math.min(subBlock.age, block.minAge);
     block.maxAge = Math.max(subBlock.age, block.maxAge);
   }
-  blocksMap.set(block.name, JSON.parse(JSON.stringify(block)));
-  block.name = "";
+  blocksMap.set(block.title, JSON.parse(JSON.stringify(block)));
+  block.title = "";
   block.subBlockInfo = [];
   block.minAge = Number.MAX_VALUE;
   block.maxAge = Number.MIN_VALUE;
   block.popup = "";
   block.on = true;
+  block.width = 100;
+  block.enableTitle = true;
+  block.rgb = { r: 255, g: 255, b: 255 };
 }
 
 /**
@@ -310,30 +367,58 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
  * @param line the line to be processed
  * @returns A subBlock object
  */
-function processBlock(line: string): SubBlockInfo | null {
+export function processBlock(line: string, defaultColor: RGB): SubBlockInfo | null {
   const currentSubBlockInfo = {
     label: "",
     age: 0,
     popup: "",
-    lineStyle: ""
+    lineStyle: "solid",
+    rgb: defaultColor //if Block has color, set to that. If not, set to white
   };
   const tabSeperated = line.split("\t");
   if (tabSeperated.length < 3) return null;
   const label = tabSeperated[1];
   const age = Number(tabSeperated[2]!);
   const popup = tabSeperated[4];
-  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeperated[2]! + " is NaN");
+  if (isNaN(age)) throw new Error("Error processing block line, age: " + tabSeperated[2]! + " is NaN");
   const lineStyle = tabSeperated[3];
+  const rgb = tabSeperated[5];
   if (label) {
     currentSubBlockInfo.label = label;
   }
   currentSubBlockInfo.age = age;
+
   if (popup) {
     currentSubBlockInfo.popup = popup;
   }
-  if (lineStyle) {
-    currentSubBlockInfo.lineStyle = lineStyle;
+
+  if (lineStyle && patternForLineStyle.test(lineStyle)) {
+    switch (lineStyle) {
+      case "dashed": {
+        currentSubBlockInfo.lineStyle = "dashed";
+        break;
+      }
+      case "dotted": {
+        currentSubBlockInfo.lineStyle = "dotted";
+        break;
+      }
+    }
   }
+  if (rgb && patternForColor.test(rgb)) {
+    const rgbSeperated = rgb.split("/");
+    currentSubBlockInfo.rgb.r = Number(rgbSeperated[0]!);
+    currentSubBlockInfo.rgb.g = Number(rgbSeperated[1]!);
+    currentSubBlockInfo.rgb.b = Number(rgbSeperated[2]!);
+    try {
+      assertRGB(currentSubBlockInfo.rgb);
+    } catch (e) {
+      console.log(`Error ${e} found while processing block rgb, setting rgb to white`);
+      currentSubBlockInfo.rgb.r = 255;
+      currentSubBlockInfo.rgb.g = 255;
+      currentSubBlockInfo.rgb.b = 255;
+    }
+  }
+
   try {
     assertSubBlockInfo(currentSubBlockInfo);
   } catch (e) {
@@ -415,6 +500,7 @@ function recursive(
     name: trimInvisibleCharacters(currentColumn),
     editName: currentColumn,
     on: true,
+    enableTitle: true,
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
     info: "",
     children: [],
@@ -431,6 +517,7 @@ function recursive(
   if (parsedColumnEntry) {
     currentColumnInfo.on = parsedColumnEntry.on;
     currentColumnInfo.info = parsedColumnEntry.info;
+    currentColumnInfo.enableTitle = parsedColumnEntry.enableTitle;
   }
   if (blocksMap.has(currentColumn)) {
     const currentBlock = blocksMap.get(currentColumn)!;
@@ -438,6 +525,7 @@ function recursive(
     currentColumnInfo.on = currentBlock.on;
     currentColumnInfo.minAge = Math.min(currentBlock.minAge, currentColumnInfo.minAge);
     currentColumnInfo.maxAge = Math.max(currentBlock.maxAge, currentColumnInfo.maxAge);
+    currentColumnInfo.enableTitle = currentBlock.enableTitle;
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
   }
