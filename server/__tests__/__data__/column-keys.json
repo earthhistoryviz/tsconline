@@ -655,5 +655,63 @@
             "popup": "Event 2 Popup",
             "on": false
         }
+    },
+    "column-types-test-5-key": {
+        "Range 1": {
+            "name": "Range 1",
+            "subRangeInfo": [
+              {
+                "label": "Range 1 SubRangeInfo 1",
+                "age": 28.4,
+                "abundance": "TOP",
+                "popup": ""
+              },
+              {
+                "label": "Range 1 SubRangeInfo 2",
+                "age": 33.9,
+                "abundance": "rare",
+                "popup": "\"popup\""
+              }
+            ],
+            "enableTitle": true,
+            "width": 100,
+            "rgb": {
+              "r": 198,
+              "g": 207,
+              "b": 174
+            },
+            "minAge": 28.4,
+            "maxAge": 33.9,
+            "popup": "Range 1 info",
+            "on": false
+        },
+        "Range 2": {
+            "name": "Range 2",
+            "subRangeInfo": [
+              {
+                "label": "Range 2 SubRangeInfo 1",
+                "age": 0,
+                "abundance": "TOP",
+                "popup": ""
+              },
+              {
+                "label": "Range 2 SubRange Info 2",
+                "age": 0.01,
+                "abundance": "flood",
+                "popup": ""
+              }
+            ],
+            "enableTitle": false,
+            "width": 100,
+            "rgb": {
+              "r": 198,
+              "g": 207,
+              "b": 174
+            },
+            "minAge": 0,
+            "maxAge": 0.01,
+            "popup": "Range 2 Info",
+            "on": true
+        }
     }
 }

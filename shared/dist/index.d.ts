@@ -239,7 +239,7 @@ export type Range = ColumnHeaderProps & {
 export type SubRangeInfo = {
     label: string;
     age: number;
-    abundance: "TOP" | "missing" | "rare" | "common" | "frequent" | "abundant" | "sample";
+    abundance: "TOP" | "missing" | "rare" | "common" | "frequent" | "abundant" | "sample" | "flood";
     popup: string;
 };
 export type SubEventInfo = {
@@ -259,13 +259,6 @@ export type Facies = ColumnHeaderProps & {
 };
 export type Event = ColumnHeaderProps & {
     subEventInfo: SubEventInfo[];
-    width: number;
-    rgb: RGB;
-    enableTitle: boolean;
-    minAge: number;
-    maxAge: number;
-    popup: string;
-    on: boolean;
 };
 export type Block = ColumnHeaderProps & {
     subBlockInfo: SubBlockInfo[];

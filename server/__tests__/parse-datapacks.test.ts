@@ -261,9 +261,9 @@ describe("getColumnTypes tests", () => {
   });
 
   /**
-   * Checks both map creation with a simple facies and block
+   * Checks both map creation all column types
    */
-  it("should create facies, event, block maps correctly", async () => {
+  it("should create all column types correctly", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-2.txt";
     await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap);
     expectedFaciesMap.set(key["column-types-test-3-key"]["Facies 1"].name, key["column-types-test-3-key"]["Facies 1"]);
@@ -292,14 +292,15 @@ describe("getColumnTypes tests", () => {
     expect(faciesMap.size).toBe(2);
     expect(blockMap.size).toBe(0);
     expect(eventMap.size).toBe(0);
+    expect(rangeMap.size).toBe(0);
     expect(faciesMap).toEqual(expectedFaciesMap);
     expect(blockMap).toEqual(expectedBlockMap);
     expect(eventMap).toEqual(expectedEventMap);
+    expect(rangeMap).toEqual(expectedRangeMap);
   });
 
   /**
    * This test checks for the correct creation of the blockMap
-   * TODO: @Jacqui fix this case where linestyle is being processed as a color
    */
   it("should create correct blockMap only, the second block should has max amount of information", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-4.txt";
@@ -310,9 +311,11 @@ describe("getColumnTypes tests", () => {
     expect(blockMap.size).toBe(2);
     expect(faciesMap.size).toBe(0);
     expect(eventMap.size).toBe(0);
+    expect(rangeMap.size).toBe(0);
     expect(blockMap).toEqual(expectedBlockMap);
     expect(faciesMap).toEqual(expectedFaciesMap);
     expect(eventMap).toEqual(expectedEventMap);
+    expect(rangeMap).toEqual(expectedRangeMap);
   });
 
   /**
@@ -327,9 +330,27 @@ describe("getColumnTypes tests", () => {
     expect(blockMap.size).toBe(0);
     expect(faciesMap.size).toBe(0);
     expect(eventMap.size).toBe(2);
+    expect(rangeMap.size).toBe(0);
     expect(blockMap).toEqual(expectedBlockMap);
     expect(faciesMap).toEqual(expectedFaciesMap);
     expect(eventMap).toEqual(expectedEventMap);
+    expect(rangeMap).toEqual(expectedRangeMap);
+  });
+
+  it("should create correct rangeMap only", async () => {
+    const file = "server/__tests__/__data__/parse-datapacks-test-6.txt";
+    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap);
+    for (const val in key["column-types-test-5-key"]) {
+      expectedRangeMap.set(val, key["column-types-test-5-key"][val]);
+    }
+    expect(blockMap.size).toBe(0);
+    expect(faciesMap.size).toBe(0);
+    expect(eventMap.size).toBe(0);
+    expect(rangeMap.size).toBe(2);
+    expect(blockMap).toEqual(expectedBlockMap);
+    expect(faciesMap).toEqual(expectedFaciesMap);
+    expect(eventMap).toEqual(expectedEventMap);
+    expect(rangeMap).toEqual(expectedRangeMap);
   });
 
   /**
@@ -341,6 +362,7 @@ describe("getColumnTypes tests", () => {
     expect(eventMap.size).toBe(0);
     expect(faciesMap.size).toBe(0);
     expect(blockMap.size).toBe(0);
+    expect(rangeMap.size).toBe(0);
   });
 });
 

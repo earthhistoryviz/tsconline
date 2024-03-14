@@ -39,7 +39,7 @@ export function assertSubRangeInfo(o) {
         throwError("SubRangeInfo", "age", "number", o.age);
     if (typeof o.abundance !== "string")
         throwError("SubRangeInfo", "abundance", "string", o.abundance);
-    if (/TOP|missing|rare|common|frequent|abundant|sample/.test(o.abundance))
+    if (/TOP|missing|rare|common|frequent|abundant|sample|flood/.test(o.abundance))
         throwError("SubRangeInfo", "abundance", "TOP | missing | rare | common | frequent | abundant | sample", o.abundance);
     if (typeof o.popup !== "string")
         throwError("SubRangeInfo", "popup", "string", o.popup);

@@ -24,7 +24,7 @@ import { trimQuotes, trimInvisibleCharacters, grabFilepaths, hasVisibleCharacter
 import { createInterface } from "readline";
 const patternForColor = /\d+\/\d+\/\d+/;
 const patternForLineStyle = /solid|dashed|dotted/;
-const patternForAbundance = /TOP|missing|rare|common|frequent|abundant|sample/;
+const patternForAbundance = /TOP|missing|rare|common|frequent|abundant|sample|flood/;
 
 export type ParsedColumnEntry = {
   children: string[];

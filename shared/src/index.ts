@@ -288,7 +288,7 @@ export type Range = ColumnHeaderProps & {
 export type SubRangeInfo = {
   label: string;
   age: number;
-  abundance: "TOP" | "missing" | "rare" | "common" | "frequent" | "abundant" | "sample";
+  abundance: "TOP" | "missing" | "rare" | "common" | "frequent" | "abundant" | "sample" | "flood";
   popup: string;
 };
 
@@ -312,13 +312,6 @@ export type Facies = ColumnHeaderProps & {
 
 export type Event = ColumnHeaderProps & {
   subEventInfo: SubEventInfo[];
-  width: number;
-  rgb: RGB;
-  enableTitle: boolean;
-  minAge: number;
-  maxAge: number;
-  popup: string;
-  on: boolean;
 };
 
 export type Block = ColumnHeaderProps & {
@@ -410,7 +403,7 @@ export function assertSubRangeInfo(o: any): asserts o is SubRangeInfo {
   if (typeof o.label !== "string") throwError("SubRangeInfo", "label", "string", o.label);
   if (typeof o.age !== "number") throwError("SubRangeInfo", "age", "number", o.age);
   if (typeof o.abundance !== "string") throwError("SubRangeInfo", "abundance", "string", o.abundance);
-  if (/TOP|missing|rare|common|frequent|abundant|sample/.test(o.abundance))
+  if (/TOP|missing|rare|common|frequent|abundant|sample|flood/.test(o.abundance))
     throwError(
       "SubRangeInfo",
       "abundance",
