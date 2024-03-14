@@ -17,7 +17,7 @@ import {
  * @returns json object containing information about the settings of the current node
  */
 
-function processSettings(settingsNode: any): any {
+function processSettings(settingsNode: any): ChartSettingsInfoTSC {
   let settings: ChartSettingsInfoTSC = {
     topAge: {
       source: "",
@@ -51,7 +51,12 @@ function processSettings(settingsNode: any): any {
   //https://stackoverflow.com/questions/69917159/type-any-is-not-assignable-to-type-never-when-trying-to-set-object-property
   //TLDR: since properties of settings has different types, can't infer type of property from variable name, so use generics
   function updateSetting<T extends keyof ChartSettingsInfoTSC>(settingName: T, value: ChartSettingsInfoTSC[T]) {
-    settings[settingName] = value;
+    if (settingName in settings) {
+      settings[settingName] = value;
+    } else {
+      let errStr = settingName + " not a key in ChartSettingsInfoTSC";
+      throw new Error(errStr);
+    }
   }
 
   const settingNodes = settingsNode.getElementsByTagName("setting");
@@ -66,9 +71,7 @@ function processSettings(settingsNode: any): any {
       continue;
     }
     if (settingName === "topAge" || settingName === "baseAge") {
-      let stage = undefined;
-      let text = undefined;
-
+      let stage, text;
       if (nestedSettingsNode.getAttribute("name") === "stage") {
         stage = settingValue;
       } else {
@@ -140,18 +143,56 @@ function processColumn(node: any, id: string): ColumnInfoTSC {
     customColor: {
       text: ""
     },
+    fonts: undefined,
+    crunchOuterMargin: undefined,
+    crunchInnerMargin: undefined,
+    crunchAscendWidth: undefined,
+    crunchOneSideSpaceUse: undefined,
+    autoFlip: undefined,
+    orientation: undefined,
+    type: undefined,
+    rangeSort: undefined,
+    justification: undefined,
+    labelMarginLeft: undefined,
+    labelMarginRight: undefined,
+    graphStyle: undefined,
+    drawNameLabel: undefined,
+    drawPoints: undefined,
+    drawLine: undefined,
+    lineColor: undefined,
+    drawSmooth: undefined,
+    drawFill: undefined,
+    fillColor: undefined,
+    doNotSetWindowAuto: undefined,
+    minWindow: undefined,
+    maxWindow: undefined,
+    drawScale: undefined,
+    drawBgrndGradient: undefined,
+    backGradStart: undefined,
+    backGradEnd: undefined,
+    drawCurveGradient: undefined,
+    curveGradStart: undefined,
+    curveGradEnd: undefined,
+    flipScale: undefined,
+    scaleStart: undefined,
+    scaleStep: undefined,
+    pointType: undefined,
     children: []
   };
   function updateColumn<T extends keyof ColumnInfoTSC>(settingName: T, value: ColumnInfoTSC[T]) {
-    column[settingName] = value;
+    if (settingName in column) {
+      column[settingName] = value;
+    } else {
+      let errStr = settingName + " not a key in ColumnInfoTSC, skipping...";
+      throw new Error(errStr);
+    }
   }
 
   const nodeAttributes = node.attributes;
-
   if (nodeAttributes.length > 0) {
     for (let i = 0; i < nodeAttributes.length; i++) {
       const attribute = nodeAttributes[i];
-      updateColumn(attribute.name, attribute.value);
+      //updateColumn(attribute.name, attribute.value);
     }
   }
 
@@ -202,7 +243,7 @@ function processColumn(node: any, id: string): ColumnInfoTSC {
  * @param xml the xml string to be converted into a json object
  * @returns the json object equivalent of the given xml string
  */
-export function xmlToJson(xml: string): any {
+export function xmlToJson(xml: string): ChartInfoTSC {
   //convert xml to a DOM document using a parser library
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xml, "text/xml");
