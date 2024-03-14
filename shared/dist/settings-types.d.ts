@@ -89,7 +89,7 @@ export type ColumnInfoTSC = {
     scaleStart?: number;
     scaleStep?: number;
     pointType?: "rect" | "round" | "tick";
-    children: ColumnInfoTSC[];
+    children?: ColumnInfoTSC[];
 };
 export declare function assertChartInfoTSC(o: any): asserts o is ChartInfoTSC;
 export declare function assertChartSettingsInfoTSC(o: any): asserts o is ChartSettingsInfoTSC;

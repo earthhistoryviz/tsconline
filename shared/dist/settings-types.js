@@ -73,21 +73,21 @@ export function assertColumnInfoTSC(o) {
     if (typeof o.title !== "string")
         throw new Error("ColumnInfoTSC must have title with type string");
     if (typeof o.useNamedColor !== "boolean")
-        throw new Error("ColumnInfoTSC must have title with type boolean");
+        throw new Error("ColumnInfoTSC must have useNamedColor with type boolean");
     if (typeof o.placeHolder !== "boolean")
-        throw new Error("ColumnInfoTSC must have title with type boolean");
+        throw new Error("ColumnInfoTSC must have placeHolder with type boolean");
     if (typeof o.drawTitle !== "boolean")
-        throw new Error("ColumnInfoTSC must have title with type boolean");
+        throw new Error("ColumnInfoTSC must have drawTitle with type boolean");
     if (typeof o.drawAgeLabel !== "boolean")
-        throw new Error("ColumnInfoTSC must have title with type boolean");
+        throw new Error("ColumnInfoTSC must have drawAgeLabel with type boolean");
     if (typeof o.drawUncertaintyLabel !== "boolean")
-        throw new Error("ColumnInfoTSC must have title with type boolean");
+        throw new Error("ColumnInfoTSC must have drawUncertaintyLabel with type boolean");
     if (typeof o.isSelected !== "boolean")
-        throw new Error("ColumnInfoTSC must have title with type boolean");
+        throw new Error("ColumnInfoTSC must have isSelected with type boolean");
     if (typeof o.width !== "number")
-        throw new Error("ColumnInfoTSC must have title with type number");
+        throw new Error("ColumnInfoTSC must have width with type number");
     if (typeof o.pad !== "number")
-        throw new Error("ColumnInfoTSC must have title with type number");
+        throw new Error("ColumnInfoTSC must have pad with type number");
     if (typeof o["age pad"] !== "number")
         throw new Error("ColumnInfoTSC must have age pad with type number");
     if (o.backgroundColor) {
@@ -140,7 +140,7 @@ export function assertColumnInfoTSC(o) {
             throw new Error("ColumnInfoTSC autoFlip must have type boolean");
     }
     if ("orientation" in o) {
-        if (o.orientation !== "vertical" || o.orientation !== "normal")
+        if (o.orientation !== "vertical" && o.orientation !== "normal")
             throw new Error("ColumnInfoTSC orientation must be vertical or normal");
     }
     if ("type" in o) {
@@ -152,8 +152,8 @@ export function assertColumnInfoTSC(o) {
             throw new Error("ColumnInfoTSC rangeSort must have type string");
     }
     if ("justification" in o) {
-        if (o.orientation !== "left" || o.orientation !== "right")
-            throw new Error("ColumnInfoTSC orientation must be left or right");
+        if (o.justification !== "left" && o.justification !== "right")
+            throw new Error("ColumnInfoTSC justification must be left or right");
     }
     if ("labelMarginLeft" in o) {
         if (typeof o.labelMarginLeft !== "number")
@@ -172,53 +172,48 @@ export function assertColumnInfoTSC(o) {
             throw new Error("ColumnInfoTSC drawNameLabel must have type number");
     }
     for (const key in o) {
-        if (o.hasOwnProperty(key)) {
-            switch (key) {
-                case "drawPoints":
-                case "drawLine":
-                case "drawSmooth":
-                case "drawFill":
-                case "doNotSetWindowAuto":
-                case "drawScale":
-                case "drawBgrndGradient":
-                case "drawCurveGradient":
-                case "flipScale":
-                    if (typeof o[key] !== "boolean") {
-                        throw new Error(`ColumnInfoTSC ${key} must have type boolean`);
-                    }
-                    break;
-                case "lineColor":
-                case "fillColor":
-                case "backGradStart":
-                case "backGradEnd":
-                case "curveGradStart":
-                case "curveGradEnd":
-                    if (typeof o[key] !== "string") {
-                        throw new Error(`ColumnInfoTSC ${key} must have type string`);
-                    }
-                    break;
-                case "minWindow":
-                case "maxWindow":
-                case "scaleStart":
-                case "scaleStep":
-                    if (typeof o[key] !== "number") {
-                        throw new Error(`ColumnInfoTSC ${key} must have type number`);
-                    }
-                    break;
-                case "pointType":
-                    if (!["rect", "round", "tick"].includes(o[key])) {
-                        throw new Error(`ColumnInfoTSC ${key} must have value "rect", "round", or "tick"`);
-                    }
-                    break;
-            }
+        switch (key) {
+            case "drawPoints":
+            case "drawLine":
+            case "drawSmooth":
+            case "drawFill":
+            case "doNotSetWindowAuto":
+            case "drawScale":
+            case "drawBgrndGradient":
+            case "drawCurveGradient":
+            case "flipScale":
+                if (typeof o[key] !== "boolean") {
+                    throw new Error(`ColumnInfoTSC ${key} must have type boolean`);
+                }
+                break;
+            case "lineColor":
+            case "fillColor":
+            case "backGradStart":
+            case "backGradEnd":
+            case "curveGradStart":
+            case "curveGradEnd":
+                if (typeof o[key] !== "string") {
+                    throw new Error(`ColumnInfoTSC ${key} must have type string`);
+                }
+                break;
+            case "minWindow":
+            case "maxWindow":
+            case "scaleStart":
+            case "scaleStep":
+                if (typeof o[key] !== "number") {
+                    throw new Error(`ColumnInfoTSC ${key} must have type number`);
+                }
+                break;
+            case "pointType":
+                if (!["rect", "round", "tick"].includes(o[key])) {
+                    throw new Error(`ColumnInfoTSC ${key} must have value "rect", "round", or "tick"`);
+                }
+                break;
         }
     }
     if ("children" in o) {
-        throw new Error("ColumnInfoTSC must have children");
-    }
-    else {
-        for (const child in o.children) {
-            assertColumnInfoTSC(child);
+        for (let i = 0; i < o.children.length; i++) {
+            assertColumnInfoTSC(o.children[i]);
         }
     }
 }
