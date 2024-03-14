@@ -49,6 +49,15 @@ export type DatapackAgeInfo = {
     topAge?: number;
     bottomAge?: number;
 };
+export type ColumnHeaderProps = {
+    minAge: number;
+    maxAge: number;
+    enableTitle: boolean;
+    on: boolean;
+    width: number;
+    popup: string;
+    rgb: RGB;
+};
 export type ChartConfig = {
     icon: string;
     background: string;
@@ -235,24 +244,13 @@ export type SubFaciesInfo = {
     age: number;
     info: string;
 };
-export type Facies = {
-    name: string;
-    info: string;
-    on: boolean;
+export type Facies = ColumnHeaderProps & {
+    title: string;
     subFaciesInfo: SubFaciesInfo[];
-    minAge: number;
-    maxAge: number;
 };
-export type Event = {
-    name: string;
+export type Event = ColumnHeaderProps & {
+    title: string;
     subEventInfo: SubEventInfo[];
-    width: number;
-    rgb: RGB;
-    enableTitle: boolean;
-    minAge: number;
-    maxAge: number;
-    popup: string;
-    on: boolean;
 };
 export type RGB = {
     r: number;
@@ -340,6 +338,7 @@ export type TimescaleItem = {
     key: string;
     value: number;
 };
+export declare function assertColumnHeaderProps(o: any): asserts o is ColumnHeaderProps;
 export declare function assertRGB(o: any): asserts o is RGB;
 export declare function assertEvent(o: any): asserts o is Event;
 export declare function assertSubEventInfo(o: any): asserts o is SubEventInfo;

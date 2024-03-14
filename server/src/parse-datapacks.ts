@@ -205,12 +205,19 @@ export async function getColumnTypes(
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
   const facies: Facies = {
-    name: "",
+    title: "",
     subFaciesInfo: [],
     minAge: Number.MAX_VALUE,
     maxAge: Number.MIN_VALUE,
-    info: "",
-    on: true
+    popup: "",
+    on: true,
+    width: 100,
+    enableTitle: true,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    }
   };
   const block: Block = {
     title: "",
@@ -224,7 +231,7 @@ export async function getColumnTypes(
     rgb: { r: 255, g: 255, b: 255 }
   };
   const event: Event = {
-    name: "",
+    title: "",
     subEventInfo: [],
     enableTitle: true,
     width: 150,
@@ -276,8 +283,8 @@ export async function getColumnTypes(
     }
     // we found a facies block
     if (!inFaciesBlock && tabSeparated[1] === "facies") {
-      facies.name = trimQuotes(tabSeparated[0]!);
-      facies.info = tabSeparated[6] || "";
+      facies.title = trimQuotes(tabSeparated[0]!);
+      facies.popup = tabSeparated[6] || "";
       if (tabSeparated[5] && (tabSeparated[5] === "off" || tabSeparated[5].length == 0)) {
         facies.on = false;
       }
@@ -369,7 +376,7 @@ function setBlockHeader(block: Block, tabSeperated: string[]) {
  * @param tabSeparated
  */
 function setEventHeaders(event: Event, tabSeparated: string[]) {
-  event.name = trimQuotes(tabSeparated[0]!);
+  event.title = trimQuotes(tabSeparated[0]!);
   event.popup = tabSeparated[6] || "";
   if (tabSeparated[2]) {
     event.width = Number(tabSeparated[2]!);
@@ -401,13 +408,14 @@ function addEventToEventMap(event: Event, eventMap: Map<string, Event>) {
     event.minAge = Math.min(subEvent.age, event.minAge);
     event.maxAge = Math.max(subEvent.age, event.maxAge);
   }
-  eventMap.set(event.name, JSON.parse(JSON.stringify(event)));
-  event.name = "";
+  eventMap.set(event.title, JSON.parse(JSON.stringify(event)));
+  event.title = "";
   event.subEventInfo = [];
   event.minAge = Number.MAX_VALUE;
   event.maxAge = Number.MIN_VALUE;
   event.popup = "";
-  event.width = 100;
+  event.enableTitle = true;
+  event.width = 150;
   event.rgb = {
     r: 255,
     g: 255,
@@ -426,13 +434,20 @@ function addFaciesToFaciesMap(facies: Facies, faciesMap: Map<string, Facies>) {
     facies.minAge = Math.min(block.age, facies.minAge);
     facies.maxAge = Math.max(block.age, facies.maxAge);
   }
-  faciesMap.set(facies.name, JSON.parse(JSON.stringify(facies)));
-  facies.name = "";
+  faciesMap.set(facies.title, JSON.parse(JSON.stringify(facies)));
+  facies.title = "";
   facies.subFaciesInfo = [];
   facies.minAge = Number.MAX_VALUE;
   facies.maxAge = Number.MIN_VALUE;
-  facies.info = "";
+  facies.popup = "";
   facies.on = true;
+  facies.enableTitle = true;
+  facies.width = 100;
+  facies.rgb = {
+    r: 255,
+    g: 255,
+    b: 255
+  };
 }
 
 /**
@@ -672,7 +687,7 @@ function recursive(
     currentColumnInfo.maxAge = Math.max(currentColumnInfo.maxAge, currentFacies.maxAge);
     currentColumnInfo.minAge = Math.min(currentColumnInfo.minAge, currentFacies.minAge);
     returnValue.subFaciesInfo = currentFacies.subFaciesInfo;
-    currentColumnInfo.info = currentFacies.info;
+    currentColumnInfo.info = currentFacies.popup;
     currentColumnInfo.on = currentFacies.on;
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
