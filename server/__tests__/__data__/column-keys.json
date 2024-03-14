@@ -5,24 +5,8 @@
                 "name": "Central Africa Cenozoic",
                 "editName": "Central Africa Cenozoic",
                 "on": true,
-            "enableTitle": true,
-            "width": 100,
-            "rgb": {
-                "r": 255,
-                "g": 255,
-                "b": 255
-            },
-            "fontsInfo": {
-                "font": "Arial"
-            },
-            "popup": "",
-            "children": [
-            {
-                "name": "Nigeria Coast",
-                "editName": "Nigeria Coast",
-                "on": true,
                 "enableTitle": true,
-                "width": 210,
+                "width": 100,
                 "rgb": {
                     "r": 255,
                     "g": 255,
@@ -32,8 +16,87 @@
                     "font": "Arial"
                 },
                 "popup": "",
-                "children": [],
-                "parent": "Central Africa Cenozoic",
+                "children": [
+                {
+                    "name": "Nigeria Coast",
+                    "editName": "Nigeria Coast",
+                    "on": true,
+                    "enableTitle": true,
+                    "width": 210,
+                    "rgb": {
+                        "r": 255,
+                        "g": 255,
+                        "b": 255
+                    },
+                    "fontsInfo": {
+                        "font": "Arial"
+                    },
+                    "popup": "",
+                    "children": [],
+                    "parent": "Central Africa Cenozoic",
+                    "minAge": 0,
+                    "maxAge": 10,
+                    "subFaciesInfo": [
+                    {
+                        "rockType": "TOP",
+                        "age": 0,
+                        "info": ""
+                    },
+                    {
+                        "rockType": "Sandstone",
+                        "label": "Delta",
+                        "age": 5,
+                        "info": ""
+                    },
+                    {
+                        "rockType": "Claystone",
+                        "label": "ProDelta",
+                        "age": 10,
+                        "info": ""
+                    }
+                    ]
+                },
+                {
+                    "name": "South Atlantic",
+                    "editName": "South Atlantic",
+                    "on": true,
+                    "enableTitle": true,
+                    "width": 210,
+                    "rgb": {
+                        "r": 255,
+                        "g": 255,
+                        "b": 255
+                    },
+                    "fontsInfo": {
+                        "font": "Arial"
+                    },
+                    "popup": "",
+                    "children": [],
+                    "parent": "Central Africa Cenozoic",
+                    "minAge": 0,
+                    "maxAge": 10,
+                    "subFaciesInfo": [
+                    {
+                        "rockType": "TOP",
+                        "age": 0,
+                        "info": ""
+                    },
+                    {
+                        "rockType": "Shallow-marine marl",
+                        "label": "Deep marine",
+                        "age": 5,
+                        "info": ""
+                    },
+                    {
+                        "rockType": "Lava",
+                        "label": "Ocean crust",
+                        "age": 10,
+                        "info": ""
+                    }
+                    ]
+                }
+                ],
+                "parent": "Root",
                 "minAge": 0,
                 "maxAge": 10,
                 "subFaciesInfo": [
@@ -55,70 +118,7 @@
                     "info": ""
                 }
                 ]
-            },
-            {
-                "name": "South Atlantic",
-                "editName": "South Atlantic",
-                "on": true,
-                "enableTitle": true,
-                "width": 210,
-                "rgb": {
-                    "r": 255,
-                    "g": 255,
-                    "b": 255
-                },
-                "fontsInfo": {
-                    "font": "Arial"
-                },
-                "popup": "",
-                "children": [],
-                "parent": "Central Africa Cenozoic",
-                "minAge": 0,
-                "maxAge": 10,
-                "subFaciesInfo": [
-                {
-                    "rockType": "TOP",
-                    "age": 0,
-                    "info": ""
-                },
-                {
-                    "rockType": "Shallow-marine marl",
-                    "label": "Deep marine",
-                    "age": 5,
-                    "info": ""
-                },
-                {
-                    "rockType": "Lava",
-                    "label": "Ocean crust",
-                    "age": 10,
-                    "info": ""
-                }
-                ]
             }
-            ],
-            "parent": "Root",
-            "minAge": 0,
-            "maxAge": 10,
-            "subFaciesInfo": [
-            {
-                "rockType": "TOP",
-                "age": 0,
-                "info": ""
-            },
-            {
-                "rockType": "Sandstone",
-                "label": "Delta",
-                "age": 5,
-                "info": ""
-            },
-            {
-                "rockType": "Claystone",
-                "label": "ProDelta",
-                "age": 10,
-                "info": ""
-            }
-            ]
-        }
         ],
         "datapackAgeInfo": {
             "datapackContainsSuggAge": false
@@ -206,23 +206,23 @@
                 "minAge": 0,
                 "maxAge": 10,
                 "subFaciesInfo": [
-                {
-                    "rockType": "TOP",
-                    "age": 0,
-                    "info": ""
-                },
-                {
-                    "rockType": "Child 2 SubFaciesInfo 1",
-                    "label": "Child 2 SubFaciesInfo 1 Label",
-                    "age": 5,
-                    "info": ""
-                },
-                {
-                    "rockType": "Child 2 SubFaciesInfo 2",
-                    "label": "Child 2 SubFaciesInfo 2 Label",
-                    "age": 10,
-                    "info": ""
-                }
+                    {
+                        "rockType": "TOP",
+                        "age": 0,
+                        "info": ""
+                    },
+                    {
+                        "rockType": "Child 2 SubFaciesInfo 1",
+                        "label": "Child 2 SubFaciesInfo 1 Label",
+                        "age": 5,
+                        "info": ""
+                    },
+                    {
+                        "rockType": "Child 2 SubFaciesInfo 2",
+                        "label": "Child 2 SubFaciesInfo 2 Label",
+                        "age": 10,
+                        "info": ""
+                    }
                 ]
             },
             {
@@ -230,7 +230,7 @@
                 "editName": "Child 3",
                 "on": true,
                 "fontsInfo": {
-                  "font": "Arial"
+                    "font": "Arial"
                 },
                 "popup": "Child 3 Info",
                 "children": [],
@@ -245,34 +245,34 @@
                   "b": 255
                 },
                 "subEventInfo": [
-                  {
-                    "label": "SubEventInfo 1",
-                    "age": 0.02,
-                    "popup": "Child 3 SubEventInfo Popup 1",
-                    "lineStyle": "solid"
-                  },
-                  {
-                    "label": "SubEventInfo 2",
-                    "age": 0.4,
-                    "popup": "Child 3 SubEventInfo Popup 2",
-                    "lineStyle": "solid"
-                  }
+                    {
+                        "label": "SubEventInfo 1",
+                        "age": 0.02,
+                        "popup": "Child 3 SubEventInfo Popup 1",
+                        "lineStyle": "solid"
+                    },
+                    {
+                        "label": "SubEventInfo 2",
+                        "age": 0.4,
+                        "popup": "Child 3 SubEventInfo Popup 2",
+                        "lineStyle": "solid"
+                    }
                 ]
-              },
-              {
+            },
+            {
                 "name": "Child 4",
                 "subRangeInfo": [
                     {
-                    "label": "SubRangeInfo 1",
-                    "age": 10,
-                    "abundance": "TOP",
-                    "popup": ""
+                        "label": "SubRangeInfo 1",
+                        "age": 10,
+                        "abundance": "TOP",
+                        "popup": ""
                     },
                     {
-                    "label": "SubRangeInfo 2",
-                    "age": 100,
-                    "abundance": "rare",
-                    "popup": "Child 4 SubRangeInfo Popup 2"
+                        "label": "SubRangeInfo 2",
+                        "age": 100,
+                        "abundance": "rare",
+                        "popup": "Child 4 SubRangeInfo Popup 2"
                     }
                 ],
                 "enableTitle": true,
