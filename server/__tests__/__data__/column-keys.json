@@ -22,7 +22,7 @@
                 "editName": "Nigeria Coast",
                 "on": true,
                 "enableTitle": true,
-                "width": 100,
+                "width": 210,
                 "rgb": {
                     "r": 255,
                     "g": 255,
@@ -61,7 +61,7 @@
                 "editName": "South Atlantic",
                 "on": true,
                 "enableTitle": true,
-                "width": 100,
+                "width": 210,
                 "rgb": {
                     "r": 255,
                     "g": 255,
@@ -149,30 +149,40 @@
                 "fontsInfo": {
                     "font": "Arial"
                 },
-                "popup": "",
+                "popup": "\"popup\"",
                 "children": [],
                 "parent": "Parent 1",
                 "minAge": 419.2,
                 "maxAge": 433.35,
-                "enableTitle": true,
-                "width": 100,
+                "enableTitle": false,
+                "width": 120,
                 "rgb": {
-                    "r": 255,
-                    "g": 255,
-                    "b": 255
+                    "r": 197,
+                    "g": 217,
+                    "b": 234
                 },
                 "subBlockInfo": [
                 {
                     "label": "TOP",
                     "age": 419.2,
                     "popup": "",
-                    "lineStyle": ""
+                    "lineStyle": "solid",
+                    "rgb": {
+                        "r": 197,
+                        "g": 217,
+                        "b": 234
+                    }
                 },
                 {
                     "label": "Child 1 SubBlock",
                     "age": 433.35,
                     "popup": "Child 1 SubBlock Info",
-                    "lineStyle": ""
+                    "lineStyle": "solid",
+                    "rgb": {
+                        "r": 197,
+                        "g": 217,
+                        "b": 234
+                    }
                 }
                 ]
             },
@@ -248,7 +258,41 @@
                     "lineStyle": "solid"
                   }
                 ]
-              }
+              },
+              {
+                "name": "Child 4",
+                "subRangeInfo": [
+                    {
+                    "label": "SubRangeInfo 1",
+                    "age": 10,
+                    "abundance": "TOP",
+                    "popup": ""
+                    },
+                    {
+                    "label": "SubRangeInfo 2",
+                    "age": 100,
+                    "abundance": "rare",
+                    "popup": "Child 4 SubRangeInfo Popup 2"
+                    }
+                ],
+                "enableTitle": true,
+                "width": 100,
+                "rgb": {
+                    "r": 198,
+                    "g": 207,
+                    "b": 174
+                },
+                "minAge": 10,
+                "maxAge": 100,
+                "popup": "Child 4 Info",
+                "on": true,
+                "parent": "Parent 1",
+                "children": [],
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "editName": "Child 4"
+            }
             ],
             "parent": "Root",
             "minAge": 0,
@@ -338,7 +382,7 @@
     },
     "column-types-test-2-key": {
         "Block Child 1": {
-            "title": "Block Child 1",
+            "name": "Block Child 1",
             "subBlockInfo": [
                 {
                     "label": "Sub Block Top",
@@ -376,7 +420,7 @@
             }
         },
         "Block Child 2": {
-            "title": "Block Child 2",
+            "name": "Block Child 2",
             "subBlockInfo": [
                 {
                     "label": "Sub Block Top",
@@ -460,13 +504,13 @@
             "on": false
         },
         "Block 1": {
-            "title": "Child 1",
+            "name": "Child 1",
             "subBlockInfo": [
                 {
                     "label": "TOP",
                     "age": 419.2,
-                    "popup": "",
                     "lineStyle": "solid",
+                    "popup": "",
                     "rgb": {
                         "r": 197,
                         "g": 217,
@@ -476,8 +520,8 @@
                 {
                     "label": "Child 1 SubBlock",
                     "age": 433.35,
-                    "popup": "Child 1 SubBlock Info",
                     "lineStyle": "solid",
+                    "popup": "Child 1 SubBlock Info",
                     "rgb": {
                         "r": 197,
                         "g": 217,
@@ -485,14 +529,21 @@
                     }
                 }
             ],
+            "popup": "\"popup\"",
+            "on": false,
+            "enableTitle": false,
+            "rgb": {
+                "r": 197,
+                "g": 217,
+                "b": 234
+            },
             "width": 120,
             "minAge": 419.2,
-            "maxAge": 433.35,
-            "popup": "",
-            "on": false
+            "maxAge": 433.35
         },
         "Event 1": {
             "name": "Child 3",
+            "on": true,
             "subEventInfo": [
                 {
                 "label": "SubEventInfo 1",
@@ -516,16 +567,35 @@
             },
             "minAge": 0.02,
             "maxAge": 0.4,
-            "popup": "Child 3 Info",
-            "on": true
-            "popup": "\"popup\"",
-            "on": false,
-            "enableTitle": false,
+            "popup": "Child 3 Info"
+        },
+        "Range 1": {
+            "name": "Child 4",
+            "subRangeInfo": [
+              {
+                "label": "SubRangeInfo 1",
+                "age": 10,
+                "abundance": "TOP",
+                "popup": ""
+              },
+              {
+                "label": "SubRangeInfo 2",
+                "age": 100,
+                "abundance": "rare",
+                "popup": "Child 4 SubRangeInfo Popup 2"
+              }
+            ],
+            "enableTitle": true,
+            "width": 100,
             "rgb": {
-                "r": 197,
-                "g": 217,
-                "b": 234
-            }
+              "r": 198,
+              "g": 207,
+              "b": 174
+            },
+            "minAge": 10,
+            "maxAge": 100,
+            "popup": "Child 4 Info",
+            "on": true 
         }
     },
     "column-types-test-4-key": {

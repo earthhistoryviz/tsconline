@@ -50,6 +50,7 @@ export type DatapackAgeInfo = {
     bottomAge?: number;
 };
 export type ColumnHeaderProps = {
+    name: string;
     minAge: number;
     maxAge: number;
     enableTitle: boolean;
@@ -225,11 +226,21 @@ export type ColumnInfo = {
     subBlockInfo?: SubBlockInfo[];
     subFaciesInfo?: SubFaciesInfo[];
     subEventInfo?: SubEventInfo[];
+    subRangeInfo?: SubRangeInfo[];
     minAge: number;
     maxAge: number;
     enableTitle: boolean;
     rgb: RGB;
     width: number;
+};
+export type Range = ColumnHeaderProps & {
+    subRangeInfo: SubRangeInfo[];
+};
+export type SubRangeInfo = {
+    label: string;
+    age: number;
+    abundance: "TOP" | "missing" | "rare" | "common" | "frequent" | "abundant" | "sample";
+    popup: string;
 };
 export type SubEventInfo = {
     label: string;
@@ -244,28 +255,20 @@ export type SubFaciesInfo = {
     info: string;
 };
 export type Facies = ColumnHeaderProps & {
-    name: string;
     subFaciesInfo: SubFaciesInfo[];
 };
 export type Event = ColumnHeaderProps & {
-    name: string;
     subEventInfo: SubEventInfo[];
-};
-export type RGB = {
-    r: number;
-    g: number;
-    b: number;
-};
-export type Block = {
-    title: string;
-    subBlockInfo: SubBlockInfo[];
     width: number;
+    rgb: RGB;
+    enableTitle: boolean;
     minAge: number;
     maxAge: number;
     popup: string;
     on: boolean;
-    enableTitle: boolean;
-    rgb: RGB;
+};
+export type Block = ColumnHeaderProps & {
+    subBlockInfo: SubBlockInfo[];
 };
 export type ChartResponseInfo = {
     chartpath: string;
@@ -337,6 +340,8 @@ export type TimescaleItem = {
     key: string;
     value: number;
 };
+export declare function assertSubRangeInfo(o: any): asserts o is SubRangeInfo;
+export declare function assertRange(o: any): asserts o is Range;
 export declare function assertColumnHeaderProps(o: any): asserts o is ColumnHeaderProps;
 export declare function assertRGB(o: any): asserts o is RGB;
 export declare function assertEvent(o: any): asserts o is Event;

@@ -57,14 +57,15 @@ export type DatapackAgeInfo = {
 };
 
 export type ColumnHeaderProps = {
-  minAge: number,
-  maxAge: number,
-  enableTitle: boolean,
-  on: boolean,
-  width: number,
-  popup: string,
-  rgb: RGB
-}
+  name: string;
+  minAge: number;
+  maxAge: number;
+  enableTitle: boolean;
+  on: boolean;
+  width: number;
+  popup: string;
+  rgb: RGB;
+};
 
 export type ChartConfig = {
   icon: string; // path to icon image
@@ -272,11 +273,23 @@ export type ColumnInfo = {
   subBlockInfo?: SubBlockInfo[];
   subFaciesInfo?: SubFaciesInfo[];
   subEventInfo?: SubEventInfo[];
+  subRangeInfo?: SubRangeInfo[];
   minAge: number;
   maxAge: number;
   enableTitle: boolean;
   rgb: RGB;
   width: number;
+};
+
+export type Range = ColumnHeaderProps & {
+  subRangeInfo: SubRangeInfo[];
+};
+
+export type SubRangeInfo = {
+  label: string;
+  age: number;
+  abundance: "TOP" | "missing" | "rare" | "common" | "frequent" | "abundant" | "sample";
+  popup: string;
 };
 
 export type SubEventInfo = {
@@ -294,12 +307,10 @@ export type SubFaciesInfo = {
 };
 
 export type Facies = ColumnHeaderProps & {
-  name: string;
   subFaciesInfo: SubFaciesInfo[];
 };
 
 export type Event = ColumnHeaderProps & {
-  name: string;
   subEventInfo: SubEventInfo[];
   width: number;
   rgb: RGB;
@@ -310,21 +321,8 @@ export type Event = ColumnHeaderProps & {
   on: boolean;
 };
 
-export type RGB = {
-  r: number;
-  g: number;
-  b: number;
-};
-
-export type Block = {
-  name: string;
+export type Block = ColumnHeaderProps & {
   subBlockInfo: SubBlockInfo[];
-  minAge: number;
-  maxAge: number;
-  popup: string;
-  on: boolean;
-  enableTitle: boolean;
-  rgb: RGB;
 };
 
 export type ChartResponseInfo = {
@@ -407,8 +405,31 @@ export type TimescaleItem = {
   value: number;
 };
 
+export function assertSubRangeInfo(o: any): asserts o is SubRangeInfo {
+  if (!o || typeof o !== "object") throw new Error("SubRangeInfo must be a non-null object");
+  if (typeof o.label !== "string") throwError("SubRangeInfo", "label", "string", o.label);
+  if (typeof o.age !== "number") throwError("SubRangeInfo", "age", "number", o.age);
+  if (typeof o.abundance !== "string") throwError("SubRangeInfo", "abundance", "string", o.abundance);
+  if (/TOP|missing|rare|common|frequent|abundant|sample/.test(o.abundance))
+    throwError(
+      "SubRangeInfo",
+      "abundance",
+      "TOP | missing | rare | common | frequent | abundant | sample",
+      o.abundance
+    );
+  if (typeof o.popup !== "string") throwError("SubRangeInfo", "popup", "string", o.popup);
+}
+export function assertRange(o: any): asserts o is Range {
+  if (!o || typeof o !== "object") throw new Error("Range must be a non-null object");
+  if (!Array.isArray(o.subRangeInfo)) throwError("Range", "subRangeInfo", "array", o.subRangeInfo);
+  for (const subRange of o.subRangeInfo) {
+    assertSubRangeInfo(subRange);
+  }
+  assertColumnHeaderProps(o);
+}
 export function assertColumnHeaderProps(o: any): asserts o is ColumnHeaderProps {
   if (!o || typeof o !== "object") throw new Error("ColumnHeaderProps must be an object");
+  if (typeof o.name !== "string") throwError("ColumnHeaderProps", "name", "string", o.name);
   if (typeof o.minAge !== "number") throwError("ColumnHeaderProps", "minAge", "number", o.minAge);
   if (typeof o.maxAge !== "number") throwError("ColumnHeaderProps", "maxAge", "number", o.maxAge);
   if (typeof o.enableTitle !== "boolean") throwError("ColumnHeaderProps", "enableTitle", "boolean", o.enableTitle);
@@ -429,7 +450,6 @@ export function assertRGB(o: any): asserts o is RGB {
 
 export function assertEvent(o: any): asserts o is Event {
   if (!o || typeof o !== "object") throw new Error("Event must be a non-null object");
-  if (typeof o.name !== "string") throwError("Event", "name", "string", o.name);
   if (!Array.isArray(o.subEventInfo)) throwError("Event", "subEventInfo", "array", o.subEventInfo);
   for (const subEvent of o.subEventInfo) {
     assertSubEventInfo(subEvent);
@@ -522,23 +542,14 @@ export function assertSubBlockInfo(o: any): asserts o is SubBlockInfo {
 
 export function assertBlock(o: any): asserts o is Block {
   if (!o || typeof o !== "object") throw new Error("Block must be a non-null object");
-  if (typeof o.title !== "string") throwError("Block", "title", "string", o.title);
-
   for (const subBlockInfo of o.subBlockInfo) {
     assertSubBlockInfo(subBlockInfo);
   }
-  if (typeof o.minAge !== "number") throwError("Block", "minAge", "number", o.minAge);
-  if (typeof o.maxAge !== "number") throwError("Block", "maxAge", "number", o.maxAge);
-  if (typeof o.popop !== "string") throwError("Block", "popup", "string", o.popop);
-  if (typeof o.on !== "boolean") throwError("Block", "on", "boolean", o.on);
-  if (typeof o.enableTitle !== "boolean") throwError("Block", "enableTitle", "boolean", o.enableTitle);
-  if (typeof o.width !== "number") throwError("Block", "width", "number", o.width);
-  assertRGB(o.rgb);
+  assertColumnHeaderProps(o);
 }
 
 export function assertFacies(o: any): asserts o is Facies {
   if (!o || typeof o !== "object") throw new Error("Facies must be a non-null object");
-  if (typeof o.name !== "string") throw new Error("Facies must have a name with string type")
   if (!Array.isArray(o.faciesTimeBlockInfo))
     throw new Error("Facies must have a faciesTimeBlockInfo field with type array");
   for (const block of o.faciesTimeBlockInfo) {
@@ -648,6 +659,13 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
       throwError("ColumnInfo", "subEventInfo", "array", o.subEventInfo);
     for (const event of o.subEventInfo) {
       assertSubEventInfo(event);
+    }
+  }
+  if ("subRangeInfo" in o) {
+    if (!o.subRangeInfo || !Array.isArray(o.subRangeInfo))
+      throwError("ColumnInfo", "subRangeInfo", "array", o.subRangeInfo);
+    for (const range of o.subRangeInfo) {
+      assertSubRangeInfo(range);
     }
   }
 }
