@@ -66,10 +66,12 @@ export function assertRGB(o) {
 export function assertEvent(o) {
     if (!o || typeof o !== "object")
         throw new Error("Event must be a non-null object");
-    if (typeof o.title !== "string")
-        throwError("Event", "title", "string", o.title);
-    for (const subBlockInfo of o.subBlockInfo) {
-        assertSubBlockInfo(subBlockInfo);
+    if (typeof o.name !== "string")
+        throwError("Event", "name", "string", o.name);
+    if (!Array.isArray(o.subEventInfo))
+        throwError("Event", "subEventInfo", "array", o.subEventInfo);
+    for (const subEvent of o.subEventInfo) {
+        assertSubEventInfo(subEvent);
     }
     assertColumnHeaderProps(o);
 }
@@ -203,8 +205,8 @@ export function assertBlock(o) {
 export function assertFacies(o) {
     if (!o || typeof o !== "object")
         throw new Error("Facies must be a non-null object");
-    if (typeof o.title !== "string")
-        throwError("Facies", "title", "string", o.title);
+    if (typeof o.name !== "string")
+        throw new Error("Facies must have a name with string type");
     if (!Array.isArray(o.faciesTimeBlockInfo))
         throw new Error("Facies must have a faciesTimeBlockInfo field with type array");
     for (const block of o.faciesTimeBlockInfo) {
@@ -303,10 +305,12 @@ export function assertColumnInfo(o) {
     }
     if (typeof o.name !== "string")
         throwError("ColumnInfo", "name", "string", o.name);
+    if (typeof o.editName !== "string")
+        throwError("ColumnInfo", "editName", "string", o.editName);
     if (typeof o.on !== "boolean")
         throwError("ColumnInfo", "on", "boolean", o.on);
-    if (typeof o.info !== "string")
-        throwError("ColumnInfo", "info", "string", o.info);
+    if (typeof o.popup !== "string")
+        throwError("ColumnInfo", "popup", "string", o.popup);
     if (o.parent !== null && typeof o.parent !== "string")
         throwError("ColumnInfo", "parent", "string", o.parent);
     if (typeof o.minAge !== "number")

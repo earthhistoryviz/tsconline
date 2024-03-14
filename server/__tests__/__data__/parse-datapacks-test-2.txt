@@ -10,7 +10,7 @@ Child 1	block	120	197/217/234	notitle	off	"popup"
 	Child 1 SubBlock	433.35		Child 1 SubBlock Info
 
 
-Child 2	facies	210
+Child 2	facies	210	100/200/255	notitle	off	Child 2 Info
 	TOP		0
 	Child 2 SubFaciesInfo 1	Child 2 SubFaciesInfo 1 Label	5
 	Child 2 SubFaciesInfo 2	Child 2 SubFaciesInfo 2 Label	10

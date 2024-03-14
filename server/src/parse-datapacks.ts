@@ -205,7 +205,7 @@ export async function getColumnTypes(
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
   const facies: Facies = {
-    title: "",
+    name: "",
     subFaciesInfo: [],
     minAge: Number.MAX_VALUE,
     maxAge: Number.MIN_VALUE,
@@ -231,7 +231,7 @@ export async function getColumnTypes(
     rgb: { r: 255, g: 255, b: 255 }
   };
   const event: Event = {
-    title: "",
+    name: "",
     subEventInfo: [],
     enableTitle: true,
     width: 150,
@@ -283,11 +283,7 @@ export async function getColumnTypes(
     }
     // we found a facies block
     if (!inFaciesBlock && tabSeparated[1] === "facies") {
-      facies.title = trimQuotes(tabSeparated[0]!);
-      facies.popup = tabSeparated[6] || "";
-      if (tabSeparated[5] && (tabSeparated[5] === "off" || tabSeparated[5].length == 0)) {
-        facies.on = false;
-      }
+      setFaciesHeaders(facies, tabSeparated);
       inFaciesBlock = true;
     } else if (inFaciesBlock) {
       const subFaciesInfo = processFacies(line);
@@ -371,12 +367,44 @@ function setBlockHeader(block: Block, tabSeperated: string[]) {
 }
 
 /**
+ * Set the appropriate headers for the facies object
+ * @param facies 
+ * @param tabSeparated 
+ */
+function setFaciesHeaders(facies: Facies, tabSeparated: string[]) { 
+  facies.name = trimQuotes(tabSeparated[0]!);
+  const width = Number(tabSeparated[2]!);
+  const rgb = tabSeparated[3];
+  const enableTitle = tabSeparated[4];
+  const on = tabSeparated[5];
+  facies.popup = tabSeparated[6] || "";
+  if (width) {
+    if (isNaN(width)) {
+      console.log(`Error found while processing facies width, got: ${width} and will be setting width to 100`);
+    } else {
+      facies.width = width;
+    }
+  }
+  if (rgb && patternForColor.test(rgb)) {
+    const rgbArray = rgb.split("/");
+    facies.rgb.r = Number(rgbArray[0]!);
+    facies.rgb.g = Number(rgbArray[1]!);
+    facies.rgb.b = Number(rgbArray[2]!);
+  }
+  if (enableTitle && enableTitle === "notitle") {
+    facies.enableTitle = false;
+  }
+  if (on && (on === "off" || on.length == 0)) {
+    facies.on = false;
+  }
+}
+/**
  * Set the appropriate headers for the event object
  * @param event
  * @param tabSeparated
  */
 function setEventHeaders(event: Event, tabSeparated: string[]) {
-  event.title = trimQuotes(tabSeparated[0]!);
+  event.name = trimQuotes(tabSeparated[0]!);
   event.popup = tabSeparated[6] || "";
   if (tabSeparated[2]) {
     event.width = Number(tabSeparated[2]!);
@@ -408,8 +436,8 @@ function addEventToEventMap(event: Event, eventMap: Map<string, Event>) {
     event.minAge = Math.min(subEvent.age, event.minAge);
     event.maxAge = Math.max(subEvent.age, event.maxAge);
   }
-  eventMap.set(event.title, JSON.parse(JSON.stringify(event)));
-  event.title = "";
+  eventMap.set(event.name, JSON.parse(JSON.stringify(event)));
+  event.name = "";
   event.subEventInfo = [];
   event.minAge = Number.MAX_VALUE;
   event.maxAge = Number.MIN_VALUE;
@@ -434,8 +462,8 @@ function addFaciesToFaciesMap(facies: Facies, faciesMap: Map<string, Facies>) {
     facies.minAge = Math.min(block.age, facies.minAge);
     facies.maxAge = Math.max(block.age, facies.maxAge);
   }
-  faciesMap.set(facies.title, JSON.parse(JSON.stringify(facies)));
-  facies.title = "";
+  faciesMap.set(facies.name, JSON.parse(JSON.stringify(facies)));
+  facies.name = "";
   facies.subFaciesInfo = [];
   facies.minAge = Number.MAX_VALUE;
   facies.maxAge = Number.MIN_VALUE;
@@ -642,12 +670,12 @@ function recursive(
   eventMap: Map<string, Event>
 ): FaciesFoundAndAgeRange {
   const currentColumnInfo: ColumnInfo = {
-    name: trimInvisibleCharacters(currentColumn),
+    name: currentColumn,
     editName: currentColumn,
     on: true,
     enableTitle: true,
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
-    info: "",
+    popup: "",
     children: [],
     parent: parent,
     minAge: Number.MAX_VALUE,
@@ -668,7 +696,7 @@ function recursive(
 
   if (parsedColumnEntry) {
     currentColumnInfo.on = parsedColumnEntry.on;
-    currentColumnInfo.info = parsedColumnEntry.info;
+    currentColumnInfo.popup = parsedColumnEntry.info;
     currentColumnInfo.enableTitle = parsedColumnEntry.enableTitle;
   }
   if (blocksMap.has(currentColumn)) {
@@ -683,27 +711,23 @@ function recursive(
   }
   if (faciesMap.has(currentColumn)) {
     const currentFacies = faciesMap.get(currentColumn)!;
-    currentColumnInfo.subFaciesInfo = JSON.parse(JSON.stringify(currentFacies.subFaciesInfo));
-    currentColumnInfo.maxAge = Math.max(currentColumnInfo.maxAge, currentFacies.maxAge);
-    currentColumnInfo.minAge = Math.min(currentColumnInfo.minAge, currentFacies.minAge);
+    const subFaciesInfoCopy = JSON.parse(JSON.stringify(currentFacies.subFaciesInfo));
+    Object.assign(currentColumnInfo, {
+      ...currentFacies,
+      subFaciesInfo: subFaciesInfoCopy,
+    });
     returnValue.subFaciesInfo = currentFacies.subFaciesInfo;
-    currentColumnInfo.info = currentFacies.popup;
-    currentColumnInfo.on = currentFacies.on;
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
   }
   if (eventMap.has(currentColumn)) {
     const currentEvent = eventMap.get(currentColumn)!;
-    currentColumnInfo.subEventInfo = currentEvent.subEventInfo;
-    currentColumnInfo.maxAge = Math.max(currentColumnInfo.maxAge, currentEvent.maxAge);
-    currentColumnInfo.minAge = Math.min(currentColumnInfo.minAge, currentEvent.minAge);
+    Object.assign(currentColumnInfo, {
+      ...currentEvent,
+      subEventInfo: JSON.parse(JSON.stringify(currentEvent.subEventInfo))
+    });
     returnValue.maxAge = currentColumnInfo.maxAge;
     returnValue.minAge = currentColumnInfo.minAge;
-    currentColumnInfo.rgb = currentEvent.rgb;
-    currentColumnInfo.width = currentEvent.width;
-    currentColumnInfo.enableTitle = currentEvent.enableTitle;
-    currentColumnInfo.info = currentEvent.popup;
-    currentColumnInfo.on = currentEvent.on;
   }
 
   childrenArray.push(currentColumnInfo);

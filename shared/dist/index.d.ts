@@ -219,8 +219,7 @@ export type ColumnInfo = {
     editName: string;
     fontsInfo: FontsInfo;
     on: boolean;
-    info: string;
-    enableTitle: boolean;
+    popup: string;
     children: ColumnInfo[];
     parent: string | null;
     subBlockInfo?: SubBlockInfo[];
@@ -245,11 +244,11 @@ export type SubFaciesInfo = {
     info: string;
 };
 export type Facies = ColumnHeaderProps & {
-    title: string;
+    name: string;
     subFaciesInfo: SubFaciesInfo[];
 };
 export type Event = ColumnHeaderProps & {
-    title: string;
+    name: string;
     subEventInfo: SubEventInfo[];
 };
 export type RGB = {
