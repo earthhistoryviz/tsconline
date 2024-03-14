@@ -9,6 +9,7 @@ jest.mock("@tsconline/shared", () => ({
   assertSubEventInfo: jest.fn().mockImplementation(() => true),
   assertSubFaciesInfo: jest.fn().mockImplementation(() => true),
   assertSubBlockInfo: jest.fn().mockImplementation(() => true),
+  assertSubRangeInfo: jest.fn().mockImplementation(() => true),
   assertRGB: jest.fn().mockImplementation((o) => {
     if (!o || typeof o !== "object") throw new Error("RGB must be a non-null object");
     if (typeof o.r !== "number") throw new Error("Invalid rgb");
@@ -34,7 +35,7 @@ import {
   spliceArrayAtFirstSpecialMatch
 } from "../src/parse-datapacks";
 import { readFileSync } from "fs";
-import { Block, DatapackAgeInfo, Facies, Event, RGB } from "@tsconline/shared";
+import { Block, Range, DatapackAgeInfo, Facies, Event, RGB } from "@tsconline/shared";
 const key = JSON.parse(readFileSync("server/__tests__/__data__/column-keys.json").toString());
 
 describe("general parse-datapacks tests", () => {
@@ -203,56 +204,60 @@ describe("process blocks line tests", () => {
 describe("process event line tests", () => {
   it("should process standard event line", () => {
     const line = "\tlabel\t120";
-    expect(processEvent(line)).toEqual({label: "label", age: 120, lineStyle: "solid", popup: ""})
-  })
+    expect(processEvent(line)).toEqual({ label: "label", age: 120, lineStyle: "solid", popup: "" });
+  });
   it("should process event line with popup", () => {
     const line = "\tlabel\t120\t\tpopup";
-    expect(processEvent(line)).toEqual({label: "label", age: 120, lineStyle: "solid", popup: "popup"})
-  })
+    expect(processEvent(line)).toEqual({ label: "label", age: 120, lineStyle: "solid", popup: "popup" });
+  });
   it("should process event line with dashed line", () => {
     const line = "\tlabel\t140\tdashed\tpopup";
-    expect(processEvent(line)).toEqual({label: "label", age: 140, lineStyle: "dashed", popup: "popup"})
-  })
+    expect(processEvent(line)).toEqual({ label: "label", age: 140, lineStyle: "dashed", popup: "popup" });
+  });
   it("should process event line with dotted line", () => {
     const line = "\tlabel\t160\tdotted\tpopup";
-    expect(processEvent(line)).toEqual({label: "label", age: 160, lineStyle: "dotted", popup: "popup"})
-  })
+    expect(processEvent(line)).toEqual({ label: "label", age: 160, lineStyle: "dotted", popup: "popup" });
+  });
   it("should default to solid line on bad linestyle", () => {
     const line = "\tlabel\t180\tbadLineStyle\tpopup";
-    expect(processEvent(line)).toEqual({label: "label", age: 180, lineStyle: "solid", popup: "popup"})
-  })
+    expect(processEvent(line)).toEqual({ label: "label", age: 180, lineStyle: "solid", popup: "popup" });
+  });
   it("should return null on small line", () => {
-    const line ="\tlabel";
+    const line = "\tlabel";
     expect(processEvent(line)).toBeNull();
-  })
+  });
   it("should return null on large line", () => {
     const line = "\tlabel\t\t\t\t";
     expect(processEvent(line)).toBeNull();
-  })
+  });
   it("should return null on empty line", () => {
     const line = "";
     expect(processEvent(line)).toBeNull();
-  })
+  });
   it("should throw error on NaN age", () => {
     const line = "\tlabel\tbadNumber";
     expect(() => processEvent(line)).toThrow();
-  })
-})
+  });
+});
 
 describe("getColumnTypes tests", () => {
   let faciesMap: Map<string, Facies>,
     blockMap: Map<string, Block>,
     eventMap: Map<string, Event>,
+    rangeMap: Map<string, Range>,
     expectedFaciesMap: Map<string, Facies>,
     expectedBlockMap: Map<string, Block>,
-    expectedEventMap: Map<string, Event>;
+    expectedEventMap: Map<string, Event>,
+    expectedRangeMap: Map<string, Range>;
   beforeEach(() => {
     faciesMap = new Map<string, Facies>();
     blockMap = new Map<string, Block>();
     eventMap = new Map<string, Event>();
+    rangeMap = new Map<string, Range>();
     expectedFaciesMap = new Map<string, Facies>();
     expectedBlockMap = new Map<string, Block>();
     expectedEventMap = new Map<string, Event>();
+    expectedRangeMap = new Map<string, Range>();
   });
 
   /**
@@ -260,16 +265,19 @@ describe("getColumnTypes tests", () => {
    */
   it("should create facies, event, block maps correctly", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-2.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap);
+    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap);
     expectedFaciesMap.set(key["column-types-test-3-key"]["Facies 1"].name, key["column-types-test-3-key"]["Facies 1"]);
     expectedBlockMap.set(key["column-types-test-3-key"]["Block 1"].name, key["column-types-test-3-key"]["Block 1"]);
     expectedEventMap.set(key["column-types-test-3-key"]["Event 1"].name, key["column-types-test-3-key"]["Event 1"]);
+    expectedRangeMap.set(key["column-types-test-3-key"]["Range 1"].name, key["column-types-test-3-key"]["Range 1"]);
     expect(faciesMap.size).toBe(1);
     expect(blockMap.size).toBe(1);
     expect(eventMap.size).toBe(1);
+    expect(rangeMap.size).toBe(1);
     expect(faciesMap).toEqual(expectedFaciesMap);
     expect(blockMap).toEqual(expectedBlockMap);
     expect(eventMap).toEqual(expectedEventMap);
+    expect(rangeMap).toEqual(expectedRangeMap);
   });
 
   /**
@@ -277,7 +285,7 @@ describe("getColumnTypes tests", () => {
    */
   it("should create correct faciesMap only", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-3.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap);
+    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap);
     for (const val in key["column-types-test-1-key"]) {
       expectedFaciesMap.set(val, key["column-types-test-1-key"][val]);
     }
@@ -295,7 +303,7 @@ describe("getColumnTypes tests", () => {
    */
   it("should create correct blockMap only, the second block should has max amount of information", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-4.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap);
+    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap);
     for (const val in key["column-types-test-2-key"]) {
       expectedBlockMap.set(val, key["column-types-test-2-key"][val]);
     }
@@ -312,7 +320,7 @@ describe("getColumnTypes tests", () => {
    */
   it("should create correct eventMap only", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-5.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap);
+    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap);
     for (const val in key["column-types-test-4-key"]) {
       expectedEventMap.set(val, key["column-types-test-4-key"][val]);
     }
@@ -322,14 +330,14 @@ describe("getColumnTypes tests", () => {
     expect(blockMap).toEqual(expectedBlockMap);
     expect(faciesMap).toEqual(expectedFaciesMap);
     expect(eventMap).toEqual(expectedEventMap);
-  })
+  });
 
   /**
    * Given a bad file, the maps should not be initialized
    */
   it("should not initialize maps on bad file", async () => {
     const file = "server/__tests__/__data__/bad-data.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap);
+    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap);
     expect(eventMap.size).toBe(0);
     expect(faciesMap.size).toBe(0);
     expect(blockMap.size).toBe(0);

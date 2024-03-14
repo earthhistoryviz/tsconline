@@ -30,9 +30,35 @@ export const defaultFontsInfo = {
     "Uncertainty Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 5 },
     "Zone Column Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12 }
 };
+export function assertSubRangeInfo(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("SubRangeInfo must be a non-null object");
+    if (typeof o.label !== "string")
+        throwError("SubRangeInfo", "label", "string", o.label);
+    if (typeof o.age !== "number")
+        throwError("SubRangeInfo", "age", "number", o.age);
+    if (typeof o.abundance !== "string")
+        throwError("SubRangeInfo", "abundance", "string", o.abundance);
+    if (/TOP|missing|rare|common|frequent|abundant|sample/.test(o.abundance))
+        throwError("SubRangeInfo", "abundance", "TOP | missing | rare | common | frequent | abundant | sample", o.abundance);
+    if (typeof o.popup !== "string")
+        throwError("SubRangeInfo", "popup", "string", o.popup);
+}
+export function assertRange(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("Range must be a non-null object");
+    if (!Array.isArray(o.subRangeInfo))
+        throwError("Range", "subRangeInfo", "array", o.subRangeInfo);
+    for (const subRange of o.subRangeInfo) {
+        assertSubRangeInfo(subRange);
+    }
+    assertColumnHeaderProps(o);
+}
 export function assertColumnHeaderProps(o) {
     if (!o || typeof o !== "object")
         throw new Error("ColumnHeaderProps must be an object");
+    if (typeof o.name !== "string")
+        throwError("ColumnHeaderProps", "name", "string", o.name);
     if (typeof o.minAge !== "number")
         throwError("ColumnHeaderProps", "minAge", "number", o.minAge);
     if (typeof o.maxAge !== "number")
@@ -66,8 +92,6 @@ export function assertRGB(o) {
 export function assertEvent(o) {
     if (!o || typeof o !== "object")
         throw new Error("Event must be a non-null object");
-    if (typeof o.name !== "string")
-        throwError("Event", "name", "string", o.name);
     if (!Array.isArray(o.subEventInfo))
         throwError("Event", "subEventInfo", "array", o.subEventInfo);
     for (const subEvent of o.subEventInfo) {
@@ -183,30 +207,14 @@ export function assertSubBlockInfo(o) {
 export function assertBlock(o) {
     if (!o || typeof o !== "object")
         throw new Error("Block must be a non-null object");
-    if (typeof o.title !== "string")
-        throwError("Block", "title", "string", o.title);
     for (const subBlockInfo of o.subBlockInfo) {
         assertSubBlockInfo(subBlockInfo);
     }
-    if (typeof o.minAge !== "number")
-        throwError("Block", "minAge", "number", o.minAge);
-    if (typeof o.maxAge !== "number")
-        throwError("Block", "maxAge", "number", o.maxAge);
-    if (typeof o.popop !== "string")
-        throwError("Block", "popup", "string", o.popop);
-    if (typeof o.on !== "boolean")
-        throwError("Block", "on", "boolean", o.on);
-    if (typeof o.enableTitle !== "boolean")
-        throwError("Block", "enableTitle", "boolean", o.enableTitle);
-    if (typeof o.width !== "number")
-        throwError("Block", "width", "number", o.width);
-    assertRGB(o.rgb);
+    assertColumnHeaderProps(o);
 }
 export function assertFacies(o) {
     if (!o || typeof o !== "object")
         throw new Error("Facies must be a non-null object");
-    if (typeof o.name !== "string")
-        throw new Error("Facies must have a name with string type");
     if (!Array.isArray(o.faciesTimeBlockInfo))
         throw new Error("Facies must have a faciesTimeBlockInfo field with type array");
     for (const block of o.faciesTimeBlockInfo) {
@@ -344,6 +352,13 @@ export function assertColumnInfo(o) {
             throwError("ColumnInfo", "subEventInfo", "array", o.subEventInfo);
         for (const event of o.subEventInfo) {
             assertSubEventInfo(event);
+        }
+    }
+    if ("subRangeInfo" in o) {
+        if (!o.subRangeInfo || !Array.isArray(o.subRangeInfo))
+            throwError("ColumnInfo", "subRangeInfo", "array", o.subRangeInfo);
+        for (const range of o.subRangeInfo) {
+            assertSubRangeInfo(range);
         }
     }
 }
