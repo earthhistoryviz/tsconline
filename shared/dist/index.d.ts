@@ -34,11 +34,12 @@ export type Patterns = {
 export type Color = {
     name: string;
     hex: string;
-    rgb: {
-        r: number;
-        g: number;
-        b: number;
-    };
+    rgb: RGB;
+};
+export type RGB = {
+    r: number;
+    g: number;
+    b: number;
 };
 export type Presets = {
     [type: string]: ChartConfig[];
@@ -194,7 +195,8 @@ export type SubBlockInfo = {
     label: string;
     age: number;
     popup: string;
-    lineStyle: string;
+    lineStyle: "solid" | "dashed" | "dotted";
+    rgb: RGB;
 };
 export type ChartRequest = {
     settings: string;
@@ -209,6 +211,7 @@ export type ColumnInfo = {
     fontsInfo: FontsInfo;
     on: boolean;
     info: string;
+    enableTitle: boolean;
     children: ColumnInfo[];
     parent: string | null;
     subBlockInfo?: SubBlockInfo[];
@@ -231,12 +234,15 @@ export type Facies = {
     maxAge: number;
 };
 export type Block = {
-    name: string;
+    title: string;
     subBlockInfo: SubBlockInfo[];
+    width: number;
     minAge: number;
     maxAge: number;
     popup: string;
     on: boolean;
+    enableTitle: boolean;
+    rgb: RGB;
 };
 export type ChartResponseInfo = {
     chartpath: string;
@@ -308,6 +314,8 @@ export type TimescaleItem = {
     key: string;
     value: number;
 };
+
+export declare function assertRGB(o: any): asserts o is RGB;
 export declare function assertColor(o: any): asserts o is Color;
 export declare function assertPatterns(o: any): asserts o is Patterns;
 export declare function assertMapPackIndex(o: any): asserts o is MapPackIndex;

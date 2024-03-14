@@ -39,13 +39,13 @@ export type Patterns = {
 export type Color = {
   name: string;
   hex: string;
-  rgb: {
-    r: number;
-    g: number;
-    b: number;
-  };
+  rgb: RGB;
 };
-
+export type RGB = {
+  r: number;
+  g: number;
+  b: number;
+};
 export type Presets = {
   [type: string]: ChartConfig[];
 };
@@ -238,7 +238,8 @@ export type SubBlockInfo = {
   label: string;
   age: number;
   popup: string;
-  lineStyle: string;
+  lineStyle: "solid" | "dashed" | "dotted";
+  rgb: RGB;
 };
 
 export type ChartRequest = {
@@ -256,6 +257,7 @@ export type ColumnInfo = {
   fontsInfo: FontsInfo;
   on: boolean;
   info: string;
+  enableTitle: boolean;
   children: ColumnInfo[];
   parent: string | null;
   subBlockInfo?: SubBlockInfo[];
@@ -280,12 +282,15 @@ export type Facies = {
 };
 
 export type Block = {
-  name: string;
+  title: string;
   subBlockInfo: SubBlockInfo[];
+  width: number;
   minAge: number;
   maxAge: number;
   popup: string;
   on: boolean;
+  enableTitle: boolean;
+  rgb: RGB;
 };
 
 export type ChartResponseInfo = {
@@ -368,17 +373,21 @@ export type TimescaleItem = {
   value: number;
 };
 
+export function assertRGB(o: any): asserts o is RGB {
+  if (!o || typeof o !== "object") throw new Error("RGB must be a non-null object");
+  if (typeof o.r !== "number") throwError("RGB", "r", "number", o.r);
+  if (o.r < 0 || o.r > 255) throwError("RGB", "r", "number between 0 and 255", o.r);
+  if (typeof o.g !== "number") throwError("RGB", "g", "number", o.rgb.g);
+  if (o.g < 0 || o.g > 255) throwError("RGB", "g", "number between 0 and 255", o.g);
+  if (typeof o.b !== "number") throwError("RGB", "b", "number", o.b);
+  if (o.b < 0 || o.b > 255) throwError("RGB", "b", "number between 0 and 255", o.b);
+}
+
 export function assertColor(o: any): asserts o is Color {
   if (!o || typeof o !== "object") throw new Error("Color must be a non-null object");
   if (typeof o.name !== "string") throwError("Color", "name", "string", o.color);
   if (typeof o.hex !== "string") throwError("Color", "hex", "string", o.hex);
-  if (typeof o.rgb !== "object") throwError("Color", "rgb", "object", o.rgb);
-  if (typeof o.rgb.r !== "number") throwError("Color", "r", "number", o.rgb.r);
-  if (o.rgb.r < 0 || o.rgb.r > 255) throwError("Color", "r", "number between 0 and 255", o.rgb.r);
-  if (typeof o.rgb.g !== "number") throwError("Color", "g", "number", o.rgb.g);
-  if (o.rgb.g < 0 || o.rgb.g > 255) throwError("Color", "g", "number between 0 and 255", o.rgb.g);
-  if (typeof o.rgb.b !== "number") throwError("Color", "b", "number", o.rgb.b);
-  if (o.rgb.b < 0 || o.rgb.b > 255) throwError("Color", "b", "number between 0 and 255", o.rgb.b);
+  assertRGB(o.rgb);
 }
 export function assertPatterns(o: any): asserts o is Patterns {
   if (!o || typeof o !== "object") throw new Error("Patterns must be a non-null object");
@@ -444,20 +453,25 @@ export function assertSubBlockInfo(o: any): asserts o is SubBlockInfo {
   if (typeof o.label !== "string") throwError("SubBlockInfo", "label", "string", o.label);
   if (typeof o.age !== "number") throwError("SubBlockInfo", "age", "number", o.number);
   if (typeof o.popup !== "string") throwError("SubBlockInfo", "popup", "string", o.popup);
-  if (typeof o.lineStyle !== "string") throwError("SubBlockInfo", "lineStyle", "string", o.lineStyle);
+  if (o.lineStyle !== "solid" && o.lineStyle !== "dotted" && o.lineStyle !== "dashed")
+    throwError("SubBlockInfo", "lineStyle", "solid, dotted or dashed", o.lineStyle);
+  assertRGB(o.rgb);
 }
 
 export function assertBlock(o: any): asserts o is Block {
   if (!o || typeof o !== "object") throw new Error("Block must be a non-null object");
+  if (typeof o.title !== "string") throwError("Block", "title", "string", o.title);
 
-  if (typeof o.name !== "string") throw new Error("Block must have a name with string type");
   for (const subBlockInfo of o.subBlockInfo) {
     assertSubBlockInfo(subBlockInfo);
   }
-  if (typeof o.minAge !== "number") throw new Error("Block must have a minAge with number type");
-  if (typeof o.maxAge !== "number") throw new Error("Block must have a maxAge with number type");
-  if (typeof o.popop !== "string") throw new Error("Block must have an popup with string type");
-  if (typeof o.name !== "boolean") throw new Error("Block must have an on value with boolean type");
+  if (typeof o.minAge !== "number") throwError("Block", "minAge", "number", o.minAge);
+  if (typeof o.maxAge !== "number") throwError("Block", "maxAge", "number", o.maxAge);
+  if (typeof o.popop !== "string") throwError("Block", "popup", "string", o.popop);
+  if (typeof o.on !== "boolean") throwError("Block", "on", "boolean", o.on);
+  if (typeof o.enableTitle !== "boolean") throwError("Block", "enableTitle", "boolean", o.enableTitle);
+  if (typeof o.width !== "number") throwError("Block", "width", "number", o.width);
+  assertRGB(o.rgb);
 }
 
 export function assertFacies(o: any): asserts o is Facies {
