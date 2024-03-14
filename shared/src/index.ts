@@ -266,8 +266,7 @@ export type ColumnInfo = {
   editName: string;
   fontsInfo: FontsInfo;
   on: boolean;
-  info: string;
-  enableTitle: boolean;
+  popup: string;
   children: ColumnInfo[];
   parent: string | null;
   subBlockInfo?: SubBlockInfo[];
@@ -295,12 +294,12 @@ export type SubFaciesInfo = {
 };
 
 export type Facies = ColumnHeaderProps & {
-  title: string;
+  name: string;
   subFaciesInfo: SubFaciesInfo[];
 };
 
 export type Event = ColumnHeaderProps & {
-  title: string;
+  name: string;
   subEventInfo: SubEventInfo[];
   width: number;
   rgb: RGB;
@@ -430,9 +429,10 @@ export function assertRGB(o: any): asserts o is RGB {
 
 export function assertEvent(o: any): asserts o is Event {
   if (!o || typeof o !== "object") throw new Error("Event must be a non-null object");
-  if (typeof o.title !== "string") throwError("Event", "title", "string", o.title);
-  for (const subBlockInfo of o.subBlockInfo) {
-    assertSubBlockInfo(subBlockInfo);
+  if (typeof o.name !== "string") throwError("Event", "name", "string", o.name);
+  if (!Array.isArray(o.subEventInfo)) throwError("Event", "subEventInfo", "array", o.subEventInfo);
+  for (const subEvent of o.subEventInfo) {
+    assertSubEventInfo(subEvent);
   }
   assertColumnHeaderProps(o);
 }
@@ -538,7 +538,7 @@ export function assertBlock(o: any): asserts o is Block {
 
 export function assertFacies(o: any): asserts o is Facies {
   if (!o || typeof o !== "object") throw new Error("Facies must be a non-null object");
-  if (typeof o.title !== "string") throwError("Facies", "title", "string", o.title);
+  if (typeof o.name !== "string") throw new Error("Facies must have a name with string type")
   if (!Array.isArray(o.faciesTimeBlockInfo))
     throw new Error("Facies must have a faciesTimeBlockInfo field with type array");
   for (const block of o.faciesTimeBlockInfo) {
@@ -617,8 +617,9 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
     throw new Error("ColumnInfo must be a non-null object");
   }
   if (typeof o.name !== "string") throwError("ColumnInfo", "name", "string", o.name);
+  if (typeof o.editName !== "string") throwError("ColumnInfo", "editName", "string", o.editName);
   if (typeof o.on !== "boolean") throwError("ColumnInfo", "on", "boolean", o.on);
-  if (typeof o.info !== "string") throwError("ColumnInfo", "info", "string", o.info);
+  if (typeof o.popup !== "string") throwError("ColumnInfo", "popup", "string", o.popup);
   if (o.parent !== null && typeof o.parent !== "string") throwError("ColumnInfo", "parent", "string", o.parent);
   if (typeof o.minAge !== "number") throwError("ColumnInfo", "minAge", "number", o.minAge);
   if (typeof o.maxAge !== "number") throwError("ColumnInfo", "maxAge", "number", o.maxAge);
