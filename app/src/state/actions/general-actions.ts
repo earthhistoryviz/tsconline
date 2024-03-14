@@ -154,7 +154,7 @@ export const setDatapackConfig = action(
         name: "Root", // if you change this, change parse-datapacks.ts :69
         editName: "Chart Title",
         fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
-        info: "",
+        popup: "",
         on: true,
         width: 100,
         enableTitle: true,
@@ -178,7 +178,7 @@ export const setDatapackConfig = action(
               g: 255,
               b: 255
             },
-            info: "",
+            popup: "",
             children: [],
             parent: "Root", // if you change this, change parse-datapacks.ts :69
             minAge: state.settings.topStageAge, //tbd
