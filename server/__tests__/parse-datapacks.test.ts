@@ -245,11 +245,11 @@ describe("process range line tests", () => {
   it("should process standard range line", () => {
     const line = "\tlabel\t100\tTOP\tpopup";
     expect(processRange(line)).toEqual({ label: "label", age: 100, abundance: "TOP", popup: "popup" });
-  })
+  });
   it("should return default on only label and age", () => {
     const line = "\tlabel\t100";
     expect(processRange(line)).toEqual({ label: "label", age: 100, abundance: "TOP", popup: "" });
-  })
+  });
   it("should process standard range line with flood, missing, rare, and common abundance", () => {
     const line = "\tlabel\t100\tflood\tpopup";
     expect(processRange(line)).toEqual({ label: "label", age: 100, abundance: "flood", popup: "popup" });
@@ -259,24 +259,24 @@ describe("process range line tests", () => {
     expect(processRange(line3)).toEqual({ label: "label", age: 100, abundance: "rare", popup: "popup" });
     const line4 = "\tlabel\t100\tcommon\tpopup";
     expect(processRange(line4)).toEqual({ label: "label", age: 100, abundance: "common", popup: "popup" });
-  })
+  });
   it("should return null on small line", () => {
     const line = "\tlabel";
     expect(processRange(line)).toBeNull();
-  })
+  });
   it("should return null on large line", () => {
     const line = "\tlabel\t\t\t\t";
     expect(processRange(line)).toBeNull();
-  })
+  });
   it("should return null on empty line", () => {
     const line = "";
     expect(processRange(line)).toBeNull();
-  })
+  });
   it("should throw error on NaN age", () => {
     const line = "\tlabel\tbadNumber";
     expect(() => processRange(line)).toThrow();
-  })
-})
+  });
+});
 
 describe("getColumnTypes tests", () => {
   let faciesMap: Map<string, Facies>,
