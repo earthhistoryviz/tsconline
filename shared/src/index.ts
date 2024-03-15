@@ -403,11 +403,11 @@ export function assertSubRangeInfo(o: any): asserts o is SubRangeInfo {
   if (typeof o.label !== "string") throwError("SubRangeInfo", "label", "string", o.label);
   if (typeof o.age !== "number") throwError("SubRangeInfo", "age", "number", o.age);
   if (typeof o.abundance !== "string") throwError("SubRangeInfo", "abundance", "string", o.abundance);
-  if (/TOP|missing|rare|common|frequent|abundant|sample|flood/.test(o.abundance))
+  if (!/TOP|missing|rare|common|frequent|abundant|sample|flood/.test(o.abundance))
     throwError(
       "SubRangeInfo",
       "abundance",
-      "TOP | missing | rare | common | frequent | abundant | sample",
+      "TOP | missing | rare | common | frequent | abundant | sample | flood",
       o.abundance
     );
   if (typeof o.popup !== "string") throwError("SubRangeInfo", "popup", "string", o.popup);
@@ -854,7 +854,7 @@ export function assertSVGStatus(o: any): asserts o is SVGStatus {
  * @param value
  */
 function throwError(obj: string, variable: string, type: string, value: any) {
-  throw new Error(`Object '${obj}' must have a '${variable}' ${type} property.\nFound value: ${value}`);
+  throw new Error(`Object '${obj}' must have a '${variable}' ${type} property.\nFound value: ${value}\n`);
 }
 
 export function assertTimescale(val: any): asserts val is TimescaleItem {
