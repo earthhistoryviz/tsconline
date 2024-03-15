@@ -700,8 +700,8 @@ function recursive(
   rangeMap: Map<string, Range>
 ): FaciesFoundAndAgeRange {
   const currentColumnInfo: ColumnInfo = {
-    name: currentColumn,
-    editName: currentColumn,
+    name: trimInvisibleCharacters(currentColumn),
+    editName: trimInvisibleCharacters(currentColumn),
     on: true,
     enableTitle: true,
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
