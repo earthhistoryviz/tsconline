@@ -39,8 +39,8 @@ export function assertSubRangeInfo(o) {
         throwError("SubRangeInfo", "age", "number", o.age);
     if (typeof o.abundance !== "string")
         throwError("SubRangeInfo", "abundance", "string", o.abundance);
-    if (/TOP|missing|rare|common|frequent|abundant|sample|flood/.test(o.abundance))
-        throwError("SubRangeInfo", "abundance", "TOP | missing | rare | common | frequent | abundant | sample", o.abundance);
+    if (!/TOP|missing|rare|common|frequent|abundant|sample|flood/.test(o.abundance))
+        throwError("SubRangeInfo", "abundance", "TOP | missing | rare | common | frequent | abundant | sample | flood", o.abundance);
     if (typeof o.popup !== "string")
         throwError("SubRangeInfo", "popup", "string", o.popup);
 }
@@ -553,7 +553,7 @@ export function assertSVGStatus(o) {
  * @param value
  */
 function throwError(obj, variable, type, value) {
-    throw new Error(`Object '${obj}' must have a '${variable}' ${type} property.\nFound value: ${value}`);
+    throw new Error(`Object '${obj}' must have a '${variable}' ${type} property.\nFound value: ${value}\n`);
 }
 export function assertTimescale(val) {
     if (!val || typeof val !== "object") {
