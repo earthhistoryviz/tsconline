@@ -8,9 +8,10 @@ import "./TSCError.css";
 import Lottie from "./TSCLottie";
 import ErrorIcon from "../assets/icons/error-icon.json";
 import Color from "color";
+import { ErrorCodes } from "../util/error-codes";
 
 type TSCErrorProps = {
-  errorContext: string;
+  errorContext: ErrorCodes;
   message: string;
   index: number;
   count: number;
