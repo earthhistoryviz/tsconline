@@ -1,0 +1,11 @@
+Event Test	:	Event 1	Event 2
+
+Event 1	event	250	198/207/174		on	"Event 1 Popup"
+EVENT
+	Event 1 SubEvent 1	2	dashed	Event 1 SubEvent 1 Popup
+	Event 1 SubEvent 2	4		Event 1 SubEvent 2 Popup
+
+Event 2	event		UNESCO-Named	notitle		Event 2 Popup
+FAD
+	Event 2 SubEvent 1	5
+	Event 2 SubEvent 2	6
