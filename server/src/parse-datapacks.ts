@@ -22,9 +22,9 @@ import {
 } from "@tsconline/shared";
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters } from "./util.js";
 import { createInterface } from "readline";
-const patternForColor = /\d+\/\d+\/\d+/;
-const patternForLineStyle = /solid|dashed|dotted/;
-const patternForAbundance = /TOP|missing|rare|common|frequent|abundant|sample|flood/;
+const patternForColor = /^\d+\/\d+\/\d+$/;
+const patternForLineStyle = /^solid|dashed|dotted$/;
+const patternForAbundance = /^TOP|missing|rare|common|frequent|abundant|sample|flood$/;
 
 export type ParsedColumnEntry = {
   children: string[];
@@ -607,16 +607,16 @@ export function processBlock(line: string, defaultColor: RGB): SubBlockInfo | nu
   }
   if (rgb && patternForColor.test(rgb)) {
     const rgbSeperated = rgb.split("/");
-    currentSubBlockInfo.rgb.r = Number(rgbSeperated[0]!);
-    currentSubBlockInfo.rgb.g = Number(rgbSeperated[1]!);
-    currentSubBlockInfo.rgb.b = Number(rgbSeperated[2]!);
+    currentSubBlockInfo.rgb = {
+      r: Number(rgbSeperated[0]!),
+      g: Number(rgbSeperated[1]!),
+      b: Number(rgbSeperated[2]!)
+    };
     try {
       assertRGB(currentSubBlockInfo.rgb);
     } catch (e) {
       console.log(`Error ${e} found while processing block rgb, setting rgb to white`);
-      currentSubBlockInfo.rgb.r = 255;
-      currentSubBlockInfo.rgb.g = 255;
-      currentSubBlockInfo.rgb.b = 255;
+      currentSubBlockInfo.rgb = defaultColor;
     }
   }
 
