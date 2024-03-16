@@ -48,7 +48,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
       body
     });
     const answer = await response.json();
-    // will check if pdf is loaded
+    // will check if svg is loaded
     try {
       assertChartInfo(answer);
       generalActions.setChartHash(answer.hash);
