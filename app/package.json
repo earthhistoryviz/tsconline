@@ -43,7 +43,8 @@
     "build": "tsc && vite build",
     "build-watch": "vite build --watch",
     "dev": "vite",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "clean": "rimraf ./dist"
   },
   "type": "module"
 }

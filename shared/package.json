@@ -8,7 +8,7 @@
     "tsc": "^2.0.4"
   },
   "devDependencies": {
-    "@types/node": "^20.11.24",
+    "@types/node": "^20.11.28",
     "typescript": "^5.0.4"
   },
   "keywords": [],
@@ -17,7 +17,8 @@
   "scripts": {
     "build": "tsc -b",
     "dev": "tsc -b -w",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "rimraf ./dist"
   },
   "type": "module"
 }

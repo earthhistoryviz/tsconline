@@ -21,6 +21,7 @@
     "nearest-color": "^0.4.4",
     "nodemon": "^2.0.22",
     "p-map": "^6.0.0",
+    "path-scurry": "^1.10.1",
     "pino-pretty": "^10.0.0",
     "svgson": "^5.3.1",
     "tsc": "^2.0.4",
@@ -28,7 +29,7 @@
   },
   "devDependencies": {
     "@types/color-thief-node": "^1",
-    "@types/node": "^20.11.24",
+    "@types/node": "^20.11.28",
     "typescript": "^5.0.4"
   },
   "keywords": [],
@@ -38,7 +39,8 @@
     "build": "tsc -b",
     "dev": "tsc -b -w",
     "start": "nodemon --watch dist --watch ../shared/dist --watch ./package.json --watch assets --watch ./public/presets dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "rimraf ./dist"
   },
   "type": "module"
 }
