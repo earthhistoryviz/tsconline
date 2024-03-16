@@ -11,12 +11,21 @@ import {
   assertRGB,
   defaultFontsInfo,
   SubFaciesInfo,
-  assertSubFaciesInfo
+  assertSubFaciesInfo,
+  Event,
+  SubEventInfo,
+  assertSubEventInfo,
+  Range,
+  ColumnHeaderProps,
+  SubRangeInfo,
+  assertSubRangeInfo
 } from "@tsconline/shared";
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters } from "./util.js";
 import { createInterface } from "readline";
-const patternForColor = /\d+\/\d+\/\d+/;
-const patternForLineStyle = /solid|dashed|dotted/;
+const patternForColor = /^\d+\/\d+\/\d+$/;
+const patternForLineStyle = /^solid|dashed|dotted$/;
+const patternForAbundance = /^TOP|missing|rare|common|frequent|abundant|sample|flood$/;
+
 export type ParsedColumnEntry = {
   children: string[];
   on: boolean;
@@ -92,10 +101,12 @@ export async function parseDatapacks(decryptFilePath: string, files: string[]): 
   const datapackAgeInfo: DatapackAgeInfo = { datapackContainsSuggAge: false };
   const faciesMap: Map<string, Facies> = new Map();
   const blocksMap: Map<string, Block> = new Map();
+  const eventMap: Map<string, Event> = new Map();
+  const rangeMap: Map<string, Range> = new Map();
   try {
     for (const decryptPath of decryptPaths) {
       //get the facies/blocks first
-      await getFaciesOrBlock(decryptPath, faciesMap, blocksMap);
+      await getColumnTypes(decryptPath, faciesMap, blocksMap, eventMap, rangeMap);
       // Originally the first step, gather all parents and their direct children
       await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
       // only iterate over parents. if we encounter one that is a child, the recursive function
@@ -103,7 +114,7 @@ export async function parseDatapacks(decryptFilePath: string, files: string[]): 
       allEntries.forEach((children, parent) => {
         // if the parent is not a child
         if (!isChild.has(parent)) {
-          recursive("Root", parent, children, columnInfoArray, allEntries, faciesMap, blocksMap);
+          recursive("Root", parent, children, columnInfoArray, allEntries, faciesMap, blocksMap, eventMap, rangeMap);
         }
       });
     }
@@ -192,10 +203,12 @@ export async function getAllEntries(
  * @param faciesMap the facies map to add to
  * @param blocksMap  the blocks map to add to
  */
-export async function getFaciesOrBlock(
+export async function getColumnTypes(
   filename: string,
   faciesMap: Map<string, Facies>,
-  blocksMap: Map<string, Block>
+  blocksMap: Map<string, Block>,
+  eventMap: Map<string, Event>,
+  rangeMap: Map<string, Range>
 ) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
@@ -204,11 +217,18 @@ export async function getFaciesOrBlock(
     subFaciesInfo: [],
     minAge: Number.MAX_VALUE,
     maxAge: Number.MIN_VALUE,
-    info: "",
-    on: true
+    popup: "",
+    on: true,
+    width: 100,
+    enableTitle: true,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    }
   };
   const block: Block = {
-    title: "",
+    name: "",
     subBlockInfo: [],
     width: 100,
     minAge: Number.MAX_VALUE,
@@ -218,30 +238,91 @@ export async function getFaciesOrBlock(
     enableTitle: true,
     rgb: { r: 255, g: 255, b: 255 }
   };
+  const event: Event = {
+    name: "",
+    subEventInfo: [],
+    enableTitle: true,
+    width: 150,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    },
+    minAge: Number.MAX_VALUE,
+    maxAge: Number.MIN_VALUE,
+    popup: "",
+    on: false
+  };
+  const range: Range = {
+    name: "",
+    subRangeInfo: [],
+    enableTitle: true,
+    width: 100,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    },
+    minAge: Number.MAX_VALUE,
+    maxAge: Number.MIN_VALUE,
+    popup: "",
+    on: true
+  };
   let inFaciesBlock = false;
   let inBlockBlock = false;
+  let inEventBlock = false;
+  let inRangeBlock = false;
 
   for await (const line of readline) {
-    // we reached the end
-    if ((!line || trimInvisibleCharacters(line) === "") && inFaciesBlock) {
-      inFaciesBlock = false;
-      addFaciesToFaciesMap(facies, faciesMap);
-      continue;
-    }
-    // reached the end and store the key value pairs into blocksMap
-    if ((!line || trimInvisibleCharacters(line) === "") && inBlockBlock) {
-      inBlockBlock = false;
-      addBlockToBlockMap(block, blocksMap);
-      continue;
-    }
-    const tabSeperated = line.split("\t");
-    // we found a facies block
-    if (!inFaciesBlock && tabSeperated[1] === "facies") {
-      facies.name = trimQuotes(tabSeperated[0]!);
-      facies.info = tabSeperated[6] || "";
-      if (tabSeperated[5] && (tabSeperated[5] === "off" || tabSeperated[5].length == 0)) {
-        facies.on = false;
+    if (!line || trimInvisibleCharacters(line) === "") {
+      // we reached the end and store the key value pairs in to faciesMap
+      if (inFaciesBlock) {
+        inFaciesBlock = false;
+        addFaciesToFaciesMap(facies, faciesMap);
+        continue;
       }
+      // reached the end and store the key value pairs into blocksMap
+      if (inBlockBlock) {
+        inBlockBlock = false;
+        addBlockToBlockMap(block, blocksMap);
+        continue;
+      }
+      // reached the end and store the key value pairs into eventMap
+      if (inEventBlock) {
+        inEventBlock = false;
+        addEventToEventMap(event, eventMap);
+        continue;
+      }
+      // reached the end and store the key value pairs into rangeMap
+      if (inRangeBlock) {
+        inRangeBlock = false;
+        addRangeToRangeMap(range, rangeMap);
+        continue;
+      }
+    }
+    const tabSeparated = line.split("\t");
+    if (!inRangeBlock && tabSeparated[1] === "range") {
+      setColumnHeaders(range, tabSeparated);
+      inRangeBlock = true;
+    } else if (inRangeBlock) {
+      const subRangeInfo = processRange(line);
+      if (subRangeInfo) {
+        range.subRangeInfo.push(subRangeInfo);
+      }
+    }
+    // we found an event block
+    if (!inEventBlock && tabSeparated[1] === "event") {
+      setColumnHeaders(event, tabSeparated);
+      inEventBlock = true;
+    } else if (inEventBlock) {
+      const subEventInfo = processEvent(line);
+      if (subEventInfo) {
+        event.subEventInfo.push(subEventInfo);
+      }
+    }
+    // we found a facies block
+    if (!inFaciesBlock && tabSeparated[1] === "facies") {
+      setColumnHeaders(facies, tabSeparated);
       inFaciesBlock = true;
     } else if (inFaciesBlock) {
       const subFaciesInfo = processFacies(line);
@@ -251,8 +332,8 @@ export async function getFaciesOrBlock(
     }
 
     // we found a block
-    if (!inBlockBlock && tabSeperated[1] === "block") {
-      setBlockHeader(block, tabSeperated);
+    if (!inBlockBlock && tabSeparated[1] === "block") {
+      setColumnHeaders(block, tabSeparated);
       inBlockBlock = true;
     } else if (inBlockBlock) {
       //get a single sub block
@@ -273,52 +354,96 @@ export async function getFaciesOrBlock(
   if (inFaciesBlock) {
     addFaciesToFaciesMap(facies, faciesMap);
   }
+  if (inEventBlock) {
+    addEventToEventMap(event, eventMap);
+  }
   if (inBlockBlock) {
     addBlockToBlockMap(block, blocksMap);
+  }
+  if (inRangeBlock) {
+    addRangeToRangeMap(range, rangeMap);
   }
 }
 
 /**
- * This function will set the header for block
- * @param block the block
- * @param tabSeperated the string array which contains all information of the block
+ * Set a general column header and all it's properties
+ * @param column
+ * @param tabSeparated
  */
-function setBlockHeader(block: Block, tabSeperated: string[]) {
-  block.title = trimQuotes(tabSeperated[0]!);
-
-  if (tabSeperated[2]) {
-    block.width = Number(tabSeperated[2]);
-    if (isNaN(block.width)) {
-      console.log(`Error found while processing block width, setting width to 100`);
-      block.width = 100;
+function setColumnHeaders(column: ColumnHeaderProps, tabSeparated: string[]) {
+  column.name = trimQuotes(tabSeparated[0]!);
+  const width = Number(tabSeparated[2]!);
+  const rgb = tabSeparated[3];
+  const enableTitle = tabSeparated[4];
+  const on = tabSeparated[5];
+  column.popup = tabSeparated[6] || "";
+  if (width) {
+    if (isNaN(width)) {
+      console.log(`Error found while processing column width, got: ${width} and will be setting width to 100`);
+    } else {
+      column.width = width;
     }
   }
+  if (rgb && patternForColor.test(rgb)) {
+    const rgbArray = rgb.split("/");
+    column.rgb.r = Number(rgbArray[0]!);
+    column.rgb.g = Number(rgbArray[1]!);
+    column.rgb.b = Number(rgbArray[2]!);
+  }
+  if (enableTitle && enableTitle === "notitle") {
+    column.enableTitle = false;
+  }
+  if (on === "off") {
+    column.on = false;
+  } else if (on === "on") {
+    column.on = true;
+  }
+}
 
-  if (tabSeperated[3] && patternForColor.test(tabSeperated[3])) {
-    const rgbSeperated = tabSeperated[3].split("/");
-    block.rgb.r = Number(rgbSeperated[0]!);
-    block.rgb.g = Number(rgbSeperated[1]!);
-    block.rgb.b = Number(rgbSeperated[2]!);
-    try {
-      assertRGB(block.rgb);
-    } catch (e) {
-      console.log(`Error ${e} found while processing block rgb, setting rgb to white`);
-      block.rgb.r = 255;
-      block.rgb.g = 255;
-      block.rgb.b = 255;
-    }
+function addRangeToRangeMap(range: Range, rangeMap: Map<string, Range>) {
+  for (const subRange of range.subRangeInfo) {
+    range.minAge = Math.min(subRange.age, range.minAge);
+    range.maxAge = Math.max(subRange.age, range.maxAge);
   }
-
-  if (tabSeperated[4] && tabSeperated[4] === "notitle") {
-    block.enableTitle = false;
+  rangeMap.set(range.name, JSON.parse(JSON.stringify(range)));
+  range.name = "";
+  range.subRangeInfo = [];
+  range.minAge = Number.MAX_VALUE;
+  range.maxAge = Number.MIN_VALUE;
+  range.popup = "";
+  range.on = true;
+  range.enableTitle = true;
+  range.width = 100;
+  range.rgb = {
+    r: 255,
+    g: 255,
+    b: 255
+  };
+}
+/**
+ * add an event object to the event map and resets event object
+ * @param event
+ * @param eventMap
+ */
+function addEventToEventMap(event: Event, eventMap: Map<string, Event>) {
+  for (const subEvent of event.subEventInfo) {
+    event.minAge = Math.min(subEvent.age, event.minAge);
+    event.maxAge = Math.max(subEvent.age, event.maxAge);
   }
-  if (tabSeperated[5] && tabSeperated[5] === "off") {
-    block.on = false;
-  }
-
-  if (tabSeperated[6]) {
-    block.popup = tabSeperated[6];
-  }
+  eventMap.set(event.name, JSON.parse(JSON.stringify(event)));
+  event.name = "";
+  event.subEventInfo = [];
+  event.minAge = Number.MAX_VALUE;
+  event.maxAge = Number.MIN_VALUE;
+  event.popup = "";
+  event.enableTitle = true;
+  event.width = 150;
+  event.on = false;
+  event.rgb = {
+    r: 255,
+    g: 255,
+    b: 255
+  };
 }
 
 /**
@@ -336,8 +461,15 @@ function addFaciesToFaciesMap(facies: Facies, faciesMap: Map<string, Facies>) {
   facies.subFaciesInfo = [];
   facies.minAge = Number.MAX_VALUE;
   facies.maxAge = Number.MIN_VALUE;
-  facies.info = "";
+  facies.popup = "";
   facies.on = true;
+  facies.enableTitle = true;
+  facies.width = 100;
+  facies.rgb = {
+    r: 255,
+    g: 255,
+    b: 255
+  };
 }
 
 /**
@@ -350,18 +482,87 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
     block.minAge = Math.min(subBlock.age, block.minAge);
     block.maxAge = Math.max(subBlock.age, block.maxAge);
   }
-  blocksMap.set(block.title, JSON.parse(JSON.stringify(block)));
-  block.title = "";
+  blocksMap.set(block.name, JSON.parse(JSON.stringify(block)));
+  block.name = "";
   block.subBlockInfo = [];
   block.minAge = Number.MAX_VALUE;
   block.maxAge = Number.MIN_VALUE;
   block.popup = "";
   block.on = true;
-  block.width = 100;
   block.enableTitle = true;
   block.rgb = { r: 255, g: 255, b: 255 };
 }
 
+/**
+ * process a single subRangeInfo line
+ * @param line
+ * @returns
+ */
+export function processRange(line: string): SubRangeInfo | null {
+  const subRangeInfo = {
+    label: "",
+    age: 0,
+    abundance: "TOP",
+    popup: ""
+  };
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length < 3 || tabSeparated.length > 5) return null;
+  const label = tabSeparated[1]!;
+  const age = Number(tabSeparated[2]!);
+  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeparated[2]! + " is NaN");
+  const abundance = tabSeparated[3];
+  const popup = tabSeparated[4];
+  subRangeInfo.label = label;
+  subRangeInfo.age = age;
+  if (abundance && patternForAbundance.test(abundance)) {
+    subRangeInfo.abundance = abundance;
+  }
+  if (popup) {
+    subRangeInfo.popup = popup;
+  }
+  try {
+    assertSubRangeInfo(subRangeInfo);
+  } catch (e) {
+    console.log(`Error ${e} found while processing subBlockInfo, returning null`);
+    return null;
+  }
+  return subRangeInfo;
+}
+/**
+ * process a SubEventInfo
+ * @param line
+ * @returns
+ */
+export function processEvent(line: string): SubEventInfo | null {
+  const subEventInfo = {
+    label: "",
+    age: 0,
+    popup: "",
+    lineStyle: "solid"
+  };
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length < 3 || tabSeparated.length > 5) return null;
+  const label = tabSeparated[1]!;
+  const age = Number(tabSeparated[2]!);
+  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeparated[2]! + " is NaN");
+  const lineStyle = tabSeparated[3];
+  const popup = tabSeparated[4];
+  subEventInfo.label = label;
+  subEventInfo.age = age;
+  if (popup) {
+    subEventInfo.popup = popup;
+  }
+  if (lineStyle && patternForLineStyle.test(lineStyle)) {
+    subEventInfo.lineStyle = lineStyle;
+  }
+  try {
+    assertSubEventInfo(subEventInfo);
+  } catch (e) {
+    console.log(`Error ${e} found while processing subBlockInfo, returning null`);
+    return null;
+  }
+  return subEventInfo;
+}
 /**
  * Processes a single subBlockInfo line
  * @param line the line to be processed
@@ -375,14 +576,14 @@ export function processBlock(line: string, defaultColor: RGB): SubBlockInfo | nu
     lineStyle: "solid",
     rgb: defaultColor //if Block has color, set to that. If not, set to white
   };
-  const tabSeperated = line.split("\t");
-  if (tabSeperated.length < 3) return null;
-  const label = tabSeperated[1];
-  const age = Number(tabSeperated[2]!);
-  const popup = tabSeperated[4];
-  if (isNaN(age)) throw new Error("Error processing block line, age: " + tabSeperated[2]! + " is NaN");
-  const lineStyle = tabSeperated[3];
-  const rgb = tabSeperated[5];
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length < 3) return null;
+  const label = tabSeparated[1];
+  const age = Number(tabSeparated[2]!);
+  const popup = tabSeparated[4];
+  if (isNaN(age)) throw new Error("Error processing block line, age: " + tabSeparated[2]! + " is NaN");
+  const lineStyle = tabSeparated[3];
+  const rgb = tabSeparated[5];
   if (label) {
     currentSubBlockInfo.label = label;
   }
@@ -406,16 +607,16 @@ export function processBlock(line: string, defaultColor: RGB): SubBlockInfo | nu
   }
   if (rgb && patternForColor.test(rgb)) {
     const rgbSeperated = rgb.split("/");
-    currentSubBlockInfo.rgb.r = Number(rgbSeperated[0]!);
-    currentSubBlockInfo.rgb.g = Number(rgbSeperated[1]!);
-    currentSubBlockInfo.rgb.b = Number(rgbSeperated[2]!);
+    currentSubBlockInfo.rgb = {
+      r: Number(rgbSeperated[0]!),
+      g: Number(rgbSeperated[1]!),
+      b: Number(rgbSeperated[2]!)
+    };
     try {
       assertRGB(currentSubBlockInfo.rgb);
     } catch (e) {
       console.log(`Error ${e} found while processing block rgb, setting rgb to white`);
-      currentSubBlockInfo.rgb.r = 255;
-      currentSubBlockInfo.rgb.g = 255;
-      currentSubBlockInfo.rgb.b = 255;
+      currentSubBlockInfo.rgb = defaultColor;
     }
   }
 
@@ -438,29 +639,29 @@ export function processFacies(line: string): SubFaciesInfo | null {
   if (line.toLowerCase().includes("primary")) {
     return null;
   }
-  const tabSeperated = line.split("\t");
-  if (tabSeperated.length < 4 || tabSeperated.length > 5) return null;
-  const age = Number(tabSeperated[3]!);
-  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeperated[3]! + " is NaN");
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length < 4 || tabSeparated.length > 5) return null;
+  const age = Number(tabSeparated[3]!);
+  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeparated[3]! + " is NaN");
   // label doesn't exist for TOP or GAP
-  if (!tabSeperated[2]) {
+  if (!tabSeparated[2]) {
     subFaciesInfo = {
-      rockType: tabSeperated[1]!,
+      rockType: tabSeparated[1]!,
       age,
       info: ""
     };
   } else {
     subFaciesInfo = {
-      rockType: tabSeperated[1]!,
-      label: tabSeperated[2]!,
+      rockType: tabSeparated[1]!,
+      label: tabSeparated[2]!,
       age,
       info: ""
     };
   }
-  if (tabSeperated[4]) {
+  if (tabSeparated[4]) {
     subFaciesInfo = {
       ...subFaciesInfo,
-      info: tabSeperated[4]
+      info: tabSeparated[4]
     };
   }
   try {
@@ -494,19 +695,27 @@ function recursive(
   childrenArray: ColumnInfo[],
   allEntries: Map<string, ParsedColumnEntry>,
   faciesMap: Map<string, Facies>,
-  blocksMap: Map<string, Block>
+  blocksMap: Map<string, Block>,
+  eventMap: Map<string, Event>,
+  rangeMap: Map<string, Range>
 ): FaciesFoundAndAgeRange {
   const currentColumnInfo: ColumnInfo = {
     name: trimInvisibleCharacters(currentColumn),
-    editName: currentColumn,
+    editName: trimInvisibleCharacters(currentColumn),
     on: true,
     enableTitle: true,
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
-    info: "",
+    popup: "",
     children: [],
     parent: parent,
     minAge: Number.MAX_VALUE,
-    maxAge: Number.MIN_VALUE
+    maxAge: Number.MIN_VALUE,
+    width: 100,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    }
   };
   const returnValue: FaciesFoundAndAgeRange = {
     faciesFound: false,
@@ -516,29 +725,45 @@ function recursive(
 
   if (parsedColumnEntry) {
     currentColumnInfo.on = parsedColumnEntry.on;
-    currentColumnInfo.info = parsedColumnEntry.info;
+    currentColumnInfo.popup = parsedColumnEntry.info;
     currentColumnInfo.enableTitle = parsedColumnEntry.enableTitle;
   }
   if (blocksMap.has(currentColumn)) {
     const currentBlock = blocksMap.get(currentColumn)!;
-    currentColumnInfo.subBlockInfo = JSON.parse(JSON.stringify(currentBlock.subBlockInfo));
-    currentColumnInfo.on = currentBlock.on;
-    currentColumnInfo.minAge = Math.min(currentBlock.minAge, currentColumnInfo.minAge);
-    currentColumnInfo.maxAge = Math.max(currentBlock.maxAge, currentColumnInfo.maxAge);
-    currentColumnInfo.enableTitle = currentBlock.enableTitle;
+    Object.assign(currentColumnInfo, {
+      ...currentBlock,
+      subBlockInfo: JSON.parse(JSON.stringify(currentBlock.subBlockInfo))
+    });
+    returnValue.minAge = currentColumnInfo.minAge;
+    returnValue.maxAge = currentColumnInfo.maxAge;
+  }
+  if (rangeMap.has(currentColumn)) {
+    const currentRange = rangeMap.get(currentColumn)!;
+    Object.assign(currentColumnInfo, {
+      ...currentRange,
+      subRangeInfo: JSON.parse(JSON.stringify(currentRange.subRangeInfo))
+    });
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
   }
   if (faciesMap.has(currentColumn)) {
     const currentFacies = faciesMap.get(currentColumn)!;
-    currentColumnInfo.subFaciesInfo = JSON.parse(JSON.stringify(currentFacies.subFaciesInfo));
-    currentColumnInfo.maxAge = Math.max(currentColumnInfo.maxAge, currentFacies.maxAge);
-    currentColumnInfo.minAge = Math.min(currentColumnInfo.minAge, currentFacies.minAge);
+    Object.assign(currentColumnInfo, {
+      ...currentFacies,
+      subFaciesInfo: JSON.parse(JSON.stringify(currentFacies.subFaciesInfo))
+    });
     returnValue.subFaciesInfo = currentFacies.subFaciesInfo;
-    currentColumnInfo.info = currentFacies.info;
-    currentColumnInfo.on = currentFacies.on;
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
+  }
+  if (eventMap.has(currentColumn)) {
+    const currentEvent = eventMap.get(currentColumn)!;
+    Object.assign(currentColumnInfo, {
+      ...currentEvent,
+      subEventInfo: JSON.parse(JSON.stringify(currentEvent.subEventInfo))
+    });
+    returnValue.maxAge = currentColumnInfo.maxAge;
+    returnValue.minAge = currentColumnInfo.minAge;
   }
 
   childrenArray.push(currentColumnInfo);
@@ -555,7 +780,9 @@ function recursive(
         currentColumnInfo.children, // the array to push all the new children into
         allEntries, // the mapping of all parents to children
         faciesMap,
-        blocksMap
+        blocksMap,
+        eventMap,
+        rangeMap
       );
       returnValue.minAge = Math.min(compareValue.minAge, returnValue.minAge);
       returnValue.maxAge = Math.max(compareValue.maxAge, returnValue.maxAge);
