@@ -530,7 +530,7 @@ export const handleCloseSnackbar = action(
   }
 );
 
-export const removeError = action("removeError", (context: string) => {
+export const removeError = action("removeError", (context: ErrorCodes) => {
   state.errors.errorAlerts.delete(context);
 });
 export const pushError = action("pushError", (context: ErrorCodes) => {
