@@ -13,6 +13,7 @@ import type {
   MapPackIndex,
   Patterns
 } from "@tsconline/shared";
+import { ErrorCodes } from "../util/error-codes";
 
 export type State = {
   chartLoading: boolean;
@@ -78,7 +79,9 @@ export type State = {
   useCache: boolean;
   usePreset: boolean;
   openSnackbar: boolean;
-  errorAlerts: ErrorAlert[];
+  errors: {
+    errorAlerts: Map<ErrorCodes, ErrorAlert>;
+  };
 };
 
 export const state = observable<State>({
@@ -152,5 +155,7 @@ export const state = observable<State>({
   useCache: true,
   usePreset: true,
   openSnackbar: false,
-  errorAlerts: []
+  errors: {
+    errorAlerts: new Map<ErrorCodes, ErrorAlert>()
+  }
 });

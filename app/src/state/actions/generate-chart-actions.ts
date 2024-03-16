@@ -1,11 +1,12 @@
 import * as generalActions from "./general-actions";
-import { displayError } from "./util-actions";
+import { displayServerError } from "./util-actions";
 import { state } from "../state";
 import { action } from "mobx";
 import { fetcher, devSafeUrl } from "../../util";
 import { assertChartInfo } from "@tsconline/shared";
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
+import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 
 export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
   if (state.useSuggestedAge != response) {
@@ -41,20 +42,25 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
     datapacks: state.config.datapacks
   });
   console.log("Sending settings to server...");
-  const response = await fetcher(`/charts/${state.useCache}/${state.useSuggestedAge}`, {
-    method: "POST",
-    body
-  });
-  const answer = await response.json();
-  // will check if pdf is loaded
   try {
-    assertChartInfo(answer);
-    generalActions.setChartHash(answer.hash);
-    generalActions.setChartPath(devSafeUrl(answer.chartpath));
-    await generalActions.checkSVGStatus();
-    generalActions.setOpenSnackbar(true);
+    const response = await fetcher(`/charts/${state.useCache}/${state.useSuggestedAge}`, {
+      method: "POST",
+      body
+    });
+    const answer = await response.json();
+    // will check if pdf is loaded
+    try {
+      assertChartInfo(answer);
+      generalActions.setChartHash(answer.hash);
+      generalActions.setChartPath(devSafeUrl(answer.chartpath));
+      await generalActions.checkSVGStatus();
+      generalActions.setOpenSnackbar(true);
+    } catch (e) {
+      displayServerError(answer, ErrorCodes.INVALID_CHART_RESPONSE, ErrorMessages[ErrorCodes.INVALID_CHART_RESPONSE]);
+      return;
+    }
   } catch (e) {
-    displayError(e, answer, "Failed to fetch chart");
-    return;
+    console.error(e);
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
   }
 });

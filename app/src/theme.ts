@@ -18,6 +18,8 @@ declare module "@mui/material/styles" {
     info: Palette["primary"];
     cardBackground: Palette["primary"];
     menuDropdown: Palette["primary"];
+    errorAlert: Palette["primary"];
+    errorText: Palette["primary"];
   }
 
   interface PaletteOptions {
@@ -37,6 +39,8 @@ declare module "@mui/material/styles" {
     info?: PaletteOptions["primary"];
     cardBackground?: PaletteOptions["primary"];
     menuDropdown?: PaletteOptions["primary"];
+    errorAlert?: PaletteOptions["primary"];
+    errorText?: PaletteOptions["primary"];
   }
 }
 
@@ -99,6 +103,12 @@ let theme = createTheme({
     },
     menuDropdown: {
       main: "#343F46"
+    },
+    errorAlert: {
+      main: "#ffe5e0"
+    },
+    errorText: {
+      main: "#c71f16"
     }
   },
   typography: {

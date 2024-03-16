@@ -10,6 +10,7 @@ import { useTheme } from "@mui/material/styles";
 import { useContext } from "react";
 import { context } from "../state/index";
 import "./Time.css";
+import { ErrorCodes } from "../util/error-codes";
 
 export const Time = observer(function Time() {
   const theme = useTheme();
@@ -39,9 +40,9 @@ export const Time = observer(function Time() {
               if (selectedAge >= 0 && selectedAge <= state.settings.baseStageAge) {
                 actions.setSelectedTopStage(selectedValue);
                 actions.setTopStageAge(selectedAge);
+                actions.removeError(ErrorCodes.TOP_STAGE_AGE_INVALID);
               } else {
-                const errorMessage = "Invalid top age/stage name input. Please enter a valid stage name/age.";
-                actions.pushError(errorMessage);
+                actions.pushError(ErrorCodes.TOP_STAGE_AGE_INVALID);
               }
             }}>
             {state.geologicalTopStageAges.map((item) => (
@@ -61,9 +62,9 @@ export const Time = observer(function Time() {
               if (!isNaN(age) && age >= 0 && age <= state.settings.baseStageAge) {
                 actions.setSelectedTopStage("");
                 actions.setTopStageAge(age);
+                actions.removeError(ErrorCodes.TOP_STAGE_AGE_INVALID);
               } else {
-                const errorMessage = "Invalid age input. Please enter a valid age.";
-                actions.pushError(errorMessage);
+                actions.pushError(ErrorCodes.TOP_STAGE_AGE_INVALID);
               }
             }}
           />
@@ -83,9 +84,9 @@ export const Time = observer(function Time() {
               if (selectedAge >= 0 && selectedAge >= state.settings.topStageAge) {
                 actions.setSelectedBaseStage(selectedValue);
                 actions.setBaseStageAge(selectedAge);
+                actions.removeError(ErrorCodes.BASE_STAGE_AGE_INVALID);
               } else {
-                const errorMessage = "Invalid base age/stage name input. Please enter a valid stage name/age.";
-                actions.pushError(errorMessage);
+                actions.pushError(ErrorCodes.BASE_STAGE_AGE_INVALID);
               }
             }}>
             {state.geologicalBaseStageAges.map((item) => (
@@ -105,9 +106,9 @@ export const Time = observer(function Time() {
               if (!isNaN(age) && age >= 0 && state.settings.topStageAge <= age) {
                 actions.setSelectedBaseStage("");
                 actions.setBaseStageAge(age);
+                actions.removeError(ErrorCodes.BASE_STAGE_AGE_INVALID);
               } else {
-                const errorMessage = "Invalid age input. Please enter a valid age.";
-                actions.pushError(errorMessage);
+                actions.pushError(ErrorCodes.BASE_STAGE_AGE_INVALID);
               }
             }}
           />
