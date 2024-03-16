@@ -61,15 +61,14 @@ const datapackIndex: DatapackIndex = {};
 const mapPackIndex: MapPackIndex = {};
 const patterns = await loadFaciesPatterns();
 await loadIndexes(datapackIndex, mapPackIndex);
+
 // Serve the main app from /
-// @ts-expect-error: server.register doesn't accept the proper types. open bug-report asap to fastify
 server.register(fastifyStatic, {
   root: process.cwd() + "/../app/dist",
   prefix: "/"
 });
 
 // Serve the generated charts, etc. from server/public/
-// @ts-expect-error: server.register doesn't accept the proper types. open bug-report asap to fastify
 server.register(fastifyStatic, {
   root: process.cwd() + "/public",
   prefix: "/public/",
@@ -77,13 +76,11 @@ server.register(fastifyStatic, {
 });
 
 // Helpful for testing locally:
-// @ts-expect-error: server.register doesn't accept the proper types. open bug-report asap to fastify
 server.register(cors, {
   origin: "*",
   methods: ["GET", "POST"]
 });
 
-// @ts-expect-error: server.register doesn't accept the proper types. open bug-report asap to fastify
 server.register(fastifyCompress, { global: true });
 
 // removes the cached public/cts directory
