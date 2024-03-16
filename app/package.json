@@ -12,7 +12,6 @@
     "@mui/styles": "^5.15.2",
     "@szhsin/react-menu": "^4.1.0",
     "@tsconline/shared": "1.0.0",
-    "@types/color": "^3.0.6",
     "clsx": "^2.1.0",
     "color": "^4.2.3",
     "lottie-web": "^5.12.2",
@@ -32,10 +31,11 @@
     "simplebar-react": "^3.2.4"
   },
   "devDependencies": {
+    "@types/color": "^3.0.6",
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
     "@vitejs/plugin-react": "^3.1.0",
-    "typescript": "^5.0.4",
+    "typescript": "5.2.2",
     "vite": "^4.1.0"
   },
   "private": true,
@@ -44,7 +44,7 @@
     "build-watch": "vite build --watch",
     "dev": "vite",
     "preview": "vite preview",
-    "clean": "rimraf ./dist"
+    "clean": "rm -rf ./dist"
   },
   "type": "module"
 }

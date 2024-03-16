@@ -1,16 +1,12 @@
 {
   "name": "tsconline-monorepo",
   "dependencies": {
-    "@types/node": "^20.11.28",
-    "fastify": "^4.17.0",
-    "fs": "^0.0.1-security",
-    "nvm": "^0.0.4",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.0.4"
+    "fastify": "^4.17.0"
   },
   "devDependencies": {
     "@types/eslint": "^8",
     "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.28",
     "@typescript-eslint/eslint-plugin": "^7.0.2",
     "@typescript-eslint/parser": "^7.0.2",
     "@yarnpkg/sdks": "^3.0.0-rc.43",
@@ -20,9 +16,10 @@
     "eslint-plugin-react": "^7.33.2",
     "jest": "^29.7.0",
     "prettier": "^3.2.5",
-    "rimraf": "^5.0.5",
     "syncpack": "^12.3.0",
-    "ts-jest": "^29.1.2"
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
+    "typescript": "5.2.2"
   },
   "packageManager": "yarn@4.0.2",
   "private": true,
