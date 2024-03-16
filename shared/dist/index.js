@@ -105,10 +105,10 @@ export function assertSubEventInfo(o) {
     if (typeof o.label !== "string")
         throwError("SubEventInfo", "label", "string", o.label);
     if (typeof o.age !== "number")
-        throwError("SubEventInfo", "age", "number", o.number);
+        throwError("SubEventInfo", "age", "number", o.age);
     if (typeof o.popup !== "string")
         throwError("SubEventInfo", "popup", "string", o.popup);
-    if (typeof o.lineStyle !== "string" && /dotted|dashed|solid/.test(o.lineStyle))
+    if (typeof o.lineStyle !== "string" || !/^dotted|dashed|solid$/.test(o.lineStyle))
         throwError("SubEventInfo", "lineStyle", "dotted | dashed | solid", o.lineStyle);
 }
 export function assertColor(o) {
