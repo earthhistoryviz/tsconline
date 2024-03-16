@@ -1,29 +1,8 @@
 {
   "name": "tsconline-monorepo",
-  "packageManager": "yarn@4.0.2",
-  "private": true,
-  "workspaces": [
-    "app",
-    "shared",
-    "server"
-  ],
-  "scripts": {
-    "setup": "yarn && yarn install && yarn build",
-    "install": "echo \"Installing packages of all workspaces...\" && yarn workspaces foreach -A --exclude @tsconline/shared --exclude tsconline/mono-repo -p -v run install",
-    "build": "echo \"Building all workspaces...\" && yarn workspace @tsconline/shared run build && echo \"@tsconline/shared successfully built... \" && yarn workspaces foreach -A --exclude @tsconline/shared --exclude tsconline/mono-repo -p run build",
-    "start": "yarn workspace @tsconline/server start",
-    "prettier-format": "prettier --write \"**/*.{ts,tsx,css}\"",
-    "prettier-check": "prettier --check \"**/*.{ts,tsx,css}\"",
-    "lint-check": "yarn eslint **/*.{tsx,ts} --quiet --config ./.eslintrc.json --no-cache",
-    "lint-format": "yarn eslint **/*.{tsx,ts} --fix --quiet --config ./.eslintrc.json",
-    "check-quality": "yarn prettier-format && yarn lint-check",
-    "test-all": "jest",
-    "test": "jest -t",
-    "test-clear-cache": "jest --clearCache"
-  },
   "dependencies": {
     "@types/node": "^20.11.24",
-    "fastify": "^4.13.0",
+    "fastify": "^4.17.0",
     "fs": "^0.0.1-security",
     "nvm": "^0.0.4",
     "ts-node": "^10.9.2",
@@ -41,6 +20,28 @@
     "eslint-plugin-react": "^7.33.2",
     "jest": "^29.7.0",
     "prettier": "^3.2.5",
+    "syncpack": "^12.3.0",
     "ts-jest": "^29.1.2"
-  }
+  },
+  "packageManager": "yarn@4.0.2",
+  "private": true,
+  "scripts": {
+    "build": "echo \"Building all workspaces...\" && yarn workspace @tsconline/shared run build && echo \"@tsconline/shared successfully built... \" && yarn workspaces foreach -A --exclude @tsconline/shared --exclude tsconline/mono-repo -p run build",
+    "check-quality": "yarn prettier-format && yarn lint-check",
+    "install": "echo \"Installing packages of all workspaces...\" && yarn workspaces foreach -A --exclude @tsconline/shared --exclude tsconline/mono-repo -p -v run install",
+    "lint-check": "yarn eslint **/*.{tsx,ts} --quiet --config ./.eslintrc.json --no-cache",
+    "lint-format": "yarn eslint **/*.{tsx,ts} --fix --quiet --config ./.eslintrc.json",
+    "prettier-check": "prettier --check \"**/*.{ts,tsx,css}\"",
+    "prettier-format": "prettier --write \"**/*.{ts,tsx,css}\"",
+    "setup": "yarn && yarn install && yarn build",
+    "start": "yarn workspace @tsconline/server start",
+    "test": "jest -t",
+    "test-all": "jest",
+    "test-clear-cache": "jest --clearCache"
+  },
+  "workspaces": [
+    "app",
+    "shared",
+    "server"
+  ]
 }

@@ -3396,7 +3396,7 @@ const RAW_RUNTIME_STATE =
           ["pino-pretty", "npm:10.0.0"],\
           ["svgson", "npm:5.3.1"],\
           ["tsc", "npm:2.0.4"],\
-          ["typescript", "patch:typescript@npm%3A4.9.5#optional!builtin<compat/typescript>::version=4.9.5&hash=289587"],\
+          ["typescript", "patch:typescript@npm%3A5.0.4#optional!builtin<compat/typescript>::version=5.0.4&hash=b5f058"],\
           ["xlsx", "npm:0.18.5"]\
         ],\
         "linkType": "SOFT"\
