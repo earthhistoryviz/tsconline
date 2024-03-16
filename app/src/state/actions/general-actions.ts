@@ -214,7 +214,7 @@ export const setDatapackConfig = action(
       assertColumnInfo(columnInfo);
       assertMapInfo(mapInfo);
     } catch (e) {
-      pushError(ErrorCodes.INVALID_DATAPACK_CONFIG, ErrorMessages[ErrorCodes.INVALID_DATAPACK_CONFIG]);
+      pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
       return false;
     }
     state.settings.datapackContainsSuggAge = datapackAgeInfo.datapackContainsSuggAge;
@@ -533,13 +533,13 @@ export const handleCloseSnackbar = action(
 export const removeError = action("removeError", (context: string) => {
   state.errors.errorAlerts.delete(context);
 });
-export const pushError = action("pushError", (context: string, message: string) => {
+export const pushError = action("pushError", (context: ErrorCodes) => {
   if (state.errors.errorAlerts.has(context)) {
     state.errors.errorAlerts.get(context)!.errorCount += 1;
     return;
   }
   const error = {
-    errorText: message,
+    errorText: ErrorMessages[context],
     errorCount: 1
   };
   state.errors.errorAlerts.set(context, error);

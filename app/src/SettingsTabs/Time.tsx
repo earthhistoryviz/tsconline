@@ -10,7 +10,7 @@ import { useTheme } from "@mui/material/styles";
 import { useContext } from "react";
 import { context } from "../state/index";
 import "./Time.css";
-import { ErrorCodes, ErrorMessages } from "../util/error-codes";
+import { ErrorCodes } from "../util/error-codes";
 
 export const Time = observer(function Time() {
   const theme = useTheme();
@@ -42,7 +42,7 @@ export const Time = observer(function Time() {
                 actions.setTopStageAge(selectedAge);
                 actions.removeError(ErrorCodes.TOP_STAGE_AGE_INVALID);
               } else {
-                actions.pushError(ErrorCodes.TOP_STAGE_AGE_INVALID, ErrorMessages[ErrorCodes.TOP_STAGE_AGE_INVALID]);
+                actions.pushError(ErrorCodes.TOP_STAGE_AGE_INVALID);
               }
             }}>
             {state.geologicalTopStageAges.map((item) => (
@@ -64,7 +64,7 @@ export const Time = observer(function Time() {
                 actions.setTopStageAge(age);
                 actions.removeError(ErrorCodes.TOP_STAGE_AGE_INVALID);
               } else {
-                actions.pushError(ErrorCodes.TOP_STAGE_AGE_INVALID, ErrorMessages[ErrorCodes.TOP_STAGE_AGE_INVALID]);
+                actions.pushError(ErrorCodes.TOP_STAGE_AGE_INVALID);
               }
             }}
           />
@@ -86,7 +86,7 @@ export const Time = observer(function Time() {
                 actions.setBaseStageAge(selectedAge);
                 actions.removeError(ErrorCodes.BASE_STAGE_AGE_INVALID);
               } else {
-                actions.pushError(ErrorCodes.BASE_STAGE_AGE_INVALID, ErrorMessages[ErrorCodes.BASE_STAGE_AGE_INVALID]);
+                actions.pushError(ErrorCodes.BASE_STAGE_AGE_INVALID);
               }
             }}>
             {state.geologicalBaseStageAges.map((item) => (
@@ -108,7 +108,7 @@ export const Time = observer(function Time() {
                 actions.setBaseStageAge(age);
                 actions.removeError(ErrorCodes.BASE_STAGE_AGE_INVALID);
               } else {
-                actions.pushError(ErrorCodes.BASE_STAGE_AGE_INVALID, ErrorMessages[ErrorCodes.BASE_STAGE_AGE_INVALID]);
+                actions.pushError(ErrorCodes.BASE_STAGE_AGE_INVALID);
               }
             }}
           />

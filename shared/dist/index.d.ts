@@ -314,7 +314,6 @@ export type TimescaleItem = {
     key: string;
     value: number;
 };
-
 export declare function assertRGB(o: any): asserts o is RGB;
 export declare function assertColor(o: any): asserts o is Color;
 export declare function assertPatterns(o: any): asserts o is Patterns;
