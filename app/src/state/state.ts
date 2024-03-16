@@ -80,7 +80,6 @@ export type State = {
   openSnackbar: boolean;
   errors: {
     errorAlerts: Map<string, ErrorAlert>;
-    errorAlertIDs: Set<number>;
   };
 };
 
@@ -156,7 +155,6 @@ export const state = observable<State>({
   usePreset: true,
   openSnackbar: false,
   errors: {
-    errorAlerts: new Map<string, ErrorAlert>(),
-    errorAlertIDs: new Set<number>()
+    errorAlerts: new Map<string, ErrorAlert>()
   }
 });

@@ -7,14 +7,14 @@ import { isServerResponseError } from "@tsconline/shared";
  * @param response the response from the server if applicable (nullable)
  * @param message the message to be shown
  */
-export function displayError(error: any, response: any, message: string) {
+export function displayServerError<T>(response: T | null, context: string, message: string) {
   if (!response) {
-    pushError(message);
+    pushError(context, message);
   } else if (isServerResponseError(response)) {
     console.log(`${message} with server response: ${response.error}`);
-    pushError(response.error);
+    pushError(context, response.error);
   } else {
-    console.log(`${message} with server response: ${response}\n Error: ${error}`);
-    pushError(message);
+    console.log(`${message} with server response: ${response}\n`);
+    pushError(context, message);
   }
 }
