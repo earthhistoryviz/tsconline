@@ -182,7 +182,7 @@ export function processLine(
       // grab setting names for the map point
       // iterate over the line and depending on the columns above, figure out which
       // parts of MapPoints to put it in
-      while (info && info[0] === "DATACOL") {
+      while (info && (info[0] === "DATACOL" || info[0] === "SUBDIR")) {
         const { mapName, mapPoint } = grabMapPoints(headerLabels, info);
         index++;
         info = tabSeparated[index];
