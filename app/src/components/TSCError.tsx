@@ -10,12 +10,12 @@ import ErrorIcon from "../assets/icons/error-icon.json";
 import Color from "color";
 
 type TSCErrorProps = {
-  text: string;
-  id: number;
+  errorContext: string;
+  message: string;
   index: number;
   count: number;
 };
-export const TSCError: React.FC<TSCErrorProps> = observer(({ text, id, index, count }) => {
+export const TSCError: React.FC<TSCErrorProps> = observer(({ errorContext, message, index, count }) => {
   const { actions } = useContext(context);
   const theme = useTheme();
   const margin = index < 5 ? index * 10 : 40;
@@ -27,7 +27,7 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ text, id, index, co
   }
   function handleCloseError(_event: React.SyntheticEvent | Event, reason?: string) {
     if (reason === "clickaway") return;
-    actions.removeError(id, text);
+    actions.removeError(errorContext);
   }
   return (
     <Snackbar
@@ -58,7 +58,7 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ text, id, index, co
         <CustomDivider key={`${index} error`} />
         <StyledScrollbar className="alert-text">
           <Typography className="alert-info-text" color={theme.palette.errorText.main}>
-            {text}
+            {message}
           </Typography>
         </StyledScrollbar>
       </div>
