@@ -13,7 +13,7 @@
     "color-thief-node": "^1.0.4",
     "cors": "^2.8.5",
     "fastify": "^4.17.0",
-    "glob": "^10.2.3",
+    "glob": "^10.3.10",
     "md5": "^2.3.0",
     "mkdirp": "^3.0.1",
     "nearest-color": "^0.4.4",
