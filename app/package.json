@@ -1,14 +1,6 @@
 {
   "name": "@tsconline/app",
-  "private": true,
   "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "build-watch": "vite build --watch",
-    "preview": "vite preview"
-  },
   "dependencies": {
     "@emotion/react": "^11.10.6",
     "@emotion/styled": "^11.10.6",
@@ -19,8 +11,7 @@
     "@mui/material": "^5.12.0",
     "@mui/styles": "^5.15.2",
     "@szhsin/react-menu": "^4.1.0",
-    "@tsconline/shared": "workspace:^",
-    "@types/color": "^3.0.6",
+    "@tsconline/shared": "1.0.0",
     "clsx": "^2.1.0",
     "color": "^4.2.3",
     "lottie-web": "^5.12.2",
@@ -40,10 +31,20 @@
     "simplebar-react": "^3.2.4"
   },
   "devDependencies": {
+    "@types/color": "^3.0.6",
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
     "@vitejs/plugin-react": "^3.1.0",
-    "typescript": "^4.9.3",
+    "typescript": "5.2.2",
     "vite": "^4.1.0"
-  }
+  },
+  "private": true,
+  "scripts": {
+    "build": "tsc && vite build",
+    "build-watch": "vite build --watch",
+    "dev": "vite",
+    "preview": "vite preview",
+    "clean": "rm -rf ./dist"
+  },
+  "type": "module"
 }
