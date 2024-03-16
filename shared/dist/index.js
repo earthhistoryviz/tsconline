@@ -30,6 +30,49 @@ export const defaultFontsInfo = {
     "Uncertainty Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 5 },
     "Zone Column Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12 }
 };
+export function assertSubRangeInfo(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("SubRangeInfo must be a non-null object");
+    if (typeof o.label !== "string")
+        throwError("SubRangeInfo", "label", "string", o.label);
+    if (typeof o.age !== "number")
+        throwError("SubRangeInfo", "age", "number", o.age);
+    if (typeof o.abundance !== "string")
+        throwError("SubRangeInfo", "abundance", "string", o.abundance);
+    if (!/TOP|missing|rare|common|frequent|abundant|sample|flood/.test(o.abundance))
+        throwError("SubRangeInfo", "abundance", "TOP | missing | rare | common | frequent | abundant | sample | flood", o.abundance);
+    if (typeof o.popup !== "string")
+        throwError("SubRangeInfo", "popup", "string", o.popup);
+}
+export function assertRange(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("Range must be a non-null object");
+    if (!Array.isArray(o.subRangeInfo))
+        throwError("Range", "subRangeInfo", "array", o.subRangeInfo);
+    for (const subRange of o.subRangeInfo) {
+        assertSubRangeInfo(subRange);
+    }
+    assertColumnHeaderProps(o);
+}
+export function assertColumnHeaderProps(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("ColumnHeaderProps must be an object");
+    if (typeof o.name !== "string")
+        throwError("ColumnHeaderProps", "name", "string", o.name);
+    if (typeof o.minAge !== "number")
+        throwError("ColumnHeaderProps", "minAge", "number", o.minAge);
+    if (typeof o.maxAge !== "number")
+        throwError("ColumnHeaderProps", "maxAge", "number", o.maxAge);
+    if (typeof o.enableTitle !== "boolean")
+        throwError("ColumnHeaderProps", "enableTitle", "boolean", o.enableTitle);
+    if (typeof o.on !== "boolean")
+        throwError("ColumnHeaderProps", "on", "boolean", o.on);
+    if (typeof o.width !== "number")
+        throwError("ColumnHeaderProps", "width", "number", o.width);
+    if (typeof o.popup !== "string")
+        throwError("ColumnHeaderProps", "popup", "string", o.popup);
+    assertRGB(o.rgb);
+}
 export function assertRGB(o) {
     if (!o || typeof o !== "object")
         throw new Error("RGB must be a non-null object");
@@ -45,6 +88,28 @@ export function assertRGB(o) {
         throwError("RGB", "b", "number", o.b);
     if (o.b < 0 || o.b > 255)
         throwError("RGB", "b", "number between 0 and 255", o.b);
+}
+export function assertEvent(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("Event must be a non-null object");
+    if (!Array.isArray(o.subEventInfo))
+        throwError("Event", "subEventInfo", "array", o.subEventInfo);
+    for (const subEvent of o.subEventInfo) {
+        assertSubEventInfo(subEvent);
+    }
+    assertColumnHeaderProps(o);
+}
+export function assertSubEventInfo(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("SubEventInfo must be a non-null object");
+    if (typeof o.label !== "string")
+        throwError("SubEventInfo", "label", "string", o.label);
+    if (typeof o.age !== "number")
+        throwError("SubEventInfo", "age", "number", o.age);
+    if (typeof o.popup !== "string")
+        throwError("SubEventInfo", "popup", "string", o.popup);
+    if (typeof o.lineStyle !== "string" || !/^dotted|dashed|solid$/.test(o.lineStyle))
+        throwError("SubEventInfo", "lineStyle", "dotted | dashed | solid", o.lineStyle);
 }
 export function assertColor(o) {
     if (!o || typeof o !== "object")
@@ -142,43 +207,20 @@ export function assertSubBlockInfo(o) {
 export function assertBlock(o) {
     if (!o || typeof o !== "object")
         throw new Error("Block must be a non-null object");
-    if (typeof o.title !== "string")
-        throwError("Block", "title", "string", o.title);
     for (const subBlockInfo of o.subBlockInfo) {
         assertSubBlockInfo(subBlockInfo);
     }
-    if (typeof o.minAge !== "number")
-        throwError("Block", "minAge", "number", o.minAge);
-    if (typeof o.maxAge !== "number")
-        throwError("Block", "maxAge", "number", o.maxAge);
-    if (typeof o.popop !== "string")
-        throwError("Block", "popup", "string", o.popop);
-    if (typeof o.on !== "boolean")
-        throwError("Block", "on", "boolean", o.on);
-    if (typeof o.enableTitle !== "boolean")
-        throwError("Block", "enableTitle", "boolean", o.enableTitle);
-    if (typeof o.width !== "number")
-        throwError("Block", "width", "number", o.width);
-    assertRGB(o.rgb);
+    assertColumnHeaderProps(o);
 }
 export function assertFacies(o) {
     if (!o || typeof o !== "object")
         throw new Error("Facies must be a non-null object");
-    if (typeof o.name !== "string")
-        throw new Error("Facies must have a name with type string");
-    if (typeof o.info !== "string")
-        throw new Error("Facies must have an info field with type string");
-    if (typeof o.on !== "boolean")
-        throw new Error("Facies must have an on field with type boolean");
-    if (typeof o.minAge !== "number")
-        throw new Error("Facies must have a min age with type number");
-    if (typeof o.maxAge !== "number")
-        throw new Error("Facies must have a max age with type number");
     if (!Array.isArray(o.faciesTimeBlockInfo))
         throw new Error("Facies must have a faciesTimeBlockInfo field with type array");
     for (const block of o.faciesTimeBlockInfo) {
         assertSubFaciesInfo(block);
     }
+    assertColumnHeaderProps(o);
 }
 export function assertDatapackParsingPack(o) {
     if (!o || typeof o !== "object")
@@ -271,16 +313,23 @@ export function assertColumnInfo(o) {
     }
     if (typeof o.name !== "string")
         throwError("ColumnInfo", "name", "string", o.name);
+    if (typeof o.editName !== "string")
+        throwError("ColumnInfo", "editName", "string", o.editName);
     if (typeof o.on !== "boolean")
         throwError("ColumnInfo", "on", "boolean", o.on);
-    if (typeof o.info !== "string")
-        throwError("ColumnInfo", "info", "string", o.info);
+    if (typeof o.popup !== "string")
+        throwError("ColumnInfo", "popup", "string", o.popup);
     if (o.parent !== null && typeof o.parent !== "string")
         throwError("ColumnInfo", "parent", "string", o.parent);
     if (typeof o.minAge !== "number")
         throwError("ColumnInfo", "minAge", "number", o.minAge);
     if (typeof o.maxAge !== "number")
         throwError("ColumnInfo", "maxAge", "number", o.maxAge);
+    if (typeof o.width !== "number")
+        throwError("ColumnInfo", "width", "number", o.width);
+    if (typeof o.enableTitle !== "boolean")
+        throwError("ColumnInfo", "enableTitle", "boolean", o.enableTitle);
+    assertRGB(o.rgb);
     for (const child of o.children) {
         assertColumnInfo(child);
     }
@@ -294,8 +343,22 @@ export function assertColumnInfo(o) {
     if ("subFaciesInfo" in o) {
         if (!o.subFaciesInfo || !Array.isArray(o.subFaciesInfo))
             throwError("ColumnInfo", "subFaciesInfo", "array", o.subFaciesInfo);
-        for (const block of o.subFaciesInfo) {
-            assertSubFaciesInfo(block);
+        for (const facies of o.subFaciesInfo) {
+            assertSubFaciesInfo(facies);
+        }
+    }
+    if ("subEventInfo" in o) {
+        if (!o.subEventInfo || !Array.isArray(o.subEventInfo))
+            throwError("ColumnInfo", "subEventInfo", "array", o.subEventInfo);
+        for (const event of o.subEventInfo) {
+            assertSubEventInfo(event);
+        }
+    }
+    if ("subRangeInfo" in o) {
+        if (!o.subRangeInfo || !Array.isArray(o.subRangeInfo))
+            throwError("ColumnInfo", "subRangeInfo", "array", o.subRangeInfo);
+        for (const range of o.subRangeInfo) {
+            assertSubRangeInfo(range);
         }
     }
 }
@@ -490,7 +553,7 @@ export function assertSVGStatus(o) {
  * @param value
  */
 function throwError(obj, variable, type, value) {
-    throw new Error(`Object '${obj}' must have a '${variable}' ${type} property.\nFound value: ${value}`);
+    throw new Error(`Object '${obj}' must have a '${variable}' ${type} property.\nFound value: ${value}\n`);
 }
 export function assertTimescale(val) {
     if (!val || typeof val !== "object") {

@@ -1,0 +1,9 @@
+Range Test	:	Range 1	Range 2
+
+Range 1	range		198/207/174		off	Range 1 info
+	Range 1 SubRangeInfo 1	28.4
+	Range 1 SubRangeInfo 2	33.9	rare	"popup"
+
+Range 2	range		198/207/174	notitle		Range 2 Info
+	Range 2 SubRangeInfo 1	0
+	Range 2 SubRange Info 2	0.01	flood
