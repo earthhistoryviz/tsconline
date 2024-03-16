@@ -1,0 +1,58 @@
+:root {
+  --alert-width: 300px;
+  --alert-height: 100px;
+  --side-margin: 20px;
+}
+
+.alert {
+  width: var(--alert-width);
+  height: var(--alert-height);
+  display: grid;
+  grid-template-rows: 1fr 5px 60px;
+  align-items: flex-start;
+  font-size: 0.8rem;
+  border-radius: 10px;
+  box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.2);
+}
+.alert-title {
+  display: inline-flex;
+  align-items: center;
+}
+.alert-text .simplebar-content {
+  margin-left: var(--side-margin);
+  margin-right: var(--side-margin);
+  width: calc(var(--alert-width) - 2 * var(--side-margin));
+}
+.MuiIconButton-root.alert-close {
+  width: 20px;
+  height: 20px;
+  padding: 0px;
+  justify-content: center;
+}
+.MuiSvgIcon-root.alert-close-icon {
+  width: inherit;
+  height: inherit;
+  color: white;
+  margin: 0px;
+}
+.alert-header {
+  width: calc(var(--alert-width) - var(--side-margin));
+  display: inline-flex;
+  padding-top: 10px;
+  margin-right: calc(var(--side-margin) / 2);
+  margin-left: calc(var(--side-margin) / 2);
+  padding-bottom: 5px;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+}
+.MuiTypography-root.alert-info-text {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+.MuiTypography-root.error-title {
+  font-size: 1rem;
+  padding-left: 15px;
+  padding-right: 15px;
+  font-weight: 600;
+}

@@ -32,8 +32,14 @@ export default observer(function App() {
         <Route path="/help" element={<Help />} />
         <Route path="/about" element={<About />} />
       </Routes>
-      {state.errorAlerts.map((error) => (
-        <TSCError key={error.id} text={error.errorText} id={error.id} />
+      {Array.from(state.errors.errorAlerts.entries()).map(([context, error], index) => (
+        <TSCError
+          key={context}
+          errorContext={context}
+          message={error.errorText}
+          index={index}
+          count={error.errorCount}
+        />
       ))}
       <TSCPopupDialog
         open={state.showSuggestedAgePopup}
@@ -51,7 +57,7 @@ export default observer(function App() {
         <Alert
           severity="success"
           variant="filled"
-          className="alert"
+          className="success-alert"
           iconMapping={{
             success: <Lottie animationData={ChartDoneIcon} speed={0.7} autoplay />
           }}>

@@ -25,9 +25,10 @@ import { state, State } from "../state";
 import { fetcher, devSafeUrl } from "../../util";
 import { initializeColumnHashMap } from "./column-actions";
 import { jsonToXml, xmlToJson } from "../parse-settings";
-import { displayError } from "./util-actions";
+import { displayServerError } from "./util-actions";
 import { Settings } from "../../types";
 import { compareStrings } from "../../util/util";
+import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 
 export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   try {
@@ -42,10 +43,10 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
       };
       console.log("Successfully fetched Map Patterns");
     } else {
-      displayError(null, patternJson, `Server responded with ${response.status}`); // THIS IS THE CODE
+      displayServerError(response, ErrorCodes.INVALID_PATTERN_INFO, ErrorMessages[ErrorCodes.INVALID_PATTERN_INFO]); // THIS IS THE CODE
     }
   } catch (e) {
-    displayError(e, null, "Error fetching the facies patterns");
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
   }
 });
@@ -69,27 +70,41 @@ export const resetSettings = action("resetSettings", () => {
 });
 
 export const fetchDatapackInfo = action("fetchDatapackInfo", async () => {
-  const response = await fetcher("/datapackinfoindex", {
-    method: "GET"
-  });
-  const indexResponse = await response.json();
   try {
-    assertIndexResponse(indexResponse);
-    loadIndexResponse(indexResponse);
-    console.log("Datapacks loaded");
+    const response = await fetcher("/datapackinfoindex", {
+      method: "GET"
+    });
+    const indexResponse = await response.json();
+    try {
+      assertIndexResponse(indexResponse);
+      loadIndexResponse(indexResponse);
+      console.log("Datapacks loaded");
+    } catch (e) {
+      displayServerError(
+        indexResponse,
+        ErrorCodes.INVALID_DATAPACK_INFO,
+        ErrorMessages[ErrorCodes.INVALID_DATAPACK_INFO]
+      );
+    }
   } catch (e) {
-    displayError(e, indexResponse, "Failed to fetch DatapackInfo");
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
   }
 });
 export const fetchPresets = action("fetchPresets", async () => {
-  const response = await fetcher("/presets");
-  const presets = await response.json();
   try {
-    assertPresets(presets);
-    loadPresets(presets);
-    console.log("Presets loaded");
+    const response = await fetcher("/presets");
+    const presets = await response.json();
+    try {
+      assertPresets(presets);
+      loadPresets(presets);
+      console.log("Presets loaded");
+    } catch (e) {
+      displayServerError(presets, ErrorCodes.INVALID_PRESET_INFO, ErrorMessages[ErrorCodes.INVALID_PRESET_INFO]);
+    }
   } catch (e) {
-    displayError(e, presets, "Failed to retrieve presets");
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
   }
 });
 
@@ -124,10 +139,10 @@ export const fetchTimescaleDataAction = action("fetchTimescaleData", async () =>
 
       console.log("Time Scale Data Loaded");
     } else {
-      displayError(null, data, `Server responded with ${response.status}`);
+      displayServerError(data, ErrorCodes.INVALID_TIME_SCALE, ErrorMessages[ErrorCodes.INVALID_TIME_SCALE]);
     }
   } catch (error) {
-    displayError(null, null, "Error fetching timescale data");
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
   }
 });
 
@@ -211,11 +226,7 @@ export const setDatapackConfig = action(
       assertColumnInfo(columnInfo);
       assertMapInfo(mapInfo);
     } catch (e) {
-      displayError(
-        e,
-        null,
-        `Error occured while changing datapack information on the website: ${e} with datapacks ${datapacks}`
-      );
+      pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
       return false;
     }
     state.settings.datapackContainsSuggAge = datapackAgeInfo.datapackContainsSuggAge;
@@ -239,7 +250,11 @@ export const setDatapackConfig = action(
         const settingsJson = xmlToJson(settingsXml);
         runInAction(() => (state.settingsJSON = settingsJson)); // Save the parsed JSON to the state.settingsJSON
       } catch (e) {
-        displayError(e, null, "Error fetching settings from server");
+        displayServerError(
+          null,
+          ErrorCodes.INVALID_SETTINGS_RESPONSE,
+          ErrorMessages[ErrorCodes.INVALID_SETTINGS_RESPONSE]
+        );
         return false;
       }
     } else {
@@ -279,7 +294,7 @@ export const removeCache = action("removeCache", async () => {
     assertSuccessfulServerResponse(msg);
     console.log(`Server successfully deleted cache with message: ${msg.message}`);
   } catch (e) {
-    displayError(e, msg, "Server could not remove cache");
+    displayServerError(e, msg, "Server could not remove cache");
     return;
   }
 });
@@ -334,7 +349,7 @@ export const generateChart = action("generateChart", async () => {
     await checkSVGStatus();
     setOpenSnackbar(true);
   } catch (e) {
-    displayError(e, answer, "Failed to fetch chart");
+    displayServerError(e, answer, "Failed to fetch chart");
     return;
   }
 });
@@ -506,7 +521,11 @@ async function fetchSVGStatus(): Promise<boolean> {
   try {
     assertSVGStatus(data);
   } catch (e) {
-    displayError(e, data, `Could not fetch SVG status`);
+    displayServerError(
+      data,
+      ErrorCodes.INVALID_SVG_READY_RESPONSE,
+      ErrorMessages[ErrorCodes.INVALID_SVG_READY_RESPONSE]
+    );
     const msg = `Error fetching SVG status with error ${e}`;
     throw new Error(msg);
   }
@@ -523,14 +542,19 @@ export const handleCloseSnackbar = action(
   }
 );
 
-export const removeError = action("removeError", (id: number) => {
-  state.errorAlerts = state.errorAlerts.filter((error) => error.id !== id);
+export const removeError = action("removeError", (context: ErrorCodes) => {
+  state.errors.errorAlerts.delete(context);
 });
-export const pushError = action("pushError", (text: string) => {
-  state.errorAlerts.push({
-    id: new Date().getTime(),
-    errorText: text
-  });
+export const pushError = action("pushError", (context: ErrorCodes) => {
+  if (state.errors.errorAlerts.has(context)) {
+    state.errors.errorAlerts.get(context)!.errorCount += 1;
+    return;
+  }
+  const error = {
+    errorText: ErrorMessages[context],
+    errorCount: 1
+  };
+  state.errors.errorAlerts.set(context, error);
 });
 
 export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
