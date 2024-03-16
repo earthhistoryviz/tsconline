@@ -3415,7 +3415,6 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./shared/",\
         "packageDependencies": [\
           ["@tsconline/shared", "workspace:shared"],\
-          ["@fastify/cors", "npm:9.0.1"],\
           ["@types/node", "npm:20.11.28"],\
           ["typescript", "patch:typescript@npm%3A5.2.2#optional!builtin<compat/typescript>::version=5.2.2&hash=f3b441"]\
         ],\

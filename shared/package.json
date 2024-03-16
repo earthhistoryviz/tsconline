@@ -3,9 +3,6 @@
   "description": "",
   "version": "1.0.0",
   "author": "",
-  "dependencies": {
-    "@fastify/cors": "^9.0.1"
-  },
   "devDependencies": {
     "@types/node": "^20.11.28",
     "typescript": "5.2.2"
