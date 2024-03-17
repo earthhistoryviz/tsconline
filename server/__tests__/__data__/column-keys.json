@@ -292,6 +292,45 @@
                     "font": "Arial"
                 },
                 "editName": "Range"
+            },
+            {
+                "name": "Chron",
+                "editName": "Chron",
+                "on": true,
+                "enableTitle": false,
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "popup": "Chron Popup",
+                "children": [],
+                "parent": "Parent 1",
+                "minAge": 0,
+                "maxAge": 0.234,
+                "width": 100,
+                "rgb": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                },
+                "subChronInfo": [
+                    {
+                        "polarity": "TOP",
+                        "age": 0,
+                        "popup": ""
+                    },
+                    {
+                        "polarity": "N",
+                        "age": 0.123,
+                        "label": "SubChronInfo 1 Label",
+                        "popup": "SubChronInfo 1 Popup"
+                    },
+                    {
+                        "polarity": "R",
+                        "age": 0.234,
+                        "label": "SubChronInfo 2 Label",
+                        "popup": "SubChronInfo 2 Popup"
+                    }
+                ]
             }
             ],
             "parent": "Root",
@@ -596,6 +635,39 @@
             "maxAge": 100,
             "popup": "Range Popup",
             "on": true 
+        }, 
+        "Chron 1": {
+            "name": "Chron",
+            "subChronInfo": [
+                {
+                    "polarity": "TOP",
+                    "age": 0,
+                    "popup": ""
+                },
+                {
+                    "polarity": "N",
+                    "age": 0.123,
+                    "label": "SubChronInfo 1 Label",
+                    "popup": "SubChronInfo 1 Popup"
+                },
+                {
+                    "polarity": "R",
+                    "age": 0.234,
+                    "label": "SubChronInfo 2 Label",
+                    "popup": "SubChronInfo 2 Popup"
+                }
+            ],
+            "minAge": 0,
+            "maxAge": 0.234,
+            "on": true,
+            "enableTitle": false,
+            "width": 100,
+            "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+            },
+            "popup": "Chron Popup"
         }
     },
     "column-types-test-4-key": {

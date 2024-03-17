@@ -7,6 +7,7 @@ jest.mock("./util.js", () => ({
 }));
 jest.mock("@tsconline/shared", () => ({
   assertSubEventInfo: jest.fn().mockImplementation(() => true),
+  assertSubChronInfo: jest.fn().mockImplementation(() => true),
   assertSubFaciesInfo: jest.fn().mockImplementation(() => true),
   assertSubBlockInfo: jest.fn().mockImplementation(() => true),
   assertSubRangeInfo: jest.fn().mockImplementation(() => true),
@@ -52,7 +53,7 @@ describe("general parse-datapacks tests", () => {
    * Parses a custom simple pack of both facies and block
    * Checks both datapack ages and columnInfo values
    */
-  it("should parse general datapack with datapack age and blocks, facies, and events", async () => {
+  it("should parse general datapack with all column types", async () => {
     const datapacks = await parseDatapacks("parse-datapacks-test-2.txt", []);
     expect(datapacks).toEqual(key["general-parse-datapacks-test-2-key"]);
   });
@@ -229,6 +230,7 @@ describe("getColumnTypes tests", () => {
     expectedBlockMap.set(key["column-types-test-3-key"]["Block 1"].name, key["column-types-test-3-key"]["Block 1"]);
     expectedEventMap.set(key["column-types-test-3-key"]["Event 1"].name, key["column-types-test-3-key"]["Event 1"]);
     expectedRangeMap.set(key["column-types-test-3-key"]["Range 1"].name, key["column-types-test-3-key"]["Range 1"]);
+    expectedChronMap.set(key["column-types-test-3-key"]["Chron 1"].name, key["column-types-test-3-key"]["Chron 1"])
     expectMapsToBeEqual();
   });
 
