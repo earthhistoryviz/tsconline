@@ -329,9 +329,9 @@
             "name": "FaciesOne",
             "width": 500,
             "rgb": {
-                "r": 234,
-                "g": 221,
-                "b": 221
+                "r": 255,
+                "g": 255,
+                "b": 255
             },
             "subFaciesInfo": [
                 {

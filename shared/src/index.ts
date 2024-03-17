@@ -274,6 +274,7 @@ export type ColumnInfo = {
   subFaciesInfo?: SubFaciesInfo[];
   subEventInfo?: SubEventInfo[];
   subRangeInfo?: SubRangeInfo[];
+  subChronInfo?: SubChronInfo[];
   minAge: number;
   maxAge: number;
   enableTitle: boolean;
@@ -283,6 +284,16 @@ export type ColumnInfo = {
 
 export type Range = ColumnHeaderProps & {
   subRangeInfo: SubRangeInfo[];
+};
+export type Chron = ColumnHeaderProps & {
+  subChronInfo: SubChronInfo[];
+};
+
+export type SubChronInfo = {
+  polarity: "TOP" | "N" | "R" | "U" | "No Data";
+  label?: string;
+  age: number;
+  popup: string;
 };
 
 export type SubRangeInfo = {
@@ -398,6 +409,21 @@ export type TimescaleItem = {
   value: number;
 };
 
+export function assertChron(o: any): asserts o is Chron {
+  if (!o || typeof o !== "object") throw new Error("Chron must be a non-null object");
+  if (!Array.isArray(o.subChronInfo)) throwError("Chron", "subChronInfo", "array", o.subChronInfo);
+  for (const subChron of o.subChronInfo) {
+    assertSubChronInfo(subChron);
+  }
+}
+export function assertSubChronInfo(o: any): asserts o is SubChronInfo {
+  if (!o || typeof o !== "object") throw new Error("SubChronInfo must be a non-null object");
+  if (typeof o.polarity !== "string" || !/^TOP|N|R|U|No Data/.test(o.polarity))
+    throwError("SubChronInfo", "polarity", "string and TOP | N | R| U | No Data", o.polarity);
+  if (o.label && typeof o.label !== "string") throwError("SubChronInfo", "label", "string", o.label);
+  if (typeof o.age !== "number") throwError("SubChronInfo", "age", "number", o.age);
+  if (typeof o.popup !== "string") throwError("SubChronInfo", "popup", "string", o.popup);
+}
 export function assertSubRangeInfo(o: any): asserts o is SubRangeInfo {
   if (!o || typeof o !== "object") throw new Error("SubRangeInfo must be a non-null object");
   if (typeof o.label !== "string") throwError("SubRangeInfo", "label", "string", o.label);
