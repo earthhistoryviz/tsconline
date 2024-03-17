@@ -10,9 +10,9 @@ import FormControl from "@mui/material/FormControl";
 import Select, {SelectChangeEvent} from "@mui/material/Select";
 import FormatBoldIcon from "@mui/icons-material/FormatBold";
 import FormatItalicIcon from "@mui/icons-material/FormatItalic";
-import ColorPicker from 'material-ui-color-picker'
 
 import ChangeColor from './ChangeColorMenu'
+import { FontMenu } from "./FontMenu";
 
 const EditNameField: React.FC<{}> = observer(({}) => {
     const {state, actions} = useContext(context);

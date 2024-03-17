@@ -61,6 +61,7 @@ const ChangeColor: React.FC<{}> = observer(({}) => {
                             <Grid item xs={12} className="color-picker">
                                 {
                                     <div>
+                                        {/* @ts-expect-error Server Component */}
                                         <PhotoshopPicker color={selectedColor} onChange={handleColorChange}
                                             className="photoshop-picker" onAccept={() => {handleCurrentChange(selectedColor); handleClose();}} 
                                             onCancel={() => {handleCancel()} } />
