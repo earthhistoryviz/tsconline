@@ -18,10 +18,14 @@ import {
   Range,
   ColumnHeaderProps,
   SubRangeInfo,
-  assertSubRangeInfo
+  assertSubRangeInfo,
+  Chron,
+  SubChronInfo,
+  assertSubChronInfo
 } from "@tsconline/shared";
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters } from "./util.js";
 import { createInterface } from "readline";
+import { create } from "domain";
 const patternForColor = /^\d+\/\d+\/\d+$/;
 const patternForLineStyle = /^solid|dashed|dotted$/;
 const patternForAbundance = /^TOP|missing|rare|common|frequent|abundant|sample|flood$/;
@@ -103,10 +107,11 @@ export async function parseDatapacks(decryptFilePath: string, files: string[]): 
   const blocksMap: Map<string, Block> = new Map();
   const eventMap: Map<string, Event> = new Map();
   const rangeMap: Map<string, Range> = new Map();
+  const chronMap: Map<string, Chron> = new Map();
   try {
     for (const decryptPath of decryptPaths) {
       //get the facies/blocks first
-      await getColumnTypes(decryptPath, faciesMap, blocksMap, eventMap, rangeMap);
+      await getColumnTypes(decryptPath, faciesMap, blocksMap, eventMap, rangeMap, chronMap);
       // Originally the first step, gather all parents and their direct children
       await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
       // only iterate over parents. if we encounter one that is a child, the recursive function
@@ -114,7 +119,18 @@ export async function parseDatapacks(decryptFilePath: string, files: string[]): 
       allEntries.forEach((children, parent) => {
         // if the parent is not a child
         if (!isChild.has(parent)) {
-          recursive("Root", parent, children, columnInfoArray, allEntries, faciesMap, blocksMap, eventMap, rangeMap);
+          recursive(
+            "Root",
+            parent,
+            children,
+            columnInfoArray,
+            allEntries,
+            faciesMap,
+            blocksMap,
+            eventMap,
+            rangeMap,
+            chronMap
+          );
         }
       });
     }
@@ -208,70 +224,38 @@ export async function getColumnTypes(
   faciesMap: Map<string, Facies>,
   blocksMap: Map<string, Block>,
   eventMap: Map<string, Event>,
-  rangeMap: Map<string, Range>
+  rangeMap: Map<string, Range>,
+  chronMap: Map<string, Chron>
 ) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
-  const facies: Facies = {
-    name: "",
-    subFaciesInfo: [],
-    minAge: Number.MAX_VALUE,
-    maxAge: Number.MIN_VALUE,
-    popup: "",
-    on: true,
-    width: 100,
-    enableTitle: true,
-    rgb: {
-      r: 255,
-      g: 255,
-      b: 255
-    }
-  };
-  const block: Block = {
-    name: "",
-    subBlockInfo: [],
-    width: 100,
-    minAge: Number.MAX_VALUE,
-    maxAge: Number.MIN_VALUE,
-    popup: "",
-    on: true,
-    enableTitle: true,
-    rgb: { r: 255, g: 255, b: 255 }
+  const range: Range = {
+    ...createDefaultColumnHeaderProps(),
+    subRangeInfo: []
   };
   const event: Event = {
-    name: "",
+    ...createDefaultColumnHeaderProps(),
     subEventInfo: [],
-    enableTitle: true,
     width: 150,
-    rgb: {
-      r: 255,
-      g: 255,
-      b: 255
-    },
-    minAge: Number.MAX_VALUE,
-    maxAge: Number.MIN_VALUE,
-    popup: "",
     on: false
   };
-  const range: Range = {
-    name: "",
-    subRangeInfo: [],
-    enableTitle: true,
-    width: 100,
-    rgb: {
-      r: 255,
-      g: 255,
-      b: 255
-    },
-    minAge: Number.MAX_VALUE,
-    maxAge: Number.MIN_VALUE,
-    popup: "",
-    on: true
+  const facies: Facies = {
+    ...createDefaultColumnHeaderProps(),
+    subFaciesInfo: []
+  };
+  const block: Block = {
+    ...createDefaultColumnHeaderProps(),
+    subBlockInfo: []
+  };
+  const chron: Chron = {
+    ...createDefaultColumnHeaderProps(),
+    subChronInfo: []
   };
   let inFaciesBlock = false;
   let inBlockBlock = false;
   let inEventBlock = false;
   let inRangeBlock = false;
+  let inChronBlock = false;
 
   for await (const line of readline) {
     if (!line || trimInvisibleCharacters(line) === "") {
@@ -297,6 +281,11 @@ export async function getColumnTypes(
       if (inRangeBlock) {
         inRangeBlock = false;
         addRangeToRangeMap(range, rangeMap);
+        continue;
+      }
+      if (inChronBlock) {
+        inChronBlock = false;
+        addChronToChronMap(chron, chronMap);
         continue;
       }
     }
@@ -331,6 +320,16 @@ export async function getColumnTypes(
       }
     }
 
+    if (!inChronBlock && (tabSeparated[1] === "chron" || tabSeparated[1] === "chron-only")) {
+      setColumnHeaders(chron, tabSeparated);
+      inChronBlock = true;
+    } else if (inChronBlock) {
+      const subChronInfo = processChron(line);
+      if (subChronInfo) {
+        chron.subChronInfo.push(subChronInfo);
+      }
+    }
+
     // we found a block
     if (!inBlockBlock && tabSeparated[1] === "block") {
       setColumnHeaders(block, tabSeparated);
@@ -362,6 +361,9 @@ export async function getColumnTypes(
   }
   if (inRangeBlock) {
     addRangeToRangeMap(range, rangeMap);
+  }
+  if (inChronBlock) {
+    addChronToChronMap(chron, chronMap);
   }
 }
 
@@ -400,25 +402,22 @@ function setColumnHeaders(column: ColumnHeaderProps, tabSeparated: string[]) {
   }
 }
 
+function addChronToChronMap(chron: Chron, chronMap: Map<string, Chron>) {
+  for (const subChron of chron.subChronInfo) {
+    chron.minAge = Math.min(subChron.age, chron.minAge);
+    chron.maxAge = Math.max(subChron.age, chron.maxAge);
+  }
+  chronMap.set(chron.name, JSON.parse(JSON.stringify(chron)));
+  Object.assign(chron, { ...createDefaultColumnHeaderProps(), subChronInfo: [] });
+}
+
 function addRangeToRangeMap(range: Range, rangeMap: Map<string, Range>) {
   for (const subRange of range.subRangeInfo) {
     range.minAge = Math.min(subRange.age, range.minAge);
     range.maxAge = Math.max(subRange.age, range.maxAge);
   }
   rangeMap.set(range.name, JSON.parse(JSON.stringify(range)));
-  range.name = "";
-  range.subRangeInfo = [];
-  range.minAge = Number.MAX_VALUE;
-  range.maxAge = Number.MIN_VALUE;
-  range.popup = "";
-  range.on = true;
-  range.enableTitle = true;
-  range.width = 100;
-  range.rgb = {
-    r: 255,
-    g: 255,
-    b: 255
-  };
+  Object.assign(range, { ...createDefaultColumnHeaderProps(), subRangeInfo: [] });
 }
 /**
  * add an event object to the event map and resets event object
@@ -431,19 +430,7 @@ function addEventToEventMap(event: Event, eventMap: Map<string, Event>) {
     event.maxAge = Math.max(subEvent.age, event.maxAge);
   }
   eventMap.set(event.name, JSON.parse(JSON.stringify(event)));
-  event.name = "";
-  event.subEventInfo = [];
-  event.minAge = Number.MAX_VALUE;
-  event.maxAge = Number.MIN_VALUE;
-  event.popup = "";
-  event.enableTitle = true;
-  event.width = 150;
-  event.on = false;
-  event.rgb = {
-    r: 255,
-    g: 255,
-    b: 255
-  };
+  Object.assign(event, { ...createDefaultColumnHeaderProps({ width: 150, on: false }), subEventInfo: [] });
 }
 
 /**
@@ -457,19 +444,7 @@ function addFaciesToFaciesMap(facies: Facies, faciesMap: Map<string, Facies>) {
     facies.maxAge = Math.max(block.age, facies.maxAge);
   }
   faciesMap.set(facies.name, JSON.parse(JSON.stringify(facies)));
-  facies.name = "";
-  facies.subFaciesInfo = [];
-  facies.minAge = Number.MAX_VALUE;
-  facies.maxAge = Number.MIN_VALUE;
-  facies.popup = "";
-  facies.on = true;
-  facies.enableTitle = true;
-  facies.width = 100;
-  facies.rgb = {
-    r: 255,
-    g: 255,
-    b: 255
-  };
+  Object.assign(facies, { ...createDefaultColumnHeaderProps(), subFaciesInfo: [] });
 }
 
 /**
@@ -483,16 +458,40 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
     block.maxAge = Math.max(subBlock.age, block.maxAge);
   }
   blocksMap.set(block.name, JSON.parse(JSON.stringify(block)));
-  block.name = "";
-  block.subBlockInfo = [];
-  block.minAge = Number.MAX_VALUE;
-  block.maxAge = Number.MIN_VALUE;
-  block.popup = "";
-  block.on = true;
-  block.enableTitle = true;
-  block.rgb = { r: 255, g: 255, b: 255 };
+  Object.assign(block, { ...createDefaultColumnHeaderProps(), subBlockInfo: [] });
 }
 
+export function processChron(line: string): SubChronInfo | null {
+  let subChronInfo = {};
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length < 4 || tabSeparated.length > 5) return null;
+  const polarity = tabSeparated[1]!;
+  const label = tabSeparated[2]!;
+  const age = Number(tabSeparated[3]!);
+  if (isNaN(age)) throw new Error("Error processing chron line, age: " + tabSeparated[3]! + " is NaN");
+  const popup = tabSeparated[4] || "";
+  if (label) {
+    subChronInfo = {
+      polarity,
+      age,
+      label,
+      popup
+    };
+  } else {
+    subChronInfo = {
+      polarity,
+      age,
+      popup
+    };
+  }
+  try {
+    assertSubChronInfo(subChronInfo);
+  } catch (e) {
+    console.log(`Error ${e} found while processing subBlockInfo, returning null`);
+    return null;
+  }
+  return subChronInfo;
+}
 /**
  * process a single subRangeInfo line
  * @param line
@@ -509,7 +508,7 @@ export function processRange(line: string): SubRangeInfo | null {
   if (tabSeparated.length < 3 || tabSeparated.length > 5) return null;
   const label = tabSeparated[1]!;
   const age = Number(tabSeparated[2]!);
-  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeparated[2]! + " is NaN");
+  if (isNaN(age)) throw new Error("Error processing range line, age: " + tabSeparated[2]! + " is NaN");
   const abundance = tabSeparated[3];
   const popup = tabSeparated[4];
   subRangeInfo.label = label;
@@ -544,7 +543,7 @@ export function processEvent(line: string): SubEventInfo | null {
   if (tabSeparated.length < 3 || tabSeparated.length > 5) return null;
   const label = tabSeparated[1]!;
   const age = Number(tabSeparated[2]!);
-  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeparated[2]! + " is NaN");
+  if (isNaN(age)) throw new Error("Error processing event line, age: " + tabSeparated[2]! + " is NaN");
   const lineStyle = tabSeparated[3];
   const popup = tabSeparated[4];
   subEventInfo.label = label;
@@ -697,7 +696,8 @@ function recursive(
   faciesMap: Map<string, Facies>,
   blocksMap: Map<string, Block>,
   eventMap: Map<string, Event>,
-  rangeMap: Map<string, Range>
+  rangeMap: Map<string, Range>,
+  chronMap: Map<string, Chron>
 ): FaciesFoundAndAgeRange {
   const currentColumnInfo: ColumnInfo = {
     name: trimInvisibleCharacters(currentColumn),
@@ -765,6 +765,15 @@ function recursive(
     returnValue.maxAge = currentColumnInfo.maxAge;
     returnValue.minAge = currentColumnInfo.minAge;
   }
+  if (chronMap.has(currentColumn)) {
+    const currentChron = chronMap.get(currentColumn)!;
+    Object.assign(currentColumnInfo, {
+      ...currentChron,
+      subChronInfo: JSON.parse(JSON.stringify(currentChron.subChronInfo))
+    });
+    returnValue.maxAge = currentColumnInfo.maxAge;
+    returnValue.minAge = currentColumnInfo.minAge;
+  }
 
   childrenArray.push(currentColumnInfo);
 
@@ -782,7 +791,8 @@ function recursive(
         faciesMap,
         blocksMap,
         eventMap,
-        rangeMap
+        rangeMap,
+        chronMap
       );
       returnValue.minAge = Math.min(compareValue.minAge, returnValue.minAge);
       returnValue.maxAge = Math.max(compareValue.maxAge, returnValue.maxAge);
@@ -803,4 +813,20 @@ function recursive(
     });
   }
   return returnValue;
+}
+
+export function createDefaultColumnHeaderProps(overrides: Partial<ColumnHeaderProps> = {}): ColumnHeaderProps {
+  const defaultRGB: RGB = { r: 255, g: 255, b: 255 };
+  const defaultProps: ColumnHeaderProps = {
+    name: "",
+    minAge: Number.MAX_VALUE,
+    maxAge: Number.MIN_VALUE,
+    enableTitle: true,
+    on: true,
+    width: 100,
+    popup: "",
+    rgb: defaultRGB
+  };
+
+  return { ...defaultProps, ...overrides };
 }
