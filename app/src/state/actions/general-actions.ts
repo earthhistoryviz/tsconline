@@ -291,7 +291,7 @@ export const setDatapackConfig = action(
         runInAction(() => (state.settingsTSC = settingsTSC)); // Save the parsed JSON to the state.settingsJSON
       } catch (e) {
         console.log(e);
-        displayError(e, null, "Error parsing xml settings file");
+        displayServerError(e, ErrorCodes.INVALID_SETTINGS_RESPONSE, "Error parsing xml settings file");
         return false;
       }
     } else {

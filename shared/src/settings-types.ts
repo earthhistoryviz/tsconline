@@ -1,4 +1,5 @@
-import { FontsInfo } from ".";
+import { FontsInfo, assertFontsInfo, throwError } from "./index.js";
+
 export type ChartInfoTSC = {
   settings?: ChartSettingsInfoTSC;
   "class datastore.RootColumn:Chart Root"?: ColumnInfoTSC;
@@ -109,169 +110,154 @@ export function assertChartInfoTSC(o: any): asserts o is ChartInfoTSC {
 export function assertChartSettingsInfoTSC(o: any): asserts o is ChartSettingsInfoTSC {
   if (!o || typeof o !== "object") throw new Error("ChartSettingsInfoTSC must be a non-null object");
   if (o.topAge) {
-    if (typeof o.topAge.source !== "string") throw new Error("topAge source must be a string");
-    if (typeof o.topAge.unit !== "string") throw new Error("topAge unit must be a string");
-    if (typeof o.topAge.stage !== "string") throw new Error("topAge stage must be a string");
-    if (typeof o.topAge.text !== "number") throw new Error("topAge text must be a string");
+    if (typeof o.topAge.source !== "string") throwError("topAge", "source", "string", o.topAge.source);
+    if (typeof o.topAge.unit !== "string") throwError("topAge", "unit", "string", o.topAge.unit);
+    if (typeof o.topAge.stage !== "string") throwError("topAge stage", "stage", "string", o.topAge.stage);
+    if (typeof o.topAge.text !== "number") throwError("topAge", "text", "string", o.topAge.text);
   } else throw new Error("ColumnSettingsTSC must have a topAge property");
   if (o.baseAge) {
-    if (typeof o.baseAge.source !== "string") throw new Error("baseAge source must be a string");
-    if (typeof o.baseAge.unit !== "string") throw new Error("baseAge unit must be a string");
-    if (typeof o.baseAge.stage !== "string") throw new Error("baseAge stage must be a string");
-    if (typeof o.baseAge.text !== "number") throw new Error("baseAge text must be a string");
+    if (typeof o.baseAge.source !== "string") throwError("baseAge", "source", "string", o.baseAge.source);
+    if (typeof o.baseAge.unit !== "string") throwError("baseAge", "unit", "string", o.baseAge.unit);
+    if (typeof o.baseAge.stage !== "string") throwError("baseAge stage", "stage", "string", o.baseAge.stage);
+    if (typeof o.baseAge.text !== "number") throwError("baseAge", "text", "string", o.baseAge.text);
   } else throw new Error("ColumnSettingsTSC must have a baseAge property");
   if (o.unitsPerMY) {
-    if (typeof o.unitsPerMY.unit !== "string") throw new Error("unitsPerMY unit must be a string");
-    if (typeof o.unitsPerMY.text !== "number") throw new Error("unitsPerMY text must be a string");
+    if (typeof o.unitsPerMY.unit !== "string") throwError("unitsPerMY", "unit", "string", o.unitsPerMY.unit);
+    if (typeof o.unitsPerMY.text !== "number") throwError("unitsPerMY", "text", "number", o.unitsPerMY.text);
   } else throw new Error("ColumnSettingsTSC must have a unitsPerMY property");
   if (o.skipEmptyColumns) {
-    if (typeof o.skipEmptyColumns.unit !== "string") throw new Error("skipEmptyColumns unit must be a string");
-    if (typeof o.skipEmptyColumns.text !== "number") throw new Error("skipEmptyColumns text must be a string");
+    if (typeof o.skipEmptyColumns.unit !== "string")
+      throwError("skipEmptyColumns", "unit", "string", o.skipEmptyColumns.unit);
+    if (typeof o.skipEmptyColumns.text !== "number")
+      throwError("skipEmptyColumns", "text", "number", o.skipEmptyColumns.text);
   } else throw new Error("ColumnSettingsTSC must have a skipEmptyColumns property");
   if (typeof o.variableColors !== "string")
-    throw new Error("ColumnSettingsInfo must have variableColors with type string");
+    throwError("ColumnSettingsInfo", "variableColors", "string", o.variableColors);
   if (typeof o.noIndentPattern !== "boolean")
-    throw new Error("ColumnSettingsInfo must have noINdentPattern with type boolean");
-  if (typeof o.negativeChk !== "boolean") throw new Error("ColumnSettingsInfo must have negativeChk with type boolean");
-  if (typeof o.doPopups !== "boolean") throw new Error("ColumnSettingsInfo must have doPopups with type boolean");
-  if (typeof o.enEventColBG !== "boolean")
-    throw new Error("ColumnSettingsInfo must have enEventColBG with type boolean");
+    throwError("ColumnSettingsInfo", "noIndentPattern", "boolean", o.noIndentPattern);
+  if (typeof o.negativeChk !== "boolean") throwError("ColumnSettingsInfo", "negativeChk", "boolean", o.negativeChk);
+  if (typeof o.doPopups !== "boolean") throwError("ColumnSettingsInfo", "doPopups", "boolean", o.doPopups);
+  if (typeof o.enEventColBG !== "boolean") throwError("ColumnSettingsInfo", "enEventColBG", "boolean", o.enEventColBG);
   if (typeof o.enChartLegend !== "boolean")
-    throw new Error("ColumnSettingsInfo must have enChartLegend with type boolean");
-  if (typeof o.enPriority !== "boolean") throw new Error("ColumnSettingsInfo must have enPriority with type boolean");
+    throwError("ColumnSettingsInfo", "enChartLegend", "boolean", o.enChartLegend);
+  if (typeof o.enPriority !== "boolean") throwError("ColumnSettingsInfo", "enPriority", "boolean", o.enPriority);
   if (typeof o.enHideBlockLable !== "boolean")
-    throw new Error("ColumnSettingsInfo must have enHideBlockLable with type boolean");
+    throwError("ColumnSettingsInfo", "enHideBlockLable", "boolean", o.enHideBlockLable);
 }
 
 export function assertColumnInfoTSC(o: any): asserts o is ColumnInfoTSC {
   if (!o || typeof o !== "object") throw new Error("ColumnInfoTSC must be a non-null object");
-  if (typeof o._id !== "string") throw new Error("ColumnInfoTSC must have _id with type string");
-  if (typeof o.title !== "string") throw new Error("ColumnInfoTSC must have title with type string");
-  if (typeof o.useNamedColor !== "boolean") throw new Error("ColumnInfoTSC must have useNamedColor with type boolean");
-  if (typeof o.placeHolder !== "boolean") throw new Error("ColumnInfoTSC must have placeHolder with type boolean");
-  if (typeof o.drawTitle !== "boolean") throw new Error("ColumnInfoTSC must have drawTitle with type boolean");
-  if (typeof o.drawAgeLabel !== "boolean") throw new Error("ColumnInfoTSC must have drawAgeLabel with type boolean");
+  if (typeof o._id !== "string") throwError("ColumnInfoTSC", "_id", "string", o._id);
+  if (typeof o.title !== "string") throwError("ColumnInfoTSC", "title", "string", o.title);
+  if (typeof o.useNamedColor !== "boolean") throwError("ColumnInfoTSC", "useNamedColor", "boolean", o.UseNamedColor);
+  if (typeof o.placeHolder !== "boolean") throwError("ColumnInfoTSC", "placeHolder", "boolean", o.placeHolder);
+  if (typeof o.drawTitle !== "boolean") throwError("ColumnInfoTSC", "drawTitle", "boolean", o.drawTitle);
+  if (typeof o.drawAgeLabel !== "boolean") throwError("ColumnInfoTSC", "drawAgeLabel", "boolean", o.drawAgeLabel);
   if (typeof o.drawUncertaintyLabel !== "boolean")
-    throw new Error("ColumnInfoTSC must have drawUncertaintyLabel with type boolean");
-  if (typeof o.isSelected !== "boolean") throw new Error("ColumnInfoTSC must have isSelected with type boolean");
-  if (typeof o.width !== "number") throw new Error("ColumnInfoTSC must have width with type number");
-  if (typeof o.pad !== "number") throw new Error("ColumnInfoTSC must have pad with type number");
-  if (typeof o["age pad"] !== "number") throw new Error("ColumnInfoTSC must have age pad with type number");
+    throwError("ColumnInfoTSC", "drawUncertaintlyLabel", "boolean", o.drawUncertaintyLabel);
+  if (typeof o.isSelected !== "boolean") throwError("ColumnInfoTSC", "isSelected", "boolean", o.isSelected);
+  if (typeof o.width !== "number") throwError("ColumnInfoTSC", "width", "number", o.width);
+  if (typeof o.pad !== "number") throwError("ColumnInfoTSC", "pad", "number", o.pad);
+  if (typeof o["age pad"] !== "number") throwError("ColumnInfoTSC", "age pad", "number", o["age pad"]);
   if (o.backgroundColor) {
     if ("standardized" in o.backgroundColor) {
       if (typeof o.backgroundColor.standardized !== "boolean")
-        throw new Error("ColumnInfoTSC backgroundColor standardized must have type boolean");
+        throwError("ColumnInfoTSC backgroundColor", "standardized", "boolean", o.backgroundColor.standardized);
     }
     if ("useNamed" in o.backgroundColor) {
       if (typeof o.backgroundColor.useNamed !== "boolean")
-        throw new Error("ColumnInfoTSC backgroundColor useNamed must have type boolean");
+        throwError("ColumnInfoTSC backgroundColor", "useNamed", "boolean", o.backgroundColor.useNamed);
     }
     if (typeof o.backgroundColor.text !== "string")
-      throw new Error("ColumnInfoTSC backgroundColor must have text with type string");
+      throwError("ColumnInfoTSC backgroundColor", "text", "string", o.backgroundColor.text);
   } else throw new Error("ColumnInfoTSC must have backgroundColor");
   if (o.customColor) {
     if ("standardized" in o.customColor) {
       if (typeof o.customColor.standardized !== "boolean")
-        throw new Error("ColumnInfoTSC customColor standardized must have type boolean");
+        throwError("ColumnInfoTSC customColor", "standardized", "boolean", o.customColor.standardized);
     }
     if ("useNamed" in o.customColor) {
       if (typeof o.customColor.useNamed !== "boolean")
-        throw new Error("ColumnInfoTSC customColor useNamed must have type boolean");
-    }
-    if (typeof o.customColor.text !== "string")
-      throw new Error("ColumnInfoTSC customColor must have text with type string");
-  } else throw new Error("ColumnInfoTSC must have customColor");
+        throwError("ColumnInfoTSC customColor", "useNamed", "boolean", o.customColor.standardized);
+      if (typeof o.customColor.text !== "string")
+        throwError("ColumnInfoTSC customColor", "text", "string", o.customColor.standardized);
+    } else throw new Error("ColumnInfoTSC must have customColor");
 
-  //TODO add fonts info assert here
-
-  if ("crunchOuterMargin" in o) {
-    if (typeof o.crunchOuterMargin !== "number")
-      throw new Error("ColumnInfoTSC crunchOuterMargin must have type number");
-  }
-  if ("crunchInnerMargin" in o) {
-    if (typeof o.crunchInnerMargin !== "number")
-      throw new Error("ColumnInfoTSC crunchInnerMargin must have type number");
-  }
-  if ("crunchAscendWidth" in o) {
-    if (typeof o.crunchAscendWidth !== "number")
-      throw new Error("ColumnInfoTSC crunchAscendWidth must have type number");
-  }
-  if ("crunchOneSideSpaceUse" in o) {
-    if (typeof o.crunchOneSideSpaceUse !== "number")
-      throw new Error("ColumnInfoTSC crunchOneSideSpaceUse must have type number");
-  }
-  if ("autoFlip" in o) {
-    if (typeof o.autoFlip !== "boolean") throw new Error("ColumnInfoTSC autoFlip must have type boolean");
-  }
-  if ("orientation" in o) {
-    if (o.orientation !== "vertical" && o.orientation !== "normal")
-      throw new Error("ColumnInfoTSC orientation must be vertical or normal");
-  }
-  if ("type" in o) {
-    if (typeof o.type !== "string") throw new Error("ColumnInfoTSC type must have type string");
-  }
-  if ("rangeSort" in o) {
-    if (typeof o.rangeSort !== "string") throw new Error("ColumnInfoTSC rangeSort must have type string");
-  }
-  if ("justification" in o) {
-    if (o.justification !== "left" && o.justification !== "right")
-      throw new Error("ColumnInfoTSC justification must be left or right");
-  }
-  if ("labelMarginLeft" in o) {
-    if (typeof o.labelMarginLeft !== "number") throw new Error("ColumnInfoTSC labelMarginLeft must have type number");
-  }
-  if ("labelMarginRight" in o) {
-    if (typeof o.labelMarginRight !== "number") throw new Error("ColumnInfoTSC labelMarginRight must have type number");
-  }
-  if ("graphStyle" in o) {
-    if (typeof o.graphStyle !== "string") throw new Error("ColumnInfoTSC graphStyle must have type string");
-  }
-  if ("drawNameLabel" in o) {
-    if (typeof o.drawNameLabel !== "boolean") throw new Error("ColumnInfoTSC drawNameLabel must have type number");
-  }
-  for (const key in o) {
-    switch (key) {
-      case "drawPoints":
-      case "drawLine":
-      case "drawSmooth":
-      case "drawFill":
-      case "doNotSetWindowAuto":
-      case "drawScale":
-      case "drawBgrndGradient":
-      case "drawCurveGradient":
-      case "flipScale":
-        if (typeof o[key] !== "boolean") {
-          throw new Error(`ColumnInfoTSC ${key} must have type boolean`);
-        }
-        break;
-      case "lineColor":
-      case "fillColor":
-      case "backGradStart":
-      case "backGradEnd":
-      case "curveGradStart":
-      case "curveGradEnd":
-        if (typeof o[key] !== "string") {
-          throw new Error(`ColumnInfoTSC ${key} must have type string`);
-        }
-        break;
-      case "minWindow":
-      case "maxWindow":
-      case "scaleStart":
-      case "scaleStep":
-        if (typeof o[key] !== "number") {
-          throw new Error(`ColumnInfoTSC ${key} must have type number`);
-        }
-        break;
-      case "pointType":
-        if (!["rect", "round", "tick"].includes(o[key] as string)) {
-          throw new Error(`ColumnInfoTSC ${key} must have value "rect", "round", or "tick"`);
-        }
-        break;
+    //TODO add fonts info assert here
+    assertFontsInfo(o.fonts);
+    for (const key in o) {
+      switch (key) {
+        //boolean
+        case "useNamedColor":
+        case "placeHolder":
+        case "drawTitle":
+        case "drawAgeLabel":
+        case "drawUncertaintyLabel":
+        case "isSelected":
+        case "autoFlip":
+        case "drawNameLabel":
+        case "drawPoints":
+        case "drawLine":
+        case "drawSmooth":
+        case "drawFill":
+        case "doNotSetWindowAuto":
+        case "drawScale":
+        case "drawBgrndGradient":
+        case "drawCurveGradient":
+        case "flipScale":
+          if (typeof o[key] !== "boolean") {
+            throwError("ColumnInfoTSC", key, "boolean", o[key]);
+          }
+          break;
+        //string
+        case "rangeSort":
+        case "graphStyle":
+        case "lineColor":
+        case "fillColor":
+        case "backGradStart":
+        case "backGradEnd":
+        case "curveGradStart":
+        case "curveGradEnd":
+          if (typeof o[key] !== "string") {
+            throwError("ColumnInfoTSC", key, "string", o[key]);
+          }
+          break;
+        //number
+        case "crunchOuterMargin":
+        case "crunchInnerMargin":
+        case "crunchAscendWidth":
+        case "crunchOneSideSpaceUse":
+        case "labelMarginLeft":
+        case "labelMarginRight":
+        case "minWindow":
+        case "maxWindow":
+        case "scaleStart":
+        case "scaleStep":
+          if (typeof o[key] !== "number") {
+            throwError("ColumnInfoTSC", key, "number", o[key]);
+          }
+          break;
+        //special cases
+        case "orientation":
+          if (!["vertical", "normal"].includes(o[key] as string)) {
+            throwError("ColumnInfoTSC", key, "vertical or normal", o[key]);
+          }
+          break;
+        case "justification":
+          if (!["left", "right"].includes(o[key] as string)) {
+            throwError("ColumnInfoTSC", key, "left or right", o[key]);
+          }
+          break;
+        case "pointType":
+          if (!["rect", "round", "tick"].includes(o[key] as string)) {
+            throwError("ColumnInfoTSC", key, "rect, round, or tick", o[key]);
+          }
+      }
     }
-  }
-  if ("children" in o) {
-    for (let i = 0; i < o.children.length; i++) {
-      assertColumnInfoTSC(o.children[i]);
+    if ("children" in o) {
+      for (let i = 0; i < o.children.length; i++) {
+        assertColumnInfoTSC(o.children[i]);
+      }
     }
   }
 }
