@@ -21,11 +21,13 @@ import {
   assertSubRangeInfo,
   Chron,
   SubChronInfo,
-  assertSubChronInfo
+  assertSubChronInfo,
+  Point,
+  assertSubPointInfo,
+  SubPointInfo
 } from "@tsconline/shared";
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters } from "./util.js";
 import { createInterface } from "readline";
-import { create } from "domain";
 const patternForColor = /^\d+\/\d+\/\d+$/;
 const patternForLineStyle = /^solid|dashed|dotted$/;
 const patternForAbundance = /^TOP|missing|rare|common|frequent|abundant|sample|flood$/;
@@ -108,10 +110,11 @@ export async function parseDatapacks(decryptFilePath: string, files: string[]): 
   const eventMap: Map<string, Event> = new Map();
   const rangeMap: Map<string, Range> = new Map();
   const chronMap: Map<string, Chron> = new Map();
+  const pointMap: Map<string, Point> = new Map();
   try {
     for (const decryptPath of decryptPaths) {
       //get the facies/blocks first
-      await getColumnTypes(decryptPath, faciesMap, blocksMap, eventMap, rangeMap, chronMap);
+      await getColumnTypes(decryptPath, faciesMap, blocksMap, eventMap, rangeMap, chronMap, pointMap);
       // Originally the first step, gather all parents and their direct children
       await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
       // only iterate over parents. if we encounter one that is a child, the recursive function
@@ -129,7 +132,8 @@ export async function parseDatapacks(decryptFilePath: string, files: string[]): 
             blocksMap,
             eventMap,
             rangeMap,
-            chronMap
+            chronMap,
+            pointMap
           );
         }
       });
@@ -225,10 +229,15 @@ export async function getColumnTypes(
   blocksMap: Map<string, Block>,
   eventMap: Map<string, Event>,
   rangeMap: Map<string, Range>,
-  chronMap: Map<string, Chron>
+  chronMap: Map<string, Chron>,
+  pointMap: Map<string, Point>
 ) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
+  const point: Point = {
+    ...createDefaultColumnHeaderProps(),
+    subPointInfo: []
+  };
   const range: Range = {
     ...createDefaultColumnHeaderProps(),
     subRangeInfo: []
@@ -256,6 +265,7 @@ export async function getColumnTypes(
   let inEventBlock = false;
   let inRangeBlock = false;
   let inChronBlock = false;
+  let inPointBlock = false;
 
   for await (const line of readline) {
     if (!line || trimInvisibleCharacters(line) === "") {
@@ -288,8 +298,23 @@ export async function getColumnTypes(
         addChronToChronMap(chron, chronMap);
         continue;
       }
+      if (inPointBlock) {
+        inPointBlock = false;
+        addPointToPointMap(point, pointMap);
+        continue;
+      }
     }
+
     const tabSeparated = line.split("\t");
+    if (!inPointBlock && tabSeparated[1] === "point") {
+      setColumnHeaders(point, tabSeparated);
+      inPointBlock = true;
+    } else if (inPointBlock) {
+      const subPointInfo = processPoint(line);
+      if (subPointInfo) {
+        point.subPointInfo.push(subPointInfo);
+      }
+    }
     if (!inRangeBlock && tabSeparated[1] === "range") {
       setColumnHeaders(range, tabSeparated);
       inRangeBlock = true;
@@ -402,6 +427,14 @@ function setColumnHeaders(column: ColumnHeaderProps, tabSeparated: string[]) {
   }
 }
 
+function addPointToPointMap(point: Point, pointMap: Map<string, Point>) {
+  for (const subPoint of point.subPointInfo) {
+    point.minAge = Math.min(subPoint.age, point.minAge);
+    point.maxAge = Math.max(subPoint.age, point.maxAge);
+  }
+  pointMap.set(point.name, JSON.parse(JSON.stringify(point)));
+  Object.assign(point, { ...createDefaultColumnHeaderProps(), subPointInfo: [] });
+}
 function addChronToChronMap(chron: Chron, chronMap: Map<string, Chron>) {
   for (const subChron of chron.subChronInfo) {
     chron.minAge = Math.min(subChron.age, chron.minAge);
@@ -562,6 +595,27 @@ export function processEvent(line: string): SubEventInfo | null {
   }
   return subEventInfo;
 }
+export function processPoint(line: string): SubPointInfo | null {
+  const subPointInfo = {
+    age: 0,
+    xVal: 0
+  }
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length !== 3 || tabSeparated[0]) return null;
+  const age = Number(tabSeparated[1]!);
+  const xVal = Number(tabSeparated[2]!);
+  if (isNaN(age)) throw new Error("Error processing point line, age: " + tabSeparated[1]! + " is NaN");
+  if (isNaN(xVal)) throw new Error("Error processing point line, xVal: " + tabSeparated[2]! + " is NaN");
+  subPointInfo.age = age;
+  subPointInfo.xVal = xVal;
+  try {
+    assertSubPointInfo(subPointInfo);
+  } catch (e) {
+    console.log(`Error ${e} found while processing subPointInfo, returning null`);
+    return null;
+  }
+  return subPointInfo;
+}
 /**
  * Processes a single subBlockInfo line
  * @param line the line to be processed
@@ -697,7 +751,8 @@ function recursive(
   blocksMap: Map<string, Block>,
   eventMap: Map<string, Event>,
   rangeMap: Map<string, Range>,
-  chronMap: Map<string, Chron>
+  chronMap: Map<string, Chron>,
+  pointMap: Map<string, Point>
 ): FaciesFoundAndAgeRange {
   const currentColumnInfo: ColumnInfo = {
     name: trimInvisibleCharacters(currentColumn),
@@ -774,6 +829,15 @@ function recursive(
     returnValue.maxAge = currentColumnInfo.maxAge;
     returnValue.minAge = currentColumnInfo.minAge;
   }
+  if (pointMap.has(currentColumn)) {
+    const currentPoint = pointMap.get(currentColumn)!;
+    Object.assign(currentColumnInfo, {
+      ...currentPoint,
+      subPointInfo: JSON.parse(JSON.stringify(currentPoint.subPointInfo))
+    });
+    returnValue.maxAge = currentColumnInfo.maxAge;
+    returnValue.minAge = currentColumnInfo.minAge;
+  }
 
   childrenArray.push(currentColumnInfo);
 
@@ -792,7 +856,8 @@ function recursive(
         blocksMap,
         eventMap,
         rangeMap,
-        chronMap
+        chronMap,
+        pointMap
       );
       returnValue.minAge = Math.min(compareValue.minAge, returnValue.minAge);
       returnValue.maxAge = Math.max(compareValue.maxAge, returnValue.maxAge);

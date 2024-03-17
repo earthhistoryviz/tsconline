@@ -275,6 +275,7 @@ export type ColumnInfo = {
   subEventInfo?: SubEventInfo[];
   subRangeInfo?: SubRangeInfo[];
   subChronInfo?: SubChronInfo[];
+  subPointInfo?: SubPointInfo[];
   minAge: number;
   maxAge: number;
   enableTitle: boolean;
@@ -285,8 +286,13 @@ export type ColumnInfo = {
 export type Range = ColumnHeaderProps & {
   subRangeInfo: SubRangeInfo[];
 };
+
 export type Chron = ColumnHeaderProps & {
   subChronInfo: SubChronInfo[];
+};
+
+export type Point = ColumnHeaderProps & {
+  subPointInfo: SubPointInfo[];
 };
 
 export type SubChronInfo = {
@@ -295,6 +301,11 @@ export type SubChronInfo = {
   age: number;
   popup: string;
 };
+
+export type SubPointInfo = {
+  age: number,
+  xVal: number
+}
 
 export type SubRangeInfo = {
   label: string;
@@ -409,6 +420,19 @@ export type TimescaleItem = {
   value: number;
 };
 
+export function assertPoint(o: any): asserts o is Point {
+  if (!o || typeof o !== "object") throw new Error("Point must be a non-null object");
+  if (!Array.isArray(o.subPointInfo)) throwError("Point", "subPointInfo", "array", o.subPointInfo);
+  for (const subPoint of o.subPointInfo) {
+    assertSubPointInfo(subPoint);
+  }
+  assertColumnHeaderProps(o);
+}
+export function assertSubPointInfo(o: any): asserts o is SubPointInfo {
+  if (!o || typeof o !== "object") throw new Error("SubPointInfo must be a non-null object");
+  if (typeof o.age !== "number") throwError("SubPointInfo", "age", "number", o.age);
+  if (typeof o.xVal !== "number") throwError("SubPointInfo", "xVal", "number", o.xVal);
+}
 export function assertChron(o: any): asserts o is Chron {
   if (!o || typeof o !== "object") throw new Error("Chron must be a non-null object");
   if (!Array.isArray(o.subChronInfo)) throwError("Chron", "subChronInfo", "array", o.subChronInfo);
@@ -685,6 +709,20 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
       throwError("ColumnInfo", "subRangeInfo", "array", o.subRangeInfo);
     for (const range of o.subRangeInfo) {
       assertSubRangeInfo(range);
+    }
+  }
+  if ("subChronInfo" in o) {
+    if (!o.subChronInfo || !Array.isArray(o.subChronInfo))
+      throwError("ColumnInfo", "subChronInfo", "array", o.subChronInfo);
+    for (const chron of o.subChronInfo) {
+      assertSubChronInfo(chron);
+    }
+  }
+  if ("subPointInfo" in o) {
+    if (!o.subPointInfo || !Array.isArray(o.subPointInfo))
+      throwError("ColumnInfo", "subPointInfo", "array", o.subPointInfo);
+    for (const point of o.subPointInfo) {
+      assertSubPointInfo(point);
     }
   }
 }
