@@ -1000,7 +1000,7 @@ export function assertSVGStatus(o: any): asserts o is SVGStatus {
  * @param type
  * @param value
  */
-function throwError(obj: string, variable: string, type: string, value: any) {
+export function throwError(obj: string, variable: string, type: string, value: any) {
   throw new Error(`Object '${obj}' must have a '${variable}' ${type} property.\nFound value: ${value}\n`);
 }
 
