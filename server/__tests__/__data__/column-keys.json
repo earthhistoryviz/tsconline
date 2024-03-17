@@ -143,13 +143,13 @@
             "width": 100,
             "children": [
             {
-                "name": "Child 1",
-                "editName": "Child 1",
+                "name": "Block",
+                "editName": "Block",
                 "on": false,
                 "fontsInfo": {
                     "font": "Arial"
                 },
-                "popup": "\"popup\"",
+                "popup": "Block Popup",
                 "children": [],
                 "parent": "Parent 1",
                 "minAge": 419.2,
@@ -174,9 +174,9 @@
                     }
                 },
                 {
-                    "label": "Child 1 SubBlock",
+                    "label": "Block SubBlock",
                     "age": 433.35,
-                    "popup": "Child 1 SubBlock Info",
+                    "popup": "Block SubBlock Info",
                     "lineStyle": "solid",
                     "rgb": {
                         "r": 197,
@@ -187,13 +187,13 @@
                 ]
             },
             {
-                "name": "Child 2",
-                "editName": "Child 2",
+                "name": "Facies",
+                "editName": "Facies",
                 "on": false,
                 "fontsInfo": {
                     "font": "Arial"
                 },
-                "popup": "Child 2 Info",
+                "popup": "Facies Popup",
                 "children": [],
                 "width": 210,
                 "enableTitle": false,
@@ -212,27 +212,27 @@
                         "info": ""
                     },
                     {
-                        "rockType": "Child 2 SubFaciesInfo 1",
-                        "label": "Child 2 SubFaciesInfo 1 Label",
+                        "rockType": "Facies SubFaciesInfo 1",
+                        "label": "Facies SubFaciesInfo 1 Label",
                         "age": 5,
                         "info": ""
                     },
                     {
-                        "rockType": "Child 2 SubFaciesInfo 2",
-                        "label": "Child 2 SubFaciesInfo 2 Label",
+                        "rockType": "Facies SubFaciesInfo 2",
+                        "label": "Facies SubFaciesInfo 2 Label",
                         "age": 10,
                         "info": ""
                     }
                 ]
             },
             {
-                "name": "Child 3",
-                "editName": "Child 3",
+                "name": "Event",
+                "editName": "Event",
                 "on": true,
                 "fontsInfo": {
                     "font": "Arial"
                 },
-                "popup": "Child 3 Info",
+                "popup": "Event Popup",
                 "children": [],
                 "parent": "Parent 1",
                 "minAge": 0.02,
@@ -248,19 +248,19 @@
                     {
                         "label": "SubEventInfo 1",
                         "age": 0.02,
-                        "popup": "Child 3 SubEventInfo Popup 1",
+                        "popup": "Event SubEventInfo Popup 1",
                         "lineStyle": "solid"
                     },
                     {
                         "label": "SubEventInfo 2",
                         "age": 0.4,
-                        "popup": "Child 3 SubEventInfo Popup 2",
+                        "popup": "Event SubEventInfo Popup 2",
                         "lineStyle": "solid"
                     }
                 ]
             },
             {
-                "name": "Child 4",
+                "name": "Range",
                 "subRangeInfo": [
                     {
                         "label": "SubRangeInfo 1",
@@ -272,7 +272,7 @@
                         "label": "SubRangeInfo 2",
                         "age": 100,
                         "abundance": "rare",
-                        "popup": "Child 4 SubRangeInfo Popup 2"
+                        "popup": "Range SubRangeInfo Popup 2"
                     }
                 ],
                 "enableTitle": true,
@@ -284,14 +284,14 @@
                 },
                 "minAge": 10,
                 "maxAge": 100,
-                "popup": "Child 4 Info",
+                "popup": "Range Popup",
                 "on": true,
                 "parent": "Parent 1",
                 "children": [],
                 "fontsInfo": {
                     "font": "Arial"
                 },
-                "editName": "Child 4"
+                "editName": "Range"
             }
             ],
             "parent": "Root",
@@ -304,14 +304,14 @@
                 "info": ""
             },
             {
-                "rockType": "Child 2 SubFaciesInfo 1",
-                "label": "Child 2 SubFaciesInfo 1 Label",
+                "rockType": "Facies SubFaciesInfo 1",
+                "label": "Facies SubFaciesInfo 1 Label",
                 "age": 5,
                 "info": ""
             },
             {
-                "rockType": "Child 2 SubFaciesInfo 2",
-                "label": "Child 2 SubFaciesInfo 2 Label",
+                "rockType": "Facies SubFaciesInfo 2",
+                "label": "Facies SubFaciesInfo 2 Label",
                 "age": 10,
                 "info": ""
             }
@@ -471,7 +471,7 @@
     },
     "column-types-test-3-key": {
         "Facies 1": {
-            "name": "Child 2",
+            "name": "Facies",
             "subFaciesInfo": [
                 {
                     "rockType": "TOP",
@@ -479,14 +479,14 @@
                     "info": ""
                 },
                 {
-                    "rockType": "Child 2 SubFaciesInfo 1",
-                    "label": "Child 2 SubFaciesInfo 1 Label",
+                    "rockType": "Facies SubFaciesInfo 1",
+                    "label": "Facies SubFaciesInfo 1 Label",
                     "age": 5,
                     "info": ""
                 },
                 {
-                    "rockType": "Child 2 SubFaciesInfo 2",
-                    "label": "Child 2 SubFaciesInfo 2 Label",
+                    "rockType": "Facies SubFaciesInfo 2",
+                    "label": "Facies SubFaciesInfo 2 Label",
                     "age": 10,
                     "info": ""
                 }
@@ -500,11 +500,11 @@
                 "g": 200,
                 "b": 255
             },
-            "popup": "Child 2 Info",
+            "popup": "Facies Popup",
             "on": false
         },
         "Block 1": {
-            "name": "Child 1",
+            "name": "Block",
             "subBlockInfo": [
                 {
                     "label": "TOP",
@@ -518,10 +518,10 @@
                     }
                 },
                 {
-                    "label": "Child 1 SubBlock",
+                    "label": "Block SubBlock",
                     "age": 433.35,
                     "lineStyle": "solid",
-                    "popup": "Child 1 SubBlock Info",
+                    "popup": "Block SubBlock Info",
                     "rgb": {
                         "r": 197,
                         "g": 217,
@@ -529,7 +529,7 @@
                     }
                 }
             ],
-            "popup": "\"popup\"",
+            "popup": "Block Popup",
             "on": false,
             "enableTitle": false,
             "rgb": {
@@ -542,19 +542,19 @@
             "maxAge": 433.35
         },
         "Event 1": {
-            "name": "Child 3",
+            "name": "Event",
             "on": true,
             "subEventInfo": [
                 {
                 "label": "SubEventInfo 1",
                 "age": 0.02,
-                "popup": "Child 3 SubEventInfo Popup 1",
+                "popup": "Event SubEventInfo Popup 1",
                 "lineStyle": "solid"
                 },
                 {
                 "label": "SubEventInfo 2",
                 "age": 0.4,
-                "popup": "Child 3 SubEventInfo Popup 2",
+                "popup": "Event SubEventInfo Popup 2",
                 "lineStyle": "solid"
                 }
             ],
@@ -567,10 +567,10 @@
             },
             "minAge": 0.02,
             "maxAge": 0.4,
-            "popup": "Child 3 Info"
+            "popup": "Event Popup"
         },
         "Range 1": {
-            "name": "Child 4",
+            "name": "Range",
             "subRangeInfo": [
               {
                 "label": "SubRangeInfo 1",
@@ -582,7 +582,7 @@
                 "label": "SubRangeInfo 2",
                 "age": 100,
                 "abundance": "rare",
-                "popup": "Child 4 SubRangeInfo Popup 2"
+                "popup": "Range SubRangeInfo Popup 2"
               }
             ],
             "enableTitle": true,
@@ -594,7 +594,7 @@
             },
             "minAge": 10,
             "maxAge": 100,
-            "popup": "Child 4 Info",
+            "popup": "Range Popup",
             "on": true 
         }
     },
