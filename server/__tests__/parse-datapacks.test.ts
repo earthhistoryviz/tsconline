@@ -279,6 +279,15 @@ describe("getColumnTypes tests", () => {
     expectMapsToBeEqual();
   });
 
+  it("should create correct chronMap only", async () => {
+    const file = "server/__tests__/__data__/parse-datapacks-test-7.txt";
+    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap);
+    for (const val in key["column-types-test-6-key"]) {
+      expectedChronMap.set(val, key["column-types-test-6-key"][val]);
+    }
+    expectMapsToBeEqual();
+  });
+
   /**
    * Given a bad file, the maps should not be initialized
    */

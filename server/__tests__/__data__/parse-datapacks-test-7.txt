@@ -1,0 +1,9 @@
+Chron Test	:	Chron 1	Chron 2
+
+Chron 1	chron		198/207/174		off	Chron 1 info
+	TOP		28.4
+	N	SubChronInfo 1 Label	33.9	SubChronInfo Popup 1
+
+Chron 2	chron		208/207/174	notitle		Chron 2 Info
+	TOP		0
+	R	SubChronInfo 2 Label	0.01	SubChronInfo 2 Popup

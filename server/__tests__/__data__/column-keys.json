@@ -785,5 +785,61 @@
             "popup": "Range 2 Info",
             "on": true
         }
+    },
+    "column-types-test-6-key": {
+        "Chron 1": {
+            "name": "Chron 1",
+            "minAge": 28.4,
+            "maxAge": 33.9,
+            "enableTitle": true,
+            "on": false,
+            "width": 100,
+            "popup": "Chron 1 info",
+            "rgb": {
+                "r": 198,
+                "g": 207,
+                "b": 174
+            },
+            "subChronInfo": [
+                {
+                    "polarity": "TOP",
+                    "age": 28.4,
+                    "popup": ""
+                },  
+                {
+                    "polarity": "N",
+                    "age": 33.9,
+                    "label": "SubChronInfo 1 Label",
+                    "popup": "SubChronInfo Popup 1"
+                }
+            ]
+        },
+        "Chron 2": {
+            "name": "Chron 2",
+            "minAge": 0,
+            "maxAge": 0.01,
+            "enableTitle": false,
+            "on": true,
+            "width": 100,
+            "popup": "Chron 2 Info",
+            "rgb": {
+                "r": 208,
+                "g": 207,
+                "b": 174
+            },
+            "subChronInfo": [
+                {
+                    "polarity": "TOP",
+                    "age": 0,
+                    "popup": ""
+                },
+                {
+                    "polarity": "R",
+                    "age": 0.01,
+                    "label": "SubChronInfo 2 Label",
+                    "popup": "SubChronInfo 2 Popup"
+                }
+            ]
+        }
     }
 }
