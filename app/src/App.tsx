@@ -43,7 +43,7 @@ export default observer(function App() {
       ))}
       <TSCPopupDialog
         open={state.showSuggestedAgePopup}
-        title="Do you want to use the default age?"
+        title="Use default age range?"
         onYes={() => actions.handlePopupResponse(true, navigate)}
         onNo={() => actions.handlePopupResponse(false, navigate)}
         onClose={() => actions.fetchChartFromServer(navigate)}

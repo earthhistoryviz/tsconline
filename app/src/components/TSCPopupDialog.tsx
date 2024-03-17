@@ -24,11 +24,11 @@ export const TSCPopupDialog: React.FC<TSCPopupDialogProps> = ({ open, title, mes
         <DialogContentText id="yes-no-dialog-description">{message}</DialogContentText>
       </DialogContent>
       <DialogActions className="dialog-actions">
-        <TSCButton className="tsc-button" onClick={onNo}>
-          No
-        </TSCButton>
         <TSCButton className="tsc-button" onClick={onYes}>
           Yes
+        </TSCButton>
+        <TSCButton className="tsc-button" onClick={onNo}>
+          No
         </TSCButton>
       </DialogActions>
     </Dialog>
