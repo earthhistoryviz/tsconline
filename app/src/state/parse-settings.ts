@@ -11,7 +11,6 @@ import {
   assertChartInfoTSC,
   defaultFontsInfo
 } from "@tsconline/shared";
-import { Settings } from "../types";
 
 /**
  *

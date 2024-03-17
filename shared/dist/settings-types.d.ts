@@ -1,4 +1,4 @@
-import { FontsInfo } from ".";
+import { FontsInfo } from "./index.js";
 export type ChartInfoTSC = {
     settings?: ChartSettingsInfoTSC;
     "class datastore.RootColumn:Chart Root"?: ColumnInfoTSC;
