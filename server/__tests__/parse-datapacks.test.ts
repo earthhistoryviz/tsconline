@@ -39,7 +39,7 @@ import {
   processRange
 } from "../src/parse-datapacks";
 import { readFileSync } from "fs";
-import { Block, Range, DatapackAgeInfo, Facies, Event, Chron, Point, Sequence } from "@tsconline/shared";
+import { Block, Range, DatapackAgeInfo, Facies, Event, Chron, Point, Sequence, Transect } from "@tsconline/shared";
 const key = JSON.parse(readFileSync("server/__tests__/__data__/column-keys.json").toString());
 
 describe("general parse-datapacks tests", () => {
@@ -205,6 +205,7 @@ describe("getColumnTypes tests", () => {
     rangeMap: Map<string, Range>,
     chronMap: Map<string, Chron>,
     pointMap: Map<string, Point>,
+    transectMap: Map<string, Transect>,
     sequenceMap: Map<string, Sequence>,
     expectedFaciesMap: Map<string, Facies>,
     expectedBlockMap: Map<string, Block>,
@@ -212,7 +213,8 @@ describe("getColumnTypes tests", () => {
     expectedRangeMap: Map<string, Range>,
     expectedChronMap: Map<string, Chron>,
     expectedPointMap: Map<string, Point>,
-    expectedSequenceMap: Map<string, Sequence>;
+    expectedSequenceMap: Map<string, Sequence>,
+    expectedTransectMap: Map<string, Transect>;
   beforeEach(() => {
     faciesMap = new Map<string, Facies>();
     blockMap = new Map<string, Block>();
@@ -220,6 +222,7 @@ describe("getColumnTypes tests", () => {
     rangeMap = new Map<string, Range>();
     chronMap = new Map<string, Chron>();
     pointMap = new Map<string, Point>();
+    transectMap = new Map<string, Transect>();
     sequenceMap = new Map<string, Sequence>();
     expectedFaciesMap = new Map<string, Facies>();
     expectedBlockMap = new Map<string, Block>();
@@ -228,6 +231,7 @@ describe("getColumnTypes tests", () => {
     expectedChronMap = new Map<string, Chron>();
     expectedPointMap = new Map<string, Point>();
     expectedSequenceMap = new Map<string, Sequence>();
+    expectedTransectMap = new Map<string, Transect>();
   });
 
   /**
@@ -235,7 +239,7 @@ describe("getColumnTypes tests", () => {
    */
   it("should create all column types correctly", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-2.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap);
+    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
     expectedFaciesMap.set(
       key["column-types-all-column-types-key"]["Facies 1"].name,
       key["column-types-all-column-types-key"]["Facies 1"]
@@ -272,7 +276,7 @@ describe("getColumnTypes tests", () => {
    */
   it("should create correct faciesMap only", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-facies.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap);
+    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
     for (const val in key["column-types-facies-key"]) {
       expectedFaciesMap.set(val, key["column-types-facies-key"][val]);
     }
@@ -284,7 +288,7 @@ describe("getColumnTypes tests", () => {
    */
   it("should create correct blockMap only, the second block should has max amount of information", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-block.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap);
+    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
     for (const val in key["column-types-block-key"]) {
       expectedBlockMap.set(val, key["column-types-block-key"][val]);
     }
@@ -296,7 +300,7 @@ describe("getColumnTypes tests", () => {
    */
   it("should create correct eventMap only", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-event.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap);
+    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
     for (const val in key["column-types-event-key"]) {
       expectedEventMap.set(val, key["column-types-event-key"][val]);
     }
@@ -305,7 +309,7 @@ describe("getColumnTypes tests", () => {
 
   it("should create correct rangeMap only", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-range.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap);
+    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
     for (const val in key["column-types-range-key"]) {
       expectedRangeMap.set(val, key["column-types-range-key"][val]);
     }
@@ -314,7 +318,7 @@ describe("getColumnTypes tests", () => {
 
   it("should create correct chronMap only", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-chron.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap);
+    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
     for (const val in key["column-types-chron-key"]) {
       expectedChronMap.set(val, key["column-types-chron-key"][val]);
     }
@@ -323,7 +327,7 @@ describe("getColumnTypes tests", () => {
 
   it("should create correct pointMap only", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-point.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap);
+    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
     for (const val in key["column-types-point-key"]) {
       expectedPointMap.set(val, key["column-types-point-key"][val]);
     }
@@ -332,7 +336,7 @@ describe("getColumnTypes tests", () => {
 
   it("should create correct sequenceMap only", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-sequence.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap);
+    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
     for (const val in key["column-types-sequence-key"]) {
       expectedSequenceMap.set(val, key["column-types-sequence-key"][val]);
     }
@@ -344,7 +348,7 @@ describe("getColumnTypes tests", () => {
    */
   it("should not initialize maps on bad file", async () => {
     const file = "server/__tests__/__data__/bad-data.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap);
+    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
     expectMapsToBeEqual();
   });
 
