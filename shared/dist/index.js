@@ -1,105 +1,6 @@
 // Shared types between app and server (i.e. messages they send back and forth)
-export const defaultFontsInfo = {
-    "Age Label": {
-        bold: false,
-        color: "rgb(0, 0, 0)",
-        fontFace: "Arial",
-        inheritable: false,
-        italic: false,
-        size: 6
-    },
-    "Column Header": {
-        bold: false,
-        color: "rgb(0, 0, 0)",
-        fontFace: "Arial",
-        inheritable: false,
-        italic: false,
-        size: 14
-    },
-    "Event Column Label": {
-        bold: false,
-        color: "rgb(0, 0, 0)",
-        fontFace: "Arial",
-        inheritable: false,
-        italic: false,
-        size: 11
-    },
-    "Legend Column Name": {
-        bold: true,
-        color: "rgb(0, 0, 0)",
-        fontFace: "Verdana",
-        inheritable: false,
-        italic: false,
-        size: 12
-    },
-    "Legend Column Source": {
-        bold: false,
-        color: "rgb(0, 0, 0)",
-        fontFace: "Verdana",
-        inheritable: false,
-        italic: true,
-        size: 12
-    },
-    "Legend Title": {
-        bold: true,
-        color: "rgb(0, 0, 0)",
-        fontFace: "Verdana",
-        inheritable: false,
-        italic: false,
-        size: 14
-    },
-    "Point Column Scale Label": {
-        bold: false,
-        color: "rgb(0, 0, 0)",
-        fontFace: "Arial",
-        inheritable: false,
-        italic: false,
-        size: 6
-    },
-    "Popup Body": { bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12 },
-    "Range Box Label": {
-        bold: false,
-        color: "rgb(0, 0, 0)",
-        fontFace: "Arial",
-        inheritable: false,
-        italic: true,
-        size: 14
-    },
-    "Range Label": { bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12 },
-    "Ruler Label": { bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12 },
-    "Ruler Tick Mark Label": {
-        bold: false,
-        color: "rgb(0, 0, 0)",
-        fontFace: "Arial",
-        inheritable: false,
-        italic: false,
-        size: 7
-    },
-    "Sequence Column Label": {
-        bold: false,
-        color: "rgb(0, 0, 0)",
-        fontFace: "Arial",
-        inheritable: false,
-        italic: false,
-        size: 12
-    },
-    "Uncertainty Label": {
-        bold: false,
-        color: "rgb(0, 0, 0)",
-        fontFace: "Arial",
-        inheritable: false,
-        italic: true,
-        size: 5
-    },
-    "Zone Column Label": {
-        bold: false,
-        color: "rgb(0, 0, 0)",
-        fontFace: "Arial",
-        inheritable: false,
-        italic: false,
-        size: 12
-    }
-};
+import { defaultFontsInfo_ } from "./constants";
+export const defaultFontsInfo = defaultFontsInfo_;
 export function assertColor(o) {
     if (!o || typeof o !== "object")
         throw new Error("Color must be a non-null object");
@@ -364,6 +265,24 @@ export function assertFontsInfo(o) {
     if (typeof o !== "object")
         throw new Error("FontsInfo must be an object");
     for (const key in o) {
+        if (![
+            "Column Header",
+            "Age Label",
+            "Uncertainty Label",
+            "Zone Column Label",
+            "Sequence Column Label",
+            "Event Column Label",
+            "Popup Body",
+            "Ruler Label",
+            "Point Column Scale Label",
+            "Range Label",
+            "Ruler Tick Mark Label",
+            "Legend Title",
+            "Legend Column Name",
+            "Legend Column Source",
+            "Range Box Label"
+        ].includes(key))
+            throwError("FontsInfo", `${key}`, "ValidFontOptions", o);
         if (typeof o.bold !== "boolean")
             throwError("FontsInfo", `${key}.bold`, "boolean", o.bold);
         if (typeof o.color !== "string")

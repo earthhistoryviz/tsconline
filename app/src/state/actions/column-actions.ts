@@ -66,30 +66,29 @@ export const setcolumnSelected = action((name: string) => {
 });
 
 export const setInheritable = action((target: ValidFontOptions, isInheritable: boolean) => {
-  if (state.settingsTabs.columnSelected === null) {
+  if (!state.settingsTabs.columnSelected) {
     throw new Error("state.settingsTabs.columnSelected is null");
   }
-
   const columnHashMapEntry = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected);
-  assertFontsInfo(columnHashMapEntry?.fontsInfo[target]);
   if (!columnHashMapEntry) {
     throw new Error(`Entry for ${state.settingsTabs.columnSelected} not found in columnHashMap`);
   }
-
+  assertFontsInfo(columnHashMapEntry.fontsInfo[target]);
   columnHashMapEntry.fontsInfo[target].inheritable = isInheritable;
   assertFontsInfo(columnHashMapEntry?.fontsInfo[target]);
 });
 
 export const setFontFace = action((target: ValidFontOptions, fontFace: "Arial" | "Courier" | "Verdana") => {
-  if (state.settingsTabs.columnSelected === null) {
+  if (!state.settingsTabs.columnSelected) {
     throw new Error("state.settingsTabs.columnSelected is null");
   }
 
   const columnHashMapEntry = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected);
-  assertFontsInfo(columnHashMapEntry?.fontsInfo[target]);
+
   if (!columnHashMapEntry) {
     throw new Error(`Entry for ${state.settingsTabs.columnSelected} not found in columnHashMap`);
   }
+  assertFontsInfo(columnHashMapEntry.fontsInfo[target]);
 
   columnHashMapEntry.fontsInfo[target].fontFace = fontFace;
   assertFontsInfo(columnHashMapEntry?.fontsInfo[target]);
@@ -101,10 +100,11 @@ export const setFontSize = action((target: ValidFontOptions, fontSize: number) =
   }
 
   const columnHashMapEntry = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected);
-  assertFontsInfo(columnHashMapEntry?.fontsInfo[target]);
+
   if (!columnHashMapEntry) {
     throw new Error(`Entry for ${state.settingsTabs.columnSelected} not found in columnHashMap`);
   }
+  assertFontsInfo(columnHashMapEntry.fontsInfo[target]);
 
   columnHashMapEntry.fontsInfo[target].size = fontSize;
   assertFontsInfo(columnHashMapEntry?.fontsInfo[target]);
@@ -116,10 +116,11 @@ export const setBold = action((target: ValidFontOptions, isBold: boolean) => {
   }
 
   const columnHashMapEntry = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected);
-  assertFontsInfo(columnHashMapEntry?.fontsInfo[target]);
+
   if (!columnHashMapEntry) {
     throw new Error(`Entry for ${state.settingsTabs.columnSelected} not found in columnHashMap`);
   }
+  assertFontsInfo(columnHashMapEntry.fontsInfo[target]);
 
   columnHashMapEntry.fontsInfo[target].bold = isBold;
   assertFontsInfo(columnHashMapEntry?.fontsInfo[target]);
@@ -131,10 +132,11 @@ export const setItalic = action((target: ValidFontOptions, isItalic: boolean) =>
   }
 
   const columnHashMapEntry = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected);
-  assertFontsInfo(columnHashMapEntry?.fontsInfo[target]);
+
   if (!columnHashMapEntry) {
     throw new Error(`Entry for ${state.settingsTabs.columnSelected} not found in columnHashMap`);
   }
+  assertFontsInfo(columnHashMapEntry.fontsInfo[target]);
 
   columnHashMapEntry.fontsInfo[target].italic = isItalic;
   assertFontsInfo(columnHashMapEntry?.fontsInfo[target]);
@@ -146,10 +148,11 @@ export const setColor = action((target: ValidFontOptions, color: React.SetStateA
   }
 
   const columnHashMapEntry = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected);
-  assertFontsInfo(columnHashMapEntry?.fontsInfo[target]);
+
   if (!columnHashMapEntry) {
     throw new Error(`Entry for ${state.settingsTabs.columnSelected} not found in columnHashMap`);
   }
+  assertFontsInfo(columnHashMapEntry.fontsInfo[target]);
 
   if (typeof color === "string") {
     columnHashMapEntry.fontsInfo[target].color = color;
