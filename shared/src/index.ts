@@ -294,6 +294,17 @@ export type Chron = ColumnHeaderProps & {
 export type Point = ColumnHeaderProps & {
   subPointInfo: SubPointInfo[];
 };
+export type Sequence = ColumnHeaderProps & {
+  subSequenceInfo: SubSequenceInfo[];
+};
+
+export type SubSequenceInfo = {
+  label?: string;
+  direction: "SB" | "MFS";
+  age: number;
+  severity: "Major" | "Minor" | "Medium";
+  popup: string;
+};
 
 export type SubChronInfo = {
   polarity: "TOP" | "N" | "R" | "U" | "No Data";
@@ -435,6 +446,26 @@ export function assertSubPointInfo(o: any): asserts o is SubPointInfo {
   if (typeof o.xVal !== "number") throwError("SubPointInfo", "xVal", "number", o.xVal);
   if (typeof o.popup !== "string") throwError("SubPointInfo", "popup", "string", o.popup);
 }
+export function assertSequence(o: any): asserts o is Sequence {
+  if (!o || typeof o !== "object") throw new Error("Sequence must be a non-null object");
+  if (!Array.isArray(o.subSequenceInfo)) throwError("Sequence", "subSequenceInfo", "array", o.subSequenceInfo);
+  for (const subSequence of o.subSequenceInfo) {
+    assertSubSequenceInfo(subSequence);
+  }
+  assertColumnHeaderProps(o);
+}
+
+export function assertSubSequenceInfo(o: any): asserts o is SubSequenceInfo {
+  if (!o || typeof o !== "object") throw new Error("SubSequenceInfo must be a non-null object");
+  if (o.label && typeof o.label !== "string") throwError("SubSequenceInfo", "label", "string", o.label);
+  if (typeof o.direction !== "string" || !/^SB|MFS$/.test(o.direction))
+    throwError("SubSequenceInfo", "direction", "string and SB | MFS", o.direction);
+  if (typeof o.age !== "number") throwError("SubSequenceInfo", "age", "number", o.age);
+  if (typeof o.severity !== "string" || !/^Major|Minor|Medium$/.test(o.severity))
+    throwError("SubSequenceInfo", "severity", "string and Major | Minor | Medium", o.severity);
+  if (typeof o.popup !== "string") throwError("SubSequenceInfo", "popup", "string", o.popup);
+}
+
 export function assertChron(o: any): asserts o is Chron {
   if (!o || typeof o !== "object") throw new Error("Chron must be a non-null object");
   if (!Array.isArray(o.subChronInfo)) throwError("Chron", "subChronInfo", "array", o.subChronInfo);

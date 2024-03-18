@@ -24,7 +24,10 @@ import {
   assertSubChronInfo,
   Point,
   assertSubPointInfo,
-  SubPointInfo
+  SubPointInfo,
+  Sequence,
+  assertSubSequenceInfo,
+  SubSequenceInfo
 } from "@tsconline/shared";
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters } from "./util.js";
 import { createInterface } from "readline";
@@ -111,10 +114,11 @@ export async function parseDatapacks(decryptFilePath: string, files: string[]): 
   const rangeMap: Map<string, Range> = new Map();
   const chronMap: Map<string, Chron> = new Map();
   const pointMap: Map<string, Point> = new Map();
+  const sequenceMap: Map<string, Sequence> = new Map();
   try {
     for (const decryptPath of decryptPaths) {
       //get the facies/blocks first
-      await getColumnTypes(decryptPath, faciesMap, blocksMap, eventMap, rangeMap, chronMap, pointMap);
+      await getColumnTypes(decryptPath, faciesMap, blocksMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap);
       // Originally the first step, gather all parents and their direct children
       await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
       // only iterate over parents. if we encounter one that is a child, the recursive function
@@ -133,7 +137,8 @@ export async function parseDatapacks(decryptFilePath: string, files: string[]): 
             eventMap,
             rangeMap,
             chronMap,
-            pointMap
+            pointMap,
+            sequenceMap
           );
         }
       });
@@ -230,10 +235,15 @@ export async function getColumnTypes(
   eventMap: Map<string, Event>,
   rangeMap: Map<string, Range>,
   chronMap: Map<string, Chron>,
-  pointMap: Map<string, Point>
+  pointMap: Map<string, Point>,
+  sequenceMap: Map<string, Sequence>
 ) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
+  const sequence: Sequence = {
+    ...createDefaultColumnHeaderProps(),
+    subSequenceInfo: []
+  };
   const point: Point = {
     ...createDefaultColumnHeaderProps(),
     subPointInfo: []
@@ -266,6 +276,7 @@ export async function getColumnTypes(
   let inRangeBlock = false;
   let inChronBlock = false;
   let inPointBlock = false;
+  let inSequenceBlock = false;
 
   for await (const line of readline) {
     if (!line || trimInvisibleCharacters(line) === "") {
@@ -303,9 +314,23 @@ export async function getColumnTypes(
         addPointToPointMap(point, pointMap);
         continue;
       }
+      if (inSequenceBlock) {
+        inSequenceBlock = false;
+        addSequenceToSequenceMap(sequence, sequenceMap);
+        continue;
+      }
     }
 
     const tabSeparated = line.split("\t");
+    if (!inSequenceBlock && (tabSeparated[1] === "sequence" || tabSeparated[1] === "trend")) {
+      setColumnHeaders(sequence, tabSeparated);
+      inSequenceBlock = true;
+    } else if (inSequenceBlock) {
+      const subSequenceInfo = processSequence(line);
+      if (subSequenceInfo) {
+        sequence.subSequenceInfo.push(subSequenceInfo);
+      }
+    }
     if (!inPointBlock && tabSeparated[1] === "point") {
       setColumnHeaders(point, tabSeparated);
       inPointBlock = true;
@@ -393,6 +418,9 @@ export async function getColumnTypes(
   if (inPointBlock) {
     addPointToPointMap(point, pointMap);
   }
+  if (inSequenceBlock) {
+    addSequenceToSequenceMap(sequence, sequenceMap);
+  }
 }
 
 /**
@@ -430,6 +458,25 @@ function setColumnHeaders(column: ColumnHeaderProps, tabSeparated: string[]) {
   }
 }
 
+/**
+ * adds a sequence object to the map. will reset the sequence object.
+ * @param sequence 
+ * @param sequenceMap 
+ */
+function addSequenceToSequenceMap(sequence: Sequence, sequenceMap: Map<string, Sequence>) {
+  for (const subSequence of sequence.subSequenceInfo) {
+    sequence.minAge = Math.min(subSequence.age, sequence.minAge);
+    sequence.maxAge = Math.max(subSequence.age, sequence.maxAge);
+  }
+  sequenceMap.set(sequence.name, JSON.parse(JSON.stringify(sequence)));
+  Object.assign(sequence, { ...createDefaultColumnHeaderProps(), subSequenceInfo: [] });
+}
+
+/**
+ * adds a point object to the map. will reset the point object.
+ * @param point 
+ * @param pointMap 
+ */
 function addPointToPointMap(point: Point, pointMap: Map<string, Point>) {
   for (const subPoint of point.subPointInfo) {
     point.minAge = Math.min(subPoint.age, point.minAge);
@@ -438,6 +485,12 @@ function addPointToPointMap(point: Point, pointMap: Map<string, Point>) {
   pointMap.set(point.name, JSON.parse(JSON.stringify(point)));
   Object.assign(point, { ...createDefaultColumnHeaderProps(), subPointInfo: [] });
 }
+
+/**
+ * adds a chron object to the map. will reset the chron object.
+ * @param chron 
+ * @param chronMap 
+ */
 function addChronToChronMap(chron: Chron, chronMap: Map<string, Chron>) {
   for (const subChron of chron.subChronInfo) {
     chron.minAge = Math.min(subChron.age, chron.minAge);
@@ -447,6 +500,11 @@ function addChronToChronMap(chron: Chron, chronMap: Map<string, Chron>) {
   Object.assign(chron, { ...createDefaultColumnHeaderProps(), subChronInfo: [] });
 }
 
+/**
+ * adds a range object to the range map and resets the range object
+ * @param range 
+ * @param rangeMap 
+ */
 function addRangeToRangeMap(range: Range, rangeMap: Map<string, Range>) {
   for (const subRange of range.subRangeInfo) {
     range.minAge = Math.min(subRange.age, range.minAge);
@@ -497,6 +555,45 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
   Object.assign(block, { ...createDefaultColumnHeaderProps(), subBlockInfo: [] });
 }
 
+export function processSequence(line: string): SubSequenceInfo | null {
+  let subSequenceInfo = {}
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length > 4 || tabSeparated[0]) return null;
+  const label = tabSeparated[1];
+  const direction = tabSeparated[2]!;
+  const age = Number(tabSeparated[3]!);
+  const severity = tabSeparated[4]!;
+  const popup = tabSeparated[5];
+  if (isNaN(age)) throw new Error("Error processing sequence line, age: " + tabSeparated[2]! + " is NaN");
+  if (label) {
+    subSequenceInfo = {
+      label,
+      direction,
+      age,
+      severity,
+      popup: popup || ""
+    };
+  } else {
+    subSequenceInfo = {
+      direction,
+      age,
+      severity,
+      popup: popup || ""
+    };
+  }
+  try {
+    assertSubSequenceInfo(subSequenceInfo);
+  } catch (e) {
+    console.log(`Error ${e} found while processing subSequenceInfo, returning null`);
+    return null;
+  }
+  return subSequenceInfo;
+}
+/**
+ * process a single subChronInfo line
+ * @param line 
+ * @returns 
+ */
 export function processChron(line: string): SubChronInfo | null {
   let subChronInfo = {};
   const tabSeparated = line.split("\t");
@@ -762,7 +859,8 @@ function recursive(
   eventMap: Map<string, Event>,
   rangeMap: Map<string, Range>,
   chronMap: Map<string, Chron>,
-  pointMap: Map<string, Point>
+  pointMap: Map<string, Point>,
+  sequenceMap: Map<string, Sequence>
 ): FaciesFoundAndAgeRange {
   const currentColumnInfo: ColumnInfo = {
     name: trimInvisibleCharacters(currentColumn),
@@ -792,6 +890,15 @@ function recursive(
     currentColumnInfo.on = parsedColumnEntry.on;
     currentColumnInfo.popup = parsedColumnEntry.info;
     currentColumnInfo.enableTitle = parsedColumnEntry.enableTitle;
+  }
+  if (sequenceMap.has(currentColumn)) {
+    const currentSequence = sequenceMap.get(currentColumn)!;
+    Object.assign(currentColumnInfo, {
+      ...currentSequence,
+      subSequenceInfo: JSON.parse(JSON.stringify(currentSequence.subSequenceInfo))
+    });
+    returnValue.minAge = currentColumnInfo.minAge;
+    returnValue.maxAge = currentColumnInfo.maxAge;
   }
   if (blocksMap.has(currentColumn)) {
     const currentBlock = blocksMap.get(currentColumn)!;
@@ -867,7 +974,8 @@ function recursive(
         eventMap,
         rangeMap,
         chronMap,
-        pointMap
+        pointMap,
+        sequenceMap
       );
       returnValue.minAge = Math.min(compareValue.minAge, returnValue.minAge);
       returnValue.maxAge = Math.max(compareValue.maxAge, returnValue.maxAge);
