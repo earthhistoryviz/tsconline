@@ -1,0 +1,23 @@
+.MuiDialog-paper {
+  border: 2px solid black;
+}
+
+.MuiDialog-paper .MuiDialogContent-root {
+  padding-bottom: 8px;
+}
+
+.MuiDialog-paper .MuiDialogActions-root {
+  justify-content: center;
+  padding: 0 24px 8px;
+}
+
+.MuiDialogActions-root .tsc-button {
+  min-width: 120px;
+  margin: 0px 6px 8px 8px;
+  border: 2px solid black;
+  max-height: 35px;
+}
+
+#yes-no-dialog-title {
+  text-align: center;
+}

@@ -43,8 +43,7 @@ export default observer(function App() {
       ))}
       <TSCPopupDialog
         open={state.showSuggestedAgePopup}
-        title="Suggested Age Span Flags detected"
-        message="Do you want to use the Data-Pack's suggested age span?"
+        title="Use default age range?"
         onYes={() => actions.handlePopupResponse(true, navigate)}
         onNo={() => actions.handlePopupResponse(false, navigate)}
         onClose={() => actions.fetchChartFromServer(navigate)}
