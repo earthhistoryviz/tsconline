@@ -3,7 +3,7 @@ SetTop:	0
 SetBase:	5
 SetScale:	6
 
-Parent 1	:	Block	Facies	Event	Range	Chron	Point	Sequence
+Parent 1	:	Block	Facies	Event	Range	Chron	Point	Sequence	Freehand
 
 Block	block	120	197/217/234	notitle	off	Block Popup
 	TOP	419.2
@@ -44,3 +44,11 @@ Transect	transect	500	240/255/255		on	Transect Popup
 	0	X8																																		X1												X45		X197		X219																									X374	
 	2.58																																															X46		X196				X220																							X373	
 	9.22																																																						X47			X195					X221													X372
+
+Freehand	freehand	70	227/123/104	notitle
+image	Other/ge_impact_icon.png
+	agetype	center	0	1
+	xtype	right
+image	Other/ge_impact_icon.png
+	agetype	center	0.3	1.3
+	xtype	right

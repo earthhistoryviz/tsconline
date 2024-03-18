@@ -8,6 +8,7 @@ jest.mock("./util.js", () => ({
 jest.mock("@tsconline/shared", () => ({
   assertSubEventInfo: jest.fn().mockImplementation(() => true),
   assertSubTransectInfo: jest.fn().mockImplementation(() => true),
+  assertSubFreehandInfo: jest.fn().mockImplementation(() => true),
   assertSubChronInfo: jest.fn().mockImplementation(() => true),
   assertSubPointInfo: jest.fn().mockImplementation(() => true),
   assertSubSequenceInfo: jest.fn().mockImplementation(() => true),
@@ -40,7 +41,18 @@ import {
   processRange
 } from "../src/parse-datapacks";
 import { readFileSync } from "fs";
-import { Block, Range, DatapackAgeInfo, Facies, Event, Chron, Point, Sequence, Transect } from "@tsconline/shared";
+import {
+  Block,
+  Range,
+  DatapackAgeInfo,
+  Facies,
+  Event,
+  Chron,
+  Point,
+  Sequence,
+  Transect,
+  Freehand
+} from "@tsconline/shared";
 const key = JSON.parse(readFileSync("server/__tests__/__data__/column-keys.json").toString());
 
 describe("general parse-datapacks tests", () => {
@@ -208,6 +220,7 @@ describe("getColumnTypes tests", () => {
     pointMap: Map<string, Point>,
     transectMap: Map<string, Transect>,
     sequenceMap: Map<string, Sequence>,
+    freehandMap: Map<string, Freehand>,
     expectedFaciesMap: Map<string, Facies>,
     expectedBlockMap: Map<string, Block>,
     expectedEventMap: Map<string, Event>,
@@ -215,7 +228,8 @@ describe("getColumnTypes tests", () => {
     expectedChronMap: Map<string, Chron>,
     expectedPointMap: Map<string, Point>,
     expectedSequenceMap: Map<string, Sequence>,
-    expectedTransectMap: Map<string, Transect>;
+    expectedTransectMap: Map<string, Transect>,
+    expectedFreehandMap: Map<string, Freehand>;
   beforeEach(() => {
     faciesMap = new Map<string, Facies>();
     blockMap = new Map<string, Block>();
@@ -225,6 +239,7 @@ describe("getColumnTypes tests", () => {
     pointMap = new Map<string, Point>();
     transectMap = new Map<string, Transect>();
     sequenceMap = new Map<string, Sequence>();
+    freehandMap = new Map<string, Freehand>();
     expectedFaciesMap = new Map<string, Facies>();
     expectedBlockMap = new Map<string, Block>();
     expectedEventMap = new Map<string, Event>();
@@ -233,6 +248,7 @@ describe("getColumnTypes tests", () => {
     expectedPointMap = new Map<string, Point>();
     expectedSequenceMap = new Map<string, Sequence>();
     expectedTransectMap = new Map<string, Transect>();
+    expectedFreehandMap = new Map<string, Freehand>();
   });
 
   /**
@@ -240,7 +256,18 @@ describe("getColumnTypes tests", () => {
    */
   it("should create all column types correctly", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-2.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
+    await getColumnTypes(
+      file,
+      faciesMap,
+      blockMap,
+      eventMap,
+      rangeMap,
+      chronMap,
+      pointMap,
+      sequenceMap,
+      transectMap,
+      freehandMap
+    );
     expectedFaciesMap.set(
       key["column-types-all-column-types-key"]["Facies 1"].name,
       key["column-types-all-column-types-key"]["Facies 1"]
@@ -273,6 +300,10 @@ describe("getColumnTypes tests", () => {
       key["column-types-all-column-types-key"]["Transect 1"].name,
       key["column-types-all-column-types-key"]["Transect 1"]
     );
+    expectedFreehandMap.set(
+      key["column-types-all-column-types-key"]["Freehand 1"].name,
+      key["column-types-all-column-types-key"]["Freehand 1"]
+    );
     expectMapsToBeEqual();
   });
 
@@ -281,7 +312,18 @@ describe("getColumnTypes tests", () => {
    */
   it("should create correct faciesMap only", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-facies.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
+    await getColumnTypes(
+      file,
+      faciesMap,
+      blockMap,
+      eventMap,
+      rangeMap,
+      chronMap,
+      pointMap,
+      sequenceMap,
+      transectMap,
+      freehandMap
+    );
     for (const val in key["column-types-facies-key"]) {
       expectedFaciesMap.set(val, key["column-types-facies-key"][val]);
     }
@@ -293,7 +335,18 @@ describe("getColumnTypes tests", () => {
    */
   it("should create correct blockMap only, the second block should has max amount of information", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-block.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
+    await getColumnTypes(
+      file,
+      faciesMap,
+      blockMap,
+      eventMap,
+      rangeMap,
+      chronMap,
+      pointMap,
+      sequenceMap,
+      transectMap,
+      freehandMap
+    );
     for (const val in key["column-types-block-key"]) {
       expectedBlockMap.set(val, key["column-types-block-key"][val]);
     }
@@ -305,7 +358,18 @@ describe("getColumnTypes tests", () => {
    */
   it("should create correct eventMap only", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-event.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
+    await getColumnTypes(
+      file,
+      faciesMap,
+      blockMap,
+      eventMap,
+      rangeMap,
+      chronMap,
+      pointMap,
+      sequenceMap,
+      transectMap,
+      freehandMap
+    );
     for (const val in key["column-types-event-key"]) {
       expectedEventMap.set(val, key["column-types-event-key"][val]);
     }
@@ -314,7 +378,18 @@ describe("getColumnTypes tests", () => {
 
   it("should create correct rangeMap only", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-range.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
+    await getColumnTypes(
+      file,
+      faciesMap,
+      blockMap,
+      eventMap,
+      rangeMap,
+      chronMap,
+      pointMap,
+      sequenceMap,
+      transectMap,
+      freehandMap
+    );
     for (const val in key["column-types-range-key"]) {
       expectedRangeMap.set(val, key["column-types-range-key"][val]);
     }
@@ -323,7 +398,18 @@ describe("getColumnTypes tests", () => {
 
   it("should create correct chronMap only", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-chron.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
+    await getColumnTypes(
+      file,
+      faciesMap,
+      blockMap,
+      eventMap,
+      rangeMap,
+      chronMap,
+      pointMap,
+      sequenceMap,
+      transectMap,
+      freehandMap
+    );
     for (const val in key["column-types-chron-key"]) {
       expectedChronMap.set(val, key["column-types-chron-key"][val]);
     }
@@ -332,7 +418,18 @@ describe("getColumnTypes tests", () => {
 
   it("should create correct pointMap only", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-point.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
+    await getColumnTypes(
+      file,
+      faciesMap,
+      blockMap,
+      eventMap,
+      rangeMap,
+      chronMap,
+      pointMap,
+      sequenceMap,
+      transectMap,
+      freehandMap
+    );
     for (const val in key["column-types-point-key"]) {
       expectedPointMap.set(val, key["column-types-point-key"][val]);
     }
@@ -341,7 +438,18 @@ describe("getColumnTypes tests", () => {
 
   it("should create correct sequenceMap only", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-sequence.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
+    await getColumnTypes(
+      file,
+      faciesMap,
+      blockMap,
+      eventMap,
+      rangeMap,
+      chronMap,
+      pointMap,
+      sequenceMap,
+      transectMap,
+      freehandMap
+    );
     for (const val in key["column-types-sequence-key"]) {
       expectedSequenceMap.set(val, key["column-types-sequence-key"][val]);
     }
@@ -350,9 +458,40 @@ describe("getColumnTypes tests", () => {
 
   it("should create correct transectMap only", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-transect.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
+    await getColumnTypes(
+      file,
+      faciesMap,
+      blockMap,
+      eventMap,
+      rangeMap,
+      chronMap,
+      pointMap,
+      sequenceMap,
+      transectMap,
+      freehandMap
+    );
     for (const val in key["column-types-transect-key"]) {
       expectedTransectMap.set(val, key["column-types-transect-key"][val]);
+    }
+    expectMapsToBeEqual();
+  });
+
+  it("should create correct freehandMap only", async () => {
+    const file = "server/__tests__/__data__/parse-datapacks-freehand.txt";
+    await getColumnTypes(
+      file,
+      faciesMap,
+      blockMap,
+      eventMap,
+      rangeMap,
+      chronMap,
+      pointMap,
+      sequenceMap,
+      transectMap,
+      freehandMap
+    );
+    for (const val in key["column-types-freehand-key"]) {
+      expectedFreehandMap.set(val, key["column-types-freehand-key"][val]);
     }
     expectMapsToBeEqual();
   });
@@ -362,7 +501,18 @@ describe("getColumnTypes tests", () => {
    */
   it("should not initialize maps on bad file", async () => {
     const file = "server/__tests__/__data__/bad-data.txt";
-    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
+    await getColumnTypes(
+      file,
+      faciesMap,
+      blockMap,
+      eventMap,
+      rangeMap,
+      chronMap,
+      pointMap,
+      sequenceMap,
+      transectMap,
+      freehandMap
+    );
     expectMapsToBeEqual();
   });
 
@@ -375,6 +525,7 @@ describe("getColumnTypes tests", () => {
     expect(pointMap).toEqual(expectedPointMap);
     expect(sequenceMap).toEqual(expectedSequenceMap);
     expect(transectMap).toEqual(expectedTransectMap);
+    expect(freehandMap).toEqual(expectedFreehandMap);
   }
 });
 

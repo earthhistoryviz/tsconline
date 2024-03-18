@@ -30,7 +30,10 @@ import {
   SubSequenceInfo,
   Transect,
   SubTransectInfo,
-  assertSubTransectInfo
+  assertSubTransectInfo,
+  Freehand,
+  SubFreehandInfo,
+  assertSubFreehandInfo
 } from "@tsconline/shared";
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters } from "./util.js";
 import { createInterface } from "readline";
@@ -119,6 +122,7 @@ export async function parseDatapacks(decryptFilePath: string, files: string[]): 
   const pointMap: Map<string, Point> = new Map();
   const sequenceMap: Map<string, Sequence> = new Map();
   const transectMap: Map<string, Transect> = new Map();
+  const freehandMap: Map<string, Freehand> = new Map();
   try {
     for (const decryptPath of decryptPaths) {
       //get the facies/blocks first
@@ -131,7 +135,8 @@ export async function parseDatapacks(decryptFilePath: string, files: string[]): 
         chronMap,
         pointMap,
         sequenceMap,
-        transectMap
+        transectMap,
+        freehandMap
       );
       // Originally the first step, gather all parents and their direct children
       await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
@@ -153,7 +158,8 @@ export async function parseDatapacks(decryptFilePath: string, files: string[]): 
             chronMap,
             pointMap,
             sequenceMap,
-            transectMap
+            transectMap,
+            freehandMap
           );
         }
       });
@@ -252,10 +258,15 @@ export async function getColumnTypes(
   chronMap: Map<string, Chron>,
   pointMap: Map<string, Point>,
   sequenceMap: Map<string, Sequence>,
-  transectMap: Map<string, Transect>
+  transectMap: Map<string, Transect>,
+  freehandMap: Map<string, Freehand>
 ) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
+  const freehand: Freehand = {
+    ...createDefaultColumnHeaderProps(),
+    subFreehandInfo: []
+  };
   const transect: Transect = {
     ...createDefaultColumnHeaderProps(),
     subTransectInfo: []
@@ -298,6 +309,7 @@ export async function getColumnTypes(
   let inPointBlock = false;
   let inSequenceBlock = false;
   let inTransectBlock = false;
+  let inFreehandBlock = false;
 
   for await (const line of readline) {
     if (!line || trimInvisibleCharacters(line) === "") {
@@ -345,9 +357,28 @@ export async function getColumnTypes(
         addTransectToTransectMap(transect, transectMap);
         continue;
       }
+      if (inFreehandBlock) {
+        inFreehandBlock = false;
+        addFreehandToFreehandMap(freehand, freehandMap);
+        continue;
+      }
     }
 
     const tabSeparated = line.split("\t");
+    if (
+      !inFreehandBlock &&
+      (tabSeparated[1] === "freehand" ||
+        tabSeparated[1] === "freehand-overlay" ||
+        tabSeparated[1] === "freehand-underlay")
+    ) {
+      setColumnHeaders(freehand, tabSeparated);
+      inFreehandBlock = true;
+    } else if (inFreehandBlock) {
+      const subFreehandInfo = processFreehand(line);
+      if (subFreehandInfo) {
+        freehand.subFreehandInfo.push(subFreehandInfo);
+      }
+    }
     if (!inTransectBlock && tabSeparated[1] === "transect") {
       setColumnHeaders(transect, tabSeparated);
       inTransectBlock = true;
@@ -464,6 +495,9 @@ export async function getColumnTypes(
   if (inSequenceBlock) {
     addSequenceToSequenceMap(sequence, sequenceMap);
   }
+  if (inFreehandBlock) {
+    addFreehandToFreehandMap(freehand, freehandMap);
+  }
 }
 
 /**
@@ -501,6 +535,19 @@ function setColumnHeaders(column: ColumnHeaderProps, tabSeparated: string[]) {
   }
 }
 
+/**
+ * adds a freehand object to the map. will reset the freehand object.
+ * @param transect
+ * @param transectMap
+ */
+function addFreehandToFreehandMap(freehand: Freehand, freehandMap: Map<string, Freehand>) {
+  for (const subFreehand of freehand.subFreehandInfo) {
+    freehand.minAge = Math.min(subFreehand.topAge, freehand.minAge);
+    freehand.maxAge = Math.max(subFreehand.baseAge, freehand.maxAge);
+  }
+  freehandMap.set(freehand.name, JSON.parse(JSON.stringify(freehand)));
+  Object.assign(freehand, { ...createDefaultColumnHeaderProps(), subFreehandInfo: [] });
+}
 /**
  * adds a transect object to the map. will reset the transect object.
  * @param transect
@@ -611,6 +658,33 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
   Object.assign(block, { ...createDefaultColumnHeaderProps(), subBlockInfo: [] });
 }
 
+/**
+ * processes a single freehand line
+ * @param line
+ * @returns
+ */
+export function processFreehand(line: string): SubFreehandInfo | null {
+  const subFreehandInfo = {
+    topAge: 0,
+    baseAge: 0
+  };
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length < 4 || tabSeparated.length > 5) return null;
+  if (tabSeparated[0] === "image") {
+    subFreehandInfo.topAge = Number(tabSeparated[2]!);
+    subFreehandInfo.baseAge = Number(tabSeparated[3]!);
+  } else {
+    subFreehandInfo.topAge = Number(tabSeparated[3]!);
+    subFreehandInfo.baseAge = Number(tabSeparated[4]!);
+  }
+  try {
+    assertSubFreehandInfo(subFreehandInfo);
+  } catch (e) {
+    console.log(`Error ${e} found while processing subFreehandInfo, returning null`);
+    return null;
+  }
+  return subFreehandInfo;
+}
 /**
  * processes a single subTransectInfo line
  * @param line
@@ -952,7 +1026,8 @@ function recursive(
   chronMap: Map<string, Chron>,
   pointMap: Map<string, Point>,
   sequenceMap: Map<string, Sequence>,
-  transectMap: Map<string, Transect>
+  transectMap: Map<string, Transect>,
+  freehandMap: Map<string, Freehand>
 ): FaciesFoundAndAgeRange {
   const currentColumnInfo: ColumnInfo = {
     name: trimInvisibleCharacters(currentColumn),
@@ -1056,6 +1131,15 @@ function recursive(
     returnValue.maxAge = currentColumnInfo.maxAge;
     returnValue.minAge = currentColumnInfo.minAge;
   }
+  if (freehandMap.has(currentColumn)) {
+    const currentFreehand = freehandMap.get(currentColumn)!;
+    Object.assign(currentColumnInfo, {
+      ...currentFreehand,
+      subFreehandInfo: JSON.parse(JSON.stringify(currentFreehand.subFreehandInfo))
+    });
+    returnValue.maxAge = currentColumnInfo.maxAge;
+    returnValue.minAge = currentColumnInfo.minAge;
+  }
 
   childrenArray.push(currentColumnInfo);
 
@@ -1077,7 +1161,8 @@ function recursive(
         chronMap,
         pointMap,
         sequenceMap,
-        transectMap
+        transectMap,
+        freehandMap
       );
       returnValue.minAge = Math.min(compareValue.minAge, returnValue.minAge);
       returnValue.maxAge = Math.max(compareValue.maxAge, returnValue.maxAge);
