@@ -790,6 +790,34 @@
                     "popup": "Label 1 Popup"
                 }
             ]
+        },
+        "Transect 1": {
+            "name": "Transect",
+            "minAge": 0,
+            "maxAge": 9.22,
+            "enableTitle": true,
+            "on": true,
+            "width": 500,
+            "popup": "Transect Popup",
+            "rgb": {
+              "r": 240,
+              "g": 255,
+              "b": 255
+            },
+            "subTransectInfo": [
+              {
+                "age": 0
+              },
+              {
+                "age": 0
+              },
+              {
+                "age": 2.58
+              },
+              {
+                "age": 9.22
+              }
+            ]
         }
     },
     "column-types-event-key": {
@@ -1075,6 +1103,67 @@
                     "severity": "Minor",
                     "popup": "No Label Popup"
                 }
+            ]
+        }
+    },
+    "column-types-transect-key": {
+        "Transect Child 1": {
+            "name": "Transect Child 1",
+            "minAge": 0,
+            "maxAge": 530.46,
+            "enableTitle": true,
+            "on": true,
+            "width": 200,
+            "popup": "Transect Child 1 Popup",
+            "rgb": {
+              "r": 245,
+              "g": 245,
+              "b": 245
+            },
+            "subTransectInfo": [
+              {
+                "age": 0
+              },
+              {
+                "age": 8.61
+              },
+              {
+                "age": 10.75
+              },
+              {
+                "age": 12.15
+              },
+              {
+                "age": 530.46
+              }
+            ]
+        },
+        "Transect Child 2": {
+            "name": "Transect Child 2",
+            "minAge": 0,
+            "maxAge": 9.22,
+            "enableTitle": true,
+            "on": true,
+            "width": 500,
+            "popup": "Transect Child 2 Popup",
+            "rgb": {
+            "r": 240,
+            "g": 255,
+            "b": 255
+            },
+            "subTransectInfo": [
+            {
+                "age": 0
+            },
+            {
+                "age": 0
+            },
+            {
+                "age": 2.58
+            },
+            {
+                "age": 9.22
+            }
             ]
         }
     }
