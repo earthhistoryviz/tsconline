@@ -231,12 +231,12 @@ describe("getColumnTypes tests", () => {
   it("should create all column types correctly", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-test-2.txt";
     await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap);
-    expectedFaciesMap.set(key["column-types-test-3-key"]["Facies 1"].name, key["column-types-test-3-key"]["Facies 1"]);
-    expectedBlockMap.set(key["column-types-test-3-key"]["Block 1"].name, key["column-types-test-3-key"]["Block 1"]);
-    expectedEventMap.set(key["column-types-test-3-key"]["Event 1"].name, key["column-types-test-3-key"]["Event 1"]);
-    expectedRangeMap.set(key["column-types-test-3-key"]["Range 1"].name, key["column-types-test-3-key"]["Range 1"]);
-    expectedChronMap.set(key["column-types-test-3-key"]["Chron 1"].name, key["column-types-test-3-key"]["Chron 1"])
-    expectedPointMap.set(key["column-types-test-3-key"]["Point 1"].name, key["column-types-test-3-key"]["Point 1"]);
+    expectedFaciesMap.set(key["column-types-all-column-types-key"]["Facies 1"].name, key["column-types-all-column-types-key"]["Facies 1"]);
+    expectedBlockMap.set(key["column-types-all-column-types-key"]["Block 1"].name, key["column-types-all-column-types-key"]["Block 1"]);
+    expectedEventMap.set(key["column-types-all-column-types-key"]["Event 1"].name, key["column-types-all-column-types-key"]["Event 1"]);
+    expectedRangeMap.set(key["column-types-all-column-types-key"]["Range 1"].name, key["column-types-all-column-types-key"]["Range 1"]);
+    expectedChronMap.set(key["column-types-all-column-types-key"]["Chron 1"].name, key["column-types-all-column-types-key"]["Chron 1"])
+    expectedPointMap.set(key["column-types-all-column-types-key"]["Point 1"].name, key["column-types-all-column-types-key"]["Point 1"]);
     expectMapsToBeEqual();
   });
 
@@ -244,10 +244,10 @@ describe("getColumnTypes tests", () => {
    * This test checks for the correct creation of the faciesMap
    */
   it("should create correct faciesMap only", async () => {
-    const file = "server/__tests__/__data__/parse-datapacks-test-3.txt";
+    const file = "server/__tests__/__data__/parse-datapacks-facies.txt";
     await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap);
-    for (const val in key["column-types-test-1-key"]) {
-      expectedFaciesMap.set(val, key["column-types-test-1-key"][val]);
+    for (const val in key["column-types-facies-key"]) {
+      expectedFaciesMap.set(val, key["column-types-facies-key"][val]);
     }
     expectMapsToBeEqual();
   });
@@ -256,10 +256,10 @@ describe("getColumnTypes tests", () => {
    * This test checks for the correct creation of the blockMap
    */
   it("should create correct blockMap only, the second block should has max amount of information", async () => {
-    const file = "server/__tests__/__data__/parse-datapacks-test-4.txt";
+    const file = "server/__tests__/__data__/parse-datapacks-block.txt";
     await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap);
-    for (const val in key["column-types-test-2-key"]) {
-      expectedBlockMap.set(val, key["column-types-test-2-key"][val]);
+    for (const val in key["column-types-block-key"]) {
+      expectedBlockMap.set(val, key["column-types-block-key"][val]);
     }
     expectMapsToBeEqual();
   });
@@ -268,31 +268,40 @@ describe("getColumnTypes tests", () => {
    * This checks a file with two events with two sub events each
    */
   it("should create correct eventMap only", async () => {
-    const file = "server/__tests__/__data__/parse-datapacks-test-5.txt";
+    const file = "server/__tests__/__data__/parse-datapacks-event.txt";
     await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap);
-    for (const val in key["column-types-test-4-key"]) {
-      expectedEventMap.set(val, key["column-types-test-4-key"][val]);
+    for (const val in key["column-types-event-key"]) {
+      expectedEventMap.set(val, key["column-types-event-key"][val]);
     }
     expectMapsToBeEqual();
   });
 
   it("should create correct rangeMap only", async () => {
-    const file = "server/__tests__/__data__/parse-datapacks-test-6.txt";
+    const file = "server/__tests__/__data__/parse-datapacks-range.txt";
     await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap);
-    for (const val in key["column-types-test-5-key"]) {
-      expectedRangeMap.set(val, key["column-types-test-5-key"][val]);
+    for (const val in key["column-types-range-key"]) {
+      expectedRangeMap.set(val, key["column-types-range-key"][val]);
     }
     expectMapsToBeEqual();
   });
 
   it("should create correct chronMap only", async () => {
-    const file = "server/__tests__/__data__/parse-datapacks-test-7.txt";
+    const file = "server/__tests__/__data__/parse-datapacks-chron.txt";
     await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap);
-    for (const val in key["column-types-test-6-key"]) {
-      expectedChronMap.set(val, key["column-types-test-6-key"][val]);
+    for (const val in key["column-types-chron-key"]) {
+      expectedChronMap.set(val, key["column-types-chron-key"][val]);
     }
     expectMapsToBeEqual();
   });
+
+  it("should create correct pointMap only", async () => {
+    const file = "server/__tests__/__data__/parse-datapacks-point.txt";
+    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap);
+    for (const val in key["column-types-point-key"]) {
+      expectedPointMap.set(val, key["column-types-point-key"][val]);
+    }
+    expectMapsToBeEqual();
+  })
 
   /**
    * Given a bad file, the maps should not be initialized
