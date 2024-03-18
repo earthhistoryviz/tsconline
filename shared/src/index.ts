@@ -1,6 +1,6 @@
 // Shared types between app and server (i.e. messages they send back and forth)
 
-import { defaultFontsInfo_ } from "./constants";
+import { defaultFontsInfoConstant } from "./constants";
 
 export type SuccessfulServerResponse = {
   message: string;
@@ -164,7 +164,7 @@ export type FontsInfo = {
   "Range Box Label": FontLabelOptions;
 };
 
-export const defaultFontsInfo: FontsInfo = defaultFontsInfo_;
+export const defaultFontsInfo: FontsInfo = defaultFontsInfoConstant;
 
 export type FaciesLocations = {
   [location: string]: {

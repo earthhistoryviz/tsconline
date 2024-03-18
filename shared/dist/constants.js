@@ -1,4 +1,4 @@
-export const defaultFontsInfo_ = {
+export const defaultFontsInfoConstant = {
     "Age Label": {
         bold: false,
         color: "rgb(0, 0, 0)",
