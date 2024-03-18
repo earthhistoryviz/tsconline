@@ -331,6 +331,38 @@
                         "popup": "SubChronInfo 2 Popup"
                     }
                 ]
+            },
+            {
+                "name": "Point",
+                "editName": "Point",
+                "children": [],
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "parent": "Parent 1",
+                "minAge": 4,
+                "maxAge": 5,
+                "enableTitle": true,
+                "on": false,
+                "width": 100,
+                "popup": "Point Popup",
+                "rgb": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                },
+                "subPointInfo": [
+                    {
+                    "age": 4,
+                    "xVal": 0,
+                    "popup": "SubPointInfo Popup 1"
+                    },
+                    {
+                    "age": 5,
+                    "xVal": 9,
+                    "popup": "SubPointInfo Popup 2"
+                    }
+                ]
             }
             ],
             "parent": "Root",
@@ -668,6 +700,32 @@
                 "b": 255
             },
             "popup": "Chron Popup"
+        },
+        "Point 1": {
+            "name": "Point",
+            "minAge": 4,
+            "maxAge": 5,
+            "enableTitle": true,
+            "on": false,
+            "width": 100,
+            "popup": "Point Popup",
+            "rgb": {
+              "r": 255,
+              "g": 255,
+              "b": 255
+            },
+            "subPointInfo": [
+              {
+                "age": 4,
+                "xVal": 0,
+                "popup": "SubPointInfo Popup 1"
+              },
+              {
+                "age": 5,
+                "xVal": 9,
+                "popup": "SubPointInfo Popup 2"
+              }
+            ]
         }
     },
     "column-types-test-4-key": {
