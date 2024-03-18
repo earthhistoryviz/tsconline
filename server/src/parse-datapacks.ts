@@ -605,14 +605,16 @@ export function processPoint(line: string): SubPointInfo | null {
     popup: ""
   }
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length !== 4 || tabSeparated[0]) return null;
+  if (tabSeparated.length > 4 || tabSeparated[0]) return null;
   const age = Number(tabSeparated[1]!);
   const xVal = Number(tabSeparated[2]!);
   const popup = tabSeparated[3];
   if (isNaN(age)) throw new Error("Error processing point line, age: " + tabSeparated[1]! + " is NaN");
-  if (isNaN(xVal)) throw new Error("Error processing point line, xVal: " + tabSeparated[2]! + " is NaN");
   subPointInfo.age = age;
-  subPointInfo.xVal = xVal;
+  // sometimes they don't exist, contrary to file documentation
+  if (!isNaN(xVal)) {
+    subPointInfo.xVal = xVal;
+  }
   if (popup) {
     subPointInfo.popup = popup;
   }

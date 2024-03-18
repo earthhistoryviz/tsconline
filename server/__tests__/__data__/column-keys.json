@@ -395,7 +395,7 @@
             "bottomAge": 5
         }
     },
-    "column-types-test-1-key": {
+    "column-types-facies-key": {
         "FaciesOne": {
             "name": "FaciesOne",
             "width": 500,
@@ -451,7 +451,7 @@
             "on": false
         }
     },
-    "column-types-test-2-key": {
+    "column-types-block-key": {
         "Block Child 1": {
             "name": "Block Child 1",
             "subBlockInfo": [
@@ -540,7 +540,7 @@
             }
         }
     },
-    "column-types-test-3-key": {
+    "column-types-all-column-types-key": {
         "Facies 1": {
             "name": "Facies",
             "subFaciesInfo": [
@@ -728,7 +728,7 @@
             ]
         }
     },
-    "column-types-test-4-key": {
+    "column-types-event-key": {
         "Event 1": {
             "name": "Event 1",
             "subEventInfo": [
@@ -786,7 +786,7 @@
             "on": false
         }
     },
-    "column-types-test-5-key": {
+    "column-types-range-key": {
         "Range 1": {
             "name": "Range 1",
             "subRangeInfo": [
@@ -844,7 +844,7 @@
             "on": true
         }
     },
-    "column-types-test-6-key": {
+    "column-types-chron-key": {
         "Chron 1": {
             "name": "Chron 1",
             "minAge": 28.4,
@@ -897,6 +897,60 @@
                     "label": "SubChronInfo 2 Label",
                     "popup": "SubChronInfo 2 Popup"
                 }
+            ]
+        }
+    },
+    "column-types-point-key": {
+        "Point 1": {
+            "name": "Point 1",
+            "minAge": 7,
+            "maxAge": 8,
+            "enableTitle": true,
+            "on": false,
+            "width": 100,
+            "popup": "Point 1 Popup",
+            "rgb": {
+              "r": 255,
+              "g": 255,
+              "b": 255
+            },
+            "subPointInfo": [
+              {
+                "age": 7,
+                "xVal": 0,
+                "popup": ""
+              },
+              {
+                "age": 8,
+                "xVal": 60,
+                "popup": ""
+              }
+            ]
+        },
+        "Point 2": {
+            "name": "Point 2",
+            "minAge": 1,
+            "maxAge": 1000,
+            "enableTitle": true,
+            "on": false,
+            "width": 100,
+            "popup": "Point 2 Popup",
+            "rgb": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+            },
+            "subPointInfo": [
+            {
+                "age": 1,
+                "xVal": 9.5,
+                "popup": "Popup 1"
+            },
+            {
+                "age": 1000,
+                "xVal": 9,
+                "popup": "Popup 2"
+            }
             ]
         }
     }
