@@ -342,6 +342,11 @@ export async function getColumnTypes(
       setColumnHeaders(transect, tabSeparated);
       inTransectBlock = true;
     } else if (inTransectBlock) {
+      if (tabSeparated[0] === "POLYGON" || tabSeparated[0] === "TEXT") {
+        addTransectToTransectMap(transect, transectMap);
+        inTransectBlock = false;
+        continue;
+      }
       const subTransectInfo = processTransect(line);
       if (subTransectInfo) {
         transect.subTransectInfo.push(subTransectInfo);

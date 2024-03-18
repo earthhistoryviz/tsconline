@@ -38,3 +38,9 @@ nopoints	line		0	10	smoothed
 Sequence	sequence	900		notitle		Sequence Popup
 		MFS	0	Major	No Label Popup
 	Label 1	SB	2	Medium	Label 1 Popup
+
+Transect	transect	500	240/255/255		on	Transect Popup
+		0	2	3	4	5	6	7	8	9	10	11	12	13	14	15	16	17	18	19	20	21	22	23	24	25	26	27	28	29	30	31	32	33	34	35	36	37	38	39	40	41	42	43	44	45	46	47	48	49	50	51	52	53	54	55	56	58	59	60	61	62	63	64	65	66	67	69	70	71	72	74	75	76	77	78	79	80	81	82	90	91	92	93	94	95	98
+	0	X8																																		X1												X45		X197		X219																									X374	
+	2.58																																															X46		X196				X220																							X373	
+	9.22																																																						X47			X195					X221													X372

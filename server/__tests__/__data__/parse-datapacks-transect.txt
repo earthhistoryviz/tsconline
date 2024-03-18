@@ -1,0 +1,24 @@
+Transect Test	:	Transect Child 1	Transect Child 2
+
+Transect Child 1	transect	200	245/245/245		on	Transect Child 1 Popup
+		0	5	10	15	20	40	45	50	55	60	65	70	75	80	85	100
+	8.61	X1												X2
+	10.75	X5											X4	X3
+	12.15	X6											X7
+	530.46	X144	X145
+POLYGON	pattern: Halite;	Neogene Salt
+	1
+	2
+	146
+TEXT	8.36	3	Neogene Salt	font-family: Arial; font-size: 10px;	1.426	36.736
+TEXT	12.65	3	Neogene Anhydrite	font-family: Arial; font-size: 10px;	1.426	51.9
+TEXT	100.5	3	Cretaceous Salt	font-family: Arial; font-size: 10px;	1.426	43.13
+
+
+Transect Child 2	transect	500	240/255/255		on	Transect Child 2 Popup
+		0	2	3	4	5	6	7	8	9	10	11	12	13	14	15	16	17	18	19	20	21	22	23	24	25	26	27	28	29	30	31	32	33	34	35	36	37	38	39	40	41	42	43	44	45	46	47	48	49	50	51	52	53	54	55	56	58	59	60	61	62	63	64	65	66	67	69	70	71	72	74	75	76	77	78	79	80	81	82	90	91	92	93	94	95	98
+	0	X8																																		X1												X45		X197		X219																									X374	
+	2.58																																															X46		X196				X220																							X373	
+	9.22																																																						X47			X195					X221													X372
+TEXT	3.92	60.2	Oolite	font-family: Arial; font-size: 20px;	2.693	14.106
+TEXT	8.99	13.52	7	font-family: Arial; font-size: 40px;	5.387	6.006

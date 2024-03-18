@@ -7,6 +7,7 @@ jest.mock("./util.js", () => ({
 }));
 jest.mock("@tsconline/shared", () => ({
   assertSubEventInfo: jest.fn().mockImplementation(() => true),
+  assertSubTransectInfo: jest.fn().mockImplementation(() => true),
   assertSubChronInfo: jest.fn().mockImplementation(() => true),
   assertSubPointInfo: jest.fn().mockImplementation(() => true),
   assertSubSequenceInfo: jest.fn().mockImplementation(() => true),
@@ -268,6 +269,10 @@ describe("getColumnTypes tests", () => {
       key["column-types-all-column-types-key"]["Sequence 1"].name,
       key["column-types-all-column-types-key"]["Sequence 1"]
     );
+    expectedTransectMap.set(
+      key["column-types-all-column-types-key"]["Transect 1"].name,
+      key["column-types-all-column-types-key"]["Transect 1"]
+    );
     expectMapsToBeEqual();
   });
 
@@ -343,6 +348,15 @@ describe("getColumnTypes tests", () => {
     expectMapsToBeEqual();
   });
 
+  it("should create correct transectMap only", async () => {
+    const file = "server/__tests__/__data__/parse-datapacks-transect.txt";
+    await getColumnTypes(file, faciesMap, blockMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
+    for (const val in key["column-types-transect-key"]) {
+      expectedTransectMap.set(val, key["column-types-transect-key"][val]);
+    }
+    expectMapsToBeEqual();
+  })
+
   /**
    * Given a bad file, the maps should not be initialized
    */
@@ -353,13 +367,6 @@ describe("getColumnTypes tests", () => {
   });
 
   function expectMapsToBeEqual() {
-    expect(blockMap.size).toBe(expectedBlockMap.size);
-    expect(faciesMap.size).toBe(expectedFaciesMap.size);
-    expect(eventMap.size).toBe(expectedEventMap.size);
-    expect(rangeMap.size).toBe(expectedRangeMap.size);
-    expect(chronMap.size).toBe(expectedChronMap.size);
-    expect(pointMap.size).toBe(expectedPointMap.size);
-    expect(sequenceMap.size).toBe(expectedSequenceMap.size);
     expect(blockMap).toEqual(expectedBlockMap);
     expect(faciesMap).toEqual(expectedFaciesMap);
     expect(eventMap).toEqual(expectedEventMap);
@@ -367,6 +374,7 @@ describe("getColumnTypes tests", () => {
     expect(chronMap).toEqual(expectedChronMap);
     expect(pointMap).toEqual(expectedPointMap);
     expect(sequenceMap).toEqual(expectedSequenceMap);
+    expect(transectMap).toEqual(expectedTransectMap);
   }
 });
 
