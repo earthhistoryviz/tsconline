@@ -6,7 +6,6 @@ import {
   type ColumnInfo,
   type MapHierarchy,
   type GeologicalStages,
-  assertChartInfo,
   assertSuccessfulServerResponse,
   Presets,
   assertSVGStatus,
@@ -22,9 +21,9 @@ import {
   assertPatterns
 } from "@tsconline/shared";
 import { state, State } from "../state";
-import { fetcher, devSafeUrl } from "../../util";
+import { fetcher } from "../../util";
 import { initializeColumnHashMap } from "./column-actions";
-import { jsonToXml, xmlToJson } from "../parse-settings";
+import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { Settings } from "../../types";
 import { compareStrings } from "../../util/util";
@@ -319,39 +318,6 @@ export const resetState = action("resetState", () => {
   state.settingsTabs.columnSelected = null;
   state.settingsXML = "";
   state.settingsJSON = {};
-});
-
-export const generateChart = action("generateChart", async () => {
-  //set the loading screen and make sure the chart isn't up
-  setTab(1);
-  setChartMade(true);
-  setChartLoading(true);
-  setChartHash("");
-  setChartPath("");
-  //let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
-  // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
-  const xmlSettings = jsonToXml(state.settingsJSON, state.settingsTabs.columns, state.settings);
-  const body = JSON.stringify({
-    settings: xmlSettings,
-    datapacks: state.config.datapacks
-  });
-  console.log("Sending settings to server...");
-  const response = await fetcher(`/charts/${state.useCache}/${state.settings.datapackContainsSuggAge}`, {
-    method: "POST",
-    body
-  });
-  const answer = await response.json();
-  // will check if pdf is loaded
-  try {
-    assertChartInfo(answer);
-    setChartHash(answer.hash);
-    setChartPath(devSafeUrl(answer.chartpath));
-    await checkSVGStatus();
-    setOpenSnackbar(true);
-  } catch (e) {
-    displayServerError(e, answer, "Failed to fetch chart");
-    return;
-  }
 });
 
 export const loadPresets = action("loadPresets", (presets: Presets) => {
