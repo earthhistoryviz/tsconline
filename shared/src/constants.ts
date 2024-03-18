@@ -1,6 +1,6 @@
 import { FontsInfo } from "./index";
 
-export const defaultFontsInfo_: FontsInfo = {
+export const defaultFontsInfoConstant: FontsInfo = {
   "Age Label": {
     bold: false,
     color: "rgb(0, 0, 0)",
