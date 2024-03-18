@@ -558,7 +558,7 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
 export function processSequence(line: string): SubSequenceInfo | null {
   let subSequenceInfo = {}
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length > 4 || tabSeparated[0]) return null;
+  if (tabSeparated.length > 6 || tabSeparated.length < 5 || tabSeparated[0]) return null;
   const label = tabSeparated[1];
   const direction = tabSeparated[2]!;
   const age = Number(tabSeparated[3]!);

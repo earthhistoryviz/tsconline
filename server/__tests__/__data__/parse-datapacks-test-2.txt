@@ -3,7 +3,7 @@ SetTop:	0
 SetBase:	5
 SetScale:	6
 
-Parent 1	:	Block	Facies	Event	Range	Chron	Point
+Parent 1	:	Block	Facies	Event	Range	Chron	Point	Sequence
 
 Block	block	120	197/217/234	notitle	off	Block Popup
 	TOP	419.2
@@ -34,3 +34,7 @@ Point	point				off	Point Popup
 nopoints	line		0	10	smoothed
 	4	0	SubPointInfo Popup 1
 	5	9	SubPointInfo Popup 2
+
+Sequence	sequence	900		notitle		Sequence Popup
+		MFS	0	Major	No Label Popup
+	Label 1	SB	2	Medium	Label 1 Popup
