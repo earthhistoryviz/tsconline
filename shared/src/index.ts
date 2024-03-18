@@ -362,8 +362,8 @@ export type Transect = ColumnHeaderProps & {
  * I will leave this open to add more properties
  */
 export type SubTransectInfo = {
-  age: number; 
-}
+  age: number;
+};
 
 export type ChartResponseInfo = {
   chartpath: string; // path to the chart

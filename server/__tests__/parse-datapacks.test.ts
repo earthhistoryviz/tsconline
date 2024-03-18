@@ -355,7 +355,7 @@ describe("getColumnTypes tests", () => {
       expectedTransectMap.set(val, key["column-types-transect-key"][val]);
     }
     expectMapsToBeEqual();
-  })
+  });
 
   /**
    * Given a bad file, the maps should not be initialized

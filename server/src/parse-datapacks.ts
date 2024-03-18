@@ -122,7 +122,17 @@ export async function parseDatapacks(decryptFilePath: string, files: string[]): 
   try {
     for (const decryptPath of decryptPaths) {
       //get the facies/blocks first
-      await getColumnTypes(decryptPath, faciesMap, blocksMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
+      await getColumnTypes(
+        decryptPath,
+        faciesMap,
+        blocksMap,
+        eventMap,
+        rangeMap,
+        chronMap,
+        pointMap,
+        sequenceMap,
+        transectMap
+      );
       // Originally the first step, gather all parents and their direct children
       await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
       // only iterate over parents. if we encounter one that is a child, the recursive function
@@ -493,8 +503,8 @@ function setColumnHeaders(column: ColumnHeaderProps, tabSeparated: string[]) {
 
 /**
  * adds a transect object to the map. will reset the transect object.
- * @param transect 
- * @param transectMap 
+ * @param transect
+ * @param transectMap
  */
 function addTransectToTransectMap(transect: Transect, transectMap: Map<string, Transect>) {
   for (const subTransect of transect.subTransectInfo) {
@@ -603,15 +613,15 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
 
 /**
  * processes a single subTransectInfo line
- * @param line 
- * @returns 
+ * @param line
+ * @returns
  */
 export function processTransect(line: string): SubTransectInfo | null {
   const subTransectInfo = {
-    age: 0,
-  }
+    age: 0
+  };
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length < 2 || tabSeparated[0]) return null;
+  if (tabSeparated.length < 2 || tabSeparated[0] || !tabSeparated[1]) return null;
   const age = Number(tabSeparated[1]!);
   if (isNaN(age)) throw new Error("Error processing transect line, age: " + tabSeparated[1]! + " is NaN");
   subTransectInfo.age = age;
@@ -626,8 +636,8 @@ export function processTransect(line: string): SubTransectInfo | null {
 
 /**
  * processes a single subSequenceInfo line
- * @param line 
- * @returns 
+ * @param line
+ * @returns
  */
 export function processSequence(line: string): SubSequenceInfo | null {
   let subSequenceInfo = {};
@@ -638,7 +648,8 @@ export function processSequence(line: string): SubSequenceInfo | null {
   const age = Number(tabSeparated[3]!);
   const severity = tabSeparated[4]!;
   const popup = tabSeparated[5];
-  if (isNaN(age)) throw new Error("Error processing sequence line, age: " + tabSeparated[2]! + " is NaN");
+  if (isNaN(age) || !tabSeparated[3])
+    throw new Error("Error processing sequence line, age: " + tabSeparated[2]! + " is NaN");
   if (label) {
     subSequenceInfo = {
       label,
@@ -675,7 +686,8 @@ export function processChron(line: string): SubChronInfo | null {
   const polarity = tabSeparated[1]!;
   const label = tabSeparated[2]!;
   const age = Number(tabSeparated[3]!);
-  if (isNaN(age)) throw new Error("Error processing chron line, age: " + tabSeparated[3]! + " is NaN");
+  if (isNaN(age) || !tabSeparated[3])
+    throw new Error("Error processing chron line, age: " + tabSeparated[3]! + " is NaN");
   const popup = tabSeparated[4] || "";
   if (label) {
     subChronInfo = {
@@ -715,7 +727,8 @@ export function processRange(line: string): SubRangeInfo | null {
   if (tabSeparated.length < 3 || tabSeparated.length > 5) return null;
   const label = tabSeparated[1]!;
   const age = Number(tabSeparated[2]!);
-  if (isNaN(age)) throw new Error("Error processing range line, age: " + tabSeparated[2]! + " is NaN");
+  if (isNaN(age) || !tabSeparated[2])
+    throw new Error("Error processing range line, age: " + tabSeparated[2]! + " is NaN");
   const abundance = tabSeparated[3];
   const popup = tabSeparated[4];
   subRangeInfo.label = label;
@@ -750,7 +763,8 @@ export function processEvent(line: string): SubEventInfo | null {
   if (tabSeparated.length < 3 || tabSeparated.length > 5) return null;
   const label = tabSeparated[1]!;
   const age = Number(tabSeparated[2]!);
-  if (isNaN(age)) throw new Error("Error processing event line, age: " + tabSeparated[2]! + " is NaN");
+  if (isNaN(age) || !tabSeparated[2])
+    throw new Error("Error processing event line, age: " + tabSeparated[2]! + " is NaN");
   const lineStyle = tabSeparated[3];
   const popup = tabSeparated[4];
   subEventInfo.label = label;
@@ -780,7 +794,8 @@ export function processPoint(line: string): SubPointInfo | null {
   const age = Number(tabSeparated[1]!);
   const xVal = Number(tabSeparated[2]!);
   const popup = tabSeparated[3];
-  if (isNaN(age)) throw new Error("Error processing point line, age: " + tabSeparated[1]! + " is NaN");
+  if (isNaN(age) || !tabSeparated[1])
+    throw new Error("Error processing point line, age: " + tabSeparated[1]! + " is NaN");
   subPointInfo.age = age;
   // sometimes they don't exist, contrary to file documentation
   if (!isNaN(xVal)) {
@@ -815,7 +830,8 @@ export function processBlock(line: string, defaultColor: RGB): SubBlockInfo | nu
   const label = tabSeparated[1];
   const age = Number(tabSeparated[2]!);
   const popup = tabSeparated[4];
-  if (isNaN(age)) throw new Error("Error processing block line, age: " + tabSeparated[2]! + " is NaN");
+  if (isNaN(age) || !tabSeparated[2])
+    throw new Error("Error processing block line, age: " + tabSeparated[2]! + " is NaN");
   const lineStyle = tabSeparated[3];
   const rgb = tabSeparated[5];
   if (label) {
@@ -876,7 +892,8 @@ export function processFacies(line: string): SubFaciesInfo | null {
   const tabSeparated = line.split("\t");
   if (tabSeparated.length < 4 || tabSeparated.length > 5) return null;
   const age = Number(tabSeparated[3]!);
-  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeparated[3]! + " is NaN");
+  if (isNaN(age) || !tabSeparated[3])
+    throw new Error("Error processing facies line, age: " + tabSeparated[3]! + " is NaN");
   // label doesn't exist for TOP or GAP
   if (!tabSeparated[2]) {
     subFaciesInfo = {
