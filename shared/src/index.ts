@@ -314,10 +314,10 @@ export type SubChronInfo = {
 };
 
 export type SubPointInfo = {
-  age: number,
-  xVal: number,
-  popup: string
-}
+  age: number;
+  xVal: number;
+  popup: string;
+};
 
 export type SubRangeInfo = {
   label: string;
