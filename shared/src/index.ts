@@ -304,7 +304,8 @@ export type SubChronInfo = {
 
 export type SubPointInfo = {
   age: number,
-  xVal: number
+  xVal: number,
+  popup: string
 }
 
 export type SubRangeInfo = {
@@ -432,6 +433,7 @@ export function assertSubPointInfo(o: any): asserts o is SubPointInfo {
   if (!o || typeof o !== "object") throw new Error("SubPointInfo must be a non-null object");
   if (typeof o.age !== "number") throwError("SubPointInfo", "age", "number", o.age);
   if (typeof o.xVal !== "number") throwError("SubPointInfo", "xVal", "number", o.xVal);
+  if (typeof o.popup !== "string") throwError("SubPointInfo", "popup", "string", o.popup);
 }
 export function assertChron(o: any): asserts o is Chron {
   if (!o || typeof o !== "object") throw new Error("Chron must be a non-null object");

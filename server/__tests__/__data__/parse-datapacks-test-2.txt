@@ -3,7 +3,7 @@ SetTop:	0
 SetBase:	5
 SetScale:	6
 
-Parent 1	:	Block	Facies	Event	Range	Chron
+Parent 1	:	Block	Facies	Event	Range	Chron	Point
 
 Block	block	120	197/217/234	notitle	off	Block Popup
 	TOP	419.2
@@ -29,3 +29,8 @@ C-Sequence	Primary
 	TOP		0
 	N	SubChronInfo 1 Label	.123	SubChronInfo 1 Popup
 	R	SubChronInfo 2 Label	.234	SubChronInfo 2 Popup
+
+Point	point				off	Point Popup
+nopoints	line		0	10	smoothed
+	4	0	SubPointInfo Popup 1
+	5	9	SubPointInfo Popup 2
