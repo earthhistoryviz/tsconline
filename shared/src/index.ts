@@ -276,6 +276,8 @@ export type ColumnInfo = {
   subRangeInfo?: SubRangeInfo[];
   subChronInfo?: SubChronInfo[];
   subPointInfo?: SubPointInfo[];
+  subFreehandInfo?: SubFreehandInfo[];
+  subSequenceInfo?: SubSequenceInfo[];
   minAge: number;
   maxAge: number;
   enableTitle: boolean;
@@ -291,11 +293,28 @@ export type Chron = ColumnHeaderProps & {
   subChronInfo: SubChronInfo[];
 };
 
+export type Freehand = ColumnHeaderProps & {
+  subFreehandInfo: SubFreehandInfo[];
+};
+
 export type Point = ColumnHeaderProps & {
   subPointInfo: SubPointInfo[];
 };
 export type Sequence = ColumnHeaderProps & {
   subSequenceInfo: SubSequenceInfo[];
+};
+
+/**
+ * NOTE: This implementation gets rid of a lot of the freehand info
+ * This is due to the structure being more complicated on various lines.
+ * For the current TSCOnline as of 1.0 we don't need that information.
+ * If we ever want to add that implementation, we would change this
+ * but that would be a considerable amount of time and is something for the future.
+ * (This is because we are using a stream reading line by line in parse-datapacks)
+ */
+export type SubFreehandInfo = {
+  topAge: number;
+  baseAge: number;
 };
 
 export type SubSequenceInfo = {
@@ -445,12 +464,25 @@ export type TimescaleItem = {
   value: number;
 };
 
+export function assertFreehand(o: any): asserts o is Freehand {
+  if (!o || typeof o !== "object") throw new Error("Freehand must be a non-null object");
+  if (!Array.isArray(o.subFreehandInfo)) throwError("Freehand", "subFreehandInfo", "array", o.subFreehandInfo);
+  for (const subFreehand of o.subFreehandInfo) {
+    assertSubFreehandInfo(subFreehand);
+  }
+}
 export function assertTransect(o: any): asserts o is Transect {
   if (!o || typeof o !== "object") throw new Error("Transect must be a non-null object");
   if (!Array.isArray(o.subTransectInfo)) throwError("Transect", "subTransectInfo", "array", o.subTransectInfo);
   for (const subTransect of o.subTransectInfo) {
     assertSubTransectInfo(subTransect);
   }
+}
+
+export function assertSubFreehandInfo(o: any): asserts o is SubFreehandInfo {
+  if (!o || typeof o !== "object") throw new Error("SubFreehandInfo must be a non-null object");
+  if (typeof o.topAge !== "number") throwError("SubFreehandInfo", "topAge", "number", o.topAge);
+  if (typeof o.baseAge !== "number") throwError("SubFreehandInfo", "baseAge", "number", o.baseAge);
 }
 
 export function assertSubTransectInfo(o: any): asserts o is SubTransectInfo {
@@ -782,6 +814,20 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
       throwError("ColumnInfo", "subPointInfo", "array", o.subPointInfo);
     for (const point of o.subPointInfo) {
       assertSubPointInfo(point);
+    }
+  }
+  if ("subFreehandInfo" in o) {
+    if (!o.subFreehandInfo || !Array.isArray(o.subFreehandInfo))
+      throwError("ColumnInfo", "subFreehandInfo", "array", o.subFreehandInfo);
+    for (const freehand of o.subFreehandInfo) {
+      assertSubFreehandInfo(freehand);
+    }
+  }
+  if ("subSequenceInfo" in o) {
+    if (!o.subSequenceInfo || !Array.isArray(o.subSequenceInfo))
+      throwError("ColumnInfo", "subSequenceInfo", "array", o.subSequenceInfo);
+    for (const sequence of o.subSequenceInfo) {
+      assertSubSequenceInfo(sequence);
     }
   }
 }
