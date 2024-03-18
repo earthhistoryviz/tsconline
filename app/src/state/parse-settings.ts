@@ -307,14 +307,10 @@ function generateFontsXml(fonts: any, colName: string, stateColumn: any, indent:
 function generateColumnXml(jsonColumn: any, stateColumn: ColumnInfo | null, indent: string): string {
   let xml = "";
   for (let key in jsonColumn) {
-    // console.log("key", key)
     if (Object.prototype.hasOwnProperty.call(jsonColumn, key)) {
       let colName = extractName(jsonColumn._id);
       let xmlKey = replaceSpecialChars(key, 0);
       // Skip the 'id' element.
-      // if (colName === "Chart Root") {
-      //   console.log(JSON.parse(JSON.stringify(stateColumn)));
-      // }
       if (key === "_id") {
         continue;
       }

@@ -155,7 +155,7 @@ export const FontMenu: React.FC<object> = observer(() => {
     "Event Column Label",
     "Range Label"
   ]);
-  if (state.settingsTabs.columnSelected != null) {
+  if (state.settingsTabs.columnSelected) {
     fontOptionsSet =
       state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)?.fontOptions ?? defaultFontSet;
   }
@@ -189,9 +189,11 @@ export const FontMenu: React.FC<object> = observer(() => {
             <Grid item xs={12}>
               <Divider />
             </Grid>
-            {Array.from(fontOptionsSet).map((target, index) => (
+            <Grid item xs={12} style={{ marginBottom: "-16px" }}>
+              <Typography id="AdditionalFontsText">Additional fonts for child columns</Typography>
+            </Grid>
+            {Array.from(fontOptionsSet).map((target) => (
               <Grid item xs={12} key={target}>
-                {index === 0 && <Typography id="AdditionalFontsText">Additional fonts for child columns</Typography>}
                 <FontMenuRow target={target} />
               </Grid>
             ))}

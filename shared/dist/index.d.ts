@@ -112,127 +112,30 @@ export type ColumnPrototypeInfo = {
     };
     fonts: FontsInfo;
 };
+export type FontLabelOptions = {
+    inheritable: boolean;
+    fontFace: "Arial" | "Courier" | "Verdana";
+    size: number;
+    bold: boolean;
+    italic: boolean;
+    color: string;
+};
 export type FontsInfo = {
-    "Column Header": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
-    "Age Label": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
-    "Uncertainty Label": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
-    "Zone Column Label": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
-    "Sequence Column Label": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
-    "Event Column Label": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
-    "Popup Body": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
-    "Ruler Label": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
-    "Point Column Scale Label": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
-    "Range Label": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
-    "Ruler Tick Mark Label": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
-    "Legend Title": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
-    "Legend Column Name": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
-    "Legend Column Source": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
-    "Range Box Label": {
-        inheritable: boolean;
-        fontFace: "Arial" | "Courier" | "Verdana";
-        size: number;
-        bold: boolean;
-        italic: boolean;
-        color: string;
-    };
+    "Column Header": FontLabelOptions;
+    "Age Label": FontLabelOptions;
+    "Uncertainty Label": FontLabelOptions;
+    "Zone Column Label": FontLabelOptions;
+    "Sequence Column Label": FontLabelOptions;
+    "Event Column Label": FontLabelOptions;
+    "Popup Body": FontLabelOptions;
+    "Ruler Label": FontLabelOptions;
+    "Point Column Scale Label": FontLabelOptions;
+    "Range Label": FontLabelOptions;
+    "Ruler Tick Mark Label": FontLabelOptions;
+    "Legend Title": FontLabelOptions;
+    "Legend Column Name": FontLabelOptions;
+    "Legend Column Source": FontLabelOptions;
+    "Range Box Label": FontLabelOptions;
 };
 export declare const defaultFontsInfo: FontsInfo;
 export type FaciesLocations = {
