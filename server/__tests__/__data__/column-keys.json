@@ -809,9 +809,6 @@
                 "age": 0
               },
               {
-                "age": 0
-              },
-              {
                 "age": 2.58
               },
               {
@@ -1109,7 +1106,7 @@
     "column-types-transect-key": {
         "Transect Child 1": {
             "name": "Transect Child 1",
-            "minAge": 0,
+            "minAge": 8.61,
             "maxAge": 530.46,
             "enableTitle": true,
             "on": true,
@@ -1121,9 +1118,6 @@
               "b": 245
             },
             "subTransectInfo": [
-              {
-                "age": 0
-              },
               {
                 "age": 8.61
               },
@@ -1152,9 +1146,6 @@
             "b": 255
             },
             "subTransectInfo": [
-            {
-                "age": 0
-            },
             {
                 "age": 0
             },
