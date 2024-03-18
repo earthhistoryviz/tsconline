@@ -351,6 +351,19 @@ export type Event = ColumnHeaderProps & {
 export type Block = ColumnHeaderProps & {
   subBlockInfo: SubBlockInfo[];
 };
+export type Transect = ColumnHeaderProps & {
+  subTransectInfo: SubTransectInfo[];
+};
+
+/**
+ * The structure of transects in the datapack are complicated so I will
+ * not be doing the deconstructing of the data since there is no added benefit
+ * However, if we for some reason want to access it or parse it
+ * I will leave this open to add more properties
+ */
+export type SubTransectInfo = {
+  age: number; 
+}
 
 export type ChartResponseInfo = {
   chartpath: string; // path to the chart
@@ -431,6 +444,19 @@ export type TimescaleItem = {
   key: string;
   value: number;
 };
+
+export function assertTransect(o: any): asserts o is Transect {
+  if (!o || typeof o !== "object") throw new Error("Transect must be a non-null object");
+  if (!Array.isArray(o.subTransectInfo)) throwError("Transect", "subTransectInfo", "array", o.subTransectInfo);
+  for (const subTransect of o.subTransectInfo) {
+    assertSubTransectInfo(subTransect);
+  }
+}
+
+export function assertSubTransectInfo(o: any): asserts o is SubTransectInfo {
+  if (!o || typeof o !== "object") throw new Error("SubTransectInfo must be a non-null object");
+  if (typeof o.age !== "number") throwError("SubTransectInfo", "age", "number", o.age);
+}
 
 export function assertPoint(o: any): asserts o is Point {
   if (!o || typeof o !== "object") throw new Error("Point must be a non-null object");

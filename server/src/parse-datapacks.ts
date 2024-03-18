@@ -27,7 +27,10 @@ import {
   SubPointInfo,
   Sequence,
   assertSubSequenceInfo,
-  SubSequenceInfo
+  SubSequenceInfo,
+  Transect,
+  SubTransectInfo,
+  assertSubTransectInfo
 } from "@tsconline/shared";
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters } from "./util.js";
 import { createInterface } from "readline";
@@ -115,10 +118,11 @@ export async function parseDatapacks(decryptFilePath: string, files: string[]): 
   const chronMap: Map<string, Chron> = new Map();
   const pointMap: Map<string, Point> = new Map();
   const sequenceMap: Map<string, Sequence> = new Map();
+  const transectMap: Map<string, Transect> = new Map();
   try {
     for (const decryptPath of decryptPaths) {
       //get the facies/blocks first
-      await getColumnTypes(decryptPath, faciesMap, blocksMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap);
+      await getColumnTypes(decryptPath, faciesMap, blocksMap, eventMap, rangeMap, chronMap, pointMap, sequenceMap, transectMap);
       // Originally the first step, gather all parents and their direct children
       await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
       // only iterate over parents. if we encounter one that is a child, the recursive function
@@ -138,7 +142,8 @@ export async function parseDatapacks(decryptFilePath: string, files: string[]): 
             rangeMap,
             chronMap,
             pointMap,
-            sequenceMap
+            sequenceMap,
+            transectMap
           );
         }
       });
@@ -236,10 +241,15 @@ export async function getColumnTypes(
   rangeMap: Map<string, Range>,
   chronMap: Map<string, Chron>,
   pointMap: Map<string, Point>,
-  sequenceMap: Map<string, Sequence>
+  sequenceMap: Map<string, Sequence>,
+  transectMap: Map<string, Transect>
 ) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
+  const transect: Transect = {
+    ...createDefaultColumnHeaderProps(),
+    subTransectInfo: []
+  };
   const sequence: Sequence = {
     ...createDefaultColumnHeaderProps(),
     subSequenceInfo: []
@@ -277,6 +287,7 @@ export async function getColumnTypes(
   let inChronBlock = false;
   let inPointBlock = false;
   let inSequenceBlock = false;
+  let inTransectBlock = false;
 
   for await (const line of readline) {
     if (!line || trimInvisibleCharacters(line) === "") {
@@ -319,9 +330,23 @@ export async function getColumnTypes(
         addSequenceToSequenceMap(sequence, sequenceMap);
         continue;
       }
+      if (inTransectBlock) {
+        inTransectBlock = false;
+        addTransectToTransectMap(transect, transectMap);
+        continue;
+      }
     }
 
     const tabSeparated = line.split("\t");
+    if (!inTransectBlock && tabSeparated[1] === "transect") {
+      setColumnHeaders(transect, tabSeparated);
+      inTransectBlock = true;
+    } else if (inTransectBlock) {
+      const subTransectInfo = processTransect(line);
+      if (subTransectInfo) {
+        transect.subTransectInfo.push(subTransectInfo);
+      }
+    }
     if (!inSequenceBlock && (tabSeparated[1] === "sequence" || tabSeparated[1] === "trend")) {
       setColumnHeaders(sequence, tabSeparated);
       inSequenceBlock = true;
@@ -400,6 +425,9 @@ export async function getColumnTypes(
     }
   }
 
+  if (inTransectBlock) {
+    addTransectToTransectMap(transect, transectMap);
+  }
   if (inFaciesBlock) {
     addFaciesToFaciesMap(facies, faciesMap);
   }
@@ -458,6 +486,19 @@ function setColumnHeaders(column: ColumnHeaderProps, tabSeparated: string[]) {
   }
 }
 
+/**
+ * adds a transect object to the map. will reset the transect object.
+ * @param transect 
+ * @param transectMap 
+ */
+function addTransectToTransectMap(transect: Transect, transectMap: Map<string, Transect>) {
+  for (const subTransect of transect.subTransectInfo) {
+    transect.minAge = Math.min(subTransect.age, transect.minAge);
+    transect.maxAge = Math.max(subTransect.age, transect.maxAge);
+  }
+  transectMap.set(transect.name, JSON.parse(JSON.stringify(transect)));
+  Object.assign(transect, { ...createDefaultColumnHeaderProps(), subTransectInfo: [] });
+}
 /**
  * adds a sequence object to the map. will reset the sequence object.
  * @param sequence
@@ -555,6 +596,34 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
   Object.assign(block, { ...createDefaultColumnHeaderProps(), subBlockInfo: [] });
 }
 
+/**
+ * processes a single subTransectInfo line
+ * @param line 
+ * @returns 
+ */
+export function processTransect(line: string): SubTransectInfo | null {
+  const subTransectInfo = {
+    age: 0,
+  }
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length < 2 || tabSeparated[0]) return null;
+  const age = Number(tabSeparated[1]!);
+  if (isNaN(age)) throw new Error("Error processing transect line, age: " + tabSeparated[1]! + " is NaN");
+  subTransectInfo.age = age;
+  try {
+    assertSubTransectInfo(subTransectInfo);
+  } catch (e) {
+    console.log(`Error ${e} found while processing subTransectInfo, returning null`);
+    return null;
+  }
+  return subTransectInfo;
+}
+
+/**
+ * processes a single subSequenceInfo line
+ * @param line 
+ * @returns 
+ */
 export function processSequence(line: string): SubSequenceInfo | null {
   let subSequenceInfo = {};
   const tabSeparated = line.split("\t");
@@ -860,7 +929,8 @@ function recursive(
   rangeMap: Map<string, Range>,
   chronMap: Map<string, Chron>,
   pointMap: Map<string, Point>,
-  sequenceMap: Map<string, Sequence>
+  sequenceMap: Map<string, Sequence>,
+  transectMap: Map<string, Transect>
 ): FaciesFoundAndAgeRange {
   const currentColumnInfo: ColumnInfo = {
     name: trimInvisibleCharacters(currentColumn),
@@ -890,6 +960,15 @@ function recursive(
     currentColumnInfo.on = parsedColumnEntry.on;
     currentColumnInfo.popup = parsedColumnEntry.info;
     currentColumnInfo.enableTitle = parsedColumnEntry.enableTitle;
+  }
+  if (transectMap.has(currentColumn)) {
+    const currentTransect = transectMap.get(currentColumn)!;
+    Object.assign(currentColumnInfo, {
+      ...currentTransect,
+      subTransectInfo: JSON.parse(JSON.stringify(currentTransect.subTransectInfo))
+    });
+    returnValue.minAge = currentColumnInfo.minAge;
+    returnValue.maxAge = currentColumnInfo.maxAge;
   }
   if (sequenceMap.has(currentColumn)) {
     const currentSequence = sequenceMap.get(currentColumn)!;
@@ -975,7 +1054,8 @@ function recursive(
         rangeMap,
         chronMap,
         pointMap,
-        sequenceMap
+        sequenceMap,
+        transectMap
       );
       returnValue.minAge = Math.min(compareValue.minAge, returnValue.minAge);
       returnValue.maxAge = Math.max(compareValue.maxAge, returnValue.maxAge);
