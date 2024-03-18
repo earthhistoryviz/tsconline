@@ -363,6 +363,41 @@
                     "popup": "SubPointInfo Popup 2"
                     }
                 ]
+            },
+            {
+                "name": "Sequence",
+                "minAge": 0,
+                "maxAge": 2,
+                "enableTitle": false,
+                "children": [],
+                "editName": "Sequence",
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "parent": "Parent 1",
+                "on": true,
+                "width": 900,
+                "popup": "Sequence Popup",
+                "rgb": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                },
+                "subSequenceInfo": [
+                    {
+                        "direction": "MFS",
+                        "age": 0,
+                        "severity": "Major",
+                        "popup": "No Label Popup"
+                    },
+                    {
+                        "label": "Label 1",
+                        "direction": "SB",
+                        "age": 2,
+                        "severity": "Medium",
+                        "popup": "Label 1 Popup"
+                    }
+                ]
             }
             ],
             "parent": "Root",
@@ -725,6 +760,35 @@
                 "xVal": 9,
                 "popup": "SubPointInfo Popup 2"
               }
+            ]
+        },
+        "Sequence 1": {
+            "name": "Sequence",
+            "minAge": 0,
+            "maxAge": 2,
+            "enableTitle": false,
+            "on": true,
+            "width": 900,
+            "popup": "Sequence Popup",
+            "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+            },
+            "subSequenceInfo": [
+                {
+                    "direction": "MFS",
+                    "age": 0,
+                    "severity": "Major",
+                    "popup": "No Label Popup"
+                },
+                {
+                    "label": "Label 1",
+                    "direction": "SB",
+                    "age": 2,
+                    "severity": "Medium",
+                    "popup": "Label 1 Popup"
+                }
             ]
         }
     },

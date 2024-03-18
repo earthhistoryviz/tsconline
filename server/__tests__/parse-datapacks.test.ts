@@ -9,6 +9,7 @@ jest.mock("@tsconline/shared", () => ({
   assertSubEventInfo: jest.fn().mockImplementation(() => true),
   assertSubChronInfo: jest.fn().mockImplementation(() => true),
   assertSubPointInfo: jest.fn().mockImplementation(() => true),
+  assertSubSequenceInfo: jest.fn().mockImplementation(() => true),
   assertSubFaciesInfo: jest.fn().mockImplementation(() => true),
   assertSubBlockInfo: jest.fn().mockImplementation(() => true),
   assertSubRangeInfo: jest.fn().mockImplementation(() => true),
@@ -241,6 +242,7 @@ describe("getColumnTypes tests", () => {
     expectedRangeMap.set(key["column-types-all-column-types-key"]["Range 1"].name, key["column-types-all-column-types-key"]["Range 1"]);
     expectedChronMap.set(key["column-types-all-column-types-key"]["Chron 1"].name, key["column-types-all-column-types-key"]["Chron 1"])
     expectedPointMap.set(key["column-types-all-column-types-key"]["Point 1"].name, key["column-types-all-column-types-key"]["Point 1"]);
+    expectedSequenceMap.set(key["column-types-all-column-types-key"]["Sequence 1"].name, key["column-types-all-column-types-key"]["Sequence 1"]);
     expectMapsToBeEqual();
   });
 
