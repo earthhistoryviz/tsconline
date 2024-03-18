@@ -1017,5 +1017,65 @@
             }
             ]
         }
+    },
+    "column-types-sequence-key": {
+        "Trend 1": {
+            "name": "Trend 1",
+            "minAge": 67,
+            "maxAge": 69,
+            "enableTitle": false,
+            "on": true,
+            "width": 100,
+            "popup": "Trend Popup",
+            "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+            },
+            "subSequenceInfo": [
+                {
+                    "label": "Trend 1 label",
+                    "direction": "SB",
+                    "age": 67,
+                    "severity": "Minor",
+                    "popup": "SubTrend 1 Popup"
+                },
+                {
+                    "direction": "MFS",
+                    "age": 69,
+                    "severity": "Medium",
+                    "popup": "No Label Popup"
+                }
+            ]
+        },
+        "Sequence 1": {
+            "name": "Sequence 1",
+            "minAge": 321.39,
+            "maxAge": 322.34,
+            "enableTitle": true,
+            "on": false,
+            "width": 100,
+            "popup": "Sequence Popup",
+            "rgb": {
+                "r": 20,
+                "g": 20,
+                "b": 20
+            },
+            "subSequenceInfo": [
+                {
+                    "label": "SubSequenceInfo 1",
+                    "direction": "SB",
+                    "age": 321.39,
+                    "severity": "Major",
+                    "popup": "Popup"
+                },
+                {
+                    "direction": "MFS",
+                    "age": 322.34,
+                    "severity": "Minor",
+                    "popup": "No Label Popup"
+                }
+            ]
+        }
     }
 }

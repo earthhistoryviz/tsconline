@@ -460,8 +460,8 @@ function setColumnHeaders(column: ColumnHeaderProps, tabSeparated: string[]) {
 
 /**
  * adds a sequence object to the map. will reset the sequence object.
- * @param sequence 
- * @param sequenceMap 
+ * @param sequence
+ * @param sequenceMap
  */
 function addSequenceToSequenceMap(sequence: Sequence, sequenceMap: Map<string, Sequence>) {
   for (const subSequence of sequence.subSequenceInfo) {
@@ -474,8 +474,8 @@ function addSequenceToSequenceMap(sequence: Sequence, sequenceMap: Map<string, S
 
 /**
  * adds a point object to the map. will reset the point object.
- * @param point 
- * @param pointMap 
+ * @param point
+ * @param pointMap
  */
 function addPointToPointMap(point: Point, pointMap: Map<string, Point>) {
   for (const subPoint of point.subPointInfo) {
@@ -488,8 +488,8 @@ function addPointToPointMap(point: Point, pointMap: Map<string, Point>) {
 
 /**
  * adds a chron object to the map. will reset the chron object.
- * @param chron 
- * @param chronMap 
+ * @param chron
+ * @param chronMap
  */
 function addChronToChronMap(chron: Chron, chronMap: Map<string, Chron>) {
   for (const subChron of chron.subChronInfo) {
@@ -502,8 +502,8 @@ function addChronToChronMap(chron: Chron, chronMap: Map<string, Chron>) {
 
 /**
  * adds a range object to the range map and resets the range object
- * @param range 
- * @param rangeMap 
+ * @param range
+ * @param rangeMap
  */
 function addRangeToRangeMap(range: Range, rangeMap: Map<string, Range>) {
   for (const subRange of range.subRangeInfo) {
@@ -556,7 +556,7 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
 }
 
 export function processSequence(line: string): SubSequenceInfo | null {
-  let subSequenceInfo = {}
+  let subSequenceInfo = {};
   const tabSeparated = line.split("\t");
   if (tabSeparated.length > 6 || tabSeparated.length < 5 || tabSeparated[0]) return null;
   const label = tabSeparated[1];
@@ -591,8 +591,8 @@ export function processSequence(line: string): SubSequenceInfo | null {
 }
 /**
  * process a single subChronInfo line
- * @param line 
- * @returns 
+ * @param line
+ * @returns
  */
 export function processChron(line: string): SubChronInfo | null {
   let subChronInfo = {};
@@ -700,7 +700,7 @@ export function processPoint(line: string): SubPointInfo | null {
     age: 0,
     xVal: 0,
     popup: ""
-  }
+  };
   const tabSeparated = line.split("\t");
   if (tabSeparated.length > 4 || tabSeparated[0]) return null;
   const age = Number(tabSeparated[1]!);
