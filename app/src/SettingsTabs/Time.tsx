@@ -16,6 +16,12 @@ export const Time = observer(function Time() {
   const navigate = useNavigate();
   const { state, actions } = useContext(context);
 
+  const filteredTopStageAges = state.geologicalTopStageAges.filter((item) => item.value <= state.settings.baseStageAge);
+
+  const filteredBaseStageAges = state.geologicalBaseStageAges.filter(
+    (item) => item.value >= state.settings.topStageAge
+  );
+
   const handleButtonClick = () => {
     actions.setTab(1);
     actions.fetchChartFromServer(navigate);
@@ -34,17 +40,12 @@ export const Time = observer(function Time() {
             value={state.settings.topStageKey}
             onChange={(event) => {
               const selectedValue = event.target.value;
-              const selectedAgeItem = state.geologicalTopStageAges.find((item) => item.key === selectedValue);
+              const selectedAgeItem = filteredTopStageAges.find((item) => item.key === selectedValue);
               const selectedAge = selectedAgeItem?.value || 0;
-              if (selectedAge >= 0 && selectedAge <= state.settings.baseStageAge) {
-                actions.setSelectedTopStage(selectedValue);
-                actions.setTopStageAge(selectedAge);
-              } else {
-                const errorMessage = "Invalid top age/stage name input. Please enter a valid stage name/age.";
-                actions.pushError(errorMessage);
-              }
+              actions.setSelectedTopStage(selectedValue);
+              actions.setTopStageAge(selectedAge);
             }}>
-            {state.geologicalTopStageAges.map((item) => (
+            {filteredTopStageAges.map((item) => (
               <MenuItem key={item.key} value={item.key}>
                 {item.key} ({item.value} Ma)
               </MenuItem>
@@ -78,17 +79,12 @@ export const Time = observer(function Time() {
             value={state.settings.baseStageKey}
             onChange={(event) => {
               const selectedValue = event.target.value;
-              const selectedAgeItem = state.geologicalBaseStageAges.find((item) => item.key === selectedValue);
+              const selectedAgeItem = filteredBaseStageAges.find((item) => item.key === selectedValue);
               const selectedAge = selectedAgeItem?.value || 0;
-              if (selectedAge >= 0 && selectedAge >= state.settings.topStageAge) {
-                actions.setSelectedBaseStage(selectedValue);
-                actions.setBaseStageAge(selectedAge);
-              } else {
-                const errorMessage = "Invalid base age/stage name input. Please enter a valid stage name/age.";
-                actions.pushError(errorMessage);
-              }
+              actions.setSelectedBaseStage(selectedValue);
+              actions.setBaseStageAge(selectedAge);
             }}>
-            {state.geologicalBaseStageAges.map((item) => (
+            {filteredBaseStageAges.map((item) => (
               <MenuItem key={item.key} value={item.key}>
                 {item.key} ({item.value} Ma)
               </MenuItem>
