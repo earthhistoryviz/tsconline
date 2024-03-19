@@ -5,6 +5,7 @@ import { TSCCheckbox } from "../components";
 import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import { useContext } from "react";
+import { useTheme } from "@mui/material/styles";
 import { context } from "../state/index";
 import "./Time.css";
 import { ErrorCodes } from "../util/error-codes";
@@ -49,8 +50,7 @@ export const Time = observer(function Time() {
             value={state.settings.topStageAge}
             onChange={(event) => {
               const age = parseFloat(event.target.value);
-              if (!isNaN(age) && age >= 0 && age <= state.settings.baseStageAge) {
-                actions.setSelectedTopStage("");
+              if (!isNaN(age)) {
                 actions.setTopStageAge(age);
                 actions.removeError(ErrorCodes.TOP_STAGE_AGE_INVALID);
               } else {
@@ -79,11 +79,13 @@ export const Time = observer(function Time() {
                 actions.pushError(ErrorCodes.BASE_STAGE_AGE_INVALID);
               }
             }}>
-            {state.geologicalBaseStageAges.map((item) => (
-              <MenuItem key={item.key} value={item.key}>
-                {item.key} ({item.value} Ma)
-              </MenuItem>
-            ))}
+            {state.geologicalBaseStageAges
+              .filter((item) => item.value >= state.settings.topStageAge)
+              .map((item) => (
+                <MenuItem key={item.key} value={item.key}>
+                  {item.key} ({item.value} Ma)
+                </MenuItem>
+              ))}
           </Select>
           <TextField
             className="BaseAgeTextField"
@@ -93,8 +95,7 @@ export const Time = observer(function Time() {
             value={state.settings.baseStageAge}
             onChange={(event) => {
               const age = parseFloat(event.target.value);
-              if (!isNaN(age) && age >= 0 && state.settings.topStageAge <= age) {
-                actions.setSelectedBaseStage("");
+              if (!isNaN(age) && age >= state.settings.topStageAge) {
                 actions.setBaseStageAge(age);
                 actions.removeError(ErrorCodes.BASE_STAGE_AGE_INVALID);
               } else {
@@ -192,12 +193,7 @@ export const Time = observer(function Time() {
           />
           <FormControlLabel
             name="use-suggested-age-spans"
-            control={
-              <TSCCheckbox
-                onChange={(e) => actions.setuseDatapackSuggestedAge(!e.target.checked)}
-                checked={!state.settings.useDatapackSuggestedAge}
-              />
-            }
+            control={<TSCCheckbox onChange={(e) => actions.setuseDatapackSuggestedAge(!e.target.checked)} />}
             label="Do not use the Data-Pack's suggested age span"
           />
         </FormGroup>
@@ -205,3 +201,4 @@ export const Time = observer(function Time() {
     </div>
   );
 });
+

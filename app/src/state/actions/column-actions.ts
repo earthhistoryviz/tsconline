@@ -65,18 +65,32 @@ export const setcolumnSelected = action((name: string) => {
   }
 });
 
-export const setInheritable = action((target: ValidFontOptions, isInheritable: boolean) => {
-  if (!state.settingsTabs.columnSelected) {
-    throw new Error("state.settingsTabs.columnSelected is null");
+export const setInheritable = action(
+  (
+    target:
+      | "Column Header"
+      | "Age Label"
+      | "Uncertainty Label"
+      | "Zone Column Label"
+      | "Event Column Label"
+      | "Range Label",
+    isInheritable: boolean
+  ) => {
+    if (state.settingsTabs.columnSelected === null) {
+      throw new Error("state.settingsTabs.columnSelected is null");
+    }
+
+    const columnHashMapEntry = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected);
+    assertFontsInfo(columnHashMapEntry?.fontsInfo[target]);
+    if (!columnHashMapEntry) {
+      throw new Error(`Entry for ${state.settingsTabs.columnSelected} not found in columnHashMap`);
+    }
+
+    columnHashMapEntry.fontsInfo[target].inheritable = isInheritable;
+    assertFontsInfo(columnHashMapEntry?.fontsInfo[target]);
   }
-  const columnHashMapEntry = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected);
-  if (!columnHashMapEntry) {
-    throw new Error(`Entry for ${state.settingsTabs.columnSelected} not found in columnHashMap`);
-  }
-  assertFontsInfo(columnHashMapEntry.fontsInfo);
-  columnHashMapEntry.fontsInfo[target].inheritable = isInheritable;
-  assertFontsInfo(columnHashMapEntry?.fontsInfo);
-});
+);
+
 
 export const setFontFace = action((target: ValidFontOptions, fontFace: "Arial" | "Courier" | "Verdana") => {
   if (!state.settingsTabs.columnSelected) {

@@ -47,38 +47,21 @@ export const ColumnMenu = observer(() => {
   const { state } = useContext(context);
   const [openMenu, setOpenMenu] = useState(false);
 
-  function showMenu() {
-    const menu = document.getElementById("ColumnMenuContent");
-    const label = document.getElementById("ColumnMenuLabel");
-    if (menu !== null && label !== null) {
-      if (!openMenu) {
-        menu.style.display = "flex";
-        label.style.display = "flex";
-        setOpenMenu(true);
-      } else {
-        menu.style.display = "none";
-        label.style.display = "none";
-        setOpenMenu(false);
-      }
-    }
-  }
+  const toggleMenu = () => {
+    setOpenMenu(!openMenu);
+  };
+
   return (
-    <div className={openMenu ? "column-menu" : ""}>
-      <div style={{ display: "flex", flexDirection: "row", width: "300px" }}>
-        <div style={{ backgroundColor: "lightgray" }}>
-          <ToggleButton
-            value="check"
-            selected={openMenu}
-            onChange={() => {
-              showMenu();
-            }}
-            size="small">
-            <SettingsSharpIcon />
-          </ToggleButton>
-        </div>
-        <div id="ColumnMenuLabel" className="column-menu-label">
-          <Typography>Settings</Typography>
-        </div>
+    <div className={`column-menu ${openMenu ? "open" : ""}`}>
+      <div className="column-menu-header">
+        <ToggleButton
+          value="check"
+          selected={openMenu}
+          onChange={toggleMenu}
+          size="small">
+          <SettingsSharpIcon />
+        </ToggleButton>
+        <Typography>Settings</Typography>
       </div>
       <div id="ColumnMenuContent" className="column-menu-content">
         {state.settingsTabs.columnSelected && <EditNameField />}
