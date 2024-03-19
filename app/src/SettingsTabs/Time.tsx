@@ -18,9 +18,7 @@ export const Time = observer(function Time() {
 
   const filteredTopStageAges = state.geologicalTopStageAges.filter((item) => item.value <= state.settings.baseStageAge);
 
-  const filteredBaseStageAges = state.geologicalBaseStageAges.filter(
-    (item) => item.value >= state.settings.topStageAge
-  );
+  const filteredBaseStageAges = state.geologicalBaseStageAges.filter((item) => item.value >= state.settings.topStageAge);
 
   const handleButtonClick = () => {
     actions.setTab(1);
