@@ -5,6 +5,7 @@ import { Button, TextField, ToggleButton, Typography } from "@mui/material";
 import SettingsSharpIcon from "@mui/icons-material/SettingsSharp";
 import "./ColumnMenu.css";
 import { FontMenu } from "./FontMenu";
+import { EditWidthField } from "./EditWidthField";
 
 const EditNameField = observer(() => {
   const { state, actions } = useContext(context);
@@ -87,6 +88,7 @@ export const ColumnMenu = observer(() => {
       >
         {state.settingsTabs.columnSelected && <EditNameField />}
         {state.settingsTabs.columnSelected && <FontMenu />}
+        {state.settingsTabs.columnSelected && <EditWidthField />}
       </div>
     </div>
   );

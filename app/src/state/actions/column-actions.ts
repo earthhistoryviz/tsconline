@@ -57,6 +57,22 @@ export const updateEditName = action((newName: string) => {
   return;
 });
 
+export const updateWidth = action((newWidth: number) => {
+  if (state.settingsTabs.columnSelected === null) {
+    console.log("WARNING: tried to access state.settingsTabs.columnSelected, but is null");
+    return;
+  }
+  if (!state.settingsTabs.columnHashMap.has(state.settingsTabs.columnSelected)) {
+    console.log(
+      "WARNING: tried to access",
+      state.settingsTabs.columnSelected,
+      "in state.settingsTabs.columnHashMap, but map does not this key"
+    );
+  }
+  state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.width = newWidth;
+  return;
+});
+
 export const setcolumnSelected = action((name: string) => {
   state.settingsTabs.columnSelected = name;
   if (!state.settingsTabs.columnHashMap.has(name)) {

@@ -301,6 +301,17 @@ function generateColumnXml(jsonColumn: any, stateColumn: ColumnInfo | null, inde
           xml += `${indent}<setting name="${xmlKey}"/>\n`;
         }
       } else if (key === "customColor") {
+      } else if (key === "width") {
+        let useEditWidth = false;
+        if (stateColumn && stateColumn !== undefined) {
+          if (stateColumn.width !== undefined) {
+            xml += `${indent}<setting name="width">${stateColumn.width}</setting>\n`;
+            useEditWidth = true
+          }
+        }
+        if (!useEditWidth) {
+          xml += `${indent}<setting name="width">${replaceSpecialChars(jsonColumn[key], 1)}</setting>\n`;
+        }
       } else if (key === "justification") {
         xml += `${indent}<setting justification="${jsonColumn[key]}" name="${xmlKey}"/>\n`;
       } else if (key === "orientation") {
