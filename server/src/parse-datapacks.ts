@@ -36,7 +36,7 @@ import {
   assertSubFreehandInfo,
   assertColumnHeaderProps
 } from "@tsconline/shared";
-import { trimQuotes, trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters } from "./util.js";
+import { trimQuotes, trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter } from "./util.js";
 import { createInterface } from "readline";
 const patternForColor = /^\d+\/\d+\/\d+$/;
 const patternForLineStyle = /^solid|dashed|dotted$/;
@@ -738,7 +738,7 @@ export function processSequence(line: string): SubSequenceInfo | null {
   const label = tabSeparated[1];
   const direction = tabSeparated[2]!;
   const age = Number(tabSeparated[3]!);
-  const severity = tabSeparated[4]!;
+  const severity = capitalizeFirstLetter(tabSeparated[4]!);
   const popup = tabSeparated[5];
   if (isNaN(age) || !tabSeparated[3])
     throw new Error("Error processing sequence line, age: " + tabSeparated[2]! + " is NaN");
@@ -774,12 +774,12 @@ export function processSequence(line: string): SubSequenceInfo | null {
 export function processChron(line: string): SubChronInfo | null {
   let subChronInfo = {};
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length < 4 || tabSeparated.length > 5) return null;
+  if (tabSeparated.length < 4 || tabSeparated.length > 5 || line.includes("Primary")) return null;
   const polarity = tabSeparated[1]!;
   const label = tabSeparated[2]!;
   const age = Number(tabSeparated[3]!);
   if (isNaN(age) || !tabSeparated[3])
-    throw new Error("Error processing chron line, age: " + tabSeparated[3]! + " is NaN");
+    throw new Error("Error processing chron line with label: " + label + ", and polarity: " + polarity + ", age: " + tabSeparated[3]! + " is NaN");
   const popup = tabSeparated[4] || "";
   if (label) {
     subChronInfo = {
