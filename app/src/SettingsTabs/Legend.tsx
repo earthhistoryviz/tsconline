@@ -103,59 +103,58 @@ export const Legend = observer(() => {
     backgroundColor: theme.palette.menuDropdown.main
   };
 
-  return (
-    <>
-      <IconButton
-        className={`scroll-top ${isScrolled ? "show" : ""}`}
-        style={{ top: `calc(${LegendHeaderHeight} + 1vh)` }}
-        onClick={() => {
-          scrollRef.current?.contentWrapperEl?.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-        }}>
-        <Lottie key="legend-arrow-up" width="inherit" height="inherit" animationData={ArrowUpIcon} playOnClick />
-      </IconButton>
-      <StyledScrollbar
-        ref={scrollRef}
-        autoHide={false}
-        style={{
-          height: `calc(100vh - ${LegendHeaderHeight})`,
-          backgroundColor: theme.palette.navbar.main
-        }}>
-        <CustomHeader className="legend-header" color="primary">
-          Map Points
-        </CustomHeader>
-        <CustomDivider />
-        <div className="legend-container">
-          {legendItems.map((item, index) => (
-            <DisplayLegendItem key={index} legendItem={item} />
-          ))}
+  return <>
+    <IconButton
+      className={`scroll-top ${isScrolled ? "show" : ""}`}
+      style={{ top: `calc(${LegendHeaderHeight} + 1vh)` }}
+      onClick={() => {
+        scrollRef.current?.contentWrapperEl?.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+      }}
+      size="large">
+      <Lottie key="legend-arrow-up" width="inherit" height="inherit" animationData={ArrowUpIcon} playOnClick />
+    </IconButton>
+    <StyledScrollbar
+      ref={scrollRef}
+      autoHide={false}
+      style={{
+        height: `calc(100vh - ${LegendHeaderHeight})`,
+        backgroundColor: theme.palette.navbar.main
+      }}>
+      <CustomHeader className="legend-header" color="primary">
+        Map Points
+      </CustomHeader>
+      <CustomDivider />
+      <div className="legend-container">
+        {legendItems.map((item, index) => (
+          <DisplayLegendItem key={index} legendItem={item} />
+        ))}
+      </div>
+      <CustomHeader className="legend-header" color="primary">
+        Facies Patterns
+      </CustomHeader>
+      <div className="search-container">
+        <FaciesSearchBar searchValue={searchValue} setSearchValue={setSearchValue} />
+        <div className="filters">
+          <FilterMenu
+            style={menuStyle}
+            colors={colors}
+            colorFilter={colorFilter}
+            colorHash={colorHash}
+            filterByPresent={filterByPresent}
+            alphabeticalSort={alphabeticalSort}
+            setAlphabeticalSort={setAlphabeticalSort}
+            setFilterByPresent={setFilterByPresent}
+            toggleColor={toggleColor}
+          />
+          <Button onClick={() => clearFilter()} className="filter-button">
+            <TypographyText>Clear Filter</TypographyText>
+          </Button>
         </div>
-        <CustomHeader className="legend-header" color="primary">
-          Facies Patterns
-        </CustomHeader>
-        <div className="search-container">
-          <FaciesSearchBar searchValue={searchValue} setSearchValue={setSearchValue} />
-          <div className="filters">
-            <FilterMenu
-              style={menuStyle}
-              colors={colors}
-              colorFilter={colorFilter}
-              colorHash={colorHash}
-              filterByPresent={filterByPresent}
-              alphabeticalSort={alphabeticalSort}
-              setAlphabeticalSort={setAlphabeticalSort}
-              setFilterByPresent={setFilterByPresent}
-              toggleColor={toggleColor}
-            />
-            <Button onClick={() => clearFilter()} className="filter-button">
-              <TypographyText>Clear Filter</TypographyText>
-            </Button>
-          </div>
-        </div>
-        <CustomDivider />
-        <FaciesPatterns patterns={filteredPatterns} />
-      </StyledScrollbar>
-    </>
-  );
+      </div>
+      <CustomDivider />
+      <FaciesPatterns patterns={filteredPatterns} />
+    </StyledScrollbar>
+  </>;
 });
 
 type FilterMenuProps = {
@@ -187,45 +186,43 @@ const FilterMenu: React.FC<FilterMenuProps> = observer(
     const anchorProps = useClick(menuState.state, toggleMenu);
     const menuRef = useRef(null);
     const { state } = useContext(context);
-    return (
-      <>
-        <IconButton ref={menuRef} className="filter-button" {...anchorProps}>
-          <FilterListIcon color="primary" />
-        </IconButton>
-        <ControlledMenu
-          {...menuState}
-          viewScroll="close"
-          portal={!state.isFullscreen}
-          className="menu"
-          menuStyle={style}
-          anchorRef={menuRef}
-          onClose={(event) => {
-            if (event.reason === "click") return;
-            toggleMenu(false);
-          }}>
-          <CustomMenuItem
-            checked={alphabeticalSort}
-            onClick={() => setAlphabeticalSort(!alphabeticalSort)}
-            type="checkbox">
-            <TypographyText>Sort A-Z</TypographyText>
-          </CustomMenuItem>
-          <CustomMenuItem
-            checked={filterByPresent}
-            onClick={() => setFilterByPresent(!filterByPresent)}
-            type="checkbox">
-            <TypographyText>Present in map</TypographyText>
-          </CustomMenuItem>
-          <MenuDivider />
-          <ColorSubMenu
-            colorHash={colorHash}
-            style={style}
-            colors={colors}
-            colorFilter={colorFilter}
-            toggleColor={toggleColor}
-          />
-        </ControlledMenu>
-      </>
-    );
+    return <>
+      <IconButton ref={menuRef} className="filter-button" {...anchorProps} size="large">
+        <FilterListIcon color="primary" />
+      </IconButton>
+      <ControlledMenu
+        {...menuState}
+        viewScroll="close"
+        portal={!state.isFullscreen}
+        className="menu"
+        menuStyle={style}
+        anchorRef={menuRef}
+        onClose={(event) => {
+          if (event.reason === "click") return;
+          toggleMenu(false);
+        }}>
+        <CustomMenuItem
+          checked={alphabeticalSort}
+          onClick={() => setAlphabeticalSort(!alphabeticalSort)}
+          type="checkbox">
+          <TypographyText>Sort A-Z</TypographyText>
+        </CustomMenuItem>
+        <CustomMenuItem
+          checked={filterByPresent}
+          onClick={() => setFilterByPresent(!filterByPresent)}
+          type="checkbox">
+          <TypographyText>Present in map</TypographyText>
+        </CustomMenuItem>
+        <MenuDivider />
+        <ColorSubMenu
+          colorHash={colorHash}
+          style={style}
+          colors={colors}
+          colorFilter={colorFilter}
+          toggleColor={toggleColor}
+        />
+      </ControlledMenu>
+    </>;
   }
 );
 
