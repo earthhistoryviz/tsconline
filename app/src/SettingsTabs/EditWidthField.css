@@ -1,0 +1,23 @@
+#editWidthField {
+    background-color: #9dc5d1;
+    border: none;
+    border-bottom: solid #000 1px;
+    padding-block: 12px;
+    padding-inline-start: 10px;
+    border-radius: 5px 5px 0px 0px;
+}
+
+#editWidthField:focus {
+    border-bottom: solid #d3d3d3 1px;
+    outline: none;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number]{
+    -moz-appearance: textfield;
+}
