@@ -133,3 +133,13 @@ export function rgbToHex(r: number, g: number, b: number) {
 export function hasVisibleCharacters(input: string): boolean {
   return !/^\s*$/.test(input);
 }
+
+/**
+ * capitalize the first letter of a string
+ * @param input
+ * @returns
+ */
+export function capitalizeFirstLetter(input: string): string {
+  if (!input) return input;
+  return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
+}
