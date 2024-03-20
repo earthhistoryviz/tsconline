@@ -3,7 +3,7 @@ SetTop:	0
 SetBase:	5
 SetScale:	6
 
-Parent 1	:	Block	Facies	Event	Range	Chron	Point	Sequence	Freehand
+Parent 1	:	Block	Facies	Event	Range	Chron	Point	Sequence	Freehand	Blank
 
 Block	block	120	197/217/234	notitle	off	Block Popup
 	TOP	419.2
@@ -52,3 +52,5 @@ image	Other/ge_impact_icon.png
 image	Other/ge_impact_icon.png
 	agetype	center	0.3	1.3
 	xtype	right
+
+Blank	blank	800	7/3/4	notitle	off	Blank Popup

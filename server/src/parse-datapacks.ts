@@ -33,7 +33,8 @@ import {
   assertSubTransectInfo,
   Freehand,
   SubFreehandInfo,
-  assertSubFreehandInfo
+  assertSubFreehandInfo,
+  assertColumnHeaderProps
 } from "@tsconline/shared";
 import { trimQuotes, trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters } from "./util.js";
 import { createInterface } from "readline";
@@ -123,6 +124,7 @@ export async function parseDatapacks(decryptFilePath: string, files: string[]): 
   const sequenceMap: Map<string, Sequence> = new Map();
   const transectMap: Map<string, Transect> = new Map();
   const freehandMap: Map<string, Freehand> = new Map();
+  const blankMap: Map<string, ColumnHeaderProps> = new Map();
   try {
     for (const decryptPath of decryptPaths) {
       //get the facies/blocks first
@@ -136,7 +138,8 @@ export async function parseDatapacks(decryptFilePath: string, files: string[]): 
         pointMap,
         sequenceMap,
         transectMap,
-        freehandMap
+        freehandMap,
+        blankMap
       );
       // Originally the first step, gather all parents and their direct children
       await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
@@ -159,7 +162,8 @@ export async function parseDatapacks(decryptFilePath: string, files: string[]): 
             pointMap,
             sequenceMap,
             transectMap,
-            freehandMap
+            freehandMap,
+            blankMap
           );
         }
       });
@@ -259,7 +263,8 @@ export async function getColumnTypes(
   pointMap: Map<string, Point>,
   sequenceMap: Map<string, Sequence>,
   transectMap: Map<string, Transect>,
-  freehandMap: Map<string, Freehand>
+  freehandMap: Map<string, Freehand>,
+  blankMap: Map<string, ColumnHeaderProps>
 ) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
@@ -301,6 +306,7 @@ export async function getColumnTypes(
     ...createDefaultColumnHeaderProps(),
     subChronInfo: []
   };
+  const blank: ColumnHeaderProps = createDefaultColumnHeaderProps();
   let inFaciesBlock = false;
   let inBlockBlock = false;
   let inEventBlock = false;
@@ -365,6 +371,12 @@ export async function getColumnTypes(
     }
 
     const tabSeparated = line.split("\t");
+    if (tabSeparated[1] === "blank") {
+      setColumnHeaders(blank, tabSeparated);
+      blankMap.set(blank.name, JSON.parse(JSON.stringify(blank)));
+      Object.assign(blank, { ...createDefaultColumnHeaderProps() });
+      continue;
+    }
     if (
       !inFreehandBlock &&
       (tabSeparated[1] === "freehand" ||
@@ -532,6 +544,12 @@ function setColumnHeaders(column: ColumnHeaderProps, tabSeparated: string[]) {
     column.on = false;
   } else if (on === "on") {
     column.on = true;
+  }
+  try {
+    assertColumnHeaderProps(column);
+  } catch (e) {
+    console.log(`Error ${e} found while processing column header, setting to default`);
+    Object.assign(column, { ...createDefaultColumnHeaderProps() });
   }
 }
 
@@ -1027,7 +1045,8 @@ function recursive(
   pointMap: Map<string, Point>,
   sequenceMap: Map<string, Sequence>,
   transectMap: Map<string, Transect>,
-  freehandMap: Map<string, Freehand>
+  freehandMap: Map<string, Freehand>,
+  blankMap: Map<string, ColumnHeaderProps>
 ): FaciesFoundAndAgeRange {
   const currentColumnInfo: ColumnInfo = {
     name: trimInvisibleCharacters(currentColumn),
@@ -1140,6 +1159,10 @@ function recursive(
     returnValue.maxAge = currentColumnInfo.maxAge;
     returnValue.minAge = currentColumnInfo.minAge;
   }
+  if (blankMap.has(currentColumn)) {
+    const currentBlank = blankMap.get(currentColumn)!;
+    Object.assign(currentColumnInfo, currentBlank);
+  }
 
   childrenArray.push(currentColumnInfo);
 
@@ -1162,7 +1185,8 @@ function recursive(
         pointMap,
         sequenceMap,
         transectMap,
-        freehandMap
+        freehandMap,
+        blankMap
       );
       returnValue.minAge = Math.min(compareValue.minAge, returnValue.minAge);
       returnValue.maxAge = Math.max(compareValue.maxAge, returnValue.maxAge);
