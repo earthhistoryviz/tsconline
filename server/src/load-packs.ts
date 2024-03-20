@@ -34,12 +34,13 @@ export async function loadIndexes(
   mapPackIndex: MapPackIndex,
   decryptionDirectory: string,
   datapacks: DatapackMetadata[],
-  uuid?: string
+  uuid?: string,
+  publicUpload?: boolean
 ) {
   let successful = true;
   console.log(`\nParsing datapacks \n`);
   for (const datapack of datapacks) {
-    await parseDatapacks(datapack, decryptionDirectory, uuid)
+    await parseDatapacks(datapack, decryptionDirectory, uuid, publicUpload)
       .then((datapackParsingPack) => {
         if (!datapackParsingPack) {
           return;

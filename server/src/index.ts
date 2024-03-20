@@ -207,6 +207,8 @@ server.get("/datapackinfoindex", (_request, reply) => {
   }
 });
 
+server.get("/public/datapacks", routes.fetchPublicDatapacks);
+
 server.get("/facies-patterns", (_request, reply) => {
   if (!patterns || Object.keys(patterns).length === 0) {
     reply.status(500).send({ error: "Server isn't able to load facies patterns" });

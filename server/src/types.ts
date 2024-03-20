@@ -67,6 +67,7 @@ export type AssetConfig = {
   colors: string;
   fileMetadata: string;
   uploadDirectory: string;
+  publicDirectory: string;
   datapackImagesDirectory: string;
   adminConfigPath: string;
 };

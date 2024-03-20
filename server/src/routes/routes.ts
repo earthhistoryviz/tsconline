@@ -31,12 +31,22 @@ export const fetchServerDatapack = async function fetchServerDatapack(
     reply.status(400).send({ error: "Invalid datapack" });
     return;
   }
-  const datapack = serverDatapackindex[decodeURIComponent(name)];
-  if (!datapack) {
+  const serverDatapack = serverDatapackindex[decodeURIComponent(name)];
+  if (!serverDatapack) {
     reply.status(404).send({ error: "Datapack not found" });
     return;
   }
-  reply.send(datapack);
+  try{
+    await access(assetconfigs.publicDirectory);
+    console.log("Loading public datapacks");
+    const publicDatapackPath = await readFile(path.join(assetconfigs.publicDirectory, "DatapackIndex.json"), "utf8");
+    Object.assign(serverDatapack, JSON.parse(publicDatapackPath));
+    const publicMapPackPath = await readFile(path.join(assetconfigs.publicDirectory, "MapPackIndex.json"), "utf8");
+    Object.assign(serverDatapack, JSON.parse(publicMapPackPath));
+  }catch(e){
+    console.log("No public datapacks to load");
+  }
+  reply.send(serverDatapack);
 };
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
