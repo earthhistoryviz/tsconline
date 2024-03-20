@@ -9,6 +9,7 @@ import { ChangeBackgroundColor } from "./BackgroundColor";
 import { ColumnInfo } from "@tsconline/shared";
 import { TSCCheckbox } from "../components";
 import { InfoBox } from "./InfoBox";
+import { EditWidthField } from "./EditWidthField";
 
 const EditNameField = observer(() => {
   const { state, actions } = useContext(context);
@@ -95,6 +96,7 @@ export const ColumnMenu = observer(() => {
         {column && <FontMenu column={column} />}
         {column && <ShowTitles column={column} />}
         {!!info && <InfoBox info={info} />}
+        {column && <EditWidthField />}
       </div>
     </div>
   );
