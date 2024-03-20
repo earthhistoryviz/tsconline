@@ -274,6 +274,10 @@ export type ColumnInfo = {
   subFaciesInfo?: SubFaciesInfo[];
   subEventInfo?: SubEventInfo[];
   subRangeInfo?: SubRangeInfo[];
+  subChronInfo?: SubChronInfo[];
+  subPointInfo?: SubPointInfo[];
+  subFreehandInfo?: SubFreehandInfo[];
+  subSequenceInfo?: SubSequenceInfo[];
   minAge: number;
   maxAge: number;
   enableTitle: boolean;
@@ -283,6 +287,55 @@ export type ColumnInfo = {
 
 export type Range = ColumnHeaderProps & {
   subRangeInfo: SubRangeInfo[];
+};
+
+export type Chron = ColumnHeaderProps & {
+  subChronInfo: SubChronInfo[];
+};
+
+export type Freehand = ColumnHeaderProps & {
+  subFreehandInfo: SubFreehandInfo[];
+};
+
+export type Point = ColumnHeaderProps & {
+  subPointInfo: SubPointInfo[];
+};
+export type Sequence = ColumnHeaderProps & {
+  subSequenceInfo: SubSequenceInfo[];
+};
+
+/**
+ * NOTE: This implementation gets rid of a lot of the freehand info
+ * This is due to the structure being more complicated on various lines.
+ * For the current TSCOnline as of 1.0 we don't need that information.
+ * If we ever want to add that implementation, we would change this
+ * but that would be a considerable amount of time and is something for the future.
+ * (This is because we are using a stream reading line by line in parse-datapacks)
+ */
+export type SubFreehandInfo = {
+  topAge: number;
+  baseAge: number;
+};
+
+export type SubSequenceInfo = {
+  label?: string;
+  direction: "SB" | "MFS";
+  age: number;
+  severity: "Major" | "Minor" | "Medium";
+  popup: string;
+};
+
+export type SubChronInfo = {
+  polarity: "TOP" | "N" | "R" | "U" | "No Data";
+  label?: string;
+  age: number;
+  popup: string;
+};
+
+export type SubPointInfo = {
+  age: number;
+  xVal: number;
+  popup: string;
 };
 
 export type SubRangeInfo = {
@@ -316,6 +369,19 @@ export type Event = ColumnHeaderProps & {
 
 export type Block = ColumnHeaderProps & {
   subBlockInfo: SubBlockInfo[];
+};
+export type Transect = ColumnHeaderProps & {
+  subTransectInfo: SubTransectInfo[];
+};
+
+/**
+ * The structure of transects in the datapack are complicated so I will
+ * not be doing the deconstructing of the data since there is no added benefit
+ * However, if we for some reason want to access it or parse it
+ * I will leave this open to add more properties
+ */
+export type SubTransectInfo = {
+  age: number;
 };
 
 export type ChartResponseInfo = {
@@ -398,12 +464,87 @@ export type TimescaleItem = {
   value: number;
 };
 
+export function assertFreehand(o: any): asserts o is Freehand {
+  if (!o || typeof o !== "object") throw new Error("Freehand must be a non-null object");
+  if (!Array.isArray(o.subFreehandInfo)) throwError("Freehand", "subFreehandInfo", "array", o.subFreehandInfo);
+  for (const subFreehand of o.subFreehandInfo) {
+    assertSubFreehandInfo(subFreehand);
+  }
+}
+export function assertTransect(o: any): asserts o is Transect {
+  if (!o || typeof o !== "object") throw new Error("Transect must be a non-null object");
+  if (!Array.isArray(o.subTransectInfo)) throwError("Transect", "subTransectInfo", "array", o.subTransectInfo);
+  for (const subTransect of o.subTransectInfo) {
+    assertSubTransectInfo(subTransect);
+  }
+}
+
+export function assertSubFreehandInfo(o: any): asserts o is SubFreehandInfo {
+  if (!o || typeof o !== "object") throw new Error("SubFreehandInfo must be a non-null object");
+  if (typeof o.topAge !== "number") throwError("SubFreehandInfo", "topAge", "number", o.topAge);
+  if (typeof o.baseAge !== "number") throwError("SubFreehandInfo", "baseAge", "number", o.baseAge);
+}
+
+export function assertSubTransectInfo(o: any): asserts o is SubTransectInfo {
+  if (!o || typeof o !== "object") throw new Error("SubTransectInfo must be a non-null object");
+  if (typeof o.age !== "number") throwError("SubTransectInfo", "age", "number", o.age);
+}
+
+export function assertPoint(o: any): asserts o is Point {
+  if (!o || typeof o !== "object") throw new Error("Point must be a non-null object");
+  if (!Array.isArray(o.subPointInfo)) throwError("Point", "subPointInfo", "array", o.subPointInfo);
+  for (const subPoint of o.subPointInfo) {
+    assertSubPointInfo(subPoint);
+  }
+  assertColumnHeaderProps(o);
+}
+export function assertSubPointInfo(o: any): asserts o is SubPointInfo {
+  if (!o || typeof o !== "object") throw new Error("SubPointInfo must be a non-null object");
+  if (typeof o.age !== "number") throwError("SubPointInfo", "age", "number", o.age);
+  if (typeof o.xVal !== "number") throwError("SubPointInfo", "xVal", "number", o.xVal);
+  if (typeof o.popup !== "string") throwError("SubPointInfo", "popup", "string", o.popup);
+}
+export function assertSequence(o: any): asserts o is Sequence {
+  if (!o || typeof o !== "object") throw new Error("Sequence must be a non-null object");
+  if (!Array.isArray(o.subSequenceInfo)) throwError("Sequence", "subSequenceInfo", "array", o.subSequenceInfo);
+  for (const subSequence of o.subSequenceInfo) {
+    assertSubSequenceInfo(subSequence);
+  }
+  assertColumnHeaderProps(o);
+}
+
+export function assertSubSequenceInfo(o: any): asserts o is SubSequenceInfo {
+  if (!o || typeof o !== "object") throw new Error("SubSequenceInfo must be a non-null object");
+  if (o.label && typeof o.label !== "string") throwError("SubSequenceInfo", "label", "string", o.label);
+  if (typeof o.direction !== "string" || !/^SB|MFS$/.test(o.direction))
+    throwError("SubSequenceInfo", "direction", "string and SB | MFS", o.direction);
+  if (typeof o.age !== "number") throwError("SubSequenceInfo", "age", "number", o.age);
+  if (typeof o.severity !== "string" || !/^Major|Minor|Medium$/.test(o.severity))
+    throwError("SubSequenceInfo", "severity", "string and Major | Minor | Medium", o.severity);
+  if (typeof o.popup !== "string") throwError("SubSequenceInfo", "popup", "string", o.popup);
+}
+
+export function assertChron(o: any): asserts o is Chron {
+  if (!o || typeof o !== "object") throw new Error("Chron must be a non-null object");
+  if (!Array.isArray(o.subChronInfo)) throwError("Chron", "subChronInfo", "array", o.subChronInfo);
+  for (const subChron of o.subChronInfo) {
+    assertSubChronInfo(subChron);
+  }
+}
+export function assertSubChronInfo(o: any): asserts o is SubChronInfo {
+  if (!o || typeof o !== "object") throw new Error("SubChronInfo must be a non-null object");
+  if (typeof o.polarity !== "string" || !/^TOP|N|R|U|No Data$/.test(o.polarity))
+    throwError("SubChronInfo", "polarity", "string and TOP | N | R| U | No Data", o.polarity);
+  if (o.label && typeof o.label !== "string") throwError("SubChronInfo", "label", "string", o.label);
+  if (typeof o.age !== "number") throwError("SubChronInfo", "age", "number", o.age);
+  if (typeof o.popup !== "string") throwError("SubChronInfo", "popup", "string", o.popup);
+}
 export function assertSubRangeInfo(o: any): asserts o is SubRangeInfo {
   if (!o || typeof o !== "object") throw new Error("SubRangeInfo must be a non-null object");
   if (typeof o.label !== "string") throwError("SubRangeInfo", "label", "string", o.label);
   if (typeof o.age !== "number") throwError("SubRangeInfo", "age", "number", o.age);
   if (typeof o.abundance !== "string") throwError("SubRangeInfo", "abundance", "string", o.abundance);
-  if (!/TOP|missing|rare|common|frequent|abundant|sample|flood/.test(o.abundance))
+  if (!/^TOP|missing|rare|common|frequent|abundant|sample|flood$/.test(o.abundance))
     throwError(
       "SubRangeInfo",
       "abundance",
@@ -659,6 +800,34 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
       throwError("ColumnInfo", "subRangeInfo", "array", o.subRangeInfo);
     for (const range of o.subRangeInfo) {
       assertSubRangeInfo(range);
+    }
+  }
+  if ("subChronInfo" in o) {
+    if (!o.subChronInfo || !Array.isArray(o.subChronInfo))
+      throwError("ColumnInfo", "subChronInfo", "array", o.subChronInfo);
+    for (const chron of o.subChronInfo) {
+      assertSubChronInfo(chron);
+    }
+  }
+  if ("subPointInfo" in o) {
+    if (!o.subPointInfo || !Array.isArray(o.subPointInfo))
+      throwError("ColumnInfo", "subPointInfo", "array", o.subPointInfo);
+    for (const point of o.subPointInfo) {
+      assertSubPointInfo(point);
+    }
+  }
+  if ("subFreehandInfo" in o) {
+    if (!o.subFreehandInfo || !Array.isArray(o.subFreehandInfo))
+      throwError("ColumnInfo", "subFreehandInfo", "array", o.subFreehandInfo);
+    for (const freehand of o.subFreehandInfo) {
+      assertSubFreehandInfo(freehand);
+    }
+  }
+  if ("subSequenceInfo" in o) {
+    if (!o.subSequenceInfo || !Array.isArray(o.subSequenceInfo))
+      throwError("ColumnInfo", "subSequenceInfo", "array", o.subSequenceInfo);
+    for (const sequence of o.subSequenceInfo) {
+      assertSubSequenceInfo(sequence);
     }
   }
 }

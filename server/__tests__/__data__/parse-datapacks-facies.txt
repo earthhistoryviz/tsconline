@@ -1,6 +1,6 @@
 FaciesTestDatapacks	:	FaciesOne	FaciesTwo
 
-FaciesOne	facies	500	234/221/221		off	"FaciesOne info"
+FaciesOne	facies	500			off	"FaciesOne info"
 Test Group	PRIMARY			"info"
 	TOP		374.64	"info"
 	RockTypeOne	RockTypeOneLabel	376.11	"info for RockTypeOne"

@@ -1,0 +1,11 @@
+Points	:	Point 1	Point 2
+
+Point 1	point				off	Point 1 Popup
+nopoints	line		0	230	smoothed
+	7
+	8	60
+
+Point 2	point				off	Point 2 Popup
+nopoints	line		0	10	smoothed
+	1	9.5	Popup 1
+	1000	9	Popup 2

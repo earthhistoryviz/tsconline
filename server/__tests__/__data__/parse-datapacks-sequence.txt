@@ -1,0 +1,9 @@
+Sequence Test	:	Trend 1	Sequence 1
+
+Trend 1	trend			notitle		Trend Popup
+	Trend 1 label	SB	67	Minor	SubTrend 1 Popup
+		MFS	69	Medium	No Label Popup
+
+Sequence 1	sequence		20/20/20		off	Sequence Popup
+	SubSequenceInfo 1	SB	321.39	Major	Popup
+		MFS	322.34	Minor	No Label Popup

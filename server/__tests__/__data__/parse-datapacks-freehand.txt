@@ -1,0 +1,20 @@
+Freehand Test	:	Freehand Child 1	Freehand Child 2
+
+Freehand Child 1	freehand	40	227/123/104	notitle
+image	image.jpg
+	agetype	center	0.07	2.07
+	xtype	right
+image	image.png
+	agetype	center	69.7	70.3
+	xtype	right
+image	image.jpg
+	agetype	center	119.7	120.3
+	xtype	right
+
+Freehand Child 2	freehand	40	227/123/106	notitle		Freehand Child 2 Popup
+image	image.png
+	agetype	center	35.9	36.9
+	xtype	right
+image	image.jpg
+	agetype	center	36.9	37.5
+	xtype	right
