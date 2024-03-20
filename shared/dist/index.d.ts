@@ -5,6 +5,7 @@ export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 export type DatapackParsingPack = {
     columnInfoArray: ColumnInfo[];
     datapackAgeInfo: DatapackAgeInfo;
+    datapackDescription: DatapackDescriptions;
 };
 export type IndexResponse = {
     datapackIndex: DatapackIndex;
@@ -47,6 +48,9 @@ export type DatapackAgeInfo = {
     datapackContainsSuggAge: boolean;
     topAge?: number;
     bottomAge?: number;
+};
+export type DatapackDescriptions = {
+    [datapack: string]: string;
 };
 export type ChartConfig = {
     icon: string;

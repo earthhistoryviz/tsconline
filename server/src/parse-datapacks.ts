@@ -79,6 +79,7 @@ export async function parseDatapacks(decrypt_filepath: string, files: string[]):
   const isChild: Set<string> = new Set();
   const allEntries: Map<string, ParsedColumnEntry> = new Map();
   const datapackAgeInfo: DatapackAgeInfo = { datapackContainsSuggAge: false };
+  const datapackDescription: {} = {};     //adding this to avoid a type error
   const faciesMap: Map<string, Facies> = new Map();
   const blocksMap: Map<string, Block> = new Map();
   try {
@@ -105,9 +106,9 @@ export async function parseDatapacks(decrypt_filepath: string, files: string[]):
       throw new Error(`No columns found for path ${decrypt_paths}`);
   } catch (e) {
     console.log("ERROR: failed to read columns for path " + decrypt_paths + ". ", e);
-    return { columnInfoArray: [], datapackAgeInfo: { datapackContainsSuggAge: false } };
+    return { columnInfoArray: [], datapackAgeInfo: { datapackContainsSuggAge: false }, datapackDescription: {} };
   }
-  return { columnInfoArray, datapackAgeInfo };
+  return { columnInfoArray, datapackAgeInfo, datapackDescription }; //added description to avoid type error w DatapackParsingPack
 }
 /**
  * This will populate a mapping of all parents : childen[]

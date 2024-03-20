@@ -73,12 +73,19 @@ try{
 }
 
 for (const datapack in datapackIndex) {
-  if (datapackDescription.hasOwnProperty(datapack)) {
-    datapackIndex[datapack].description = datapackDescription[datapack];
+  if (datapackIndex.hasOwnProperty(datapack)) {
+    // Check if datapackDescription has the corresponding datapack
+    if (datapackDescription.hasOwnProperty(datapack)) {
+      // Access description property directly without worrying about undefined
+      datapackIndex[datapack].description = datapackDescription[datapack];
+    } else {
+      console.log(`No description found for datapack: ${datapack}`);
+    }
   } else {
-    console.log(`No description found for datapack: ${datapack}`);
+    console.log(`No datapack found for: ${datapack}`);
   }
 }
+
 
 // Serve the main app from /
 // @ts-expect-error: server.register doesn't accept the proper types. open bug-report asap to fastify
