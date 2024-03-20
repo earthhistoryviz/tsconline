@@ -264,9 +264,9 @@ describe("process sequence line tests", () => {
   test.each([
     [
       "\tlabel\tN\t60\tseverity\tpopup",
-      { label: "label", direction: "N", age: 60, severity: "severity", popup: "popup" }
+      { label: "label", direction: "N", age: 60, severity: "Severity", popup: "popup" }
     ],
-    ["\tlabel\tN\t60\tseverity", { label: "label", direction: "N", age: 60, severity: "severity", popup: "" }],
+    ["\tlabel\tN\t60\tseverity", { label: "label", direction: "N", age: 60, severity: "Severity", popup: "" }],
     ["\tlabel\tN\t60", null],
     ["\tlabel\tN\tage\tseverity\tpopup\t", null],
     ["", null]
