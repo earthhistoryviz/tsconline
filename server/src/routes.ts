@@ -1,66 +1,17 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
-import { writeFile, stat } from "fs/promises";
-import { Patterns, assertChartRequest, assertPatterns } from "@tsconline/shared";
-import { deleteDirectory, rgbToHex } from "./util.js";
+import { writeFile, stat, readFile } from "fs/promises";
+import { TimescaleItem, assertChartRequest } from "@tsconline/shared";
+import { deleteDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
 import { grabMapImages } from "./parse-map-packs.js";
 import md5 from "md5";
 import { assetconfigs } from "./index.js";
 import svgson from "svgson";
 import fs from "fs";
-import { readFile } from "fs/promises";
-import { glob } from "glob";
-import path from "path";
-import { getColorFromURL } from "color-thief-node";
-import nearestColor from "nearest-color";
-import { assertColors } from "./types.js";
+import { assertTimescale } from "@tsconline/shared";
+import { parseExcelFile } from "./parse-excel-file.js";
 
-export const fetchFaciesPatterns = async function fetchFaciesPatterns(_request: FastifyRequest, reply: FastifyReply) {
-  try {
-    const patterns: Patterns = {};
-    const patternsGlobed = await glob(`${assetconfigs.patternsDirectory}/*.PNG`);
-    const colors = JSON.parse((await readFile(assetconfigs.colors)).toString());
-    assertColors(colors);
-    const nearest = nearestColor.from(colors);
-    if (patternsGlobed.length == 0) throw new Error("No patterns found");
-    for (const pattern of patternsGlobed) {
-      const name = path.basename(pattern).split(".")[0];
-      const dominant = await getColorFromURL(pattern);
-      const color = nearest(rgbToHex(dominant[0], dominant[1], dominant[2]));
-      if (!name) {
-        console.error(`Unrecognized pattern file in ${assetconfigs.patternsDirectory} with path ${pattern}`);
-        continue;
-      }
-      if (!color) {
-        console.error(
-          `Unrecognized color in ${assetconfigs.patternsDirectory} with path ${pattern} with color ${color}`
-        );
-        continue;
-      }
-      // format so it splits all underscores and capitalizes the first letter
-      const formattedName = name
-        .split("_")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
-      patterns[name] = {
-        name,
-        formattedName,
-        filePath: `/${pattern}`,
-        color: {
-          name: color.name,
-          hex: color.value,
-          rgb: color.rgb
-        }
-      };
-    }
-    assertPatterns(patterns);
-    reply.status(200).send({ patterns });
-  } catch (e) {
-    console.error(e);
-    reply.status(500).send({ error: e });
-  }
-};
 export const fetchSettingsXml = async function fetchSettingsJson(
   request: FastifyRequest<{ Params: { settingFile: string } }>,
   reply: FastifyReply
@@ -155,36 +106,36 @@ export const fetchChart = async function fetchChart(
   // );
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
   const hash = md5(settingsXml + chartrequest.datapacks.join(","));
-  const chartdir_urlpath = `/${assetconfigs.chartsDirectory}/${hash}`;
-  const chart_urlpath = chartdir_urlpath + "/chart.svg";
+  const chartDirUrlPath = `/${assetconfigs.chartsDirectory}/${hash}`;
+  const chartUrlPath = chartDirUrlPath + "/chart.svg";
 
-  const chartdir_filepath = chartdir_urlpath.slice(1); // no leading slash
-  const chart_filepath = chart_urlpath.slice(1);
-  const settings_filepath = chartdir_filepath + "/settings.tsc";
+  const chartDirFilePath = chartDirUrlPath.slice(1); // no leading slash
+  const chartFilePath = chartUrlPath.slice(1);
+  const settingsFilePath = chartDirFilePath + "/settings.tsc";
 
   // If this setting already has a chart, just return that
   try {
-    await stat(chart_filepath);
+    await stat(chartFilePath);
     if (!usecache) {
       console.log("Deleting chart filepath since it already exists and cache is not being used");
-      deleteDirectory(chart_filepath);
+      deleteDirectory(chartFilePath);
     } else {
       console.log("Request for chart that already exists (hash:", hash, ".  Returning cached version");
-      reply.send({ chartpath: chart_urlpath, hash: hash }); // send the browser back the URL equivalent...
+      reply.send({ chartpath: chartUrlPath, hash: hash }); // send the browser back the URL equivalent...
       return;
     }
   } catch (e) {
     // Doesn't exist, so make one
-    console.log("Request for chart", chart_urlpath, ": chart does not exist, creating...");
+    console.log("Request for chart", chartUrlPath, ": chart does not exist, creating...");
   }
 
   // Create the directory and save the settings there for java:
   try {
-    await mkdirp(chartdir_filepath);
-    await writeFile(settings_filepath, settingsXml);
-    console.log("Successfully created and saved chart settings at", settings_filepath);
+    await mkdirp(chartDirFilePath);
+    await writeFile(settingsFilePath, settingsXml);
+    console.log("Successfully created and saved chart settings at", settingsFilePath);
   } catch (e) {
-    console.log("ERROR: failed to save settings at", settings_filepath, "  Error was:", e);
+    console.log("ERROR: failed to save settings at", settingsFilePath, "  Error was:", e);
     reply.send({ error: "ERROR: failed to save settings" });
     return;
   }
@@ -214,11 +165,11 @@ export const fetchChart = async function fetchChart(
     // Turns off GUI (e.g Suggested Age pop-up (defaults to yes if -a flag is not passed))
     `-node ` +
     // Add settings:
-    `-s ${settings_filepath} -ss ${settings_filepath} ` +
+    `-s ${settingsFilePath} -ss ${settingsFilePath} ` +
     // Add datapacks:
     `-d ${datapacks.join(" ")} ` +
     // Tell it where to save chart
-    `-o ${chart_filepath} ` +
+    `-o ${chartFilePath} ` +
     // Don't use datapacks suggested age (if useSuggestedAge is true then ignore datapack ages)
     `${!useSuggestedAge ? "-a" : ""}`;
 
@@ -234,8 +185,36 @@ export const fetchChart = async function fetchChart(
     });
   });
   console.log("Sending reply to browser: ", {
-    chartpath: chart_urlpath,
+    chartpath: chartUrlPath,
     hash: hash
   });
-  reply.send({ chartpath: chart_urlpath, hash: hash });
+  reply.send({ chartpath: chartUrlPath, hash: hash });
+};
+
+// Serve timescale data endpoint
+export const fetchTimescale = async function (_request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const filePath = assetconfigs.timescaleFilepath;
+
+    // Check if the file exists
+    if (!fs.existsSync(filePath)) {
+      console.error("Error: Excel file not found");
+      reply.status(404).send({ error: "Excel file not found" });
+      return;
+    }
+
+    const excelData: string[][] = await parseExcelFile(filePath);
+    const timescaleData: TimescaleItem[] = excelData
+      .map(([, , stage, ma]) => ({
+        key: stage as string,
+        value: parseFloat(ma as string)
+      }))
+      .filter((item) => item.key);
+    timescaleData.forEach((data) => assertTimescale(data));
+
+    reply.send({ timescaleData });
+  } catch (error) {
+    console.error("Error reading Excel file:", error);
+    reply.status(500).send({ error: "Internal Server Error" });
+  }
 };

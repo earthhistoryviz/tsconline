@@ -1,0 +1,1302 @@
+{
+    "general-parse-datapacks-test-1-key": {
+        "columnInfoArray": [
+            {
+                "name": "Central Africa Cenozoic",
+                "editName": "Central Africa Cenozoic",
+                "on": true,
+                "enableTitle": true,
+                "width": 100,
+                "rgb": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                },
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "popup": "",
+                "children": [
+                {
+                    "name": "Nigeria Coast",
+                    "editName": "Nigeria Coast",
+                    "on": true,
+                    "enableTitle": true,
+                    "width": 210,
+                    "rgb": {
+                        "r": 255,
+                        "g": 255,
+                        "b": 255
+                    },
+                    "fontsInfo": {
+                        "font": "Arial"
+                    },
+                    "popup": "",
+                    "children": [],
+                    "parent": "Central Africa Cenozoic",
+                    "minAge": 0,
+                    "maxAge": 10,
+                    "subFaciesInfo": [
+                    {
+                        "rockType": "TOP",
+                        "age": 0,
+                        "info": ""
+                    },
+                    {
+                        "rockType": "Sandstone",
+                        "label": "Delta",
+                        "age": 5,
+                        "info": ""
+                    },
+                    {
+                        "rockType": "Claystone",
+                        "label": "ProDelta",
+                        "age": 10,
+                        "info": ""
+                    }
+                    ]
+                },
+                {
+                    "name": "South Atlantic",
+                    "editName": "South Atlantic",
+                    "on": true,
+                    "enableTitle": true,
+                    "width": 210,
+                    "rgb": {
+                        "r": 255,
+                        "g": 255,
+                        "b": 255
+                    },
+                    "fontsInfo": {
+                        "font": "Arial"
+                    },
+                    "popup": "",
+                    "children": [],
+                    "parent": "Central Africa Cenozoic",
+                    "minAge": 0,
+                    "maxAge": 10,
+                    "subFaciesInfo": [
+                    {
+                        "rockType": "TOP",
+                        "age": 0,
+                        "info": ""
+                    },
+                    {
+                        "rockType": "Shallow-marine marl",
+                        "label": "Deep marine",
+                        "age": 5,
+                        "info": ""
+                    },
+                    {
+                        "rockType": "Lava",
+                        "label": "Ocean crust",
+                        "age": 10,
+                        "info": ""
+                    }
+                    ]
+                }
+                ],
+                "parent": "Root",
+                "minAge": 0,
+                "maxAge": 10,
+                "subFaciesInfo": [
+                {
+                    "rockType": "TOP",
+                    "age": 0,
+                    "info": ""
+                },
+                {
+                    "rockType": "Sandstone",
+                    "label": "Delta",
+                    "age": 5,
+                    "info": ""
+                },
+                {
+                    "rockType": "Claystone",
+                    "label": "ProDelta",
+                    "age": 10,
+                    "info": ""
+                }
+                ]
+            }
+        ],
+        "datapackAgeInfo": {
+            "datapackContainsSuggAge": false
+        }
+    },
+    "general-parse-datapacks-test-2-key": {
+        "columnInfoArray": [
+        {
+            "name": "Parent 1",
+            "editName": "Parent 1",
+            "on": true,
+            "enableTitle": true,
+            "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+            },
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "popup": "",
+            "width": 100,
+            "children": [
+            {
+                "name": "Block",
+                "editName": "Block",
+                "on": false,
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "popup": "Block Popup",
+                "children": [],
+                "parent": "Parent 1",
+                "minAge": 419.2,
+                "maxAge": 433.35,
+                "enableTitle": false,
+                "width": 120,
+                "rgb": {
+                    "r": 197,
+                    "g": 217,
+                    "b": 234
+                },
+                "subBlockInfo": [
+                {
+                    "label": "TOP",
+                    "age": 419.2,
+                    "popup": "",
+                    "lineStyle": "solid",
+                    "rgb": {
+                        "r": 197,
+                        "g": 217,
+                        "b": 234
+                    }
+                },
+                {
+                    "label": "Block SubBlock",
+                    "age": 433.35,
+                    "popup": "Block SubBlock Info",
+                    "lineStyle": "solid",
+                    "rgb": {
+                        "r": 197,
+                        "g": 217,
+                        "b": 234
+                    }
+                }
+                ]
+            },
+            {
+                "name": "Facies",
+                "editName": "Facies",
+                "on": false,
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "popup": "Facies Popup",
+                "children": [],
+                "width": 210,
+                "enableTitle": false,
+                "rgb": {
+                    "r": 100,
+                    "g": 200,
+                    "b": 255
+                },
+                "parent": "Parent 1",
+                "minAge": 0,
+                "maxAge": 10,
+                "subFaciesInfo": [
+                    {
+                        "rockType": "TOP",
+                        "age": 0,
+                        "info": ""
+                    },
+                    {
+                        "rockType": "Facies SubFaciesInfo 1",
+                        "label": "Facies SubFaciesInfo 1 Label",
+                        "age": 5,
+                        "info": ""
+                    },
+                    {
+                        "rockType": "Facies SubFaciesInfo 2",
+                        "label": "Facies SubFaciesInfo 2 Label",
+                        "age": 10,
+                        "info": ""
+                    }
+                ]
+            },
+            {
+                "name": "Event",
+                "editName": "Event",
+                "on": true,
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "popup": "Event Popup",
+                "children": [],
+                "parent": "Parent 1",
+                "minAge": 0.02,
+                "maxAge": 0.4,
+                "width": 250,
+                "enableTitle": true,
+                "rgb": {
+                  "r": 100,
+                  "g": 200,
+                  "b": 255
+                },
+                "subEventInfo": [
+                    {
+                        "label": "SubEventInfo 1",
+                        "age": 0.02,
+                        "popup": "Event SubEventInfo Popup 1",
+                        "lineStyle": "solid"
+                    },
+                    {
+                        "label": "SubEventInfo 2",
+                        "age": 0.4,
+                        "popup": "Event SubEventInfo Popup 2",
+                        "lineStyle": "solid"
+                    }
+                ]
+            },
+            {
+                "name": "Range",
+                "subRangeInfo": [
+                    {
+                        "label": "SubRangeInfo 1",
+                        "age": 10,
+                        "abundance": "TOP",
+                        "popup": ""
+                    },
+                    {
+                        "label": "SubRangeInfo 2",
+                        "age": 100,
+                        "abundance": "rare",
+                        "popup": "Range SubRangeInfo Popup 2"
+                    }
+                ],
+                "enableTitle": true,
+                "width": 100,
+                "rgb": {
+                    "r": 198,
+                    "g": 207,
+                    "b": 174
+                },
+                "minAge": 10,
+                "maxAge": 100,
+                "popup": "Range Popup",
+                "on": true,
+                "parent": "Parent 1",
+                "children": [],
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "editName": "Range"
+            },
+            {
+                "name": "Chron",
+                "editName": "Chron",
+                "on": true,
+                "enableTitle": false,
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "popup": "Chron Popup",
+                "children": [],
+                "parent": "Parent 1",
+                "minAge": 0,
+                "maxAge": 0.234,
+                "width": 100,
+                "rgb": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                },
+                "subChronInfo": [
+                    {
+                        "polarity": "TOP",
+                        "age": 0,
+                        "popup": ""
+                    },
+                    {
+                        "polarity": "N",
+                        "age": 0.123,
+                        "label": "SubChronInfo 1 Label",
+                        "popup": "SubChronInfo 1 Popup"
+                    },
+                    {
+                        "polarity": "R",
+                        "age": 0.234,
+                        "label": "SubChronInfo 2 Label",
+                        "popup": "SubChronInfo 2 Popup"
+                    }
+                ]
+            },
+            {
+                "name": "Point",
+                "editName": "Point",
+                "children": [],
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "parent": "Parent 1",
+                "minAge": 4,
+                "maxAge": 5,
+                "enableTitle": true,
+                "on": false,
+                "width": 100,
+                "popup": "Point Popup",
+                "rgb": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                },
+                "subPointInfo": [
+                    {
+                    "age": 4,
+                    "xVal": 0,
+                    "popup": "SubPointInfo Popup 1"
+                    },
+                    {
+                    "age": 5,
+                    "xVal": 9,
+                    "popup": "SubPointInfo Popup 2"
+                    }
+                ]
+            },
+            {
+                "name": "Sequence",
+                "minAge": 0,
+                "maxAge": 2,
+                "enableTitle": false,
+                "children": [],
+                "editName": "Sequence",
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "parent": "Parent 1",
+                "on": true,
+                "width": 900,
+                "popup": "Sequence Popup",
+                "rgb": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                },
+                "subSequenceInfo": [
+                    {
+                        "direction": "MFS",
+                        "age": 0,
+                        "severity": "Major",
+                        "popup": "No Label Popup"
+                    },
+                    {
+                        "label": "Label 1",
+                        "direction": "SB",
+                        "age": 2,
+                        "severity": "Medium",
+                        "popup": "Label 1 Popup"
+                    }
+                ]
+            },
+            {
+                "name": "Freehand",
+                "editName": "Freehand",
+                "children": [],
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "parent": "Parent 1",
+                "minAge": 0,
+                "maxAge": 1.3,
+                "enableTitle": false,
+                "on": true,
+                "width": 70,
+                "popup": "",
+                "rgb": {
+                  "r": 227,
+                  "g": 123,
+                  "b": 104
+                },
+                "subFreehandInfo": [
+                  {
+                    "topAge": 0,
+                    "baseAge": 1
+                  },
+                  {
+                    "topAge": 0.3,
+                    "baseAge": 1.3
+                  }
+                ]
+            },
+            {
+                "name": "Blank",
+                "minAge": 1.7976931348623157e+308,
+                "maxAge": 5e-324,
+                "enableTitle": false,
+                "on": false,
+                "width": 800,
+                "popup": "Blank Popup",
+                "rgb": {
+                "r": 7,
+                "g": 3,
+                "b": 4
+                },
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "children": [],
+                "editName": "Blank",
+                "parent": "Parent 1"
+            }
+            ],
+            "parent": "Root",
+            "minAge": 0,
+            "maxAge": 433.35,
+            "subFaciesInfo": [
+            {
+                "rockType": "TOP",
+                "age": 0,
+                "info": ""
+            },
+            {
+                "rockType": "Facies SubFaciesInfo 1",
+                "label": "Facies SubFaciesInfo 1 Label",
+                "age": 5,
+                "info": ""
+            },
+            {
+                "rockType": "Facies SubFaciesInfo 2",
+                "label": "Facies SubFaciesInfo 2 Label",
+                "age": 10,
+                "info": ""
+            }
+            ]
+        }
+        ],
+        "datapackAgeInfo": {
+            "datapackContainsSuggAge": true,
+            "topAge": 0,
+            "bottomAge": 5
+        }
+    },
+    "column-types-facies-key": {
+        "FaciesOne": {
+            "name": "FaciesOne",
+            "width": 500,
+            "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+            },
+            "subFaciesInfo": [
+                {
+                    "rockType": "TOP",
+                    "age": 374.64,
+                    "info": "\"info\""
+                },
+                {
+                    "rockType": "RockTypeOne",
+                    "label": "RockTypeOneLabel",
+                    "age": 376.11,
+                    "info": "\"info for RockTypeOne\""
+                }
+            ],
+            "minAge": 374.64,
+            "maxAge": 376.11,
+            "enableTitle": true,
+            "popup": "\"FaciesOne info\"",
+            "on": false
+        },
+        "FaciesTwo": {
+            "name": "FaciesTwo",
+            "subFaciesInfo": [
+                {
+                    "rockType": "TOP",
+                    "age": 311.59,
+                    "info": "\"info\""
+                },
+                {
+                    "rockType": "RockTypeTwo",
+                    "label": "RockTypeTwoLabel",
+                    "age": 315,
+                    "info": "\"info for RockTypeTwo\""
+                }
+            ],
+            "minAge": 311.59,
+            "width": 500,
+            "maxAge": 315,
+            "enableTitle": true,
+            "rgb": {
+                "r": 234,
+                "g": 221,
+                "b": 221 
+            },
+            "popup": "\"FaciesTwo info\"",
+            "on": false
+        }
+    },
+    "column-types-block-key": {
+        "Block Child 1": {
+            "name": "Block Child 1",
+            "subBlockInfo": [
+                {
+                    "label": "Sub Block Top",
+                    "age": 0,
+                    "popup": "",
+                    "lineStyle": "solid",
+                    "rgb": {
+                        "r": 255,
+                        "g": 255,
+                        "b": 255
+                    }
+                },
+                {
+                    "label": "Sub Block 1",
+                    "age": 201.36,
+                    "popup": "",
+                    "lineStyle": "solid",
+                    "rgb": {
+                        "r": 255,
+                        "g": 255,
+                        "b": 255
+                    }
+                }
+            ],
+            "width": 100,
+            "minAge": 0,
+            "maxAge": 201.36,
+            "popup": "",
+            "on": true,
+            "enableTitle": true,
+            "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+            }
+        },
+        "Block Child 2": {
+            "name": "Block Child 2",
+            "subBlockInfo": [
+                {
+                    "label": "Sub Block Top",
+                    "age": 0,
+                    "popup": "info",
+                    "lineStyle": "solid",
+                    "rgb": {
+                        "r": 255,
+                        "g": 225,
+                        "b": 210
+                    }
+                },
+                {
+                    "label": "Sub Block 2",
+                    "age": 23.03,
+                    "popup": "info",
+                    "lineStyle": "solid",
+                    "rgb": {
+                        "r": 222,
+                        "g": 255,
+                        "b": 0
+                    }
+                },
+                {
+                    "label": "Sub Block 3",
+                    "age": 32.02,
+                    "popup": "info",
+                    "lineStyle": "solid",
+                    "rgb": {
+                        "r": 255,
+                        "g": 225,
+                        "b": 210
+                    }
+                }
+            ],
+            "width": 70,
+            "minAge": 0,
+            "maxAge": 32.02,
+            "popup": "\"popup\"",
+            "on": false,
+            "enableTitle": false,
+            "rgb": {
+                "r": 255,
+                "g": 225,
+                "b": 210
+            }
+        }
+    },
+    "column-types-all-column-types-key": {
+        "Facies 1": {
+            "name": "Facies",
+            "subFaciesInfo": [
+                {
+                    "rockType": "TOP",
+                    "age": 0,
+                    "info": ""
+                },
+                {
+                    "rockType": "Facies SubFaciesInfo 1",
+                    "label": "Facies SubFaciesInfo 1 Label",
+                    "age": 5,
+                    "info": ""
+                },
+                {
+                    "rockType": "Facies SubFaciesInfo 2",
+                    "label": "Facies SubFaciesInfo 2 Label",
+                    "age": 10,
+                    "info": ""
+                }
+            ],
+            "minAge": 0,
+            "maxAge": 10,
+            "enableTitle": false,
+            "width": 210,
+            "rgb": {
+                "r": 100,
+                "g": 200,
+                "b": 255
+            },
+            "popup": "Facies Popup",
+            "on": false
+        },
+        "Block 1": {
+            "name": "Block",
+            "subBlockInfo": [
+                {
+                    "label": "TOP",
+                    "age": 419.2,
+                    "lineStyle": "solid",
+                    "popup": "",
+                    "rgb": {
+                        "r": 197,
+                        "g": 217,
+                        "b": 234
+                    }
+                },
+                {
+                    "label": "Block SubBlock",
+                    "age": 433.35,
+                    "lineStyle": "solid",
+                    "popup": "Block SubBlock Info",
+                    "rgb": {
+                        "r": 197,
+                        "g": 217,
+                        "b": 234
+                    }
+                }
+            ],
+            "popup": "Block Popup",
+            "on": false,
+            "enableTitle": false,
+            "rgb": {
+                "r": 197,
+                "g": 217,
+                "b": 234
+            },
+            "width": 120,
+            "minAge": 419.2,
+            "maxAge": 433.35
+        },
+        "Event 1": {
+            "name": "Event",
+            "on": true,
+            "subEventInfo": [
+                {
+                "label": "SubEventInfo 1",
+                "age": 0.02,
+                "popup": "Event SubEventInfo Popup 1",
+                "lineStyle": "solid"
+                },
+                {
+                "label": "SubEventInfo 2",
+                "age": 0.4,
+                "popup": "Event SubEventInfo Popup 2",
+                "lineStyle": "solid"
+                }
+            ],
+            "enableTitle": true,
+            "width": 250,
+            "rgb": {
+                "r": 100,
+                "g": 200,
+                "b": 255
+            },
+            "minAge": 0.02,
+            "maxAge": 0.4,
+            "popup": "Event Popup"
+        },
+        "Range 1": {
+            "name": "Range",
+            "subRangeInfo": [
+              {
+                "label": "SubRangeInfo 1",
+                "age": 10,
+                "abundance": "TOP",
+                "popup": ""
+              },
+              {
+                "label": "SubRangeInfo 2",
+                "age": 100,
+                "abundance": "rare",
+                "popup": "Range SubRangeInfo Popup 2"
+              }
+            ],
+            "enableTitle": true,
+            "width": 100,
+            "rgb": {
+              "r": 198,
+              "g": 207,
+              "b": 174
+            },
+            "minAge": 10,
+            "maxAge": 100,
+            "popup": "Range Popup",
+            "on": true 
+        }, 
+        "Chron 1": {
+            "name": "Chron",
+            "subChronInfo": [
+                {
+                    "polarity": "TOP",
+                    "age": 0,
+                    "popup": ""
+                },
+                {
+                    "polarity": "N",
+                    "age": 0.123,
+                    "label": "SubChronInfo 1 Label",
+                    "popup": "SubChronInfo 1 Popup"
+                },
+                {
+                    "polarity": "R",
+                    "age": 0.234,
+                    "label": "SubChronInfo 2 Label",
+                    "popup": "SubChronInfo 2 Popup"
+                }
+            ],
+            "minAge": 0,
+            "maxAge": 0.234,
+            "on": true,
+            "enableTitle": false,
+            "width": 100,
+            "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+            },
+            "popup": "Chron Popup"
+        },
+        "Point 1": {
+            "name": "Point",
+            "minAge": 4,
+            "maxAge": 5,
+            "enableTitle": true,
+            "on": false,
+            "width": 100,
+            "popup": "Point Popup",
+            "rgb": {
+              "r": 255,
+              "g": 255,
+              "b": 255
+            },
+            "subPointInfo": [
+              {
+                "age": 4,
+                "xVal": 0,
+                "popup": "SubPointInfo Popup 1"
+              },
+              {
+                "age": 5,
+                "xVal": 9,
+                "popup": "SubPointInfo Popup 2"
+              }
+            ]
+        },
+        "Sequence 1": {
+            "name": "Sequence",
+            "minAge": 0,
+            "maxAge": 2,
+            "enableTitle": false,
+            "on": true,
+            "width": 900,
+            "popup": "Sequence Popup",
+            "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+            },
+            "subSequenceInfo": [
+                {
+                    "direction": "MFS",
+                    "age": 0,
+                    "severity": "Major",
+                    "popup": "No Label Popup"
+                },
+                {
+                    "label": "Label 1",
+                    "direction": "SB",
+                    "age": 2,
+                    "severity": "Medium",
+                    "popup": "Label 1 Popup"
+                }
+            ]
+        },
+        "Transect 1": {
+            "name": "Transect",
+            "minAge": 0,
+            "maxAge": 9.22,
+            "enableTitle": true,
+            "on": true,
+            "width": 500,
+            "popup": "Transect Popup",
+            "rgb": {
+              "r": 240,
+              "g": 255,
+              "b": 255
+            },
+            "subTransectInfo": [
+              {
+                "age": 0
+              },
+              {
+                "age": 2.58
+              },
+              {
+                "age": 9.22
+              }
+            ]
+        },
+        "Freehand 1": {
+            "name": "Freehand",
+            "minAge": 0,
+            "maxAge": 1.3,
+            "enableTitle": false,
+            "on": true,
+            "width": 70,
+            "popup": "",
+            "rgb": {
+                "r": 227,
+                "g": 123,
+                "b": 104
+            },
+            "subFreehandInfo": [
+                {
+                "topAge": 0,
+                "baseAge": 1
+                },
+                {
+                "topAge": 0.3,
+                "baseAge": 1.3
+                }
+            ]
+        }, "Blank 1": {
+            "name": "Blank",
+            "minAge": 1.7976931348623157e+308,
+            "maxAge": 5e-324,
+            "enableTitle": false,
+            "on": false,
+            "width": 800,
+            "popup": "Blank Popup",
+            "rgb": {
+              "r": 7,
+              "g": 3,
+              "b": 4
+            }
+        }
+    },
+    "column-types-event-key": {
+        "Event 1": {
+            "name": "Event 1",
+            "subEventInfo": [
+                {
+                "label": "Event 1 SubEvent 1",
+                "age": 2,
+                "popup": "Event 1 SubEvent 1 Popup",
+                "lineStyle": "dashed"
+                },
+                {
+                "label": "Event 1 SubEvent 2",
+                "age": 4,
+                "popup": "Event 1 SubEvent 2 Popup",
+                "lineStyle": "solid"
+                }
+            ],
+            "enableTitle": true,
+            "width": 250,
+            "rgb": {
+                "r": 198,
+                "g": 207,
+                "b": 174
+            },
+            "minAge": 2,
+            "maxAge": 4,
+            "popup": "\"Event 1 Popup\"",
+            "on": true
+        },
+        "Event 2": {
+            "name": "Event 2",
+            "subEventInfo": [
+                {
+                "label": "Event 2 SubEvent 1",
+                "age": 5,
+                "popup": "",
+                "lineStyle": "solid"
+                },
+                {
+                "label": "Event 2 SubEvent 2",
+                "age": 6,
+                "popup": "",
+                "lineStyle": "solid"
+                }
+            ],
+            "enableTitle": false,
+            "width": 150,
+            "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+            },
+            "minAge": 5,
+            "maxAge": 6,
+            "popup": "Event 2 Popup",
+            "on": false
+        }
+    },
+    "column-types-range-key": {
+        "Range 1": {
+            "name": "Range 1",
+            "subRangeInfo": [
+              {
+                "label": "Range 1 SubRangeInfo 1",
+                "age": 28.4,
+                "abundance": "TOP",
+                "popup": ""
+              },
+              {
+                "label": "Range 1 SubRangeInfo 2",
+                "age": 33.9,
+                "abundance": "rare",
+                "popup": "\"popup\""
+              }
+            ],
+            "enableTitle": true,
+            "width": 100,
+            "rgb": {
+              "r": 198,
+              "g": 207,
+              "b": 174
+            },
+            "minAge": 28.4,
+            "maxAge": 33.9,
+            "popup": "Range 1 info",
+            "on": false
+        },
+        "Range 2": {
+            "name": "Range 2",
+            "subRangeInfo": [
+              {
+                "label": "Range 2 SubRangeInfo 1",
+                "age": 0,
+                "abundance": "TOP",
+                "popup": ""
+              },
+              {
+                "label": "Range 2 SubRange Info 2",
+                "age": 0.01,
+                "abundance": "flood",
+                "popup": ""
+              }
+            ],
+            "enableTitle": false,
+            "width": 100,
+            "rgb": {
+              "r": 198,
+              "g": 207,
+              "b": 174
+            },
+            "minAge": 0,
+            "maxAge": 0.01,
+            "popup": "Range 2 Info",
+            "on": true
+        }
+    },
+    "column-types-chron-key": {
+        "Chron 1": {
+            "name": "Chron 1",
+            "minAge": 28.4,
+            "maxAge": 33.9,
+            "enableTitle": true,
+            "on": false,
+            "width": 100,
+            "popup": "Chron 1 info",
+            "rgb": {
+                "r": 198,
+                "g": 207,
+                "b": 174
+            },
+            "subChronInfo": [
+                {
+                    "polarity": "TOP",
+                    "age": 28.4,
+                    "popup": ""
+                },  
+                {
+                    "polarity": "N",
+                    "age": 33.9,
+                    "label": "SubChronInfo 1 Label",
+                    "popup": "SubChronInfo Popup 1"
+                }
+            ]
+        },
+        "Chron 2": {
+            "name": "Chron 2",
+            "minAge": 0,
+            "maxAge": 0.01,
+            "enableTitle": false,
+            "on": true,
+            "width": 100,
+            "popup": "Chron 2 Info",
+            "rgb": {
+                "r": 208,
+                "g": 207,
+                "b": 174
+            },
+            "subChronInfo": [
+                {
+                    "polarity": "TOP",
+                    "age": 0,
+                    "popup": ""
+                },
+                {
+                    "polarity": "R",
+                    "age": 0.01,
+                    "label": "SubChronInfo 2 Label",
+                    "popup": "SubChronInfo 2 Popup"
+                }
+            ]
+        }
+    },
+    "column-types-point-key": {
+        "Point 1": {
+            "name": "Point 1",
+            "minAge": 7,
+            "maxAge": 8,
+            "enableTitle": true,
+            "on": false,
+            "width": 100,
+            "popup": "Point 1 Popup",
+            "rgb": {
+              "r": 255,
+              "g": 255,
+              "b": 255
+            },
+            "subPointInfo": [
+              {
+                "age": 7,
+                "xVal": 0,
+                "popup": ""
+              },
+              {
+                "age": 8,
+                "xVal": 60,
+                "popup": ""
+              }
+            ]
+        },
+        "Point 2": {
+            "name": "Point 2",
+            "minAge": 1,
+            "maxAge": 1000,
+            "enableTitle": true,
+            "on": false,
+            "width": 100,
+            "popup": "Point 2 Popup",
+            "rgb": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+            },
+            "subPointInfo": [
+            {
+                "age": 1,
+                "xVal": 9.5,
+                "popup": "Popup 1"
+            },
+            {
+                "age": 1000,
+                "xVal": 9,
+                "popup": "Popup 2"
+            }
+            ]
+        }
+    },
+    "column-types-sequence-key": {
+        "Trend 1": {
+            "name": "Trend 1",
+            "minAge": 67,
+            "maxAge": 69,
+            "enableTitle": false,
+            "on": true,
+            "width": 100,
+            "popup": "Trend Popup",
+            "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+            },
+            "subSequenceInfo": [
+                {
+                    "label": "Trend 1 label",
+                    "direction": "SB",
+                    "age": 67,
+                    "severity": "Minor",
+                    "popup": "SubTrend 1 Popup"
+                },
+                {
+                    "direction": "MFS",
+                    "age": 69,
+                    "severity": "Medium",
+                    "popup": "No Label Popup"
+                }
+            ]
+        },
+        "Sequence 1": {
+            "name": "Sequence 1",
+            "minAge": 321.39,
+            "maxAge": 322.34,
+            "enableTitle": true,
+            "on": false,
+            "width": 100,
+            "popup": "Sequence Popup",
+            "rgb": {
+                "r": 20,
+                "g": 20,
+                "b": 20
+            },
+            "subSequenceInfo": [
+                {
+                    "label": "SubSequenceInfo 1",
+                    "direction": "SB",
+                    "age": 321.39,
+                    "severity": "Major",
+                    "popup": "Popup"
+                },
+                {
+                    "direction": "MFS",
+                    "age": 322.34,
+                    "severity": "Minor",
+                    "popup": "No Label Popup"
+                }
+            ]
+        }
+    },
+    "column-types-transect-key": {
+        "Transect Child 1": {
+            "name": "Transect Child 1",
+            "minAge": 8.61,
+            "maxAge": 530.46,
+            "enableTitle": true,
+            "on": true,
+            "width": 200,
+            "popup": "Transect Child 1 Popup",
+            "rgb": {
+              "r": 245,
+              "g": 245,
+              "b": 245
+            },
+            "subTransectInfo": [
+              {
+                "age": 8.61
+              },
+              {
+                "age": 10.75
+              },
+              {
+                "age": 12.15
+              },
+              {
+                "age": 530.46
+              }
+            ]
+        },
+        "Transect Child 2": {
+            "name": "Transect Child 2",
+            "minAge": 0,
+            "maxAge": 9.22,
+            "enableTitle": true,
+            "on": true,
+            "width": 500,
+            "popup": "Transect Child 2 Popup",
+            "rgb": {
+            "r": 240,
+            "g": 255,
+            "b": 255
+            },
+            "subTransectInfo": [
+            {
+                "age": 0
+            },
+            {
+                "age": 2.58
+            },
+            {
+                "age": 9.22
+            }
+            ]
+        }
+    },
+    "column-types-freehand-key": {
+        "Freehand Child 1": {
+            "name": "Freehand Child 1",
+            "minAge": 0.07,
+            "maxAge": 120.3,
+            "enableTitle": false,
+            "on": true,
+            "width": 40,
+            "popup": "",
+            "rgb": {
+                "r": 227,
+                "g": 123,
+                "b": 104
+            },
+            "subFreehandInfo": [
+                {
+                "topAge": 0.07,
+                "baseAge": 2.07
+                },
+                {
+                "topAge": 69.7,
+                "baseAge": 70.3
+                },
+                {
+                "topAge": 119.7,
+                "baseAge": 120.3
+                }
+            ]
+        },
+        "Freehand Child 2": {
+            "name": "Freehand Child 2",
+            "minAge": 35.9,
+            "maxAge": 37.5,
+            "enableTitle": false,
+            "on": true,
+            "width": 40,
+            "popup": "Freehand Child 2 Popup",
+            "rgb": {
+                "r": 227,
+                "g": 123,
+                "b": 106
+            },
+            "subFreehandInfo": [
+                {
+                "topAge": 35.9,
+                "baseAge": 36.9
+                },
+                {
+                "topAge": 36.9,
+                "baseAge": 37.5
+                }
+            ]
+        }
+    }
+}

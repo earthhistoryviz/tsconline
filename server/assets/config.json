@@ -16,5 +16,6 @@
   "chartsDirectory": "public/charts",
   "imagesDirectory": "public/mapimages",
   "patternsDirectory": "public/patterns",
-  "colors": "assets/colors.json"
+  "colors": "assets/colors.json",
+  "timescaleFilepath": "assets/default_timescale.xlsx"
 }

@@ -1,6 +1,7 @@
 import { observable } from "mobx";
 
-import { ErrorAlert, FaciesOptions, MapHistory, Settings } from "../types";
+import { ErrorAlert, FaciesOptions, MapHistory } from "../types";
+import { TimescaleItem } from "@tsconline/shared";
 import type {
   MapHierarchy,
   MapInfo,
@@ -12,6 +13,7 @@ import type {
   MapPackIndex,
   Patterns
 } from "@tsconline/shared";
+import { ErrorCodes } from "../util/error-codes";
 
 export type State = {
   chartLoading: boolean;
@@ -20,6 +22,9 @@ export type State = {
   showSuggestedAgePopup: boolean;
   useSuggestedAge: boolean;
   isFullscreen: boolean;
+  showPresetInfo: boolean;
+  geologicalTopStageAges: TimescaleItem[];
+  geologicalBaseStageAges: TimescaleItem[];
   settingsTabs: {
     selected: "time" | "font" | "column" | "mappoints";
     columns: ColumnInfo | null;
@@ -49,17 +54,34 @@ export type State = {
   presets: Presets;
   datapackIndex: DatapackIndex;
   mapPackIndex: MapPackIndex;
-  mapPatterns: Patterns;
+  mapPatterns: {
+    patterns: Patterns;
+    sortedPatterns: Patterns[string][];
+  };
   selectedPreset: ChartConfig | null;
   chartPath: string;
   chartHash: string;
   settingsXML: string;
   settingsJSON: any;
-  settings: Settings;
+  settings: {
+    selectedStage: string;
+    topStageAge: number;
+    topStageKey: string;
+    baseStageAge: number;
+    baseStageKey: string;
+    unitsPerMY: number;
+    useDatapackSuggestedAge: boolean;
+    mouseOverPopupsEnabled: boolean;
+    datapackContainsSuggAge: boolean;
+    selectedBaseStage: string;
+    selectedTopStage: string;
+  };
   useCache: boolean;
   usePreset: boolean;
   openSnackbar: boolean;
-  errorAlerts: ErrorAlert[];
+  errors: {
+    errorAlerts: Map<ErrorCodes, ErrorAlert>;
+  };
 };
 
 export const state = observable<State>({
@@ -69,6 +91,9 @@ export const state = observable<State>({
   showSuggestedAgePopup: false,
   useSuggestedAge: true,
   isFullscreen: false,
+  showPresetInfo: false,
+  geologicalTopStageAges: [],
+  geologicalBaseStageAges: [],
   settingsTabs: {
     selected: "time",
     columns: null,
@@ -105,23 +130,32 @@ export const state = observable<State>({
   presets: {},
   datapackIndex: {},
   mapPackIndex: {},
-  mapPatterns: {},
+  mapPatterns: {
+    patterns: {},
+    sortedPatterns: []
+  },
   selectedPreset: null,
   chartPath: "",
   chartHash: "",
   settingsXML: "",
   settingsJSON: {},
   settings: {
+    selectedStage: "",
     topStageAge: 0,
     topStageKey: "",
     baseStageAge: 0,
     baseStageKey: "",
     unitsPerMY: 2,
     mouseOverPopupsEnabled: false,
-    datapackContainsSuggAge: false
+    datapackContainsSuggAge: false,
+    useDatapackSuggestedAge: false,
+    selectedBaseStage: "",
+    selectedTopStage: ""
   },
   useCache: true,
   usePreset: true,
   openSnackbar: false,
-  errorAlerts: []
+  errors: {
+    errorAlerts: new Map<ErrorCodes, ErrorAlert>()
+  }
 });

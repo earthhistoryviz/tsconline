@@ -23,9 +23,8 @@ import { observer } from "mobx-react-lite";
 import ColorLensIcon from "@mui/icons-material/ColorLens";
 import SimpleBarCore from "simplebar-core";
 import ArrowUpIcon from "../assets/icons/arrow-up.json";
-import { LEGEND_HEADER_HEIGHT } from "./MapPointConstants";
+import { LegendHeaderHeight } from "./MapPointConstants";
 import { Color, Patterns } from "@tsconline/shared";
-import { compareStrings } from "../util/util";
 
 /**
  * This is the legend that describes the icons present on the
@@ -35,8 +34,8 @@ import { compareStrings } from "../util/util";
 export const Legend = observer(() => {
   // the filters for the facies patterns
   const [searchValue, setSearchValue] = useState("");
-  const [filterByPresent, setFilterByPresent] = useState(false);
-  const [alphabeticalSort, setAlphabeticalSort] = useState(false);
+  const [filterByPresent, setFilterByPresent] = useState(true);
+  const [alphabeticalSort, setAlphabeticalSort] = useState(true);
   const [colorFilter, setColorFilter] = useState<Set<string>>(new Set<string>());
 
   //scroll state
@@ -75,7 +74,8 @@ export const Legend = observer(() => {
   });
   const colors = new Set<string>();
   const colorHash = new Map<string, Color>();
-  const filteredPatterns = Object.values(state.mapPatterns).filter((value) => {
+  const patterns = alphabeticalSort ? state.mapPatterns.sortedPatterns : state.mapPatterns.patterns;
+  const filteredPatterns = Object.values(patterns).filter((value) => {
     const isPresent = !filterByPresent || state.mapState.currentFaciesOptions.presentRockTypes.has(value.formattedName);
     const matchesSearch = value.formattedName.toLowerCase().includes(searchValue.toLowerCase());
     const hasColor = colorFilter.size == 0 || colorFilter.has(value.color.name);
@@ -86,11 +86,6 @@ export const Legend = observer(() => {
     }
     return isPresent && matchesSearch && hasColor;
   });
-  if (alphabeticalSort) {
-    filteredPatterns.sort((a, b) => {
-      return compareStrings(a.formattedName, b.formattedName);
-    });
-  }
   // legend icon array
   const legendItems: LegendItem[] = [
     { color: theme.palette.on.main, label: "On", icon: AvailableIcon },
@@ -112,7 +107,7 @@ export const Legend = observer(() => {
     <>
       <IconButton
         className={`scroll-top ${isScrolled ? "show" : ""}`}
-        style={{ top: `calc(${LEGEND_HEADER_HEIGHT} + 1vh)` }}
+        style={{ top: `calc(${LegendHeaderHeight} + 1vh)` }}
         onClick={() => {
           scrollRef.current?.contentWrapperEl?.scrollTo({ top: 0, left: 0, behavior: "smooth" });
         }}>
@@ -122,7 +117,7 @@ export const Legend = observer(() => {
         ref={scrollRef}
         autoHide={false}
         style={{
-          height: `calc(100vh - ${LEGEND_HEADER_HEIGHT})`,
+          height: `calc(100vh - ${LegendHeaderHeight})`,
           backgroundColor: theme.palette.navbar.main
         }}>
         <CustomHeader className="legend-header" color="primary">

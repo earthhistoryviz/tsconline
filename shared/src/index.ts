@@ -39,13 +39,13 @@ export type Patterns = {
 export type Color = {
   name: string;
   hex: string;
-  rgb: {
-    r: number;
-    g: number;
-    b: number;
-  };
+  rgb: RGB;
 };
-
+export type RGB = {
+  r: number;
+  g: number;
+  b: number;
+};
 export type Presets = {
   [type: string]: ChartConfig[];
 };
@@ -54,6 +54,17 @@ export type DatapackAgeInfo = {
   datapackContainsSuggAge: boolean; //Default Age is not age located in datapack. Should be false if age exists, otherwise true.
   topAge?: number;
   bottomAge?: number;
+};
+
+export type ColumnHeaderProps = {
+  name: string;
+  minAge: number;
+  maxAge: number;
+  enableTitle: boolean;
+  on: boolean;
+  width: number;
+  popup: string;
+  rgb: RGB;
 };
 
 export type ChartConfig = {
@@ -238,7 +249,8 @@ export type SubBlockInfo = {
   label: string;
   age: number;
   popup: string;
-  lineStyle: string;
+  lineStyle: "solid" | "dashed" | "dotted";
+  rgb: RGB;
 };
 
 export type ChartRequest = {
@@ -255,14 +267,91 @@ export type ColumnInfo = {
   editName: string;
   fontsInfo: FontsInfo;
   on: boolean;
-  info: string;
+  popup: string;
   children: ColumnInfo[];
   parent: string | null;
   subBlockInfo?: SubBlockInfo[];
   subFaciesInfo?: SubFaciesInfo[];
+  subEventInfo?: SubEventInfo[];
+  subRangeInfo?: SubRangeInfo[];
+  subChronInfo?: SubChronInfo[];
+  subPointInfo?: SubPointInfo[];
+  subFreehandInfo?: SubFreehandInfo[];
+  subSequenceInfo?: SubSequenceInfo[];
   minAge: number;
   maxAge: number;
+  enableTitle: boolean;
+  rgb: RGB;
+  width: number;
 };
+
+export type Range = ColumnHeaderProps & {
+  subRangeInfo: SubRangeInfo[];
+};
+
+export type Chron = ColumnHeaderProps & {
+  subChronInfo: SubChronInfo[];
+};
+
+export type Freehand = ColumnHeaderProps & {
+  subFreehandInfo: SubFreehandInfo[];
+};
+
+export type Point = ColumnHeaderProps & {
+  subPointInfo: SubPointInfo[];
+};
+export type Sequence = ColumnHeaderProps & {
+  subSequenceInfo: SubSequenceInfo[];
+};
+
+/**
+ * NOTE: This implementation gets rid of a lot of the freehand info
+ * This is due to the structure being more complicated on various lines.
+ * For the current TSCOnline as of 1.0 we don't need that information.
+ * If we ever want to add that implementation, we would change this
+ * but that would be a considerable amount of time and is something for the future.
+ * (This is because we are using a stream reading line by line in parse-datapacks)
+ */
+export type SubFreehandInfo = {
+  topAge: number;
+  baseAge: number;
+};
+
+export type SubSequenceInfo = {
+  label?: string;
+  direction: "SB" | "MFS";
+  age: number;
+  severity: "Major" | "Minor" | "Medium";
+  popup: string;
+};
+
+export type SubChronInfo = {
+  polarity: "TOP" | "N" | "R" | "U" | "No Data";
+  label?: string;
+  age: number;
+  popup: string;
+};
+
+export type SubPointInfo = {
+  age: number;
+  xVal: number;
+  popup: string;
+};
+
+export type SubRangeInfo = {
+  label: string;
+  age: number;
+  abundance: "TOP" | "missing" | "rare" | "common" | "frequent" | "abundant" | "sample" | "flood";
+  popup: string;
+};
+
+export type SubEventInfo = {
+  label: string;
+  age: number;
+  lineStyle: "solid" | "dashed" | "dotted";
+  popup: string;
+};
+
 export type SubFaciesInfo = {
   rockType: string; // rock type that is the name of the png in /public/patterns/
   label?: string; // the label
@@ -270,22 +359,29 @@ export type SubFaciesInfo = {
   info: string;
 };
 
-export type Facies = {
-  name: string;
-  info: string;
-  on: boolean;
+export type Facies = ColumnHeaderProps & {
   subFaciesInfo: SubFaciesInfo[];
-  minAge: number; // the min age of this specific location
-  maxAge: number; // the max age of this specific location
 };
 
-export type Block = {
-  name: string;
+export type Event = ColumnHeaderProps & {
+  subEventInfo: SubEventInfo[];
+};
+
+export type Block = ColumnHeaderProps & {
   subBlockInfo: SubBlockInfo[];
-  minAge: number;
-  maxAge: number;
-  popup: string;
-  on: boolean;
+};
+export type Transect = ColumnHeaderProps & {
+  subTransectInfo: SubTransectInfo[];
+};
+
+/**
+ * The structure of transects in the datapack are complicated so I will
+ * not be doing the deconstructing of the data since there is no added benefit
+ * However, if we for some reason want to access it or parse it
+ * I will leave this open to add more properties
+ */
+export type SubTransectInfo = {
+  age: number;
 };
 
 export type ChartResponseInfo = {
@@ -326,6 +422,7 @@ export type InfoPoints = {
 
 export type MapInfo = {
   [name: string]: {
+    name: string;
     img: string; // the image corresponding to the map image
     note?: string; // any notes on the map
     parent?: ParentMap; // the parent map this map exists in
@@ -362,17 +459,151 @@ export type VertBounds = {
   scale: number;
 };
 
+export type TimescaleItem = {
+  key: string;
+  value: number;
+};
+
+export function assertFreehand(o: any): asserts o is Freehand {
+  if (!o || typeof o !== "object") throw new Error("Freehand must be a non-null object");
+  if (!Array.isArray(o.subFreehandInfo)) throwError("Freehand", "subFreehandInfo", "array", o.subFreehandInfo);
+  for (const subFreehand of o.subFreehandInfo) {
+    assertSubFreehandInfo(subFreehand);
+  }
+}
+export function assertTransect(o: any): asserts o is Transect {
+  if (!o || typeof o !== "object") throw new Error("Transect must be a non-null object");
+  if (!Array.isArray(o.subTransectInfo)) throwError("Transect", "subTransectInfo", "array", o.subTransectInfo);
+  for (const subTransect of o.subTransectInfo) {
+    assertSubTransectInfo(subTransect);
+  }
+}
+
+export function assertSubFreehandInfo(o: any): asserts o is SubFreehandInfo {
+  if (!o || typeof o !== "object") throw new Error("SubFreehandInfo must be a non-null object");
+  if (typeof o.topAge !== "number") throwError("SubFreehandInfo", "topAge", "number", o.topAge);
+  if (typeof o.baseAge !== "number") throwError("SubFreehandInfo", "baseAge", "number", o.baseAge);
+}
+
+export function assertSubTransectInfo(o: any): asserts o is SubTransectInfo {
+  if (!o || typeof o !== "object") throw new Error("SubTransectInfo must be a non-null object");
+  if (typeof o.age !== "number") throwError("SubTransectInfo", "age", "number", o.age);
+}
+
+export function assertPoint(o: any): asserts o is Point {
+  if (!o || typeof o !== "object") throw new Error("Point must be a non-null object");
+  if (!Array.isArray(o.subPointInfo)) throwError("Point", "subPointInfo", "array", o.subPointInfo);
+  for (const subPoint of o.subPointInfo) {
+    assertSubPointInfo(subPoint);
+  }
+  assertColumnHeaderProps(o);
+}
+export function assertSubPointInfo(o: any): asserts o is SubPointInfo {
+  if (!o || typeof o !== "object") throw new Error("SubPointInfo must be a non-null object");
+  if (typeof o.age !== "number") throwError("SubPointInfo", "age", "number", o.age);
+  if (typeof o.xVal !== "number") throwError("SubPointInfo", "xVal", "number", o.xVal);
+  if (typeof o.popup !== "string") throwError("SubPointInfo", "popup", "string", o.popup);
+}
+export function assertSequence(o: any): asserts o is Sequence {
+  if (!o || typeof o !== "object") throw new Error("Sequence must be a non-null object");
+  if (!Array.isArray(o.subSequenceInfo)) throwError("Sequence", "subSequenceInfo", "array", o.subSequenceInfo);
+  for (const subSequence of o.subSequenceInfo) {
+    assertSubSequenceInfo(subSequence);
+  }
+  assertColumnHeaderProps(o);
+}
+
+export function assertSubSequenceInfo(o: any): asserts o is SubSequenceInfo {
+  if (!o || typeof o !== "object") throw new Error("SubSequenceInfo must be a non-null object");
+  if (o.label && typeof o.label !== "string") throwError("SubSequenceInfo", "label", "string", o.label);
+  if (typeof o.direction !== "string" || !/^SB|MFS$/.test(o.direction))
+    throwError("SubSequenceInfo", "direction", "string and SB | MFS", o.direction);
+  if (typeof o.age !== "number") throwError("SubSequenceInfo", "age", "number", o.age);
+  if (typeof o.severity !== "string" || !/^Major|Minor|Medium$/.test(o.severity))
+    throwError("SubSequenceInfo", "severity", "string and Major | Minor | Medium", o.severity);
+  if (typeof o.popup !== "string") throwError("SubSequenceInfo", "popup", "string", o.popup);
+}
+
+export function assertChron(o: any): asserts o is Chron {
+  if (!o || typeof o !== "object") throw new Error("Chron must be a non-null object");
+  if (!Array.isArray(o.subChronInfo)) throwError("Chron", "subChronInfo", "array", o.subChronInfo);
+  for (const subChron of o.subChronInfo) {
+    assertSubChronInfo(subChron);
+  }
+}
+export function assertSubChronInfo(o: any): asserts o is SubChronInfo {
+  if (!o || typeof o !== "object") throw new Error("SubChronInfo must be a non-null object");
+  if (typeof o.polarity !== "string" || !/^TOP|N|R|U|No Data$/.test(o.polarity))
+    throwError("SubChronInfo", "polarity", "string and TOP | N | R| U | No Data", o.polarity);
+  if (o.label && typeof o.label !== "string") throwError("SubChronInfo", "label", "string", o.label);
+  if (typeof o.age !== "number") throwError("SubChronInfo", "age", "number", o.age);
+  if (typeof o.popup !== "string") throwError("SubChronInfo", "popup", "string", o.popup);
+}
+export function assertSubRangeInfo(o: any): asserts o is SubRangeInfo {
+  if (!o || typeof o !== "object") throw new Error("SubRangeInfo must be a non-null object");
+  if (typeof o.label !== "string") throwError("SubRangeInfo", "label", "string", o.label);
+  if (typeof o.age !== "number") throwError("SubRangeInfo", "age", "number", o.age);
+  if (typeof o.abundance !== "string") throwError("SubRangeInfo", "abundance", "string", o.abundance);
+  if (!/^TOP|missing|rare|common|frequent|abundant|sample|flood$/.test(o.abundance))
+    throwError(
+      "SubRangeInfo",
+      "abundance",
+      "TOP | missing | rare | common | frequent | abundant | sample | flood",
+      o.abundance
+    );
+  if (typeof o.popup !== "string") throwError("SubRangeInfo", "popup", "string", o.popup);
+}
+export function assertRange(o: any): asserts o is Range {
+  if (!o || typeof o !== "object") throw new Error("Range must be a non-null object");
+  if (!Array.isArray(o.subRangeInfo)) throwError("Range", "subRangeInfo", "array", o.subRangeInfo);
+  for (const subRange of o.subRangeInfo) {
+    assertSubRangeInfo(subRange);
+  }
+  assertColumnHeaderProps(o);
+}
+export function assertColumnHeaderProps(o: any): asserts o is ColumnHeaderProps {
+  if (!o || typeof o !== "object") throw new Error("ColumnHeaderProps must be an object");
+  if (typeof o.name !== "string") throwError("ColumnHeaderProps", "name", "string", o.name);
+  if (typeof o.minAge !== "number") throwError("ColumnHeaderProps", "minAge", "number", o.minAge);
+  if (typeof o.maxAge !== "number") throwError("ColumnHeaderProps", "maxAge", "number", o.maxAge);
+  if (typeof o.enableTitle !== "boolean") throwError("ColumnHeaderProps", "enableTitle", "boolean", o.enableTitle);
+  if (typeof o.on !== "boolean") throwError("ColumnHeaderProps", "on", "boolean", o.on);
+  if (typeof o.width !== "number") throwError("ColumnHeaderProps", "width", "number", o.width);
+  if (typeof o.popup !== "string") throwError("ColumnHeaderProps", "popup", "string", o.popup);
+  assertRGB(o.rgb);
+}
+export function assertRGB(o: any): asserts o is RGB {
+  if (!o || typeof o !== "object") throw new Error("RGB must be a non-null object");
+  if (typeof o.r !== "number") throwError("RGB", "r", "number", o.r);
+  if (o.r < 0 || o.r > 255) throwError("RGB", "r", "number between 0 and 255", o.r);
+  if (typeof o.g !== "number") throwError("RGB", "g", "number", o.rgb.g);
+  if (o.g < 0 || o.g > 255) throwError("RGB", "g", "number between 0 and 255", o.g);
+  if (typeof o.b !== "number") throwError("RGB", "b", "number", o.b);
+  if (o.b < 0 || o.b > 255) throwError("RGB", "b", "number between 0 and 255", o.b);
+}
+
+export function assertEvent(o: any): asserts o is Event {
+  if (!o || typeof o !== "object") throw new Error("Event must be a non-null object");
+  if (!Array.isArray(o.subEventInfo)) throwError("Event", "subEventInfo", "array", o.subEventInfo);
+  for (const subEvent of o.subEventInfo) {
+    assertSubEventInfo(subEvent);
+  }
+  assertColumnHeaderProps(o);
+}
+export function assertSubEventInfo(o: any): asserts o is SubEventInfo {
+  if (!o || typeof o !== "object") throw new Error("SubEventInfo must be a non-null object");
+  if (typeof o.label !== "string") throwError("SubEventInfo", "label", "string", o.label);
+  if (typeof o.age !== "number") throwError("SubEventInfo", "age", "number", o.age);
+  if (typeof o.popup !== "string") throwError("SubEventInfo", "popup", "string", o.popup);
+  if (typeof o.lineStyle !== "string" || !/^dotted|dashed|solid$/.test(o.lineStyle))
+    throwError("SubEventInfo", "lineStyle", "dotted | dashed | solid", o.lineStyle);
+}
+
 export function assertColor(o: any): asserts o is Color {
   if (!o || typeof o !== "object") throw new Error("Color must be a non-null object");
   if (typeof o.name !== "string") throwError("Color", "name", "string", o.color);
   if (typeof o.hex !== "string") throwError("Color", "hex", "string", o.hex);
-  if (typeof o.rgb !== "object") throwError("Color", "rgb", "object", o.rgb);
-  if (typeof o.rgb.r !== "number") throwError("Color", "r", "number", o.rgb.r);
-  if (o.rgb.r < 0 || o.rgb.r > 255) throwError("Color", "r", "number between 0 and 255", o.rgb.r);
-  if (typeof o.rgb.g !== "number") throwError("Color", "g", "number", o.rgb.g);
-  if (o.rgb.g < 0 || o.rgb.g > 255) throwError("Color", "g", "number between 0 and 255", o.rgb.g);
-  if (typeof o.rgb.b !== "number") throwError("Color", "b", "number", o.rgb.b);
-  if (o.rgb.b < 0 || o.rgb.b > 255) throwError("Color", "b", "number between 0 and 255", o.rgb.b);
+  assertRGB(o.rgb);
 }
 export function assertPatterns(o: any): asserts o is Patterns {
   if (!o || typeof o !== "object") throw new Error("Patterns must be a non-null object");
@@ -438,34 +669,27 @@ export function assertSubBlockInfo(o: any): asserts o is SubBlockInfo {
   if (typeof o.label !== "string") throwError("SubBlockInfo", "label", "string", o.label);
   if (typeof o.age !== "number") throwError("SubBlockInfo", "age", "number", o.number);
   if (typeof o.popup !== "string") throwError("SubBlockInfo", "popup", "string", o.popup);
-  if (typeof o.lineStyle !== "string") throwError("SubBlockInfo", "lineStyle", "string", o.lineStyle);
+  if (o.lineStyle !== "solid" && o.lineStyle !== "dotted" && o.lineStyle !== "dashed")
+    throwError("SubBlockInfo", "lineStyle", "solid, dotted or dashed", o.lineStyle);
+  assertRGB(o.rgb);
 }
 
 export function assertBlock(o: any): asserts o is Block {
   if (!o || typeof o !== "object") throw new Error("Block must be a non-null object");
-
-  if (typeof o.name !== "string") throw new Error("Block must have a name with string type");
   for (const subBlockInfo of o.subBlockInfo) {
     assertSubBlockInfo(subBlockInfo);
   }
-  if (typeof o.minAge !== "number") throw new Error("Block must have a minAge with number type");
-  if (typeof o.maxAge !== "number") throw new Error("Block must have a maxAge with number type");
-  if (typeof o.popop !== "string") throw new Error("Block must have an popup with string type");
-  if (typeof o.name !== "boolean") throw new Error("Block must have an on value with boolean type");
+  assertColumnHeaderProps(o);
 }
 
 export function assertFacies(o: any): asserts o is Facies {
   if (!o || typeof o !== "object") throw new Error("Facies must be a non-null object");
-  if (typeof o.name !== "string") throw new Error("Facies must have a name with type string");
-  if (typeof o.info !== "string") throw new Error("Facies must have an info field with type string");
-  if (typeof o.on !== "boolean") throw new Error("Facies must have an on field with type boolean");
-  if (typeof o.minAge !== "number") throw new Error("Facies must have a min age with type number");
-  if (typeof o.maxAge !== "number") throw new Error("Facies must have a max age with type number");
   if (!Array.isArray(o.faciesTimeBlockInfo))
     throw new Error("Facies must have a faciesTimeBlockInfo field with type array");
   for (const block of o.faciesTimeBlockInfo) {
     assertSubFaciesInfo(block);
   }
+  assertColumnHeaderProps(o);
 }
 export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingPack {
   if (!o || typeof o !== "object") throw new Error("DatapackParsingPack must be a non-null object");
@@ -538,11 +762,15 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
     throw new Error("ColumnInfo must be a non-null object");
   }
   if (typeof o.name !== "string") throwError("ColumnInfo", "name", "string", o.name);
+  if (typeof o.editName !== "string") throwError("ColumnInfo", "editName", "string", o.editName);
   if (typeof o.on !== "boolean") throwError("ColumnInfo", "on", "boolean", o.on);
-  if (typeof o.info !== "string") throwError("ColumnInfo", "info", "string", o.info);
+  if (typeof o.popup !== "string") throwError("ColumnInfo", "popup", "string", o.popup);
   if (o.parent !== null && typeof o.parent !== "string") throwError("ColumnInfo", "parent", "string", o.parent);
   if (typeof o.minAge !== "number") throwError("ColumnInfo", "minAge", "number", o.minAge);
   if (typeof o.maxAge !== "number") throwError("ColumnInfo", "maxAge", "number", o.maxAge);
+  if (typeof o.width !== "number") throwError("ColumnInfo", "width", "number", o.width);
+  if (typeof o.enableTitle !== "boolean") throwError("ColumnInfo", "enableTitle", "boolean", o.enableTitle);
+  assertRGB(o.rgb);
   for (const child of o.children) {
     assertColumnInfo(child);
   }
@@ -556,8 +784,50 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   if ("subFaciesInfo" in o) {
     if (!o.subFaciesInfo || !Array.isArray(o.subFaciesInfo))
       throwError("ColumnInfo", "subFaciesInfo", "array", o.subFaciesInfo);
-    for (const block of o.subFaciesInfo) {
-      assertSubFaciesInfo(block);
+    for (const facies of o.subFaciesInfo) {
+      assertSubFaciesInfo(facies);
+    }
+  }
+  if ("subEventInfo" in o) {
+    if (!o.subEventInfo || !Array.isArray(o.subEventInfo))
+      throwError("ColumnInfo", "subEventInfo", "array", o.subEventInfo);
+    for (const event of o.subEventInfo) {
+      assertSubEventInfo(event);
+    }
+  }
+  if ("subRangeInfo" in o) {
+    if (!o.subRangeInfo || !Array.isArray(o.subRangeInfo))
+      throwError("ColumnInfo", "subRangeInfo", "array", o.subRangeInfo);
+    for (const range of o.subRangeInfo) {
+      assertSubRangeInfo(range);
+    }
+  }
+  if ("subChronInfo" in o) {
+    if (!o.subChronInfo || !Array.isArray(o.subChronInfo))
+      throwError("ColumnInfo", "subChronInfo", "array", o.subChronInfo);
+    for (const chron of o.subChronInfo) {
+      assertSubChronInfo(chron);
+    }
+  }
+  if ("subPointInfo" in o) {
+    if (!o.subPointInfo || !Array.isArray(o.subPointInfo))
+      throwError("ColumnInfo", "subPointInfo", "array", o.subPointInfo);
+    for (const point of o.subPointInfo) {
+      assertSubPointInfo(point);
+    }
+  }
+  if ("subFreehandInfo" in o) {
+    if (!o.subFreehandInfo || !Array.isArray(o.subFreehandInfo))
+      throwError("ColumnInfo", "subFreehandInfo", "array", o.subFreehandInfo);
+    for (const freehand of o.subFreehandInfo) {
+      assertSubFreehandInfo(freehand);
+    }
+  }
+  if ("subSequenceInfo" in o) {
+    if (!o.subSequenceInfo || !Array.isArray(o.subSequenceInfo))
+      throwError("ColumnInfo", "subSequenceInfo", "array", o.subSequenceInfo);
+    for (const sequence of o.subSequenceInfo) {
+      assertSubSequenceInfo(sequence);
     }
   }
 }
@@ -594,6 +864,7 @@ export function assertMapInfo(o: any): asserts o is MapInfo {
     if (typeof map !== "object" || map === null) {
       throw new Error(`MapInfo' value for key '${key}' must be a non-null object`);
     }
+    if (typeof map.name !== "string") throwError("MapInfo", "name", "string", map.name);
     if (typeof map.img !== "string") {
       throw new Error(`MapInfo' value for key '${key}' must have an 'img' string property`);
     }
@@ -752,5 +1023,14 @@ export function assertSVGStatus(o: any): asserts o is SVGStatus {
  * @param value
  */
 function throwError(obj: string, variable: string, type: string, value: any) {
-  throw new Error(`Object '${obj}' must have a '${variable}' ${type} property.\nFound value: ${value}`);
+  throw new Error(`Object '${obj}' must have a '${variable}' ${type} property.\nFound value: ${value}\n`);
+}
+
+export function assertTimescale(val: any): asserts val is TimescaleItem {
+  if (!val || typeof val !== "object") {
+    throwError("Timescale", "object", "of type object", val);
+  }
+  if (typeof val.key !== "string" || typeof val.value !== "number") {
+    throwError("Timescale", "'key' of type string and 'value' of type number", "", val);
+  }
 }

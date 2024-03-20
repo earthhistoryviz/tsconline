@@ -6,18 +6,53 @@ import {
   DatapackParsingPack,
   SubBlockInfo,
   Block,
+  RGB,
   assertSubBlockInfo,
+  assertRGB,
   defaultFontsInfo,
   SubFaciesInfo,
-  assertSubFaciesInfo
+  assertSubFaciesInfo,
+  Event,
+  SubEventInfo,
+  assertSubEventInfo,
+  Range,
+  ColumnHeaderProps,
+  SubRangeInfo,
+  assertSubRangeInfo,
+  Chron,
+  SubChronInfo,
+  assertSubChronInfo,
+  Point,
+  assertSubPointInfo,
+  SubPointInfo,
+  Sequence,
+  assertSubSequenceInfo,
+  SubSequenceInfo,
+  Transect,
+  SubTransectInfo,
+  assertSubTransectInfo,
+  Freehand,
+  SubFreehandInfo,
+  assertSubFreehandInfo,
+  assertColumnHeaderProps
 } from "@tsconline/shared";
-import { trimQuotes, trimInvisibleCharacters, grabFilepaths } from "./util.js";
+import {
+  trimQuotes,
+  trimInvisibleCharacters,
+  grabFilepaths,
+  hasVisibleCharacters,
+  capitalizeFirstLetter
+} from "./util.js";
 import { createInterface } from "readline";
+const patternForColor = /^\d+\/\d+\/\d+$/;
+const patternForLineStyle = /^solid|dashed|dotted$/;
+const patternForAbundance = /^TOP|missing|rare|common|frequent|abundant|sample|flood$/;
 
-type ParsedColumnEntry = {
+export type ParsedColumnEntry = {
   children: string[];
   on: boolean;
   info: string;
+  enableTitle: boolean;
 };
 
 type FaciesFoundAndAgeRange = {
@@ -32,20 +67,28 @@ type FaciesFoundAndAgeRange = {
  * @param array the children string to parse
  * @returns the correctly parsed children string array
  */
-function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
+export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
   const parsedColumnEntry: ParsedColumnEntry = {
     children: [],
     on: true,
-    info: ""
+    info: "",
+    enableTitle: true
   };
   for (let i = 0; i < array.length; i++) {
-    if (array[i]?.includes("_METACOLUMN") || array[i]?.includes("TITLE")) {
-      if (array[i]?.includes("_METACOLUMN")) {
-        if (array[i] === "_METACOLUMN_ON") {
-          parsedColumnEntry.on = true;
-        } else {
-          parsedColumnEntry.on = false;
-        }
+    if (array[i]?.includes("METACOLUMN")) {
+      if (array[i] === "_METACOLUMN_ON") {
+        parsedColumnEntry.on = true;
+      } else {
+        parsedColumnEntry.on = false;
+      }
+      array.splice(i, 1);
+      i = i - 1;
+    }
+    if (array[i]?.includes("TITLE")) {
+      if (array[i] === "_TITLE_ON") {
+        parsedColumnEntry.enableTitle = true;
+      } else {
+        parsedColumnEntry.enableTitle = false;
       }
       array.splice(i, 1);
       i = i - 1;
@@ -58,7 +101,6 @@ function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
     }
   }
   parsedColumnEntry.children = array;
-
   return parsedColumnEntry;
 }
 
@@ -68,36 +110,80 @@ function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEntry {
  * and an amount of files in a string array that should pop up in that decrypted directory
  * Have not checked edge cases in which a file doesn't show up, will only return any that are correct.
  * Maybe add functionality in the future to check if all the files exist
- * @param decrypt_filepath the decryption folder location
+ * @param decryptFilePath the decryption folder location
  * @param files the files to be parsed
  * @returns
  */
-export async function parseDatapacks(decrypt_filepath: string, files: string[]): Promise<DatapackParsingPack> {
-  const decrypt_paths = await grabFilepaths(files, decrypt_filepath, "datapacks");
-  if (decrypt_paths.length == 0) throw new Error(`Did not find any datapacks for ${files}`);
+export async function parseDatapacks(decryptFilePath: string, files: string[]): Promise<DatapackParsingPack> {
+  const decryptPaths = await grabFilepaths(files, decryptFilePath, "datapacks");
+  if (decryptPaths.length == 0) throw new Error(`Did not find any datapacks for ${files}`);
   const columnInfoArray: ColumnInfo[] = [];
   const isChild: Set<string> = new Set();
   const allEntries: Map<string, ParsedColumnEntry> = new Map();
   const datapackAgeInfo: DatapackAgeInfo = { datapackContainsSuggAge: false };
   const faciesMap: Map<string, Facies> = new Map();
   const blocksMap: Map<string, Block> = new Map();
+  const eventMap: Map<string, Event> = new Map();
+  const rangeMap: Map<string, Range> = new Map();
+  const chronMap: Map<string, Chron> = new Map();
+  const pointMap: Map<string, Point> = new Map();
+  const sequenceMap: Map<string, Sequence> = new Map();
+  const transectMap: Map<string, Transect> = new Map();
+  const freehandMap: Map<string, Freehand> = new Map();
+  const blankMap: Map<string, ColumnHeaderProps> = new Map();
   try {
-    for (const decrypt_path of decrypt_paths) {
+    for (const decryptPath of decryptPaths) {
       //get the facies/blocks first
-      await getFaciesOrBlock(decrypt_path, faciesMap, blocksMap);
+      await getColumnTypes(
+        decryptPath,
+        faciesMap,
+        blocksMap,
+        eventMap,
+        rangeMap,
+        chronMap,
+        pointMap,
+        sequenceMap,
+        transectMap,
+        freehandMap,
+        blankMap
+      );
       // Originally the first step, gather all parents and their direct children
-      await getAllEntries(decrypt_path, allEntries, isChild, datapackAgeInfo);
+      await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
       // only iterate over parents. if we encounter one that is a child, the recursive function
       // should have already processed it.
       allEntries.forEach((children, parent) => {
         // if the parent is not a child
         if (!isChild.has(parent)) {
-          recursive("Root", parent, children, columnInfoArray, allEntries, faciesMap, blocksMap);
+          recursive(
+            "Root",
+            parent,
+            children,
+            columnInfoArray,
+            allEntries,
+            faciesMap,
+            blocksMap,
+            eventMap,
+            rangeMap,
+            chronMap,
+            pointMap,
+            sequenceMap,
+            transectMap,
+            freehandMap,
+            blankMap
+          );
         }
       });
     }
+    if (
+      columnInfoArray.length == 1 &&
+      columnInfoArray[0]!.name.length == 0 &&
+      columnInfoArray[0]!.maxAge == Number.MIN_VALUE &&
+      columnInfoArray[0]!.minAge == Number.MAX_VALUE
+    )
+      throw new Error(`No columns found for path ${decryptPaths}`);
   } catch (e) {
-    console.log("ERROR: failed to read columns for path " + decrypt_paths + ".  Error was: ", e);
+    console.log("ERROR: failed to read columns for path " + decryptPaths + ". ", e);
+    return { columnInfoArray: [], datapackAgeInfo: { datapackContainsSuggAge: false } };
   }
   return { columnInfoArray, datapackAgeInfo };
 }
@@ -110,7 +196,7 @@ export async function parseDatapacks(decrypt_filepath: string, files: string[]):
  * @param isChild the set of all children
  * @param datapackAgeInfo the datapack age info
  */
-async function getAllEntries(
+export async function getAllEntries(
   filename: string,
   allEntries: Map<string, ParsedColumnEntry>,
   isChild: Set<string>,
@@ -150,7 +236,7 @@ async function getAllEntries(
     //North Belgium -- Oostende, Brussels, Antwerp, Campine, Maastrichen
 
     const childrenstring = line.split("\t:\t")[1];
-    if (!parent || !childrenstring) continue;
+    if (!parent || !hasVisibleCharacters(parent) || !childrenstring || !hasVisibleCharacters(childrenstring)) continue;
     // childrenstring = childrenstring!.split("\t\t")[0];
     const parsedChildren = spliceArrayAtFirstSpecialMatch(childrenstring!.split("\t"));
     //if the entry is a child, add it to a set.
@@ -173,49 +259,198 @@ async function getAllEntries(
  * @param faciesMap the facies map to add to
  * @param blocksMap  the blocks map to add to
  */
-async function getFaciesOrBlock(filename: string, faciesMap: Map<string, Facies>, blocksMap: Map<string, Block>) {
+export async function getColumnTypes(
+  filename: string,
+  faciesMap: Map<string, Facies>,
+  blocksMap: Map<string, Block>,
+  eventMap: Map<string, Event>,
+  rangeMap: Map<string, Range>,
+  chronMap: Map<string, Chron>,
+  pointMap: Map<string, Point>,
+  sequenceMap: Map<string, Sequence>,
+  transectMap: Map<string, Transect>,
+  freehandMap: Map<string, Freehand>,
+  blankMap: Map<string, ColumnHeaderProps>
+) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
+  const freehand: Freehand = {
+    ...createDefaultColumnHeaderProps(),
+    subFreehandInfo: []
+  };
+  const transect: Transect = {
+    ...createDefaultColumnHeaderProps(),
+    subTransectInfo: []
+  };
+  const sequence: Sequence = {
+    ...createDefaultColumnHeaderProps(),
+    subSequenceInfo: []
+  };
+  const point: Point = {
+    ...createDefaultColumnHeaderProps(),
+    subPointInfo: []
+  };
+  const range: Range = {
+    ...createDefaultColumnHeaderProps(),
+    subRangeInfo: []
+  };
+  const event: Event = {
+    ...createDefaultColumnHeaderProps(),
+    subEventInfo: [],
+    width: 150,
+    on: false
+  };
   const facies: Facies = {
-    name: "",
-    subFaciesInfo: [],
-    minAge: 0,
-    maxAge: 0,
-    info: "",
-    on: true
+    ...createDefaultColumnHeaderProps(),
+    subFaciesInfo: []
   };
   const block: Block = {
-    name: "",
-    subBlockInfo: [],
-    minAge: 0,
-    maxAge: 0,
-    popup: "",
-    on: true
+    ...createDefaultColumnHeaderProps(),
+    subBlockInfo: []
   };
+  const chron: Chron = {
+    ...createDefaultColumnHeaderProps(),
+    subChronInfo: []
+  };
+  const blank: ColumnHeaderProps = createDefaultColumnHeaderProps();
   let inFaciesBlock = false;
   let inBlockBlock = false;
+  let inEventBlock = false;
+  let inRangeBlock = false;
+  let inChronBlock = false;
+  let inPointBlock = false;
+  let inSequenceBlock = false;
+  let inTransectBlock = false;
+  let inFreehandBlock = false;
 
   for await (const line of readline) {
-    // we reached the end
-    if ((!line || trimInvisibleCharacters(line) === "") && inFaciesBlock) {
-      inFaciesBlock = false;
-      addFaciesToFaciesMap(facies, faciesMap);
-      continue;
-    }
-    // reached the end and store the key value pairs into blocksMap
-    if ((!line || trimInvisibleCharacters(line) === "") && inBlockBlock) {
-      inBlockBlock = false;
-      addBlockToBlockMap(block, blocksMap);
-      continue;
-    }
-    const tabSeperated = line.split("\t");
-    // we found a facies block
-    if (!inFaciesBlock && tabSeperated[1] === "facies") {
-      facies.name = trimQuotes(tabSeperated[0]!);
-      facies.info = tabSeperated[6] || "";
-      if (tabSeperated[5] && (tabSeperated[5] === "off" || tabSeperated[5].length == 0)) {
-        facies.on = false;
+    if (!line || trimInvisibleCharacters(line) === "") {
+      // we reached the end and store the key value pairs in to faciesMap
+      if (inFaciesBlock) {
+        inFaciesBlock = false;
+        addFaciesToFaciesMap(facies, faciesMap);
+        continue;
       }
+      // reached the end and store the key value pairs into blocksMap
+      if (inBlockBlock) {
+        inBlockBlock = false;
+        addBlockToBlockMap(block, blocksMap);
+        continue;
+      }
+      // reached the end and store the key value pairs into eventMap
+      if (inEventBlock) {
+        inEventBlock = false;
+        addEventToEventMap(event, eventMap);
+        continue;
+      }
+      // reached the end and store the key value pairs into rangeMap
+      if (inRangeBlock) {
+        inRangeBlock = false;
+        addRangeToRangeMap(range, rangeMap);
+        continue;
+      }
+      if (inChronBlock) {
+        inChronBlock = false;
+        addChronToChronMap(chron, chronMap);
+        continue;
+      }
+      if (inPointBlock) {
+        inPointBlock = false;
+        addPointToPointMap(point, pointMap);
+        continue;
+      }
+      if (inSequenceBlock) {
+        inSequenceBlock = false;
+        addSequenceToSequenceMap(sequence, sequenceMap);
+        continue;
+      }
+      if (inTransectBlock) {
+        inTransectBlock = false;
+        addTransectToTransectMap(transect, transectMap);
+        continue;
+      }
+      if (inFreehandBlock) {
+        inFreehandBlock = false;
+        addFreehandToFreehandMap(freehand, freehandMap);
+        continue;
+      }
+    }
+
+    const tabSeparated = line.split("\t");
+    if (tabSeparated[1] === "blank") {
+      setColumnHeaders(blank, tabSeparated);
+      blankMap.set(blank.name, JSON.parse(JSON.stringify(blank)));
+      Object.assign(blank, { ...createDefaultColumnHeaderProps() });
+      continue;
+    }
+    if (
+      !inFreehandBlock &&
+      (tabSeparated[1] === "freehand" ||
+        tabSeparated[1] === "freehand-overlay" ||
+        tabSeparated[1] === "freehand-underlay")
+    ) {
+      setColumnHeaders(freehand, tabSeparated);
+      inFreehandBlock = true;
+    } else if (inFreehandBlock) {
+      const subFreehandInfo = processFreehand(line);
+      if (subFreehandInfo) {
+        freehand.subFreehandInfo.push(subFreehandInfo);
+      }
+    }
+    if (!inTransectBlock && tabSeparated[1] === "transect") {
+      setColumnHeaders(transect, tabSeparated);
+      inTransectBlock = true;
+    } else if (inTransectBlock) {
+      if (tabSeparated[0] === "POLYGON" || tabSeparated[0] === "TEXT") {
+        addTransectToTransectMap(transect, transectMap);
+        inTransectBlock = false;
+        continue;
+      }
+      const subTransectInfo = processTransect(line);
+      if (subTransectInfo) {
+        transect.subTransectInfo.push(subTransectInfo);
+      }
+    }
+    if (!inSequenceBlock && (tabSeparated[1] === "sequence" || tabSeparated[1] === "trend")) {
+      setColumnHeaders(sequence, tabSeparated);
+      inSequenceBlock = true;
+    } else if (inSequenceBlock) {
+      const subSequenceInfo = processSequence(line);
+      if (subSequenceInfo) {
+        sequence.subSequenceInfo.push(subSequenceInfo);
+      }
+    }
+    if (!inPointBlock && tabSeparated[1] === "point") {
+      setColumnHeaders(point, tabSeparated);
+      inPointBlock = true;
+    } else if (inPointBlock) {
+      const subPointInfo = processPoint(line);
+      if (subPointInfo) {
+        point.subPointInfo.push(subPointInfo);
+      }
+    }
+    if (!inRangeBlock && tabSeparated[1] === "range") {
+      setColumnHeaders(range, tabSeparated);
+      inRangeBlock = true;
+    } else if (inRangeBlock) {
+      const subRangeInfo = processRange(line);
+      if (subRangeInfo) {
+        range.subRangeInfo.push(subRangeInfo);
+      }
+    }
+    // we found an event block
+    if (!inEventBlock && tabSeparated[1] === "event") {
+      setColumnHeaders(event, tabSeparated);
+      inEventBlock = true;
+    } else if (inEventBlock) {
+      const subEventInfo = processEvent(line);
+      if (subEventInfo) {
+        event.subEventInfo.push(subEventInfo);
+      }
+    }
+    // we found a facies block
+    if (!inFaciesBlock && tabSeparated[1] === "facies") {
+      setColumnHeaders(facies, tabSeparated);
       inFaciesBlock = true;
     } else if (inFaciesBlock) {
       const subFaciesInfo = processFacies(line);
@@ -224,35 +459,199 @@ async function getFaciesOrBlock(filename: string, faciesMap: Map<string, Facies>
       }
     }
 
+    if (!inChronBlock && (tabSeparated[1] === "chron" || tabSeparated[1] === "chron-only")) {
+      setColumnHeaders(chron, tabSeparated);
+      inChronBlock = true;
+    } else if (inChronBlock) {
+      const subChronInfo = processChron(line);
+      if (subChronInfo) {
+        chron.subChronInfo.push(subChronInfo);
+      }
+    }
+
     // we found a block
-    if (!inBlockBlock && tabSeperated[1] === "block") {
-      block.name = trimQuotes(tabSeperated[0]!);
-      if (tabSeperated[5] && tabSeperated[5] === "off") {
-        block.on = false;
-      }
-      const popup = tabSeperated[tabSeperated.length - 1];
-      const pattern = /"*"/;
-
-      if (popup && pattern.test(popup)) {
-        block.popup = popup;
-      }
-
+    if (!inBlockBlock && tabSeparated[1] === "block") {
+      setColumnHeaders(block, tabSeparated);
       inBlockBlock = true;
     } else if (inBlockBlock) {
       //get a single sub block
-      const subBlockInfo = processBlock(line);
+
+      //make sure we don't pass by reference
+      const subBlockInfo = processBlock(line, {
+        r: block.rgb.r,
+        g: block.rgb.g,
+        b: block.rgb.b
+      });
+
       if (subBlockInfo) {
         block.subBlockInfo.push(subBlockInfo);
       }
     }
   }
 
+  if (inTransectBlock) {
+    addTransectToTransectMap(transect, transectMap);
+  }
   if (inFaciesBlock) {
     addFaciesToFaciesMap(facies, faciesMap);
+  }
+  if (inEventBlock) {
+    addEventToEventMap(event, eventMap);
   }
   if (inBlockBlock) {
     addBlockToBlockMap(block, blocksMap);
   }
+  if (inRangeBlock) {
+    addRangeToRangeMap(range, rangeMap);
+  }
+  if (inChronBlock) {
+    addChronToChronMap(chron, chronMap);
+  }
+  if (inPointBlock) {
+    addPointToPointMap(point, pointMap);
+  }
+  if (inSequenceBlock) {
+    addSequenceToSequenceMap(sequence, sequenceMap);
+  }
+  if (inFreehandBlock) {
+    addFreehandToFreehandMap(freehand, freehandMap);
+  }
+}
+
+/**
+ * Set a general column header and all it's properties
+ * @param column
+ * @param tabSeparated
+ */
+function setColumnHeaders(column: ColumnHeaderProps, tabSeparated: string[]) {
+  column.name = trimQuotes(tabSeparated[0]!);
+  const width = Number(tabSeparated[2]!);
+  const rgb = tabSeparated[3];
+  const enableTitle = tabSeparated[4];
+  const on = tabSeparated[5];
+  column.popup = tabSeparated[6] || "";
+  if (width) {
+    if (isNaN(width)) {
+      console.log(`Error found while processing column width, got: ${width} and will be setting width to 100`);
+    } else {
+      column.width = width;
+    }
+  }
+  if (rgb && patternForColor.test(rgb)) {
+    const rgbArray = rgb.split("/");
+    column.rgb.r = Number(rgbArray[0]!);
+    column.rgb.g = Number(rgbArray[1]!);
+    column.rgb.b = Number(rgbArray[2]!);
+  }
+  if (enableTitle && enableTitle === "notitle") {
+    column.enableTitle = false;
+  }
+  if (on === "off") {
+    column.on = false;
+  } else if (on === "on") {
+    column.on = true;
+  }
+  try {
+    assertColumnHeaderProps(column);
+  } catch (e) {
+    console.log(`Error ${e} found while processing column header, setting to default`);
+    Object.assign(column, { ...createDefaultColumnHeaderProps() });
+  }
+}
+
+/**
+ * adds a freehand object to the map. will reset the freehand object.
+ * @param transect
+ * @param transectMap
+ */
+function addFreehandToFreehandMap(freehand: Freehand, freehandMap: Map<string, Freehand>) {
+  for (const subFreehand of freehand.subFreehandInfo) {
+    freehand.minAge = Math.min(subFreehand.topAge, freehand.minAge);
+    freehand.maxAge = Math.max(subFreehand.baseAge, freehand.maxAge);
+  }
+  freehandMap.set(freehand.name, JSON.parse(JSON.stringify(freehand)));
+  Object.assign(freehand, { ...createDefaultColumnHeaderProps(), subFreehandInfo: [] });
+}
+/**
+ * adds a transect object to the map. will reset the transect object.
+ * @param transect
+ * @param transectMap
+ */
+function addTransectToTransectMap(transect: Transect, transectMap: Map<string, Transect>) {
+  for (const subTransect of transect.subTransectInfo) {
+    transect.minAge = Math.min(subTransect.age, transect.minAge);
+    transect.maxAge = Math.max(subTransect.age, transect.maxAge);
+  }
+  transectMap.set(transect.name, JSON.parse(JSON.stringify(transect)));
+  Object.assign(transect, { ...createDefaultColumnHeaderProps(), subTransectInfo: [] });
+}
+/**
+ * adds a sequence object to the map. will reset the sequence object.
+ * @param sequence
+ * @param sequenceMap
+ */
+function addSequenceToSequenceMap(sequence: Sequence, sequenceMap: Map<string, Sequence>) {
+  for (const subSequence of sequence.subSequenceInfo) {
+    sequence.minAge = Math.min(subSequence.age, sequence.minAge);
+    sequence.maxAge = Math.max(subSequence.age, sequence.maxAge);
+  }
+  sequenceMap.set(sequence.name, JSON.parse(JSON.stringify(sequence)));
+  Object.assign(sequence, { ...createDefaultColumnHeaderProps(), subSequenceInfo: [] });
+}
+
+/**
+ * adds a point object to the map. will reset the point object.
+ * @param point
+ * @param pointMap
+ */
+function addPointToPointMap(point: Point, pointMap: Map<string, Point>) {
+  for (const subPoint of point.subPointInfo) {
+    point.minAge = Math.min(subPoint.age, point.minAge);
+    point.maxAge = Math.max(subPoint.age, point.maxAge);
+  }
+  pointMap.set(point.name, JSON.parse(JSON.stringify(point)));
+  Object.assign(point, { ...createDefaultColumnHeaderProps(), subPointInfo: [] });
+}
+
+/**
+ * adds a chron object to the map. will reset the chron object.
+ * @param chron
+ * @param chronMap
+ */
+function addChronToChronMap(chron: Chron, chronMap: Map<string, Chron>) {
+  for (const subChron of chron.subChronInfo) {
+    chron.minAge = Math.min(subChron.age, chron.minAge);
+    chron.maxAge = Math.max(subChron.age, chron.maxAge);
+  }
+  chronMap.set(chron.name, JSON.parse(JSON.stringify(chron)));
+  Object.assign(chron, { ...createDefaultColumnHeaderProps(), subChronInfo: [] });
+}
+
+/**
+ * adds a range object to the range map and resets the range object
+ * @param range
+ * @param rangeMap
+ */
+function addRangeToRangeMap(range: Range, rangeMap: Map<string, Range>) {
+  for (const subRange of range.subRangeInfo) {
+    range.minAge = Math.min(subRange.age, range.minAge);
+    range.maxAge = Math.max(subRange.age, range.maxAge);
+  }
+  rangeMap.set(range.name, JSON.parse(JSON.stringify(range)));
+  Object.assign(range, { ...createDefaultColumnHeaderProps(), subRangeInfo: [] });
+}
+/**
+ * add an event object to the event map and resets event object
+ * @param event
+ * @param eventMap
+ */
+function addEventToEventMap(event: Event, eventMap: Map<string, Event>) {
+  for (const subEvent of event.subEventInfo) {
+    event.minAge = Math.min(subEvent.age, event.minAge);
+    event.maxAge = Math.max(subEvent.age, event.maxAge);
+  }
+  eventMap.set(event.name, JSON.parse(JSON.stringify(event)));
+  Object.assign(event, { ...createDefaultColumnHeaderProps({ width: 150, on: false }), subEventInfo: [] });
 }
 
 /**
@@ -266,12 +665,7 @@ function addFaciesToFaciesMap(facies: Facies, faciesMap: Map<string, Facies>) {
     facies.maxAge = Math.max(block.age, facies.maxAge);
   }
   faciesMap.set(facies.name, JSON.parse(JSON.stringify(facies)));
-  facies.name = "";
-  facies.subFaciesInfo = [];
-  facies.minAge = 0;
-  facies.maxAge = 0;
-  facies.info = "";
-  facies.on = true;
+  Object.assign(facies, { ...createDefaultColumnHeaderProps(), subFaciesInfo: [] });
 }
 
 /**
@@ -285,43 +679,303 @@ function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
     block.maxAge = Math.max(subBlock.age, block.maxAge);
   }
   blocksMap.set(block.name, JSON.parse(JSON.stringify(block)));
-  block.name = "";
-  block.subBlockInfo = [];
-  block.minAge = 0;
-  block.maxAge = 0;
-  block.popup = "";
-  block.on = true;
+  Object.assign(block, { ...createDefaultColumnHeaderProps(), subBlockInfo: [] });
 }
 
+/**
+ * processes a single freehand line
+ * @param line
+ * @returns
+ */
+export function processFreehand(line: string): SubFreehandInfo | null {
+  const subFreehandInfo = {
+    topAge: 0,
+    baseAge: 0
+  };
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length < 4 || tabSeparated.length > 5) return null;
+  if (tabSeparated[0] === "image") {
+    subFreehandInfo.topAge = Number(tabSeparated[2]!);
+    subFreehandInfo.baseAge = Number(tabSeparated[3]!);
+  } else {
+    subFreehandInfo.topAge = Number(tabSeparated[3]!);
+    subFreehandInfo.baseAge = Number(tabSeparated[4]!);
+  }
+  try {
+    assertSubFreehandInfo(subFreehandInfo);
+  } catch (e) {
+    console.log(`Error ${e} found while processing subFreehandInfo, returning null`);
+    return null;
+  }
+  return subFreehandInfo;
+}
+/**
+ * processes a single subTransectInfo line
+ * @param line
+ * @returns
+ */
+export function processTransect(line: string): SubTransectInfo | null {
+  const subTransectInfo = {
+    age: 0
+  };
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length < 2 || tabSeparated[0] || !tabSeparated[1]) return null;
+  const age = Number(tabSeparated[1]!);
+  if (isNaN(age)) throw new Error("Error processing transect line, age: " + tabSeparated[1]! + " is NaN");
+  subTransectInfo.age = age;
+  try {
+    assertSubTransectInfo(subTransectInfo);
+  } catch (e) {
+    console.log(`Error ${e} found while processing subTransectInfo, returning null`);
+    return null;
+  }
+  return subTransectInfo;
+}
+
+/**
+ * processes a single subSequenceInfo line
+ * @param line
+ * @returns
+ */
+export function processSequence(line: string): SubSequenceInfo | null {
+  let subSequenceInfo = {};
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length > 6 || tabSeparated.length < 5 || tabSeparated[0]) return null;
+  const label = tabSeparated[1];
+  const direction = tabSeparated[2]!;
+  const age = Number(tabSeparated[3]!);
+  const severity = capitalizeFirstLetter(tabSeparated[4]!);
+  const popup = tabSeparated[5];
+  if (isNaN(age) || !tabSeparated[3])
+    throw new Error("Error processing sequence line, age: " + tabSeparated[2]! + " is NaN");
+  if (label) {
+    subSequenceInfo = {
+      label,
+      direction,
+      age,
+      severity,
+      popup: popup || ""
+    };
+  } else {
+    subSequenceInfo = {
+      direction,
+      age,
+      severity,
+      popup: popup || ""
+    };
+  }
+  try {
+    assertSubSequenceInfo(subSequenceInfo);
+  } catch (e) {
+    console.log(`Error ${e} found while processing subSequenceInfo, returning null`);
+    return null;
+  }
+  return subSequenceInfo;
+}
+/**
+ * process a single subChronInfo line
+ * @param line
+ * @returns
+ */
+export function processChron(line: string): SubChronInfo | null {
+  let subChronInfo = {};
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length < 4 || tabSeparated.length > 5 || line.includes("Primary")) return null;
+  const polarity = tabSeparated[1]!;
+  const label = tabSeparated[2]!;
+  const age = Number(tabSeparated[3]!);
+  if (isNaN(age) || !tabSeparated[3])
+    throw new Error(
+      "Error processing chron line with label: " +
+        label +
+        ", and polarity: " +
+        polarity +
+        ", age: " +
+        tabSeparated[3]! +
+        " is NaN"
+    );
+  const popup = tabSeparated[4] || "";
+  if (label) {
+    subChronInfo = {
+      polarity,
+      age,
+      label,
+      popup
+    };
+  } else {
+    subChronInfo = {
+      polarity,
+      age,
+      popup
+    };
+  }
+  try {
+    assertSubChronInfo(subChronInfo);
+  } catch (e) {
+    console.log(`Error ${e} found while processing subBlockInfo, returning null`);
+    return null;
+  }
+  return subChronInfo;
+}
+/**
+ * process a single subRangeInfo line
+ * @param line
+ * @returns
+ */
+export function processRange(line: string): SubRangeInfo | null {
+  const subRangeInfo = {
+    label: "",
+    age: 0,
+    abundance: "TOP",
+    popup: ""
+  };
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length < 3 || tabSeparated.length > 5) return null;
+  const label = tabSeparated[1]!;
+  const age = Number(tabSeparated[2]!);
+  if (isNaN(age) || !tabSeparated[2])
+    throw new Error("Error processing range line, age: " + tabSeparated[2]! + " is NaN");
+  const abundance = tabSeparated[3];
+  const popup = tabSeparated[4];
+  subRangeInfo.label = label;
+  subRangeInfo.age = age;
+  if (abundance && patternForAbundance.test(abundance)) {
+    subRangeInfo.abundance = abundance;
+  }
+  if (popup) {
+    subRangeInfo.popup = popup;
+  }
+  try {
+    assertSubRangeInfo(subRangeInfo);
+  } catch (e) {
+    console.log(`Error ${e} found while processing subBlockInfo, returning null`);
+    return null;
+  }
+  return subRangeInfo;
+}
+/**
+ * process a SubEventInfo
+ * @param line
+ * @returns
+ */
+export function processEvent(line: string): SubEventInfo | null {
+  const subEventInfo = {
+    label: "",
+    age: 0,
+    popup: "",
+    lineStyle: "solid"
+  };
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length < 3 || tabSeparated.length > 5) return null;
+  const label = tabSeparated[1]!;
+  const age = Number(tabSeparated[2]!);
+  if (isNaN(age) || !tabSeparated[2])
+    throw new Error("Error processing event line, age: " + tabSeparated[2]! + " is NaN");
+  const lineStyle = tabSeparated[3];
+  const popup = tabSeparated[4];
+  subEventInfo.label = label;
+  subEventInfo.age = age;
+  if (popup) {
+    subEventInfo.popup = popup;
+  }
+  if (lineStyle && patternForLineStyle.test(lineStyle)) {
+    subEventInfo.lineStyle = lineStyle;
+  }
+  try {
+    assertSubEventInfo(subEventInfo);
+  } catch (e) {
+    console.log(`Error ${e} found while processing subBlockInfo, returning null`);
+    return null;
+  }
+  return subEventInfo;
+}
+export function processPoint(line: string): SubPointInfo | null {
+  const subPointInfo = {
+    age: 0,
+    xVal: 0,
+    popup: ""
+  };
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length < 2 || tabSeparated.length > 4 || tabSeparated[0]) return null;
+  const age = Number(tabSeparated[1]!);
+  const xVal = Number(tabSeparated[2]!);
+  const popup = tabSeparated[3];
+  if (isNaN(age) || !tabSeparated[1])
+    throw new Error("Error processing point line, age: " + tabSeparated[1]! + " is NaN");
+  subPointInfo.age = age;
+  // sometimes they don't exist, contrary to file documentation
+  if (!isNaN(xVal)) {
+    subPointInfo.xVal = xVal;
+  }
+  if (popup) {
+    subPointInfo.popup = popup;
+  }
+  try {
+    assertSubPointInfo(subPointInfo);
+  } catch (e) {
+    console.log(`Error ${e} found while processing subPointInfo, returning null`);
+    return null;
+  }
+  return subPointInfo;
+}
 /**
  * Processes a single subBlockInfo line
  * @param line the line to be processed
  * @returns A subBlock object
  */
-function processBlock(line: string): SubBlockInfo | null {
+export function processBlock(line: string, defaultColor: RGB): SubBlockInfo | null {
   const currentSubBlockInfo = {
     label: "",
     age: 0,
     popup: "",
-    lineStyle: ""
+    lineStyle: "solid",
+    rgb: defaultColor //if Block has color, set to that. If not, set to white
   };
-  const tabSeperated = line.split("\t");
-  if (tabSeperated.length < 3) return null;
-  const label = tabSeperated[1];
-  const age = Number(tabSeperated[2]!);
-  const popup = tabSeperated[4];
-  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeperated[2]! + " is NaN");
-  const lineStyle = tabSeperated[3];
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length < 3) return null;
+  const label = tabSeparated[1];
+  const age = Number(tabSeparated[2]!);
+  const popup = tabSeparated[4];
+  if (isNaN(age) || !tabSeparated[2])
+    throw new Error("Error processing block line, age: " + tabSeparated[2]! + " is NaN");
+  const lineStyle = tabSeparated[3];
+  const rgb = tabSeparated[5];
   if (label) {
     currentSubBlockInfo.label = label;
   }
   currentSubBlockInfo.age = age;
+
   if (popup) {
     currentSubBlockInfo.popup = popup;
   }
-  if (lineStyle) {
-    currentSubBlockInfo.lineStyle = lineStyle;
+
+  if (lineStyle && patternForLineStyle.test(lineStyle)) {
+    switch (lineStyle) {
+      case "dashed": {
+        currentSubBlockInfo.lineStyle = "dashed";
+        break;
+      }
+      case "dotted": {
+        currentSubBlockInfo.lineStyle = "dotted";
+        break;
+      }
+    }
   }
+  if (rgb && patternForColor.test(rgb)) {
+    const rgbSeperated = rgb.split("/");
+    currentSubBlockInfo.rgb = {
+      r: Number(rgbSeperated[0]!),
+      g: Number(rgbSeperated[1]!),
+      b: Number(rgbSeperated[2]!)
+    };
+    try {
+      assertRGB(currentSubBlockInfo.rgb);
+    } catch (e) {
+      console.log(`Error ${e} found while processing block rgb, setting rgb to white`);
+      currentSubBlockInfo.rgb = defaultColor;
+    }
+  }
+
   try {
     assertSubBlockInfo(currentSubBlockInfo);
   } catch (e) {
@@ -336,28 +990,35 @@ function processBlock(line: string): SubBlockInfo | null {
  * @param line the line to be processed
  * @returns A FaciesTimeBlock object
  */
-function processFacies(line: string): SubFaciesInfo | null {
+export function processFacies(line: string): SubFaciesInfo | null {
   let subFaciesInfo = {};
   if (line.toLowerCase().includes("primary")) {
     return null;
   }
-  const tabSeperated = line.split("\t");
-  if (tabSeperated.length < 4) return null;
-  const age = Number(tabSeperated[3]!);
-  if (isNaN(age)) throw new Error("Error processing facies line, age: " + tabSeperated[3]! + " is NaN");
+  const tabSeparated = line.split("\t");
+  if (tabSeparated.length < 4 || tabSeparated.length > 5) return null;
+  const age = Number(tabSeparated[3]!);
+  if (isNaN(age) || !tabSeparated[3])
+    throw new Error("Error processing facies line, age: " + tabSeparated[3]! + " is NaN");
   // label doesn't exist for TOP or GAP
-  if (!tabSeperated[2]) {
+  if (!tabSeparated[2]) {
     subFaciesInfo = {
-      rockType: tabSeperated[1]!,
+      rockType: tabSeparated[1]!,
       age,
-      info: tabSeperated[3]
+      info: ""
     };
   } else {
     subFaciesInfo = {
-      rockType: tabSeperated[1]!,
-      label: tabSeperated[2]!,
+      rockType: tabSeparated[1]!,
+      label: tabSeparated[2]!,
       age,
-      info: tabSeperated[3]
+      info: ""
+    };
+  }
+  if (tabSeparated[4]) {
+    subFaciesInfo = {
+      ...subFaciesInfo,
+      info: tabSeparated[4]
     };
   }
   try {
@@ -391,18 +1052,33 @@ function recursive(
   childrenArray: ColumnInfo[],
   allEntries: Map<string, ParsedColumnEntry>,
   faciesMap: Map<string, Facies>,
-  blocksMap: Map<string, Block>
+  blocksMap: Map<string, Block>,
+  eventMap: Map<string, Event>,
+  rangeMap: Map<string, Range>,
+  chronMap: Map<string, Chron>,
+  pointMap: Map<string, Point>,
+  sequenceMap: Map<string, Sequence>,
+  transectMap: Map<string, Transect>,
+  freehandMap: Map<string, Freehand>,
+  blankMap: Map<string, ColumnHeaderProps>
 ): FaciesFoundAndAgeRange {
   const currentColumnInfo: ColumnInfo = {
     name: trimInvisibleCharacters(currentColumn),
-    editName: currentColumn,
+    editName: trimInvisibleCharacters(currentColumn),
     on: true,
+    enableTitle: true,
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
-    info: "",
+    popup: "",
     children: [],
     parent: parent,
-    minAge: 0,
-    maxAge: 0
+    minAge: Number.MAX_VALUE,
+    maxAge: Number.MIN_VALUE,
+    width: 100,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    }
   };
   const returnValue: FaciesFoundAndAgeRange = {
     faciesFound: false,
@@ -412,25 +1088,94 @@ function recursive(
 
   if (parsedColumnEntry) {
     currentColumnInfo.on = parsedColumnEntry.on;
-    currentColumnInfo.info = parsedColumnEntry.info;
+    currentColumnInfo.popup = parsedColumnEntry.info;
+    currentColumnInfo.enableTitle = parsedColumnEntry.enableTitle;
+  }
+  if (transectMap.has(currentColumn)) {
+    const currentTransect = transectMap.get(currentColumn)!;
+    Object.assign(currentColumnInfo, {
+      ...currentTransect,
+      subTransectInfo: JSON.parse(JSON.stringify(currentTransect.subTransectInfo))
+    });
+    returnValue.minAge = currentColumnInfo.minAge;
+    returnValue.maxAge = currentColumnInfo.maxAge;
+  }
+  if (sequenceMap.has(currentColumn)) {
+    const currentSequence = sequenceMap.get(currentColumn)!;
+    Object.assign(currentColumnInfo, {
+      ...currentSequence,
+      subSequenceInfo: JSON.parse(JSON.stringify(currentSequence.subSequenceInfo))
+    });
+    returnValue.minAge = currentColumnInfo.minAge;
+    returnValue.maxAge = currentColumnInfo.maxAge;
   }
   if (blocksMap.has(currentColumn)) {
     const currentBlock = blocksMap.get(currentColumn)!;
-    currentColumnInfo.subBlockInfo = JSON.parse(JSON.stringify(currentBlock.subBlockInfo));
-    currentColumnInfo.on = currentBlock.on;
-    returnValue.minAge = currentBlock.minAge;
-    returnValue.maxAge = currentBlock.maxAge;
+    Object.assign(currentColumnInfo, {
+      ...currentBlock,
+      subBlockInfo: JSON.parse(JSON.stringify(currentBlock.subBlockInfo))
+    });
+    returnValue.minAge = currentColumnInfo.minAge;
+    returnValue.maxAge = currentColumnInfo.maxAge;
+  }
+  if (rangeMap.has(currentColumn)) {
+    const currentRange = rangeMap.get(currentColumn)!;
+    Object.assign(currentColumnInfo, {
+      ...currentRange,
+      subRangeInfo: JSON.parse(JSON.stringify(currentRange.subRangeInfo))
+    });
+    returnValue.minAge = currentColumnInfo.minAge;
+    returnValue.maxAge = currentColumnInfo.maxAge;
   }
   if (faciesMap.has(currentColumn)) {
     const currentFacies = faciesMap.get(currentColumn)!;
-    currentColumnInfo.subFaciesInfo = JSON.parse(JSON.stringify(currentFacies.subFaciesInfo));
-    currentColumnInfo.maxAge = Math.max(currentColumnInfo.maxAge, currentFacies.maxAge);
-    currentColumnInfo.minAge = Math.min(currentColumnInfo.minAge, currentFacies.minAge);
+    Object.assign(currentColumnInfo, {
+      ...currentFacies,
+      subFaciesInfo: JSON.parse(JSON.stringify(currentFacies.subFaciesInfo))
+    });
     returnValue.subFaciesInfo = currentFacies.subFaciesInfo;
-    currentColumnInfo.info = currentFacies.info;
-    currentColumnInfo.on = currentFacies.on;
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
+  }
+  if (eventMap.has(currentColumn)) {
+    const currentEvent = eventMap.get(currentColumn)!;
+    Object.assign(currentColumnInfo, {
+      ...currentEvent,
+      subEventInfo: JSON.parse(JSON.stringify(currentEvent.subEventInfo))
+    });
+    returnValue.maxAge = currentColumnInfo.maxAge;
+    returnValue.minAge = currentColumnInfo.minAge;
+  }
+  if (chronMap.has(currentColumn)) {
+    const currentChron = chronMap.get(currentColumn)!;
+    Object.assign(currentColumnInfo, {
+      ...currentChron,
+      subChronInfo: JSON.parse(JSON.stringify(currentChron.subChronInfo))
+    });
+    returnValue.maxAge = currentColumnInfo.maxAge;
+    returnValue.minAge = currentColumnInfo.minAge;
+  }
+  if (pointMap.has(currentColumn)) {
+    const currentPoint = pointMap.get(currentColumn)!;
+    Object.assign(currentColumnInfo, {
+      ...currentPoint,
+      subPointInfo: JSON.parse(JSON.stringify(currentPoint.subPointInfo))
+    });
+    returnValue.maxAge = currentColumnInfo.maxAge;
+    returnValue.minAge = currentColumnInfo.minAge;
+  }
+  if (freehandMap.has(currentColumn)) {
+    const currentFreehand = freehandMap.get(currentColumn)!;
+    Object.assign(currentColumnInfo, {
+      ...currentFreehand,
+      subFreehandInfo: JSON.parse(JSON.stringify(currentFreehand.subFreehandInfo))
+    });
+    returnValue.maxAge = currentColumnInfo.maxAge;
+    returnValue.minAge = currentColumnInfo.minAge;
+  }
+  if (blankMap.has(currentColumn)) {
+    const currentBlank = blankMap.get(currentColumn)!;
+    Object.assign(currentColumnInfo, currentBlank);
   }
 
   childrenArray.push(currentColumnInfo);
@@ -447,7 +1192,15 @@ function recursive(
         currentColumnInfo.children, // the array to push all the new children into
         allEntries, // the mapping of all parents to children
         faciesMap,
-        blocksMap
+        blocksMap,
+        eventMap,
+        rangeMap,
+        chronMap,
+        pointMap,
+        sequenceMap,
+        transectMap,
+        freehandMap,
+        blankMap
       );
       returnValue.minAge = Math.min(compareValue.minAge, returnValue.minAge);
       returnValue.maxAge = Math.max(compareValue.maxAge, returnValue.maxAge);
@@ -468,4 +1221,20 @@ function recursive(
     });
   }
   return returnValue;
+}
+
+export function createDefaultColumnHeaderProps(overrides: Partial<ColumnHeaderProps> = {}): ColumnHeaderProps {
+  const defaultRGB: RGB = { r: 255, g: 255, b: 255 };
+  const defaultProps: ColumnHeaderProps = {
+    name: "",
+    minAge: Number.MAX_VALUE,
+    maxAge: Number.MIN_VALUE,
+    enableTitle: true,
+    on: true,
+    width: 100,
+    popup: "",
+    rgb: defaultRGB
+  };
+
+  return { ...defaultProps, ...overrides };
 }

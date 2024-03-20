@@ -6,4 +6,5 @@ export async function initialize() {
   actions.fetchDatapackInfo();
   actions.fetchPresets();
   actions.fetchFaciesPatterns();
+  actions.fetchTimescaleDataAction();
 }

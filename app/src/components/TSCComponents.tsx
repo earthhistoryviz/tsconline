@@ -75,7 +75,7 @@ export const StyledScrollbar = styled(SimpleBar)(({ theme, color }) => {
       backgroundColor: `${Color(backgroundColor).lighten(0.15)}`
     },
     "& .simplebar-track": {
-      backgroundColor: Color(backgroundColor).darken(0.8).alpha(0.3).string()
+      backgroundColor: Color(backgroundColor).darken(0.8).alpha(0.1).string()
       // this is if we ever decide to make scrollbars "clickable"
       // cursor: "pointer",
     }
