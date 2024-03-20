@@ -533,7 +533,7 @@ export function assertChron(o: any): asserts o is Chron {
 }
 export function assertSubChronInfo(o: any): asserts o is SubChronInfo {
   if (!o || typeof o !== "object") throw new Error("SubChronInfo must be a non-null object");
-  if (typeof o.polarity !== "string" || !/^TOP|N|R|U|No Data/.test(o.polarity))
+  if (typeof o.polarity !== "string" || !/^TOP|N|R|U|No Data$/.test(o.polarity))
     throwError("SubChronInfo", "polarity", "string and TOP | N | R| U | No Data", o.polarity);
   if (o.label && typeof o.label !== "string") throwError("SubChronInfo", "label", "string", o.label);
   if (typeof o.age !== "number") throwError("SubChronInfo", "age", "number", o.age);
@@ -544,7 +544,7 @@ export function assertSubRangeInfo(o: any): asserts o is SubRangeInfo {
   if (typeof o.label !== "string") throwError("SubRangeInfo", "label", "string", o.label);
   if (typeof o.age !== "number") throwError("SubRangeInfo", "age", "number", o.age);
   if (typeof o.abundance !== "string") throwError("SubRangeInfo", "abundance", "string", o.abundance);
-  if (!/TOP|missing|rare|common|frequent|abundant|sample|flood/.test(o.abundance))
+  if (!/^TOP|missing|rare|common|frequent|abundant|sample|flood$/.test(o.abundance))
     throwError(
       "SubRangeInfo",
       "abundance",
