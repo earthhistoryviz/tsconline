@@ -3,44 +3,53 @@ import { useContext, useRef, useState } from "react";
 import { context } from "../state";
 import { Button, TextField, ToggleButton, Typography } from "@mui/material";
 import SettingsSharpIcon from "@mui/icons-material/SettingsSharp";
-import "./ColumnMenu.css";
+import Modal from "@mui/material/Modal";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import FormControl from "@mui/material/FormControl";
+import Select, {SelectChangeEvent} from "@mui/material/Select";
+import FormatBoldIcon from "@mui/icons-material/FormatBold";
+import FormatItalicIcon from "@mui/icons-material/FormatItalic";
+
+import ChangeColor from './ChangeColorMenu'
 import { FontMenu } from "./FontMenu";
 
-const EditNameField = observer(() => {
-  const { state, actions } = useContext(context);
-  const editName = useRef("");
-  const name =
-    state.settingsTabs.columnSelected === null
-      ? ""
-      : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.editName;
-  return (
-    <div>
-      <Typography style={{ padding: "5px" }}>Edit Title</Typography>
-      <div style={{ display: "flex", flexDirection: "row" }}>
-        <TextField
-          hiddenLabel
-          id="editNameTextField"
-          defaultValue={name}
-          key={name}
-          onChange={(event) => {
-            editName.current = event.target.value;
-          }}
-          variant="filled"
-          size="small"
-        />
-        <div className="edit-title-button">
-          <Button
-            color="secondary"
-            variant="contained"
-            onClick={() => {
-              actions.updateEditName(editName.current);
-            }}>
-            Confirm
-          </Button>
+const EditNameField: React.FC<{}> = observer(({}) => {
+    const {state, actions} = useContext(context);
+    let editName = useRef("");
+    const name =
+        state.settingsTabs.columnSelected === null
+            ? ""
+            : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.editName;
+    return (
+        <div>
+            <Typography style={{padding: "5px"}}>Edit Title</Typography>
+            <div style={{display: "flex", flexDirection: "row"}}>
+                <TextField
+                    hiddenLabel
+                    id="editNameTextField"
+                    defaultValue={name}
+                    key={name}
+                    onChange={(event) => {
+                        editName.current = event.target.value;
+                    }}
+                    variant="filled"
+                    size="small"
+                />
+                <div className="edit-title-button">
+                    <Button
+                        color="secondary"
+                        variant="contained"
+                        onClick={() => {
+                            actions.updateEditName(editName.current);
+                        }}
+                    >
+                        Confirm
+                    </Button>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 });
 
 export const ColumnMenu = observer(() => {
@@ -85,8 +94,12 @@ export const ColumnMenu = observer(() => {
         className="column-menu-content"
         //style={{ display: "flex", flexDirection: "column" }}
       >
-        {state.settingsTabs.columnSelected && <EditNameField />}
-        {state.settingsTabs.columnSelected && <FontMenu />}
+        {state.settingsTabs.columnSelected && <>
+                                                        <ChangeColor/>
+                                                        <FontMenu/>
+                                                        <EditNameField/>
+                                                      </>
+                }
       </div>
     </div>
   );
