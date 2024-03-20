@@ -38,7 +38,10 @@ import {
   processFacies,
   processBlock,
   spliceArrayAtFirstSpecialMatch,
-  processRange
+  processRange,
+  processChron,
+  processPoint,
+  processSequence
 } from "../src/parse-datapacks";
 import { readFileSync } from "fs";
 import {
@@ -208,6 +211,73 @@ describe("process range line tests", () => {
   it("should throw error on NaN age", () => {
     const line = "\tlabel\tbadNumber";
     expect(() => processRange(line)).toThrow();
+  });
+});
+
+describe("process chron line tests", () => {
+  test.each([
+    ["\tTOP\t\t0", { polarity: "TOP", age: 0, popup: "" }],
+    ["\tR\tlabel\t100\tpopup", { polarity: "R", label: "label", age: 100, popup: "popup" }],
+    ["\tR\tlabel\t100", { polarity: "R", label: "label", age: 100, popup: "" }],
+    ["\tR\tlabel", null],
+    ["\tR\tlabel\tage\tpopup\t", null],
+    ["", null]
+  ])("should process '%s'", (line, expected) => {
+    if (expected === null) {
+      expect(processChron(line)).toBeNull();
+    } else {
+      expect(processChron(line)).toEqual(expected);
+    }
+  });
+
+  it("should throw error on NaN age", () => {
+    const line = "\t\t\tbadNumber";
+    expect(() => processChron(line)).toThrow();
+  });
+});
+
+describe("process point line tests", () => {
+  test.each([
+    ["\t10\t10\tpopup", { age: 10, xVal: 10, popup: "popup" }],
+    ["\t10\t10\t", { age: 10, xVal: 10, popup: "" }],
+    ["\t10\t10", { age: 10, xVal: 10, popup: "" }],
+    ["\t10\tbadNumber\tpopup", { age: 10, xVal: 0, popup: "popup" }],
+    ["\t10\tbadNumer", { age: 10, xVal: 0, popup: "" }],
+    ["", null]
+  ])("should process '%s'", (line, expected) => {
+    if (expected === null) {
+      expect(processPoint(line)).toBeNull();
+    } else {
+      expect(processPoint(line)).toEqual(expected);
+    }
+  });
+
+  it("should throw error on NaN age", () => {
+    const line = "\tbadNumber";
+    expect(() => processPoint(line)).toThrow();
+  });
+});
+
+describe("process sequence line tests", () => {
+  test.each([
+    [
+      "\tlabel\tN\t60\tseverity\tpopup",
+      { label: "label", direction: "N", age: 60, severity: "severity", popup: "popup" }
+    ],
+    ["\tlabel\tN\t60\tseverity", { label: "label", direction: "N", age: 60, severity: "severity", popup: "" }],
+    ["\tlabel\tN\t60", null],
+    ["\tlabel\tN\tage\tseverity\tpopup\t", null],
+    ["", null]
+  ])("should process '%s'", (line, expected) => {
+    if (expected === null) {
+      expect(processSequence(line)).toBeNull();
+    } else {
+      expect(processSequence(line)).toEqual(expected);
+    }
+  });
+  it("should throw error on NaN age", () => {
+    const line = "\tlabel\tN\tbadNumber\t";
+    expect(() => processSequence(line)).toThrow();
   });
 });
 
