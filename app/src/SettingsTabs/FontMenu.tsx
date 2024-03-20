@@ -24,6 +24,8 @@ import FormatItalicIcon from "@mui/icons-material/FormatItalic";
 import { MuiColorInput } from "mui-color-input";
 import CloseIcon from "@mui/icons-material/Close";
 import "./FontMenu.css";
+import "../components/TSCColorPicker"
+import TSCColorPicker from "../components/TSCColorPicker";
 
 const FontMenuRow: React.FC<{
   target:
