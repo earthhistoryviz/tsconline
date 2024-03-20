@@ -10,6 +10,7 @@ jest.mock("@tsconline/shared", () => ({
   assertSubTransectInfo: jest.fn().mockImplementation(() => true),
   assertSubFreehandInfo: jest.fn().mockImplementation(() => true),
   assertSubChronInfo: jest.fn().mockImplementation(() => true),
+  assertColumnHeaderProps: jest.fn().mockImplementation(() => true),
   assertSubPointInfo: jest.fn().mockImplementation(() => true),
   assertSubSequenceInfo: jest.fn().mockImplementation(() => true),
   assertSubFaciesInfo: jest.fn().mockImplementation(() => true),
@@ -54,7 +55,8 @@ import {
   Point,
   Sequence,
   Transect,
-  Freehand
+  Freehand,
+  ColumnHeaderProps
 } from "@tsconline/shared";
 const key = JSON.parse(readFileSync("server/__tests__/__data__/column-keys.json").toString());
 
@@ -291,6 +293,7 @@ describe("getColumnTypes tests", () => {
     transectMap: Map<string, Transect>,
     sequenceMap: Map<string, Sequence>,
     freehandMap: Map<string, Freehand>,
+    blankMap: Map<string, ColumnHeaderProps>,
     expectedFaciesMap: Map<string, Facies>,
     expectedBlockMap: Map<string, Block>,
     expectedEventMap: Map<string, Event>,
@@ -299,7 +302,8 @@ describe("getColumnTypes tests", () => {
     expectedPointMap: Map<string, Point>,
     expectedSequenceMap: Map<string, Sequence>,
     expectedTransectMap: Map<string, Transect>,
-    expectedFreehandMap: Map<string, Freehand>;
+    expectedFreehandMap: Map<string, Freehand>,
+    expectedBlankMap: Map<string, ColumnHeaderProps>;
   beforeEach(() => {
     faciesMap = new Map<string, Facies>();
     blockMap = new Map<string, Block>();
@@ -310,6 +314,7 @@ describe("getColumnTypes tests", () => {
     transectMap = new Map<string, Transect>();
     sequenceMap = new Map<string, Sequence>();
     freehandMap = new Map<string, Freehand>();
+    blankMap = new Map<string, ColumnHeaderProps>();
     expectedFaciesMap = new Map<string, Facies>();
     expectedBlockMap = new Map<string, Block>();
     expectedEventMap = new Map<string, Event>();
@@ -319,6 +324,7 @@ describe("getColumnTypes tests", () => {
     expectedSequenceMap = new Map<string, Sequence>();
     expectedTransectMap = new Map<string, Transect>();
     expectedFreehandMap = new Map<string, Freehand>();
+    expectedBlankMap = new Map<string, ColumnHeaderProps>();
   });
 
   /**
@@ -336,7 +342,8 @@ describe("getColumnTypes tests", () => {
       pointMap,
       sequenceMap,
       transectMap,
-      freehandMap
+      freehandMap,
+      blankMap
     );
     expectedFaciesMap.set(
       key["column-types-all-column-types-key"]["Facies 1"].name,
@@ -374,6 +381,10 @@ describe("getColumnTypes tests", () => {
       key["column-types-all-column-types-key"]["Freehand 1"].name,
       key["column-types-all-column-types-key"]["Freehand 1"]
     );
+    expectedBlankMap.set(
+      key["column-types-all-column-types-key"]["Blank 1"].name,
+      key["column-types-all-column-types-key"]["Blank 1"]
+    );
     expectMapsToBeEqual();
   });
 
@@ -392,7 +403,8 @@ describe("getColumnTypes tests", () => {
       pointMap,
       sequenceMap,
       transectMap,
-      freehandMap
+      freehandMap,
+      blankMap
     );
     for (const val in key["column-types-facies-key"]) {
       expectedFaciesMap.set(val, key["column-types-facies-key"][val]);
@@ -415,7 +427,8 @@ describe("getColumnTypes tests", () => {
       pointMap,
       sequenceMap,
       transectMap,
-      freehandMap
+      freehandMap,
+      blankMap
     );
     for (const val in key["column-types-block-key"]) {
       expectedBlockMap.set(val, key["column-types-block-key"][val]);
@@ -438,7 +451,8 @@ describe("getColumnTypes tests", () => {
       pointMap,
       sequenceMap,
       transectMap,
-      freehandMap
+      freehandMap,
+      blankMap
     );
     for (const val in key["column-types-event-key"]) {
       expectedEventMap.set(val, key["column-types-event-key"][val]);
@@ -458,7 +472,8 @@ describe("getColumnTypes tests", () => {
       pointMap,
       sequenceMap,
       transectMap,
-      freehandMap
+      freehandMap,
+      blankMap
     );
     for (const val in key["column-types-range-key"]) {
       expectedRangeMap.set(val, key["column-types-range-key"][val]);
@@ -478,7 +493,8 @@ describe("getColumnTypes tests", () => {
       pointMap,
       sequenceMap,
       transectMap,
-      freehandMap
+      freehandMap,
+      blankMap
     );
     for (const val in key["column-types-chron-key"]) {
       expectedChronMap.set(val, key["column-types-chron-key"][val]);
@@ -498,7 +514,8 @@ describe("getColumnTypes tests", () => {
       pointMap,
       sequenceMap,
       transectMap,
-      freehandMap
+      freehandMap,
+      blankMap
     );
     for (const val in key["column-types-point-key"]) {
       expectedPointMap.set(val, key["column-types-point-key"][val]);
@@ -518,7 +535,8 @@ describe("getColumnTypes tests", () => {
       pointMap,
       sequenceMap,
       transectMap,
-      freehandMap
+      freehandMap,
+      blankMap
     );
     for (const val in key["column-types-sequence-key"]) {
       expectedSequenceMap.set(val, key["column-types-sequence-key"][val]);
@@ -538,7 +556,8 @@ describe("getColumnTypes tests", () => {
       pointMap,
       sequenceMap,
       transectMap,
-      freehandMap
+      freehandMap,
+      blankMap
     );
     for (const val in key["column-types-transect-key"]) {
       expectedTransectMap.set(val, key["column-types-transect-key"][val]);
@@ -558,7 +577,8 @@ describe("getColumnTypes tests", () => {
       pointMap,
       sequenceMap,
       transectMap,
-      freehandMap
+      freehandMap,
+      blankMap
     );
     for (const val in key["column-types-freehand-key"]) {
       expectedFreehandMap.set(val, key["column-types-freehand-key"][val]);
@@ -581,7 +601,8 @@ describe("getColumnTypes tests", () => {
       pointMap,
       sequenceMap,
       transectMap,
-      freehandMap
+      freehandMap,
+      blankMap
     );
     expectMapsToBeEqual();
   });
@@ -593,6 +614,7 @@ describe("getColumnTypes tests", () => {
     expect(rangeMap).toEqual(expectedRangeMap);
     expect(chronMap).toEqual(expectedChronMap);
     expect(pointMap).toEqual(expectedPointMap);
+    expect(blankMap).toEqual(expectedBlankMap);
     expect(sequenceMap).toEqual(expectedSequenceMap);
     expect(transectMap).toEqual(expectedTransectMap);
     expect(freehandMap).toEqual(expectedFreehandMap);

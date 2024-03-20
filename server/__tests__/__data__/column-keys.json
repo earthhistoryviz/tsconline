@@ -428,6 +428,26 @@
                     "baseAge": 1.3
                   }
                 ]
+            },
+            {
+                "name": "Blank",
+                "minAge": 1.7976931348623157e+308,
+                "maxAge": 5e-324,
+                "enableTitle": false,
+                "on": false,
+                "width": 800,
+                "popup": "Blank Popup",
+                "rgb": {
+                "r": 7,
+                "g": 3,
+                "b": 4
+                },
+                "fontsInfo": {
+                    "font": "Arial"
+                },
+                "children": [],
+                "editName": "Blank",
+                "parent": "Parent 1"
             }
             ],
             "parent": "Root",
@@ -869,6 +889,19 @@
                 "baseAge": 1.3
                 }
             ]
+        }, "Blank 1": {
+            "name": "Blank",
+            "minAge": 1.7976931348623157e+308,
+            "maxAge": 5e-324,
+            "enableTitle": false,
+            "on": false,
+            "width": 800,
+            "popup": "Blank Popup",
+            "rgb": {
+              "r": 7,
+              "g": 3,
+              "b": 4
+            }
         }
     },
     "column-types-event-key": {
