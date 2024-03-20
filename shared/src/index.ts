@@ -60,6 +60,7 @@ export type DatapackParsingPack = {
   date?: string;
   verticalScale?: number;
   uuid?: string;
+  isPublic: boolean;
   description: string;
   title: string;
   file: string;

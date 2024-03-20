@@ -166,7 +166,8 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
 export async function parseDatapacks(
   datapackInfo: DatapackMetadata,
   decryptFilePath: string,
-  uuid?: string
+  uuid?: string,
+  isPublic: boolean = false
 ): Promise<DatapackParsingPack | null> {
   const decryptPaths = await grabFilepaths([datapackInfo.file], decryptFilePath, "datapacks");
   if (decryptPaths.length == 0)
@@ -301,6 +302,7 @@ export async function parseDatapacks(
     defaultChronostrat,
     formatVersion,
     columnTypeCount: columnTypeCounter,
+    isPublic,
     image: "",
     datapackImageCount:
       (await countFiles(join(decryptFilePath, parse(datapackInfo.file).name, "datapack-images"))) +
