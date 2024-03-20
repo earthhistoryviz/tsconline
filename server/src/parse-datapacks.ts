@@ -36,7 +36,13 @@ import {
   assertSubFreehandInfo,
   assertColumnHeaderProps
 } from "@tsconline/shared";
-import { trimQuotes, trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter } from "./util.js";
+import {
+  trimQuotes,
+  trimInvisibleCharacters,
+  grabFilepaths,
+  hasVisibleCharacters,
+  capitalizeFirstLetter
+} from "./util.js";
 import { createInterface } from "readline";
 const patternForColor = /^\d+\/\d+\/\d+$/;
 const patternForLineStyle = /^solid|dashed|dotted$/;
@@ -779,7 +785,15 @@ export function processChron(line: string): SubChronInfo | null {
   const label = tabSeparated[2]!;
   const age = Number(tabSeparated[3]!);
   if (isNaN(age) || !tabSeparated[3])
-    throw new Error("Error processing chron line with label: " + label + ", and polarity: " + polarity + ", age: " + tabSeparated[3]! + " is NaN");
+    throw new Error(
+      "Error processing chron line with label: " +
+        label +
+        ", and polarity: " +
+        polarity +
+        ", age: " +
+        tabSeparated[3]! +
+        " is NaN"
+    );
   const popup = tabSeparated[4] || "";
   if (label) {
     subChronInfo = {
