@@ -864,7 +864,7 @@ export function processPoint(line: string): SubPointInfo | null {
     popup: ""
   };
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length > 4 || tabSeparated[0]) return null;
+  if (tabSeparated.length < 2 || tabSeparated.length > 4 || tabSeparated[0]) return null;
   const age = Number(tabSeparated[1]!);
   const xVal = Number(tabSeparated[2]!);
   const popup = tabSeparated[3];
