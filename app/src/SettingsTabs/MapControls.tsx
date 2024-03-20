@@ -112,7 +112,10 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
   return (
     <ColoredDiv className="header-bar" style={headerStyle}>
       <div className="header-title-container">
-        <IconButton className="move-maps-button" onClick={actions.goBackInMapHistory}>
+        <IconButton
+          className="move-maps-button"
+          onClick={actions.goBackInMapHistory}
+          size="large">
           <BorderedIcon component={ArrowBackIcon} className="icon-button" />
         </IconButton>
         <div className="header-title">
@@ -121,7 +124,10 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
             Map Viewer
           </TypographyText>
         </div>
-        <IconButton className="move-maps-button" onClick={() => actions.closeMapViewer()}>
+        <IconButton
+          className="move-maps-button"
+          onClick={() => actions.closeMapViewer()}
+          size="large">
           <BorderedIcon component={CloseIcon} className="icon-button" />
         </IconButton>
       </div>
