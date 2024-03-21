@@ -235,9 +235,6 @@ export const setDatapackConfig = action(
     state.config.datapacks = datapacks;
     state.config.settingsPath = settingsPath;
     initializeColumnHashMap(columnInfo);
-    await fetcher(`/mapimages/${datapacks.join(":")}`, {
-      method: "POST"
-    });
     // Grab the settings for this chart if there are any:
     if (settingsPath && settingsPath.length > 0) {
       const res = await fetcher(`/settingsXml/${encodeURIComponent(settingsPath)}`, {
