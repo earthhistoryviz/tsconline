@@ -6,6 +6,9 @@ import {
   assertMapPack,
   assertPatterns
 } from "@tsconline/shared";
+import pmap from "p-map";
+import fs from "fs/promises";
+import fsSync from "fs";
 import { assetconfigs } from "./index.js";
 import { parseDatapacks } from "./parse-datapacks.js";
 import { parseMapPacks } from "./parse-map-packs.js";
@@ -15,7 +18,7 @@ import { readFile } from "fs/promises";
 import nearestColor from "nearest-color";
 import path from "path";
 import { assertColors } from "./types.js";
-import { rgbToHex } from "./util.js";
+import { deleteDirectory, grabFilepaths, rgbToHex } from "./util.js";
 
 /**
  * Loads all the indexes for the active datapacks and mapPacks (if they exist)
@@ -45,6 +48,7 @@ export async function loadIndexes(datapackIndex: DatapackIndex, mapPackIndex: Ma
         console.log(`Cannot create a mapPack with datapack ${datapack} and error: ${e}`);
       });
   }
+  grabMapImages();
 }
 /**
  * Loads all the facies patterns from the patterns directory
@@ -94,4 +98,38 @@ export async function loadFaciesPatterns() {
     console.error(e);
     return {};
   }
+}
+
+/**
+ * Finds all map images and puts them in the public directory
+ * For access from fastify server servicing
+ */
+async function grabMapImages() {
+  const imagePaths = await grabFilepaths(assetconfigs.activeDatapacks, assetconfigs.decryptionDirectory, "MapImages");
+  const compiledImages: string[] = [];
+  try {
+    // recursive: true ensures if it already exists, we continue with no error
+    await fs.mkdir(assetconfigs.imagesDirectory, { recursive: true });
+    await pmap(
+      imagePaths,
+      async (image_path) => {
+        const fileName = path.basename(image_path);
+        const destPath = path.join(assetconfigs.imagesDirectory, fileName);
+        if (fsSync.existsSync(destPath)) {
+          console.log(fileName + " already exists")
+          return;
+        }
+        try {
+          await fs.copyFile(image_path, destPath);
+          compiledImages.push(`/${destPath}`);
+        } catch (e) {
+          console.log("Error copying image file, file could already exist. Resulting Error: ", e);
+        }
+      },
+      { concurrency: 5 }
+    ); // Adjust concurrency as needed
+  } catch (e) {
+    console.log("Error processing image paths for datapacks: ", assetconfigs.activeDatapacks, " \n", "With error: ", e);
+  }
+  return compiledImages;
 }
