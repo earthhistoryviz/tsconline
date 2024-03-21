@@ -128,7 +128,7 @@ export const About = observer(function About() {
     <div
       className="whole_page"
       style={{
-        background: theme.palette.gradient.main
+        background: theme.gradients.primary
       }}>
       <TSCOnlineHeader />
       <div
