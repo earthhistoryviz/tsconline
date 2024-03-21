@@ -18,7 +18,7 @@ import { readFile } from "fs/promises";
 import nearestColor from "nearest-color";
 import path from "path";
 import { assertColors } from "./types.js";
-import { deleteDirectory, grabFilepaths, rgbToHex } from "./util.js";
+import { grabFilepaths, rgbToHex } from "./util.js";
 
 /**
  * Loads all the indexes for the active datapacks and mapPacks (if they exist)
@@ -116,7 +116,7 @@ async function grabMapImages() {
         const fileName = path.basename(image_path);
         const destPath = path.join(assetconfigs.imagesDirectory, fileName);
         if (fsSync.existsSync(destPath)) {
-          console.log(fileName + " already exists")
+          console.log(fileName + " already exists");
           return;
         }
         try {
