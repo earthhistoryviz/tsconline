@@ -233,10 +233,7 @@ const Controls = ({
       <IconButton className="icon-view-button" onClick={() => zoomOut()} size="large">
         <BorderedIcon component={ZoomOutIcon} className="icon-button" />
       </IconButton>
-      <IconButton
-        className="icon-view-button"
-        onClick={() => resetTransform()}
-        size="large">
+      <IconButton className="icon-view-button" onClick={() => resetTransform()} size="large">
         <BorderedIcon component={YoutubeSearchedForIcon} className="icon-button" />
       </IconButton>
     </div>

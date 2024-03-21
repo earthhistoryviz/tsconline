@@ -92,43 +92,45 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
       adjustY = iconSize / 2 / scale;
     }
 
-    return <>
-      <MapPointTooltip
-        container={container}
-        title={
-          <>
-            <h3 className="header">{`${name}`}</h3>
-            <ul>
-              <li>Latitude: {mapPoint.lat}</li>
-              <li>Longitude: {mapPoint.lon}</li>
-              {/* <li>Default: {mapPoint.default || '--'}</li>
+    return (
+      <>
+        <MapPointTooltip
+          container={container}
+          title={
+            <>
+              <h3 className="header">{`${name}`}</h3>
+              <ul>
+                <li>Latitude: {mapPoint.lat}</li>
+                <li>Longitude: {mapPoint.lon}</li>
+                {/* <li>Default: {mapPoint.default || '--'}</li>
             <li>Minimum Age: {mapPoint.minage || '--'}</li>
             <li>Maximum Age: {mapPoint.maxage || '--'}</li> */}
-              <li>Note: {mapPoint.note || "--"}</li>
-            </ul>
-          </>
-        }>
-        <IconButton
-          className="map-point"
-          disableRipple={isInfo || state.mapState.isFacies}
-          style={{
-            left: `calc(${x}% - ${iconSize / 2 / scale}px)`,
-            // we take a the full icon_size here to anchor to the
-            // bottom of the icon
-            color: color,
-            top: `calc(${y}% - ${adjustY}px)`,
-            width: `${iconSize / scale}px`,
-            height: `${iconSize / scale}px`
-          }}
-          onClick={() => {
-            if (state.mapState.isFacies || disabled || isInfo) return;
-            actions.toggleSettingsTabColumn(name);
-          }}
-          size="large">
-          {getIcon(disabled, isInfo, iconSize, scale, column)}
-        </IconButton>
-      </MapPointTooltip>
-    </>;
+                <li>Note: {mapPoint.note || "--"}</li>
+              </ul>
+            </>
+          }>
+          <IconButton
+            className="map-point"
+            disableRipple={isInfo || state.mapState.isFacies}
+            style={{
+              left: `calc(${x}% - ${iconSize / 2 / scale}px)`,
+              // we take a the full icon_size here to anchor to the
+              // bottom of the icon
+              color: color,
+              top: `calc(${y}% - ${adjustY}px)`,
+              width: `${iconSize / scale}px`,
+              height: `${iconSize / scale}px`
+            }}
+            onClick={() => {
+              if (state.mapState.isFacies || disabled || isInfo) return;
+              actions.toggleSettingsTabColumn(name);
+            }}
+            size="large">
+            {getIcon(disabled, isInfo, iconSize, scale, column)}
+          </IconButton>
+        </MapPointTooltip>
+      </>
+    );
   }
 );
 
