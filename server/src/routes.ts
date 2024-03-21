@@ -4,7 +4,6 @@ import { writeFile, stat, readFile } from "fs/promises";
 import { TimescaleItem, assertChartRequest } from "@tsconline/shared";
 import { deleteDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
-import { grabMapImages } from "./parse-map-packs.js";
 import md5 from "md5";
 import { assetconfigs } from "./index.js";
 import svgson from "svgson";
@@ -24,24 +23,6 @@ export const fetchSettingsXml = async function fetchSettingsJson(
   } catch (e) {
     reply.send({ error: e });
   }
-};
-
-// Handles getting the columns for the files specified in the url
-// Currently Returns ColumnSettings and Stages if they exist
-// TODO: ADD ASSERTS
-export const refreshMapImages = async function refreshMapImages(
-  request: FastifyRequest<{ Params: { files: string } }>,
-  reply: FastifyReply
-) {
-  deleteDirectory(assetconfigs.imagesDirectory);
-  const { files } = request.params;
-  if (!files) {
-    reply.send("Error: no files requested");
-    return;
-  }
-  console.log("Getting map images for files: ", files);
-  const filesSplit = files.split(":");
-  await grabMapImages(filesSplit, assetconfigs.imagesDirectory);
 };
 
 /**
