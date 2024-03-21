@@ -223,16 +223,17 @@ const Controls = ({
           } else {
             mapViewer.requestFullscreen();
           }
-        }}>
+        }}
+        size="large">
         <BorderedIcon component={FullscreenIcon} className="icon-button" />
       </IconButton>
-      <IconButton className="icon-view-button" onClick={() => zoomIn()}>
+      <IconButton className="icon-view-button" onClick={() => zoomIn()} size="large">
         <BorderedIcon component={ZoomInIcon} className="icon-button" />
       </IconButton>
-      <IconButton className="icon-view-button" onClick={() => zoomOut()}>
+      <IconButton className="icon-view-button" onClick={() => zoomOut()} size="large">
         <BorderedIcon component={ZoomOutIcon} className="icon-button" />
       </IconButton>
-      <IconButton className="icon-view-button" onClick={() => resetTransform()}>
+      <IconButton className="icon-view-button" onClick={() => resetTransform()} size="large">
         <BorderedIcon component={YoutubeSearchedForIcon} className="icon-button" />
       </IconButton>
     </div>

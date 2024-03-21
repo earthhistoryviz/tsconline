@@ -55,7 +55,7 @@ export const TSCInputAdornment = styled("div")(
 `
 );
 export const GradientDiv = styled("div")(({ theme }) => ({
-  backgroundColor: theme.palette.gradient.main
+  backgroundColor: theme.gradients.main
 }));
 export const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",

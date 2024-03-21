@@ -110,7 +110,8 @@ export const Legend = observer(() => {
         style={{ top: `calc(${LegendHeaderHeight} + 1vh)` }}
         onClick={() => {
           scrollRef.current?.contentWrapperEl?.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-        }}>
+        }}
+        size="large">
         <Lottie key="legend-arrow-up" width="inherit" height="inherit" animationData={ArrowUpIcon} playOnClick />
       </IconButton>
       <StyledScrollbar
@@ -189,7 +190,7 @@ const FilterMenu: React.FC<FilterMenuProps> = observer(
     const { state } = useContext(context);
     return (
       <>
-        <IconButton ref={menuRef} className="filter-button" {...anchorProps}>
+        <IconButton ref={menuRef} className="filter-button" {...anchorProps} size="large">
           <FilterListIcon color="primary" />
         </IconButton>
         <ControlledMenu

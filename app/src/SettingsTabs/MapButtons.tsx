@@ -103,8 +103,8 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
                 <li>Latitude: {mapPoint.lat}</li>
                 <li>Longitude: {mapPoint.lon}</li>
                 {/* <li>Default: {mapPoint.default || '--'}</li>
-              <li>Minimum Age: {mapPoint.minage || '--'}</li>
-              <li>Maximum Age: {mapPoint.maxage || '--'}</li> */}
+            <li>Minimum Age: {mapPoint.minage || '--'}</li>
+            <li>Maximum Age: {mapPoint.maxage || '--'}</li> */}
                 <li>Note: {mapPoint.note || "--"}</li>
               </ul>
             </>
@@ -124,7 +124,8 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
             onClick={() => {
               if (state.mapState.isFacies || disabled || isInfo) return;
               actions.toggleSettingsTabColumn(name);
-            }}>
+            }}
+            size="large">
             {getIcon(disabled, isInfo, iconSize, scale, column)}
           </IconButton>
         </MapPointTooltip>
