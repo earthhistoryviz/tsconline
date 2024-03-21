@@ -7,7 +7,7 @@ import { Settings } from "./Settings";
 import { Chart } from "./Chart";
 import { Datapack } from "./Datapack";
 import { Help } from "./Help";
-import { ThemeProvider, Theme, StyledEngineProvider } from "@mui/material/styles";
+import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
 import theme from "./theme";
 import { Alert, Slide, Snackbar, Typography } from "@mui/material";
 import { useContext } from "react";
