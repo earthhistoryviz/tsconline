@@ -77,7 +77,8 @@ for (const datapack in datapackIndex) {
     // Check if datapackDescription has the corresponding datapack
     if (datapackDescription.hasOwnProperty(datapack)) {
       // Access description property directly without worrying about undefined
-      datapackIndex[datapack].description = datapackDescription[datapack];
+      //datapackIndex[datapack].description = datapackDescription[datapack];
+      console.log('Description will be set here');
     } else {
       console.log(`No description found for datapack: ${datapack}`);
     }
