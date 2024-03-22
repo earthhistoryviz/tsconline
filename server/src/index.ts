@@ -72,11 +72,10 @@ try{
   process.exit(1);
 }
 
+//TODO: set descriptions for datapacks TSC-131 
 for (const datapack in datapackIndex) {
   if (datapackIndex.hasOwnProperty(datapack)) {
-    // Check if datapackDescription has the corresponding datapack
     if (datapackDescription.hasOwnProperty(datapack)) {
-      // Access description property directly without worrying about undefined
       //datapackIndex[datapack].description = datapackDescription[datapack];
       console.log('Description will be set here');
     } else {

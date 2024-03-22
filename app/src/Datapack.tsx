@@ -15,23 +15,23 @@ export const Datapack = observer(function Datapack() {
   const theme = useTheme();
   const { actions } = useContext(context);
   const [selectedDatapacks, setSelectedDatapacks] = useState<string[]>(() => {
-    // Retrieve selected datapacks from local storage on component mount
     const storedSelectedDatapacks = localStorage.getItem("selectedDatapacks");
     return storedSelectedDatapacks ? JSON.parse(storedSelectedDatapacks) : [];
   });
   const datapackIndex = state.datapackIndex;
 
   useEffect(() => {localStorage.setItem("selectedDatapacks", JSON.stringify(selectedDatapacks));
-  }, [selectedDatapacks]);
+  actions.setDatapackConfig(selectedDatapacks, state.config.settingsPath);
+  }, [selectedDatapacks, actions, state.config.settingsPath]);
 
   const handleCheckboxChange = (name: string) => {
-    setSelectedDatapacks(selectedDatapacks);
-    if (selectedDatapacks.includes(name)) {
-      setSelectedDatapacks(selectedDatapacks.filter(selectedName => selectedName !== name));
-    } else {
-      setSelectedDatapacks([...selectedDatapacks, name]);
-    }
-    actions.setDatapackConfig(selectedDatapacks, state.config.settingsPath);
+    setSelectedDatapacks(prevSelectedDatapacks => {
+      if (prevSelectedDatapacks.includes(name)) {
+        return prevSelectedDatapacks.filter(selectedName => selectedName !== name);
+      } else {
+        return [...prevSelectedDatapacks, name];
+      }
+    });
   };
 
   return (
