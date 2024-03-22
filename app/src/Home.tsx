@@ -43,7 +43,7 @@ export const Home = observer(function Home() {
     <div
       className="whole_page"
       style={{
-        background: theme.palette.gradient.main
+        background: theme.gradients.main
       }}>
       <TSCOnlineHeader />
       {Object.entries(state.presets).map(([type, configArray]) => {

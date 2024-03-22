@@ -42,6 +42,16 @@ declare module "@mui/material/styles" {
     errorAlert?: PaletteOptions["primary"];
     errorText?: PaletteOptions["primary"];
   }
+  interface Theme {
+    gradients: {
+      [key: string]: string;
+    };
+  }
+  interface ThemeOptions {
+    gradients?: {
+      [key: string]: string;
+    };
+  }
 }
 
 let theme = createTheme({
@@ -139,11 +149,6 @@ theme = createTheme(theme, {
       main: theme.palette.navbar.main,
       dark: `${Color(theme.palette.navbar.main).darken(0.3)}`
     },
-    gradient: {
-      main: `linear-gradient(to top, 
-              ${Color(theme.palette.altbackground.main).lighten(0.3)}, 
-            ${Color(theme.palette.altbackground.light).rotate(24).lighten(0.3)})`
-    },
     settings: {
       light: `${Color(theme.palette.altbackground.light).lighten(0.3)}`,
       main: `${Color(theme.palette.altbackground.main).lighten(0.3)}`
@@ -160,6 +165,11 @@ theme = createTheme(theme, {
       main: theme.palette.on.main,
       dark: `${Color(theme.palette.on.main).darken(0.3)}`
     }
+  },
+  gradients: {
+    main: `linear-gradient(to top, 
+            ${Color(theme.palette.altbackground.main).lighten(0.3)}, 
+          ${Color(theme.palette.altbackground.light).rotate(24).lighten(0.3)})`
   }
 });
 theme = createTheme(theme, {

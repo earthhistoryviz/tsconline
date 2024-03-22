@@ -79,7 +79,7 @@ export const TSCCard = ({
             </Grid>
             <Grid container mt={2} alignItems="center" justifyContent="center" spacing={2} wrap="nowrap">
               <Grid item>
-                <IconButton onClick={handleFlip}>
+                <IconButton onClick={handleFlip} size="large">
                   <InfoIcon />
                 </IconButton>
               </Grid>
@@ -151,17 +151,17 @@ const BackCard = ({
         </StyledScrollbar>
       </CardContent>
       <div className="overlay-buttons">
-        <IconButton className="icon-button" onClick={handleFlip}>
+        <IconButton className="icon-button" onClick={handleFlip} size="large">
           <BorderedIcon className="add-icon" component={ArrowBackIcon} />
         </IconButton>
       </div>
       <div className="add-buttons">
         {added ? (
-          <IconButton className="add-button" onClick={add}>
+          <IconButton className="add-button" onClick={add} size="large">
             <Lottie key={"check"} playOnClick autoplay animationData={checkIcon} width={45} height={45} speed={1.7} />
           </IconButton>
         ) : (
-          <IconButton className="add-button" onClick={add}>
+          <IconButton className="add-button" onClick={add} size="large">
             <BorderedIcon className="add-icon" strokeWidth={0.1} component={AddOutlinedIcon} />
           </IconButton>
         )}

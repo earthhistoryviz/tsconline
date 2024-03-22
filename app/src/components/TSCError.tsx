@@ -52,7 +52,7 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ errorContext, messa
               Error {countDisplay}
             </Typography>
           </div>
-          <IconButton className="alert-close" onClick={handleCloseError}>
+          <IconButton className="alert-close" onClick={handleCloseError} size="large">
             <CloseIcon className="alert-close-icon" style={{ color: theme.palette.errorText.main }} />
           </IconButton>
         </div>

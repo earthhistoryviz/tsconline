@@ -109,9 +109,6 @@ server.post("/upload", () => {
 //fetches json object of requested settings file
 server.get<{ Params: { settingFile: string } }>("/settingsXml/:settingFile", routes.fetchSettingsXml);
 
-// handles chart columns and age ranges requests
-server.post<{ Params: { files: string } }>("/mapimages/:files", routes.refreshMapImages);
-
 server.get("/datapackinfoindex", (_request, reply) => {
   if (!datapackIndex || !mapPackIndex) {
     reply.send({ error: "datapackIndex/mapPackIndex is null" });
