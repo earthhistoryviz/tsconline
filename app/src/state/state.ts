@@ -26,7 +26,7 @@ export type State = {
   geologicalTopStageAges: TimescaleItem[];
   geologicalBaseStageAges: TimescaleItem[];
   settingsTabs: {
-    selected: "time" | "font" | "column" | "mappoints";
+    selected: "time" | "font" | "column" | "mappoints" | "datapacks";
     columns: ColumnInfo | null;
     columnSelected: string | null;
     geologicalTopStages: GeologicalStages;

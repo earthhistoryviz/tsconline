@@ -2,8 +2,8 @@ import { useState, useContext } from "react";
 import { observer } from "mobx-react-lite";
 import { useTheme } from "@mui/material/styles";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { TSCCheckbox, InputFileUpload } from "./components";
-import { context } from "./state";
+import { TSCCheckbox, InputFileUpload } from "../components";
+import { context } from "../state";
 import Box from "@mui/material/Box";
 import InfoIcon from "@mui/icons-material/Info";
 import Tooltip from "@mui/material/Tooltip";
@@ -11,7 +11,7 @@ import Typography from "@mui/material/Typography";
 
 import "./Datapack.css";
 
-export const Datapack = observer(function Datapack() {
+export const Datapacks = observer(function Datapacks() {
   const theme = useTheme();
   const { actions } = useContext(context);
 
