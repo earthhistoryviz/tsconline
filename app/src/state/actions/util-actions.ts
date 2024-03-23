@@ -1,5 +1,5 @@
 import { ErrorCodes } from "../../util/error-codes";
-import { pushError } from "./general-actions";
+import { pushError, pushSnackbar } from "./general-actions";
 import { isServerResponseError } from "@tsconline/shared";
 
 /**
@@ -18,4 +18,12 @@ export function displayServerError<T>(response: T | null, context: ErrorCodes, m
     console.log(`${message} with server response: ${response}\n`);
     pushError(context);
   }
+}
+
+/**
+ * Display snackbar
+ * @param message the message to be shown
+ */
+export function displaySnackbar(message: string) {
+  pushSnackbar(message);
 }

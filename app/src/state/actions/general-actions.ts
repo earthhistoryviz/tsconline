@@ -25,7 +25,7 @@ import { state, State } from "../state";
 import { fetcher } from "../../util";
 import { initializeColumnHashMap } from "./column-actions";
 import { xmlToJson } from "../parse-settings";
-import { displayServerError } from "./util-actions";
+import { displayServerError, displaySnackbar } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 
@@ -486,7 +486,7 @@ async function fetchSVGStatus(): Promise<boolean> {
   return data.ready;
 }
 
-export const handleCloseSnackbar = action(
+/* export const handleCloseSnackbar = action(
   "handleCloseSnackbar",
   (event: React.SyntheticEvent | Event, reason?: string) => {
     if (reason === "clickaway") {
@@ -494,7 +494,7 @@ export const handleCloseSnackbar = action(
     }
     state.openSnackbar = false;
   }
-);
+); */
 
 export const removeError = action("removeError", (context: ErrorCodes) => {
   state.errors.errorAlerts.delete(context);
@@ -511,6 +511,15 @@ export const pushError = action("pushError", (context: ErrorCodes) => {
   };
   state.errors.errorAlerts.set(context, error);
 });
+export const removeSnackbar = action("removeSnackbar", (id: number) => {
+  state.snackbars = state.snackbars.filter((error) => error.id !== id);
+});
+export const pushSnackbar = action("pushSnackbar", (text: string) => {
+  state.snackbars.push({
+    id: new Date().getTime(),
+    snackbarText: text
+  })
+})
 
 export const fetchImage = action("fetchImage", async (datapackName: string, imageName: string) => {
   const response = await fetcher(`/images/${datapackName}/${imageName}`, {

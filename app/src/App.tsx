@@ -12,9 +12,11 @@ import { Alert, Slide, Snackbar, Typography } from "@mui/material";
 import { useContext } from "react";
 import { context } from "./state";
 import { About } from "./About";
-import { TSCPopupDialog, TSCError, Lottie } from "./components";
+import { TSCPopupDialog, TSCError, TSCSnackbar } from "./components";
 import ChartDoneIcon from "./assets/icons/chart-done.json";
 import "./App.css";
+
+
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -47,21 +49,9 @@ export default observer(function App() {
           onNo={() => actions.handlePopupResponse(false, navigate)}
           onClose={() => actions.fetchChartFromServer(navigate)}
         />
-        <Snackbar
-          open={state.openSnackbar}
-          autoHideDuration={5000}
-          TransitionComponent={Slide}
-          onClose={actions.handleCloseSnackbar}>
-          <Alert
-            severity="success"
-            variant="filled"
-            className="success-alert"
-            iconMapping={{
-              success: <Lottie animationData={ChartDoneIcon} speed={0.7} autoplay />
-            }}>
-            <Typography>Chart Successfully Generated!</Typography>
-          </Alert>
-        </Snackbar>
+        {state.snackbars.map((info) => (
+          <TSCSnackbar key={info.id} text={info.snackbarText} id={info.id} />
+        ))}
       </ThemeProvider>
     </StyledEngineProvider>
   );
