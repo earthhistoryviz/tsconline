@@ -26,6 +26,11 @@ export type ErrorAlert = {
   errorText: string;
   errorCount: number;
 };
+
+export type SnackbarInfo = {
+  snackbarText: string;
+  snackbarCount: number;
+}
 export type ChartSettings = {
   selectedStage: string;
   topStageAge: number;
