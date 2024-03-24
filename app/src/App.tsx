@@ -49,8 +49,8 @@ export default observer(function App() {
           onNo={() => actions.handlePopupResponse(false, navigate)}
           onClose={() => actions.fetchChartFromServer(navigate)}
         />
-        {state.snackbars.map((info) => (
-          <TSCSnackbar key={info.id} text={info.snackbarText} id={info.id} />
+        {state.snackbars.map((info, index) => (
+          <TSCSnackbar key={index} text={info.snackbarText} count={info.snackbarCount} index={index} />
         ))}
       </ThemeProvider>
     </StyledEngineProvider>
