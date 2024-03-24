@@ -7,17 +7,30 @@ import ChartDoneIcon from "../assets/icons/chart-done.json";
 
 type TSCSnackbarProps = {
     text: string;
-    id: number;
+    count: number;
+    index: number;
 };
-export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, id }) => {
-    const { actions } = useContext(context);
+export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, count, index }) => {
+    const { actions, state } = useContext(context);
+    const margin = index < 5 ? index * 10 : 40;
+    let countDisplay = "";
+    if (count > 1 && count < 1000) {
+        countDisplay = `(${count})`;
+    } else if (count >= 1000) {
+        countDisplay = "(999+)";
+    }
     function handleCloseSnackbar(_event: React.SyntheticEvent | Event, reason?: string) {
         if (reason === "clickaway") return;
-        actions.removeSnackbar(id);
+
+        actions.removeSnackbar(text);
     }
     return (
         <Snackbar
-            open={true}
+            open={state.openSnackbar}
+            style={{
+                marginBottom: `${margin}px`,
+                zIndex: `${1000 - index}`
+            }}
             onClose={handleCloseSnackbar}
             autoHideDuration={5000}
             TransitionComponent={Slide}
@@ -29,7 +42,7 @@ export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, id }) =
                 iconMapping={{
                     success: <Lottie animationData={ChartDoneIcon} speed={0.7} autoplay />
                 }}>
-                <Typography>{text}</Typography>
+                <Typography>{countDisplay} {text}</Typography>
             </Alert>
         </Snackbar>
 

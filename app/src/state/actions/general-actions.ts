@@ -331,6 +331,10 @@ export const removeCache = action("removeCache", async () => {
   try {
     assertSuccessfulServerResponse(msg);
     console.log(`Server successfully deleted cache with message: ${msg.message}`);
+    displaySnackbar("Snackbar1");
+    displaySnackbar("Snackbar2");
+    displaySnackbar("Snackbar3");
+    displaySnackbar("Snackbar4");
   } catch (e) {
     displayServerError(e, msg, "Server could not remove cache");
     return;
@@ -511,14 +515,22 @@ export const pushError = action("pushError", (context: ErrorCodes) => {
   };
   state.errors.errorAlerts.set(context, error);
 });
-export const removeSnackbar = action("removeSnackbar", (id: number) => {
-  state.snackbars = state.snackbars.filter((error) => error.id !== id);
+export const removeSnackbar = action("removeSnackbar", (text: string) => {
+  state.snackbars = state.snackbars.filter((info) => info.snackbarText !== text);
+  state.openSnackbar = false;
 });
 export const pushSnackbar = action("pushSnackbar", (text: string) => {
+  for (const snackbar of state.snackbars) {
+    if (snackbar.snackbarText === text) {
+      snackbar.snackbarCount += 1;
+      return;
+    }
+  }
   state.snackbars.push({
-    id: new Date().getTime(),
-    snackbarText: text
+    snackbarText: text,
+    snackbarCount: 1
   })
+  state.openSnackbar = true;
 })
 
 export const fetchImage = action("fetchImage", async (datapackName: string, imageName: string) => {
@@ -613,9 +625,9 @@ export const setBaseStageAge = action("setBaseStageAge", (age: number) => {
 export const settingsXML = action("settingsXML", (xml: string) => {
   state.settingsXML = xml;
 });
-export const setOpenSnackbar = action("setOpenSnackbar", (show: boolean) => {
+/* export const setOpenSnackbar = action("setOpenSnackbar", (show: boolean) => {
   state.openSnackbar = show;
-});
+}); */
 export const setIsFullscreen = action("setIsFullscreen", (newval: boolean) => {
   state.isFullscreen = newval;
 });
