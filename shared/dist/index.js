@@ -59,6 +59,103 @@ export const defaultFontsInfo = {
         size: 12
     }
 };
+export function assertFreehand(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("Freehand must be a non-null object");
+    if (!Array.isArray(o.subFreehandInfo))
+        throwError("Freehand", "subFreehandInfo", "array", o.subFreehandInfo);
+    for (const subFreehand of o.subFreehandInfo) {
+        assertSubFreehandInfo(subFreehand);
+    }
+}
+export function assertTransect(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("Transect must be a non-null object");
+    if (!Array.isArray(o.subTransectInfo))
+        throwError("Transect", "subTransectInfo", "array", o.subTransectInfo);
+    for (const subTransect of o.subTransectInfo) {
+        assertSubTransectInfo(subTransect);
+    }
+}
+export function assertSubFreehandInfo(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("SubFreehandInfo must be a non-null object");
+    if (typeof o.topAge !== "number")
+        throwError("SubFreehandInfo", "topAge", "number", o.topAge);
+    if (typeof o.baseAge !== "number")
+        throwError("SubFreehandInfo", "baseAge", "number", o.baseAge);
+}
+export function assertSubTransectInfo(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("SubTransectInfo must be a non-null object");
+    if (typeof o.age !== "number")
+        throwError("SubTransectInfo", "age", "number", o.age);
+}
+export function assertPoint(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("Point must be a non-null object");
+    if (!Array.isArray(o.subPointInfo))
+        throwError("Point", "subPointInfo", "array", o.subPointInfo);
+    for (const subPoint of o.subPointInfo) {
+        assertSubPointInfo(subPoint);
+    }
+    assertColumnHeaderProps(o);
+}
+export function assertSubPointInfo(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("SubPointInfo must be a non-null object");
+    if (typeof o.age !== "number")
+        throwError("SubPointInfo", "age", "number", o.age);
+    if (typeof o.xVal !== "number")
+        throwError("SubPointInfo", "xVal", "number", o.xVal);
+    if (typeof o.popup !== "string")
+        throwError("SubPointInfo", "popup", "string", o.popup);
+}
+export function assertSequence(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("Sequence must be a non-null object");
+    if (!Array.isArray(o.subSequenceInfo))
+        throwError("Sequence", "subSequenceInfo", "array", o.subSequenceInfo);
+    for (const subSequence of o.subSequenceInfo) {
+        assertSubSequenceInfo(subSequence);
+    }
+    assertColumnHeaderProps(o);
+}
+export function assertSubSequenceInfo(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("SubSequenceInfo must be a non-null object");
+    if (o.label && typeof o.label !== "string")
+        throwError("SubSequenceInfo", "label", "string", o.label);
+    if (typeof o.direction !== "string" || !/^SB|MFS$/.test(o.direction))
+        throwError("SubSequenceInfo", "direction", "string and SB | MFS", o.direction);
+    if (typeof o.age !== "number")
+        throwError("SubSequenceInfo", "age", "number", o.age);
+    if (typeof o.severity !== "string" || !/^Major|Minor|Medium$/.test(o.severity))
+        throwError("SubSequenceInfo", "severity", "string and Major | Minor | Medium", o.severity);
+    if (typeof o.popup !== "string")
+        throwError("SubSequenceInfo", "popup", "string", o.popup);
+}
+export function assertChron(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("Chron must be a non-null object");
+    if (!Array.isArray(o.subChronInfo))
+        throwError("Chron", "subChronInfo", "array", o.subChronInfo);
+    for (const subChron of o.subChronInfo) {
+        assertSubChronInfo(subChron);
+    }
+}
+export function assertSubChronInfo(o) {
+    if (!o || typeof o !== "object")
+        throw new Error("SubChronInfo must be a non-null object");
+    if (typeof o.polarity !== "string" || !/^TOP|N|R|U|No Data$/.test(o.polarity))
+        throwError("SubChronInfo", "polarity", "string and TOP | N | R| U | No Data", o.polarity);
+    if (o.label && typeof o.label !== "string")
+        throwError("SubChronInfo", "label", "string", o.label);
+    if (typeof o.age !== "number")
+        throwError("SubChronInfo", "age", "number", o.age);
+    if (typeof o.popup !== "string")
+        throwError("SubChronInfo", "popup", "string", o.popup);
+}
 export function assertSubRangeInfo(o) {
     if (!o || typeof o !== "object")
         throw new Error("SubRangeInfo must be a non-null object");
@@ -68,7 +165,7 @@ export function assertSubRangeInfo(o) {
         throwError("SubRangeInfo", "age", "number", o.age);
     if (typeof o.abundance !== "string")
         throwError("SubRangeInfo", "abundance", "string", o.abundance);
-    if (!/TOP|missing|rare|common|frequent|abundant|sample|flood/.test(o.abundance))
+    if (!/^TOP|missing|rare|common|frequent|abundant|sample|flood$/.test(o.abundance))
         throwError("SubRangeInfo", "abundance", "TOP | missing | rare | common | frequent | abundant | sample | flood", o.abundance);
     if (typeof o.popup !== "string")
         throwError("SubRangeInfo", "popup", "string", o.popup);
@@ -388,6 +485,34 @@ export function assertColumnInfo(o) {
             throwError("ColumnInfo", "subRangeInfo", "array", o.subRangeInfo);
         for (const range of o.subRangeInfo) {
             assertSubRangeInfo(range);
+        }
+    }
+    if ("subChronInfo" in o) {
+        if (!o.subChronInfo || !Array.isArray(o.subChronInfo))
+            throwError("ColumnInfo", "subChronInfo", "array", o.subChronInfo);
+        for (const chron of o.subChronInfo) {
+            assertSubChronInfo(chron);
+        }
+    }
+    if ("subPointInfo" in o) {
+        if (!o.subPointInfo || !Array.isArray(o.subPointInfo))
+            throwError("ColumnInfo", "subPointInfo", "array", o.subPointInfo);
+        for (const point of o.subPointInfo) {
+            assertSubPointInfo(point);
+        }
+    }
+    if ("subFreehandInfo" in o) {
+        if (!o.subFreehandInfo || !Array.isArray(o.subFreehandInfo))
+            throwError("ColumnInfo", "subFreehandInfo", "array", o.subFreehandInfo);
+        for (const freehand of o.subFreehandInfo) {
+            assertSubFreehandInfo(freehand);
+        }
+    }
+    if ("subSequenceInfo" in o) {
+        if (!o.subSequenceInfo || !Array.isArray(o.subSequenceInfo))
+            throwError("ColumnInfo", "subSequenceInfo", "array", o.subSequenceInfo);
+        for (const sequence of o.subSequenceInfo) {
+            assertSubSequenceInfo(sequence);
         }
     }
 }
