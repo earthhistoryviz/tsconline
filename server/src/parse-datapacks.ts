@@ -1247,7 +1247,6 @@ function recursive(
     parent: parent,
     minAge: Number.MAX_VALUE,
     maxAge: Number.MIN_VALUE,
-    width: 100,
     rgb: {
       r: 255,
       g: 255,
