@@ -178,6 +178,10 @@ export type ColumnInfo = {
     subFaciesInfo?: SubFaciesInfo[];
     subEventInfo?: SubEventInfo[];
     subRangeInfo?: SubRangeInfo[];
+    subChronInfo?: SubChronInfo[];
+    subPointInfo?: SubPointInfo[];
+    subFreehandInfo?: SubFreehandInfo[];
+    subSequenceInfo?: SubSequenceInfo[];
     minAge: number;
     maxAge: number;
     enableTitle: boolean;
@@ -186,6 +190,48 @@ export type ColumnInfo = {
 };
 export type Range = ColumnHeaderProps & {
     subRangeInfo: SubRangeInfo[];
+};
+export type Chron = ColumnHeaderProps & {
+    subChronInfo: SubChronInfo[];
+};
+export type Freehand = ColumnHeaderProps & {
+    subFreehandInfo: SubFreehandInfo[];
+};
+export type Point = ColumnHeaderProps & {
+    subPointInfo: SubPointInfo[];
+};
+export type Sequence = ColumnHeaderProps & {
+    subSequenceInfo: SubSequenceInfo[];
+};
+/**
+ * NOTE: This implementation gets rid of a lot of the freehand info
+ * This is due to the structure being more complicated on various lines.
+ * For the current TSCOnline as of 1.0 we don't need that information.
+ * If we ever want to add that implementation, we would change this
+ * but that would be a considerable amount of time and is something for the future.
+ * (This is because we are using a stream reading line by line in parse-datapacks)
+ */
+export type SubFreehandInfo = {
+    topAge: number;
+    baseAge: number;
+};
+export type SubSequenceInfo = {
+    label?: string;
+    direction: "SB" | "MFS";
+    age: number;
+    severity: "Major" | "Minor" | "Medium";
+    popup: string;
+};
+export type SubChronInfo = {
+    polarity: "TOP" | "N" | "R" | "U" | "No Data";
+    label?: string;
+    age: number;
+    popup: string;
+};
+export type SubPointInfo = {
+    age: number;
+    xVal: number;
+    popup: string;
 };
 export type SubRangeInfo = {
     label: string;
@@ -213,6 +259,18 @@ export type Event = ColumnHeaderProps & {
 };
 export type Block = ColumnHeaderProps & {
     subBlockInfo: SubBlockInfo[];
+};
+export type Transect = ColumnHeaderProps & {
+    subTransectInfo: SubTransectInfo[];
+};
+/**
+ * The structure of transects in the datapack are complicated so I will
+ * not be doing the deconstructing of the data since there is no added benefit
+ * However, if we for some reason want to access it or parse it
+ * I will leave this open to add more properties
+ */
+export type SubTransectInfo = {
+    age: number;
 };
 export type ChartResponseInfo = {
     chartpath: string;
@@ -284,6 +342,16 @@ export type TimescaleItem = {
     key: string;
     value: number;
 };
+export declare function assertFreehand(o: any): asserts o is Freehand;
+export declare function assertTransect(o: any): asserts o is Transect;
+export declare function assertSubFreehandInfo(o: any): asserts o is SubFreehandInfo;
+export declare function assertSubTransectInfo(o: any): asserts o is SubTransectInfo;
+export declare function assertPoint(o: any): asserts o is Point;
+export declare function assertSubPointInfo(o: any): asserts o is SubPointInfo;
+export declare function assertSequence(o: any): asserts o is Sequence;
+export declare function assertSubSequenceInfo(o: any): asserts o is SubSequenceInfo;
+export declare function assertChron(o: any): asserts o is Chron;
+export declare function assertSubChronInfo(o: any): asserts o is SubChronInfo;
 export declare function assertSubRangeInfo(o: any): asserts o is SubRangeInfo;
 export declare function assertRange(o: any): asserts o is Range;
 export declare function assertColumnHeaderProps(o: any): asserts o is ColumnHeaderProps;
