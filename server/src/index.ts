@@ -11,6 +11,7 @@ import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
 import { AssetConfig, assertAssetConfig } from "./types.js";
 import { readFile } from "fs/promises";
+import fastifyMultipart from "@fastify/multipart";
 
 const server = fastify({
   logger: false,
@@ -62,6 +63,8 @@ const mapPackIndex: MapPackIndex = {};
 const patterns = await loadFaciesPatterns();
 await loadIndexes(datapackIndex, mapPackIndex);
 
+server.register(fastifyMultipart);
+
 // Serve the main app from /
 server.register(fastifyStatic, {
   root: process.cwd() + "/../app/dist",
@@ -102,9 +105,7 @@ server.get("/presets", async (_request, reply) => {
   reply.send(presets);
 });
 // uploads datapack
-server.post("/upload", () => {
-  console.log("upload");
-});
+server.post("/upload", routes.uploadDatapack);
 
 //fetches json object of requested settings file
 server.get<{ Params: { settingFile: string } }>("/settingsXml/:settingFile", routes.fetchSettingsXml);
