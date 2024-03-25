@@ -10,7 +10,29 @@ import svgson from "svgson";
 import fs from "fs";
 import { assertTimescale } from "@tsconline/shared";
 import { parseExcelFile } from "./parse-excel-file.js";
+import path from "path";
+import pump from "pump";
 
+
+export const uploadDatapack = async function uploadDatapack(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const file = await request.file();
+  if (!file) {
+    reply.status(404).send({ error: "No file uploaded" });
+    return;
+  }
+  const filename = file?.filename;
+  const ext = path.extname(filename)
+  if (!/^\.dpk|\.txt|\.map|\.mdpk$/.test(ext)) {
+    reply.status(415).send({ error: "Invalid file type" });
+    return;
+  }
+  const fileStream = file?.file;
+  pump(fileStream, fs.createWriteStream(path.join(assetconfigs.uploadedDatapackDirectory, filename)))
+  reply.status(200).send({ message: "File uploaded" });
+}
 export const fetchSettingsXml = async function fetchSettingsJson(
   request: FastifyRequest<{ Params: { settingFile: string } }>,
   reply: FastifyReply

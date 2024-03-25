@@ -107,13 +107,24 @@ export const fetchPresets = action("fetchPresets", async () => {
   }
 });
 
-export const uploadDatapack = action("uploadDatapack", (file: File) => {
+export const uploadDatapack = action("uploadDatapack", async (file: File) => {
   const formData = new FormData();
   formData.append("file", file);
-  fetcher("/upload", {
-    method: "POST",
-    body: formData
-  });
+  try {
+    const response = await fetcher("/upload", {
+      method: "POST",
+      body: formData
+    });
+    const data = await response.json();
+    if (response.ok) {
+      console.log("Successfully uploaded datapack");
+    } else {
+      displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+    }
+  } catch (e) {
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
+  }
 });
 export const loadIndexResponse = action("loadIndexResponse", (response: IndexResponse) => {
   state.mapPackIndex = response.mapPackIndex;
