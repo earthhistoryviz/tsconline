@@ -166,19 +166,6 @@ export type FontsInfo = {
 
 export const defaultFontsInfo: FontsInfo = defaultFontsInfoConstant;
 
-export type FaciesLocations = {
-  [location: string]: {
-    faciesTimeBlockArray: FaciesTimeBlock[];
-    minAge: number; // the min age of this specific location
-    maxAge: number; // the max age of this specific location
-  };
-};
-export type FaciesTimeBlock = {
-  rockType: string; // rock type that is the name of the png in /public/patterns/
-  label?: string; // the label
-  age: number; // the base gge of the facies time block
-};
-
 export type SubBlockInfo = {
   label: string;
   age: number;
@@ -809,12 +796,12 @@ export function assertFontsInfo(o: any): asserts o is FontsInfo {
       ).includes(key as ValidFontOptions)
     )
       throwError("FontsInfo", `${key}`, "ValidFontOptions", o);
-    if (typeof o.bold !== "boolean") throwError("FontsInfo", `${key}.bold`, "boolean", o.bold);
-    if (typeof o.color !== "string") throwError("FontsInfo", `${key}.color`, "string", o.color);
-    if (typeof o.fontFace !== "string") throwError("FontsInfo", `${key}.fontFace`, "string", o.fontFace);
-    if (typeof o.inheritable !== "boolean") throwError("FontsInfo", `${key}.inheritable`, "boolean", o.inheritable);
-    if (typeof o.italic !== "boolean") throwError("FontsInfo", "italic", `${key}.boolean`, o.italic);
-    if (typeof o.size !== "number") throwError("FontsInfo", "size", `${key}.number`, o.size);
+    if (typeof o[key].bold !== "boolean") throwError("FontsInfo", `${key}.bold`, "boolean", o[key].bold);
+    if (typeof o[key].color !== "string") throwError("FontsInfo", `${key}.color`, "string", o[key].color);
+    if (typeof o[key].fontFace !== "string") throwError("FontsInfo", `${key}.fontFace`, "string", o[key].fontFace);
+    if (typeof o[key].inheritable !== "boolean") throwError("FontsInfo", `${key}.inheritable`, "boolean", o[key].inheritable);
+    if (typeof o[key].italic !== "boolean") throwError("FontsInfo", "italic", `${key}.boolean`, o[key].italic);
+    if (typeof o[key].size !== "number") throwError("FontsInfo", "size", `${key}.number`, o[key].size);
   }
 }
 
