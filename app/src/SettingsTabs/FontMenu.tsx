@@ -35,7 +35,7 @@ const FontMenuRow: React.FC<{
   const [formats, setFormats] = useState([""]);
   const fontOpts = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected as string)!.fontsInfo[target];
   const handleFontChange = (event: SelectChangeEvent) => {
-    if (!(/^(Arial|Courier|Verdana)$/.test(event.target.value))) return;
+    if (!/^(Arial|Courier|Verdana)$/.test(event.target.value)) return;
     actions.setFontFace(target, event.target.value as "Arial" | "Courier" | "Verdana");
     setFont(event.target.value as string);
   };

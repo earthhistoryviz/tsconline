@@ -799,7 +799,8 @@ export function assertFontsInfo(o: any): asserts o is FontsInfo {
     if (typeof o[key].bold !== "boolean") throwError("FontsInfo", `${key}.bold`, "boolean", o[key].bold);
     if (typeof o[key].color !== "string") throwError("FontsInfo", `${key}.color`, "string", o[key].color);
     if (typeof o[key].fontFace !== "string") throwError("FontsInfo", `${key}.fontFace`, "string", o[key].fontFace);
-    if (typeof o[key].inheritable !== "boolean") throwError("FontsInfo", `${key}.inheritable`, "boolean", o[key].inheritable);
+    if (typeof o[key].inheritable !== "boolean")
+      throwError("FontsInfo", `${key}.inheritable`, "boolean", o[key].inheritable);
     if (typeof o[key].italic !== "boolean") throwError("FontsInfo", "italic", `${key}.boolean`, o[key].italic);
     if (typeof o[key].size !== "number") throwError("FontsInfo", "size", `${key}.number`, o[key].size);
   }
