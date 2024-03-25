@@ -34,8 +34,8 @@ const FontMenuRow: React.FC<{
   const [font, setFont] = useState("Arial");
   const [formats, setFormats] = useState([""]);
   const fontOpts = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected as string)!.fontsInfo[target];
-  const handleChange = (event: SelectChangeEvent) => {
-    if (/Arial|Courier|Verdana/.test(event.target.value)) return;
+  const handleFontChange = (event: SelectChangeEvent) => {
+    if (!(/^(Arial|Courier|Verdana)$/.test(event.target.value))) return;
     actions.setFontFace(target, event.target.value as "Arial" | "Courier" | "Verdana");
     setFont(event.target.value as string);
   };
@@ -84,7 +84,7 @@ const FontMenuRow: React.FC<{
           <Select
             value={fontOpts.fontFace}
             label="Font Face"
-            onChange={handleChange}
+            onChange={handleFontChange}
             disabled={!fontTarget}
             displayEmpty>
             <MenuItem value={"Arial"}>Arial</MenuItem>
