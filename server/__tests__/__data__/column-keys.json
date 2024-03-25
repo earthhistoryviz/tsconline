@@ -6,7 +6,6 @@
                 "editName": "Central Africa Cenozoic",
                 "on": true,
                 "enableTitle": true,
-                "width": 100,
                 "rgb": {
                     "r": 255,
                     "g": 255,
@@ -140,7 +139,6 @@
                 "font": "Arial"
             },
             "popup": "",
-            "width": 100,
             "children": [
             {
                 "name": "Block",
