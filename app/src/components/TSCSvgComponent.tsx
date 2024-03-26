@@ -2,19 +2,18 @@ import React, { useEffect, useState, useContext } from "react";
 import { context } from "../state/index";
 import { ErrorCodes } from "../util/error-codes";
 
-declare global {
-  interface Window {
-    doMOHover: (evt: MouseEvent, elemID: string, textID: string) => void;
-    doMOOut: (evt: MouseEvent) => void;
-    doMOClick: (evt: MouseEvent, elemID: string, textID: string) => void;
-    curHoverElemID?: string;
-    curHoverTextID?: string;
-  }
+interface SVGWindow extends Window {
+  doMOHover?: (evt: MouseEvent, elemID: string, textID: string) => void;
+  doMOOut?: (evt: MouseEvent) => void;
+  doMOClick?: (evt: MouseEvent, elemID: string, textID: string) => void;
+  curHoverElemID?: string;
+  curHoverTextID?: string;
 }
 
-interface TSCSvgComponentProps {
+type TSCSvgComponentProps = {
   path: string;
-}
+};
+
 export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = ({ path }) => {
   const [svgContent, setSvgContent] = useState<string>("");
   const [isValidPath, setIsValidPath] = useState<boolean>(true);
@@ -45,30 +44,32 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = ({ path }) => {
 
   /* eslint @typescript-eslint/no-unused-vars: "off" -- These functions need to match the signatures used by the SVG */
 
-  window.doMOHover = (evt, elemID, textID) => {
+  const svgEventWindow = window as SVGWindow;
+
+  svgEventWindow.doMOHover = (evt, elemID, textID) => {
     const e = document.getElementById(elemID);
     if (!e) return;
     e.setAttribute("opacity", "1");
-    window.curHoverElemID = elemID;
-    window.curHoverTextID = textID;
+    svgEventWindow.curHoverElemID = elemID;
+    svgEventWindow.curHoverTextID = textID;
   };
 
-  window.doMOOut = (evt) => {
-    const elem = window.curHoverElemID ? document.getElementById(window.curHoverElemID) : null;
+  svgEventWindow.doMOOut = (evt) => {
+    const elem = svgEventWindow.curHoverElemID ? document.getElementById(svgEventWindow.curHoverElemID) : null;
     if (elem) elem.setAttribute("opacity", "0");
   };
 
-  window.doMOClick = (evt, elemID, textID) => {
+  svgEventWindow.doMOClick = (evt, elemID, textID) => {
     const textElement = document.getElementById(textID);
     const text = textElement ? textElement.getAttribute("popuptext") : "";
     let url: string = "http://localhost:5173";
     if (import.meta.env.VITE_APP_URL) {
       url = import.meta.env.VITE_APP_URL;
     }
-    if (typeof window.top === "undefined") {
+    if (typeof svgEventWindow.top === "undefined") {
       alert(textID);
-    } else if (window.top !== null) {
-      window.top.postMessage({ action: "showPopup", text }, url);
+    } else if (svgEventWindow.top !== null) {
+      svgEventWindow.top.postMessage({ action: "showPopup", text }, url);
     }
   };
 
