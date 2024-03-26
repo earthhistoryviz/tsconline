@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import fsPromises from "fs/promises";
 import { glob } from "glob";
+import pump from "pump";
 
 /**
  * Recursively deletes directory INCLUDING directoryPath
