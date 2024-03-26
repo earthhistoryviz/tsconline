@@ -19,6 +19,5 @@
   "colors": "assets/colors.json",
   "timescaleFilepath": "assets/default_timescale.xlsx",
   "fileMetadata": "assets/file_metadata.json",
-  "uploadedDatapackDirectory": "assets/uploads/datapacks",
-  "uploadedDecryptedDatapackDirectory": "assets/uploads/decrypted"
+  "uploadDirectory": "assets/uploads"
 }

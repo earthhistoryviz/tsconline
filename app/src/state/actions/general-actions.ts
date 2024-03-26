@@ -107,11 +107,11 @@ export const fetchPresets = action("fetchPresets", async () => {
   }
 });
 
-export const uploadDatapack = action("uploadDatapack", async (file: File) => {
+export const uploadDatapack = action("uploadDatapack", async (file: File, username: string) => {
   const formData = new FormData();
   formData.append("file", file);
   try {
-    const response = await fetcher("/upload", {
+    const response = await fetcher(`/upload/${username}`, {
       method: "POST",
       body: formData
     });

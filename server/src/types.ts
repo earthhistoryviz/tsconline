@@ -9,9 +9,8 @@ export type AssetConfig = {
   timescaleFilepath: string;
   patternsDirectory: string;
   colors: string;
-  uploadedDatapackDirectory: string;
   fileMetadata: string;
-  uploadedDecryptedDatapackDirectory: string;
+  uploadDirectory: string;
 };
 
 export type Colors = {
@@ -36,9 +35,8 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
   if (typeof o.imagesDirectory !== "string") throw 'AssetConfig must have a "imagesDirectory" string';
   if (typeof o.patternsDirectory !== "string") throw 'AssetConfig must have a "patternsDirectory" string';
   if (typeof o.colors !== "string") throw 'AssetConfig must have a "colors" string';
-  if (typeof o.uploadedDatapackDirectory !== "string") throw 'AssetConfig must have a "uploadedDatapackDirectory" string';
   if (typeof o.fileMetadata !== "string") throw 'AssetConfig must have a "fileMetadata" string';
-  if (typeof o.uploadedDecryptedDatapackDirectory !== "string") throw 'AssetConfig must have a "uploadedDecryptedDatapackDirectory" string';
+  if (typeof o.uploadDirectory !== "string") throw 'AssetConfig must have a "uploadDirectory" string';
   if (!o.activeDatapacks || !Array.isArray(o.activeDatapacks)) throw 'AssetConfig must have an "activeJar" string';
   for (const [index, ad] of o.activeDatapacks.entries()) {
     if (typeof ad !== "string") throw "AssetConfig activeDatapacks item " + index + " must be a string";

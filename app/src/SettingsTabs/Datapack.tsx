@@ -87,7 +87,7 @@ export const Datapacks = observer(function Datapacks() {
           text="Upload Datapack"
           onChange={(event) => {
             const file = event.target.files![0];
-            actions.uploadDatapack(file);
+            actions.uploadDatapack(file, "username");
           }}
         />
       </div>

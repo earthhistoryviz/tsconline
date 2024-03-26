@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { exec } from "child_process";
+import { exec, execSync } from "child_process";
 import { writeFile, stat, readFile } from "fs/promises";
 import { TimescaleItem, assertChartRequest } from "@tsconline/shared";
 import { deleteDirectory } from "./util.js";
@@ -15,22 +15,71 @@ import pump from "pump";
 
 
 export const uploadDatapack = async function uploadDatapack(
-  request: FastifyRequest,
+  request: FastifyRequest< {Params: { username: string} } >,
   reply: FastifyReply
 ) {
+  const { username } = request.params;
+  if (!username) {
+    reply.status(400).send({ error: "No username provided" });
+    return;
+  }
+  console.log(username)
   const file = await request.file();
   if (!file) {
     reply.status(404).send({ error: "No file uploaded" });
     return;
   }
-  const filename = file?.filename;
+  const filename = file.filename;
   const ext = path.extname(filename)
+  const hash = md5(username)
+  const userDir = path.join(assetconfigs.uploadDirectory, hash);
+  const datapackDir = path.join(userDir, "datapacks")
+  const decryptDir = path.join(userDir, "decrypted")
+  const filepath = path.join(datapackDir, filename)
   if (!/^\.dpk|\.txt|\.map|\.mdpk$/.test(ext)) {
     reply.status(415).send({ error: "Invalid file type" });
     return;
   }
-  const fileStream = file?.file;
-  pump(fileStream, fs.createWriteStream(path.join(assetconfigs.uploadedDatapackDirectory, filename)))
+  if (!fs.existsSync(datapackDir)) {
+    fs.mkdirSync(datapackDir, { recursive: true });
+  }
+  const fileStream = file.file;
+  console.log("Uploading file: ", filename);
+  pump(fileStream, fs.createWriteStream(filepath))
+  try {
+    // must wait for the file to be written before decrypting
+    await new Promise<void>((resolve, reject) => {
+      pump(fileStream, fs.createWriteStream(filepath), (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      })
+  })} catch (e) {
+    reply.status(500).send({ error: "Failed to save file with error: " + e });
+    return;
+  }
+  if (file.file.truncated) {
+    if (fs.existsSync(filepath)) {
+      fs.unlinkSync(filepath);
+    }
+    reply.status(413).send({ error: "File too large"});    
+    return
+  }
+  try {
+    const cmd =
+      `java -jar ${assetconfigs.decryptionJar} ` +
+      // Decrypting these datapacks:
+      `-d "${filepath}" ` +
+      // Tell it where to send the datapacks
+      `-dest ${decryptDir} `;
+    console.log("Calling Java decrypt.jar: ", cmd);
+    execSync(cmd);
+    console.log("Finished decryption");
+  } catch (e) {
+    reply.status(500).send({ error: "Failed to decrypt activeDatapacks in AssetConfig with error: " + e });
+  }
   reply.status(200).send({ message: "File uploaded" });
 }
 export const fetchSettingsXml = async function fetchSettingsJson(
