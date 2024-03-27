@@ -10,7 +10,8 @@ export enum ErrorCodes {
   INVALID_SVG_READY_RESPONSE = "INVALID_SVG_READY_RESPONSE",
   INVALID_SETTINGS_RESPONSE = "INVALID_SETTINGS_RESPONSE",
   INVALID_CHART_RESPONSE = "INVALID_CHART_RESPONSE",
-  INVALID_DATAPACK_UPLOAD = "INVALID_DATAPACK_UPLOAD"
+  INVALID_DATAPACK_UPLOAD = "INVALID_DATAPACK_UPLOAD",
+  INVALID_USER_DATAPACKS = "INVALID_USER_DATAPACKS",
 }
 
 export const ErrorMessages = {
@@ -25,5 +26,6 @@ export const ErrorMessages = {
   [ErrorCodes.INVALID_SVG_READY_RESPONSE]: "Invalid SVG ready response received from server. Please try again later.",
   [ErrorCodes.INVALID_SETTINGS_RESPONSE]: "Invalid settings response received from server. Please try again later.",
   [ErrorCodes.INVALID_CHART_RESPONSE]: "Invalid chart response received from server. Please try again later.",
-  [ErrorCodes.INVALID_DATAPACK_UPLOAD]: "Invalid datapack upload."
+  [ErrorCodes.INVALID_DATAPACK_UPLOAD]: "Invalid datapack upload.",
+  [ErrorCodes.INVALID_USER_DATAPACKS]: "Invalid user datapacks received from server. Please try again later.",
 };

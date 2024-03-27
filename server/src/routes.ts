@@ -1,20 +1,47 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec, execSync } from "child_process";
 import { writeFile, stat, readFile } from "fs/promises";
-import { DatapackIndex, MapPack, MapPackIndex, TimescaleItem, assertChartRequest } from "@tsconline/shared";
+import { DatapackIndex, MapPackIndex, TimescaleItem, assertChartRequest, assertIndexResponse } from "@tsconline/shared";
 import { deleteDirectory, resetUploadDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
 import md5 from "md5";
 import { assetconfigs } from "./index.js";
 import svgson from "svgson";
-import fs, { unlinkSync } from "fs";
+import fs from "fs";
 import { assertTimescale } from "@tsconline/shared";
 import { parseExcelFile } from "./parse-excel-file.js";
 import path from "path";
 import pump from "pump";
 import { loadIndexes } from "./load-packs.js";
-import { glob } from "glob";
 
+export const fetchUserDatapacks = async function fetchUserDatapacks(
+  request: FastifyRequest<{ Params: { username: string } }>,
+  reply: FastifyReply
+) {
+  const { username } = request.params;
+  if (!username) {
+    reply.status(400).send({ error: "No username provided" });
+    return;
+  }
+  const hash = md5(username)
+  const userDir = path.join(assetconfigs.uploadDirectory, hash);
+  if (!fs.existsSync(userDir)) {
+    reply.status(404).send({ error: "User does not exist" });
+    return;
+  }
+  if (!fs.existsSync(path.join(userDir, "DatapackIndex.json"))) {
+    reply.status(404).send({ error: "User has no datapacks" });
+    return;
+  }
+  const datapackIndex = JSON.parse(fs.readFileSync(path.join(userDir, "DatapackIndex.json")).toString());
+  const mapPackIndex = {}
+  if (fs.existsSync(path.join(userDir, "MapPackIndex.json"))) {
+    Object.assign(mapPackIndex, JSON.parse(fs.readFileSync(path.join(userDir, "MapPackIndex.json")).toString()));
+  }
+  const indexResponse = {datapackIndex, mapPackIndex};
+  assertIndexResponse(indexResponse)
+  reply.status(200).send(indexResponse);
+}
 
 export const uploadDatapack = async function uploadDatapack(
   request: FastifyRequest< {Params: { username: string} } >,
