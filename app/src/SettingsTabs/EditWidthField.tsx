@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { useContext, useRef, useState } from "react";
+import React, {useContext, useState } from "react";
 import { context } from "../state";
 import { Button, Typography } from "@mui/material";
 import { Unstable_NumberInput as NumberInput, numberInputClasses } from '@mui/base/Unstable_NumberInput';
@@ -7,22 +7,31 @@ import { styled } from "@mui/material/styles";
 
 import "./EditWidthField.css"
 
+type ChangeHandler = (
+    event:
+        | React.FocusEvent<HTMLInputElement, Element>
+        | React.PointerEvent<Element>
+        | React.KeyboardEvent<Element>,
+    value: number | null
+) => void;
+
 export const EditWidthField = observer(() => {
   const { state, actions } = useContext(context);
   const name =
     state.settingsTabs.columnSelected === null
       ? ""
       : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.editName;
-      
+
   const editWidth =
     state.settingsTabs.columnSelected === null
       ? 0
       : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.width;
   const [width, setWidth] = useState<number>(editWidth ?? 0)
-  const handleChange = (newWidth: string) => {
-    newWidth = parseInt(newWidth, 10)
-    if (isNaN(newWidth)) return
-    setWidth(newWidth); 
+  const handleChange:ChangeHandler = (event, value) => {
+    if(value === null) return
+    // let numWidth = parseInt(newWidth, 10)
+    if (isNaN(value)) return
+    setWidth(value);
   }
   return (
     <div>
@@ -32,7 +41,7 @@ export const EditWidthField = observer(() => {
           placeholder="Edit width"
           value={width}
           key={name}
-          onChange={(event, val) => handleChange(val)}
+          onChange={handleChange}
           slots={{
             root: StyledInputRoot,
             input: StyledInputElement,
@@ -64,7 +73,7 @@ export const EditWidthField = observer(() => {
 });
 
 const StyledInputRoot = styled('div')(
-  ({ theme }) => `
+  () => `
   font-family: 'Titillium Web', sans-serif;
   border-radius: 5px 5px 0px 0px;
   background: #a3cbd8;
@@ -93,7 +102,7 @@ const StyledInputRoot = styled('div')(
 );
 
 const StyledInputElement = styled('input')(
-  ({ theme }) => `
+  () => `
   font-family: inherit;
   grid-column: 1/2;
   grid-row: 1/3;
@@ -106,7 +115,7 @@ const StyledInputElement = styled('input')(
 );
 
 const StyledButton = styled('button')(
-  ({ theme }) => `
+  () => `
   display: flex;
   flex-flow: row nowrap;
   justify-content: center;
