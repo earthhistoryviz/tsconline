@@ -1,0 +1,10 @@
+.popup {
+  position: fixed;
+  top: 20%;
+  left: 20%;
+  width: auto;
+  padding: 20px;
+  z-index: 1000;
+  max-width: 60%;
+  box-sizing: border-box;
+}
