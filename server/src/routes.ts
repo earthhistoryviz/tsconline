@@ -47,7 +47,9 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(
       Object.assign(mapPackIndex, JSON.parse(fs.readFileSync(path.join(userDir, "MapPackIndex.json")).toString()));
     }
   } catch (e) {
-    reply.status(500).send({ error: "Failed to load indexes, corrupt json files present. Please contact customer service." });
+    reply
+      .status(500)
+      .send({ error: "Failed to load indexes, corrupt json files present. Please contact customer service." });
     return;
   }
   const indexResponse = { datapackIndex, mapPackIndex };
@@ -71,8 +73,8 @@ export const uploadDatapack = async function uploadDatapack(
   }
   // only accept a binary file (encoded) or an unecnrypted text file
   if (file.mimetype !== "application/octet-stream" && file.mimetype !== "text/plain") {
-    reply.status(400).send({ error: `Invalid mimetype of uploaded file, received ${file.mimetype}`})
-    return
+    reply.status(400).send({ error: `Invalid mimetype of uploaded file, received ${file.mimetype}` });
+    return;
   }
   const filename = file.filename;
   const ext = path.extname(filename);
