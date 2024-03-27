@@ -139,10 +139,10 @@ export const uploadDatapack = action("uploadDatapack", async (file: File, userna
     const data = await response.json();
     if (response.ok) {
       console.log("Successfully uploaded datapack");
+      fetchUserDatapacks(username);
     } else {
       displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
     }
-    fetchUserDatapacks(username);
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
