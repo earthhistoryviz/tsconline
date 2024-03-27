@@ -124,7 +124,6 @@ export async function grabMapImages(
         const fileName = path.basename(image_path);
         const destPath = path.join(assetconfigs.imagesDirectory, fileName);
         if (fsSync.existsSync(destPath)) {
-          // console.log(fileName + " already exists");
           return;
         }
         try {
