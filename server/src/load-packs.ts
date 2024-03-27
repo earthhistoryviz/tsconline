@@ -109,7 +109,7 @@ export async function loadFaciesPatterns() {
  * Finds all map images and puts them in the public directory
  * For access from fastify server servicing
  */
-export async function grabMapImages(datapacks: string[], decryptionDirectory: string) {
+export async function grabMapImages(datapacks: string[] = assetconfigs.activeDatapacks, decryptionDirectory: string = assetconfigs.decryptionDirectory) {
   const imagePaths = await grabFilepaths(datapacks, decryptionDirectory, "MapImages");
   const compiledImages: string[] = [];
   try {
