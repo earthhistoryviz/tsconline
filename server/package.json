@@ -40,7 +40,7 @@
   "scripts": {
     "build": "tsc -b",
     "dev": "tsc -b -w",
-    "start": "nodemon --watch dist --watch ../shared/dist --watch ./package.json --watch assets --watch ./public/presets dist/index.js",
+    "start": "nodemon --watch dist --watch ../shared/dist --watch ./package.json --watch assets --watch ./public/presets dist/index.js --ignore assets/uploads",
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -rf ./dist"
   },

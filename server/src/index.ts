@@ -7,7 +7,7 @@ import { deleteDirectory } from "./util.js";
 import * as routes from "./routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
 import fastifyCompress from "@fastify/compress";
-import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
+import { grabMapImages, loadFaciesPatterns, loadIndexes } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
 import { AssetConfig, assertAssetConfig } from "./types.js";
 import { readFile } from "fs/promises";
@@ -61,7 +61,8 @@ try {
 const datapackIndex: DatapackIndex = {};
 const mapPackIndex: MapPackIndex = {};
 const patterns = await loadFaciesPatterns();
-await loadIndexes(datapackIndex, mapPackIndex);
+await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, assetconfigs.activeDatapacks);
+grabMapImages();
 
 server.register(fastifyMultipart);
 
