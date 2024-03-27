@@ -8,10 +8,11 @@ import { Chart } from "./Chart";
 import { Help } from "./Help";
 import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
 import theme from "./theme";
-import { Alert, Slide, Snackbar, Typography } from "@mui/material";
+import { Alert, CssBaseline, Slide, Snackbar, Typography } from "@mui/material";
 import { useContext } from "react";
 import { context } from "./state";
 import { About } from "./About";
+import { Login } from "./Login";
 import { TSCPopupDialog, TSCError, Lottie } from "./components";
 import ChartDoneIcon from "./assets/icons/chart-done.json";
 import "./App.css";
@@ -22,6 +23,7 @@ export default observer(function App() {
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={theme}>
+        <CssBaseline />
         <NavBar />
         <Toolbar />
         <Routes>
@@ -30,6 +32,7 @@ export default observer(function App() {
           <Route path="/chart" element={<Chart />} />
           <Route path="/help" element={<Help />} />
           <Route path="/about" element={<About />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
         {Array.from(state.errors.errorAlerts.entries()).map(([context, error], index) => (
           <TSCError
