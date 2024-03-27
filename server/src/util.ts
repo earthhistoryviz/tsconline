@@ -2,7 +2,6 @@ import fs from "fs";
 import path from "path";
 import fsPromises from "fs/promises";
 import { glob } from "glob";
-import pump from "pump";
 
 /**
  * Recursively deletes directory INCLUDING directoryPath
@@ -147,8 +146,8 @@ export function capitalizeFirstLetter(input: string): string {
 
 /**
  * delete the uploaded file and the decrypted directory if they exist
- * @param uploadedFile 
- * @param decryptedUploadedDirectory 
+ * @param uploadedFile
+ * @param decryptedUploadedDirectory
  */
 export function resetUploadDirectory(uploadedFile: string, decryptedUploadedDirectory: string) {
   if (fs.existsSync(uploadedFile)) {

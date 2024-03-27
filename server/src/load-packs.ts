@@ -27,7 +27,12 @@ import { grabFilepaths, rgbToHex } from "./util.js";
  * @param datapackIndex the datapackIndex to load
  * @param mapPackIndex the mapPackIndex to load
  */
-export async function loadIndexes(datapackIndex: DatapackIndex, mapPackIndex: MapPackIndex, decryptionDirectory: string, datapacks: string[]) {
+export async function loadIndexes(
+  datapackIndex: DatapackIndex,
+  mapPackIndex: MapPackIndex,
+  decryptionDirectory: string,
+  datapacks: string[]
+) {
   console.log(`\nParsing datapacks: ${datapacks}\n`);
   for (const datapack of datapacks) {
     await parseDatapacks([datapack], decryptionDirectory)
