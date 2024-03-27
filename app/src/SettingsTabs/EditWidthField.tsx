@@ -1,18 +1,15 @@
 import { observer } from "mobx-react-lite";
-import React, {useContext, useState } from "react";
+import React, { useContext, useState } from "react";
 import { context } from "../state";
 import { Button, Typography } from "@mui/material";
-import { Unstable_NumberInput as NumberInput, numberInputClasses } from '@mui/base/Unstable_NumberInput';
+import { Unstable_NumberInput as NumberInput, numberInputClasses } from "@mui/base/Unstable_NumberInput";
 import { styled } from "@mui/material/styles";
 
-import "./EditWidthField.css"
+import "./EditWidthField.css";
 
 type ChangeHandler = (
-    event:
-        | React.FocusEvent<HTMLInputElement, Element>
-        | React.PointerEvent<Element>
-        | React.KeyboardEvent<Element>,
-    value: number | null
+  event: React.FocusEvent<HTMLInputElement, Element> | React.PointerEvent<Element> | React.KeyboardEvent<Element>,
+  value: number | null
 ) => void;
 
 export const EditWidthField = observer(() => {
@@ -26,13 +23,12 @@ export const EditWidthField = observer(() => {
     state.settingsTabs.columnSelected === null
       ? 0
       : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.width;
-  const [width, setWidth] = useState<number>(editWidth ?? 0)
-  const handleChange:ChangeHandler = (event, value) => {
-    if(value === null) return
-    // let numWidth = parseInt(newWidth, 10)
-    if (isNaN(value)) return
+  const [width, setWidth] = useState<number>(editWidth ?? 0);
+  const handleChange: ChangeHandler = (event, value) => {
+    if (value === null) return;
+    if (isNaN(value)) return;
     setWidth(value);
-  }
+  };
   return (
     <div>
       <Typography style={{ padding: "5px" }}>Edit Width</Typography>
@@ -46,15 +42,15 @@ export const EditWidthField = observer(() => {
             root: StyledInputRoot,
             input: StyledInputElement,
             incrementButton: StyledButton,
-            decrementButton: StyledButton,
+            decrementButton: StyledButton
           }}
           slotProps={{
             incrementButton: {
-              children: '▴',
+              children: "▴"
             },
             decrementButton: {
-              children: '▾',
-            },
+              children: "▾"
+            }
           }}
         />
         <div>
@@ -72,7 +68,7 @@ export const EditWidthField = observer(() => {
   );
 });
 
-const StyledInputRoot = styled('div')(
+const StyledInputRoot = styled("div")(
   () => `
   font-family: 'Titillium Web', sans-serif;
   border-radius: 5px 5px 0px 0px;
@@ -98,10 +94,10 @@ const StyledInputRoot = styled('div')(
   &.${numberInputClasses.focused} {
     border-bottom: solid #fff 1px;
   }
-`,
+`
 );
 
-const StyledInputElement = styled('input')(
+const StyledInputElement = styled("input")(
   () => `
   font-family: inherit;
   grid-column: 1/2;
@@ -111,10 +107,10 @@ const StyledInputElement = styled('input')(
   border-radius: inherit;
   padding: 2px 6px;
   outline: 0;
-`,
+`
 );
 
-const StyledButton = styled('button')(
+const StyledButton = styled("button")(
   () => `
   display: flex;
   flex-flow: row nowrap;
@@ -176,5 +172,5 @@ const StyledButton = styled('button')(
   & .arrow {
     transform: translateY(-1px);
   }
-`,
+`
 );

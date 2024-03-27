@@ -306,7 +306,7 @@ function generateColumnXml(jsonColumn: any, stateColumn: ColumnInfo | null, inde
         if (stateColumn && stateColumn !== undefined) {
           if (stateColumn.width !== undefined) {
             xml += `${indent}<setting name="width">${stateColumn.width}</setting>\n`;
-            useEditWidth = true
+            useEditWidth = true;
           }
         }
         if (!useEditWidth) {
