@@ -118,7 +118,7 @@ export const uploadDatapack = async function uploadDatapack(
     console.log("Finished decryption");
   } catch (e) {
     resetUploadDirectory(filepath, decryptedFilepathDir);
-    reply.status(500).send({ error: "Failed to decrypt activeDatapacks in AssetConfig with error: " + e });
+    reply.status(500).send({ error: "Failed to decrypt datapacks with error " + e });
     return;
   }
   if (!fs.existsSync(decryptedFilepathDir) || !fs.existsSync(path.join(decryptedFilepathDir, "datapacks"))) {
