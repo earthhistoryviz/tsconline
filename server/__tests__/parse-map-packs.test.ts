@@ -138,12 +138,10 @@ describe("parseMapPacks tests", () => {
    * parses three packs with same parent "World map" (not parse-map-packs-test-1)
    */
   it("should parse all packs", async () => {
-    const mapPacks = await parseMapPacks([
-      "parse-map-packs-test-1.txt",
-      "parse-map-packs-test-2.txt",
-      "parse-map-packs-test-3.txt"
-    ],
-    "");
+    const mapPacks = await parseMapPacks(
+      ["parse-map-packs-test-1.txt", "parse-map-packs-test-2.txt", "parse-map-packs-test-3.txt"],
+      ""
+    );
     const expected = {
       mapInfo: {
         ...key["map-pack-key-1"]["mapInfo"],
