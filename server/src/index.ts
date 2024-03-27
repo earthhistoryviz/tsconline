@@ -136,6 +136,8 @@ server.get("/facies-patterns", (_request, reply) => {
   }
 });
 
+server.get("/user-datapacks/:username", routes.fetchUserDatapacks);
+
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
 server.post<{ Params: { usecache: string; useSuggestedAge: string } }>(
