@@ -53,6 +53,7 @@ export async function loadIndexes(
         console.log(`Cannot create a mapPack with datapack ${datapack} and error: ${e}`);
       });
   }
+  await grabMapImages(datapacks, decryptionDirectory);
 }
 /**
  * Loads all the facies patterns from the patterns directory
@@ -108,8 +109,8 @@ export async function loadFaciesPatterns() {
  * Finds all map images and puts them in the public directory
  * For access from fastify server servicing
  */
-export async function grabMapImages() {
-  const imagePaths = await grabFilepaths(assetconfigs.activeDatapacks, assetconfigs.decryptionDirectory, "MapImages");
+export async function grabMapImages(datapacks: string[], decryptionDirectory: string) {
+  const imagePaths = await grabFilepaths(datapacks, decryptionDirectory, "MapImages");
   const compiledImages: string[] = [];
   try {
     // recursive: true ensures if it already exists, we continue with no error
@@ -133,7 +134,7 @@ export async function grabMapImages() {
       { concurrency: 5 }
     ); // Adjust concurrency as needed
   } catch (e) {
-    console.log("Error processing image paths for datapacks: ", assetconfigs.activeDatapacks, " \n", "With error: ", e);
+    console.log("Error processing image paths for datapacks: ", datapacks, " \n", "With error: ", e);
   }
   return compiledImages;
 }
