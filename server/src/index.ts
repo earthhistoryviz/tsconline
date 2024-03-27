@@ -7,7 +7,7 @@ import { deleteDirectory } from "./util.js";
 import * as routes from "./routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
 import fastifyCompress from "@fastify/compress";
-import { grabMapImages, loadFaciesPatterns, loadIndexes } from "./load-packs.js";
+import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
 import { AssetConfig, assertAssetConfig } from "./types.js";
 import { readFile } from "fs/promises";
