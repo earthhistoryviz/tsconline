@@ -1,7 +1,7 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec, execSync } from "child_process";
 import { writeFile, stat, readFile } from "fs/promises";
-import { DatapackIndex, MapPackIndex, TimescaleItem, assertChartRequest, assertIndexResponse } from "@tsconline/shared";
+import { DatapackIndex, MapPackIndex, TimescaleItem, assertChartRequest, assertDatapackIndex, assertIndexResponse, assertMapPackIndex } from "@tsconline/shared";
 import { deleteDirectory, resetUploadDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
 import md5 from "md5";
@@ -29,12 +29,11 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(
     reply.status(404).send({ error: "User does not exist" });
     return;
   }
-  if (!fs.existsSync(path.join(userDir, "DatapackIndex.json"))) {
-    reply.status(404).send({ error: "User has no datapacks" });
-    return;
+  const datapackIndex: DatapackIndex = {};
+  if (fs.existsSync(path.join(userDir, "DatapackIndex.json"))) {
+    Object.assign(datapackIndex, JSON.parse(fs.readFileSync(path.join(userDir, "DatapackIndex.json")).toString()));
   }
-  const datapackIndex = JSON.parse(fs.readFileSync(path.join(userDir, "DatapackIndex.json")).toString());
-  const mapPackIndex = {};
+  const mapPackIndex: MapPackIndex = {};
   if (fs.existsSync(path.join(userDir, "MapPackIndex.json"))) {
     Object.assign(mapPackIndex, JSON.parse(fs.readFileSync(path.join(userDir, "MapPackIndex.json")).toString()));
   }
@@ -123,43 +122,31 @@ export const uploadDatapack = async function uploadDatapack(
   const mapPackIndex: MapPackIndex = {};
   // check for if this user has a datapack index already
   if (fs.existsSync(datapackIndexFilepath)) {
-    fs.readFile(datapackIndexFilepath, (err, data) => {
-      if (err) {
-        resetUploadDirectory(filepath, decryptedFilepathDir);
-        reply.status(500).send({ error: "Failed to read DatapackIndex.json" });
-        return;
-      }
-      try {
-        const json = JSON.parse(data.toString());
+      try{
+        const json = fs.readFileSync(datapackIndexFilepath).toString();
         if (json) {
           Object.assign(datapackIndex, json);
         }
+        assertDatapackIndex(datapackIndex)
       } catch (e) {
         resetUploadDirectory(filepath, decryptedFilepathDir);
         reply.status(500).send({ error: "Failed to parse DatapackIndex.json" });
         return;
       }
-    });
-  }
+  };
   // check for if this user has a map index already
-  if (fs.existsSync(path.join(userDir, "MapPackIndex.json"))) {
-    fs.readFile(mapPackIndexFilepath, (err, data) => {
-      if (err) {
-        resetUploadDirectory(filepath, decryptedFilepathDir);
-        reply.status(500).send({ error: "Failed to read MapPackIndex.json" });
-        return;
+  if (fs.existsSync(mapPackIndexFilepath)) {
+    try { 
+      const json = fs.readFileSync(mapPackIndexFilepath).toString();
+      if (json) {
+        Object.assign(mapPackIndex, json);
       }
-      try {
-        const json = JSON.parse(data.toString());
-        if (json) {
-          Object.assign(mapPackIndex, json);
-        }
+        assertMapPackIndex(mapPackIndex);
       } catch (e) {
         resetUploadDirectory(filepath, decryptedFilepathDir);
         reply.status(500).send({ error: "Failed to parse MapPackIndex.json" });
         return;
-      }
-    });
+    }
   }
   await loadIndexes(datapackIndex, mapPackIndex, decryptDir, [filename]);
   if (!datapackIndex[filename]) {
@@ -177,6 +164,7 @@ export const uploadDatapack = async function uploadDatapack(
   }
   reply.status(200).send({ message: "File uploaded" });
 };
+
 export const fetchSettingsXml = async function fetchSettingsJson(
   request: FastifyRequest<{ Params: { settingFile: string } }>,
   reply: FastifyReply
