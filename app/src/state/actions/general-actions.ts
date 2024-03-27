@@ -114,19 +114,19 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async (username: 
     });
     const data = await response.json();
     try {
-      assertIndexResponse(data)
+      assertIndexResponse(data);
       const { mapPackIndex, datapackIndex } = data;
       Object.assign(state.mapPackIndex, mapPackIndex);
       Object.assign(state.datapackIndex, datapackIndex);
-      console.log("User Datapacks loaded")
-    } catch(e) {
+      console.log("User Datapacks loaded");
+    } catch (e) {
       displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
     }
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
   }
-})
+});
 
 export const uploadDatapack = action("uploadDatapack", async (file: File, username: string) => {
   const formData = new FormData();

@@ -23,7 +23,7 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(
     reply.status(400).send({ error: "No username provided" });
     return;
   }
-  const hash = md5(username)
+  const hash = md5(username);
   const userDir = path.join(assetconfigs.uploadDirectory, hash);
   if (!fs.existsSync(userDir)) {
     reply.status(404).send({ error: "User does not exist" });
@@ -34,17 +34,17 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(
     return;
   }
   const datapackIndex = JSON.parse(fs.readFileSync(path.join(userDir, "DatapackIndex.json")).toString());
-  const mapPackIndex = {}
+  const mapPackIndex = {};
   if (fs.existsSync(path.join(userDir, "MapPackIndex.json"))) {
     Object.assign(mapPackIndex, JSON.parse(fs.readFileSync(path.join(userDir, "MapPackIndex.json")).toString()));
   }
-  const indexResponse = {datapackIndex, mapPackIndex};
-  assertIndexResponse(indexResponse)
+  const indexResponse = { datapackIndex, mapPackIndex };
+  assertIndexResponse(indexResponse);
   reply.status(200).send(indexResponse);
-}
+};
 
 export const uploadDatapack = async function uploadDatapack(
-  request: FastifyRequest< {Params: { username: string} } >,
+  request: FastifyRequest<{ Params: { username: string } }>,
   reply: FastifyReply
 ) {
   const { username } = request.params;
@@ -58,16 +58,16 @@ export const uploadDatapack = async function uploadDatapack(
     return;
   }
   const filename = file.filename;
-  const ext = path.extname(filename)
+  const ext = path.extname(filename);
   const filenameWithoutExtension = path.basename(filename, ext);
-  const hash = md5(username)
+  const hash = md5(username);
   const userDir = path.join(assetconfigs.uploadDirectory, hash);
-  const datapackDir = path.join(userDir, "datapacks")
-  const decryptDir = path.join(userDir, "decrypted")
-  const filepath = path.join(datapackDir, filename)
-  const decryptedFilepathDir = path.join(decryptDir, filenameWithoutExtension)
-  const mapPackIndexFilepath = path.join(userDir, "MapPackIndex.json")
-  const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json")
+  const datapackDir = path.join(userDir, "datapacks");
+  const decryptDir = path.join(userDir, "decrypted");
+  const filepath = path.join(datapackDir, filename);
+  const decryptedFilepathDir = path.join(decryptDir, filenameWithoutExtension);
+  const mapPackIndexFilepath = path.join(userDir, "MapPackIndex.json");
+  const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json");
   if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(ext)) {
     reply.status(415).send({ error: "Invalid file type" });
     return;
@@ -77,7 +77,7 @@ export const uploadDatapack = async function uploadDatapack(
   }
   const fileStream = file.file;
   console.log("Uploading file: ", filename);
-  pump(fileStream, fs.createWriteStream(filepath))
+  pump(fileStream, fs.createWriteStream(filepath));
   try {
     // must wait for the file to be written before decrypting
     await new Promise<void>((resolve, reject) => {
@@ -87,16 +87,17 @@ export const uploadDatapack = async function uploadDatapack(
         } else {
           resolve();
         }
-      })
-  })} catch (e) {
+      });
+    });
+  } catch (e) {
     resetUploadDirectory(filepath, decryptedFilepathDir);
     reply.status(500).send({ error: "Failed to save file with error: " + e });
     return;
   }
   if (file.file.truncated) {
     resetUploadDirectory(filepath, decryptedFilepathDir);
-    reply.status(413).send({ error: "File too large"});    
-    return
+    reply.status(413).send({ error: "File too large" });
+    return;
   }
   try {
     const cmd =
@@ -106,7 +107,7 @@ export const uploadDatapack = async function uploadDatapack(
       // Tell it where to send the datapacks
       `-dest ${decryptDir} `;
     console.log("Calling Java decrypt.jar: ", cmd);
-    execSync(cmd, { stdio: 'inherit' });
+    execSync(cmd, { stdio: "inherit" });
     console.log("Finished decryption");
   } catch (e) {
     resetUploadDirectory(filepath, decryptedFilepathDir);
@@ -118,8 +119,8 @@ export const uploadDatapack = async function uploadDatapack(
     reply.status(500).send({ error: "Failed to decrypt file" });
     return;
   }
-  const datapackIndex: DatapackIndex = {}
-  const mapPackIndex: MapPackIndex = {}
+  const datapackIndex: DatapackIndex = {};
+  const mapPackIndex: MapPackIndex = {};
   // check for if this user has a datapack index already
   if (fs.existsSync(datapackIndexFilepath)) {
     fs.readFile(datapackIndexFilepath, (err, data) => {
@@ -138,7 +139,7 @@ export const uploadDatapack = async function uploadDatapack(
         reply.status(500).send({ error: "Failed to parse DatapackIndex.json" });
         return;
       }
-    })
+    });
   }
   // check for if this user has a map index already
   if (fs.existsSync(path.join(userDir, "MapPackIndex.json"))) {
@@ -158,7 +159,7 @@ export const uploadDatapack = async function uploadDatapack(
         reply.status(500).send({ error: "Failed to parse MapPackIndex.json" });
         return;
       }
-    })
+    });
   }
   await loadIndexes(datapackIndex, mapPackIndex, decryptDir, [filename]);
   if (!datapackIndex[filename]) {
@@ -175,7 +176,7 @@ export const uploadDatapack = async function uploadDatapack(
     return;
   }
   reply.status(200).send({ message: "File uploaded" });
-}
+};
 export const fetchSettingsXml = async function fetchSettingsJson(
   request: FastifyRequest<{ Params: { settingFile: string } }>,
   reply: FastifyReply
