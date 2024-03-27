@@ -13,21 +13,26 @@ export const EditWidthField = observer(() => {
     state.settingsTabs.columnSelected === null
       ? ""
       : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.editName;
+      
   const editWidth =
     state.settingsTabs.columnSelected === null
       ? 0
       : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.width;
-  const [width, setWidth] = useState<number>(editWidth)
+  const [width, setWidth] = useState<number>(editWidth ?? 0)
+  const handleChange = (newWidth: string) => {
+    newWidth = parseInt(newWidth, 10)
+    if (isNaN(newWidth)) return
+    setWidth(newWidth); 
+  }
   return (
     <div>
       <Typography style={{ padding: "5px" }}>Edit Width</Typography>
       <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
         <NumberInput
-          // id="editWidthField"
           placeholder="Edit width"
           value={width}
           key={name}
-          onChange={(event:any, val: number) => setWidth(val)}
+          onChange={(event, val) => handleChange(val)}
           slots={{
             root: StyledInputRoot,
             input: StyledInputElement,

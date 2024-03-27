@@ -88,7 +88,7 @@ export const ColumnMenu = observer(() => {
       >
         {state.settingsTabs.columnSelected && <EditNameField />}
         {state.settingsTabs.columnSelected && <FontMenu />}
-        {state.settingsTabs.columnSelected && <EditWidthField />}
+        {state.settingsTabs.columnSelected && state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.width && <EditWidthField />}
       </div>
     </div>
   );
