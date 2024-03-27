@@ -63,7 +63,12 @@ const mapPackIndex: MapPackIndex = {};
 const patterns = await loadFaciesPatterns();
 await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, assetconfigs.activeDatapacks);
 
-server.register(fastifyMultipart);
+server.register(fastifyMultipart, {
+  limits: {
+    fieldNameSize: 100,
+    fileSize: 1024 * 1024 * 60 // 60 mb
+  }
+});
 
 // Serve the main app from /
 server.register(fastifyStatic, {

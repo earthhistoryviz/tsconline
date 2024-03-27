@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { exec, execSync } from "child_process";
+import { exec } from "child_process";
 import { writeFile, stat, readFile } from "fs/promises";
 import {
   DatapackIndex,
@@ -38,12 +38,17 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(
     return;
   }
   const datapackIndex: DatapackIndex = {};
-  if (fs.existsSync(path.join(userDir, "DatapackIndex.json"))) {
-    Object.assign(datapackIndex, JSON.parse(fs.readFileSync(path.join(userDir, "DatapackIndex.json")).toString()));
-  }
   const mapPackIndex: MapPackIndex = {};
-  if (fs.existsSync(path.join(userDir, "MapPackIndex.json"))) {
-    Object.assign(mapPackIndex, JSON.parse(fs.readFileSync(path.join(userDir, "MapPackIndex.json")).toString()));
+  try {
+    if (fs.existsSync(path.join(userDir, "DatapackIndex.json"))) {
+      Object.assign(datapackIndex, JSON.parse(fs.readFileSync(path.join(userDir, "DatapackIndex.json")).toString()));
+    }
+    if (fs.existsSync(path.join(userDir, "MapPackIndex.json"))) {
+      Object.assign(mapPackIndex, JSON.parse(fs.readFileSync(path.join(userDir, "MapPackIndex.json")).toString()));
+    }
+  } catch (e) {
+    reply.status(500).send({ error: "Failed to load indexes, corrupt json files present. Please contact customer service." });
+    return;
   }
   const indexResponse = { datapackIndex, mapPackIndex };
   assertIndexResponse(indexResponse);
@@ -84,7 +89,6 @@ export const uploadDatapack = async function uploadDatapack(
   }
   const fileStream = file.file;
   console.log("Uploading file: ", filename);
-  pump(fileStream, fs.createWriteStream(filepath));
   try {
     // must wait for the file to be written before decrypting
     await new Promise<void>((resolve, reject) => {
@@ -107,15 +111,26 @@ export const uploadDatapack = async function uploadDatapack(
     return;
   }
   try {
-    const cmd =
-      `java -jar ${assetconfigs.decryptionJar} ` +
-      // Decrypting these datapacks:
-      `-d "${filepath}" ` +
-      // Tell it where to send the datapacks
-      `-dest ${decryptDir} `;
-    console.log("Calling Java decrypt.jar: ", cmd);
-    execSync(cmd, { stdio: "inherit" });
-    console.log("Finished decryption");
+    await new Promise<void>((resolve, reject) => {
+      const cmd =
+        `java -jar ${assetconfigs.decryptionJar} ` +
+        // Decrypting these datapacks:
+        `-d "${filepath}" ` +
+        // Tell it where to send the datapacks
+        `-dest ${decryptDir} `;
+      console.log("Calling Java decrypt.jar: ", cmd);
+      exec(cmd, function (error, stdout, stderror) {
+        console.log("Java decrypt.jar finished, sending reply to browser");
+        if (error) {
+          console.error("Java error param: " + error);
+          console.error("Java stderr: " + stderror.toString());
+          reject(error);
+        } else {
+          console.log("Java stdout: " + stdout.toString());
+          resolve();
+        }
+      });
+    });
   } catch (e) {
     resetUploadDirectory(filepath, decryptedFilepathDir);
     reply.status(500).send({ error: "Failed to decrypt datapacks with error " + e });
@@ -131,10 +146,8 @@ export const uploadDatapack = async function uploadDatapack(
   // check for if this user has a datapack index already
   if (fs.existsSync(datapackIndexFilepath)) {
     try {
-      const json = fs.readFileSync(datapackIndexFilepath).toString();
-      if (json) {
-        Object.assign(datapackIndex, json);
-      }
+      const data = await readFile(datapackIndexFilepath);
+      Object.assign(datapackIndex, JSON.parse(data.toString()));
       assertDatapackIndex(datapackIndex);
     } catch (e) {
       resetUploadDirectory(filepath, decryptedFilepathDir);
@@ -145,10 +158,8 @@ export const uploadDatapack = async function uploadDatapack(
   // check for if this user has a map index already
   if (fs.existsSync(mapPackIndexFilepath)) {
     try {
-      const json = fs.readFileSync(mapPackIndexFilepath).toString();
-      if (json) {
-        Object.assign(mapPackIndex, json);
-      }
+      const data = await readFile(mapPackIndexFilepath);
+      Object.assign(mapPackIndex, JSON.parse(data.toString()));
       assertMapPackIndex(mapPackIndex);
     } catch (e) {
       resetUploadDirectory(filepath, decryptedFilepathDir);
@@ -163,8 +174,8 @@ export const uploadDatapack = async function uploadDatapack(
     return;
   }
   try {
-    fs.writeFileSync(datapackIndexFilepath, JSON.stringify(datapackIndex));
-    fs.writeFileSync(mapPackIndexFilepath, JSON.stringify(mapPackIndex));
+    await writeFile(datapackIndexFilepath, JSON.stringify(datapackIndex));
+    await writeFile(mapPackIndexFilepath, JSON.stringify(mapPackIndex));
   } catch (e) {
     reply.status(500).send({ error: "Failed to save indexes" });
     resetUploadDirectory(filepath, decryptedFilepathDir);

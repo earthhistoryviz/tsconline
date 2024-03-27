@@ -151,7 +151,11 @@ export function capitalizeFirstLetter(input: string): string {
  */
 export function resetUploadDirectory(uploadedFile: string, decryptedUploadedDirectory: string) {
   if (fs.existsSync(uploadedFile)) {
-    fs.unlinkSync(uploadedFile);
+    fs.unlink(uploadedFile, (err) => {
+      if (err) {
+        console.error(err);
+      }
+    });
   }
   if (fs.existsSync(decryptedUploadedDirectory)) {
     deleteDirectory(decryptedUploadedDirectory);
