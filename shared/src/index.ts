@@ -1,6 +1,6 @@
 // Shared types between app and server (i.e. messages they send back and forth)
 
-import { defaultFontsInfoConstant } from "./constants";
+import { defaultFontsInfoConstant } from "./constants.js";
 
 export type SuccessfulServerResponse = {
   message: string;
