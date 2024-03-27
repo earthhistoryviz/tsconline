@@ -68,7 +68,7 @@ export const uploadDatapack = async function uploadDatapack(
   const decryptedFilepathDir = path.join(decryptDir, filenameWithoutExtension)
   const mapPackIndexFilepath = path.join(userDir, "MapPackIndex.json")
   const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json")
-  if (!/^\.dpk|\.txt|\.map|\.mdpk$/.test(ext)) {
+  if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(ext)) {
     reply.status(415).send({ error: "Invalid file type" });
     return;
   }
