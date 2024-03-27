@@ -69,7 +69,7 @@ export const updateWidth = action((newWidth: number) => {
       "in state.settingsTabs.columnHashMap, but map does not this key"
     );
   }
-  if (isNaN(newWidth)) return
+  if (isNaN(newWidth)) return;
   state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.width = newWidth;
   return;
 });
