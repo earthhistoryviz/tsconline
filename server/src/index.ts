@@ -62,7 +62,6 @@ const datapackIndex: DatapackIndex = {};
 const mapPackIndex: MapPackIndex = {};
 const patterns = await loadFaciesPatterns();
 await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, assetconfigs.activeDatapacks);
-grabMapImages();
 
 server.register(fastifyMultipart);
 
