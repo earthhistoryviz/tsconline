@@ -69,6 +69,11 @@ export const uploadDatapack = async function uploadDatapack(
     reply.status(404).send({ error: "No file uploaded" });
     return;
   }
+  // only accept a binary file (encoded) or an unecnrypted text file
+  if (file.mimetype !== "application/octet-stream" && file.mimetype !== "text/plain") {
+    reply.status(400).send({ error: `Invalid mimetype of uploaded file, received ${file.mimetype}`})
+    return
+  }
   const filename = file.filename;
   const ext = path.extname(filename);
   const filenameWithoutExtension = path.basename(filename, ext);
