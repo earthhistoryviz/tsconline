@@ -9,7 +9,7 @@ export function devSafeUrl(url: string) {
         Therefore, you will probably encounter bugs on the dev side. The call stack here (to show you where you made the call) is: ${new Error().stack}`
     );
   }
-  let baseUrl = "http://localhost:3000"
+  let baseUrl = "http://localhost:3000";
   if (import.meta.env.VITE_SERVER_URL) {
     baseUrl = import.meta.env.VITE_SERVER_URL;
   }

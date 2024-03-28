@@ -7,14 +7,51 @@ import { ErrorCodes } from "../util/error-codes";
 import { TSCButton } from "./TSCButton";
 
 export const TSCPopupManager = () => {
-  const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState("");
+  const [popupContent, setPopupContent] = useState({ open: false, message: "" });
   const [isValidPath, setIsValidPath] = useState<boolean>(true);
-  const { actions } = useContext(context);
+  const { state, actions } = useContext(context);
 
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      let url: string = "http://localhost:5173";
+    const processImages = async (text: string) => {
+      const srcMatches = [...text.matchAll(/src="([^"]+)"/g)];
+      const imagePromises = srcMatches.map(async (match) => {
+        const [fullMatch, src] = match;
+        const imageName = src.split("/").pop();
+        if (imageName) {
+          try {
+            for (const datapack of state.config.datapacks) {
+              const datapackName = datapack.replace(/\.[^/.]+$/, "");
+              const imageBlob = await actions.fetchImage(datapackName, imageName);
+              const reader = new FileReader();
+              reader.readAsDataURL(imageBlob);
+              await new Promise((resolve, reject) => {
+                reader.onloadend = resolve;
+                reader.onerror = reject;
+              });
+              return { fullMatch, dataUrl: reader.result };
+            }
+          } catch (error) {
+            console.error("Error fetching or processing image:", error);
+            return { fullMatch, dataUrl: "" };
+          }
+        }
+        return { fullMatch, dataUrl: "" };
+      });
+
+      const images = await Promise.all(imagePromises);
+      let newText = text;
+      images.forEach(({ fullMatch, dataUrl }) => {
+        if (dataUrl) {
+          newText = newText.replace(fullMatch, `src="${dataUrl}"`);
+        } else {
+          newText = newText.replace(fullMatch, "");
+        }
+      });
+      return newText;
+    };
+
+    const handleMessage = async (event: MessageEvent) => {
+      let url = "http://localhost:5173";
       if (import.meta.env.VITE_APP_URL) {
         url = import.meta.env.VITE_APP_URL;
       }
@@ -25,13 +62,13 @@ export const TSCPopupManager = () => {
       }
 
       if (event.data.action === "showPopup") {
-        setMessage(event.data.text);
-        setOpen(true);
+        let text = event.data.text;
+        text = await processImages(text);
+        setPopupContent({ open: true, message: text });
       }
     };
 
     window.addEventListener("message", handleMessage);
-
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
@@ -39,12 +76,12 @@ export const TSCPopupManager = () => {
     return <div>Invalid SVG Path. Please check the path and try again.</div>;
   }
 
-  const handleClose = () => setOpen(false);
+  const handleClose = () => setPopupContent((prev) => ({ ...prev, open: false }));
 
   return (
-    <Dialog open={open} onClose={handleClose}>
+    <Dialog open={popupContent.open} onClose={handleClose}>
       <DialogContent>
-        <div dangerouslySetInnerHTML={{ __html: message }} />
+        <div dangerouslySetInnerHTML={{ __html: popupContent.message }} />
       </DialogContent>
       <DialogActions>
         <TSCButton onClick={handleClose}>Close</TSCButton>

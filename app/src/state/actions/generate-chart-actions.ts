@@ -7,7 +7,7 @@ import { assertChartInfo } from "@tsconline/shared";
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import  DOMPurify  from "dompurify";
+import DOMPurify from "dompurify";
 
 export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
   if (state.settings.useDatapackSuggestedAge != response) {
@@ -56,7 +56,8 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
       await generalActions.checkSVGStatus();
       const content = await (await fetcher(answer.chartpath)).text();
       const domPurifyConfig = {
-        ADD_ATTR: ["popuptext"]
+        ADD_ATTR: ["docbase", "popuptext"],
+        ADD_URI_SAFE_ATTR: ["docbase", "popuptext"]
       };
       const sanitizedSVG = DOMPurify.sanitize(content, domPurifyConfig);
       generalActions.setChartContent(sanitizedSVG);

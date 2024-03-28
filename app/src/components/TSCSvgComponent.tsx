@@ -16,7 +16,6 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ chart
   const svgContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    
     if (!state.settings.mouseOverPopupsEnabled) return;
 
     const container = svgContainerRef.current;

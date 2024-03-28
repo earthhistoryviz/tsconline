@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
-import { writeFile, stat, readFile } from "fs/promises";
+import { writeFile, stat, readFile, access } from "fs/promises";
 import { TimescaleItem, assertChartRequest } from "@tsconline/shared";
 import { deleteDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
@@ -10,6 +10,25 @@ import svgson from "svgson";
 import fs from "fs";
 import { assertTimescale } from "@tsconline/shared";
 import { parseExcelFile } from "./parse-excel-file.js";
+
+export const fetchImage = async function (
+  request: FastifyRequest<{ Params: { datapackName: string; imageName: string } }>,
+  reply: FastifyReply
+) {
+  const imagePath = `${assetconfigs.decryptionDirectory}/${request.params.datapackName}/datapack-images/${request.params.imageName}`;
+  try {
+    await access(imagePath);
+    const image = await readFile(imagePath);
+    reply.send(image);
+  } catch (e) {
+    const error = e as NodeJS.ErrnoException;
+    if (error.code === "ENOENT") {
+      reply.status(404).send({ error: "Image not found" });
+    } else {
+      reply.status(500).send({ error: "An error occurred" });
+    }
+  }
+};
 
 export const fetchSettingsXml = async function fetchSettingsJson(
   request: FastifyRequest<{ Params: { settingFile: string } }>,

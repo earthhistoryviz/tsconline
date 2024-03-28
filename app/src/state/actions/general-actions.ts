@@ -513,6 +513,7 @@ export const handleCloseSnackbar = action(
 export const removeError = action("removeError", (context: ErrorCodes) => {
   state.errors.errorAlerts.delete(context);
 });
+
 export const pushError = action("pushError", (context: ErrorCodes) => {
   if (state.errors.errorAlerts.has(context)) {
     state.errors.errorAlerts.get(context)!.errorCount += 1;
@@ -523,6 +524,23 @@ export const pushError = action("pushError", (context: ErrorCodes) => {
     errorCount: 1
   };
   state.errors.errorAlerts.set(context, error);
+});
+
+export const fetchImage = action("fetchImage", async (datapackName: string, imageName: string) => {
+  const response = await fetcher(`/charts/${datapackName}/${imageName}`, {
+    method: "GET"
+  });
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error("Image not found");
+    } else if (response.status === 500) {
+      throw new Error("Server error");
+    } else {
+      throw new Error("Unknown error");
+    }
+  }
+  const image = await response.blob();
+  return image;
 });
 
 export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {

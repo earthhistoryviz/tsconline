@@ -144,6 +144,11 @@ server.post<{ Params: { usecache: string; useSuggestedAge: string } }>(
 // Serve timescale data endpoint
 server.get("/timescale", routes.fetchTimescale);
 
+server.get<{ Params: { datapackName: string; imageName: string } }>(
+  "/charts/:datapackName/:imageName",
+  routes.fetchImage
+);
+
 // Start the server...
 try {
   await server.listen({
