@@ -17,5 +17,7 @@
   "imagesDirectory": "public/mapimages",
   "patternsDirectory": "public/patterns",
   "colors": "assets/colors.json",
-  "timescaleFilepath": "assets/default_timescale.xlsx"
+  "timescaleFilepath": "assets/default_timescale.xlsx",
+  "fileMetadata": "assets/file_metadata.json",
+  "uploadDirectory": "assets/uploads"
 }
