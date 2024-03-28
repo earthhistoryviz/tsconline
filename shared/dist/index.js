@@ -126,11 +126,11 @@ export function assertSubSequenceInfo(o) {
         throw new Error("SubSequenceInfo must be a non-null object");
     if (o.label && typeof o.label !== "string")
         throwError("SubSequenceInfo", "label", "string", o.label);
-    if (typeof o.direction !== "string" || !/^SB|MFS$/.test(o.direction))
+    if (typeof o.direction !== "string" || !/^(SB|MFS)$/.test(o.direction))
         throwError("SubSequenceInfo", "direction", "string and SB | MFS", o.direction);
     if (typeof o.age !== "number")
         throwError("SubSequenceInfo", "age", "number", o.age);
-    if (typeof o.severity !== "string" || !/^Major|Minor|Medium$/.test(o.severity))
+    if (typeof o.severity !== "string" || !/^(Major|Minor|Medium)$/.test(o.severity))
         throwError("SubSequenceInfo", "severity", "string and Major | Minor | Medium", o.severity);
     if (typeof o.popup !== "string")
         throwError("SubSequenceInfo", "popup", "string", o.popup);
@@ -147,7 +147,7 @@ export function assertChron(o) {
 export function assertSubChronInfo(o) {
     if (!o || typeof o !== "object")
         throw new Error("SubChronInfo must be a non-null object");
-    if (typeof o.polarity !== "string" || !/^TOP|N|R|U|No Data$/.test(o.polarity))
+    if (typeof o.polarity !== "string" || !/^(TOP|N|R|U|No Data)$/.test(o.polarity))
         throwError("SubChronInfo", "polarity", "string and TOP | N | R| U | No Data", o.polarity);
     if (o.label && typeof o.label !== "string")
         throwError("SubChronInfo", "label", "string", o.label);
@@ -165,7 +165,7 @@ export function assertSubRangeInfo(o) {
         throwError("SubRangeInfo", "age", "number", o.age);
     if (typeof o.abundance !== "string")
         throwError("SubRangeInfo", "abundance", "string", o.abundance);
-    if (!/^TOP|missing|rare|common|frequent|abundant|sample|flood$/.test(o.abundance))
+    if (!/^(TOP|missing|rare|common|frequent|abundant|sample|flood)$/.test(o.abundance))
         throwError("SubRangeInfo", "abundance", "TOP | missing | rare | common | frequent | abundant | sample | flood", o.abundance);
     if (typeof o.popup !== "string")
         throwError("SubRangeInfo", "popup", "string", o.popup);
@@ -234,7 +234,7 @@ export function assertSubEventInfo(o) {
         throwError("SubEventInfo", "age", "number", o.age);
     if (typeof o.popup !== "string")
         throwError("SubEventInfo", "popup", "string", o.popup);
-    if (typeof o.lineStyle !== "string" || !/^dotted|dashed|solid$/.test(o.lineStyle))
+    if (typeof o.lineStyle !== "string" || !/(^dotted|dashed|solid)$/.test(o.lineStyle))
         throwError("SubEventInfo", "lineStyle", "dotted | dashed | solid", o.lineStyle);
 }
 export function assertColor(o) {

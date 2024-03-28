@@ -1,4 +1,4 @@
-import { FontsInfo, assertFontsInfo, assertPoint, defaultFontsInfo, throwError } from "./index.js";
+import { FontsInfo, throwError } from "./index.js";
 
 export type ChartInfoTSC = {
   settings?: ChartSettingsInfoTSC;
@@ -36,20 +36,20 @@ export type ChartSettingsInfoTSC = {
   enHideBlockLable: boolean;
 };
 
-export type ColumnInfoTSC = ColumnBasicProps & (ZoneColumnInfo | EventColumnInfo | SequenceColumnInfo | RangeColumnInfo | RulerColumnInfo | PointColumnInfo)
+export type ColumnInfoTSC = ColumnBasicProps &
+  (ZoneColumnInfo | EventColumnInfo | SequenceColumnInfo | RangeColumnInfo | RulerColumnInfo | PointColumnInfo);
 
-export type ZoneColumnInfoTSC = ColumnBasicProps & ZoneColumnInfo
+export type ZoneColumnInfoTSC = ColumnBasicProps & ZoneColumnInfo;
 
-export type EventColumnInfoTSC = ColumnBasicProps & EventColumnInfo
+export type EventColumnInfoTSC = ColumnBasicProps & EventColumnInfo;
 
-export type RangeColumnInfoTSC = ColumnBasicProps & RangeColumnInfo
+export type RangeColumnInfoTSC = ColumnBasicProps & RangeColumnInfo;
 
-export type SequenceColumnInfoTSC = ColumnBasicProps & RangeColumnInfo
+export type SequenceColumnInfoTSC = ColumnBasicProps & RangeColumnInfo;
 
-export type RulerColumnInfoTSC = ColumnBasicProps & RulerColumnInfo
+export type RulerColumnInfoTSC = ColumnBasicProps & RulerColumnInfo;
 
-export type PointColumnInfoTSC = ColumnBasicProps & PointColumnInfo
-
+export type PointColumnInfoTSC = ColumnBasicProps & PointColumnInfo;
 
 export type ColumnBasicProps = {
   _id: string;
@@ -84,11 +84,11 @@ export type ZoneColumnInfo = {
   crunchOneSideSpaceUse: number;
   autoFlip: boolean;
   orientation: "vertical" | "normal";
-}
+};
 
 export type EventColumnInfo = {
   type: string;
-}
+};
 
 export type SequenceColumnInfo = {
   type: string;
@@ -96,15 +96,15 @@ export type SequenceColumnInfo = {
   labelMarginRight: number;
   graphStyle: string;
   drawNameLabel: boolean;
-}
+};
 
 export type RangeColumnInfo = {
   rangeSort: string;
-}
+};
 
 export type RulerColumnInfo = {
   justification: "left" | "right";
-}
+};
 
 export type PointColumnInfo = {
   drawPoints: boolean;
@@ -127,7 +127,7 @@ export type PointColumnInfo = {
   scaleStart: number;
   scaleStep: number;
   pointType: "rect" | "round" | "tick";
-}
+};
 
 export function assertChartInfoTSC(o: any): asserts o is ChartInfoTSC {
   if (!o || typeof o !== "object") throw new Error("ChartInfoTSC must be a non-null object");
@@ -173,67 +173,81 @@ export function assertChartSettingsInfoTSC(o: any): asserts o is ChartSettingsIn
     throwError("ColumnSettingsInfo", "enHideBlockLable", "boolean", o.enHideBlockLable);
 }
 
-export function assertZoneColumnInfo(o:any) {
-  if (typeof o.crunchOuterMargin !== "number") throwError("ZoneColumnInfoTSC", "crunchOuterMargin", "number", o.crunchOuterMargin);
-  if (typeof o.crunchInnerMargin !== "number") throwError("ZoneColumnInfoTSC", "crunchInnerMargin", "number", o.crunchInnerMargin);
-  if (typeof o.crunchAscendWidth !== "number") throwError("ZoneColumnInfoTSC", "CrunchAscendWidth", "number", o.CrunchAscendWidth);
-  if (typeof o.crunchOneSideSpaceUse !== "number") throwError("ZoneColumnInfoTSC", "crunchOneSideSpaceUse", "number", o.crunchOneSideSpaceUse);
+export function assertZoneColumnInfo(o: any) {
+  if (typeof o.crunchOuterMargin !== "number")
+    throwError("ZoneColumnInfoTSC", "crunchOuterMargin", "number", o.crunchOuterMargin);
+  if (typeof o.crunchInnerMargin !== "number")
+    throwError("ZoneColumnInfoTSC", "crunchInnerMargin", "number", o.crunchInnerMargin);
+  if (typeof o.crunchAscendWidth !== "number")
+    throwError("ZoneColumnInfoTSC", "CrunchAscendWidth", "number", o.CrunchAscendWidth);
+  if (typeof o.crunchOneSideSpaceUse !== "number")
+    throwError("ZoneColumnInfoTSC", "crunchOneSideSpaceUse", "number", o.crunchOneSideSpaceUse);
   if (typeof o.autoFlip !== "boolean") throwError("ZoneColumnInfoTSC", "autoFlip", "boolean", o.autoFlip);
-  if (o.orientation !== "vertical" && o.orientation !== "normal") throwError("ZoneColumnInfoTSC", "orientation", "vertical or normal", o.orientation);
+  if (o.orientation !== "vertical" && o.orientation !== "normal")
+    throwError("ZoneColumnInfoTSC", "orientation", "vertical or normal", o.orientation);
 }
 
-export function assertEventColumnInfo(o:any) {
+export function assertEventColumnInfo(o: any) {
   if (typeof o.type !== "string") throwError("EventColumnInfoTSC", "type", "string", o.type);
 }
-export function assertSequenceColumnInfo(o:any) {
+export function assertSequenceColumnInfo(o: any) {
   if (typeof o.type !== "string") throwError("SequenceColumnInfoTSC", "type", "string", o.type);
-  if (typeof o.labelMarginLeft !== "number") throwError("SequenceColumnInfoTSC", "labelMarginLeft", "number", o.labelMarginLeft);
-  if (typeof o.labelMarginRight !== "number") throwError("SequenceColumnInfoTSC", "labelMarginRight", "number", o.labelMarginRight);
+  if (typeof o.labelMarginLeft !== "number")
+    throwError("SequenceColumnInfoTSC", "labelMarginLeft", "number", o.labelMarginLeft);
+  if (typeof o.labelMarginRight !== "number")
+    throwError("SequenceColumnInfoTSC", "labelMarginRight", "number", o.labelMarginRight);
   if (typeof o.graphStyle !== "string") throwError("SequenceColumnInfoTSC", "graphStype", "string", o.graphStyle);
-  if (typeof o.drawNameLabel !== "boolean") throwError("SequenceColumnInfoTSC", "drawNameLabel", "boolean", o.drawNameLabel);
+  if (typeof o.drawNameLabel !== "boolean")
+    throwError("SequenceColumnInfoTSC", "drawNameLabel", "boolean", o.drawNameLabel);
 }
 
-export function assertRangeColumnInfo(o:any) {
+export function assertRangeColumnInfo(o: any) {
   if (typeof o.rangeSort !== "string") throwError("RangeColumnInfoTSC", "rangeSort", "string", o.rangeSort);
 }
 
-export function assertRulerColumnInfo(o:any) {
-  if (o.justification !== "left" && o.justification !== "right") throwError("RulerColumnInfoTSC", "justification", "left or right", o.justification);
+export function assertRulerColumnInfo(o: any) {
+  if (o.justification !== "left" && o.justification !== "right")
+    throwError("RulerColumnInfoTSC", "justification", "left or right", o.justification);
 }
 
-export function assertPointColumnInfo(o:any) {
+export function assertPointColumnInfo(o: any) {
   if (typeof o.drawPoints !== "boolean") throwError("PointColumnInfoTSC", "drawPoints", "boolean", o.drawPoints);
   if (typeof o.drawLine !== "boolean") throwError("PointColumnInfoTSC", "drawLine", "boolean", o.drawLine);
   if (typeof o.lineColor !== "string") throwError("PointColumnInfoTSC", "lineColor", "string", o.lineColor);
   if (typeof o.drawSmooth !== "boolean") throwError("PointColumnInfoTSC", "drawSmooth", "boolean", o.drawSmooth);
   if (typeof o.drawFill !== "boolean") throwError("PointColumnInfoTSC", "drawFill", "boolean", o.drawFill);
   if (typeof o.fillColor !== "string") throwError("PointColumnInfoTSC", "fillColor", "string", o.fillColor);
-  if (typeof o.doNotSetWindowAuto !== "boolean") throwError("PointColumnInfoTSC", "doNotSetWindowAuto", "boolean", o.doNotSetWindowAuto);
+  if (typeof o.doNotSetWindowAuto !== "boolean")
+    throwError("PointColumnInfoTSC", "doNotSetWindowAuto", "boolean", o.doNotSetWindowAuto);
   if (typeof o.minWindow !== "number") throwError("PointColumnInfoTSC", "minWindow", "number", o.minWindow);
   if (typeof o.maxWindow !== "number") throwError("PointColumnInfoTSC", "maxWindow", "number", o.maxWindow);
   if (typeof o.drawScale !== "boolean") throwError("PointColumnInfoTSC", "drawScale", "boolean", o.drawScale);
-  if (typeof o.drawBgrndGradient !== "boolean") throwError("PointColumnInfoTSC", "drawBgrndGradient", "boolean", o.drawBgrndGradient);
+  if (typeof o.drawBgrndGradient !== "boolean")
+    throwError("PointColumnInfoTSC", "drawBgrndGradient", "boolean", o.drawBgrndGradient);
   if (typeof o.backGradStart !== "string") throwError("PointColumnInfoTSC", "backGradStart", "string", o.backGradStart);
   if (typeof o.backGradEnd !== "string") throwError("PointColumnInfoTSC", "backGradEnd", "string", o.backGradEnd);
-  if (typeof o.drawCurveGradient !== "boolean") throwError("PointColumnInfoTSC", "drawCurveGradient", "boolean", o.drawCurveGradient);
-  if (typeof o.curveGradStart !== "string") throwError("PointColumnInfoTSC", "curveGradStart", "string", o.curveGradStart);
+  if (typeof o.drawCurveGradient !== "boolean")
+    throwError("PointColumnInfoTSC", "drawCurveGradient", "boolean", o.drawCurveGradient);
+  if (typeof o.curveGradStart !== "string")
+    throwError("PointColumnInfoTSC", "curveGradStart", "string", o.curveGradStart);
   if (typeof o.curveGradEnd !== "string") throwError("PointColumnInfoTSC", "curveGradEnd", "string", o.curveGradEnd);
   if (typeof o.flipScale !== "boolean") throwError("PointColumnInfoTSC", "flipScale", "boolean", o.flipScale);
   if (typeof o.scaleStart !== "number") throwError("PointColumnInfoTSC", "scaleStart", "number", o.scaleStart);
   if (typeof o.scaleStep !== "number") throwError("PointColumnInfoTSC", "scaleStep", "number", o.scaleStep);
-  if (o.pointType !== "rect" && o.pointType !== "round" && o.pointType !== "tick") throwError("ColumnInfoTSC", "pointType", "rect or round or tick", o.pointType);
+  if (o.pointType !== "rect" && o.pointType !== "round" && o.pointType !== "tick")
+    throwError("ColumnInfoTSC", "pointType", "rect or round or tick", o.pointType);
 }
 
 export function assertColumnInfoTSC(o: any): asserts o is ColumnInfoTSC {
   if (!o || typeof o !== "object") throw new Error("ColumnInfoTSC must be a non-null object");
   if (typeof o._id !== "string") {
     throwError("ColumnInfoTSC", "_id", "string", o._id);
-  } 
-  else { //check for specific column type since id has the column type in it
+  } else {
+    //check for specific column type since id has the column type in it
     if (o._id === "RootColumn") {
       console.log(o);
     }
-    const columnType = o._id.match(/\.(.*?)\:/)[1];
+    const columnType = o._id.match(/\.(.*?):/)[1];
     switch (columnType) {
       case "ZoneColumn":
         assertZoneColumnInfo(o);
@@ -262,7 +276,7 @@ export function assertColumnInfoTSC(o: any): asserts o is ColumnInfoTSC {
       case "FreehandColumn":
       case "TransectColumn":
       case "RootColumn":
-      break;
+        break;
       default:
         console.log("Warning :unknown column type", columnType);
     }
@@ -303,7 +317,7 @@ export function assertColumnInfoTSC(o: any): asserts o is ColumnInfoTSC {
     } else throw new Error("ColumnInfoTSC must have customColor");
     if (o.fonts) {
       //assertFontsInfo(o.fonts);
-    } else throw new Error("ColumnInfoTSC must have fonts")
+    } else throw new Error("ColumnInfoTSC must have fonts");
     for (const key in o) {
       switch (key) {
         //boolean

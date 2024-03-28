@@ -53,13 +53,13 @@ export type ColumnBasicProps = {
     pad: number;
     "age pad": number;
     backgroundColor: {
-        standardized: boolean;
-        useNamed: boolean;
+        standardized?: boolean;
+        useNamed?: boolean;
         text: string;
     };
     customColor: {
-        standardized: boolean;
-        useNamed: boolean;
+        standardized?: boolean;
+        useNamed?: boolean;
         text: string;
     };
     fonts: FontsInfo;
