@@ -22,7 +22,6 @@ import FormControl from "@mui/material/FormControl";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import FormatBoldIcon from "@mui/icons-material/FormatBold";
 import FormatItalicIcon from "@mui/icons-material/FormatItalic";
-import { MuiColorInput } from "mui-color-input";
 import CloseIcon from "@mui/icons-material/Close";
 import "./FontMenu.css";
 import { ValidFontOptions } from "@tsconline/shared";
@@ -118,14 +117,7 @@ const FontMenuRow: React.FC<{
           </ToggleButton>
         </ToggleButtonGroup>
         <div id="ColorInputContainer">
-          <MuiColorInput
-            value={fontOpts.color}
-            size="small"
-            label="Color"
-            format="rgb"
-            onChange={handleColor}
-            disabled={!fontOpts.on}
-          />
+          <TSCColorPicker />
         </div>
         <Typography
           sx={{
