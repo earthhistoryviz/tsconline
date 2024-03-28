@@ -10,8 +10,8 @@ import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import  DOMPurify  from "dompurify";
 
 export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
-  if (state.useSuggestedAge != response) {
-    state.useSuggestedAge = response;
+  if (state.settings.useDatapackSuggestedAge != response) {
+    state.settings.useDatapackSuggestedAge = response;
     generalActions.setUseCache(false);
   }
   fetchChartFromServer(navigate);
@@ -44,7 +44,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   });
   console.log("Sending settings to server...");
   try {
-    const response = await fetcher(`/charts/${state.useCache}/${state.useSuggestedAge}`, {
+    const response = await fetcher(`/charts/${state.useCache}/${state.settings.useDatapackSuggestedAge}`, {
       method: "POST",
       body
     });

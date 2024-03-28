@@ -60,7 +60,7 @@ export const resetSettings = action("resetSettings", () => {
     baseStageAge: 0,
     baseStageKey: "",
     unitsPerMY: 2,
-    useDatapackSuggestedAge: false,
+    useDatapackSuggestedAge: true,
     mouseOverPopupsEnabled: false,
     datapackContainsSuggAge: false,
     selectedBaseStage: "",
@@ -526,7 +526,7 @@ export const pushError = action("pushError", (context: ErrorCodes) => {
 });
 
 export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
-  state.settings.datapackContainsSuggAge = isChecked;
+  state.settings.useDatapackSuggestedAge = isChecked;
 });
 export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;

@@ -20,7 +20,6 @@ export type State = {
   tab: number;
   madeChart: boolean;
   showSuggestedAgePopup: boolean;
-  useSuggestedAge: boolean;
   isFullscreen: boolean;
   showPresetInfo: boolean;
   geologicalTopStageAges: TimescaleItem[];
@@ -89,7 +88,6 @@ export const state = observable<State>({
   madeChart: false,
   tab: 0,
   showSuggestedAgePopup: false,
-  useSuggestedAge: true,
   isFullscreen: false,
   showPresetInfo: false,
   geologicalTopStageAges: [],
@@ -148,7 +146,7 @@ export const state = observable<State>({
     unitsPerMY: 2,
     mouseOverPopupsEnabled: false,
     datapackContainsSuggAge: false,
-    useDatapackSuggestedAge: false,
+    useDatapackSuggestedAge: true,
     selectedBaseStage: "",
     selectedTopStage: ""
   },
