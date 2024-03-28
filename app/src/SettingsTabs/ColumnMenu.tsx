@@ -5,6 +5,8 @@ import { Button, FormControlLabel, TextField, ToggleButton, Typography } from "@
 import SettingsSharpIcon from "@mui/icons-material/SettingsSharp";
 import "./ColumnMenu.css";
 import { FontMenu } from "./FontMenu";
+import TSCColorPicker from "../components/TSCColorPicker";
+import { Padding } from "@mui/icons-material";
 import { ColumnInfo } from "@tsconline/shared";
 import { TSCCheckbox } from "../components";
 import { InfoBox } from "./InfoBox";
@@ -90,6 +92,7 @@ export const ColumnMenu = observer(() => {
       </div>
       <div id="ColumnMenuContent" className="column-menu-content">
         {column && <EditNameField />}
+        {column && <TSCColorPicker />}
         {column && <FontMenu column={column} />}
         {column && <ShowTitles column={column} />}
         {!!info && <InfoBox info={info} />}

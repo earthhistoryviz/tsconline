@@ -1,7 +1,6 @@
 {
   "name": "tsconline-monorepo",
   "dependencies": {
-    "canvas": "^2.11.2",
     "fastify": "^4.17.0"
   },
   "devDependencies": {
