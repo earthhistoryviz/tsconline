@@ -59,7 +59,7 @@ export type State = {
     sortedPatterns: Patterns[string][];
   };
   selectedPreset: ChartConfig | null;
-  chartPath: string;
+  chartContent: string;
   chartHash: string;
   settingsXML: string;
   settingsJSON: any;
@@ -135,7 +135,7 @@ export const state = observable<State>({
     sortedPatterns: []
   },
   selectedPreset: null,
-  chartPath: "",
+  chartContent: "",
   chartHash: "",
   settingsXML: "",
   settingsJSON: {},

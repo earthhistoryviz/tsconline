@@ -305,7 +305,7 @@ export const resetState = action("resetState", () => {
   setChartLoading(true);
   setDatapackConfig([], "");
   setChartHash("");
-  setChartPath("");
+  setChartContent("");
   setUseCache(true);
   setUsePreset(true);
   setTab(0);
@@ -541,8 +541,8 @@ export const setUsePreset = action((temp: boolean) => {
   state.useCache = temp;
 });
 
-export const setChartPath = action("setChartPath", (chartpath: string) => {
-  state.chartPath = chartpath;
+export const setChartContent = action("setChartContent", (chartContent: string) => {
+  state.chartContent = chartContent;
 });
 export const setMapInfo = action("setMapInfo", (mapInfo: MapInfo) => {
   state.mapState.mapInfo = mapInfo;

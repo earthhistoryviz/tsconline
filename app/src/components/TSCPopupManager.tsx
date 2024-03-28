@@ -19,7 +19,7 @@ export const TSCPopupManager = () => {
         url = import.meta.env.VITE_APP_URL;
       }
       if (event.origin !== url) {
-        actions.pushError(ErrorCodes.INVALID_SVG_PATH);
+        actions.pushError(ErrorCodes.INVALID_PATH);
         setIsValidPath(false);
         return;
       }

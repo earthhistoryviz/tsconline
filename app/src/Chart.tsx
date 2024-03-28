@@ -25,7 +25,7 @@ export const Chart = observer(function () {
       ) : state.madeChart ? (
         <TransformWrapper minScale={0.01} maxScale={3} limitToBounds={false}>
           <TransformComponent>
-            <TSCSvgComponent path={state.chartPath} />
+            <TSCSvgComponent chartContent={state.chartContent} />
           </TransformComponent>
         </TransformWrapper>
       ) : (

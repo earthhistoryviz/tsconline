@@ -7,6 +7,7 @@ import { assertChartInfo } from "@tsconline/shared";
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
+import  DOMPurify  from "dompurify";
 
 export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
   if (state.useSuggestedAge != response) {
@@ -33,7 +34,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   generalActions.setChartMade(true);
   generalActions.setChartLoading(true);
   generalActions.setChartHash("");
-  generalActions.setChartPath("");
+  generalActions.setChartContent("");
   //let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
   // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
   const xmlSettings = jsonToXml(state.settingsJSON, state.settingsTabs.columns, state.settings);
@@ -52,8 +53,13 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
     try {
       assertChartInfo(answer);
       generalActions.setChartHash(answer.hash);
-      generalActions.setChartPath(devSafeUrl(answer.chartpath));
       await generalActions.checkSVGStatus();
+      const content = await (await fetcher(answer.chartpath)).text();
+      const domPurifyConfig = {
+        ADD_ATTR: ["popuptext"]
+      };
+      const sanitizedSVG = DOMPurify.sanitize(content, domPurifyConfig);
+      generalActions.setChartContent(sanitizedSVG);
       generalActions.setOpenSnackbar(true);
     } catch (e) {
       displayServerError(answer, ErrorCodes.INVALID_CHART_RESPONSE, ErrorMessages[ErrorCodes.INVALID_CHART_RESPONSE]);

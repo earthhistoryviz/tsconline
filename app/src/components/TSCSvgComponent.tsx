@@ -1,7 +1,6 @@
-import React, { useEffect, useState, useContext, useRef } from "react";
+import React, { useEffect, useContext, useRef } from "react";
 import { context } from "../state/index";
-import { ErrorCodes } from "../util/error-codes";
-import DOMPurify from "dompurify";
+import { observer } from "mobx-react-lite";
 
 interface SVGWindow extends Window {
   curHoverElemID?: string;
@@ -9,41 +8,15 @@ interface SVGWindow extends Window {
 }
 
 type TSCSvgComponentProps = {
-  path: string;
+  chartContent: string;
 };
 
-export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = ({ path }) => {
-  const [svgContent, setSvgContent] = useState<string>("");
-  const [isValidPath, setIsValidPath] = useState<boolean>(true);
-  const { actions, state } = useContext(context);
+export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ chartContent }) => {
+  const { state } = useContext(context);
   const svgContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let url: string = "http://localhost:3000";
-    if (import.meta.env.VITE_SERVER_URL) {
-      url = import.meta.env.VITE_SERVER_URL;
-    }
-    if (!path.startsWith(url)) {
-      actions.pushError(ErrorCodes.INVALID_SVG_PATH);
-      setIsValidPath(false);
-      return;
-    }
-    fetch(path)
-      .then((response) => response.text())
-      .then((text) => {
-        const domPurifyConfig = {
-          ADD_ATTR: ["popuptext"]
-        };
-        const sanitizedSVG = DOMPurify.sanitize(text, domPurifyConfig);
-        setSvgContent(sanitizedSVG);
-      })
-      .catch(() => {
-        actions.pushError(ErrorCodes.INVALID_SVG_RESPONSE);
-        setIsValidPath(false);
-      });
-  }, [path]);
-
-  useEffect(() => {
+    
     if (!state.settings.mouseOverPopupsEnabled) return;
 
     const container = svgContainerRef.current;
@@ -89,8 +62,6 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = ({ path }) => {
               }
               break;
             }
-            default:
-              break;
           }
           break;
         }
@@ -107,11 +78,7 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = ({ path }) => {
       container.removeEventListener("mouseout", handleSvgEvent);
       container.removeEventListener("click", handleSvgEvent);
     };
-  }, [svgContent, state.settings.mouseOverPopupsEnabled]);
+  }, [chartContent, state.settings.mouseOverPopupsEnabled]);
 
-  if (!isValidPath) {
-    return <div>Invalid SVG Path. Please check the path and try again.</div>;
-  }
-
-  return <div ref={svgContainerRef} dangerouslySetInnerHTML={{ __html: svgContent }} />;
-};
+  return <div ref={svgContainerRef} dangerouslySetInnerHTML={{ __html: chartContent }} />;
+});
