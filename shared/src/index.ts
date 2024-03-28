@@ -1,5 +1,7 @@
 // Shared types between app and server (i.e. messages they send back and forth)
 
+export * from "./settings-types.js";
+
 export type SuccessfulServerResponse = {
   message: string;
 };
@@ -80,59 +82,6 @@ export type ChartConfig = {
 export type Datapack = {
   name: string;
   file: string;
-};
-
-export type ChartInfo = {
-  settings: ChartSettingsInfo;
-  "class datastore.RootColumn:Chart Root": [name: ColumnPrototypeInfo];
-};
-
-export type ChartSettingsInfo = {
-  topAge: {
-    source: string;
-    unit: string;
-    text: number;
-  };
-  baseAge: {
-    source: string;
-    unit: string;
-    text: number;
-  };
-  unitsPerMY: {
-    unit: string;
-    text: number;
-  };
-  skipEmptyColumns: {
-    unit: string;
-    text: boolean;
-  };
-  variableColors: string;
-  noIndentPattern: boolean;
-  negativeChk: boolean;
-  doPopups: boolean;
-  enEventColBG: boolean;
-  enChartLegend: boolean;
-  enPriority: boolean;
-  enHideBlockLable: boolean;
-};
-
-export type ColumnPrototypeInfo = {
-  _id: string;
-  title: string;
-  useNamedColor: boolean;
-  placeHolder: boolean;
-  drawTitle: boolean;
-  drawAgeLabel: boolean;
-  drawUncertaintyLabel: boolean;
-  isSelected: boolean;
-  width: number;
-  pad: number;
-  "age pad": number;
-  backgroundColor: {
-    useNamed: boolean;
-    text: string;
-  };
-  fonts: FontsInfo;
 };
 
 export type FontsInfo = {
@@ -222,7 +171,14 @@ export const defaultFontsInfo: FontsInfo = {
     italic: false,
     size: 6
   },
-  "Column Header": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 14 },
+  "Column Header": {
+    bold: false,
+    color: "#000000",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 14
+  },
   "Event Column Label": {
     bold: false,
     color: "#000000",
@@ -237,12 +193,33 @@ export const defaultFontsInfo: FontsInfo = {
   "Point Column Scale Label": { inheritable: false },
   "Popup Body": { inheritable: false },
   "Range Box Label": { inheritable: false },
-  "Range Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12 },
+  "Range Label": {
+    bold: false,
+    color: "#000000",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 12
+  },
   "Ruler Label": { inheritable: false },
   "Ruler Tick Mark Label": { inheritable: false },
   "Sequence Column Label": { inheritable: false },
-  "Uncertainty Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 5 },
-  "Zone Column Label": { bold: false, color: "#000000", fontFace: "Arial", inheritable: false, italic: false, size: 12 }
+  "Uncertainty Label": {
+    bold: false,
+    color: "#000000",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 5
+  },
+  "Zone Column Label": {
+    bold: false,
+    color: "#000000",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 12
+  }
 };
 
 export type SubBlockInfo = {
@@ -1015,6 +992,7 @@ export function assertSVGStatus(o: any): asserts o is SVGStatus {
   if (!o || typeof o !== "object") throw new Error(`SVGStatus must be a non-null object`);
   if (typeof o.ready !== "boolean") throw new Error(`SVGStatus must have a 'ready' boolean property`);
 }
+
 /**
  * throws an error `Object '${obj}' must have a '${variable}' ${type} property.\nFound value: ${value}`
  * @param obj
@@ -1022,7 +1000,7 @@ export function assertSVGStatus(o: any): asserts o is SVGStatus {
  * @param type
  * @param value
  */
-function throwError(obj: string, variable: string, type: string, value: any) {
+export function throwError(obj: string, variable: string, type: string, value: any) {
   throw new Error(`Object '${obj}' must have a '${variable}' ${type} property.\nFound value: ${value}\n`);
 }
 

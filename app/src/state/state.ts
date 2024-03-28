@@ -11,7 +11,8 @@ import type {
   Presets,
   DatapackIndex,
   MapPackIndex,
-  Patterns
+  Patterns,
+  ChartInfoTSC
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 
@@ -27,7 +28,7 @@ export type State = {
   geologicalBaseStageAges: TimescaleItem[];
   settingsTabs: {
     selected: "time" | "font" | "column" | "mappoints" | "datapacks";
-    columns: ColumnInfo | null;
+    columns: ColumnInfo | undefined;
     columnSelected: string | null;
     geologicalTopStages: GeologicalStages;
     geologicalBaseStages: GeologicalStages;
@@ -62,7 +63,7 @@ export type State = {
   chartPath: string;
   chartHash: string;
   settingsXML: string;
-  settingsJSON: any;
+  settingsTSC: ChartInfoTSC;
   settings: {
     selectedStage: string;
     topStageAge: number;
@@ -96,7 +97,7 @@ export const state = observable<State>({
   geologicalBaseStageAges: [],
   settingsTabs: {
     selected: "time",
-    columns: null,
+    columns: undefined,
     columnSelected: null,
     geologicalTopStages: {},
     geologicalBaseStages: {},
@@ -138,7 +139,7 @@ export const state = observable<State>({
   chartPath: "",
   chartHash: "",
   settingsXML: "",
-  settingsJSON: {},
+  settingsTSC: {},
   settings: {
     selectedStage: "",
     topStageAge: 0,
