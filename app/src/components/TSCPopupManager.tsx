@@ -5,6 +5,8 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import { ErrorCodes } from "../util/error-codes";
 import { TSCButton } from "./TSCButton";
+import { Typography } from "@mui/material";
+import { StyledScrollbar } from "./TSCComponents";
 
 export const TSCPopupManager = () => {
   const [popupContent, setPopupContent] = useState({ open: false, message: "" });
@@ -12,6 +14,8 @@ export const TSCPopupManager = () => {
   const { state, actions } = useContext(context);
 
   useEffect(() => {
+    if (!state.settings.mouseOverPopupsEnabled) return;
+
     const processImages = async (text: string) => {
       const srcMatches = [...text.matchAll(/src="([^"]+)"/g)];
       const imagePromises = srcMatches.map(async (match) => {
@@ -73,7 +77,7 @@ export const TSCPopupManager = () => {
   }, []);
 
   if (!isValidPath) {
-    return <div>Invalid SVG Path. Please check the path and try again.</div>;
+    return <Typography>Invalid SVG Path. Please check the path and try again.</Typography>;
   }
 
   const handleClose = () => setPopupContent((prev) => ({ ...prev, open: false }));

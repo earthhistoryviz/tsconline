@@ -527,7 +527,7 @@ export const pushError = action("pushError", (context: ErrorCodes) => {
 });
 
 export const fetchImage = action("fetchImage", async (datapackName: string, imageName: string) => {
-  const response = await fetcher(`/charts/${datapackName}/${imageName}`, {
+  const response = await fetcher(`/images/${datapackName}/${imageName}`, {
     method: "GET"
   });
   if (!response.ok) {

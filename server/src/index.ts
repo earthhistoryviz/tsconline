@@ -145,7 +145,7 @@ server.post<{ Params: { usecache: string; useSuggestedAge: string } }>(
 server.get("/timescale", routes.fetchTimescale);
 
 server.get<{ Params: { datapackName: string; imageName: string } }>(
-  "/charts/:datapackName/:imageName",
+  "/images/:datapackName/:imageName",
   routes.fetchImage
 );
 
