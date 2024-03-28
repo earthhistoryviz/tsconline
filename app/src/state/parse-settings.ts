@@ -9,63 +9,58 @@ import {
   ColumnInfoTSC,
   FontsInfo,
   assertChartInfoTSC,
-  defaultFontsInfo
+  assertChartSettingsInfoTSC,
+  assertColumnInfoTSC,
+  defaultFontsInfo,
 } from "@tsconline/shared";
 
+
+/**
+ * casts a string to a specified type
+ * @param value a string that we want to cast to a type
+ * @returns the casted value
+ */
+function castValue(value: string) {
+  let castValue;
+  if (value === "") {
+    castValue = ""
+  }
+  else if (value === "true") {
+    castValue = true;
+  } else if (value === "false") {
+    castValue = false;
+  } else if (!isNaN(Number(value))) {
+    castValue = Number(value);
+  } else castValue = String(value);
+  return castValue;
+}
 /**
  *
  * @param settingsNode DOM node with name settings
  * @returns json object containing information about the settings of the current node
  */
 
-function processSettings(settingsNode: any): ChartSettingsInfoTSC {
-  let settings: ChartSettingsInfoTSC = {
-    topAge: {
-      source: "",
-      unit: "",
-      stage: undefined,
-      text: undefined
-    },
-    baseAge: {
-      source: "",
-      unit: "",
-      stage: undefined,
-      text: undefined
-    },
-    unitsPerMY: {
-      unit: "",
-      text: 0
-    },
-    skipEmptyColumns: {
-      unit: "",
-      text: false
-    },
-    variableColors: "",
-    noIndentPattern: false,
-    negativeChk: false,
-    doPopups: false,
-    enEventColBG: false,
-    enChartLegend: false,
-    enPriority: false,
-    enHideBlockLable: false
-  };
-  //https://stackoverflow.com/questions/69917159/type-any-is-not-assignable-to-type-never-when-trying-to-set-object-property
-  //TLDR: since properties of settings has different types, can't infer type of property from variable name, so use generics
-  function updateSetting<T extends keyof ChartSettingsInfoTSC>(settingName: T, value: ChartSettingsInfoTSC[T]) {
-    if (settingName in settings) {
-      settings[settingName] = value;
-    } else {
-      let errStr = settingName + " not a key in ChartSettingsInfoTSC";
-      throw new Error(errStr);
-    }
-  }
-
+function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
+  let settings: any = {};
   const settingNodes = settingsNode.getElementsByTagName("setting");
   for (let i = 0; i < settingNodes.length; i++) {
     const settingNode = settingNodes[i];
     const settingName = settingNode.getAttribute("name");
+    if (settingName === null) {
+      continue;
+    }
     const nestedSettingsNode = settingNode.getElementsByTagName("setting")[0];
-    let settingValue = nestedSettingsNode ? nestedSettingsNode.textContent.trim() : settingNode.textContent.trim();
+    let settingValue: any = "";
+    if (nestedSettingsNode) {
+      if (nestedSettingsNode.textContent) {
+        settingValue = castValue(nestedSettingsNode.textContent.trim());
+      }
+    }
+    else {
+      if (settingNode.textContent) {
+        settingValue = castValue(settingNode.textContent.trim())
+      }
+    }
     //since we access the elements by tag name, the nested settings of topage and baseage
     //are treated on the same level, so skip when the setting name is text or stage.
     if (settingName === "text" || settingName === "stage") {
@@ -78,29 +73,29 @@ function processSettings(settingsNode: any): ChartSettingsInfoTSC {
       } else {
         text = settingValue;
       }
-      if (settingNode.getElementsByTagName("setting")[1]) {
-        settingValue = settingNode.getElementsByTagName("setting")[1].textContent.trim();
+      if (settingNode.getElementsByTagName("setting")[1].textContent) {
+        settingValue = settingNode.getElementsByTagName("setting")[1].textContent?.trim();
         if (settingNode.getElementsByTagName("setting")[1].getAttribute("name") === "stage") {
           stage = settingValue;
         } else {
           text = settingValue;
         }
       }
-      updateSetting(settingName, {
+      settings[settingName] = {
         source: settingNode.getAttribute("source"),
         unit: settingNode.getAttribute("unit"),
-        stage: stage,
-        text: text
-      });
+        stage: castValue(stage),
+        text: castValue(text)
+      };
     }
     //these two tags have units, so make an object storing its unit and value
     else if (settingName === "unitsPerMY" || settingName === "skipEmptyColumns") {
-      updateSetting(settingName, { unit: "Ma", text: settingValue });
+      settings[settingName]= { unit: "Ma", text: settingValue };
     } else {
-      const settingValue = settingNode.textContent.trim();
-      updateSetting(settingName, settingValue);
+      settings[settingName] = settingValue;
     }
   }
+  assertChartSettingsInfoTSC(settings);
   return settings;
 }
 /**
@@ -118,88 +113,8 @@ function processFonts(fontsNode: any): FontsInfo {
  * @returns json object containing the info of the current and children columns
  */
 function processColumn(node: any, id: string): ColumnInfoTSC {
-  const column: ColumnInfoTSC = {
-    _id: "",
-    title: "",
-    useNamedColor: true,
-    placeHolder: true,
-    drawTitle: true,
-    drawAgeLabel: true,
-    drawUncertaintyLabel: true,
-    isSelected: true,
-    width: 0,
-    pad: 0,
-    "age pad": 0,
-    backgroundColor: {
-      text: ""
-    },
-    customColor: {
-      text: ""
-    },
-    fonts: undefined,
-    crunchOuterMargin: undefined,
-    crunchInnerMargin: undefined,
-    crunchAscendWidth: undefined,
-    crunchOneSideSpaceUse: undefined,
-    autoFlip: undefined,
-    orientation: undefined,
-    type: undefined,
-    rangeSort: undefined,
-    justification: undefined,
-    labelMarginLeft: undefined,
-    labelMarginRight: undefined,
-    graphStyle: undefined,
-    drawNameLabel: undefined,
-    drawPoints: undefined,
-    drawLine: undefined,
-    lineColor: undefined,
-    drawSmooth: undefined,
-    drawFill: undefined,
-    fillColor: undefined,
-    doNotSetWindowAuto: undefined,
-    minWindow: undefined,
-    maxWindow: undefined,
-    drawScale: undefined,
-    drawBgrndGradient: undefined,
-    backGradStart: undefined,
-    backGradEnd: undefined,
-    drawCurveGradient: undefined,
-    curveGradStart: undefined,
-    curveGradEnd: undefined,
-    flipScale: undefined,
-    scaleStart: undefined,
-    scaleStep: undefined,
-    pointType: undefined,
-    children: []
-  };
-  function updateColumn<T extends keyof ColumnInfoTSC>(settingName: T, value: ColumnInfoTSC[T]) {
-    if (settingName in column) {
-      column[settingName] = value;
-    } else {
-      let errStr = settingName + " not a key in ColumnInfoTSC";
-      throw new Error();
-    }
-  }
-  function castValue(value: string) {
-    let castValue;
-    if (value === "true") {
-      castValue = true;
-    } else if (value === "false") {
-      castValue = false;
-    } else if (!isNaN(Number(value))) {
-      castValue = Number(value);
-    } else castValue = String(value);
-    return castValue;
-  }
-
-  const nodeAttributes = node.attributes;
-  if (nodeAttributes.length > 0) {
-    for (let i = 0; i < nodeAttributes.length; i++) {
-      const attribute = nodeAttributes[i];
-      //updateColumn(attribute.name, attribute.value);
-    }
-  }
-
+  const column: any = {};
+  column.children = [];
   const childNodes = node.childNodes;
   column._id = id;
   if (childNodes.length > 0) {
@@ -213,46 +128,61 @@ function processColumn(node: any, id: string): ColumnInfoTSC {
         } else if (child.nodeName === "fonts") {
           column.fonts = processFonts(child);
         } else if (child.nodeName === "setting") {
-          const settingName = child.getAttribute("name") as keyof ColumnInfoTSC;
+          const settingName = child.getAttribute("name");
           const justificationValue = child.getAttribute("justification");
           const orientationValue = child.getAttribute("orientation");
           const useNamedValue = child.getAttribute("useNamed");
           const standardizedValue = child.getAttribute("standardized");
           if (settingName === "backgroundColor" || settingName === "customColor") {
-            column[settingName] = {
-              standardized: standardizedValue === "true",
-              useNamed: useNamedValue === "true",
-              text: child.textContent.trim()
-            };
+            if (standardizedValue && useNamedValue) {
+              column[settingName] = {
+                standardized: standardizedValue === "true" ,
+                useNamed: useNamedValue === "true" ,
+                text: castValue(child.textContent.trim())
+              }
+            }
+            else if (useNamedValue) {
+              column[settingName] = {
+                useNamed: useNamedValue === "true" ,
+                text: castValue(child.textContent.trim())
+              }
+            }
+            else if (standardizedValue) {
+              column[settingName] = {
+                standardized: standardizedValue === "true" ,
+                text: castValue(child.textContent.trim())
+              }
+            }
+            else {
+              column[settingName] = {
+                text:castValue(child.textContent.trim())
+              }
+            }
+            
           } else if (justificationValue) {
-            updateColumn(settingName, castValue(justificationValue));
+            column[settingName] = castValue(justificationValue);
           } else if (orientationValue) {
-            updateColumn(settingName, castValue(orientationValue));
-          } else if (settingName === "type") {
-            const textContent = child.textContent.trim();
-            if (textContent === 0) {
-              updateColumn(settingName, String(child.getAttribute("type")));
-            } else updateColumn(settingName, String(textContent));
-          } else if (settingName === "pointType") {
-            updateColumn(settingName, child.getAttribute("pointType"));
-          } else {
+            column[settingName] = castValue(orientationValue);
+          } 
+          else if (settingName === "type") {
             const textContent = castValue(child.textContent.trim());
-            updateColumn(settingName, textContent);
+            if (textContent === 0) {
+              column[settingName] = child.getAttribute("type");
+            } 
+            else column[settingName] = textContent;
+          } 
+          else if (settingName === "pointType") {
+            column[settingName] = castValue(child.getAttribute("pointType"));
+          } 
+          else {
+            column[settingName] = castValue(child.textContent.trim());
           }
         }
       }
     }
   }
-  //for removing undefined properties
-  function removeUndefined<T extends Object>(obj: T): Partial<T> {
-    return Object.fromEntries(Object.entries(obj).filter(([_, value]) => value !== undefined)) as Partial<T>;
-  }
-  let filteredColumn = removeUndefined(column) as ColumnInfoTSC;
-  //remove children property if it's empty
-  if (filteredColumn.children?.length == 0) {
-    delete filteredColumn.children;
-  }
-  return filteredColumn;
+  assertColumnInfoTSC(column);
+  return column as ColumnInfoTSC;
 }
 
 /**
@@ -276,7 +206,7 @@ export function xmlToJson(xml: string): ChartInfoTSC {
     }
     const rootColumnNode = tsCreatorNode.getElementsByTagName("column")[0];
     if (rootColumnNode) {
-      settingsTSC["class datastore.RootColumn:Chart Root"] = processColumn(rootColumnNode, "RootColumn");
+      settingsTSC["class datastore.RootColumn:Chart Root"] = processColumn(rootColumnNode, "class datastore.RootColumn:Chart Root");
       settingsTSC["class datastore.RootColumn:Chart Root"]._id = "class datastore.RootColumn:Chart Root";
     }
   }
@@ -417,23 +347,6 @@ function generateFontsXml(fonts: any, colName: string, stateColumn: any, indent:
   return xml;
 }
 
-function columnIsChild(columns: ColumnInfoTSC[], name: string) {
-  for (let i = 0; i < columns.length; i++) {
-    if (name === columns[i]._id) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function getChildColumn(columns: ColumnInfoTSC[], name: string) {
-  for (let i = 0; i < columns.length; i++) {
-    if (name === columns[i]._id) {
-      return columns[i];
-    }
-  }
-}
-
 /**
  * generates xml string with column info
  * @param columnTSC json object with column info
@@ -465,12 +378,12 @@ function generateColumnXml(columnTSC: ColumnInfoTSC, stateColumn: ColumnInfo | u
           xml += `${indent}<setting name="title">${replaceSpecialChars(columnTSC[key], 1)}</setting>\n`;
         }
       } else if (key === "backgroundColor" || key === "customColor") {
-        if (columnTSC[key].standardized && columnTSC[key].useNamed) {
+        if ("standardized" in columnTSC[key] && "useNamed" in columnTSC[key]) {
           xml += `${indent}<setting name="${xmlKey}" standardized="${columnTSC[key].standardized}" 
           useNamed="${columnTSC[key].useNamed}">${columnTSC[key].text}</setting>\n`;
-        } else if (columnTSC[key].useNamed) {
+        } else if ("useNamed" in columnTSC[key]) {
           xml += `${indent}<setting name="${xmlKey}" useNamed="${columnTSC[key].useNamed}">${columnTSC[key].text}</setting>\n`;
-        } else if (columnTSC[key].standardized) {
+        } else if ("standardized" in columnTSC[key]) {
           xml += `${indent}<setting name="${xmlKey}" useNamed="${columnTSC[key].standardized}">${columnTSC[key].text}</setting>\n`;
         } else {
           xml += `${indent}<setting name="${xmlKey}"/>\n`;
@@ -500,10 +413,11 @@ function generateColumnXml(columnTSC: ColumnInfoTSC, stateColumn: ColumnInfo | u
             }
           }
         }
-        // } else if (key.startsWith("_")) {
-        //   xml += `${indent}<${xmlKey.slice(1)}>${columnTSC[key]}</${xmlKey.slice(1)}>\n`;
-        //
-      } else if (key === "fonts") {
+      }
+      else if (key === "orientation") {
+        xml += `${indent}<setting name="${xmlKey}" orientation="${columnTSC[key as keyof ColumnInfoTSC]}"/>\n`;
+      }
+      else if (key === "fonts") {
         xml += `${indent}<fonts>\n`;
         xml += generateFontsXml(presetColumn[key], colName, stateColumn?.fontsInfo, `${indent}    `);
         xml += `${indent}</fonts>\n`;
