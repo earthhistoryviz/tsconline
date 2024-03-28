@@ -26,7 +26,6 @@ import { fetcher } from "../../util";
 import { initializeColumnHashMap } from "./column-actions";
 import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
-import { Settings } from "../../types";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 

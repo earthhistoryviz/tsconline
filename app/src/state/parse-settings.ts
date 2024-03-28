@@ -11,9 +11,8 @@ import {
   assertChartInfoTSC,
   assertChartSettingsInfoTSC,
   assertColumnInfoTSC,
-  defaultFontsInfo,
+  defaultFontsInfo
 } from "@tsconline/shared";
-
 
 /**
  * casts a string to a specified type
@@ -23,9 +22,8 @@ import {
 function castValue(value: string) {
   let castValue;
   if (value === "") {
-    castValue = ""
-  }
-  else if (value === "true") {
+    castValue = "";
+  } else if (value === "true") {
     castValue = true;
   } else if (value === "false") {
     castValue = false;
@@ -55,10 +53,9 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
       if (nestedSettingsNode.textContent) {
         settingValue = castValue(nestedSettingsNode.textContent.trim());
       }
-    }
-    else {
+    } else {
       if (settingNode.textContent) {
-        settingValue = castValue(settingNode.textContent.trim())
+        settingValue = castValue(settingNode.textContent.trim());
       }
     }
     //since we access the elements by tag name, the nested settings of topage and baseage
@@ -90,7 +87,7 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
     }
     //these two tags have units, so make an object storing its unit and value
     else if (settingName === "unitsPerMY" || settingName === "skipEmptyColumns") {
-      settings[settingName]= { unit: "Ma", text: settingValue };
+      settings[settingName] = { unit: "Ma", text: settingValue };
     } else {
       settings[settingName] = settingValue;
     }
@@ -136,45 +133,37 @@ function processColumn(node: any, id: string): ColumnInfoTSC {
           if (settingName === "backgroundColor" || settingName === "customColor") {
             if (standardizedValue && useNamedValue) {
               column[settingName] = {
-                standardized: standardizedValue === "true" ,
-                useNamed: useNamedValue === "true" ,
+                standardized: standardizedValue === "true",
+                useNamed: useNamedValue === "true",
                 text: castValue(child.textContent.trim())
-              }
-            }
-            else if (useNamedValue) {
+              };
+            } else if (useNamedValue) {
               column[settingName] = {
-                useNamed: useNamedValue === "true" ,
+                useNamed: useNamedValue === "true",
                 text: castValue(child.textContent.trim())
-              }
-            }
-            else if (standardizedValue) {
+              };
+            } else if (standardizedValue) {
               column[settingName] = {
-                standardized: standardizedValue === "true" ,
+                standardized: standardizedValue === "true",
                 text: castValue(child.textContent.trim())
-              }
-            }
-            else {
+              };
+            } else {
               column[settingName] = {
-                text:castValue(child.textContent.trim())
-              }
+                text: castValue(child.textContent.trim())
+              };
             }
-            
           } else if (justificationValue) {
             column[settingName] = castValue(justificationValue);
           } else if (orientationValue) {
             column[settingName] = castValue(orientationValue);
-          } 
-          else if (settingName === "type") {
+          } else if (settingName === "type") {
             const textContent = castValue(child.textContent.trim());
             if (textContent === 0) {
               column[settingName] = child.getAttribute("type");
-            } 
-            else column[settingName] = textContent;
-          } 
-          else if (settingName === "pointType") {
+            } else column[settingName] = textContent;
+          } else if (settingName === "pointType") {
             column[settingName] = castValue(child.getAttribute("pointType"));
-          } 
-          else {
+          } else {
             column[settingName] = castValue(child.textContent.trim());
           }
         }
@@ -206,7 +195,10 @@ export function xmlToJson(xml: string): ChartInfoTSC {
     }
     const rootColumnNode = tsCreatorNode.getElementsByTagName("column")[0];
     if (rootColumnNode) {
-      settingsTSC["class datastore.RootColumn:Chart Root"] = processColumn(rootColumnNode, "class datastore.RootColumn:Chart Root");
+      settingsTSC["class datastore.RootColumn:Chart Root"] = processColumn(
+        rootColumnNode,
+        "class datastore.RootColumn:Chart Root"
+      );
       settingsTSC["class datastore.RootColumn:Chart Root"]._id = "class datastore.RootColumn:Chart Root";
     }
   }
@@ -413,11 +405,9 @@ function generateColumnXml(columnTSC: ColumnInfoTSC, stateColumn: ColumnInfo | u
             }
           }
         }
-      }
-      else if (key === "orientation") {
+      } else if (key === "orientation") {
         xml += `${indent}<setting name="${xmlKey}" orientation="${columnTSC[key as keyof ColumnInfoTSC]}"/>\n`;
-      }
-      else if (key === "fonts") {
+      } else if (key === "fonts") {
         xml += `${indent}<fonts>\n`;
         xml += generateFontsXml(presetColumn[key], colName, stateColumn?.fontsInfo, `${indent}    `);
         xml += `${indent}</fonts>\n`;
