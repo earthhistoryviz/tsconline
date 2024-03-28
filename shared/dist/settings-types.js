@@ -152,11 +152,12 @@ export function assertColumnInfoTSC(o) {
     if (typeof o._id !== "string") {
         throwError("ColumnInfoTSC", "_id", "string", o._id);
     }
-    else { //check for specific column type since id has the column type in it
+    else {
+        //check for specific column type since id has the column type in it
         if (o._id === "RootColumn") {
             console.log(o);
         }
-        const columnType = o._id.match(/\.(.*?)\:/)[1];
+        const columnType = o._id.match(/\.(.*?):/)[1];
         switch (columnType) {
             case "ZoneColumn":
                 assertZoneColumnInfo(o);
