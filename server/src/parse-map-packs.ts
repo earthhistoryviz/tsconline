@@ -14,8 +14,8 @@ import {
   assertParentMap
 } from "@tsconline/shared";
 
-export async function parseMapPacks(datapacks: string[]): Promise<MapPack> {
-  const mapInfoPaths = await grabFilepaths(datapacks, assetconfigs.decryptionDirectory, "map-packs");
+export async function parseMapPacks(datapacks: string[], decryptionDirectory: string): Promise<MapPack> {
+  const mapInfoPaths = await grabFilepaths(datapacks, decryptionDirectory, "map-packs");
   const mapInfo: MapInfo = {};
   const mapHierarchy: MapHierarchy = {};
   await pmap(mapInfoPaths, async (map_info) => {

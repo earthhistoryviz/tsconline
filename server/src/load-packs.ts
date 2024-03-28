@@ -27,10 +27,15 @@ import { grabFilepaths, rgbToHex } from "./util.js";
  * @param datapackIndex the datapackIndex to load
  * @param mapPackIndex the mapPackIndex to load
  */
-export async function loadIndexes(datapackIndex: DatapackIndex, mapPackIndex: MapPackIndex) {
-  console.log(`\nParsing datapacks: ${assetconfigs.activeDatapacks}\n`);
-  for (const datapack of assetconfigs.activeDatapacks) {
-    parseDatapacks(assetconfigs.decryptionDirectory, [datapack])
+export async function loadIndexes(
+  datapackIndex: DatapackIndex,
+  mapPackIndex: MapPackIndex,
+  decryptionDirectory: string,
+  datapacks: string[]
+) {
+  console.log(`\nParsing datapacks: ${datapacks}\n`);
+  for (const datapack of datapacks) {
+    await parseDatapacks([datapack], decryptionDirectory)
       .then((datapackParsingPack) => {
         assertDatapackParsingPack(datapackParsingPack);
         datapackIndex[datapack] = datapackParsingPack;
@@ -39,7 +44,7 @@ export async function loadIndexes(datapackIndex: DatapackIndex, mapPackIndex: Ma
       .catch((e) => {
         console.log(`Cannot create a datapackParsingPack with datapack ${datapack} and error: ${e}`);
       });
-    parseMapPacks([datapack])
+    await parseMapPacks([datapack], decryptionDirectory)
       .then((mapPack) => {
         assertMapPack(mapPack);
         mapPackIndex[datapack] = mapPack;
@@ -48,7 +53,7 @@ export async function loadIndexes(datapackIndex: DatapackIndex, mapPackIndex: Ma
         console.log(`Cannot create a mapPack with datapack ${datapack} and error: ${e}`);
       });
   }
-  grabMapImages();
+  await grabMapImages(datapacks, decryptionDirectory);
 }
 /**
  * Loads all the facies patterns from the patterns directory
@@ -104,8 +109,11 @@ export async function loadFaciesPatterns() {
  * Finds all map images and puts them in the public directory
  * For access from fastify server servicing
  */
-async function grabMapImages() {
-  const imagePaths = await grabFilepaths(assetconfigs.activeDatapacks, assetconfigs.decryptionDirectory, "MapImages");
+export async function grabMapImages(
+  datapacks: string[] = assetconfigs.activeDatapacks,
+  decryptionDirectory: string = assetconfigs.decryptionDirectory
+) {
+  const imagePaths = await grabFilepaths(datapacks, decryptionDirectory, "MapImages");
   const compiledImages: string[] = [];
   try {
     // recursive: true ensures if it already exists, we continue with no error
@@ -116,7 +124,6 @@ async function grabMapImages() {
         const fileName = path.basename(image_path);
         const destPath = path.join(assetconfigs.imagesDirectory, fileName);
         if (fsSync.existsSync(destPath)) {
-          console.log(fileName + " already exists");
           return;
         }
         try {
@@ -129,7 +136,7 @@ async function grabMapImages() {
       { concurrency: 5 }
     ); // Adjust concurrency as needed
   } catch (e) {
-    console.log("Error processing image paths for datapacks: ", assetconfigs.activeDatapacks, " \n", "With error: ", e);
+    console.log("Error processing image paths for datapacks: ", datapacks, " \n", "With error: ", e);
   }
   return compiledImages;
 }
