@@ -24,24 +24,18 @@ import FormatItalicIcon from "@mui/icons-material/FormatItalic";
 import { MuiColorInput } from "mui-color-input";
 import CloseIcon from "@mui/icons-material/Close";
 import "./FontMenu.css";
+import { ValidFontOptions } from "@tsconline/shared";
 
 const FontMenuRow: React.FC<{
-  target:
-    | "Column Header"
-    | "Age Label"
-    | "Uncertainty Label"
-    | "Zone Column Label"
-    | "Event Column Label"
-    | "Range Label";
+  target: ValidFontOptions;
 }> = observer(({ target }) => {
   const { state, actions } = useContext(context);
   const [fontTarget, setFontTarget] = useState(false);
   const [font, setFont] = useState("Arial");
-  const [formats, setFormats] = useState(["bold", "italic"]);
-
+  const [formats, setFormats] = useState([""]);
   const fontOpts = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected as string)!.fontsInfo[target];
-  const handleChange = (event: SelectChangeEvent) => {
-    if (/Arial|Courier|Verdana/.test(event.target.value)) return;
+  const handleFontChange = (event: SelectChangeEvent) => {
+    if (!/^(Arial|Courier|Verdana)$/.test(event.target.value)) return;
     actions.setFontFace(target, event.target.value as "Arial" | "Courier" | "Verdana");
     setFont(event.target.value as string);
   };
@@ -90,7 +84,7 @@ const FontMenuRow: React.FC<{
           <Select
             value={fontOpts.fontFace}
             label="Font Face"
-            onChange={handleChange}
+            onChange={handleFontChange}
             disabled={!fontTarget}
             displayEmpty>
             <MenuItem value={"Arial"}>Arial</MenuItem>
@@ -126,7 +120,7 @@ const FontMenuRow: React.FC<{
             value={fontOpts.color}
             size="small"
             label="Color"
-            format="hex"
+            format="rgb"
             onChange={handleColor}
             disabled={!fontTarget}
           />
@@ -146,13 +140,25 @@ const FontMenuRow: React.FC<{
   );
 });
 
-export const FontMenu = observer(() => {
+export const FontMenu: React.FC<object> = observer(() => {
   const { state } = useContext(context);
   const theme = useTheme();
   const name =
     state.settingsTabs.columnSelected === null
       ? ""
       : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.editName;
+  let fontOptionsSet: Set<ValidFontOptions> = new Set();
+  const defaultFontSet: Set<ValidFontOptions> = new Set([
+    "Age Label",
+    "Zone Column Label",
+    "Uncertainty Label",
+    "Event Column Label",
+    "Range Label"
+  ]);
+  if (state.settingsTabs.columnSelected) {
+    fontOptionsSet =
+      state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)?.fontOptions ?? defaultFontSet;
+  }
   const [open, setOpen] = useState(false);
   const handleOpen = () => {
     setOpen(true);
@@ -183,23 +189,14 @@ export const FontMenu = observer(() => {
             <Grid item xs={12}>
               <Divider />
             </Grid>
-
-            <Grid item xs={12}>
+            <Grid item xs={12} style={{ marginBottom: "-16px" }}>
               <Typography id="AdditionalFontsText">Additional fonts for child columns</Typography>
-              <FontMenuRow target="Age Label" />
             </Grid>
-            <Grid item xs={12}>
-              <FontMenuRow target="Zone Column Label" />
-            </Grid>
-            <Grid item xs={12}>
-              <FontMenuRow target="Uncertainty Label" />
-            </Grid>
-            <Grid item xs={12}>
-              <FontMenuRow target="Event Column Label" />
-            </Grid>
-            <Grid item xs={12}>
-              <FontMenuRow target="Range Label" />
-            </Grid>
+            {Array.from(fontOptionsSet).map((target) => (
+              <Grid item xs={12} key={target}>
+                <FontMenuRow target={target} />
+              </Grid>
+            ))}
           </Grid>
         </Box>
       </Modal>
