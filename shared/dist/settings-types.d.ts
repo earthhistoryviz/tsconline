@@ -33,7 +33,14 @@ export type ChartSettingsInfoTSC = {
     enPriority: boolean;
     enHideBlockLable: boolean;
 };
-export type ColumnInfoTSC = {
+export type ColumnInfoTSC = ColumnBasicProps & (ZoneColumnInfo | EventColumnInfo | SequenceColumnInfo | RangeColumnInfo | RulerColumnInfo | PointColumnInfo);
+export type ZoneColumnInfoTSC = ColumnBasicProps & ZoneColumnInfo;
+export type EventColumnInfoTSC = ColumnBasicProps & EventColumnInfo;
+export type RangeColumnInfoTSC = ColumnBasicProps & RangeColumnInfo;
+export type SequenceColumnInfoTSC = ColumnBasicProps & RangeColumnInfo;
+export type RulerColumnInfoTSC = ColumnBasicProps & RulerColumnInfo;
+export type PointColumnInfoTSC = ColumnBasicProps & PointColumnInfo;
+export type ColumnBasicProps = {
     _id: string;
     title: string;
     useNamedColor: boolean;
@@ -46,51 +53,70 @@ export type ColumnInfoTSC = {
     pad: number;
     "age pad": number;
     backgroundColor: {
-        standardized?: boolean;
-        useNamed?: boolean;
+        standardized: boolean;
+        useNamed: boolean;
         text: string;
     };
     customColor: {
-        standardized?: boolean;
-        useNamed?: boolean;
+        standardized: boolean;
+        useNamed: boolean;
         text: string;
     };
-    fonts?: FontsInfo;
-    crunchOuterMargin?: number;
-    crunchInnerMargin?: number;
-    crunchAscendWidth?: number;
-    crunchOneSideSpaceUse?: number;
-    autoFlip?: boolean;
-    orientation?: "vertical" | "normal";
-    type?: string;
-    rangeSort?: string;
-    justification?: "left" | "right";
-    labelMarginLeft?: number;
-    labelMarginRight?: number;
-    graphStyle?: string;
-    drawNameLabel?: boolean;
-    drawPoints?: boolean;
-    drawLine?: boolean;
-    lineColor?: string;
-    drawSmooth?: boolean;
-    drawFill?: boolean;
-    fillColor?: string;
-    doNotSetWindowAuto?: boolean;
-    minWindow?: number;
-    maxWindow?: number;
-    drawScale?: boolean;
-    drawBgrndGradient?: boolean;
-    backGradStart?: string;
-    backGradEnd?: string;
-    drawCurveGradient?: boolean;
-    curveGradStart?: string;
-    curveGradEnd?: string;
-    flipScale?: boolean;
-    scaleStart?: number;
-    scaleStep?: number;
-    pointType?: "rect" | "round" | "tick";
-    children?: ColumnInfoTSC[];
+    fonts: FontsInfo;
+    children: ColumnInfoTSC[];
+};
+export type ZoneColumnInfo = {
+    crunchOuterMargin: number;
+    crunchInnerMargin: number;
+    crunchAscendWidth: number;
+    crunchOneSideSpaceUse: number;
+    autoFlip: boolean;
+    orientation: "vertical" | "normal";
+};
+export type EventColumnInfo = {
+    type: string;
+};
+export type SequenceColumnInfo = {
+    type: string;
+    labelMarginLeft: number;
+    labelMarginRight: number;
+    graphStyle: string;
+    drawNameLabel: boolean;
+};
+export type RangeColumnInfo = {
+    rangeSort: string;
+};
+export type RulerColumnInfo = {
+    justification: "left" | "right";
+};
+export type PointColumnInfo = {
+    drawPoints: boolean;
+    drawLine: boolean;
+    lineColor: string;
+    drawSmooth: boolean;
+    drawFill: boolean;
+    fillColor: string;
+    doNotSetWindowAuto: boolean;
+    minWindow: number;
+    maxWindow: number;
+    drawScale: boolean;
+    drawBgrndGradient: boolean;
+    backGradStart: string;
+    backGradEnd: string;
+    drawCurveGradient: boolean;
+    curveGradStart: string;
+    curveGradEnd: string;
+    flipScale: boolean;
+    scaleStart: number;
+    scaleStep: number;
+    pointType: "rect" | "round" | "tick";
 };
 export declare function assertChartInfoTSC(o: any): asserts o is ChartInfoTSC;
 export declare function assertChartSettingsInfoTSC(o: any): asserts o is ChartSettingsInfoTSC;
+export declare function assertZoneColumnInfo(o: any): void;
+export declare function assertEventColumnInfo(o: any): void;
+export declare function assertSequenceColumnInfo(o: any): void;
+export declare function assertRangeColumnInfo(o: any): void;
+export declare function assertRulerColumnInfo(o: any): void;
+export declare function assertPointColumnInfo(o: any): void;
 export declare function assertColumnInfoTSC(o: any): asserts o is ColumnInfoTSC;
