@@ -74,19 +74,19 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
  * and change before the conversion to xml. The downside is we must check
  * every ColumnInfo object which may cause problems with time consistency.
  * However, this is asyncronous, which makes it less likely to cause problems.
- * @param column 
+ * @param column
  */
 function changeFaciesColumn(column: ColumnInfo) {
   if (column.name === `${column.parent} Facies Label`) {
-    column.name = "Facies Label"
+    column.name = "Facies Label";
   } else if (column.name === `${column.parent} Series Label`) {
-    column.name = "Series Label"
+    column.name = "Series Label";
   } else if (column.name === `${column.parent} Members`) {
-    column.name = "Members"
+    column.name = "Members";
   } else if (column.name === `${column.parent} Facies`) {
-    column.name = "Facies"
+    column.name = "Facies";
   }
   for (const child of column.children) {
-    changeFaciesColumn(child)
+    changeFaciesColumn(child);
   }
 }
