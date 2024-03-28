@@ -2,7 +2,7 @@ import * as generalActions from "./general-actions";
 import { displayServerError } from "./util-actions";
 import { state } from "../state";
 import { action } from "mobx";
-import { fetcher, devSafeUrl } from "../../util";
+import { fetcher } from "../../util";
 import { assertChartInfo } from "@tsconline/shared";
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";

@@ -6,7 +6,6 @@ import DialogActions from "@mui/material/DialogActions";
 import { ErrorCodes } from "../util/error-codes";
 import { TSCButton } from "./TSCButton";
 import { Typography } from "@mui/material";
-import { StyledScrollbar } from "./TSCComponents";
 
 export const TSCPopupManager = () => {
   const [popupContent, setPopupContent] = useState({ open: false, message: "" });
