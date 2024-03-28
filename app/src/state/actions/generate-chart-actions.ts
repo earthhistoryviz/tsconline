@@ -3,7 +3,7 @@ import { displayServerError } from "./util-actions";
 import { state } from "../state";
 import { action } from "mobx";
 import { fetcher, devSafeUrl } from "../../util";
-import { assertChartInfo } from "@tsconline/shared";
+import { ColumnInfo, assertChartInfo } from "@tsconline/shared";
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -36,7 +36,9 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   generalActions.setChartPath("");
   //let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
   // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
-  const xmlSettings = jsonToXml(state.settingsJSON, state.settingsTabs.columns, state.settings);
+  const columnCopy: ColumnInfo = JSON.parse(JSON.stringify(state.settingsTabs.columns));
+  changeFaciesColumn(columnCopy);
+  const xmlSettings = jsonToXml(state.settingsJSON, columnCopy, state.settings);
   const body = JSON.stringify({
     settings: xmlSettings,
     datapacks: state.config.datapacks
@@ -64,3 +66,27 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
   }
 });
+
+/**
+ * Since we hash by name only to allow consistency between facies maps and
+ * the column page, a generic like Facies Label will cause errors.
+ * The solution @Paolo came up with is to prepend the name of the parent
+ * and change before the conversion to xml. The downside is we must check
+ * every ColumnInfo object which may cause problems with time consistency.
+ * However, this is asyncronous, which makes it less likely to cause problems.
+ * @param column
+ */
+function changeFaciesColumn(column: ColumnInfo) {
+  if (column.name === `${column.parent} Facies Label`) {
+    column.name = "Facies Label";
+  } else if (column.name === `${column.parent} Series Label`) {
+    column.name = "Series Label";
+  } else if (column.name === `${column.parent} Members`) {
+    column.name = "Members";
+  } else if (column.name === `${column.parent} Facies`) {
+    column.name = "Facies";
+  }
+  for (const child of column.children) {
+    changeFaciesColumn(child);
+  }
+}
