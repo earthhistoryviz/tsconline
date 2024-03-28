@@ -1134,6 +1134,7 @@ function recursive(
       ...currentFacies,
       subFaciesInfo: JSON.parse(JSON.stringify(currentFacies.subFaciesInfo))
     });
+    addFaciesChildren(currentColumnInfo.children, currentColumnInfo.name, currentColumnInfo.width, currentColumnInfo.minAge, currentColumnInfo.maxAge);
     returnValue.subFaciesInfo = currentFacies.subFaciesInfo;
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
@@ -1238,4 +1239,79 @@ export function createDefaultColumnHeaderProps(overrides: Partial<ColumnHeaderPr
   };
 
   return { ...defaultProps, ...overrides };
+}
+
+function addFaciesChildren(children: ColumnInfo[], name: string, width: number, minAge: number, maxAge: number) {
+  children.push({
+    name: `${name} Facies`,
+    editName: name,
+    on: true,
+    enableTitle: false,
+    fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+    popup: "",
+    children: [],
+    parent: name,
+    minAge,
+    maxAge,
+    width: width * 0.4,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    }
+  })
+  children.push({
+    name: `${name} Members`,
+    editName: "Members",
+    on: false,
+    enableTitle: false,
+    fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+    popup: "",
+    children: [],
+    parent: name,
+    minAge,
+    maxAge,
+    width,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    }
+  })
+  children.push({
+    name: `${name} Facies Label`,
+    editName: "Facies Label",
+    on: true,
+    enableTitle: false,
+    fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+    popup: "",
+    children: [],
+    parent: name,
+    minAge,
+    maxAge,
+    width: width * 0.4,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    }
+  })
+  children.push({
+    name: `${name} Series Label`,
+    editName: "Series Label",
+    on: true,
+    enableTitle: false,
+    fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+    popup: "",
+    children: [],
+    parent: name,
+    minAge,
+    maxAge,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    },
+    width: width * 0.2
+  })
 }
