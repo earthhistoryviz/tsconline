@@ -1,8 +1,16 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
 import { writeFile, stat, readFile, access } from "fs/promises";
-import { TimescaleItem, assertChartRequest } from "@tsconline/shared";
-import { deleteDirectory } from "./util.js";
+import {
+  DatapackIndex,
+  MapPackIndex,
+  TimescaleItem,
+  assertChartRequest,
+  assertDatapackIndex,
+  assertIndexResponse,
+  assertMapPackIndex
+} from "@tsconline/shared";
+import { deleteDirectory, resetUploadDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
 import md5 from "md5";
 import { assetconfigs } from "./index.js";
@@ -10,6 +18,178 @@ import svgson from "svgson";
 import fs from "fs";
 import { assertTimescale } from "@tsconline/shared";
 import { parseExcelFile } from "./parse-excel-file.js";
+import path from "path";
+import pump from "pump";
+import { loadIndexes } from "./load-packs.js";
+
+export const fetchUserDatapacks = async function fetchUserDatapacks(
+  request: FastifyRequest<{ Params: { username: string } }>,
+  reply: FastifyReply
+) {
+  const { username } = request.params;
+  if (!username) {
+    reply.status(400).send({ error: "No username provided" });
+    return;
+  }
+  const hash = md5(username);
+  const userDir = path.join(assetconfigs.uploadDirectory, hash);
+  if (!fs.existsSync(userDir)) {
+    reply.status(404).send({ error: "User does not exist" });
+    return;
+  }
+  const datapackIndex: DatapackIndex = {};
+  const mapPackIndex: MapPackIndex = {};
+  try {
+    if (fs.existsSync(path.join(userDir, "DatapackIndex.json"))) {
+      Object.assign(datapackIndex, JSON.parse(fs.readFileSync(path.join(userDir, "DatapackIndex.json")).toString()));
+    }
+    if (fs.existsSync(path.join(userDir, "MapPackIndex.json"))) {
+      Object.assign(mapPackIndex, JSON.parse(fs.readFileSync(path.join(userDir, "MapPackIndex.json")).toString()));
+    }
+  } catch (e) {
+    reply
+      .status(500)
+      .send({ error: "Failed to load indexes, corrupt json files present. Please contact customer service." });
+    return;
+  }
+  const indexResponse = { datapackIndex, mapPackIndex };
+  assertIndexResponse(indexResponse);
+  reply.status(200).send(indexResponse);
+};
+
+export const uploadDatapack = async function uploadDatapack(
+  request: FastifyRequest<{ Params: { username: string } }>,
+  reply: FastifyReply
+) {
+  const { username } = request.params;
+  if (!username) {
+    reply.status(400).send({ error: "No username provided" });
+    return;
+  }
+  const file = await request.file();
+  if (!file) {
+    reply.status(404).send({ error: "No file uploaded" });
+    return;
+  }
+  // only accept a binary file (encoded) or an unecnrypted text file
+  if (file.mimetype !== "application/octet-stream" && file.mimetype !== "text/plain") {
+    reply.status(400).send({ error: `Invalid mimetype of uploaded file, received ${file.mimetype}` });
+    return;
+  }
+  const filename = file.filename;
+  const ext = path.extname(filename);
+  const filenameWithoutExtension = path.basename(filename, ext);
+  const hash = md5(username);
+  const userDir = path.join(assetconfigs.uploadDirectory, hash);
+  const datapackDir = path.join(userDir, "datapacks");
+  const decryptDir = path.join(userDir, "decrypted");
+  const filepath = path.join(datapackDir, filename);
+  const decryptedFilepathDir = path.join(decryptDir, filenameWithoutExtension);
+  const mapPackIndexFilepath = path.join(userDir, "MapPackIndex.json");
+  const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json");
+  if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(ext)) {
+    reply.status(415).send({ error: "Invalid file type" });
+    return;
+  }
+  if (!fs.existsSync(datapackDir)) {
+    fs.mkdirSync(datapackDir, { recursive: true });
+  }
+  const fileStream = file.file;
+  console.log("Uploading file: ", filename);
+  try {
+    // must wait for the file to be written before decrypting
+    await new Promise<void>((resolve, reject) => {
+      pump(fileStream, fs.createWriteStream(filepath), (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
+  } catch (e) {
+    resetUploadDirectory(filepath, decryptedFilepathDir);
+    reply.status(500).send({ error: "Failed to save file with error: " + e });
+    return;
+  }
+  if (file.file.truncated) {
+    resetUploadDirectory(filepath, decryptedFilepathDir);
+    reply.status(413).send({ error: "File too large" });
+    return;
+  }
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const cmd =
+        `java -jar ${assetconfigs.decryptionJar} ` +
+        // Decrypting these datapacks:
+        `-d "${filepath}" ` +
+        // Tell it where to send the datapacks
+        `-dest ${decryptDir} `;
+      console.log("Calling Java decrypt.jar: ", cmd);
+      exec(cmd, function (error, stdout, stderror) {
+        console.log("Java decrypt.jar finished, sending reply to browser");
+        if (error) {
+          console.error("Java error param: " + error);
+          console.error("Java stderr: " + stderror.toString());
+          reject(error);
+        } else {
+          console.log("Java stdout: " + stdout.toString());
+          resolve();
+        }
+      });
+    });
+  } catch (e) {
+    resetUploadDirectory(filepath, decryptedFilepathDir);
+    reply.status(500).send({ error: "Failed to decrypt datapacks with error " + e });
+    return;
+  }
+  if (!fs.existsSync(decryptedFilepathDir) || !fs.existsSync(path.join(decryptedFilepathDir, "datapacks"))) {
+    resetUploadDirectory(filepath, decryptedFilepathDir);
+    reply.status(500).send({ error: "Failed to decrypt file" });
+    return;
+  }
+  const datapackIndex: DatapackIndex = {};
+  const mapPackIndex: MapPackIndex = {};
+  // check for if this user has a datapack index already
+  if (fs.existsSync(datapackIndexFilepath)) {
+    try {
+      const data = await readFile(datapackIndexFilepath);
+      Object.assign(datapackIndex, JSON.parse(data.toString()));
+      assertDatapackIndex(datapackIndex);
+    } catch (e) {
+      resetUploadDirectory(filepath, decryptedFilepathDir);
+      reply.status(500).send({ error: "Failed to parse DatapackIndex.json" });
+      return;
+    }
+  }
+  // check for if this user has a map index already
+  if (fs.existsSync(mapPackIndexFilepath)) {
+    try {
+      const data = await readFile(mapPackIndexFilepath);
+      Object.assign(mapPackIndex, JSON.parse(data.toString()));
+      assertMapPackIndex(mapPackIndex);
+    } catch (e) {
+      resetUploadDirectory(filepath, decryptedFilepathDir);
+      reply.status(500).send({ error: "Failed to parse MapPackIndex.json" });
+      return;
+    }
+  }
+  await loadIndexes(datapackIndex, mapPackIndex, decryptDir, [filename]);
+  if (!datapackIndex[filename]) {
+    resetUploadDirectory(filepath, decryptedFilepathDir);
+    reply.status(500).send({ error: "Failed to load decrypted datapack" });
+    return;
+  }
+  try {
+    await writeFile(datapackIndexFilepath, JSON.stringify(datapackIndex));
+    await writeFile(mapPackIndexFilepath, JSON.stringify(mapPackIndex));
+  } catch (e) {
+    reply.status(500).send({ error: "Failed to save indexes" });
+    resetUploadDirectory(filepath, decryptedFilepathDir);
+    return;
+  }
+  reply.status(200).send({ message: "File uploaded" });
+};
 
 export const fetchImage = async function (
   request: FastifyRequest<{ Params: { datapackName: string; imageName: string } }>,

@@ -102,7 +102,7 @@ const headerTransectsInfo = ["TRANSECT", "TRANSECT 1", "START", "END", "NOTE"];
 
 describe("parseMapPacks tests", () => {
   it("should parse africa general map pack", async () => {
-    const mapPacks = await parseMapPacks(["parse-map-packs-test-1.txt"]);
+    const mapPacks = await parseMapPacks(["parse-map-packs-test-1.txt"], "");
     expect(mapPacks).toEqual(key["map-pack-key-1"]);
   });
 
@@ -110,7 +110,7 @@ describe("parseMapPacks tests", () => {
    * parses the belgium map pack with a parent map
    */
   it("should parse belgium map-pack", async () => {
-    const mapPacks = await parseMapPacks(["parse-map-packs-test-2.txt"]);
+    const mapPacks = await parseMapPacks(["parse-map-packs-test-2.txt"], "");
     expect(mapPacks).toEqual(key["map-pack-key-2"]);
   });
 
@@ -118,7 +118,7 @@ describe("parseMapPacks tests", () => {
    * parses transects, info points, map points, parent, coord, and header
    */
   it("should parse everything", async () => {
-    const mapPacks = await parseMapPacks(["parse-map-packs-test-3.txt"]);
+    const mapPacks = await parseMapPacks(["parse-map-packs-test-3.txt"], "");
     expect(mapPacks).toEqual(key["map-pack-key-3"]);
   });
 
@@ -126,7 +126,7 @@ describe("parseMapPacks tests", () => {
    * parses two packs with same parent "World map"
    */
   it("should parse two packs with same parent", async () => {
-    const mapPacks = await parseMapPacks(["parse-map-packs-test-2.txt", "parse-map-packs-test-3.txt"]);
+    const mapPacks = await parseMapPacks(["parse-map-packs-test-2.txt", "parse-map-packs-test-3.txt"], "");
     const expected = {
       mapInfo: { ...key["map-pack-key-2"]["mapInfo"], ...key["map-pack-key-3"]["mapInfo"] },
       mapHierarchy: { "World Map": ["Belgium", "MAP TITLE TEST"] }
@@ -138,11 +138,10 @@ describe("parseMapPacks tests", () => {
    * parses three packs with same parent "World map" (not parse-map-packs-test-1)
    */
   it("should parse all packs", async () => {
-    const mapPacks = await parseMapPacks([
-      "parse-map-packs-test-1.txt",
-      "parse-map-packs-test-2.txt",
-      "parse-map-packs-test-3.txt"
-    ]);
+    const mapPacks = await parseMapPacks(
+      ["parse-map-packs-test-1.txt", "parse-map-packs-test-2.txt", "parse-map-packs-test-3.txt"],
+      ""
+    );
     const expected = {
       mapInfo: {
         ...key["map-pack-key-1"]["mapInfo"],
@@ -155,7 +154,7 @@ describe("parseMapPacks tests", () => {
   });
 
   it("should return empty if bad data", async () => {
-    await expect(parseMapPacks(["bad-data.txt"])).rejects.toThrow(
+    await expect(parseMapPacks(["bad-data.txt"], "")).rejects.toThrow(
       new Error("Map info file: bad-data is not in the correct format/version")
     );
   });

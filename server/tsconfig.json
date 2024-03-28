@@ -5,6 +5,7 @@
     "outDir": "dist",
     "allowJs": true
   },
+  "exclude": ["assets/uploads"],
   "include": [ 
     "src",
   ]

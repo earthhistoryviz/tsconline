@@ -65,7 +65,7 @@ describe("general parse-datapacks tests", () => {
    * Parses the general Africa Bight map pack
    */
   it("should parse africa general datapack", async () => {
-    const datapacks = await parseDatapacks("parse-datapacks-test-1.txt", []);
+    const datapacks = await parseDatapacks([], "parse-datapacks-test-1.txt");
     expect(datapacks).toEqual(key["general-parse-datapacks-test-1-key"]);
   });
 
@@ -74,7 +74,7 @@ describe("general parse-datapacks tests", () => {
    * Checks both datapack ages and columnInfo values
    */
   it("should parse general datapack with all column types", async () => {
-    const datapacks = await parseDatapacks("parse-datapacks-test-2.txt", []);
+    const datapacks = await parseDatapacks([], "parse-datapacks-test-2.txt");
     expect(datapacks).toEqual(key["general-parse-datapacks-test-2-key"]);
   });
 
@@ -82,7 +82,7 @@ describe("general parse-datapacks tests", () => {
    * Given a bad file, return empty array and default datapackAgeInfo
    */
   it("should not parse bad file return empty array", async () => {
-    const datapacks = await parseDatapacks("bad-data.txt", []);
+    const datapacks = await parseDatapacks([], "bad-data.txt");
     expect(datapacks).toEqual({ columnInfoArray: [], datapackAgeInfo: { datapackContainsSuggAge: false } });
   });
 });

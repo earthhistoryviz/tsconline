@@ -10,7 +10,9 @@ export enum ErrorCodes {
   INVALID_SVG_READY_RESPONSE = "INVALID_SVG_READY_RESPONSE",
   INVALID_SETTINGS_RESPONSE = "INVALID_SETTINGS_RESPONSE",
   INVALID_CHART_RESPONSE = "INVALID_CHART_RESPONSE",
-  INVALID_PATH = "INVALID_PATH"
+  INVALID_PATH = "INVALID_PATH",
+  INVALID_DATAPACK_UPLOAD = "INVALID_DATAPACK_UPLOAD",
+  INVALID_USER_DATAPACKS = "INVALID_USER_DATAPACKS"
 }
 
 export const ErrorMessages = {
@@ -26,5 +28,7 @@ export const ErrorMessages = {
   [ErrorCodes.INVALID_SETTINGS_RESPONSE]: "Invalid settings response received from server. Please try again later.",
   [ErrorCodes.INVALID_CHART_RESPONSE]: "Invalid chart response received from server. Please try again later.",
   [ErrorCodes.INVALID_PATH]:
-    "The requested path does not match the allowed base URL. Please ensure the path is correct."
+    "The requested path does not match the allowed base URL. Please ensure the path is correct.",
+  [ErrorCodes.INVALID_DATAPACK_UPLOAD]: "Invalid datapack upload.",
+  [ErrorCodes.INVALID_USER_DATAPACKS]: "Invalid user datapacks received from server. Please try again later."
 };
