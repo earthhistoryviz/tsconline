@@ -30,6 +30,7 @@ export type ErrorAlert = {
 export type SnackbarInfo = {
   snackbarText: string;
   snackbarCount: number;
+  severity: "success" | "info";
 }
 export type ChartSettings = {
   selectedStage: string;

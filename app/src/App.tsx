@@ -13,7 +13,6 @@ import { useContext } from "react";
 import { context } from "./state";
 import { About } from "./About";
 import { TSCPopupDialog, TSCError, TSCSnackbar } from "./components";
-import ChartDoneIcon from "./assets/icons/chart-done.json";
 import "./App.css";
 
 
@@ -50,7 +49,7 @@ export default observer(function App() {
           onClose={() => actions.fetchChartFromServer(navigate)}
         />
         {state.snackbars.map((info, index) => (
-          <TSCSnackbar key={index} text={info.snackbarText} count={info.snackbarCount} index={index} />
+          <TSCSnackbar key={index} text={info.snackbarText} count={info.snackbarCount} index={index} severity={info.severity} />
         ))}
       </ThemeProvider>
     </StyledEngineProvider>
