@@ -1,4 +1,4 @@
-import { FontsInfo, assertFontsInfo, throwError } from "./index.js";
+import { FontsInfo, throwError } from "./index.js";
 
 export type ChartInfoTSC = {
   settings?: ChartSettingsInfoTSC;
@@ -272,7 +272,7 @@ export function assertColumnInfoTSC(o: any): asserts o is ColumnInfoTSC {
     throwError("ColumnInfoTSC", "_id", "string", o._id);
   } else {
     //check for specific column type since id has the column type in it
-    if (!o._id.match(/\.(.*?):/)) throw new Error("missing column type in id")
+    if (!o._id.match(/\.(.*?):/)) throw new Error("missing column type in id");
     const columnType = o._id.match(/\.(.*?):/)![1];
     switch (columnType) {
       case "ZoneColumn":
