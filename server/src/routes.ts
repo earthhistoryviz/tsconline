@@ -346,18 +346,32 @@ export const fetchChart = async function fetchChart(
   //   const datapackInfo = parseDefaultAges(fullPath);
   //   console.log(datapackInfo);
   // });
+  console.log(assetconfigs.chartsDirectory);
   const cmd =
     `java -Xmx512m -XX:MaxDirectMemorySize=64m -XX:MaxRAM=1g -jar ${assetconfigs.activeJar} ` +
     // Turns off GUI (e.g Suggested Age pop-up (defaults to yes if -a flag is not passed))
     `-node ` +
     // Add settings:
-    `-s ${settingsFilePath} -ss ${settingsFilePath} ` +
+    `-s public/presets/006-Africa-Bight-Map-TEST/settings-copy.tsc -ss ${settingsFilePath} ` +
     // Add datapacks:
     `-d ${datapacks.join(" ")} ` +
     // Tell it where to save chart
     `-o ${chartFilePath} ` +
     // Don't use datapacks suggested age (if useSuggestedAge is true then ignore datapack ages)
     `${!useSuggestedAge ? "-a" : ""}`;
+
+  // const cmd =
+  //   `java -Xmx512m -XX:MaxDirectMemorySize=64m -XX:MaxRAM=1g -jar ${assetconfigs.activeJar} ` +
+  //   // Turns off GUI (e.g Suggested Age pop-up (defaults to yes if -a flag is not passed))
+  //   `-node ` +
+  //   // Add settings:
+  //   `-s ${settingsFilePath} -ss ${settingsFilePath} ` +
+  //   // Add datapacks:
+  //   `-d ${datapacks.join(" ")} ` +
+  //   // Tell it where to save chart
+  //   `-o ${chartFilePath} ` +
+  //   // Don't use datapacks suggested age (if useSuggestedAge is true then ignore datapack ages)
+  //   `${!useSuggestedAge ? "-a" : ""}`;
 
   // Exec Java command and send final reply to browser
   await new Promise<void>((resolve) => {

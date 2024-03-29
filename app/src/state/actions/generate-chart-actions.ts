@@ -39,7 +39,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
   const columnCopy: ColumnInfo = JSON.parse(JSON.stringify(state.settingsTabs.columns));
   changeFaciesColumn(columnCopy);
-  const xmlSettings = jsonToXml(state.settingsJSON, columnCopy, state.settings);
+  const xmlSettings = jsonToXml(state.settingsTSC, columnCopy, state.settings);
   const body = JSON.stringify({
     settings: xmlSettings,
     datapacks: state.config.datapacks
