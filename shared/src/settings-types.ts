@@ -294,7 +294,7 @@ export function assertColumnInfoTSC(o: any): asserts o is ColumnInfoTSC {
         assertPointColumnInfo(o);
         break;
       //these just have the basic column info props
-      case "RuleColumn":
+      case "RulerColumn":
       case "MetaColumn":
       case "FaciesColumn":
       case "BlockSeriesMetaColumn":
