@@ -288,7 +288,7 @@ function generateSettingsXml(settings: any, chartSettings: any, indent: string):
  *
  * @param fonts font json object
  * @param indent the amount of indent to place in the xml file
- * @returns xml string with settings info
+ * @returns xml string with fonts info
  */
 function generateFontsXml(fonts: any, colName: string, stateColumn: any, indent: string): string {
   if (!stateColumn) {
@@ -350,11 +350,11 @@ function generateFontsXml(fonts: any, colName: string, stateColumn: any, indent:
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with column info
  */
-function generateColumnXml(columnTSC: ColumnInfoTSC, stateColumn: ColumnInfo | undefined, indent: string): string {
+function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo | undefined, indent: string): string {
   let xml = "";
-  for (let key in columnTSC) {
-    if (Object.prototype.hasOwnProperty.call(columnTSC, key)) {
-      let colName = extractName(columnTSC._id);
+  for (let key in presetColumn) {
+    if (Object.prototype.hasOwnProperty.call(presetColumn, key)) {
+      let colName = extractName(presetColumn._id);
       let xmlKey = replaceSpecialChars(key, 0);
       // Skip the 'id' element.
       if (key === "_id" || key === "id") {
@@ -371,27 +371,27 @@ function generateColumnXml(columnTSC: ColumnInfoTSC, stateColumn: ColumnInfo | u
           }
         }
         if (!useEditName) {
-          xml += `${indent}<setting name="title">${replaceSpecialChars(columnTSC[key], 1)}</setting>\n`;
+          xml += `${indent}<setting name="title">${replaceSpecialChars(presetColumn[key], 1)}</setting>\n`;
         }
       } else if (key === "backgroundColor" || key === "customColor") {
-        if ("standardized" in columnTSC[key] && "useNamed" in columnTSC[key]) {
-          xml += `${indent}<setting name="${xmlKey}" standardized="${columnTSC[key].standardized}" 
-          useNamed="${columnTSC[key].useNamed}">${columnTSC[key].text}</setting>\n`;
-        } else if ("useNamed" in columnTSC[key]) {
-          xml += `${indent}<setting name="${xmlKey}" useNamed="${columnTSC[key].useNamed}">${columnTSC[key].text}</setting>\n`;
-        } else if ("standardized" in columnTSC[key]) {
-          xml += `${indent}<setting name="${xmlKey}" useNamed="${columnTSC[key].standardized}">${columnTSC[key].text}</setting>\n`;
+        if ("standardized" in presetColumn[key] && "useNamed" in presetColumn[key]) {
+          xml += `${indent}<setting name="${xmlKey}" standardized="${presetColumn[key].standardized}" 
+          useNamed="${presetColumn[key].useNamed}">${presetColumn[key].text}</setting>\n`;
+        } else if ("useNamed" in presetColumn[key]) {
+          xml += `${indent}<setting name="${xmlKey}" useNamed="${presetColumn[key].useNamed}">${presetColumn[key].text}</setting>\n`;
+        } else if ("standardized" in presetColumn[key]) {
+          xml += `${indent}<setting name="${xmlKey}" useNamed="${presetColumn[key].standardized}">${presetColumn[key].text}</setting>\n`;
         } else {
           xml += `${indent}<setting name="${xmlKey}"/>\n`;
         }
       } else if (key === "isSelected") {
         //TODO: remove later when event columns are covered
-        if (columnTSC._id.includes("EventColumn")) {
-          xml += `${indent}<setting name="${xmlKey}">${columnTSC["isSelected"]}</setting>\n`;
+        if (presetColumn._id.includes("EventColumn")) {
+          xml += `${indent}<setting name="${xmlKey}">${presetColumn["isSelected"]}</setting>\n`;
         }
         //if column isn't in state, then use default given by the original xml
         else if (stateColumn === undefined) {
-          xml += `${indent}<setting name="${xmlKey}">${columnTSC["isSelected"]}</setting>\n`;
+          xml += `${indent}<setting name="${xmlKey}">${presetColumn["isSelected"]}</setting>\n`;
         }
         //always display these things (the original tsc throws an error if not selected)
         //(but online doesn't have option to deselect them)
@@ -410,30 +410,30 @@ function generateColumnXml(columnTSC: ColumnInfoTSC, stateColumn: ColumnInfo | u
           }
         }
       } else if (key === "orientation") {
-        xml += `${indent}<setting name="${xmlKey}" orientation="${columnTSC[key as keyof ColumnInfoTSC]}"/>\n`;
+        xml += `${indent}<setting name="${xmlKey}" orientation="${presetColumn[key as keyof ColumnInfoTSC]}"/>\n`;
       } else if (key === "fonts") {
         xml += `${indent}<fonts>\n`;
         xml += generateFontsXml(presetColumn[key], colName, stateColumn?.fontsInfo, `${indent}    `);
         xml += `${indent}</fonts>\n`;
       } else if (key === "children") {
-        let currName = extractName(columnTSC._id);
+        let currName = extractName(presetColumn._id);
         if (currName === "Chart Root") {
           xml += `${indent}<column id="class datastore.RootColumn:Chart Title">\n`;
-          if (columnTSC.children) {
-            xml += generateColumnXml(columnTSC.children[0], stateColumn, `${indent}    `);
+          if (presetColumn.children) {
+            xml += generateColumnXml(presetColumn.children[0], stateColumn, `${indent}    `);
           }
           xml += `${indent}</column>\n`;
         } else {
-          if (columnTSC.children) {
-            for (let i = 0; i < columnTSC.children.length; i++) {
-              xml += `${indent}<column id="${replaceSpecialChars(columnTSC.children[i]._id, 0)}">\n`;
-              xml += generateColumnXml(columnTSC.children[i], stateColumn?.children[i], `${indent}    `);
+          if (presetColumn.children) {
+            for (let i = 0; i < presetColumn.children.length; i++) {
+              xml += `${indent}<column id="${replaceSpecialChars(presetColumn.children[i]._id, 0)}">\n`;
+              xml += generateColumnXml(presetColumn.children[i], stateColumn?.children[i], `${indent}    `);
               xml += `${indent}</column>\n`;
             }
           }
         }
       } else {
-        xml += `${indent}<setting name="${xmlKey}">${columnTSC[key as keyof ColumnInfoTSC]}</setting>\n`;
+        xml += `${indent}<setting name="${xmlKey}">${presetColumn[key as keyof ColumnInfoTSC]}</setting>\n`;
       }
     }
   }

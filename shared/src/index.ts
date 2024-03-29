@@ -2,7 +2,6 @@
 
 import { defaultFontsInfoConstant } from "./constants.js";
 
-
 export * from "./settings-types.js";
 
 export type SuccessfulServerResponse = {
@@ -85,66 +84,6 @@ export type ChartConfig = {
 export type Datapack = {
   name: string;
   file: string;
-};
-export type ChartInfoTSC = {
-  settings?: ChartSettingsInfoTSC;
-  "class datastore.RootColumn:Chart Root"?: ColumnInfoTSC;
-};
-
-export type ChartSettingsInfoTSC = {
-  topAge: {
-    source: string;
-    unit: string;
-    stage?: string;
-    text?: number;
-  };
-  baseAge: {
-    source: string;
-    unit: string;
-    stage?: string;
-    text?: number;
-  };
-  unitsPerMY: {
-    unit: string;
-    text: number;
-  };
-  skipEmptyColumns: {
-    unit: string;
-    text: boolean;
-  };
-  variableColors: string;
-  noIndentPattern: boolean;
-  negativeChk: boolean;
-  doPopups: boolean;
-  enEventColBG: boolean;
-  enChartLegend: boolean;
-  enPriority: boolean;
-  enHideBlockLable: boolean;
-};
-
-export type ColumnInfoTSC = {
-  _id: string;
-  title: string;
-  useNamedColor: boolean;
-  placeHolder: boolean;
-  drawTitle: boolean;
-  drawAgeLabel: boolean;
-  drawUncertaintyLabel: boolean;
-  isSelected: boolean;
-  width: number;
-  pad: number;
-  "age pad": number;
-  backgroundColor: {
-    standardized?: boolean;
-    useNamed?: boolean;
-    text: string;
-  };
-  customColor: {
-    standardized?: boolean;
-    useNamed?: boolean;
-    text: string;
-  };
-  fonts: FontsInfo;
 };
 
 export type FontLabelOptions = {
