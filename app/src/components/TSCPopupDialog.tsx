@@ -19,7 +19,7 @@ export const TSCPopupDialog: React.FC<TSCPopupDialogProps> = ({ open, title, mes
       aria-labelledby="yes-no-dialog-title"
       aria-describedby="yes-no-dialog-description"
       className="tsc-dialog">
-      <DialogTitle className="yes-no-dialog-title">{title}</DialogTitle>
+      <DialogTitle id="yes-no-dialog-title">{title}</DialogTitle>
       <DialogContent className="dialog-content">
         <DialogContentText className="yes-no-dialog-description">{message}</DialogContentText>
       </DialogContent>
