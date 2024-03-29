@@ -3232,11 +3232,13 @@ const RAW_RUNTIME_STATE =
           ["@szhsin/react-menu", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:4.1.0"],\
           ["@tsconline/shared", "workspace:shared"],\
           ["@types/color", "npm:3.0.6"],\
+          ["@types/dompurify", "npm:3.0.5"],\
           ["@types/react", "npm:18.2.58"],\
           ["@types/react-dom", "npm:18.2.1"],\
           ["@vitejs/plugin-react", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:4.2.1"],\
           ["clsx", "npm:2.1.0"],\
           ["color", "npm:4.2.3"],\
+          ["dompurify", "npm:3.0.11"],\
           ["lottie-web", "npm:5.12.2"],\
           ["mobx", "npm:6.9.0"],\
           ["mobx-react-lite", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:3.4.3"],\
@@ -3397,6 +3399,16 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./.yarn/cache/@types-color-thief-node-npm-1.0.4-24d287dc25-3621826eff.zip/node_modules/@types/color-thief-node/",\
         "packageDependencies": [\
           ["@types/color-thief-node", "npm:1.0.4"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["@types/dompurify", [\
+      ["npm:3.0.5", {\
+        "packageLocation": "./.yarn/cache/@types-dompurify-npm-3.0.5-1338d8e659-e544b3ce53.zip/node_modules/@types/dompurify/",\
+        "packageDependencies": [\
+          ["@types/dompurify", "npm:3.0.5"],\
+          ["@types/trusted-types", "npm:2.0.7"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -3716,6 +3728,15 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./.yarn/cache/@types-treeify-npm-1.0.0-b5e04e9cd3-7d313ba9de.zip/node_modules/@types/treeify/",\
         "packageDependencies": [\
           ["@types/treeify", "npm:1.0.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["@types/trusted-types", [\
+      ["npm:2.0.7", {\
+        "packageLocation": "./.yarn/cache/@types-trusted-types-npm-2.0.7-a07fc44f59-8e4202766a.zip/node_modules/@types/trusted-types/",\
+        "packageDependencies": [\
+          ["@types/trusted-types", "npm:2.0.7"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -5762,6 +5783,15 @@ const RAW_RUNTIME_STATE =
           ["dom-helpers", "npm:5.2.1"],\
           ["@babel/runtime", "npm:7.21.0"],\
           ["csstype", "npm:3.1.2"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["dompurify", [\
+      ["npm:3.0.11", {\
+        "packageLocation": "./.yarn/cache/dompurify-npm-3.0.11-4bb92716e8-fc7027ef5c.zip/node_modules/dompurify/",\
+        "packageDependencies": [\
+          ["dompurify", "npm:3.0.11"]\
         ],\
         "linkType": "HARD"\
       }]\

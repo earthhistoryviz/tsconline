@@ -11,6 +11,7 @@
     "@tsconline/shared": "1.0.0",
     "clsx": "^2.1.0",
     "color": "^4.2.3",
+    "dompurify": "^3.0.11",
     "lottie-web": "^5.12.2",
     "mobx": "^6.8.0",
     "mobx-react-lite": "^3.4.0",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@types/color": "^3.0.6",
+    "@types/dompurify": "^3",
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
     "@vitejs/plugin-react": "^4.2.1",

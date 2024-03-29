@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
-import { writeFile, stat, readFile } from "fs/promises";
+import { writeFile, stat, readFile, access } from "fs/promises";
 import {
   DatapackIndex,
   MapPackIndex,
@@ -189,6 +189,31 @@ export const uploadDatapack = async function uploadDatapack(
     return;
   }
   reply.status(200).send({ message: "File uploaded" });
+};
+
+// TODO: later check in the user's directory for the file
+export const fetchImage = async function (
+  request: FastifyRequest<{ Params: { datapackName: string; imageName: string } }>,
+  reply: FastifyReply
+) {
+  const imagePath = path.join(
+    assetconfigs.decryptionDirectory,
+    request.params.datapackName,
+    "datapack-images",
+    request.params.imageName
+  );
+  try {
+    await access(imagePath);
+    const image = await readFile(imagePath);
+    reply.send(image);
+  } catch (e) {
+    const error = e as NodeJS.ErrnoException;
+    if (error.code === "ENOENT") {
+      reply.status(404).send({ error: "Image not found" });
+    } else {
+      reply.status(500).send({ error: "An error occurred" });
+    }
+  }
 };
 
 export const fetchSettingsXml = async function fetchSettingsJson(
