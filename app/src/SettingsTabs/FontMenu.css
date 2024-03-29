@@ -29,6 +29,8 @@
   border: 2px solid #000;
   box-shadow: 0 0 24px rgba(0, 0, 0, 0.5);
   padding: 24px;
+  max-height: 80%;
+  overflow: auto;
 }
 
 #FontRowContainer {
