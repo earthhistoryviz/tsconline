@@ -191,11 +191,17 @@ export const uploadDatapack = async function uploadDatapack(
   reply.status(200).send({ message: "File uploaded" });
 };
 
+// TODO: later check in the user's directory for the file
 export const fetchImage = async function (
   request: FastifyRequest<{ Params: { datapackName: string; imageName: string } }>,
   reply: FastifyReply
 ) {
-  const imagePath = `${assetconfigs.decryptionDirectory}/${request.params.datapackName}/datapack-images/${request.params.imageName}`;
+  const imagePath = path.join(
+    assetconfigs.decryptionDirectory,
+    request.params.datapackName,
+    "datapack-images",
+    request.params.imageName
+  );
   try {
     await access(imagePath);
     const image = await readFile(imagePath);

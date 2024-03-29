@@ -2,10 +2,12 @@ import { useEffect, useState, useContext } from "react";
 import { context } from "../state/index";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
-import DialogActions from "@mui/material/DialogActions";
 import { ErrorCodes } from "../util/error-codes";
-import { TSCButton } from "./TSCButton";
 import { Typography } from "@mui/material";
+import CloseSharpIcon from "@mui/icons-material/CloseSharp";
+import IconButton from "@mui/material/IconButton";
+import DialogTitle from "@mui/material/DialogTitle";
+import "./TSCPopupManager.css";
 
 export const TSCPopupManager = () => {
   const [popupContent, setPopupContent] = useState({ open: false, message: "" });
@@ -82,13 +84,14 @@ export const TSCPopupManager = () => {
   const handleClose = () => setPopupContent((prev) => ({ ...prev, open: false }));
 
   return (
-    <Dialog open={popupContent.open} onClose={handleClose}>
-      <DialogContent>
+    <Dialog open={popupContent.open} onClose={handleClose} sx={{ minWidth: "260px" }}>
+      <DialogTitle className="popup-title">Details</DialogTitle>
+      <IconButton aria-label="close" onClick={handleClose} className="popup-close-button">
+        <CloseSharpIcon />
+      </IconButton>
+      <DialogContent className="popup-dialog">
         <div dangerouslySetInnerHTML={{ __html: popupContent.message }} />
       </DialogContent>
-      <DialogActions>
-        <TSCButton onClick={handleClose}>Close</TSCButton>
-      </DialogActions>
     </Dialog>
   );
 };

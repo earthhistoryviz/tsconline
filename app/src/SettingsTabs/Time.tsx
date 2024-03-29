@@ -137,7 +137,12 @@ export const Time = observer(function Time() {
         <FormGroup>
           <FormControlLabel
             name="mouse-over-info-checkbox"
-            control={<TSCCheckbox onChange={(e) => actions.setMouseOverPopupsEnabled(e.target.checked)} />}
+            control={
+              <TSCCheckbox
+                onChange={(e) => actions.setMouseOverPopupsEnabled(e.target.checked)}
+                checked={state.settings.mouseOverPopupsEnabled}
+              />
+            }
             label="Add MouseOver info (popups)"
           />
           <FormControlLabel
@@ -172,7 +177,12 @@ export const Time = observer(function Time() {
           />
           <FormControlLabel
             name="use-suggested-age-spans"
-            control={<TSCCheckbox onChange={(e) => actions.setuseDatapackSuggestedAge(!e.target.checked)} />}
+            control={
+              <TSCCheckbox
+                onChange={(e) => actions.setuseDatapackSuggestedAge(!e.target.checked)}
+                checked={!state.settings.useDatapackSuggestedAge}
+              />
+            }
             label="Do not use the Data-Pack's suggested age span"
           />
         </FormGroup>
