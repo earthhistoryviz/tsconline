@@ -120,20 +120,20 @@ export type ZoneColumnInfoTSC = {
   crunchOneSideSpaceUse?: number;
   autoFlip?: boolean;
   orientation?: "vertical" | "normal";
-}
+};
 
 export type EventColumnInfoTSC = {
   type?: string;
   rangeSort?: string;
-}
+};
 
 export type RangeColumnInfoTSC = {
   rangeSort?: string;
-}
+};
 
 export type RulerColumnInfoTSC = {
   justification?: "left" | "right";
-}
+};
 
 export type SequenceColumnInfoTSC = {
   labelMarginLeft?: number;
@@ -141,7 +141,7 @@ export type SequenceColumnInfoTSC = {
   graphStyle?: string;
   drawNameLabel?: boolean;
   type?: string;
-}
+};
 
 export const defaultFontsInfo: FontsInfo = defaultFontsInfoConstant;
 
