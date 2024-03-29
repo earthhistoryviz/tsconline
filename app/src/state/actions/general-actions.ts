@@ -60,7 +60,7 @@ export const resetSettings = action("resetSettings", () => {
     baseStageAge: 0,
     baseStageKey: "",
     unitsPerMY: 2,
-    useDatapackSuggestedAge: false,
+    useDatapackSuggestedAge: true,
     mouseOverPopupsEnabled: false,
     datapackContainsSuggAge: false,
     selectedBaseStage: "",
@@ -338,7 +338,7 @@ export const resetState = action("resetState", () => {
   setChartLoading(true);
   setDatapackConfig([], "");
   setChartHash("");
-  setChartPath("");
+  setChartContent("");
   setUseCache(true);
   setUsePreset(true);
   setTab(0);
@@ -546,6 +546,7 @@ export const handleCloseSnackbar = action(
 export const removeError = action("removeError", (context: ErrorCodes) => {
   state.errors.errorAlerts.delete(context);
 });
+
 export const pushError = action("pushError", (context: ErrorCodes) => {
   if (state.errors.errorAlerts.has(context)) {
     state.errors.errorAlerts.get(context)!.errorCount += 1;
@@ -558,8 +559,25 @@ export const pushError = action("pushError", (context: ErrorCodes) => {
   state.errors.errorAlerts.set(context, error);
 });
 
+export const fetchImage = action("fetchImage", async (datapackName: string, imageName: string) => {
+  const response = await fetcher(`/images/${datapackName}/${imageName}`, {
+    method: "GET"
+  });
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error("Image not found");
+    } else if (response.status === 500) {
+      throw new Error("Server error");
+    } else {
+      throw new Error("Unknown error");
+    }
+  }
+  const image = await response.blob();
+  return image;
+});
+
 export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
-  state.settings.datapackContainsSuggAge = isChecked;
+  state.settings.useDatapackSuggestedAge = isChecked;
 });
 export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;
@@ -574,8 +592,8 @@ export const setUsePreset = action((temp: boolean) => {
   state.useCache = temp;
 });
 
-export const setChartPath = action("setChartPath", (chartpath: string) => {
-  state.chartPath = chartpath;
+export const setChartContent = action("setChartContent", (chartContent: string) => {
+  state.chartContent = chartContent;
 });
 export const setMapInfo = action("setMapInfo", (mapInfo: MapInfo) => {
   state.mapState.mapInfo = mapInfo;

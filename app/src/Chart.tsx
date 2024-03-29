@@ -4,7 +4,7 @@ import { context } from "./state";
 import { useTheme } from "@mui/material/styles";
 import "./Chart.css";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
-import { GradientDiv } from "./components";
+import { GradientDiv, TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
 
 export const Chart = observer(function () {
@@ -25,7 +25,7 @@ export const Chart = observer(function () {
       ) : state.madeChart ? (
         <TransformWrapper minScale={0.01} maxScale={3} limitToBounds={false}>
           <TransformComponent>
-            <object data={state.chartPath} type="image/svg+xml" width="100%" height="100%"></object>
+            <TSCSvgComponent chartContent={state.chartContent} />
           </TransformComponent>
         </TransformWrapper>
       ) : (
@@ -37,6 +37,7 @@ export const Chart = observer(function () {
           <div className="loading"> You have not made a chart yet </div>
         </div>
       )}
+      <TSCPopupManager />
     </GradientDiv>
   );
 });
