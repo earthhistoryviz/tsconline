@@ -1065,6 +1065,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fastify/busboy@npm:^2.1.0":
+  version: 2.1.1
+  resolution: "@fastify/busboy@npm:2.1.1"
+  checksum: 2bb8a7eca8289ed14c9eb15239bc1019797454624e769b39a0b90ed204d032403adc0f8ed0d2aef8a18c772205fa7808cf5a1b91f21c7bfc7b6032150b1062c5
+  languageName: node
+  linkType: hard
+
 "@fastify/compress@npm:^7.0.0":
   version: 7.0.0
   resolution: "@fastify/compress@npm:7.0.0"
@@ -1111,6 +1118,20 @@ __metadata:
   dependencies:
     fast-json-stringify: "npm:^5.7.0"
   checksum: 9ad575907d44bbd371dbc23a51853fd349a459092340fe91c50317f92707961f2e6ca6c9d17707a8e4a087c635e09bce1166e082d54f191769a582339c94badd
+  languageName: node
+  linkType: hard
+
+"@fastify/multipart@npm:^8.2.0":
+  version: 8.2.0
+  resolution: "@fastify/multipart@npm:8.2.0"
+  dependencies:
+    "@fastify/busboy": "npm:^2.1.0"
+    "@fastify/deepmerge": "npm:^1.0.0"
+    "@fastify/error": "npm:^3.0.0"
+    fastify-plugin: "npm:^4.0.0"
+    secure-json-parse: "npm:^2.4.0"
+    stream-wormhole: "npm:^1.1.0"
+  checksum: 2e96611bc1f9923c9b36e3d8724ddbc30662899efb200e6d6f4d4556bd753d43965e378457e38b59526af564dcae82e77bed75af241fb07dab6aa7264cefa27e
   languageName: node
   linkType: hard
 
@@ -2283,12 +2304,14 @@ __metadata:
   dependencies:
     "@fastify/compress": "npm:^7.0.0"
     "@fastify/cors": "npm:^9.0.1"
+    "@fastify/multipart": "npm:^8.2.0"
     "@fastify/static": "npm:^6.10.1"
     "@tsconline/shared": "npm:1.0.0"
     "@types/color-thief-node": "npm:^1"
     "@types/md5": "npm:^2.3.5"
     "@types/nearest-color": "npm:^0.4.1"
     "@types/node": "npm:^20.11.28"
+    "@types/pump": "npm:^1.1.3"
     "@xmldom/xmldom": "npm:0.8.10"
     color-thief-node: "npm:^1.0.4"
     cors: "npm:^2.8.5"
@@ -2301,6 +2324,7 @@ __metadata:
     p-map: "npm:^6.0.0"
     path-scurry: "npm:^1.10.1"
     pino-pretty: "npm:^10.0.0"
+    pump: "npm:^3.0.0"
     svgson: "npm:^5.3.1"
     tsc: "npm:^2.0.4"
     typescript: "npm:5.2.2"
@@ -2557,6 +2581,15 @@ __metadata:
   version: 15.7.11
   resolution: "@types/prop-types@npm:15.7.11"
   checksum: 7519ff11d06fbf6b275029fe03fff9ec377b4cb6e864cac34d87d7146c7f5a7560fd164bdc1d2dbe00b60c43713631251af1fd3d34d46c69cd354602bc0c7c54
+  languageName: node
+  linkType: hard
+
+"@types/pump@npm:^1.1.3":
+  version: 1.1.3
+  resolution: "@types/pump@npm:1.1.3"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 9409dc54b6b2e28d4f88f6f542fa32aac5066fa057d6c1bf9611f9eb6687bbeb324341ba183dd38a9e53b6bd9e5ed6435f015a3fc37d3e66c2ff265b452cf802
   languageName: node
   linkType: hard
 
@@ -9097,6 +9130,13 @@ __metadata:
   version: 1.0.3
   resolution: "stream-shift@npm:1.0.3"
   checksum: a24c0a3f66a8f9024bd1d579a533a53be283b4475d4e6b4b3211b964031447bdf6532dd1f3c2b0ad66752554391b7c62bd7ca4559193381f766534e723d50242
+  languageName: node
+  linkType: hard
+
+"stream-wormhole@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "stream-wormhole@npm:1.1.0"
+  checksum: cc19e0235c5d031bd530fa83913c807d9525fa4ba33d51691dd822c0726b8b7ef138b34f289d063a3018cddba67d3ba7fd0ecedaa97242a0f1ed2eed3c6a2ab1
   languageName: node
   linkType: hard
 

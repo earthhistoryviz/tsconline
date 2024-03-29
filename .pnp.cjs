@@ -1680,6 +1680,15 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["@fastify/busboy", [\
+      ["npm:2.1.1", {\
+        "packageLocation": "./.yarn/cache/@fastify-busboy-npm-2.1.1-455d8b6bf5-2bb8a7eca8.zip/node_modules/@fastify/busboy/",\
+        "packageDependencies": [\
+          ["@fastify/busboy", "npm:2.1.1"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["@fastify/compress", [\
       ["npm:7.0.0", {\
         "packageLocation": "./.yarn/cache/@fastify-compress-npm-7.0.0-b4379518f4-0aef1dc24b.zip/node_modules/@fastify/compress/",\
@@ -1732,6 +1741,21 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["@fastify/fast-json-stringify-compiler", "npm:4.3.0"],\
           ["fast-json-stringify", "npm:5.7.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["@fastify/multipart", [\
+      ["npm:8.2.0", {\
+        "packageLocation": "./.yarn/cache/@fastify-multipart-npm-8.2.0-7ec77311da-2e96611bc1.zip/node_modules/@fastify/multipart/",\
+        "packageDependencies": [\
+          ["@fastify/multipart", "npm:8.2.0"],\
+          ["@fastify/busboy", "npm:2.1.1"],\
+          ["@fastify/deepmerge", "npm:1.3.0"],\
+          ["@fastify/error", "npm:3.2.0"],\
+          ["fastify-plugin", "npm:4.5.0"],\
+          ["secure-json-parse", "npm:2.7.0"],\
+          ["stream-wormhole", "npm:1.1.0"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -3241,12 +3265,14 @@ const RAW_RUNTIME_STATE =
           ["@tsconline/server", "workspace:server"],\
           ["@fastify/compress", "npm:7.0.0"],\
           ["@fastify/cors", "npm:9.0.1"],\
+          ["@fastify/multipart", "npm:8.2.0"],\
           ["@fastify/static", "npm:6.10.1"],\
           ["@tsconline/shared", "workspace:shared"],\
           ["@types/color-thief-node", "npm:1.0.4"],\
           ["@types/md5", "npm:2.3.5"],\
           ["@types/nearest-color", "npm:0.4.1"],\
           ["@types/node", "npm:20.11.28"],\
+          ["@types/pump", "npm:1.1.3"],\
           ["@xmldom/xmldom", "npm:0.8.10"],\
           ["color-thief-node", "npm:1.0.4"],\
           ["cors", "npm:2.8.5"],\
@@ -3259,6 +3285,7 @@ const RAW_RUNTIME_STATE =
           ["p-map", "npm:6.0.0"],\
           ["path-scurry", "npm:1.10.1"],\
           ["pino-pretty", "npm:10.0.0"],\
+          ["pump", "npm:3.0.0"],\
           ["svgson", "npm:5.3.1"],\
           ["tsc", "npm:2.0.4"],\
           ["typescript", "patch:typescript@npm%3A5.2.2#optional!builtin<compat/typescript>::version=5.2.2&hash=f3b441"],\
@@ -3556,6 +3583,16 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./.yarn/cache/@types-prop-types-npm-15.7.5-2aa48aa177-5b43b8b154.zip/node_modules/@types/prop-types/",\
         "packageDependencies": [\
           ["@types/prop-types", "npm:15.7.5"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["@types/pump", [\
+      ["npm:1.1.3", {\
+        "packageLocation": "./.yarn/cache/@types-pump-npm-1.1.3-1c9fda5df7-9409dc54b6.zip/node_modules/@types/pump/",\
+        "packageDependencies": [\
+          ["@types/pump", "npm:1.1.3"],\
+          ["@types/node", "npm:18.14.0"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -11146,6 +11183,15 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./.yarn/cache/stream-shift-npm-1.0.3-c1c29210c7-a24c0a3f66.zip/node_modules/stream-shift/",\
         "packageDependencies": [\
           ["stream-shift", "npm:1.0.3"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["stream-wormhole", [\
+      ["npm:1.1.0", {\
+        "packageLocation": "./.yarn/cache/stream-wormhole-npm-1.1.0-f067a319cd-cc19e0235c.zip/node_modules/stream-wormhole/",\
+        "packageDependencies": [\
+          ["stream-wormhole", "npm:1.1.0"]\
         ],\
         "linkType": "HARD"\
       }]\

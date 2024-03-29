@@ -32,7 +32,88 @@
                         "font": "Arial"
                     },
                     "popup": "",
-                    "children": [],
+                    "children": [
+                        {
+                            "name": "Nigeria Coast Facies",
+                            "editName": "Nigeria Coast",
+                            "on": true,
+                            "enableTitle": false,
+                            "fontsInfo": {
+                              "font": "Arial"
+                            },
+                            "popup": "",
+                            "children": [],
+                            "parent": "Nigeria Coast",
+                            "minAge": 0,
+                            "maxAge": 10,
+                            "width": 84,
+                            "rgb": {
+                                "r": 255,
+                                "g": 255,
+                                "b": 255
+                            }
+                        },
+                        {
+                            "name": "Nigeria Coast Members",
+                            "editName": "Members",
+                            "on": false,
+                            "enableTitle": false,
+                            "fontsInfo": {
+                              "font": "Arial"
+                            },
+                            "popup": "",
+                            "children": [],
+                            "parent": "Nigeria Coast",
+                            "minAge": 0,
+                            "maxAge": 10,
+                            "width": 210,
+                            "rgb": {
+                                "r": 255,
+                                "g": 255,
+                                "b": 255
+                            }
+                          },
+                          {
+                            "name": "Nigeria Coast Facies Label",
+                            "editName": "Facies Label",
+                            "on": true,
+                            "enableTitle": false,
+                            "fontsInfo": {
+                              "font": "Arial"
+                            },
+                            "popup": "",
+                            "children": [],
+                            "parent": "Nigeria Coast",
+                            "minAge": 0,
+                            "maxAge": 10,
+                            "width": 84,
+                            "rgb": {
+                                "r": 255,
+                                "g": 255,
+                                "b": 255
+                            }
+                        },
+                        {
+                            "name": "Nigeria Coast Series Label",
+                            "editName": "Series Label",
+                            "on": true,
+                            "enableTitle": false,
+                            "fontsInfo": {
+                              "font": "Arial"
+                            },
+                            "popup": "",
+                            "children": [],
+                            "parent": "Nigeria Coast",
+                            "minAge": 0,
+                            "maxAge": 10,
+                            "rgb": {
+                                "r": 255,
+                                "g": 255,
+                                "b": 255
+                            },
+                            "width": 42
+                        }
+                    ],
                     "parent": "Central Africa Cenozoic",
                     "minAge": 0,
                     "maxAge": 10,
@@ -71,7 +152,88 @@
                         "font": "Arial"
                     },
                     "popup": "",
-                    "children": [],
+                    "children": [
+                        {
+                            "name": "South Atlantic Facies",
+                            "editName": "South Atlantic",
+                            "on": true,
+                            "enableTitle": false,
+                            "fontsInfo": {
+                              "font": "Arial"
+                            },
+                            "popup": "",
+                            "children": [],
+                            "parent": "South Atlantic",
+                            "minAge": 0,
+                            "maxAge": 10,
+                            "width": 84,
+                            "rgb": {
+                                "r": 255,
+                                "g": 255,
+                                "b": 255
+                            }
+                        },
+                        {
+                            "name": "South Atlantic Members",
+                            "editName": "Members",
+                            "on": false,
+                            "enableTitle": false,
+                            "fontsInfo": {
+                              "font": "Arial"
+                            },
+                            "popup": "",
+                            "children": [],
+                            "parent": "South Atlantic",
+                            "minAge": 0,
+                            "maxAge": 10,
+                            "width": 210,
+                            "rgb": {
+                                "r": 255,
+                                "g": 255,
+                                "b": 255
+                            }
+                        },
+                        {
+                            "name": "South Atlantic Facies Label",
+                            "editName": "Facies Label",
+                            "on": true,
+                            "enableTitle": false,
+                            "fontsInfo": {
+                              "font": "Arial"
+                            },
+                            "popup": "",
+                            "children": [],
+                            "parent": "South Atlantic",
+                            "minAge": 0,
+                            "maxAge": 10,
+                            "width": 84,
+                            "rgb": {
+                                "r": 255,
+                                "g": 255,
+                                "b": 255
+                            }
+                        },
+                        {
+                            "name": "South Atlantic Series Label",
+                            "editName": "Series Label",
+                            "on": true,
+                            "enableTitle": false,
+                            "fontsInfo": {
+                              "font": "Arial"
+                            },
+                            "popup": "",
+                            "children": [],
+                            "parent": "South Atlantic",
+                            "minAge": 0,
+                            "maxAge": 10,
+                            "rgb": {
+                                "r": 255,
+                                "g": 255,
+                                "b": 255
+                            },
+                            "width": 42
+                        }
+                    ],
                     "parent": "Central Africa Cenozoic",
                     "minAge": 0,
                     "maxAge": 10,
@@ -194,7 +356,88 @@
                     "font": "Arial"
                 },
                 "popup": "Facies Popup",
-                "children": [],
+                "children": [
+                    {
+                        "name": "Facies Facies",
+                        "editName": "Facies",
+                        "on": true,
+                        "enableTitle": false,
+                        "fontsInfo": {
+                          "font": "Arial"
+                        },
+                        "popup": "",
+                        "children": [],
+                        "parent": "Facies",
+                        "minAge": 0,
+                        "maxAge": 10,
+                        "width": 84,
+                        "rgb": {
+                            "r": 255,
+                            "g": 255,
+                            "b": 255
+                        }
+                    },
+                    {
+                        "name": "Facies Members",
+                        "editName": "Members",
+                        "on": false,
+                        "enableTitle": false,
+                        "fontsInfo": {
+                          "font": "Arial"
+                        },
+                        "popup": "",
+                        "children": [],
+                        "parent": "Facies",
+                        "minAge": 0,
+                        "maxAge": 10,
+                        "width": 210,
+                        "rgb": {
+                            "r": 255,
+                            "g": 255,
+                            "b": 255
+                        }
+                    },
+                    {
+                        "name": "Facies Facies Label",
+                        "editName": "Facies Label",
+                        "on": true,
+                        "enableTitle": false,
+                        "fontsInfo": {
+                          "font": "Arial"
+                        },
+                        "popup": "",
+                        "children": [],
+                        "parent": "Facies",
+                        "minAge": 0,
+                        "maxAge": 10,
+                        "width": 84,
+                        "rgb": {
+                            "r": 255,
+                            "g": 255,
+                            "b": 255
+                        }
+                    },
+                    {
+                        "name": "Facies Series Label",
+                        "editName": "Series Label",
+                        "on": true,
+                        "enableTitle": false,
+                        "fontsInfo": {
+                          "font": "Arial"
+                        },
+                        "popup": "",
+                        "children": [],
+                        "parent": "Facies",
+                        "minAge": 0,
+                        "maxAge": 10,
+                        "rgb": {
+                            "r": 255,
+                            "g": 255,
+                            "b": 255
+                        },
+                        "width": 42
+                    }
+                ],
                 "width": 210,
                 "enableTitle": false,
                 "rgb": {
