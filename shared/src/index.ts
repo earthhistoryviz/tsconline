@@ -813,7 +813,6 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
 
 export function assertFontsInfo(o: any): asserts o is FontsInfo {
   if (typeof o !== "object") throw new Error("FontsInfo must be an object");
-  console.log(o);
   for (const key in o) {
     if (
       !(
