@@ -1,6 +1,6 @@
 import { observable } from "mobx";
 
-import { ErrorAlert, FaciesOptions, MapHistory } from "../types";
+import { ChartSettings, ErrorAlert, FaciesOptions, MapHistory } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
   MapHierarchy,
@@ -63,19 +63,7 @@ export type State = {
   chartHash: string;
   settingsXML: string;
   settingsTSC: ChartInfoTSC;
-  settings: {
-    selectedStage: string;
-    topStageAge: number;
-    topStageKey: string;
-    baseStageAge: number;
-    baseStageKey: string;
-    unitsPerMY: number;
-    useDatapackSuggestedAge: boolean;
-    mouseOverPopupsEnabled: boolean;
-    datapackContainsSuggAge: boolean;
-    selectedBaseStage: string;
-    selectedTopStage: string;
-  };
+  settings: ChartSettings;
   useCache: boolean;
   usePreset: boolean;
   openSnackbar: boolean;

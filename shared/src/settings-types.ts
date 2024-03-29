@@ -237,9 +237,49 @@ export function assertPointColumnInfo(o: any) {
   if (o.pointType !== "rect" && o.pointType !== "round" && o.pointType !== "tick")
     throwError("ColumnInfoTSC", "pointType", "rect or round or tick", o.pointType);
 }
-
+export function assertColumnBasicInfo(o: any) {
+  if (typeof o.title !== "string") throwError("ColumnInfoTSC", "title", "string", o.title);
+  if (typeof o.useNamedColor !== "boolean") throwError("ColumnInfoTSC", "useNamedColor", "boolean", o.useNamedColor);
+  if (typeof o.placeHolder !== "boolean") throwError("ColumnInfoTSC", "placeHolder", "boolean", o.placeHolder);
+  if (typeof o.drawTitle !== "boolean") throwError("ColumnInfoTSC", "drawTitle", "boolean", o.drawTitle);
+  if (typeof o.drawAgeLabel !== "boolean") throwError("ColumnInfoTSC", "drawAgeLabel", "boolean", o.drawAgeLabel);
+  if (typeof o.drawUncertaintyLabel !== "boolean")
+    throwError("ColumnInfoTSC", "drawUncertaintlyLabel", "boolean", o.drawUncertaintyLabel);
+  if (typeof o.isSelected !== "boolean") throwError("ColumnInfoTSC", "isSelected", "boolean", o.isSelected);
+  if (typeof o.width !== "number") throwError("ColumnInfoTSC", "width", "number", o.width);
+  if (typeof o.pad !== "number") throwError("ColumnInfoTSC", "pad", "number", o.pad);
+  if (typeof o["age pad"] !== "number") throwError("ColumnInfoTSC", "age pad", "number", o["age pad"]);
+  if (o.backgroundColor) {
+    if ("standardized" in o.backgroundColor) {
+      if (typeof o.backgroundColor.standardized !== "boolean")
+        throwError("ColumnInfoTSC backgroundColor", "standardized", "boolean", o.backgroundColor.standardized);
+    }
+    if ("useNamed" in o.backgroundColor) {
+      if (typeof o.backgroundColor.useNamed !== "boolean")
+        throwError("ColumnInfoTSC backgroundColor", "useNamed", "boolean", o.backgroundColor.useNamed);
+    }
+    if (typeof o.backgroundColor.text !== "string")
+      throwError("ColumnInfoTSC backgroundColor", "text", "string", o.backgroundColor.text);
+  } else throw new Error("ColumnInfoTSC must have backgroundColor");
+  if (o.customColor) {
+    if ("standardized" in o.customColor) {
+      if (typeof o.customColor.standardized !== "boolean")
+        throwError("ColumnInfoTSC customColor", "standardized", "boolean", o.customColor.standardized);
+    }
+    if ("useNamed" in o.customColor) {
+      if (typeof o.customColor.useNamed !== "boolean")
+        throwError("ColumnInfoTSC customColor", "useNamed", "boolean", o.customColor.standardized);
+      if (typeof o.customColor.text !== "string")
+        throwError("ColumnInfoTSC customColor", "text", "string", o.customColor.standardized);
+    } else throw new Error("ColumnInfoTSC must have customColor");
+    if (o.fonts) {
+      //assertFontsInfo(o.fonts);
+    } else throw new Error("ColumnInfoTSC must have fonts");
+  }
+}
 export function assertColumnInfoTSC(o: any): asserts o is ColumnInfoTSC {
   if (!o || typeof o !== "object") throw new Error("ColumnInfoTSC must be a non-null object");
+  assertColumnBasicInfo(o);
   if (typeof o._id !== "string") {
     throwError("ColumnInfoTSC", "_id", "string", o._id);
   } else {
@@ -281,116 +321,9 @@ export function assertColumnInfoTSC(o: any): asserts o is ColumnInfoTSC {
         console.log("Warning :unknown column type", columnType);
     }
   }
-  if (typeof o.title !== "string") throwError("ColumnInfoTSC", "title", "string", o.title);
-  if (typeof o.useNamedColor !== "boolean") throwError("ColumnInfoTSC", "useNamedColor", "boolean", o.useNamedColor);
-  if (typeof o.placeHolder !== "boolean") throwError("ColumnInfoTSC", "placeHolder", "boolean", o.placeHolder);
-  if (typeof o.drawTitle !== "boolean") throwError("ColumnInfoTSC", "drawTitle", "boolean", o.drawTitle);
-  if (typeof o.drawAgeLabel !== "boolean") throwError("ColumnInfoTSC", "drawAgeLabel", "boolean", o.drawAgeLabel);
-  if (typeof o.drawUncertaintyLabel !== "boolean")
-    throwError("ColumnInfoTSC", "drawUncertaintlyLabel", "boolean", o.drawUncertaintyLabel);
-  if (typeof o.isSelected !== "boolean") throwError("ColumnInfoTSC", "isSelected", "boolean", o.isSelected);
-  if (typeof o.width !== "number") throwError("ColumnInfoTSC", "width", "number", o.width);
-  if (typeof o.pad !== "number") throwError("ColumnInfoTSC", "pad", "number", o.pad);
-  if (typeof o["age pad"] !== "number") throwError("ColumnInfoTSC", "age pad", "number", o["age pad"]);
-  if (o.backgroundColor) {
-    if ("standardized" in o.backgroundColor) {
-      if (typeof o.backgroundColor.standardized !== "boolean")
-        throwError("ColumnInfoTSC backgroundColor", "standardized", "boolean", o.backgroundColor.standardized);
-    }
-    if ("useNamed" in o.backgroundColor) {
-      if (typeof o.backgroundColor.useNamed !== "boolean")
-        throwError("ColumnInfoTSC backgroundColor", "useNamed", "boolean", o.backgroundColor.useNamed);
-    }
-    if (typeof o.backgroundColor.text !== "string")
-      throwError("ColumnInfoTSC backgroundColor", "text", "string", o.backgroundColor.text);
-  } else throw new Error("ColumnInfoTSC must have backgroundColor");
-  if (o.customColor) {
-    if ("standardized" in o.customColor) {
-      if (typeof o.customColor.standardized !== "boolean")
-        throwError("ColumnInfoTSC customColor", "standardized", "boolean", o.customColor.standardized);
-    }
-    if ("useNamed" in o.customColor) {
-      if (typeof o.customColor.useNamed !== "boolean")
-        throwError("ColumnInfoTSC customColor", "useNamed", "boolean", o.customColor.standardized);
-      if (typeof o.customColor.text !== "string")
-        throwError("ColumnInfoTSC customColor", "text", "string", o.customColor.standardized);
-    } else throw new Error("ColumnInfoTSC must have customColor");
-    if (o.fonts) {
-      //assertFontsInfo(o.fonts);
-    } else throw new Error("ColumnInfoTSC must have fonts");
-    for (const key in o) {
-      switch (key) {
-        //boolean
-        case "useNamedColor":
-        case "placeHolder":
-        case "drawTitle":
-        case "drawAgeLabel":
-        case "drawUncertaintyLabel":
-        case "isSelected":
-        case "autoFlip":
-        case "drawNameLabel":
-        case "drawPoints":
-        case "drawLine":
-        case "drawSmooth":
-        case "drawFill":
-        case "doNotSetWindowAuto":
-        case "drawScale":
-        case "drawBgrndGradient":
-        case "drawCurveGradient":
-        case "flipScale":
-          if (typeof o[key] !== "boolean") {
-            throwError("ColumnInfoTSC", key, "boolean", o[key]);
-          }
-          break;
-        //string
-        case "rangeSort":
-        case "graphStyle":
-        case "lineColor":
-        case "fillColor":
-        case "backGradStart":
-        case "backGradEnd":
-        case "curveGradStart":
-        case "curveGradEnd":
-          if (typeof o[key] !== "string") {
-            throwError("ColumnInfoTSC", key, "string", o[key]);
-          }
-          break;
-        //number
-        case "crunchOuterMargin":
-        case "crunchInnerMargin":
-        case "crunchAscendWidth":
-        case "crunchOneSideSpaceUse":
-        case "labelMarginLeft":
-        case "labelMarginRight":
-        case "minWindow":
-        case "maxWindow":
-        case "scaleStart":
-        case "scaleStep":
-          if (typeof o[key] !== "number") {
-            throwError("ColumnInfoTSC", key, "number", o[key]);
-          }
-          break;
-        //special cases
-        case "orientation":
-          if (!["vertical", "normal"].includes(o[key] as string)) {
-            throwError("ColumnInfoTSC", key, "vertical or normal", o[key]);
-          }
-          break;
-        case "justification":
-          if (!["left", "right"].includes(o[key] as string)) {
-            throwError("ColumnInfoTSC", key, "left or right", o[key]);
-          }
-          break;
-        case "pointType":
-          if (!["rect", "round", "tick"].includes(o[key] as string)) {
-            throwError("ColumnInfoTSC", key, "rect, round, or tick", o[key]);
-          }
-      }
-    }
-    if ("children" in o) {
-      for (let i = 0; i < o.children.length; i++) {
-        assertColumnInfoTSC(o.children[i]);
-      }
+  if ("children" in o) {
+    for (let i = 0; i < o.children.length; i++) {
+      assertColumnInfoTSC(o.children[i]);
     }
   }
 }

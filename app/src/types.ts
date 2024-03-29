@@ -26,7 +26,8 @@ export type ErrorAlert = {
   errorText: string;
   errorCount: number;
 };
-export type Settings = {
+export type ChartSettings = {
+  selectedStage: string;
   topStageAge: number;
   topStageKey: string;
   baseStageAge: number;
@@ -34,4 +35,7 @@ export type Settings = {
   unitsPerMY: number;
   mouseOverPopupsEnabled: boolean;
   datapackContainsSuggAge: boolean;
+  useDatapackSuggestedAge: boolean;
+  selectedBaseStage: string;
+  selectedTopStage: string;
 };

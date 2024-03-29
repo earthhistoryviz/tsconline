@@ -186,7 +186,6 @@ export const fetchTimescaleDataAction = action("fetchTimescaleData", async () =>
 export const setDatapackConfig = action(
   "setChart",
   async (datapacks: string[], settingsPath: string): Promise<boolean> => {
-    resetSettings();
     //set the settings tab back to time
     setSettingsTabsSelected(0);
     let datapackAgeInfo: DatapackAgeInfo = {
@@ -196,6 +195,37 @@ export const setDatapackConfig = action(
     let mapHierarchy: MapHierarchy = {};
     let columnInfo: ColumnInfo;
     try {
+      // Grab the settings for this chart if there are any:
+      //TODO: only get default settings file if its a preset
+      if (settingsPath && settingsPath.length > 0) {
+        const res = await fetcher(`/settingsXml/${encodeURIComponent(settingsPath)}`, {
+          method: "GET"
+        });
+        let settingsXml;
+        let settingsTSC: ChartInfoTSC;
+        try {
+          settingsXml = await res.text();
+        } catch (e) {
+          //couldn't get settings from server
+          displayServerError(
+            null,
+            ErrorCodes.INVALID_SETTINGS_RESPONSE,
+            ErrorMessages[ErrorCodes.INVALID_SETTINGS_RESPONSE]
+          );
+          return false;
+        }
+        try {
+          settingsTSC = xmlToJson(settingsXml);
+        } catch (e) {
+          console.log(e);
+          //couldn't parse settings
+          displayServerError(e, ErrorCodes.INVALID_SETTINGS_RESPONSE, "Error parsing xml settings file");
+          return false;
+        }
+        runInAction(() => (state.settingsTSC = settingsTSC)); // Save the parsed JSON to the state.settingsTSC
+      } else {
+        state.settingsTSC = {};
+      }
       // the default overarching variable for the columnInfo
       columnInfo = {
         name: "Root", // if you change this, change parse-datapacks.ts :69
@@ -268,35 +298,7 @@ export const setDatapackConfig = action(
     state.config.datapacks = datapacks;
     state.config.settingsPath = settingsPath;
     initializeColumnHashMap(columnInfo);
-    // Grab the settings for this chart if there are any:
-    if (settingsPath && settingsPath.length > 0) {
-      const res = await fetcher(`/settingsXml/${encodeURIComponent(settingsPath)}`, {
-        method: "GET"
-      });
-      let settingsXml;
-      let settingsTSC: ChartInfoTSC;
-      try {
-        settingsXml = await res.text();
-      } catch (e) {
-        displayServerError(
-          null,
-          ErrorCodes.INVALID_SETTINGS_RESPONSE,
-          ErrorMessages[ErrorCodes.INVALID_SETTINGS_RESPONSE]
-        );
-        return false;
-      }
-      try {
-        settingsTSC = xmlToJson(settingsXml);
-        runInAction(() => (state.settingsTSC = settingsTSC)); // Save the parsed JSON to the state.settingsJSON
-      } catch (e) {
-        console.log(e);
-        displayServerError(e, ErrorCodes.INVALID_SETTINGS_RESPONSE, "Error parsing xml settings file");
-        return false;
-      }
-    } else {
-      state.settingsTSC = {};
-    }
-
+    resetSettings();
     return true;
   }
 );
