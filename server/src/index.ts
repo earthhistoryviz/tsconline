@@ -11,6 +11,7 @@ import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
 import { AssetConfig, assertAssetConfig } from "./types.js";
 import { readFile } from "fs/promises";
+import fastifyMultipart from "@fastify/multipart";
 
 const server = fastify({
   logger: false,
@@ -60,7 +61,14 @@ try {
 const datapackIndex: DatapackIndex = {};
 const mapPackIndex: MapPackIndex = {};
 const patterns = await loadFaciesPatterns();
-await loadIndexes(datapackIndex, mapPackIndex);
+await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, assetconfigs.activeDatapacks);
+
+server.register(fastifyMultipart, {
+  limits: {
+    fieldNameSize: 100,
+    fileSize: 1024 * 1024 * 60 // 60 mb
+  }
+});
 
 // Serve the main app from /
 server.register(fastifyStatic, {
@@ -102,9 +110,7 @@ server.get("/presets", async (_request, reply) => {
   reply.send(presets);
 });
 // uploads datapack
-server.post("/upload", () => {
-  console.log("upload");
-});
+server.post<{ Params: { username: string } }>("/upload/:username", routes.uploadDatapack);
 
 //fetches json object of requested settings file
 server.get<{ Params: { settingFile: string } }>("/settingsXml/:settingFile", routes.fetchSettingsXml);
@@ -133,6 +139,8 @@ server.get("/facies-patterns", (_request, reply) => {
     reply.status(200).send({ patterns });
   }
 });
+
+server.get("/user-datapacks/:username", routes.fetchUserDatapacks);
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it

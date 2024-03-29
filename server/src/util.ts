@@ -59,7 +59,7 @@ export async function copyDirectory(src: string, destination: string): Promise<v
   }
 }
 /**
- * Globs files of the form <topDirectory>/<filename>/<botDirectory>
+ * Globs files of the form \<topDirectory\>/<filename\>/\<botDirectory\>
  * @param files
  * @param topDirectory
  * @param botDirectory
@@ -142,4 +142,22 @@ export function hasVisibleCharacters(input: string): boolean {
 export function capitalizeFirstLetter(input: string): string {
   if (!input) return input;
   return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
+}
+
+/**
+ * delete the uploaded file and the decrypted directory if they exist
+ * @param uploadedFile
+ * @param decryptedUploadedDirectory
+ */
+export function resetUploadDirectory(uploadedFile: string, decryptedUploadedDirectory: string) {
+  if (fs.existsSync(uploadedFile)) {
+    fs.unlink(uploadedFile, (err) => {
+      if (err) {
+        console.error(err);
+      }
+    });
+  }
+  if (fs.existsSync(decryptedUploadedDirectory)) {
+    deleteDirectory(decryptedUploadedDirectory);
+  }
 }
