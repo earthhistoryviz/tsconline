@@ -331,10 +331,8 @@ export const removeCache = action("removeCache", async () => {
   try {
     assertSuccessfulServerResponse(msg);
     console.log(`Server successfully deleted cache with message: ${msg.message}`);
-    displaySnackbar("Snackbar1");
-    displaySnackbar("Snackbar2");
-    displaySnackbar("Snackbar3");
-    displaySnackbar("Snackbar4");
+    // displaySnackbar("This is a success snackbar", "success");
+    displaySnackbar("This is an info snackbar", "info");
   } catch (e) {
     displayServerError(e, msg, "Server could not remove cache");
     return;
@@ -519,16 +517,21 @@ export const removeSnackbar = action("removeSnackbar", (text: string) => {
   state.snackbars = state.snackbars.filter((info) => info.snackbarText !== text);
   state.openSnackbar = false;
 });
-export const pushSnackbar = action("pushSnackbar", (text: string) => {
+export const pushSnackbar = action("pushSnackbar", (text: string, severity: string) => {
   for (const snackbar of state.snackbars) {
     if (snackbar.snackbarText === text) {
       snackbar.snackbarCount += 1;
       return;
     }
   }
+  if (severity != "success" && severity != "info") {
+    console.log("severity of the snackbar must be either 'success' or 'info'");
+    return;
+  }
   state.snackbars.push({
     snackbarText: text,
-    snackbarCount: 1
+    snackbarCount: 1,
+    severity: severity
   })
   state.openSnackbar = true;
 })

@@ -20,6 +20,8 @@ declare module "@mui/material/styles" {
     menuDropdown: Palette["primary"];
     errorAlert: Palette["primary"];
     errorText: Palette["primary"];
+    snackbarAlert: Palette["primary"];
+    snackbarText: Palette["primary"];
   }
 
   interface PaletteOptions {
@@ -41,6 +43,8 @@ declare module "@mui/material/styles" {
     menuDropdown?: PaletteOptions["primary"];
     errorAlert?: PaletteOptions["primary"];
     errorText?: PaletteOptions["primary"];
+    snackbarAlert?: PaletteOptions["primary"];
+    snackbarText?: PaletteOptions["primary"];
   }
   interface Theme {
     gradients: {
@@ -118,6 +122,13 @@ let theme = createTheme({
       main: "#ffe5e0"
     },
     errorText: {
+      main: "#c71f16"
+    },
+    snackbarAlert: {
+      main: "#D5F5E3",
+      light: "#D6EEF8"
+    },
+    snackbarText: {
       main: "#c71f16"
     }
   },
