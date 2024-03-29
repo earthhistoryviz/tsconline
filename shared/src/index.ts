@@ -84,21 +84,23 @@ export type Datapack = {
   file: string;
 };
 
-export type ChartInfo = {
-  settings: ChartSettingsInfo;
-  "class datastore.RootColumn:Chart Root": [name: ColumnPrototypeInfo];
+export type PresetChartInfo = {
+  settings: PresetChartSettingsInfo;
+  "class datastore.RootColumn:Chart Root": PresetColumnInfo;
 };
 
-export type ChartSettingsInfo = {
+export type PresetChartSettingsInfo = {
   topAge: {
     source: string;
     unit: string;
-    text: number;
+    stage?: string;
+    text?: number;
   };
   baseAge: {
     source: string;
     unit: string;
-    text: number;
+    stage?: string;
+    text?: number;
   };
   unitsPerMY: {
     unit: string;
@@ -118,7 +120,7 @@ export type ChartSettingsInfo = {
   enHideBlockLable: boolean;
 };
 
-export type ColumnPrototypeInfo = {
+export type PresetColumnInfo = {
   _id: string;
   title: string;
   useNamedColor: boolean;
@@ -131,7 +133,8 @@ export type ColumnPrototypeInfo = {
   pad: number;
   "age pad": number;
   backgroundColor: {
-    useNamed: boolean;
+    standardized?: boolean;
+    useNamed?: boolean;
     text: string;
   };
   fonts: FontsInfo;
@@ -983,7 +986,7 @@ export function assertSVGStatus(o: any): asserts o is SVGStatus {
  * @param type
  * @param value
  */
-function throwError(obj: string, variable: string, type: string, value: any) {
+export function throwError(obj: string, variable: string, type: string, value: any) {
   throw new Error(`Object '${obj}' must have a '${variable}' ${type} property.\nFound value: ${value}\n`);
 }
 
