@@ -36,7 +36,7 @@ export const TSCPopupManager = () => {
               return { fullMatch, dataUrl: reader.result };
             }
           } catch (error) {
-            console.error("Error fetching or processing image:", error);
+            actions.pushError(ErrorCodes.INVALID_PATH);
             return { fullMatch, dataUrl: "" };
           }
         }
