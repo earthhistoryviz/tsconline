@@ -1,4 +1,4 @@
-import { FontsInfo, throwError } from "./index.js";
+import { FontsInfo, assertFontsInfo, throwError } from "./index.js";
 
 export type ChartInfoTSC = {
   settings?: ChartSettingsInfoTSC;
@@ -36,22 +36,10 @@ export type ChartSettingsInfoTSC = {
   enHideBlockLable: boolean;
 };
 
-export type ColumnInfoTSC = ColumnBasicProps &
+export type ColumnInfoTSC = ColumnBasicInfo &
   (ZoneColumnInfo | EventColumnInfo | SequenceColumnInfo | RangeColumnInfo | RulerColumnInfo | PointColumnInfo);
 
-export type ZoneColumnInfoTSC = ColumnBasicProps & ZoneColumnInfo;
-
-export type EventColumnInfoTSC = ColumnBasicProps & EventColumnInfo;
-
-export type RangeColumnInfoTSC = ColumnBasicProps & RangeColumnInfo;
-
-export type SequenceColumnInfoTSC = ColumnBasicProps & RangeColumnInfo;
-
-export type RulerColumnInfoTSC = ColumnBasicProps & RulerColumnInfo;
-
-export type PointColumnInfoTSC = ColumnBasicProps & PointColumnInfo;
-
-export type ColumnBasicProps = {
+export type ColumnBasicInfo = {
   _id: string;
   title: string;
   useNamedColor: boolean;
@@ -237,7 +225,7 @@ export function assertPointColumnInfo(o: any) {
   if (o.pointType !== "rect" && o.pointType !== "round" && o.pointType !== "tick")
     throwError("ColumnInfoTSC", "pointType", "rect or round or tick", o.pointType);
 }
-export function assertColumnBasicInfo(o: any) {
+export function assertColumnBasicInfo(o: any): asserts o is ColumnBasicInfo {
   if (typeof o.title !== "string") throwError("ColumnInfoTSC", "title", "string", o.title);
   if (typeof o.useNamedColor !== "boolean") throwError("ColumnInfoTSC", "useNamedColor", "boolean", o.useNamedColor);
   if (typeof o.placeHolder !== "boolean") throwError("ColumnInfoTSC", "placeHolder", "boolean", o.placeHolder);
@@ -273,7 +261,7 @@ export function assertColumnBasicInfo(o: any) {
         throwError("ColumnInfoTSC customColor", "text", "string", o.customColor.standardized);
     } else throw new Error("ColumnInfoTSC must have customColor");
     if (o.fonts) {
-      //assertFontsInfo(o.fonts);
+      assertFontsInfo(o.fonts);
     } else throw new Error("ColumnInfoTSC must have fonts");
   }
 }
@@ -284,10 +272,8 @@ export function assertColumnInfoTSC(o: any): asserts o is ColumnInfoTSC {
     throwError("ColumnInfoTSC", "_id", "string", o._id);
   } else {
     //check for specific column type since id has the column type in it
-    if (o._id === "RootColumn") {
-      console.log(o);
-    }
-    const columnType = o._id.match(/\.(.*?):/)[1];
+    if (!o._id.match(/\.(.*?):/)) throw new Error("missing column type in id")
+    const columnType = o._id.match(/\.(.*?):/)![1];
     switch (columnType) {
       case "ZoneColumn":
         assertZoneColumnInfo(o);
