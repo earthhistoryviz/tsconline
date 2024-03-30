@@ -1,4 +1,14 @@
-import { ChartSettingsInfoTSC, ColumnBasicInfoTSC, EventColumnInfoTSC, FontsInfo, PointColumnInfoTSC, RangeColumnInfoTSC, RulerColumnInfoTSC, SequenceColumnInfoTSC, ZoneColumnInfoTSC } from "./index";
+import {
+  ChartSettingsInfoTSC,
+  ColumnBasicInfoTSC,
+  EventColumnInfoTSC,
+  FontsInfo,
+  PointColumnInfoTSC,
+  RangeColumnInfoTSC,
+  RulerColumnInfoTSC,
+  SequenceColumnInfoTSC,
+  ZoneColumnInfoTSC
+} from "./index";
 
 export const defaultFontsInfoConstant: FontsInfo = {
   "Age Label": {
@@ -131,7 +141,7 @@ export const defaultChartSettingsInfoTSC: ChartSettingsInfoTSC = {
   enChartLegend: false,
   enPriority: false,
   enHideBlockLable: false
-}
+};
 
 export const defaultColumnBasicInfoTSC: ColumnBasicInfoTSC = {
   _id: "",
@@ -146,19 +156,19 @@ export const defaultColumnBasicInfoTSC: ColumnBasicInfoTSC = {
   pad: 0,
   "age pad": 0,
   backgroundColor: {
-    text: "",
+    text: ""
   },
   customColor: {
-    text: "",
+    text: ""
   },
   fonts: defaultFontsInfoConstant,
-  children: [],
+  children: []
 };
 
 export const defaultEventColumnInfoTSC: EventColumnInfoTSC = {
   ...defaultColumnBasicInfoTSC,
-  type: "",
-}
+  type: ""
+};
 
 export const defaultZoneColumnInfoTSC: ZoneColumnInfoTSC = {
   ...defaultColumnBasicInfoTSC,
@@ -176,18 +186,18 @@ export const defaultSequenceColumnInfoTSC: SequenceColumnInfoTSC = {
   labelMarginLeft: 0,
   labelMarginRight: 0,
   graphStyle: "",
-  drawNameLabel: false,
-}
+  drawNameLabel: false
+};
 
 export const defaultRangeColumnInfoTSC: RangeColumnInfoTSC = {
   ...defaultColumnBasicInfoTSC,
-  rangeSort: "",
-}
+  rangeSort: ""
+};
 
 export const defaultRulerColumnInfoTSC: RulerColumnInfoTSC = {
   ...defaultColumnBasicInfoTSC,
-  justification: "left",
-}
+  justification: "left"
+};
 
 export const defaultPointColumnInfoTSC: PointColumnInfoTSC = {
   ...defaultColumnBasicInfoTSC,
@@ -210,5 +220,5 @@ export const defaultPointColumnInfoTSC: PointColumnInfoTSC = {
   flipScale: false,
   scaleStart: 0,
   scaleStep: 0,
-  pointType: "rect",
-}
+  pointType: "rect"
+};

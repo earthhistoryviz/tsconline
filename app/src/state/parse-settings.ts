@@ -10,17 +10,16 @@ import {
   FontsInfo,
   assertChartInfoTSC,
   assertChartSettingsInfoTSC,
-  assertColumnInfoTSC,
   defaultChartSettingsInfoTSC,
   defaultColumnBasicInfoTSC,
   defaultEventColumnInfoTSC,
   defaultFontsInfo,
+  defaultFontsInfoConstant,
   defaultPointColumnInfoTSC,
   defaultRangeColumnInfoTSC,
   defaultRulerColumnInfoTSC,
   defaultSequenceColumnInfoTSC,
-  defaultZoneColumnInfoTSC,
-
+  defaultZoneColumnInfoTSC
 } from "@tsconline/shared";
 import { ChartSettings } from "../types";
 
@@ -78,7 +77,8 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
       continue;
     }
     if (settingName === "topAge" || settingName === "baseAge") {
-      let stage = "", text = "";
+      let stage = "",
+        text = "";
       if (nestedSettingsNode.getAttribute("name") === "stage") {
         stage = settingValue;
       } else {
@@ -104,8 +104,7 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
     //these two tags have units, so make an object storing its unit and value
     else if (settingName === "unitsPerMY") {
       settings[settingName] = { unit: "Ma", text: Number(settingValue) };
-    } 
-    else if (settingName === "skipEmptyColumns") {
+    } else if (settingName === "skipEmptyColumns") {
       settings[settingName] = { unit: "Ma", text: Boolean(settingValue) };
     } else {
       updateProperty(settings, settingName as keyof ChartSettingsInfoTSC, settingValue);
@@ -120,41 +119,44 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
  * @returns json object containing the font info
  */
 function processFonts(fontsNode: Element): FontsInfo {
-  const fonts: FontsInfo = defaultFontsInfo;
+  const fonts: FontsInfo = <FontsInfo>{};
+  Object.assign(fonts, defaultFontsInfoConstant);
   return fonts;
 }
 /**
  *
  * @param node DOM node of a column in the settings file, starts with the chart title
+ * @param id id of current column
  * @returns json object containing the info of the current and children columns
  */
 function processColumn(node: Element, id: string): ColumnInfoTSC {
-  let column: ColumnInfoTSC;
-  const columnType = id.substring(id.indexOf(".") + 1, id.indexOf(":"))
+  let column: ColumnInfoTSC = <ColumnInfoTSC>{};
+  const columnType = id.substring(id.indexOf(".") + 1, id.indexOf(":"));
   switch (columnType) {
     case "EventColumn":
-      column = defaultEventColumnInfoTSC;
+      //can't set it equal to default because it becomes reference to object
+      Object.assign(column, defaultEventColumnInfoTSC);
       break;
     case "ZoneColumn":
-      column = defaultZoneColumnInfoTSC;
+      Object.assign(column, defaultZoneColumnInfoTSC);
       break;
     case "SequenceColumn":
-      column = defaultSequenceColumnInfoTSC;
+      Object.assign(column, defaultSequenceColumnInfoTSC);
       break;
     case "RangeColumn":
-      column = defaultRangeColumnInfoTSC;
+      Object.assign(column, defaultRangeColumnInfoTSC);
       break;
     case "RulerColumn":
-      column = defaultRulerColumnInfoTSC;
+      Object.assign(column, defaultRulerColumnInfoTSC);
       break;
     case "PointColumn":
-      column = defaultPointColumnInfoTSC;
+      Object.assign(column, defaultPointColumnInfoTSC);
       break;
     default:
-      column = defaultColumnBasicInfoTSC;
+      Object.assign(column, defaultColumnBasicInfoTSC);
   }
   column._id = id;
-  assertColumnInfoTSC(column);
+  column.children = [];
   const childNodes = node.childNodes;
   if (childNodes.length > 0) {
     for (let i = 0; i < childNodes.length; i++) {
@@ -163,9 +165,7 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
         const child = <Element>maybeChild;
         const childName = child.getAttribute("id");
         if (child.nodeName === "column") {
-          console.log(childName)
-          const childTSC = processColumn(child, childName!);
-          column.children.push(childTSC);
+          column.children.push(processColumn(child, childName!));
         } else if (child.nodeName === "fonts") {
           column.fonts = processFonts(child);
         } else if (child.nodeName === "setting") {
@@ -198,29 +198,22 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
               };
             }
           } else if (justificationValue) {
-            updateProperty(column,settingName as keyof ColumnInfoTSC,justificationValue);
-            //column[settingName!] = castValue(justificationValue);
+            updateProperty(column, settingName as keyof ColumnInfoTSC, justificationValue);
           } else if (orientationValue) {
-            updateProperty(column,settingName as keyof ColumnInfoTSC,orientationValue);
-            //column[settingName!] = castValue(orientationValue);
+            updateProperty(column, settingName as keyof ColumnInfoTSC, orientationValue);
           } else if (settingName === "type") {
             if (textValue === "") {
-              updateProperty(column,settingName as keyof ColumnInfoTSC,child.getAttribute("type")!);
-              //column[settingName] = child.getAttribute("type");
-            } else updateProperty(column, settingName as keyof ColumnInfoTSC, textValue)
-            //column[settingName] = textValue;
+              updateProperty(column, settingName as keyof ColumnInfoTSC, child.getAttribute("type")!);
+            } else updateProperty(column, settingName as keyof ColumnInfoTSC, textValue);
           } else if (settingName === "pointType") {
-            updateProperty(column, settingName as keyof ColumnInfoTSC, child.getAttribute("pointType")!)
-            //column[settingName] = castValue(child.getAttribute("pointType")!);
+            updateProperty(column, settingName as keyof ColumnInfoTSC, child.getAttribute("pointType")!);
           } else {
             updateProperty(column, settingName as keyof ColumnInfoTSC, textValue);
-            //column[settingName!] = textValue;
           }
         }
       }
     }
   }
-  assertColumnInfoTSC(column);
   return column;
 }
 
