@@ -331,6 +331,7 @@ export const removeCache = action("removeCache", async () => {
   try {
     assertSuccessfulServerResponse(msg);
     console.log(`Server successfully deleted cache with message: ${msg.message}`);
+    displaySnackbar("Cache Successfully Removed", "success");
   } catch (e) {
     displayServerError(e, msg, "Server could not remove cache");
     return;
@@ -458,7 +459,6 @@ export const checkSVGStatus = action(async () => {
     return;
   }
   setChartLoading(false);
-
 });
 
 /**
@@ -486,7 +486,6 @@ async function fetchSVGStatus(): Promise<boolean> {
   }
   return data.ready;
 }
-
 
 export const removeError = action("removeError", (context: ErrorCodes) => {
   state.errors.errorAlerts.delete(context);
@@ -522,9 +521,9 @@ export const pushSnackbar = action("pushSnackbar", (text: string, severity: stri
     snackbarText: text,
     snackbarCount: 1,
     severity: severity
-  })
+  });
   state.openSnackbar = true;
-})
+});
 
 export const fetchImage = action("fetchImage", async (datapackName: string, imageName: string) => {
   const response = await fetcher(`/images/${datapackName}/${imageName}`, {

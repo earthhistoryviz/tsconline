@@ -14,8 +14,6 @@ import { About } from "./About";
 import { TSCPopupDialog, TSCError, TSCSnackbar } from "./components";
 import "./App.css";
 
-
-
 export default observer(function App() {
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
@@ -48,7 +46,13 @@ export default observer(function App() {
           onClose={() => actions.fetchChartFromServer(navigate)}
         />
         {state.snackbars.map((info, index) => (
-          <TSCSnackbar key={index} text={info.snackbarText} count={info.snackbarCount} index={index} severity={info.severity} />
+          <TSCSnackbar
+            key={index}
+            text={info.snackbarText}
+            count={info.snackbarCount}
+            index={index}
+            severity={info.severity}
+          />
         ))}
       </ThemeProvider>
     </StyledEngineProvider>

@@ -8,54 +8,53 @@ import InfoIcon from "../assets/icons/info-icon.json";
 import "./TSCSnackbar.css";
 
 type TSCSnackbarProps = {
-    text: string;
-    count: number;
-    index: number;
-    severity: "success" | "info"
+  text: string;
+  count: number;
+  index: number;
+  severity: "success" | "info";
 };
 export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, count, severity, index }) => {
-    const { actions, state } = useContext(context);
-    const theme = useTheme();
-    const margin = index < 5 ? index * 10 : 40;
-    let countDisplay = "";
-    if (count > 1 && count < 1000) {
-        countDisplay = `(${count})`;
-    } else if (count >= 1000) {
-        countDisplay = "(999+)";
-    }
-    let bgColor = severity === "info" ? theme.palette.snackbarAlert.light : theme.palette.snackbarAlert.main;
-    function handleCloseSnackbar(_event: React.SyntheticEvent | Event, reason?: string) {
-        if (reason === "clickaway") return;
+  const { actions, state } = useContext(context);
+  const theme = useTheme();
+  const margin = index < 5 ? index * 10 : 40;
+  let countDisplay = "";
+  if (count > 1 && count < 1000) {
+    countDisplay = `(${count})`;
+  } else if (count >= 1000) {
+    countDisplay = "(999+)";
+  }
+  const bgColor = severity === "info" ? theme.palette.snackbarAlert.light : theme.palette.snackbarAlert.main;
+  function handleCloseSnackbar(_event: React.SyntheticEvent | Event, reason?: string) {
+    if (reason === "clickaway") return;
 
-        actions.removeSnackbar(text);
-    }
-    return (
-        <Snackbar
-            open={state.openSnackbar}
-            style={{
-                marginBottom: `${margin}px`,
-                zIndex: `${1000 - index}`
-            }}
-            onClose={handleCloseSnackbar}
-            autoHideDuration={5000}
-            TransitionComponent={Slide}
-        >
-            <Alert
-                style={{
-                    backgroundColor: bgColor,
-                }}
-                severity={severity}
-                variant="outlined"
-                color={severity}
-                className="snackabr"
-                iconMapping={{
-                    success: <Lottie animationData={ChartDoneIcon} speed={0.7} autoplay />,
-                    info: <Lottie animationData={InfoIcon} speed={0.7} autoplay />
-                }}>
-                <Typography>{countDisplay} {text}</Typography>
-            </Alert>
-        </Snackbar>
-
-
-    );
+    actions.removeSnackbar(text);
+  }
+  return (
+    <Snackbar
+      open={state.openSnackbar}
+      style={{
+        marginBottom: `${margin}px`,
+        zIndex: `${1000 - index}`
+      }}
+      onClose={handleCloseSnackbar}
+      autoHideDuration={5000}
+      TransitionComponent={Slide}>
+      <Alert
+        style={{
+          backgroundColor: bgColor
+        }}
+        severity={severity}
+        variant="outlined"
+        color={severity}
+        className="snackabr"
+        iconMapping={{
+          success: <Lottie animationData={ChartDoneIcon} speed={0.7} autoplay />,
+          info: <Lottie animationData={InfoIcon} speed={0.7} autoplay />
+        }}>
+        <Typography>
+          {countDisplay} {text}
+        </Typography>
+      </Alert>
+    </Snackbar>
+  );
 });
