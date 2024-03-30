@@ -11,7 +11,16 @@ import {
   assertChartInfoTSC,
   assertChartSettingsInfoTSC,
   assertColumnInfoTSC,
-  defaultFontsInfo
+  defaultChartSettingsInfoTSC,
+  defaultColumnBasicInfoTSC,
+  defaultEventColumnInfoTSC,
+  defaultFontsInfo,
+  defaultPointColumnInfoTSC,
+  defaultRangeColumnInfoTSC,
+  defaultRulerColumnInfoTSC,
+  defaultSequenceColumnInfoTSC,
+  defaultZoneColumnInfoTSC,
+
 } from "@tsconline/shared";
 import { ChartSettings } from "../types";
 
@@ -33,6 +42,10 @@ function castValue(value: string) {
   } else castValue = String(value);
   return castValue;
 }
+
+function updateProperty<T, K extends keyof T>(obj: T, key: K, value: string) {
+  obj[key] = castValue(value) as T[K];
+}
 /**
  *
  * @param settingsNode DOM node with name settings
@@ -40,7 +53,7 @@ function castValue(value: string) {
  */
 
 function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
-  let settings: any = {};
+  let settings: ChartSettingsInfoTSC = defaultChartSettingsInfoTSC;
   const settingNodes = settingsNode.getElementsByTagName("setting");
   for (let i = 0; i < settingNodes.length; i++) {
     const settingNode = settingNodes[i];
@@ -49,14 +62,14 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
       continue;
     }
     const nestedSettingsNode = settingNode.getElementsByTagName("setting")[0];
-    let settingValue: any = "";
+    let settingValue: string = "";
     if (nestedSettingsNode) {
       if (nestedSettingsNode.textContent) {
-        settingValue = castValue(nestedSettingsNode.textContent.trim());
+        settingValue = nestedSettingsNode.textContent.trim();
       }
     } else {
       if (settingNode.textContent) {
-        settingValue = castValue(settingNode.textContent.trim());
+        settingValue = settingNode.textContent.trim();
       }
     }
     //since we access the elements by tag name, the nested settings of topage and baseage
@@ -65,7 +78,7 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
       continue;
     }
     if (settingName === "topAge" || settingName === "baseAge") {
-      let stage, text;
+      let stage = "", text = "";
       if (nestedSettingsNode.getAttribute("name") === "stage") {
         stage = settingValue;
       } else {
@@ -73,7 +86,7 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
       }
       if (settingNode.getElementsByTagName("setting")[1]) {
         if (settingNode.getElementsByTagName("setting")[1].textContent) {
-          settingValue = settingNode.getElementsByTagName("setting")[1].textContent?.trim();
+          settingValue = settingNode.getElementsByTagName("setting")[1].textContent!.trim();
           if (settingNode.getElementsByTagName("setting")[1].getAttribute("name") === "stage") {
             stage = settingValue;
           } else {
@@ -82,17 +95,20 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
         }
       }
       settings[settingName] = {
-        source: settingNode.getAttribute("source"),
-        unit: settingNode.getAttribute("unit"),
-        stage: castValue(stage),
-        text: castValue(text)
+        source: settingNode.getAttribute("source") as string,
+        unit: settingNode.getAttribute("unit") as string,
+        stage: castValue(stage) as string,
+        text: castValue(text) as number
       };
     }
     //these two tags have units, so make an object storing its unit and value
-    else if (settingName === "unitsPerMY" || settingName === "skipEmptyColumns") {
-      settings[settingName] = { unit: "Ma", text: settingValue };
+    else if (settingName === "unitsPerMY") {
+      settings[settingName] = { unit: "Ma", text: Number(settingValue) };
+    } 
+    else if (settingName === "skipEmptyColumns") {
+      settings[settingName] = { unit: "Ma", text: Boolean(settingValue) };
     } else {
-      settings[settingName] = settingValue;
+      updateProperty(settings, settingName as keyof ChartSettingsInfoTSC, settingValue);
     }
   }
   assertChartSettingsInfoTSC(settings);
@@ -113,10 +129,33 @@ function processFonts(fontsNode: Element): FontsInfo {
  * @returns json object containing the info of the current and children columns
  */
 function processColumn(node: Element, id: string): ColumnInfoTSC {
-  const column: any = {};
-  column.children = [];
-  const childNodes = node.childNodes;
+  let column: ColumnInfoTSC;
+  const columnType = id.substring(id.indexOf(".") + 1, id.indexOf(":"))
+  switch (columnType) {
+    case "EventColumn":
+      column = defaultEventColumnInfoTSC;
+      break;
+    case "ZoneColumn":
+      column = defaultZoneColumnInfoTSC;
+      break;
+    case "SequenceColumn":
+      column = defaultSequenceColumnInfoTSC;
+      break;
+    case "RangeColumn":
+      column = defaultRangeColumnInfoTSC;
+      break;
+    case "RulerColumn":
+      column = defaultRulerColumnInfoTSC;
+      break;
+    case "PointColumn":
+      column = defaultPointColumnInfoTSC;
+      break;
+    default:
+      column = defaultColumnBasicInfoTSC;
+  }
   column._id = id;
+  assertColumnInfoTSC(column);
+  const childNodes = node.childNodes;
   if (childNodes.length > 0) {
     for (let i = 0; i < childNodes.length; i++) {
       const maybeChild = childNodes[i];
@@ -124,8 +163,9 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
         const child = <Element>maybeChild;
         const childName = child.getAttribute("id");
         if (child.nodeName === "column") {
+          console.log(childName)
           const childTSC = processColumn(child, childName!);
-          column.children!.push(childTSC);
+          column.children.push(childTSC);
         } else if (child.nodeName === "fonts") {
           column.fonts = processFonts(child);
         } else if (child.nodeName === "setting") {
@@ -134,41 +174,47 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
           const orientationValue = child.getAttribute("orientation");
           const useNamedValue = child.getAttribute("useNamed");
           const standardizedValue = child.getAttribute("standardized");
-          const textValue = castValue(child.textContent!.trim());
+          const textValue = child.textContent!.trim();
           if (settingName === "backgroundColor" || settingName === "customColor") {
             if (standardizedValue && useNamedValue) {
               column[settingName] = {
                 standardized: standardizedValue === "true",
                 useNamed: useNamedValue === "true",
-                text: textValue
+                text: textValue as string
               };
             } else if (useNamedValue) {
               column[settingName] = {
                 useNamed: useNamedValue === "true",
-                text: textValue
+                text: textValue as string
               };
             } else if (standardizedValue) {
               column[settingName] = {
                 standardized: standardizedValue === "true",
-                text: textValue
+                text: textValue as string
               };
             } else {
               column[settingName] = {
-                text: textValue
+                text: textValue as string
               };
             }
           } else if (justificationValue) {
-            column[settingName!] = castValue(justificationValue);
+            updateProperty(column,settingName as keyof ColumnInfoTSC,justificationValue);
+            //column[settingName!] = castValue(justificationValue);
           } else if (orientationValue) {
-            column[settingName!] = castValue(orientationValue);
+            updateProperty(column,settingName as keyof ColumnInfoTSC,orientationValue);
+            //column[settingName!] = castValue(orientationValue);
           } else if (settingName === "type") {
-            if (textValue === 0) {
-              column[settingName] = child.getAttribute("type");
-            } else column[settingName] = textValue;
+            if (textValue === "") {
+              updateProperty(column,settingName as keyof ColumnInfoTSC,child.getAttribute("type")!);
+              //column[settingName] = child.getAttribute("type");
+            } else updateProperty(column, settingName as keyof ColumnInfoTSC, textValue)
+            //column[settingName] = textValue;
           } else if (settingName === "pointType") {
-            column[settingName] = castValue(child.getAttribute("pointType")!);
+            updateProperty(column, settingName as keyof ColumnInfoTSC, child.getAttribute("pointType")!)
+            //column[settingName] = castValue(child.getAttribute("pointType")!);
           } else {
-            column[settingName!] = textValue;
+            updateProperty(column, settingName as keyof ColumnInfoTSC, textValue);
+            //column[settingName!] = textValue;
           }
         }
       }

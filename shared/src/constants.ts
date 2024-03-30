@@ -1,4 +1,4 @@
-import { FontsInfo } from "./index";
+import { ChartSettingsInfoTSC, ColumnBasicInfoTSC, EventColumnInfoTSC, FontsInfo, PointColumnInfoTSC, RangeColumnInfoTSC, RulerColumnInfoTSC, SequenceColumnInfoTSC, ZoneColumnInfoTSC } from "./index";
 
 export const defaultFontsInfoConstant: FontsInfo = {
   "Age Label": {
@@ -101,3 +101,114 @@ export const defaultFontsInfoConstant: FontsInfo = {
     size: 12
   }
 };
+
+export const defaultChartSettingsInfoTSC: ChartSettingsInfoTSC = {
+  topAge: {
+    source: "",
+    unit: "",
+    stage: undefined,
+    text: undefined
+  },
+  baseAge: {
+    source: "",
+    unit: "",
+    stage: undefined,
+    text: undefined
+  },
+  unitsPerMY: {
+    unit: "",
+    text: 0
+  },
+  skipEmptyColumns: {
+    unit: "",
+    text: false
+  },
+  variableColors: "",
+  noIndentPattern: false,
+  negativeChk: false,
+  doPopups: false,
+  enEventColBG: false,
+  enChartLegend: false,
+  enPriority: false,
+  enHideBlockLable: false
+}
+
+export const defaultColumnBasicInfoTSC: ColumnBasicInfoTSC = {
+  _id: "",
+  title: "",
+  useNamedColor: false,
+  placeHolder: false,
+  drawTitle: false,
+  drawAgeLabel: false,
+  drawUncertaintyLabel: false,
+  isSelected: false,
+  width: 0,
+  pad: 0,
+  "age pad": 0,
+  backgroundColor: {
+    text: "",
+  },
+  customColor: {
+    text: "",
+  },
+  fonts: defaultFontsInfoConstant,
+  children: [],
+};
+
+export const defaultEventColumnInfoTSC: EventColumnInfoTSC = {
+  ...defaultColumnBasicInfoTSC,
+  type: "",
+}
+
+export const defaultZoneColumnInfoTSC: ZoneColumnInfoTSC = {
+  ...defaultColumnBasicInfoTSC,
+  crunchOuterMargin: 0,
+  crunchInnerMargin: 0,
+  crunchAscendWidth: 0,
+  crunchOneSideSpaceUse: 0,
+  autoFlip: false,
+  orientation: "normal"
+};
+
+export const defaultSequenceColumnInfoTSC: SequenceColumnInfoTSC = {
+  ...defaultColumnBasicInfoTSC,
+  type: "",
+  labelMarginLeft: 0,
+  labelMarginRight: 0,
+  graphStyle: "",
+  drawNameLabel: false,
+}
+
+export const defaultRangeColumnInfoTSC: RangeColumnInfoTSC = {
+  ...defaultColumnBasicInfoTSC,
+  rangeSort: "",
+}
+
+export const defaultRulerColumnInfoTSC: RulerColumnInfoTSC = {
+  ...defaultColumnBasicInfoTSC,
+  justification: "left",
+}
+
+export const defaultPointColumnInfoTSC: PointColumnInfoTSC = {
+  ...defaultColumnBasicInfoTSC,
+  drawPoints: false,
+  drawLine: false,
+  lineColor: "",
+  drawSmooth: false,
+  drawFill: false,
+  fillColor: "",
+  doNotSetWindowAuto: false,
+  minWindow: 0,
+  maxWindow: 0,
+  drawScale: false,
+  drawBgrndGradient: false,
+  backGradStart: "",
+  backGradEnd: "",
+  drawCurveGradient: false,
+  curveGradStart: "",
+  curveGradEnd: "",
+  flipScale: false,
+  scaleStart: 0,
+  scaleStep: 0,
+  pointType: "rect",
+}

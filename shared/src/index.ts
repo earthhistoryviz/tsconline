@@ -2,6 +2,8 @@
 
 import { defaultFontsInfoConstant } from "./constants.js";
 
+export * from "./constants.js"
+
 export * from "./settings-types.js";
 
 export type SuccessfulServerResponse = {
@@ -111,36 +113,6 @@ export type FontsInfo = {
   "Legend Column Name": FontLabelOptions;
   "Legend Column Source": FontLabelOptions;
   "Range Box Label": FontLabelOptions;
-};
-
-export type ZoneColumnInfoTSC = {
-  crunchOuterMargin?: number;
-  crunchInnerMargin?: number;
-  crunchAscendWidth?: number;
-  crunchOneSideSpaceUse?: number;
-  autoFlip?: boolean;
-  orientation?: "vertical" | "normal";
-};
-
-export type EventColumnInfoTSC = {
-  type?: string;
-  rangeSort?: string;
-};
-
-export type RangeColumnInfoTSC = {
-  rangeSort?: string;
-};
-
-export type RulerColumnInfoTSC = {
-  justification?: "left" | "right";
-};
-
-export type SequenceColumnInfoTSC = {
-  labelMarginLeft?: number;
-  labelMarginRight?: number;
-  graphStyle?: string;
-  drawNameLabel?: boolean;
-  type?: string;
 };
 
 export const defaultFontsInfo: FontsInfo = defaultFontsInfoConstant;
