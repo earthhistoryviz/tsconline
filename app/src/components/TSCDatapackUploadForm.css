@@ -28,9 +28,12 @@
 .MuiTextField-root.datapack-description-input > .MuiInputLabel-root {
   color: gray;
 }
-.file-upload {
+.file-upload,
+.file-upload-button {
+  margin: 10px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  gap: 20px;
   align-items: center;
   justify-content: center;
 }
