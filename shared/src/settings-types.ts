@@ -36,10 +36,10 @@ export type ChartSettingsInfoTSC = {
   enHideBlockLable: boolean;
 };
 
-export type ColumnInfoTSC = ColumnBasicInfo &
-  (ZoneColumnInfo | EventColumnInfo | SequenceColumnInfo | RangeColumnInfo | RulerColumnInfo | PointColumnInfo);
+export type ColumnInfoTSC = ColumnBasicInfoTSC | 
+  ZoneColumnInfoTSC | EventColumnInfoTSC | SequenceColumnInfoTSC | RangeColumnInfoTSC| PointColumnInfoTSC | RulerColumnInfoTSC ;
 
-export type ColumnBasicInfo = {
+export type ColumnBasicInfoTSC = {
   _id: string;
   title: string;
   useNamedColor: boolean;
@@ -65,7 +65,11 @@ export type ColumnBasicInfo = {
   children: ColumnInfoTSC[];
 };
 
-export type ZoneColumnInfo = {
+export type EventColumnInfoTSC = ColumnBasicInfoTSC & {
+  type: string;
+};
+
+export type ZoneColumnInfoTSC = ColumnBasicInfoTSC & {
   crunchOuterMargin: number;
   crunchInnerMargin: number;
   crunchAscendWidth: number;
@@ -74,11 +78,7 @@ export type ZoneColumnInfo = {
   orientation: "vertical" | "normal";
 };
 
-export type EventColumnInfo = {
-  type: string;
-};
-
-export type SequenceColumnInfo = {
+export type SequenceColumnInfoTSC = ColumnBasicInfoTSC & {
   type: string;
   labelMarginLeft: number;
   labelMarginRight: number;
@@ -86,15 +86,15 @@ export type SequenceColumnInfo = {
   drawNameLabel: boolean;
 };
 
-export type RangeColumnInfo = {
+export type RangeColumnInfoTSC = ColumnBasicInfoTSC & {
   rangeSort: string;
 };
 
-export type RulerColumnInfo = {
+export type RulerColumnInfoTSC = ColumnBasicInfoTSC & {
   justification: "left" | "right";
 };
 
-export type PointColumnInfo = {
+export type PointColumnInfoTSC = ColumnBasicInfoTSC & {
   drawPoints: boolean;
   drawLine: boolean;
   lineColor: string;
@@ -148,20 +148,20 @@ export function assertChartSettingsInfoTSC(o: any): asserts o is ChartSettingsIn
       throwError("skipEmptyColumns", "text", "boolean", o.skipEmptyColumns.text);
   } else throw new Error("ColumnSettingsTSC must have a skipEmptyColumns property");
   if (typeof o.variableColors !== "string")
-    throwError("ColumnSettingsInfo", "variableColors", "string", o.variableColors);
+    throwError("ColumnSettingsInfoTSC", "variableColors", "string", o.variableColors);
   if (typeof o.noIndentPattern !== "boolean")
-    throwError("ColumnSettingsInfo", "noIndentPattern", "boolean", o.noIndentPattern);
-  if (typeof o.negativeChk !== "boolean") throwError("ColumnSettingsInfo", "negativeChk", "boolean", o.negativeChk);
-  if (typeof o.doPopups !== "boolean") throwError("ColumnSettingsInfo", "doPopups", "boolean", o.doPopups);
-  if (typeof o.enEventColBG !== "boolean") throwError("ColumnSettingsInfo", "enEventColBG", "boolean", o.enEventColBG);
+    throwError("ColumnSettingsInfoTSC", "noIndentPattern", "boolean", o.noIndentPattern);
+  if (typeof o.negativeChk !== "boolean") throwError("ColumnSettingsInfoTSC", "negativeChk", "boolean", o.negativeChk);
+  if (typeof o.doPopups !== "boolean") throwError("ColumnSettingsInfoTSC", "doPopups", "boolean", o.doPopups);
+  if (typeof o.enEventColBG !== "boolean") throwError("ColumnSettingsInfoTSC", "enEventColBG", "boolean", o.enEventColBG);
   if (typeof o.enChartLegend !== "boolean")
-    throwError("ColumnSettingsInfo", "enChartLegend", "boolean", o.enChartLegend);
-  if (typeof o.enPriority !== "boolean") throwError("ColumnSettingsInfo", "enPriority", "boolean", o.enPriority);
+    throwError("ColumnSettingsInfoTSC", "enChartLegend", "boolean", o.enChartLegend);
+  if (typeof o.enPriority !== "boolean") throwError("ColumnSettingsInfoTSC", "enPriority", "boolean", o.enPriority);
   if (typeof o.enHideBlockLable !== "boolean")
-    throwError("ColumnSettingsInfo", "enHideBlockLable", "boolean", o.enHideBlockLable);
+    throwError("ColumnSettingsInfoTSC", "enHideBlockLable", "boolean", o.enHideBlockLable);
 }
 
-export function assertZoneColumnInfo(o: any) {
+export function assertZoneColumnInfoTSC(o: any): asserts o is ZoneColumnInfoTSC {
   if (typeof o.crunchOuterMargin !== "number")
     throwError("ZoneColumnInfoTSC", "crunchOuterMargin", "number", o.crunchOuterMargin);
   if (typeof o.crunchInnerMargin !== "number")
@@ -175,10 +175,10 @@ export function assertZoneColumnInfo(o: any) {
     throwError("ZoneColumnInfoTSC", "orientation", "vertical or normal", o.orientation);
 }
 
-export function assertEventColumnInfo(o: any) {
+export function assertEventColumnInfoTSC(o: any): asserts o is EventColumnInfoTSC {
   if (typeof o.type !== "string") throwError("EventColumnInfoTSC", "type", "string", o.type);
 }
-export function assertSequenceColumnInfo(o: any) {
+export function assertSequenceColumnInfoTSC(o: any): asserts o is SequenceColumnInfoTSC {
   if (typeof o.type !== "string") throwError("SequenceColumnInfoTSC", "type", "string", o.type);
   if (typeof o.labelMarginLeft !== "number")
     throwError("SequenceColumnInfoTSC", "labelMarginLeft", "number", o.labelMarginLeft);
@@ -189,16 +189,16 @@ export function assertSequenceColumnInfo(o: any) {
     throwError("SequenceColumnInfoTSC", "drawNameLabel", "boolean", o.drawNameLabel);
 }
 
-export function assertRangeColumnInfo(o: any) {
+export function assertRangeColumnInfoTSC(o: any): asserts o is RangeColumnInfoTSC {
   if (typeof o.rangeSort !== "string") throwError("RangeColumnInfoTSC", "rangeSort", "string", o.rangeSort);
 }
 
-export function assertRulerColumnInfo(o: any) {
+export function assertRulerColumnInfoTSC(o: any): asserts o is RulerColumnInfoTSC {
   if (o.justification !== "left" && o.justification !== "right")
     throwError("RulerColumnInfoTSC", "justification", "left or right", o.justification);
 }
 
-export function assertPointColumnInfo(o: any) {
+export function assertPointColumnInfoTSC(o: any): asserts o is PointColumnInfoTSC {
   if (typeof o.drawPoints !== "boolean") throwError("PointColumnInfoTSC", "drawPoints", "boolean", o.drawPoints);
   if (typeof o.drawLine !== "boolean") throwError("PointColumnInfoTSC", "drawLine", "boolean", o.drawLine);
   if (typeof o.lineColor !== "string") throwError("PointColumnInfoTSC", "lineColor", "string", o.lineColor);
@@ -225,7 +225,7 @@ export function assertPointColumnInfo(o: any) {
   if (o.pointType !== "rect" && o.pointType !== "round" && o.pointType !== "tick")
     throwError("ColumnInfoTSC", "pointType", "rect or round or tick", o.pointType);
 }
-export function assertColumnBasicInfo(o: any): asserts o is ColumnBasicInfo {
+export function assertColumnBasicInfoTSC(o: any): asserts o is ColumnBasicInfoTSC {
   if (typeof o.title !== "string") throwError("ColumnInfoTSC", "title", "string", o.title);
   if (typeof o.useNamedColor !== "boolean") throwError("ColumnInfoTSC", "useNamedColor", "boolean", o.useNamedColor);
   if (typeof o.placeHolder !== "boolean") throwError("ColumnInfoTSC", "placeHolder", "boolean", o.placeHolder);
@@ -259,41 +259,41 @@ export function assertColumnBasicInfo(o: any): asserts o is ColumnBasicInfo {
         throwError("ColumnInfoTSC customColor", "useNamed", "boolean", o.customColor.standardized);
       if (typeof o.customColor.text !== "string")
         throwError("ColumnInfoTSC customColor", "text", "string", o.customColor.standardized);
-    } else throw new Error("ColumnInfoTSC must have customColor");
-    if (o.fonts) {
-      assertFontsInfo(o.fonts);
-    } else throw new Error("ColumnInfoTSC must have fonts");
-  }
+    } 
+  } else throw new Error("ColumnInfoTSC must have customColor");
+  if (o.fonts) {
+    assertFontsInfo(o.fonts);
+  } else throw new Error("ColumnInfoTSC must have fonts");
 }
+
 export function assertColumnInfoTSC(o: any): asserts o is ColumnInfoTSC {
   if (!o || typeof o !== "object") throw new Error("ColumnInfoTSC must be a non-null object");
-  assertColumnBasicInfo(o);
+  assertColumnBasicInfoTSC(o);
   if (typeof o._id !== "string") {
     throwError("ColumnInfoTSC", "_id", "string", o._id);
   } else {
     //check for specific column type since id has the column type in it
-    if (!o._id.match(/\.(.*?):/)) throw new Error("missing column type in id");
-    const columnType = o._id.match(/\.(.*?):/)![1];
+    const columnType = o._id.substring(o._id.indexOf(".") + 1, o._id.indexOf(":"));
     switch (columnType) {
       case "ZoneColumn":
-        assertZoneColumnInfo(o);
+        assertZoneColumnInfoTSC(o);
         break;
       case "EventColumn":
-        assertEventColumnInfo(o);
+        assertEventColumnInfoTSC(o);
         break;
       case "SequenceColumn":
-        assertSequenceColumnInfo(o);
+        assertSequenceColumnInfoTSC(o);
         break;
       case "RangeColumn":
-        assertRangeColumnInfo(o);
+        assertRangeColumnInfoTSC(o);
         break;
       case "RulerColumn":
-        assertRulerColumnInfo(o);
+        assertRulerColumnInfoTSC(o);
         break;
       case "PointColumn":
-        assertPointColumnInfo(o);
+        assertPointColumnInfoTSC(o);
         break;
-      //these just have the basic column info props
+      //these just have the basic column InfoTSC props
       case "MetaColumn":
       case "FaciesColumn":
       case "BlockSeriesMetaColumn":
@@ -308,6 +308,7 @@ export function assertColumnInfoTSC(o: any): asserts o is ColumnInfoTSC {
   }
   if ("children" in o) {
     for (let i = 0; i < o.children.length; i++) {
+      console.log(o.children[i])
       assertColumnInfoTSC(o.children[i]);
     }
   }
