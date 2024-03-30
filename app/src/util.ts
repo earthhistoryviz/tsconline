@@ -13,9 +13,6 @@ export function devSafeUrl(url: string) {
   if (import.meta.env.VITE_SERVER_URL) {
     baseUrl = import.meta.env.VITE_SERVER_URL;
   }
-  if (!import.meta.env.DEV && !url.startsWith(baseUrl)) {
-    throw new Error(`ERROR: The path does not start with the base URL. Path: ${url}, Base URL: ${baseUrl}`);
-  }
 
   // vite sets this variable to true if you are running `yarn dev`, but if you
   // are running from the built files in dist/ (i.e. they are served to the
