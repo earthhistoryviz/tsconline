@@ -12,7 +12,9 @@ export enum ErrorCodes {
   INVALID_CHART_RESPONSE = "INVALID_CHART_RESPONSE",
   INVALID_PATH = "INVALID_PATH",
   INVALID_DATAPACK_UPLOAD = "INVALID_DATAPACK_UPLOAD",
-  INVALID_USER_DATAPACKS = "INVALID_USER_DATAPACKS"
+  INVALID_USER_DATAPACKS = "INVALID_USER_DATAPACKS",
+  NO_DATAPACK_FILE_FOUND = "NO_DATAPACK_FILE_FOUND",
+  DATAPACK_FILE_NAME_TOO_LONG = "DATAPACK_FILE_NAME_TOO_LONG"
 }
 
 export const ErrorMessages = {
@@ -29,5 +31,7 @@ export const ErrorMessages = {
   [ErrorCodes.INVALID_CHART_RESPONSE]: "Invalid chart response received from server. Please try again later.",
   [ErrorCodes.INVALID_PATH]: "The requested path was invalid. Please ensure the path is correct.",
   [ErrorCodes.INVALID_DATAPACK_UPLOAD]: "Invalid datapack upload.",
-  [ErrorCodes.INVALID_USER_DATAPACKS]: "Invalid user datapacks received from server. Please try again later."
+  [ErrorCodes.INVALID_USER_DATAPACKS]: "Invalid user datapacks received from server. Please try again later.",
+  [ErrorCodes.NO_DATAPACK_FILE_FOUND]: "No datapack file found. Please upload a datapack file first.",
+  [ErrorCodes.DATAPACK_FILE_NAME_TOO_LONG]: "Datapack file name is too long. Please shorten the file name."
 };
