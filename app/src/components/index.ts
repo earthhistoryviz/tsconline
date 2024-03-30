@@ -1,4 +1,5 @@
 export { TSCCheckbox } from "./TSCCheckbox";
+export { TSCDatapackUploadForm } from "./TSCDatapackUploadForm";
 export { TSCButton } from "./TSCButton";
 export { TSCTab, TSCTabs } from "./TSCTabs";
 export { TSCTextField } from "./TSCTextField";

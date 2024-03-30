@@ -1,0 +1,36 @@
+.datapack-upload-form {
+  display: flex;
+  flex-direction: column;
+  align-items: left;
+  justify-content: center;
+  margin: 20px;
+  width: auto;
+  height: auto;
+  max-width: 80vw;
+  max-height: 80vh;
+}
+.MuiTypography-root.upload-datapack-header {
+  font-size: 30px;
+  font-weight: 900;
+  margin-bottom: 20px;
+  align-self: center;
+}
+.MuiTextField-root.datapack-name-input {
+  margin-bottom: 20px;
+}
+.MuiTextField-root.datapack-description-input {
+  margin-bottom: 20px;
+}
+.MuiInputBase-input.datapack-description-input-text {
+  width: 50vw;
+}
+.MuiTextField-root.datapack-name-input > .MuiInputLabel-root,
+.MuiTextField-root.datapack-description-input > .MuiInputLabel-root {
+  color: gray;
+}
+.file-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
