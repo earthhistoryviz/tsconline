@@ -249,6 +249,9 @@ function generateSettingsXml(settings: any, chartSettings: any, indent: string):
  * @returns xml string with settings info
  */
 function generateFontsXml(fonts: any, colName: string, stateColumn: any, indent: string): string {
+  if (!stateColumn) {
+    return "";
+  }
   let defInfo = JSON.parse(JSON.stringify(defaultFontsInfo));
   if (
     colName === "Chart Root" ||
