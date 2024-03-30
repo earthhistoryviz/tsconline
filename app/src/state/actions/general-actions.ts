@@ -331,8 +331,6 @@ export const removeCache = action("removeCache", async () => {
   try {
     assertSuccessfulServerResponse(msg);
     console.log(`Server successfully deleted cache with message: ${msg.message}`);
-    // displaySnackbar("This is a success snackbar", "success");
-    displaySnackbar("This is an info snackbar", "info");
   } catch (e) {
     displayServerError(e, msg, "Server could not remove cache");
     return;
@@ -488,15 +486,6 @@ async function fetchSVGStatus(): Promise<boolean> {
   return data.ready;
 }
 
-/* export const handleCloseSnackbar = action(
-  "handleCloseSnackbar",
-  (event: React.SyntheticEvent | Event, reason?: string) => {
-    if (reason === "clickaway") {
-      return;
-    }
-    state.openSnackbar = false;
-  }
-); */
 
 export const removeError = action("removeError", (context: ErrorCodes) => {
   state.errors.errorAlerts.delete(context);

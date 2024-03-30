@@ -5,6 +5,7 @@ import { observer } from "mobx-react-lite";
 import { Lottie } from "../components";
 import ChartDoneIcon from "../assets/icons/chart-done.json";
 import InfoIcon from "../assets/icons/info-icon.json";
+import "./TSCSnackbar.css";
 
 type TSCSnackbarProps = {
     text: string;
@@ -42,12 +43,11 @@ export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, count, 
             <Alert
                 style={{
                     backgroundColor: bgColor,
-                    //border: `1px solid ${Color(bgColor).darken(4)}`
                 }}
                 severity={severity}
                 variant="outlined"
                 color={severity}
-                className="success-alert"
+                className="snackabr"
                 iconMapping={{
                     success: <Lottie animationData={ChartDoneIcon} speed={0.7} autoplay />,
                     info: <Lottie animationData={InfoIcon} speed={0.7} autoplay />
