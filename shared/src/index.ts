@@ -2,7 +2,7 @@
 
 import { defaultFontsInfoConstant } from "./constants.js";
 
-export * from "./constants.js"
+export * from "./constants.js";
 
 export * from "./settings-types.js";
 

@@ -36,8 +36,14 @@ export type ChartSettingsInfoTSC = {
   enHideBlockLable: boolean;
 };
 
-export type ColumnInfoTSC = ColumnBasicInfoTSC | 
-  ZoneColumnInfoTSC | EventColumnInfoTSC | SequenceColumnInfoTSC | RangeColumnInfoTSC| PointColumnInfoTSC | RulerColumnInfoTSC ;
+export type ColumnInfoTSC =
+  | ColumnBasicInfoTSC
+  | ZoneColumnInfoTSC
+  | EventColumnInfoTSC
+  | SequenceColumnInfoTSC
+  | RangeColumnInfoTSC
+  | PointColumnInfoTSC
+  | RulerColumnInfoTSC;
 
 export type ColumnBasicInfoTSC = {
   _id: string;
@@ -153,7 +159,8 @@ export function assertChartSettingsInfoTSC(o: any): asserts o is ChartSettingsIn
     throwError("ColumnSettingsInfoTSC", "noIndentPattern", "boolean", o.noIndentPattern);
   if (typeof o.negativeChk !== "boolean") throwError("ColumnSettingsInfoTSC", "negativeChk", "boolean", o.negativeChk);
   if (typeof o.doPopups !== "boolean") throwError("ColumnSettingsInfoTSC", "doPopups", "boolean", o.doPopups);
-  if (typeof o.enEventColBG !== "boolean") throwError("ColumnSettingsInfoTSC", "enEventColBG", "boolean", o.enEventColBG);
+  if (typeof o.enEventColBG !== "boolean")
+    throwError("ColumnSettingsInfoTSC", "enEventColBG", "boolean", o.enEventColBG);
   if (typeof o.enChartLegend !== "boolean")
     throwError("ColumnSettingsInfoTSC", "enChartLegend", "boolean", o.enChartLegend);
   if (typeof o.enPriority !== "boolean") throwError("ColumnSettingsInfoTSC", "enPriority", "boolean", o.enPriority);
@@ -259,7 +266,7 @@ export function assertColumnBasicInfoTSC(o: any): asserts o is ColumnBasicInfoTS
         throwError("ColumnInfoTSC customColor", "useNamed", "boolean", o.customColor.standardized);
       if (typeof o.customColor.text !== "string")
         throwError("ColumnInfoTSC customColor", "text", "string", o.customColor.standardized);
-    } 
+    }
   } else throw new Error("ColumnInfoTSC must have customColor");
   if (o.fonts) {
     assertFontsInfo(o.fonts);
@@ -303,12 +310,12 @@ export function assertColumnInfoTSC(o: any): asserts o is ColumnInfoTSC {
       case "RootColumn":
         break;
       default:
-        console.log("Warning :unknown column type", columnType);
+        console.log("Warning: unknown column type", columnType);
     }
   }
   if ("children" in o) {
+    //console.log(o.children.length)
     for (let i = 0; i < o.children.length; i++) {
-      console.log(o.children[i])
       assertColumnInfoTSC(o.children[i]);
     }
   }
