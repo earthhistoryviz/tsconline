@@ -1,5 +1,5 @@
 import * as generalActions from "./general-actions";
-import { displayServerError } from "./util-actions";
+import { displayServerError, displaySnackbar } from "./util-actions";
 import { state } from "../state";
 import { action } from "mobx";
 import { fetcher } from "../../util";
@@ -63,7 +63,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
       };
       const sanitizedSVG = DOMPurify.sanitize(content, domPurifyConfig);
       generalActions.setChartContent(sanitizedSVG);
-      generalActions.displaySnackbar("Chart Successfully Generated", "success"); //manually changed after new implementation of snackbar
+      // displaySnackbar("Chart Successfully Generated", "success"); //manually changed after new implementation of snackbar
     } catch (e) {
       displayServerError(answer, ErrorCodes.INVALID_CHART_RESPONSE, ErrorMessages[ErrorCodes.INVALID_CHART_RESPONSE]);
       return;

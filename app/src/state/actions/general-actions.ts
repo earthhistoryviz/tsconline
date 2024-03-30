@@ -458,6 +458,7 @@ export const checkSVGStatus = action(async () => {
     return;
   }
   setChartLoading(false);
+
 });
 
 /**
