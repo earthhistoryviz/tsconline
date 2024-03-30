@@ -1,9 +1,9 @@
 :root {
-    --snackbar-width: 300px;
-    --snackbar-height: 100px;
+  --snackbar-width: 300px;
+  --snackbar-height: 100px;
 }
 
 .snackabr {
-    width: var(--snackbar-width);
-    height: var(--snackbar-heightt);
+  width: var(--snackbar-width);
+  height: var(--snackbar-heightt);
 }
