@@ -1,12 +1,14 @@
-.MuiAlert-filled.success-alert {
+.MuiAlert-filled.snackbar {
   align-items: center;
-  width: 100%;
+  /*width: 100%;*/
 }
-.MuiAlert-root.success-alert .MuiAlert-icon {
+
+.MuiAlert-root.snackbar .MuiAlert-icon {
   display: flex;
   align-items: center;
 }
-.MuiAlert-root.success-alert .MuiAlert-message {
+
+.MuiAlert-root.snackbar .MuiAlert-message {
   display: flex;
   align-items: center;
   flex-grow: 1;

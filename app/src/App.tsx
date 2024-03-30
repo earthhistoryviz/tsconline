@@ -8,7 +8,6 @@ import { Chart } from "./Chart";
 import { Help } from "./Help";
 import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
 import theme from "./theme";
-import { Alert, Slide, Snackbar, Typography } from "@mui/material";
 import { useContext } from "react";
 import { context } from "./state";
 import { About } from "./About";
