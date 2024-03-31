@@ -4,3 +4,8 @@
   margin-top: 1px;
   align-items: center;
 }
+
+.color-picker {
+  position: absolute; 
+  z-index: 2;
+}

@@ -737,6 +737,16 @@ export const settingsXML = action("settingsXML", (xml: string) => {
 export const setIsFullscreen = action("setIsFullscreen", (newval: boolean) => {
   state.isFullscreen = newval;
 });
+
+export const updatePresetColors = action("updatePresetColors", (newColor: string) => {
+  let updatedColors = state.presetColors.filter((c) => c !== newColor);
+  updatedColors.unshift(newColor);
+  if (updatedColors.length > 10) {
+    updatedColors = updatedColors.slice(0, 10);
+  }
+  state.presetColors = updatedColors;
+  localStorage.setItem("savedColors", JSON.stringify(updatedColors));
+});
 export const setSkipEmptyColumns = action("setSkipEmptyColumns", (newval: boolean, unit: string) => {
   if (!state.settings.timeSettings[unit]) {
     throw new Error(`Unit ${unit} not found in timeSettings`);
