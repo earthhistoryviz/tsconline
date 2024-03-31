@@ -2302,7 +2302,7 @@ __metadata:
     "@szhsin/react-menu": "npm:^4.1.0"
     "@tsconline/shared": "npm:1.0.0"
     "@types/color": "npm:^3.0.6"
-    "@types/react": "npm:17.0.38"
+    "@types/react": "npm:^18.2.73"
     "@types/react-dom": "npm:^18.0.10"
     "@vitejs/plugin-react": "npm:^4.2.1"
     clsx: "npm:^2.1.0"
@@ -2669,17 +2669,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:17.0.38":
-  version: 17.0.38
-  resolution: "@types/react@npm:17.0.38"
-  dependencies:
-    "@types/prop-types": "npm:*"
-    "@types/scheduler": "npm:*"
-    csstype: "npm:^3.0.2"
-  checksum: be14f86ade4233b6482c58986c0cad8085041e09e920bff50c6fa809b094346aaf9bdab6d22c4461e0cfcd713d86b5c1343657f31028e48efa98517123c7d477
-  languageName: node
-  linkType: hard
-
 "@types/react@npm:>=16.9.11":
   version: 18.2.6
   resolution: "@types/react@npm:18.2.6"
@@ -2699,6 +2688,16 @@ __metadata:
     "@types/scheduler": "npm:*"
     csstype: "npm:^3.0.2"
   checksum: 15f02bd76a61e2796b29c8d9d04bcd2a2e92c712714e4d411b1f486ec7c6b05f58d274c1943571f0b09c2ce3c9119ea51b8739b3db24b131e9c4f48363ceb5d8
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:^18.2.73":
+  version: 18.2.73
+  resolution: "@types/react@npm:18.2.73"
+  dependencies:
+    "@types/prop-types": "npm:*"
+    csstype: "npm:^3.0.2"
+  checksum: 799e30e73464dff40e04f4eb7499ebc31f99b1711a69263b9af340af738e35c9cdf53084e3dacc3b21c031aaa0cba1b51f4ba60490204b7abb75f115b841583f
   languageName: node
   linkType: hard
 
@@ -3711,7 +3710,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"canvas@npm:^2.11.2, canvas@npm:^2.5.0":
+"canvas@npm:^2.5.0":
   version: 2.11.2
   resolution: "canvas@npm:2.11.2"
   dependencies:
@@ -9657,7 +9656,6 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^7.0.2"
     "@typescript-eslint/parser": "npm:^7.0.2"
     "@yarnpkg/sdks": "npm:^3.0.0-rc.43"
-    canvas: "npm:^2.11.2"
     eslint: "npm:^8.57.0"
     eslint-config-prettier: "npm:^9.1.0"
     eslint-plugin-check-file: "npm:^2.7.1"

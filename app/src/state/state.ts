@@ -17,6 +17,12 @@ import type {
 import { ErrorCodes } from "../util/error-codes";
 import { settings } from "../constants";
 
+const defaultColors: string[] = [
+  "#D32F2F", "#C2185B", "#7B1FA2", "#512DA8",
+  "#303F9F", "#1976D2", "#0288D1", "#0097A7",
+  "#00796B", "#388E3C"
+];
+
 export type State = {
   isLoggedIn: boolean;
   chartLoading: boolean;
@@ -71,6 +77,7 @@ export type State = {
     errorAlerts: Map<ErrorCodes, ErrorAlert>;
   };
   snackbars: SnackbarInfo[];
+  presetColors: string[];
 };
 
 export const state = observable<State>({
@@ -139,5 +146,6 @@ export const state = observable<State>({
   errors: {
     errorAlerts: new Map<ErrorCodes, ErrorAlert>()
   },
+  presetColors: JSON.parse(localStorage.getItem("savedColors") || JSON.stringify(defaultColors)),,
   snackbars: []
 });
