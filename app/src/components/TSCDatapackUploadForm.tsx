@@ -14,7 +14,7 @@ type TSCDatapackUploadFormProps = {
   close: () => void;
 };
 export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ close }) => {
-  const { actions } = useContext(context);
+  const { state, actions } = useContext(context);
   const [datapackName, setDatapackName] = useState("");
   const [datapackDescription, setDatapackDescription] = useState("");
   const [datapackFile, setDatapackFile] = useState<File | null>(null);
@@ -53,6 +53,11 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
                 actions.pushError(ErrorCodes.UNRECOGNIZED_DATAPACK_EXTENSION);
                 return;
               }
+              if (state.datapackIndex[file.name]) {
+                actions.pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
+                return;
+              }
+              actions.removeError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
               actions.removeError(ErrorCodes.UNRECOGNIZED_DATAPACK_FILE);
               actions.removeError(ErrorCodes.UNRECOGNIZED_DATAPACK_EXTENSION);
               actions.removeError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
