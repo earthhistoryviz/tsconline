@@ -27,7 +27,7 @@ export const InputFileUpload: React.FC<InputFileUploadProps> = ({ startIcon, tex
 };
 /**
  * reset the input value so we can upload the same file again
- * @param event 
+ * @param event
  */
 function resetHandler(event: React.MouseEvent<HTMLLabelElement>) {
   const input = event.currentTarget.querySelector("input");
