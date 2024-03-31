@@ -7,6 +7,7 @@ import "./TSCDatapackUploadForm.css";
 import { TSCButton } from "./TSCButton";
 import { ErrorCodes } from "../util/error-codes";
 import CloseIcon from "@mui/icons-material/Close";
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { CustomDivider } from "./TSCComponents";
 
 type TSCDatapackUploadFormProps = {
@@ -26,7 +27,7 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
       </div>
       <div className="datapack-upload-form">
         <Typography className="upload-datapack-header" variant="h4">
-          Upload a Datapack
+          Upload Your Own Datapack
         </Typography>
         <CustomDivider />
         <div className="file-upload">
@@ -42,6 +43,18 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
                 actions.pushError(ErrorCodes.DATAPACK_FILE_NAME_TOO_LONG);
                 return;
               }
+              const ext = file.name.split(".").pop()
+              // either an unencoded file (text file) or an encoded file that we have no type for
+              if (file.type !== "text/plain" && file.type !== "") {
+                actions.pushError(ErrorCodes.UNRECOGNIZED_DATAPACK_FILE);
+                return;
+              }
+              if (!ext || !/^(dpk|mdpk|txt|map)$/.test(ext)) {
+                actions.pushError(ErrorCodes.UNRECOGNIZED_DATAPACK_EXTENSION);
+                return;
+              }
+              actions.removeError(ErrorCodes.UNRECOGNIZED_DATAPACK_FILE)
+              actions.removeError(ErrorCodes.UNRECOGNIZED_DATAPACK_EXTENSION);
               actions.removeError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
               actions.removeError(ErrorCodes.DATAPACK_FILE_NAME_TOO_LONG);
               setDatapackFile(file);
@@ -50,9 +63,16 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
           <Typography className="file-upload-text" variant="body2">
             {datapackFile ? datapackFile.name : "No file selected"}
           </Typography>
+          {datapackFile && 
+          <IconButton className="icon" onClick={() => setDatapackFile(null)}>
+            <DeleteOutlineIcon className="close-icon"/>
+          </IconButton>
+          }
         </div>
         <TextField
           label="Datapack Name"
+          placeholder="Enter a name for your datapack."
+          InputLabelProps={{ shrink: true }}
           className="datapack-name-input"
           value={datapackName}
           onChange={(event) => setDatapackName(event.target.value)}
@@ -75,9 +95,15 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
                 actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
                 return;
               }
+              if (!datapackName || !datapackDescription) {
+                actions.pushError(ErrorCodes.UNFINISHED_DATAPACK_UPLOAD_FORM);
+                return;
+              }
+              actions.removeError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
+              actions.removeError(ErrorCodes.UNFINISHED_DATAPACK_UPLOAD_FORM);
               actions.uploadDatapack(datapackFile!, "username");
             }}>
-            Upload
+            Finish & Upload
           </TSCButton>
         </div>
       </div>
