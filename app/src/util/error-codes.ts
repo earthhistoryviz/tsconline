@@ -14,7 +14,10 @@ export enum ErrorCodes {
   INVALID_DATAPACK_UPLOAD = "INVALID_DATAPACK_UPLOAD",
   INVALID_USER_DATAPACKS = "INVALID_USER_DATAPACKS",
   NO_DATAPACK_FILE_FOUND = "NO_DATAPACK_FILE_FOUND",
-  DATAPACK_FILE_NAME_TOO_LONG = "DATAPACK_FILE_NAME_TOO_LONG"
+  DATAPACK_FILE_NAME_TOO_LONG = "DATAPACK_FILE_NAME_TOO_LONG",
+  UNRECOGNIZED_DATAPACK_EXTENSION = "UNRECOGNIZED_DATAPACK_EXTENSION",
+  UNRECOGNIZED_DATAPACK_FILE = "UNRECOGNIZED_DATAPACK_FILE",
+  UNFINISHED_DATAPACK_UPLOAD_FORM = "UNFINISHED_DATAPACK_UPLOAD_FORM",
 }
 
 export const ErrorMessages = {
@@ -33,5 +36,8 @@ export const ErrorMessages = {
   [ErrorCodes.INVALID_DATAPACK_UPLOAD]: "Invalid datapack upload.",
   [ErrorCodes.INVALID_USER_DATAPACKS]: "Invalid user datapacks received from server. Please try again later.",
   [ErrorCodes.NO_DATAPACK_FILE_FOUND]: "No datapack file found. Please upload a datapack file first.",
-  [ErrorCodes.DATAPACK_FILE_NAME_TOO_LONG]: "Datapack file name is too long. Please shorten the file name."
+  [ErrorCodes.DATAPACK_FILE_NAME_TOO_LONG]: "Datapack file name is too long. Please shorten the file name.",
+  [ErrorCodes.UNRECOGNIZED_DATAPACK_EXTENSION]: "Unrecognized datapack extension. File must be of type .dpk, .mdpk, .map, .txt. Please upload a valid datapack file.",
+  [ErrorCodes.UNRECOGNIZED_DATAPACK_FILE]: "Unrecognized datapack file. Please upload a valid datapack file.",
+  [ErrorCodes.UNFINISHED_DATAPACK_UPLOAD_FORM]: "Please finish the datapack upload form before attempting to upload the file.",
 };
