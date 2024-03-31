@@ -7,6 +7,7 @@ import {
     useTheme
 } from "@mui/material";
 import "./InfoBox.css"
+import {StyledScrollbar} from "../components";
 
 export const InfoBox = observer(() => {
     const { state } = useContext(context);
@@ -18,14 +19,15 @@ export const InfoBox = observer(() => {
     const info =
         state.settingsTabs.columnSelected === null
             ? ""
-            : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.name;
-    const [open, setOpen] = useState(false);
+            : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.popup;
 
     return (
-        <div>
+        <div className="container">
+            <Typography>Information and References</Typography>
             <Box className="info-box">
-                <Typography>Information and References</Typography>
-                <Typography>test test test test test test test test test test test test</Typography>
+                <StyledScrollbar className="scroll-bar">
+                    <Typography>{info}</Typography>
+                </StyledScrollbar>
             </Box>
         </div>
     );
