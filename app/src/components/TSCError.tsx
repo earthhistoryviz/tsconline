@@ -35,7 +35,7 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ errorContext, messa
       open={true}
       style={{
         marginBottom: `${margin}px`,
-        zIndex: `${1000 - index}`
+        zIndex: `${100000 - index}`
       }}
       anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       TransitionComponent={Fade}>
