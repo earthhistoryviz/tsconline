@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext, useState } from "react";
+import { useContext, useState } from "react";
 import { context } from "../state";
 import { TextFieldProps, Typography, TextField } from "@mui/material";
 import "./EditWidthField.css";
