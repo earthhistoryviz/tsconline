@@ -268,9 +268,7 @@ export function assertColumnBasicInfoTSC(o: any): asserts o is ColumnBasicInfoTS
         throwError("ColumnInfoTSC customColor", "text", "string", o.customColor.standardized);
     }
   } else throw new Error("ColumnInfoTSC must have customColor");
-  if (o.fonts) {
-    assertFontsInfo(o.fonts);
-  } else throw new Error("ColumnInfoTSC must have fonts");
+  assertFontsInfo(o.fonts);
 }
 
 export function assertColumnInfoTSC(o: any): asserts o is ColumnInfoTSC {
