@@ -128,26 +128,30 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async (username: 
   }
 });
 
-export const uploadDatapack = action("uploadDatapack", async (file: File, username: string) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  try {
-    const response = await fetcher(`/upload/${username}`, {
-      method: "POST",
-      body: formData
-    });
-    const data = await response.json();
-    if (response.ok) {
-      console.log("Successfully uploaded datapack");
-      fetchUserDatapacks(username);
-    } else {
-      displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+export const uploadDatapack = action(
+  "uploadDatapack",
+  async (file: File, username: string, name: string, description: string) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const response = await fetcher(`/upload/${username}`, {
+        method: "POST",
+        body: formData
+      });
+      const data = await response.json();
+      if (response.ok) {
+        console.log("Successfully uploaded datapack");
+        fetchUserDatapacks(username);
+        pushSnackbar("Successfully uploaded " + name + " datapack", "success");
+      } else {
+        displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+      }
+    } catch (e) {
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      console.error(e);
     }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
   }
-});
+);
 export const loadIndexResponse = action("loadIndexResponse", (response: IndexResponse) => {
   state.mapPackIndex = response.mapPackIndex;
   state.datapackIndex = response.datapackIndex;
@@ -331,7 +335,7 @@ export const removeCache = action("removeCache", async () => {
   try {
     assertSuccessfulServerResponse(msg);
     console.log(`Server successfully deleted cache with message: ${msg.message}`);
-    pushSnackbar("Cache Successfully Removed", "success");
+    pushSnackbar("Successfully removed cache of recently generated charts", "success");
   } catch (e) {
     displayServerError(e, msg, "Server could not remove cache");
     return;
