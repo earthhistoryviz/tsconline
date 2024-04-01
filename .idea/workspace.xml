@@ -4,23 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="05d8b37b-6461-40eb-8159-d519b49b6f0f" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.yarn/cache/@esbuild-linux-x64-npm-0.20.2-54b0127370-10.zip" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.yarn/cache/@rollup-rollup-linux-x64-gnu-npm-4.13.0-834923f1a9-10.zip" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/SettingsTabs/EditWidthField.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/SettingsTabs/EditWidthField.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/yarn.lock" beforeDir="false" afterPath="$PROJECT_DIR$/yarn.lock" afterDir="false" />
-    </list>
+    <list default="true" id="05d8b37b-6461-40eb-8159-d519b49b6f0f" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;yarn:shared\\package.json:typescript&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "node.js.selected.package.tslint": "(autodetect)",
+    "ts.external.directory.path": "yarn:shared\\package.json:typescript"
   }
-}</component>
+}]]></component>
   <component name="ReactDesignerToolWindowState">
     <option name="myId2Visible">
       <map>
