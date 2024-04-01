@@ -1316,7 +1316,7 @@ function recursive(
     returnValue.maxAge = currentColumnInfo.maxAge;
   }
   if (faciesMap.has(currentColumn)) {
-    const { subFaciesInfo, ...currentFacies } = faciesMap.get(currentColumn)!;
+    const { width, subFaciesInfo, ...currentFacies } = faciesMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentFacies,
       columnDisplayType: "BlockSeriesMetaColumn",
@@ -1325,7 +1325,7 @@ function recursive(
     addFaciesChildren(
       currentColumnInfo.children,
       currentColumnInfo.name,
-      currentColumnInfo.width,
+      width,
       currentColumnInfo.minAge,
       currentColumnInfo.maxAge,
       currentColumnInfo.rgb,
