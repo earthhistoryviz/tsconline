@@ -96,6 +96,14 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
         <div className="file-upload-button">
           <TSCButton
             onClick={() => {
+              setDatapackFile(null);
+              setDatapackName("");
+              setDatapackDescription("");
+            }}>
+            Start Over
+          </TSCButton>
+          <TSCButton
+            onClick={() => {
               if (!datapackFile) {
                 actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
                 return;
