@@ -135,7 +135,7 @@ export const state = observable<State>({
     unitsPerMY: 2,
     mouseOverPopupsEnabled: false,
     datapackContainsSuggAge: false,
-    useDatapackSuggestedAge: false,
+    useDatapackSuggestedAge: true,
     selectedBaseStage: "",
     selectedTopStage: ""
   },

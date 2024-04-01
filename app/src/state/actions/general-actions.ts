@@ -217,7 +217,6 @@ export const setDatapackConfig = action(
         try {
           settingsTSC = xmlToJson(settingsXml);
         } catch (e) {
-          console.log(e);
           //couldn't parse settings
           displayServerError(e, ErrorCodes.INVALID_SETTINGS_RESPONSE, "Error parsing xml settings file");
           return false;
