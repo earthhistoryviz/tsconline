@@ -25,7 +25,7 @@ import { state, State } from "../state";
 import { fetcher } from "../../util";
 import { initializeColumnHashMap } from "./column-actions";
 import { xmlToJson } from "../parse-settings";
-import { displayServerError, displaySnackbar } from "./util-actions";
+import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 
@@ -331,7 +331,7 @@ export const removeCache = action("removeCache", async () => {
   try {
     assertSuccessfulServerResponse(msg);
     console.log(`Server successfully deleted cache with message: ${msg.message}`);
-    displaySnackbar("Cache Successfully Removed", "success");
+    pushSnackbar("Cache Successfully Removed", "success");
   } catch (e) {
     displayServerError(e, msg, "Server could not remove cache");
     return;
@@ -504,25 +504,23 @@ export const pushError = action("pushError", (context: ErrorCodes) => {
 });
 export const removeSnackbar = action("removeSnackbar", (text: string) => {
   state.snackbars = state.snackbars.filter((info) => info.snackbarText !== text);
-  state.openSnackbar = false;
 });
-export const pushSnackbar = action("pushSnackbar", (text: string, severity: string) => {
+export const pushSnackbar = action("pushSnackbar", (text: string, severity: "success" | "info") => {
+  if (text.length > 70) {
+    console.error("The length of snackbar text must be less than 70");
+    return;
+  }
   for (const snackbar of state.snackbars) {
     if (snackbar.snackbarText === text) {
       snackbar.snackbarCount += 1;
       return;
     }
   }
-  if (severity != "success" && severity != "info") {
-    console.log("severity of the snackbar must be either 'success' or 'info'");
-    return;
-  }
   state.snackbars.push({
     snackbarText: text,
     snackbarCount: 1,
     severity: severity
   });
-  state.openSnackbar = true;
 });
 
 export const fetchImage = action("fetchImage", async (datapackName: string, imageName: string) => {
@@ -617,9 +615,7 @@ export const setBaseStageAge = action("setBaseStageAge", (age: number) => {
 export const settingsXML = action("settingsXML", (xml: string) => {
   state.settingsXML = xml;
 });
-/* export const setOpenSnackbar = action("setOpenSnackbar", (show: boolean) => {
-  state.openSnackbar = show;
-}); */
+
 export const setIsFullscreen = action("setIsFullscreen", (newval: boolean) => {
   state.isFullscreen = newval;
 });

@@ -1,9 +1,13 @@
 :root {
   --snackbar-width: 300px;
-  --snackbar-height: 100px;
+  --snackbar-height: 60px;
 }
 
 .snackabr {
   width: var(--snackbar-width);
-  height: var(--snackbar-heightt);
+  height: var(--snackbar-height);
+  align-items: center;
+  font-size: 0.8rem;
+  border-radius: 10px;
+  box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.2);
 }
