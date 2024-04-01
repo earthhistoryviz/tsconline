@@ -47,7 +47,7 @@ export default observer(function App() {
         />
         {state.snackbars.map((info, index) => (
           <TSCSnackbar
-            key={index}
+            key={info.snackbarText}
             text={info.snackbarText}
             count={info.snackbarCount}
             index={index}

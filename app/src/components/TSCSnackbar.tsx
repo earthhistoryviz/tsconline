@@ -14,7 +14,7 @@ type TSCSnackbarProps = {
   severity: "success" | "info";
 };
 export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, count, severity, index }) => {
-  const { actions, state } = useContext(context);
+  const { actions } = useContext(context);
   const theme = useTheme();
   const margin = index < 5 ? index * 10 : 40;
   let countDisplay = "";
@@ -31,10 +31,10 @@ export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, count, 
   }
   return (
     <Snackbar
-      open={state.openSnackbar}
+      open={true}
       style={{
         marginBottom: `${margin}px`,
-        zIndex: `${1000 - index}`
+        zIndex: `${100000 - index}`
       }}
       onClose={handleCloseSnackbar}
       autoHideDuration={5000}
@@ -48,8 +48,8 @@ export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, count, 
         color={severity}
         className="snackabr"
         iconMapping={{
-          success: <Lottie animationData={ChartDoneIcon} speed={0.7} autoplay />,
-          info: <Lottie animationData={InfoIcon} speed={0.7} autoplay />
+          success: <Lottie key={text} animationData={ChartDoneIcon} speed={0.7} autoplay />,
+          info: <Lottie key={text} animationData={InfoIcon} speed={0.7} autoplay />
         }}>
         <Typography>
           {countDisplay} {text}

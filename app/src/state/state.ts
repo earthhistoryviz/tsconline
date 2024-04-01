@@ -66,7 +66,6 @@ export type State = {
   settings: ChartSettings;
   useCache: boolean;
   usePreset: boolean;
-  openSnackbar: boolean;
   errors: {
     errorAlerts: Map<ErrorCodes, ErrorAlert>;
   };
@@ -142,7 +141,6 @@ export const state = observable<State>({
   },
   useCache: true,
   usePreset: true,
-  openSnackbar: false,
   errors: {
     errorAlerts: new Map<ErrorCodes, ErrorAlert>()
   },

@@ -19,11 +19,3 @@ export function displayServerError<T>(response: T | null, context: ErrorCodes, m
     pushError(context);
   }
 }
-
-/**
- * Display snackbar
- * @param message the message to be shown
- */
-export function displaySnackbar(message: string, severity: "success" | "info") {
-  pushSnackbar(message, severity);
-}
