@@ -128,30 +128,27 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async (username: 
   }
 });
 
-export const uploadDatapack = action(
-  "uploadDatapack",
-  async (file: File, username: string, name: string, description: string) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    try {
-      const response = await fetcher(`/upload/${username}`, {
-        method: "POST",
-        body: formData
-      });
-      const data = await response.json();
-      if (response.ok) {
-        console.log("Successfully uploaded datapack");
-        fetchUserDatapacks(username);
-        pushSnackbar("Successfully uploaded " + name + " datapack", "success");
-      } else {
-        displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
-      }
-    } catch (e) {
-      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-      console.error(e);
+export const uploadDatapack = action("uploadDatapack", async (file: File, username: string, name: string) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  try {
+    const response = await fetcher(`/upload/${username}`, {
+      method: "POST",
+      body: formData
+    });
+    const data = await response.json();
+    if (response.ok) {
+      console.log("Successfully uploaded datapack");
+      fetchUserDatapacks(username);
+      pushSnackbar("Successfully uploaded " + name + " datapack", "success");
+    } else {
+      displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
     }
+  } catch (e) {
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
   }
-);
+});
 export const loadIndexResponse = action("loadIndexResponse", (response: IndexResponse) => {
   state.mapPackIndex = response.mapPackIndex;
   state.datapackIndex = response.datapackIndex;
