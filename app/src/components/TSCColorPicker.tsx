@@ -34,11 +34,7 @@ const TSCColorPicker: React.FC = observer(() => {
         style={{ backgroundColor: selectedColor }}></Button>
       {showPicker && (
         <div className="color-picker">
-          <SketchPicker
-            color={selectedColor}
-            onChangeComplete={handleColorChange}
-            presetColors={state.presetColors}
-          />
+          <SketchPicker color={selectedColor} onChangeComplete={handleColorChange} presetColors={state.presetColors} />
         </div>
       )}
     </div>

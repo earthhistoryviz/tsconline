@@ -25,7 +25,7 @@ import FormatItalicIcon from "@mui/icons-material/FormatItalic";
 import CloseIcon from "@mui/icons-material/Close";
 import "./FontMenu.css";
 import { ValidFontOptions } from "@tsconline/shared";
-import "../components/TSCColorPicker"
+import "../components/TSCColorPicker";
 import TSCColorPicker from "../components/TSCColorPicker";
 import { NumericFormat } from "react-number-format";
 const FontSizeTextField = ({ ...props }: TextFieldProps) => (
