@@ -1,19 +1,18 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useTheme } from "@mui/material/styles";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { TSCCheckbox, InputFileUpload } from "../components";
-import { context } from "../state";
+import { TSCCheckbox, TSCDatapackUploadForm, TSCButton } from "../components";
 import Box from "@mui/material/Box";
 import InfoIcon from "@mui/icons-material/Info";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 
 import "./Datapack.css";
+import { Dialog } from "@mui/material";
 
 export const Datapacks = observer(function Datapacks() {
   const theme = useTheme();
-  const { actions } = useContext(context);
+  const [formOpen, setFormOpen] = useState(false);
 
   // dummy datapacks data
   //DatapackParsingPack in shared for the real datapacks
@@ -81,15 +80,16 @@ export const Datapacks = observer(function Datapacks() {
             </tbody>
           </table>
         </Box>
+        <TSCButton
+          onClick={() => {
+            setFormOpen(!formOpen);
+          }}>
+          Upload Datapack
+        </TSCButton>
 
-        <InputFileUpload
-          startIcon={<CloudUploadIcon />}
-          text="Upload Datapack"
-          onChange={(event) => {
-            const file = event.target.files![0];
-            actions.uploadDatapack(file, "username");
-          }}
-        />
+        <Dialog classes={{ paper: "datapack-dialog" }} open={formOpen} onClose={() => setFormOpen(false)}>
+          <TSCDatapackUploadForm close={() => setFormOpen(false)} />
+        </Dialog>
       </div>
     </div>
   );
