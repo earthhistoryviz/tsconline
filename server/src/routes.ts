@@ -346,6 +346,7 @@ export const fetchChart = async function fetchChart(
   //   const datapackInfo = parseDefaultAges(fullPath);
   //   console.log(datapackInfo);
   // });
+
   const cmd =
     `java -Xmx512m -XX:MaxDirectMemorySize=64m -XX:MaxRAM=1g -jar ${assetconfigs.activeJar} ` +
     // Turns off GUI (e.g Suggested Age pop-up (defaults to yes if -a flag is not passed))
