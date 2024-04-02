@@ -46,7 +46,7 @@ export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, count, 
         severity={severity}
         variant="outlined"
         color={severity}
-        className="snackabr"
+        className="snackbar"
         iconMapping={{
           success: <Lottie key={text} animationData={ChartDoneIcon} speed={0.7} autoplay />,
           info: <Lottie key={text} animationData={InfoIcon} speed={0.7} autoplay />
