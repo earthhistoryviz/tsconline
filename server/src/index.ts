@@ -9,7 +9,7 @@ import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/sha
 import fastifyCompress from "@fastify/compress";
 import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
-import { AssetConfig, assertAssetConfig } from "./types.js";
+import { AssetConfig, DatapackDescriptions, assertAssetConfig } from "./types.js";
 import { readFile } from "fs/promises";
 import fastifyMultipart from "@fastify/multipart";
 
@@ -69,6 +69,30 @@ server.register(fastifyMultipart, {
     fileSize: 1024 * 1024 * 60 // 60 mb
   }
 });
+
+export let datapackDescription: DatapackDescriptions;
+try {
+  const desc = JSON.parse((await readFile("assets/description.json")).toString());
+  //assertDatapackDescriptions(desc);
+  datapackDescription = desc;
+} catch (e) {
+  console.log("ERROR: Failed to load datapack descriptions from JSON file. Error was: ", e);
+  process.exit(1);
+}
+
+for (const datapack in datapackIndex) {
+  if (datapackIndex.hasOwnProperty(datapack)) {
+    if (datapackDescription.hasOwnProperty(datapack)) {
+      //datapackIndex[datapack].description = datapackDescription[datapack];
+      console.log("Description set for datapack: ", datapack);
+    } else {
+      console.log(`No description found for datapack: ${datapack}`);
+    }
+  } else {
+    console.log(`No datapack found for: ${datapack}`);
+  }
+} 
+
 
 // Serve the main app from /
 server.register(fastifyStatic, {
