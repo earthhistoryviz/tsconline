@@ -12,7 +12,6 @@ import { useContext } from "react";
 import { context } from "./state";
 import { About } from "./About";
 import { TSCPopupDialog, TSCError, TSCSnackbar } from "./components";
-import "./App.css";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
