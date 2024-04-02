@@ -2,6 +2,10 @@
 
 import { defaultFontsInfoConstant } from "./constants.js";
 
+export * from "./constants.js";
+
+export * from "./settings-types.js";
+
 export type SuccessfulServerResponse = {
   message: string;
 };
@@ -82,59 +86,6 @@ export type ChartConfig = {
 export type Datapack = {
   name: string;
   file: string;
-};
-
-export type ChartInfo = {
-  settings: ChartSettingsInfo;
-  "class datastore.RootColumn:Chart Root": [name: ColumnPrototypeInfo];
-};
-
-export type ChartSettingsInfo = {
-  topAge: {
-    source: string;
-    unit: string;
-    text: number;
-  };
-  baseAge: {
-    source: string;
-    unit: string;
-    text: number;
-  };
-  unitsPerMY: {
-    unit: string;
-    text: number;
-  };
-  skipEmptyColumns: {
-    unit: string;
-    text: boolean;
-  };
-  variableColors: string;
-  noIndentPattern: boolean;
-  negativeChk: boolean;
-  doPopups: boolean;
-  enEventColBG: boolean;
-  enChartLegend: boolean;
-  enPriority: boolean;
-  enHideBlockLable: boolean;
-};
-
-export type ColumnPrototypeInfo = {
-  _id: string;
-  title: string;
-  useNamedColor: boolean;
-  placeHolder: boolean;
-  drawTitle: boolean;
-  drawAgeLabel: boolean;
-  drawUncertaintyLabel: boolean;
-  isSelected: boolean;
-  width: number;
-  pad: number;
-  "age pad": number;
-  backgroundColor: {
-    useNamed: boolean;
-    text: string;
-  };
-  fonts: FontsInfo;
 };
 
 export type FontLabelOptions = {
@@ -976,6 +927,7 @@ export function assertSVGStatus(o: any): asserts o is SVGStatus {
   if (!o || typeof o !== "object") throw new Error(`SVGStatus must be a non-null object`);
   if (typeof o.ready !== "boolean") throw new Error(`SVGStatus must have a 'ready' boolean property`);
 }
+
 /**
  * throws an error `Object '${obj}' must have a '${variable}' ${type} property.\nFound value: ${value}`
  * @param obj
@@ -983,7 +935,7 @@ export function assertSVGStatus(o: any): asserts o is SVGStatus {
  * @param type
  * @param value
  */
-function throwError(obj: string, variable: string, type: string, value: any) {
+export function throwError(obj: string, variable: string, type: string, value: any) {
   throw new Error(`Object '${obj}' must have a '${variable}' ${type} property.\nFound value: ${value}\n`);
 }
 

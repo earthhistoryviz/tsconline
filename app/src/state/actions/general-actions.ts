@@ -18,14 +18,14 @@ import {
   defaultFontsInfo,
   assertIndexResponse,
   assertPresets,
-  assertPatterns
+  assertPatterns,
+  ChartInfoTSC
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { fetcher } from "../../util";
 import { initializeColumnHashMap } from "./column-actions";
 import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
-import { Settings } from "../../types";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 
@@ -186,7 +186,6 @@ export const fetchTimescaleDataAction = action("fetchTimescaleData", async () =>
 export const setDatapackConfig = action(
   "setChart",
   async (datapacks: string[], settingsPath: string): Promise<boolean> => {
-    resetSettings();
     //set the settings tab back to time
     setSettingsTabsSelected(0);
     let datapackAgeInfo: DatapackAgeInfo = {
@@ -196,6 +195,36 @@ export const setDatapackConfig = action(
     let mapHierarchy: MapHierarchy = {};
     let columnInfo: ColumnInfo;
     try {
+      // Grab the settings for this chart if there are any:
+      //TODO: only get default settings file if its a preset
+      if (settingsPath && settingsPath.length > 0) {
+        const res = await fetcher(`/settingsXml/${encodeURIComponent(settingsPath)}`, {
+          method: "GET"
+        });
+        let settingsXml;
+        let settingsTSC: ChartInfoTSC;
+        try {
+          settingsXml = await res.text();
+        } catch (e) {
+          //couldn't get settings from server
+          displayServerError(
+            null,
+            ErrorCodes.INVALID_SETTINGS_RESPONSE,
+            ErrorMessages[ErrorCodes.INVALID_SETTINGS_RESPONSE]
+          );
+          return false;
+        }
+        try {
+          settingsTSC = xmlToJson(settingsXml);
+        } catch (e) {
+          //couldn't parse settings
+          displayServerError(e, ErrorCodes.INVALID_SETTINGS_RESPONSE, "Error parsing xml settings file");
+          return false;
+        }
+        runInAction(() => (state.settingsTSC = settingsTSC)); // Save the parsed JSON to the state.settingsTSC
+      } else {
+        state.settingsTSC = {};
+      }
       // the default overarching variable for the columnInfo
       columnInfo = {
         name: "Root", // if you change this, change parse-datapacks.ts :69
@@ -268,27 +297,7 @@ export const setDatapackConfig = action(
     state.config.datapacks = datapacks;
     state.config.settingsPath = settingsPath;
     initializeColumnHashMap(columnInfo);
-    // Grab the settings for this chart if there are any:
-    if (settingsPath && settingsPath.length > 0) {
-      const res = await fetcher(`/settingsXml/${encodeURIComponent(settingsPath)}`, {
-        method: "GET"
-      });
-      try {
-        const settingsXml = await res.text();
-        console.log("recieved settings Xml string at setDatapackConfig");
-        const settingsJson = xmlToJson(settingsXml);
-        runInAction(() => (state.settingsJSON = settingsJson)); // Save the parsed JSON to the state.settingsJSON
-      } catch (e) {
-        displayServerError(
-          null,
-          ErrorCodes.INVALID_SETTINGS_RESPONSE,
-          ErrorMessages[ErrorCodes.INVALID_SETTINGS_RESPONSE]
-        );
-        return false;
-      }
-    } else {
-      state.settingsJSON = null;
-    }
+    resetSettings();
     return true;
   }
 );
@@ -343,46 +352,18 @@ export const resetState = action("resetState", () => {
   setUsePreset(true);
   setTab(0);
   setSettingsTabsSelected("time");
-  setSettingsColumns(null);
+  setSettingsColumns(undefined);
   setMapInfo({});
   state.settingsTabs.columnSelected = null;
   state.settingsXML = "";
-  state.settingsJSON = {};
+  state.settingsTSC = {};
 });
 
 export const loadPresets = action("loadPresets", (presets: Presets) => {
   state.presets = presets;
   setDatapackConfig([], "");
 });
-//update
-//TODO: need to overhaul
-export const updateSettings = action("updateSettings", () => {
-  const { unitsPerMY } = state.settings;
-  // Validate the user input
-  if (isNaN(unitsPerMY)) {
-    // Handle invalid input, show error message, etc.
-    return;
-  }
-  state.settingsJSON["settingsTabs"] = state.settingsTabs;
-  // const jsonSettings = state.settingsJSON;
-  // if ("settings" in jsonSettings) {
-  //   const settings = jsonSettings.settings as any;
-  //   settings["topAge"]["stage"] = state.settingsTabs.columns[topStageKey];
-  //   settings["baseAge"]["stage"] = state.settingsTabs.columns[baseStageKey];
-  //   settings["unitsPerMY"] = (unitsPerMY * 30).toString();
-  // }
-  // if ("settingsTabs" in jsonSettings) {
-  //   const settingsTabs = jsonSettings as any;
-  // }
-  // uncomment later
-  // const xmlSettings = jsonToXml(jsonSettings); // Convert JSON to XML using jsonToXml function
 
-  //console.log("Updated settingsXML:\n", xmlSettings); // Print the updated XML
-
-  // state.settingsXML = xmlSettings;
-});
-
-//update the checkboxes
 // Define settingOptions globally
 export const settingOptions = [
   { name: "enablePopups", label: "Enable popups", stateName: "doPopups" },
@@ -407,34 +388,6 @@ export const settingOptions = [
     stateName: "skipEmptyColumns"
   }
 ];
-
-// Combined function to update the checkbox settings and individual action functions
-export const updateCheckboxSetting = action((stateName: string, checked: boolean) => {
-  // Check if the stateName is a valid setting option
-  const settingOption = settingOptions.find((option) => option.stateName === stateName);
-  if (!settingOption) return;
-
-  // Update the checkbox setting in state.settings
-  if (
-    state.settings[stateName as keyof Settings] !== undefined &&
-    typeof state.settings[stateName as keyof Settings] === "boolean"
-  ) {
-    // @ts-expect-error: This cannot index by stateName key for some reason so we ignore with error
-    state.settings[`${stateName as keyof Settings}`] = checked;
-  }
-
-  // Update the checkbox setting in jsonSettings['settings'] if available
-  if (state.settingsJSON["settings"]) {
-    const settings = state.settingsJSON["settings"];
-    // Check if the current setting is already equal to the new value
-    if (settings[stateName] !== checked) {
-      settings[stateName] = checked;
-    }
-  }
-
-  // Log the updated setting
-  console.log(`Updated setting "${stateName}" to ${checked}`);
-});
 
 /**
  * set the settings tab based on a string or number
@@ -582,7 +535,7 @@ export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
 export const setTab = action("setTab", (newval: number) => {
   state.tab = newval;
 });
-export const setSettingsColumns = action((temp: ColumnInfo | null) => {
+export const setSettingsColumns = action((temp?: ColumnInfo) => {
   state.settingsTabs.columns = temp;
 });
 export const setUseCache = action((temp: boolean) => {
