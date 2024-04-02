@@ -1,6 +1,5 @@
 import { observer } from "mobx-react-lite";
 import React, { useState } from "react";
-import { makeAutoObservable } from "mobx";
 import { SketchPicker, ColorResult } from "@hello-pangea/color-picker";
 import Button from "@mui/material/Button";
 import "./TSCColorPicker.css";
