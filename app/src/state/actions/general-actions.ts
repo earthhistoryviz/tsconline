@@ -128,7 +128,7 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async (username: 
   }
 });
 
-export const uploadDatapack = action("uploadDatapack", async (file: File, username: string) => {
+export const uploadDatapack = action("uploadDatapack", async (file: File, username: string, name: string) => {
   const formData = new FormData();
   formData.append("file", file);
   try {
@@ -140,6 +140,7 @@ export const uploadDatapack = action("uploadDatapack", async (file: File, userna
     if (response.ok) {
       console.log("Successfully uploaded datapack");
       fetchUserDatapacks(username);
+      pushSnackbar("Successfully uploaded " + name + " datapack", "success");
     } else {
       displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
     }
@@ -331,6 +332,7 @@ export const removeCache = action("removeCache", async () => {
   try {
     assertSuccessfulServerResponse(msg);
     console.log(`Server successfully deleted cache with message: ${msg.message}`);
+    pushSnackbar("Successfully removed cache of recently generated charts", "success");
   } catch (e) {
     displayServerError(e, msg, "Server could not remove cache");
     return;
@@ -486,16 +488,6 @@ async function fetchSVGStatus(): Promise<boolean> {
   return data.ready;
 }
 
-export const handleCloseSnackbar = action(
-  "handleCloseSnackbar",
-  (event: React.SyntheticEvent | Event, reason?: string) => {
-    if (reason === "clickaway") {
-      return;
-    }
-    state.openSnackbar = false;
-  }
-);
-
 export const removeError = action("removeError", (context: ErrorCodes) => {
   state.errors.errorAlerts.delete(context);
 });
@@ -510,6 +502,26 @@ export const pushError = action("pushError", (context: ErrorCodes) => {
     errorCount: 1
   };
   state.errors.errorAlerts.set(context, error);
+});
+export const removeSnackbar = action("removeSnackbar", (text: string) => {
+  state.snackbars = state.snackbars.filter((info) => info.snackbarText !== text);
+});
+export const pushSnackbar = action("pushSnackbar", (text: string, severity: "success" | "info") => {
+  if (text.length > 70) {
+    console.error("The length of snackbar text must be less than 70");
+    return;
+  }
+  for (const snackbar of state.snackbars) {
+    if (snackbar.snackbarText === text) {
+      snackbar.snackbarCount += 1;
+      return;
+    }
+  }
+  state.snackbars.push({
+    snackbarText: text,
+    snackbarCount: 1,
+    severity: severity
+  });
 });
 
 export const fetchImage = action("fetchImage", async (datapackName: string, imageName: string) => {
@@ -604,9 +616,7 @@ export const setBaseStageAge = action("setBaseStageAge", (age: number) => {
 export const settingsXML = action("settingsXML", (xml: string) => {
   state.settingsXML = xml;
 });
-export const setOpenSnackbar = action("setOpenSnackbar", (show: boolean) => {
-  state.openSnackbar = show;
-});
+
 export const setIsFullscreen = action("setIsFullscreen", (newval: boolean) => {
   state.isFullscreen = newval;
 });
