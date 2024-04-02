@@ -8,13 +8,10 @@ import { Chart } from "./Chart";
 import { Help } from "./Help";
 import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
 import theme from "./theme";
-import { Alert, Slide, Snackbar, Typography } from "@mui/material";
 import { useContext } from "react";
 import { context } from "./state";
 import { About } from "./About";
-import { TSCPopupDialog, TSCError, Lottie } from "./components";
-import ChartDoneIcon from "./assets/icons/chart-done.json";
-import "./App.css";
+import { TSCPopupDialog, TSCError, TSCSnackbar } from "./components";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -47,21 +44,15 @@ export default observer(function App() {
           onNo={() => actions.handlePopupResponse(false, navigate)}
           onClose={() => actions.fetchChartFromServer(navigate)}
         />
-        <Snackbar
-          open={state.openSnackbar}
-          autoHideDuration={5000}
-          TransitionComponent={Slide}
-          onClose={actions.handleCloseSnackbar}>
-          <Alert
-            severity="success"
-            variant="filled"
-            className="success-alert"
-            iconMapping={{
-              success: <Lottie animationData={ChartDoneIcon} speed={0.7} autoplay />
-            }}>
-            <Typography>Chart Successfully Generated!</Typography>
-          </Alert>
-        </Snackbar>
+        {state.snackbars.map((info, index) => (
+          <TSCSnackbar
+            key={info.snackbarText}
+            text={info.snackbarText}
+            count={info.snackbarCount}
+            index={index}
+            severity={info.severity}
+          />
+        ))}
       </ThemeProvider>
     </StyledEngineProvider>
   );

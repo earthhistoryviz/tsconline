@@ -1,6 +1,6 @@
 import { observable } from "mobx";
 
-import { ChartSettings, ErrorAlert, FaciesOptions, MapHistory } from "../types";
+import { SnackbarInfo, ChartSettings, ErrorAlert, FaciesOptions, MapHistory } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
   MapHierarchy,
@@ -66,10 +66,10 @@ export type State = {
   settings: ChartSettings;
   useCache: boolean;
   usePreset: boolean;
-  openSnackbar: boolean;
   errors: {
     errorAlerts: Map<ErrorCodes, ErrorAlert>;
   };
+  snackbars: SnackbarInfo[];
 };
 
 export const state = observable<State>({
@@ -141,8 +141,8 @@ export const state = observable<State>({
   },
   useCache: true,
   usePreset: true,
-  openSnackbar: false,
   errors: {
     errorAlerts: new Map<ErrorCodes, ErrorAlert>()
-  }
+  },
+  snackbars: []
 });

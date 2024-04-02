@@ -1,0 +1,24 @@
+:root {
+  --snackbar-width: 300px;
+  --snackbar-height: 60px;
+}
+
+.snackbar {
+  width: var(--snackbar-width);
+  height: var(--snackbar-height);
+  align-items: center;
+  font-size: 0.8rem;
+  border-radius: 10px;
+  box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.2);
+}
+
+.snackbar .MuiAlert-icon {
+  display: flex;
+  align-items: center;
+}
+
+.snackbar .MuiAlert-message {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+}
