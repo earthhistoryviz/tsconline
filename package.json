@@ -1,6 +1,7 @@
 {
   "name": "tsconline-monorepo",
   "dependencies": {
+    "@szhsin/react-menu": "^4.1.0",
     "fastify": "^4.17.0"
   },
   "devDependencies": {
