@@ -9638,6 +9638,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "tsconline-monorepo@workspace:."
   dependencies:
+    "@szhsin/react-menu": "npm:^4.1.0"
     "@types/eslint": "npm:^8"
     "@types/jest": "npm:^29.5.12"
     "@types/node": "npm:^20.11.28"
