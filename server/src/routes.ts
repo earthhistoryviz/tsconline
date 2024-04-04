@@ -22,6 +22,7 @@ import path from "path";
 import pump from "pump";
 import { loadIndexes } from "./load-packs.js";
 import { writeFileMetadata } from "./file-metadata-handler.js";
+import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(
   request: FastifyRequest<{ Params: { username: string } }>,
@@ -38,8 +39,8 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(
     reply.status(404).send({ error: "User does not exist" });
     return;
   }
-  const datapackIndex: DatapackIndex = {};
-  const mapPackIndex: MapPackIndex = {};
+  const datapackIndex: DatapackIndex = JSON.parse(JSON.stringify(serverDatapackindex));
+  const mapPackIndex: MapPackIndex = JSON.parse(JSON.stringify(serverMapPackIndex));
   try {
     if (fs.existsSync(path.join(userDir, "DatapackIndex.json"))) {
       Object.assign(datapackIndex, JSON.parse(fs.readFileSync(path.join(userDir, "DatapackIndex.json")).toString()));

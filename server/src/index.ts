@@ -59,8 +59,8 @@ try {
   process.exit(1);
 }
 
-const datapackIndex: DatapackIndex = {};
-const mapPackIndex: MapPackIndex = {};
+export const datapackIndex: DatapackIndex = {};
+export const mapPackIndex: MapPackIndex = {};
 const patterns = await loadFaciesPatterns();
 await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, assetconfigs.activeDatapacks);
 
