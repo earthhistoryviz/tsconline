@@ -287,7 +287,6 @@ export type Transects = {
   [name: string]: {
     startMapPoint: string;
     endMapPoint: string;
-    on: boolean;
     note?: string;
   };
 };
@@ -533,7 +532,6 @@ export function assertTransects(o: any): asserts o is Transects {
       throw new Error(`Transects key ${key} value of startMapPoint must be a string`);
     if (typeof transect.endMapPoint !== "string")
       throw new Error(`Transects key ${key} value of endMapPoint must be a string`);
-    if (typeof transect.on !== "boolean") throw new Error(`Transects key ${key} value of on must be a boolean`);
     if ("note" in transect && typeof transect.note !== "string")
       throw new Error(`Transects key ${key} value of note must be a string`);
   }
