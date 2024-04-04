@@ -285,7 +285,6 @@ function grabTransects(headerLabels: string[], info: string[]) {
         throw new Error(`Unrecognized component of TRANSECT: ${headerLabels[i]!}`);
     }
   }
-  transect.on = true;
   return { transect, name };
 }
 

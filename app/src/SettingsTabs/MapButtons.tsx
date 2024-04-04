@@ -67,6 +67,9 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
     const theme = useTheme();
     const { state } = useContext(context);
     const column = state.settingsTabs.columnHashMap.get(name);
+    if (!column) {
+      console.log(`Column ${name} not found in columnHashMap`);
+    }
     const clicked = column ? column.on : false;
     // is an info point if given or doesn't exist in hash map
     isInfo = isInfo || !column;
@@ -148,10 +151,12 @@ interface TransectLineProps {
  */
 const TransectLine: React.FC<TransectLineProps> = observer(
   ({ name, startPosition, endPosition, transect, onColor, offColor, container }) => {
-    const [on, setOn] = useState(transect.on);
-    function toggleOn() {
-      setOn(!on);
+    const { state } = useContext(context);
+    const column = state.settingsTabs.columnHashMap.get(name);
+    if (!column) {
+      console.log(`Column ${name} not found in columnHashMap`);
     }
+    const clicked = column ? column.on : false;
     return (
       <MapPointTooltip
         container={container}
@@ -180,8 +185,11 @@ const TransectLine: React.FC<TransectLineProps> = observer(
             y2={`${endPosition.y}%`}
             strokeWidth={9}
             strokeLinecap="round"
-            stroke={on ? onColor : offColor}
-            onClick={toggleOn}
+            stroke={clicked ? onColor : offColor}
+            onClick={() => {
+              if (state.mapState.isFacies) return;
+              actions.toggleSettingsTabColumn(name);
+            }}
           />
         </g>
       </MapPointTooltip>
