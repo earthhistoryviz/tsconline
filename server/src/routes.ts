@@ -21,6 +21,8 @@ import { parseExcelFile } from "./parse-excel-file.js";
 import path from "path";
 import pump from "pump";
 import { loadIndexes } from "./load-packs.js";
+import { writeFileMetadata, loadFileMetadata } from "./file-metadata-handler.js";
+import { assertFileMetadata, assertFileMetadataIndex } from "./types.js";
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(
   request: FastifyRequest<{ Params: { username: string } }>,
@@ -108,6 +110,7 @@ export const uploadDatapack = async function uploadDatapack(
       });
     });
   } catch (e) {
+    console.error(e);
     resetUploadDirectory(filepath, decryptedFilepathDir);
     reply.status(500).send({ error: "Failed to save file with error: " + e });
     return;
@@ -139,6 +142,7 @@ export const uploadDatapack = async function uploadDatapack(
       });
     });
   } catch (e) {
+    console.error(e);
     resetUploadDirectory(filepath, decryptedFilepathDir);
     reply.status(500).send({ error: "Failed to decrypt datapacks with error " + e });
     return;
@@ -157,6 +161,7 @@ export const uploadDatapack = async function uploadDatapack(
       Object.assign(datapackIndex, JSON.parse(data.toString()));
       assertDatapackIndex(datapackIndex);
     } catch (e) {
+      console.error(e);
       resetUploadDirectory(filepath, decryptedFilepathDir);
       reply.status(500).send({ error: "Failed to parse DatapackIndex.json" });
       return;
@@ -169,6 +174,7 @@ export const uploadDatapack = async function uploadDatapack(
       Object.assign(mapPackIndex, JSON.parse(data.toString()));
       assertMapPackIndex(mapPackIndex);
     } catch (e) {
+      console.error(e);
       resetUploadDirectory(filepath, decryptedFilepathDir);
       reply.status(500).send({ error: "Failed to parse MapPackIndex.json" });
       return;
@@ -184,7 +190,25 @@ export const uploadDatapack = async function uploadDatapack(
     await writeFile(datapackIndexFilepath, JSON.stringify(datapackIndex));
     await writeFile(mapPackIndexFilepath, JSON.stringify(mapPackIndex));
   } catch (e) {
+    console.error(e);
     reply.status(500).send({ error: "Failed to save indexes" });
+    resetUploadDirectory(filepath, decryptedFilepathDir);
+    return;
+  }
+  try {
+    const metadata = loadFileMetadata(assetconfigs.fileMetadata);
+    assertFileMetadataIndex(metadata);
+    writeFileMetadata(
+      metadata,
+      assetconfigs.fileMetadata,
+      filepath,
+      decryptedFilepathDir,
+      mapPackIndexFilepath,
+      datapackIndexFilepath
+    );
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Failed to load and write metadata for file" });
     resetUploadDirectory(filepath, decryptedFilepathDir);
     return;
   }
