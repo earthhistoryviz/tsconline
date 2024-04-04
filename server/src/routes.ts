@@ -21,8 +21,7 @@ import { parseExcelFile } from "./parse-excel-file.js";
 import path from "path";
 import pump from "pump";
 import { loadIndexes } from "./load-packs.js";
-import { writeFileMetadata, loadFileMetadata } from "./file-metadata-handler.js";
-import { assertFileMetadata, assertFileMetadataIndex } from "./types.js";
+import { writeFileMetadata } from "./file-metadata-handler.js";
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(
   request: FastifyRequest<{ Params: { username: string } }>,
@@ -196,11 +195,9 @@ export const uploadDatapack = async function uploadDatapack(
     return;
   }
   try {
-    const metadata = loadFileMetadata(assetconfigs.fileMetadata);
-    assertFileMetadataIndex(metadata);
     writeFileMetadata(
-      metadata,
       assetconfigs.fileMetadata,
+      filename,
       filepath,
       decryptedFilepathDir,
       mapPackIndexFilepath,

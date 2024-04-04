@@ -24,6 +24,7 @@ export type FileMetadataIndex = {
 };
 
 export type FileMetadata = {
+  fileName: string;
   uploadedAt: string;
   decryptedFilepath: string;
   mapPackIndexFilepath: string;
@@ -32,6 +33,7 @@ export type FileMetadata = {
 
 export function assertFileMetadata(o: any): asserts o is FileMetadata {
   if (typeof o !== "object" || !o) throw "FileMetadata must be an object";
+  if (typeof o.fileName !== "string") throwError("FileMetadata", "fileName", "string", o.fileName);
   if (typeof o.uploadedAt !== "string") throwError("FileMetadata", "uploadedAt", "string", o.uploadedAt);
   if (typeof o.decryptedFilepath !== "string")
     throwError("FileMetadata", "decryptedFilepath", "string", o.decryptedFilepath);
