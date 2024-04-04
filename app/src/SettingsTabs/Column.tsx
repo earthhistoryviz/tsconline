@@ -89,7 +89,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
           <TSCCheckbox
             checked={details.on}
             onChange={() => {
-              actions.toggleSettingsTabColumn(details.name);
+              actions.toggleSettingsTabColumn(details.editName);
             }}
           />
         );
@@ -207,7 +207,8 @@ export const Column = observer(function Column() {
           </TSCButton>
           {state.settingsTabs.columns && (
             <ColumnAccordion
-              details={state.settingsTabs.columns}
+              //takes in one chart title, change when multiple chart titles are involved
+              details={state.settingsTabs.columns.children[0]}
               expandedAccordions={expandedAccordions}
               accordionClicked={accordionClicked}
             />

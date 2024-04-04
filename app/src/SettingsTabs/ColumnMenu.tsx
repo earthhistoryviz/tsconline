@@ -80,11 +80,7 @@ export const ColumnMenu = observer(() => {
           <Typography>Settings</Typography>
         </div>
       </div>
-      <div
-        id="ColumnMenuContent"
-        className="column-menu-content"
-        //style={{ display: "flex", flexDirection: "column" }}
-      >
+      <div id="ColumnMenuContent" className="column-menu-content">
         {state.settingsTabs.columnSelected && <EditNameField />}
         {state.settingsTabs.columnSelected && <FontMenu />}
       </div>
