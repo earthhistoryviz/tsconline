@@ -89,7 +89,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
           <TSCCheckbox
             checked={details.on}
             onChange={() => {
-              actions.toggleSettingsTabColumn(details.editName);
+              actions.toggleSettingsTabColumn(details.name);
             }}
           />
         );
