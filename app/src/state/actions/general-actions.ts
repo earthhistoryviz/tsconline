@@ -263,8 +263,8 @@ export const setDatapackConfig = action(
       }
       // the default overarching variable for the columnInfo
       columnInfo = {
-        name: "Root", // if you change this, change parse-datapacks.ts :69
-        editName: "Chart Title",
+        name: "Chart Root", // if you change this, change parse-datapacks.ts :69
+        editName: "Chart Root",
         fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
         popup: "",
         on: true,
@@ -279,8 +279,8 @@ export const setDatapackConfig = action(
         maxAge: state.settings.baseStageAge,
         children: [
           {
-            name: "Ma",
-            editName: "Ma",
+            name: "Chart Title",
+            editName: "Chart Title",
             fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
             on: true,
             width: 100,
@@ -291,8 +291,27 @@ export const setDatapackConfig = action(
               b: 255
             },
             popup: "",
-            children: [],
-            parent: "Root", // if you change this, change parse-datapacks.ts :69
+            children: [
+              {
+                name: "Ma",
+                editName: "Ma",
+                fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+                on: true,
+                width: 100,
+                enableTitle: true,
+                rgb: {
+                  r: 255,
+                  g: 255,
+                  b: 255
+                },
+                popup: "",
+                children: [],
+                parent: "Chart Title", // if you change this, change parse-datapacks.ts :69
+                minAge: state.settings.topStageAge, //tbd
+                maxAge: state.settings.baseStageAge //tbd
+              }
+            ],
+            parent: "Chart Root", // if you change this, change parse-datapacks.ts :69
             minAge: state.settings.topStageAge, //tbd
             maxAge: state.settings.baseStageAge //tbd
           }
@@ -307,7 +326,9 @@ export const setDatapackConfig = action(
         const datapackParsingPack = state.datapackIndex[datapack]!;
         // concat the children array of root to the array created in preparsed array
         // we can't do Object.assign here because it will overwrite the array rather than concat it
-        columnInfo.children = columnInfo.children.concat(datapackParsingPack.columnInfoArray);
+        // concat datapack info under chart title column info
+        // todo: create multiple chart titles if creating two different charts in one
+        columnInfo.children[0].children = columnInfo.children[0].children.concat(datapackParsingPack.columnInfoArray);
         // concat datapackAgeInfo objects together
         if (!datapackAgeInfo) datapackAgeInfo = datapackParsingPack.datapackAgeInfo;
         else Object.assign(datapackAgeInfo, datapackParsingPack.datapackAgeInfo);
@@ -332,7 +353,7 @@ export const setDatapackConfig = action(
     state.mapState.mapInfo = mapInfo;
     state.config.datapacks = datapacks;
     state.config.settingsPath = settingsPath;
-    initializeColumnHashMap(columnInfo);
+    initializeColumnHashMap(state.settingsTabs.columns);
     resetSettings();
     if (state.settingsTSC.settings) {
       setChartSettings(state.settingsTSC.settings);
