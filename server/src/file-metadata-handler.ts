@@ -50,28 +50,32 @@ export function writeFileMetadata(
  */
 export async function checkFileMetadata(fileMetadataFilepath: string) {
   console.log("Checking file metadata for sunsetted files");
-  const metadata = loadFileMetadata(fileMetadataFilepath);
-  assertFileMetadataIndex(metadata);
-  const twoWeeksAgo = Date.now() - sunsetInterval;
-  for (const file in metadata) {
-    if (new Date(metadata[file]!.uploadedAt).getTime() < twoWeeksAgo) {
-      console.log("Deleting file: ", file, " for being older than 2 weeks");
-      const datapackIndex = JSON.parse(await readFile(metadata[file]!.datapackIndexFilepath, "utf-8"));
-      assertDatapackIndex(datapackIndex);
-      const mapPackIndex = JSON.parse(await readFile(metadata[file]!.mapPackIndexFilepath, "utf-8"));
-      assertMapPackIndex(mapPackIndex);
-      await rm(metadata[file]!.decryptedFilepath, { recursive: true, force: true });
-      unlink(file, (err) => {
-        if (err) {
-          console.error(`Error deleting file ${file} with error: ${err}`);
-        }
-      });
-      delete datapackIndex[metadata[file]!.fileName];
-      delete mapPackIndex[metadata[file]!.fileName];
-      await writeFile(metadata[file]!.datapackIndexFilepath, JSON.stringify(datapackIndex));
-      await writeFile(metadata[file]!.mapPackIndexFilepath, JSON.stringify(mapPackIndex));
-      delete metadata[file];
+  try {
+    const metadata = loadFileMetadata(fileMetadataFilepath);
+    assertFileMetadataIndex(metadata);
+    const twoWeeksAgo = Date.now() - sunsetInterval;
+    for (const file in metadata) {
+      if (new Date(metadata[file]!.uploadedAt).getTime() < twoWeeksAgo) {
+        console.log("Deleting file: ", file, " for being older than 2 weeks");
+        const datapackIndex = JSON.parse(await readFile(metadata[file]!.datapackIndexFilepath, "utf-8"));
+        assertDatapackIndex(datapackIndex);
+        const mapPackIndex = JSON.parse(await readFile(metadata[file]!.mapPackIndexFilepath, "utf-8"));
+        assertMapPackIndex(mapPackIndex);
+        await rm(metadata[file]!.decryptedFilepath, { recursive: true, force: true });
+        unlink(file, (err) => {
+          if (err) {
+            console.error(`Error deleting file ${file} with error: ${err}`);
+          }
+        });
+        delete datapackIndex[metadata[file]!.fileName];
+        delete mapPackIndex[metadata[file]!.fileName];
+        await writeFile(metadata[file]!.datapackIndexFilepath, JSON.stringify(datapackIndex));
+        await writeFile(metadata[file]!.mapPackIndexFilepath, JSON.stringify(mapPackIndex));
+        delete metadata[file];
+      }
     }
+    await writeFile(fileMetadataFilepath, JSON.stringify(metadata));
+  } catch (e) {
+    console.error("Error checking file metadata for sunsetted files: ", e);
   }
-  await writeFile(fileMetadataFilepath, JSON.stringify(metadata));
 }
