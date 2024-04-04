@@ -258,7 +258,7 @@
                     ]
                 }
                 ],
-                "parent": "Root",
+                "parent": "Chart Title",
                 "minAge": 0,
                 "maxAge": 10,
                 "subFaciesInfo": [
@@ -693,7 +693,7 @@
                 "parent": "Parent 1"
             }
             ],
-            "parent": "Root",
+            "parent": "Chart Title",
             "minAge": 0,
             "maxAge": 433.35,
             "subFaciesInfo": [
