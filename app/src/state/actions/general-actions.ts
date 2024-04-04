@@ -116,8 +116,10 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async (username: 
     try {
       assertIndexResponse(data);
       const { mapPackIndex, datapackIndex } = data;
-      Object.assign(state.mapPackIndex, mapPackIndex);
-      Object.assign(state.datapackIndex, datapackIndex);
+      // Object.assign(state.mapPackIndex, mapPackIndex);
+      // Object.assign(state.datapackIndex, datapackIndex);
+      state.mapPackIndex = mapPackIndex;
+      state.datapackIndex = datapackIndex;
       console.log("User Datapacks loaded");
     } catch (e) {
       displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);

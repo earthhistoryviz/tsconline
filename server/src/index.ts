@@ -12,6 +12,7 @@ import { loadPresets } from "./preset.js";
 import { AssetConfig, assertAssetConfig } from "./types.js";
 import { readFile } from "fs/promises";
 import fastifyMultipart from "@fastify/multipart";
+import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 
 const server = fastify({
   logger: false,
@@ -157,6 +158,9 @@ server.get<{ Params: { datapackName: string; imageName: string } }>(
   routes.fetchImage
 );
 
+setInterval(() => {
+  checkFileMetadata(assetconfigs.fileMetadata);
+}, sunsetInterval);
 // Start the server...
 try {
   await server.listen({

@@ -1,7 +1,9 @@
 import { existsSync, readFileSync, unlink, writeFileSync } from "fs";
-import { readFile, rm } from "fs/promises";
-import { FileMetadata, FileMetadataIndex, assertFileMetadata, assertFileMetadataIndex } from "./types.js";
+import { readFile, rm, writeFile } from "fs/promises";
+import { assertFileMetadataIndex } from "./types.js";
 import { assertDatapackIndex, assertMapPackIndex } from "@tsconline/shared";
+
+export const sunsetInterval = 1000 * 60 * 60 * 24 * 14;
 
 /**
  * load the metadata from the file
@@ -24,6 +26,7 @@ export function loadFileMetadata(destination: string) {
  */
 export function writeFileMetadata(
   fileMetadataFilepath: string,
+  fileName: string,
   filepath: string,
   decryptedFilepath: string,
   mapPackIndexFilepath: string,
@@ -32,6 +35,7 @@ export function writeFileMetadata(
   const metadata = loadFileMetadata(fileMetadataFilepath);
   assertFileMetadataIndex(metadata);
   metadata[filepath] = {
+    fileName,
     uploadedAt: new Date().toISOString(),
     decryptedFilepath,
     mapPackIndexFilepath,
@@ -45,14 +49,16 @@ export function writeFileMetadata(
  * @param destination
  */
 export async function checkFileMetadata(fileMetadataFilepath: string) {
+  console.log("Checking file metadata for sunsetted files");
   const metadata = loadFileMetadata(fileMetadataFilepath);
   assertFileMetadataIndex(metadata);
-  const twoWeeksAgo = Date.now() - 1000 * 60 * 60 * 24 * 14;
+  const twoWeeksAgo = Date.now() - sunsetInterval;
   for (const file in metadata) {
     if (new Date(metadata[file]!.uploadedAt).getTime() < twoWeeksAgo) {
-      const datapackIndex = await readFile(metadata[file]!.datapackIndexFilepath, "utf-8");
+      console.log("Deleting file: ", file, " for being older than 2 weeks");
+      const datapackIndex = JSON.parse(await readFile(metadata[file]!.datapackIndexFilepath, "utf-8"));
       assertDatapackIndex(datapackIndex);
-      const mapPackIndex = await readFile(metadata[file]!.mapPackIndexFilepath, "utf-8");
+      const mapPackIndex = JSON.parse(await readFile(metadata[file]!.mapPackIndexFilepath, "utf-8"));
       assertMapPackIndex(mapPackIndex);
       await rm(metadata[file]!.decryptedFilepath, { recursive: true, force: true });
       unlink(file, (err) => {
@@ -60,10 +66,12 @@ export async function checkFileMetadata(fileMetadataFilepath: string) {
           console.error(`Error deleting file ${file} with error: ${err}`);
         }
       });
-      delete datapackIndex[file];
-      delete mapPackIndex[file];
+      delete datapackIndex[metadata[file]!.fileName];
+      delete mapPackIndex[metadata[file]!.fileName];
+      await writeFile(metadata[file]!.datapackIndexFilepath, JSON.stringify(datapackIndex));
+      await writeFile(metadata[file]!.mapPackIndexFilepath, JSON.stringify(mapPackIndex));
       delete metadata[file];
     }
   }
-  writeFileSync(fileMetadataFilepath, JSON.stringify(metadata));
+  await writeFile(fileMetadataFilepath, JSON.stringify(metadata));
 }
