@@ -680,7 +680,7 @@ describe("processLine tests", () => {
         transects: {
           "TRANSECT 1": {
             startMapPoint: "START",
-            endMapPoint: "END",
+            endMapPoint: "END"
           }
         }
       };
