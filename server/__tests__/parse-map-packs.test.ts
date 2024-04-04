@@ -652,7 +652,6 @@ describe("processLine tests", () => {
           "TRANSECT 1": {
             startMapPoint: "START",
             endMapPoint: "END",
-            on: true,
             note: "NOTE"
           }
         }
@@ -681,8 +680,7 @@ describe("processLine tests", () => {
         transects: {
           "TRANSECT 1": {
             startMapPoint: "START",
-            endMapPoint: "END",
-            on: true
+            endMapPoint: "END"
           }
         }
       };
@@ -715,19 +713,16 @@ describe("processLine tests", () => {
           "TRANSECT 1": {
             startMapPoint: "START",
             endMapPoint: "END",
-            on: true,
             note: "NOTE"
           },
           "TRANSECT 2": {
             startMapPoint: "START",
             endMapPoint: "END",
-            on: true,
             note: "NOTE"
           },
           "TRANSECT 3": {
             startMapPoint: "START",
             endMapPoint: "END",
-            on: true,
             note: "NOTE"
           }
         }

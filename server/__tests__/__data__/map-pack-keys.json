@@ -110,14 +110,12 @@
                     "Transect 1": {
                     "startMapPoint": "Transect 1 StartLoc",
                     "endMapPoint": "Transect 1 EndLoc",
-                    "note": "Transect 1 Info",
-                    "on": true
+                    "note": "Transect 1 Info"
                     },
                     "Transect 2": {
                     "startMapPoint": "Transect 2 StartLoc",
                     "endMapPoint": "Transect 2 EndLoc",
-                    "note": "Transect 2 Info",
-                    "on": true
+                    "note": "Transect 2 Info"
                     }
                 },
                 "infoPoints": {
