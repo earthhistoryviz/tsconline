@@ -21,6 +21,8 @@ import { parseExcelFile } from "./parse-excel-file.js";
 import path from "path";
 import pump from "pump";
 import { loadIndexes } from "./load-packs.js";
+import { writeFileMetadata } from "./file-metadata-handler.js";
+import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(
   request: FastifyRequest<{ Params: { username: string } }>,
@@ -37,8 +39,8 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(
     reply.status(404).send({ error: "User does not exist" });
     return;
   }
-  const datapackIndex: DatapackIndex = {};
-  const mapPackIndex: MapPackIndex = {};
+  const datapackIndex: DatapackIndex = JSON.parse(JSON.stringify(serverDatapackindex));
+  const mapPackIndex: MapPackIndex = JSON.parse(JSON.stringify(serverMapPackIndex));
   try {
     if (fs.existsSync(path.join(userDir, "DatapackIndex.json"))) {
       Object.assign(datapackIndex, JSON.parse(fs.readFileSync(path.join(userDir, "DatapackIndex.json")).toString()));
@@ -108,6 +110,7 @@ export const uploadDatapack = async function uploadDatapack(
       });
     });
   } catch (e) {
+    console.error(e);
     resetUploadDirectory(filepath, decryptedFilepathDir);
     reply.status(500).send({ error: "Failed to save file with error: " + e });
     return;
@@ -122,9 +125,9 @@ export const uploadDatapack = async function uploadDatapack(
       const cmd =
         `java -jar ${assetconfigs.decryptionJar} ` +
         // Decrypting these datapacks:
-        `-d "${filepath}" ` +
+        `-d "${filepath.replaceAll("\\", "/")}" ` +
         // Tell it where to send the datapacks
-        `-dest ${decryptDir} `;
+        `-dest ${decryptDir.replaceAll("\\", "/")} `;
       console.log("Calling Java decrypt.jar: ", cmd);
       exec(cmd, function (error, stdout, stderror) {
         console.log("Java decrypt.jar finished, sending reply to browser");
@@ -139,6 +142,7 @@ export const uploadDatapack = async function uploadDatapack(
       });
     });
   } catch (e) {
+    console.error(e);
     resetUploadDirectory(filepath, decryptedFilepathDir);
     reply.status(500).send({ error: "Failed to decrypt datapacks with error " + e });
     return;
@@ -157,6 +161,7 @@ export const uploadDatapack = async function uploadDatapack(
       Object.assign(datapackIndex, JSON.parse(data.toString()));
       assertDatapackIndex(datapackIndex);
     } catch (e) {
+      console.error(e);
       resetUploadDirectory(filepath, decryptedFilepathDir);
       reply.status(500).send({ error: "Failed to parse DatapackIndex.json" });
       return;
@@ -169,12 +174,13 @@ export const uploadDatapack = async function uploadDatapack(
       Object.assign(mapPackIndex, JSON.parse(data.toString()));
       assertMapPackIndex(mapPackIndex);
     } catch (e) {
+      console.error(e);
       resetUploadDirectory(filepath, decryptedFilepathDir);
       reply.status(500).send({ error: "Failed to parse MapPackIndex.json" });
       return;
     }
   }
-  await loadIndexes(datapackIndex, mapPackIndex, decryptDir, [filename]);
+  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [filename]);
   if (!datapackIndex[filename]) {
     resetUploadDirectory(filepath, decryptedFilepathDir);
     reply.status(500).send({ error: "Failed to load decrypted datapack" });
@@ -184,7 +190,23 @@ export const uploadDatapack = async function uploadDatapack(
     await writeFile(datapackIndexFilepath, JSON.stringify(datapackIndex));
     await writeFile(mapPackIndexFilepath, JSON.stringify(mapPackIndex));
   } catch (e) {
+    console.error(e);
     reply.status(500).send({ error: "Failed to save indexes" });
+    resetUploadDirectory(filepath, decryptedFilepathDir);
+    return;
+  }
+  try {
+    await writeFileMetadata(
+      assetconfigs.fileMetadata,
+      filename,
+      filepath,
+      decryptedFilepathDir,
+      mapPackIndexFilepath,
+      datapackIndexFilepath
+    );
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Failed to load and write metadata for file" });
     resetUploadDirectory(filepath, decryptedFilepathDir);
     return;
   }
