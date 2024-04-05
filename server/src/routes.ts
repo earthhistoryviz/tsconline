@@ -196,7 +196,7 @@ export const uploadDatapack = async function uploadDatapack(
     return;
   }
   try {
-    writeFileMetadata(
+    await writeFileMetadata(
       assetconfigs.fileMetadata,
       filename,
       filepath,

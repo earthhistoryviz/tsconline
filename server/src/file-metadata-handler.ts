@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, unlink, writeFileSync } from "fs";
+import { existsSync } from "fs";
 import { readFile, rm, writeFile } from "fs/promises";
 import { assertFileMetadataIndex } from "./types.js";
 import { assertDatapackIndex, assertMapPackIndex } from "@tsconline/shared";
@@ -10,11 +10,11 @@ export const sunsetInterval = 1000 * 60 * 60 * 24 * 14;
  * @param destination
  * @returns
  */
-export function loadFileMetadata(destination: string) {
+export async function loadFileMetadata(destination: string) {
   if (!existsSync(destination)) {
-    writeFileSync(destination, "{}");
+    await writeFile(destination, "{}");
   }
-  const metadata = readFileSync(destination, "utf-8");
+  const metadata = await readFile(destination, "utf-8");
   return JSON.parse(metadata);
 }
 
@@ -24,7 +24,7 @@ export function loadFileMetadata(destination: string) {
  * @param filepath
  * @param destination
  */
-export function writeFileMetadata(
+export async function writeFileMetadata(
   fileMetadataFilepath: string,
   fileName: string,
   filepath: string,
@@ -41,7 +41,7 @@ export function writeFileMetadata(
     mapPackIndexFilepath,
     datapackIndexFilepath
   };
-  writeFileSync(fileMetadataFilepath, JSON.stringify(metadata));
+  await writeFile(fileMetadataFilepath, JSON.stringify(metadata));
 }
 
 /**
@@ -62,11 +62,7 @@ export async function checkFileMetadata(fileMetadataFilepath: string) {
         const mapPackIndex = JSON.parse(await readFile(metadata[file]!.mapPackIndexFilepath, "utf-8"));
         assertMapPackIndex(mapPackIndex);
         await rm(metadata[file]!.decryptedFilepath, { recursive: true, force: true });
-        unlink(file, (err) => {
-          if (err) {
-            console.error(`Error deleting file ${file} with error: ${err}`);
-          }
-        });
+        await rm(file, { force: true });
         delete datapackIndex[metadata[file]!.fileName];
         delete mapPackIndex[metadata[file]!.fileName];
         await writeFile(metadata[file]!.datapackIndexFilepath, JSON.stringify(datapackIndex));
