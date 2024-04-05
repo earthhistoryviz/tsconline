@@ -132,6 +132,7 @@ export async function parseDatapacks(files: string[], decryptFilePath: string): 
   const transectMap: Map<string, Transect> = new Map();
   const freehandMap: Map<string, Freehand> = new Map();
   const blankMap: Map<string, ColumnHeaderProps> = new Map();
+  const description = ""; //TODO: add description
   try {
     for (const decryptPath of decryptPaths) {
       //get the facies/blocks first
@@ -184,9 +185,9 @@ export async function parseDatapacks(files: string[], decryptFilePath: string): 
       throw new Error(`No columns found for path ${decryptPaths}`);
   } catch (e) {
     console.log("ERROR: failed to read columns for path " + decryptPaths + ". ", e);
-    return { columnInfoArray: [], datapackAgeInfo: { datapackContainsSuggAge: false } };
+    return { columnInfoArray: [], datapackAgeInfo: { datapackContainsSuggAge: false }, description: "" };
   }
-  return { columnInfoArray, datapackAgeInfo };
+  return { columnInfoArray, datapackAgeInfo, description};
 }
 /**
  * This will populate a mapping of all parents : childen[]

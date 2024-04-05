@@ -52,7 +52,7 @@ export const Datapacks = observer(function Datapacks() {
                   </td>
                   <td className="info-cell">
                     <div>
-                      <Tooltip title="Description" arrow placement="right">
+                      <Tooltip title={state.datapackIndex[datapack]?.description??"Description unavailable" } arrow placement="right">
                         <InfoIcon className="info-icon" />
                       </Tooltip>
                     </div>

@@ -18,17 +18,20 @@ export type Colors = {
 };
 
 export type DatapackDescriptions = {
+  [datapack: string]: {
   name: string;
   file: string;
   description: string;
+  }[];
 };
 
 export function assertDatapackDescriptions(o: any): asserts o is DatapackDescriptions {
   if (typeof o !== "object" || !o) throw "DatapackDescriptions must be an object";
-  for (const description in o) {
-    if (typeof o.name !== "string") throw 'Datapack descriptions must have a "datapack" key that is a string';
-    if (typeof o.file !== "string") throw 'Datapack descriptions must have a "file" key that is a string';
-    if (typeof o.description !== "string") throw 'Datapack descriptions must have a "description" key that is a string';
+  for (const key in o) {
+    const desc = o[key];
+    if (typeof desc.name !== "string") throw 'Datapack descriptions must have a "datapack" key that is a string';
+    if (typeof desc.file !== "string") throw 'Datapack descriptions must have a "file" key that is a string';
+    if (typeof desc.description !== "string") throw 'Datapack descriptions must have a "description" key that is a string';
   }
 }
 

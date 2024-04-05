@@ -15,6 +15,7 @@ export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 export type DatapackParsingPack = {
   columnInfoArray: ColumnInfo[];
   datapackAgeInfo: DatapackAgeInfo;
+  description: string;
 };
 
 export type IndexResponse = {
