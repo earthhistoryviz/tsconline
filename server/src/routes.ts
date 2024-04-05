@@ -23,6 +23,10 @@ import pump from "pump";
 import { loadIndexes } from "./load-packs.js";
 import { writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
+import { randomUUID } from "crypto";
+import dotenv from "dotenv";
+import { getDb, UserRow } from "./database.js";
+import { genSalt, hash, compare } from "bcrypt-ts";
 import { glob } from "glob";
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(
@@ -279,6 +283,110 @@ export const fetchSVGStatus = async function (
 
   console.log("reply: ", { ready: isSVGReady });
   reply.send({ ready: isSVGReady });
+};
+
+export const signup = async function signup(
+  request: FastifyRequest<{ Body: { username: string; password: string } }>,
+  reply: FastifyReply
+) {
+  const { username, password } = request.body;
+  const db = getDb();
+  const rows = db.prepare(`SELECT * FROM users WHERE username = ?`).all(username);
+  if (rows) {
+    for (const row of rows) {
+      const hashedPassword = (row as UserRow)['hashed_password'];
+      if (hashedPassword) {
+        const result = await compare(password, hashedPassword);
+        if (result) {
+          reply.status(409).send({ message: "It looks like you already have an account. Please log in instead" });
+        }
+      }
+    }
+  }
+  const salt = await genSalt();
+  const hashedPassword = await hash(password, salt);
+  try {
+    db.prepare(`INSERT INTO users (username, email, hashed_password, google_id, uuid) VALUES (?, ?, ?, ?, ?)`).run(username, null, hashedPassword, null, randomUUID());
+  } catch (e) {
+    console.error("Error during signup:", e);
+    reply.status(500).send({ message: "Failed to create user" });
+    return;
+  }
+  reply.status(200).send({ message: "User created" });
+}
+
+export const login = async function login(
+  request: FastifyRequest<{ Body: { username: string; password: string } }>,
+  reply: FastifyReply
+) {
+  const { username, password } = request.body;
+  const db = getDb();
+  const rows = db.prepare(`SELECT * FROM users WHERE username = ?`).all(username);
+  if (!rows) {
+    reply.status(401).send({ message: "Login failed" });
+    return;
+  }
+  if (rows) {
+    for (const row of rows) {
+      const hashedPassword = (row as UserRow)['hashed_password'];
+      if (hashedPassword) {
+        const result = await compare(password, hashedPassword);
+        if (result) {
+          reply.status(200).send({ uuid: (row as UserRow)['uuid'] });
+          return;
+        }
+      }
+    }
+  }
+  reply.status(401).send({ message: "Login failed" });
+};
+
+export const googleLogin = async function login(
+  request: FastifyRequest<{ Querystring: { code: string; scope: string; authuser: string; prompt: string } }>,
+  reply: FastifyReply
+) {
+  //code contains authorization code, exchange it for access token
+  const { code } = request.query;
+  dotenv.config();
+  try {
+    const data = {
+      client_id: "1080920977375-djjnsjd5dpj4eopgfadkt9keukc57m8b.apps.googleusercontent.com",
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      code: code,
+      redirect_uri: "http://localhost:3000/googleLogin",
+      grant_type: "authorization_code"
+    };
+    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    });
+    const tokenData = await tokenResponse.json();
+    if (tokenData.error) {
+      throw new Error(tokenData.error);
+    }
+    const accessToken = tokenData.access_token;
+    const userDataResponse = await fetch("https://www.googleapis.com/oauth2/v1/userinfo?alt=json", {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    const userData = await userDataResponse.json();
+
+    const db = getDb();
+    const row = db.prepare(`SELECT * FROM users WHERE google_id = ?`).get(userData.id);
+    let uuid = "";
+    if (!row) {
+      uuid = randomUUID();
+      db.prepare(`INSERT INTO users (username, email, hashed_password, google_id, uuid) VALUES (?, ?, ?, ?, ?)`).run(null, userData.email, null, userData.id, uuid);
+    } else {
+      uuid = (row as UserRow)['uuid'];
+    }
+    reply.status(303).redirect("http://localhost:5173/login?uuid=" + uuid);
+  } catch (error) {
+    console.error("Error during login:", error);
+    reply.status(500).send({ message: "Login failed" });
+  }
 };
 
 /**

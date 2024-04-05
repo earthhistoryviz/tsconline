@@ -1,0 +1,33 @@
+import BetterSqlite3 from "better-sqlite3";
+import fs from "fs";
+
+export interface UserRow {
+  id: number;
+  username: string | null;
+  email: string;
+  hashed_password: string | null;
+  google_id: string | null;
+  uuid: string;
+}
+
+if (!fs.existsSync("../server/db")) {
+  fs.mkdirSync("../server/db");
+}
+
+let db: BetterSqlite3.Database | null = null;
+
+export const getDb = (): BetterSqlite3.Database => {
+  if (db) return db;
+  db = new BetterSqlite3("../server/db/TSC.db");
+  db.exec(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT,
+    email TEXT UNIQUE,
+    hashed_password TEXT UNIQUE,
+    google_id TEXT UNIQUE,
+    uuid VARCHAR(36) NOT NULL UNIQUE
+  );`);
+
+  process.on('exit', () => db?.close());
+  return db;
+};
