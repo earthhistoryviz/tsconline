@@ -389,12 +389,10 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo,
           }
         }
         if (!useEditWidth) {
-          xml += `${indent}<setting name="width">${replaceSpecialChars(jsonColumn[key], 1)}</setting>\n`;
+          xml += `${indent}<setting name="width">${presetColumn[key]}</setting>\n`;
         }
-      } else if (key === "justification") {
-        xml += `${indent}<setting justification="${jsonColumn[key]}" name="${xmlKey}"/>\n`;
       } else if (key === "orientation") {
-        xml += `${indent}<setting name="${xmlKey}" orientation="${jsonColumn[key]}"/>\n`;
+        xml += `${indent}<setting name="${xmlKey}" orientation="${presetColumn[key as keyof ColumnInfoTSC]}"/>\n`;
       } else if (key === "isSelected") {
         //TODO: remove later when event columns are covered
         if (presetColumn._id.includes("EventColumn")) {
