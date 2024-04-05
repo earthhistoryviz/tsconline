@@ -13,6 +13,7 @@ import { AssetConfig, assertAssetConfig } from "./types.js";
 import { readFile } from "fs/promises";
 import fastifyMultipart from "@fastify/multipart";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
+import { getDb } from "./database.js";
 
 const server = fastify({
   logger: false,
@@ -144,6 +145,12 @@ server.get("/facies-patterns", (_request, reply) => {
 
 server.get("/user-datapacks/:username", routes.fetchUserDatapacks);
 
+server.get("/googleLogin", routes.googleLogin);
+
+server.post("/login", routes.login);
+
+server.post("/signup", routes.signup);
+
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
 server.post<{ Params: { usecache: string; useSuggestedAge: string; username: string } }>(
@@ -164,6 +171,7 @@ setInterval(() => {
 }, sunsetInterval);
 // Start the server...
 try {
+  await getDb();
   await server.listen({
     host: "0.0.0.0", // for this to work in Docker, you need 0.0.0.0
     port: +(process.env.port || 3000)
