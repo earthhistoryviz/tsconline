@@ -125,9 +125,9 @@ export const uploadDatapack = async function uploadDatapack(
       const cmd =
         `java -jar ${assetconfigs.decryptionJar} ` +
         // Decrypting these datapacks:
-        `-d "${filepath}" ` +
+        `-d "${filepath.replaceAll("\\", "/")}" ` +
         // Tell it where to send the datapacks
-        `-dest ${decryptDir} `;
+        `-dest ${decryptDir.replaceAll("\\", "/")} `;
       console.log("Calling Java decrypt.jar: ", cmd);
       exec(cmd, function (error, stdout, stderror) {
         console.log("Java decrypt.jar finished, sending reply to browser");
@@ -180,7 +180,7 @@ export const uploadDatapack = async function uploadDatapack(
       return;
     }
   }
-  await loadIndexes(datapackIndex, mapPackIndex, decryptDir, [filename]);
+  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [filename]);
   if (!datapackIndex[filename]) {
     resetUploadDirectory(filepath, decryptedFilepathDir);
     reply.status(500).send({ error: "Failed to load decrypted datapack" });

@@ -32,7 +32,7 @@ export async function writeFileMetadata(
   mapPackIndexFilepath: string,
   datapackIndexFilepath: string
 ) {
-  const metadata = loadFileMetadata(fileMetadataFilepath);
+  const metadata = await loadFileMetadata(fileMetadataFilepath);
   assertFileMetadataIndex(metadata);
   metadata[filepath] = {
     fileName,
@@ -51,7 +51,7 @@ export async function writeFileMetadata(
 export async function checkFileMetadata(fileMetadataFilepath: string) {
   console.log("Checking file metadata for sunsetted files");
   try {
-    const metadata = loadFileMetadata(fileMetadataFilepath);
+    const metadata = await loadFileMetadata(fileMetadataFilepath);
     assertFileMetadataIndex(metadata);
     const twoWeeksAgo = Date.now() - sunsetInterval;
     for (const file in metadata) {
