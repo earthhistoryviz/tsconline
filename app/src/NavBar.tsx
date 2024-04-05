@@ -58,6 +58,7 @@ export const NavBar = observer(function Navbar() {
             <Tab value={2} label="Settings" to="/settings" component={Link} />
             <Tab value={3} label="Help" to="/help" component={Link} />
             <Tab value={4} label="About" to="/about" component={Link} />
+            <Tab value={5} label="Login" to="/login" component={Link} />
           </TSCTabs>
         }
         <div style={{ flexGrow: 1 }} />
