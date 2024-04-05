@@ -205,14 +205,15 @@ export const Column = observer(function Column() {
             }}>
             collapse All
           </TSCButton>
-          {state.settingsTabs.columns && (
-            <ColumnAccordion
-              //takes in one chart title, change when multiple chart titles are involved
-              details={state.settingsTabs.columns.children[0]}
-              expandedAccordions={expandedAccordions}
-              accordionClicked={accordionClicked}
-            />
-          )}
+          {state.settingsTabs.columns &&
+            Object.entries(state.settingsTabs.columns.children).map(([childName, childDetails]) => (
+              <ColumnAccordion
+                key={childName}
+                details={childDetails}
+                expandedAccordions={expandedAccordions}
+                accordionClicked={accordionClicked}
+              />
+            ))}
         </Box>
         <ColumnMenu />
       </div>
