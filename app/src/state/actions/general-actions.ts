@@ -689,6 +689,9 @@ export const fetchImage = action("fetchImage", async (datapackName: string, imag
   return image;
 });
 
+export const requestDownload = action((needEncryption: boolean) => {
+
+});
 export const logout = action("logout", async () => {
   try {
     const response = await fetcher("/auth/logout", {
@@ -730,6 +733,7 @@ export const sessionCheck = action("sessionCheck", async () => {
 export const setIsLoggedIn = action("setIsLoggedIn", (newval: boolean) => {
   state.isLoggedIn = newval;
 });
+
 export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
   state.settings.useDatapackSuggestedAge = isChecked;
 });

@@ -138,7 +138,7 @@ server.get("/presets", async (_request, reply) => {
   reply.send(presets);
 });
 // uploads datapack
-server.post("/upload", routes.uploadDatapack);
+server.post<{ Params: { username: string } }>("/upload/:username", routes.uploadDatapack);
 
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", routes.fetchSettingsXml);

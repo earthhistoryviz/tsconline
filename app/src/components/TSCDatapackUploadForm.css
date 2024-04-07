@@ -5,36 +5,44 @@
   justify-content: center;
   margin: 20px;
 }
+
 .MuiTypography-root.upload-datapack-header {
   font-size: 30px;
   font-weight: 900;
   margin-bottom: 20px;
   align-self: center;
 }
+
 .MuiTextField-root.datapack-name-input {
   margin-bottom: 20px;
   margin-top: 20px;
 }
+
 .MuiTextField-root.datapack-description-input {
   margin-bottom: 20px;
 }
+
 .MuiInputBase-input.datapack-description-input-text {
   width: 50vw;
 }
-.MuiTextField-root.datapack-name-input > .MuiInputLabel-root,
-.MuiTextField-root.datapack-description-input > .MuiInputLabel-root {
+
+.MuiTextField-root.datapack-name-input>.MuiInputLabel-root,
+.MuiTextField-root.datapack-description-input>.MuiInputLabel-root {
   color: gray;
 }
+
 .close-upload-form {
   position: absolute;
   left: calc(100% - 40px);
   top: 5px;
   display: flex;
 }
+
 .MuiIconButton-root.icon {
   width: 35px;
   height: 35px;
 }
+
 .MuiSvgIcon-root.close-icon {
   border-radius: 50%;
   object-fit: contain;
@@ -42,6 +50,7 @@
   margin: 0;
   z-index: 1;
 }
+
 .file-upload,
 .file-upload-button {
   margin: 10px;
@@ -54,4 +63,11 @@
 
 .file-upload {
   margin-top: 30px;
+}
+
+.encrypt-file {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: left;
 }
