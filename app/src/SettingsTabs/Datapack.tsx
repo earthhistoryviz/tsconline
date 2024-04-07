@@ -7,9 +7,12 @@ import Box from "@mui/material/Box";
 import InfoIcon from "@mui/icons-material/Info";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-
+import DownloadIcon from '@mui/icons-material/Download';
+import { Menu, MenuItem } from '@szhsin/react-menu';
 import "./Datapack.css";
 import { Dialog } from "@mui/material";
+import { action } from "mobx";
+
 
 export const Datapacks = observer(function Datapacks() {
   const theme = useTheme();
@@ -26,6 +29,16 @@ export const Datapacks = observer(function Datapacks() {
       actions.setDatapackConfig([...state.config.datapacks, name], "");
     }
   };
+
+  function handleDownload(needEncryption: boolean) {
+    if (needEncryption) {
+      console.log("encrypted download");
+      actions.requestDownload(true);
+    } else {
+      console.log("download");
+      actions.requestDownload(false);
+    }
+  }
 
   return (
     <div style={{ background: theme.palette.settings.light }}>
@@ -48,6 +61,15 @@ export const Datapacks = observer(function Datapacks() {
                   <td>
                     <div className="name-cell">
                       <Typography>{datapack}</Typography>
+                    </div>
+                  </td>
+                  <td className="download-cell" >
+                    <div>
+                      <Menu menuButton={<DownloadIcon className="download-icon" />} transition>
+                        <MenuItem onClick={(e) => handleDownload(true)}><Typography>encrypted download</Typography></MenuItem>
+                        <MenuItem onClick={(e) => handleDownload(false)}><Typography>download</Typography></MenuItem>
+                      </Menu>
+
                     </div>
                   </td>
                   <td className="info-cell">

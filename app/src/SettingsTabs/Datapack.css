@@ -29,7 +29,8 @@
   margin: 0 auto;
   margin-top: 20px;
   margin-bottom: 20px;
-  width: 85%; /*this fixed the window scaling issue, changed from 100 */
+  width: 85%;
+  /*this fixed the window scaling issue, changed from 100 */
   overflow-x: hidden;
 }
 
@@ -53,4 +54,8 @@
 
 .upload-button {
   margin-top: 20px;
+}
+
+.download-icon {
+  margin-top: 4px;
 }
