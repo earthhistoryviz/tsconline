@@ -5,13 +5,14 @@ import { observer } from "mobx-react-lite";
 import { Lottie } from "../components";
 import ChartDoneIcon from "../assets/icons/chart-done.json";
 import InfoIcon from "../assets/icons/info-icon.json";
+import WarningIcon from "../assets/icons/warning-icon.json";
 import "./TSCSnackbar.css";
 
 type TSCSnackbarProps = {
   text: string;
   count: number;
   index: number;
-  severity: "success" | "info";
+  severity: "success" | "info" | "warning";
 };
 export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, count, severity, index }) => {
   const { actions } = useContext(context);
@@ -23,7 +24,7 @@ export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, count, 
   } else if (count >= 1000) {
     countDisplay = "(999+)";
   }
-  const bgColor = severity === "info" ? theme.palette.snackbarAlert.light : theme.palette.snackbarAlert.main;
+  const bgColor = severity === "info" ? theme.palette.snackbarAlert.light : severity === "success" ? theme.palette.snackbarAlert.main : theme.palette.warningAlert.main;
   function handleCloseSnackbar(_event: React.SyntheticEvent | Event, reason?: string) {
     if (reason === "clickaway") return;
 
@@ -49,7 +50,8 @@ export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, count, 
         className="snackbar"
         iconMapping={{
           success: <Lottie key={text} animationData={ChartDoneIcon} speed={0.7} autoplay />,
-          info: <Lottie key={text} animationData={InfoIcon} speed={0.7} autoplay />
+          info: <Lottie key={text} animationData={InfoIcon} speed={0.7} autoplay />,
+          warning: <Lottie key={text} animationData={WarningIcon} speed={0.7} autoplay />
         }}>
         <Typography>
           {countDisplay} {text}

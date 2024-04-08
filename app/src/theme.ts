@@ -21,6 +21,7 @@ declare module "@mui/material/styles" {
     errorAlert: Palette["primary"];
     errorText: Palette["primary"];
     snackbarAlert: Palette["primary"];
+    warningAlert: Palette["primary"];
   }
 
   interface PaletteOptions {
@@ -43,6 +44,7 @@ declare module "@mui/material/styles" {
     errorAlert?: PaletteOptions["primary"];
     errorText?: PaletteOptions["primary"];
     snackbarAlert?: PaletteOptions["primary"];
+    warningAlert?: PaletteOptions["primary"];
   }
   interface Theme {
     gradients: {
@@ -125,6 +127,9 @@ let theme = createTheme({
     snackbarAlert: {
       main: "#D5F5E3",
       light: "#D6EEF8"
+    },
+    warningAlert: {
+      main: "#fffdc2"
     }
   },
   typography: {

@@ -1,6 +1,6 @@
 import { observable } from "mobx";
 
-import { SnackbarInfo, ChartSettings, ErrorAlert, FaciesOptions, MapHistory } from "../types";
+import { SnackbarInfo, ChartSettings, ErrorAlert, FaciesOptions, MapHistory, Config } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
   MapHierarchy,
@@ -47,10 +47,8 @@ export type State = {
     };
     mapHistory: MapHistory;
   };
-  config: {
-    datapacks: string[]; // the datapacks used on the server
-    settingsPath: string; // the path to the settings file on the server
-  };
+  config: Config;
+  prevConfig: Config;
   presets: Presets;
   datapackIndex: DatapackIndex;
   mapPackIndex: MapPackIndex;
@@ -64,6 +62,7 @@ export type State = {
   settingsXML: string;
   settingsTSC: ChartInfoTSC;
   settings: ChartSettings;
+  prevSettings: ChartSettings;
   useCache: boolean;
   usePreset: boolean;
   errors: {
@@ -114,6 +113,10 @@ export const state = observable<State>({
     datapacks: [],
     settingsPath: ""
   },
+  prevConfig: {
+    datapacks: [],
+    settingsPath: ""
+  },
   presets: {},
   datapackIndex: {},
   mapPackIndex: {},
@@ -127,6 +130,19 @@ export const state = observable<State>({
   settingsXML: "",
   settingsTSC: {},
   settings: {
+    selectedStage: "",
+    topStageAge: 0,
+    topStageKey: "",
+    baseStageAge: 0,
+    baseStageKey: "",
+    unitsPerMY: 2,
+    mouseOverPopupsEnabled: false,
+    datapackContainsSuggAge: false,
+    useDatapackSuggestedAge: true,
+    selectedBaseStage: "",
+    selectedTopStage: ""
+  },
+  prevSettings: {
     selectedStage: "",
     topStageAge: 0,
     topStageKey: "",
