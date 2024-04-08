@@ -184,13 +184,6 @@ export const Column = observer(function Column() {
 
   return (
     <div className="column-top-level">
-      <TSCButton
-        id="column-generate-button-top"
-        onClick={() => {
-          actions.fetchChartFromServer(navigate);
-        }}>
-        Generate
-      </TSCButton>
       <div className="column-accordion-and-menu">
         <Box
           className="hide-scrollbar column-accordion-wrapper"
@@ -201,14 +194,14 @@ export const Column = observer(function Column() {
             padding: "10px"
           }}>
           <TSCButton
-            id="column-generate-button-top"
+            id="column-expand-buttons"
             onClick={() => {
               expandAll();
             }}>
             Expand All
           </TSCButton>
           <TSCButton
-            id="column-generate-button-top"
+            id="column-expand-buttons"
             onClick={() => {
               collapseAll();
             }}>
