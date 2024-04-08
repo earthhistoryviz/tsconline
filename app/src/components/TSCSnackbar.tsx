@@ -24,7 +24,12 @@ export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, count, 
   } else if (count >= 1000) {
     countDisplay = "(999+)";
   }
-  const bgColor = severity === "info" ? theme.palette.snackbarAlert.light : severity === "success" ? theme.palette.snackbarAlert.main : theme.palette.warningAlert.main;
+  const bgColor =
+    severity === "info"
+      ? theme.palette.snackbarAlert.light
+      : severity === "success"
+        ? theme.palette.snackbarAlert.main
+        : theme.palette.warningAlert.main;
   function handleCloseSnackbar(_event: React.SyntheticEvent | Event, reason?: string) {
     if (reason === "clickaway") return;
 

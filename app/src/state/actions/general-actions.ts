@@ -547,7 +547,11 @@ export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
   state.settings.useDatapackSuggestedAge = isChecked;
 });
 export const setTab = action("setTab", (newval: number) => {
-  if (newval == 1 && state.chartContent && (!equalChartSettings(state.settings, state.prevSettings) || !equalConfig(state.config, state.prevConfig))) {
+  if (
+    newval == 1 &&
+    state.chartContent &&
+    (!equalChartSettings(state.settings, state.prevSettings) || !equalConfig(state.config, state.prevConfig))
+  ) {
     pushSnackbar("Chart settings are different from the displayed chart.", "warning");
   }
   state.tab = newval;

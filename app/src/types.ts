@@ -66,5 +66,7 @@ export function equalChartSettings(a: ChartSettings, b: ChartSettings): boolean 
   );
 }
 export function equalConfig(a: Config, b: Config): boolean {
-  return a.datapacks.length === b.datapacks.length && a.datapacks.every((aValue, index) => aValue === b.datapacks[index]);
+  return (
+    a.datapacks.length === b.datapacks.length && a.datapacks.every((aValue, index) => aValue === b.datapacks[index])
+  );
 }
