@@ -17,11 +17,6 @@ export const Time = observer(function Time() {
   const navigate = useNavigate();
   const { state, actions } = useContext(context);
 
-  const handleButtonClick = () => {
-    actions.setTab(1);
-    actions.fetchChartFromServer(navigate);
-  };
-
   return (
     <div>
       <Box className="Box">
@@ -121,16 +116,6 @@ export const Time = observer(function Time() {
           value={state.settings.unitsPerMY}
           onChange={(event) => actions.setUnitsPerMY(parseFloat(event.target.value))}
         />
-        <Button
-          className="Button"
-          sx={{
-            backgroundColor: theme.palette.button.main
-          }}
-          onClick={handleButtonClick}
-          variant="contained"
-          endIcon={<ForwardIcon />}>
-          Make your own chart
-        </Button>
       </Box>
 
       <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
