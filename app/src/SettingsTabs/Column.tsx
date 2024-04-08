@@ -4,7 +4,6 @@ import Typography from "@mui/material/Typography";
 import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
 import { Box } from "@mui/material";
-import { useNavigate } from "react-router-dom";
 import { ColumnContainer, AccordionDetails, TSCCheckbox, AccordionSummary, Accordion, TSCButton } from "../components";
 
 import { ColumnMenu } from "./ColumnMenu";
@@ -148,8 +147,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
 
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
-  const { state, actions } = useContext(context);
-  const navigate = useNavigate();
+  const { state } = useContext(context);
   //state array of column names that are expanded
   const accordions = state.settingsTabs.columns ? stringToHash(state.settingsTabs.columns.name) : 0;
   const [expandedAccordions, setExpandedAccordions] = useState<number[]>([accordions]);

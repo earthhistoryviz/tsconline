@@ -31,7 +31,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
     generalActions.pushError(ErrorCodes.NO_DATAPACKS_SELECTED);
     return;
   }
-  generalActions.removeError(ErrorCodes.NO_DATAPACKS_SELECTED)
+  generalActions.removeError(ErrorCodes.NO_DATAPACKS_SELECTED);
   state.showSuggestedAgePopup = false;
   navigate("/chart");
   //set the loading screen and make sure the chart isn't up
@@ -107,4 +107,4 @@ function changeFaciesColumn(column: ColumnInfo) {
 const savePreviousSettings = action("savePreviousSettings", () => {
   state.prevSettings = JSON.parse(JSON.stringify(state.settings));
   state.prevConfig = JSON.parse(JSON.stringify(state.config));
-})
+});

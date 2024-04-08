@@ -4,7 +4,6 @@ import AppBar from "@mui/material/AppBar";
 import { Link, useNavigate } from "react-router-dom";
 import Toolbar from "@mui/material/Toolbar";
 import { useTheme } from "@mui/material/styles";
-import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import HomeIcon from "@mui/icons-material/Home";
 import { IconButton, Tab } from "@mui/material";
 import { context } from "./state";
@@ -62,9 +61,7 @@ export const NavBar = observer(function Navbar() {
           </TSCTabs>
         }
         <div style={{ flexGrow: 1 }} />
-        <TSCButton
-        onClick={() => actions.initiateChartGeneration(navigate)}
-        >Generate Chart</TSCButton>
+        <TSCButton onClick={() => actions.initiateChartGeneration(navigate)}>Generate Chart</TSCButton>
       </Toolbar>
     </AppBar>
   );

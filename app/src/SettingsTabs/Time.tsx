@@ -1,20 +1,15 @@
-import { Box, Button, TextField } from "@mui/material";
+import { Box, TextField } from "@mui/material";
 import { observer } from "mobx-react-lite";
-import ForwardIcon from "@mui/icons-material/Forward";
-import { useNavigate } from "react-router-dom";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import { TSCCheckbox } from "../components";
 import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import { useTheme } from "@mui/material/styles";
 import { useContext } from "react";
 import { context } from "../state/index";
 import "./Time.css";
 import { ErrorCodes } from "../util/error-codes";
 
 export const Time = observer(function Time() {
-  const theme = useTheme();
-  const navigate = useNavigate();
   const { state, actions } = useContext(context);
 
   return (
