@@ -39,6 +39,10 @@ export type DatapackParsingPack = {
   date?: string;
   verticalScale?: number;
   isUserDatapack: boolean;
+  description: string;
+  title: string;
+  file: string;
+  size: string;
   warnings?: DatapackWarning[];
   image: string;
 };
@@ -905,6 +909,7 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
   if (typeof o.image !== "string") throwError("DatapackParsingPack", "image", "string", o.image);
   assertColumnInfo(o.columnInfo);
 }
+
 export function assertDatapackWarning(o: any): asserts o is DatapackWarning {
   if (!o || typeof o !== "object") throw new Error("DatapackWarning must be a non-null object");
   if ("message" in o && typeof o.message !== "string") throwError("DatapackWarning", "message", "string", o.message);
