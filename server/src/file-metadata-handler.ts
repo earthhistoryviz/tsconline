@@ -30,7 +30,8 @@ export async function writeFileMetadata(
   filepath: string,
   decryptedFilepath: string,
   mapPackIndexFilepath: string,
-  datapackIndexFilepath: string
+  datapackIndexFilepath: string,
+  settingsFilepath: string
 ) {
   const metadata = await loadFileMetadata(fileMetadataFilepath);
   assertFileMetadataIndex(metadata);
@@ -39,7 +40,8 @@ export async function writeFileMetadata(
     uploadedAt: new Date().toISOString(),
     decryptedFilepath,
     mapPackIndexFilepath,
-    datapackIndexFilepath
+    datapackIndexFilepath,
+    settingsFilepath
   };
   await writeFile(fileMetadataFilepath, JSON.stringify(metadata));
 }
@@ -62,6 +64,7 @@ export async function checkFileMetadata(fileMetadataFilepath: string) {
         const mapPackIndex = JSON.parse(await readFile(metadata[file]!.mapPackIndexFilepath, "utf-8"));
         assertMapPackIndex(mapPackIndex);
         await rm(metadata[file]!.decryptedFilepath, { recursive: true, force: true });
+        await rm(metadata[file]!.settingsFilepath, { force: true });
         await rm(file, { force: true });
         delete datapackIndex[metadata[file]!.fileName];
         delete mapPackIndex[metadata[file]!.fileName];
