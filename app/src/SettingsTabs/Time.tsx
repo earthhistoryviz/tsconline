@@ -46,7 +46,7 @@ export const Time = observer(function Time() {
             label="Top Age"
             type="number"
             name="vertical-scale-text-field"
-            value={state.settings.topStageAge.toString()}
+            value={state.settings.topStageAge}
             onChange={(event) => {
               const age = parseFloat(event.target.value);
               if (!isNaN(age) && age >= 0 && age <= state.settings.baseStageAge) {
@@ -90,7 +90,7 @@ export const Time = observer(function Time() {
             label="Base Age"
             type="number"
             name="vertical-scale-text-field"
-            value={state.settings.baseStageAge.toString()}
+            value={state.settings.baseStageAge}
             onChange={(event) => {
               const age = parseFloat(event.target.value);
               if (!isNaN(age) && age >= 0 && state.settings.topStageAge <= age) {
@@ -115,6 +115,16 @@ export const Time = observer(function Time() {
 
       <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
         <FormGroup>
+          <FormControlLabel
+            name="skip-empty-columns"
+            control={
+              <TSCCheckbox
+                onChange={(e) => actions.setSkipEmptyColumns(e.target.checked)}
+                checked={state.settings.skipEmptyColumns}
+              />
+            }
+            label="Gray out (and do not draw) columns which do not have data on the selected time interval"
+          />
           <FormControlLabel
             name="mouse-over-info-checkbox"
             control={
