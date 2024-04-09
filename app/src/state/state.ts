@@ -146,7 +146,8 @@ export const state = observable<State>({
     datapackContainsSuggAge: false,
     useDatapackSuggestedAge: true,
     selectedBaseStage: "",
-    selectedTopStage: ""
+    selectedTopStage: "",
+    unit: "Ma"
   },
   prevSettings: {
     selectedStage: "",
@@ -165,7 +166,8 @@ export const state = observable<State>({
     datapackContainsSuggAge: false,
     useDatapackSuggestedAge: true,
     selectedBaseStage: "",
-    selectedTopStage: ""
+    selectedTopStage: "",
+    unit: "Ma"
   },
   useCache: true,
   usePreset: true,

@@ -70,7 +70,8 @@ export const resetSettings = action("resetSettings", () => {
     mouseOverPopupsEnabled: false,
     datapackContainsSuggAge: false,
     selectedBaseStage: "",
-    selectedTopStage: ""
+    selectedTopStage: "",
+    unit: "Ma"
   };
 });
 
