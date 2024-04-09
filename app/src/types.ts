@@ -43,6 +43,12 @@ export type ChartSettings = {
   baseStageAge: number;
   baseStageKey: string;
   unitsPerMY: number;
+  skipEmptyColumns: boolean;
+  noIndentPattern: boolean;
+  enableColumnBackground: boolean;
+  enableChartLegend: boolean;
+  enablePriority: boolean;
+  enableHideBlockLabel: boolean;
   mouseOverPopupsEnabled: boolean;
   datapackContainsSuggAge: boolean;
   useDatapackSuggestedAge: boolean;
