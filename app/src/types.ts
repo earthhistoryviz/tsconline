@@ -54,6 +54,7 @@ export type ChartSettings = {
   useDatapackSuggestedAge: boolean;
   selectedBaseStage: string;
   selectedTopStage: string;
+  unit: string;
 };
 
 export function equalChartSettings(a: ChartSettings, b: ChartSettings): boolean {

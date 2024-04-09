@@ -137,32 +137,47 @@ export const Time = observer(function Time() {
           />
           <FormControlLabel
             name="global-priority-checkbox"
-            control={<TSCCheckbox />}
+            control={<TSCCheckbox 
+              onChange={(e) => actions.setEnablePriority(e.target.checked)}
+              checked={state.settings.enablePriority}
+            />}
             label="Enabled Global Priority Filtering for block columns"
           />
           <FormControlLabel
             name="stage-background-checkbox"
-            control={<TSCCheckbox />}
+            control={<TSCCheckbox 
+              onChange={(e) => actions.setEnableColumnBackground(e.target.checked)}
+              checked={state.settings.enableColumnBackground}
+            />}
             label="Enabled stage background for event columns"
           />
           <FormControlLabel
             name="enable-legend-checkbox"
-            control={<TSCCheckbox />}
+            control={<TSCCheckbox 
+              onChange={(e) => actions.setEnableChartLegend(e.target.checked)}
+              checked={state.settings.enableChartLegend}
+            />}
             label="Enable legend for the chart"
           />
           <FormControlLabel
-            control={<TSCCheckbox />}
+            control={<TSCCheckbox 
+              onChange={(e) => actions.setNoIndentPattern(e.target.checked)}
+              checked={state.settings.noIndentPattern}
+            />}
             name="lithology-auto-indent-checkbox"
             label="Do not auto-indent lithology patterns"
           />
           <FormControlLabel
             name="conserve-chart-checkbox"
             control={<TSCCheckbox />}
-            label="Conserve Chart Space in Family Tree Plotting"
+            label="Conserve Chart Space in Family Tree Plotting (Not implemented)"
           />
           <FormControlLabel
             name="hide-block-labels-checkbox"
-            control={<TSCCheckbox />}
+            control={<TSCCheckbox 
+              onChange={(e) => actions.setEnableHideBlockLabel(e.target.checked)}
+              checked={state.settings.enableHideBlockLabel}
+            />}
             label="Hide block labels based on priority"
           />
           <FormControlLabel
