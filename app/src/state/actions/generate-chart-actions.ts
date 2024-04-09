@@ -59,7 +59,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   }
   console.log("Sending settings to server...");
   try {
-    const response = await fetcher(`/charts/${state.useCache}/${state.settings.useDatapackSuggestedAge}`, {
+    const response = await fetcher(`/charts/${state.useCache}/${state.settings.useDatapackSuggestedAge}/username`, {
       method: "POST",
       body
     });
