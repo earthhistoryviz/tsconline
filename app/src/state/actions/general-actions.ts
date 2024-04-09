@@ -139,6 +139,10 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async (username: 
 });
 
 export const uploadDatapack = action("uploadDatapack", async (file: File, username: string, name: string) => {
+  if (state.datapackIndex[file.name]) {
+    pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
+    return;
+  }
   const formData = new FormData();
   formData.append("file", file);
   try {
