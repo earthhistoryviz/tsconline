@@ -23,6 +23,7 @@ import pump from "pump";
 import { loadIndexes } from "./load-packs.js";
 import { writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
+import { glob } from "glob";
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(
   request: FastifyRequest<{ Params: { username: string } }>,
@@ -287,14 +288,9 @@ export const fetchSVGStatus = async function (
  * Will return the chart path and the hash the chart was saved with
  */
 export const fetchChart = async function fetchChart(
-  request: FastifyRequest<{
-    Params: { usecache: string; useSuggestedAge: string };
-  }>,
+  request: FastifyRequest,
   reply: FastifyReply
 ) {
-  //TODO change this to be in request body
-  const usecache = request.params.usecache === "true";
-  const useSuggestedAge = request.params.useSuggestedAge === "true";
   let chartrequest;
   try {
     chartrequest = JSON.parse(request.body as string);
@@ -306,7 +302,9 @@ export const fetchChart = async function fetchChart(
     });
     return;
   }
+  const { username, useCache, useSuggestedAge } = chartrequest;
   const settingsXml = chartrequest.settings;
+  const hashedUsername = md5(username);
   //console.log(settingsXml);
   // const settingsXml = jsonToXml(
   //   chartrequest.settings,
@@ -324,7 +322,7 @@ export const fetchChart = async function fetchChart(
   // If this setting already has a chart, just return that
   try {
     await stat(chartFilePath);
-    if (!usecache) {
+    if (!useCache) {
       console.log("Deleting chart filepath since it already exists and cache is not being used");
       deleteDirectory(chartFilePath);
     } else {
@@ -347,16 +345,19 @@ export const fetchChart = async function fetchChart(
     reply.send({ error: "ERROR: failed to save settings" });
     return;
   }
-  const datapacks = chartrequest.datapacks.map(
-    (datapack) => '"' + assetconfigs.datapacksDirectory + "/" + datapack + '"'
-  );
+  const userDatapackFilepaths = await glob(`${assetconfigs.uploadDirectory}/${hashedUsername}/datapacks/*`)
+  const userDatapackNames = userDatapackFilepaths.map((datapack) => path.basename(datapack));
+  const datapacks = []
   for (const datapack of chartrequest.datapacks) {
-    if (!assetconfigs.activeDatapacks.includes(datapack)) {
+    if (assetconfigs.activeDatapacks.includes(datapack)) {
+      datapacks.push(`"${assetconfigs.datapacksDirectory}/${datapack}"`);
+    } else if (userDatapackNames.includes(datapack)) {
+      datapacks.push(`"${assetconfigs.uploadDirectory}/${hashedUsername}/datapacks/${datapack}"`);
+    } else {
       console.log("ERROR: datapack: ", datapack, " is not included in activeDatapacks");
       console.log("assetconfig.activeDatapacks:", assetconfigs.activeDatapacks);
       console.log("chartrequest.datapacks: ", chartrequest.datapacks);
       reply.send({ error: "ERROR: failed to load datapacks" });
-      return;
     }
   }
   // Call the Java monster...
