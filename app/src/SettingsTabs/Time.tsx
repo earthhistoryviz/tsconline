@@ -105,7 +105,7 @@ export const Time = observer(function Time() {
         </FormControl>
         <TextField
           className="VerticalScale"
-          label="Vertical Scale (cm/Ma)"
+          label="Vertical Scale (cm/unit)"
           type="number"
           name="vertical-scale-text-field"
           value={state.settings.unitsPerMY}
@@ -137,33 +137,41 @@ export const Time = observer(function Time() {
           />
           <FormControlLabel
             name="global-priority-checkbox"
-            control={<TSCCheckbox 
-              onChange={(e) => actions.setEnablePriority(e.target.checked)}
-              checked={state.settings.enablePriority}
-            />}
+            control={
+              <TSCCheckbox
+                onChange={(e) => actions.setEnablePriority(e.target.checked)}
+                checked={state.settings.enablePriority}
+              />
+            }
             label="Enabled Global Priority Filtering for block columns"
           />
           <FormControlLabel
             name="stage-background-checkbox"
-            control={<TSCCheckbox 
-              onChange={(e) => actions.setEnableColumnBackground(e.target.checked)}
-              checked={state.settings.enableColumnBackground}
-            />}
+            control={
+              <TSCCheckbox
+                onChange={(e) => actions.setEnableColumnBackground(e.target.checked)}
+                checked={state.settings.enableColumnBackground}
+              />
+            }
             label="Enabled stage background for event columns"
           />
           <FormControlLabel
             name="enable-legend-checkbox"
-            control={<TSCCheckbox 
-              onChange={(e) => actions.setEnableChartLegend(e.target.checked)}
-              checked={state.settings.enableChartLegend}
-            />}
+            control={
+              <TSCCheckbox
+                onChange={(e) => actions.setEnableChartLegend(e.target.checked)}
+                checked={state.settings.enableChartLegend}
+              />
+            }
             label="Enable legend for the chart"
           />
           <FormControlLabel
-            control={<TSCCheckbox 
-              onChange={(e) => actions.setNoIndentPattern(e.target.checked)}
-              checked={state.settings.noIndentPattern}
-            />}
+            control={
+              <TSCCheckbox
+                onChange={(e) => actions.setNoIndentPattern(e.target.checked)}
+                checked={state.settings.noIndentPattern}
+              />
+            }
             name="lithology-auto-indent-checkbox"
             label="Do not auto-indent lithology patterns"
           />
@@ -174,10 +182,12 @@ export const Time = observer(function Time() {
           />
           <FormControlLabel
             name="hide-block-labels-checkbox"
-            control={<TSCCheckbox 
-              onChange={(e) => actions.setEnableHideBlockLabel(e.target.checked)}
-              checked={state.settings.enableHideBlockLabel}
-            />}
+            control={
+              <TSCCheckbox
+                onChange={(e) => actions.setEnableHideBlockLabel(e.target.checked)}
+                checked={state.settings.enableHideBlockLabel}
+              />
+            }
             label="Hide block labels based on priority"
           />
           <FormControlLabel
