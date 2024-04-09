@@ -9,8 +9,9 @@ import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import HomeIcon from "@mui/icons-material/Home";
 import { IconButton } from "@mui/material";
 import { context } from "./state";
-import { TSCTabs, Tab } from "./components";
+import { TSCTabs } from "./components";
 import { ControlledMenu, MenuItem, useMenuState, useHover } from "@szhsin/react-menu";
+import { Tab } from "@mui/material";
 import "@szhsin/react-menu/dist/index.css";
 import "@szhsin/react-menu/dist/transitions/slide.css";
 
@@ -25,10 +26,14 @@ export const NavBar = observer(function Navbar() {
   const { hoverProps } = useHover(menuState.state, toggleMenu);
 
   // Function to handle menu item click
-  const handleMenuItemClick = (selectedTab) => {
-    actions.setSettingsTabsSelected(selectedTab); // Set the selected settings tab
-    navigate('/settings'); // Navigate to the settings page
-  };
+  const handleMenuItemClick = (selectedTab: string) => {
+    if (selectedTab === "time" || selectedTab === "font" || selectedTab === "column" || selectedTab === "mappoints" || selectedTab === "datapacks") {
+        actions.setSettingsTabsSelected(selectedTab);
+        navigate("/settings");
+    } else {
+        console.error("Invalid tab selected");
+    }
+};
 
   return (
     <AppBar position="fixed" sx={{ background: theme.palette.navbar.main, display: "flex" }}>
@@ -46,8 +51,7 @@ export const NavBar = observer(function Navbar() {
             onClick={() => {
               actions.setTab(0);
               actions.setUseCache(true);
-            }}
-          >
+            }}>
             <HomeIcon />
           </IconButton>
         </Link>
@@ -64,8 +68,7 @@ export const NavBar = observer(function Navbar() {
             "& .Mui-selected": {
               color: theme.palette.selection.main
             }
-          }}
-        >
+          }}>
           <Tab label="Chart" value={1} component={Link} to="/chart" />
           <Tab label="Settings" value={2} component={Link} to="/settings" ref={menuRef} {...hoverProps} />
           <Tab label="Datapack" value={3} component={Link} to="/datapack" />
@@ -75,10 +78,10 @@ export const NavBar = observer(function Navbar() {
         <div style={{ flexGrow: 1 }} />
         <img src={TSCreatorLogo} alt="TSCreator Logo" width="4%" height="4%" />
         <ControlledMenu {...hoverProps} anchorRef={menuRef} onClose={() => toggleMenu(false)}>
-          <MenuItem onClick={() => handleMenuItemClick('time')}>Time</MenuItem>
-          <MenuItem onClick={() => handleMenuItemClick('font')}>Font</MenuItem>
-          <MenuItem onClick={() => handleMenuItemClick('column')}>Columns</MenuItem>
-          <MenuItem onClick={() => handleMenuItemClick('mappoints')}>Map Points</MenuItem>
+          <MenuItem onClick={() => handleMenuItemClick("time")}>Time</MenuItem>
+          <MenuItem onClick={() => handleMenuItemClick("font")}>Font</MenuItem>
+          <MenuItem onClick={() => handleMenuItemClick("column")}>Columns</MenuItem>
+          <MenuItem onClick={() => handleMenuItemClick("mappoints")}>Map Points</MenuItem>
         </ControlledMenu>
       </Toolbar>
     </AppBar>
