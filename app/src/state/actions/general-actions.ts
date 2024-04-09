@@ -28,6 +28,7 @@ import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
+import { equalChartSettings, equalConfig } from "../../types";
 
 export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   try {
@@ -507,7 +508,7 @@ export const pushError = action("pushError", (context: ErrorCodes) => {
 export const removeSnackbar = action("removeSnackbar", (text: string) => {
   state.snackbars = state.snackbars.filter((info) => info.snackbarText !== text);
 });
-export const pushSnackbar = action("pushSnackbar", (text: string, severity: "success" | "info") => {
+export const pushSnackbar = action("pushSnackbar", (text: string, severity: "success" | "info" | "warning") => {
   if (text.length > 70) {
     console.error("The length of snackbar text must be less than 70");
     return;
@@ -546,6 +547,13 @@ export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
   state.settings.useDatapackSuggestedAge = isChecked;
 });
 export const setTab = action("setTab", (newval: number) => {
+  if (
+    newval == 1 &&
+    state.chartContent &&
+    (!equalChartSettings(state.settings, state.prevSettings) || !equalConfig(state.config, state.prevConfig))
+  ) {
+    pushSnackbar("Chart settings are different from the displayed chart.", "warning");
+  }
   state.tab = newval;
 });
 export const setSettingsColumns = action((temp?: ColumnInfo) => {
