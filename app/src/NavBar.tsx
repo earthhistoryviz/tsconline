@@ -1,20 +1,20 @@
 import { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import AppBar from "@mui/material/AppBar";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Toolbar from "@mui/material/Toolbar";
 import { useTheme } from "@mui/material/styles";
-import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import HomeIcon from "@mui/icons-material/Home";
 import { IconButton, Tab } from "@mui/material";
 import { context } from "./state";
-import { TSCTabs } from "./components";
+import { TSCButton, TSCTabs } from "./components";
 
 import "./NavBar.css";
 
 export const NavBar = observer(function Navbar() {
   const theme = useTheme();
   const { state, actions } = useContext(context);
+  const navigate = useNavigate();
   return (
     <AppBar position="fixed" sx={{ background: theme.palette.navbar.main, display: "flex" }}>
       <Toolbar>
@@ -61,7 +61,7 @@ export const NavBar = observer(function Navbar() {
           </TSCTabs>
         }
         <div style={{ flexGrow: 1 }} />
-        <img src={TSCreatorLogo} width="4%" height="4%" />
+        <TSCButton onClick={() => actions.initiateChartGeneration(navigate)}>Generate Chart</TSCButton>
       </Toolbar>
     </AppBar>
   );
