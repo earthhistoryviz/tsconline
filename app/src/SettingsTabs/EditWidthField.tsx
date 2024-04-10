@@ -1,34 +1,34 @@
 import { observer } from "mobx-react-lite";
-import { useContext, useState } from "react";
+import React, { useContext, useState } from "react";
 import { context } from "../state";
 import { Button, TextFieldProps, Typography, TextField } from "@mui/material";
 import "./EditWidthField.css";
 import { NumericFormat } from "react-number-format";
+import { pushError } from "../state/actions";
+import { ErrorCodes } from "../util/error-codes";
 
 const WidthTextField = ({ ...props }: TextFieldProps) => (
   <TextField {...props} hiddenLabel variant="filled" size="small" />
 );
 
-export const EditWidthField = observer(() => {
-  const { state, actions } = useContext(context);
-  const editWidth =
-    state.settingsTabs.columnSelected === null
-      ? 0
-      : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.width;
-  const [width, setWidth] = useState<number>(editWidth ?? 0);
+export const EditWidthField: React.FC<{
+  width: number;
+}> = observer(({ width }) => {
+  const { actions } = useContext(context);
+  const [inputWidth, setInputWidth] = useState<number>(width ?? 0);
   return (
     <div>
-      <Typography style={{ padding: "5px" }}>Edit Width</Typography>
-      <div style={{ display: "flex", flexDirection: "row" }}>
+      <Typography id="edit-width-text">Edit Width</Typography>
+      <div id="edit-width-container">
         <NumericFormat
-          value={width}
+          value={inputWidth}
           customInput={WidthTextField}
           onValueChange={(values) => {
             const floatValue = values.floatValue;
             if (!floatValue) {
               return;
             }
-            setWidth(floatValue);
+            setInputWidth(floatValue);
           }}
           style={{ height: "20px" }}
         />
@@ -37,7 +37,8 @@ export const EditWidthField = observer(() => {
             color="secondary"
             variant="contained"
             onClick={() => {
-              actions.updateWidth(width);
+              if (isNaN(inputWidth)) pushError(ErrorCodes.INVALID_WIDTH_TYPE);
+              actions.updateWidth(inputWidth);
             }}>
             Confirm
           </Button>
