@@ -757,7 +757,6 @@ export const updatePresetColors = action("updatePresetColors", (newColor: string
     "#00796B",
     "#388E3C"
   ];
-  //localStorage.setItem("savedColors", JSON.stringify(defaultColors));
   localStorage.setItem("savedColors", JSON.stringify(updatedColors));
 });
 export const setSkipEmptyColumns = action("setSkipEmptyColumns", (newval: boolean, unit: string) => {
