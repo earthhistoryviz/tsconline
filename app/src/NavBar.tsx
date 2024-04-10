@@ -27,13 +27,19 @@ export const NavBar = observer(function Navbar() {
 
   // Function to handle menu item click
   const handleMenuItemClick = (selectedTab: string) => {
-    if (selectedTab === "time" || selectedTab === "font" || selectedTab === "column" || selectedTab === "mappoints" || selectedTab === "datapacks") {
-        actions.setSettingsTabsSelected(selectedTab);
-        navigate("/settings");
+    if (
+      selectedTab === "time" ||
+      selectedTab === "font" ||
+      selectedTab === "column" ||
+      selectedTab === "mappoints" ||
+      selectedTab === "datapacks"
+    ) {
+      actions.setSettingsTabsSelected(selectedTab);
+      navigate("/settings");
     } else {
-        console.error("Invalid tab selected");
+      console.error("Invalid tab selected");
     }
-};
+  };
 
   return (
     <AppBar position="fixed" sx={{ background: theme.palette.navbar.main, display: "flex" }}>
