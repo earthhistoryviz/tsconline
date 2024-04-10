@@ -52,7 +52,7 @@ const FontMenuRow: React.FC<{
 
   const handleColorChangs = (color: string) => {
     fontOpts.color = color;
-  }
+  };
 
   return (
     <div>
@@ -121,9 +121,7 @@ const FontMenuRow: React.FC<{
           </ToggleButton>
         </ToggleButtonGroup>
         <div id="ColorInputContainer">
-          <TSCColorPicker 
-            color = {fontOpts.color}
-            onColorChange={handleColorChangs}/>
+          <TSCColorPicker color={fontOpts.color} onColorChange={handleColorChangs} />
         </div>
         <Typography
           sx={{

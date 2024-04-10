@@ -21,28 +21,23 @@ const TSCColorPicker: React.FC<TSCColorPickerProps> = observer(({ color, onColor
 
   return (
     <>
-  <Button
-    color="secondary"
-    variant="contained"
-    onClick={() => {
-      setShowPicker(!showPicker);
-      if (showPicker) {
-        actions.updatePresetColors(selectedColor);
-      }
-    }}
-    className="cp-button"
-    style={{ backgroundColor: selectedColor }}
-  ></Button>
-  {showPicker && (
-    <div className="color-picker">
-      <SketchPicker
-        color={selectedColor}
-        onChangeComplete={handleColorChange}
-        presetColors={state.presetColors}
-      />
-    </div>
-  )}
-</>
+      <Button
+        color="secondary"
+        variant="contained"
+        onClick={() => {
+          setShowPicker(!showPicker);
+          if (showPicker) {
+            actions.updatePresetColors(selectedColor);
+          }
+        }}
+        className="cp-button"
+        style={{ backgroundColor: selectedColor }}></Button>
+      {showPicker && (
+        <div className="color-picker">
+          <SketchPicker color={selectedColor} onChangeComplete={handleColorChange} presetColors={state.presetColors} />
+        </div>
+      )}
+    </>
   );
 });
 
