@@ -27,9 +27,15 @@ export const initiateChartGeneration = action("initiateChartGeneration", (naviga
 });
 
 export const fetchChartFromServer = action("fetchChartFromServer", async (navigate: NavigateFunction) => {
+  if (!state.config.datapacks || state.config.datapacks.length === 0) {
+    generalActions.pushError(ErrorCodes.NO_DATAPACKS_SELECTED);
+    return;
+  }
+  generalActions.removeError(ErrorCodes.NO_DATAPACKS_SELECTED);
   state.showSuggestedAgePopup = false;
   navigate("/chart");
   //set the loading screen and make sure the chart isn't up
+  savePreviousSettings();
   generalActions.setTab(1);
   generalActions.setChartMade(true);
   generalActions.setChartLoading(true);
@@ -97,3 +103,8 @@ function changeFaciesColumn(column: ColumnInfo) {
     changeFaciesColumn(child);
   }
 }
+
+const savePreviousSettings = action("savePreviousSettings", () => {
+  state.prevSettings = JSON.parse(JSON.stringify(state.settings));
+  state.prevConfig = JSON.parse(JSON.stringify(state.config));
+});

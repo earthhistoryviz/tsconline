@@ -1,5 +1,5 @@
-import { action, runInAction } from "mobx";
-import { TimescaleItem } from "@tsconline/shared";
+import { action } from "mobx";
+import { ChartSettingsInfoTSC, TimescaleItem } from "@tsconline/shared";
 
 import {
   type MapInfo,
@@ -18,8 +18,7 @@ import {
   defaultFontsInfo,
   assertIndexResponse,
   assertPresets,
-  assertPatterns,
-  ChartInfoTSC
+  assertPatterns
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { fetcher } from "../../util";
@@ -28,6 +27,7 @@ import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
+import { equalChartSettings, equalConfig } from "../../types";
 
 export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   try {
@@ -60,11 +60,18 @@ export const resetSettings = action("resetSettings", () => {
     baseStageAge: 0,
     baseStageKey: "",
     unitsPerMY: 2,
+    noIndentPattern: false,
+    enableColumnBackground: false,
+    enableChartLegend: false,
+    enablePriority: false,
+    enableHideBlockLabel: false,
+    skipEmptyColumns: true,
     useDatapackSuggestedAge: true,
     mouseOverPopupsEnabled: false,
     datapackContainsSuggAge: false,
     selectedBaseStage: "",
-    selectedTopStage: ""
+    selectedTopStage: "",
+    unit: "Ma"
   };
 });
 
@@ -182,6 +189,35 @@ export const fetchTimescaleDataAction = action("fetchTimescaleData", async () =>
   }
 });
 
+const setChartSettings = action("setChartSettings", (settings: ChartSettingsInfoTSC) => {
+  const {
+    topAge,
+    baseAge,
+    unitsPerMY,
+    skipEmptyColumns,
+    doPopups,
+    noIndentPattern,
+    enChartLegend,
+    enEventColBG,
+    enHideBlockLable,
+    enPriority
+  } = settings;
+  if (topAge.text) {
+    setTopStageAge(topAge.text);
+  }
+  if (baseAge.text) {
+    setBaseStageAge(baseAge.text);
+  }
+  setUnitsPerMY(unitsPerMY.text);
+  setSkipEmptyColumns(skipEmptyColumns.text);
+  setMouseOverPopupsEnabled(doPopups);
+  setEnableChartLegend(enChartLegend);
+  setEnablePriority(enPriority);
+  setEnableColumnBackground(enEventColBG);
+  setNoIndentPattern(noIndentPattern);
+  setEnableHideBlockLabel(enHideBlockLable);
+});
+
 /**
  * Rests the settings, sets the tabs to 0
  * sets chart to newval and requests info on the datapacks from the server
@@ -204,7 +240,6 @@ export const setDatapackConfig = action(
           method: "GET"
         });
         let settingsXml;
-        let settingsTSC: ChartInfoTSC;
         try {
           settingsXml = await res.text();
         } catch (e) {
@@ -217,13 +252,12 @@ export const setDatapackConfig = action(
           return false;
         }
         try {
-          settingsTSC = xmlToJson(settingsXml);
+          state.settingsTSC = xmlToJson(settingsXml); // Save the parsed JSON to the state.settingsTSC
         } catch (e) {
           //couldn't parse settings
           displayServerError(e, ErrorCodes.INVALID_SETTINGS_RESPONSE, "Error parsing xml settings file");
           return false;
         }
-        runInAction(() => (state.settingsTSC = settingsTSC)); // Save the parsed JSON to the state.settingsTSC
       } else {
         state.settingsTSC = {};
       }
@@ -300,6 +334,9 @@ export const setDatapackConfig = action(
     state.config.settingsPath = settingsPath;
     initializeColumnHashMap(columnInfo);
     resetSettings();
+    if (state.settingsTSC.settings) {
+      setChartSettings(state.settingsTSC.settings);
+    }
     return true;
   }
 );
@@ -507,7 +544,7 @@ export const pushError = action("pushError", (context: ErrorCodes) => {
 export const removeSnackbar = action("removeSnackbar", (text: string) => {
   state.snackbars = state.snackbars.filter((info) => info.snackbarText !== text);
 });
-export const pushSnackbar = action("pushSnackbar", (text: string, severity: "success" | "info") => {
+export const pushSnackbar = action("pushSnackbar", (text: string, severity: "success" | "info" | "warning") => {
   if (text.length > 70) {
     console.error("The length of snackbar text must be less than 70");
     return;
@@ -546,6 +583,13 @@ export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
   state.settings.useDatapackSuggestedAge = isChecked;
 });
 export const setTab = action("setTab", (newval: number) => {
+  if (
+    newval == 1 &&
+    state.chartContent &&
+    (!equalChartSettings(state.settings, state.prevSettings) || !equalConfig(state.config, state.prevConfig))
+  ) {
+    pushSnackbar("Chart settings are different from the displayed chart.", "warning");
+  }
   state.tab = newval;
 });
 export const setSettingsColumns = action((temp?: ColumnInfo) => {
@@ -620,4 +664,22 @@ export const settingsXML = action("settingsXML", (xml: string) => {
 
 export const setIsFullscreen = action("setIsFullscreen", (newval: boolean) => {
   state.isFullscreen = newval;
+});
+export const setSkipEmptyColumns = action("setSkipEmptyColumns", (newval: boolean) => {
+  state.settings.skipEmptyColumns = newval;
+});
+export const setNoIndentPattern = action("setNoIndentPattern", (newval: boolean) => {
+  state.settings.noIndentPattern = newval;
+});
+export const setEnableColumnBackground = action("setEnableColumnBackground", (newval: boolean) => {
+  state.settings.enableColumnBackground = newval;
+});
+export const setEnableChartLegend = action("setEnableChartLegend", (newval: boolean) => {
+  state.settings.enableChartLegend = newval;
+});
+export const setEnablePriority = action("setEnablePriority", (newval: boolean) => {
+  state.settings.enablePriority = newval;
+});
+export const setEnableHideBlockLabel = action("setEnableHideBlockLabel", (newval: boolean) => {
+  state.settings.enableHideBlockLabel = newval;
 });

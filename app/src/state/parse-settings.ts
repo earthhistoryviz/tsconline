@@ -290,37 +290,23 @@ function replaceSpecialChars(text: string, type: number): string {
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with settings info
  */
-function generateSettingsXml(settings: any, chartSettings: any, indent: string): string {
+function generateSettingsXml(stateSettings: ChartSettings, indent: string): string {
   let xml = "";
-  for (const key in settings) {
-    if (Object.prototype.hasOwnProperty.call(settings, key)) {
-      const value = settings[key];
-      if (typeof value === "object") {
-        if (key === "topAge") {
-          xml += `${indent}<setting name="${key}" source="text" unit="${value.unit}">\n`;
-          xml += `${indent}    <setting name="text">${chartSettings.topStageAge}</setting>\n`;
-          xml += `${indent}</setting>\n`;
-        } else if (key === "baseAge") {
-          xml += `${indent}<setting name="${key}" source="text" unit="${value.unit}">\n`;
-          //this is a hack, right now the parser gets the chart settings from state which is initialized to zero
-          //so if settings state hasn't changed, use preset value.
-          //later use something other than checking if base stage is zero.
-          if (chartSettings.baseStageAge === 0) {
-            xml += `${indent}    <setting name="text">${value.text}</setting>\n`;
-          } else xml += `${indent}    <setting name="text">${chartSettings.baseStageAge}</setting>\n`;
-          xml += `${indent}</setting>\n`;
-        } else if (key === "unitsPerMY" || key === "skipEmptyColumns") {
-          xml += `${indent}<setting name="${key}" unit="${value.unit}">${value.text}</setting>\n`;
-        }
-      } else if (key === "justification") {
-        xml += `${indent}<setting justification="${value}" name="${key}"/>\n`;
-      } else if (key === "doPopups") {
-        xml += `${indent}<setting name="${key}">${chartSettings.mouseOverPopupsEnabled}</setting>\n`;
-      } else {
-        xml += `${indent}<setting name="${key}">${value}</setting>\n`;
-      }
-    }
-  }
+  xml += `${indent}<setting name="topAge" source="text" unit="${stateSettings.unit}">\n`;
+  xml += `${indent}    <setting name="text">${stateSettings.topStageAge}</setting>\n`;
+  xml += `${indent}</setting>\n`;
+  xml += `${indent}<setting name="baseAge" source="text" unit="${stateSettings.unit}">\n`;
+  xml += `${indent}    <setting name="text">${stateSettings.baseStageAge}</setting>\n`;
+  xml += `${indent}</setting>\n`;
+  xml += `${indent}<setting name="unitsPerMY" unit="${stateSettings.unit}">${stateSettings.unitsPerMY}</setting>\n`;
+  xml += `${indent}<setting name="skipEmptyColumns">${stateSettings.skipEmptyColumns}</setting>\n`;
+  xml += `${indent}<setting name="variableColors">UNESCO</setting>\n`;
+  xml += `${indent}<setting name="negativeChk">false</setting>\n`;
+  xml += `${indent}<setting name="doPopups">${stateSettings.mouseOverPopupsEnabled}</setting>\n`;
+  xml += `${indent}<setting name="enEventColBG">${stateSettings.enableColumnBackground}</setting>\n`;
+  xml += `${indent}<setting name="enChartLegend">${stateSettings.enableChartLegend}</setting>\n`;
+  xml += `${indent}<setting name="enPriority">${stateSettings.enablePriority}</setting>\n`;
+  xml += `${indent}<setting name="enHideBlockLabel">${stateSettings.enableHideBlockLabel}</setting>\n`;
   return xml;
 }
 /**
@@ -499,7 +485,7 @@ export function jsonToXml(
   xml += `<TSCreator version="${version}">\n`;
   if (settingsTSC["settings"]) {
     xml += '    <settings version="1.0">\n';
-    xml += generateSettingsXml(settingsTSC["settings"], chartSettings, "        ");
+    xml += generateSettingsXml(chartSettings, "        ");
     xml += "    </settings>\n";
   }
   xml += '    <column id="class datastore.RootColumn:Chart Root">\n';
