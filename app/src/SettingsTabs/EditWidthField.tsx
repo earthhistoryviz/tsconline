@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { useContext, useState } from "react";
+import React, { useContext, useState } from "react";
 import { context } from "../state";
 import { TextFieldProps, Typography, TextField } from "@mui/material";
 import "./EditWidthField.css";
@@ -8,6 +8,8 @@ import { ColumnInfo } from "@tsconline/shared";
 
 import "./EditWidthField.css";
 import { NumericFormat } from "react-number-format";
+import { pushError } from "../state/actions";
+import { ErrorCodes } from "../util/error-codes";
 
 const WidthTextField = ({ ...props }: TextFieldProps) => (
   <TextField {...props} hiddenLabel variant="filled" size="small" />
