@@ -1,26 +1,16 @@
-import { Box, Button, TextField } from "@mui/material";
+import { Box, TextField } from "@mui/material";
 import { observer } from "mobx-react-lite";
-import ForwardIcon from "@mui/icons-material/Forward";
-import { useNavigate } from "react-router-dom";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import { TSCCheckbox } from "../components";
 import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import { useTheme } from "@mui/material/styles";
 import { useContext } from "react";
 import { context } from "../state/index";
 import "./Time.css";
 import { ErrorCodes } from "../util/error-codes";
 
 export const Time = observer(function Time() {
-  const theme = useTheme();
-  const navigate = useNavigate();
   const { state, actions } = useContext(context);
-
-  const handleButtonClick = () => {
-    actions.setTab(1);
-    actions.fetchChartFromServer(navigate);
-  };
 
   return (
     <div>
@@ -56,7 +46,7 @@ export const Time = observer(function Time() {
             label="Top Age"
             type="number"
             name="vertical-scale-text-field"
-            value={state.settings.topStageAge.toString()}
+            value={state.settings.topStageAge}
             onChange={(event) => {
               const age = parseFloat(event.target.value);
               if (!isNaN(age) && age >= 0 && age <= state.settings.baseStageAge) {
@@ -100,7 +90,7 @@ export const Time = observer(function Time() {
             label="Base Age"
             type="number"
             name="vertical-scale-text-field"
-            value={state.settings.baseStageAge.toString()}
+            value={state.settings.baseStageAge}
             onChange={(event) => {
               const age = parseFloat(event.target.value);
               if (!isNaN(age) && age >= 0 && state.settings.topStageAge <= age) {
@@ -115,26 +105,26 @@ export const Time = observer(function Time() {
         </FormControl>
         <TextField
           className="VerticalScale"
-          label="Vertical Scale (cm/Ma)"
+          label="Vertical Scale (cm/unit)"
           type="number"
           name="vertical-scale-text-field"
           value={state.settings.unitsPerMY}
           onChange={(event) => actions.setUnitsPerMY(parseFloat(event.target.value))}
         />
-        <Button
-          className="Button"
-          sx={{
-            backgroundColor: theme.palette.button.main
-          }}
-          onClick={handleButtonClick}
-          variant="contained"
-          endIcon={<ForwardIcon />}>
-          Make your own chart
-        </Button>
       </Box>
 
       <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
         <FormGroup>
+          <FormControlLabel
+            name="skip-empty-columns"
+            control={
+              <TSCCheckbox
+                onChange={(e) => actions.setSkipEmptyColumns(e.target.checked)}
+                checked={state.settings.skipEmptyColumns}
+              />
+            }
+            label="Gray out (and do not draw) columns which do not have data on the selected time interval"
+          />
           <FormControlLabel
             name="mouse-over-info-checkbox"
             control={
@@ -147,32 +137,57 @@ export const Time = observer(function Time() {
           />
           <FormControlLabel
             name="global-priority-checkbox"
-            control={<TSCCheckbox />}
+            control={
+              <TSCCheckbox
+                onChange={(e) => actions.setEnablePriority(e.target.checked)}
+                checked={state.settings.enablePriority}
+              />
+            }
             label="Enabled Global Priority Filtering for block columns"
           />
           <FormControlLabel
             name="stage-background-checkbox"
-            control={<TSCCheckbox />}
+            control={
+              <TSCCheckbox
+                onChange={(e) => actions.setEnableColumnBackground(e.target.checked)}
+                checked={state.settings.enableColumnBackground}
+              />
+            }
             label="Enabled stage background for event columns"
           />
           <FormControlLabel
             name="enable-legend-checkbox"
-            control={<TSCCheckbox />}
+            control={
+              <TSCCheckbox
+                onChange={(e) => actions.setEnableChartLegend(e.target.checked)}
+                checked={state.settings.enableChartLegend}
+              />
+            }
             label="Enable legend for the chart"
           />
           <FormControlLabel
-            control={<TSCCheckbox />}
+            control={
+              <TSCCheckbox
+                onChange={(e) => actions.setNoIndentPattern(e.target.checked)}
+                checked={state.settings.noIndentPattern}
+              />
+            }
             name="lithology-auto-indent-checkbox"
             label="Do not auto-indent lithology patterns"
           />
           <FormControlLabel
             name="conserve-chart-checkbox"
             control={<TSCCheckbox />}
-            label="Conserve Chart Space in Family Tree Plotting"
+            label="Conserve Chart Space in Family Tree Plotting (Not implemented)"
           />
           <FormControlLabel
             name="hide-block-labels-checkbox"
-            control={<TSCCheckbox />}
+            control={
+              <TSCCheckbox
+                onChange={(e) => actions.setEnableHideBlockLabel(e.target.checked)}
+                checked={state.settings.enableHideBlockLabel}
+              />
+            }
             label="Hide block labels based on priority"
           />
           <FormControlLabel

@@ -1,10 +1,11 @@
 version: "3"
-
+networks:
+  shared_network:
+    external: true
 services:
   tsconline:
-    build:
-      .
-      #image: tscreator/tscreator_online:v2
+    build: .
+    #image: tscreator/tscreator_online:v2
     env_file: # You have to create this file yourself with a VNCPASSWORD=thepasswordyouwant
       - secrets.env
     expose:
@@ -13,9 +14,10 @@ services:
       - 5900
       - 5800
     ports:
-      - "3000:${PORT:-3000}" # map to PORT on host machine, or default to 3000 if PORT is not set
-        # Uncomment these if you need to view the GUI
+      - "${BIND_ADDRESS:-127.0.0.1}:${EXTERNAL_PORT:-6000}:3000" # container accessible on localhost:6000 unless specified in .env file
       - "5900:5900"
       - "5800:5800"
     volumes:
       - .:/code
+    networks:
+      - shared_network
