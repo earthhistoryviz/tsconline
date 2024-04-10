@@ -50,6 +50,10 @@ const FontMenuRow: React.FC<{
     actions.setColor(target, newColor, column);
   };
 
+  const handleColorChangs = (color: string) => {
+    fontOpts.color = color;
+  }
+
   return (
     <div>
       <div id="FontRowContainer">
@@ -117,7 +121,9 @@ const FontMenuRow: React.FC<{
           </ToggleButton>
         </ToggleButtonGroup>
         <div id="ColorInputContainer">
-          <TSCColorPicker />
+          <TSCColorPicker 
+            color = {fontOpts.color}
+            onColorChange={handleColorChangs}/>
         </div>
         <Typography
           sx={{
