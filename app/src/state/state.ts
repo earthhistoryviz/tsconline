@@ -140,6 +140,6 @@ export const state = observable<State>({
   errors: {
     errorAlerts: new Map<ErrorCodes, ErrorAlert>()
   },
-  presetColors: JSON.parse(localStorage.getItem("savedColors") || JSON.stringify(defaultColors)),,
+  presetColors: JSON.parse(localStorage.getItem("savedColors") || JSON.stringify(defaultColors)),
   snackbars: []
 });
