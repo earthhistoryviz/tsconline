@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { FormLabel } from "@mui/material";
 import TSCColorPicker from "../components/TSCColorPicker";
 
-export const ChangeColor: React.FC<{}> = observer(({}) => {
+export const ChangeColor: React.FC<> = observer(() => {
   const [selectedColor, setSelectedColor] = useState("#000"); // State to keep track of selected color
 
   const handleColorChange = (color: string) => {

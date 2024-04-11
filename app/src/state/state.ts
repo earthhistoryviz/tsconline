@@ -15,6 +15,7 @@ import type {
   ChartInfoTSC
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
+import { defaultColors } from "../util/constant";
 import { settings } from "../constants";
 
 export type State = {
