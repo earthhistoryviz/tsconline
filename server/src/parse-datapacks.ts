@@ -150,7 +150,7 @@ export async function parseDatapacks(files: string[], decryptFilePath: string): 
         // if the parent is not a child
         if (!isChild.has(parent)) {
           recursive(
-            "Root",
+            "Chart Title",
             parent,
             children,
             columnInfoArray,
