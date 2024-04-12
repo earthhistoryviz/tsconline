@@ -111,10 +111,14 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
  * @param files the files to be parsed
  * @returns
  */
-export async function parseDatapacks(files: string[], decryptFilePath: string): Promise<DatapackParsingPack> {
-  const decryptPaths = await grabFilepaths(files, decryptFilePath, "datapacks");
+export async function parseDatapacks(
+  file: string,
+  decryptFilePath: string,
+  isUserDatapack: boolean
+): Promise<DatapackParsingPack> {
+  const decryptPaths = await grabFilepaths([file], decryptFilePath, "datapacks");
   if (decryptPaths.length == 0)
-    throw new Error(`Did not find any datapacks for ${files} in decryptFilePath ${decryptFilePath}`);
+    throw new Error(`Did not find any datapacks for ${file} in decryptFilePath ${decryptFilePath}`);
   const columnInfoArray: ColumnInfo[] = [];
   const isChild: Set<string> = new Set();
   const allEntries: Map<string, ParsedColumnEntry> = new Map();
@@ -181,9 +185,9 @@ export async function parseDatapacks(files: string[], decryptFilePath: string): 
       throw new Error(`No columns found for path ${decryptPaths}`);
   } catch (e) {
     console.log("ERROR: failed to read columns for path " + decryptPaths + ". ", e);
-    return { columnInfoArray: [], datapackAgeInfo: { datapackContainsSuggAge: false } };
+    return { columnInfoArray: [], datapackAgeInfo: { datapackContainsSuggAge: false }, isUserDatapack };
   }
-  return { columnInfoArray, datapackAgeInfo };
+  return { columnInfoArray, datapackAgeInfo, isUserDatapack };
 }
 /**
  * This will populate a mapping of all parents : childen[]

@@ -229,41 +229,21 @@ const setChartSettings = action("setChartSettings", (settings: ChartSettingsInfo
  */
 export const setDatapackConfig = action(
   "setChart",
-  async (datapacks: string[], settingsPath: string): Promise<boolean> => {
+  async (datapacks: string[], settingsPath?: string): Promise<boolean> => {
     let datapackAgeInfo: DatapackAgeInfo = {
       datapackContainsSuggAge: false
     };
     let mapInfo: MapInfo = {};
     let mapHierarchy: MapHierarchy = {};
     let columnInfo: ColumnInfo;
+    let chartSettings: ChartInfoTSC = {};
     try {
-      // Grab the settings for this chart if there are any:
-      //TODO: only get default settings file if its a preset
       if (settingsPath && settingsPath.length > 0) {
-        const res = await fetcher(`/settingsXml/${encodeURIComponent(settingsPath)}`, {
-          method: "GET"
+        await fetchSettingsXML(`/settingsXml/${settingsPath}`).then((settings) => {
+          if (settings) {
+            chartSettings = settings;
+          }
         });
-        let settingsXml;
-        try {
-          settingsXml = await res.text();
-        } catch (e) {
-          //couldn't get settings from server
-          displayServerError(
-            null,
-            ErrorCodes.INVALID_SETTINGS_RESPONSE,
-            ErrorMessages[ErrorCodes.INVALID_SETTINGS_RESPONSE]
-          );
-          return false;
-        }
-        try {
-          state.settingsTSC = xmlToJson(settingsXml); // Save the parsed JSON to the state.settingsTSC
-        } catch (e) {
-          //couldn't parse settings
-          displayServerError(e, ErrorCodes.INVALID_SETTINGS_RESPONSE, "Error parsing xml settings file");
-          return false;
-        }
-      } else {
-        state.settingsTSC = {};
       }
       // the default overarching variable for the columnInfo
       columnInfo = {
@@ -328,7 +308,7 @@ export const setDatapackConfig = action(
       // add everything together
       // uses preparsed data on server start and appends items together
       for (const datapack of datapacks) {
-        if (!datapack || !state.datapackIndex[datapack] || !state.mapPackIndex[datapack])
+        if (!datapack || !state.datapackIndex[datapack])
           throw new Error(`File requested doesn't exist on server: ${datapack}`);
         const datapackParsingPack = state.datapackIndex[datapack]!;
         // concat the children array of root to the array created in preparsed array
@@ -345,6 +325,15 @@ export const setDatapackConfig = action(
         else Object.assign(mapInfo, mapPack.mapInfo);
         if (!mapHierarchy) mapHierarchy = mapPack.mapHierarchy;
         else Object.assign(mapHierarchy, mapPack.mapHierarchy);
+        if (!settingsPath) {
+          // use a state username through the session
+          await fetchSettingsXML(`/settingsXml/${datapack}/username`).then((settings) => {
+            // this is where we would combine the settings
+            if (settings) {
+              chartSettings = settings;
+            }
+          });
+        }
       }
       assertDatapackAgeInfo(datapackAgeInfo);
       assertMapHierarchy(mapHierarchy);
@@ -360,8 +349,8 @@ export const setDatapackConfig = action(
     state.settingsTabs.columns = columnInfo;
     state.mapState.mapInfo = mapInfo;
     state.config.datapacks = datapacks;
-    state.config.settingsPath = settingsPath;
-    initializeColumnHashMap(state.settingsTabs.columns);
+    state.settingsTSC = chartSettings;
+    initializeColumnHashMap(columnInfo);
     resetSettings();
     if (state.settingsTSC.settings) {
       setChartSettings(state.settingsTSC.settings);
@@ -369,6 +358,29 @@ export const setDatapackConfig = action(
     return true;
   }
 );
+
+const fetchSettingsXML = async (settingsPath: string): Promise<ChartInfoTSC | null> => {
+  const res = await fetcher(`/settingsXml/${settingsPath}`, {
+    method: "GET"
+  });
+  let settingsXml;
+  try {
+    settingsXml = await res.text();
+  } catch (e) {
+    //couldn't get settings from server
+    displayServerError(null, ErrorCodes.INVALID_SETTINGS_RESPONSE, ErrorMessages[ErrorCodes.INVALID_SETTINGS_RESPONSE]);
+    return null;
+  }
+  try {
+    const settingsJson = xmlToJson(settingsXml);
+    removeError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
+    return settingsJson;
+  } catch (e) {
+    //couldn't parse settings
+    displayServerError(e, ErrorCodes.INVALID_SETTINGS_RESPONSE, "Error parsing xml settings file");
+  }
+  return null;
+};
 
 /**
  * Sets the geological top stages and the base stages

@@ -123,7 +123,7 @@ export const uploadDatapack = async function uploadDatapack(
     return;
   }
   try {
-    await new Promise<void>((resolve, reject) => {
+    await new Promise<void>((resolve) => {
       const cmd =
         `java -jar ${assetconfigs.activeJar} -node ` +
         // Decrypting these datapacks:
@@ -142,7 +142,7 @@ export const uploadDatapack = async function uploadDatapack(
           resolve();
         }
       });
-    })
+    });
   } catch (e) {
     console.error(e);
     await resetUploadDirectory(filepath, decryptedFilepathDir, settingsFilepath);
@@ -214,7 +214,7 @@ export const uploadDatapack = async function uploadDatapack(
       return;
     }
   }
-  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [filename]);
+  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [filename], true);
   if (!datapackIndex[filename]) {
     await resetUploadDirectory(filepath, decryptedFilepathDir, settingsFilepath);
     reply.status(500).send({ error: "Failed to load decrypted datapack" });
@@ -274,13 +274,18 @@ export const fetchImage = async function (
 };
 
 export const fetchSettingsXml = async function fetchSettingsJson(
-  request: FastifyRequest<{ Params: { settingFile: string } }>,
+  request: FastifyRequest<{ Params: { file: string; username?: string } }>,
   reply: FastifyReply
 ) {
   try {
-    const { settingFile } = request.params;
+    const { file, username } = request.params;
+    let settingsPath = file;
+    if (username) {
+      const settingsFile = path.basename(file, path.extname(file)) + ".tsc";
+      settingsPath = path.join(assetconfigs.uploadDirectory, md5(username), "settings", settingsFile);
+    }
     //TODO: differentiate between preset and user uploaded datpack
-    const settingsXml = (await readFile(`${decodeURIComponent(settingFile)}`)).toString();
+    const settingsXml = (await readFile(`${settingsPath}`)).toString();
     reply.send(settingsXml);
   } catch (e) {
     reply.send({ error: e });
@@ -321,10 +326,7 @@ export const fetchSVGStatus = async function (
  * Will fetch a chart with or without the cache
  * Will return the chart path and the hash the chart was saved with
  */
-export const fetchChart = async function fetchChart(
-  request: FastifyRequest,
-  reply: FastifyReply
-) {
+export const fetchChart = async function fetchChart(request: FastifyRequest, reply: FastifyReply) {
   let chartrequest;
   try {
     chartrequest = JSON.parse(request.body as string);
@@ -374,9 +376,9 @@ export const fetchChart = async function fetchChart(
     reply.send({ error: "ERROR: failed to save settings" });
     return;
   }
-  const userDatapackFilepaths = await glob(`${assetconfigs.uploadDirectory}/${hashedUsername}/datapacks/*`)
+  const userDatapackFilepaths = await glob(`${assetconfigs.uploadDirectory}/${hashedUsername}/datapacks/*`);
   const userDatapackNames = userDatapackFilepaths.map((datapack) => path.basename(datapack));
-  const datapacks = []
+  const datapacks = [];
   for (const datapack of chartrequest.datapacks) {
     if (assetconfigs.activeDatapacks.includes(datapack)) {
       datapacks.push(`"${assetconfigs.datapacksDirectory}/${datapack}"`);

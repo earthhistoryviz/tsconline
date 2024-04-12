@@ -42,7 +42,8 @@ export function assertFileMetadata(o: any): asserts o is FileMetadata {
     throwError("FileMetadata", "mapPackIndexFilepath", "string", o.mapPackIndexFilepath);
   if (typeof o.datapackIndexFilepath !== "string")
     throwError("FileMetadata", "datapackIndexFilepath", "string", o.datapackIndexFilepath);
-  if (typeof o.settingsFilepath !== "string") throwError("FileMetadata", "settingsFilepath", "string", o.settingsFilepath)
+  if (typeof o.settingsFilepath !== "string")
+    throwError("FileMetadata", "settingsFilepath", "string", o.settingsFilepath);
 }
 
 export function assertFileMetadataIndex(o: any): asserts o is FileMetadataIndex {
