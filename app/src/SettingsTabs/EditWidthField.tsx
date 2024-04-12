@@ -8,8 +8,7 @@ import { ColumnInfo } from "@tsconline/shared";
 
 import "./EditWidthField.css";
 import { NumericFormat } from "react-number-format";
-import { pushError } from "../state/actions";
-import { ErrorCodes } from "../util/error-codes";
+import { ColumnInfo } from "@tsconline/shared";
 
 const WidthTextField = ({ ...props }: TextFieldProps) => (
   <TextField {...props} hiddenLabel variant="filled" size="small" />
