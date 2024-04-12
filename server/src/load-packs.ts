@@ -31,11 +31,12 @@ export async function loadIndexes(
   datapackIndex: DatapackIndex,
   mapPackIndex: MapPackIndex,
   decryptionDirectory: string,
-  datapacks: string[]
+  datapacks: string[],
+  isUserDatapack: boolean = false
 ) {
   console.log(`\nParsing datapacks: ${datapacks}\n`);
   for (const datapack of datapacks) {
-    await parseDatapacks([datapack], decryptionDirectory)
+    await parseDatapacks(datapack, decryptionDirectory, isUserDatapack)
       .then((datapackParsingPack) => {
         assertDatapackParsingPack(datapackParsingPack);
         datapackIndex[datapack] = datapackParsingPack;
@@ -44,7 +45,7 @@ export async function loadIndexes(
       .catch((e) => {
         console.log(`Cannot create a datapackParsingPack with datapack ${datapack} and error: ${e}`);
       });
-    await parseMapPacks([datapack], decryptionDirectory)
+    await parseMapPacks(datapack, decryptionDirectory)
       .then((mapPack) => {
         assertMapPack(mapPack);
         mapPackIndex[datapack] = mapPack;
