@@ -215,6 +215,7 @@ export type ColumnInfo = {
   subInfo?: SubInfo[];
   minAge: number;
   maxAge: number;
+  show: boolean;
   enableTitle: boolean;
   columnDisplayType: DisplayedColumnTypes;
   rgb: RGB;
@@ -840,6 +841,7 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   if ("width" in o && typeof o.width !== "number") throwError("ColumnInfo", "width", "number", o.width);
   if (typeof o.enableTitle !== "boolean") throwError("ColumnInfo", "enableTitle", "boolean", o.enableTitle);
   if (typeof o.units !== "string") throwError("ColumnInfo", "units", "string", o.units);
+  if (typeof o.show !== "boolean") throwError("ColumnInfo", "show", "boolean", o.show);
   if ("showAgeLabels" in o && typeof o.showAgeLabels !== "boolean")
     throwError("ColumnInfo", "showAgeLabels", "boolean", o.showAgeLabels);
   if ("showUncertaintyLabels" in o && typeof o.showUncertaintyLabels !== "boolean")

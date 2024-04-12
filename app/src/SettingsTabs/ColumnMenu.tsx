@@ -54,38 +54,25 @@ export const ColumnMenu = observer(() => {
   const [openMenu, setOpenMenu] = useState(false);
   const selectedColumn = state.settingsTabs.columnSelected;
   const column = selectedColumn ? state.settingsTabs.columnHashMap.get(selectedColumn!) : undefined;
-  function showMenu() {
-    const menu = document.getElementById("ColumnMenuContent");
-    const label = document.getElementById("ColumnMenuLabel");
-    if (menu !== null && label !== null) {
-      if (!openMenu) {
-        menu.style.display = "flex";
-        label.style.display = "flex";
-        setOpenMenu(true);
-      } else {
-        menu.style.display = "none";
-        label.style.display = "none";
-        setOpenMenu(false);
-      }
-    }
-  }
+  const info =
+    state.settingsTabs.columnSelected === null
+      ? ""
+      : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)?.popup;
+  const toggleMenu = () => {
+    setOpenMenu(!openMenu);
+  };
+
   return (
-    <div className={openMenu ? "column-menu" : ""}>
+    <div className={`column-menu ${openMenu ? "open" : ""}`}>
       <div className="column-menu-header">
-        <div className="column-settings-cog">
-          <ToggleButton
-            value="check"
-            selected={openMenu}
-            onChange={() => {
-              showMenu();
-            }}
-            size="small">
-            <SettingsSharpIcon />
-          </ToggleButton>
-        </div>
-        <div id="ColumnMenuLabel" className="column-menu-label">
-          <Typography>Settings</Typography>
-        </div>
+        <ToggleButton
+          value="check"
+          selected={openMenu}
+          onChange={toggleMenu}
+          size="small">
+          <SettingsSharpIcon />
+        </ToggleButton>
+        <Typography>Settings</Typography>
       </div>
       <div id="ColumnMenuContent" className="column-menu-content">
         {column && (

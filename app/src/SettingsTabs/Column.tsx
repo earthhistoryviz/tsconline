@@ -3,7 +3,8 @@ import React, { useContext, useState } from "react";
 import Typography from "@mui/material/Typography";
 import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
-import { Box } from "@mui/material";
+import { Box, TextField } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import { ColumnContainer, AccordionDetails, TSCCheckbox, AccordionSummary, Accordion, TSCButton } from "../components";
 
 import { ColumnMenu } from "./ColumnMenu";
@@ -39,6 +40,9 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
   ({ details, expandedAccordions, accordionClicked }) => {
     const { actions, state } = useContext(context);
     const theme = useTheme();
+    if (!details.show) {
+      return null;
+    }
     //for keeping the original name for array access
     function clickColumnName() {
       actions.setcolumnSelected(details.name);
@@ -133,7 +137,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
                   key={childName}
                   details={childDetails}
                   expandedAccordions={expandedAccordions}
-                  accordionClicked={accordionClicked}
+                  accordionClicked={accordionClicked} 
                 />
               ))}
           </>
@@ -145,10 +149,19 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
 
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
-  const { state } = useContext(context);
+  const { state, actions } = useContext(context);
+  const navigate = useNavigate();
   //state array of column names that are expanded
-  const accordions = state.settingsTabs.columns ? stringToHash(state.settingsTabs.columns.name) : 0;
-  const [expandedAccordions, setExpandedAccordions] = useState<number[]>([accordions]);
+  const [expandedAccordions, setExpandedAccordions] = useState<number[]>([
+    stringToHash(state.settingsTabs.columns!.name)
+  ]);
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const term = event.target.value;
+    console.log(term)
+    setSearchTerm(term);
+    actions.searchColumns(term);
+  };
   //if column not in expanded list, add it
   //if column in expanded list, remove it
   const accordionClicked = (name: string) => {
@@ -159,7 +172,6 @@ export const Column = observer(function Column() {
   //replaces expanded list with only top level column open
   //which collpases everything
   const collapseAll = () => {
-    if (!state.settingsTabs.columns) return;
     setExpandedAccordions([stringToHash(state.settingsTabs.columns!.name)]);
   };
   //helper function for expand all for going through all the columns
@@ -172,42 +184,69 @@ export const Column = observer(function Column() {
   //adds every column to the expand list
   const expandAll = () => {
     const newArray: number[] = [];
-    if (!state.settingsTabs.columns) return;
     newArray.push(stringToHash(state.settingsTabs.columns!.name));
     recurseThroughColumn(newArray, state.settingsTabs.columns!.children);
     setExpandedAccordions(newArray);
   };
 
-  return (
-    <div className="column-top-level">
-      <div className="column-accordion-and-menu">
-        <Box className="hide-scrollbar column-accordion-wrapper">
-          <TSCButton
-            id="column-expand-buttons"
-            onClick={() => {
-              expandAll();
-            }}>
-            Expand All
-          </TSCButton>
-          <TSCButton
-            id="column-expand-buttons"
-            onClick={() => {
-              collapseAll();
-            }}>
-            collapse All
-          </TSCButton>
-          {state.settingsTabs.columns &&
-            Object.entries(state.settingsTabs.columns.children).map(([childName, childDetails]) => (
-              <ColumnAccordion
-                key={childName}
-                details={childDetails}
-                expandedAccordions={expandedAccordions}
-                accordionClicked={accordionClicked}
-              />
-            ))}
+    return (
+      <div className="column-top-level">
+        <Box sx={{ 
+          marginTop: '20px',
+          marginBottom: '10px' }}>
+          <TextField
+            id="search-bar"
+            label="Search"
+            variant="outlined"
+            size="small"
+            fullWidth
+            sx={{ marginBottom: '10px', width: '400px' }}
+            onChange={handleSearch} 
+            value={searchTerm}
+          />
         </Box>
-        <ColumnMenu />
+        <TSCButton
+          id="column-generate-button-top"
+          onClick={() => {
+            actions.fetchChartFromServer(navigate);
+          }}>
+          Generate
+        </TSCButton>
+        <div className="column-accordion-and-menu">
+          <Box
+            className="hide-scrollbar column-accordion-wrapper"
+            sx={{
+              border: `1px solid gray`,
+              borderRadius: "4px",
+              zIndex: 0,
+              padding: "10px"
+            }}>
+              <>
+                <TSCButton
+                  id="column-generate-button-top"
+                  onClick={() => {
+                    expandAll();
+                  }}>
+                  Expand All
+                </TSCButton>
+                <TSCButton
+                  id="column-generate-button-top"
+                  onClick={() => {
+                    collapseAll();
+                  }}>
+                  collapse All
+                </TSCButton>
+                {state.settingsTabs.columns && (
+                  <ColumnAccordion
+                    details={state.settingsTabs.columns}
+                    expandedAccordions={expandedAccordions}
+                    accordionClicked={accordionClicked}
+                  />
+                )}
+              </>
+          </Box>
+          <ColumnMenu />
+        </div>
       </div>
-    </div>
-  );
+    );
 });

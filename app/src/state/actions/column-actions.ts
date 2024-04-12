@@ -73,6 +73,55 @@ export const setcolumnSelected = action((name: string) => {
   }
 });
 
+// Function to update column visibility based on search results
+export const updateColumnVisibility = (columnsToShow: string[]) => {
+  state.settingsTabs.columnHashMap.forEach((columnInfo) => {
+    if (columnsToShow.includes(columnInfo.name)) {
+      columnInfo.show = true;
+      let parentName = columnInfo.parent;
+      while (parentName) {
+        const parentColumnInfo = state.settingsTabs.columnHashMap.get(parentName);
+        if (parentColumnInfo) {
+          parentColumnInfo.show = true;
+          parentName = parentColumnInfo.parent;
+        } else {
+          break;
+        }
+      }
+    } else {
+      columnInfo.show = false;
+    }
+  });
+};
+
+// Function to search columns and retain hierarchy
+export const searchColumns = action(async (searchTerm: string) => {
+  if (searchTerm === "") {
+    state.settingsTabs.columnHashMap.forEach((columnInfo) => {
+      columnInfo.show = true;
+    });
+    return;
+  }
+  state.settingsTabs.columnHashMap.forEach((columnInfo) => {
+    columnInfo.show = false;
+  })
+  state.settingsTabs.columnHashMap.forEach((columnInfo) => {
+    if (columnInfo.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+      columnInfo.show = true;
+      let parentName = columnInfo.parent;
+      while (parentName) {
+        const parentColumnInfo = state.settingsTabs.columnHashMap.get(parentName);
+        if (parentColumnInfo) {
+          parentColumnInfo.show = true;
+          parentName = parentColumnInfo.parent;
+        } else {
+          break;
+        }
+      }
+    }
+  });
+});
+
 export const setInheritable = action((target: ValidFontOptions, isInheritable: boolean, column: ColumnInfo) => {
   column.fontsInfo[target].inheritable = isInheritable;
 });

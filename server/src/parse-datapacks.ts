@@ -54,6 +54,7 @@ export type ParsedColumnEntry = {
   children: string[];
   on: boolean;
   info: string;
+  show: boolean;
   enableTitle: boolean;
 };
 
@@ -74,6 +75,7 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
     children: [],
     on: true,
     info: "",
+    show: true,
     enableTitle: true
   };
   for (let i = 0; i < array.length; i++) {
@@ -1302,6 +1304,8 @@ function recursive(
     parent: parent,
     minAge: Number.MAX_VALUE,
     maxAge: Number.MIN_VALUE,
+    show: true,
+    width: 100,
     rgb: {
       r: 255,
       g: 255,
@@ -1554,6 +1558,7 @@ function addFaciesChildren(
     parent: name,
     minAge,
     maxAge,
+    show: true,
     width: width * 0.4,
     rgb,
     units,
@@ -1571,6 +1576,7 @@ function addFaciesChildren(
     parent: name,
     minAge,
     maxAge,
+    show: false,
     width,
     rgb,
     units,
@@ -1588,6 +1594,7 @@ function addFaciesChildren(
     parent: name,
     minAge,
     maxAge,
+    show: true,
     width: width * 0.4,
     rgb,
     units,
@@ -1657,6 +1664,7 @@ function addChronChildren(
     rgb,
     units,
     columnDisplayType: "Chron"
+    show: true,
   });
   children.push({
     name: `${name} Chron Label`,
@@ -1674,6 +1682,7 @@ function addChronChildren(
     rgb,
     units,
     columnDisplayType: "Zone"
+    show: true,
   });
   children.push({
     name: `${name} Series Label`,
@@ -1691,6 +1700,7 @@ function addChronChildren(
     rgb,
     units,
     columnDisplayType: "Zone"
+    show: true,
   });
   for (const child of children) {
     for (const fontOption of child.fontOptions) {
