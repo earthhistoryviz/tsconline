@@ -241,7 +241,10 @@ export const setDatapackConfig = action(
       if (settingsPath && settingsPath.length > 0) {
         await fetchSettingsXML(`/settingsXml/${settingsPath}`).then((settings) => {
           if (settings) {
+            removeError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
             chartSettings = settings;
+          } else {
+            return false;
           }
         });
       }
@@ -325,15 +328,6 @@ export const setDatapackConfig = action(
         else Object.assign(mapInfo, mapPack.mapInfo);
         if (!mapHierarchy) mapHierarchy = mapPack.mapHierarchy;
         else Object.assign(mapHierarchy, mapPack.mapHierarchy);
-        if (!settingsPath) {
-          // use a state username through the session
-          await fetchSettingsXML(`/settingsXml/${datapack}/username`).then((settings) => {
-            // this is where we would combine the settings
-            if (settings) {
-              chartSettings = settings;
-            }
-          });
-        }
       }
       assertDatapackAgeInfo(datapackAgeInfo);
       assertMapHierarchy(mapHierarchy);
@@ -373,7 +367,6 @@ const fetchSettingsXML = async (settingsPath: string): Promise<ChartInfoTSC | nu
   }
   try {
     const settingsJson = xmlToJson(settingsXml);
-    removeError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
     return settingsJson;
   } catch (e) {
     //couldn't parse settings
