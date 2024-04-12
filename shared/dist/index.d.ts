@@ -34,11 +34,12 @@ export type Patterns = {
 export type Color = {
     name: string;
     hex: string;
-    rgb: {
-        r: number;
-        g: number;
-        b: number;
-    };
+    rgb: RGB;
+};
+export type RGB = {
+    r: number;
+    g: number;
+    b: number;
 };
 export type Presets = {
     [type: string]: ChartConfig[];
@@ -47,6 +48,16 @@ export type DatapackAgeInfo = {
     datapackContainsSuggAge: boolean;
     topAge?: number;
     bottomAge?: number;
+};
+export type ColumnHeaderProps = {
+    name: string;
+    minAge: number;
+    maxAge: number;
+    enableTitle: boolean;
+    on: boolean;
+    width: number;
+    popup: string;
+    rgb: RGB;
 };
 export type ChartConfig = {
     icon: string;
@@ -194,7 +205,8 @@ export type SubBlockInfo = {
     label: string;
     age: number;
     popup: string;
-    lineStyle: string;
+    lineStyle: "solid" | "dashed" | "dotted";
+    rgb: RGB;
 };
 export type ChartRequest = {
     settings: string;
@@ -208,14 +220,33 @@ export type ColumnInfo = {
     editName: string;
     fontsInfo: FontsInfo;
     on: boolean;
-    info: string;
+    popup: string;
     children: ColumnInfo[];
     parent: string | null;
     subBlockInfo?: SubBlockInfo[];
     subFaciesInfo?: SubFaciesInfo[];
+    subEventInfo?: SubEventInfo[];
+    subRangeInfo?: SubRangeInfo[];
     minAge: number;
     maxAge: number;
-    show: boolean
+    enableTitle: boolean;
+    rgb: RGB;
+    width: number;
+};
+export type Range = ColumnHeaderProps & {
+    subRangeInfo: SubRangeInfo[];
+};
+export type SubRangeInfo = {
+    label: string;
+    age: number;
+    abundance: "TOP" | "missing" | "rare" | "common" | "frequent" | "abundant" | "sample" | "flood";
+    popup: string;
+};
+export type SubEventInfo = {
+    label: string;
+    age: number;
+    lineStyle: "solid" | "dashed" | "dotted";
+    popup: string;
 };
 export type SubFaciesInfo = {
     rockType: string;
@@ -223,21 +254,14 @@ export type SubFaciesInfo = {
     age: number;
     info: string;
 };
-export type Facies = {
-    name: string;
-    info: string;
-    on: boolean;
+export type Facies = ColumnHeaderProps & {
     subFaciesInfo: SubFaciesInfo[];
-    minAge: number;
-    maxAge: number;
 };
-export type Block = {
-    name: string;
+export type Event = ColumnHeaderProps & {
+    subEventInfo: SubEventInfo[];
+};
+export type Block = ColumnHeaderProps & {
     subBlockInfo: SubBlockInfo[];
-    minAge: number;
-    maxAge: number;
-    popup: string;
-    on: boolean;
 };
 export type ChartResponseInfo = {
     chartpath: string;
@@ -309,6 +333,12 @@ export type TimescaleItem = {
     key: string;
     value: number;
 };
+export declare function assertSubRangeInfo(o: any): asserts o is SubRangeInfo;
+export declare function assertRange(o: any): asserts o is Range;
+export declare function assertColumnHeaderProps(o: any): asserts o is ColumnHeaderProps;
+export declare function assertRGB(o: any): asserts o is RGB;
+export declare function assertEvent(o: any): asserts o is Event;
+export declare function assertSubEventInfo(o: any): asserts o is SubEventInfo;
 export declare function assertColor(o: any): asserts o is Color;
 export declare function assertPatterns(o: any): asserts o is Patterns;
 export declare function assertMapPackIndex(o: any): asserts o is MapPackIndex;
