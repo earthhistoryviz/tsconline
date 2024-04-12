@@ -149,10 +149,7 @@ export function capitalizeFirstLetter(input: string): string {
  * @param uploadedFile
  * @param decryptedUploadedDirectory
  */
-export async function resetUploadDirectory(
-  uploadedFile: string,
-  decryptedUploadedDirectory: string,
-) {
+export async function resetUploadDirectory(uploadedFile: string, decryptedUploadedDirectory: string) {
   await rm(uploadedFile, { force: true });
   if (fs.existsSync(decryptedUploadedDirectory)) {
     deleteDirectory(decryptedUploadedDirectory);

@@ -30,7 +30,7 @@ export async function writeFileMetadata(
   filepath: string,
   decryptedFilepath: string,
   mapPackIndexFilepath: string,
-  datapackIndexFilepath: string,
+  datapackIndexFilepath: string
 ) {
   const metadata = await loadFileMetadata(fileMetadataFilepath);
   assertFileMetadataIndex(metadata);
@@ -39,7 +39,7 @@ export async function writeFileMetadata(
     uploadedAt: new Date().toISOString(),
     decryptedFilepath,
     mapPackIndexFilepath,
-    datapackIndexFilepath,
+    datapackIndexFilepath
   };
   await writeFile(fileMetadataFilepath, JSON.stringify(metadata));
 }

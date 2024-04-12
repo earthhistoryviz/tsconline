@@ -201,7 +201,7 @@ export const uploadDatapack = async function uploadDatapack(
       filepath,
       decryptedFilepathDir,
       mapPackIndexFilepath,
-      datapackIndexFilepath,
+      datapackIndexFilepath
     );
   } catch (e) {
     console.error(e);
