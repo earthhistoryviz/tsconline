@@ -97,10 +97,8 @@ export const ColumnMenu = observer(() => {
         {column && <ShowTitles column={column} />}
         {!!info && <InfoBox info={info} />}
         {state.settingsTabs.columnSelected &&
-          state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.width && (
-            <EditWidthField
-              width={state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.width ?? 0}
-            />
+          state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected) && (
+            <EditWidthField width={state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)?.width} />
           )}
       </div>
     </div>
