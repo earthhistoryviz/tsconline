@@ -86,8 +86,6 @@ export const uploadDatapack = async function uploadDatapack(
   const userDir = path.join(assetconfigs.uploadDirectory, hash);
   const datapackDir = path.join(userDir, "datapacks");
   const decryptDir = path.join(userDir, "decrypted");
-  const settingsDir = path.join(userDir, "settings");
-  const settingsFilepath = path.join(settingsDir, filenameWithoutExtension + ".tsc");
   const filepath = path.join(datapackDir, filename);
   const decryptedFilepathDir = path.join(decryptDir, filenameWithoutExtension);
   const mapPackIndexFilepath = path.join(userDir, "MapPackIndex.json");
@@ -97,7 +95,6 @@ export const uploadDatapack = async function uploadDatapack(
     return;
   }
   await mkdirp(datapackDir);
-  await mkdirp(settingsDir);
   const fileStream = file.file;
   console.log("Uploading file: ", filename);
   try {
@@ -113,45 +110,13 @@ export const uploadDatapack = async function uploadDatapack(
     });
   } catch (e) {
     console.error(e);
-    await resetUploadDirectory(filepath, decryptedFilepathDir, settingsFilepath);
+    await resetUploadDirectory(filepath, decryptedFilepathDir);
     reply.status(500).send({ error: "Failed to save file with error: " + e });
     return;
   }
   if (file.file.truncated) {
-    await resetUploadDirectory(filepath, decryptedFilepathDir, settingsFilepath);
+    await resetUploadDirectory(filepath, decryptedFilepathDir);
     reply.status(413).send({ error: "File too large" });
-    return;
-  }
-  try {
-    await new Promise<void>((resolve) => {
-      const cmd =
-        `java -jar ${assetconfigs.activeJar} -node ` +
-        // Decrypting these datapacks:
-        `-d "${filepath.replaceAll("\\", "/")}" ` +
-        // Tell it where to send the datapacks
-        `-sse "${settingsFilepath}" `;
-      console.log("Calling java file to create settings file: ", cmd);
-      exec(cmd, function (error, stdout, stderror) {
-        console.log("Java jar finished, sending reply to browser");
-        if (error) {
-          console.error("Java error param: " + error);
-          console.error("Java stderr: " + stderror.toString());
-          resolve();
-        } else {
-          console.log("Java stdout: " + stdout.toString());
-          resolve();
-        }
-      });
-    });
-  } catch (e) {
-    console.error(e);
-    await resetUploadDirectory(filepath, decryptedFilepathDir, settingsFilepath);
-    reply.status(500).send({ error: "Failed to create settings file during java runtime with error: " + e });
-    return;
-  }
-  if (!fs.existsSync(settingsFilepath)) {
-    await resetUploadDirectory(filepath, decryptedFilepathDir, settingsFilepath);
-    reply.status(500).send({ error: "Failed to create settings file" });
     return;
   }
   try {
@@ -177,12 +142,12 @@ export const uploadDatapack = async function uploadDatapack(
     });
   } catch (e) {
     console.error(e);
-    await resetUploadDirectory(filepath, decryptedFilepathDir, settingsFilepath);
+    await resetUploadDirectory(filepath, decryptedFilepathDir);
     reply.status(500).send({ error: "Failed to decrypt datapacks with error " + e });
     return;
   }
   if (!fs.existsSync(decryptedFilepathDir) || !fs.existsSync(path.join(decryptedFilepathDir, "datapacks"))) {
-    await resetUploadDirectory(filepath, decryptedFilepathDir, settingsFilepath);
+    await resetUploadDirectory(filepath, decryptedFilepathDir);
     reply.status(500).send({ error: "Failed to decrypt file" });
     return;
   }
@@ -196,7 +161,7 @@ export const uploadDatapack = async function uploadDatapack(
       assertDatapackIndex(datapackIndex);
     } catch (e) {
       console.error(e);
-      await resetUploadDirectory(filepath, decryptedFilepathDir, settingsFilepath);
+      await resetUploadDirectory(filepath, decryptedFilepathDir);
       reply.status(500).send({ error: "Failed to parse DatapackIndex.json" });
       return;
     }
@@ -209,14 +174,14 @@ export const uploadDatapack = async function uploadDatapack(
       assertMapPackIndex(mapPackIndex);
     } catch (e) {
       console.error(e);
-      await resetUploadDirectory(filepath, decryptedFilepathDir, settingsFilepath);
+      await resetUploadDirectory(filepath, decryptedFilepathDir);
       reply.status(500).send({ error: "Failed to parse MapPackIndex.json" });
       return;
     }
   }
   await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [filename], true);
   if (!datapackIndex[filename]) {
-    await resetUploadDirectory(filepath, decryptedFilepathDir, settingsFilepath);
+    await resetUploadDirectory(filepath, decryptedFilepathDir);
     reply.status(500).send({ error: "Failed to load decrypted datapack" });
     return;
   }
@@ -226,7 +191,7 @@ export const uploadDatapack = async function uploadDatapack(
   } catch (e) {
     console.error(e);
     reply.status(500).send({ error: "Failed to save indexes" });
-    await resetUploadDirectory(filepath, decryptedFilepathDir, settingsFilepath);
+    await resetUploadDirectory(filepath, decryptedFilepathDir);
     return;
   }
   try {
@@ -237,12 +202,11 @@ export const uploadDatapack = async function uploadDatapack(
       decryptedFilepathDir,
       mapPackIndexFilepath,
       datapackIndexFilepath,
-      settingsFilepath
     );
   } catch (e) {
     console.error(e);
     reply.status(500).send({ error: "Failed to load and write metadata for file" });
-    await resetUploadDirectory(filepath, decryptedFilepathDir, settingsFilepath);
+    await resetUploadDirectory(filepath, decryptedFilepathDir);
     return;
   }
   reply.status(200).send({ message: "File uploaded" });
