@@ -1,18 +1,18 @@
 .container {
-    /*padding-left: 4px;*/
-    /*padding-right: 4px;*/
+  /*padding-left: 4px;*/
+  /*padding-right: 4px;*/
 }
 
 .info-box {
-    width: 90%;
-    border: black solid 1px;
-    border-radius: 5px;
-    margin-top: 5px;
-    padding: 4px;
-    max-height: 200px;
+  width: 90%;
+  border: black solid 1px;
+  border-radius: 5px;
+  margin-top: 5px;
+  padding: 4px;
+  max-height: 200px;
 }
 
 .scroll-bar {
-    max-height: 200px;
-    /*padding-right: 10px;*/
+  max-height: 200px;
+  /*padding-right: 10px;*/
 }
