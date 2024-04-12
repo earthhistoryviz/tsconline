@@ -179,7 +179,7 @@ export const uploadDatapack = async function uploadDatapack(
       return;
     }
   }
-  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [filename], true);
+  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [filename]);
   if (!datapackIndex[filename]) {
     await resetUploadDirectory(filepath, decryptedFilepathDir);
     reply.status(500).send({ error: "Failed to load decrypted datapack" });

@@ -15,7 +15,6 @@ export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 export type DatapackParsingPack = {
   columnInfoArray: ColumnInfo[];
   datapackAgeInfo: DatapackAgeInfo;
-  isUserDatapack: boolean;
 };
 
 export type IndexResponse = {
@@ -592,8 +591,6 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
     assertColumnInfo(columnInfo);
   }
   assertDatapackAgeInfo(o.datapackAgeInfo);
-  if (typeof o.isUserDatapack !== "boolean")
-    throwError("DatapackParsingPack", "isUserDatapack", "boolean", o.isUserDatapack);
 }
 export function assertDatapackIndex(o: any): asserts o is DatapackIndex {
   if (!o || typeof o !== "object") throw new Error("DatapackIndex must be a non-null object");
