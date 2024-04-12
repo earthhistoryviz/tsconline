@@ -1,5 +1,5 @@
 import { action } from "mobx";
-import { ChartSettingsInfoTSC, TimescaleItem } from "@tsconline/shared";
+import { ChartInfoTSC, ChartSettingsInfoTSC, TimescaleItem } from "@tsconline/shared";
 
 import {
   type MapInfo,
@@ -239,14 +239,20 @@ export const setDatapackConfig = action(
     let chartSettings: ChartInfoTSC = {};
     try {
       if (settingsPath && settingsPath.length > 0) {
-        await fetchSettingsXML(`/settingsXml/${settingsPath}`).then((settings) => {
-          if (settings) {
-            removeError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
-            chartSettings = settings;
-          } else {
+        await fetchSettingsXML(settingsPath)
+          .then((settings) => {
+            if (settings) {
+              removeError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
+              chartSettings = settings;
+            } else {
+              return false;
+            }
+          })
+          .catch((e) => {
+            console.error(e);
+            pushError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
             return false;
-          }
-        });
+          });
       }
       // the default overarching variable for the columnInfo
       columnInfo = {
@@ -354,7 +360,7 @@ export const setDatapackConfig = action(
 );
 
 const fetchSettingsXML = async (settingsPath: string): Promise<ChartInfoTSC | null> => {
-  const res = await fetcher(`/settingsXml/${settingsPath}`, {
+  const res = await fetcher(`/settingsXml/${encodeURIComponent(settingsPath)}`, {
     method: "GET"
   });
   let settingsXml;

@@ -114,7 +114,7 @@ server.get("/presets", async (_request, reply) => {
 server.post<{ Params: { username: string } }>("/upload/:username", routes.uploadDatapack);
 
 //fetches json object of requested settings file
-server.get("/settingsXml/:file/:username", routes.fetchSettingsXml);
+server.get<{ Params: { file: string } }>("/settingsXml/:file", routes.fetchSettingsXml);
 
 server.get("/datapackinfoindex", (_request, reply) => {
   if (!datapackIndex || !mapPackIndex) {

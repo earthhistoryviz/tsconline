@@ -238,18 +238,13 @@ export const fetchImage = async function (
 };
 
 export const fetchSettingsXml = async function fetchSettingsJson(
-  request: FastifyRequest<{ Params: { file: string; username?: string } }>,
+  request: FastifyRequest<{ Params: { file: string } }>,
   reply: FastifyReply
 ) {
   try {
-    const { file, username } = request.params;
-    let settingsPath = file;
-    if (username) {
-      const settingsFile = path.basename(file, path.extname(file)) + ".tsc";
-      settingsPath = path.join(assetconfigs.uploadDirectory, md5(username), "settings", settingsFile);
-    }
+    const { file } = request.params;
     //TODO: differentiate between preset and user uploaded datpack
-    const settingsXml = (await readFile(`${settingsPath}`)).toString();
+    const settingsXml = (await readFile(`${decodeURIComponent(file)}`)).toString();
     reply.send(settingsXml);
   } catch (e) {
     reply.send({ error: e });
