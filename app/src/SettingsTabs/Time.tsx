@@ -28,13 +28,8 @@ export const Time = observer(function Time() {
               const selectedValue = event.target.value;
               const selectedAgeItem = state.geologicalTopStageAges.find((item) => item.key === selectedValue);
               const selectedAge = selectedAgeItem?.value || 0;
-              if (selectedAge >= 0 && selectedAge <= state.settings.baseStageAge) {
-                actions.setSelectedTopStage(selectedValue);
-                actions.setTopStageAge(selectedAge);
-                actions.removeError(ErrorCodes.TOP_STAGE_AGE_INVALID);
-              } else {
-                actions.pushError(ErrorCodes.TOP_STAGE_AGE_INVALID);
-              }
+              actions.setSelectedTopStage(selectedValue);
+              actions.setTopStageAge(selectedAge);
             }}>
             {state.geologicalTopStageAges.map((item) => (
               <MenuItem key={item.key} value={item.key}>
@@ -52,9 +47,9 @@ export const Time = observer(function Time() {
               const age = parseFloat(event.target.value);
               if (!isNaN(age)) {
                 actions.setTopStageAge(age);
+              }
+              else {
                 actions.removeError(ErrorCodes.TOP_STAGE_AGE_INVALID);
-              } else {
-                actions.pushError(ErrorCodes.TOP_STAGE_AGE_INVALID);
               }
             }}
           />
@@ -71,7 +66,7 @@ export const Time = observer(function Time() {
               const selectedValue = event.target.value;
               const selectedAgeItem = state.geologicalBaseStageAges.find((item) => item.key === selectedValue);
               const selectedAge = selectedAgeItem?.value || 0;
-              if (selectedAge >= 0 && selectedAge >= state.settings.topStageAge) {
+              if (selectedAge > state.settings.topStageAge) {
                 actions.setSelectedBaseStage(selectedValue);
                 actions.setBaseStageAge(selectedAge);
                 actions.removeError(ErrorCodes.BASE_STAGE_AGE_INVALID);
@@ -97,8 +92,8 @@ export const Time = observer(function Time() {
               const age = parseFloat(event.target.value);
               if (!isNaN(age) && age >= state.settings.topStageAge) {
                 actions.setBaseStageAge(age);
-                actions.removeError(ErrorCodes.BASE_STAGE_AGE_INVALID);
-              } else {
+              } 
+              else {
                 actions.pushError(ErrorCodes.BASE_STAGE_AGE_INVALID);
               }
             }}
@@ -201,4 +196,3 @@ export const Time = observer(function Time() {
     </div>
   );
 });
-

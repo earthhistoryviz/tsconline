@@ -1,5 +1,6 @@
 import { action } from "mobx";
 import { ChartSettingsInfoTSC, TimescaleItem } from "@tsconline/shared";
+import { actions } from "../index";
 
 import {
   type MapInfo,
@@ -674,9 +675,28 @@ export const setChartHash = action("setChartHash", (charthash: string) => {
 });
 export const setTopStageAge = action("setTopStageAge", (age: number) => {
   state.settings.topStageAge = age;
+  const correspondingTopStage = state.geologicalTopStageAges.find((item) => item.value === age);
+    if (correspondingTopStage) {
+      actions.setSelectedTopStage(correspondingTopStage.key);
+    } else {
+      actions.setSelectedTopStage("");
+    }
+
+    const correspondingBaseStage = state.geologicalBaseStageAges.find((item) => item.value >= age);
+    if (correspondingBaseStage) {
+      actions.setSelectedBaseStage(correspondingBaseStage.key);
+      actions.setBaseStageAge(Math.max(correspondingBaseStage.value, age));
+    }
 });
 export const setBaseStageAge = action("setBaseStageAge", (age: number) => {
   state.settings.baseStageAge = age;
+
+  const correspondingBaseStage = state.geologicalBaseStageAges.find((item) => item.value === age);
+  if (correspondingBaseStage) {
+    actions.setSelectedBaseStage(correspondingBaseStage.key);
+  } else {
+    actions.setSelectedBaseStage("");
+  }
 });
 
 export const settingsXML = action("settingsXML", (xml: string) => {
