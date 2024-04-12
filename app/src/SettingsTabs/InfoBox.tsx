@@ -19,7 +19,7 @@ export const InfoBox = observer(() => {
             <Typography style={{fontWeight: "bold"}}>Information and References</Typography>
             <Box className="info-box">
                 <StyledScrollbar className="scroll-bar">
-                    <div dangerouslySetInnerHTML={{__html: info.substring(1, info.length - 1)}}/>
+                    <div dangerouslySetInnerHTML={{__html: info.substring(1, info.length - 1).replace('""', '"')}}/>
                 </StyledScrollbar>
             </Box>
         </div>
