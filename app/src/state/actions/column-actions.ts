@@ -57,7 +57,7 @@ export const updateEditName = action((newName: string) => {
   return;
 });
 
-export const updateWidth = action((newWidth: number) => {
+export const updateWidth = action((columnObject: ColumnInfo, newWidth: number) => {
   if (state.settingsTabs.columnSelected === null) {
     console.log("WARNING: tried to access state.settingsTabs.columnSelected, but is null");
     return;
@@ -69,7 +69,16 @@ export const updateWidth = action((newWidth: number) => {
       "in state.settingsTabs.columnHashMap, but map does not this key"
     );
   }
-  state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.width = newWidth;
+  const selectedColumn = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!;
+  if (!selectedColumn.width) {
+    console.error(
+      "ERROR: Tried to update width for column",
+      state.settingsTabs.columnSelected,
+      "but width attribute is missing."
+    );
+    return;
+  }
+  selectedColumn.width = newWidth;
   return;
 });
 
