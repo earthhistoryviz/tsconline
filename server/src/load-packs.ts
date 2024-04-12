@@ -44,7 +44,7 @@ export async function loadIndexes(
       .catch((e) => {
         console.log(`Cannot create a datapackParsingPack with datapack ${datapack} and error: ${e}`);
       });
-    await parseMapPacks(datapack, decryptionDirectory)
+    await parseMapPacks([datapack], decryptionDirectory)
       .then((mapPack) => {
         assertMapPack(mapPack);
         mapPackIndex[datapack] = mapPack;
