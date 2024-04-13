@@ -14,6 +14,10 @@ import { readFile } from "fs/promises";
 import fastifyMultipart from "@fastify/multipart";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import { getDb } from "./database.js";
+import fastifySecureSession from "@fastify/secure-session";
+import crypto from "crypto";
+import dotenv from "dotenv";
+import fastifyFormbody from "@fastify/formbody";
 
 const server = fastify({
   logger: false,
@@ -64,6 +68,27 @@ export const datapackIndex: DatapackIndex = {};
 export const mapPackIndex: MapPackIndex = {};
 const patterns = await loadFaciesPatterns();
 await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, assetconfigs.activeDatapacks);
+
+server.register(fastifyFormbody);
+
+declare module "@fastify/secure-session" {
+  interface SessionData {
+    uuid: string;
+  }
+}
+dotenv.config();
+const sessionKey = process.env.SESSION_KEY || crypto.randomBytes(32);
+server.register(fastifySecureSession, {
+  cookieName: "loginSession",
+  key: sessionKey,
+  cookie: {
+    path: "/",
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+    maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
+  }
+});
 
 server.register(fastifyMultipart, {
   limits: {
@@ -145,11 +170,19 @@ server.get("/facies-patterns", (_request, reply) => {
 
 server.get("/user-datapacks/:username", routes.fetchUserDatapacks);
 
-server.get("/googleLogin", routes.googleLogin);
+server.post("/auth/oauth", routes.googleLogin);
 
-server.post("/login", routes.login);
+server.post("/auth/login", routes.login);
 
-server.post("/signup", routes.signup);
+server.get("/auth/session-check", async(request, reply) => {
+  if (request.session.get("uuid")) {
+    reply.send({ authenticated: true });
+  } else {
+    reply.send({ authenticated: false });
+  }
+});
+
+server.post("/auth/signup", routes.signup);
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it

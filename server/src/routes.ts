@@ -8,7 +8,8 @@ import {
   assertChartRequest,
   assertDatapackIndex,
   assertIndexResponse,
-  assertMapPackIndex
+  assertMapPackIndex,
+  assertTimescale,
 } from "@tsconline/shared";
 import { deleteDirectory, resetUploadDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
@@ -16,7 +17,6 @@ import md5 from "md5";
 import { assetconfigs } from "./index.js";
 import svgson from "svgson";
 import fs from "fs";
-import { assertTimescale } from "@tsconline/shared";
 import { parseExcelFile } from "./parse-excel-file.js";
 import path from "path";
 import pump from "pump";
@@ -28,31 +28,32 @@ import dotenv from "dotenv";
 import { getDb, UserRow } from "./database.js";
 import { genSalt, hash, compare } from "bcrypt-ts";
 import { glob } from "glob";
+import formUrlEncoded from "form-urlencoded";
+import { OAuth2Client } from "google-auth-library";
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(
   request: FastifyRequest<{ Params: { username: string } }>,
   reply: FastifyReply
 ) {
-  const { username } = request.params;
-  if (!username) {
-    reply.status(400).send({ error: "No username provided" });
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
     return;
   }
-  const hash = md5(username);
-  const userDir = path.join(assetconfigs.uploadDirectory, hash);
-  if (!fs.existsSync(userDir)) {
-    reply.status(404).send({ error: "User does not exist" });
+  const userDir = path.join(assetconfigs.uploadDirectory, uuid);
+  try {
+    await access(userDir);
+  } catch (e) {
+    reply.status(404).send({ error: "User has no uploaded datapacks" });
     return;
   }
   const datapackIndex: DatapackIndex = JSON.parse(JSON.stringify(serverDatapackindex));
   const mapPackIndex: MapPackIndex = JSON.parse(JSON.stringify(serverMapPackIndex));
   try {
-    if (fs.existsSync(path.join(userDir, "DatapackIndex.json"))) {
-      Object.assign(datapackIndex, JSON.parse(fs.readFileSync(path.join(userDir, "DatapackIndex.json")).toString()));
-    }
-    if (fs.existsSync(path.join(userDir, "MapPackIndex.json"))) {
-      Object.assign(mapPackIndex, JSON.parse(fs.readFileSync(path.join(userDir, "MapPackIndex.json")).toString()));
-    }
+    await access(path.join(userDir, "DatapackIndex.json"));
+    Object.assign(datapackIndex, JSON.parse(fs.readFileSync(path.join(userDir, "DatapackIndex.json")).toString()));
+    await access(path.join(userDir, "MapPackIndex.json"));
+    Object.assign(mapPackIndex, JSON.parse(fs.readFileSync(path.join(userDir, "MapPackIndex.json")).toString()));
   } catch (e) {
     reply
       .status(500)
@@ -68,9 +69,9 @@ export const uploadDatapack = async function uploadDatapack(
   request: FastifyRequest<{ Params: { username: string } }>,
   reply: FastifyReply
 ) {
-  const { username } = request.params;
-  if (!username) {
-    reply.status(400).send({ error: "No username provided" });
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
     return;
   }
   const file = await request.file();
@@ -86,8 +87,7 @@ export const uploadDatapack = async function uploadDatapack(
   const filename = file.filename;
   const ext = path.extname(filename);
   const filenameWithoutExtension = path.basename(filename, ext);
-  const hash = md5(username);
-  const userDir = path.join(assetconfigs.uploadDirectory, hash);
+  const userDir = path.join(assetconfigs.uploadDirectory, uuid);
   const datapackDir = path.join(userDir, "datapacks");
   const decryptDir = path.join(userDir, "decrypted");
   const filepath = path.join(datapackDir, filename);
@@ -150,7 +150,10 @@ export const uploadDatapack = async function uploadDatapack(
     reply.status(500).send({ error: "Failed to decrypt datapacks with error " + e });
     return;
   }
-  if (!fs.existsSync(decryptedFilepathDir) || !fs.existsSync(path.join(decryptedFilepathDir, "datapacks"))) {
+  try {
+    await access(decryptedFilepathDir);
+    await access(path.join(decryptedFilepathDir, "datapacks"));
+  } catch (e) {
     await resetUploadDirectory(filepath, decryptedFilepathDir);
     reply.status(500).send({ error: "Failed to decrypt file" });
     return;
@@ -158,30 +161,28 @@ export const uploadDatapack = async function uploadDatapack(
   const datapackIndex: DatapackIndex = {};
   const mapPackIndex: MapPackIndex = {};
   // check for if this user has a datapack index already
-  if (fs.existsSync(datapackIndexFilepath)) {
-    try {
-      const data = await readFile(datapackIndexFilepath);
-      Object.assign(datapackIndex, JSON.parse(data.toString()));
-      assertDatapackIndex(datapackIndex);
-    } catch (e) {
-      console.error(e);
-      await resetUploadDirectory(filepath, decryptedFilepathDir);
-      reply.status(500).send({ error: "Failed to parse DatapackIndex.json" });
-      return;
-    }
+  try {
+    await access(datapackIndexFilepath);
+    const data = await readFile(datapackIndexFilepath);
+    Object.assign(datapackIndex, JSON.parse(data.toString()));
+    assertDatapackIndex(datapackIndex);
+  } catch (e) {
+    console.error(e);
+    await resetUploadDirectory(filepath, decryptedFilepathDir);
+    reply.status(500).send({ error: "Failed to parse DatapackIndex.json" });
+    return;
   }
   // check for if this user has a map index already
-  if (fs.existsSync(mapPackIndexFilepath)) {
-    try {
-      const data = await readFile(mapPackIndexFilepath);
-      Object.assign(mapPackIndex, JSON.parse(data.toString()));
-      assertMapPackIndex(mapPackIndex);
-    } catch (e) {
-      console.error(e);
-      await resetUploadDirectory(filepath, decryptedFilepathDir);
-      reply.status(500).send({ error: "Failed to parse MapPackIndex.json" });
-      return;
-    }
+  try {
+    await access(mapPackIndexFilepath);
+    const data = await readFile(mapPackIndexFilepath);
+    Object.assign(mapPackIndex, JSON.parse(data.toString()));
+    assertMapPackIndex(mapPackIndex);
+  } catch (e) {
+    console.error(e);
+    await resetUploadDirectory(filepath, decryptedFilepathDir);
+    reply.status(500).send({ error: "Failed to parse MapPackIndex.json" });
+    return;
   }
   await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [filename]);
   if (!datapackIndex[filename]) {
@@ -294,7 +295,7 @@ export const signup = async function signup(
   const rows = db.prepare(`SELECT * FROM users WHERE username = ?`).all(username);
   if (rows) {
     for (const row of rows) {
-      const hashedPassword = (row as UserRow)['hashed_password'];
+      const hashedPassword = (row as UserRow)["hashed_password"];
       if (hashedPassword) {
         const result = await compare(password, hashedPassword);
         if (result) {
@@ -306,14 +307,21 @@ export const signup = async function signup(
   const salt = await genSalt();
   const hashedPassword = await hash(password, salt);
   try {
-    db.prepare(`INSERT INTO users (username, email, hashed_password, google_id, uuid) VALUES (?, ?, ?, ?, ?)`).run(username, null, hashedPassword, null, randomUUID());
+    db.prepare(`INSERT INTO users (username, email, hashed_password, google_id, uuid, picture_url) VALUES (?, ?, ?, ?, ?, ?)`).run(
+      username,
+      null,
+      hashedPassword,
+      null,
+      randomUUID(),
+      null
+    );
   } catch (e) {
     console.error("Error during signup:", e);
     reply.status(500).send({ message: "Failed to create user" });
     return;
   }
   reply.status(200).send({ message: "User created" });
-}
+};
 
 export const login = async function login(
   request: FastifyRequest<{ Body: { username: string; password: string } }>,
@@ -323,18 +331,16 @@ export const login = async function login(
   const db = getDb();
   const rows = db.prepare(`SELECT * FROM users WHERE username = ?`).all(username);
   if (!rows) {
-    reply.status(401).send({ message: "Login failed" });
+    reply.status(401).send({ message: "User does not exist" });
     return;
   }
   if (rows) {
     for (const row of rows) {
-      const hashedPassword = (row as UserRow)['hashed_password'];
-      if (hashedPassword) {
-        const result = await compare(password, hashedPassword);
-        if (result) {
-          reply.status(200).send({ uuid: (row as UserRow)['uuid'] });
-          return;
-        }
+      const hashedPassword = (row as UserRow)["hashed_password"];
+      if (hashedPassword && (await compare(password, hashedPassword))) {
+        request.session.set("uuid", (row as UserRow)["uuid"]);
+        reply.send({ message: "Login successful" });
+        return;
       }
     }
   }
@@ -342,50 +348,46 @@ export const login = async function login(
 };
 
 export const googleLogin = async function login(
-  request: FastifyRequest<{ Querystring: { code: string; scope: string; authuser: string; prompt: string } }>,
+  request: FastifyRequest<{ Body: {credential: string}}>,
   reply: FastifyReply
 ) {
-  //code contains authorization code, exchange it for access token
-  const { code } = request.query;
   dotenv.config();
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    reply.status(400).send({ message: "Missing Google Client Secret or Google Client ID" });
+    return;
+  }
+  const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+  const ticket = await client.verifyIdToken({
+    idToken: request.body.credential,
+    audience: process.env.GOOGLE_CLIENT_ID
+  });
+  const payload = ticket.getPayload();
+  if (!payload) {
+    reply.status(400).send({ message: "Invalid Google Credential" });
+    return;
+  }
   try {
-    const data = {
-      client_id: "1080920977375-djjnsjd5dpj4eopgfadkt9keukc57m8b.apps.googleusercontent.com",
-      client_secret: process.env.GOOGLE_CLIENT_SECRET,
-      code: code,
-      redirect_uri: "http://localhost:3000/googleLogin",
-      grant_type: "authorization_code"
-    };
-    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(data)
-    });
-    const tokenData = await tokenResponse.json();
-    if (tokenData.error) {
-      throw new Error(tokenData.error);
-    }
-    const accessToken = tokenData.access_token;
-    const userDataResponse = await fetch("https://www.googleapis.com/oauth2/v1/userinfo?alt=json", {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    });
-    const userData = await userDataResponse.json();
-
     const db = getDb();
-    const row = db.prepare(`SELECT * FROM users WHERE google_id = ?`).get(userData.id);
+    const row = db.prepare(`SELECT * FROM users WHERE google_id = ?`).get(payload.sub);
     let uuid = "";
     if (!row) {
       uuid = randomUUID();
-      db.prepare(`INSERT INTO users (username, email, hashed_password, google_id, uuid) VALUES (?, ?, ?, ?, ?)`).run(null, userData.email, null, userData.id, uuid);
+      db.prepare(`INSERT INTO users (username, email, hashed_password, google_id, uuid, picture_url) VALUES (?, ?, ?, ?, ?, ?)`).run(
+        null,
+        payload.email,
+        null,
+        payload.sub,
+        uuid,
+        payload.picture
+      );
     } else {
-      uuid = (row as UserRow)['uuid'];
+      uuid = (row as UserRow)["uuid"];
     }
-    reply.status(303).redirect("http://localhost:5173/login?uuid=" + uuid);
+    request.session.set("uuid", uuid);
+    reply.redirect(process.env.APP_URL || "http://localhost:5173");
   } catch (error) {
     console.error("Error during login:", error);
-    reply.status(500).send({ message: "Login failed" });
+    reply.status(500).send({ message: error });
   }
 };
 
