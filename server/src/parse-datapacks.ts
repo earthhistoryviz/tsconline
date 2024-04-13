@@ -34,7 +34,9 @@ import {
   Freehand,
   SubFreehandInfo,
   assertSubFreehandInfo,
-  assertColumnHeaderProps
+  assertColumnHeaderProps,
+  ValidFontOptions,
+  allFontOptions
 } from "@tsconline/shared";
 import { trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter } from "./util.js";
 import { createInterface } from "readline";
@@ -54,6 +56,7 @@ type FaciesFoundAndAgeRange = {
   subFaciesInfo?: SubFaciesInfo[];
   minAge: number;
   maxAge: number;
+  fontOptions: Set<ValidFontOptions>;
 };
 /**
  * parses the METACOLUMN and info of the children string
@@ -1073,12 +1076,14 @@ function recursive(
       r: 255,
       g: 255,
       b: 255
-    }
+    },
+    fontOptions: new Set<ValidFontOptions>(["Column Header"])
   };
   const returnValue: FaciesFoundAndAgeRange = {
     faciesFound: false,
     minAge: 99999,
-    maxAge: -99999
+    maxAge: -99999,
+    fontOptions: new Set<ValidFontOptions>(["Column Header"])
   };
 
   if (parsedColumnEntry) {
@@ -1088,6 +1093,7 @@ function recursive(
   }
   if (transectMap.has(currentColumn)) {
     const currentTransect = transectMap.get(currentColumn)!;
+    // TODO NOTE FOR FUTURE: @Paolo - Java file appends all fonts to this, but from trial and error, only column header makes sense. If this case changes here we would change it
     Object.assign(currentColumnInfo, {
       ...currentTransect,
       subTransectInfo: JSON.parse(JSON.stringify(currentTransect.subTransectInfo))
@@ -1099,8 +1105,10 @@ function recursive(
     const currentSequence = sequenceMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentSequence,
+      fontOptions: new Set<ValidFontOptions>(["Column Header", "Age Label", "Sequence Column Label"]),
       subSequenceInfo: JSON.parse(JSON.stringify(currentSequence.subSequenceInfo))
     });
+    returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
   }
@@ -1108,8 +1116,10 @@ function recursive(
     const currentBlock = blocksMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentBlock,
+      fontOptions: new Set<ValidFontOptions>(["Column Header", "Age Label", "Zone Column Label"]),
       subBlockInfo: JSON.parse(JSON.stringify(currentBlock.subBlockInfo))
     });
+    returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
   }
@@ -1117,8 +1127,10 @@ function recursive(
     const currentRange = rangeMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentRange,
+      fontOptions: new Set<ValidFontOptions>(allFontOptions),
       subRangeInfo: JSON.parse(JSON.stringify(currentRange.subRangeInfo))
     });
+    returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
   }
@@ -1133,7 +1145,8 @@ function recursive(
       currentColumnInfo.name,
       currentColumnInfo.width,
       currentColumnInfo.minAge,
-      currentColumnInfo.maxAge
+      currentColumnInfo.maxAge,
+      returnValue.fontOptions
     );
     returnValue.subFaciesInfo = currentFacies.subFaciesInfo;
     returnValue.minAge = currentColumnInfo.minAge;
@@ -1143,8 +1156,10 @@ function recursive(
     const currentEvent = eventMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentEvent,
+      fontOptions: new Set<ValidFontOptions>(["Column Header", "Age Label", "Event Column Label", "Uncertainty Label", "Range Label"]),
       subEventInfo: JSON.parse(JSON.stringify(currentEvent.subEventInfo))
     });
+    returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.maxAge = currentColumnInfo.maxAge;
     returnValue.minAge = currentColumnInfo.minAge;
   }
@@ -1152,8 +1167,10 @@ function recursive(
     const currentChron = chronMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentChron,
+      fontOptions: new Set<ValidFontOptions>(["Column Header", "Age Label"]),
       subChronInfo: JSON.parse(JSON.stringify(currentChron.subChronInfo))
     });
+    returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.maxAge = currentColumnInfo.maxAge;
     returnValue.minAge = currentColumnInfo.minAge;
   }
@@ -1161,13 +1178,16 @@ function recursive(
     const currentPoint = pointMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentPoint,
+      fontOptions: new Set<ValidFontOptions>(["Column Header", "Point Column Scale Label"]),
       subPointInfo: JSON.parse(JSON.stringify(currentPoint.subPointInfo))
     });
+    returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.maxAge = currentColumnInfo.maxAge;
     returnValue.minAge = currentColumnInfo.minAge;
   }
   if (freehandMap.has(currentColumn)) {
     const currentFreehand = freehandMap.get(currentColumn)!;
+    // TODO NOTE FOR FUTURE: @Paolo - Java file appends all fonts to this, but from trial and error, only column header makes sense. If this case changes here we would change it
     Object.assign(currentColumnInfo, {
       ...currentFreehand,
       subFreehandInfo: JSON.parse(JSON.stringify(currentFreehand.subFreehandInfo))
@@ -1177,6 +1197,7 @@ function recursive(
   }
   if (blankMap.has(currentColumn)) {
     const currentBlank = blankMap.get(currentColumn)!;
+    // TODO NOTE FOR FUTURE: @Paolo - Java file appends all fonts to this, but from trial and error, only column header makes sense. If this case changes here we would change it
     Object.assign(currentColumnInfo, currentBlank);
   }
 
@@ -1206,6 +1227,7 @@ function recursive(
       );
       returnValue.minAge = Math.min(compareValue.minAge, returnValue.minAge);
       returnValue.maxAge = Math.max(compareValue.maxAge, returnValue.maxAge);
+      currentColumnInfo.fontOptions = new Set([...currentColumnInfo.fontOptions, ...compareValue.fontOptions]);
       currentColumnInfo.minAge = returnValue.minAge;
       currentColumnInfo.maxAge = returnValue.maxAge;
       returnValue.faciesFound = compareValue.faciesFound || returnValue.faciesFound;
@@ -1250,13 +1272,18 @@ export function createDefaultColumnHeaderProps(overrides: Partial<ColumnHeaderPr
  * @param minAge the minage of the parent
  * @param maxAge  the maxage of the parent
  */
-function addFaciesChildren(children: ColumnInfo[], name: string, width: number, minAge: number, maxAge: number) {
+function addFaciesChildren(children: ColumnInfo[], name: string, width: number, minAge: number, maxAge: number, fontOptions: Set<ValidFontOptions>) {
+  fontOptions.add("Column Header");
+  fontOptions.add("Age Label");
+  fontOptions.add("Zone Column Label");
+  fontOptions.add("Uncertainty Label")
   children.push({
     name: `${name} Facies`,
     editName: name,
     on: true,
     enableTitle: false,
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+    fontOptions: new Set<ValidFontOptions>(["Column Header", "Age Label", "Uncertainty Label"]),
     popup: "",
     children: [],
     parent: name,
@@ -1274,6 +1301,7 @@ function addFaciesChildren(children: ColumnInfo[], name: string, width: number, 
     editName: "Members",
     on: false,
     enableTitle: false,
+    fontOptions: new Set<ValidFontOptions>(["Column Header", "Age Label", "Zone Column Label"]),
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
     popup: "",
     children: [],
@@ -1293,6 +1321,7 @@ function addFaciesChildren(children: ColumnInfo[], name: string, width: number, 
     on: true,
     enableTitle: false,
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+    fontOptions: new Set<ValidFontOptions>(["Column Header", "Age Label", "Zone Column Label"]),
     popup: "",
     children: [],
     parent: name,
@@ -1311,6 +1340,7 @@ function addFaciesChildren(children: ColumnInfo[], name: string, width: number, 
     on: true,
     enableTitle: false,
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+    fontOptions: new Set<ValidFontOptions>(["Column Header", "Age Label", "Zone Column Label"]),
     popup: "",
     children: [],
     parent: name,

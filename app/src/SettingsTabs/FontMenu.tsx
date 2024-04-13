@@ -143,6 +143,7 @@ const FontMenuRow: React.FC<{
 export const FontMenu: React.FC<object> = observer(() => {
   const { state } = useContext(context);
   const theme = useTheme();
+  if (state.settingsTabs.columnSelected === null) return null;
   const name =
     state.settingsTabs.columnSelected === null
       ? ""
