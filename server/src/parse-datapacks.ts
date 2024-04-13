@@ -129,6 +129,7 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
   const transectMap: Map<string, Transect> = new Map();
   const freehandMap: Map<string, Freehand> = new Map();
   const blankMap: Map<string, ColumnHeaderProps> = new Map();
+  let ageUnits = "Ma"
   try {
     for (const decryptPath of decryptPaths) {
       //get the facies/blocks first
@@ -146,7 +147,7 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
         blankMap
       );
       // Originally the first step, gather all parents and their direct children
-      await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
+      ageUnits = await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
       // only iterate over parents. if we encounter one that is a child, the recursive function
       // should have already processed it.
       allEntries.forEach((children, parent) => {
@@ -181,9 +182,9 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
       throw new Error(`No columns found for path ${decryptPaths}`);
   } catch (e) {
     console.log("ERROR: failed to read columns for path " + decryptPaths + ". ", e);
-    return { columnInfoArray: [], datapackAgeInfo: { datapackContainsSuggAge: false } };
+    return { columnInfoArray: [], datapackAgeInfo: { datapackContainsSuggAge: false }, ageUnits: "Ma" };
   }
-  return { columnInfoArray, datapackAgeInfo };
+  return { columnInfoArray, datapackAgeInfo, ageUnits };
 }
 /**
  * This will populate a mapping of all parents : childen[]
@@ -204,6 +205,7 @@ export async function getAllEntries(
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
   let topAge: number | null = null;
   let bottomAge: number | null = null;
+  let ageUnits: string = "Ma"
   for await (const line of readline) {
     if (!line) continue;
     if (line.includes("SetTop") || line.includes("SetBase")) {
@@ -217,6 +219,16 @@ export async function getAllEntries(
           } else if (key === "SetBase") {
             bottomAge = value;
           }
+        }
+      }
+    }
+    if (line.includes("age units")) {
+      const parts = line.split("\t");
+      if (parts.length == 2) {
+        const key = parts[0] ? parts[0].trim() : null;
+        const value = parts[1] ? parts[1].trim() : null;
+        if (key === "age units:" && value) {
+          ageUnits = value;
         }
       }
     }
@@ -249,6 +261,7 @@ export async function getAllEntries(
     datapackAgeInfo.topAge = topAge;
     datapackAgeInfo.bottomAge = bottomAge;
   }
+  return ageUnits
 }
 /**
  * This function will populate the maps with the parsed entries in the filename
