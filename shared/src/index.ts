@@ -15,6 +15,7 @@ export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 export type DatapackParsingPack = {
   columnInfoArray: ColumnInfo[];
   datapackAgeInfo: DatapackAgeInfo;
+  ageUnits: string;
 };
 
 export type IndexResponse = {
@@ -587,6 +588,7 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
   if (!o || typeof o !== "object") throw new Error("DatapackParsingPack must be a non-null object");
   if (!Array.isArray(o.columnInfoArray))
     throw new Error(`DatapackParsingPack must have a columnInfoArray array of ColumnInfos`);
+  if (typeof o.ageUnits !== "string") throwError("DatapackParsingPack", "ageUnits", "string", o.ageUnits);
   for (const columnInfo of o.columnInfoArray) {
     assertColumnInfo(columnInfo);
   }
