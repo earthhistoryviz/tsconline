@@ -155,7 +155,7 @@ export type ColumnInfo = {
   name: string;
   editName: string;
   fontsInfo: FontsInfo;
-  fontOptions?: Set<ValidFontOptions>;
+  fontOptions: Set<ValidFontOptions>;
   on: boolean;
   popup: string;
   children: ColumnInfo[];
@@ -168,6 +168,7 @@ export type ColumnInfo = {
   subPointInfo?: SubPointInfo[];
   subFreehandInfo?: SubFreehandInfo[];
   subSequenceInfo?: SubSequenceInfo[];
+  subTransectInfo?: SubTransectInfo[];
   minAge: number;
   maxAge: number;
   enableTitle: boolean;
@@ -716,6 +717,13 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
       throwError("ColumnInfo", "subSequenceInfo", "array", o.subSequenceInfo);
     for (const sequence of o.subSequenceInfo) {
       assertSubSequenceInfo(sequence);
+    }
+  }
+  if ("subTransectInfo" in o) {
+    if (!o.subTransectInfo || !Array.isArray(o.subTransectInfo))
+      throwError("ColumnInfo", "subTransectInfo", "array", o.subTransectInfo);
+    for (const transect of o.subTransectInfo) {
+      assertSubTransectInfo(transect);
     }
   }
 }
