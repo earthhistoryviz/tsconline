@@ -1146,8 +1146,9 @@ function recursive(
       currentColumnInfo.width,
       currentColumnInfo.minAge,
       currentColumnInfo.maxAge,
-      returnValue.fontOptions
+      currentColumnInfo.fontOptions
     );
+    returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.subFaciesInfo = currentFacies.subFaciesInfo;
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
@@ -1275,8 +1276,8 @@ export function createDefaultColumnHeaderProps(overrides: Partial<ColumnHeaderPr
 function addFaciesChildren(children: ColumnInfo[], name: string, width: number, minAge: number, maxAge: number, fontOptions: Set<ValidFontOptions>) {
   fontOptions.add("Column Header");
   fontOptions.add("Age Label");
-  fontOptions.add("Zone Column Label");
   fontOptions.add("Uncertainty Label")
+  fontOptions.add("Zone Column Label");
   children.push({
     name: `${name} Facies`,
     editName: name,
