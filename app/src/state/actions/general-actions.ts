@@ -347,7 +347,7 @@ export const setDatapackConfig = action(
       assertColumnInfo(columnInfo);
       assertMapInfo(mapInfo);
     } catch (e) {
-      console.error(e)
+      console.error(e);
       pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
       return false;
     }

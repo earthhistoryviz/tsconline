@@ -440,8 +440,8 @@
                         "maxAge": 10,
                         "width": 84,
                         "rgb": {
-                            "r": 255,
-                            "g": 255,
+                            "r": 100,
+                            "g": 200,
                             "b": 255
                         }
                     },
@@ -465,8 +465,8 @@
                         "maxAge": 10,
                         "width": 210,
                         "rgb": {
-                            "r": 255,
-                            "g": 255,
+                            "r": 100,
+                            "g": 200,
                             "b": 255
                         }
                     },
@@ -490,8 +490,8 @@
                         "maxAge": 10,
                         "width": 84,
                         "rgb": {
-                            "r": 255,
-                            "g": 255,
+                            "r": 100,
+                            "g": 200,
                             "b": 255
                         }
                     },
@@ -514,8 +514,8 @@
                         "minAge": 0,
                         "maxAge": 10,
                         "rgb": {
-                            "r": 255,
-                            "g": 255,
+                            "r": 100,
+                            "g": 200,
                             "b": 255
                         },
                         "width": 42
@@ -643,10 +643,86 @@
                 },
                 "fontOptions": [
                     "Column Header",
-                    "Age Label"
+                    "Age Label",
+                    "Zone Column Label"
                 ],
                 "popup": "Chron Popup",
-                "children": [],
+                "children": [
+                    {
+                        "name": "Chron Chron",
+                        "editName": "Chron",
+                        "on": true,
+                        "enableTitle": false,
+                        "fontOptions": [
+                          "Column Header",
+                          "Age Label"
+                        ],
+                        "fontsInfo": {
+                          "font": "Arial"
+                        },
+                        "popup": "",
+                        "children": [],
+                        "parent": "Chron",
+                        "minAge": 0,
+                        "maxAge": 0.234,
+                        "width": 60,
+                        "rgb": {
+                          "r": 255,
+                          "g": 255,
+                          "b": 255
+                        }
+                    },
+                    {
+                        "name": "Chron Chron Label",
+                        "editName": "Chron Label",
+                        "on": false,
+                        "enableTitle": false,
+                        "fontOptions": [
+                          "Column Header",
+                          "Age Label",
+                          "Zone Column Label"
+                        ],
+                        "fontsInfo": {
+                          "font": "Arial"
+                        },
+                        "popup": "",
+                        "children": [],
+                        "parent": "Chron",
+                        "minAge": 0,
+                        "maxAge": 0.234,
+                        "width": 40,
+                        "rgb": {
+                          "r": 255,
+                          "g": 255,
+                          "b": 255
+                        }
+                    },
+                    {
+                        "name": "Chron Series Label",
+                        "editName": "Series Label",
+                        "on": true,
+                        "enableTitle": false,
+                        "fontOptions": [
+                          "Column Header",
+                          "Age Label",
+                          "Zone Column Label"
+                        ],
+                        "fontsInfo": {
+                          "font": "Arial"
+                        },
+                        "popup": "",
+                        "children": [],
+                        "parent": "Chron",
+                        "minAge": 0,
+                        "maxAge": 0.234,
+                        "width": 40,
+                        "rgb": {
+                          "r": 255,
+                          "g": 255,
+                          "b": 255
+                        }
+                    }    
+                ],
                 "parent": "Parent 1",
                 "minAge": 0,
                 "maxAge": 0.234,
