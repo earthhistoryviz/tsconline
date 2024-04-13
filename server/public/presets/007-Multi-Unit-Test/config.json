@@ -1,0 +1,18 @@
+{
+  "icon": "multi-cultural-icon.png",
+  "background": "world-map.jpeg",
+  "title": "Multi Unit Test",
+  "date": "04.14.2024",
+  "description": "2 different age units",
+  "settings": "settings.tsc",
+  "datapacks": [
+    {
+      "name": "Africa Bight",
+      "file": "AfricaBight.map"
+    },
+    {
+      "name": "Human Culture",
+      "file": "HumanCulture_ENCRYPTED_21Apr2020.txt"
+    }
+  ]
+}
