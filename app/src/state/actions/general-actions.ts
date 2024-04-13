@@ -266,6 +266,7 @@ export const setDatapackConfig = action(
         name: "Chart Root", // if you change this, change parse-datapacks.ts :69
         editName: "Chart Root",
         fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+        fontOptions: ["Column Header"],
         popup: "",
         on: true,
         width: 100,
@@ -284,6 +285,7 @@ export const setDatapackConfig = action(
             fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
             on: true,
             width: 100,
+            fontOptions: ["Column Header"],
             enableTitle: true,
             rgb: {
               r: 255,
@@ -296,6 +298,7 @@ export const setDatapackConfig = action(
                 name: "Ma",
                 editName: "Ma",
                 fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+                fontOptions: ["Column Header", "Ruler Label"],
                 on: true,
                 width: 100,
                 enableTitle: true,

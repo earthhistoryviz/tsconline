@@ -155,7 +155,7 @@ export type ColumnInfo = {
   name: string;
   editName: string;
   fontsInfo: FontsInfo;
-  fontOptions: Set<ValidFontOptions>;
+  fontOptions: ValidFontOptions[];
   on: boolean;
   popup: string;
   children: ColumnInfo[];
@@ -645,6 +645,15 @@ export function assertChartInfo(o: any): asserts o is ChartResponseInfo {
   if (typeof o.chartpath !== "string") throwError("ChartInfo", "chartpath", "string", o.chartpath);
   if (typeof o.hash !== "string") throwError("ChartInfo", "hash", "string", o.hash);
 }
+export function assertValidFontOptions(o: any): asserts o is ValidFontOptions {
+  if (!o || typeof o !== "string") throw new Error("ValidFontOptions must be a string");
+  if (
+    /^(Column Header|Age Label|Uncertainty Label|Zone Column Label|Sequence Column Label|Event Column Label|Popup Body|Ruler Label|Point Column Scale Label|Range Label|Ruler Tick Mark Label|Legend Title|Legend Column Name|Legend Column Source|Range Box Label)$/.test(
+      o
+    )
+  )
+    throw new Error("ValidFontOptions must be a valid font option");
+}
 
 export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   if (typeof o !== "object" || o === null) {
@@ -659,6 +668,10 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   if (typeof o.maxAge !== "number") throwError("ColumnInfo", "maxAge", "number", o.maxAge);
   if (typeof o.width !== "number") throwError("ColumnInfo", "width", "number", o.width);
   if (typeof o.enableTitle !== "boolean") throwError("ColumnInfo", "enableTitle", "boolean", o.enableTitle);
+  if (!Array.isArray(o.fontOptions)) throwError("ColumnInfo", "fontOptions", "array", o.fontOptions);
+  for (const fontOption of o.fontOptions) {
+    assertValidFontOptions(fontOption);
+  }
   assertRGB(o.rgb);
   for (const child of o.children) {
     assertColumnInfo(child);
