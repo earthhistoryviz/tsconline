@@ -807,6 +807,40 @@
                 "children": [],
                 "editName": "Blank",
                 "parent": "Parent 1"
+            },
+            {
+                "name": "Transect",
+                "editName": "Transect",
+                "on": true,
+                "enableTitle": true,
+                "fontsInfo": {
+                  "font": "Arial"
+                },
+                "popup": "Transect Popup",
+                "children": [],
+                "parent": "Parent 1",
+                "minAge": 0,
+                "maxAge": 9.22,
+                "width": 500,
+                "rgb": {
+                  "r": 240,
+                  "g": 255,
+                  "b": 255
+                },
+                "fontOptions": [
+                    "Column Header"
+                ],
+                "subTransectInfo": [
+                  {
+                    "age": 0
+                  },
+                  {
+                    "age": 2.58
+                  },
+                  {
+                    "age": 9.22
+                  }
+                ]
             }
             ],
             "parent": "Chart Title",

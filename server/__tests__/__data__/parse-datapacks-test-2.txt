@@ -3,7 +3,7 @@ SetTop:	0
 SetBase:	5
 SetScale:	6
 
-Parent 1	:	Block	Facies	Event	Range	Chron	Point	Sequence	Freehand	Blank
+Parent 1	:	Block	Facies	Event	Range	Chron	Point	Sequence	Freehand	Blank	Transect
 
 Block	block	120	197/217/234	notitle	off	Block Popup
 	TOP	419.2
