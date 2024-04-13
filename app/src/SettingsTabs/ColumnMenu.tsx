@@ -46,6 +46,8 @@ const EditNameField = observer(() => {
 export const ColumnMenu = observer(() => {
   const { state } = useContext(context);
   const [openMenu, setOpenMenu] = useState(false);
+  const selectedColumn = state.settingsTabs.columnSelected;
+  const column = selectedColumn ? state.settingsTabs.columnHashMap.get(selectedColumn!) : undefined;
 
   function showMenu() {
     const menu = document.getElementById("ColumnMenuContent");
@@ -81,8 +83,8 @@ export const ColumnMenu = observer(() => {
         </div>
       </div>
       <div id="ColumnMenuContent" className="column-menu-content">
-        {state.settingsTabs.columnSelected && <EditNameField />}
-        <FontMenu />
+        {column && <EditNameField />}
+        {column && <FontMenu column={column}/>}
       </div>
     </div>
   );
