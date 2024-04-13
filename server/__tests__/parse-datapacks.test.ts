@@ -61,28 +61,33 @@ import {
 } from "@tsconline/shared";
 const key = JSON.parse(readFileSync("server/__tests__/__data__/column-keys.json").toString());
 
+/**
+ * converts the sets to arrays for comparison with json files
+ * @param files
+ * @param decrypt_filepath
+ * @returns
+ */
+async function parseDatapacksAndNormalize(files: string[], decrypt_filepath: string) {
+  const datapacks = await parseDatapacks(files, decrypt_filepath);
+  return JSON.parse(JSON.stringify(datapacks, (_key, value) => (value instanceof Set ? [...value] : value)));
+}
+
 describe("general parse-datapacks tests", () => {
   /**
    * Parses the general Africa Bight map pack
    */
   it("should parse africa general datapack", async () => {
-    const datapacks = await parseDatapacks([], "parse-datapacks-test-1.txt");
-    const normalizedDatapacks = JSON.parse(JSON.stringify(datapacks, (_key, value) =>
-      value instanceof Set ? [...value] : value
-    ));
-    expect(normalizedDatapacks).toEqual(key["general-parse-datapacks-test-1-key"]);
+    const datapacks = await parseDatapacksAndNormalize([], "parse-datapacks-test-1.txt");
+    expect(datapacks).toEqual(key["general-parse-datapacks-test-1-key"]);
   });
 
   /**
-   * Parses a custom simple pack of both facies and block
+   * Parses a custom simple pack of all column types
    * Checks both datapack ages and columnInfo values
    */
   it("should parse general datapack with all column types", async () => {
-    const datapacks = await parseDatapacks([], "parse-datapacks-test-2.txt");
-    const normalizedDatapacks = JSON.parse(JSON.stringify(datapacks, (_key, value) =>
-      value instanceof Set ? [...value] : value
-    ));
-    expect(normalizedDatapacks).toEqual(key["general-parse-datapacks-test-2-key"]);
+    const datapacks = await parseDatapacksAndNormalize([], "parse-datapacks-test-2.txt");
+    expect(datapacks).toEqual(key["general-parse-datapacks-test-2-key"]);
   });
 
   /**
