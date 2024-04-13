@@ -1146,6 +1146,7 @@ function recursive(
       currentColumnInfo.width,
       currentColumnInfo.minAge,
       currentColumnInfo.maxAge,
+      currentColumnInfo.rgb,
       currentColumnInfo.fontOptions
     );
     returnValue.fontOptions = currentColumnInfo.fontOptions;
@@ -1165,12 +1166,20 @@ function recursive(
     returnValue.minAge = currentColumnInfo.minAge;
   }
   if (chronMap.has(currentColumn)) {
-    const currentChron = chronMap.get(currentColumn)!;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { width, ...currentChron } = chronMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentChron,
-      fontOptions: ["Column Header", "Age Label"],
       subChronInfo: JSON.parse(JSON.stringify(currentChron.subChronInfo))
     });
+    addChronChildren(
+      currentColumnInfo.children,
+      currentColumnInfo.name,
+      currentColumnInfo.minAge,
+      currentColumnInfo.maxAge,
+      currentColumnInfo.rgb,
+      currentColumnInfo.fontOptions
+    );
     returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.maxAge = currentColumnInfo.maxAge;
     returnValue.minAge = currentColumnInfo.minAge;
@@ -1282,6 +1291,7 @@ function addFaciesChildren(
   width: number,
   minAge: number,
   maxAge: number,
+  rgb: RGB,
   fontOptions: ValidFontOptions[]
 ) {
   fontOptions.push("Age Label");
@@ -1300,11 +1310,7 @@ function addFaciesChildren(
     minAge,
     maxAge,
     width: width * 0.4,
-    rgb: {
-      r: 255,
-      g: 255,
-      b: 255
-    }
+    rgb
   });
   children.push({
     name: `${name} Members`,
@@ -1319,11 +1325,7 @@ function addFaciesChildren(
     minAge,
     maxAge,
     width,
-    rgb: {
-      r: 255,
-      g: 255,
-      b: 255
-    }
+    rgb
   });
   children.push({
     name: `${name} Facies Label`,
@@ -1338,11 +1340,7 @@ function addFaciesChildren(
     minAge,
     maxAge,
     width: width * 0.4,
-    rgb: {
-      r: 255,
-      g: 255,
-      b: 255
-    }
+    rgb
   });
   children.push({
     name: `${name} Series Label`,
@@ -1356,11 +1354,77 @@ function addFaciesChildren(
     parent: name,
     minAge,
     maxAge,
-    rgb: {
-      r: 255,
-      g: 255,
-      b: 255
-    },
+    rgb,
     width: width * 0.2
+  });
+}
+
+/**
+ * Chrons columns consist of three sub columns
+ * Currently from trial and error, even if there is a width on the parent chrons
+ * the children will have a width of 60, 40, 40
+ * TODO check to make sure this is okay in the future
+ * @param children
+ * @param name
+ * @param width
+ * @param minAge
+ * @param maxAge
+ * @param rgb
+ * @param fontOptions
+ */
+function addChronChildren(
+  children: ColumnInfo[],
+  name: string,
+  minAge: number,
+  maxAge: number,
+  rgb: RGB,
+  fontOptions: ValidFontOptions[]
+) {
+  fontOptions.push("Age Label");
+  fontOptions.push("Zone Column Label");
+  children.push({
+    name: `${name} Chron`,
+    editName: name,
+    on: true,
+    enableTitle: false,
+    fontOptions: ["Column Header", "Age Label"],
+    fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+    popup: "",
+    children: [],
+    parent: name,
+    minAge,
+    maxAge,
+    width: 60,
+    rgb
+  });
+  children.push({
+    name: `${name} Chron Label`,
+    editName: "Chron Label",
+    on: false,
+    enableTitle: false,
+    fontOptions: ["Column Header", "Age Label", "Zone Column Label"],
+    fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+    popup: "",
+    children: [],
+    parent: name,
+    minAge,
+    maxAge,
+    width: 40,
+    rgb
+  });
+  children.push({
+    name: `${name} Series Label`,
+    editName: "Series Label",
+    on: true,
+    enableTitle: false,
+    fontOptions: ["Column Header", "Age Label", "Zone Column Label"],
+    fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+    popup: "",
+    children: [],
+    parent: name,
+    minAge,
+    maxAge,
+    width: 40,
+    rgb
   });
 }

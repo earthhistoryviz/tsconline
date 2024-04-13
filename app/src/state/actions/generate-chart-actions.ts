@@ -43,13 +43,20 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   generalActions.setChartContent("");
   //let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
   // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
-  const columnCopy: ColumnInfo = JSON.parse(JSON.stringify(state.settingsTabs.columns));
-  changeFaciesColumn(columnCopy);
-  const xmlSettings = jsonToXml(state.settingsTSC, columnCopy, state.settings);
-  const body = JSON.stringify({
-    settings: xmlSettings,
-    datapacks: state.config.datapacks
-  });
+  let body;
+  try {
+    const columnCopy: ColumnInfo = JSON.parse(JSON.stringify(state.settingsTabs.columns));
+    changeManuallyAddedColumns(columnCopy);
+    const xmlSettings = jsonToXml(state.settingsTSC, columnCopy, state.settings);
+    body = JSON.stringify({
+      settings: xmlSettings,
+      datapacks: state.config.datapacks
+    });
+  } catch (e) {
+    console.error(e);
+    generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
+    return;
+  }
   console.log("Sending settings to server...");
   try {
     const response = await fetcher(`/charts/${state.useCache}/${state.settings.useDatapackSuggestedAge}`, {
@@ -89,7 +96,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
  * However, this is asyncronous, which makes it less likely to cause problems.
  * @param column
  */
-function changeFaciesColumn(column: ColumnInfo) {
+function changeManuallyAddedColumns(column: ColumnInfo) {
   if (column.name === `${column.parent} Facies Label`) {
     column.name = "Facies Label";
   } else if (column.name === `${column.parent} Series Label`) {
@@ -98,9 +105,13 @@ function changeFaciesColumn(column: ColumnInfo) {
     column.name = "Members";
   } else if (column.name === `${column.parent} Facies`) {
     column.name = "Facies";
+  } else if (column.name === `${column.parent} Chron`) {
+    column.name = "Chron";
+  } else if (column.name === `${column.parent} Chron Label`) {
+    column.name = "Chron Label";
   }
   for (const child of column.children) {
-    changeFaciesColumn(child);
+    changeManuallyAddedColumns(child);
   }
 }
 
