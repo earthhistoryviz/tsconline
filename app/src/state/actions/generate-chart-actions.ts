@@ -4,7 +4,7 @@ import { state } from "../state";
 import { action } from "mobx";
 import { fetcher } from "../../util";
 import { ColumnInfo, assertChartInfo } from "@tsconline/shared";
-import { jsonToXml } from "../parse-settings";
+import { jsonToXml, tempJsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import DOMPurify from "dompurify";

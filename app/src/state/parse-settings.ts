@@ -405,6 +405,7 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo,
   return xml;
 }
 
+
 /**
  * main parser
  * a major aspect for the parser is that it can only add fields that were part of the initial input settings
