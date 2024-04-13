@@ -140,13 +140,13 @@ const FontMenuRow: React.FC<{
   );
 });
 
-export const FontMenu: React.FC<object> = observer(() => {
-  const { state } = useContext(context);
+type FontMenuProps = {
+  column: ColumnInfo;
+};
+
+export const FontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
-  if (!state.settingsTabs.columnSelected || !state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected))
-    return null;
-  const column = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!;
   const metaColumn = column.children.length > 0;
   const handleOpen = () => {
     setOpen(true);
@@ -176,9 +176,6 @@ export const FontMenu: React.FC<object> = observer(() => {
   );
 });
 
-type FontMenuProps = {
-  column: ColumnInfo;
-};
 const MetaColumnFontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
   return (
     <Grid container rowSpacing={2} columnSpacing={0}>
