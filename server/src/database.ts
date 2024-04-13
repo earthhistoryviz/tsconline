@@ -8,6 +8,7 @@ export interface UserRow {
   hashed_password: string | null;
   google_id: string | null;
   uuid: string;
+  picture_url: string | null;
 }
 
 if (!fs.existsSync("../server/db")) {
@@ -25,9 +26,10 @@ export const getDb = (): BetterSqlite3.Database => {
     email TEXT UNIQUE,
     hashed_password TEXT UNIQUE,
     google_id TEXT UNIQUE,
-    uuid VARCHAR(36) NOT NULL UNIQUE
+    uuid VARCHAR(36) NOT NULL UNIQUE,
+    picture_url TEXT
   );`);
 
-  process.on('exit', () => db?.close());
+  process.on("exit", () => db?.close());
   return db;
 };

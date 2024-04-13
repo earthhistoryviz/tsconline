@@ -130,7 +130,8 @@ export const uploadDatapack = action("uploadDatapack", async (file: File, userna
   try {
     const response = await fetcher(`/upload/${username}`, {
       method: "POST",
-      body: formData
+      body: formData,
+      credentials: "include"
     });
     const data = await response.json();
     if (response.ok) {
