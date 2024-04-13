@@ -1231,6 +1231,7 @@ function recursive(
       currentColumnInfo.fontOptions = Array.from(
         new Set([...currentColumnInfo.fontOptions, ...compareValue.fontOptions])
       );
+      returnValue.fontOptions = currentColumnInfo.fontOptions;
       currentColumnInfo.minAge = returnValue.minAge;
       currentColumnInfo.maxAge = returnValue.maxAge;
       returnValue.faciesFound = compareValue.faciesFound || returnValue.faciesFound;
