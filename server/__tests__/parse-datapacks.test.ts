@@ -25,6 +25,7 @@ jest.mock("@tsconline/shared", () => ({
     if (typeof o.b !== "number") throw new Error("Invalid rgb");
     if (o.b < 0 || o.b > 255) throw new Error("Invalid rgb");
   }),
+  allFontOptions: ["Column Header", "Popup Body"],
   defaultFontsInfo: { font: "Arial" },
   assertFontsInfo: jest.fn().mockImplementation((fonts) => {
     if (fonts.font !== "Arial") throw new Error("Invalid font");
@@ -66,7 +67,10 @@ describe("general parse-datapacks tests", () => {
    */
   it("should parse africa general datapack", async () => {
     const datapacks = await parseDatapacks([], "parse-datapacks-test-1.txt");
-    expect(datapacks).toEqual(key["general-parse-datapacks-test-1-key"]);
+    const normalizedDatapacks = JSON.parse(JSON.stringify(datapacks, (_key, value) =>
+      value instanceof Set ? [...value] : value
+    ));
+    expect(normalizedDatapacks).toEqual(key["general-parse-datapacks-test-1-key"]);
   });
 
   /**
@@ -75,7 +79,10 @@ describe("general parse-datapacks tests", () => {
    */
   it("should parse general datapack with all column types", async () => {
     const datapacks = await parseDatapacks([], "parse-datapacks-test-2.txt");
-    expect(datapacks).toEqual(key["general-parse-datapacks-test-2-key"]);
+    const normalizedDatapacks = JSON.parse(JSON.stringify(datapacks, (_key, value) =>
+      value instanceof Set ? [...value] : value
+    ));
+    expect(normalizedDatapacks).toEqual(key["general-parse-datapacks-test-2-key"]);
   });
 
   /**

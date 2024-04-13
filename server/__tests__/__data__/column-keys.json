@@ -15,6 +15,12 @@
                 "fontsInfo": {
                     "font": "Arial"
                 },
+                "fontOptions": [
+                    "Column Header",
+                    "Age Label",
+                    "Uncertainty Label",
+                    "Zone Column Label"
+                ],
                 "popup": "",
                 "children": [
                 {
@@ -31,6 +37,12 @@
                     "fontsInfo": {
                         "font": "Arial"
                     },
+                    "fontOptions": [
+                        "Column Header",
+                        "Age Label",
+                        "Uncertainty Label",
+                        "Zone Column Label"
+                    ],
                     "popup": "",
                     "children": [
                         {
@@ -41,6 +53,11 @@
                             "fontsInfo": {
                               "font": "Arial"
                             },
+                            "fontOptions": [
+                                "Column Header",
+                                "Age Label",
+                                "Uncertainty Label"
+                            ],
                             "popup": "",
                             "children": [],
                             "parent": "Nigeria Coast",
@@ -61,6 +78,11 @@
                             "fontsInfo": {
                               "font": "Arial"
                             },
+                            "fontOptions": [
+                                "Column Header",
+                                "Age Label",
+                                "Zone Column Label"
+                            ],
                             "popup": "",
                             "children": [],
                             "parent": "Nigeria Coast",
@@ -81,6 +103,11 @@
                             "fontsInfo": {
                               "font": "Arial"
                             },
+                            "fontOptions": [
+                                "Column Header",
+                                "Age Label",
+                                "Zone Column Label"
+                            ],
                             "popup": "",
                             "children": [],
                             "parent": "Nigeria Coast",
@@ -101,6 +128,11 @@
                             "fontsInfo": {
                               "font": "Arial"
                             },
+                            "fontOptions": [
+                                "Column Header",
+                                "Age Label",
+                                "Zone Column Label"
+                            ],
                             "popup": "",
                             "children": [],
                             "parent": "Nigeria Coast",
@@ -151,6 +183,12 @@
                     "fontsInfo": {
                         "font": "Arial"
                     },
+                    "fontOptions": [
+                        "Column Header",
+                        "Age Label",
+                        "Uncertainty Label",
+                        "Zone Column Label"
+                    ],
                     "popup": "",
                     "children": [
                         {
@@ -161,6 +199,11 @@
                             "fontsInfo": {
                               "font": "Arial"
                             },
+                            "fontOptions": [
+                                "Column Header",
+                                "Age Label",
+                                "Uncertainty Label"
+                            ],
                             "popup": "",
                             "children": [],
                             "parent": "South Atlantic",
@@ -181,6 +224,11 @@
                             "fontsInfo": {
                               "font": "Arial"
                             },
+                            "fontOptions": [
+                                "Column Header",
+                                "Age Label",
+                                "Zone Column Label"
+                            ],
                             "popup": "",
                             "children": [],
                             "parent": "South Atlantic",
@@ -201,6 +249,11 @@
                             "fontsInfo": {
                               "font": "Arial"
                             },
+                            "fontOptions": [
+                                "Column Header",
+                                "Age Label",
+                                "Zone Column Label"
+                            ],
                             "popup": "",
                             "children": [],
                             "parent": "South Atlantic",
@@ -221,6 +274,11 @@
                             "fontsInfo": {
                               "font": "Arial"
                             },
+                            "fontOptions": [
+                                "Column Header",
+                                "Age Label",
+                                "Zone Column Label"
+                            ],
                             "popup": "",
                             "children": [],
                             "parent": "South Atlantic",
@@ -323,6 +381,11 @@
                     "g": 217,
                     "b": 234
                 },
+                "fontOptions": [
+                    "Column Header",
+                    "Age Label",
+                    "Zone Column Label"
+                  ],
                 "subBlockInfo": [
                 {
                     "label": "TOP",
@@ -367,6 +430,11 @@
                         },
                         "popup": "",
                         "children": [],
+                        "fontOptions": [
+                            "Column Header",
+                            "Age Label",
+                            "Uncertainty Label"
+                          ],
                         "parent": "Facies",
                         "minAge": 0,
                         "maxAge": 10,
@@ -385,6 +453,11 @@
                         "fontsInfo": {
                           "font": "Arial"
                         },
+                        "fontOptions": [
+                            "Column Header",
+                            "Age Label",
+                            "Zone Column Label"
+                          ],
                         "popup": "",
                         "children": [],
                         "parent": "Facies",
@@ -405,6 +478,11 @@
                         "fontsInfo": {
                           "font": "Arial"
                         },
+                        "fontOptions": [
+                            "Column Header",
+                            "Age Label",
+                            "Zone Column Label"
+                          ],
                         "popup": "",
                         "children": [],
                         "parent": "Facies",
@@ -425,6 +503,11 @@
                         "fontsInfo": {
                           "font": "Arial"
                         },
+                        "fontOptions": [
+                            "Column Header",
+                            "Age Label",
+                            "Zone Column Label"
+                          ],
                         "popup": "",
                         "children": [],
                         "parent": "Facies",
@@ -446,6 +529,12 @@
                     "b": 255
                 },
                 "parent": "Parent 1",
+                "fontOptions": [
+                    "Column Header",
+                    "Age Label",
+                    "Uncertainty Label",
+                    "Zone Column Label"
+                ],
                 "minAge": 0,
                 "maxAge": 10,
                 "subFaciesInfo": [
@@ -475,6 +564,13 @@
                 "fontsInfo": {
                     "font": "Arial"
                 },
+                "fontOptions": [
+                    "Column Header",
+                    "Age Label",
+                    "Event Column Label",
+                    "Uncertainty Label",
+                    "Range Label"
+                  ],
                 "popup": "Event Popup",
                 "children": [],
                 "parent": "Parent 1",
@@ -534,6 +630,7 @@
                 "fontsInfo": {
                     "font": "Arial"
                 },
+                "fontOptions": ["Column Header", "Popup Body"],
                 "editName": "Range"
             },
             {
@@ -544,6 +641,10 @@
                 "fontsInfo": {
                     "font": "Arial"
                 },
+                "fontOptions": [
+                    "Column Header",
+                    "Age Label"
+                ],
                 "popup": "Chron Popup",
                 "children": [],
                 "parent": "Parent 1",
@@ -582,6 +683,10 @@
                 "fontsInfo": {
                     "font": "Arial"
                 },
+                "fontOptions": [
+                    "Column Header",
+                    "Point Column Scale Label"
+                ],
                 "parent": "Parent 1",
                 "minAge": 4,
                 "maxAge": 5,
@@ -617,6 +722,11 @@
                 "fontsInfo": {
                     "font": "Arial"
                 },
+                "fontOptions": [
+                    "Column Header",
+                    "Age Label",
+                    "Sequence Column Label"
+                ],
                 "parent": "Parent 1",
                 "on": true,
                 "width": 900,
@@ -661,6 +771,9 @@
                   "g": 123,
                   "b": 104
                 },
+                "fontOptions": [
+                    "Column Header"
+                ],
                 "subFreehandInfo": [
                   {
                     "topAge": 0,
@@ -688,6 +801,9 @@
                 "fontsInfo": {
                     "font": "Arial"
                 },
+                "fontOptions": [
+                    "Column Header"
+                ],
                 "children": [],
                 "editName": "Blank",
                 "parent": "Parent 1"
@@ -714,7 +830,18 @@
                 "age": 10,
                 "info": ""
             }
-            ]
+            ],
+            "fontOptions": [
+                "Column Header",
+                "Age Label",
+                "Zone Column Label",
+                "Uncertainty Label",
+                "Event Column Label",
+                "Range Label",
+                "Popup Body",
+                "Point Column Scale Label",
+                "Sequence Column Label"
+              ]
         }
         ],
         "datapackAgeInfo": {
