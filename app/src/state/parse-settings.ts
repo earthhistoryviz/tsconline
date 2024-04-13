@@ -442,19 +442,11 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo 
         xml += `${indent}</fonts>\n`;
       } else if (key === "children") {
         let currName = extractName(presetColumn._id);
-        if (currName === "Chart Root") {
-          xml += `${indent}<column id="class datastore.RootColumn:Chart Title">\n`;
-          if (presetColumn.children) {
-            xml += generateColumnXml(presetColumn.children[0], stateColumn, `${indent}    `);
-          }
-          xml += `${indent}</column>\n`;
-        } else {
-          if (presetColumn.children) {
-            for (let i = 0; i < presetColumn.children.length; i++) {
-              xml += `${indent}<column id="${replaceSpecialChars(presetColumn.children[i]._id, 0)}">\n`;
-              xml += generateColumnXml(presetColumn.children[i], stateColumn?.children[i], `${indent}    `);
-              xml += `${indent}</column>\n`;
-            }
+        if (presetColumn.children) {
+          for (let i = 0; i < presetColumn.children.length; i++) {
+            xml += `${indent}<column id="${replaceSpecialChars(presetColumn.children[i]._id, 0)}">\n`;
+            xml += generateColumnXml(presetColumn.children[i], stateColumn?.children[i], `${indent}    `);
+            xml += `${indent}</column>\n`;
           }
         }
       } else {

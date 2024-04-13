@@ -36,13 +36,7 @@ import {
   assertSubFreehandInfo,
   assertColumnHeaderProps
 } from "@tsconline/shared";
-import {
-  trimQuotes,
-  trimInvisibleCharacters,
-  grabFilepaths,
-  hasVisibleCharacters,
-  capitalizeFirstLetter
-} from "./util.js";
+import { trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter } from "./util.js";
 import { createInterface } from "readline";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;
@@ -156,7 +150,7 @@ export async function parseDatapacks(files: string[], decryptFilePath: string): 
         // if the parent is not a child
         if (!isChild.has(parent)) {
           recursive(
-            "Root",
+            "Chart Title",
             parent,
             children,
             columnInfoArray,
@@ -525,7 +519,7 @@ export async function getColumnTypes(
  * @param tabSeparated
  */
 function setColumnHeaders(column: ColumnHeaderProps, tabSeparated: string[]) {
-  column.name = trimQuotes(tabSeparated[0]!);
+  column.name = tabSeparated[0]!;
   const width = Number(tabSeparated[2]!);
   const rgb = tabSeparated[3];
   const enableTitle = tabSeparated[4];
