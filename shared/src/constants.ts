@@ -12,9 +12,21 @@ import {
 } from "./index";
 
 export const allFontOptions: ValidFontOptions[] = [
-  "Column Header", "Age Label", "Uncertainty Label", "Zone Column Label", "Sequence Column Label",
-  "Event Column Label", "Popup Body", "Ruler Label", "Point Column Scale Label", "Range Label",
-  "Ruler Tick Mark Label", "Legend Title", "Legend Column Name", "Legend Column Source", "Range Box Label"
+  "Column Header",
+  "Age Label",
+  "Uncertainty Label",
+  "Zone Column Label",
+  "Sequence Column Label",
+  "Event Column Label",
+  "Popup Body",
+  "Ruler Label",
+  "Point Column Scale Label",
+  "Range Label",
+  "Ruler Tick Mark Label",
+  "Legend Title",
+  "Legend Column Name",
+  "Legend Column Source",
+  "Range Box Label"
 ];
 
 export const defaultFontsInfoConstant: FontsInfo = {

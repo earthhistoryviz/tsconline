@@ -1157,7 +1157,13 @@ function recursive(
     const currentEvent = eventMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentEvent,
-      fontOptions: new Set<ValidFontOptions>(["Column Header", "Age Label", "Event Column Label", "Uncertainty Label", "Range Label"]),
+      fontOptions: new Set<ValidFontOptions>([
+        "Column Header",
+        "Age Label",
+        "Event Column Label",
+        "Uncertainty Label",
+        "Range Label"
+      ]),
       subEventInfo: JSON.parse(JSON.stringify(currentEvent.subEventInfo))
     });
     returnValue.fontOptions = currentColumnInfo.fontOptions;
@@ -1273,10 +1279,17 @@ export function createDefaultColumnHeaderProps(overrides: Partial<ColumnHeaderPr
  * @param minAge the minage of the parent
  * @param maxAge  the maxage of the parent
  */
-function addFaciesChildren(children: ColumnInfo[], name: string, width: number, minAge: number, maxAge: number, fontOptions: Set<ValidFontOptions>) {
+function addFaciesChildren(
+  children: ColumnInfo[],
+  name: string,
+  width: number,
+  minAge: number,
+  maxAge: number,
+  fontOptions: Set<ValidFontOptions>
+) {
   fontOptions.add("Column Header");
   fontOptions.add("Age Label");
-  fontOptions.add("Uncertainty Label")
+  fontOptions.add("Uncertainty Label");
   fontOptions.add("Zone Column Label");
   children.push({
     name: `${name} Facies`,
