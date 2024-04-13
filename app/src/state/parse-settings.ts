@@ -434,6 +434,7 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo,
   }
   return xml;
 }
+
 /**
  * main parser
  * a major aspect for the parser is that it can only add fields that were part of the initial input settings
@@ -463,4 +464,230 @@ export function jsonToXml(
   xml += "    </column>\n";
   xml += "</TSCreator>\n";
   return xml;
+}
+
+export function translateSettings(state: ChartSettings): ChartSettingsInfoTSC {
+  let settings: ChartSettingsInfoTSC = <ChartSettingsInfoTSC>{};
+  Object.assign(settings, defaultChartSettingsInfoTSC);
+  //TODO: change units based on datapack
+  settings.topAge.source = "text";
+  settings.topAge.unit = "Ma";
+  settings.topAge.text = state.topStageAge;
+  settings.baseAge.source = "text";
+  settings.baseAge.unit = "Ma";
+  settings.baseAge.text = state.baseStageAge;
+  settings.unitsPerMY.unit = "Ma";
+  settings.unitsPerMY.text = state.unitsPerMY;
+  settings.skipEmptyColumns.unit = "Ma";
+  settings.skipEmptyColumns.text = state.skipEmptyColumns;
+  settings.noIndentPattern = state.noIndentPattern;
+  settings.enPriority = state.enablePriority;
+  settings.enChartLegend = state.enableChartLegend;
+  settings.enHideBlockLable = state.enableHideBlockLabel;
+  settings.enEventColBG = state.enableColumnBackground;
+  settings.doPopups = state.mouseOverPopupsEnabled;
+  return settings;
+}
+export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
+  let column: ColumnInfoTSC = <ColumnInfoTSC>{};
+  Object.assign(column, defaultColumnBasicInfoTSC);
+  //Zone column
+  if (state.subBlockInfo) {
+    Object.assign(column, defaultZoneColumnInfoTSC);
+    column._id = "class datastore.ZoneColumn:" + replaceSpecialChars(state.name, 0);
+  }
+  //blockseriesmetacolumn
+  else if (state.subFaciesInfo || state.subChronInfo) {
+    column._id = "class datastore.BlockSeriesMetaColumn:" + replaceSpecialChars(state.name, 0);
+  }
+  //event column
+  else if (state.subEventInfo) {
+    Object.assign(column, defaultEventColumnInfoTSC);
+    column._id = "class datastore.EventColumn:" + replaceSpecialChars(state.name, 0);
+  }
+  //range column
+  else if (state.subRangeInfo) {
+    column._id = "class datastore.RangeColumn:" + replaceSpecialChars(state.name, 0);
+  }
+  //point column
+  else if (state.subPointInfo) {
+    Object.assign(column, defaultPointColumnInfoTSC);
+    column._id = "class datastore.PointColumn:" + replaceSpecialChars(state.name, 0);
+  }
+  //freehand column
+  else if (state.subFreehandInfo) {
+    column._id = "class datastore.FreehandColumn:" + replaceSpecialChars(state.name, 0);
+  }
+  //sequence column
+  else if (state.subSequenceInfo) {
+    Object.assign(column, defaultSequenceColumnInfoTSC);
+    column._id = "class datastore.SequenceColumn:" + replaceSpecialChars(state.name, 0);
+  }
+  //for checking leaf columns that are manually added
+  else if (!state.children) {
+    //zone column
+    if (
+      state.name.includes("Facies Label") ||
+      state.name.includes("Series Label") ||
+      state.name.includes("Chron Label") ||
+      state.name.includes("Members")
+    ) {
+      Object.assign(column, defaultZoneColumnInfoTSC);
+      if (state.name.includes("Facies Label")) {
+        column._id = "class datastore.ZoneColumn:Facies Label";
+      } else if (state.name.includes("Series Label")) {
+        column._id = "class datastore.ZoneColumn:Series Label";
+      } else if (state.name.includes("Chron Label")) {
+        column._id = "class datastore.ZoneColumn:Chron Label";
+      } else {
+        column._id = "class datastore.ZoneColumn:Members";
+      }
+    } else if (state.name.includes("Facies")) {
+      column._id = "class datastore.FaciesColumn:Facies";
+    } else if (state.name.includes("Chron")) {
+      column._id = "class datastore.ChronColumn:Chron";
+    }
+  }
+  column.title = state.editName;
+  column.isSelected = state.on;
+  column.fonts = state.fontsInfo;
+  column.width = state.width;
+  column.backgroundColor.text = "rgb(" + state.rgb.r + "," + state.rgb.g + "," + state.rgb.b + ")";
+  for (let i = 0; i < state.children.length; i++) {
+    column.children.push(translateColumn(state.children[i]));
+  }
+  return column;
+}
+
+export function columnInfoToSettingsTSC(state: ColumnInfo, settings: ChartSettings): ChartInfoTSC {
+  const settingsTSC: ChartInfoTSC = {};
+  settingsTSC["class datastore.RootColumn:Chart Root"] = translateColumn(state);
+  settingsTSC["class datastore.RootColumn:Chart Root"]._id = "class datastore.RootColumn:Chart Root";
+  settingsTSC.settings = translateSettings(settings);
+  assertChartInfoTSC(settingsTSC);
+  return settingsTSC;
+}
+
+/**
+ *
+ * @param settings settings json object
+ * @param indent the amount of indent to place in the xml file
+ * @returns xml string with settings info
+ */
+
+function ChartSettingsInfoTSCToXml(settings: ChartSettingsInfoTSC | undefined, indent: string): string {
+  if (!settings) {
+    return "";
+  }
+  let xml = "";
+  xml += `${indent}<setting name="topAge" source="text" unit="${settings.topAge.unit}">\n`;
+  xml += `${indent}    <setting name="text">${settings.topAge.text}</setting>\n`;
+  xml += `${indent}</setting>\n`;
+  xml += `${indent}<setting name="baseAge" source="text" unit="${settings.baseAge.unit}">\n`;
+  xml += `${indent}    <setting name="text">${settings.baseAge.text}</setting>\n`;
+  xml += `${indent}</setting>\n`;
+  xml += `${indent}<setting name="unitsPerMY" unit="${settings.unitsPerMY.unit}">${settings.unitsPerMY.text}</setting>\n`;
+  xml += `${indent}<setting name="skipEmptyColumns">${settings.skipEmptyColumns}</setting>\n`;
+  xml += `${indent}<setting name="variableColors">UNESCO</setting>\n`;
+  xml += `${indent}<setting name="negativeChk">false</setting>\n`;
+  xml += `${indent}<setting name="doPopups">${settings.doPopups}</setting>\n`;
+  xml += `${indent}<setting name="enEventColBG">${settings.enEventColBG}</setting>\n`;
+  xml += `${indent}<setting name="enChartLegend">${settings.enChartLegend}</setting>\n`;
+  xml += `${indent}<setting name="enPriority">${settings.enPriority}</setting>\n`;
+  xml += `${indent}<setting name="enHideBlockLabel">${settings.enHideBlockLable}</setting>\n`;
+  return xml;
+}
+
+function FontsInfoToXml(fonts: FontsInfo, indent: string): string {
+  let xml = "";
+  let defInfo = JSON.parse(JSON.stringify(defaultFontsInfo));
+  let newFonts = JSON.parse(JSON.stringify(fonts));
+  for (const key in fonts) {
+    if (Object.prototype.hasOwnProperty.call(fonts, key)) {
+      const inheritable = fonts[key as keyof FontsInfo].inheritable;
+      if (JSON.stringify(newFonts[key]) === JSON.stringify(defInfo[key])) {
+        xml += `${indent}<font function="${key}" inheritable="${inheritable}"/>\n`;
+      } else {
+        xml += `${indent}<font function="${key}" inheritable="${inheritable}">`;
+        for (let fKey in newFonts[key]) {
+          if (JSON.stringify(newFonts[key][fKey]) !== JSON.stringify(defInfo[key][fKey])) {
+            if (fKey === "fontFace") {
+              xml += `font-family: ${newFonts[key][fKey]};`;
+            }
+            if (fKey === "size") {
+              xml += `font-size: ${newFonts[key][fKey]}px;`;
+            }
+            if (fKey === "italic") {
+              xml += `font-style: italic;`;
+            }
+            if (fKey === "bold") {
+              xml += `font-weight: bold;`;
+            }
+            if (fKey === "color") {
+              xml += `fill: ${newFonts[key][fKey]};`;
+            }
+          }
+        }
+        xml += `</font>\n`;
+      }
+    }
+  }
+  return xml;
+}
+
+
+function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
+  let xml = "";
+  for (let key in column) {
+    if (key === "title") {
+      xml += `${indent}<setting name="title">${column[key]}</setting>\n`;
+    }
+    else if (key === "backgroundColor" || key === "customColor") {
+      if ("standardized" in column[key] && "useNamed" in column[key]) {
+        xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}" 
+        useNamed="${column[key].useNamed}">${column[key].text}</setting>\n`;
+      } else if ("useNamed" in column[key]) {
+        xml += `${indent}<setting name="${key}" useNamed="${column[key].useNamed}">${column[key].text}</setting>\n`;
+      } else if ("standardized" in column[key]) {
+        xml += `${indent}<setting name="${key}" useNamed="${column[key].standardized}">${column[key].text}</setting>\n`;
+      } else {
+        xml += `${indent}<setting name="${key}"/>\n`;
+      }
+    }
+    else if (key === "fonts") {
+      xml += `${indent}<fonts>\n`;
+      xml += FontsInfoToXml(column.fonts, `${indent}    `);
+      xml += `${indent}</fonts>\n`;
+    }
+    if (key === "children") {
+      for (let i = 0; i < column.children.length; i++) {
+        xml += `${indent}<column id="${replaceSpecialChars(column.children[i]._id, 0)}">\n`;
+        xml += columnInfoTSCToXml(column.children[i], `${indent}    `);
+        xml += `${indent}</column>\n`;
+      }
+    }
+    else {
+      xml += `${indent}<setting name="${key}">${column[key as keyof ColumnInfoTSC]}</setting>\n`;
+    }
+  }
+  return xml;
+}
+
+export function ChartInfoTSCToXml(settingsTSC: ChartInfoTSC, version: string = "PRO8.1"): string {
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+  xml += `<TSCreator version="${version}">\n`;
+  if (settingsTSC["settings"]) {
+    xml += '    <settings version="1.0">\n';
+    xml += ChartSettingsInfoTSCToXml(settingsTSC.settings, "        ");
+    xml += "    </settings>\n";
+  }
+  xml += '    <column id="class datastore.RootColumn:Chart Root">\n';
+  xml += columnInfoTSCToXml(settingsTSC["class datastore.RootColumn:Chart Root"]!, "        ");
+  xml += "    </column>\n";
+  xml += "</TSCreator>\n";
+  return xml;
+}
+
+export function tempJsonToXml(state: ColumnInfo, settings: ChartSettings): string {
+  return ChartInfoTSCToXml(columnInfoToSettingsTSC(state, settings));
 }
