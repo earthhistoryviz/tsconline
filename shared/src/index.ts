@@ -648,11 +648,11 @@ export function assertChartInfo(o: any): asserts o is ChartResponseInfo {
 export function assertValidFontOptions(o: any): asserts o is ValidFontOptions {
   if (!o || typeof o !== "string") throw new Error("ValidFontOptions must be a string");
   if (
-    /^(Column Header|Age Label|Uncertainty Label|Zone Column Label|Sequence Column Label|Event Column Label|Popup Body|Ruler Label|Point Column Scale Label|Range Label|Ruler Tick Mark Label|Legend Title|Legend Column Name|Legend Column Source|Range Box Label)$/.test(
+    !/^(Column Header|Age Label|Uncertainty Label|Zone Column Label|Sequence Column Label|Event Column Label|Popup Body|Ruler Label|Point Column Scale Label|Range Label|Ruler Tick Mark Label|Legend Title|Legend Column Name|Legend Column Source|Range Box Label)$/.test(
       o
     )
   )
-    throw new Error("ValidFontOptions must be a valid font option");
+    throwError("ValidFontOptions", "ValidFontOptions", "ValidFontOptions", o);
 }
 
 export function assertColumnInfo(o: any): asserts o is ColumnInfo {
