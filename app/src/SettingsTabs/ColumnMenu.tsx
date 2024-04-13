@@ -84,7 +84,7 @@ export const ColumnMenu = observer(() => {
       </div>
       <div id="ColumnMenuContent" className="column-menu-content">
         {column && <EditNameField />}
-        {column && <FontMenu column={column}/>}
+        {column && <FontMenu column={column} />}
       </div>
     </div>
   );
