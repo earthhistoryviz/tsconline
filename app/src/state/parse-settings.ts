@@ -456,6 +456,7 @@ export function translateSettings(state: ChartSettings): ChartSettingsInfoTSC {
   return settings;
 }
 
+
 export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
   let column: ColumnInfoTSC = <ColumnInfoTSC>{};
   Object.assign(column, defaultColumnBasicInfoTSC);
@@ -481,6 +482,7 @@ export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
   }
   //range column
   else if (state.subRangeInfo) {
+    Object.assign(column, defaultRangeColumnInfoTSC);
     Object.assign(column, defaultRangeColumnInfoTSC);
     column._id = "class datastore.RangeColumn:" + replaceSpecialChars(state.name, 0);
   }
@@ -519,20 +521,15 @@ export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
       }
     } else if (state.name === "Facies") {
       column._id = "class datastore.FaciesColumn:Facies";
-    } else if (state.name === "Chron") {
+    } else if (state.name.includes("Chron")) {
       column._id = "class datastore.ChronColumn:Chron";
     }
-    //Ruler column
-    else {
-      Object.assign(column, defaultRulerColumnInfoTSC);
-      column._id = "class datastore.RulerColumn:" + state.name;
-    }
-  }
-  //root columns
+  } 
   else if (state.name === "Chart Root" || state.name === "Chart Title") {
     column._id = "class datastore.RootColumn:" + state.name;
-  } else {
-    column._id = "class datastore.BlankColumn:" + state.name;
+  }
+  else {
+    column._id = "class datastore.BlankColumn:" + replaceSpecialChars(state.name, 0);
   }
   column.title = replaceSpecialChars(state.editName, 1);
   column.isSelected = state.on;
@@ -684,6 +681,6 @@ export function ChartInfoTSCToXml(settingsTSC: ChartInfoTSC, version: string = "
   return xml;
 }
 
-export function jsonToXml(state: ColumnInfo, settings: ChartSettings): string {
+export function tempJsonToXml(state: ColumnInfo, settings: ChartSettings): string {
   return ChartInfoTSCToXml(columnInfoToSettingsTSC(state, settings));
 }
