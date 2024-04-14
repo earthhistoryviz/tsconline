@@ -3,13 +3,13 @@ import { ChartSettings } from "./types";
 export const settings: ChartSettings = {
   timeSettings: {
     Ma: {
-        selectedStage: "",
-        topStageAge: 0,
-        topStageKey: "",
-        baseStageAge: 0,
-        baseStageKey: "",
-        unitsPerMY: 2,
-        skipEmptyColumns: true
+      selectedStage: "",
+      topStageAge: 0,
+      topStageKey: "",
+      baseStageAge: 0,
+      baseStageKey: "",
+      unitsPerMY: 2,
+      skipEmptyColumns: true
     }
   },
   noIndentPattern: false,
@@ -22,11 +22,11 @@ export const settings: ChartSettings = {
   useDatapackSuggestedAge: true
 };
 export const defaultTimeSettings = {
-    selectedStage: "",
-    topStageAge: 0,
-    topStageKey: "",
-    baseStageAge: 0,
-    baseStageKey: "",
-    unitsPerMY: 2,
-    skipEmptyColumns: true
+  selectedStage: "",
+  topStageAge: 0,
+  topStageKey: "",
+  baseStageAge: 0,
+  baseStageKey: "",
+  unitsPerMY: 2,
+  skipEmptyColumns: true
 };

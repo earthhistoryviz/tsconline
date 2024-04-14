@@ -131,30 +131,26 @@ export function assertChartInfoTSC(o: any): asserts o is ChartInfoTSC {
 
 export function assertChartSettingsInfoTSC(o: any): asserts o is ChartSettingsInfoTSC {
   if (!o || typeof o !== "object") throw new Error("ChartSettingsInfoTSC must be a non-null object");
-  if (!Array.isArray(o.topAge))
-    throw new Error("ChartSettingsTSC must have a topAge array");
+  if (!Array.isArray(o.topAge)) throw new Error("ChartSettingsTSC must have a topAge array");
   for (const item of o.topAge) {
     if (typeof item.source !== "string") throwError("topAge", "source", "string", item.source);
     if (typeof item.unit !== "string") throwError("topAge", "unit", "string", item.unit);
     if ("stage" in item && typeof item.stage !== "string") throwError("topAge stage", "stage", "string", item.stage);
     if (typeof item.text !== "number") throwError("topAge", "text", "number", item.text);
   }
-  if (!Array.isArray(o.baseAge))
-    throw new Error("ChartSettingsTSC must have a baseAge array");
+  if (!Array.isArray(o.baseAge)) throw new Error("ChartSettingsTSC must have a baseAge array");
   for (const item of o.baseAge) {
     if (typeof item.source !== "string") throwError("baseAge", "source", "string", item.source);
     if (typeof item.unit !== "string") throwError("baseAge", "unit", "string", item.unit);
     if ("stage" in item && typeof item.stage !== "string") throwError("baseAge stage", "stage", "string", item.stage);
     if (typeof item.text !== "number") throwError("baseAge", "text", "number", item.text);
   }
-  if (!Array.isArray(o.unitsPerMY))
-    throw new Error("ChartSettingsTSC must have a unitsPerMY array");
+  if (!Array.isArray(o.unitsPerMY)) throw new Error("ChartSettingsTSC must have a unitsPerMY array");
   for (const item of o.unitsPerMY) {
     if (typeof item.unit !== "string") throwError("unitsPerMY", "unit", "string", item.unit);
     if (typeof item.text !== "number") throwError("unitsPerMY", "text", "number", item.text);
   }
-  if (!Array.isArray(o.skipEmptyColumns))
-    throw new Error("ChartSettingsTSC must have a skipEmptyColumns array");
+  if (!Array.isArray(o.skipEmptyColumns)) throw new Error("ChartSettingsTSC must have a skipEmptyColumns array");
   for (const item of o.skipEmptyColumns) {
     if (typeof item.unit !== "string") throwError("skipEmptyColumns", "unit", "string", item.unit);
     if (typeof item.text !== "boolean") throwError("skipEmptyColumns", "text", "boolean", item.text);
