@@ -63,7 +63,6 @@ export type State = {
   chartContent: string;
   chartHash: string;
   settingsXML: string;
-  settingsTSC: ChartInfoTSC;
   settings: ChartSettings;
   prevSettings: ChartSettings;
   useCache: boolean;
