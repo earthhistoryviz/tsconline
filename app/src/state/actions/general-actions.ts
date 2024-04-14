@@ -419,7 +419,6 @@ export const resetState = action("resetState", () => {
   setMapInfo({});
   state.settingsTabs.columnSelected = null;
   state.settingsXML = "";
-  state.settingsTSC = {};
 });
 
 export const loadPresets = action("loadPresets", (presets: Presets) => {
