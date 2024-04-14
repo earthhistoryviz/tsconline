@@ -249,10 +249,6 @@ export function xmlToJson(xml: string): ChartInfoTSC {
 //                                          JSON to XML parser                                       //
 //-------------------------------------------------------------------------------------------------- //
 
-function extractName(text: string): string {
-  return text.substring(text.indexOf(":") + 1, text.length);
-}
-
 /**
  * for escaping special characters in xml (& " ' < >)
  * in text, " ' > do not need to be escaped.
@@ -272,10 +268,6 @@ function replaceSpecialChars(text: string, type: number): string {
     text = text.replaceAll('"', "&quot;");
     text = text.replaceAll("'", "&apos;");
     text = text.replaceAll(">", " &gt; ");
-  }
-  //edge case for usa alaska mexico datapack
-  if (text.includes("Alaska")) {
-    text = text.replaceAll("&apos;", "'");
   }
   return text;
 }
@@ -488,6 +480,7 @@ export function translateSettings(state: ChartSettings): ChartSettingsInfoTSC {
   settings.doPopups = state.mouseOverPopupsEnabled;
   return settings;
 }
+
 export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
   let column: ColumnInfoTSC = <ColumnInfoTSC>{};
   Object.assign(column, defaultColumnBasicInfoTSC);
@@ -507,6 +500,7 @@ export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
   }
   //range column
   else if (state.subRangeInfo) {
+    Object.assign(column, defaultRangeColumnInfoTSC);
     column._id = "class datastore.RangeColumn:" + replaceSpecialChars(state.name, 0);
   }
   //point column
@@ -523,7 +517,9 @@ export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
     Object.assign(column, defaultSequenceColumnInfoTSC);
     column._id = "class datastore.SequenceColumn:" + replaceSpecialChars(state.name, 0);
   }
-  //for checking leaf columns that are manually added
+  //else if (state.subTransectInfo) {
+  //   column._id = "class datastore.TransectColumn:" + replaceSpecialChars(state.name, 0);
+  // }
   else if (!state.children) {
     //zone column
     if (
@@ -533,26 +529,33 @@ export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
       state.name.includes("Members")
     ) {
       Object.assign(column, defaultZoneColumnInfoTSC);
-      if (state.name.includes("Facies Label")) {
+      if (state.name === "Facies Label") {
         column._id = "class datastore.ZoneColumn:Facies Label";
-      } else if (state.name.includes("Series Label")) {
+      } else if (state.name === "Series Label") {
         column._id = "class datastore.ZoneColumn:Series Label";
-      } else if (state.name.includes("Chron Label")) {
+      } else if (state.name === "Chron Label") {
         column._id = "class datastore.ZoneColumn:Chron Label";
       } else {
         column._id = "class datastore.ZoneColumn:Members";
       }
-    } else if (state.name.includes("Facies")) {
+    } else if (state.name === "Facies") {
       column._id = "class datastore.FaciesColumn:Facies";
-    } else if (state.name.includes("Chron")) {
+    } else if (state.name === "Chron") {
       column._id = "class datastore.ChronColumn:Chron";
     }
+  } 
+  else if (state.name === "Chart Root" || state.name === "Chart Title") {
+    column._id = "class datastore.RootColumn:" + state.name;
   }
-  column.title = state.editName;
+  else {
+    column._id = "class datastore.BlankColumn:" + replaceSpecialChars(state.name, 0);
+  }
+  column.title = replaceSpecialChars(state.editName, 1);
   column.isSelected = state.on;
   column.fonts = state.fontsInfo;
   column.width = state.width;
   column.backgroundColor.text = "rgb(" + state.rgb.r + "," + state.rgb.g + "," + state.rgb.b + ")";
+  column.children = [];
   for (let i = 0; i < state.children.length; i++) {
     column.children.push(translateColumn(state.children[i]));
   }
@@ -587,7 +590,7 @@ function ChartSettingsInfoTSCToXml(settings: ChartSettingsInfoTSC | undefined, i
   xml += `${indent}    <setting name="text">${settings.baseAge.text}</setting>\n`;
   xml += `${indent}</setting>\n`;
   xml += `${indent}<setting name="unitsPerMY" unit="${settings.unitsPerMY.unit}">${settings.unitsPerMY.text}</setting>\n`;
-  xml += `${indent}<setting name="skipEmptyColumns">${settings.skipEmptyColumns}</setting>\n`;
+  xml += `${indent}<setting name="skipEmptyColumns" unit="${settings.skipEmptyColumns.unit}">${settings.skipEmptyColumns.text}</setting>\n`;
   xml += `${indent}<setting name="variableColors">UNESCO</setting>\n`;
   xml += `${indent}<setting name="negativeChk">false</setting>\n`;
   xml += `${indent}<setting name="doPopups">${settings.doPopups}</setting>\n`;
@@ -635,14 +638,12 @@ function FontsInfoToXml(fonts: FontsInfo, indent: string): string {
   return xml;
 }
 
-
 function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
   let xml = "";
   for (let key in column) {
     if (key === "title") {
       xml += `${indent}<setting name="title">${column[key]}</setting>\n`;
-    }
-    else if (key === "backgroundColor" || key === "customColor") {
+    } else if (key === "backgroundColor" || key === "customColor") {
       if ("standardized" in column[key] && "useNamed" in column[key]) {
         xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}" 
         useNamed="${column[key].useNamed}">${column[key].text}</setting>\n`;
@@ -653,8 +654,7 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       } else {
         xml += `${indent}<setting name="${key}"/>\n`;
       }
-    }
-    else if (key === "fonts") {
+    } else if (key === "fonts") {
       xml += `${indent}<fonts>\n`;
       xml += FontsInfoToXml(column.fonts, `${indent}    `);
       xml += `${indent}</fonts>\n`;
@@ -665,8 +665,7 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
         xml += columnInfoTSCToXml(column.children[i], `${indent}    `);
         xml += `${indent}</column>\n`;
       }
-    }
-    else {
+    } else {
       xml += `${indent}<setting name="${key}">${column[key as keyof ColumnInfoTSC]}</setting>\n`;
     }
   }
@@ -688,6 +687,6 @@ export function ChartInfoTSCToXml(settingsTSC: ChartInfoTSC, version: string = "
   return xml;
 }
 
-export function tempJsonToXml(state: ColumnInfo, settings: ChartSettings): string {
+export function jsonToXml(state: ColumnInfo, settings: ChartSettings): string {
   return ChartInfoTSCToXml(columnInfoToSettingsTSC(state, settings));
 }

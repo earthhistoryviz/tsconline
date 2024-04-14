@@ -308,6 +308,7 @@ export function assertColumnInfoTSC(o: any): asserts o is ColumnInfoTSC {
       case "FreehandColumn":
       case "TransectColumn":
       case "RootColumn":
+      case "BlankColumn":
         break;
       default:
         console.log("Warning: unknown column type", columnType);
