@@ -60,7 +60,7 @@ const FontMenuRow: React.FC<{
             <Checkbox
               checked={fontOpts.on}
               onChange={() => {
-                actions.setFontOptionOn(target, !fontOpts.on, column)
+                actions.setFontOptionOn(target, !fontOpts.on, column);
               }}
               inputProps={{ "aria-label": "controlled" }}
             />

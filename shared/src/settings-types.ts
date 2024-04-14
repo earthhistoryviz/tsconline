@@ -10,22 +10,22 @@ export type ChartSettingsInfoTSC = {
     source: string;
     unit: string;
     stage?: string;
-    text?: number;
-  };
+    text: number;
+  }[];
   baseAge: {
     source: string;
     unit: string;
     stage?: string;
-    text?: number;
-  };
+    text: number;
+  }[];
   unitsPerMY: {
     unit: string;
     text: number;
-  };
+  }[];
   skipEmptyColumns: {
     unit: string;
     text: boolean;
-  };
+  }[];
   variableColors: string;
   noIndentPattern: boolean;
   negativeChk: boolean;
@@ -131,28 +131,34 @@ export function assertChartInfoTSC(o: any): asserts o is ChartInfoTSC {
 
 export function assertChartSettingsInfoTSC(o: any): asserts o is ChartSettingsInfoTSC {
   if (!o || typeof o !== "object") throw new Error("ChartSettingsInfoTSC must be a non-null object");
-  if (o.topAge) {
-    if (typeof o.topAge.source !== "string") throwError("topAge", "source", "string", o.topAge.source);
-    if (typeof o.topAge.unit !== "string") throwError("topAge", "unit", "string", o.topAge.unit);
-    if (typeof o.topAge.stage !== "string") throwError("topAge stage", "stage", "string", o.topAge.stage);
-    if (typeof o.topAge.text !== "number") throwError("topAge", "text", "number", o.topAge.text);
-  } else throw new Error("ColumnSettingsTSC must have a topAge property");
-  if (o.baseAge) {
-    if (typeof o.baseAge.source !== "string") throwError("baseAge", "source", "string", o.baseAge.source);
-    if (typeof o.baseAge.unit !== "string") throwError("baseAge", "unit", "string", o.baseAge.unit);
-    if (typeof o.baseAge.stage !== "string") throwError("baseAge stage", "stage", "string", o.baseAge.stage);
-    if (typeof o.baseAge.text !== "number") throwError("baseAge", "text", "number", o.baseAge.text);
-  } else throw new Error("ColumnSettingsTSC must have a baseAge property");
-  if (o.unitsPerMY) {
-    if (typeof o.unitsPerMY.unit !== "string") throwError("unitsPerMY", "unit", "string", o.unitsPerMY.unit);
-    if (typeof o.unitsPerMY.text !== "number") throwError("unitsPerMY", "text", "number", o.unitsPerMY.text);
-  } else throw new Error("ColumnSettingsTSC must have a unitsPerMY property");
-  if (o.skipEmptyColumns) {
-    if (typeof o.skipEmptyColumns.unit !== "string")
-      throwError("skipEmptyColumns", "unit", "string", o.skipEmptyColumns.unit);
-    if (typeof o.skipEmptyColumns.text !== "boolean")
-      throwError("skipEmptyColumns", "text", "boolean", o.skipEmptyColumns.text);
-  } else throw new Error("ColumnSettingsTSC must have a skipEmptyColumns property");
+  if (!Array.isArray(o.topAge))
+    throw new Error("ChartSettingsTSC must have a topAge array");
+  for (const item of o.topAge) {
+    if (typeof item.source !== "string") throwError("topAge", "source", "string", item.source);
+    if (typeof item.unit !== "string") throwError("topAge", "unit", "string", item.unit);
+    if ("stage" in item && typeof item.stage !== "string") throwError("topAge stage", "stage", "string", item.stage);
+    if (typeof item.text !== "number") throwError("topAge", "text", "number", item.text);
+  }
+  if (!Array.isArray(o.baseAge))
+    throw new Error("ChartSettingsTSC must have a baseAge array");
+  for (const item of o.baseAge) {
+    if (typeof item.source !== "string") throwError("baseAge", "source", "string", item.source);
+    if (typeof item.unit !== "string") throwError("baseAge", "unit", "string", item.unit);
+    if ("stage" in item && typeof item.stage !== "string") throwError("baseAge stage", "stage", "string", item.stage);
+    if (typeof item.text !== "number") throwError("baseAge", "text", "number", item.text);
+  }
+  if (!Array.isArray(o.unitsPerMY))
+    throw new Error("ChartSettingsTSC must have a unitsPerMY array");
+  for (const item of o.unitsPerMY) {
+    if (typeof item.unit !== "string") throwError("unitsPerMY", "unit", "string", item.unit);
+    if (typeof item.text !== "number") throwError("unitsPerMY", "text", "number", item.text);
+  }
+  if (!Array.isArray(o.skipEmptyColumns))
+    throw new Error("ChartSettingsTSC must have a skipEmptyColumns array");
+  for (const item of o.skipEmptyColumns) {
+    if (typeof item.unit !== "string") throwError("skipEmptyColumns", "unit", "string", item.unit);
+    if (typeof item.text !== "boolean") throwError("skipEmptyColumns", "text", "boolean", item.text);
+  }
   if (typeof o.variableColors !== "string")
     throwError("ColumnSettingsInfoTSC", "variableColors", "string", o.variableColors);
   if (typeof o.noIndentPattern !== "boolean")

@@ -746,7 +746,7 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
 export function assertFontsInfo(o: any): asserts o is FontsInfo {
   if (typeof o !== "object") throw new Error("FontsInfo must be an object");
   for (const key in o) {
-    assertValidFontOptions(key)
+    assertValidFontOptions(key);
     assertFontLabelOptions(o[key]);
   }
 }

@@ -15,6 +15,7 @@ import type {
   ChartInfoTSC
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
+import { settings } from "../constants";
 
 export type State = {
   chartLoading: boolean;
@@ -110,10 +111,14 @@ export const state = observable<State>({
     }
   },
   config: {
-    datapacks: []
+    datapacks: [],
+    settingsPath: "",
+    unitsUsed: new Set<string>(["Ma"])
   },
   prevConfig: {
-    datapacks: []
+    datapacks: [],
+    settingsPath: "",
+    unitsUsed: new Set<string>(["Ma"])
   },
   presets: {},
   datapackIndex: {},
@@ -127,46 +132,8 @@ export const state = observable<State>({
   chartHash: "",
   settingsXML: "",
   settingsTSC: {},
-  settings: {
-    selectedStage: "",
-    topStageAge: 0,
-    topStageKey: "",
-    baseStageAge: 0,
-    baseStageKey: "",
-    unitsPerMY: 2,
-    skipEmptyColumns: true,
-    noIndentPattern: false,
-    enableColumnBackground: false,
-    enableChartLegend: false,
-    enablePriority: false,
-    enableHideBlockLabel: false,
-    mouseOverPopupsEnabled: false,
-    datapackContainsSuggAge: false,
-    useDatapackSuggestedAge: true,
-    selectedBaseStage: "",
-    selectedTopStage: "",
-    unit: "Ma"
-  },
-  prevSettings: {
-    selectedStage: "",
-    topStageAge: 0,
-    topStageKey: "",
-    baseStageAge: 0,
-    baseStageKey: "",
-    unitsPerMY: 2,
-    skipEmptyColumns: true,
-    noIndentPattern: false,
-    enableColumnBackground: false,
-    enableChartLegend: false,
-    enablePriority: false,
-    enableHideBlockLabel: false,
-    mouseOverPopupsEnabled: false,
-    datapackContainsSuggAge: false,
-    useDatapackSuggestedAge: true,
-    selectedBaseStage: "",
-    selectedTopStage: "",
-    unit: "Ma"
-  },
+  settings: JSON.parse(JSON.stringify(settings)),
+  prevSettings: JSON.parse(JSON.stringify(settings)),
   useCache: true,
   usePreset: true,
   errors: {

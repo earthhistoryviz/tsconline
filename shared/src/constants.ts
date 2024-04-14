@@ -93,7 +93,15 @@ export const defaultFontsInfoConstant: FontsInfo = {
     italic: false,
     size: 6
   },
-  "Popup Body": { on: false, bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12 },
+  "Popup Body": {
+    on: false,
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 12
+  },
   "Range Box Label": {
     on: false,
     bold: false,
@@ -103,8 +111,24 @@ export const defaultFontsInfoConstant: FontsInfo = {
     italic: true,
     size: 14
   },
-  "Range Label": { on: false, bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12 },
-  "Ruler Label": { on: false, bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12 },
+  "Range Label": {
+    on: false,
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 12
+  },
+  "Ruler Label": {
+    on: false,
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 12
+  },
   "Ruler Tick Mark Label": {
     on: false,
     bold: false,
@@ -144,26 +168,10 @@ export const defaultFontsInfoConstant: FontsInfo = {
 };
 
 export const defaultChartSettingsInfoTSC: ChartSettingsInfoTSC = {
-  topAge: {
-    source: "",
-    unit: "",
-    stage: undefined,
-    text: undefined
-  },
-  baseAge: {
-    source: "",
-    unit: "",
-    stage: undefined,
-    text: undefined
-  },
-  unitsPerMY: {
-    unit: "",
-    text: 0
-  },
-  skipEmptyColumns: {
-    unit: "",
-    text: false
-  },
+  topAge: [],
+  baseAge: [],
+  unitsPerMY: [],
+  skipEmptyColumns: [],
   variableColors: "",
   noIndentPattern: false,
   negativeChk: false,
