@@ -13,7 +13,7 @@ export type SuccessfulServerResponse = {
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 
 export type DatapackParsingPack = {
-  columnInfoArray: ColumnInfo[];
+  columnInfo: ColumnInfo;
   datapackAgeInfo: DatapackAgeInfo;
   ageUnits: string;
 };
@@ -90,6 +90,7 @@ export type Datapack = {
 };
 
 export type FontLabelOptions = {
+  on: boolean;
   inheritable: boolean;
   fontFace: "Arial" | "Courier" | "Verdana";
   size: number;
@@ -586,12 +587,8 @@ export function assertFacies(o: any): asserts o is Facies {
 }
 export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingPack {
   if (!o || typeof o !== "object") throw new Error("DatapackParsingPack must be a non-null object");
-  if (!Array.isArray(o.columnInfoArray))
-    throw new Error(`DatapackParsingPack must have a columnInfoArray array of ColumnInfos`);
   if (typeof o.ageUnits !== "string") throwError("DatapackParsingPack", "ageUnits", "string", o.ageUnits);
-  for (const columnInfo of o.columnInfoArray) {
-    assertColumnInfo(columnInfo);
-  }
+  assertColumnInfo(o.columnInfo);
   assertDatapackAgeInfo(o.datapackAgeInfo);
 }
 export function assertDatapackIndex(o: any): asserts o is DatapackIndex {
@@ -749,36 +746,20 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
 export function assertFontsInfo(o: any): asserts o is FontsInfo {
   if (typeof o !== "object") throw new Error("FontsInfo must be an object");
   for (const key in o) {
-    if (
-      !(
-        [
-          "Column Header",
-          "Age Label",
-          "Uncertainty Label",
-          "Zone Column Label",
-          "Sequence Column Label",
-          "Event Column Label",
-          "Popup Body",
-          "Ruler Label",
-          "Point Column Scale Label",
-          "Range Label",
-          "Ruler Tick Mark Label",
-          "Legend Title",
-          "Legend Column Name",
-          "Legend Column Source",
-          "Range Box Label"
-        ] as const
-      ).includes(key as ValidFontOptions)
-    )
-      throwError("FontsInfo", `${key}`, "ValidFontOptions", o);
-    if (typeof o[key].bold !== "boolean") throwError("FontsInfo", `${key}.bold`, "boolean", o[key].bold);
-    if (typeof o[key].color !== "string") throwError("FontsInfo", `${key}.color`, "string", o[key].color);
-    if (typeof o[key].fontFace !== "string") throwError("FontsInfo", `${key}.fontFace`, "string", o[key].fontFace);
-    if (typeof o[key].inheritable !== "boolean")
-      throwError("FontsInfo", `${key}.inheritable`, "boolean", o[key].inheritable);
-    if (typeof o[key].italic !== "boolean") throwError("FontsInfo", "italic", `${key}.boolean`, o[key].italic);
-    if (typeof o[key].size !== "number") throwError("FontsInfo", "size", `${key}.number`, o[key].size);
+    assertValidFontOptions(key)
+    assertFontLabelOptions(o[key]);
   }
+}
+
+export function assertFontLabelOptions(o: any): asserts o is FontLabelOptions {
+  if (typeof o !== "object") throw new Error("FontLabelOptions must be an object");
+  if (typeof o.bold !== "boolean") throwError("FontLabelOptions", "bold", "boolean", o.bold);
+  if (typeof o.color !== "string") throwError("FontLabelOptions", "color", "string", o.color);
+  if (typeof o.fontFace !== "string") throwError("FontLabelOptions", "fontFace", "string", o.fontFace);
+  if (typeof o.inheritable !== "boolean") throwError("FontLabelOptions", "inheritable", "boolean", o.inheritable);
+  if (typeof o.italic !== "boolean") throwError("FontLabelOptions", "italic", "boolean", o.italic);
+  if (typeof o.size !== "number") throwError("FontLabelOptions", "size", "number", o.size);
+  if (typeof o.on !== "boolean") throwError("FontLabelOptions", "on", "boolean", o.on);
 }
 
 export function assertMapHierarchy(o: any): asserts o is MapHierarchy {

@@ -65,18 +65,13 @@ export const setcolumnSelected = action((name: string) => {
   }
 });
 
-export const setInheritable = action((target: ValidFontOptions, isInheritable: boolean) => {
-  if (!state.settingsTabs.columnSelected) {
-    throw new Error("state.settingsTabs.columnSelected is null");
-  }
-  const columnHashMapEntry = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected);
-  if (!columnHashMapEntry) {
-    throw new Error(`Entry for ${state.settingsTabs.columnSelected} not found in columnHashMap`);
-  }
-  assertFontsInfo(columnHashMapEntry.fontsInfo);
-  columnHashMapEntry.fontsInfo[target].inheritable = isInheritable;
-  assertFontsInfo(columnHashMapEntry?.fontsInfo);
+export const setInheritable = action((target: ValidFontOptions, isInheritable: boolean, column: ColumnInfo) => {
+  column.fontsInfo[target].inheritable = isInheritable;
 });
+
+export const setFontOptionOn = action((target: ValidFontOptions, isOn: boolean, column: ColumnInfo) => {
+  column.fontsInfo[target].on = isOn;
+})
 
 export const setFontFace = action((target: ValidFontOptions, fontFace: "Arial" | "Courier" | "Verdana") => {
   if (!state.settingsTabs.columnSelected) {
