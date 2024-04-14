@@ -28,12 +28,12 @@ import { ColumnInfo, ValidFontOptions } from "@tsconline/shared";
 
 const FontMenuRow: React.FC<{
   target: ValidFontOptions;
-}> = observer(({ target }) => {
-  const { state, actions } = useContext(context);
-  const [fontTarget, setFontTarget] = useState(false);
+  column: ColumnInfo;
+}> = observer(({ target, column }) => {
+  const { actions } = useContext(context);
+  const fontOpts = column.fontsInfo[target];
   const [font, setFont] = useState("Arial");
   const [formats, setFormats] = useState([""]);
-  const fontOpts = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected as string)!.fontsInfo[target];
   const handleFontChange = (event: SelectChangeEvent) => {
     if (!/^(Arial|Courier|Verdana)$/.test(event.target.value)) return;
     actions.setFontFace(target, event.target.value as "Arial" | "Courier" | "Verdana");
@@ -58,8 +58,10 @@ const FontMenuRow: React.FC<{
         <FormControlLabel
           control={
             <Checkbox
-              checked={fontTarget}
-              onChange={() => setFontTarget(!fontTarget)}
+              checked={fontOpts.on}
+              onChange={() => {
+                actions.setFontOptionOn(target, !fontOpts.on, column)
+              }}
               inputProps={{ "aria-label": "controlled" }}
             />
           }
@@ -71,10 +73,10 @@ const FontMenuRow: React.FC<{
             <Checkbox
               checked={fontOpts.inheritable}
               onChange={() => {
-                actions.setInheritable(target, !fontOpts.inheritable);
+                actions.setInheritable(target, !fontOpts.inheritable, column);
               }}
               inputProps={{ "aria-label": "controlled" }}
-              disabled={!fontTarget}
+              disabled={!fontOpts.on}
             />
           }
           label="Inheritable"
@@ -85,7 +87,7 @@ const FontMenuRow: React.FC<{
             value={fontOpts.fontFace}
             label="Font Face"
             onChange={handleFontChange}
-            disabled={!fontTarget}
+            disabled={!fontOpts.on}
             displayEmpty>
             <MenuItem value={"Arial"}>Arial</MenuItem>
             <MenuItem value={"Courier"}>Courier</MenuItem>
@@ -100,14 +102,14 @@ const FontMenuRow: React.FC<{
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             actions.setFontSize(target, Number(event.target.value));
           }}
-          disabled={!fontTarget}
+          disabled={!fontOpts.on}
         />
         <ToggleButtonGroup
           value={formats}
           onChange={handleFormat}
           aria-label="text formatting"
           sx={{ marginRight: "10px" }}
-          disabled={!fontTarget}>
+          disabled={!fontOpts.on}>
           <ToggleButton value="bold" aria-label="bold" color="info">
             <FormatBoldIcon />
           </ToggleButton>
@@ -122,7 +124,7 @@ const FontMenuRow: React.FC<{
             label="Color"
             format="rgb"
             onChange={handleColor}
-            disabled={!fontTarget}
+            disabled={!fontOpts.on}
           />
         </div>
         <Typography
@@ -181,7 +183,7 @@ const MetaColumnFontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
     <Grid container rowSpacing={2} columnSpacing={0}>
       <Grid item xs={12}>
         <Typography id="Bold">Change Font</Typography>
-        <FontMenuRow target="Column Header" />
+        <FontMenuRow column={column} target="Column Header" />
       </Grid>
       <Grid item xs={12}>
         <Divider />
@@ -193,7 +195,7 @@ const MetaColumnFontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
         if (target === "Column Header") return null;
         return (
           <Grid item xs={12} key={target}>
-            <FontMenuRow target={target} />
+            <FontMenuRow column={column} target={target} />
           </Grid>
         );
       })}
@@ -208,7 +210,7 @@ const LeafColumnFontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
         <Typography id="Bold">Change Font</Typography>
         {Array.from(column.fontOptions).map((target) => (
           <Grid item xs={12} key={target}>
-            <FontMenuRow target={target} />
+            <FontMenuRow column={column} target={target} />
           </Grid>
         ))}
       </Grid>

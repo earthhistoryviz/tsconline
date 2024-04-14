@@ -111,7 +111,7 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
  * @param files the files to be parsed
  * @returns
  */
-export async function parseDatapacks(file: string, decryptFilePath: string): Promise<DatapackParsingPack> {
+export async function parseDatapacks(file: string, decryptFilePath: string): Promise<DatapackParsingPack | null> {
   const decryptPaths = await grabFilepaths([file], decryptFilePath, "datapacks");
   if (decryptPaths.length == 0)
     throw new Error(`Did not find any datapacks for ${file} in decryptFilePath ${decryptFilePath}`);
@@ -129,6 +129,13 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
   const transectMap: Map<string, Transect> = new Map();
   const freehandMap: Map<string, Freehand> = new Map();
   const blankMap: Map<string, ColumnHeaderProps> = new Map();
+  const returnValue: FaciesFoundAndAgeRange = {
+    faciesFound: false,
+    minAge: 99999,
+    maxAge: -99999,
+    fontOptions: ["Column Header"]
+  };
+  let chartTitle = "Chart Title"
   let ageUnits = "Ma"
   try {
     for (const decryptPath of decryptPaths) {
@@ -147,14 +154,16 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
         blankMap
       );
       // Originally the first step, gather all parents and their direct children
-      ageUnits = await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
+      const { units, title } = await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
+      ageUnits = units
+      chartTitle = title
       // only iterate over parents. if we encounter one that is a child, the recursive function
       // should have already processed it.
       allEntries.forEach((children, parent) => {
         // if the parent is not a child
         if (!isChild.has(parent)) {
-          recursive(
-            "Chart Title",
+          const compare = recursive(
+            chartTitle,
             parent,
             children,
             columnInfoArray,
@@ -170,6 +179,9 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
             freehandMap,
             blankMap
           );
+          returnValue.maxAge = Math.max(returnValue.maxAge, compare.maxAge)
+          returnValue.minAge = Math.min(returnValue.minAge, compare.minAge)
+          returnValue.fontOptions = Array.from(new Set<ValidFontOptions>([...compare.fontOptions, ...returnValue.fontOptions]))
         }
       });
     }
@@ -182,9 +194,47 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
       throw new Error(`No columns found for path ${decryptPaths}`);
   } catch (e) {
     console.log("ERROR: failed to read columns for path " + decryptPaths + ". ", e);
-    return { columnInfoArray: [], datapackAgeInfo: { datapackContainsSuggAge: false }, ageUnits: "Ma" };
+    return null
   }
-  return { columnInfoArray, datapackAgeInfo, ageUnits };
+  columnInfoArray.unshift({
+    name: ageUnits,
+    editName: ageUnits,
+    fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+    fontOptions: ["Column Header", "Ruler Label"],
+    on: true,
+    width: 100,
+    enableTitle: true,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    },
+    popup: "",
+    children: [],
+    parent: chartTitle,
+    minAge: Number.MIN_VALUE,
+    maxAge: Number.MAX_VALUE
+  })
+  const chartColumn: ColumnInfo = {
+    name: chartTitle,
+    editName: chartTitle,
+    fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+    fontOptions: returnValue.fontOptions,
+    on: true,
+    width: 100,
+    enableTitle: true,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    },
+    popup: "",
+    children: columnInfoArray,
+    parent: "Chart Root",
+    minAge: returnValue.minAge,
+    maxAge: returnValue.maxAge
+  }
+  return { columnInfo: chartColumn, datapackAgeInfo, ageUnits };
 }
 /**
  * This will populate a mapping of all parents : childen[]
@@ -206,6 +256,7 @@ export async function getAllEntries(
   let topAge: number | null = null;
   let bottomAge: number | null = null;
   let ageUnits: string = "Ma"
+  let chartTitle: string = "Chart Title"
   for await (const line of readline) {
     if (!line) continue;
     if (line.includes("SetTop") || line.includes("SetBase")) {
@@ -219,6 +270,16 @@ export async function getAllEntries(
           } else if (key === "SetBase") {
             bottomAge = value;
           }
+        }
+      }
+    }
+    if (line.includes("chart title")) {
+      const parts = line.split("\t");
+      if (parts.length == 2) {
+        const key = parts[0] ? parts[0].trim() : null;
+        const value = parts[1] ? parts[1].trim() : null;
+        if (key === "chart title:" && value) {
+          chartTitle = value;
         }
       }
     }
@@ -261,7 +322,7 @@ export async function getAllEntries(
     datapackAgeInfo.topAge = topAge;
     datapackAgeInfo.bottomAge = bottomAge;
   }
-  return ageUnits
+  return { title: chartTitle, units: ageUnits }
 }
 /**
  * This function will populate the maps with the parsed entries in the filename
