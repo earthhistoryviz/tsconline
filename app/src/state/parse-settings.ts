@@ -524,11 +524,9 @@ export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
     } else if (state.name.includes("Chron")) {
       column._id = "class datastore.ChronColumn:Chron";
     }
-  } 
-  else if (state.name === "Chart Root" || state.name === "Chart Title") {
+  } else if (state.name === "Chart Root" || state.name === "Chart Title") {
     column._id = "class datastore.RootColumn:" + state.name;
-  }
-  else {
+  } else {
     column._id = "class datastore.BlankColumn:" + replaceSpecialChars(state.name, 0);
   }
   column.title = replaceSpecialChars(state.editName, 1);
