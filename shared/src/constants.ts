@@ -185,15 +185,15 @@ export const defaultChartSettingsInfoTSC: ChartSettingsInfoTSC = {
 export const defaultColumnBasicInfoTSC: ColumnBasicInfoTSC = {
   _id: "",
   title: "",
-  useNamedColor: false,
+  useNamedColor: true,
   placeHolder: false,
-  drawTitle: false,
+  drawTitle: true,
   drawAgeLabel: false,
   drawUncertaintyLabel: false,
   isSelected: false,
-  width: 0,
-  pad: 0,
-  "age pad": 0,
+  width: 100,
+  pad: 0.2,
+  "age pad": 2,
   backgroundColor: {
     text: ""
   },
