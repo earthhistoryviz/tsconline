@@ -71,7 +71,7 @@ export const setInheritable = action((target: ValidFontOptions, isInheritable: b
 
 export const setFontOptionOn = action((target: ValidFontOptions, isOn: boolean, column: ColumnInfo) => {
   column.fontsInfo[target].on = isOn;
-})
+});
 
 export const setFontFace = action((target: ValidFontOptions, fontFace: "Arial" | "Courier" | "Verdana") => {
   if (!state.settingsTabs.columnSelected) {
