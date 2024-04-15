@@ -15,8 +15,8 @@ const WidthTextField = ({ ...props }: TextFieldProps) => (
 );
 
 export const EditWidthField: React.FC<{
-  width: number | undefined;
-}> = observer(({ width = 20 }) => {
+  width: number;
+}> = observer(({ width }) => {
   const { state, actions } = useContext(context);
   const [inputWidth, setInputWidth] = useState<number>(width);
   let columnObject: ColumnInfo | undefined;
