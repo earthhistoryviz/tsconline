@@ -12,7 +12,7 @@ import { useMenuState, ControlledMenu, MenuItem, useHover } from "@szhsin/react-
 import { context } from "./state";
 import { TSCTabs } from "./components";
 
-type SettingsTab = 'time' | 'font' | 'column' | 'mappoints' | 'datapacks';
+type SettingsTab = "time" | "font" | "column" | "mappoints" | "datapacks";
 
 export const NavBar = observer(function Navbar() {
   const { state, actions } = useContext(context);
