@@ -516,11 +516,9 @@ export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
   else if (state.subSequenceInfo) {
     Object.assign(column, defaultSequenceColumnInfoTSC);
     column._id = "class datastore.SequenceColumn:" + replaceSpecialChars(state.name, 0);
-  }
-  //else if (state.subTransectInfo) {
-  //   column._id = "class datastore.TransectColumn:" + replaceSpecialChars(state.name, 0);
-  // }
-  else if (!state.children) {
+  } else if (state.subTransectInfo) {
+    column._id = "class datastore.TransectColumn:" + replaceSpecialChars(state.name, 0);
+  } else if (!state.children) {
     //zone column
     if (
       state.name.includes("Facies Label") ||
