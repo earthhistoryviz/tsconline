@@ -24,7 +24,7 @@ import FormatItalicIcon from "@mui/icons-material/FormatItalic";
 import { MuiColorInput } from "mui-color-input";
 import CloseIcon from "@mui/icons-material/Close";
 import "./FontMenu.css";
-import { ValidFontOptions } from "@tsconline/shared";
+import { ColumnInfo, ValidFontOptions } from "@tsconline/shared";
 
 const FontMenuRow: React.FC<{
   target: ValidFontOptions;
@@ -140,26 +140,14 @@ const FontMenuRow: React.FC<{
   );
 });
 
-export const FontMenu: React.FC<object> = observer(() => {
-  const { state } = useContext(context);
+type FontMenuProps = {
+  column: ColumnInfo;
+};
+
+export const FontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
   const theme = useTheme();
-  const name =
-    state.settingsTabs.columnSelected === null
-      ? ""
-      : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.editName;
-  let fontOptionsSet: Set<ValidFontOptions> = new Set();
-  const defaultFontSet: Set<ValidFontOptions> = new Set([
-    "Age Label",
-    "Zone Column Label",
-    "Uncertainty Label",
-    "Event Column Label",
-    "Range Label"
-  ]);
-  if (state.settingsTabs.columnSelected) {
-    fontOptionsSet =
-      state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)?.fontOptions ?? defaultFontSet;
-  }
   const [open, setOpen] = useState(false);
+  const metaColumn = column.children.length > 0;
   const handleOpen = () => {
     setOpen(true);
   };
@@ -176,30 +164,54 @@ export const FontMenu: React.FC<object> = observer(() => {
       <Modal open={open} onClose={handleClose}>
         <Box id="FontMenuContainer">
           <div id="HeadingContainer">
-            <Typography id="FontOptionsTitle">Font Options for {`"${name}"`}</Typography>
+            <Typography id="FontOptionsTitle">Font Options for {`"${column.name}"`}</Typography>
             <div onClick={handleClose}>
               <CloseIcon sx={{ color: theme.palette.primary.main }} />
             </div>
           </div>
-          <Grid container rowSpacing={2} columnSpacing={0}>
-            <Grid item xs={12}>
-              <Typography id="Bold">Change Font</Typography>
-              <FontMenuRow target="Column Header" />
-            </Grid>
-            <Grid item xs={12}>
-              <Divider />
-            </Grid>
-            <Grid item xs={12} style={{ marginBottom: "-16px" }}>
-              <Typography id="AdditionalFontsText">Additional fonts for child columns</Typography>
-            </Grid>
-            {Array.from(fontOptionsSet).map((target) => (
-              <Grid item xs={12} key={target}>
-                <FontMenuRow target={target} />
-              </Grid>
-            ))}
-          </Grid>
+          {metaColumn ? <MetaColumnFontMenu column={column} /> : <LeafColumnFontMenu column={column} />}
         </Box>
       </Modal>
     </div>
+  );
+});
+
+const MetaColumnFontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
+  return (
+    <Grid container rowSpacing={2} columnSpacing={0}>
+      <Grid item xs={12}>
+        <Typography id="Bold">Change Font</Typography>
+        <FontMenuRow target="Column Header" />
+      </Grid>
+      <Grid item xs={12}>
+        <Divider />
+      </Grid>
+      <Grid item xs={12} style={{ marginBottom: "-16px" }}>
+        <Typography id="AdditionalFontsText">Additional fonts for child columns</Typography>
+      </Grid>
+      {Array.from(column.fontOptions).map((target) => {
+        if (target === "Column Header") return null;
+        return (
+          <Grid item xs={12} key={target}>
+            <FontMenuRow target={target} />
+          </Grid>
+        );
+      })}
+    </Grid>
+  );
+});
+
+const LeafColumnFontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
+  return (
+    <Grid container rowSpacing={2} columnSpacing={0}>
+      <Grid item xs={12}>
+        <Typography id="Bold">Change Font</Typography>
+        {Array.from(column.fontOptions).map((target) => (
+          <Grid item xs={12} key={target}>
+            <FontMenuRow target={target} />
+          </Grid>
+        ))}
+      </Grid>
+    </Grid>
   );
 });
