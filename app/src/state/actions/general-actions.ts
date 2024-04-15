@@ -326,10 +326,7 @@ export const setDatapackConfig = action(
     state.settingsTSC = chartSettings;
     // this is for app start up or when all datapacks are removed
     if (datapacks.length === 0) {
-      state.config.unitsUsed = new Set(["Default"]);
-      state.settings.timeSettings["Default"] = JSON.parse(JSON.stringify(defaultTimeSettings));
-    } else {
-      state.config.unitsUsed = new Set(unitMap.keys());
+      state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
     }
     initializeColumnHashMap(columnInfo);
     if (state.settingsTSC.settings) {

@@ -112,13 +112,11 @@ export const state = observable<State>({
   },
   config: {
     datapacks: [],
-    settingsPath: "",
-    unitsUsed: new Set<string>()
+    settingsPath: ""
   },
   prevConfig: {
     datapacks: [],
-    settingsPath: "",
-    unitsUsed: new Set<string>()
+    settingsPath: ""
   },
   presets: {},
   datapackIndex: {},

@@ -1,7 +1,7 @@
-import { Box, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { Box, TextField, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
-import { TSCCheckbox } from "../components";
+import { CustomDivider, TSCCheckbox } from "../components";
 import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import { useContext, useState } from "react";
@@ -11,10 +11,11 @@ import { ErrorCodes } from "../util/error-codes";
 
 export const Time = observer(function Time() {
   const { state, actions } = useContext(context);
-  const [units, setUnits] = useState<string>(Array.from(state.config.unitsUsed)[0]);
+  const [units, setUnits] = useState<string>(Object.keys(state.settings.timeSettings)[0]);
   if (units === null || units === undefined) {
     throw new Error("There must be a unit used in the config");
   }
+  const disabled = units !== "Ma";
   return (
     <div>
       <ToggleButtonGroup
@@ -28,20 +29,25 @@ export const Time = observer(function Time() {
         }}
         className="ToggleButtonGroup"
         aria-label="Units">
-        {Array.from(state.config.unitsUsed).map((unit) => (
+        {Object.keys(state.settings.timeSettings).map((unit) => (
           <ToggleButton key={unit} value={unit} disableRipple>
             {unit}
           </ToggleButton>
         ))}
       </ToggleButtonGroup>
-      <Box className="Box">
-        <FormControl className="FormControlTop">
-          <InputLabel htmlFor="top-age-selector">Top Age/Stage Name</InputLabel>
+      <Box className="TimeBox">
+        <Typography className="IntervalLabel">Top of Interval</Typography>
+        <CustomDivider className="time-form-divider" />
+        <FormControl className="FormControlIntervals">
+          <InputLabel htmlFor="top-age-selector">
+            {disabled ? "Not Available for this Unit" : "Top Age/Stage Name"}
+          </InputLabel>
           <Select
             className="SelectTop"
             inputProps={{ id: "top-age-selector" }}
             name="top-age-stage-name"
             label="Top Age/Stage Name"
+            disabled={disabled}
             value={state.settings.timeSettings[units].topStageKey}
             onChange={(event) => {
               const selectedValue = event.target.value;
@@ -62,8 +68,8 @@ export const Time = observer(function Time() {
             ))}
           </Select>
           <TextField
-            className="TopAgeTextField"
-            label="Top Age"
+            className="UnitTextField"
+            label={`${units}: `}
             type="number"
             name="vertical-scale-text-field"
             value={state.settings.timeSettings[units].topStageAge}
@@ -79,12 +85,16 @@ export const Time = observer(function Time() {
             }}
           />
         </FormControl>
-        <FormControl className="FormControlBaseAgeStageName">
-          <InputLabel htmlFor="base-age-selector">Base Age/Stage Name</InputLabel>
+        <Typography className="IntervalLabel">Base of Interval</Typography>
+        <CustomDivider className="time-form-divider" />
+        <FormControl className="FormControlIntervals">
+          <InputLabel htmlFor="base-age-selector">
+            {disabled ? "Not Available for this Unit" : "Base Age/Stage Name"}
+          </InputLabel>
           <Select
             className="SelectBase"
-            label="Base Age/Stage Name"
             inputProps={{ id: "base-age-selector" }}
+            disabled={disabled}
             name="base-age-stage-name"
             value={state.settings.timeSettings[units].baseStageKey}
             onChange={(event) => {
@@ -106,8 +116,8 @@ export const Time = observer(function Time() {
             ))}
           </Select>
           <TextField
-            className="BaseAgeTextField"
-            label="Base Age"
+            className="UnitTextField"
+            label={`${units} :`}
             type="number"
             name="vertical-scale-text-field"
             value={state.settings.timeSettings[units].baseStageAge}
@@ -125,7 +135,7 @@ export const Time = observer(function Time() {
         </FormControl>
         <TextField
           className="VerticalScale"
-          label="Vertical Scale (cm/unit)"
+          label={`Vertical Scale (cm per 1 ${units}):`}
           type="number"
           name="vertical-scale-text-field"
           value={state.settings.timeSettings[units].unitsPerMY}
