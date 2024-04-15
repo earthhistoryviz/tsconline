@@ -292,11 +292,11 @@ function generateSettingsXml(stateSettings: ChartSettings, indent: string): stri
     const timeSettings = stateSettings.timeSettings[unit];
     xml += `${indent}<setting name="topAge" source="text" unit="${unit}">\n`;
     xml += `${indent}    <setting name="text">${timeSettings.topStageAge}</setting>\n`;
-    xml += `${indent}</setting>\n`;
+    xml += `${indent}</setting>\n`
     xml += `${indent}<setting name="baseAge" source="text" unit="${unit}">\n`;
     xml += `${indent}    <setting name="text">${timeSettings.baseStageAge}</setting>\n`;
-    xml += `${indent}</setting>\n`;
-    xml += `${indent}<setting name="unitsPerMY" unit="${unit}">${timeSettings.unitsPerMY}</setting>\n`;
+    xml += `${indent}</setting>\n`
+    xml += `${indent}<setting name="unitsPerMY" unit="${unit}">${timeSettings.unitsPerMY * 30}</setting>\n`;
     xml += `${indent}<setting name="skipEmptyColumns">${timeSettings.skipEmptyColumns}</setting>\n`;
   }
   xml += `${indent}<setting name="variableColors">UNESCO</setting>\n`;
