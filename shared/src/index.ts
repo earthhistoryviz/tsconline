@@ -128,6 +128,9 @@ export type SubBlockInfo = {
 export type ChartRequest = {
   settings: string; // JSON string representing the settings file you want to use to make a chart
   datapacks: string[]; // active datapacks to be used on chart
+  useCache: boolean; // whether to use the cache or not
+  useSuggestedAge: boolean; // whether to use the suggested age or not
+  username: string; // the username of the user
 };
 
 export type ServerResponseError = {

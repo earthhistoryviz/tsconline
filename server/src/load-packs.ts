@@ -35,7 +35,7 @@ export async function loadIndexes(
 ) {
   console.log(`\nParsing datapacks: ${datapacks}\n`);
   for (const datapack of datapacks) {
-    await parseDatapacks([datapack], decryptionDirectory)
+    await parseDatapacks(datapack, decryptionDirectory)
       .then((datapackParsingPack) => {
         assertDatapackParsingPack(datapackParsingPack);
         datapackIndex[datapack] = datapackParsingPack;

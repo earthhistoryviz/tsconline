@@ -50,7 +50,10 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
     const xmlSettings = jsonToXml(state.settingsTSC, columnCopy, state.settings);
     body = JSON.stringify({
       settings: xmlSettings,
-      datapacks: state.config.datapacks
+      datapacks: state.config.datapacks,
+      username: "username",
+      useCache: state.useCache,
+      useSuggestedAge: state.settings.useDatapackSuggestedAge
     });
   } catch (e) {
     console.error(e);
@@ -59,7 +62,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   }
   console.log("Sending settings to server...");
   try {
-    const response = await fetcher(`/charts/${state.useCache}/${state.settings.useDatapackSuggestedAge}`, {
+    const response = await fetcher(`/charts/${state.useCache}/${state.settings.useDatapackSuggestedAge}/username`, {
       method: "POST",
       body
     });

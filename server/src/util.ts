@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import fsPromises from "fs/promises";
+import fsPromises, { rm } from "fs/promises";
 import { glob } from "glob";
 
 /**
@@ -149,14 +149,8 @@ export function capitalizeFirstLetter(input: string): string {
  * @param uploadedFile
  * @param decryptedUploadedDirectory
  */
-export function resetUploadDirectory(uploadedFile: string, decryptedUploadedDirectory: string) {
-  if (fs.existsSync(uploadedFile)) {
-    fs.unlink(uploadedFile, (err) => {
-      if (err) {
-        console.error(err);
-      }
-    });
-  }
+export async function resetUploadDirectory(uploadedFile: string, decryptedUploadedDirectory: string) {
+  await rm(uploadedFile, { force: true });
   if (fs.existsSync(decryptedUploadedDirectory)) {
     deleteDirectory(decryptedUploadedDirectory);
   }

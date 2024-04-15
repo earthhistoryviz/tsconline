@@ -114,7 +114,7 @@ server.get("/presets", async (_request, reply) => {
 server.post<{ Params: { username: string } }>("/upload/:username", routes.uploadDatapack);
 
 //fetches json object of requested settings file
-server.get<{ Params: { settingFile: string } }>("/settingsXml/:settingFile", routes.fetchSettingsXml);
+server.get<{ Params: { file: string } }>("/settingsXml/:file", routes.fetchSettingsXml);
 
 server.get("/datapackinfoindex", (_request, reply) => {
   if (!datapackIndex || !mapPackIndex) {
@@ -145,8 +145,8 @@ server.get("/user-datapacks/:username", routes.fetchUserDatapacks);
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
-server.post<{ Params: { usecache: string; useSuggestedAge: string } }>(
-  "/charts/:usecache/:useSuggestedAge",
+server.post<{ Params: { usecache: string; useSuggestedAge: string; username: string } }>(
+  "/charts/:usecache/:useSuggestedAge/:username",
   routes.fetchChart
 );
 
