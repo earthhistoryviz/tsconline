@@ -12,6 +12,8 @@ import { useMenuState, ControlledMenu, MenuItem, useHover } from "@szhsin/react-
 import { context } from "./state";
 import { TSCTabs } from "./components";
 
+type SettingsTab = 'time' | 'font' | 'column' | 'mappoints' | 'datapacks';
+
 export const NavBar = observer(function Navbar() {
   const { state, actions } = useContext(context);
   const theme = useTheme();
@@ -19,7 +21,7 @@ export const NavBar = observer(function Navbar() {
   const [menuState, toggle] = useMenuState({ transition: true });
   const { hoverProps, anchorProps } = useHover(menuState.state, toggle);
 
-  const handleMenuItemClick = (settingTab: string) => {
+  const handleMenuItemClick = (settingTab: SettingsTab) => {
     actions.setSettingsTabsSelected(settingTab);
     toggle(false);
   };
