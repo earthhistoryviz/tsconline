@@ -155,7 +155,7 @@ export type ColumnInfo = {
   name: string;
   editName: string;
   fontsInfo: FontsInfo;
-  fontOptions?: Set<ValidFontOptions>;
+  fontOptions: ValidFontOptions[];
   on: boolean;
   popup: string;
   children: ColumnInfo[];
@@ -168,6 +168,7 @@ export type ColumnInfo = {
   subPointInfo?: SubPointInfo[];
   subFreehandInfo?: SubFreehandInfo[];
   subSequenceInfo?: SubSequenceInfo[];
+  subTransectInfo?: SubTransectInfo[];
   minAge: number;
   maxAge: number;
   enableTitle: boolean;
@@ -644,6 +645,15 @@ export function assertChartInfo(o: any): asserts o is ChartResponseInfo {
   if (typeof o.chartpath !== "string") throwError("ChartInfo", "chartpath", "string", o.chartpath);
   if (typeof o.hash !== "string") throwError("ChartInfo", "hash", "string", o.hash);
 }
+export function assertValidFontOptions(o: any): asserts o is ValidFontOptions {
+  if (!o || typeof o !== "string") throw new Error("ValidFontOptions must be a string");
+  if (
+    !/^(Column Header|Age Label|Uncertainty Label|Zone Column Label|Sequence Column Label|Event Column Label|Popup Body|Ruler Label|Point Column Scale Label|Range Label|Ruler Tick Mark Label|Legend Title|Legend Column Name|Legend Column Source|Range Box Label)$/.test(
+      o
+    )
+  )
+    throwError("ValidFontOptions", "ValidFontOptions", "ValidFontOptions", o);
+}
 
 export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   if (typeof o !== "object" || o === null) {
@@ -658,6 +668,10 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   if (typeof o.maxAge !== "number") throwError("ColumnInfo", "maxAge", "number", o.maxAge);
   if (typeof o.width !== "number") throwError("ColumnInfo", "width", "number", o.width);
   if (typeof o.enableTitle !== "boolean") throwError("ColumnInfo", "enableTitle", "boolean", o.enableTitle);
+  if (!Array.isArray(o.fontOptions)) throwError("ColumnInfo", "fontOptions", "array", o.fontOptions);
+  for (const fontOption of o.fontOptions) {
+    assertValidFontOptions(fontOption);
+  }
   assertRGB(o.rgb);
   for (const child of o.children) {
     assertColumnInfo(child);
@@ -716,6 +730,13 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
       throwError("ColumnInfo", "subSequenceInfo", "array", o.subSequenceInfo);
     for (const sequence of o.subSequenceInfo) {
       assertSubSequenceInfo(sequence);
+    }
+  }
+  if ("subTransectInfo" in o) {
+    if (!o.subTransectInfo || !Array.isArray(o.subTransectInfo))
+      throwError("ColumnInfo", "subTransectInfo", "array", o.subTransectInfo);
+    for (const transect of o.subTransectInfo) {
+      assertSubTransectInfo(transect);
     }
   }
 }

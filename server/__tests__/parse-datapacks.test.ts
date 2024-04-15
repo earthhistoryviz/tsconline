@@ -25,6 +25,7 @@ jest.mock("@tsconline/shared", () => ({
     if (typeof o.b !== "number") throw new Error("Invalid rgb");
     if (o.b < 0 || o.b > 255) throw new Error("Invalid rgb");
   }),
+  allFontOptions: ["Column Header", "Popup Body"],
   defaultFontsInfo: { font: "Arial" },
   assertFontsInfo: jest.fn().mockImplementation((fonts) => {
     if (fonts.font !== "Arial") throw new Error("Invalid font");
@@ -70,7 +71,7 @@ describe("general parse-datapacks tests", () => {
   });
 
   /**
-   * Parses a custom simple pack of both facies and block
+   * Parses a custom simple pack of all column types
    * Checks both datapack ages and columnInfo values
    */
   it("should parse general datapack with all column types", async () => {
