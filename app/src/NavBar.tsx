@@ -1,4 +1,4 @@
-import React, { useContext, useRef } from "react";
+import { useContext, useRef } from "react";
 import { observer } from "mobx-react-lite";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
@@ -21,7 +21,7 @@ export const NavBar = observer(function Navbar() {
 
   const handleMenuItemClick = (settingTab) => {
     actions.setSettingsTabsSelected(settingTab);
-    toggle(false); 
+    toggle(false);
   };
 
   return (
@@ -45,37 +45,31 @@ export const NavBar = observer(function Navbar() {
           </IconButton>
         </Link>
         <TSCTabs
-            value={state.tab !== 0 ? state.tab : false}
-            onChange={(_e, value) => actions.setTab(value)}
-            sx={{
-              "& .MuiTab-root": {
-                color: theme.palette.primary.main,
-                "&:hover": {
-                  color: theme.palette.selection.light
-                }
-              },
-              "& .Mui-selected": {
-                color: theme.palette.selection.main
+          value={state.tab !== 0 ? state.tab : false}
+          onChange={(_e, value) => actions.setTab(value)}
+          sx={{
+            "& .MuiTab-root": {
+              color: theme.palette.primary.main,
+              "&:hover": {
+                color: theme.palette.selection.light
               }
-            }}>
-            <Tab label="Chart" component={Link} to="/chart" />
-            <Tab label="Settings" component={Link} to="/settings" ref={menuRef} {...anchorProps}/>
-            <Tab label="Datapack" component={Link} to="/datapack" />
-            <Tab label="Help" component={Link} to="/help" />
-            <Tab label="About" component={Link} to="/about" />
+            },
+            "& .Mui-selected": {
+              color: theme.palette.selection.main
+            }
+          }}>
+          <Tab label="Chart" component={Link} to="/chart" />
+          <Tab label="Settings" component={Link} to="/settings" ref={menuRef} {...anchorProps} />
+          <Tab label="Datapack" component={Link} to="/datapack" />
+          <Tab label="Help" component={Link} to="/help" />
+          <Tab label="About" component={Link} to="/about" />
         </TSCTabs>
         <div style={{ flexGrow: 1 }} />
         <img src={TSCreatorLogo} width="40" height="40" alt="TSCreator Logo" />
-        <ControlledMenu
-          {...hoverProps}
-          {...menuState}
-          anchorRef={menuRef}
-          onClose={() => toggle(false)}
-        >
+        <ControlledMenu {...hoverProps} {...menuState} anchorRef={menuRef} onClose={() => toggle(false)}>
           <MenuItem onClick={() => handleMenuItemClick("time")}>Time</MenuItem>
           <MenuItem onClick={() => handleMenuItemClick("column")}>Columns</MenuItem>
           <MenuItem onClick={() => handleMenuItemClick("font")}>Font</MenuItem>
-          <MenuItem onClick={() => handleMenuItemClick("column")}>Columns</MenuItem>
           <MenuItem onClick={() => handleMenuItemClick("mappoints")}>Map Points</MenuItem>
         </ControlledMenu>
       </Toolbar>
