@@ -52,9 +52,9 @@ export const ColumnMenu = observer(() => {
   const selectedColumn = state.settingsTabs.columnSelected;
   const column = selectedColumn ? state.settingsTabs.columnHashMap.get(selectedColumn!) : undefined;
   const info =
-      state.settingsTabs.columnSelected === null
-          ? ""
-          : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.popup;
+    state.settingsTabs.columnSelected === null
+      ? ""
+      : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)?.popup;
   function showMenu() {
     const menu = document.getElementById("ColumnMenuContent");
     const label = document.getElementById("ColumnMenuLabel");
@@ -92,7 +92,6 @@ export const ColumnMenu = observer(() => {
         {column && <EditNameField />}
         {column && <FontMenu column={column} />}
         {column && <ShowTitles column={column} />}
-        {column && <InfoBox />}
         {info !== "" && <InfoBox />}
       </div>
     </div>
