@@ -350,7 +350,7 @@ export const setDatapackConfig = action(
     state.mapState.mapInfo = mapInfo;
     state.config.datapacks = datapacks;
     state.settingsTSC = chartSettings;
-    initializeColumnHashMap(columnInfo);
+    initializeColumnHashMap(state.settingsTabs.columns);
     resetSettings();
     if (state.settingsTSC.settings) {
       setChartSettings(state.settingsTSC.settings);
