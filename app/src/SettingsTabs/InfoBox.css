@@ -1,8 +1,3 @@
-.container {
-  /*padding-left: 4px;*/
-  /*padding-right: 4px;*/
-}
-
 .info-box {
   width: 90%;
   border: black solid 1px;
@@ -14,5 +9,4 @@
 
 .scroll-bar {
   max-height: 200px;
-  /*padding-right: 10px;*/
 }
