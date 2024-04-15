@@ -177,7 +177,8 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
             sequenceMap,
             transectMap,
             freehandMap,
-            blankMap
+            blankMap,
+            ageUnits
           );
           returnValue.maxAge = Math.max(returnValue.maxAge, compare.maxAge);
           returnValue.minAge = Math.min(returnValue.minAge, compare.minAge);
@@ -215,7 +216,8 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     children: [],
     parent: chartTitle,
     minAge: Number.MIN_VALUE,
-    maxAge: Number.MAX_VALUE
+    maxAge: Number.MAX_VALUE,
+    units: ageUnits
   });
   const chartColumn: ColumnInfo = {
     name: chartTitle,
@@ -234,7 +236,8 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     children: columnInfoArray,
     parent: "Chart Root",
     minAge: returnValue.minAge,
-    maxAge: returnValue.maxAge
+    maxAge: returnValue.maxAge,
+    units: ageUnits
   };
   return { columnInfo: chartColumn, datapackAgeInfo, ageUnits };
 }
@@ -1134,7 +1137,8 @@ function recursive(
   sequenceMap: Map<string, Sequence>,
   transectMap: Map<string, Transect>,
   freehandMap: Map<string, Freehand>,
-  blankMap: Map<string, ColumnHeaderProps>
+  blankMap: Map<string, ColumnHeaderProps>,
+  units: string
 ): FaciesFoundAndAgeRange {
   const currentColumnInfo: ColumnInfo = {
     name: trimInvisibleCharacters(currentColumn),
@@ -1153,7 +1157,8 @@ function recursive(
       g: 255,
       b: 255
     },
-    fontOptions: ["Column Header"]
+    fontOptions: ["Column Header"],
+    units
   };
   const returnValue: FaciesFoundAndAgeRange = {
     faciesFound: false,
@@ -1223,7 +1228,8 @@ function recursive(
       currentColumnInfo.minAge,
       currentColumnInfo.maxAge,
       currentColumnInfo.rgb,
-      currentColumnInfo.fontOptions
+      currentColumnInfo.fontOptions,
+      units
     );
     returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.subFaciesInfo = currentFacies.subFaciesInfo;
@@ -1254,7 +1260,8 @@ function recursive(
       currentColumnInfo.minAge,
       currentColumnInfo.maxAge,
       currentColumnInfo.rgb,
-      currentColumnInfo.fontOptions
+      currentColumnInfo.fontOptions,
+      units
     );
     returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.maxAge = currentColumnInfo.maxAge;
@@ -1309,7 +1316,8 @@ function recursive(
         sequenceMap,
         transectMap,
         freehandMap,
-        blankMap
+        blankMap,
+        units
       );
       returnValue.minAge = Math.min(compareValue.minAge, returnValue.minAge);
       returnValue.maxAge = Math.max(compareValue.maxAge, returnValue.maxAge);
@@ -1368,7 +1376,8 @@ function addFaciesChildren(
   minAge: number,
   maxAge: number,
   rgb: RGB,
-  fontOptions: ValidFontOptions[]
+  fontOptions: ValidFontOptions[],
+  units: string
 ) {
   fontOptions.push("Age Label");
   fontOptions.push("Uncertainty Label");
@@ -1386,7 +1395,8 @@ function addFaciesChildren(
     minAge,
     maxAge,
     width: width * 0.4,
-    rgb
+    rgb,
+    units
   });
   children.push({
     name: `${name} Members`,
@@ -1401,7 +1411,8 @@ function addFaciesChildren(
     minAge,
     maxAge,
     width,
-    rgb
+    rgb,
+    units
   });
   children.push({
     name: `${name} Facies Label`,
@@ -1416,7 +1427,8 @@ function addFaciesChildren(
     minAge,
     maxAge,
     width: width * 0.4,
-    rgb
+    rgb,
+    units
   });
   children.push({
     name: `${name} Series Label`,
@@ -1431,7 +1443,8 @@ function addFaciesChildren(
     minAge,
     maxAge,
     rgb,
-    width: width * 0.2
+    width: width * 0.2,
+    units
   });
 }
 
@@ -1454,7 +1467,8 @@ function addChronChildren(
   minAge: number,
   maxAge: number,
   rgb: RGB,
-  fontOptions: ValidFontOptions[]
+  fontOptions: ValidFontOptions[],
+  units: string
 ) {
   fontOptions.push("Age Label");
   fontOptions.push("Zone Column Label");
@@ -1471,7 +1485,8 @@ function addChronChildren(
     minAge,
     maxAge,
     width: 60,
-    rgb
+    rgb,
+    units
   });
   children.push({
     name: `${name} Chron Label`,
@@ -1486,7 +1501,8 @@ function addChronChildren(
     minAge,
     maxAge,
     width: 40,
-    rgb
+    rgb,
+    units
   });
   children.push({
     name: `${name} Series Label`,
@@ -1501,6 +1517,7 @@ function addChronChildren(
     minAge,
     maxAge,
     width: 40,
-    rgb
+    rgb,
+    units
   });
 }

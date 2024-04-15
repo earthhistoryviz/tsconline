@@ -271,7 +271,8 @@ export const setDatapackConfig = action(
         minAge: Number.MAX_VALUE,
         maxAge: Number.MIN_VALUE,
         children: [],
-        parent: null
+        parent: null,
+        units: ""
       };
       // add everything together
       // uses preparsed data on server start and appends items together
