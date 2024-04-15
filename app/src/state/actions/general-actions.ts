@@ -204,7 +204,7 @@ const setChartSettings = action("setChartSettings", (settings: ChartSettingsInfo
     if (!state.settings.timeSettings[unit.unit]) {
       state.settings.timeSettings[unit.unit] = JSON.parse(JSON.stringify(defaultTimeSettings));
     }
-    setUnitsPerMY(unit.text, unit.unit);
+    setUnitsPerMY(unit.text / 30, unit.unit);
   }
   for (const unit of skipEmptyColumns) {
     if (!state.settings.timeSettings[unit.unit]) {

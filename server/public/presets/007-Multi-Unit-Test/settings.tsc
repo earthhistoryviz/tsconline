@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <TSCreator version="PRO8.1">
     <settings version="1.0">
+        <setting name="topAge" source="text" unit="ka (before AD2000)">
+            <setting name="text">0.0</setting>
+        </setting>
+        <setting name="baseAge" source="text" unit="ka (before AD2000)">
+            <setting name="text">15.0</setting>
+        </setting>
+        <setting name="unitsPerMY" unit="ka (before AD2000)">30.0</setting>
+        <setting name="skipEmptyColumns" unit="ka (before AD2000)">true</setting>
         <setting name="topAge" source="text" unit="Ma">
             <setting name="text">0.0</setting>
         </setting>
@@ -9,14 +17,6 @@
         </setting>
         <setting name="unitsPerMY" unit="Ma">30.0</setting>
         <setting name="skipEmptyColumns" unit="Ma">true</setting>
-        <setting name="topAge" source="text" unit="ka (before AD2000)">
-            <setting name="text">0.0</setting>
-        </setting>
-        <setting name="baseAge" source="text" unit="ka (before AD2000)">
-            <setting name="text">15.0</setting>
-        </setting>
-        <setting name="unitsPerMY" unit="ka (before AD2000)">60.0</setting>
-        <setting name="skipEmptyColumns" unit="ka (before AD2000)">true</setting>
         <setting name="variableColors">USGS</setting>
         <setting name="noIndentPattern">false</setting>
         <setting name="negativeChk">false</setting>
@@ -4863,7 +4863,7 @@
                             <setting name="orientation" orientation="normal"/>
                         </column>
                         <column id="class datastore.ZoneColumn:Southeast (Balkans-Ukraine) -  northern">
-                            <setting name="title">Southeast (Balkans-Ukraine) -  northern</setting>
+                            <setting name="title">Southeast (Balkans-Ukraine) - northern</setting>
                             <setting name="useNamedColor">false</setting>
                             <setting name="placeHolder">false</setting>
                             <setting name="drawTitle">true</setting>
