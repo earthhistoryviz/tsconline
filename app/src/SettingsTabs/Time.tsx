@@ -12,7 +12,7 @@ import { ErrorCodes } from "../util/error-codes";
 export const Time = observer(function Time() {
   const { state, actions } = useContext(context);
   const [units, setUnits] = useState<string>(Array.from(state.config.unitsUsed)[0]);
-  if (!units) {
+  if (units === null || units === undefined) {
     throw new Error("There must be a unit used in the config");
   }
   return (

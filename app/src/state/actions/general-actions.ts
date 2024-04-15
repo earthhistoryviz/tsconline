@@ -316,15 +316,21 @@ export const setDatapackConfig = action(
       pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
       return false;
     }
+    resetSettings();
     state.settings.datapackContainsSuggAge = datapackAgeInfo.datapackContainsSuggAge;
     state.mapState.mapHierarchy = mapHierarchy;
     state.settingsTabs.columns = columnInfo;
     state.mapState.mapInfo = mapInfo;
     state.config.datapacks = datapacks;
     state.settingsTSC = chartSettings;
-    state.config.unitsUsed = new Set(unitMap.keys());
+    // this is for app start up or when all datapacks are removed
+    if (datapacks.length === 0) {
+      state.config.unitsUsed = new Set(["Default"]);
+      state.settings.timeSettings["Default"] = JSON.parse(JSON.stringify(defaultTimeSettings));
+    } else {
+      state.config.unitsUsed = new Set(unitMap.keys());
+    }
     initializeColumnHashMap(columnInfo);
-    resetSettings();
     if (state.settingsTSC.settings) {
       setChartSettings(state.settingsTSC.settings);
     }
@@ -414,7 +420,6 @@ export const resetState = action("resetState", () => {
 
 export const loadPresets = action("loadPresets", (presets: Presets) => {
   state.presets = presets;
-  setDatapackConfig([], "");
 });
 
 // Define settingOptions globally
