@@ -19,7 +19,7 @@ export const NavBar = observer(function Navbar() {
   const [menuState, toggle] = useMenuState({ transition: true });
   const { hoverProps, anchorProps } = useHover(menuState.state, toggle);
 
-  const handleMenuItemClick = (settingTab) => {
+  const handleMenuItemClick = (settingTab: string) => {
     actions.setSettingsTabsSelected(settingTab);
     toggle(false);
   };
