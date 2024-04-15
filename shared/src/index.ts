@@ -179,6 +179,7 @@ export type ColumnInfo = {
   enableTitle: boolean;
   rgb: RGB;
   width: number;
+  units: string;
 };
 
 export type Range = ColumnHeaderProps & {
@@ -670,6 +671,7 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   if (typeof o.maxAge !== "number") throwError("ColumnInfo", "maxAge", "number", o.maxAge);
   if (typeof o.width !== "number") throwError("ColumnInfo", "width", "number", o.width);
   if (typeof o.enableTitle !== "boolean") throwError("ColumnInfo", "enableTitle", "boolean", o.enableTitle);
+  if (typeof o.units !== "string") throwError("ColumnInfo", "units", "string", o.units);
   if (!Array.isArray(o.fontOptions)) throwError("ColumnInfo", "fontOptions", "array", o.fontOptions);
   for (const fontOption of o.fontOptions) {
     assertValidFontOptions(fontOption);
