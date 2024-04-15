@@ -29,7 +29,6 @@ export type ErrorAlert = {
 export type Config = {
   datapacks: string[];
   settingsPath: string;
-  unitsUsed: Set<string>;
 };
 
 export type SnackbarInfo = {
