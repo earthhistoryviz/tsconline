@@ -68,7 +68,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
     if (state.settingsTabs.columns !== undefined) normalizeColumnProperties(state.settingsTabs.columns);
     const columnCopy: ColumnInfo = JSON.parse(JSON.stringify(state.settingsTabs.columns));
     changeManuallyAddedColumns(columnCopy);
-    const xmlSettings = jsonToXml(state.settingsTSC, columnCopy, state.settings);
+    const xmlSettings = jsonToXml(columnCopy, state.settings);
     body = JSON.stringify({
       settings: xmlSettings,
       datapacks: state.config.datapacks,
