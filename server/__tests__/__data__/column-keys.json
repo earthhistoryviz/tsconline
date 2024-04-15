@@ -868,7 +868,6 @@
                 "parent": "Parent 1",
                 "minAge": 0,
                 "maxAge": 0.234,
-                "width": 100,
                 "rgb": {
                   "r": 255,
                   "g": 255,

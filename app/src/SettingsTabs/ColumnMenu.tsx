@@ -95,11 +95,8 @@ export const ColumnMenu = observer(() => {
         {column && <ChangeBackgroundColor column={column} />}
         {column && <FontMenu column={column} />}
         {column && <ShowTitles column={column} />}
+        {column && column.width && <EditWidthField width={column.width} />}
         {!!info && <InfoBox info={info} />}
-        {state.settingsTabs.columnSelected &&
-          state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected) && (
-            <EditWidthField width={state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)?.width} />
-          )}
       </div>
     </div>
   );
