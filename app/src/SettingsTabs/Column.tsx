@@ -55,8 +55,8 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
     const dataInrange = checkIfDataIsInRange(
       details.minAge,
       details.maxAge,
-      state.settings.topStageAge,
-      state.settings.baseStageAge
+      state.settings.timeSettings[details.units].topStageAge,
+      state.settings.timeSettings[details.units].baseStageAge
     );
 
     function checkbox(leaf: string) {

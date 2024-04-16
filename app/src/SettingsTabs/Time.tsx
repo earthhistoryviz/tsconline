@@ -1,35 +1,61 @@
-import { Box, TextField } from "@mui/material";
+import { Box, TextField, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
-import { TSCCheckbox } from "../components";
+import { CustomDivider, TSCCheckbox } from "../components";
 import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { context } from "../state/index";
 import "./Time.css";
 import { ErrorCodes } from "../util/error-codes";
 
 export const Time = observer(function Time() {
   const { state, actions } = useContext(context);
-
+  const [units, setUnits] = useState<string>(Object.keys(state.settings.timeSettings)[0]);
+  if (units === null || units === undefined) {
+    throw new Error("There must be a unit used in the config");
+  }
+  const disabled = units !== "Ma";
   return (
     <div>
-      <Box className="Box">
-        <FormControl className="FormControlTop">
-          <InputLabel htmlFor="top-age-selector">Top Age/Stage Name</InputLabel>
+      <ToggleButtonGroup
+        value={units}
+        exclusive
+        onChange={(_event: React.MouseEvent<HTMLElement>, value: string) => {
+          if (value === null) {
+            return;
+          }
+          setUnits(value);
+        }}
+        className="ToggleButtonGroup"
+        aria-label="Units">
+        {Object.keys(state.settings.timeSettings).map((unit) => (
+          <ToggleButton key={unit} value={unit} disableRipple>
+            {unit}
+          </ToggleButton>
+        ))}
+      </ToggleButtonGroup>
+      <Box className="TimeBox">
+        <Typography className="IntervalLabel">Top of Interval</Typography>
+        <CustomDivider className="time-form-divider" />
+        <FormControl className="FormControlIntervals">
+          <InputLabel htmlFor="top-age-selector">
+            {disabled ? "Not Available for this Unit" : "Top Age/Stage Name"}
+          </InputLabel>
           <Select
             className="SelectTop"
             inputProps={{ id: "top-age-selector" }}
             name="top-age-stage-name"
             label="Top Age/Stage Name"
-            value={state.settings.topStageKey}
+            disabled={disabled}
+            value={state.settings.timeSettings[units].topStageKey}
             onChange={(event) => {
               const selectedValue = event.target.value;
               const selectedAgeItem = state.geologicalTopStageAges.find((item) => item.key === selectedValue);
               const selectedAge = selectedAgeItem?.value || 0;
-              if (selectedAge >= 0 && selectedAge <= state.settings.baseStageAge) {
-                actions.setSelectedTopStage(selectedValue);
-                actions.setTopStageAge(selectedAge);
+              if (selectedAge >= 0 && selectedAge <= state.settings.timeSettings[units].baseStageAge) {
+                actions.setTopStageKey(selectedValue, units);
+                actions.setTopStageAge(selectedAge, units);
                 actions.removeError(ErrorCodes.TOP_STAGE_AGE_INVALID);
               } else {
                 actions.pushError(ErrorCodes.TOP_STAGE_AGE_INVALID);
@@ -42,16 +68,16 @@ export const Time = observer(function Time() {
             ))}
           </Select>
           <TextField
-            className="TopAgeTextField"
-            label="Top Age"
+            className="UnitTextField"
+            label={`${units}: `}
             type="number"
             name="vertical-scale-text-field"
-            value={state.settings.topStageAge}
+            value={state.settings.timeSettings[units].topStageAge}
             onChange={(event) => {
               const age = parseFloat(event.target.value);
-              if (!isNaN(age) && age >= 0 && age <= state.settings.baseStageAge) {
-                actions.setSelectedTopStage("");
-                actions.setTopStageAge(age);
+              if (!isNaN(age) && age >= 0 && age <= state.settings.timeSettings[units].baseStageAge) {
+                actions.setTopStageKey("", units);
+                actions.setTopStageAge(age, units);
                 actions.removeError(ErrorCodes.TOP_STAGE_AGE_INVALID);
               } else {
                 actions.pushError(ErrorCodes.TOP_STAGE_AGE_INVALID);
@@ -59,21 +85,25 @@ export const Time = observer(function Time() {
             }}
           />
         </FormControl>
-        <FormControl className="FormControlBaseAgeStageName">
-          <InputLabel htmlFor="base-age-selector">Base Age/Stage Name</InputLabel>
+        <Typography className="IntervalLabel">Base of Interval</Typography>
+        <CustomDivider className="time-form-divider" />
+        <FormControl className="FormControlIntervals">
+          <InputLabel htmlFor="base-age-selector">
+            {disabled ? "Not Available for this Unit" : "Base Age/Stage Name"}
+          </InputLabel>
           <Select
             className="SelectBase"
-            label="Base Age/Stage Name"
             inputProps={{ id: "base-age-selector" }}
+            disabled={disabled}
             name="base-age-stage-name"
-            value={state.settings.baseStageKey}
+            value={state.settings.timeSettings[units].baseStageKey}
             onChange={(event) => {
               const selectedValue = event.target.value;
               const selectedAgeItem = state.geologicalBaseStageAges.find((item) => item.key === selectedValue);
               const selectedAge = selectedAgeItem?.value || 0;
-              if (selectedAge >= 0 && selectedAge >= state.settings.topStageAge) {
-                actions.setSelectedBaseStage(selectedValue);
-                actions.setBaseStageAge(selectedAge);
+              if (selectedAge >= 0 && selectedAge >= state.settings.timeSettings[units].topStageAge) {
+                actions.setBaseStageKey(selectedValue, units);
+                actions.setBaseStageAge(selectedAge, units);
                 actions.removeError(ErrorCodes.BASE_STAGE_AGE_INVALID);
               } else {
                 actions.pushError(ErrorCodes.BASE_STAGE_AGE_INVALID);
@@ -86,16 +116,16 @@ export const Time = observer(function Time() {
             ))}
           </Select>
           <TextField
-            className="BaseAgeTextField"
-            label="Base Age"
+            className="UnitTextField"
+            label={`${units} :`}
             type="number"
             name="vertical-scale-text-field"
-            value={state.settings.baseStageAge}
+            value={state.settings.timeSettings[units].baseStageAge}
             onChange={(event) => {
               const age = parseFloat(event.target.value);
-              if (!isNaN(age) && age >= 0 && state.settings.topStageAge <= age) {
-                actions.setSelectedBaseStage("");
-                actions.setBaseStageAge(age);
+              if (!isNaN(age) && age >= 0 && state.settings.timeSettings[units].topStageAge <= age) {
+                actions.setBaseStageKey("", units);
+                actions.setBaseStageAge(age, units);
                 actions.removeError(ErrorCodes.BASE_STAGE_AGE_INVALID);
               } else {
                 actions.pushError(ErrorCodes.BASE_STAGE_AGE_INVALID);
@@ -105,22 +135,21 @@ export const Time = observer(function Time() {
         </FormControl>
         <TextField
           className="VerticalScale"
-          label="Vertical Scale (cm/unit)"
+          label={`Vertical Scale (cm per 1 ${units}):`}
           type="number"
           name="vertical-scale-text-field"
-          value={state.settings.unitsPerMY}
-          onChange={(event) => actions.setUnitsPerMY(parseFloat(event.target.value))}
+          value={state.settings.timeSettings[units].unitsPerMY}
+          onChange={(event) => actions.setUnitsPerMY(parseFloat(event.target.value), units)}
         />
       </Box>
-
       <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
         <FormGroup>
           <FormControlLabel
             name="skip-empty-columns"
             control={
               <TSCCheckbox
-                onChange={(e) => actions.setSkipEmptyColumns(e.target.checked)}
-                checked={state.settings.skipEmptyColumns}
+                onChange={(e) => actions.setSkipEmptyColumns(e.target.checked, units)}
+                checked={state.settings.timeSettings[units].skipEmptyColumns}
               />
             }
             label="Gray out (and do not draw) columns which do not have data on the selected time interval"

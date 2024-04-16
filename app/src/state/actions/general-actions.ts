@@ -28,6 +28,7 @@ import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { equalChartSettings, equalConfig } from "../../types";
+import { settings, defaultTimeSettings } from "../../constants";
 
 export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   try {
@@ -53,26 +54,7 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
  * Resets any user defined settings
  */
 export const resetSettings = action("resetSettings", () => {
-  state.settings = {
-    selectedStage: "",
-    topStageAge: 0,
-    topStageKey: "",
-    baseStageAge: 0,
-    baseStageKey: "",
-    unitsPerMY: 2,
-    noIndentPattern: false,
-    enableColumnBackground: false,
-    enableChartLegend: false,
-    enablePriority: false,
-    enableHideBlockLabel: false,
-    skipEmptyColumns: true,
-    useDatapackSuggestedAge: true,
-    mouseOverPopupsEnabled: false,
-    datapackContainsSuggAge: false,
-    selectedBaseStage: "",
-    selectedTopStage: "",
-    unit: "Ma"
-  };
+  state.settings = JSON.parse(JSON.stringify(settings));
 });
 
 export const fetchDatapackInfo = action("fetchDatapackInfo", async () => {
@@ -206,14 +188,30 @@ const setChartSettings = action("setChartSettings", (settings: ChartSettingsInfo
     enHideBlockLable,
     enPriority
   } = settings;
-  if (topAge.text) {
-    setTopStageAge(topAge.text);
+  for (const unit of topAge) {
+    if (!state.settings.timeSettings[unit.unit]) {
+      state.settings.timeSettings[unit.unit] = JSON.parse(JSON.stringify(defaultTimeSettings));
+    }
+    setTopStageAge(unit.text, unit.unit);
   }
-  if (baseAge.text) {
-    setBaseStageAge(baseAge.text);
+  for (const unit of baseAge) {
+    if (!state.settings.timeSettings[unit.unit]) {
+      state.settings.timeSettings[unit.unit] = JSON.parse(JSON.stringify(defaultTimeSettings));
+    }
+    setBaseStageAge(unit.text, unit.unit);
   }
-  setUnitsPerMY(unitsPerMY.text);
-  setSkipEmptyColumns(skipEmptyColumns.text);
+  for (const unit of unitsPerMY) {
+    if (!state.settings.timeSettings[unit.unit]) {
+      state.settings.timeSettings[unit.unit] = JSON.parse(JSON.stringify(defaultTimeSettings));
+    }
+    setUnitsPerMY(unit.text / 30, unit.unit);
+  }
+  for (const unit of skipEmptyColumns) {
+    if (!state.settings.timeSettings[unit.unit]) {
+      state.settings.timeSettings[unit.unit] = JSON.parse(JSON.stringify(defaultTimeSettings));
+    }
+    setSkipEmptyColumns(unit.text, unit.unit);
+  }
   setMouseOverPopupsEnabled(doPopups);
   setEnableChartLegend(enChartLegend);
   setEnablePriority(enPriority);
@@ -233,6 +231,7 @@ export const setDatapackConfig = action(
     let datapackAgeInfo: DatapackAgeInfo = {
       datapackContainsSuggAge: false
     };
+    const unitMap = new Map<string, ColumnInfo>();
     let mapInfo: MapInfo = {};
     let mapHierarchy: MapHierarchy = {};
     let columnInfo: ColumnInfo;
@@ -269,50 +268,11 @@ export const setDatapackConfig = action(
           g: 255,
           b: 255
         },
-        minAge: state.settings.topStageAge,
-        maxAge: state.settings.baseStageAge,
-        children: [
-          {
-            name: "Chart Title",
-            editName: "Chart Title",
-            fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
-            on: true,
-            width: 100,
-            fontOptions: ["Column Header"],
-            enableTitle: true,
-            rgb: {
-              r: 255,
-              g: 255,
-              b: 255
-            },
-            popup: "",
-            children: [
-              {
-                name: "Ma",
-                editName: "Ma",
-                fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
-                fontOptions: ["Column Header", "Ruler Label"],
-                on: true,
-                width: 100,
-                enableTitle: true,
-                rgb: {
-                  r: 255,
-                  g: 255,
-                  b: 255
-                },
-                popup: "",
-                children: [],
-                parent: "Chart Title", // if you change this, change parse-datapacks.ts :69
-                minAge: state.settings.topStageAge, //tbd
-                maxAge: state.settings.baseStageAge //tbd
-              }
-            ],
-            parent: "Chart Root", // if you change this, change parse-datapacks.ts :69
-            minAge: state.settings.topStageAge, //tbd
-            maxAge: state.settings.baseStageAge //tbd
-          }
-        ],
-        parent: null
+        minAge: Number.MAX_VALUE,
+        maxAge: Number.MIN_VALUE,
+        children: [],
+        parent: null,
+        units: ""
       };
       // add everything together
       // uses preparsed data on server start and appends items together
@@ -320,20 +280,33 @@ export const setDatapackConfig = action(
         if (!datapack || !state.datapackIndex[datapack])
           throw new Error(`File requested doesn't exist on server: ${datapack}`);
         const datapackParsingPack = state.datapackIndex[datapack]!;
-        // concat the children array of root to the array created in preparsed array
-        // we can't do Object.assign here because it will overwrite the array rather than concat it
-        // concat datapack info under chart title column info
-        // todo: create multiple chart titles if creating two different charts in one
-        columnInfo.children[0].children = columnInfo.children[0].children.concat(datapackParsingPack.columnInfoArray);
-        // concat datapackAgeInfo objects together
+        if (unitMap.has(datapackParsingPack.ageUnits)) {
+          const existingUnitChart = unitMap.get(datapackParsingPack.ageUnits)!;
+          const newUnitChart = datapackParsingPack.columnInfo;
+          // slice off the existing unit column
+          const columnsToAdd = newUnitChart.children.slice(1);
+          existingUnitChart.children = existingUnitChart.children.concat(columnsToAdd);
+        } else {
+          unitMap.set(datapackParsingPack.ageUnits, datapackParsingPack.columnInfo);
+        }
         if (!datapackAgeInfo) datapackAgeInfo = datapackParsingPack.datapackAgeInfo;
         else Object.assign(datapackAgeInfo, datapackParsingPack.datapackAgeInfo);
-
         const mapPack = state.mapPackIndex[datapack]!;
         if (!mapInfo) mapInfo = mapPack.mapInfo;
         else Object.assign(mapInfo, mapPack.mapInfo);
         if (!mapHierarchy) mapHierarchy = mapPack.mapHierarchy;
         else Object.assign(mapHierarchy, mapPack.mapHierarchy);
+      }
+      // makes sure things are named correctly for users and for the hash map to not have collisions
+      for (const [unit, column] of unitMap) {
+        if (unit !== "Ma" && column.name === "Chart Title") {
+          column.name = column.name + " in " + unit;
+          column.editName = unit;
+          for (const child of column.children) {
+            child.parent = column.name;
+          }
+        }
+        columnInfo.children.push(column);
       }
       assertDatapackAgeInfo(datapackAgeInfo);
       assertMapHierarchy(mapHierarchy);
@@ -344,14 +317,18 @@ export const setDatapackConfig = action(
       pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
       return false;
     }
+    resetSettings();
     state.settings.datapackContainsSuggAge = datapackAgeInfo.datapackContainsSuggAge;
     state.mapState.mapHierarchy = mapHierarchy;
     state.settingsTabs.columns = columnInfo;
     state.mapState.mapInfo = mapInfo;
     state.config.datapacks = datapacks;
     state.settingsTSC = chartSettings;
-    initializeColumnHashMap(state.settingsTabs.columns);
-    resetSettings();
+    // this is for app start up or when all datapacks are removed
+    if (datapacks.length === 0) {
+      state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
+    }
+    initializeColumnHashMap(columnInfo);
     if (state.settingsTSC.settings) {
       setChartSettings(state.settingsTSC.settings);
     }
@@ -441,7 +418,6 @@ export const resetState = action("resetState", () => {
 
 export const loadPresets = action("loadPresets", (presets: Presets) => {
   state.presets = presets;
-  setDatapackConfig([], "");
 });
 
 // Define settingOptions globally
@@ -648,20 +624,23 @@ export const setChartContent = action("setChartContent", (chartContent: string) 
 export const setMapInfo = action("setMapInfo", (mapInfo: MapInfo) => {
   state.mapState.mapInfo = mapInfo;
 });
-export const setTopStageKey = action("setTopStageKey", (key: string) => {
-  state.settings.topStageKey = key;
+export const setTopStageKey = action("setTopStageKey", (key: string, unit: string) => {
+  if (!state.settings.timeSettings[unit]) {
+    throw new Error(`Unit ${unit} not found in timeSettings`);
+  }
+  state.settings.timeSettings[unit].topStageKey = key;
 });
-export const setBaseStageKey = action("setBottomStageKey", (key: string) => {
-  state.settings.baseStageKey = key;
+export const setBaseStageKey = action("setBaseStageKey", (key: string, unit: string) => {
+  if (!state.settings.timeSettings[unit]) {
+    throw new Error(`Unit ${unit} not found in timeSettings`);
+  }
+  state.settings.timeSettings[unit].baseStageKey = key;
 });
-export const setSelectedTopStage = action("setSelectedTopStage", (key: string) => {
-  state.settings.topStageKey = key;
-});
-export const setSelectedBaseStage = action("setSelectedBaseStage", (key: string) => {
-  state.settings.baseStageKey = key;
-});
-export const setSelectedStage = action("setSelectedStage", (key: string) => {
-  state.settings.selectedStage = key;
+export const setSelectedStage = action("setSelectedStage", (key: string, unit: string) => {
+  if (!state.settings.timeSettings[unit]) {
+    throw new Error(`Unit ${unit} not found in timeSettings`);
+  }
+  state.settings.timeSettings[unit].selectedStage = key;
 });
 export const setGeologicalBaseStageAges = action("setGeologicalBaseStageAges", (key: TimescaleItem[]) => {
   state.geologicalBaseStageAges = key;
@@ -669,8 +648,11 @@ export const setGeologicalBaseStageAges = action("setGeologicalBaseStageAges", (
 export const setGeologicalTopStageAges = action("setGeologicalTopStageAges", (key: TimescaleItem[]) => {
   state.geologicalTopStageAges = key;
 });
-export const setUnitsPerMY = action((units: number) => {
-  state.settings.unitsPerMY = units;
+export const setUnitsPerMY = action((units: number, unit: string) => {
+  if (!state.settings.timeSettings[unit]) {
+    throw new Error(`Unit ${unit} not found in timeSettings`);
+  }
+  state.settings.timeSettings[unit].unitsPerMY = units;
 });
 
 export const setMouseOverPopupsEnabled = action((checked: boolean) => {
@@ -691,11 +673,17 @@ export const setMapHierarchy = action("setMapHierarchy", (mapHierarchy: MapHiera
 export const setChartHash = action("setChartHash", (charthash: string) => {
   state.chartHash = charthash;
 });
-export const setTopStageAge = action("setTopStageAge", (age: number) => {
-  state.settings.topStageAge = age;
+export const setTopStageAge = action("setTopStageAge", (age: number, unit: string) => {
+  if (!state.settings.timeSettings[unit]) {
+    throw new Error(`Unit ${unit} not found in timeSettings`);
+  }
+  state.settings.timeSettings[unit].topStageAge = age;
 });
-export const setBaseStageAge = action("setBaseStageAge", (age: number) => {
-  state.settings.baseStageAge = age;
+export const setBaseStageAge = action("setBaseStageAge", (age: number, unit: string) => {
+  if (!state.settings.timeSettings[unit]) {
+    throw new Error(`Unit ${unit} not found in timeSettings`);
+  }
+  state.settings.timeSettings[unit].baseStageAge = age;
 });
 
 export const settingsXML = action("settingsXML", (xml: string) => {
@@ -705,8 +693,11 @@ export const settingsXML = action("settingsXML", (xml: string) => {
 export const setIsFullscreen = action("setIsFullscreen", (newval: boolean) => {
   state.isFullscreen = newval;
 });
-export const setSkipEmptyColumns = action("setSkipEmptyColumns", (newval: boolean) => {
-  state.settings.skipEmptyColumns = newval;
+export const setSkipEmptyColumns = action("setSkipEmptyColumns", (newval: boolean, unit: string) => {
+  if (!state.settings.timeSettings[unit]) {
+    throw new Error(`Unit ${unit} not found in timeSettings`);
+  }
+  state.settings.timeSettings[unit].skipEmptyColumns = newval;
 });
 export const setNoIndentPattern = action("setNoIndentPattern", (newval: boolean) => {
   state.settings.noIndentPattern = newval;

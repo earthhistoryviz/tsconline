@@ -28,6 +28,7 @@ export type ErrorAlert = {
 };
 export type Config = {
   datapacks: string[];
+  settingsPath: string;
 };
 
 export type SnackbarInfo = {
@@ -35,14 +36,19 @@ export type SnackbarInfo = {
   snackbarCount: number;
   severity: "success" | "info" | "warning";
 };
+export type TimeSettings = {
+  [unit: string]: {
+    selectedStage: string;
+    topStageAge: number;
+    topStageKey: string;
+    baseStageAge: number;
+    baseStageKey: string;
+    unitsPerMY: number;
+    skipEmptyColumns: boolean;
+  };
+};
 export type ChartSettings = {
-  selectedStage: string;
-  topStageAge: number;
-  topStageKey: string;
-  baseStageAge: number;
-  baseStageKey: string;
-  unitsPerMY: number;
-  skipEmptyColumns: boolean;
+  timeSettings: TimeSettings;
   noIndentPattern: boolean;
   enableColumnBackground: boolean;
   enableChartLegend: boolean;
@@ -51,24 +57,37 @@ export type ChartSettings = {
   mouseOverPopupsEnabled: boolean;
   datapackContainsSuggAge: boolean;
   useDatapackSuggestedAge: boolean;
-  selectedBaseStage: string;
-  selectedTopStage: string;
-  unit: string;
 };
 
+export function equalTimeSettings(a: TimeSettings, b: TimeSettings): boolean {
+  return (
+    Object.keys(a).length === Object.keys(b).length &&
+    Object.keys(a).every((key) => {
+      const aValue = a[key];
+      const bValue = b[key];
+      return (
+        aValue.selectedStage === bValue.selectedStage &&
+        aValue.topStageAge === bValue.topStageAge &&
+        aValue.topStageKey === bValue.topStageKey &&
+        aValue.baseStageAge === bValue.baseStageAge &&
+        aValue.baseStageKey === bValue.baseStageKey &&
+        aValue.unitsPerMY === bValue.unitsPerMY &&
+        aValue.skipEmptyColumns === bValue.skipEmptyColumns
+      );
+    })
+  );
+}
 export function equalChartSettings(a: ChartSettings, b: ChartSettings): boolean {
   return (
-    a.selectedStage === b.selectedStage &&
-    a.topStageAge === b.topStageAge &&
-    a.topStageKey === b.topStageKey &&
-    a.baseStageAge === b.baseStageAge &&
-    a.baseStageKey === b.baseStageKey &&
-    a.unitsPerMY === b.unitsPerMY &&
+    equalTimeSettings(a.timeSettings, b.timeSettings) &&
+    a.noIndentPattern === b.noIndentPattern &&
+    a.enableColumnBackground === b.enableColumnBackground &&
+    a.enableChartLegend === b.enableChartLegend &&
+    a.enablePriority === b.enablePriority &&
+    a.enableHideBlockLabel === b.enableHideBlockLabel &&
     a.mouseOverPopupsEnabled === b.mouseOverPopupsEnabled &&
     a.datapackContainsSuggAge === b.datapackContainsSuggAge &&
-    a.useDatapackSuggestedAge === b.useDatapackSuggestedAge &&
-    a.selectedBaseStage === b.selectedBaseStage &&
-    a.selectedTopStage === b.selectedTopStage
+    a.useDatapackSuggestedAge === b.useDatapackSuggestedAge
   );
 }
 export function equalConfig(a: Config, b: Config): boolean {

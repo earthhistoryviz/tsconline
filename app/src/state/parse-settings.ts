@@ -62,14 +62,10 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
     }
     const nestedSettingsNode = settingNode.getElementsByTagName("setting")[0];
     let settingValue: string = "";
-    if (nestedSettingsNode) {
-      if (nestedSettingsNode.textContent) {
-        settingValue = nestedSettingsNode.textContent.trim();
-      }
-    } else {
-      if (settingNode.textContent) {
-        settingValue = settingNode.textContent.trim();
-      }
+    if (nestedSettingsNode && nestedSettingsNode.textContent) {
+      settingValue = nestedSettingsNode.textContent.trim();
+    } else if (settingNode.textContent) {
+      settingValue = settingNode.textContent.trim();
     }
     //since we access the elements by tag name, the nested settings of topage and baseage
     //are treated on the same level, so skip when the setting name is text or stage.
@@ -94,18 +90,18 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
           }
         }
       }
-      settings[settingName] = {
+      settings[settingName].push({
         source: settingNode.getAttribute("source") as string,
         unit: settingNode.getAttribute("unit") as string,
         stage: castValue(stage) as string,
         text: castValue(text) as number
-      };
+      });
     }
     //these two tags have units, so make an object storing its unit and value
     else if (settingName === "unitsPerMY") {
-      settings[settingName] = { unit: "Ma", text: Number(settingValue) };
+      settings[settingName].push({ unit: "Ma", text: Number(settingValue) });
     } else if (settingName === "skipEmptyColumns") {
-      settings[settingName] = { unit: "Ma", text: Boolean(settingValue) };
+      settings[settingName].push({ unit: "Ma", text: Boolean(settingValue) });
     } else {
       updateProperty(settings, settingName as keyof ChartSettingsInfoTSC, settingValue);
     }
@@ -292,14 +288,17 @@ function replaceSpecialChars(text: string, type: number): string {
  */
 function generateSettingsXml(stateSettings: ChartSettings, indent: string): string {
   let xml = "";
-  xml += `${indent}<setting name="topAge" source="text" unit="${stateSettings.unit}">\n`;
-  xml += `${indent}    <setting name="text">${stateSettings.topStageAge}</setting>\n`;
-  xml += `${indent}</setting>\n`;
-  xml += `${indent}<setting name="baseAge" source="text" unit="${stateSettings.unit}">\n`;
-  xml += `${indent}    <setting name="text">${stateSettings.baseStageAge}</setting>\n`;
-  xml += `${indent}</setting>\n`;
-  xml += `${indent}<setting name="unitsPerMY" unit="${stateSettings.unit}">${stateSettings.unitsPerMY}</setting>\n`;
-  xml += `${indent}<setting name="skipEmptyColumns">${stateSettings.skipEmptyColumns}</setting>\n`;
+  for (const unit in stateSettings.timeSettings) {
+    const timeSettings = stateSettings.timeSettings[unit];
+    xml += `${indent}<setting name="topAge" source="text" unit="${unit}">\n`;
+    xml += `${indent}    <setting name="text">${timeSettings.topStageAge}</setting>\n`;
+    xml += `${indent}</setting>\n`;
+    xml += `${indent}<setting name="baseAge" source="text" unit="${unit}">\n`;
+    xml += `${indent}    <setting name="text">${timeSettings.baseStageAge}</setting>\n`;
+    xml += `${indent}</setting>\n`;
+    xml += `${indent}<setting name="unitsPerMY" unit="${unit}">${timeSettings.unitsPerMY * 30}</setting>\n`;
+    xml += `${indent}<setting name="skipEmptyColumns">${timeSettings.skipEmptyColumns}</setting>\n`;
+  }
   xml += `${indent}<setting name="variableColors">UNESCO</setting>\n`;
   xml += `${indent}<setting name="negativeChk">false</setting>\n`;
   xml += `${indent}<setting name="doPopups">${stateSettings.mouseOverPopupsEnabled}</setting>\n`;
