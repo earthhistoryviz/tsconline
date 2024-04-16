@@ -652,8 +652,7 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       } else {
         xml += `${indent}<setting name="${key}"/>\n`;
       }
-    } 
-     else if (key === "fonts") {
+    } else if (key === "fonts") {
       xml += `${indent}<fonts>\n`;
       xml += FontsInfoToXml(column.fonts, extractName(column._id), `${indent}    `);
       xml += `${indent}</fonts>\n`;
