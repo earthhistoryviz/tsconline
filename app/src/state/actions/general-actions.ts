@@ -324,6 +324,7 @@ export const setDatapackConfig = action(
       return false;
     }
     resetSettings();
+    //TODO: apply presets, temp code for applying just the chart settings
     if (chartSettings) {
       setChartSettings(chartSettings.settings);
     }

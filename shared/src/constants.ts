@@ -206,7 +206,8 @@ export const defaultColumnBasicInfoTSC: ColumnBasicInfoTSC = {
 
 export const defaultEventColumnInfoTSC: EventColumnInfoTSC = {
   ...defaultColumnBasicInfoTSC,
-  type: ""
+  type: "events",
+  rangeSort: "first occurrence"
 };
 
 export const defaultZoneColumnInfoTSC: ZoneColumnInfoTSC = {
@@ -230,7 +231,7 @@ export const defaultSequenceColumnInfoTSC: SequenceColumnInfoTSC = {
 
 export const defaultRangeColumnInfoTSC: RangeColumnInfoTSC = {
   ...defaultColumnBasicInfoTSC,
-  rangeSort: ""
+  rangeSort: "first occurence"
 };
 
 export const defaultRulerColumnInfoTSC: RulerColumnInfoTSC = {

@@ -73,6 +73,7 @@ export type ColumnBasicInfoTSC = {
 
 export type EventColumnInfoTSC = ColumnBasicInfoTSC & {
   type: string;
+  rangeSort: string;
 };
 
 export type ZoneColumnInfoTSC = ColumnBasicInfoTSC & {
@@ -186,6 +187,7 @@ export function assertZoneColumnInfoTSC(o: any): asserts o is ZoneColumnInfoTSC 
 
 export function assertEventColumnInfoTSC(o: any): asserts o is EventColumnInfoTSC {
   if (typeof o.type !== "string") throwError("EventColumnInfoTSC", "type", "string", o.type);
+  if (typeof o.rangeSort !== "string") throwError("EventColumnInfoTSC", "rangeSort", "string", o.type);
 }
 export function assertSequenceColumnInfoTSC(o: any): asserts o is SequenceColumnInfoTSC {
   if (typeof o.type !== "string") throwError("SequenceColumnInfoTSC", "type", "string", o.type);

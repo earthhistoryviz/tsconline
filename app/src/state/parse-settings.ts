@@ -117,8 +117,7 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
  * @returns json object containing the font info
  */
 function processFonts(fontsNode: Element): FontsInfo {
-  const fonts: FontsInfo = <FontsInfo>{};
-  Object.assign(fonts, defaultFontsInfoConstant);
+  const fonts: FontsInfo = JSON.parse(JSON.stringify(defaultFontsInfoConstant));
   return fonts;
 }
 /**
@@ -133,25 +132,25 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
   switch (columnType) {
     case "EventColumn":
       //can't set it equal to default because it becomes reference to object
-      Object.assign(column, defaultEventColumnInfoTSC);
+      column = JSON.parse(JSON.stringify(defaultEventColumnInfoTSC));
       break;
     case "ZoneColumn":
-      Object.assign(column, defaultZoneColumnInfoTSC);
+      column = JSON.parse(JSON.stringify(defaultZoneColumnInfoTSC));
       break;
     case "SequenceColumn":
-      Object.assign(column, defaultSequenceColumnInfoTSC);
+      column = JSON.parse(JSON.stringify(defaultSequenceColumnInfoTSC));
       break;
     case "RangeColumn":
-      Object.assign(column, defaultRangeColumnInfoTSC);
+      column = JSON.parse(JSON.stringify(defaultRangeColumnInfoTSC));
       break;
     case "RulerColumn":
-      Object.assign(column, defaultRulerColumnInfoTSC);
+      column = JSON.parse(JSON.stringify(defaultRulerColumnInfoTSC));
       break;
     case "PointColumn":
-      Object.assign(column, defaultPointColumnInfoTSC);
+      column = JSON.parse(JSON.stringify(defaultPointColumnInfoTSC));
       break;
     default:
-      Object.assign(column, defaultColumnBasicInfoTSC);
+      column = JSON.parse(JSON.stringify(defaultColumnBasicInfoTSC));
   }
   column._id = id;
   column.children = [];
@@ -438,10 +437,11 @@ export function jsonToXml(
 }
 
 export function translateSettings(state: ChartSettings): ChartSettingsInfoTSC {
-  let settings: ChartSettingsInfoTSC = <ChartSettingsInfoTSC>{};
-  Object.assign(settings, defaultChartSettingsInfoTSC);
+  let settings: ChartSettingsInfoTSC = JSON.parse(JSON.stringify(defaultChartSettingsInfoTSC));
   for (const unit in state.timeSettings) {
     const timeSettings = state.timeSettings[unit];
+    console.log(JSON.parse(JSON.stringify(timeSettings)))
+
     settings.topAge.push({ source: "text", unit: unit, text: timeSettings.topStageAge });
     settings.baseAge.push({ source: "text", unit: unit, text: timeSettings.baseStageAge });
     settings.unitsPerMY.push({ unit: unit, text: timeSettings.unitsPerMY * 30 });
@@ -458,11 +458,10 @@ export function translateSettings(state: ChartSettings): ChartSettingsInfoTSC {
 
 
 export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
-  let column: ColumnInfoTSC = <ColumnInfoTSC>{};
-  Object.assign(column, defaultColumnBasicInfoTSC);
+  let column: ColumnInfoTSC = JSON.parse(JSON.stringify(defaultColumnBasicInfoTSC));
   //Zone column
   if (state.subBlockInfo) {
-    Object.assign(column, defaultZoneColumnInfoTSC);
+    column = JSON.parse(JSON.stringify(defaultZoneColumnInfoTSC));
     column._id = "class datastore.ZoneColumn:" + replaceSpecialChars(state.name, 0);
   }
   //blockseriesmetacolumn or meta column
@@ -477,18 +476,17 @@ export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
   }
   //event column
   else if (state.subEventInfo) {
-    Object.assign(column, defaultEventColumnInfoTSC);
+    column = JSON.parse(JSON.stringify(defaultEventColumnInfoTSC));
     column._id = "class datastore.EventColumn:" + replaceSpecialChars(state.name, 0);
   }
   //range column
   else if (state.subRangeInfo) {
-    Object.assign(column, defaultRangeColumnInfoTSC);
-    Object.assign(column, defaultRangeColumnInfoTSC);
+    column = JSON.parse(JSON.stringify(defaultRangeColumnInfoTSC));
     column._id = "class datastore.RangeColumn:" + replaceSpecialChars(state.name, 0);
   }
   //point column
   else if (state.subPointInfo) {
-    Object.assign(column, defaultPointColumnInfoTSC);
+    column = JSON.parse(JSON.stringify(defaultPointColumnInfoTSC));
     column._id = "class datastore.PointColumn:" + replaceSpecialChars(state.name, 0);
   }
   //freehand column
@@ -497,7 +495,7 @@ export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
   }
   //sequence column
   else if (state.subSequenceInfo) {
-    Object.assign(column, defaultSequenceColumnInfoTSC);
+    column = JSON.parse(JSON.stringify(defaultSequenceColumnInfoTSC));
     column._id = "class datastore.SequenceColumn:" + replaceSpecialChars(state.name, 0);
   } else if (state.subTransectInfo) {
     column._id = "class datastore.TransectColumn:" + replaceSpecialChars(state.name, 0);
@@ -509,7 +507,7 @@ export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
       state.name === "Chron Label" ||
       state.name === "Members"
     ) {
-      Object.assign(column, defaultZoneColumnInfoTSC);
+      column = JSON.parse(JSON.stringify(defaultZoneColumnInfoTSC));
       if (state.name === "Facies Label") {
         column._id = "class datastore.ZoneColumn:Facies Label";
       } else if (state.name === "Series Label") {
@@ -525,16 +523,34 @@ export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
       column._id = "class datastore.ChronColumn:Chron";
     }
     //Ruler column
-    else {
-      Object.assign(column, defaultRulerColumnInfoTSC);
+    else if (state.name === state.units) {
+      column = JSON.parse(JSON.stringify(defaultRulerColumnInfoTSC));
+      //get first word of units
+      // if (state.name.indexOf(' ') === -1) {
+      //   column._id = "class datastore.RulerColumn:" + state.name;
+      // }
+      // else {
+      //   column._id = "class datastore.RulerColumn:" + state.name.substring(0, state.name.indexOf(' '));
+      // }
       column._id = "class datastore.RulerColumn:" + state.name;
+    } else {
+      column._id = "class datastore.BlankColumn:" + state.name;
     }
   }
   //root columns
-  else if (state.name === "Chart Root" || state.name === "Chart Title") {
+  else if (state.name === "Chart Root" || state.parent === "Chart Root") {
+    if (state.name.includes("Chart Title in ")) {
+      let
+    delimiter = ' ',
+    start = 3,
+    tokens = state.name.split(delimiter).slice(start),
+    result = tokens.join(delimiter); 
+    column._id = "class datastore.RootColumn:" + result;
+    }
+    else
     column._id = "class datastore.RootColumn:" + state.name;
   } else {
-    column._id = "class datastore.BlankColumn:" + state.name;
+    column._id = "class datastore.MetaColumn:" + state.name;
   }
   column.title = replaceSpecialChars(state.editName, 1);
   column.isSelected = state.on;
@@ -570,7 +586,7 @@ function ChartSettingsInfoTSCToXml(settings: ChartSettingsInfoTSC, indent: strin
     return "";
   }
   let xml = "";
-  for (let i = 0; i < settings.topAge.length; i++) {
+  for (let i = settings.topAge.length - 1; i >= 0; i--) {
     xml += `${indent}<setting name="topAge" source="text" unit="${settings.topAge[i].unit}">\n`;
     xml += `${indent}    <setting name="text">${settings.topAge[i].text}</setting>\n`;
     xml += `${indent}</setting>\n`;
@@ -663,7 +679,7 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
         xml += `${indent}</column>\n`;
       }
     } else if (key === "justification") {
-      xml += `${indent}<setting justification="${column[key as keyof ColumnInfoTSC]}" name="justification"/>`;
+      xml += `${indent}<setting justification="${column[key as keyof ColumnInfoTSC]}" name="justification"/>\n`;
     } else if (key === "orientation") {
       xml += `${indent}<setting name="orientation" orientation="${column[key as keyof ColumnInfoTSC]}"/>\n`;
     } else {
