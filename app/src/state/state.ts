@@ -11,8 +11,7 @@ import type {
   Presets,
   DatapackIndex,
   MapPackIndex,
-  Patterns,
-  ChartInfoTSC
+  Patterns
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
@@ -132,7 +131,6 @@ export const state = observable<State>({
   chartContent: "",
   chartHash: "",
   settingsXML: "",
-  settingsTSC: {},
   settings: JSON.parse(JSON.stringify(settings)),
   prevSettings: JSON.parse(JSON.stringify(settings)),
   useCache: true,

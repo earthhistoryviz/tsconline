@@ -220,6 +220,13 @@ const setChartSettings = action("setChartSettings", (settings: ChartSettingsInfo
   setEnableHideBlockLabel(enHideBlockLable);
 });
 
+//TODO: combine presets here
+//right now it assumes just one time setting
+const applyPresets = action("applyPresets", (preset: ChartInfoTSC) => {
+  setTopStageAge(preset.settings.topAge[0].text, preset.settings.topAge[0].unit);
+  setBaseStageAge(preset.settings.baseAge[0].text, preset.settings.baseAge[0].unit);
+});
+
 /**
  * Rests the settings, sets the tabs to 0
  * sets chart to newval and requests info on the datapacks from the server
@@ -235,7 +242,7 @@ export const setDatapackConfig = action(
     let mapInfo: MapInfo = {};
     let mapHierarchy: MapHierarchy = {};
     let columnInfo: ColumnInfo;
-    let chartSettings: ChartInfoTSC = {};
+    let chartSettings: ChartInfoTSC = <ChartInfoTSC>{};
     try {
       if (settingsPath && settingsPath.length > 0) {
         await fetchSettingsXML(settingsPath)
@@ -324,20 +331,17 @@ export const setDatapackConfig = action(
       return false;
     }
     resetSettings();
+    applyPresets(chartSettings);
     state.settings.datapackContainsSuggAge = datapackAgeInfo.datapackContainsSuggAge;
     state.mapState.mapHierarchy = mapHierarchy;
     state.settingsTabs.columns = columnInfo;
     state.mapState.mapInfo = mapInfo;
     state.config.datapacks = datapacks;
-    state.settingsTSC = chartSettings;
     // this is for app start up or when all datapacks are removed
     if (datapacks.length === 0) {
       state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
     }
     initializeColumnHashMap(columnInfo);
-    if (state.settingsTSC.settings) {
-      setChartSettings(state.settingsTSC.settings);
-    }
     return true;
   }
 );
