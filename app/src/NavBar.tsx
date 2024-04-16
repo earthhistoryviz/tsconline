@@ -63,9 +63,7 @@ export const NavBar = observer(function Navbar() {
           </TSCTabs>
         }
         <div style={{ flexGrow: 1 }} />
-        <TSCButton onClick={() => actions.initiateChartGeneration(navigate)} sx={{ height: "auto" }}>
-          Generate Chart
-        </TSCButton>
+        <TSCButton onClick={() => actions.initiateChartGeneration(navigate)}>Generate Chart</TSCButton>
         {state.isLoggedIn ? (
           <Tab
             className="login-tab"
@@ -80,28 +78,24 @@ export const NavBar = observer(function Navbar() {
               color: theme.palette.primary.main,
               "&:hover": {
                 color: theme.palette.selection.light
-              },
-              flexDirection: "row",
-              fontSize: "1rem"
+              }
             }}
           />
         ) : (
-        <Tab
-          className="login-tab"
-          value={5}
-          label="Sign in"
-          icon={<AccountCircleIcon />}
-          to="/login"
-          component={Link}
-          sx={{
-            color: theme.palette.primary.main,
-            "&:hover": {
-              color: theme.palette.selection.light
-            },
-            flexDirection: "row",
-            fontSize: "1rem"
-          }}
-        />
+          <Tab
+            className="login-tab"
+            value={5}
+            label="Sign in"
+            icon={<AccountCircleIcon />}
+            to="/login"
+            component={Link}
+            sx={{
+              color: theme.palette.primary.main,
+              "&:hover": {
+                color: theme.palette.selection.light
+              }
+            }}
+          />
         )}
       </Toolbar>
     </AppBar>

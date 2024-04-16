@@ -1,0 +1,8 @@
+.account-recovery-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.account-recovery-box .MuiAvatar-root {
+  margin-top: 20px;
+}
