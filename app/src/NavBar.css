@@ -8,6 +8,10 @@
 .MuiTab-root.tab-space {
   margin-right: 10%;
 }
+.login-tab {
+  flex-direction: row;
+  font-size: 1rem;
+}
 .login-tab .MuiTab-iconWrapper {
   margin-bottom: 0px;
 }

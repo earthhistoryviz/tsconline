@@ -13,17 +13,13 @@ import LoginIcon from "@mui/icons-material/Login";
 import { GoogleLogin } from "@react-oauth/google";
 import { fetcher } from "./util";
 import { actions, context } from "./state";
-import { useNavigate } from "react-router-dom";
 import { ErrorCodes } from "./util/error-codes";
 
-export const Login: React.FC = observer(() => {
-  const { state } = useContext(context)
-  const navigate = useNavigate();
-  const theme = useTheme();
+import "./Login.css";
 
-  if (state.isLoggedIn) {
-    //navigate("/");
-  }
+export const Login: React.FC = observer(() => {
+  const { state } = useContext(context);
+  const theme = useTheme();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -56,20 +52,12 @@ export const Login: React.FC = observer(() => {
   };
 
   return (
-    <Box
-      sx={{
-        my: 8,
-        mx: "auto",
-        maxWidth: 400,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center"
-      }}>
+    <Box className="login-box">
       <Avatar sx={{ "& .MuiSvgIcon-root": { mr: 0 }, bgcolor: theme.palette.navbar.dark }}>
         <LockOutlinedIcon sx={{ color: theme.palette.selection.main }} />
       </Avatar>
       <Typography variant="h5">{"Sign In"}</Typography>
-      <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 1, width: "100%" }}>
+      <Box component="form" noValidate onSubmit={handleSubmit} className="form-box">
         <TextField
           margin="normal"
           required
@@ -93,34 +81,34 @@ export const Login: React.FC = observer(() => {
         <TSCButton type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }} endIcon={<LoginIcon />}>
           Sign In
         </TSCButton>
-        <Grid container direction="row" alignItems="center" justifyContent="flex-end" sx={{ mt: 2 }}>
-            <Grid item xs>
-              <Link href="#" sx={{ color: "black" }}>
-                Forgot password?
-              </Link>
-            </Grid>
+        <Grid container className="grid-container">
+          <Grid item xs>
+            <Link href="/account-recovery" sx={{ color: "black" }}>
+              Forgot password?
+            </Link>
+          </Grid>
           <Grid item>
-            <Link href="#" sx={{ color: "black" }}>
-              "Don't have an account? Sign Up"
+            <Link href="/signup" sx={{ color: "black" }}>
+              Don&apos;t have an account? Sign Up
             </Link>
           </Grid>
         </Grid>
-          <Box sx={{ my: 2, display: "flex", alignItems: "center", width: "100%" }}>
-            <Box sx={{ flex: 1, height: "1px", bgcolor: "black" }}></Box>
-            <Box sx={{ px: 2 }}>
-              <Typography variant="caption" sx={{ color: "black" }}>
-                or
-              </Typography>
-            </Box>
-            <Box sx={{ flex: 1, height: "1px", bgcolor: "black" }}></Box>
+        <Box className="divider-box">
+          <Box className="divider-line"></Box>
+          <Box sx={{ px: 2 }}>
+            <Typography variant="caption" sx={{ color: "black" }}>
+              or
+            </Typography>
           </Box>
-          <GoogleLogin
-            onSuccess={() => console.log("Logged in with Google")}
-            ux_mode="redirect"
-            login_uri={`http://${import.meta.env.VITE_SERVER_URL || "localhost:3000"}/auth/oauth`}
-            onError={() => actions.pushError(ErrorCodes.UNABLE_TO_LOGIN)}
-            width="400px"
-          />
+          <Box className="divider-line"></Box>
+        </Box>
+        <GoogleLogin
+          onSuccess={() => console.log("Logged in with Google")}
+          ux_mode="redirect"
+          login_uri={`${import.meta.env.VITE_SERVER_URL || "https://localhost:3000"}/auth/oauth`}
+          onError={() => actions.pushError(ErrorCodes.UNABLE_TO_LOGIN)}
+          width="400px"
+        />
       </Box>
     </Box>
   );
