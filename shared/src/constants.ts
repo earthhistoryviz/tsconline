@@ -185,7 +185,7 @@ export const defaultChartSettingsInfoTSC: ChartSettingsInfoTSC = {
 export const defaultColumnBasicInfoTSC: ColumnBasicInfoTSC = {
   _id: "",
   title: "",
-  useNamedColor: true,
+  useNamedColor: false,
   placeHolder: false,
   drawTitle: true,
   drawAgeLabel: false,

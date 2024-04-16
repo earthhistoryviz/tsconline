@@ -524,10 +524,17 @@ export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
     } else if (state.name.includes("Chron")) {
       column._id = "class datastore.ChronColumn:Chron";
     }
-  } else if (state.name === "Chart Root" || state.name === "Chart Title") {
+    //Ruler column
+    else {
+      Object.assign(column, defaultRulerColumnInfoTSC);
+      column._id = "class datastore.RulerColumn:" + state.name;
+    }
+  }
+  //root columns
+  else if (state.name === "Chart Root" || state.name === "Chart Title") {
     column._id = "class datastore.RootColumn:" + state.name;
   } else {
-    column._id = "class datastore.BlankColumn:" + replaceSpecialChars(state.name, 0);
+    column._id = "class datastore.BlankColumn:" + state.name;
   }
   column.title = replaceSpecialChars(state.editName, 1);
   column.isSelected = state.on;
@@ -640,10 +647,13 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
         xml += `${indent}<setting name="${key}" useNamed="${column[key].standardized}">${column[key].text}</setting>\n`;
       } else if (column[key].text.length > 0) {
         xml += `${indent}<setting name="${key}">${column[key].text}</setting>\n`;
+      } else if (column[key].text.length > 0) {
+        xml += `${indent}<setting name="${key}">${column[key].text}</setting>\n`;
       } else {
         xml += `${indent}<setting name="${key}"/>\n`;
       }
-    } else if (key === "fonts") {
+    } 
+     else if (key === "fonts") {
       xml += `${indent}<fonts>\n`;
       xml += FontsInfoToXml(column.fonts, extractName(column._id), `${indent}    `);
       xml += `${indent}</fonts>\n`;
