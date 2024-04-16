@@ -31,6 +31,7 @@ export const allFontOptions: ValidFontOptions[] = [
 
 export const defaultFontsInfoConstant: FontsInfo = {
   "Age Label": {
+    on: false,
     bold: false,
     color: "rgb(0, 0, 0)",
     fontFace: "Arial",
@@ -39,6 +40,7 @@ export const defaultFontsInfoConstant: FontsInfo = {
     size: 6
   },
   "Column Header": {
+    on: false,
     bold: false,
     color: "rgb(0, 0, 0)",
     fontFace: "Arial",
@@ -47,6 +49,7 @@ export const defaultFontsInfoConstant: FontsInfo = {
     size: 14
   },
   "Event Column Label": {
+    on: false,
     bold: false,
     color: "rgb(0, 0, 0)",
     fontFace: "Arial",
@@ -55,6 +58,7 @@ export const defaultFontsInfoConstant: FontsInfo = {
     size: 11
   },
   "Legend Column Name": {
+    on: false,
     bold: true,
     color: "rgb(0, 0, 0)",
     fontFace: "Verdana",
@@ -63,6 +67,7 @@ export const defaultFontsInfoConstant: FontsInfo = {
     size: 12
   },
   "Legend Column Source": {
+    on: false,
     bold: false,
     color: "rgb(0, 0, 0)",
     fontFace: "Verdana",
@@ -71,6 +76,7 @@ export const defaultFontsInfoConstant: FontsInfo = {
     size: 12
   },
   "Legend Title": {
+    on: false,
     bold: true,
     color: "rgb(0, 0, 0)",
     fontFace: "Verdana",
@@ -79,6 +85,7 @@ export const defaultFontsInfoConstant: FontsInfo = {
     size: 14
   },
   "Point Column Scale Label": {
+    on: false,
     bold: false,
     color: "rgb(0, 0, 0)",
     fontFace: "Arial",
@@ -86,8 +93,17 @@ export const defaultFontsInfoConstant: FontsInfo = {
     italic: false,
     size: 6
   },
-  "Popup Body": { bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12 },
+  "Popup Body": {
+    on: false,
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 12
+  },
   "Range Box Label": {
+    on: false,
     bold: false,
     color: "rgb(0, 0, 0)",
     fontFace: "Arial",
@@ -95,9 +111,26 @@ export const defaultFontsInfoConstant: FontsInfo = {
     italic: true,
     size: 14
   },
-  "Range Label": { bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12 },
-  "Ruler Label": { bold: false, color: "rgb(0, 0, 0)", fontFace: "Arial", inheritable: false, italic: false, size: 12 },
+  "Range Label": {
+    on: false,
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 12
+  },
+  "Ruler Label": {
+    on: false,
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 12
+  },
   "Ruler Tick Mark Label": {
+    on: false,
     bold: false,
     color: "rgb(0, 0, 0)",
     fontFace: "Arial",
@@ -106,6 +139,7 @@ export const defaultFontsInfoConstant: FontsInfo = {
     size: 7
   },
   "Sequence Column Label": {
+    on: false,
     bold: false,
     color: "rgb(0, 0, 0)",
     fontFace: "Arial",
@@ -114,6 +148,7 @@ export const defaultFontsInfoConstant: FontsInfo = {
     size: 12
   },
   "Uncertainty Label": {
+    on: false,
     bold: false,
     color: "rgb(0, 0, 0)",
     fontFace: "Arial",
@@ -122,6 +157,7 @@ export const defaultFontsInfoConstant: FontsInfo = {
     size: 5
   },
   "Zone Column Label": {
+    on: false,
     bold: false,
     color: "rgb(0, 0, 0)",
     fontFace: "Arial",
@@ -132,26 +168,10 @@ export const defaultFontsInfoConstant: FontsInfo = {
 };
 
 export const defaultChartSettingsInfoTSC: ChartSettingsInfoTSC = {
-  topAge: {
-    source: "",
-    unit: "",
-    stage: undefined,
-    text: undefined
-  },
-  baseAge: {
-    source: "",
-    unit: "",
-    stage: undefined,
-    text: undefined
-  },
-  unitsPerMY: {
-    unit: "",
-    text: 0
-  },
-  skipEmptyColumns: {
-    unit: "",
-    text: false
-  },
+  topAge: [],
+  baseAge: [],
+  unitsPerMY: [],
+  skipEmptyColumns: [],
   variableColors: "",
   noIndentPattern: false,
   negativeChk: false,

@@ -111,7 +111,7 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
  * @param files the files to be parsed
  * @returns
  */
-export async function parseDatapacks(file: string, decryptFilePath: string): Promise<DatapackParsingPack> {
+export async function parseDatapacks(file: string, decryptFilePath: string): Promise<DatapackParsingPack | null> {
   const decryptPaths = await grabFilepaths([file], decryptFilePath, "datapacks");
   if (decryptPaths.length == 0)
     throw new Error(`Did not find any datapacks for ${file} in decryptFilePath ${decryptFilePath}`);
@@ -129,6 +129,14 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
   const transectMap: Map<string, Transect> = new Map();
   const freehandMap: Map<string, Freehand> = new Map();
   const blankMap: Map<string, ColumnHeaderProps> = new Map();
+  const returnValue: FaciesFoundAndAgeRange = {
+    faciesFound: false,
+    minAge: 99999,
+    maxAge: -99999,
+    fontOptions: ["Column Header"]
+  };
+  let chartTitle = "Chart Title";
+  let ageUnits = "Ma";
   try {
     for (const decryptPath of decryptPaths) {
       //get the facies/blocks first
@@ -146,14 +154,16 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
         blankMap
       );
       // Originally the first step, gather all parents and their direct children
-      await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
+      const { units, title } = await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
+      ageUnits = units;
+      chartTitle = title;
       // only iterate over parents. if we encounter one that is a child, the recursive function
       // should have already processed it.
       allEntries.forEach((children, parent) => {
         // if the parent is not a child
         if (!isChild.has(parent)) {
-          recursive(
-            "Chart Title",
+          const compare = recursive(
+            chartTitle,
             parent,
             children,
             columnInfoArray,
@@ -167,7 +177,13 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
             sequenceMap,
             transectMap,
             freehandMap,
-            blankMap
+            blankMap,
+            ageUnits
+          );
+          returnValue.maxAge = Math.max(returnValue.maxAge, compare.maxAge);
+          returnValue.minAge = Math.min(returnValue.minAge, compare.minAge);
+          returnValue.fontOptions = Array.from(
+            new Set<ValidFontOptions>([...compare.fontOptions, ...returnValue.fontOptions])
           );
         }
       });
@@ -181,9 +197,49 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
       throw new Error(`No columns found for path ${decryptPaths}`);
   } catch (e) {
     console.log("ERROR: failed to read columns for path " + decryptPaths + ". ", e);
-    return { columnInfoArray: [], datapackAgeInfo: { datapackContainsSuggAge: false } };
+    return null;
   }
-  return { columnInfoArray, datapackAgeInfo };
+  columnInfoArray.unshift({
+    name: ageUnits,
+    editName: ageUnits,
+    fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+    fontOptions: ["Column Header", "Ruler Label"],
+    on: true,
+    width: 100,
+    enableTitle: true,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    },
+    popup: "",
+    children: [],
+    parent: chartTitle,
+    minAge: Number.MIN_VALUE,
+    maxAge: Number.MAX_VALUE,
+    units: ageUnits
+  });
+  const chartColumn: ColumnInfo = {
+    name: chartTitle,
+    editName: chartTitle,
+    fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+    fontOptions: returnValue.fontOptions,
+    on: true,
+    width: 100,
+    enableTitle: true,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    },
+    popup: "",
+    children: columnInfoArray,
+    parent: "Chart Root",
+    minAge: returnValue.minAge,
+    maxAge: returnValue.maxAge,
+    units: ageUnits
+  };
+  return { columnInfo: chartColumn, datapackAgeInfo, ageUnits };
 }
 /**
  * This will populate a mapping of all parents : childen[]
@@ -204,6 +260,8 @@ export async function getAllEntries(
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
   let topAge: number | null = null;
   let bottomAge: number | null = null;
+  let ageUnits: string = "Ma";
+  let chartTitle: string = "Chart Title";
   for await (const line of readline) {
     if (!line) continue;
     if (line.includes("SetTop") || line.includes("SetBase")) {
@@ -217,6 +275,26 @@ export async function getAllEntries(
           } else if (key === "SetBase") {
             bottomAge = value;
           }
+        }
+      }
+    }
+    if (line.includes("chart title")) {
+      const parts = line.split("\t");
+      if (parts.length == 2) {
+        const key = parts[0] ? parts[0].trim() : null;
+        const value = parts[1] ? parts[1].trim() : null;
+        if (key === "chart title:" && value) {
+          chartTitle = value;
+        }
+      }
+    }
+    if (line.includes("age units")) {
+      const parts = line.split("\t");
+      if (parts.length == 2) {
+        const key = parts[0] ? parts[0].trim() : null;
+        const value = parts[1] ? parts[1].trim() : null;
+        if (key === "age units:" && value) {
+          ageUnits = value;
         }
       }
     }
@@ -249,6 +327,7 @@ export async function getAllEntries(
     datapackAgeInfo.topAge = topAge;
     datapackAgeInfo.bottomAge = bottomAge;
   }
+  return { title: chartTitle, units: ageUnits };
 }
 /**
  * This function will populate the maps with the parsed entries in the filename
@@ -1058,7 +1137,8 @@ function recursive(
   sequenceMap: Map<string, Sequence>,
   transectMap: Map<string, Transect>,
   freehandMap: Map<string, Freehand>,
-  blankMap: Map<string, ColumnHeaderProps>
+  blankMap: Map<string, ColumnHeaderProps>,
+  units: string
 ): FaciesFoundAndAgeRange {
   const currentColumnInfo: ColumnInfo = {
     name: trimInvisibleCharacters(currentColumn),
@@ -1077,7 +1157,8 @@ function recursive(
       g: 255,
       b: 255
     },
-    fontOptions: ["Column Header"]
+    fontOptions: ["Column Header"],
+    units
   };
   const returnValue: FaciesFoundAndAgeRange = {
     faciesFound: false,
@@ -1147,7 +1228,8 @@ function recursive(
       currentColumnInfo.minAge,
       currentColumnInfo.maxAge,
       currentColumnInfo.rgb,
-      currentColumnInfo.fontOptions
+      currentColumnInfo.fontOptions,
+      units
     );
     returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.subFaciesInfo = currentFacies.subFaciesInfo;
@@ -1178,7 +1260,8 @@ function recursive(
       currentColumnInfo.minAge,
       currentColumnInfo.maxAge,
       currentColumnInfo.rgb,
-      currentColumnInfo.fontOptions
+      currentColumnInfo.fontOptions,
+      units
     );
     returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.maxAge = currentColumnInfo.maxAge;
@@ -1233,7 +1316,8 @@ function recursive(
         sequenceMap,
         transectMap,
         freehandMap,
-        blankMap
+        blankMap,
+        units
       );
       returnValue.minAge = Math.min(compareValue.minAge, returnValue.minAge);
       returnValue.maxAge = Math.max(compareValue.maxAge, returnValue.maxAge);
@@ -1292,7 +1376,8 @@ function addFaciesChildren(
   minAge: number,
   maxAge: number,
   rgb: RGB,
-  fontOptions: ValidFontOptions[]
+  fontOptions: ValidFontOptions[],
+  units: string
 ) {
   fontOptions.push("Age Label");
   fontOptions.push("Uncertainty Label");
@@ -1310,7 +1395,8 @@ function addFaciesChildren(
     minAge,
     maxAge,
     width: width * 0.4,
-    rgb
+    rgb,
+    units
   });
   children.push({
     name: `${name} Members`,
@@ -1325,7 +1411,8 @@ function addFaciesChildren(
     minAge,
     maxAge,
     width,
-    rgb
+    rgb,
+    units
   });
   children.push({
     name: `${name} Facies Label`,
@@ -1340,7 +1427,8 @@ function addFaciesChildren(
     minAge,
     maxAge,
     width: width * 0.4,
-    rgb
+    rgb,
+    units
   });
   children.push({
     name: `${name} Series Label`,
@@ -1355,7 +1443,8 @@ function addFaciesChildren(
     minAge,
     maxAge,
     rgb,
-    width: width * 0.2
+    width: width * 0.2,
+    units
   });
 }
 
@@ -1378,7 +1467,8 @@ function addChronChildren(
   minAge: number,
   maxAge: number,
   rgb: RGB,
-  fontOptions: ValidFontOptions[]
+  fontOptions: ValidFontOptions[],
+  units: string
 ) {
   fontOptions.push("Age Label");
   fontOptions.push("Zone Column Label");
@@ -1395,7 +1485,8 @@ function addChronChildren(
     minAge,
     maxAge,
     width: 60,
-    rgb
+    rgb,
+    units
   });
   children.push({
     name: `${name} Chron Label`,
@@ -1410,7 +1501,8 @@ function addChronChildren(
     minAge,
     maxAge,
     width: 40,
-    rgb
+    rgb,
+    units
   });
   children.push({
     name: `${name} Series Label`,
@@ -1425,6 +1517,7 @@ function addChronChildren(
     minAge,
     maxAge,
     width: 40,
-    rgb
+    rgb,
+    units
   });
 }

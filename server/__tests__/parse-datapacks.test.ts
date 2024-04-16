@@ -84,7 +84,7 @@ describe("general parse-datapacks tests", () => {
    */
   it("should not parse bad file return empty array", async () => {
     const datapacks = await parseDatapacks("", "bad-data.txt");
-    expect(datapacks).toEqual({ columnInfoArray: [], datapackAgeInfo: { datapackContainsSuggAge: false } });
+    expect(datapacks).toEqual(key["bad-data-key"]);
   });
 });
 

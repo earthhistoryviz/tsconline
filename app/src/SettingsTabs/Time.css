@@ -1,4 +1,4 @@
-.Box {
+.TimeBox {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -9,16 +9,19 @@
   border-radius: 4px;
   max-width: 600px;
   margin: 0 auto;
-  margin-top: 50px;
+  margin-top: 20px;
 }
-
-.FormControlBaseAgeStageName {
+.IntervalLabel {
   margin-bottom: 10px;
+}
+.MuiToggleButtonGroup-root.ToggleButtonGroup {
+  margin-top: 10px;
   width: 100%;
+  align-items: center;
+  justify-content: center;
 }
 
-.FormControlTop {
-  margin-bottom: 10px;
+.FormControlIntervals {
   width: 100%;
 }
 
@@ -26,19 +29,17 @@
   margin-bottom: 10px;
   width: 100%;
 }
+.time-form-divider {
+  margin-bottom: 20px;
+}
 
-.MuiTextField-root.TopAgeTextField {
+.MuiTextField-root.UnitTextField {
   margin-bottom: 20px;
   width: 100%;
 }
 
 .SelectBase {
   margin-bottom: 10px;
-  width: 100%;
-}
-
-.MuiTextField-root.BaseAgeTextField {
-  margin-bottom: 20px;
   width: 100%;
 }
 
