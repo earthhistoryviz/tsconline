@@ -314,54 +314,28 @@ function generateSettingsXml(stateSettings: ChartSettings, indent: string): stri
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with fonts info
  */
-function generateFontsXml(fonts: any, colName: string, stateColumn: any, indent: string): string {
-  if (!stateColumn) {
+function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
+  if (!fontsInfo) {
     return "";
   }
   let defInfo = JSON.parse(JSON.stringify(defaultFontsInfo));
-  if (
-    colName === "Chart Root" ||
-    colName === "Facies" ||
-    colName === "Members" ||
-    colName === "Facies Label" ||
-    colName === "Series Label"
-  ) {
-    let newStateColumn = {};
-    if (stateColumn) {
-      newStateColumn = JSON.parse(JSON.stringify(stateColumn));
-    }
-    return "";
-  }
-  let newStateColumn = JSON.parse(JSON.stringify(stateColumn));
   let xml = "";
-  for (const key in fonts) {
-    if (Object.prototype.hasOwnProperty.call(fonts, key)) {
-      const inheritable = fonts[key].inheritable;
-      if (JSON.stringify(newStateColumn[key]) === JSON.stringify(defInfo[key])) {
-        xml += `${indent}<font function="${key}" inheritable="${inheritable}"/>\n`;
+  for (const key in fontsInfo) {
+      const fontTarget = fontsInfo[key as keyof FontsInfo];
+      if (JSON.stringify(fontTarget) === JSON.stringify(defInfo[key])) {
+        xml += `${indent}<font function="${key}" inheritable="${fontTarget.inheritable}"/>\n`;
       } else {
-        xml += `${indent}<font function="${key}" inheritable="${inheritable}">`;
-        for (let fKey in newStateColumn[key]) {
-          if (JSON.stringify(newStateColumn[key][fKey]) !== JSON.stringify(defInfo[key][fKey])) {
-            if (fKey === "fontFace") {
-              xml += `font-family: ${newStateColumn[key][fKey]};`;
-            }
-            if (fKey === "size") {
-              xml += `font-size: ${newStateColumn[key][fKey]}px;`;
-            }
-            if (fKey === "italic") {
-              xml += `font-style: italic;`;
-            }
-            if (fKey === "bold") {
-              xml += `font-weight: bold;`;
-            }
-            if (fKey === "color") {
-              xml += `fill: ${newStateColumn[key][fKey]};`;
-            }
-          }
+        xml += `${indent}<font function="${key}" inheritable="${fontTarget.inheritable}">`;
+        xml += `font-family: ${fontTarget.fontFace};`;
+        xml += `font-size: ${fontTarget.size}px;`;
+        if (fontTarget.italic) {
+          xml += `font-style: italic;`;
         }
+        if (fontTarget.bold) {
+          xml += `font-weight: bold;`;
+        }
+        xml += `fill: ${fontTarget.color};`;
         xml += `</font>\n`;
-      }
     }
   }
   return xml;
@@ -437,7 +411,7 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo 
         xml += `${indent}<setting name="${xmlKey}" orientation="${presetColumn[key as keyof ColumnInfoTSC]}"/>\n`;
       } else if (key === "fonts") {
         xml += `${indent}<fonts>\n`;
-        xml += generateFontsXml(presetColumn[key], colName, stateColumn?.fontsInfo, `${indent}    `);
+        xml += generateFontsXml(`${indent}    `, stateColumn?.fontsInfo);
         xml += `${indent}</fonts>\n`;
       } else if (key === "children") {
         let currName = extractName(presetColumn._id);
