@@ -7,7 +7,9 @@ import {
   ChartSettingsInfoTSC,
   ColumnInfo,
   ColumnInfoTSC,
+  FontLabelOptions,
   FontsInfo,
+  allFontOptions,
   assertChartInfoTSC,
   assertChartSettingsInfoTSC,
   defaultChartSettingsInfoTSC,
@@ -52,7 +54,7 @@ function updateProperty<T, K extends keyof T>(obj: T, key: K, value: string) {
  */
 
 function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
-  let settings: ChartSettingsInfoTSC = defaultChartSettingsInfoTSC;
+  let settings: ChartSettingsInfoTSC = JSON.parse(JSON.stringify(defaultChartSettingsInfoTSC));
   const settingNodes = settingsNode.getElementsByTagName("setting");
   for (let i = 0; i < settingNodes.length; i++) {
     const settingNode = settingNodes[i];
@@ -222,7 +224,7 @@ export function xmlToJson(xml: string): ChartInfoTSC {
   //convert xml to a DOM document using a parser library
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xml, "text/xml");
-  const settingsTSC: ChartInfoTSC = {};
+  const settingsTSC: ChartInfoTSC = <ChartInfoTSC>{};
   const tsCreatorNode = xmlDoc.getElementsByTagName("TSCreator")[0];
   if (tsCreatorNode) {
     const settingsNode = tsCreatorNode.getElementsByTagName("settings")[0];
@@ -272,34 +274,10 @@ function replaceSpecialChars(text: string, type: number): string {
   return text;
 }
 
-/**
- *
- * @param settings settings json object
- * @param indent the amount of indent to place in the xml file
- * @returns xml string with settings info
- */
-function generateSettingsXml(stateSettings: ChartSettings, indent: string): string {
-  let xml = "";
-  for (const unit in stateSettings.timeSettings) {
-    const timeSettings = stateSettings.timeSettings[unit];
-    xml += `${indent}<setting name="topAge" source="text" unit="${unit}">\n`;
-    xml += `${indent}    <setting name="text">${timeSettings.topStageAge}</setting>\n`;
-    xml += `${indent}</setting>\n`;
-    xml += `${indent}<setting name="baseAge" source="text" unit="${unit}">\n`;
-    xml += `${indent}    <setting name="text">${timeSettings.baseStageAge}</setting>\n`;
-    xml += `${indent}</setting>\n`;
-    xml += `${indent}<setting name="unitsPerMY" unit="${unit}">${timeSettings.unitsPerMY * 30}</setting>\n`;
-    xml += `${indent}<setting name="skipEmptyColumns">${timeSettings.skipEmptyColumns}</setting>\n`;
-  }
-  xml += `${indent}<setting name="variableColors">UNESCO</setting>\n`;
-  xml += `${indent}<setting name="negativeChk">false</setting>\n`;
-  xml += `${indent}<setting name="doPopups">${stateSettings.mouseOverPopupsEnabled}</setting>\n`;
-  xml += `${indent}<setting name="enEventColBG">${stateSettings.enableColumnBackground}</setting>\n`;
-  xml += `${indent}<setting name="enChartLegend">${stateSettings.enableChartLegend}</setting>\n`;
-  xml += `${indent}<setting name="enPriority">${stateSettings.enablePriority}</setting>\n`;
-  xml += `${indent}<setting name="enHideBlockLabel">${stateSettings.enableHideBlockLabel}</setting>\n`;
-  return xml;
+function extractName(text: string): string {
+  return text.substring(text.indexOf(":") + 1, text.length);
 }
+
 /**
  *
  * @param fonts font json object
@@ -461,17 +439,13 @@ export function jsonToXml(
 export function translateSettings(state: ChartSettings): ChartSettingsInfoTSC {
   let settings: ChartSettingsInfoTSC = <ChartSettingsInfoTSC>{};
   Object.assign(settings, defaultChartSettingsInfoTSC);
-  //TODO: change units based on datapack
-  settings.topAge.source = "text";
-  settings.topAge.unit = "Ma";
-  settings.topAge.text = state.topStageAge;
-  settings.baseAge.source = "text";
-  settings.baseAge.unit = "Ma";
-  settings.baseAge.text = state.baseStageAge;
-  settings.unitsPerMY.unit = "Ma";
-  settings.unitsPerMY.text = state.unitsPerMY;
-  settings.skipEmptyColumns.unit = "Ma";
-  settings.skipEmptyColumns.text = state.skipEmptyColumns;
+  for (const unit in state.timeSettings) {
+    const timeSettings = state.timeSettings[unit];
+    settings.topAge.push({ source: "text", unit: unit, text: timeSettings.topStageAge });
+    settings.baseAge.push({ source: "text", unit: unit, text: timeSettings.baseStageAge });
+    settings.unitsPerMY.push({ unit: unit, text: timeSettings.unitsPerMY * 30 });
+    settings.skipEmptyColumns.push({ unit: unit, text: timeSettings.skipEmptyColumns });
+  }
   settings.noIndentPattern = state.noIndentPattern;
   settings.enPriority = state.enablePriority;
   settings.enChartLegend = state.enableChartLegend;
@@ -489,9 +463,15 @@ export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
     Object.assign(column, defaultZoneColumnInfoTSC);
     column._id = "class datastore.ZoneColumn:" + replaceSpecialChars(state.name, 0);
   }
-  //blockseriesmetacolumn
+  //blockseriesmetacolumn or meta column
   else if (state.subFaciesInfo || state.subChronInfo) {
-    column._id = "class datastore.BlockSeriesMetaColumn:" + replaceSpecialChars(state.name, 0);
+    //only blockseriesmetacolumn if its children are leaves
+    //we also know that if a column has facies or chron info, it is not a leaf
+    if (state.children[0].children.length === 0) {
+      column._id = "class datastore.BlockSeriesMetaColumn:" + replaceSpecialChars(state.name, 0);
+    }
+    //metacolumn otherwise
+    else column._id = "class datastore.MetaColumn:" + replaceSpecialChars(state.name, 0);
   }
   //event column
   else if (state.subEventInfo) {
@@ -518,13 +498,13 @@ export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
     column._id = "class datastore.SequenceColumn:" + replaceSpecialChars(state.name, 0);
   } else if (state.subTransectInfo) {
     column._id = "class datastore.TransectColumn:" + replaceSpecialChars(state.name, 0);
-  } else if (!state.children) {
+  } else if (state.children.length === 0) {
     //zone column
     if (
-      state.name.includes("Facies Label") ||
-      state.name.includes("Series Label") ||
-      state.name.includes("Chron Label") ||
-      state.name.includes("Members")
+      state.name === "Facies Label" ||
+      state.name === "Series Label" ||
+      state.name === "Chron Label" ||
+      state.name === "Members"
     ) {
       Object.assign(column, defaultZoneColumnInfoTSC);
       if (state.name === "Facies Label") {
@@ -541,13 +521,21 @@ export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
     } else if (state.name === "Chron") {
       column._id = "class datastore.ChronColumn:Chron";
     }
-  } else if (state.name === "Chart Root" || state.name === "Chart Title") {
+    //Ruler column
+    else {
+      Object.assign(column, defaultRulerColumnInfoTSC);
+      column._id = "class datastore.RulerColumn:" + state.name;
+    }
+  }
+  //root columns
+  else if (state.name === "Chart Root" || state.name === "Chart Title") {
     column._id = "class datastore.RootColumn:" + state.name;
   } else {
-    column._id = "class datastore.BlankColumn:" + replaceSpecialChars(state.name, 0);
+    column._id = "class datastore.BlankColumn:" + state.name;
   }
   column.title = replaceSpecialChars(state.editName, 1);
   column.isSelected = state.on;
+  column.drawTitle = state.enableTitle;
   column.fonts = state.fontsInfo;
   column.width = state.width;
   column.backgroundColor.text = "rgb(" + state.rgb.r + "," + state.rgb.g + "," + state.rgb.b + ")";
@@ -559,7 +547,7 @@ export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
 }
 
 export function columnInfoToSettingsTSC(state: ColumnInfo, settings: ChartSettings): ChartInfoTSC {
-  const settingsTSC: ChartInfoTSC = {};
+  const settingsTSC: ChartInfoTSC = <ChartInfoTSC>{};
   settingsTSC["class datastore.RootColumn:Chart Root"] = translateColumn(state);
   settingsTSC["class datastore.RootColumn:Chart Root"]._id = "class datastore.RootColumn:Chart Root";
   settingsTSC.settings = translateSettings(settings);
@@ -574,47 +562,51 @@ export function columnInfoToSettingsTSC(state: ColumnInfo, settings: ChartSettin
  * @returns xml string with settings info
  */
 
-function ChartSettingsInfoTSCToXml(settings: ChartSettingsInfoTSC | undefined, indent: string): string {
+function ChartSettingsInfoTSCToXml(settings: ChartSettingsInfoTSC, indent: string): string {
   if (!settings) {
     return "";
   }
   let xml = "";
-  xml += `${indent}<setting name="topAge" source="text" unit="${settings.topAge.unit}">\n`;
-  xml += `${indent}    <setting name="text">${settings.topAge.text}</setting>\n`;
-  xml += `${indent}</setting>\n`;
-  xml += `${indent}<setting name="baseAge" source="text" unit="${settings.baseAge.unit}">\n`;
-  xml += `${indent}    <setting name="text">${settings.baseAge.text}</setting>\n`;
-  xml += `${indent}</setting>\n`;
-  xml += `${indent}<setting name="unitsPerMY" unit="${settings.unitsPerMY.unit}">${settings.unitsPerMY.text}</setting>\n`;
-  xml += `${indent}<setting name="skipEmptyColumns" unit="${settings.skipEmptyColumns.unit}">${settings.skipEmptyColumns.text}</setting>\n`;
+  for (let i = 0; i < settings.topAge.length; i++) {
+    xml += `${indent}<setting name="topAge" source="text" unit="${settings.topAge[i].unit}">\n`;
+    xml += `${indent}    <setting name="text">${settings.topAge[i].text}</setting>\n`;
+    xml += `${indent}</setting>\n`;
+    xml += `${indent}<setting name="baseAge" source="text" unit="${settings.baseAge[i].unit}">\n`;
+    xml += `${indent}    <setting name="text">${settings.baseAge[i].text}</setting>\n`;
+    xml += `${indent}</setting>\n`;
+    xml += `${indent}<setting name="unitsPerMY" unit="${settings.unitsPerMY[i].unit}">${settings.unitsPerMY[i].text}</setting>\n`;
+    xml += `${indent}<setting name="skipEmptyColumns" unit="${settings.skipEmptyColumns[i].unit}">${settings.skipEmptyColumns[i].text}</setting>\n`;
+  }
   xml += `${indent}<setting name="variableColors">UNESCO</setting>\n`;
+  xml+=`${indent}<setting name="noIndentPattern">${settings.noIndentPattern}</setting>\n`;
   xml += `${indent}<setting name="negativeChk">false</setting>\n`;
   xml += `${indent}<setting name="doPopups">${settings.doPopups}</setting>\n`;
   xml += `${indent}<setting name="enEventColBG">${settings.enEventColBG}</setting>\n`;
   xml += `${indent}<setting name="enChartLegend">${settings.enChartLegend}</setting>\n`;
   xml += `${indent}<setting name="enPriority">${settings.enPriority}</setting>\n`;
-  xml += `${indent}<setting name="enHideBlockLabel">${settings.enHideBlockLable}</setting>\n`;
+  xml += `${indent}<setting name="enHideBlockLable">${settings.enHideBlockLable}</setting>\n`;
   return xml;
 }
 
-function FontsInfoToXml(fonts: FontsInfo, indent: string): string {
+function FontsInfoToXml(fonts: FontsInfo, colName: string, indent: string): string {
   let xml = "";
   let defInfo = JSON.parse(JSON.stringify(defaultFontsInfo));
-  let newFonts = JSON.parse(JSON.stringify(fonts));
-  for (const key in fonts) {
-    if (Object.prototype.hasOwnProperty.call(fonts, key)) {
+  let newStateColumn = JSON.parse(JSON.stringify(fonts));
+  for (let i = 0; i < allFontOptions.length; i++) {
+    let key = allFontOptions[i];
+    if (key in fonts) {
       const inheritable = fonts[key as keyof FontsInfo].inheritable;
-      if (JSON.stringify(newFonts[key]) === JSON.stringify(defInfo[key])) {
+      if (JSON.stringify(newStateColumn[key]) === JSON.stringify(defInfo[key])) {
         xml += `${indent}<font function="${key}" inheritable="${inheritable}"/>\n`;
       } else {
         xml += `${indent}<font function="${key}" inheritable="${inheritable}">`;
-        for (let fKey in newFonts[key]) {
-          if (JSON.stringify(newFonts[key][fKey]) !== JSON.stringify(defInfo[key][fKey])) {
+        for (let fKey in newStateColumn[key]) {
+          if (JSON.stringify(newStateColumn[key][fKey]) !== JSON.stringify(defInfo[key][fKey])) {
             if (fKey === "fontFace") {
-              xml += `font-family: ${newFonts[key][fKey]};`;
+              xml += `font-family: ${newStateColumn[key][fKey]};`;
             }
             if (fKey === "size") {
-              xml += `font-size: ${newFonts[key][fKey]}px;`;
+              xml += `font-size: ${newStateColumn[key][fKey]}px;`;
             }
             if (fKey === "italic") {
               xml += `font-style: italic;`;
@@ -623,7 +615,7 @@ function FontsInfoToXml(fonts: FontsInfo, indent: string): string {
               xml += `font-weight: bold;`;
             }
             if (fKey === "color") {
-              xml += `fill: ${newFonts[key][fKey]};`;
+              xml += `fill: ${newStateColumn[key][fKey]};`;
             }
           }
         }
@@ -637,6 +629,9 @@ function FontsInfoToXml(fonts: FontsInfo, indent: string): string {
 function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
   let xml = "";
   for (let key in column) {
+    if (key === "_id") {
+      continue;
+    }
     if (key === "title") {
       xml += `${indent}<setting name="title">${column[key]}</setting>\n`;
     } else if (key === "backgroundColor" || key === "customColor") {
@@ -647,21 +642,30 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
         xml += `${indent}<setting name="${key}" useNamed="${column[key].useNamed}">${column[key].text}</setting>\n`;
       } else if ("standardized" in column[key]) {
         xml += `${indent}<setting name="${key}" useNamed="${column[key].standardized}">${column[key].text}</setting>\n`;
+      } else if (column[key].text.length > 0) {
+        xml += `${indent}<setting name="${key}">${column[key].text}</setting>\n`;
       } else {
         xml += `${indent}<setting name="${key}"/>\n`;
       }
-    } else if (key === "fonts") {
+    } 
+     else if (key === "fonts") {
       xml += `${indent}<fonts>\n`;
-      xml += FontsInfoToXml(column.fonts, `${indent}    `);
+      xml += FontsInfoToXml(column.fonts, extractName(column._id), `${indent}    `);
       xml += `${indent}</fonts>\n`;
-    }
-    if (key === "children") {
+    } else if (key === "children") {
       for (let i = 0; i < column.children.length; i++) {
         xml += `${indent}<column id="${replaceSpecialChars(column.children[i]._id, 0)}">\n`;
         xml += columnInfoTSCToXml(column.children[i], `${indent}    `);
         xml += `${indent}</column>\n`;
       }
-    } else {
+    } 
+    else if (key === "justification") {
+      xml += `${indent}<setting justification="${column[key as keyof ColumnInfoTSC]}" name="justification"/>`;
+    }
+    else if (key === "orientation") {
+      xml += `${indent}<setting name="orientation" orientation="${column[key as keyof ColumnInfoTSC]}"/>\n`;
+    }
+    else {
       xml += `${indent}<setting name="${key}">${column[key as keyof ColumnInfoTSC]}</setting>\n`;
     }
   }

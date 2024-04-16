@@ -1,7 +1,7 @@
 import { FontsInfo, assertFontsInfo, throwError } from "./index.js";
 
 export type ChartInfoTSC = {
-  settings?: ChartSettingsInfoTSC;
+  settings: ChartSettingsInfoTSC;
   "class datastore.RootColumn:Chart Root"?: ColumnInfoTSC;
 };
 

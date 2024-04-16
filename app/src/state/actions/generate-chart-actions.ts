@@ -9,6 +9,7 @@ import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import DOMPurify from "dompurify";
 import { pushSnackbar } from "./general-actions";
+import { ChartSettings } from "../../types";
 
 export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
   if (state.settings.useDatapackSuggestedAge != response) {
@@ -61,8 +62,6 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   generalActions.setChartLoading(true);
   generalActions.setChartHash("");
   generalActions.setChartContent("");
-  //let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
-  // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
   let body;
   try {
     if (state.settingsTabs.columns !== undefined) normalizeColumnProperties(state.settingsTabs.columns);
