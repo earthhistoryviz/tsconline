@@ -322,7 +322,7 @@ function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
   let xml = "";
   for (const key in fontsInfo) {
       const fontTarget = fontsInfo[key as keyof FontsInfo];
-      if (JSON.stringify(fontTarget) === JSON.stringify(defInfo[key])) {
+      if (!fontTarget.on || JSON.stringify(fontTarget) === JSON.stringify(defInfo[key])) {
         xml += `${indent}<font function="${key}" inheritable="${fontTarget.inheritable}"/>\n`;
       } else {
         xml += `${indent}<font function="${key}" inheritable="${fontTarget.inheritable}">`;
