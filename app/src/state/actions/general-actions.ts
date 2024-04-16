@@ -595,6 +595,42 @@ export const fetchImage = action("fetchImage", async (datapackName: string, imag
   return image;
 });
 
+export const logout = action("logout", async () => {
+  try {
+    const response = await fetcher("/auth/logout", {
+      method: "POST",
+      credentials: "include"
+    });
+    if (response.ok) {
+      setIsLoggedIn(false);
+    }
+  } catch (error) {
+    console.error("Failed to logout:", error);
+  }
+});
+
+export const sessionCheck = action("sessionCheck", async () => {
+  try {
+    const response = await fetcher("/auth/session-check", {
+      method: "GET",
+      credentials: "include"
+    });
+    const data = await response.json();
+    if (data.authenticated) {
+      setIsLoggedIn(true);
+    }
+  } catch (error) {
+    console.error("Failed to check session:", error);
+    displayServerError(null, ErrorCodes.UNABLE_TO_LOGIN, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN]);
+  }
+});
+
+export const setUserProfile = action("setUserProfile", (profile: any) => {
+  state.userProfile = profile;
+});
+export const setIsLoggedIn = action("setIsLoggedIn", (newval: boolean) => {
+  state.isLoggedIn = newval;
+});
 export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
   state.settings.useDatapackSuggestedAge = isChecked;
 });

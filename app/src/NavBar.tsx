@@ -8,6 +8,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import { IconButton, Tab } from "@mui/material";
 import { context } from "./state";
 import { TSCButton, TSCTabs } from "./components";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
 import "./NavBar.css";
 
@@ -15,6 +16,7 @@ export const NavBar = observer(function Navbar() {
   const theme = useTheme();
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
+  actions.sessionCheck();
   return (
     <AppBar position="fixed" sx={{ background: theme.palette.navbar.main, display: "flex" }}>
       <Toolbar>
@@ -58,11 +60,49 @@ export const NavBar = observer(function Navbar() {
             <Tab value={2} label="Settings" to="/settings" component={Link} />
             <Tab value={3} label="Help" to="/help" component={Link} />
             <Tab value={4} label="About" to="/about" component={Link} />
-            <Tab value={5} label="Login" to="/login" component={Link} />
           </TSCTabs>
         }
         <div style={{ flexGrow: 1 }} />
-        <TSCButton onClick={() => actions.initiateChartGeneration(navigate)}>Generate Chart</TSCButton>
+        <TSCButton onClick={() => actions.initiateChartGeneration(navigate)} sx={{ height: "auto" }}>
+          Generate Chart
+        </TSCButton>
+        {state.isLoggedIn ? (
+          <Tab
+            className="login-tab"
+            value={5}
+            label="Sign out"
+            icon={<AccountCircleIcon />}
+            onClick={() => {
+              actions.logout();
+              navigate("/");
+            }}
+            sx={{
+              color: theme.palette.primary.main,
+              "&:hover": {
+                color: theme.palette.selection.light
+              },
+              flexDirection: "row",
+              fontSize: "1rem"
+            }}
+          />
+        ) : (
+        <Tab
+          className="login-tab"
+          value={5}
+          label="Sign in"
+          icon={<AccountCircleIcon />}
+          to="/login"
+          component={Link}
+          sx={{
+            color: theme.palette.primary.main,
+            "&:hover": {
+              color: theme.palette.selection.light
+            },
+            flexDirection: "row",
+            fontSize: "1rem"
+          }}
+        />
+        )}
       </Toolbar>
     </AppBar>
   );
