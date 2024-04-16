@@ -92,3 +92,7 @@ export const setItalic = action((target: ValidFontOptions, isItalic: boolean, co
 export const setColor = action((target: ValidFontOptions, color: string, column: ColumnInfo) => {
   column.fontsInfo[target].color = color;
 });
+
+export const setEnableTitle = action((isOn: boolean, column: ColumnInfo) => {
+  column.enableTitle = isOn;
+})
