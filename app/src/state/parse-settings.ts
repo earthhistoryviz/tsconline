@@ -578,7 +578,7 @@ function ChartSettingsInfoTSCToXml(settings: ChartSettingsInfoTSC, indent: strin
     xml += `${indent}<setting name="skipEmptyColumns" unit="${settings.skipEmptyColumns[i].unit}">${settings.skipEmptyColumns[i].text}</setting>\n`;
   }
   xml += `${indent}<setting name="variableColors">UNESCO</setting>\n`;
-  xml+=`${indent}<setting name="noIndentPattern">${settings.noIndentPattern}</setting>\n`;
+  xml += `${indent}<setting name="noIndentPattern">${settings.noIndentPattern}</setting>\n`;
   xml += `${indent}<setting name="negativeChk">false</setting>\n`;
   xml += `${indent}<setting name="doPopups">${settings.doPopups}</setting>\n`;
   xml += `${indent}<setting name="enEventColBG">${settings.enEventColBG}</setting>\n`;
@@ -647,8 +647,7 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       } else {
         xml += `${indent}<setting name="${key}"/>\n`;
       }
-    } 
-     else if (key === "fonts") {
+    } else if (key === "fonts") {
       xml += `${indent}<fonts>\n`;
       xml += FontsInfoToXml(column.fonts, extractName(column._id), `${indent}    `);
       xml += `${indent}</fonts>\n`;
@@ -658,14 +657,11 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
         xml += columnInfoTSCToXml(column.children[i], `${indent}    `);
         xml += `${indent}</column>\n`;
       }
-    } 
-    else if (key === "justification") {
+    } else if (key === "justification") {
       xml += `${indent}<setting justification="${column[key as keyof ColumnInfoTSC]}" name="justification"/>`;
-    }
-    else if (key === "orientation") {
+    } else if (key === "orientation") {
       xml += `${indent}<setting name="orientation" orientation="${column[key as keyof ColumnInfoTSC]}"/>\n`;
-    }
-    else {
+    } else {
       xml += `${indent}<setting name="${key}">${column[key as keyof ColumnInfoTSC]}</setting>\n`;
     }
   }
