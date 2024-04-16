@@ -22,19 +22,14 @@ import FormControl from "@mui/material/FormControl";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import FormatBoldIcon from "@mui/icons-material/FormatBold";
 import FormatItalicIcon from "@mui/icons-material/FormatItalic";
-import { MuiColorInput, MuiColorInputColors } from "mui-color-input";
+import { MuiColorInput } from "mui-color-input";
 import CloseIcon from "@mui/icons-material/Close";
 import "./FontMenu.css";
 import { ColumnInfo, ValidFontOptions } from "@tsconline/shared";
 import { NumericFormat } from "react-number-format";
-const FontSizeTextField = (({...props} : TextFieldProps) => (
-  <TextField
-    {...props}
-    className="FontSizeContainer"
-    label="Size"
-    variant="outlined"
-    />
-))
+const FontSizeTextField = ({ ...props }: TextFieldProps) => (
+  <TextField {...props} className="FontSizeContainer" label="Size" variant="outlined" />
+);
 const FontMenuRow: React.FC<{
   target: ValidFontOptions;
   column: ColumnInfo;
@@ -99,15 +94,15 @@ const FontMenuRow: React.FC<{
           </Select>
         </FormControl>
         <NumericFormat
-        customInput={FontSizeTextField}
-        value={fontOpts.size}
-        onValueChange={(values) => {
-          if (!values.floatValue) {
-            return;
-          }
-          actions.setFontSize(target, values.floatValue, column);
-        }}
-        disabled={!fontOpts.on}
+          customInput={FontSizeTextField}
+          value={fontOpts.size}
+          onValueChange={(values) => {
+            if (!values.floatValue) {
+              return;
+            }
+            actions.setFontSize(target, values.floatValue, column);
+          }}
+          disabled={!fontOpts.on}
         />
         <ToggleButtonGroup
           value={[fontOpts.bold ? "bold" : "", fontOpts.italic ? "italic" : ""]}

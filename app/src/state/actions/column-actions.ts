@@ -1,7 +1,6 @@
 import { action } from "mobx";
 import { state } from "../state";
-import { assertFontsInfo, ColumnInfo, ValidFontOptions } from "@tsconline/shared";
-import React from "react";
+import { ColumnInfo, ValidFontOptions } from "@tsconline/shared";
 
 export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
   state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
@@ -73,9 +72,11 @@ export const setFontOptionOn = action((target: ValidFontOptions, isOn: boolean, 
   column.fontsInfo[target].on = isOn;
 });
 
-export const setFontFace = action((target: ValidFontOptions, face: "Arial" | "Courier" | "Verdana", column: ColumnInfo) => {
-  column.fontsInfo[target].fontFace = face;
-});
+export const setFontFace = action(
+  (target: ValidFontOptions, face: "Arial" | "Courier" | "Verdana", column: ColumnInfo) => {
+    column.fontsInfo[target].fontFace = face;
+  }
+);
 
 export const setFontSize = action((target: ValidFontOptions, fontSize: number, column: ColumnInfo) => {
   column.fontsInfo[target].size = fontSize;
@@ -95,4 +96,4 @@ export const setColor = action((target: ValidFontOptions, color: string, column:
 
 export const setEnableTitle = action((isOn: boolean, column: ColumnInfo) => {
   column.enableTitle = isOn;
-})
+});

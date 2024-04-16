@@ -27,11 +27,23 @@ export const initiateChartGeneration = action("initiateChartGeneration", (naviga
 });
 
 export const fetchChartFromServer = action("fetchChartFromServer", async (navigate: NavigateFunction) => {
-  if (!state.config.datapacks || state.config.datapacks.length === 0) {
+  if (!state.config.datapacks || state.config.datapacks.length === 0 || !state.settingsTabs.columns) {
     generalActions.pushError(ErrorCodes.NO_DATAPACKS_SELECTED);
     return;
   }
   generalActions.removeError(ErrorCodes.NO_DATAPACKS_SELECTED);
+  let columnOn = false;
+  for (const column of state.settingsTabs.columns.children) {
+    if (column.on) {
+      columnOn = true;
+      break;
+    }
+  }
+  if (!columnOn) {
+    generalActions.pushError(ErrorCodes.NO_COLUMNS_SELECTED);
+    return;
+  }
+  generalActions.removeError(ErrorCodes.NO_COLUMNS_SELECTED);
   state.showSuggestedAgePopup = false;
   navigate("/chart");
   //set the loading screen and make sure the chart isn't up
