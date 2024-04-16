@@ -321,22 +321,22 @@ function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
   let defInfo = JSON.parse(JSON.stringify(defaultFontsInfo));
   let xml = "";
   for (const key in fontsInfo) {
-      const fontTarget = fontsInfo[key as keyof FontsInfo];
-      if (!fontTarget.on || JSON.stringify(fontTarget) === JSON.stringify(defInfo[key])) {
-        xml += `${indent}<font function="${key}" inheritable="${fontTarget.inheritable}"/>\n`;
-      } else {
-        xml += `${indent}<font function="${key}" inheritable="${fontTarget.inheritable}">`;
-        xml += `font-family: ${fontTarget.fontFace};`;
-        // removed px from font size because jar uses parseDouble and doesn't parse px
-        xml += `font-size: ${fontTarget.size};`;
-        if (fontTarget.italic) {
-          xml += `font-style: italic;`;
-        }
-        if (fontTarget.bold) {
-          xml += `font-weight: bold;`;
-        }
-        xml += `fill: ${fontTarget.color};`;
-        xml += `</font>\n`;
+    const fontTarget = fontsInfo[key as keyof FontsInfo];
+    if (!fontTarget.on || JSON.stringify(fontTarget) === JSON.stringify(defInfo[key])) {
+      xml += `${indent}<font function="${key}" inheritable="${fontTarget.inheritable}"/>\n`;
+    } else {
+      xml += `${indent}<font function="${key}" inheritable="${fontTarget.inheritable}">`;
+      xml += `font-family: ${fontTarget.fontFace};`;
+      // removed px from font size because jar uses parseDouble and doesn't parse px
+      xml += `font-size: ${fontTarget.size};`;
+      if (fontTarget.italic) {
+        xml += `font-style: italic;`;
+      }
+      if (fontTarget.bold) {
+        xml += `font-weight: bold;`;
+      }
+      xml += `fill: ${fontTarget.color};`;
+      xml += `</font>\n`;
     }
   }
   return xml;
@@ -417,7 +417,7 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo,
             xml += `${indent}</column>\n`;
           }
         }
-      } else if (key === "drawTitle"){
+      } else if (key === "drawTitle") {
         xml += `${indent}<setting name="${xmlKey}">${stateColumn.enableTitle}</setting>\n`;
       } else {
         xml += `${indent}<setting name="${xmlKey}">${presetColumn[key as keyof ColumnInfoTSC]}</setting>\n`;

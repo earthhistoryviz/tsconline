@@ -7,7 +7,6 @@ import "./ColumnMenu.css";
 import { FontMenu } from "./FontMenu";
 import { ColumnInfo } from "@tsconline/shared";
 import { TSCCheckbox } from "../components";
-import { CheckBox } from "@mui/icons-material";
 
 const EditNameField = observer(() => {
   const { state, actions } = useContext(context);
@@ -94,23 +93,23 @@ export const ColumnMenu = observer(() => {
   );
 });
 
-const ShowTitles = observer(({ column }: { column: ColumnInfo}) => {
+const ShowTitles = observer(({ column }: { column: ColumnInfo }) => {
   const { actions } = useContext(context);
   return (
     <div className="ShowTitlesContainer">
-    <FormControlLabel
-    name="enableTitle"
-    label="Enable Title"
-    control={
-      <TSCCheckbox
-        outlineColor="gray"
-        checked={column.enableTitle}
-        onChange={() => {
-          actions.setEnableTitle(!column.enableTitle, column);
-        }}
+      <FormControlLabel
+        name="enableTitle"
+        label="Enable Title"
+        control={
+          <TSCCheckbox
+            outlineColor="gray"
+            checked={column.enableTitle}
+            onChange={() => {
+              actions.setEnableTitle(!column.enableTitle, column);
+            }}
+          />
+        }
       />
-    }
-    />
     </div>
   );
 });
