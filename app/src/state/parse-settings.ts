@@ -349,7 +349,7 @@ function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with column info
  */
-function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo | undefined, indent: string): string {
+function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo, indent: string): string {
   let xml = "";
   for (let key in presetColumn) {
     if (Object.prototype.hasOwnProperty.call(presetColumn, key)) {
@@ -392,12 +392,6 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo 
         else if (stateColumn === undefined) {
           xml += `${indent}<setting name="${xmlKey}">${presetColumn["isSelected"]}</setting>\n`;
         }
-        //always display these things (the original tsc throws an error if not selected)
-        //(but online doesn't have option to deselect them)
-        else if (colName === "Chart Root" || colName === "Chart Title" || colName === "Ma") {
-          xml += `${indent}<setting name="${xmlKey}">true</setting>\n`;
-          continue;
-        }
         //check if column is checked or not, and change the isSelected field to true or false
         else if (stateColumn) {
           if (stateColumn.on) {
@@ -419,10 +413,12 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo 
         if (presetColumn.children) {
           for (let i = 0; i < presetColumn.children.length; i++) {
             xml += `${indent}<column id="${replaceSpecialChars(presetColumn.children[i]._id, 0)}">\n`;
-            xml += generateColumnXml(presetColumn.children[i], stateColumn?.children[i], `${indent}    `);
+            xml += generateColumnXml(presetColumn.children[i], stateColumn.children[i], `${indent}    `);
             xml += `${indent}</column>\n`;
           }
         }
+      } else if (key === "drawTitle"){
+        xml += `${indent}<setting name="${xmlKey}">${stateColumn.enableTitle}</setting>\n`;
       } else {
         xml += `${indent}<setting name="${xmlKey}">${presetColumn[key as keyof ColumnInfoTSC]}</setting>\n`;
       }
@@ -443,7 +439,7 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo 
  */
 export function jsonToXml(
   settingsTSC: ChartInfoTSC,
-  columnSettings: ColumnInfo | undefined,
+  columnSettings: ColumnInfo,
   chartSettings: ChartSettings,
   version: string = "PRO8.1"
 ): string {
