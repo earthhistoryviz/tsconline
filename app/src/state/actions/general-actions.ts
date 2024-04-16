@@ -220,13 +220,6 @@ const setChartSettings = action("setChartSettings", (settings: ChartSettingsInfo
   setEnableHideBlockLabel(enHideBlockLable);
 });
 
-//TODO: combine presets here
-//right now it assumes just one time setting
-const applyPresets = action("applyPresets", (preset: ChartInfoTSC) => {
-  setTopStageAge(preset.settings.topAge[0].text, preset.settings.topAge[0].unit);
-  setBaseStageAge(preset.settings.baseAge[0].text, preset.settings.baseAge[0].unit);
-});
-
 /**
  * Rests the settings, sets the tabs to 0
  * sets chart to newval and requests info on the datapacks from the server
