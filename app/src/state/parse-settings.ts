@@ -526,13 +526,12 @@ export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
     else if (state.name === state.units) {
       column = JSON.parse(JSON.stringify(defaultRulerColumnInfoTSC));
       //get first word of units
-      // if (state.name.indexOf(' ') === -1) {
-      //   column._id = "class datastore.RulerColumn:" + state.name;
-      // }
-      // else {
-      //   column._id = "class datastore.RulerColumn:" + state.name.substring(0, state.name.indexOf(' '));
-      // }
-      column._id = "class datastore.RulerColumn:" + state.name;
+      if (state.name.indexOf(' ') === -1) {
+        column._id = "class datastore.RulerColumn:" + state.name;
+      }
+      else {
+        column._id = "class datastore.RulerColumn:" + state.name.substring(0, state.name.indexOf(' '));
+      }
     } else {
       column._id = "class datastore.BlankColumn:" + state.name;
     }
@@ -546,6 +545,10 @@ export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
     tokens = state.name.split(delimiter).slice(start),
     result = tokens.join(delimiter); 
     column._id = "class datastore.RootColumn:" + result;
+    }
+    //edge case for default datapack
+    else if (state.name === "TimeScale Creator GTS2020 chart") {
+      column._id = "class datastore.RootColumn:Chart Title";
     }
     else
     column._id = "class datastore.RootColumn:" + state.name;
