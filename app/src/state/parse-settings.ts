@@ -327,7 +327,8 @@ function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
       } else {
         xml += `${indent}<font function="${key}" inheritable="${fontTarget.inheritable}">`;
         xml += `font-family: ${fontTarget.fontFace};`;
-        xml += `font-size: ${fontTarget.size}px;`;
+        // removed px from font size because jar uses parseDouble and doesn't parse px
+        xml += `font-size: ${fontTarget.size};`;
         if (fontTarget.italic) {
           xml += `font-style: italic;`;
         }

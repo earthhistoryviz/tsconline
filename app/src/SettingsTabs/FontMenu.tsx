@@ -9,6 +9,7 @@ import {
   FormControlLabel,
   Grid,
   TextField,
+  TextFieldProps,
   ToggleButton,
   ToggleButtonGroup,
   Typography,
@@ -21,11 +22,19 @@ import FormControl from "@mui/material/FormControl";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import FormatBoldIcon from "@mui/icons-material/FormatBold";
 import FormatItalicIcon from "@mui/icons-material/FormatItalic";
-import { MuiColorInput } from "mui-color-input";
+import { MuiColorInput, MuiColorInputColors } from "mui-color-input";
 import CloseIcon from "@mui/icons-material/Close";
 import "./FontMenu.css";
 import { ColumnInfo, ValidFontOptions } from "@tsconline/shared";
-
+import { NumericFormat } from "react-number-format";
+const FontSizeTextField = (({...props} : TextFieldProps) => (
+  <TextField
+    {...props}
+    className="FontSizeContainer"
+    label="Size"
+    variant="outlined"
+    />
+))
 const FontMenuRow: React.FC<{
   target: ValidFontOptions;
   column: ColumnInfo;
@@ -33,23 +42,18 @@ const FontMenuRow: React.FC<{
   const { actions } = useContext(context);
   const fontOpts = column.fontsInfo[target];
   const [font, setFont] = useState("Arial");
-  const [formats, setFormats] = useState([""]);
   const handleFontChange = (event: SelectChangeEvent) => {
     if (!/^(Arial|Courier|Verdana)$/.test(event.target.value)) return;
-    actions.setFontFace(target, event.target.value as "Arial" | "Courier" | "Verdana");
+    actions.setFontFace(target, event.target.value as "Arial" | "Courier" | "Verdana", column);
     setFont(event.target.value as string);
   };
   const handleFormat = (_event: React.MouseEvent<HTMLElement>, newFormats: string[]) => {
-    setFormats(newFormats);
-    if (newFormats.includes("bold")) actions.setBold(target, true);
-    else actions.setBold(target, false);
-
-    if (newFormats.includes("italic")) actions.setItalic(target, true);
-    else actions.setItalic(target, false);
+    actions.setBold(target, newFormats.includes("bold"), column);
+    actions.setItalic(target, newFormats.includes("italic"), column);
   };
 
-  const handleColor = (newColor: React.SetStateAction<string>) => {
-    actions.setColor(target, newColor);
+  const handleColor = (newColor: string) => {
+    actions.setColor(target, newColor, column);
   };
 
   return (
@@ -94,18 +98,19 @@ const FontMenuRow: React.FC<{
             <MenuItem value={"Verdana"}>Verdana</MenuItem>
           </Select>
         </FormControl>
-        <TextField
-          className="FontSizeContainer"
-          label="Size"
-          variant="outlined"
-          value={fontOpts.size}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-            actions.setFontSize(target, Number(event.target.value));
-          }}
-          disabled={!fontOpts.on}
+        <NumericFormat
+        customInput={FontSizeTextField}
+        value={fontOpts.size}
+        onValueChange={(values) => {
+          if (!values.floatValue) {
+            return;
+          }
+          actions.setFontSize(target, values.floatValue, column);
+        }}
+        disabled={!fontOpts.on}
         />
         <ToggleButtonGroup
-          value={formats}
+          value={[fontOpts.bold ? "bold" : "", fontOpts.italic ? "italic" : ""]}
           onChange={handleFormat}
           aria-label="text formatting"
           sx={{ marginRight: "10px" }}
