@@ -13,7 +13,7 @@ import LoginIcon from "@mui/icons-material/Login";
 import { GoogleLogin } from "@react-oauth/google";
 import { devSafeUrl, fetcher } from "./util";
 import { actions, context } from "./state";
-import { ErrorCodes } from "./util/error-codes";
+import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { useNavigate } from "react-router";
 
 import "./Login.css";
@@ -43,17 +43,17 @@ export const Login: React.FC = observer(() => {
       if (login.ok) {
         actions.sessionCheck();
         if (!state.isLoggedIn) {
-          displayServerError(login, ErrorCodes.UNABLE_TO_LOGIN, "Error trying to log in");
+          displayServerError(login, ErrorCodes.UNABLE_TO_LOGIN, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN]);
         } else {
           actions.removeError(ErrorCodes.UNABLE_TO_LOGIN);
           actions.pushSnackbar("Succesfully logged in", "success");
           navigate("/");
         }
       } else {
-        displayServerError(login, ErrorCodes.UNABLE_TO_LOGIN, "Error trying to log in");
+        displayServerError(login, ErrorCodes.UNABLE_TO_LOGIN, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN]);
       }
     } catch (error) {
-      displayServerError(error, ErrorCodes.UNABLE_TO_LOGIN, "Error trying to log in");
+      displayServerError(error, ErrorCodes.UNABLE_TO_LOGIN, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN]);
     }
   };
 
