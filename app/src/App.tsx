@@ -20,7 +20,6 @@ import { CssBaseline } from "@mui/material";
 export default observer(function App() {
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
-  actions.sessionCheck();
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={theme}>

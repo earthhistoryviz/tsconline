@@ -71,7 +71,6 @@ export const NavBar = observer(function Navbar() {
             icon={<AccountCircleIcon />}
             onClick={() => {
               actions.logout();
-              navigate("/");
             }}
             sx={{
               color: theme.palette.primary.main,
