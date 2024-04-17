@@ -11,12 +11,13 @@ import { TSCButton } from "./components";
 import { useTheme } from "@mui/material/styles";
 import LoginIcon from "@mui/icons-material/Login";
 import { GoogleLogin } from "@react-oauth/google";
-import { fetcher } from "./util";
+import { devSafeUrl, fetcher } from "./util";
 import { actions, context } from "./state";
 import { ErrorCodes } from "./util/error-codes";
 import { useNavigate } from "react-router";
 
 import "./Login.css";
+import { displayServerError } from "./state/actions/util-actions";
 
 export const Login: React.FC = observer(() => {
   const { state } = useContext(context);
@@ -42,19 +43,17 @@ export const Login: React.FC = observer(() => {
       if (login.ok) {
         actions.sessionCheck();
         if (!state.isLoggedIn) {
-          actions.pushError(ErrorCodes.UNABLE_TO_LOGIN);
+          displayServerError(login, ErrorCodes.UNABLE_TO_LOGIN, "Error trying to log in");
         } else {
           actions.removeError(ErrorCodes.UNABLE_TO_LOGIN);
           actions.pushSnackbar("Succesfully logged in", "success");
           navigate("/");
         }
       } else {
-        console.error("Error trying to log in: " + login.status);
-        actions.pushError(ErrorCodes.UNABLE_TO_LOGIN);
+        displayServerError(login, ErrorCodes.UNABLE_TO_LOGIN, "Error trying to log in");
       }
     } catch (error) {
-      console.error("Error:", error);
-      actions.pushError(ErrorCodes.UNABLE_TO_LOGIN);
+      displayServerError(error, ErrorCodes.UNABLE_TO_LOGIN, "Error trying to log in");
     }
   };
 
@@ -112,7 +111,7 @@ export const Login: React.FC = observer(() => {
         <GoogleLogin
           onSuccess={() => console.log("Logged in with Google")}
           ux_mode="redirect"
-          login_uri={`${import.meta.env.VITE_SERVER_URL || "https://localhost:3000"}/auth/oauth`}
+          login_uri={devSafeUrl("/auth/oauth")}
           onError={() => actions.pushError(ErrorCodes.UNABLE_TO_LOGIN)}
           width="400px"
         />

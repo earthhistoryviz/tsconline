@@ -12,6 +12,8 @@ import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import LoginIcon from "@mui/icons-material/Login";
 
+import "./Login.css";
+
 export const SignUp: React.FC = observer(() => {
   const theme = useTheme();
 
@@ -27,13 +29,7 @@ export const SignUp: React.FC = observer(() => {
 
   return (
     <Container component="main" maxWidth="xs">
-      <Box
-        sx={{
-          marginTop: 8,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center"
-        }}>
+      <Box className="login-box">
         <Avatar sx={{ "& .MuiSvgIcon-root": { mr: 0 }, bgcolor: theme.palette.navbar.dark }}>
           <LockOutlinedIcon sx={{ color: theme.palette.selection.main }} />
         </Avatar>
