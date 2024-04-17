@@ -16,7 +16,6 @@ export const NavBar = observer(function Navbar() {
   const theme = useTheme();
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
-  actions.sessionCheck();
   return (
     <AppBar position="fixed" sx={{ background: theme.palette.navbar.main, display: "flex" }}>
       <Toolbar>
