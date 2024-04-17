@@ -1,6 +1,6 @@
 import { Button, IconButton, Theme, Tooltip, TooltipProps, styled, useTheme } from "@mui/material";
 import { FaciesOptions } from "../types";
-import { Bounds, ColumnInfo, InfoPoints, MapPoints, Transects, isRectBounds, isVertBounds } from "@tsconline/shared";
+import { Bounds, ColumnInfo, InfoPoints, MapPoints, Transects, assertSubFaciesInfo, isRectBounds, isSubFaciesInfo, isSubFaciesInfoArray, isVertBounds } from "@tsconline/shared";
 import { useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { actions, context } from "../state";
@@ -476,13 +476,12 @@ function getRockTypeForAge(
   setSelectedMapAgeRange: (min: number, max: number) => void,
   pushPresentRockType: (rockType: string) => void
 ) {
-  if (!column.subFaciesInfo || column.subFaciesInfo.length === 0) {
+  if (!isSubFaciesInfoArray(column.subInfo) || column.subInfo.length === 0) {
     return "TOP"; // Return "TOP" if there's no subFaciesInfo or it's empty
   }
   setSelectedMapAgeRange(column.minAge, column.maxAge);
-
   // Find the nearest time block that does not exceed the current age
-  const suitableBlock = column.subFaciesInfo.find((timeBlock) => timeBlock.age >= currentAge);
+  const suitableBlock = column.subInfo.find((timeBlock) => timeBlock.age >= currentAge);
 
   if (!suitableBlock) {
     return "TOP";
