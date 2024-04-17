@@ -8,15 +8,15 @@ interface TSCCheckboxProps extends CheckboxProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export const TSCCheckbox: React.FC<TSCCheckboxProps> = (props: TSCCheckboxProps) => {
+export const TSCCheckbox: React.FC<TSCCheckboxProps> = ({ outlineColor, checkedColor, checked, onChange, ...props}) => {
   const theme = useTheme();
-  const outlineColor = props.outlineColor || theme.palette.primary.main;
-  const checkedColor = props.checkedColor || theme.palette.selection.main;
+  outlineColor = outlineColor || theme.palette.primary.main;
+  checkedColor = checkedColor || theme.palette.selection.main;
   return (
     <Checkbox
       {...props}
-      checked={props.checked}
-      onChange={props.onChange}
+      checked={checked}
+      onChange={onChange}
       size="small"
       sx={{
         color: outlineColor,
