@@ -7,7 +7,7 @@ import "./ColumnMenu.css";
 import { FontMenu } from "./FontMenu";
 import { ColumnInfo } from "@tsconline/shared";
 import { TSCCheckbox } from "../components";
-import {InfoBox} from "./InfoBox";
+import { InfoBox } from "./InfoBox";
 
 const EditNameField = observer(() => {
   const { state, actions } = useContext(context);
@@ -92,7 +92,7 @@ export const ColumnMenu = observer(() => {
         {column && <EditNameField />}
         {column && <FontMenu column={column} />}
         {column && <ShowTitles column={column} />}
-        {info !== "" && <InfoBox />}
+        {!!info && <InfoBox info={info} />}
       </div>
     </div>
   );

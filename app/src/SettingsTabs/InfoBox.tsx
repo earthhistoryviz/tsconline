@@ -3,15 +3,9 @@ import React from "react";
 import { Box, Typography } from "@mui/material";
 import "./InfoBox.css";
 import { StyledScrollbar } from "../components";
+import { trimQuotes } from "../util/util";
 
 export const InfoBox: React.FC<{ info: string }> = observer(({ info }) => {
-  function trimQuotes(input: string): string {
-    if (input.startsWith('"') && input.endsWith('"')) {
-      return input.slice(1, -1);
-    }
-    return input;
-  }
-
   return (
     <div className="container">
       <Typography style={{ fontWeight: "bold" }}>Information and References</Typography>
