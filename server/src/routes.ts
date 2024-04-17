@@ -9,7 +9,7 @@ import {
   assertDatapackIndex,
   assertIndexResponse,
   assertMapPackIndex,
-  assertTimescale,
+  assertTimescale
 } from "@tsconline/shared";
 import { deleteDirectory, resetUploadDirectory } from "./util.js";
 import { mkdirp } from "mkdirp";
@@ -28,7 +28,6 @@ import dotenv from "dotenv";
 import { getDb, UserRow } from "./database.js";
 import { genSalt, hash, compare } from "bcrypt-ts";
 import { glob } from "glob";
-import formUrlEncoded from "form-urlencoded";
 import { OAuth2Client } from "google-auth-library";
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(
@@ -292,35 +291,31 @@ export const signup = async function signup(
 ) {
   const { username, password } = request.body;
   const db = getDb();
-  const rows = db.prepare(`SELECT * FROM users WHERE username = ?`).all(username);
-  if (rows) {
-    for (const row of rows) {
-      const hashedPassword = (row as UserRow)["hashed_password"];
-      if (hashedPassword) {
-        const result = await compare(password, hashedPassword);
-        if (result) {
+
+  try {
+    const rows = db.prepare(`SELECT * FROM users WHERE username = ?`).all(username);
+    if (rows) {
+      for (const row of rows) {
+        const hashedPassword = (row as UserRow)["hashedPassword"];
+        if (hashedPassword && (await compare(password, hashedPassword))) {
           reply.status(409).send({ message: "It looks like you already have an account. Please log in instead" });
+          return;
         }
       }
     }
+    const salt = await genSalt();
+    const hashedPassword = await hash(password, salt);
+    const uuid = randomUUID();
+    db.prepare(
+      `INSERT INTO users (username, email, hashed_password, google_id, uuid, picture_url) VALUES (?, ?, ?, ?, ?, ?)`
+    ).run(username, null, hashedPassword, null, uuid, null);
+    request.session.delete();
+    request.session.set("uuid", uuid);
+    reply.status(200).send({ message: "User created" });
+  } catch (error) {
+    console.error("Error during signup:", error);
+    reply.status(500).send({ message: error });
   }
-  const salt = await genSalt();
-  const hashedPassword = await hash(password, salt);
-  try {
-    db.prepare(`INSERT INTO users (username, email, hashed_password, google_id, uuid, picture_url) VALUES (?, ?, ?, ?, ?, ?)`).run(
-      username,
-      null,
-      hashedPassword,
-      null,
-      randomUUID(),
-      null
-    );
-  } catch (e) {
-    console.error("Error during signup:", e);
-    reply.status(500).send({ message: "Failed to create user" });
-    return;
-  }
-  reply.status(200).send({ message: "User created" });
 };
 
 export const login = async function login(
@@ -329,26 +324,31 @@ export const login = async function login(
 ) {
   const { username, password } = request.body;
   const db = getDb();
-  const rows = db.prepare(`SELECT * FROM users WHERE username = ?`).all(username);
-  if (!rows) {
-    reply.status(401).send({ message: "User does not exist" });
-    return;
-  }
-  if (rows) {
+
+  try {
+    const rows = db.prepare(`SELECT * FROM users WHERE username = ?`).all(username);
+    if (!rows) {
+      reply.status(401).send({ message: "User does not exist" });
+      return;
+    }
     for (const row of rows) {
-      const hashedPassword = (row as UserRow)["hashed_password"];
+      const { uuid, hashedPassword } = row as UserRow;
       if (hashedPassword && (await compare(password, hashedPassword))) {
-        request.session.set("uuid", (row as UserRow)["uuid"]);
+        request.session.delete();
+        request.session.set("uuid", uuid);
         reply.send({ message: "Login successful" });
         return;
       }
     }
+    reply.status(401).send({ message: "User does not exist" });
+  } catch (error) {
+    console.error("Error during login:", error);
+    reply.status(500).send({ message: error });
   }
-  reply.status(401).send({ message: "Login failed" });
 };
 
 export const googleLogin = async function login(
-  request: FastifyRequest<{ Body: {credential: string}}>,
+  request: FastifyRequest<{ Body: { credential: string } }>,
   reply: FastifyReply
 ) {
   dotenv.config();
@@ -372,23 +372,24 @@ export const googleLogin = async function login(
     let uuid = "";
     if (!row) {
       uuid = randomUUID();
-      db.prepare(`INSERT INTO users (username, email, hashed_password, google_id, uuid, picture_url) VALUES (?, ?, ?, ?, ?, ?)`).run(
-        null,
-        payload.email,
-        null,
-        payload.sub,
-        uuid,
-        payload.picture
-      );
+      db.prepare(
+        `INSERT INTO users (username, email, hashed_password, google_id, uuid, picture_url) VALUES (?, ?, ?, ?, ?, ?)`
+      ).run(null, payload.email, null, payload.sub, uuid, payload.picture);
     } else {
       uuid = (row as UserRow)["uuid"];
     }
+    request.session.delete();
     request.session.set("uuid", uuid);
     reply.redirect(process.env.APP_URL || "http://localhost:5173");
   } catch (error) {
     console.error("Error during login:", error);
     reply.status(500).send({ message: error });
   }
+};
+
+export const logout = async function logout(request: FastifyRequest, reply: FastifyReply) {
+  request.session.delete();
+  reply.send({ message: "Logged out" });
 };
 
 /**

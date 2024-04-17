@@ -17,7 +17,6 @@ import { getDb } from "./database.js";
 import fastifySecureSession from "@fastify/secure-session";
 import crypto from "crypto";
 import dotenv from "dotenv";
-import fastifyFormbody from "@fastify/formbody";
 
 const server = fastify({
   logger: false,
@@ -68,8 +67,6 @@ export const datapackIndex: DatapackIndex = {};
 export const mapPackIndex: MapPackIndex = {};
 const patterns = await loadFaciesPatterns();
 await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, assetconfigs.activeDatapacks);
-
-server.register(fastifyFormbody);
 
 declare module "@fastify/secure-session" {
   interface SessionData {
@@ -174,7 +171,7 @@ server.post("/auth/oauth", routes.googleLogin);
 
 server.post("/auth/login", routes.login);
 
-server.get("/auth/session-check", async(request, reply) => {
+server.post("/auth/session-check", async (request, reply) => {
   if (request.session.get("uuid")) {
     reply.send({ authenticated: true });
   } else {
@@ -183,6 +180,8 @@ server.get("/auth/session-check", async(request, reply) => {
 });
 
 server.post("/auth/signup", routes.signup);
+
+server.post("/auth/logout", routes.logout);
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
