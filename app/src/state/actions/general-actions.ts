@@ -603,9 +603,13 @@ export const logout = action("logout", async () => {
     });
     if (response.ok) {
       setIsLoggedIn(false);
+      pushSnackbar("Successfully logged out", "success");
+    } else {
+      pushError(ErrorCodes.UNABLE_TO_LOGOUT);
     }
   } catch (error) {
     console.error("Failed to logout:", error);
+    displayServerError(error, ErrorCodes.UNABLE_TO_LOGOUT, ErrorMessages[ErrorCodes.UNABLE_TO_LOGOUT]);
   }
 });
 
@@ -622,7 +626,7 @@ export const sessionCheck = action("sessionCheck", async () => {
   //   }
   // } catch (error) {
   //   console.error("Failed to check session:", error);
-  //   displayServerError(null, ErrorCodes.UNABLE_TO_LOGIN, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN]);
+  //   displayServerError(error, ErrorCodes.UNABLE_TO_LOGIN, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN]);
   // }
 });
 

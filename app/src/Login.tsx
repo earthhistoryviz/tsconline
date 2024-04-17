@@ -14,12 +14,14 @@ import { GoogleLogin } from "@react-oauth/google";
 import { fetcher } from "./util";
 import { actions, context } from "./state";
 import { ErrorCodes } from "./util/error-codes";
+import { useNavigate } from "react-router";
 
 import "./Login.css";
 
 export const Login: React.FC = observer(() => {
   const { state } = useContext(context);
   const theme = useTheme();
+  const navigate = useNavigate();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -34,12 +36,17 @@ export const Login: React.FC = observer(() => {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
+        credentials: "include"
       });
       if (login.ok) {
         actions.sessionCheck();
         if (!state.isLoggedIn) {
           actions.pushError(ErrorCodes.UNABLE_TO_LOGIN);
+        } else {
+          actions.removeError(ErrorCodes.UNABLE_TO_LOGIN);
+          actions.pushSnackbar("Succesfully logged in", "success");
+          navigate("/");
         }
       } else {
         console.error("Error trying to log in: " + login.status);

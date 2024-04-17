@@ -20,7 +20,8 @@ export enum ErrorCodes {
   UNFINISHED_DATAPACK_UPLOAD_FORM = "UNFINISHED_DATAPACK_UPLOAD_FORM",
   DATAPACK_ALREADY_EXISTS = "DATAPACK_ALREADY_EXISTS",
   NO_DATAPACKS_SELECTED = "NO_DATAPACKS_SELECTED",
-  UNABLE_TO_LOGIN = "UNABLE_TO_LOGIN"
+  UNABLE_TO_LOGIN = "UNABLE_TO_LOGIN",
+  UNABLE_TO_LOGOUT = "UNABLE_TO_LOGOUT"
 }
 
 export const ErrorMessages = {
@@ -47,5 +48,6 @@ export const ErrorMessages = {
     "Please finish the datapack upload form before attempting to upload the file.",
   [ErrorCodes.DATAPACK_ALREADY_EXISTS]: "Datapack already exists. Please upload a new datapack file.",
   [ErrorCodes.NO_DATAPACKS_SELECTED]: "No datapacks selected. Please select at least one datapack to generate.",
-  [ErrorCodes.UNABLE_TO_LOGIN]: "Unable to login. Please try again later."
+  [ErrorCodes.UNABLE_TO_LOGIN]: "Unable to login. Please try again later.",
+  [ErrorCodes.UNABLE_TO_LOGOUT]: "Unable to logout. Please try again later."
 };
