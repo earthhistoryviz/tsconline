@@ -45,7 +45,8 @@
             "parent": "Chart Title",
             "minAge": 5e-324,
             "maxAge": 1.7976931348623157e+308,
-            "units": "Ma"
+            "units": "Ma",
+            "columnDisplayType": "Ruler"
           },
           {
             "name": "Central Africa Cenozoic",
@@ -91,7 +92,8 @@
                       "g": 255,
                       "b": 255
                     },
-                    "units": "Ma"
+                    "units": "Ma",
+                    "columnDisplayType": "Facies"
                   },
                   {
                     "name": "Nigeria Coast Members",
@@ -117,7 +119,8 @@
                       "g": 255,
                       "b": 255
                     },
-                    "units": "Ma"
+                    "units": "Ma",
+                    "columnDisplayType": "Zone"
                   },
                   {
                     "name": "Nigeria Coast Facies Label",
@@ -143,7 +146,8 @@
                       "g": 255,
                       "b": 255
                     },
-                    "units": "Ma"
+                    "units": "Ma",
+                    "columnDisplayType": "Zone"
                   },
                   {
                     "name": "Nigeria Coast Series Label",
@@ -169,10 +173,12 @@
                       "b": 255
                     },
                     "width": 42,
-                    "units": "Ma"
+                    "units": "Ma",
+                    "columnDisplayType": "Zone"
                   }
                 ],
                 "parent": "Central Africa Cenozoic",
+                "columnDisplayType": "BlockSeriesMetaColumn",
                 "minAge": 0,
                 "maxAge": 10,
                 "width": 210,
@@ -188,7 +194,7 @@
                   "Zone Column Label"
                 ],
                 "units": "Ma",
-                "subFaciesInfo": [
+                "subInfo": [
                   {
                     "rockType": "TOP",
                     "age": 0,
@@ -242,7 +248,8 @@
                       "g": 255,
                       "b": 255
                     },
-                    "units": "Ma"
+                    "units": "Ma",
+                    "columnDisplayType": "Facies"
                   },
                   {
                     "name": "South Atlantic Members",
@@ -268,7 +275,8 @@
                       "g": 255,
                       "b": 255
                     },
-                    "units": "Ma"
+                    "units": "Ma",
+                    "columnDisplayType": "Zone"
                   },
                   {
                     "name": "South Atlantic Facies Label",
@@ -294,7 +302,8 @@
                       "g": 255,
                       "b": 255
                     },
-                    "units": "Ma"
+                    "units": "Ma",
+                    "columnDisplayType": "Zone"
                   },
                   {
                     "name": "South Atlantic Series Label",
@@ -320,10 +329,12 @@
                       "b": 255
                     },
                     "width": 42,
-                    "units": "Ma"
+                    "units": "Ma",
+                    "columnDisplayType": "Zone"
                   }
                 ],
                 "parent": "Central Africa Cenozoic",
+                "columnDisplayType": "BlockSeriesMetaColumn",
                 "minAge": 0,
                 "maxAge": 10,
                 "width": 210,
@@ -339,7 +350,7 @@
                   "Zone Column Label"
                 ],
                 "units": "Ma",
-                "subFaciesInfo": [
+                "subInfo": [
                   {
                     "rockType": "TOP",
                     "age": 0,
@@ -361,6 +372,7 @@
               }
             ],
             "parent": "Chart Title",
+            "columnDisplayType": "MetaColumn",
             "minAge": 0,
             "maxAge": 10,
             "width": 100,
@@ -376,7 +388,7 @@
               "Zone Column Label"
             ],
             "units": "Ma",
-            "subFaciesInfo": [
+            "subInfo": [
               {
                 "rockType": "TOP",
                 "age": 0,
@@ -400,7 +412,8 @@
         "parent": "Chart Root",
         "minAge": 0,
         "maxAge": 10,
-        "units": "Ma"
+        "units": "Ma",
+        "columnDisplayType": "RootColumn"
       },
       "datapackAgeInfo": {
         "datapackContainsSuggAge": false
@@ -458,7 +471,8 @@
             "parent": "Chart Title",
             "minAge": 5e-324,
             "maxAge": 1.7976931348623157e+308,
-            "units": "Ma"
+            "units": "Ma",
+            "columnDisplayType": "Ruler"
           },
           {
             "name": "Parent 1",
@@ -495,7 +509,8 @@
                   "Zone Column Label"
                 ],
                 "units": "Ma",
-                "subBlockInfo": [
+                "columnDisplayType": "Zone",
+                "subInfo": [
                   {
                     "label": "TOP",
                     "age": 419.2,
@@ -554,7 +569,8 @@
                       "g": 200,
                       "b": 255
                     },
-                    "units": "Ma"
+                    "units": "Ma",
+                    "columnDisplayType": "Facies"
                   },
                   {
                     "name": "Facies Members",
@@ -580,7 +596,8 @@
                       "g": 200,
                       "b": 255
                     },
-                    "units": "Ma"
+                    "units": "Ma",
+                    "columnDisplayType": "Zone"
                   },
                   {
                     "name": "Facies Facies Label",
@@ -606,7 +623,8 @@
                       "g": 200,
                       "b": 255
                     },
-                    "units": "Ma"
+                    "units": "Ma",
+                    "columnDisplayType": "Zone"
                   },
                   {
                     "name": "Facies Series Label",
@@ -632,7 +650,8 @@
                       "b": 255
                     },
                     "width": 42,
-                    "units": "Ma"
+                    "units": "Ma",
+                    "columnDisplayType": "Zone"
                   }
                 ],
                 "parent": "Parent 1",
@@ -651,7 +670,8 @@
                   "Zone Column Label"
                 ],
                 "units": "Ma",
-                "subFaciesInfo": [
+                "columnDisplayType": "BlockSeriesMetaColumn",
+                "subInfo": [
                   {
                     "rockType": "TOP",
                     "age": 0,
@@ -698,7 +718,8 @@
                   "Range Label"
                 ],
                 "units": "Ma",
-                "subEventInfo": [
+                "columnDisplayType": "MetaColumn",
+                "subInfo": [
                   {
                     "label": "SubEventInfo 1",
                     "age": 0.02,
@@ -737,7 +758,8 @@
                   "Popup Body"
                 ],
                 "units": "Ma",
-                "subRangeInfo": [
+                "columnDisplayType": "Range",
+                "subInfo": [
                   {
                     "label": "SubRangeInfo 1",
                     "age": 10,
@@ -785,7 +807,8 @@
                       "g": 255,
                       "b": 255
                     },
-                    "units": "Ma"
+                    "units": "Ma",
+                    "columnDisplayType": "Chron"
                   },
                   {
                     "name": "Chron Chron Label",
@@ -811,7 +834,8 @@
                       "g": 255,
                       "b": 255
                     },
-                    "units": "Ma"
+                    "units": "Ma",
+                    "columnDisplayType": "Zone"
                   },
                   {
                     "name": "Chron Series Label",
@@ -837,7 +861,8 @@
                       "g": 255,
                       "b": 255
                     },
-                    "units": "Ma"
+                    "units": "Ma",
+                    "columnDisplayType": "Zone"
                   }
                 ],
                 "parent": "Parent 1",
@@ -855,7 +880,8 @@
                   "Zone Column Label"
                 ],
                 "units": "Ma",
-                "subChronInfo": [
+                "columnDisplayType": "MetaColumn",
+                "subInfo": [
                   {
                     "polarity": "TOP",
                     "age": 0,
@@ -899,7 +925,8 @@
                   "Point Column Scale Label"
                 ],
                 "units": "Ma",
-                "subPointInfo": [
+                "columnDisplayType": "MetaColumn",
+                "subInfo": [
                   {
                     "age": 4,
                     "xVal": 0,
@@ -937,7 +964,8 @@
                   "Sequence Column Label"
                 ],
                 "units": "Ma",
-                "subSequenceInfo": [
+                "columnDisplayType": "Sequence",
+                "subInfo": [
                   {
                     "direction": "MFS",
                     "age": 0,
@@ -976,7 +1004,8 @@
                   "Column Header"
                 ],
                 "units": "Ma",
-                "subFreehandInfo": [
+                "columnDisplayType": "MetaColumn",
+                "subInfo": [
                   {
                     "topAge": 0,
                     "baseAge": 1
@@ -1009,7 +1038,8 @@
                 "fontOptions": [
                   "Column Header"
                 ],
-                "units": "Ma"
+                "units": "Ma",
+                "columnDisplayType": "MetaColumn"
               },
               {
                 "name": "Transect",
@@ -1034,7 +1064,8 @@
                   "Column Header"
                 ],
                 "units": "Ma",
-                "subTransectInfo": [
+                "columnDisplayType": "Transect",
+                "subInfo": [
                   {
                     "age": 0
                   },
@@ -1068,7 +1099,8 @@
               "Sequence Column Label"
             ],
             "units": "Ma",
-            "subFaciesInfo": [
+            "columnDisplayType": "MetaColumn",
+            "subInfo": [
               {
                 "rockType": "TOP",
                 "age": 0,
@@ -1092,7 +1124,8 @@
         "parent": "Chart Root",
         "minAge": 0,
         "maxAge": 433.35,
-        "units": "Ma"
+        "units": "Ma",
+        "columnDisplayType": "RootColumn"
       },
       "datapackAgeInfo": {
         "datapackContainsSuggAge": true,
@@ -1247,7 +1280,7 @@
         }
     },
     "column-types-all-column-types-key": {
-        "Facies 1": {
+        "Facies": {
             "name": "Facies",
             "subFaciesInfo": [
                 {
@@ -1280,7 +1313,7 @@
             "popup": "Facies Popup",
             "on": false
         },
-        "Block 1": {
+        "Block": {
             "name": "Block",
             "subBlockInfo": [
                 {
@@ -1318,7 +1351,7 @@
             "minAge": 419.2,
             "maxAge": 433.35
         },
-        "Event 1": {
+        "Event": {
             "name": "Event",
             "on": true,
             "subEventInfo": [
@@ -1346,7 +1379,7 @@
             "maxAge": 0.4,
             "popup": "Event Popup"
         },
-        "Range 1": {
+        "Range": {
             "name": "Range",
             "subRangeInfo": [
               {
@@ -1374,7 +1407,7 @@
             "popup": "Range Popup",
             "on": true 
         }, 
-        "Chron 1": {
+        "Chron": {
             "name": "Chron",
             "subChronInfo": [
                 {
@@ -1407,7 +1440,7 @@
             },
             "popup": "Chron Popup"
         },
-        "Point 1": {
+        "Point": {
             "name": "Point",
             "minAge": 4,
             "maxAge": 5,
@@ -1433,7 +1466,7 @@
               }
             ]
         },
-        "Sequence 1": {
+        "Sequence": {
             "name": "Sequence",
             "minAge": 0,
             "maxAge": 2,
@@ -1462,7 +1495,7 @@
                 }
             ]
         },
-        "Transect 1": {
+        "Transect": {
             "name": "Transect",
             "minAge": 0,
             "maxAge": 9.22,
@@ -1487,7 +1520,7 @@
               }
             ]
         },
-        "Freehand 1": {
+        "Freehand": {
             "name": "Freehand",
             "minAge": 0,
             "maxAge": 1.3,
@@ -1510,7 +1543,8 @@
                 "baseAge": 1.3
                 }
             ]
-        }, "Blank 1": {
+        },
+        "Blank": {
             "name": "Blank",
             "minAge": 1.7976931348623157e+308,
             "maxAge": 5e-324,
@@ -1963,13 +1997,15 @@
                   "parent": "Chart Title",
                   "minAge": 5e-324,
                   "maxAge": 1.7976931348623157e+308,
-                  "units": "Ma"
+                  "units": "Ma",
+                  "columnDisplayType": "Ruler"
                 }
               ],
               "parent": "Chart Root",
               "minAge": 99999,
               "maxAge": -99999,
-              "units": "Ma"
+              "units": "Ma",
+              "columnDisplayType": "RootColumn"
             },
             "datapackAgeInfo": {
               "datapackContainsSuggAge": false

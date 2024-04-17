@@ -314,54 +314,29 @@ function generateSettingsXml(stateSettings: ChartSettings, indent: string): stri
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with fonts info
  */
-function generateFontsXml(fonts: any, colName: string, stateColumn: any, indent: string): string {
-  if (!stateColumn) {
+function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
+  if (!fontsInfo) {
     return "";
   }
   let defInfo = JSON.parse(JSON.stringify(defaultFontsInfo));
-  if (
-    colName === "Chart Root" ||
-    colName === "Facies" ||
-    colName === "Members" ||
-    colName === "Facies Label" ||
-    colName === "Series Label"
-  ) {
-    let newStateColumn = {};
-    if (stateColumn) {
-      newStateColumn = JSON.parse(JSON.stringify(stateColumn));
-    }
-    return "";
-  }
-  let newStateColumn = JSON.parse(JSON.stringify(stateColumn));
   let xml = "";
-  for (const key in fonts) {
-    if (Object.prototype.hasOwnProperty.call(fonts, key)) {
-      const inheritable = fonts[key].inheritable;
-      if (JSON.stringify(newStateColumn[key]) === JSON.stringify(defInfo[key])) {
-        xml += `${indent}<font function="${key}" inheritable="${inheritable}"/>\n`;
-      } else {
-        xml += `${indent}<font function="${key}" inheritable="${inheritable}">`;
-        for (let fKey in newStateColumn[key]) {
-          if (JSON.stringify(newStateColumn[key][fKey]) !== JSON.stringify(defInfo[key][fKey])) {
-            if (fKey === "fontFace") {
-              xml += `font-family: ${newStateColumn[key][fKey]};`;
-            }
-            if (fKey === "size") {
-              xml += `font-size: ${newStateColumn[key][fKey]}px;`;
-            }
-            if (fKey === "italic") {
-              xml += `font-style: italic;`;
-            }
-            if (fKey === "bold") {
-              xml += `font-weight: bold;`;
-            }
-            if (fKey === "color") {
-              xml += `fill: ${newStateColumn[key][fKey]};`;
-            }
-          }
-        }
-        xml += `</font>\n`;
+  for (const key in fontsInfo) {
+    const fontTarget = fontsInfo[key as keyof FontsInfo];
+    if (!fontTarget.on || JSON.stringify(fontTarget) === JSON.stringify(defInfo[key])) {
+      xml += `${indent}<font function="${key}" inheritable="${fontTarget.inheritable}"/>\n`;
+    } else {
+      xml += `${indent}<font function="${key}" inheritable="${fontTarget.inheritable}">`;
+      xml += `font-family: ${fontTarget.fontFace};`;
+      // removed px from font size because jar uses parseDouble and doesn't parse px
+      xml += `font-size: ${fontTarget.size};`;
+      if (fontTarget.italic) {
+        xml += `font-style: italic;`;
       }
+      if (fontTarget.bold) {
+        xml += `font-weight: bold;`;
+      }
+      xml += `fill: ${fontTarget.color};`;
+      xml += `</font>\n`;
     }
   }
   return xml;
@@ -374,7 +349,7 @@ function generateFontsXml(fonts: any, colName: string, stateColumn: any, indent:
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with column info
  */
-function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo | undefined, indent: string): string {
+function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo, indent: string): string {
   let xml = "";
   for (let key in presetColumn) {
     if (Object.prototype.hasOwnProperty.call(presetColumn, key)) {
@@ -417,12 +392,6 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo 
         else if (stateColumn === undefined) {
           xml += `${indent}<setting name="${xmlKey}">${presetColumn["isSelected"]}</setting>\n`;
         }
-        //always display these things (the original tsc throws an error if not selected)
-        //(but online doesn't have option to deselect them)
-        else if (colName === "Chart Root" || colName === "Chart Title" || colName === "Ma") {
-          xml += `${indent}<setting name="${xmlKey}">true</setting>\n`;
-          continue;
-        }
         //check if column is checked or not, and change the isSelected field to true or false
         else if (stateColumn) {
           if (stateColumn.on) {
@@ -437,17 +406,26 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo 
         xml += `${indent}<setting name="${xmlKey}" orientation="${presetColumn[key as keyof ColumnInfoTSC]}"/>\n`;
       } else if (key === "fonts") {
         xml += `${indent}<fonts>\n`;
-        xml += generateFontsXml(presetColumn[key], colName, stateColumn?.fontsInfo, `${indent}    `);
+        xml += generateFontsXml(`${indent}    `, stateColumn.fontsInfo);
         xml += `${indent}</fonts>\n`;
       } else if (key === "children") {
         let currName = extractName(presetColumn._id);
         if (presetColumn.children) {
           for (let i = 0; i < presetColumn.children.length; i++) {
+            // will need to remove this
+            if (!stateColumn.children[i]) {
+              console.error(
+                JSON.stringify(presetColumn.children[i]._id, null, 2) + "\n" + "doesn't exist in the state"
+              );
+              continue;
+            }
             xml += `${indent}<column id="${replaceSpecialChars(presetColumn.children[i]._id, 0)}">\n`;
-            xml += generateColumnXml(presetColumn.children[i], stateColumn?.children[i], `${indent}    `);
+            xml += generateColumnXml(presetColumn.children[i], stateColumn.children[i], `${indent}    `);
             xml += `${indent}</column>\n`;
           }
         }
+      } else if (key === "drawTitle") {
+        xml += `${indent}<setting name="${xmlKey}">${stateColumn.enableTitle}</setting>\n`;
       } else {
         xml += `${indent}<setting name="${xmlKey}">${presetColumn[key as keyof ColumnInfoTSC]}</setting>\n`;
       }
@@ -468,7 +446,7 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo 
  */
 export function jsonToXml(
   settingsTSC: ChartInfoTSC,
-  columnSettings: ColumnInfo | undefined,
+  columnSettings: ColumnInfo,
   chartSettings: ChartSettings,
   version: string = "PRO8.1"
 ): string {

@@ -139,6 +139,32 @@ export type ServerResponseError = {
   error: string; // any time an error is thrown on the server side
 };
 
+export type Blank = ColumnHeaderProps;
+
+export type ColumnInfoTypeMap = {
+  Block: Block;
+  Facies: Facies;
+  Event: Event;
+  Range: Range;
+  Chron: Chron;
+  Freehand: Freehand;
+  Point: Point;
+  Sequence: Sequence;
+  Transect: Transect;
+  Blank: Blank;
+};
+
+export type ColumnInfoType = keyof ColumnInfoTypeMap;
+
+export type DisplayedColumnTypes =
+  | ColumnInfoType
+  | "Zone"
+  | "Ruler"
+  | "AgeAge"
+  | "MetaColumn"
+  | "RootColumn"
+  | "BlockSeriesMetaColumn";
+
 export type ValidFontOptions =
   | "Column Header"
   | "Age Label"
@@ -156,6 +182,17 @@ export type ValidFontOptions =
   | "Legend Column Source"
   | "Range Box Label";
 
+export type SubInfo =
+  | SubBlockInfo
+  | SubFaciesInfo
+  | SubEventInfo
+  | SubRangeInfo
+  | SubChronInfo
+  | SubFreehandInfo
+  | SubPointInfo
+  | SubSequenceInfo
+  | SubTransectInfo;
+
 export type ColumnInfo = {
   name: string;
   editName: string;
@@ -165,18 +202,11 @@ export type ColumnInfo = {
   popup: string;
   children: ColumnInfo[];
   parent: string | null;
-  subBlockInfo?: SubBlockInfo[];
-  subFaciesInfo?: SubFaciesInfo[];
-  subEventInfo?: SubEventInfo[];
-  subRangeInfo?: SubRangeInfo[];
-  subChronInfo?: SubChronInfo[];
-  subPointInfo?: SubPointInfo[];
-  subFreehandInfo?: SubFreehandInfo[];
-  subSequenceInfo?: SubSequenceInfo[];
-  subTransectInfo?: SubTransectInfo[];
+  subInfo?: SubInfo[];
   minAge: number;
   maxAge: number;
   enableTitle: boolean;
+  columnDisplayType: DisplayedColumnTypes;
   rgb: RGB;
   width: number;
   units: string;
@@ -377,8 +407,8 @@ export function assertTransect(o: any): asserts o is Transect {
 
 export function assertSubFreehandInfo(o: any): asserts o is SubFreehandInfo {
   if (!o || typeof o !== "object") throw new Error("SubFreehandInfo must be a non-null object");
-  if (typeof o.topAge !== "number") throwError("SubFreehandInfo", "topAge", "number", o.topAge);
-  if (typeof o.baseAge !== "number") throwError("SubFreehandInfo", "baseAge", "number", o.baseAge);
+  if (typeof o.topAge !== "number" || isNaN(o.topAge)) throwError("SubFreehandInfo", "topAge", "number", o.topAge);
+  if (typeof o.baseAge !== "number" || isNaN(o.baseAge)) throwError("SubFreehandInfo", "baseAge", "number", o.baseAge);
 }
 
 export function assertSubTransectInfo(o: any): asserts o is SubTransectInfo {
@@ -658,6 +688,129 @@ export function assertValidFontOptions(o: any): asserts o is ValidFontOptions {
     throwError("ValidFontOptions", "ValidFontOptions", "ValidFontOptions", o);
 }
 
+export function isRGB(o: any): o is RGB {
+  if (!o || typeof o !== "object") return false;
+  if (typeof o.r !== "number") return false;
+  if (o.r < 0 || o.r > 255) return false;
+  if (typeof o.g !== "number") return false;
+  if (o.g < 0 || o.g > 255) return false;
+  if (typeof o.b !== "number") return false;
+  if (o.b < 0 || o.b > 255) return false;
+  return true;
+}
+
+export function isSubBlockInfo(o: any): o is SubBlockInfo {
+  if (!o || typeof o !== "object") return false;
+  if (typeof o.label !== "string") return false;
+  if (typeof o.age !== "number") return false;
+  if (typeof o.popup !== "string") return false;
+  if (o.lineStyle !== "solid" && o.lineStyle !== "dotted" && o.lineStyle !== "dashed") return false;
+  if (!isRGB(o.rgb)) return false;
+  return true;
+}
+
+export function isSubFaciesInfoArray(o: any): o is SubFaciesInfo[] {
+  if (!o || !Array.isArray(o)) return false;
+  for (const sub of o) {
+    if (!isSubFaciesInfo(sub)) return false;
+  }
+  return true;
+}
+
+export function isSubFaciesInfo(o: any): o is SubFaciesInfo {
+  if (!o || typeof o !== "object") return false;
+  if (typeof o.rockType !== "string") return false;
+  if (typeof o.info !== "string") return false;
+  if ("label" in o && typeof o.label !== "string") return false;
+  if (typeof o.age !== "number") return false;
+  return true;
+}
+
+export function isSubEventInfo(o: any): o is SubEventInfo {
+  if (!o || typeof o !== "object") return false;
+  if (typeof o.label !== "string") return false;
+  if (typeof o.age !== "number") return false;
+  if (typeof o.popup !== "string") return false;
+  if (typeof o.lineStyle !== "string" || !/(^dotted|dashed|solid)$/.test(o.lineStyle)) return false;
+  return true;
+}
+
+export function isSubRangeInfo(o: any): o is SubRangeInfo {
+  if (!o || typeof o !== "object") return false;
+  if (typeof o.label !== "string") return false;
+  if (typeof o.age !== "number") return false;
+  if (typeof o.abundance !== "string") return false;
+  if (!/^(TOP|missing|rare|common|frequent|abundant|sample|flood)$/.test(o.abundance)) return false;
+  if (typeof o.popup !== "string") return false;
+  return true;
+}
+
+export function isSubChronInfo(o: any): o is SubChronInfo {
+  if (!o || typeof o !== "object") return false;
+  if (typeof o.polarity !== "string" || !/^(TOP|N|R|U|No Data)$/.test(o.polarity)) return false;
+  if (o.label && typeof o.label !== "string") return false;
+  if (typeof o.age !== "number") return false;
+  if (typeof o.popup !== "string") return false;
+  return true;
+}
+
+export function isSubPointInfo(o: any): o is SubPointInfo {
+  if (!o || typeof o !== "object") return false;
+  if (typeof o.age !== "number") return false;
+  if (typeof o.xVal !== "number") return false;
+  if (typeof o.popup !== "string") return false;
+  return true;
+}
+
+export function isSubSequenceInfo(o: any): o is SubSequenceInfo {
+  if (!o || typeof o !== "object") return false;
+  if (o.label && typeof o.label !== "string") return false;
+  if (typeof o.direction !== "string" || !/^(SB|MFS)$/.test(o.direction)) return false;
+  if (typeof o.age !== "number") return false;
+  if (typeof o.severity !== "string" || !/^(Major|Minor|Medium)$/.test(o.severity)) return false;
+  if (typeof o.popup !== "string") return false;
+  return true;
+}
+
+export function isSubTransectInfo(o: any): o is SubTransectInfo {
+  if (!o || typeof o !== "object") return false;
+  if (typeof o.age !== "number") return false;
+  return true;
+}
+
+export function isSubFreehandInfo(o: any): o is SubFreehandInfo {
+  if (!o || typeof o !== "object") return false;
+  if (typeof o.topAge !== "number") return false;
+  if (typeof o.baseAge !== "number") return false;
+  return true;
+}
+
+export function assertSubInfo(o: any): asserts o is SubInfo[] {
+  if (!o || !Array.isArray(o)) throw new Error("SubInfo must be an array");
+  for (const sub of o) {
+    if (typeof sub !== "object") throw new Error("SubInfo must be an array of objects");
+    if (isSubBlockInfo(sub)) assertSubBlockInfo(sub);
+    else if (isSubFaciesInfo(sub)) assertSubFaciesInfo(sub);
+    else if (isSubEventInfo(sub)) assertSubEventInfo(sub);
+    else if (isSubRangeInfo(sub)) assertSubRangeInfo(sub);
+    else if (isSubChronInfo(sub)) assertSubChronInfo(sub);
+    else if (isSubPointInfo(sub)) assertSubPointInfo(sub);
+    else if (isSubSequenceInfo(sub)) assertSubSequenceInfo(sub);
+    else if (isSubTransectInfo(sub)) assertSubTransectInfo(sub);
+    else if (isSubFreehandInfo(sub)) assertSubFreehandInfo(sub);
+    else throw new Error("SubInfo must be an array of valid subInfo objects");
+  }
+}
+export function assertDisplayedColumnTypes(o: any): asserts o is DisplayedColumnTypes {
+  if (!o || typeof o !== "string") throwError("DisplayedColumnTypes", "DisplayedColumnTypes", "string", o);
+  if (
+    !/^(Block|Facies|Event|Range|Chron|Point|Sequence|Transect|Freehand|Zone|Ruler|AgeAge|MetaColumn|BlockSeriesMetaColumn|RootColumn)$/.test(
+      o
+    )
+  )
+    throw new Error("DisplayedColumnTypes must be a string of a valid column type");
+}
+
 export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   if (typeof o !== "object" || o === null) {
     throw new Error("ColumnInfo must be a non-null object");
@@ -676,73 +829,13 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   for (const fontOption of o.fontOptions) {
     assertValidFontOptions(fontOption);
   }
+  assertDisplayedColumnTypes(o.columnDisplayType);
   assertRGB(o.rgb);
   for (const child of o.children) {
     assertColumnInfo(child);
   }
-  if ("subBlockInfo" in o) {
-    if (!o.subBlockInfo || !Array.isArray(o.subBlockInfo))
-      throwError("ColumnInfo", "subBlockInfo", "array", o.subBlockInfo);
-    for (const block of o.subBlockInfo) {
-      assertSubBlockInfo(block);
-    }
-  }
-  if ("subFaciesInfo" in o) {
-    if (!o.subFaciesInfo || !Array.isArray(o.subFaciesInfo))
-      throwError("ColumnInfo", "subFaciesInfo", "array", o.subFaciesInfo);
-    for (const facies of o.subFaciesInfo) {
-      assertSubFaciesInfo(facies);
-    }
-  }
-  if ("subEventInfo" in o) {
-    if (!o.subEventInfo || !Array.isArray(o.subEventInfo))
-      throwError("ColumnInfo", "subEventInfo", "array", o.subEventInfo);
-    for (const event of o.subEventInfo) {
-      assertSubEventInfo(event);
-    }
-  }
-  if ("subRangeInfo" in o) {
-    if (!o.subRangeInfo || !Array.isArray(o.subRangeInfo))
-      throwError("ColumnInfo", "subRangeInfo", "array", o.subRangeInfo);
-    for (const range of o.subRangeInfo) {
-      assertSubRangeInfo(range);
-    }
-  }
-  if ("subChronInfo" in o) {
-    if (!o.subChronInfo || !Array.isArray(o.subChronInfo))
-      throwError("ColumnInfo", "subChronInfo", "array", o.subChronInfo);
-    for (const chron of o.subChronInfo) {
-      assertSubChronInfo(chron);
-    }
-  }
-  if ("subPointInfo" in o) {
-    if (!o.subPointInfo || !Array.isArray(o.subPointInfo))
-      throwError("ColumnInfo", "subPointInfo", "array", o.subPointInfo);
-    for (const point of o.subPointInfo) {
-      assertSubPointInfo(point);
-    }
-  }
-  if ("subFreehandInfo" in o) {
-    if (!o.subFreehandInfo || !Array.isArray(o.subFreehandInfo))
-      throwError("ColumnInfo", "subFreehandInfo", "array", o.subFreehandInfo);
-    for (const freehand of o.subFreehandInfo) {
-      assertSubFreehandInfo(freehand);
-    }
-  }
-  if ("subSequenceInfo" in o) {
-    if (!o.subSequenceInfo || !Array.isArray(o.subSequenceInfo))
-      throwError("ColumnInfo", "subSequenceInfo", "array", o.subSequenceInfo);
-    for (const sequence of o.subSequenceInfo) {
-      assertSubSequenceInfo(sequence);
-    }
-  }
-  if ("subTransectInfo" in o) {
-    if (!o.subTransectInfo || !Array.isArray(o.subTransectInfo))
-      throwError("ColumnInfo", "subTransectInfo", "array", o.subTransectInfo);
-    for (const transect of o.subTransectInfo) {
-      assertSubTransectInfo(transect);
-    }
-  }
+  assertFontsInfo(o.fontsInfo);
+  if (o.subInfo) assertSubInfo(o.subInfo);
 }
 
 export function assertFontsInfo(o: any): asserts o is FontsInfo {
