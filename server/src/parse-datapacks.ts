@@ -36,10 +36,16 @@ import {
   assertSubFreehandInfo,
   assertColumnHeaderProps,
   ValidFontOptions,
-  allFontOptions
+  allFontOptions,
+  DisplayedColumnTypes,
+  ColumnInfoTypeMap,
+  ColumnInfoType,
+  assertSubInfo,
+  SubInfo
 } from "@tsconline/shared";
 import { trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter } from "./util.js";
 import { createInterface } from "readline";
+import { get } from "http";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;
 const patternForAbundance = /^(TOP|missing|rare|common|frequent|abundant|sample|flood)$/;
@@ -129,6 +135,7 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
   const transectMap: Map<string, Transect> = new Map();
   const freehandMap: Map<string, Freehand> = new Map();
   const blankMap: Map<string, ColumnHeaderProps> = new Map();
+  const loneColumns: ColumnInfo[] = [];
   const returnValue: FaciesFoundAndAgeRange = {
     faciesFound: false,
     minAge: 99999,
@@ -139,7 +146,10 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
   let ageUnits = "Ma";
   try {
     for (const decryptPath of decryptPaths) {
-      //get the facies/blocks first
+      const { units, title } = await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
+      ageUnits = units;
+      chartTitle = title;
+      const allParsedEntries = Array.from(allEntries.keys()).concat(Array.from(isChild));
       await getColumnTypes(
         decryptPath,
         faciesMap,
@@ -151,12 +161,12 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
         sequenceMap,
         transectMap,
         freehandMap,
-        blankMap
+        blankMap,
+        allParsedEntries,
+        loneColumns,
+        ageUnits
       );
-      // Originally the first step, gather all parents and their direct children
-      const { units, title } = await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
-      ageUnits = units;
-      chartTitle = title;
+      // all the entries parsed thus far (only from parent and child relationships)
       // only iterate over parents. if we encounter one that is a child, the recursive function
       // should have already processed it.
       allEntries.forEach((children, parent) => {
@@ -199,7 +209,8 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     console.log("ERROR: failed to read columns for path " + decryptPaths + ". ", e);
     return null;
   }
-  columnInfoArray.unshift({
+  const columnInfo = columnInfoArray.concat(loneColumns);
+  columnInfo.unshift({
     name: ageUnits,
     editName: ageUnits,
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
@@ -233,7 +244,7 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
       b: 255
     },
     popup: "",
-    children: columnInfoArray,
+    children: columnInfo,
     parent: "Chart Root",
     minAge: returnValue.minAge,
     maxAge: returnValue.maxAge,
@@ -347,7 +358,10 @@ export async function getColumnTypes(
   sequenceMap: Map<string, Sequence>,
   transectMap: Map<string, Transect>,
   freehandMap: Map<string, Freehand>,
-  blankMap: Map<string, ColumnHeaderProps>
+  blankMap: Map<string, ColumnHeaderProps>,
+  allParsedEntries: string[],
+  loneColumns: ColumnInfo[],
+  units: string
 ) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
@@ -404,51 +418,112 @@ export async function getColumnTypes(
     if (!line || trimInvisibleCharacters(line) === "") {
       // we reached the end and store the key value pairs in to faciesMap
       if (inFaciesBlock) {
-        inFaciesBlock = false;
-        addFaciesToFaciesMap(facies, faciesMap);
+        inFaciesBlock = processColumn(
+          "Facies",
+          facies,
+          "subFaciesInfo",
+          allParsedEntries,
+          addFaciesToFaciesMap,
+          faciesMap,
+          units,
+          loneColumns
+        );
         continue;
-      }
-      // reached the end and store the key value pairs into blocksMap
-      if (inBlockBlock) {
-        inBlockBlock = false;
-        addBlockToBlockMap(block, blocksMap);
+      } else if (inBlockBlock) {
+        inBlockBlock = processColumn(
+          "Block",
+          block,
+          "subBlockInfo",
+          allParsedEntries,
+          addBlockToBlockMap,
+          blocksMap,
+          units,
+          loneColumns
+        );
         continue;
-      }
-      // reached the end and store the key value pairs into eventMap
-      if (inEventBlock) {
-        inEventBlock = false;
-        addEventToEventMap(event, eventMap);
+      } else if (inEventBlock) {
+        inEventBlock = processColumn(
+          "Event",
+          event,
+          "subEventInfo",
+          allParsedEntries,
+          addEventToEventMap,
+          eventMap,
+          units,
+          loneColumns
+        );
         continue;
-      }
-      // reached the end and store the key value pairs into rangeMap
-      if (inRangeBlock) {
-        inRangeBlock = false;
-        addRangeToRangeMap(range, rangeMap);
+      } else if (inRangeBlock) {
+        inRangeBlock = processColumn(
+          "Range",
+          range,
+          "subRangeInfo",
+          allParsedEntries,
+          addRangeToRangeMap,
+          rangeMap,
+          units,
+          loneColumns
+        );
         continue;
-      }
-      if (inChronBlock) {
-        inChronBlock = false;
-        addChronToChronMap(chron, chronMap);
+      } else if (inChronBlock) {
+        inChronBlock = processColumn(
+          "Chron",
+          chron,
+          "subChronInfo",
+          allParsedEntries,
+          addChronToChronMap,
+          chronMap,
+          units,
+          loneColumns
+        );
         continue;
-      }
-      if (inPointBlock) {
-        inPointBlock = false;
-        addPointToPointMap(point, pointMap);
+      } else if (inPointBlock) {
+        inPointBlock = processColumn(
+          "Point",
+          point,
+          "subPointInfo",
+          allParsedEntries,
+          addPointToPointMap,
+          pointMap,
+          units,
+          loneColumns
+        );
         continue;
-      }
-      if (inSequenceBlock) {
-        inSequenceBlock = false;
-        addSequenceToSequenceMap(sequence, sequenceMap);
+      } else if (inSequenceBlock) {
+        inSequenceBlock = processColumn(
+          "Sequence",
+          sequence,
+          "subSequenceInfo",
+          allParsedEntries,
+          addSequenceToSequenceMap,
+          sequenceMap,
+          units,
+          loneColumns
+        );
         continue;
-      }
-      if (inTransectBlock) {
-        inTransectBlock = false;
-        addTransectToTransectMap(transect, transectMap);
+      } else if (inTransectBlock) {
+        inTransectBlock = processColumn(
+          "Transect",
+          transect,
+          "subTransectInfo",
+          allParsedEntries,
+          addTransectToTransectMap,
+          transectMap,
+          units,
+          loneColumns
+        );
         continue;
-      }
-      if (inFreehandBlock) {
-        inFreehandBlock = false;
-        addFreehandToFreehandMap(freehand, freehandMap);
+      } else if (inFreehandBlock) {
+        inFreehandBlock = processColumn(
+          "Freehand",
+          freehand,
+          "subFreehandInfo",
+          allParsedEntries,
+          addFreehandToFreehandMap,
+          freehandMap,
+          units,
+          loneColumns
+        );
         continue;
       }
     }
@@ -770,7 +845,7 @@ export function processFreehand(line: string): SubFreehandInfo | null {
     baseAge: 0
   };
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length < 4 || tabSeparated.length > 5) return null;
+  if (tabSeparated.length < 4 || tabSeparated.length > 5 || line.includes("POLYGON")) return null;
   if (tabSeparated[0] === "image") {
     subFreehandInfo.topAge = Number(tabSeparated[2]!);
     subFreehandInfo.baseAge = Number(tabSeparated[3]!);
@@ -1177,7 +1252,7 @@ function recursive(
     // TODO NOTE FOR FUTURE: @Paolo - Java file appends all fonts to this, but from trial and error, only column header makes sense. If this case changes here we would change it
     Object.assign(currentColumnInfo, {
       ...currentTransect,
-      subTransectInfo: JSON.parse(JSON.stringify(currentTransect.subTransectInfo))
+      subInfo: JSON.parse(JSON.stringify(currentTransect.subTransectInfo))
     });
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
@@ -1186,8 +1261,8 @@ function recursive(
     const currentSequence = sequenceMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentSequence,
-      fontOptions: ["Column Header", "Age Label", "Sequence Column Label"],
-      subSequenceInfo: JSON.parse(JSON.stringify(currentSequence.subSequenceInfo))
+      fontOptions: getValidFontOptions("Sequence"),
+      subInfo: JSON.parse(JSON.stringify(currentSequence.subSequenceInfo))
     });
     returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.minAge = currentColumnInfo.minAge;
@@ -1197,8 +1272,8 @@ function recursive(
     const currentBlock = blocksMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentBlock,
-      fontOptions: ["Column Header", "Age Label", "Zone Column Label"],
-      subBlockInfo: JSON.parse(JSON.stringify(currentBlock.subBlockInfo))
+      fontOptions: getValidFontOptions("Block"),
+      subInfo: JSON.parse(JSON.stringify(currentBlock.subBlockInfo))
     });
     returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.minAge = currentColumnInfo.minAge;
@@ -1208,8 +1283,8 @@ function recursive(
     const currentRange = rangeMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentRange,
-      fontOptions: [...allFontOptions],
-      subRangeInfo: JSON.parse(JSON.stringify(currentRange.subRangeInfo))
+      fontOptions: getValidFontOptions("Range"),
+      subInfo: JSON.parse(JSON.stringify(currentRange.subRangeInfo))
     });
     returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.minAge = currentColumnInfo.minAge;
@@ -1219,7 +1294,7 @@ function recursive(
     const currentFacies = faciesMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentFacies,
-      subFaciesInfo: JSON.parse(JSON.stringify(currentFacies.subFaciesInfo))
+      subInfo: JSON.parse(JSON.stringify(currentFacies.subFaciesInfo))
     });
     addFaciesChildren(
       currentColumnInfo.children,
@@ -1240,8 +1315,8 @@ function recursive(
     const currentEvent = eventMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentEvent,
-      fontOptions: ["Column Header", "Age Label", "Event Column Label", "Uncertainty Label", "Range Label"],
-      subEventInfo: JSON.parse(JSON.stringify(currentEvent.subEventInfo))
+      fontOptions: getValidFontOptions("Event"),
+      subInfo: JSON.parse(JSON.stringify(currentEvent.subEventInfo))
     });
     returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.maxAge = currentColumnInfo.maxAge;
@@ -1252,7 +1327,7 @@ function recursive(
     const { width, ...currentChron } = chronMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentChron,
-      subChronInfo: JSON.parse(JSON.stringify(currentChron.subChronInfo))
+      subInfo: JSON.parse(JSON.stringify(currentChron.subChronInfo))
     });
     addChronChildren(
       currentColumnInfo.children,
@@ -1271,8 +1346,8 @@ function recursive(
     const currentPoint = pointMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentPoint,
-      fontOptions: ["Column Header", "Point Column Scale Label"],
-      subPointInfo: JSON.parse(JSON.stringify(currentPoint.subPointInfo))
+      fontOptions: getValidFontOptions("Point"),
+      subInfo: JSON.parse(JSON.stringify(currentPoint.subPointInfo))
     });
     returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.maxAge = currentColumnInfo.maxAge;
@@ -1283,7 +1358,7 @@ function recursive(
     // TODO NOTE FOR FUTURE: @Paolo - Java file appends all fonts to this, but from trial and error, only column header makes sense. If this case changes here we would change it
     Object.assign(currentColumnInfo, {
       ...currentFreehand,
-      subFreehandInfo: JSON.parse(JSON.stringify(currentFreehand.subFreehandInfo))
+      subInfo: JSON.parse(JSON.stringify(currentFreehand.subFreehandInfo))
     });
     returnValue.maxAge = currentColumnInfo.maxAge;
     returnValue.minAge = currentColumnInfo.minAge;
@@ -1337,7 +1412,7 @@ function recursive(
       // facies event exists for this map point
       if (!returnValue.faciesFound && faciesMap.has(child)) {
         returnValue.faciesFound = true;
-        if (compareValue.subFaciesInfo) currentColumnInfo.subFaciesInfo = compareValue.subFaciesInfo;
+        if (compareValue.subFaciesInfo) currentColumnInfo.subInfo = compareValue.subFaciesInfo;
       }
     });
   }
@@ -1379,16 +1454,13 @@ function addFaciesChildren(
   fontOptions: ValidFontOptions[],
   units: string
 ) {
-  fontOptions.push("Age Label");
-  fontOptions.push("Uncertainty Label");
-  fontOptions.push("Zone Column Label");
   children.push({
     name: `${name} Facies`,
     editName: name,
     on: true,
     enableTitle: false,
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
-    fontOptions: ["Column Header", "Age Label", "Uncertainty Label"],
+    fontOptions: getValidFontOptions("Facies"),
     popup: "",
     children: [],
     parent: name,
@@ -1403,7 +1475,7 @@ function addFaciesChildren(
     editName: "Members",
     on: false,
     enableTitle: false,
-    fontOptions: ["Column Header", "Age Label", "Zone Column Label"],
+    fontOptions: getValidFontOptions("Zone"),
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
     popup: "",
     children: [],
@@ -1420,7 +1492,7 @@ function addFaciesChildren(
     on: true,
     enableTitle: false,
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
-    fontOptions: ["Column Header", "Age Label", "Zone Column Label"],
+    fontOptions: getValidFontOptions("Zone"),
     popup: "",
     children: [],
     parent: name,
@@ -1436,7 +1508,7 @@ function addFaciesChildren(
     on: true,
     enableTitle: false,
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
-    fontOptions: ["Column Header", "Age Label", "Zone Column Label"],
+    fontOptions: getValidFontOptions("Zone"),
     popup: "",
     children: [],
     parent: name,
@@ -1446,6 +1518,13 @@ function addFaciesChildren(
     width: width * 0.2,
     units
   });
+  for (const child of children) {
+    for (const fontOption of child.fontOptions) {
+      if (!fontOptions.includes(fontOption)) {
+        fontOptions.push(fontOption);
+      }
+    }
+  }
 }
 
 /**
@@ -1470,14 +1549,12 @@ function addChronChildren(
   fontOptions: ValidFontOptions[],
   units: string
 ) {
-  fontOptions.push("Age Label");
-  fontOptions.push("Zone Column Label");
   children.push({
     name: `${name} Chron`,
     editName: name,
     on: true,
     enableTitle: false,
-    fontOptions: ["Column Header", "Age Label"],
+    fontOptions: getValidFontOptions("Chron"),
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
     popup: "",
     children: [],
@@ -1493,7 +1570,7 @@ function addChronChildren(
     editName: "Chron Label",
     on: false,
     enableTitle: false,
-    fontOptions: ["Column Header", "Age Label", "Zone Column Label"],
+    fontOptions: getValidFontOptions("Zone"),
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
     popup: "",
     children: [],
@@ -1509,7 +1586,7 @@ function addChronChildren(
     editName: "Series Label",
     on: true,
     enableTitle: false,
-    fontOptions: ["Column Header", "Age Label", "Zone Column Label"],
+    fontOptions: getValidFontOptions("Zone"),
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
     popup: "",
     children: [],
@@ -1520,4 +1597,87 @@ function addChronChildren(
     rgb,
     units
   });
+  for (const child of children) {
+    for (const fontOption of child.fontOptions) {
+      if (!fontOptions.includes(fontOption)) {
+        fontOptions.push(fontOption);
+      }
+    }
+  }
+}
+
+/**
+ * For columns that don't have any parents
+ * @param props
+ * @param fontOptions
+ * @param units
+ * @param subInfo
+ * @returns
+ */
+function createLoneColumn(
+  props: ColumnHeaderProps,
+  fontOptions: ValidFontOptions[],
+  units: string,
+  subInfo: SubInfo[]
+): ColumnInfo {
+  return {
+    ...props,
+    editName: props.name,
+    fontOptions,
+    fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+    children: [],
+    parent: "",
+    units,
+    subInfo
+  };
+}
+
+function getValidFontOptions(type: DisplayedColumnTypes): ValidFontOptions[] {
+  switch (type) {
+    case "Block":
+    case "Zone":
+      return ["Column Header", "Age Label", "Zone Column Label"];
+    case "Chron":
+      return ["Column Header", "Age Label"];
+    case "Event":
+      return ["Column Header", "Age Label", "Event Column Label", "Uncertainty Label", "Range Label"];
+    case "Facies":
+      return ["Column Header", "Age Label", "Uncertainty Label"];
+    case "Point":
+      return ["Column Header", "Point Column Scale Label"];
+    case "Range":
+      return [...allFontOptions];
+    case "Sequence":
+      return ["Column Header", "Age Label", "Sequence Column Label"];
+    case "Ruler":
+    case "AgeAge":
+      return ["Column Header", "Age Label"];
+    case "Transect":
+      return ["Column Header"];
+    case "Freehand":
+      return ["Column Header"];
+    default:
+      return ["Column Header"];
+  }
+}
+
+function processColumn<T extends ColumnInfoType>(
+  type: T,
+  column: ColumnInfoTypeMap[T],
+  subInfoKey: keyof ColumnInfoTypeMap[T],
+  allParsedEntries: string[],
+  addFunction: (col: ColumnInfoTypeMap[T], map: Map<string, ColumnInfoTypeMap[T]>) => void,
+  map: Map<string, ColumnInfoTypeMap[T]>,
+  units: string,
+  loneColumns: ColumnInfo[]
+): boolean {
+  if (allParsedEntries.includes(column.name)) {
+    addFunction(column, map);
+  } else {
+    const { [subInfoKey]: subInfo, ...columnHeaderProps } = column;
+    assertColumnHeaderProps(columnHeaderProps);
+    assertSubInfo(subInfo);
+    loneColumns.push(createLoneColumn(columnHeaderProps, getValidFontOptions(type), units, subInfo));
+  }
+  return false;
 }

@@ -406,12 +406,19 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo,
         xml += `${indent}<setting name="${xmlKey}" orientation="${presetColumn[key as keyof ColumnInfoTSC]}"/>\n`;
       } else if (key === "fonts") {
         xml += `${indent}<fonts>\n`;
-        xml += generateFontsXml(`${indent}    `, stateColumn?.fontsInfo);
+        xml += generateFontsXml(`${indent}    `, stateColumn.fontsInfo);
         xml += `${indent}</fonts>\n`;
       } else if (key === "children") {
         let currName = extractName(presetColumn._id);
         if (presetColumn.children) {
           for (let i = 0; i < presetColumn.children.length; i++) {
+            // will need to remove this
+            if (!stateColumn.children[i]) {
+              console.error(
+                JSON.stringify(presetColumn.children[i]._id, null, 2) + "\n" + "doesn't exist in the state"
+              );
+              continue;
+            }
             xml += `${indent}<column id="${replaceSpecialChars(presetColumn.children[i]._id, 0)}">\n`;
             xml += generateColumnXml(presetColumn.children[i], stateColumn.children[i], `${indent}    `);
             xml += `${indent}</column>\n`;
