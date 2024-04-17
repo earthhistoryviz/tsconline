@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useRef, useEffect } from "react";
 import { SketchPicker, ColorResult } from "@hello-pangea/color-picker";
 import Button from "@mui/material/Button";
 import "./TSCColorPicker.css";
@@ -13,11 +13,27 @@ const TSCColorPicker: React.FC<TSCColorPickerProps> = observer(({ color, onColor
   const [showPicker, setShowPicker] = useState<boolean>(false);
   const [selectedColor, setSelectedColor] = useState<string>(color ? color : "#000");
   const { state, actions } = useContext(context);
+  const pickerRef = useRef<HTMLDivElement>(null); // Reference to the picker container
+
 
   const handleColorChange = (color: ColorResult) => {
     setSelectedColor(color.hex);
     onColorChange(color.hex);
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+        setShowPicker(false);
+        actions.updatePresetColors(selectedColor);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  });
 
   return (
     <>
@@ -33,7 +49,7 @@ const TSCColorPicker: React.FC<TSCColorPickerProps> = observer(({ color, onColor
         className="cp-button"
         style={{ backgroundColor: selectedColor }}></Button>
       {showPicker && (
-        <div className="color-picker">
+        <div ref = {pickerRef} className="color-picker">
           <SketchPicker color={selectedColor} onChangeComplete={handleColorChange} presetColors={state.presetColors} />
         </div>
       )}
