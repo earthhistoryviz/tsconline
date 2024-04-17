@@ -1,6 +1,15 @@
 import { Button, IconButton, Theme, Tooltip, TooltipProps, styled, useTheme } from "@mui/material";
 import { FaciesOptions } from "../types";
-import { Bounds, ColumnInfo, InfoPoints, MapPoints, Transects, assertSubFaciesInfo, isRectBounds, isSubFaciesInfo, isSubFaciesInfoArray, isVertBounds } from "@tsconline/shared";
+import {
+  Bounds,
+  ColumnInfo,
+  InfoPoints,
+  MapPoints,
+  Transects,
+  isRectBounds,
+  isSubFaciesInfoArray,
+  isVertBounds
+} from "@tsconline/shared";
 import { useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { actions, context } from "../state";
