@@ -286,35 +286,33 @@ export const fetchSVGStatus = async function (
 };
 
 export const signup = async function signup(
-  request: FastifyRequest<{ Body: { username: string; password: string } }>,
+  request: FastifyRequest<{ Body: { username: string; password: string; email: string } }>,
   reply: FastifyReply
 ) {
-  const { username, password } = request.body;
+  const { username, password, email } = request.body;
+  if (!username || !password || !email) {
+    reply.status(400).send({ message: "Invalid form" });
+    return;
+  }
   const db = getDb();
-
   try {
-    const rows = db.prepare(`SELECT * FROM users WHERE username = ?`).all(username);
-    if (rows) {
-      for (const row of rows) {
-        const hashedPassword = (row as UserRow)["hashedPassword"];
-        if (hashedPassword && (await compare(password, hashedPassword))) {
-          reply.status(409).send({ message: "It looks like you already have an account. Please log in instead" });
-          return;
-        }
-      }
+    const rows = db.prepare(`SELECT * FROM users WHERE email = ? OR username = ?`).all(email, username);
+    if (rows.length > 0) {
+      reply.status(409);
+      return;
     }
     const salt = await genSalt();
     const hashedPassword = await hash(password, salt);
     const uuid = randomUUID();
     db.prepare(
       `INSERT INTO users (username, email, hashed_password, google_id, uuid, picture_url) VALUES (?, ?, ?, ?, ?, ?)`
-    ).run(username, null, hashedPassword, null, uuid, null);
+    ).run(username, email, hashedPassword, null, uuid, null);
     request.session.delete();
     request.session.set("uuid", uuid);
-    reply.status(200).send({ message: "User created" });
+    reply.status(201).send({ message: "User created" });
   } catch (error) {
     console.error("Error during signup:", error);
-    reply.status(500).send({ message: error });
+    reply.status(500).send({ message: "Unknown Error" });
   }
 };
 
@@ -323,27 +321,28 @@ export const login = async function login(
   reply: FastifyReply
 ) {
   const { username, password } = request.body;
+  if (!username || !password) {
+    reply.status(400).send({ message: "Invalid form" });
+    return;
+  }
   const db = getDb();
-
   try {
-    const rows = db.prepare(`SELECT * FROM users WHERE username = ?`).all(username);
-    if (!rows) {
-      reply.status(401).send({ message: "User does not exist" });
+    const row = db.prepare(`SELECT * FROM users WHERE username = ?`).get(username);
+    if (!row) {
+      reply.status(401).send({ message: "Incorrect username or password" });
       return;
     }
-    for (const row of rows) {
-      const { uuid, hashedPassword } = row as UserRow;
-      if (hashedPassword && (await compare(password, hashedPassword))) {
-        request.session.delete();
-        request.session.set("uuid", uuid);
-        reply.send({ message: "Login successful" });
-        return;
-      }
+    const { uuid, hashedPassword } = row as UserRow;
+    if (hashedPassword && (await compare(password, hashedPassword))) {
+      request.session.delete();
+      request.session.set("uuid", uuid);
+      reply.send({ message: "Login successful" });
+      return;
     }
-    reply.status(401).send({ message: "User does not exist" });
+    reply.status(401).send({ message: "Incorrect username or password" });
   } catch (error) {
     console.error("Error during login:", error);
-    reply.status(500).send({ message: error });
+    reply.status(500).send({ message: "Unknown Error" });
   }
 };
 
@@ -353,7 +352,7 @@ export const googleLogin = async function login(
 ) {
   dotenv.config();
   if (!process.env.GOOGLE_CLIENT_ID) {
-    reply.status(400).send({ message: "Missing Google Client Secret or Google Client ID" });
+    reply.status(500).send({ message: "Missing Google Client Secret or Google Client ID" });
     return;
   }
   const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -383,7 +382,7 @@ export const googleLogin = async function login(
     reply.redirect(process.env.APP_URL || "http://localhost:5173");
   } catch (error) {
     console.error("Error during login:", error);
-    reply.status(500).send({ message: error });
+    reply.status(500).send({ message: "Unknown Error" });
   }
 };
 

@@ -20,11 +20,25 @@ export function devSafeUrl(url: string) {
   return url;
 }
 
-export async function fetcher(...args: Parameters<typeof fetch>): ReturnType<typeof fetch> {
+export class HttpError extends Error {
+  status: number;
+
+  constructor(status: number, statusText: string) {
+    super(`${status}: ${statusText}`);
+    this.status = status;
+    this.name = "HttpError";
+  }
+}
+
+export async function fetcher(...args: Parameters<typeof fetch>): Promise<Response> {
   if (import.meta.env.DEV) {
     if (typeof args[0] === "string") {
       args[0] = devSafeUrl(args[0]);
     }
   }
-  return fetch(...args);
+  const response = await fetch(...args);
+  if (!response.ok) {
+    throw new HttpError(response.status, response.statusText);
+  }
+  return response;
 }

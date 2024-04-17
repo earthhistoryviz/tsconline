@@ -621,20 +621,18 @@ export const logout = action("logout", async () => {
 });
 
 export const sessionCheck = action("sessionCheck", async () => {
-  // For now commented out because the backend is not set up for this and will throw an error
-  // try {
-  //   const response = await fetcher("/auth/session-check", {
-  //     method: "GET",
-  //     credentials: "include"
-  //   });
-  //   const data = await response.json();
-  //   if (data.authenticated) {
-  //     setIsLoggedIn(true);
-  //   }
-  // } catch (error) {
-  //   console.error("Failed to check session:", error);
-  //   displayServerError(error, ErrorCodes.UNABLE_TO_LOGIN, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN]);
-  // }
+  try {
+    const response = await fetcher("/auth/session-check", {
+      method: "POST",
+      credentials: "include"
+    });
+    const data = await response.json();
+    if (data.authenticated) {
+      setIsLoggedIn(true);
+    }
+  } catch (error) {
+    console.error("Failed to check session:", error);
+  }
 });
 
 export const setIsLoggedIn = action("setIsLoggedIn", (newval: boolean) => {

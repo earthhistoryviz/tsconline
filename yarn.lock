@@ -1124,16 +1124,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fastify/formbody@npm:^7.4.0":
-  version: 7.4.0
-  resolution: "@fastify/formbody@npm:7.4.0"
-  dependencies:
-    fast-querystring: "npm:^1.0.0"
-    fastify-plugin: "npm:^4.0.0"
-  checksum: 976e2d33ec5dc447678a6b8572712fb956028b7c31feafb9e60eaf5311c8b5d710b975f72d4e9cdadc62e541db0887fc429656bb1797ad3078005b0f9cc8c39a
-  languageName: node
-  linkType: hard
-
 "@fastify/multipart@npm:^8.2.0":
   version: 8.2.0
   resolution: "@fastify/multipart@npm:8.2.0"
@@ -2383,7 +2373,6 @@ __metadata:
   dependencies:
     "@fastify/compress": "npm:^7.0.0"
     "@fastify/cors": "npm:^9.0.1"
-    "@fastify/formbody": "npm:^7.4.0"
     "@fastify/multipart": "npm:^8.2.0"
     "@fastify/secure-session": "npm:^7.4.0"
     "@fastify/static": "npm:^6.10.1"
