@@ -156,7 +156,14 @@ export type ColumnInfoTypeMap = {
 
 export type ColumnInfoType = keyof ColumnInfoTypeMap;
 
-export type DisplayedColumnTypes = ColumnInfoType | "Zone" | "Ruler" | "AgeAge" | "MetaColumn" | "RootColumn" | "BlockSeriesMetaColumn";
+export type DisplayedColumnTypes =
+  | ColumnInfoType
+  | "Zone"
+  | "Ruler"
+  | "AgeAge"
+  | "MetaColumn"
+  | "RootColumn"
+  | "BlockSeriesMetaColumn";
 
 export type ValidFontOptions =
   | "Column Header"
@@ -796,7 +803,11 @@ export function assertSubInfo(o: any): asserts o is SubInfo[] {
 }
 export function assertDisplayedColumnTypes(o: any): asserts o is DisplayedColumnTypes {
   if (!o || typeof o !== "string") throwError("DisplayedColumnTypes", "DisplayedColumnTypes", "string", o);
-  if (!/^(Block|Facies|Event|Range|Chron|Point|Sequence|Transect|Freehand|Zone|Ruler|AgeAge|MetaColumn|BlockSeriesMetaColumn|RootColumn)$/.test(o))
+  if (
+    !/^(Block|Facies|Event|Range|Chron|Point|Sequence|Transect|Freehand|Zone|Ruler|AgeAge|MetaColumn|BlockSeriesMetaColumn|RootColumn)$/.test(
+      o
+    )
+  )
     throw new Error("DisplayedColumnTypes must be a string of a valid column type");
 }
 
