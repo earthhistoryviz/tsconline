@@ -45,7 +45,6 @@ import {
 } from "@tsconline/shared";
 import { trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter } from "./util.js";
 import { createInterface } from "readline";
-import { get } from "http";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;
 const patternForAbundance = /^(TOP|missing|rare|common|frequent|abundant|sample|flood)$/;
@@ -428,7 +427,6 @@ export async function getColumnTypes(
           units,
           loneColumns
         );
-        continue;
       } else if (inBlockBlock) {
         inBlockBlock = processColumn(
           "Block",
@@ -440,7 +438,6 @@ export async function getColumnTypes(
           units,
           loneColumns
         );
-        continue;
       } else if (inEventBlock) {
         inEventBlock = processColumn(
           "Event",
@@ -452,7 +449,6 @@ export async function getColumnTypes(
           units,
           loneColumns
         );
-        continue;
       } else if (inRangeBlock) {
         inRangeBlock = processColumn(
           "Range",
@@ -464,7 +460,6 @@ export async function getColumnTypes(
           units,
           loneColumns
         );
-        continue;
       } else if (inChronBlock) {
         inChronBlock = processColumn(
           "Chron",
@@ -476,7 +471,6 @@ export async function getColumnTypes(
           units,
           loneColumns
         );
-        continue;
       } else if (inPointBlock) {
         inPointBlock = processColumn(
           "Point",
@@ -488,7 +482,6 @@ export async function getColumnTypes(
           units,
           loneColumns
         );
-        continue;
       } else if (inSequenceBlock) {
         inSequenceBlock = processColumn(
           "Sequence",
@@ -500,7 +493,6 @@ export async function getColumnTypes(
           units,
           loneColumns
         );
-        continue;
       } else if (inTransectBlock) {
         inTransectBlock = processColumn(
           "Transect",
@@ -512,7 +504,6 @@ export async function getColumnTypes(
           units,
           loneColumns
         );
-        continue;
       } else if (inFreehandBlock) {
         inFreehandBlock = processColumn(
           "Freehand",
@@ -524,8 +515,8 @@ export async function getColumnTypes(
           units,
           loneColumns
         );
-        continue;
       }
+      continue;
     }
 
     const tabSeparated = line.split("\t");
@@ -641,32 +632,60 @@ export async function getColumnTypes(
     }
   }
 
-  if (inTransectBlock) {
-    addTransectToTransectMap(transect, transectMap);
-  }
   if (inFaciesBlock) {
-    addFaciesToFaciesMap(facies, faciesMap);
-  }
-  if (inEventBlock) {
-    addEventToEventMap(event, eventMap);
-  }
-  if (inBlockBlock) {
-    addBlockToBlockMap(block, blocksMap);
-  }
-  if (inRangeBlock) {
-    addRangeToRangeMap(range, rangeMap);
-  }
-  if (inChronBlock) {
-    addChronToChronMap(chron, chronMap);
-  }
-  if (inPointBlock) {
-    addPointToPointMap(point, pointMap);
-  }
-  if (inSequenceBlock) {
-    addSequenceToSequenceMap(sequence, sequenceMap);
-  }
-  if (inFreehandBlock) {
-    addFreehandToFreehandMap(freehand, freehandMap);
+    processColumn(
+      "Facies",
+      facies,
+      "subFaciesInfo",
+      allParsedEntries,
+      addFaciesToFaciesMap,
+      faciesMap,
+      units,
+      loneColumns
+    );
+  } else if (inBlockBlock) {
+    processColumn("Block", block, "subBlockInfo", allParsedEntries, addBlockToBlockMap, blocksMap, units, loneColumns);
+  } else if (inEventBlock) {
+    processColumn("Event", event, "subEventInfo", allParsedEntries, addEventToEventMap, eventMap, units, loneColumns);
+  } else if (inRangeBlock) {
+    processColumn("Range", range, "subRangeInfo", allParsedEntries, addRangeToRangeMap, rangeMap, units, loneColumns);
+  } else if (inChronBlock) {
+    processColumn("Chron", chron, "subChronInfo", allParsedEntries, addChronToChronMap, chronMap, units, loneColumns);
+  } else if (inPointBlock) {
+    processColumn("Point", point, "subPointInfo", allParsedEntries, addPointToPointMap, pointMap, units, loneColumns);
+  } else if (inSequenceBlock) {
+    processColumn(
+      "Sequence",
+      sequence,
+      "subSequenceInfo",
+      allParsedEntries,
+      addSequenceToSequenceMap,
+      sequenceMap,
+      units,
+      loneColumns
+    );
+  } else if (inTransectBlock) {
+    processColumn(
+      "Transect",
+      transect,
+      "subTransectInfo",
+      allParsedEntries,
+      addTransectToTransectMap,
+      transectMap,
+      units,
+      loneColumns
+    );
+  } else if (inFreehandBlock) {
+    processColumn(
+      "Freehand",
+      freehand,
+      "subFreehandInfo",
+      allParsedEntries,
+      addFreehandToFreehandMap,
+      freehandMap,
+      units,
+      loneColumns
+    );
   }
 }
 

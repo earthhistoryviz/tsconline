@@ -176,7 +176,7 @@ export type ValidFontOptions =
   | "Range Box Label";
 
 export type SubInfo =
-  SubBlockInfo
+  | SubBlockInfo
   | SubFaciesInfo
   | SubEventInfo
   | SubRangeInfo
@@ -804,7 +804,7 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   if (typeof o.popup !== "string") throwError("ColumnInfo", "popup", "string", o.popup);
   if (o.parent !== null && typeof o.parent !== "string") throwError("ColumnInfo", "parent", "string", o.parent);
   if (typeof o.minAge !== "number") {
-    console.trace(o.name)
+    console.trace(o.name);
     throwError("ColumnInfo", "minAge", "number", o.minAge);
   }
   if (typeof o.maxAge !== "number") throwError("ColumnInfo", "maxAge", "number", o.maxAge);
