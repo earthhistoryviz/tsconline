@@ -26,12 +26,31 @@ export const initiateChartGeneration = action("initiateChartGeneration", (naviga
   }
 });
 
-export const fetchChartFromServer = action("fetchChartFromServer", async (navigate: NavigateFunction) => {
-  if (!state.config.datapacks || state.config.datapacks.length === 0) {
+function areSettingsValidForGeneration() {
+  if (!state.config.datapacks || state.config.datapacks.length === 0 || !state.settingsTabs.columns) {
     generalActions.pushError(ErrorCodes.NO_DATAPACKS_SELECTED);
-    return;
+    return false;
   }
   generalActions.removeError(ErrorCodes.NO_DATAPACKS_SELECTED);
+  if (
+    Object.keys(state.settings.timeSettings).every(
+      (key) => state.settings.timeSettings[key].baseStageAge === state.settings.timeSettings[key].topStageAge
+    )
+  ) {
+    generalActions.pushError(ErrorCodes.UNIT_RANGE_EMPTY);
+    return false;
+  }
+  generalActions.removeError(ErrorCodes.UNIT_RANGE_EMPTY);
+  if (!state.settingsTabs.columns.children.some((column) => column.on)) {
+    generalActions.pushError(ErrorCodes.NO_COLUMNS_SELECTED);
+    return false;
+  }
+  generalActions.removeError(ErrorCodes.NO_COLUMNS_SELECTED);
+  return true;
+}
+
+export const fetchChartFromServer = action("fetchChartFromServer", async (navigate: NavigateFunction) => {
+  if (!areSettingsValidForGeneration()) return;
   state.showSuggestedAgePopup = false;
   navigate("/chart");
   //set the loading screen and make sure the chart isn't up

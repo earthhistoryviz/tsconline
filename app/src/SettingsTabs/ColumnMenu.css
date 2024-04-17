@@ -22,3 +22,10 @@
   align-items: center;
   justify-content: center;
 }
+
+.ShowTitlesContainer {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+  margin-left: 10px;
+}

@@ -272,7 +272,8 @@ export const setDatapackConfig = action(
         maxAge: Number.MIN_VALUE,
         children: [],
         parent: null,
-        units: ""
+        units: "",
+        columnDisplayType: "RootColumn"
       };
       // add everything together
       // uses preparsed data on server start and appends items together

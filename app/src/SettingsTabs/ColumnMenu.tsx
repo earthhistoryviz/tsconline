@@ -1,10 +1,12 @@
 import { observer } from "mobx-react-lite";
 import { useContext, useRef, useState } from "react";
 import { context } from "../state";
-import { Button, TextField, ToggleButton, Typography } from "@mui/material";
+import { Button, FormControlLabel, TextField, ToggleButton, Typography } from "@mui/material";
 import SettingsSharpIcon from "@mui/icons-material/SettingsSharp";
 import "./ColumnMenu.css";
 import { FontMenu } from "./FontMenu";
+import { ColumnInfo } from "@tsconline/shared";
+import { TSCCheckbox } from "../components";
 
 const EditNameField = observer(() => {
   const { state, actions } = useContext(context);
@@ -85,7 +87,29 @@ export const ColumnMenu = observer(() => {
       <div id="ColumnMenuContent" className="column-menu-content">
         {column && <EditNameField />}
         {column && <FontMenu column={column} />}
+        {column && <ShowTitles column={column} />}
       </div>
+    </div>
+  );
+});
+
+const ShowTitles = observer(({ column }: { column: ColumnInfo }) => {
+  const { actions } = useContext(context);
+  return (
+    <div className="ShowTitlesContainer">
+      <FormControlLabel
+        name="enableTitle"
+        label="Enable Title"
+        control={
+          <TSCCheckbox
+            outlineColor="gray"
+            checked={column.enableTitle}
+            onChange={() => {
+              actions.setEnableTitle(!column.enableTitle, column);
+            }}
+          />
+        }
+      />
     </div>
   );
 });
