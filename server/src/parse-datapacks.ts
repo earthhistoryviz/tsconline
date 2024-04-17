@@ -227,7 +227,8 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     parent: chartTitle,
     minAge: Number.MIN_VALUE,
     maxAge: Number.MAX_VALUE,
-    units: ageUnits
+    units: ageUnits,
+    columnDisplayType: "Ruler"
   });
   const chartColumn: ColumnInfo = {
     name: chartTitle,
@@ -247,7 +248,8 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     parent: "Chart Root",
     minAge: returnValue.minAge,
     maxAge: returnValue.maxAge,
-    units: ageUnits
+    units: ageUnits,
+    columnDisplayType: "RootColumn"
   };
   return { columnInfo: chartColumn, datapackAgeInfo, ageUnits };
 }
@@ -1252,7 +1254,8 @@ function recursive(
       b: 255
     },
     fontOptions: ["Column Header"],
-    units
+    units,
+    columnDisplayType: "MetaColumn"
   };
   const returnValue: FaciesFoundAndAgeRange = {
     faciesFound: false,
@@ -1271,6 +1274,7 @@ function recursive(
     // TODO NOTE FOR FUTURE: @Paolo - Java file appends all fonts to this, but from trial and error, only column header makes sense. If this case changes here we would change it
     Object.assign(currentColumnInfo, {
       ...currentTransect,
+      columnDisplayType: "Transect",
       subInfo: JSON.parse(JSON.stringify(currentTransect.subTransectInfo))
     });
     returnValue.minAge = currentColumnInfo.minAge;
@@ -1281,6 +1285,7 @@ function recursive(
     Object.assign(currentColumnInfo, {
       ...currentSequence,
       fontOptions: getValidFontOptions("Sequence"),
+      columnDisplayType: "Sequence",
       subInfo: JSON.parse(JSON.stringify(currentSequence.subSequenceInfo))
     });
     returnValue.fontOptions = currentColumnInfo.fontOptions;
@@ -1292,6 +1297,7 @@ function recursive(
     Object.assign(currentColumnInfo, {
       ...currentBlock,
       fontOptions: getValidFontOptions("Block"),
+      columnDisplayType: "Zone",
       subInfo: JSON.parse(JSON.stringify(currentBlock.subBlockInfo))
     });
     returnValue.fontOptions = currentColumnInfo.fontOptions;
@@ -1303,6 +1309,7 @@ function recursive(
     Object.assign(currentColumnInfo, {
       ...currentRange,
       fontOptions: getValidFontOptions("Range"),
+      columnDisplayType: "Range",
       subInfo: JSON.parse(JSON.stringify(currentRange.subRangeInfo))
     });
     returnValue.fontOptions = currentColumnInfo.fontOptions;
@@ -1313,6 +1320,7 @@ function recursive(
     const currentFacies = faciesMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentFacies,
+      columnDisplayType: "BlockSeriesMetaColumn",
       subInfo: JSON.parse(JSON.stringify(currentFacies.subFaciesInfo))
     });
     addFaciesChildren(
@@ -1487,7 +1495,8 @@ function addFaciesChildren(
     maxAge,
     width: width * 0.4,
     rgb,
-    units
+    units,
+    columnDisplayType: "Facies"
   });
   children.push({
     name: `${name} Members`,
@@ -1503,7 +1512,8 @@ function addFaciesChildren(
     maxAge,
     width,
     rgb,
-    units
+    units,
+    columnDisplayType: "Zone"
   });
   children.push({
     name: `${name} Facies Label`,
@@ -1519,7 +1529,8 @@ function addFaciesChildren(
     maxAge,
     width: width * 0.4,
     rgb,
-    units
+    units,
+    columnDisplayType: "Zone"
   });
   children.push({
     name: `${name} Series Label`,
@@ -1535,7 +1546,8 @@ function addFaciesChildren(
     maxAge,
     rgb,
     width: width * 0.2,
-    units
+    units,
+    columnDisplayType: "Zone"
   });
   for (const child of children) {
     for (const fontOption of child.fontOptions) {
@@ -1582,7 +1594,8 @@ function addChronChildren(
     maxAge,
     width: 60,
     rgb,
-    units
+    units,
+    columnDisplayType: "Chron"
   });
   children.push({
     name: `${name} Chron Label`,
@@ -1598,7 +1611,8 @@ function addChronChildren(
     maxAge,
     width: 40,
     rgb,
-    units
+    units,
+    columnDisplayType: "Zone"
   });
   children.push({
     name: `${name} Series Label`,
@@ -1614,7 +1628,8 @@ function addChronChildren(
     maxAge,
     width: 40,
     rgb,
-    units
+    units,
+    columnDisplayType: "Zone"
   });
   for (const child of children) {
     for (const fontOption of child.fontOptions) {
@@ -1637,8 +1652,11 @@ function createLoneColumn(
   props: ColumnHeaderProps,
   fontOptions: ValidFontOptions[],
   units: string,
-  subInfo: SubInfo[]
+  subInfo: SubInfo[],
+  type: DisplayedColumnTypes
 ): ColumnInfo {
+  // block changes to zone for display
+  if (type === "Block") type = "Zone"
   return {
     ...props,
     editName: props.name,
@@ -1647,7 +1665,8 @@ function createLoneColumn(
     children: [],
     parent: "",
     units,
-    subInfo
+    subInfo,
+    columnDisplayType: type
   };
 }
 
@@ -1696,7 +1715,7 @@ function processColumn<T extends ColumnInfoType>(
     const { [subInfoKey]: subInfo, ...columnHeaderProps } = column;
     assertColumnHeaderProps(columnHeaderProps);
     assertSubInfo(subInfo);
-    loneColumns.push(createLoneColumn(columnHeaderProps, getValidFontOptions(type), units, subInfo));
+    loneColumns.push(createLoneColumn(columnHeaderProps, getValidFontOptions(type), units, subInfo, type));
   }
   return false;
 }

@@ -156,7 +156,7 @@ export type ColumnInfoTypeMap = {
 
 export type ColumnInfoType = keyof ColumnInfoTypeMap;
 
-export type DisplayedColumnTypes = ColumnInfoType | "Zone" | "Ruler" | "AgeAge";
+export type DisplayedColumnTypes = ColumnInfoType | "Zone" | "Ruler" | "AgeAge" | "MetaColumn" | "RootColumn" | "BlockSeriesMetaColumn";
 
 export type ValidFontOptions =
   | "Column Header"
@@ -199,6 +199,7 @@ export type ColumnInfo = {
   minAge: number;
   maxAge: number;
   enableTitle: boolean;
+  columnDisplayType: DisplayedColumnTypes;
   rgb: RGB;
   width: number;
   units: string;
@@ -793,6 +794,14 @@ export function assertSubInfo(o: any): asserts o is SubInfo[] {
     else throw new Error("SubInfo must be an array of valid subInfo objects");
   }
 }
+export function assertDisplayedColumnTypes(o: any): asserts o is DisplayedColumnTypes {
+  if (!o || !Array.isArray(o)) throw new Error("DisplayedColumnTypes must be an array");
+  for (const type of o) {
+    if (typeof type !== "string") throw new Error("DisplayedColumnTypes must be an array of strings");
+    if (!/^(Block|Facies|Event|Range|Chron|Point|Sequence|Transect|Freehand|Zone|Ruler|AgeAge|MetaColumn|BlockSeriesMetaColumn|RootColumn)$/.test(type))
+      throw new Error("DisplayedColumnTypes must be an array of valid column types");
+  }
+}
 
 export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   if (typeof o !== "object" || o === null) {
@@ -815,6 +824,7 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   for (const fontOption of o.fontOptions) {
     assertValidFontOptions(fontOption);
   }
+  assertDisplayedColumnTypes(o.displayedColumnTypes);
   assertRGB(o.rgb);
   for (const child of o.children) {
     assertColumnInfo(child);
