@@ -1270,7 +1270,7 @@ function recursive(
     currentColumnInfo.enableTitle = parsedColumnEntry.enableTitle;
   }
   if (transectMap.has(currentColumn)) {
-    const {subTransectInfo, ...currentTransect } = transectMap.get(currentColumn)!;
+    const { subTransectInfo, ...currentTransect } = transectMap.get(currentColumn)!;
     // TODO NOTE FOR FUTURE: @Paolo - Java file appends all fonts to this, but from trial and error, only column header makes sense. If this case changes here we would change it
     Object.assign(currentColumnInfo, {
       ...currentTransect,
@@ -1281,7 +1281,7 @@ function recursive(
     returnValue.maxAge = currentColumnInfo.maxAge;
   }
   if (sequenceMap.has(currentColumn)) {
-    const {subSequenceInfo, ...currentSequence} = sequenceMap.get(currentColumn)!;
+    const { subSequenceInfo, ...currentSequence } = sequenceMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentSequence,
       fontOptions: getValidFontOptions("Sequence"),
@@ -1293,7 +1293,7 @@ function recursive(
     returnValue.maxAge = currentColumnInfo.maxAge;
   }
   if (blocksMap.has(currentColumn)) {
-    const {subBlockInfo, ...currentBlock} = blocksMap.get(currentColumn)!;
+    const { subBlockInfo, ...currentBlock } = blocksMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentBlock,
       fontOptions: getValidFontOptions("Block"),
@@ -1305,7 +1305,7 @@ function recursive(
     returnValue.maxAge = currentColumnInfo.maxAge;
   }
   if (rangeMap.has(currentColumn)) {
-    const {subRangeInfo, ...currentRange} = rangeMap.get(currentColumn)!;
+    const { subRangeInfo, ...currentRange } = rangeMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentRange,
       fontOptions: getValidFontOptions("Range"),
@@ -1317,7 +1317,7 @@ function recursive(
     returnValue.maxAge = currentColumnInfo.maxAge;
   }
   if (faciesMap.has(currentColumn)) {
-    const {subFaciesInfo, ...currentFacies} = faciesMap.get(currentColumn)!;
+    const { subFaciesInfo, ...currentFacies } = faciesMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentFacies,
       columnDisplayType: "BlockSeriesMetaColumn",
@@ -1339,7 +1339,7 @@ function recursive(
     returnValue.maxAge = currentColumnInfo.maxAge;
   }
   if (eventMap.has(currentColumn)) {
-    const {subEventInfo, ...currentEvent} = eventMap.get(currentColumn)!;
+    const { subEventInfo, ...currentEvent } = eventMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentEvent,
       fontOptions: getValidFontOptions("Event"),
@@ -1370,7 +1370,7 @@ function recursive(
     returnValue.minAge = currentColumnInfo.minAge;
   }
   if (pointMap.has(currentColumn)) {
-    const {subPointInfo, ...currentPoint} = pointMap.get(currentColumn)!;
+    const { subPointInfo, ...currentPoint } = pointMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentPoint,
       fontOptions: getValidFontOptions("Point"),
@@ -1381,7 +1381,7 @@ function recursive(
     returnValue.minAge = currentColumnInfo.minAge;
   }
   if (freehandMap.has(currentColumn)) {
-    const {subFreehandInfo, ...currentFreehand} = freehandMap.get(currentColumn)!;
+    const { subFreehandInfo, ...currentFreehand } = freehandMap.get(currentColumn)!;
     // TODO NOTE FOR FUTURE: @Paolo - Java file appends all fonts to this, but from trial and error, only column header makes sense. If this case changes here we would change it
     Object.assign(currentColumnInfo, {
       ...currentFreehand,
@@ -1656,7 +1656,7 @@ function createLoneColumn(
   type: DisplayedColumnTypes
 ): ColumnInfo {
   // block changes to zone for display
-  if (type === "Block") type = "Zone"
+  if (type === "Block") type = "Zone";
   return {
     ...props,
     editName: props.name,
