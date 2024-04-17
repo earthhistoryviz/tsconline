@@ -208,7 +208,7 @@ export type ColumnInfo = {
   enableTitle: boolean;
   columnDisplayType: DisplayedColumnTypes;
   rgb: RGB;
-  width: number;
+  width?: number;
   units: string;
 };
 
