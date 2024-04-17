@@ -5,10 +5,10 @@ export interface UserRow {
   id: number;
   username: string | null;
   email: string;
-  hashed_password: string | null;
-  google_id: string | null;
+  hashedPassword: string | null;
+  googleId: string | null;
   uuid: string;
-  picture_url: string | null;
+  pictureUrl: string | null;
 }
 
 if (!fs.existsSync("../server/db")) {
