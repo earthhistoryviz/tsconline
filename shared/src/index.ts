@@ -795,12 +795,9 @@ export function assertSubInfo(o: any): asserts o is SubInfo[] {
   }
 }
 export function assertDisplayedColumnTypes(o: any): asserts o is DisplayedColumnTypes {
-  if (!o || !Array.isArray(o)) throw new Error("DisplayedColumnTypes must be an array");
-  for (const type of o) {
-    if (typeof type !== "string") throw new Error("DisplayedColumnTypes must be an array of strings");
-    if (!/^(Block|Facies|Event|Range|Chron|Point|Sequence|Transect|Freehand|Zone|Ruler|AgeAge|MetaColumn|BlockSeriesMetaColumn|RootColumn)$/.test(type))
-      throw new Error("DisplayedColumnTypes must be an array of valid column types");
-  }
+  if (!o || typeof o !== "string") throwError("DisplayedColumnTypes", "DisplayedColumnTypes", "string", o);
+  if (!/^(Block|Facies|Event|Range|Chron|Point|Sequence|Transect|Freehand|Zone|Ruler|AgeAge|MetaColumn|BlockSeriesMetaColumn|RootColumn)$/.test(o))
+    throw new Error("DisplayedColumnTypes must be a string of a valid column type");
 }
 
 export function assertColumnInfo(o: any): asserts o is ColumnInfo {
@@ -824,7 +821,7 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   for (const fontOption of o.fontOptions) {
     assertValidFontOptions(fontOption);
   }
-  assertDisplayedColumnTypes(o.displayedColumnTypes);
+  assertDisplayedColumnTypes(o.columnDisplayType);
   assertRGB(o.rgb);
   for (const child of o.children) {
     assertColumnInfo(child);
