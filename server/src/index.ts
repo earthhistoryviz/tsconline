@@ -86,8 +86,9 @@ server.register(fastifyStatic, {
 
 // Helpful for testing locally:
 server.register(cors, {
-  origin: "*",
-  methods: ["GET", "POST"]
+  origin: process.env.APP_ORIGIN || "http://localhost:5173",
+  methods: ["GET", "POST"],
+  credentials: true
 });
 
 server.register(fastifyCompress, { global: true });

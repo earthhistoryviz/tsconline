@@ -18,6 +18,7 @@ import { ErrorCodes } from "../util/error-codes";
 import { settings } from "../constants";
 
 export type State = {
+  isLoggedIn: boolean;
   chartLoading: boolean;
   tab: number;
   madeChart: boolean;
@@ -73,6 +74,7 @@ export type State = {
 };
 
 export const state = observable<State>({
+  isLoggedIn: false,
   chartLoading: false,
   madeChart: false,
   tab: 0,
