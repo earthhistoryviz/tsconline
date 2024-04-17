@@ -15,6 +15,7 @@ import { devSafeUrl, fetcher } from "./util";
 import { actions, context } from "./state";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { useNavigate } from "react-router";
+import { HttpError } from "./util";
 
 import "./Login.css";
 import { displayServerError } from "./state/actions/util-actions";
@@ -32,7 +33,7 @@ export const Login: React.FC = observer(() => {
       password: data.get("password")
     };
     try {
-      const login = await fetcher("auth/login", {
+      const login = await fetcher("/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -43,17 +44,26 @@ export const Login: React.FC = observer(() => {
       if (login.ok) {
         actions.sessionCheck();
         if (!state.isLoggedIn) {
-          displayServerError(login, ErrorCodes.UNABLE_TO_LOGIN, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN]);
+          displayServerError(login, ErrorCodes.UNABLE_TO_LOGIN_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]);
         } else {
-          actions.removeError(ErrorCodes.UNABLE_TO_LOGIN);
+          actions.removeError(ErrorCodes.UNABLE_TO_LOGIN_SERVER);
           actions.pushSnackbar("Succesfully logged in", "success");
           navigate("/");
         }
       } else {
-        displayServerError(login, ErrorCodes.UNABLE_TO_LOGIN, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN]);
+        displayServerError(login, ErrorCodes.UNABLE_TO_LOGIN_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]);
       }
     } catch (error) {
-      displayServerError(error, ErrorCodes.UNABLE_TO_LOGIN, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN]);
+      if (error instanceof HttpError) {
+        const status = error.status;
+        if (status === 401) {
+          actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD);
+        } else if (status === 400) {
+          actions.pushError(ErrorCodes.INVALID_FORM);
+        }
+      } else {
+        displayServerError(error, ErrorCodes.UNABLE_TO_LOGIN_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]);
+      }
     }
   };
 
@@ -112,7 +122,7 @@ export const Login: React.FC = observer(() => {
           onSuccess={() => console.log("Logged in with Google")}
           ux_mode="redirect"
           login_uri={devSafeUrl("/auth/oauth")}
-          onError={() => actions.pushError(ErrorCodes.UNABLE_TO_LOGIN)}
+          onError={() => actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_SERVER)}
           width="400px"
         />
       </Box>

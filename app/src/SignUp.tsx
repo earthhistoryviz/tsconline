@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import Avatar from "@mui/material/Avatar";
 import { TSCButton } from "./components";
@@ -11,20 +11,69 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import LoginIcon from "@mui/icons-material/Login";
+import { fetcher, HttpError } from "./util";
+import { actions } from "./state";
+import { ErrorCodes } from "./util/error-codes";
+import { context } from "./state";
+import { useNavigate } from "react-router";
 
 import "./Login.css";
 
 export const SignUp: React.FC = observer(() => {
   const theme = useTheme();
+  const { state } = useContext(context);
+  const navigate = useNavigate();
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get("email"),
-      username: data.get("username"),
-      password: data.get("password")
-    });
+    const form = event.currentTarget;
+    if (form.checkValidity() === false) {
+      event.stopPropagation();
+      actions.pushError(ErrorCodes.INVALID_FORM);
+    } else {
+      const data = new FormData(event.currentTarget);
+      try {
+        const response = await fetcher("/auth/signup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            username: data.get("username"),
+            password: data.get("password"),
+            email: data.get("email")
+          })
+        });
+        if (response.ok) {
+          actions.sessionCheck();
+          if (!state.isLoggedIn) {
+            actions.pushError(ErrorCodes.UNABLE_TO_SIGNUP_SERVER);
+          } else {
+            actions.removeError(ErrorCodes.UNABLE_TO_SIGNUP_SERVER);
+            actions.removeError(ErrorCodes.UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL);
+            actions.removeError(ErrorCodes.INVALID_FORM);
+            actions.pushSnackbar("Succesfully signed up", "success");
+            navigate("/");
+          }
+        } else {
+          console.error("Error trying to log in: " + response.status);
+          actions.pushError(ErrorCodes.UNABLE_TO_SIGNUP_SERVER);
+        }
+      } catch (error) {
+        if (error instanceof HttpError) {
+          const status = error.status;
+          if (status === 409) {
+            actions.pushError(ErrorCodes.UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL);
+          } else if (status === 400) {
+            actions.pushError(ErrorCodes.INVALID_FORM);
+          }
+        } else {
+          console.error("Error:", error);
+          actions.pushError(ErrorCodes.UNABLE_TO_SIGNUP_SERVER);
+        }
+      }
+    }
   };
 
   return (
