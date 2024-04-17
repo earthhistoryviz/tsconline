@@ -365,7 +365,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     // Turns off GUI (e.g Suggested Age pop-up (defaults to yes if -a flag is not passed))
     `-node ` +
     // Add settings:
-    `-s ${settingsFilePath} ` + 
+    `-s ${settingsFilePath} ` +
     // Save settings to file:
     `-ss ${settingsFilePath} ` +
     // Add datapacks:
