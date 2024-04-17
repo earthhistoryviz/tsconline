@@ -25,7 +25,6 @@ import FormatItalicIcon from "@mui/icons-material/FormatItalic";
 import CloseIcon from "@mui/icons-material/Close";
 import "./FontMenu.css";
 import { ValidFontOptions } from "@tsconline/shared";
-import "../components/TSCColorPicker";
 import TSCColorPicker from "../components/TSCColorPicker";
 import { NumericFormat } from "react-number-format";
 const FontSizeTextField = ({ ...props }: TextFieldProps) => (
@@ -50,9 +49,9 @@ const FontMenuRow: React.FC<{
     actions.setColor(target, newColor, column);
   };
 
-  const handleColorChangs = (color: string) => {
-    fontOpts.color = color;
-  };
+  const handleColor = (newColor: React.SetStateAction<string>) => {
+    actions.setColor(target, newColor);
+  }
 
   return (
     <div>
@@ -121,7 +120,7 @@ const FontMenuRow: React.FC<{
           </ToggleButton>
         </ToggleButtonGroup>
         <div id="ColorInputContainer">
-          <TSCColorPicker color={fontOpts.color} onColorChange={handleColorChangs} />
+          <TSCColorPicker color={fontOpts.color} onColorChange={handleColor} />
         </div>
         <Typography
           sx={{
