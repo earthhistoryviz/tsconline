@@ -1270,58 +1270,58 @@ function recursive(
     currentColumnInfo.enableTitle = parsedColumnEntry.enableTitle;
   }
   if (transectMap.has(currentColumn)) {
-    const currentTransect = transectMap.get(currentColumn)!;
+    const {subTransectInfo, ...currentTransect } = transectMap.get(currentColumn)!;
     // TODO NOTE FOR FUTURE: @Paolo - Java file appends all fonts to this, but from trial and error, only column header makes sense. If this case changes here we would change it
     Object.assign(currentColumnInfo, {
       ...currentTransect,
       columnDisplayType: "Transect",
-      subInfo: JSON.parse(JSON.stringify(currentTransect.subTransectInfo))
+      subInfo: JSON.parse(JSON.stringify(subTransectInfo))
     });
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
   }
   if (sequenceMap.has(currentColumn)) {
-    const currentSequence = sequenceMap.get(currentColumn)!;
+    const {subSequenceInfo, ...currentSequence} = sequenceMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentSequence,
       fontOptions: getValidFontOptions("Sequence"),
       columnDisplayType: "Sequence",
-      subInfo: JSON.parse(JSON.stringify(currentSequence.subSequenceInfo))
+      subInfo: JSON.parse(JSON.stringify(subSequenceInfo))
     });
     returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
   }
   if (blocksMap.has(currentColumn)) {
-    const currentBlock = blocksMap.get(currentColumn)!;
+    const {subBlockInfo, ...currentBlock} = blocksMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentBlock,
       fontOptions: getValidFontOptions("Block"),
       columnDisplayType: "Zone",
-      subInfo: JSON.parse(JSON.stringify(currentBlock.subBlockInfo))
+      subInfo: JSON.parse(JSON.stringify(subBlockInfo))
     });
     returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
   }
   if (rangeMap.has(currentColumn)) {
-    const currentRange = rangeMap.get(currentColumn)!;
+    const {subRangeInfo, ...currentRange} = rangeMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentRange,
       fontOptions: getValidFontOptions("Range"),
       columnDisplayType: "Range",
-      subInfo: JSON.parse(JSON.stringify(currentRange.subRangeInfo))
+      subInfo: JSON.parse(JSON.stringify(subRangeInfo))
     });
     returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
   }
   if (faciesMap.has(currentColumn)) {
-    const currentFacies = faciesMap.get(currentColumn)!;
+    const {subFaciesInfo, ...currentFacies} = faciesMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentFacies,
       columnDisplayType: "BlockSeriesMetaColumn",
-      subInfo: JSON.parse(JSON.stringify(currentFacies.subFaciesInfo))
+      subInfo: JSON.parse(JSON.stringify(subFaciesInfo))
     });
     addFaciesChildren(
       currentColumnInfo.children,
@@ -1334,16 +1334,16 @@ function recursive(
       units
     );
     returnValue.fontOptions = currentColumnInfo.fontOptions;
-    returnValue.subFaciesInfo = currentFacies.subFaciesInfo;
+    returnValue.subFaciesInfo = subFaciesInfo;
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
   }
   if (eventMap.has(currentColumn)) {
-    const currentEvent = eventMap.get(currentColumn)!;
+    const {subEventInfo, ...currentEvent} = eventMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentEvent,
       fontOptions: getValidFontOptions("Event"),
-      subInfo: JSON.parse(JSON.stringify(currentEvent.subEventInfo))
+      subInfo: JSON.parse(JSON.stringify(subEventInfo))
     });
     returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.maxAge = currentColumnInfo.maxAge;
@@ -1351,10 +1351,10 @@ function recursive(
   }
   if (chronMap.has(currentColumn)) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { width, ...currentChron } = chronMap.get(currentColumn)!;
+    const { width, subChronInfo, ...currentChron } = chronMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentChron,
-      subInfo: JSON.parse(JSON.stringify(currentChron.subChronInfo))
+      subInfo: JSON.parse(JSON.stringify(subChronInfo))
     });
     addChronChildren(
       currentColumnInfo.children,
@@ -1370,22 +1370,22 @@ function recursive(
     returnValue.minAge = currentColumnInfo.minAge;
   }
   if (pointMap.has(currentColumn)) {
-    const currentPoint = pointMap.get(currentColumn)!;
+    const {subPointInfo, ...currentPoint} = pointMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentPoint,
       fontOptions: getValidFontOptions("Point"),
-      subInfo: JSON.parse(JSON.stringify(currentPoint.subPointInfo))
+      subInfo: JSON.parse(JSON.stringify(subPointInfo))
     });
     returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.maxAge = currentColumnInfo.maxAge;
     returnValue.minAge = currentColumnInfo.minAge;
   }
   if (freehandMap.has(currentColumn)) {
-    const currentFreehand = freehandMap.get(currentColumn)!;
+    const {subFreehandInfo, ...currentFreehand} = freehandMap.get(currentColumn)!;
     // TODO NOTE FOR FUTURE: @Paolo - Java file appends all fonts to this, but from trial and error, only column header makes sense. If this case changes here we would change it
     Object.assign(currentColumnInfo, {
       ...currentFreehand,
-      subInfo: JSON.parse(JSON.stringify(currentFreehand.subFreehandInfo))
+      subInfo: JSON.parse(JSON.stringify(subFreehandInfo))
     });
     returnValue.maxAge = currentColumnInfo.maxAge;
     returnValue.minAge = currentColumnInfo.minAge;
