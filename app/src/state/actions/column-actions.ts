@@ -59,7 +59,6 @@ export const updateEditName = action((newName: string) => {
 
 export const updateWidth = action((columnObject: ColumnInfo, newWidth: number) => {
   columnObject.width = newWidth;
-  return;
 });
 
 export const setcolumnSelected = action((name: string) => {

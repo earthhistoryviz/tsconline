@@ -381,15 +381,8 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo,
       } else if (key == "customColor") {
         xml += `${indent}<setting name="${xmlKey}" useNamed="false">rgb(${stateColumn.rgb.r},${stateColumn.rgb.g},${stateColumn.rgb.b})</setting>\n`;
       } else if (key === "width") {
-        let useEditWidth = false;
-        if (stateColumn && stateColumn !== undefined) {
-          if (stateColumn.width !== undefined) {
-            xml += `${indent}<setting name="width">${stateColumn.width}</setting>\n`;
-            useEditWidth = true;
-          }
-        }
-        if (!useEditWidth) {
-          xml += `${indent}<setting name="width">${presetColumn[key]}</setting>\n`;
+        if (stateColumn && stateColumn.width) {
+          xml += `${indent}<setting name="width">${stateColumn.width}</setting>\n`;
         }
       } else if (key === "orientation") {
         xml += `${indent}<setting name="${xmlKey}" orientation="${presetColumn[key as keyof ColumnInfoTSC]}"/>\n`;
