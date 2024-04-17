@@ -595,6 +595,44 @@ export const fetchImage = action("fetchImage", async (datapackName: string, imag
   return image;
 });
 
+export const logout = action("logout", async () => {
+  try {
+    const response = await fetcher("/auth/logout", {
+      method: "POST",
+      credentials: "include"
+    });
+    if (response.ok) {
+      setIsLoggedIn(false);
+      pushSnackbar("Successfully logged out", "success");
+    } else {
+      pushError(ErrorCodes.UNABLE_TO_LOGOUT);
+    }
+  } catch (error) {
+    console.error("Failed to logout:", error);
+    displayServerError(error, ErrorCodes.UNABLE_TO_LOGOUT, ErrorMessages[ErrorCodes.UNABLE_TO_LOGOUT]);
+  }
+});
+
+export const sessionCheck = action("sessionCheck", async () => {
+  // For now commented out because the backend is not set up for this and will throw an error
+  // try {
+  //   const response = await fetcher("/auth/session-check", {
+  //     method: "GET",
+  //     credentials: "include"
+  //   });
+  //   const data = await response.json();
+  //   if (data.authenticated) {
+  //     setIsLoggedIn(true);
+  //   }
+  // } catch (error) {
+  //   console.error("Failed to check session:", error);
+  //   displayServerError(error, ErrorCodes.UNABLE_TO_LOGIN, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN]);
+  // }
+});
+
+export const setIsLoggedIn = action("setIsLoggedIn", (newval: boolean) => {
+  state.isLoggedIn = newval;
+});
 export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
   state.settings.useDatapackSuggestedAge = isChecked;
 });

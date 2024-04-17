@@ -11,7 +11,11 @@ import theme from "./theme";
 import { useContext } from "react";
 import { context } from "./state";
 import { About } from "./About";
+import { Login } from "./Login";
+import { SignUp } from "./SignUp";
+import { AccountRecovery } from "./AccountRecovery";
 import { TSCPopupDialog, TSCError, TSCSnackbar } from "./components";
+import { CssBaseline } from "@mui/material";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -19,6 +23,7 @@ export default observer(function App() {
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={theme}>
+        <CssBaseline />
         <NavBar />
         <Toolbar />
         <Routes>
@@ -27,6 +32,9 @@ export default observer(function App() {
           <Route path="/chart" element={<Chart />} />
           <Route path="/help" element={<Help />} />
           <Route path="/about" element={<About />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/account-recovery" element={<AccountRecovery />} />
         </Routes>
         {Array.from(state.errors.errorAlerts.entries()).map(([context, error], index) => (
           <TSCError
