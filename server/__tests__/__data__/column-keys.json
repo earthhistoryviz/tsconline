@@ -1247,7 +1247,7 @@
         }
     },
     "column-types-all-column-types-key": {
-        "Facies 1": {
+        "Facies": {
             "name": "Facies",
             "subFaciesInfo": [
                 {
@@ -1280,7 +1280,7 @@
             "popup": "Facies Popup",
             "on": false
         },
-        "Block 1": {
+        "Block": {
             "name": "Block",
             "subBlockInfo": [
                 {
@@ -1318,7 +1318,7 @@
             "minAge": 419.2,
             "maxAge": 433.35
         },
-        "Event 1": {
+        "Event": {
             "name": "Event",
             "on": true,
             "subEventInfo": [
@@ -1346,7 +1346,7 @@
             "maxAge": 0.4,
             "popup": "Event Popup"
         },
-        "Range 1": {
+        "Range": {
             "name": "Range",
             "subRangeInfo": [
               {
@@ -1374,7 +1374,7 @@
             "popup": "Range Popup",
             "on": true 
         }, 
-        "Chron 1": {
+        "Chron": {
             "name": "Chron",
             "subChronInfo": [
                 {
@@ -1407,7 +1407,7 @@
             },
             "popup": "Chron Popup"
         },
-        "Point 1": {
+        "Point": {
             "name": "Point",
             "minAge": 4,
             "maxAge": 5,
@@ -1433,7 +1433,7 @@
               }
             ]
         },
-        "Sequence 1": {
+        "Sequence": {
             "name": "Sequence",
             "minAge": 0,
             "maxAge": 2,
@@ -1462,7 +1462,7 @@
                 }
             ]
         },
-        "Transect 1": {
+        "Transect": {
             "name": "Transect",
             "minAge": 0,
             "maxAge": 9.22,
@@ -1487,7 +1487,7 @@
               }
             ]
         },
-        "Freehand 1": {
+        "Freehand": {
             "name": "Freehand",
             "minAge": 0,
             "maxAge": 1.3,
@@ -1510,7 +1510,8 @@
                 "baseAge": 1.3
                 }
             ]
-        }, "Blank 1": {
+        },
+        "Blank": {
             "name": "Blank",
             "minAge": 1.7976931348623157e+308,
             "maxAge": 5e-324,

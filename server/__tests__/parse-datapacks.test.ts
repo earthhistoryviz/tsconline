@@ -6,6 +6,7 @@ jest.mock("./util.js", () => ({
   })
 }));
 jest.mock("@tsconline/shared", () => ({
+  assertSubInfo: jest.fn().mockImplementation(() => true),
   assertSubEventInfo: jest.fn().mockImplementation(() => true),
   assertSubTransectInfo: jest.fn().mockImplementation(() => true),
   assertSubFreehandInfo: jest.fn().mockImplementation(() => true),
@@ -344,47 +345,50 @@ describe("getColumnTypes tests", () => {
       sequenceMap,
       transectMap,
       freehandMap,
-      blankMap
+      blankMap,
+      Object.keys(key["column-types-all-column-types-key"]),
+      [],
+      "Ma"
     );
     expectedFaciesMap.set(
-      key["column-types-all-column-types-key"]["Facies 1"].name,
-      key["column-types-all-column-types-key"]["Facies 1"]
+      key["column-types-all-column-types-key"]["Facies"].name,
+      key["column-types-all-column-types-key"]["Facies"]
     );
     expectedBlockMap.set(
-      key["column-types-all-column-types-key"]["Block 1"].name,
-      key["column-types-all-column-types-key"]["Block 1"]
+      key["column-types-all-column-types-key"]["Block"].name,
+      key["column-types-all-column-types-key"]["Block"]
     );
     expectedEventMap.set(
-      key["column-types-all-column-types-key"]["Event 1"].name,
-      key["column-types-all-column-types-key"]["Event 1"]
+      key["column-types-all-column-types-key"]["Event"].name,
+      key["column-types-all-column-types-key"]["Event"]
     );
     expectedRangeMap.set(
-      key["column-types-all-column-types-key"]["Range 1"].name,
-      key["column-types-all-column-types-key"]["Range 1"]
+      key["column-types-all-column-types-key"]["Range"].name,
+      key["column-types-all-column-types-key"]["Range"]
     );
     expectedChronMap.set(
-      key["column-types-all-column-types-key"]["Chron 1"].name,
-      key["column-types-all-column-types-key"]["Chron 1"]
+      key["column-types-all-column-types-key"]["Chron"].name,
+      key["column-types-all-column-types-key"]["Chron"]
     );
     expectedPointMap.set(
-      key["column-types-all-column-types-key"]["Point 1"].name,
-      key["column-types-all-column-types-key"]["Point 1"]
+      key["column-types-all-column-types-key"]["Point"].name,
+      key["column-types-all-column-types-key"]["Point"]
     );
     expectedSequenceMap.set(
-      key["column-types-all-column-types-key"]["Sequence 1"].name,
-      key["column-types-all-column-types-key"]["Sequence 1"]
+      key["column-types-all-column-types-key"]["Sequence"].name,
+      key["column-types-all-column-types-key"]["Sequence"]
     );
     expectedTransectMap.set(
-      key["column-types-all-column-types-key"]["Transect 1"].name,
-      key["column-types-all-column-types-key"]["Transect 1"]
+      key["column-types-all-column-types-key"]["Transect"].name,
+      key["column-types-all-column-types-key"]["Transect"]
     );
     expectedFreehandMap.set(
-      key["column-types-all-column-types-key"]["Freehand 1"].name,
-      key["column-types-all-column-types-key"]["Freehand 1"]
+      key["column-types-all-column-types-key"]["Freehand"].name,
+      key["column-types-all-column-types-key"]["Freehand"]
     );
     expectedBlankMap.set(
-      key["column-types-all-column-types-key"]["Blank 1"].name,
-      key["column-types-all-column-types-key"]["Blank 1"]
+      key["column-types-all-column-types-key"]["Blank"].name,
+      key["column-types-all-column-types-key"]["Blank"]
     );
     expectMapsToBeEqual();
   });
@@ -405,7 +409,10 @@ describe("getColumnTypes tests", () => {
       sequenceMap,
       transectMap,
       freehandMap,
-      blankMap
+      blankMap,
+      Object.keys(key["column-types-facies-key"]),
+      [],
+      "Ma"
     );
     for (const val in key["column-types-facies-key"]) {
       expectedFaciesMap.set(val, key["column-types-facies-key"][val]);
@@ -429,7 +436,10 @@ describe("getColumnTypes tests", () => {
       sequenceMap,
       transectMap,
       freehandMap,
-      blankMap
+      blankMap,
+      Object.keys(key["column-types-block-key"]),
+      [],
+      "Ma"
     );
     for (const val in key["column-types-block-key"]) {
       expectedBlockMap.set(val, key["column-types-block-key"][val]);
@@ -453,7 +463,10 @@ describe("getColumnTypes tests", () => {
       sequenceMap,
       transectMap,
       freehandMap,
-      blankMap
+      blankMap,
+      Object.keys(key["column-types-event-key"]),
+      [],
+      "Ma"
     );
     for (const val in key["column-types-event-key"]) {
       expectedEventMap.set(val, key["column-types-event-key"][val]);
@@ -474,7 +487,10 @@ describe("getColumnTypes tests", () => {
       sequenceMap,
       transectMap,
       freehandMap,
-      blankMap
+      blankMap,
+      Object.keys(key["column-types-range-key"]),
+      [],
+      "Ma"
     );
     for (const val in key["column-types-range-key"]) {
       expectedRangeMap.set(val, key["column-types-range-key"][val]);
@@ -495,7 +511,10 @@ describe("getColumnTypes tests", () => {
       sequenceMap,
       transectMap,
       freehandMap,
-      blankMap
+      blankMap,
+      Object.keys(key["column-types-chron-key"]),
+      [],
+      "Ma"
     );
     for (const val in key["column-types-chron-key"]) {
       expectedChronMap.set(val, key["column-types-chron-key"][val]);
@@ -516,7 +535,10 @@ describe("getColumnTypes tests", () => {
       sequenceMap,
       transectMap,
       freehandMap,
-      blankMap
+      blankMap,
+      Object.keys(key["column-types-point-key"]),
+      [],
+      "Ma"
     );
     for (const val in key["column-types-point-key"]) {
       expectedPointMap.set(val, key["column-types-point-key"][val]);
@@ -537,7 +559,10 @@ describe("getColumnTypes tests", () => {
       sequenceMap,
       transectMap,
       freehandMap,
-      blankMap
+      blankMap,
+      Object.keys(key["column-types-sequence-key"]),
+      [],
+      "Ma"
     );
     for (const val in key["column-types-sequence-key"]) {
       expectedSequenceMap.set(val, key["column-types-sequence-key"][val]);
@@ -558,7 +583,10 @@ describe("getColumnTypes tests", () => {
       sequenceMap,
       transectMap,
       freehandMap,
-      blankMap
+      blankMap,
+      Object.keys(key["column-types-transect-key"]),
+      [],
+      "Ma"
     );
     for (const val in key["column-types-transect-key"]) {
       expectedTransectMap.set(val, key["column-types-transect-key"][val]);
@@ -579,7 +607,10 @@ describe("getColumnTypes tests", () => {
       sequenceMap,
       transectMap,
       freehandMap,
-      blankMap
+      blankMap,
+      Object.keys(key["column-types-freehand-key"]),
+      [],
+      "Ma"
     );
     for (const val in key["column-types-freehand-key"]) {
       expectedFreehandMap.set(val, key["column-types-freehand-key"][val]);
@@ -603,7 +634,10 @@ describe("getColumnTypes tests", () => {
       sequenceMap,
       transectMap,
       freehandMap,
-      blankMap
+      blankMap,
+      [],
+      [],
+      "Ma"
     );
     expectMapsToBeEqual();
   });
