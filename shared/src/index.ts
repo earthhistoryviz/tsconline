@@ -820,10 +820,7 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   if (typeof o.on !== "boolean") throwError("ColumnInfo", "on", "boolean", o.on);
   if (typeof o.popup !== "string") throwError("ColumnInfo", "popup", "string", o.popup);
   if (o.parent !== null && typeof o.parent !== "string") throwError("ColumnInfo", "parent", "string", o.parent);
-  if (typeof o.minAge !== "number") {
-    console.trace(o.name);
-    throwError("ColumnInfo", "minAge", "number", o.minAge);
-  }
+  if (typeof o.minAge !== "number") throwError("ColumnInfo", "minAge", "number", o.minAge);
   if (typeof o.maxAge !== "number") throwError("ColumnInfo", "maxAge", "number", o.maxAge);
   if (typeof o.width !== "number") throwError("ColumnInfo", "width", "number", o.width);
   if (typeof o.enableTitle !== "boolean") throwError("ColumnInfo", "enableTitle", "boolean", o.enableTitle);
