@@ -305,9 +305,8 @@ export const signup = async function signup(
     const hashedPassword = await hash(password, salt);
     const uuid = randomUUID();
     db.prepare(
-      `INSERT INTO users (username, email, hashed_password, google_id, uuid, picture_url) VALUES (?, ?, ?, ?, ?, ?)`
+      `INSERT INTO users (username, email, hashedPassword, googleId, uuid, pictureUrl) VALUES (?, ?, ?, ?, ?, ?)`
     ).run(username, email, hashedPassword, null, uuid, null);
-    request.session.delete();
     request.session.set("uuid", uuid);
     reply.status(201).send({ message: "User created" });
   } catch (error) {
@@ -322,27 +321,26 @@ export const login = async function login(
 ) {
   const { username, password } = request.body;
   if (!username || !password) {
-    reply.status(400).send({ message: "Invalid form" });
+    reply.status(400).send({ error: "Invalid form" });
     return;
   }
   const db = getDb();
   try {
     const row = db.prepare(`SELECT * FROM users WHERE username = ?`).get(username);
     if (!row) {
-      reply.status(401).send({ message: "Incorrect username or password" });
+      reply.status(401).send({ error: "Incorrect username or password" });
       return;
     }
     const { uuid, hashedPassword } = row as UserRow;
     if (hashedPassword && (await compare(password, hashedPassword))) {
-      request.session.delete();
       request.session.set("uuid", uuid);
       reply.send({ message: "Login successful" });
       return;
     }
-    reply.status(401).send({ message: "Incorrect username or password" });
+    reply.status(401).send({ error: "Incorrect username or password" });
   } catch (error) {
     console.error("Error during login:", error);
-    reply.status(500).send({ message: "Unknown Error" });
+    reply.status(500).send({ error: "Unknown Error" });
   }
 };
 
@@ -352,7 +350,7 @@ export const googleLogin = async function login(
 ) {
   dotenv.config();
   if (!process.env.GOOGLE_CLIENT_ID) {
-    reply.status(500).send({ message: "Missing Google Client Secret or Google Client ID" });
+    reply.status(500).send({ error: "Missing Google Client Secret or Google Client ID" });
     return;
   }
   const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -362,33 +360,33 @@ export const googleLogin = async function login(
   });
   const payload = ticket.getPayload();
   if (!payload) {
-    reply.status(400).send({ message: "Invalid Google Credential" });
+    reply.status(400).send({ error: "Invalid Google Credential" });
     return;
   }
   try {
     const db = getDb();
-    const row = db.prepare(`SELECT * FROM users WHERE google_id = ?`).get(payload.sub);
+    const row = db.prepare(`SELECT * FROM users WHERE googleId = ?`).get(payload.sub);
     let uuid = "";
     if (!row) {
-      uuid = randomUUID();
-      db.prepare(
-        `INSERT INTO users (username, email, hashed_password, google_id, uuid, picture_url) VALUES (?, ?, ?, ?, ?, ?)`
-      ).run(null, payload.email, null, payload.sub, uuid, payload.picture);
+      const emailRow = db.prepare(`SELECT * FROM users WHERE email = ?`).get(payload.email);
+      if (emailRow) {
+        db.prepare(`UPDATE users SET googleId = ? WHERE email = ?`).run(payload.sub, payload.email);
+        uuid = (emailRow as UserRow)["uuid"];
+      } else {
+        uuid = randomUUID();
+        db.prepare(
+          `INSERT INTO users (username, email, hashedPassword, googleId, uuid, pictureUrl) VALUES (?, ?, ?, ?, ?, ?)`
+        ).run(null, payload.email, null, payload.sub, uuid, payload.picture);
+      }
     } else {
       uuid = (row as UserRow)["uuid"];
     }
-    request.session.delete();
     request.session.set("uuid", uuid);
-    reply.redirect(process.env.APP_URL || "http://localhost:5173");
+    reply.redirect(process.env.APP_URL || "http://localhost:5173?google_login=success");
   } catch (error) {
     console.error("Error during login:", error);
-    reply.status(500).send({ message: "Unknown Error" });
+    reply.status(500).send({ error: "Unknown Error" });
   }
-};
-
-export const logout = async function logout(request: FastifyRequest, reply: FastifyReply) {
-  request.session.delete();
-  reply.send({ message: "Logged out" });
 };
 
 /**

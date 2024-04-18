@@ -60,6 +60,7 @@ export const ErrorMessages = {
   [ErrorCodes.UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD]: "Invalid username or password. Please try again.",
   [ErrorCodes.UNABLE_TO_LOGOUT]: "Unable to logout. Please try again later.",
   [ErrorCodes.UNABLE_TO_SIGNUP_SERVER]: "Unable to sign up due to server error. Please try again later.",
-  [ErrorCodes.UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL]: "Email or username already exists. Please try again with a different email or username.",
-  [ErrorCodes.INVALID_FORM]: "Invalid form. Please ensure all fields are filled out correctly.",
+  [ErrorCodes.UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL]:
+    "Email or username already exists. Please try again with a different email or username.",
+  [ErrorCodes.INVALID_FORM]: "Invalid form. Please ensure all fields are filled out correctly."
 };

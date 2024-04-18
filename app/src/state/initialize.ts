@@ -1,4 +1,4 @@
-import { actions } from "./index";
+import { actions, state } from "./index";
 
 export async function initialize() {
   // If we're running in dev mode (yarn dev), then the app is not served from the same URL

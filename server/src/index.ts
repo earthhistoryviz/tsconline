@@ -12,6 +12,7 @@ import { loadPresets } from "./preset.js";
 import { AssetConfig, assertAssetConfig } from "./types.js";
 import { readFile } from "fs/promises";
 import fastifyMultipart from "@fastify/multipart";
+import fastifyFormbody from "@fastify/formbody";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import { getDb } from "./database.js";
 import fastifySecureSession from "@fastify/secure-session";
@@ -86,6 +87,8 @@ server.register(fastifySecureSession, {
     maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
   }
 });
+
+server.register(fastifyFormbody);
 
 server.register(fastifyMultipart, {
   limits: {
@@ -181,7 +184,10 @@ server.post("/auth/session-check", async (request, reply) => {
 
 server.post("/auth/signup", routes.signup);
 
-server.post("/auth/logout", routes.logout);
+server.post("/auth/logout", async (request, reply) => {
+  request.session.delete();
+  reply.send({ message: "Logged out" });
+});
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
