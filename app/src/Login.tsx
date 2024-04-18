@@ -16,9 +16,9 @@ import { actions, context } from "./state";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { useNavigate } from "react-router";
 import { HttpError } from "./util";
+import { displayServerError } from "./state/actions/util-actions";
 
 import "./Login.css";
-import { displayServerError } from "./state/actions/util-actions";
 
 export const Login: React.FC = observer(() => {
   const { state } = useContext(context);
@@ -27,6 +27,12 @@ export const Login: React.FC = observer(() => {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const form = event.currentTarget;
+    if (form.checkValidity() === false) {
+      event.stopPropagation();
+      actions.pushError(ErrorCodes.INVALID_FORM);
+      return;
+    }
     const data = new FormData(event.currentTarget);
     const formData = {
       username: data.get("username"),
@@ -42,16 +48,20 @@ export const Login: React.FC = observer(() => {
         credentials: "include"
       });
       if (login.ok) {
-        actions.sessionCheck();
+        await actions.sessionCheck();
         if (!state.isLoggedIn) {
-          displayServerError(login, ErrorCodes.UNABLE_TO_LOGIN_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]);
+          displayServerError(
+            login.status,
+            ErrorCodes.UNABLE_TO_LOGIN_SERVER,
+            ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]
+          );
         } else {
           actions.removeError(ErrorCodes.UNABLE_TO_LOGIN_SERVER);
-          actions.pushSnackbar("Succesfully logged in", "success");
+          actions.pushSnackbar("Succesfully signed in", "success");
           navigate("/");
         }
       } else {
-        displayServerError(login, ErrorCodes.UNABLE_TO_LOGIN_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]);
+        displayServerError(login.status, ErrorCodes.UNABLE_TO_LOGIN_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]);
       }
     } catch (error) {
       if (error instanceof HttpError) {

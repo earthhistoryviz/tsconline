@@ -13,9 +13,10 @@ import Container from "@mui/material/Container";
 import LoginIcon from "@mui/icons-material/Login";
 import { fetcher, HttpError } from "./util";
 import { actions } from "./state";
-import { ErrorCodes } from "./util/error-codes";
+import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { context } from "./state";
 import { useNavigate } from "react-router";
+import { displayServerError } from "./state/actions/util-actions";
 
 import "./Login.css";
 
@@ -30,48 +31,58 @@ export const SignUp: React.FC = observer(() => {
     if (form.checkValidity() === false) {
       event.stopPropagation();
       actions.pushError(ErrorCodes.INVALID_FORM);
-    } else {
-      const data = new FormData(event.currentTarget);
-      try {
-        const response = await fetcher("/auth/signup", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            username: data.get("username"),
-            password: data.get("password"),
-            email: data.get("email")
-          })
-        });
-        if (response.ok) {
-          actions.sessionCheck();
-          if (!state.isLoggedIn) {
-            actions.pushError(ErrorCodes.UNABLE_TO_SIGNUP_SERVER);
-          } else {
-            actions.removeError(ErrorCodes.UNABLE_TO_SIGNUP_SERVER);
-            actions.removeError(ErrorCodes.UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL);
-            actions.removeError(ErrorCodes.INVALID_FORM);
-            actions.pushSnackbar("Succesfully signed up", "success");
-            navigate("/");
-          }
+      return;
+    }
+    const data = new FormData(event.currentTarget);
+    try {
+      const response = await fetcher("/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          username: data.get("username"),
+          password: data.get("password"),
+          email: data.get("email")
+        })
+      });
+      if (response.ok) {
+        await actions.sessionCheck();
+        if (!state.isLoggedIn) {
+          displayServerError(
+            response.status,
+            ErrorCodes.UNABLE_TO_LOGIN_SERVER,
+            ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]
+          );
         } else {
-          console.error("Error trying to log in: " + response.status);
-          actions.pushError(ErrorCodes.UNABLE_TO_SIGNUP_SERVER);
+          actions.removeError(ErrorCodes.UNABLE_TO_SIGNUP_SERVER);
+          actions.removeError(ErrorCodes.UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL);
+          actions.removeError(ErrorCodes.INVALID_FORM);
+          actions.pushSnackbar("Succesfully signed up", "success");
+          navigate("/");
         }
-      } catch (error) {
-        if (error instanceof HttpError) {
-          const status = error.status;
-          if (status === 409) {
-            actions.pushError(ErrorCodes.UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL);
-          } else if (status === 400) {
-            actions.pushError(ErrorCodes.INVALID_FORM);
-          }
-        } else {
-          console.error("Error:", error);
-          actions.pushError(ErrorCodes.UNABLE_TO_SIGNUP_SERVER);
+      } else {
+        displayServerError(
+          response.status,
+          ErrorCodes.UNABLE_TO_SIGNUP_SERVER,
+          ErrorMessages[ErrorCodes.UNABLE_TO_SIGNUP_SERVER]
+        );
+      }
+    } catch (error) {
+      if (error instanceof HttpError) {
+        const status = error.status;
+        if (status === 409) {
+          actions.pushError(ErrorCodes.UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL);
+        } else if (status === 400) {
+          actions.pushError(ErrorCodes.INVALID_FORM);
         }
+      } else {
+        displayServerError(
+          error,
+          ErrorCodes.UNABLE_TO_SIGNUP_SERVER,
+          ErrorMessages[ErrorCodes.UNABLE_TO_SIGNUP_SERVER]
+        );
       }
     }
   };
