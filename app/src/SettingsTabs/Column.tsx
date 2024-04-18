@@ -79,7 +79,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
               }
             }}>
             <ErrorOutlineIcon
-              className="error-icon"
+              className="column-error-icon"
               style={{
                 color: theme.palette.error.main
               }}

@@ -53,9 +53,10 @@
   background-color: transparent;
 }
 
-.MuiSvgIcon-root.error-icon {
+.MuiSvgIcon-root.column-error-icon {
   font-size: 1.3rem;
-  padding-left: 10px;
-  padding-right: 10px;
-  padding-top: 6px;
+  margin-right: 0px;
+  margin-left: 10px;
+  margin-right: 10px;
+  margin-top: 6px;
 }
