@@ -8,14 +8,15 @@ import { context } from "../state";
 interface TSCColorPickerProps {
   color: string; // Current color
   onColorChange: (color: string) => void; // Callback function when color changes
+  disabled?: boolean
 }
-const TSCColorPicker: React.FC<TSCColorPickerProps> = observer(({ color, onColorChange }) => {
+const TSCColorPicker: React.FC<TSCColorPickerProps> = observer(({ color, onColorChange, disabled = false }) => {
   const [showPicker, setShowPicker] = useState<boolean>(false);
-  const [selectedColor, setSelectedColor] = useState<string>(color ? color : "#000");
+  const [selectedColor, setSelectedColor] = useState<string>(color);
   const { state, actions } = useContext(context);
   const pickerRef = useRef<HTMLDivElement>(null); // Reference to the picker container
 
-
+  
   const handleColorChange = (color: ColorResult) => {
     setSelectedColor(color.hex);
     onColorChange(color.hex);
@@ -46,6 +47,7 @@ const TSCColorPicker: React.FC<TSCColorPickerProps> = observer(({ color, onColor
             actions.updatePresetColors(selectedColor);
           }
         }}
+        disabled={disabled}
         className="cp-button"
         style={{ backgroundColor: selectedColor }}></Button>
       {showPicker && (

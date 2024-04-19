@@ -1,51 +1,44 @@
 import { observer } from "mobx-react-lite";
-import React, { useState, useContext } from "react";
-import { FormLabel } from "@mui/material";
+import React, { useState, useContext, useEffect } from "react";
+import { FormLabel, Typography } from "@mui/material";
 import TSCColorPicker from "../components/TSCColorPicker";
 import { context } from "../state";
 import { setRGB } from "../state/actions";
 import { RGB } from "@tsconline/shared";
+import "./BackgroundColor.css";
+import { convertHexToRGB } from "../state/actions/util-actions"
 
-function hexToRgb(hex: string): RGB {
-  // Ensure the input is a valid hex color code
-  if (!/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(hex)) {
-      throw new Error("Invalid hexadecimal color code");
-  }
 
-  // Remove the "#" character
-  hex = hex.slice(1);
-
-  // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-  if (hex.length === 3) {
-      hex = hex.split('').map(char => char + char).join('');
-  }
-
-  // Parse the red, green, and blue values
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
-  const toReturn: RGB = {r: r, g: g, b: b}
-
-  // Return the RGB representation
-  return toReturn;
+interface ChangeBGColorProps {
+  column: ColumnInfo
 }
-
-export const ChangeBackgroundColor: React.FC = observer(() => {
+export const ChangeBackgroundColor: React.FC<ChangeBGColorProps> = observer(({column}) => {
   const { state, actions } = useContext(context);
-  const bgColor = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected as string)!.rgb;
-
-  const [selectedColor, setSelectedColor] = useState(bgColor); // State to keep track of selected color
-  
   const handleColorChange = (color: string) => {
-    setRGB(hexToRgb(color));
+    setRGB(column, convertHexToRGB(color, false));
   };
 
-  return (
-    <div>
+
+  if (column.children.length != 0) {
+    return (
+      <div>
       <FormLabel id="color-label" className="bg-label">
-        Background Color:
+        Background Color:     
+        <Typography className="not-avail" style={{ display: 'inline' }}>
+            Not Available
+        </Typography>
       </FormLabel>
-      <TSCColorPicker color={`rgb(${selectedColor.r}, ${selectedColor.g}, ${selectedColor.b})`} onColorChange={handleColorChange} />
     </div>
-  );
+    )
+  }
+  else {
+    return (
+      <div>
+        <FormLabel id="color-label" className="bg-label">
+          Background Color:
+        </FormLabel>
+        <TSCColorPicker key={column.name} color={`rgb(${column.rgb.r}, ${column.rgb.g}, ${column.rgb.b})`} onColorChange={handleColorChange} />
+      </div>
+    );
+  }
 });
