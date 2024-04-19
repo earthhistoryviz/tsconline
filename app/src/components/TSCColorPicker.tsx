@@ -8,7 +8,7 @@ import { context } from "../state";
 interface TSCColorPickerProps {
   color: string; // Current color
   onColorChange: (color: string) => void; // Callback function when color changes
-  disabled?: boolean
+  disabled?: boolean;
 }
 const TSCColorPicker: React.FC<TSCColorPickerProps> = observer(({ color, onColorChange, disabled = false }) => {
   const [showPicker, setShowPicker] = useState<boolean>(false);
@@ -16,7 +16,6 @@ const TSCColorPicker: React.FC<TSCColorPickerProps> = observer(({ color, onColor
   const { state, actions } = useContext(context);
   const pickerRef = useRef<HTMLDivElement>(null); // Reference to the picker container
 
-  
   const handleColorChange = (color: ColorResult) => {
     setSelectedColor(color.hex);
     onColorChange(color.hex);
@@ -30,9 +29,9 @@ const TSCColorPicker: React.FC<TSCColorPickerProps> = observer(({ color, onColor
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   });
 
@@ -51,7 +50,7 @@ const TSCColorPicker: React.FC<TSCColorPickerProps> = observer(({ color, onColor
         className="cp-button"
         style={{ backgroundColor: selectedColor }}></Button>
       {showPicker && (
-        <div ref = {pickerRef} className="color-picker">
+        <div ref={pickerRef} className="color-picker">
           <SketchPicker color={selectedColor} onChangeComplete={handleColorChange} presetColors={state.presetColors} />
         </div>
       )}
