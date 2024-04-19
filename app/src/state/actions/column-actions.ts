@@ -105,3 +105,11 @@ export const setEnableTitle = action((isOn: boolean, column: ColumnInfo) => {
 export const setRGB = action((column: ColumnInfo, color: RGB) => {
   column.rgb = color;
 });
+
+export const setShowAgeLabels = action((isOn: boolean, column: ColumnInfo) => {
+  column.showAgeLabels = isOn;
+})
+
+export const setShowUncertaintyLabels = action((isOn: boolean, column: ColumnInfo) => {
+  column.showUncertaintyLabels = isOn;
+})

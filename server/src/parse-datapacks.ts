@@ -225,7 +225,7 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     name: ageUnits.split(" ")[0]!,
     editName: ageUnits.split(" ")[0]!,
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
-    fontOptions: ["Column Header", "Ruler Label"],
+    fontOptions: getValidFontOptions("Ruler"),
     on: true,
     width: 100,
     enableTitle: true,
@@ -263,6 +263,7 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     units: ageUnits,
     columnDisplayType: "RootColumn"
   };
+  setShowLabels(chartColumn);
   const datapackParsingPack = { columnInfo: chartColumn, ageUnits, defaultChronostrat, formatVersion };
   assertDatapackParsingPack(datapackParsingPack);
   if (date) datapackParsingPack.date = date;
@@ -271,6 +272,17 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
   if (verticalScale) datapackParsingPack.verticalScale = verticalScale;
   return datapackParsingPack;
 }
+
+function setShowLabels(column: ColumnInfo) {
+  if (column.columnDisplayType !== "RootColumn" && column.columnDisplayType !== "MetaColumn" && column.columnDisplayType !== "BlockSeriesMetaColumn") {
+    if (column.fontOptions.includes("Age Label")) column.showAgeLabels = false;
+    if (column.fontOptions.includes("Uncertainty Label")) column.showUncertaintyLabels = false;
+  }
+  for (const child of column.children) {
+    setShowLabels(child);
+  }
+}
+
 /**
  * This will populate a mapping of all parents : childen[]
  * We need this to recursively iterate correctly. We do not want
@@ -566,9 +578,7 @@ export async function getColumnTypes(
     }
     if (
       !inFreehandBlock &&
-      (tabSeparated[1] === "freehand" ||
-        tabSeparated[1] === "freehand-overlay" ||
-        tabSeparated[1] === "freehand-underlay")
+      (tabSeparated[1] === "freehand")
     ) {
       setColumnHeaders(freehand, tabSeparated);
       inFreehandBlock = true;
@@ -1378,6 +1388,7 @@ function recursive(
     Object.assign(currentColumnInfo, {
       ...currentEvent,
       fontOptions: getValidFontOptions("Event"),
+      columnDisplayType: "Event",
       subInfo: JSON.parse(JSON.stringify(subEventInfo))
     });
     returnValue.fontOptions = currentColumnInfo.fontOptions;
@@ -1389,6 +1400,7 @@ function recursive(
     const { width, subChronInfo, ...currentChron } = chronMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentChron,
+      columnDisplayType: "Chron",
       subInfo: JSON.parse(JSON.stringify(subChronInfo))
     });
     addChronChildren(
@@ -1409,6 +1421,7 @@ function recursive(
     Object.assign(currentColumnInfo, {
       ...currentPoint,
       fontOptions: getValidFontOptions("Point"),
+      columnDisplayType: "Point",
       subInfo: JSON.parse(JSON.stringify(subPointInfo))
     });
     returnValue.fontOptions = currentColumnInfo.fontOptions;
@@ -1420,6 +1433,7 @@ function recursive(
     // TODO NOTE FOR FUTURE: @Paolo - Java file appends all fonts to this, but from trial and error, only column header makes sense. If this case changes here we would change it
     Object.assign(currentColumnInfo, {
       ...currentFreehand,
+      columnDisplayType: "Freehand",
       subInfo: JSON.parse(JSON.stringify(subFreehandInfo))
     });
     returnValue.maxAge = currentColumnInfo.maxAge;
@@ -1428,7 +1442,10 @@ function recursive(
   if (blankMap.has(currentColumn)) {
     const currentBlank = blankMap.get(currentColumn)!;
     // TODO NOTE FOR FUTURE: @Paolo - Java file appends all fonts to this, but from trial and error, only column header makes sense. If this case changes here we would change it
-    Object.assign(currentColumnInfo, currentBlank);
+    Object.assign({
+      ...currentBlank,
+      columnDisplayType: "Blank"
+    }, currentBlank);
   }
 
   childrenArray.push(currentColumnInfo);
@@ -1724,7 +1741,7 @@ function getValidFontOptions(type: DisplayedColumnTypes): ValidFontOptions[] {
       return ["Column Header", "Age Label", "Sequence Column Label"];
     case "Ruler":
     case "AgeAge":
-      return ["Column Header", "Age Label"];
+      return ["Column Header", "Ruler Label"];
     case "Transect":
       return ["Column Header"];
     case "Freehand":
