@@ -133,19 +133,6 @@ export const setColor = action((target: ValidFontOptions, color: React.SetStateA
   assertFontsInfo(columnHashMapEntry?.fontsInfo);
 });
 
-export const setRGB = action((color: RGB) => {
-  if (state.settingsTabs.columnSelected === null) {
-    throw new Error("state.settingsTabs.columnSelected is null");
-  }
-
-  const columnHashMapEntry = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected);
-
-  if (!columnHashMapEntry) {
-    throw new Error(`Entry for ${state.settingsTabs.columnSelected} not found in columnHashMap`);
-  }
-  console.log(columnHashMapEntry.name);
-  console.log(color);
-  console.log(columnHashMapEntry);
-  columnHashMapEntry.rgb = color;
-  console.log(columnHashMapEntry.rgb);
+export const setRGB = action((column: ColumnInfo, color: RGB) => {
+  column.rgb = color;
 });
