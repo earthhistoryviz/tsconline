@@ -121,6 +121,32 @@ const ShowTitles = observer(({ column }: { column: ColumnInfo }) => {
           />
         }
       />
+      {column.showAgeLabels !== undefined && <FormControlLabel
+        name="showAgeLabel"
+        label="Show Age Label"
+        control={
+          <TSCCheckbox
+            outlineColor="gray"
+            checked={column.showAgeLabels}
+            onChange={() => {
+              actions.setShowAgeLabels(!column.showAgeLabels, column);
+            }}
+          />
+        }
+      />}
+      {column.showUncertaintyLabels !== undefined && <FormControlLabel
+        name="showUncertaintyLabels"
+        label="Show Uncertainty Labels"
+        control={
+          <TSCCheckbox
+            outlineColor="gray"
+            checked={column.showUncertaintyLabels}
+            onChange={() => {
+              actions.setShowUncertaintyLabels(!column.showUncertaintyLabels, column);
+            }}
+          />
+        }
+      />}
     </div>
   );
 });

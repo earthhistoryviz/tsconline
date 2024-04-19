@@ -216,6 +216,8 @@ export type ColumnInfo = {
   rgb: RGB;
   width?: number;
   units: string;
+  showAgeLabels?: boolean;
+  showUncertaintyLabels?: boolean;
 };
 
 export type Range = ColumnHeaderProps & {
@@ -846,6 +848,8 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   if ("width" in o && typeof o.width !== "number") throwError("ColumnInfo", "width", "number", o.width);
   if (typeof o.enableTitle !== "boolean") throwError("ColumnInfo", "enableTitle", "boolean", o.enableTitle);
   if (typeof o.units !== "string") throwError("ColumnInfo", "units", "string", o.units);
+  if ("showAgeLabels" in o && typeof o.showAgeLabels !== "boolean") throwError("ColumnInfo", "showAgeLabels", "boolean", o.showAgeLabels);
+  if ("showUncertaintyLabels" in o && typeof o.showUncertaintyLabels !== "boolean") throwError("ColumnInfo", "showUncertaintyLabels", "boolean", o.showUncertaintyLabels);
   if (!Array.isArray(o.fontOptions)) throwError("ColumnInfo", "fontOptions", "array", o.fontOptions);
   for (const fontOption of o.fontOptions) {
     assertValidFontOptions(fontOption);
