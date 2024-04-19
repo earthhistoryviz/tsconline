@@ -62,3 +62,15 @@ export function compareStrings(a: string, b: string) {
   if (a > b) return 1;
   return 0;
 }
+
+/**
+ * trim the first and last character (most likely quotes) (will not check if it is though)
+ * @param input
+ * @returns
+ */
+export function trimQuotes(input: string): string {
+  if (input.startsWith('"') && input.endsWith('"')) {
+    return input.slice(1, -1);
+  }
+  return input;
+}
