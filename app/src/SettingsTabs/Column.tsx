@@ -156,10 +156,12 @@ export const Column = observer(function Column() {
     stringToHash(state.settingsTabs.columns!.name)
   ]);
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [searchTermDisplay, setSearchTermDisplay] = useState("");
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const term = event.target.value;
     console.log(term)
     setSearchTerm(term);
+    setSearchTermDisplay(term);
     actions.searchColumns(term);
   };
   //if column not in expanded list, add it
@@ -204,6 +206,10 @@ export const Column = observer(function Column() {
             onChange={handleSearch} 
             value={searchTerm}
           />
+          <Typography variant="body2" color="textSecondary">
+            {/* Searching For: "{searchTermDisplay}" */}
+            <span style={{ color: 'red' }}>Searching For: "{searchTermDisplay}"</span>
+          </Typography>
         </Box>
         <TSCButton
           id="column-generate-button-top"
