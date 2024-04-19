@@ -1,6 +1,7 @@
 import { action } from "mobx";
 import { state } from "../state";
-import { ColumnInfo, ValidFontOptions } from "@tsconline/shared";
+import { assertFontsInfo, ColumnInfo, RGB, ValidFontOptions } from "@tsconline/shared";
+import React from "react";
 
 export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
   state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
@@ -82,18 +83,69 @@ export const setFontSize = action((target: ValidFontOptions, fontSize: number, c
   column.fontsInfo[target].size = fontSize;
 });
 
-export const setBold = action((target: ValidFontOptions, isBold: boolean, column: ColumnInfo) => {
-  column.fontsInfo[target].bold = isBold;
+export const setBold = action((target: ValidFontOptions, isBold: boolean) => {
+  if (state.settingsTabs.columnSelected === null) {
+    throw new Error("state.settingsTabs.columnSelected is null");
+  }
+
+  const columnHashMapEntry = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected);
+
+  if (!columnHashMapEntry) {
+    throw new Error(`Entry for ${state.settingsTabs.columnSelected} not found in columnHashMap`);
+  }
+  assertFontsInfo(columnHashMapEntry.fontsInfo);
+
+  columnHashMapEntry.fontsInfo[target].bold = isBold;
+  assertFontsInfo(columnHashMapEntry?.fontsInfo);
 });
 
-export const setItalic = action((target: ValidFontOptions, isItalic: boolean, column: ColumnInfo) => {
-  column.fontsInfo[target].italic = isItalic;
+export const setItalic = action((target: ValidFontOptions, isItalic: boolean) => {
+  if (state.settingsTabs.columnSelected === null) {
+    throw new Error("state.settingsTabs.columnSelected is null");
+  }
+
+  const columnHashMapEntry = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected);
+
+  if (!columnHashMapEntry) {
+    throw new Error(`Entry for ${state.settingsTabs.columnSelected} not found in columnHashMap`);
+  }
+  assertFontsInfo(columnHashMapEntry.fontsInfo);
+
+  columnHashMapEntry.fontsInfo[target].italic = isItalic;
+  assertFontsInfo(columnHashMapEntry?.fontsInfo);
 });
 
-export const setColor = action((target: ValidFontOptions, color: string, column: ColumnInfo) => {
-  column.fontsInfo[target].color = color;
+export const setColor = action((target: ValidFontOptions, color: React.SetStateAction<string>) => {
+  if (state.settingsTabs.columnSelected === null) {
+    throw new Error("state.settingsTabs.columnSelected is null");
+  }
+
+  const columnHashMapEntry = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected);
+
+  if (!columnHashMapEntry) {
+    throw new Error(`Entry for ${state.settingsTabs.columnSelected} not found in columnHashMap`);
+  }
+  assertFontsInfo(columnHashMapEntry.fontsInfo);
+
+  if (typeof color === "string") {
+    columnHashMapEntry.fontsInfo[target].color = color;
+  }
+  assertFontsInfo(columnHashMapEntry?.fontsInfo);
 });
 
-export const setEnableTitle = action((isOn: boolean, column: ColumnInfo) => {
-  column.enableTitle = isOn;
+export const setRGB = action((color: RGB) => {
+  if (state.settingsTabs.columnSelected === null) {
+    throw new Error("state.settingsTabs.columnSelected is null");
+  }
+
+  const columnHashMapEntry = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected);
+
+  if (!columnHashMapEntry) {
+    throw new Error(`Entry for ${state.settingsTabs.columnSelected} not found in columnHashMap`);
+  }
+  console.log(columnHashMapEntry.name);
+  console.log(color);
+  console.log(columnHashMapEntry);
+  columnHashMapEntry.rgb = color;
+  console.log(columnHashMapEntry.rgb);
 });

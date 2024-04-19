@@ -377,7 +377,15 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo,
           xml += `${indent}<setting name="${xmlKey}" standardized="${presetColumn[key].standardized}" 
           useNamed="${presetColumn[key].useNamed}">${presetColumn[key].text}</setting>\n`;
         } else if ("useNamed" in presetColumn[key]) {
-          xml += `${indent}<setting name="${xmlKey}" useNamed="${presetColumn[key].useNamed}">${presetColumn[key].text}</setting>\n`;
+          if (!presetColumn[key].useNamed) {
+            if (colName == "Ma") {
+                console.log(`rgb(${stateColumn?.rgb.r}, ${stateColumn?.rgb.g}, ${stateColumn?.rgb.b}`)
+            }
+            xml += `${indent}<setting name="${xmlKey}" useNamed="${presetColumn[key].useNamed}">rgb(${stateColumn?.rgb.r}, ${stateColumn?.rgb.g}, ${stateColumn?.rgb.b}</setting>\n`;
+          } 
+          else {
+            xml += `${indent}<setting name="${xmlKey}" useNamed="${presetColumn[key].useNamed}">${presetColumn[key].text}</setting>\n`;
+          }
         } else if ("standardized" in presetColumn[key]) {
           xml += `${indent}<setting name="${xmlKey}" useNamed="${presetColumn[key].standardized}">${presetColumn[key].text}</setting>\n`;
         } else {
