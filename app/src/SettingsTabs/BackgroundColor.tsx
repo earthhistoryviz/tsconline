@@ -5,6 +5,7 @@ import TSCColorPicker from "../components/TSCColorPicker";
 import { setRGB } from "../state/actions";
 import "./BackgroundColor.css";
 import { convertHexToRGB } from "../state/actions/util-actions";
+import { ColumnInfo } from "@tsconline/shared";
 
 interface ChangeBGColorProps {
   column: ColumnInfo;

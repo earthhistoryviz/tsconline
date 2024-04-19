@@ -27,10 +27,11 @@ import "./FontMenu.css";
 import { ValidFontOptions } from "@tsconline/shared";
 import TSCColorPicker from "../components/TSCColorPicker";
 import { NumericFormat } from "react-number-format";
+import { ColumnInfo } from "@tsconline/shared";
+import { convertHexToRGB } from "../state/actions/util-actions";
 const FontSizeTextField = ({ ...props }: TextFieldProps) => (
   <TextField {...props} className="FontSizeContainer" label="Size" variant="outlined" />
 );
-import { convertHexToRGB } from "../state/actions/util-actions";
 
 const FontMenuRow: React.FC<{
   target: ValidFontOptions;
