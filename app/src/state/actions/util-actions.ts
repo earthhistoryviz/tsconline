@@ -27,7 +27,10 @@ export function convertHexToRGB(hex: string, returnAsString: boolean = false): R
   hex = hex.slice(1);
 
   if (hex.length === 3) {
-    hex = hex.split('').map(char => char + char).join('');
+    hex = hex
+      .split("")
+      .map((char) => char + char)
+      .join("");
   }
 
   const r = parseInt(hex.substring(0, 2), 16);

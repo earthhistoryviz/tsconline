@@ -29,8 +29,8 @@ import TSCColorPicker from "../components/TSCColorPicker";
 import { NumericFormat } from "react-number-format";
 const FontSizeTextField = ({ ...props }: TextFieldProps) => (
   <TextField {...props} className="FontSizeContainer" label="Size" variant="outlined" />
-);import { convertHexToRGB } from "../state/actions/util-actions";
-
+);
+import { convertHexToRGB } from "../state/actions/util-actions";
 
 const FontMenuRow: React.FC<{
   target: ValidFontOptions;
@@ -48,13 +48,9 @@ const FontMenuRow: React.FC<{
   };
 
   const handleColor = (newColor: string) => {
-    actions.setColor(target, newColor, column);
-  };
-
-  const handleColor = (newColor: string) => {
     const rgb = convertHexToRGB(newColor, true);
-    actions.setColor(target, rgb);
-  }
+    actions.setColor(target, rgb, column);
+  };
 
   return (
     <div>
@@ -123,7 +119,7 @@ const FontMenuRow: React.FC<{
           </ToggleButton>
         </ToggleButtonGroup>
         <div id="ColorInputContainer">
-          <TSCColorPicker color={fontOpts.color} onColorChange={handleColor} disabled={!fontOpts.on}/>
+          <TSCColorPicker color={fontOpts.color} onColorChange={handleColor} disabled={!fontOpts.on} />
         </div>
         <Typography
           sx={{
