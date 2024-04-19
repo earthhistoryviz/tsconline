@@ -1,0 +1,12 @@
+.info-box {
+  width: 90%;
+  border: black solid 1px;
+  border-radius: 5px;
+  margin-top: 5px;
+  padding: 4px;
+  max-height: 200px;
+}
+
+.scroll-bar {
+  max-height: 200px;
+}
