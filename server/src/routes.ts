@@ -58,6 +58,12 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   const datapackInfoChunk: DatapackInfoChunk = { datapackIndex: chunk!, totalChunks: allDatapackKeys.length };
   reply.status(200).send(datapackInfoChunk);
 };
+export const loadActiveDatapacks = async function loadActiveDatapacks(request: FastifyRequest, reply: FastifyReply) {
+  const activeDatapacks = assetconfigs.activeDatapacks;
+  reply.status(200).send({ activeDatapacks });
+  return;
+}
+
 
 export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
   request: FastifyRequest<{ Querystring: { start?: number; increment?: number } }>,
@@ -180,39 +186,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     await errorHandler("File too large", 413);
     return;
   }
-  if (encrypt === "true") {
-    try {
-      await new Promise<void>((resolve, reject) => {
-        const cmd =
-          `java -jar ${assetconfigs.activeJar} ` +
-          // datapacks:
-          `-d "${filepath.replaceAll("\\", "/")}" ` +
-          // Tell it where to send the datapacks
-          `-enc ${datapackDir.replaceAll("\\", "/")} ` +
-          `-node`;
-
-        // java -jar <jar file> -d <datapack> <datapack> -enc <destination directory> -node
-        console.log("Calling Java encrypt.jar: ", cmd);
-        exec(cmd, function (error, stdout, stderror) {
-          console.log("Java encrypt.jar finished, sending reply to browser");
-          if (error) {
-            console.error("Java error param: " + error);
-            console.error("Java stderr: " + stderror.toString());
-            resolve();
-          } else {
-            console.log("Java stdout: " + stdout.toString());
-            resolve();
-          }
-        });
-      });
-    } catch (e) {
-      console.error(e);
-      resetUploadDirectory(filepath, decryptedFilepathDir);
-      reply.status(500).send({ error: "Failed to encrypt datapacks with error " + e });
-      return;
-    }
-  }
-
   try {
     await new Promise<void>((resolve, reject) => {
       const cmd =
@@ -233,7 +206,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
           resolve();
         }
       });
-
     });
   } catch (e) {
     await errorHandler("Failed to decrypt datapacks with error " + e, 500, e);
@@ -270,7 +242,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       errorHandler("Failed to parse MapPackIndex.json", 500, e);
       return;
     }
-
   }
   await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [filename]);
   if (!datapackIndex[filename]) {

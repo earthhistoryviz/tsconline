@@ -13,11 +13,11 @@ import "./Datapack.css";
 import { Dialog } from "@mui/material";
 import { action } from "mobx";
 
-
 export const Datapacks = observer(function Datapacks() {
   const theme = useTheme();
   const { actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
+  const [downloadButton, setDownloadButton] = useState([]);
 
   const handleCheckboxChange = (name: string) => {
     if (state.config.datapacks.includes(name)) {
@@ -29,6 +29,21 @@ export const Datapacks = observer(function Datapacks() {
       actions.setDatapackConfig([...state.config.datapacks, name], "");
     }
   };
+  const download = async (name: string) => {
+
+    let systemDp = await checkActiveDatapacks(name);
+    return (systemDp &&
+
+
+      <div>
+        <Menu menuButton={<DownloadIcon className="download-icon" />} transition>
+          <MenuItem onClick={(e) => handleDownload(true)}><Typography>encrypted download</Typography></MenuItem>
+          <MenuItem onClick={(e) => handleDownload(false)}><Typography>download</Typography></MenuItem>
+        </Menu>
+
+      </div>
+    )
+  }
 
   function handleDownload(needEncryption: boolean) {
     if (needEncryption) {
@@ -38,6 +53,12 @@ export const Datapacks = observer(function Datapacks() {
       console.log("download");
       actions.requestDownload(false);
     }
+  }
+
+  const checkActiveDatapacks = async (name: string) => {
+    const activeDatapacks = await actions.loadActiveDatapacks();
+    return activeDatapacks!.includes(name) || false;
+
   }
 
   return (
@@ -63,15 +84,8 @@ export const Datapacks = observer(function Datapacks() {
                       <Typography>{datapack}</Typography>
                     </div>
                   </td>
-                  <td className="download-cell" >
-                    <div>
-                      <Menu menuButton={<DownloadIcon className="download-icon" />} transition>
-                        <MenuItem onClick={(e) => handleDownload(true)}><Typography>encrypted download</Typography></MenuItem>
-                        <MenuItem onClick={(e) => handleDownload(false)}><Typography>download</Typography></MenuItem>
-                      </Menu>
+                  <td className="download-cell" >{download(datapack)}</td>
 
-                    </div>
-                  </td>
                   <td className="info-cell">
                     <div>
                       <Tooltip title="Description" arrow placement="right">

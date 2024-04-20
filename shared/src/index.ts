@@ -36,8 +36,10 @@ export type IndexResponse = {
   datapackIndex: DatapackIndex;
   mapPackIndex: MapPackIndex;
 };
+
 export type DatapackIndex = {
   [name: string]: DatapackParsingPack;
+
 };
 export type MapPackIndex = {
   [name: string]: MapPack;

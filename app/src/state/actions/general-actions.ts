@@ -689,6 +689,23 @@ export const fetchImage = action("fetchImage", async (datapackName: string, imag
   return image;
 });
 
+export const loadActiveDatapacks = action(async () => {
+  const response = await fetcher(`/loadActiveDatapacks`, {
+    method: "GET"
+  });
+  let data;
+  let datapacks;
+  if (response.ok) {
+    data = await response.json();
+    datapacks = JSON.stringify(data.activeDatapacks);
+    return datapacks;
+  } else {
+    console.error("failed loading active datapacks");
+    return;
+  }
+
+});
+
 export const requestDownload = action((needEncryption: boolean) => {
 
 });
