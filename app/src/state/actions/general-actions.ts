@@ -701,13 +701,16 @@ export const loadActiveDatapacks = action(async () => {
     return datapacks;
   } else {
     console.error("failed loading active datapacks");
-    return;
+    return "";
   }
 
 });
 
-export const requestDownload = action((needEncryption: boolean) => {
-
+export const requestDownload = action(async (needEncryption: boolean, filePath: string, datapackDir: string) => {
+  const response = await fetcher(`/requestDownload/${needEncryption}/${filePath}/${datapackDir}`, {
+    method: "POST"
+  })
+  // TODO: finish download
 });
 export const logout = action("logout", async () => {
   try {

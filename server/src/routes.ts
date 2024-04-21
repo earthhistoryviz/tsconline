@@ -58,6 +58,44 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   const datapackInfoChunk: DatapackInfoChunk = { datapackIndex: chunk!, totalChunks: allDatapackKeys.length };
   reply.status(200).send(datapackInfoChunk);
 };
+export const requestDownload = async function requestDownload(request: FastifyRequest<{ Params: { needEncryption: string, filePath: string, datapackDir: string } }>, reply: FastifyReply) {
+  const { needEncryption } = request.params;
+  const { filePath } = request.params;
+  const { datapackDir } = request.params;
+  if (needEncryption) {
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const cmd =
+          `java -jar ${assetconfigs.activeJar} ` +
+          // datapacks:
+          `-d "${filePath.replaceAll("\\", "/")}" ` +
+          // Tell it where to send the datapacks
+          `-enc ${datapackDir.replaceAll("\\", "/")} ` +
+          `-node`;
+
+        // java -jar <jar file> -d <datapack> <datapack> -enc <destination directory> -node
+        console.log("Calling Java encrypt.jar: ", cmd);
+        exec(cmd, function (error, stdout, stderror) {
+          console.log("Java encrypt.jar finished, sending reply to browser");
+          if (error) {
+            console.error("Java error param: " + error);
+            console.error("Java stderr: " + stderror.toString());
+            resolve();
+          } else {
+            console.log("Java stdout: " + stdout.toString());
+            resolve();
+          }
+        });
+      });
+    } catch (e) {
+      console.error(e);
+      reply.status(500).send({ error: "Failed to encrypt datapacks with error " + e });
+      return;
+    }
+  }
+  //TODO: finish download. Encypted download -> Encrypted file path; Normal download -> original file path;
+}
+
 export const loadActiveDatapacks = async function loadActiveDatapacks(request: FastifyRequest, reply: FastifyReply) {
   const activeDatapacks = assetconfigs.activeDatapacks;
   reply.status(200).send({ activeDatapacks });

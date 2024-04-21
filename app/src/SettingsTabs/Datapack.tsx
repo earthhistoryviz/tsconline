@@ -11,13 +11,16 @@ import DownloadIcon from '@mui/icons-material/Download';
 import { Menu, MenuItem } from '@szhsin/react-menu';
 import "./Datapack.css";
 import { Dialog } from "@mui/material";
-import { action } from "mobx";
+import { action, set } from "mobx";
 
 export const Datapacks = observer(function Datapacks() {
   const theme = useTheme();
   const { actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
-  const [downloadButton, setDownloadButton] = useState([]);
+  const numberOfDatapackIndexes = Object.keys(state.datapackIndex).length;
+  const defaultDownloadButton = Array(numberOfDatapackIndexes).fill(false);
+  const [downloadButton, setDownloadButton] = useState(defaultDownloadButton);
+  //let i = 0;
 
   const handleCheckboxChange = (name: string) => {
     if (state.config.datapacks.includes(name)) {
@@ -29,10 +32,11 @@ export const Datapacks = observer(function Datapacks() {
       actions.setDatapackConfig([...state.config.datapacks, name], "");
     }
   };
-  const download = async (name: string) => {
-
-    let systemDp = await checkActiveDatapacks(name);
-    return (systemDp &&
+  const download = (name: string, key: number) => {
+    // i++;
+    //console.log(i);
+    checkActiveDatapacks(name, key);
+    return (downloadButton[key] &&
 
 
       <div>
@@ -46,18 +50,25 @@ export const Datapacks = observer(function Datapacks() {
   }
 
   function handleDownload(needEncryption: boolean) {
+    //TODO: find a way to pass the real file path and datapack directory to requestDownload. Might need to know the username
+    //      probably need to implement a search route/function. The file path will be used for download.
     if (needEncryption) {
       console.log("encrypted download");
-      actions.requestDownload(true);
+      actions.requestDownload(true, "dummy/file/path", "dummy/datapack/dir");
     } else {
       console.log("download");
-      actions.requestDownload(false);
+      actions.requestDownload(false, "dummy/file/path", "dummy/datapack/dir");
     }
   }
 
-  const checkActiveDatapacks = async (name: string) => {
+  async function checkActiveDatapacks(name: string, key: number) {
     const activeDatapacks = await actions.loadActiveDatapacks();
-    return activeDatapacks!.includes(name) || false;
+    const isSystemDatapack = activeDatapacks.includes(name);
+    if (!isSystemDatapack) {
+      const newButtonState = [...downloadButton];
+      newButtonState[key] = true;
+      setDownloadButton(newButtonState);
+    }
 
   }
 
@@ -84,7 +95,7 @@ export const Datapacks = observer(function Datapacks() {
                       <Typography>{datapack}</Typography>
                     </div>
                   </td>
-                  <td className="download-cell" >{download(datapack)}</td>
+                  <td className="download-cell" >{download(datapack, index)}</td>
 
                   <td className="info-cell">
                     <div>
