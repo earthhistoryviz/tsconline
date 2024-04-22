@@ -2270,7 +2270,6 @@ __metadata:
     "@mui/icons-material": "npm:^5.11.9"
     "@mui/joy": "npm:^5.0.0-alpha.79"
     "@mui/material": "npm:^5.15.14"
-    "@szhsin/react-menu": "npm:^4.1.0"
     "@tsconline/shared": "npm:1.0.0"
     "@types/color": "npm:^3.0.6"
     "@types/dompurify": "npm:^3"

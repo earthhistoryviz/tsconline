@@ -1,11 +1,26 @@
+/* Existing styles */
 .navbar {
   display: flex;
   justify-content: flex-start;
 }
 
-.nabvar div:last-child {
+.navbar div:last-child {
   margin-left: auto;
 }
+
 .MuiTab-root.tab-space {
   margin-right: 10%;
+}
+
+/* Centering items in the controlled menu */
+.controlled-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center align items horizontally */
+}
+
+.controlled-menu .menu-item {
+  width: 67%; /* Full width to ensure it can center text properly */
+  text-align: center; /* Center text within each item */
+  justify-content: center; /* Justify text center if flex is used */
 }
