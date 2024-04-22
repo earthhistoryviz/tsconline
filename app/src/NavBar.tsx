@@ -1,7 +1,7 @@
 import { useContext, useRef } from "react";
 import { observer } from "mobx-react-lite";
 import AppBar from "@mui/material/AppBar";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import HomeIcon from "@mui/icons-material/Home";
@@ -22,7 +22,6 @@ export const NavBar = observer(function Navbar() {
   const menuRef = useRef(null);
   const [menuState, toggle] = useMenuState({ transition: true });
   const { anchorProps, hoverProps } = useHover(menuState.state, toggle);
-  const navigate = useNavigate();
 
   return (
     <AppBar position="fixed" sx={{ background: theme.palette.navbar.main, display: "flex" }}>
@@ -47,7 +46,7 @@ export const NavBar = observer(function Navbar() {
         <TSCTabs
           value={state.tab !== 0 ? state.tab : false}
           onChange={(_e, value) => {
-              actions.setTab(value);
+            actions.setTab(value);
           }}
           sx={{
             "& .MuiTab-root": {
@@ -60,7 +59,6 @@ export const NavBar = observer(function Navbar() {
               color: theme.palette.selection.main
             }
           }}>
-          navigate("/settings");
           <Tab value={1} label="Chart" to="/chart" component={Link} />
           <Tab value={2} label="Settings" to="/settings" component={Link} ref={menuRef} {...anchorProps} />
           <Tab value={3} label="Datapack" to="/datapack" component={Link} />
@@ -74,12 +72,20 @@ export const NavBar = observer(function Navbar() {
           {...menuState}
           anchorRef={menuRef}
           onClose={() => toggle(false)}
-          className="controlled-menu"
-        >
-          <MenuItem className="menu-item" onClick={() => actions.setSettingsTabsSelected("time")}>  Time</MenuItem>
-          <MenuItem className="menu-item" onClick={() => actions.setSettingsTabsSelected("column")}>Columns</MenuItem>
-          <MenuItem className="menu-item" onClick={() => actions.setSettingsTabsSelected("font")}>Font</MenuItem>
-          <MenuItem className="menu-item" onClick={() => actions.setSettingsTabsSelected("map points")}>Map Points</MenuItem>
+          className="controlled-menu">
+          <MenuItem className="menu-item" onClick={() => actions.setSettingsTabsSelected("time")}>
+            {" "}
+            Time
+          </MenuItem>
+          <MenuItem className="menu-item" onClick={() => actions.setSettingsTabsSelected("column")}>
+            Columns
+          </MenuItem>
+          <MenuItem className="menu-item" onClick={() => actions.setSettingsTabsSelected("font")}>
+            Font
+          </MenuItem>
+          <MenuItem className="menu-item" onClick={() => actions.setSettingsTabsSelected("map points")}>
+            Map Points
+          </MenuItem>
         </ControlledMenu>
       </Toolbar>
     </AppBar>
