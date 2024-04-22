@@ -382,10 +382,8 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo,
         xml += `${indent}<setting name="${xmlKey}" useNamed="false">rgb(${stateColumn.rgb.r},${stateColumn.rgb.g},${stateColumn.rgb.b})</setting>\n`;
       } else if (key === "width") {
         if (stateColumn && stateColumn.width) {
-          xml += `${indent}<setting name="width">${stateColumn.width}</setting>\n`;
+          xml += `${indent}<setting name="width">${isNaN(stateColumn.width) ? 20 : stateColumn.width}</setting>\n`;
         }
-      } else if (key === "orientation") {
-        xml += `${indent}<setting name="${xmlKey}" orientation="${presetColumn[key as keyof ColumnInfoTSC]}"/>\n`;
       } else if (key === "isSelected") {
         //TODO: remove later when event columns are covered
         if (presetColumn._id.includes("EventColumn")) {

@@ -95,7 +95,9 @@ export const ColumnMenu = observer(() => {
         {column && <ChangeBackgroundColor column={column} />}
         {column && <FontMenu column={column} />}
         {column && <ShowTitles column={column} />}
-        {column && column.width && <EditWidthField width={column.width} key={column.name} />}
+        {column && column.width !== undefined && (
+          <EditWidthField width={column.width} key={column.name} columnObject={column} />
+        )}
         {!!info && <InfoBox info={info} />}
       </div>
     </div>
