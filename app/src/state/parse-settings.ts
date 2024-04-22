@@ -276,6 +276,91 @@ function replaceSpecialChars(text: string, type: number): string {
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
 }
+/**
+ *
+ * @param settings settings json object
+ * @param indent the amount of indent to place in the xml file
+ * @returns xml string with settings info
+ */
+function generateSettingsXml(stateSettings: ChartSettings, indent: string): string {
+  let xml = "";
+  for (const unit in stateSettings.timeSettings) {
+    const timeSettings = stateSettings.timeSettings[unit];
+    xml += `${indent}<setting name="topAge" source="text" unit="${unit}">\n`;
+    xml += `${indent}    <setting name="text">${timeSettings.topStageAge}</setting>\n`;
+    xml += `${indent}</setting>\n`;
+    xml += `${indent}<setting name="baseAge" source="text" unit="${unit}">\n`;
+    xml += `${indent}    <setting name="text">${timeSettings.baseStageAge}</setting>\n`;
+    xml += `${indent}</setting>\n`;
+    xml += `${indent}<setting name="unitsPerMY" unit="${unit}">${timeSettings.unitsPerMY * 30}</setting>\n`;
+    xml += `${indent}<setting name="skipEmptyColumns">${timeSettings.skipEmptyColumns}</setting>\n`;
+  }
+  xml += `${indent}<setting name="variableColors">UNESCO</setting>\n`;
+  xml += `${indent}<setting name="negativeChk">false</setting>\n`;
+  xml += `${indent}<setting name="doPopups">${stateSettings.mouseOverPopupsEnabled}</setting>\n`;
+  xml += `${indent}<setting name="enEventColBG">${stateSettings.enableColumnBackground}</setting>\n`;
+  xml += `${indent}<setting name="enChartLegend">${stateSettings.enableChartLegend}</setting>\n`;
+  xml += `${indent}<setting name="enPriority">${stateSettings.enablePriority}</setting>\n`;
+  xml += `${indent}<setting name="enHideBlockLabel">${stateSettings.enableHideBlockLabel}</setting>\n`;
+  return xml;
+}
+
+export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
+  let column: ColumnInfoTSC = JSON.parse(JSON.stringify(defaultColumnBasicInfoTSC));
+  switch (state.columnDisplayType) {
+    case "Event":
+      //can't set it equal to default because it becomes reference to object
+      column = JSON.parse(JSON.stringify(defaultEventColumnInfoTSC));
+      break;
+    case "Zone":
+      column = JSON.parse(JSON.stringify(defaultZoneColumnInfoTSC));
+      break;
+    case "Sequence":
+      column = JSON.parse(JSON.stringify(defaultSequenceColumnInfoTSC));
+      break;
+    case "Range":
+      column = JSON.parse(JSON.stringify(defaultRangeColumnInfoTSC));
+      break;
+    case "Ruler":
+      column = JSON.parse(JSON.stringify(defaultRulerColumnInfoTSC));
+      break;
+    case "Point":
+      column = JSON.parse(JSON.stringify(defaultPointColumnInfoTSC));
+  }
+  switch (state.columnDisplayType) {
+    case "RootColumn":
+      if (state.name.substring(0, 14) === "Chart Title in") {
+        column._id = `class datastore.${state.columnDisplayType}:` + state.name.substring(15, state.name.length);
+      } else column._id = `class datastore.${state.columnDisplayType}:` + state.name;
+      break;
+    case "MetaColumn":
+    case "BlockSeriesMetaColumn":
+      column._id = `class datastore.${state.columnDisplayType}:` + state.name;
+      break;
+    default:
+      column._id = `class datastore.${state.columnDisplayType}Column:` + state.name;
+  }
+  column.title = replaceSpecialChars(state.editName, 1);
+  column.isSelected = state.on;
+  column.drawTitle = state.enableTitle;
+  column.fonts = state.fontsInfo;
+  column.width = state.width;
+  column.backgroundColor.text = "rgb(" + state.rgb.r + "," + state.rgb.g + "," + state.rgb.b + ")";
+  column.children = [];
+  for (let i = 0; i < state.children.length; i++) {
+    column.children.push(translateColumn(state.children[i]));
+  }
+  return column;
+}
+
+export function columnInfoToSettingsTSC(state: ColumnInfo, settings: ChartSettings): ChartInfoTSC {
+  const settingsTSC: ChartInfoTSC = <ChartInfoTSC>{};
+  settingsTSC["class datastore.RootColumn:Chart Root"] = translateColumn(state);
+  settingsTSC["class datastore.RootColumn:Chart Root"]._id = "class datastore.RootColumn:Chart Root";
+  settingsTSC.settings = JSON.parse(JSON.stringify(defaultChartSettingsInfoTSC));
+  assertChartInfoTSC(settingsTSC);
+  return settingsTSC;
+}
 
 /**
  *
@@ -669,7 +754,7 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       }
     } else if (key === "fonts") {
       xml += `${indent}<fonts>\n`;
-      xml += FontsInfoToXml(column.fonts, extractName(column._id), `${indent}    `);
+      xml += generateFontsXml(`${indent}    `, column.fonts);
       xml += `${indent}</fonts>\n`;
     } else if (key === "children") {
       for (let i = 0; i < column.children.length; i++) {
@@ -688,21 +773,16 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
   return xml;
 }
 
-export function ChartInfoTSCToXml(settingsTSC: ChartInfoTSC, version: string = "PRO8.1"): string {
+export function jsonToXml(state: ColumnInfo, settings: ChartSettings, version: string = "PRO8.1"): string {
+  let settingsTSC = JSON.parse(JSON.stringify(columnInfoToSettingsTSC(state, settings)));
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
-  if (settingsTSC["settings"]) {
-    xml += '    <settings version="1.0">\n';
-    xml += ChartSettingsInfoTSCToXml(settingsTSC.settings, "        ");
-    xml += "    </settings>\n";
-  }
+  xml += '    <settings version="1.0">\n';
+  xml += generateSettingsXml(settings, "        ");
+  xml += "    </settings>\n";
   xml += '    <column id="class datastore.RootColumn:Chart Root">\n';
-  xml += columnInfoTSCToXml(settingsTSC["class datastore.RootColumn:Chart Root"]!, "        ");
+  xml += columnInfoTSCToXml(settingsTSC["class datastore.RootColumn:Chart Root"], "        ");
   xml += "    </column>\n";
   xml += "</TSCreator>\n";
   return xml;
-}
-
-export function tempJsonToXml(state: ColumnInfo, settings: ChartSettings): string {
-  return ChartInfoTSCToXml(columnInfoToSettingsTSC(state, settings));
 }
