@@ -22,12 +22,16 @@ export enum ErrorCodes {
   NO_DATAPACKS_SELECTED = "NO_DATAPACKS_SELECTED",
   NO_COLUMNS_SELECTED = "NO_COLUMNS_SELECTED",
   UNIT_RANGE_EMPTY = "UNIT_RANGE_EMPTY",
-  UNABLE_TO_LOGIN_SERVER = "UNABLE_TO_LOGIN",
+  UNABLE_TO_LOGIN_SERVER = "UNABLE_TO_LOGIN_SERVER",
   UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD = "UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD",
+  UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL = "UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL",
+  UNABLE_TO_LOGIN_USER_EXISTS = "UNABLE_TO_LOGIN_USER_EXISTS",
   UNABLE_TO_LOGOUT = "UNABLE_TO_LOGOUT",
   UNABLE_TO_SIGNUP_SERVER = "UNABLE_TO_SIGNUP_SERVER",
   UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL = "UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL",
-  INVALID_FORM = "INVALID_FORM"
+  INVALID_FORM = "INVALID_FORM",
+  UNABLE_TO_VERIFY_ACCOUNT = "UNABLE_TO_VERIFY_ACCOUNT",
+  ALREADY_VERIFIED_ACCOUNT = "ALREADY_VERIFIED_ACCOUNT"
 }
 
 export const ErrorMessages = {
@@ -57,10 +61,15 @@ export const ErrorMessages = {
   [ErrorCodes.NO_COLUMNS_SELECTED]: "No columns selected. Please select at least one column to generate.",
   [ErrorCodes.UNIT_RANGE_EMPTY]: "Unit range is empty. Please enter a valid unit range.",
   [ErrorCodes.UNABLE_TO_LOGIN_SERVER]: "Unable to login due to server error. Please try again later.",
+  [ErrorCodes.UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL]: "Unable to login with Google credentials. Please try again.",
   [ErrorCodes.UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD]: "Invalid username or password. Please try again.",
+  [ErrorCodes.UNABLE_TO_LOGIN_USER_EXISTS]:
+    "User with that email already exists. Please log in or sign up with a different email.",
   [ErrorCodes.UNABLE_TO_LOGOUT]: "Unable to logout. Please try again later.",
   [ErrorCodes.UNABLE_TO_SIGNUP_SERVER]: "Unable to sign up due to server error. Please try again later.",
   [ErrorCodes.UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL]:
     "Email or username already exists. Please try again with a different email or username.",
-  [ErrorCodes.INVALID_FORM]: "Invalid form. Please ensure all fields are filled out correctly."
+  [ErrorCodes.INVALID_FORM]: "Invalid form. Please ensure all fields are filled out correctly.",
+  [ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT]: "Unable to verify account. Please try again later.",
+  [ErrorCodes.ALREADY_VERIFIED_ACCOUNT]: "Account is already verified. Please log in."
 };

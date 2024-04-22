@@ -19,7 +19,7 @@ type TSCErrorProps = {
 export const TSCError: React.FC<TSCErrorProps> = observer(({ errorContext, message, index, count }) => {
   const { actions } = useContext(context);
   const theme = useTheme();
-  const margin = index < 5 ? index * 10 : 40;
+  const margin = index < 5 ? index * -10 : -40;
   let countDisplay = "";
   if (count > 1 && count < 1000) {
     countDisplay = `(${count})`;
@@ -35,7 +35,7 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ errorContext, messa
       open={true}
       style={{
         marginBottom: `${margin}px`,
-        zIndex: `${100000 - index}`
+        zIndex: `${100000 + index}`
       }}
       anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       TransitionComponent={Fade}>

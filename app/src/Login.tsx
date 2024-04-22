@@ -11,7 +11,7 @@ import { TSCButton } from "./components";
 import { useTheme } from "@mui/material/styles";
 import LoginIcon from "@mui/icons-material/Login";
 import { GoogleLogin } from "@react-oauth/google";
-import { devSafeUrl, fetcher } from "./util";
+import { fetcher } from "./util";
 import { actions, context } from "./state";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { useNavigate } from "react-router";
@@ -25,6 +25,67 @@ export const Login: React.FC = observer(() => {
   const theme = useTheme();
   const navigate = useNavigate();
 
+  interface Form {
+    username: FormDataEntryValue | null;
+    password: FormDataEntryValue | null;
+  }
+
+  interface Credential {
+    credential: string | undefined;
+  }
+
+  const handleLogin = async (isGoogleLogin: boolean, body: Form | Credential) => {
+    try {
+      const response = await fetcher(`/auth/${isGoogleLogin ? "oauth" : "login"}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify(body)
+      });
+      if (response.ok) {
+        await actions.sessionCheck();
+        if (!state.isLoggedIn) {
+          displayServerError(null, ErrorCodes.UNABLE_TO_LOGIN_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]);
+        } else {
+          actions.removeAllErrors();
+          actions.pushSnackbar("Succesfully signed in", "success");
+          navigate("/");
+        }
+      } else {
+        displayServerError(null, ErrorCodes.UNABLE_TO_LOGIN_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]);
+      }
+    } catch (error) {
+      if (error instanceof HttpError) {
+        switch (error.status) {
+          case 400:
+            if (isGoogleLogin) {
+              actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL);
+            } else {
+              actions.pushError(ErrorCodes.INVALID_FORM);
+            }
+            break;
+          case 401:
+            actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD);
+            break;
+          case 409:
+            actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_USER_EXISTS);
+            break;
+          default:
+            displayServerError(
+              error,
+              ErrorCodes.UNABLE_TO_LOGIN_SERVER,
+              ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]
+            );
+            break;
+        }
+      } else {
+        displayServerError(error, ErrorCodes.UNABLE_TO_LOGIN_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]);
+      }
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.currentTarget;
@@ -34,47 +95,11 @@ export const Login: React.FC = observer(() => {
       return;
     }
     const data = new FormData(event.currentTarget);
-    const formData = {
+    const formData: Form = {
       username: data.get("username"),
       password: data.get("password")
     };
-    try {
-      const login = await fetcher("/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(formData),
-        credentials: "include"
-      });
-      if (login.ok) {
-        await actions.sessionCheck();
-        if (!state.isLoggedIn) {
-          displayServerError(
-            login.status,
-            ErrorCodes.UNABLE_TO_LOGIN_SERVER,
-            ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]
-          );
-        } else {
-          actions.removeError(ErrorCodes.UNABLE_TO_LOGIN_SERVER);
-          actions.pushSnackbar("Succesfully signed in", "success");
-          navigate("/");
-        }
-      } else {
-        displayServerError(login.status, ErrorCodes.UNABLE_TO_LOGIN_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]);
-      }
-    } catch (error) {
-      if (error instanceof HttpError) {
-        const status = error.status;
-        if (status === 401) {
-          actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD);
-        } else if (status === 400) {
-          actions.pushError(ErrorCodes.INVALID_FORM);
-        }
-      } else {
-        displayServerError(error, ErrorCodes.UNABLE_TO_LOGIN_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]);
-      }
-    }
+    await handleLogin(false, formData);
   };
 
   return (
@@ -129,9 +154,10 @@ export const Login: React.FC = observer(() => {
           <Box className="divider-line"></Box>
         </Box>
         <GoogleLogin
-          onSuccess={() => console.log("Logged in with Google")}
-          ux_mode="redirect"
-          login_uri={devSafeUrl("/auth/oauth")}
+          onSuccess={async (credentialResponse) => {
+            const credential = credentialResponse.credential;
+            await handleLogin(true, { credential });
+          }}
           onError={() => actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_SERVER)}
           width="400px"
         />

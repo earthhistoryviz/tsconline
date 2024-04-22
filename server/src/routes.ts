@@ -23,12 +23,13 @@ import pump from "pump";
 import { loadIndexes } from "./load-packs.js";
 import { writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
-import { randomUUID } from "crypto";
-import dotenv from "dotenv";
-import { getDb, UserRow } from "./database.js";
-import { genSalt, hash, compare } from "bcrypt-ts";
+import { randomUUID, randomBytes } from "crypto";
+import { getDb, UserRow, VerificationRow } from "./database.js";
+import { compare, hash } from "bcrypt-ts";
 import { glob } from "glob";
 import { OAuth2Client } from "google-auth-library";
+import { sendEmail } from "./util.js";
+import { Email } from "./types.js";
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(
   request: FastifyRequest<{ Params: { username: string } }>,
@@ -285,13 +286,42 @@ export const fetchSVGStatus = async function (
   reply.send({ ready: isSVGReady });
 };
 
+export const verify = async function verify(request: FastifyRequest<{ Body: { token: string } }>, reply: FastifyReply) {
+  const token = request.body.token;
+  const db = getDb();
+  try {
+    const row = db.prepare(`SELECT * FROM verification WHERE token = ?`).get(token);
+    if (!row) {
+      reply.status(404).send({ error: "Verification token not found" });
+      return;
+    }
+    const check = db.prepare(`SELECT * FROM users WHERE id = ?`).get((row as VerificationRow)["userId"]);
+    if ((check as UserRow)["emailVerified"]) {
+      request.session.delete();
+      reply.status(409).send({ error: "Email already verified" });
+      return;
+    }
+    const userId = (row as VerificationRow)["userId"];
+    db.prepare(`UPDATE users SET emailVerified = 1 WHERE id = ?`).run(userId);
+    request.session.set("uuid", (db.prepare(`SELECT uuid FROM users WHERE id = ?`).get(userId) as UserRow)["uuid"]);
+    reply.send({ message: "Email verified" });
+  } catch (error) {
+    console.error("Error during confirmation:", error);
+    reply.status(500).send({ error: "Unknown Error" });
+  }
+};
+
 export const signup = async function signup(
   request: FastifyRequest<{ Body: { username: string; password: string; email: string } }>,
   reply: FastifyReply
 ) {
   const { username, password, email } = request.body;
   if (!username || !password || !email) {
-    reply.status(400).send({ message: "Invalid form" });
+    reply.status(400).send({ error: "Invalid form" });
+    return;
+  }
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    reply.status(500).send({ error: "Email service not configured" });
     return;
   }
   const db = getDb();
@@ -301,17 +331,25 @@ export const signup = async function signup(
       reply.status(409);
       return;
     }
-    const salt = await genSalt();
-    const hashedPassword = await hash(password, salt);
-    const uuid = randomUUID();
+    const hashedPassword = await hash(password, 10);
     db.prepare(
-      `INSERT INTO users (username, email, hashedPassword, googleId, uuid, pictureUrl) VALUES (?, ?, ?, ?, ?, ?)`
-    ).run(username, email, hashedPassword, null, uuid, null);
-    request.session.set("uuid", uuid);
-    reply.status(201).send({ message: "User created" });
+      `INSERT INTO users (username, email, hashedPassword, uuid, pictureUrl, emailVerified) VALUES (?, ?, ?, ?, ?, ?)`
+    ).run(username, email, hashedPassword, randomUUID(), null, 0);
+    const token = randomBytes(16).toString("hex");
+    const authEmail: Email = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Welcome to TSC Online - Verify Your Email",
+      text: `Welcome to TSC Online, ${username}! Please verify your email by clicking on the following link: ${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`
+    };
+    await sendEmail(authEmail);
+    db.prepare(`INSERT into verification (userId, token) VALUES ((SELECT id FROM users WHERE email = ?), ?)`).run(
+      email,
+      token
+    );
   } catch (error) {
     console.error("Error during signup:", error);
-    reply.status(500).send({ message: "Unknown Error" });
+    reply.status(500).send({ error: "Unknown Error" });
   }
 };
 
@@ -348,15 +386,10 @@ export const googleLogin = async function login(
   request: FastifyRequest<{ Body: { credential: string } }>,
   reply: FastifyReply
 ) {
-  dotenv.config();
-  if (!process.env.GOOGLE_CLIENT_ID) {
-    reply.status(500).send({ error: "Missing Google Client Secret or Google Client ID" });
-    return;
-  }
-  const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+  const client = new OAuth2Client("1010066768032-cfp1hg2ad9euid20vjllfdqj18ki7hmb.apps.googleusercontent.com");
   const ticket = await client.verifyIdToken({
     idToken: request.body.credential,
-    audience: process.env.GOOGLE_CLIENT_ID
+    audience: "1010066768032-cfp1hg2ad9euid20vjllfdqj18ki7hmb.apps.googleusercontent.com"
   });
   const payload = ticket.getPayload();
   if (!payload) {
@@ -365,24 +398,24 @@ export const googleLogin = async function login(
   }
   try {
     const db = getDb();
-    const row = db.prepare(`SELECT * FROM users WHERE googleId = ?`).get(payload.sub);
-    let uuid = "";
-    if (!row) {
-      const emailRow = db.prepare(`SELECT * FROM users WHERE email = ?`).get(payload.email);
-      if (emailRow) {
-        db.prepare(`UPDATE users SET googleId = ? WHERE email = ?`).run(payload.sub, payload.email);
-        uuid = (emailRow as UserRow)["uuid"];
+    const row = db.prepare(`SELECT * FROM users WHERE email = ?`).get(payload.email);
+    if (row) {
+      console.log(row);
+      if ((row as UserRow)["username"] !== null) {
+        reply.status(409).send({ error: "User already exists" });
       } else {
-        uuid = randomUUID();
-        db.prepare(
-          `INSERT INTO users (username, email, hashedPassword, googleId, uuid, pictureUrl) VALUES (?, ?, ?, ?, ?, ?)`
-        ).run(null, payload.email, null, payload.sub, uuid, payload.picture);
+        console.log("User already exists, logging in");
+        request.session.set("uuid", (row as UserRow)["uuid"]);
+        reply.send({ message: "Login successful" });
       }
-    } else {
-      uuid = (row as UserRow)["uuid"];
+      return;
     }
+    const uuid = randomUUID();
+    db.prepare(
+      `INSERT INTO users (username, email, hashedPassword, uuid, pictureUrl, emailVerified) VALUES (?, ?, ?, ?, ?, ?)`
+    ).run(null, payload.email, null, uuid, payload.picture, 1);
     request.session.set("uuid", uuid);
-    reply.redirect(process.env.APP_URL || "http://localhost:5173?google_login=success");
+    reply.send({ message: "Login successful" });
   } catch (error) {
     console.error("Error during login:", error);
     reply.status(500).send({ error: "Unknown Error" });

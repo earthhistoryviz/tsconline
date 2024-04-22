@@ -6,9 +6,14 @@ export interface UserRow {
   username: string | null;
   email: string;
   hashedPassword: string | null;
-  googleId: string | null;
   uuid: string;
   pictureUrl: string | null;
+  emailVerified: number;
+}
+
+export interface VerificationRow {
+  userId: number;
+  token: string;
 }
 
 if (!fs.existsSync("../server/db")) {
@@ -24,10 +29,15 @@ export const getDb = (): BetterSqlite3.Database => {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT,
     email TEXT UNIQUE,
-    hashed_password TEXT UNIQUE,
-    google_id TEXT UNIQUE,
+    hashedPassword TEXT UNIQUE,
     uuid VARCHAR(36) NOT NULL UNIQUE,
-    picture_url TEXT
+    pictureUrl TEXT,
+    emailVerified INTEGER NOT NULL DEFAULT 0
+  );`);
+  db.exec(`CREATE TABLE IF NOT EXISTS verification (
+    userId INT NOT NULL,
+    token VARCHAR(32) NOT NULL,
+    FOREIGN KEY (userId) REFERENCES users (id)
   );`);
 
   process.on("exit", () => db?.close());
