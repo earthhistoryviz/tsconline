@@ -549,6 +549,10 @@ async function fetchSVGStatus(): Promise<boolean> {
   return data.ready;
 }
 
+export const removeAllErrors = action("removeAllErrors", () => {
+  state.errors.errorAlerts.clear();
+});
+
 export const removeError = action("removeError", (context: ErrorCodes) => {
   state.errors.errorAlerts.delete(context);
 });
@@ -621,7 +625,6 @@ export const logout = action("logout", async () => {
 });
 
 export const sessionCheck = action("sessionCheck", async () => {
-  const googleLogin = new URLSearchParams(window.location.search).get("google_login") === "success";
   try {
     const response = await fetcher("/auth/session-check", {
       method: "POST",
@@ -630,9 +633,6 @@ export const sessionCheck = action("sessionCheck", async () => {
     const data = await response.json();
     if (data.authenticated) {
       setIsLoggedIn(true);
-      if (googleLogin) {
-        pushSnackbar("Successfully signed in", "success");
-      }
     } else {
       setIsLoggedIn(false);
     }

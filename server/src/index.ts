@@ -174,6 +174,8 @@ server.post("/auth/oauth", routes.googleLogin);
 
 server.post("/auth/login", routes.login);
 
+server.post("/auth/signup", routes.signup);
+
 server.post("/auth/session-check", async (request, reply) => {
   if (request.session.get("uuid")) {
     reply.send({ authenticated: true });
@@ -182,12 +184,12 @@ server.post("/auth/session-check", async (request, reply) => {
   }
 });
 
-server.post("/auth/signup", routes.signup);
-
 server.post("/auth/logout", async (request, reply) => {
   request.session.delete();
   reply.send({ message: "Logged out" });
 });
+
+server.post("/auth/verify", routes.verify);
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it

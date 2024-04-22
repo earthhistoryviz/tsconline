@@ -1,5 +1,12 @@
 import { throwError } from "@tsconline/shared";
 
+export type Email = {
+  from: string;
+  to: string;
+  subject: string;
+  text: string;
+};
+
 export type AssetConfig = {
   activeJar: string;
   activeDatapacks: string[];
@@ -30,6 +37,15 @@ export type FileMetadata = {
   mapPackIndexFilepath: string;
   datapackIndexFilepath: string;
 };
+
+export function assertEmail(o: any): asserts o is Email {
+  if (typeof o !== "object" || !o) throw "Email must be an object";
+  if (typeof o.from !== "string") throwError("Email", "from", "string", o.from);
+  if (typeof o.to !== "string") throwError("Email", "to", "string", o.to);
+  if (o.from === o.to) throwError("Email", "from", "different from", "to");
+  if (typeof o.subject !== "string") throwError("Email", "subject", "string", o.subject);
+  if (typeof o.text !== "string") throwError("Email", "text", "string", o.text);
+}
 
 export function assertFileMetadata(o: any): asserts o is FileMetadata {
   if (typeof o !== "object" || !o) throw "FileMetadata must be an object";
