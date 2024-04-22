@@ -2,7 +2,7 @@ import { FontsInfo, assertFontsInfo, throwError } from "./index.js";
 
 export type ChartInfoTSC = {
   settings: ChartSettingsInfoTSC;
-  "class datastore.RootColumn:Chart Root"?: ColumnInfoTSC;
+  "class datastore.RootColumn:Chart Root": ColumnInfoTSC;
 };
 
 export type ChartSettingsInfoTSC = {

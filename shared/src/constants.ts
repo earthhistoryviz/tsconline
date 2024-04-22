@@ -190,7 +190,7 @@ export const defaultColumnBasicInfoTSC: ColumnBasicInfoTSC = {
   drawTitle: true,
   drawAgeLabel: false,
   drawUncertaintyLabel: false,
-  isSelected: false,
+  isSelected: true,
   width: 100,
   pad: 0.2,
   "age pad": 2,
@@ -206,6 +206,8 @@ export const defaultColumnBasicInfoTSC: ColumnBasicInfoTSC = {
 
 export const defaultEventColumnInfoTSC: EventColumnInfoTSC = {
   ...defaultColumnBasicInfoTSC,
+  width: 150,
+  isSelected: false,
   type: "events",
   rangeSort: "first occurrence"
 };
