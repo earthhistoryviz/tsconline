@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import { context } from "../state";
 import { TextFieldProps, Typography, TextField } from "@mui/material";
 import "./EditWidthField.css";
@@ -12,23 +12,18 @@ const WidthTextField = ({ ...props }: TextFieldProps) => (
 
 export const EditWidthField: React.FC<{
   width: number;
-}> = observer(({ width }) => {
-  const { state, actions } = useContext(context);
-  const [inputWidth, setInputWidth] = useState<number>(width);
-  let columnObject: ColumnInfo | undefined;
-  if (state.settingsTabs.columnSelected != null) {
-    columnObject = state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected);
-  }
+  columnObject: ColumnInfo | undefined;
+}> = observer(({ width, columnObject }) => {
+  const { actions } = useContext(context);
   return (
     <div>
       <Typography id="edit-width-text">Edit Width</Typography>
       <NumericFormat
-        value={inputWidth || ""}
+        value={width || ""}
         customInput={WidthTextField}
         onValueChange={(values) => {
           const floatValue = values.floatValue;
-          if (columnObject) actions.updateWidth(columnObject, floatValue ?? 20);
-          if (floatValue) setInputWidth(floatValue);
+          if (columnObject) actions.updateWidth(columnObject, floatValue ?? NaN);
         }}
         style={{ height: "20px" }}
       />
