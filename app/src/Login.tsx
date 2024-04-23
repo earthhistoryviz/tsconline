@@ -15,7 +15,6 @@ import { fetcher } from "./util";
 import { actions, context } from "./state";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { useNavigate } from "react-router";
-import { HttpError } from "./util";
 import { displayServerError } from "./state/actions/util-actions";
 
 import "./Login.css";
@@ -54,35 +53,45 @@ export const Login: React.FC = observer(() => {
           navigate("/");
         }
       } else {
-        displayServerError(null, ErrorCodes.UNABLE_TO_LOGIN_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]);
-      }
-    } catch (error) {
-      if (error instanceof HttpError) {
-        switch (error.status) {
+        const message = await response.json();
+        switch (response.status) {
           case 400:
             if (isGoogleLogin) {
-              actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL);
+              displayServerError(
+                message,
+                ErrorCodes.UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL,
+                ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL]
+              );
             } else {
-              actions.pushError(ErrorCodes.INVALID_FORM);
+              displayServerError(message, ErrorCodes.INVALID_FORM, ErrorMessages[ErrorCodes.INVALID_FORM]);
             }
             break;
           case 401:
-            actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD);
+            displayServerError(
+              message,
+              ErrorCodes.UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD,
+              ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD]
+            );
             break;
           case 409:
-            actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_USER_EXISTS);
+            displayServerError(
+              message,
+              ErrorCodes.UNABLE_TO_LOGIN_USER_EXISTS,
+              ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_USER_EXISTS]
+            );
             break;
           default:
             displayServerError(
-              error,
+              message,
               ErrorCodes.UNABLE_TO_LOGIN_SERVER,
               ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]
             );
             break;
         }
-      } else {
-        displayServerError(error, ErrorCodes.UNABLE_TO_LOGIN_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]);
       }
+    } catch (error) {
+      console.error(error);
+      displayServerError(null, ErrorCodes.UNABLE_TO_LOGIN_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]);
     }
   };
 

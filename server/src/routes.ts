@@ -297,8 +297,13 @@ export const verify = async function verify(request: FastifyRequest<{ Body: { to
     }
     const check = db.prepare(`SELECT * FROM users WHERE id = ?`).get((row as VerificationRow)["userId"]);
     if ((check as UserRow)["emailVerified"]) {
-      request.session.delete();
       reply.status(409).send({ error: "Email already verified" });
+      return;
+    }
+    const expiresAt = new Date((row as VerificationRow)["expiresAt"]);
+    if (expiresAt < new Date()) {
+      db.prepare(`DELETE FROM verification WHERE token = ?`).run(token);
+      reply.status(401).send({ error: "Verification token expired" });
       return;
     }
     const userId = (row as VerificationRow)["userId"];
@@ -328,7 +333,7 @@ export const signup = async function signup(
   try {
     const rows = db.prepare(`SELECT * FROM users WHERE email = ? OR username = ?`).all(email, username);
     if (rows.length > 0) {
-      reply.status(409);
+      reply.status(409).send({ error: "User with this email or username already exists" });
       return;
     }
     const hashedPassword = await hash(password, 10);
@@ -343,10 +348,11 @@ export const signup = async function signup(
       text: `Welcome to TSC Online, ${username}! Please verify your email by clicking on the following link: ${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`
     };
     await sendEmail(authEmail);
-    db.prepare(`INSERT into verification (userId, token) VALUES ((SELECT id FROM users WHERE email = ?), ?)`).run(
-      email,
-      token
-    );
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1);
+    db.prepare(
+      `INSERT into verification (userId, token, expiresAt) VALUES ((SELECT id FROM users WHERE email = ?), ?, ?)`
+    ).run(email, token, expiresAt.toISOString());
   } catch (error) {
     console.error("Error during signup:", error);
     reply.status(500).send({ error: "Unknown Error" });

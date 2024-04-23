@@ -14,6 +14,7 @@ export interface UserRow {
 export interface VerificationRow {
   userId: number;
   token: string;
+  expiresAt: string;
 }
 
 if (!fs.existsSync("../server/db")) {
@@ -37,6 +38,7 @@ export const getDb = (): BetterSqlite3.Database => {
   db.exec(`CREATE TABLE IF NOT EXISTS verification (
     userId INT NOT NULL,
     token VARCHAR(32) NOT NULL,
+    expiresAt DATETIME NOT NULL,
     FOREIGN KEY (userId) REFERENCES users (id)
   );`);
 
