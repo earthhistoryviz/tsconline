@@ -207,8 +207,8 @@ export const Column = observer(function Column() {
             value={searchTerm}
           />
           <Typography variant="body2" color="textSecondary">
-            {/* Searching For: "{searchTermDisplay}" */}
-            <span style={{ color: 'red' }}>Searching For: "{searchTermDisplay}"</span>
+            {/* Filtered For: "{searchTermDisplay}" */}
+            <span style={{ color: 'red' }}>Filtered For: "{searchTermDisplay}"</span>
           </Typography>
         </Box>
         <TSCButton
