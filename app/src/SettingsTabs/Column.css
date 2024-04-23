@@ -69,3 +69,7 @@
   margin-right: 10px;
   margin-top: 6px;
 }
+
+.filtered-border {
+  outline: 4px solid red;
+}
