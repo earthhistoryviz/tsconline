@@ -191,68 +191,67 @@ export const Column = observer(function Column() {
     setExpandedAccordions(newArray);
   };
 
-    return (
-      <div className="column-top-level">
-        <Box sx={{ 
-          marginTop: '20px',
-          marginBottom: '10px' }}>
-          <TextField
-            id="search-bar"
-            label="Search"
-            variant="outlined"
-            size="small"
-            fullWidth
-            sx={{ marginBottom: '10px', width: '400px' }}
-            onChange={handleSearch} 
-            value={searchTerm}
-          />
-          <Typography variant="body2" color="textSecondary">
-            {/* Filtered For: "{searchTermDisplay}" */}
-            <span style={{ color: 'red' }}>Filtered For: "{searchTermDisplay}"</span>
-          </Typography>
-        </Box>
-        <TSCButton
-          id="column-generate-button-top"
-          onClick={() => {
-            actions.fetchChartFromServer(navigate);
+  return (
+    <div className={`column-top-level ${searchTerm ? 'filtered' : ''}`}>
+      <Box sx={{ 
+        marginTop: '20px',
+        marginBottom: '10px' }}>
+        <TextField
+          id="search-bar"
+          label="Search"
+          variant="outlined"
+          size="small"
+          fullWidth
+          sx={{ marginBottom: '10px', width: '400px' }}
+          onChange={handleSearch} 
+          value={searchTerm}
+        />
+        <Typography variant="body2" color="textSecondary">
+          <span style={{ color: 'red' }}>Filtered For: "{searchTermDisplay}"</span>
+        </Typography>
+      </Box>
+      <TSCButton
+        id="column-generate-button-top"
+        onClick={() => {
+          actions.fetchChartFromServer(navigate);
+        }}>
+        Generate
+      </TSCButton>
+      <div className="column-accordion-and-menu">
+        <Box
+          className={`hide-scrollbar column-accordion-wrapper ${searchTerm ? 'filtered-border' : ''}`}
+          sx={{
+            border: `1px solid gray`,
+            borderRadius: "4px",
+            zIndex: 0,
+            padding: "10px"
           }}>
-          Generate
-        </TSCButton>
-        <div className="column-accordion-and-menu">
-          <Box
-            className="hide-scrollbar column-accordion-wrapper"
-            sx={{
-              border: `1px solid gray`,
-              borderRadius: "4px",
-              zIndex: 0,
-              padding: "10px"
-            }}>
-              <>
-                <TSCButton
-                  id="column-generate-button-top"
-                  onClick={() => {
-                    expandAll();
-                  }}>
-                  Expand All
-                </TSCButton>
-                <TSCButton
-                  id="column-generate-button-top"
-                  onClick={() => {
-                    collapseAll();
-                  }}>
-                  collapse All
-                </TSCButton>
-                {state.settingsTabs.columns && (
-                  <ColumnAccordion
-                    details={state.settingsTabs.columns}
-                    expandedAccordions={expandedAccordions}
-                    accordionClicked={accordionClicked}
-                  />
-                )}
-              </>
-          </Box>
-          <ColumnMenu />
-        </div>
+            <>
+              <TSCButton
+                id="column-generate-button-top"
+                onClick={() => {
+                  expandAll();
+                }}>
+                Expand All
+              </TSCButton>
+              <TSCButton
+                id="column-generate-button-top"
+                onClick={() => {
+                  collapseAll();
+                }}>
+                collapse All
+              </TSCButton>
+              {state.settingsTabs.columns && (
+                <ColumnAccordion
+                  details={state.settingsTabs.columns}
+                  expandedAccordions={expandedAccordions}
+                  accordionClicked={accordionClicked}
+                />
+              )}
+            </>
+        </Box>
+        <ColumnMenu />
       </div>
-    );
+    </div>
+  );
 });
