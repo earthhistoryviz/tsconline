@@ -31,7 +31,8 @@ export enum ErrorCodes {
   UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL = "UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL",
   INVALID_FORM = "INVALID_FORM",
   UNABLE_TO_VERIFY_ACCOUNT = "UNABLE_TO_VERIFY_ACCOUNT",
-  ALREADY_VERIFIED_ACCOUNT = "ALREADY_VERIFIED_ACCOUNT"
+  ALREADY_VERIFIED_ACCOUNT = "ALREADY_VERIFIED_ACCOUNT",
+  SIGNUP_TOKEN_EXPIRED = "SIGNUP_TOKEN_EXPIRED"
 }
 
 export const ErrorMessages = {
@@ -71,5 +72,6 @@ export const ErrorMessages = {
     "Email or username already exists. Please try again with a different email or username.",
   [ErrorCodes.INVALID_FORM]: "Invalid form. Please ensure all fields are filled out correctly.",
   [ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT]: "Unable to verify account. Please try again later.",
-  [ErrorCodes.ALREADY_VERIFIED_ACCOUNT]: "Account is already verified. Please log in."
+  [ErrorCodes.ALREADY_VERIFIED_ACCOUNT]: "Account is already verified. Please log in.",
+  [ErrorCodes.SIGNUP_TOKEN_EXPIRED]: "Signup token has expired."
 };

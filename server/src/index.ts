@@ -12,7 +12,6 @@ import { loadPresets } from "./preset.js";
 import { AssetConfig, assertAssetConfig } from "./types.js";
 import { readFile } from "fs/promises";
 import fastifyMultipart from "@fastify/multipart";
-import fastifyFormbody from "@fastify/formbody";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import { getDb } from "./database.js";
 import fastifySecureSession from "@fastify/secure-session";
@@ -88,13 +87,12 @@ server.register(fastifySecureSession, {
   }
 });
 
-server.register(fastifyFormbody);
-
 server.register(fastifyMultipart, {
   limits: {
     fieldNameSize: 100,
     fileSize: 1024 * 1024 * 60 // 60 mb
-  }
+  },
+  attachFieldsToBody: true
 });
 
 // Serve the main app from /

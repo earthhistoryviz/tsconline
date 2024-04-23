@@ -11,7 +11,7 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import LoginIcon from "@mui/icons-material/Login";
-import { fetcher, HttpError } from "./util";
+import { fetcher } from "./util";
 import { actions } from "./state";
 import { Lottie } from "./components";
 import loader from "./assets/icons/loading.json";
@@ -51,27 +51,29 @@ export const SignUp: React.FC = observer(() => {
       if (response.ok) {
         setSubmitted(true);
       } else {
-        displayServerError(
-          response.status,
-          ErrorCodes.UNABLE_TO_SIGNUP_SERVER,
-          ErrorMessages[ErrorCodes.UNABLE_TO_SIGNUP_SERVER]
-        );
+        const message = await response.json();
+        switch (response.status) {
+          case 400:
+            displayServerError(message, ErrorCodes.INVALID_FORM, ErrorMessages[ErrorCodes.INVALID_FORM]);
+            break;
+          case 409:
+            displayServerError(
+              message,
+              ErrorCodes.UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL,
+              ErrorMessages[ErrorCodes.UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL]
+            );
+            break;
+          default:
+            displayServerError(
+              message,
+              ErrorCodes.UNABLE_TO_SIGNUP_SERVER,
+              ErrorMessages[ErrorCodes.UNABLE_TO_SIGNUP_SERVER]
+            );
+            break;
+        }
       }
     } catch (error) {
-      if (error instanceof HttpError) {
-        const status = error.status;
-        if (status === 409) {
-          actions.pushError(ErrorCodes.UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL);
-        } else if (status === 400) {
-          actions.pushError(ErrorCodes.INVALID_FORM);
-        }
-      } else {
-        displayServerError(
-          error,
-          ErrorCodes.UNABLE_TO_SIGNUP_SERVER,
-          ErrorMessages[ErrorCodes.UNABLE_TO_SIGNUP_SERVER]
-        );
-      }
+      displayServerError(null, ErrorCodes.UNABLE_TO_SIGNUP_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_SIGNUP_SERVER]);
     } finally {
       setLoading(false);
     }

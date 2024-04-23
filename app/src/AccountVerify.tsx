@@ -4,8 +4,8 @@ import Box from "@mui/material/Box";
 import Avatar from "@mui/material/Avatar";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
-import { HttpError, fetcher } from "./util";
-import { Lottie } from "./components";
+import { fetcher } from "./util";
+import { Lottie, TSCButton } from "./components";
 import loader from "./assets/icons/loading.json";
 import { useLocation, useNavigate } from "react-router";
 import { context, state } from "./state";
@@ -20,6 +20,8 @@ export const AccountVerify: React.FC = observer(() => {
   const location = useLocation();
   const { actions } = useContext(context);
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+  const [resend, setResend] = useState(false);
   const navigate = useNavigate();
   const theme = useTheme();
   const checkedRef = useRef(false);
@@ -50,39 +52,44 @@ export const AccountVerify: React.FC = observer(() => {
         await actions.sessionCheck();
         if (!state.isLoggedIn) {
           displayServerError(null, ErrorCodes.UNABLE_TO_LOGIN_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]);
+          setMessage("We were able to verify your account, but we were unable to log you in. Please try again later.");
         } else {
           actions.removeAllErrors();
-          actions.pushSnackbar("Succesfully signed in", "success");
+          actions.pushSnackbar("Account verified, redirecting...", "success");
+          setMessage("Your account has been verified. Thank you! Redirecting...");
           setTimeout(() => navigate("/"), 2000);
         }
-      }
-    } catch (error) {
-      if (error instanceof HttpError) {
-        switch (error.status) {
+      } else {
+        const message = await response.json();
+        switch (response.status) {
           case 401:
             displayServerError(
-              error,
-              ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT,
-              ErrorMessages[ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT]
+              message,
+              ErrorCodes.SIGNUP_TOKEN_EXPIRED,
+              ErrorMessages[ErrorCodes.SIGNUP_TOKEN_EXPIRED]
             );
+            setMessage(ErrorMessages[ErrorCodes.SIGNUP_TOKEN_EXPIRED]);
+            setResend(true);
             break;
           case 409:
-            actions.pushError(ErrorCodes.ALREADY_VERIFIED_ACCOUNT);
+            actions.removeAllErrors();
+            actions.pushSnackbar("Account already verified, redirecting...", "info");
+            setMessage("Your account has already been verified. Thank you! Redirecting...");
+            setTimeout(() => navigate("/"), 2000);
             break;
           default:
             displayServerError(
-              error,
+              message,
               ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT,
               ErrorMessages[ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT]
             );
+            setMessage(ErrorMessages[ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT]);
+            break;
         }
-      } else {
-        displayServerError(
-          error,
-          ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT,
-          ErrorMessages[ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT]
-        );
       }
+    } catch (error) {
+      displayServerError(null, ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT, ErrorMessages[ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT]);
+      setMessage(ErrorMessages[ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT]);
     } finally {
       setLoading(false);
     }
@@ -103,8 +110,26 @@ export const AccountVerify: React.FC = observer(() => {
           </>
         ) : (
           <Typography component="h1" variant="h5" sx={{ mt: 8, textAlign: "center" }}>
-            Account verification failed.
+            {message}
           </Typography>
+        )}
+        {resend && (
+          <TSCButton
+            onClick={() => {
+              actions.removeAllErrors();
+              actions.pushSnackbar("Resending verification email...", "info");
+              fetcher("/auth/resend", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json"
+                },
+                credentials: "include"
+              }).then(() => {
+                actions.pushSnackbar("Verification email sent!", "success");
+              });
+            }}>
+            Resend Verification Email
+          </TSCButton>
         )}
       </Box>
     </Container>
