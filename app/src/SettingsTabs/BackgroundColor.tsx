@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, {useContext} from "react";
+import React, { useContext } from "react";
 import { FormLabel, Typography } from "@mui/material";
 import TSCColorPicker from "../components/TSCColorPicker";
 import "./BackgroundColor.css";
@@ -11,7 +11,7 @@ interface ChangeBGColorProps {
   column: ColumnInfo;
 }
 export const ChangeBackgroundColor: React.FC<ChangeBGColorProps> = observer(({ column }) => {
-  const { state, actions } = useContext(context);
+  const { actions } = useContext(context);
   const handleColorChange = (color: string) => {
     actions.setRGB(column, convertHexToRGB(color, false));
   };
@@ -21,23 +21,19 @@ export const ChangeBackgroundColor: React.FC<ChangeBGColorProps> = observer(({ c
       <>
         <FormLabel>
           Background Color:
-          <Typography className="not-avail">
-            Not Available
-          </Typography>
+          <Typography className="not-avail">Not Available</Typography>
         </FormLabel>
       </>
     );
   } else {
     return (
       <div>
-        <FormLabel>
-          Background Color:&nbsp;
-        </FormLabel>
-          <TSCColorPicker
-              key={column.name}
-              color={`rgb(${column.rgb.r}, ${column.rgb.g}, ${column.rgb.b})`}
-              onColorChange={handleColorChange}
-          />
+        <FormLabel>Background Color:&nbsp;</FormLabel>
+        <TSCColorPicker
+          key={column.name}
+          color={`rgb(${column.rgb.r}, ${column.rgb.g}, ${column.rgb.b})`}
+          onColorChange={handleColorChange}
+        />
       </div>
     );
   }

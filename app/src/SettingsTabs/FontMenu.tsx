@@ -120,7 +120,12 @@ const FontMenuRow: React.FC<{
           </ToggleButton>
         </ToggleButtonGroup>
         <div id="ColorInputContainer">
-          <TSCColorPicker key={column.name} color={fontOpts.color} onColorChange={handleColor} disabled={!fontOpts.on} />
+          <TSCColorPicker
+            key={column.name}
+            color={fontOpts.color}
+            onColorChange={handleColor}
+            disabled={!fontOpts.on}
+          />
         </div>
         <Typography
           sx={{
