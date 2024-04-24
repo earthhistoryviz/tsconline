@@ -1,5 +1,5 @@
 import { action } from "mobx";
-import { ChartInfoTSC, ChartSettingsInfoTSC, FontsInfo, TimescaleItem, allFontOptions } from "@tsconline/shared";
+import { ChartInfoTSC, ChartSettingsInfoTSC, FontsInfo, TimescaleItem } from "@tsconline/shared";
 
 import {
   type MapInfo,
