@@ -104,11 +104,16 @@ export const AccountRecovery: React.FC = observer(() => {
             break;
           case 401:
             errorCode = ErrorCodes.TOKEN_EXPIRED_OR_INVALID;
-            setMessage("Resend password reset email.");
+            setMessage(
+              "Unable to reset password. Your token is invalid or has expired. Please resend the verification email."
+            );
             setshowResendForm(true);
             break;
           default:
-            setMessage("Unable to reset password. Please try again later.");
+            setMessage(
+              "Unable to reset password. Your token is invalid or has expired. Please resend the verification email."
+            );
+            setshowResendForm(true);
             break;
         }
         displayServerError(message, errorCode, ErrorMessages[errorCode]);

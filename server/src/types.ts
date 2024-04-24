@@ -42,7 +42,6 @@ export function assertEmail(o: any): asserts o is Email {
   if (typeof o !== "object" || !o) throw "Email must be an object";
   if (typeof o.from !== "string") throwError("Email", "from", "string", o.from);
   if (typeof o.to !== "string") throwError("Email", "to", "string", o.to);
-  if (o.from === o.to) throwError("Email", "from", "different from", "to");
   if (typeof o.subject !== "string") throwError("Email", "subject", "string", o.subject);
   if (typeof o.text !== "string") throwError("Email", "text", "string", o.text);
 }
