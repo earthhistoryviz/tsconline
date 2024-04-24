@@ -212,13 +212,6 @@ export const Column = observer(function Column() {
           </Typography>
         )}
       </Box>
-      {/* <TSCButton
-        id="column-generate-button-top"
-        onClick={() => {
-          actions.fetchChartFromServer(navigate);
-        }}>
-        Generate
-      </TSCButton> */}
       <div className="column-accordion-and-menu">
         <Box
           className={`hide-scrollbar column-accordion-wrapper ${searchTerm ? 'filtered-border' : ''}`}
