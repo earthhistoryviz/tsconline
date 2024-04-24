@@ -28,8 +28,9 @@ import { getDb, UserRow, VerificationRow } from "./database.js";
 import { compare, hash } from "bcrypt-ts";
 import { glob } from "glob";
 import { OAuth2Client } from "google-auth-library";
-import { sendEmail } from "./util.js";
-import { Email } from "./types.js";
+import { Email, assertEmail } from "./types.js";
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(
   request: FastifyRequest<{ Params: { username: string } }>,
@@ -286,6 +287,30 @@ export const fetchSVGStatus = async function (
   reply.send({ ready: isSVGReady });
 };
 
+dotenv.config();
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+const sendEmail = async (email: Email) => {
+  assertEmail(email);
+  try {
+    await transporter.sendMail({
+      from: email.from,
+      to: email.to,
+      subject: email.subject,
+      text: email.text
+    });
+  } catch (error) {
+    console.error("An error occurred:", error);
+    throw error;
+  }
+};
+
 export const resetPassword = async function resetPassword(
   request: FastifyRequest<{ Body: { token: string; password: string } }>,
   reply: FastifyReply
@@ -336,26 +361,38 @@ export const sendResetPasswordEmail = async function sendResetPasswordEmail(
   }
   try {
     const row = db.prepare(`SELECT * FROM users WHERE email = ?`).get(email);
-    if (!row || !(row as UserRow).emailVerified) {
+    if (!row) {
       reply.send({ message: "Email sent" });
       return;
     }
-    const token = randomBytes(16).toString("hex");
+    const { hashedPassword, emailVerified } = row as UserRow;
+    if (!row || !emailVerified) {
+      reply.send({ message: "Email sent" });
+      return;
+    }
+    let emailText = "";
+    if (!hashedPassword) {
+      emailText =
+        "You have requested a password reset but there is no password set for this account. Please sign in with Google.";
+    } else {
+      const token = randomBytes(16).toString("hex");
+      emailText = `Click on the following link to reset your password: ${process.env.APP_URL || "http://localhost:5173"}/account-recovery?token=${token}`;
+      const expiresAt = new Date();
+      expiresAt.setMinutes(expiresAt.getMinutes() + 15);
+      db.prepare(
+        `DELETE FROM verification WHERE userId = (SELECT id FROM users WHERE email = ?) AND verifyOrReset = ?`
+      ).run(email, "reset");
+      db.prepare(
+        `INSERT into verification (userId, token, expiresAt, verifyOrReset) VALUES ((SELECT id FROM users WHERE email = ?), ?, ?, ?)`
+      ).run(email, token, expiresAt.toISOString(), "reset");
+    }
     const authEmail: Email = {
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Reset Your Password",
-      text: `Click on the following link to reset your password: ${process.env.APP_URL || "http://localhost:5173"}/account-recovery?token=${token}`
+      text: emailText
     };
     await sendEmail(authEmail);
-    const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 15);
-    db.prepare(
-      `DELETE FROM verification WHERE userId = (SELECT id FROM users WHERE email = ?) AND verifyOrReset = ?`
-    ).run(email, "reset");
-    db.prepare(
-      `INSERT into verification (userId, token, expiresAt, verifyOrReset) VALUES ((SELECT id FROM users WHERE email = ?), ?, ?, ?)`
-    ).run(email, token, expiresAt.toISOString(), "reset");
     reply.send({ message: "Email sent" });
   } catch (error) {
     console.error("Error during reset:", error);
@@ -393,6 +430,11 @@ export const resendVerificationEmail = async function resendVerificationEmail(
       token = randomBytes(16).toString("hex");
       emailText = `Welcome to TSC Online! Please verify your email by clicking on the following link: ${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`;
       db.prepare(`DELETE FROM verification WHERE userId = ?`).run(id);
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 1);
+      db.prepare(
+        `INSERT into verification (userId, token, expiresAt, verifyOrReset) VALUES ((SELECT id FROM users WHERE email = ?), ?, ?, ?)`
+      ).run(email, token, expiresAt.toISOString(), "verify");
     }
     const authEmail: Email = {
       from: process.env.EMAIL_USER,
@@ -401,13 +443,6 @@ export const resendVerificationEmail = async function resendVerificationEmail(
       text: emailText
     };
     await sendEmail(authEmail);
-    if (!emailVerified) {
-      const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 1);
-      db.prepare(
-        `INSERT into verification (userId, token, expiresAt, verifyOrReset) VALUES ((SELECT id FROM users WHERE email = ?), ?, ?, ?)`
-      ).run(email, token, expiresAt.toISOString(), "verify");
-    }
     reply.send({ message: "Email sent" });
   } catch (error) {
     console.error("Error during resend:", error);

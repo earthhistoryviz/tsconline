@@ -81,8 +81,9 @@ server.register(fastifySecureSession, {
   cookie: {
     path: "/",
     httpOnly: true,
+    domain: process.env.NODE_ENV === "production" ? "dev.timescalecreator.org" : "localhost",
     secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+    sameSite: "strict",
     maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
   }
 });

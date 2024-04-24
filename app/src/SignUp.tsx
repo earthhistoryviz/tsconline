@@ -48,6 +48,7 @@ export const SignUp: React.FC = observer(() => {
         })
       });
       if (response.ok) {
+        actions.removeAllErrors();
         setSubmitted(true);
       } else {
         const message = await response.json();
