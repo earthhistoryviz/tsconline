@@ -16,7 +16,6 @@ import { actions, context } from "./state";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { useNavigate } from "react-router";
 import { displayServerError } from "./state/actions/util-actions";
-
 import "./Login.css";
 
 export const Login: React.FC = observer(() => {
@@ -54,40 +53,27 @@ export const Login: React.FC = observer(() => {
         }
       } else {
         const message = await response.json();
+        let errorCode = ErrorCodes.UNABLE_TO_LOGIN_SERVER;
         switch (response.status) {
           case 400:
             if (isGoogleLogin) {
-              displayServerError(
-                message,
-                ErrorCodes.UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL,
-                ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL]
-              );
+              errorCode = ErrorCodes.UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL;
             } else {
-              displayServerError(message, ErrorCodes.INVALID_FORM, ErrorMessages[ErrorCodes.INVALID_FORM]);
+              errorCode = ErrorCodes.INVALID_FORM;
             }
             break;
           case 401:
-            displayServerError(
-              message,
-              ErrorCodes.UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD,
-              ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD]
-            );
+            errorCode = ErrorCodes.UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD;
+            break;
+          case 403:
+            errorCode = ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT;
+            navigate("/verify");
             break;
           case 409:
-            displayServerError(
-              message,
-              ErrorCodes.UNABLE_TO_LOGIN_USER_EXISTS,
-              ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_USER_EXISTS]
-            );
-            break;
-          default:
-            displayServerError(
-              message,
-              ErrorCodes.UNABLE_TO_LOGIN_SERVER,
-              ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]
-            );
+            errorCode = ErrorCodes.UNABLE_TO_LOGIN_USER_EXISTS;
             break;
         }
+        displayServerError(message, errorCode, ErrorMessages[errorCode]);
       }
     } catch (error) {
       console.error(error);
@@ -117,7 +103,7 @@ export const Login: React.FC = observer(() => {
         <LockOutlinedIcon sx={{ color: theme.palette.selection.main }} />
       </Avatar>
       <Typography variant="h5">{"Sign In"}</Typography>
-      <Box component="form" noValidate onSubmit={handleSubmit} className="form-box">
+      <Box component="form" onSubmit={handleSubmit} className="form-box">
         <TextField
           margin="normal"
           required
@@ -171,6 +157,11 @@ export const Login: React.FC = observer(() => {
           width="400px"
         />
       </Box>
+      <Grid item sx={{ mt: 4 }}>
+        <Link href="/verify" sx={{ color: "black" }}>
+          Need to verify your account?
+        </Link>
+      </Grid>
     </Box>
   );
 });

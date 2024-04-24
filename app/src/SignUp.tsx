@@ -17,7 +17,6 @@ import { Lottie } from "./components";
 import loader from "./assets/icons/loading.json";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { displayServerError } from "./state/actions/util-actions";
-
 import "./Login.css";
 
 export const SignUp: React.FC = observer(() => {
@@ -52,25 +51,16 @@ export const SignUp: React.FC = observer(() => {
         setSubmitted(true);
       } else {
         const message = await response.json();
+        let errorCode = ErrorCodes.UNABLE_TO_SIGNUP_SERVER;
         switch (response.status) {
           case 400:
-            displayServerError(message, ErrorCodes.INVALID_FORM, ErrorMessages[ErrorCodes.INVALID_FORM]);
+            errorCode = ErrorCodes.INVALID_FORM;
             break;
           case 409:
-            displayServerError(
-              message,
-              ErrorCodes.UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL,
-              ErrorMessages[ErrorCodes.UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL]
-            );
-            break;
-          default:
-            displayServerError(
-              message,
-              ErrorCodes.UNABLE_TO_SIGNUP_SERVER,
-              ErrorMessages[ErrorCodes.UNABLE_TO_SIGNUP_SERVER]
-            );
+            errorCode = ErrorCodes.UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL;
             break;
         }
+        displayServerError(message, errorCode, ErrorMessages[errorCode]);
       }
     } catch (error) {
       displayServerError(null, ErrorCodes.UNABLE_TO_SIGNUP_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_SIGNUP_SERVER]);
@@ -96,10 +86,18 @@ export const SignUp: React.FC = observer(() => {
             <Typography component="h1" variant="h5">
               Sign up
             </Typography>
-            <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3 }}>
+            <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
-                  <TextField required fullWidth id="email" label="Email Address" name="email" autoComplete="email" />
+                  <TextField
+                    required
+                    fullWidth
+                    id="email"
+                    label="Email Address"
+                    name="email"
+                    autoComplete="username"
+                    type="email"
+                  />
                 </Grid>
                 <Grid item xs={12}>
                   <TextField

@@ -286,7 +286,139 @@ export const fetchSVGStatus = async function (
   reply.send({ ready: isSVGReady });
 };
 
-export const verify = async function verify(request: FastifyRequest<{ Body: { token: string } }>, reply: FastifyReply) {
+export const resetPassword = async function resetPassword(
+  request: FastifyRequest<{ Body: { token: string; password: string } }>,
+  reply: FastifyReply
+) {
+  const { token, password } = request.body;
+  if (!password) {
+    reply.status(400).send({ error: "Invalid form" });
+    return;
+  }
+  const db = getDb();
+  try {
+    const row = db.prepare(`SELECT * FROM verification WHERE token = ?`).get(token);
+    if (!row) {
+      reply.status(404).send({ error: "Password reset token not found" });
+      return;
+    }
+    const { userId, expiresAt, verifyOrReset } = row as VerificationRow;
+    const expiresAtDate = new Date(expiresAt);
+    if (expiresAtDate < new Date() || verifyOrReset !== "reset") {
+      db.prepare(`DELETE FROM verification WHERE token = ?`).run(token);
+      reply.status(401).send({ error: "Password reset token expired or invalid" });
+      return;
+    }
+    const hashedPassword = await hash(password, 10);
+    db.prepare(`UPDATE users SET hashedPassword = ? WHERE id = ?`).run(hashedPassword, userId);
+    db.prepare(`DELETE FROM verification WHERE token = ?`).run(token);
+    request.session.set("uuid", (db.prepare(`SELECT uuid FROM users WHERE id = ?`).get(userId) as UserRow)["uuid"]);
+    reply.send({ message: "Password reset" });
+  } catch (error) {
+    console.error("Error during reset:", error);
+    reply.status(500).send({ error: "Unknown Error" });
+  }
+};
+
+export const sendResetPasswordEmail = async function sendResetPasswordEmail(
+  request: FastifyRequest<{ Body: { email: string } }>,
+  reply: FastifyReply
+) {
+  const email = request.body.email;
+  if (!email) {
+    reply.status(400).send({ error: "Invalid form" });
+    return;
+  }
+  const db = getDb();
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    reply.status(500).send({ error: "Email service not configured" });
+    return;
+  }
+  try {
+    const row = db.prepare(`SELECT * FROM users WHERE email = ?`).get(email);
+    if (!row || !(row as UserRow).emailVerified) {
+      reply.send({ message: "Email sent" });
+      return;
+    }
+    const token = randomBytes(16).toString("hex");
+    const authEmail: Email = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Reset Your Password",
+      text: `Click on the following link to reset your password: ${process.env.APP_URL || "http://localhost:5173"}/account-recovery?token=${token}`
+    };
+    await sendEmail(authEmail);
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 15);
+    db.prepare(
+      `DELETE FROM verification WHERE userId = (SELECT id FROM users WHERE email = ?) AND verifyOrReset = ?`
+    ).run(email, "reset");
+    db.prepare(
+      `INSERT into verification (userId, token, expiresAt, verifyOrReset) VALUES ((SELECT id FROM users WHERE email = ?), ?, ?, ?)`
+    ).run(email, token, expiresAt.toISOString(), "reset");
+    reply.send({ message: "Email sent" });
+  } catch (error) {
+    console.error("Error during reset:", error);
+    reply.status(500).send({ error: "Unknown Error" });
+  }
+};
+
+export const resendVerificationEmail = async function resendVerificationEmail(
+  request: FastifyRequest<{ Body: { email: string } }>,
+  reply: FastifyReply
+) {
+  const email = request.body.email;
+  if (!email) {
+    reply.status(400).send({ error: "Invalid form" });
+    return;
+  }
+  const db = getDb();
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    reply.status(500).send({ error: "Email service not configured" });
+    return;
+  }
+  try {
+    const row = db.prepare(`SELECT * FROM users WHERE email = ?`).get(email);
+    if (!row) {
+      reply.send({ message: "Email sent" });
+      return;
+    }
+    let emailText = "";
+    let token = "";
+    const { id, emailVerified } = row as UserRow;
+    if (emailVerified) {
+      emailText =
+        "Welcome back to TSC Online! Your email is already verified. If you did not request this email, please ignore it.";
+    } else {
+      token = randomBytes(16).toString("hex");
+      emailText = `Welcome to TSC Online! Please verify your email by clicking on the following link: ${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`;
+      db.prepare(`DELETE FROM verification WHERE userId = ?`).run(id);
+    }
+    const authEmail: Email = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Welcome to TSC Online - Verify Your Email",
+      text: emailText
+    };
+    await sendEmail(authEmail);
+    if (!emailVerified) {
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 1);
+      db.prepare(
+        `INSERT into verification (userId, token, expiresAt, verifyOrReset) VALUES ((SELECT id FROM users WHERE email = ?), ?, ?, ?)`
+      ).run(email, token, expiresAt.toISOString(), "verify");
+    }
+    reply.send({ message: "Email sent" });
+  } catch (error) {
+    console.error("Error during resend:", error);
+    reply.status(500).send({ error: "Unknown Error" });
+  }
+};
+
+export const verifyEmail = async function verifyEmail(
+  request: FastifyRequest<{ Body: { token: string } }>,
+  reply: FastifyReply
+) {
   const token = request.body.token;
   const db = getDb();
   try {
@@ -295,20 +427,21 @@ export const verify = async function verify(request: FastifyRequest<{ Body: { to
       reply.status(404).send({ error: "Verification token not found" });
       return;
     }
-    const check = db.prepare(`SELECT * FROM users WHERE id = ?`).get((row as VerificationRow)["userId"]);
-    if ((check as UserRow)["emailVerified"]) {
+    const { userId, expiresAt, verifyOrReset } = row as VerificationRow;
+    const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(userId);
+    const { emailVerified, uuid } = user as UserRow;
+    if (emailVerified) {
       reply.status(409).send({ error: "Email already verified" });
       return;
     }
-    const expiresAt = new Date((row as VerificationRow)["expiresAt"]);
-    if (expiresAt < new Date()) {
+    const expiresAtDate = new Date(expiresAt);
+    if (expiresAtDate < new Date() || verifyOrReset !== "verify") {
       db.prepare(`DELETE FROM verification WHERE token = ?`).run(token);
-      reply.status(401).send({ error: "Verification token expired" });
+      reply.status(401).send({ error: "Verification token expired or invalid" });
       return;
     }
-    const userId = (row as VerificationRow)["userId"];
     db.prepare(`UPDATE users SET emailVerified = 1 WHERE id = ?`).run(userId);
-    request.session.set("uuid", (db.prepare(`SELECT uuid FROM users WHERE id = ?`).get(userId) as UserRow)["uuid"]);
+    request.session.set("uuid", uuid);
     reply.send({ message: "Email verified" });
   } catch (error) {
     console.error("Error during confirmation:", error);
@@ -321,7 +454,7 @@ export const signup = async function signup(
   reply: FastifyReply
 ) {
   const { username, password, email } = request.body;
-  if (!username || !password || !email) {
+  if (!username || !password || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     reply.status(400).send({ error: "Invalid form" });
     return;
   }
@@ -351,8 +484,8 @@ export const signup = async function signup(
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 1);
     db.prepare(
-      `INSERT into verification (userId, token, expiresAt) VALUES ((SELECT id FROM users WHERE email = ?), ?, ?)`
-    ).run(email, token, expiresAt.toISOString());
+      `INSERT into verification (userId, token, expiresAt, verifyOrReset) VALUES ((SELECT id FROM users WHERE email = ?), ?, ?, ?)`
+    ).run(email, token, expiresAt.toISOString(), "verify");
   } catch (error) {
     console.error("Error during signup:", error);
     reply.status(500).send({ error: "Unknown Error" });
@@ -375,8 +508,12 @@ export const login = async function login(
       reply.status(401).send({ error: "Incorrect username or password" });
       return;
     }
-    const { uuid, hashedPassword } = row as UserRow;
+    const { uuid, hashedPassword, emailVerified } = row as UserRow;
     if (hashedPassword && (await compare(password, hashedPassword))) {
+      if (!emailVerified) {
+        reply.status(403).send({ error: "Email not verified" });
+        return;
+      }
       request.session.set("uuid", uuid);
       reply.send({ message: "Login successful" });
       return;
@@ -388,7 +525,7 @@ export const login = async function login(
   }
 };
 
-export const googleLogin = async function login(
+export const googleLogin = async function googleLogin(
   request: FastifyRequest<{ Body: { credential: string } }>,
   reply: FastifyReply
 ) {
