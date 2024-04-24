@@ -206,9 +206,11 @@ export const Column = observer(function Column() {
           onChange={handleSearch} 
           value={searchTerm}
         />
-        <Typography variant="body2" color="textSecondary">
-          <span style={{ color: 'red' }}>Filtered For: "{searchTermDisplay}"</span>
-        </Typography>
+        {searchTerm && (
+          <Typography variant="body2" color="textSecondary">
+            <span style={{ color: 'red' }}>Filtered For: "{searchTermDisplay}"</span>
+          </Typography>
+        )}
       </Box>
       <TSCButton
         id="column-generate-button-top"
@@ -253,5 +255,5 @@ export const Column = observer(function Column() {
         <ColumnMenu />
       </div>
     </div>
-  );
+  );  
 });
