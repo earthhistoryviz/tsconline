@@ -258,7 +258,7 @@ export const setDatapackConfig = action(
         name: "Chart Root", // if you change this, change parse-datapacks.ts :69
         editName: "Chart Root",
         fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
-        fontOptions: [...allFontOptions],
+        fontOptions: ["Column Header"],
         popup: "",
         on: true,
         width: 100,
@@ -311,6 +311,7 @@ export const setDatapackConfig = action(
             child.parent = column.name;
           }
         }
+        columnInfo.fontOptions = Array.from(new Set([...columnInfo.fontOptions, ...column.fontOptions]));
         columnInfo.children.push(column);
       }
       assertDatapackAgeInfo(datapackAgeInfo);
