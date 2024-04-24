@@ -376,10 +376,10 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo,
         if (stateColumn.rgb.r == 255 && stateColumn.rgb.g == 255 && stateColumn.rgb.b == 255) {
           xml += `${indent}<setting name="${xmlKey}"/>\n`;
         } else {
-          xml += `${indent}<setting name="${xmlKey}" useNamed="false">rgb(${stateColumn?.rgb.r},${stateColumn?.rgb.g},${stateColumn?.rgb.b})</setting>\n`;
+          xml += `${indent}<setting name="${xmlKey}" useNamed="false">rgb(${stateColumn.rgb.r},${stateColumn.rgb.g},${stateColumn.rgb.b})</setting>\n`;
         }
       } else if (key == "customColor") {
-        xml += `${indent}<setting name="${xmlKey}" useNamed="false">rgb(${stateColumn?.rgb.r},${stateColumn?.rgb.g},${stateColumn?.rgb.b})</setting>\n`;
+        xml += `${indent}<setting name="${xmlKey}" useNamed="false">rgb(${stateColumn.rgb.r},${stateColumn.rgb.g},${stateColumn.rgb.b})</setting>\n`;
       } else if (key === "isSelected") {
         //TODO: remove later when event columns are covered
         if (presetColumn._id.includes("EventColumn")) {
