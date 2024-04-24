@@ -17,6 +17,7 @@ export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
 
 export const toggleSettingsTabColumn = action((name: string) => {
   let curcol: ColumnInfo;
+  
   if (state.settingsTabs.columnHashMap.get(name) === undefined) {
     console.log("WARNING: tried to get", name, "in state.columnHashMap, but is undefined");
     return;
@@ -73,27 +74,6 @@ export const setcolumnSelected = action((name: string) => {
   }
 });
 
-// Function to update column visibility based on search results
-export const updateColumnVisibility = (columnsToShow: string[]) => {
-  state.settingsTabs.columnHashMap.forEach((columnInfo) => {
-    if (columnsToShow.includes(columnInfo.name)) {
-      columnInfo.show = true;
-      let parentName = columnInfo.parent;
-      while (parentName) {
-        const parentColumnInfo = state.settingsTabs.columnHashMap.get(parentName);
-        if (parentColumnInfo) {
-          parentColumnInfo.show = true;
-          parentName = parentColumnInfo.parent;
-        } else {
-          break;
-        }
-      }
-    } else {
-      columnInfo.show = false;
-    }
-  });
-};
-
 // Function to search columns and retain hierarchy
 export const searchColumns = action(async (searchTerm: string) => {
   if (searchTerm === "") {
@@ -105,6 +85,7 @@ export const searchColumns = action(async (searchTerm: string) => {
   state.settingsTabs.columnHashMap.forEach((columnInfo) => {
     columnInfo.show = false;
   })
+  
   state.settingsTabs.columnHashMap.forEach((columnInfo) => {
     if (columnInfo.name.toLowerCase().includes(searchTerm.toLowerCase())) {
       columnInfo.show = true;
