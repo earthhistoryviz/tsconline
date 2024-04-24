@@ -1,8 +1,8 @@
 .cp-button {
   width: 60px;
   height: 30px;
-  margin-top: 1px;
-  align-items: center;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .color-picker {

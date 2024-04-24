@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext, useState, useRef, useEffect } from "react";
+import React, { useContext, useState, useRef, useEffect, CSSProperties } from "react";
 import { SketchPicker, ColorResult } from "@hello-pangea/color-picker";
 import Button from "@mui/material/Button";
 import "./TSCColorPicker.css";
@@ -10,7 +10,7 @@ interface TSCColorPickerProps {
   onColorChange: (color: string) => void; // Callback function when color changes
   disabled?: boolean;
 }
-const TSCColorPicker: React.FC<TSCColorPickerProps> = observer(({ color, onColorChange, disabled = false }) => {
+const TSCColorPicker: React.FC<TSCColorPickerProps> = observer(({ color, onColorChange, disabled = false}) => {
   const [showPicker, setShowPicker] = useState<boolean>(false);
   const [selectedColor, setSelectedColor] = useState<string>(color);
   const { state, actions } = useContext(context);
@@ -48,7 +48,7 @@ const TSCColorPicker: React.FC<TSCColorPickerProps> = observer(({ color, onColor
         }}
         disabled={disabled}
         className="cp-button"
-        style={{ backgroundColor: selectedColor }}></Button>
+        style={{ backgroundColor: selectedColor}}></Button>
       {showPicker && (
         <div ref={pickerRef} className="color-picker">
           <SketchPicker color={selectedColor} onChangeComplete={handleColorChange} presetColors={state.presetColors} />
