@@ -273,7 +273,7 @@ export const setDatapackConfig = action(
         children: [],
         parent: null,
         units: "",
-        columnDisplayType: "RootColumn",
+        columnDisplayType: "RootColumn"
       };
       // all chart root font options have inheritable on
       for (const opt in columnInfo.fontsInfo) {
