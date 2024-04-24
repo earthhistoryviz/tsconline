@@ -1,5 +1,5 @@
 import { action } from "mobx";
-import { ChartInfoTSC, ChartSettingsInfoTSC, TimescaleItem } from "@tsconline/shared";
+import { ChartInfoTSC, ChartSettingsInfoTSC, FontsInfo, TimescaleItem } from "@tsconline/shared";
 
 import {
   type MapInfo,
@@ -275,6 +275,10 @@ export const setDatapackConfig = action(
         units: "",
         columnDisplayType: "RootColumn"
       };
+      // all chart root font options have inheritable on
+      for (const opt in columnInfo.fontsInfo) {
+        columnInfo.fontsInfo[opt as keyof FontsInfo].inheritable = true;
+      }
       // add everything together
       // uses preparsed data on server start and appends items together
       for (const datapack of datapacks) {
@@ -307,6 +311,7 @@ export const setDatapackConfig = action(
             child.parent = column.name;
           }
         }
+        columnInfo.fontOptions = Array.from(new Set([...columnInfo.fontOptions, ...column.fontOptions]));
         columnInfo.children.push(column);
       }
       assertDatapackAgeInfo(datapackAgeInfo);
