@@ -8,6 +8,7 @@ import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import DOMPurify from "dompurify";
+import { pushSnackbar } from "./general-actions";
 
 export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
   if (state.settings.useDatapackSuggestedAge != response) {
@@ -64,6 +65,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
   let body;
   try {
+    if (state.settingsTabs.columns !== undefined) normalizeColumnProperties(state.settingsTabs.columns);
     const columnCopy: ColumnInfo = JSON.parse(JSON.stringify(state.settingsTabs.columns));
     changeManuallyAddedColumns(columnCopy);
     const xmlSettings = jsonToXml(state.settingsTSC, columnCopy, state.settings);
@@ -134,6 +136,16 @@ function changeManuallyAddedColumns(column: ColumnInfo) {
   }
   for (const child of column.children) {
     changeManuallyAddedColumns(child);
+  }
+}
+
+function normalizeColumnProperties(column: ColumnInfo) {
+  if (column.width !== undefined && (isNaN(column.width) || column.width < 20)) {
+    column.width = 20;
+    pushSnackbar("Invalid width input found, updating column width to 20", "warning");
+  }
+  for (const child of column.children) {
+    normalizeColumnProperties(child);
   }
 }
 
