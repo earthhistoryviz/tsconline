@@ -277,7 +277,7 @@ export const setDatapackConfig = action(
       };
       // all chart root font options have inheritable on
       for (const opt in columnInfo.fontsInfo) {
-        columnInfo.fontsInfo[opt as keyof FontsInfo].inheritable = true
+        columnInfo.fontsInfo[opt as keyof FontsInfo].inheritable = true;
       }
       // add everything together
       // uses preparsed data on server start and appends items together
