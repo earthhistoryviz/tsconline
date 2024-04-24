@@ -194,8 +194,9 @@ export const Column = observer(function Column() {
   return (
     <div className={`column-top-level ${searchTerm ? 'filtered' : ''}`}>
       <Box sx={{ 
-        marginTop: '20px',
-        marginBottom: '10px' }}>
+        marginTop: '30px',
+        marginBottom: '10px',
+        position: 'relative' }}>
         <TextField
           id="search-bar"
           label="Search"
@@ -207,7 +208,10 @@ export const Column = observer(function Column() {
           value={searchTerm}
         />
         {searchTerm && (
-          <Typography variant="body2" color="textSecondary">
+          <Typography 
+            variant="body2" 
+            color="textSecondary"
+            sx={{ position: 'absolute', top: '-24px' }}>
             <span style={{ color: 'red' }}>Filtered For: "{searchTermDisplay}"</span>
           </Typography>
         )}
@@ -248,5 +252,5 @@ export const Column = observer(function Column() {
         <ColumnMenu />
       </div>
     </div>
-  );  
+  );    
 });

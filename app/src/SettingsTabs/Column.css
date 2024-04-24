@@ -73,3 +73,7 @@
 .filtered-border {
   outline: 1px solid red;
 }
+
+.column-top-level .MuiTypography-root {
+  margin: 10;
+}
