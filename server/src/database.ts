@@ -15,6 +15,7 @@ export interface VerificationRow {
   userId: number;
   token: string;
   expiresAt: string;
+  verifyOrReset: "verify" | "reset";
 }
 
 if (!fs.existsSync("../server/db")) {
@@ -39,6 +40,7 @@ export const getDb = (): BetterSqlite3.Database => {
     userId INT NOT NULL,
     token VARCHAR(32) NOT NULL,
     expiresAt DATETIME NOT NULL,
+    verifyOrReset VARCHAR(6) NOT NULL,
     FOREIGN KEY (userId) REFERENCES users (id)
   );`);
 

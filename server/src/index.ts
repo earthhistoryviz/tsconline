@@ -187,7 +187,13 @@ server.post("/auth/logout", async (request, reply) => {
   reply.send({ message: "Logged out" });
 });
 
-server.post("/auth/verify", routes.verify);
+server.post("/auth/verify", routes.verifyEmail);
+
+server.post("/auth/resend", routes.resendVerificationEmail);
+
+server.post("/auth/send-reset-email", routes.sendResetPasswordEmail);
+
+server.post("/auth/reset-password", routes.resetPassword);
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
