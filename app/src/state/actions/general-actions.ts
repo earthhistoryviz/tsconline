@@ -1,5 +1,5 @@
 import { action } from "mobx";
-import { ChartInfoTSC, ChartSettingsInfoTSC, TimescaleItem } from "@tsconline/shared";
+import { ChartInfoTSC, ChartSettingsInfoTSC, FontsInfo, TimescaleItem, allFontOptions } from "@tsconline/shared";
 
 import {
   type MapInfo,
@@ -258,7 +258,7 @@ export const setDatapackConfig = action(
         name: "Chart Root", // if you change this, change parse-datapacks.ts :69
         editName: "Chart Root",
         fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
-        fontOptions: ["Column Header"],
+        fontOptions: [...allFontOptions],
         popup: "",
         on: true,
         width: 100,
@@ -275,6 +275,10 @@ export const setDatapackConfig = action(
         units: "",
         columnDisplayType: "RootColumn"
       };
+      // all chart root font options have inheritable on
+      for (const opt in columnInfo.fontsInfo) {
+        columnInfo.fontsInfo[opt as keyof FontsInfo].inheritable = true
+      }
       // add everything together
       // uses preparsed data on server start and appends items together
       for (const datapack of datapacks) {
