@@ -15,7 +15,6 @@ import fastifyMultipart from "@fastify/multipart";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import { getDb } from "./database.js";
 import fastifySecureSession from "@fastify/secure-session";
-import crypto from "crypto";
 import dotenv from "dotenv";
 
 const server = fastify({
@@ -74,7 +73,9 @@ declare module "@fastify/secure-session" {
   }
 }
 dotenv.config();
-const sessionKey = process.env.SESSION_KEY || crypto.randomBytes(32);
+const sessionKey = process.env.SESSION_KEY
+  ? Buffer.from(process.env.SESSION_KEY, "hex")
+  : "d30a7eae1e37a08d6d5c65ac91dfbc75b54ce34dd29153439979364046cc06ae";
 server.register(fastifySecureSession, {
   cookieName: "loginSession",
   key: sessionKey,
@@ -92,8 +93,7 @@ server.register(fastifyMultipart, {
   limits: {
     fieldNameSize: 100,
     fileSize: 1024 * 1024 * 60 // 60 mb
-  },
-  attachFieldsToBody: true
+  }
 });
 
 // Serve the main app from /
@@ -137,7 +137,7 @@ server.get("/presets", async (_request, reply) => {
   reply.send(presets);
 });
 // uploads datapack
-server.post<{ Params: { username: string } }>("/upload/:username", routes.uploadDatapack);
+server.post("/upload", routes.uploadDatapack);
 
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", routes.fetchSettingsXml);
@@ -167,7 +167,7 @@ server.get("/facies-patterns", (_request, reply) => {
   }
 });
 
-server.get("/user-datapacks/:username", routes.fetchUserDatapacks);
+server.get("/user-datapacks", routes.fetchUserDatapacks);
 
 server.post("/auth/oauth", routes.googleLogin);
 
