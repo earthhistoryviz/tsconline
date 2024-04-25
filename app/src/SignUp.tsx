@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
 import Avatar from "@mui/material/Avatar";
 import { TSCButton } from "./components";
@@ -12,17 +12,18 @@ import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import LoginIcon from "@mui/icons-material/Login";
 import { fetcher } from "./util";
-import { actions } from "./state";
 import { Lottie } from "./components";
 import loader from "./assets/icons/loading.json";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { displayServerError } from "./state/actions/util-actions";
+import { context } from "./state";
 import "./Login.css";
 
 export const SignUp: React.FC = observer(() => {
   const theme = useTheme();
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { actions } = useContext(context);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
