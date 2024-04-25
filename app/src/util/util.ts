@@ -1,3 +1,5 @@
+import { RGB } from "@tsconline/shared";
+
 /**
  * Returns if the datapoint range (minDataAge, maxDataAge) is inside the user selected range of (userTopAge, userBaseAge)
  * @param minDataAge
@@ -73,4 +75,32 @@ export function trimQuotes(input: string): string {
     return input.slice(1, -1);
   }
   return input;
+}
+
+export function convertHexToRGB(hex: string, returnAsString: false): RGB;
+export function convertHexToRGB(hex: string, returnAsString: true): string;
+
+export function convertHexToRGB(hex: string, returnAsString: boolean = false): RGB | string {
+  if (!/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(hex)) {
+    throw new Error("Invalid hexadecimal color code");
+  }
+  hex = hex.slice(1);
+
+  if (hex.length === 3) {
+    hex = hex
+      .split("")
+      .map((char) => char + char)
+      .join("");
+  }
+
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  const rgb: RGB = { r, g, b };
+
+  if (returnAsString) {
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+
+  return rgb;
 }
