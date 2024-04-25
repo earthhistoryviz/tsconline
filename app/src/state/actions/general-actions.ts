@@ -100,20 +100,23 @@ export const fetchPresets = action("fetchPresets", async () => {
 /**
  * This will grab the user datapacks AND the server datapacks from the server
  */
-export const fetchUserDatapacks = action("fetchUserDatapacks", async (username: string) => {
+export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
   try {
-    const response = await fetcher(`/user-datapacks/${username}`, {
-      method: "GET"
+    const response = await fetcher(`/user-datapacks`, {
+      method: "GET",
+      credentials: "include"
     });
     const data = await response.json();
     try {
       assertIndexResponse(data);
       const { mapPackIndex, datapackIndex } = data;
-      state.mapPackIndex = mapPackIndex;
-      state.datapackIndex = datapackIndex;
+      setMapPackIndex(mapPackIndex);
+      setDatapackIndex(datapackIndex);
       console.log("User Datapacks loaded");
     } catch (e) {
-      displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
+      if (response.status != 401 && response.status != 404) {
+        displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
+      }
     }
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
@@ -121,7 +124,7 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async (username: 
   }
 });
 
-export const uploadDatapack = action("uploadDatapack", async (file: File, username: string, name: string) => {
+export const uploadDatapack = action("uploadDatapack", async (file: File, name: string) => {
   if (state.datapackIndex[file.name]) {
     pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
     return;
@@ -129,7 +132,7 @@ export const uploadDatapack = action("uploadDatapack", async (file: File, userna
   const formData = new FormData();
   formData.append("file", file);
   try {
-    const response = await fetcher(`/upload/${username}`, {
+    const response = await fetcher(`/upload`, {
       method: "POST",
       body: formData,
       credentials: "include"
@@ -137,7 +140,7 @@ export const uploadDatapack = action("uploadDatapack", async (file: File, userna
     const data = await response.json();
     if (response.ok) {
       console.log("Successfully uploaded datapack");
-      fetchUserDatapacks(username);
+      fetchUserDatapacks();
       pushSnackbar("Successfully uploaded " + name + " datapack", "success");
     } else {
       displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
@@ -550,14 +553,18 @@ async function fetchSVGStatus(): Promise<boolean> {
   return data.ready;
 }
 
+export const setMapPackIndex = action("setMapPackIndex", (mapPackIndex: State["mapPackIndex"]) => {
+  state.mapPackIndex = mapPackIndex;
+});
+export const setDatapackIndex = action("setDatapackIndex", (datapackIndex: State["datapackIndex"]) => {
+  state.datapackIndex = datapackIndex;
+});
 export const removeAllErrors = action("removeAllErrors", () => {
   state.errors.errorAlerts.clear();
 });
-
 export const removeError = action("removeError", (context: ErrorCodes) => {
   state.errors.errorAlerts.delete(context);
 });
-
 export const pushError = action("pushError", (context: ErrorCodes) => {
   if (state.errors.errorAlerts.has(context)) {
     state.errors.errorAlerts.get(context)!.errorCount += 1;
@@ -634,6 +641,7 @@ export const sessionCheck = action("sessionCheck", async () => {
     const data = await response.json();
     if (data.authenticated) {
       setIsLoggedIn(true);
+      await fetchUserDatapacks();
     } else {
       setIsLoggedIn(false);
     }

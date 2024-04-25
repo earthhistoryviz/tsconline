@@ -41,7 +41,8 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
-  const userDir = path.join(assetconfigs.uploadDirectory, uuid);
+  const hash = md5(uuid);
+  const userDir = path.join(assetconfigs.uploadDirectory, hash);
   try {
     await access(userDir);
   } catch (e) {
@@ -51,10 +52,10 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(
   const datapackIndex: DatapackIndex = JSON.parse(JSON.stringify(serverDatapackindex));
   const mapPackIndex: MapPackIndex = JSON.parse(JSON.stringify(serverMapPackIndex));
   try {
-    await access(path.join(userDir, "DatapackIndex.json"));
-    Object.assign(datapackIndex, JSON.parse(fs.readFileSync(path.join(userDir, "DatapackIndex.json")).toString()));
-    await access(path.join(userDir, "MapPackIndex.json"));
-    Object.assign(mapPackIndex, JSON.parse(fs.readFileSync(path.join(userDir, "MapPackIndex.json")).toString()));
+    const dataPackData = await readFile(path.join(userDir, "DatapackIndex.json"), "utf8");
+    Object.assign(datapackIndex, JSON.parse(dataPackData));
+    const mapPackData = await readFile(path.join(userDir, "MapPackIndex.json"), "utf8");
+    Object.assign(mapPackIndex, JSON.parse(mapPackData));
   } catch (e) {
     reply
       .status(500)
@@ -66,10 +67,8 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(
   reply.status(200).send(indexResponse);
 };
 
-export const uploadDatapack = async function uploadDatapack(
-  request: FastifyRequest<{ Params: { username: string } }>,
-  reply: FastifyReply
-) {
+// If at some point a delete datapack function is needed, this function needs to be modified for race conditions
+export const uploadDatapack = async function uploadDatapack(request: FastifyRequest, reply: FastifyReply) {
   const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
@@ -88,13 +87,19 @@ export const uploadDatapack = async function uploadDatapack(
   const filename = file.filename;
   const ext = path.extname(filename);
   const filenameWithoutExtension = path.basename(filename, ext);
-  const userDir = path.join(assetconfigs.uploadDirectory, uuid);
+  const hash = md5(uuid);
+  const userDir = path.join(assetconfigs.uploadDirectory, hash);
   const datapackDir = path.join(userDir, "datapacks");
   const decryptDir = path.join(userDir, "decrypted");
   const filepath = path.join(datapackDir, filename);
   const decryptedFilepathDir = path.join(decryptDir, filenameWithoutExtension);
   const mapPackIndexFilepath = path.join(userDir, "MapPackIndex.json");
   const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json");
+  async function errorHandler(message: string, errorStatus: number, e?: unknown) {
+    e && console.error(e);
+    await resetUploadDirectory(filepath, decryptedFilepathDir);
+    reply.status(errorStatus).send({ error: message });
+  }
   if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(ext)) {
     reply.status(415).send({ error: "Invalid file type" });
     return;
@@ -114,14 +119,11 @@ export const uploadDatapack = async function uploadDatapack(
       });
     });
   } catch (e) {
-    console.error(e);
-    await resetUploadDirectory(filepath, decryptedFilepathDir);
-    reply.status(500).send({ error: "Failed to save file with error: " + e });
+    await errorHandler("Failed to save file with error: " + e, 500, e);
     return;
   }
   if (file.file.truncated) {
-    await resetUploadDirectory(filepath, decryptedFilepathDir);
-    reply.status(413).send({ error: "File too large" });
+    await errorHandler("File too large", 413);
     return;
   }
   try {
@@ -146,58 +148,50 @@ export const uploadDatapack = async function uploadDatapack(
       });
     });
   } catch (e) {
-    console.error(e);
-    await resetUploadDirectory(filepath, decryptedFilepathDir);
-    reply.status(500).send({ error: "Failed to decrypt datapacks with error " + e });
+    await errorHandler("Failed to decrypt datapacks with error " + e, 500, e);
     return;
   }
   try {
     await access(decryptedFilepathDir);
     await access(path.join(decryptedFilepathDir, "datapacks"));
   } catch (e) {
-    await resetUploadDirectory(filepath, decryptedFilepathDir);
-    reply.status(500).send({ error: "Failed to decrypt file" });
+    await errorHandler("Failed to decrypt file", 500);
     return;
   }
   const datapackIndex: DatapackIndex = {};
   const mapPackIndex: MapPackIndex = {};
   // check for if this user has a datapack index already
   try {
-    await access(datapackIndexFilepath);
-    const data = await readFile(datapackIndexFilepath);
-    Object.assign(datapackIndex, JSON.parse(data.toString()));
+    const data = await readFile(datapackIndexFilepath, "utf-8");
+    Object.assign(datapackIndex, JSON.parse(data));
     assertDatapackIndex(datapackIndex);
   } catch (e) {
-    console.error(e);
-    await resetUploadDirectory(filepath, decryptedFilepathDir);
-    reply.status(500).send({ error: "Failed to parse DatapackIndex.json" });
-    return;
+    if ((e as NodeJS.ErrnoException).code != "ENOENT") {
+      await errorHandler("Failed to parse DatapackIndex.json", 500, e);
+      return;
+    }
   }
   // check for if this user has a map index already
   try {
-    await access(mapPackIndexFilepath);
-    const data = await readFile(mapPackIndexFilepath);
-    Object.assign(mapPackIndex, JSON.parse(data.toString()));
+    const data = await readFile(mapPackIndexFilepath, "utf-8");
+    Object.assign(mapPackIndex, JSON.parse(data));
     assertMapPackIndex(mapPackIndex);
   } catch (e) {
-    console.error(e);
-    await resetUploadDirectory(filepath, decryptedFilepathDir);
-    reply.status(500).send({ error: "Failed to parse MapPackIndex.json" });
-    return;
+    if ((e as NodeJS.ErrnoException).code != "ENOENT") {
+      errorHandler("Failed to parse MapPackIndex.json", 500, e);
+      return;
+    }
   }
   await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [filename]);
   if (!datapackIndex[filename]) {
-    await resetUploadDirectory(filepath, decryptedFilepathDir);
-    reply.status(500).send({ error: "Failed to load decrypted datapack" });
+    await errorHandler("Failed to load decrypted datapack", 500);
     return;
   }
   try {
     await writeFile(datapackIndexFilepath, JSON.stringify(datapackIndex));
     await writeFile(mapPackIndexFilepath, JSON.stringify(mapPackIndex));
   } catch (e) {
-    console.error(e);
-    reply.status(500).send({ error: "Failed to save indexes" });
-    await resetUploadDirectory(filepath, decryptedFilepathDir);
+    await errorHandler("Failed to save indexes", 500, e);
     return;
   }
   try {
@@ -210,36 +204,55 @@ export const uploadDatapack = async function uploadDatapack(
       datapackIndexFilepath
     );
   } catch (e) {
-    console.error(e);
-    reply.status(500).send({ error: "Failed to load and write metadata for file" });
-    await resetUploadDirectory(filepath, decryptedFilepathDir);
+    await errorHandler("Failed to load and write metadata for file", 500, e);
     return;
   }
   reply.status(200).send({ message: "File uploaded" });
 };
 
-// TODO: later check in the user's directory for the file
 export const fetchImage = async function (
   request: FastifyRequest<{ Params: { datapackName: string; imageName: string } }>,
   reply: FastifyReply
 ) {
-  const imagePath = path.join(
-    assetconfigs.decryptionDirectory,
-    request.params.datapackName,
-    "datapack-images",
-    request.params.imageName
-  );
+  const tryReadFile = async (path: string) => {
+    try {
+      const file = await readFile(path);
+      return file;
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === "ENOENT") {
+        return null;
+      }
+      throw e;
+    }
+  };
   try {
-    await access(imagePath);
-    const image = await readFile(imagePath);
+    const imagePath = path.join(
+      assetconfigs.decryptionDirectory,
+      request.params.datapackName,
+      "datapack-images",
+      request.params.imageName
+    );
+    let image = await tryReadFile(imagePath);
+    const uuid = request.session.get("uuid");
+    if (!image && uuid) {
+      const userImagePath = path.join(
+        assetconfigs.uploadDirectory,
+        await hash(uuid, 10),
+        "decrypted",
+        request.params.datapackName,
+        "datapack-images",
+        request.params.imageName
+      );
+      image = await tryReadFile(userImagePath);
+    }
+    if (!image) {
+      reply.status(404).send({ error: "Image not found" });
+      return;
+    }
     reply.send(image);
   } catch (e) {
-    const error = e as NodeJS.ErrnoException;
-    if (error.code === "ENOENT") {
-      reply.status(404).send({ error: "Image not found" });
-    } else {
-      reply.status(500).send({ error: "An error occurred" });
-    }
+    console.error("Error fetching image: ", e);
+    reply.status(500).send({ error: "Unknown error" });
   }
 };
 
@@ -578,11 +591,9 @@ export const googleLogin = async function googleLogin(
     const db = getDb();
     const row = db.prepare(`SELECT * FROM users WHERE email = ?`).get(payload.email);
     if (row) {
-      console.log(row);
       if ((row as UserRow)["username"] !== null) {
         reply.status(409).send({ error: "User already exists" });
       } else {
-        console.log("User already exists, logging in");
         request.session.set("uuid", (row as UserRow)["uuid"]);
         reply.send({ message: "Login successful" });
       }
@@ -616,9 +627,9 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     });
     return;
   }
-  const { username, useCache, useSuggestedAge } = chartrequest;
+  const { useCache, useSuggestedAge } = chartrequest;
   const settingsXml = chartrequest.settings;
-  const hashedUsername = md5(username);
+  const hashsedUser = md5(request.session.get("uuid") || "");
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
   const hash = md5(settingsXml + chartrequest.datapacks.join(","));
   const chartDirUrlPath = `/${assetconfigs.chartsDirectory}/${hash}`;
@@ -654,14 +665,14 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     reply.send({ error: "ERROR: failed to save settings" });
     return;
   }
-  const userDatapackFilepaths = await glob(`${assetconfigs.uploadDirectory}/${hashedUsername}/datapacks/*`);
+  const userDatapackFilepaths = await glob(`${assetconfigs.uploadDirectory}/${hashsedUser}/datapacks/*`);
   const userDatapackNames = userDatapackFilepaths.map((datapack) => path.basename(datapack));
   const datapacks = [];
   for (const datapack of chartrequest.datapacks) {
     if (assetconfigs.activeDatapacks.includes(datapack)) {
       datapacks.push(`"${assetconfigs.datapacksDirectory}/${datapack}"`);
     } else if (userDatapackNames.includes(datapack)) {
-      datapacks.push(`"${assetconfigs.uploadDirectory}/${hashedUsername}/datapacks/${datapack}"`);
+      datapacks.push(`"${assetconfigs.uploadDirectory}/${hashsedUser}/datapacks/${datapack}"`);
     } else {
       console.log("ERROR: datapack: ", datapack, " is not included in activeDatapacks");
       console.log("assetconfig.activeDatapacks:", assetconfigs.activeDatapacks);
