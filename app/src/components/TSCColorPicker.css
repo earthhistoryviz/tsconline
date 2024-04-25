@@ -1,0 +1,9 @@
+.cp-button {
+  width: 60px;
+  height: 30px;
+}
+
+.color-picker {
+  position: absolute;
+  z-index: 2;
+}

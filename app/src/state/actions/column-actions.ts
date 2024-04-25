@@ -1,6 +1,6 @@
 import { action } from "mobx";
 import { state } from "../state";
-import { ColumnInfo, ValidFontOptions } from "@tsconline/shared";
+import { ColumnInfo, RGB, ValidFontOptions } from "@tsconline/shared";
 
 export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
   state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
@@ -96,4 +96,8 @@ export const setColor = action((target: ValidFontOptions, color: string, column:
 
 export const setEnableTitle = action((isOn: boolean, column: ColumnInfo) => {
   column.enableTitle = isOn;
+});
+
+export const setRGB = action((column: ColumnInfo, color: RGB) => {
+  column.rgb = color;
 });

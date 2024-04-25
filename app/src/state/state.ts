@@ -15,6 +15,7 @@ import type {
   ChartInfoTSC
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
+import { defaultColors } from "../util/constant";
 import { settings } from "../constants";
 
 export type State = {
@@ -71,6 +72,7 @@ export type State = {
     errorAlerts: Map<ErrorCodes, ErrorAlert>;
   };
   snackbars: SnackbarInfo[];
+  presetColors: string[];
 };
 
 export const state = observable<State>({
@@ -139,5 +141,6 @@ export const state = observable<State>({
   errors: {
     errorAlerts: new Map<ErrorCodes, ErrorAlert>()
   },
+  presetColors: JSON.parse(localStorage.getItem("savedColors") || JSON.stringify(defaultColors)),
   snackbars: []
 });

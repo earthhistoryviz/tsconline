@@ -372,17 +372,14 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo,
         if (!useEditName) {
           xml += `${indent}<setting name="title">${replaceSpecialChars(presetColumn[key], 1)}</setting>\n`;
         }
-      } else if (key === "backgroundColor" || key === "customColor") {
-        if ("standardized" in presetColumn[key] && "useNamed" in presetColumn[key]) {
-          xml += `${indent}<setting name="${xmlKey}" standardized="${presetColumn[key].standardized}" 
-          useNamed="${presetColumn[key].useNamed}">${presetColumn[key].text}</setting>\n`;
-        } else if ("useNamed" in presetColumn[key]) {
-          xml += `${indent}<setting name="${xmlKey}" useNamed="${presetColumn[key].useNamed}">${presetColumn[key].text}</setting>\n`;
-        } else if ("standardized" in presetColumn[key]) {
-          xml += `${indent}<setting name="${xmlKey}" useNamed="${presetColumn[key].standardized}">${presetColumn[key].text}</setting>\n`;
-        } else {
+      } else if (key === "backgroundColor") {
+        if (stateColumn.rgb.r == 255 && stateColumn.rgb.g == 255 && stateColumn.rgb.b == 255) {
           xml += `${indent}<setting name="${xmlKey}"/>\n`;
+        } else {
+          xml += `${indent}<setting name="${xmlKey}" useNamed="false">rgb(${stateColumn.rgb.r},${stateColumn.rgb.g},${stateColumn.rgb.b})</setting>\n`;
         }
+      } else if (key == "customColor") {
+        xml += `${indent}<setting name="${xmlKey}" useNamed="false">rgb(${stateColumn.rgb.r},${stateColumn.rgb.g},${stateColumn.rgb.b})</setting>\n`;
       } else if (key === "isSelected") {
         //TODO: remove later when event columns are covered
         if (presetColumn._id.includes("EventColumn")) {

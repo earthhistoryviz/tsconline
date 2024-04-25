@@ -22,14 +22,17 @@ import FormControl from "@mui/material/FormControl";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import FormatBoldIcon from "@mui/icons-material/FormatBold";
 import FormatItalicIcon from "@mui/icons-material/FormatItalic";
-import { MuiColorInput } from "mui-color-input";
 import CloseIcon from "@mui/icons-material/Close";
 import "./FontMenu.css";
-import { ColumnInfo, ValidFontOptions } from "@tsconline/shared";
+import { ValidFontOptions } from "@tsconline/shared";
+import TSCColorPicker from "../components/TSCColorPicker";
 import { NumericFormat } from "react-number-format";
+import { ColumnInfo } from "@tsconline/shared";
+import { convertHexToRGB } from "../util/util";
 const FontSizeTextField = ({ ...props }: TextFieldProps) => (
   <TextField {...props} className="FontSizeContainer" label="Size" variant="outlined" />
 );
+
 const FontMenuRow: React.FC<{
   target: ValidFontOptions;
   column: ColumnInfo;
@@ -46,7 +49,8 @@ const FontMenuRow: React.FC<{
   };
 
   const handleColor = (newColor: string) => {
-    actions.setColor(target, newColor, column);
+    const rgb = convertHexToRGB(newColor, true);
+    actions.setColor(target, rgb, column);
   };
 
   return (
@@ -116,12 +120,10 @@ const FontMenuRow: React.FC<{
           </ToggleButton>
         </ToggleButtonGroup>
         <div id="ColorInputContainer">
-          <MuiColorInput
-            value={fontOpts.color}
-            size="small"
-            label="Color"
-            format="rgb"
-            onChange={handleColor}
+          <TSCColorPicker
+            key={column.name}
+            color={fontOpts.color}
+            onColorChange={handleColor}
             disabled={!fontOpts.on}
           />
         </div>
