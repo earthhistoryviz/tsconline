@@ -57,6 +57,10 @@ export const updateEditName = action((newName: string) => {
   return;
 });
 
+export const updateWidth = action((columnObject: ColumnInfo, newWidth: number) => {
+  columnObject.width = newWidth;
+});
+
 export const setcolumnSelected = action((name: string) => {
   state.settingsTabs.columnSelected = name;
   if (!state.settingsTabs.columnHashMap.has(name)) {
