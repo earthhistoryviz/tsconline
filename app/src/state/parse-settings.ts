@@ -380,6 +380,10 @@ function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo,
         }
       } else if (key == "customColor") {
         xml += `${indent}<setting name="${xmlKey}" useNamed="false">rgb(${stateColumn.rgb.r},${stateColumn.rgb.g},${stateColumn.rgb.b})</setting>\n`;
+      } else if (key === "width") {
+        if (stateColumn && stateColumn.width !== undefined) {
+          xml += `${indent}<setting name="width">${stateColumn.width}</setting>\n`;
+        }
       } else if (key === "isSelected") {
         //TODO: remove later when event columns are covered
         if (presetColumn._id.includes("EventColumn")) {

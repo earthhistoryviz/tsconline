@@ -181,7 +181,6 @@
                 "columnDisplayType": "BlockSeriesMetaColumn",
                 "minAge": 0,
                 "maxAge": 10,
-                "width": 210,
                 "rgb": {
                   "r": 255,
                   "g": 255,
@@ -337,7 +336,6 @@
                 "columnDisplayType": "BlockSeriesMetaColumn",
                 "minAge": 0,
                 "maxAge": 10,
-                "width": 210,
                 "rgb": {
                   "r": 255,
                   "g": 255,
@@ -375,7 +373,6 @@
             "columnDisplayType": "MetaColumn",
             "minAge": 0,
             "maxAge": 10,
-            "width": 100,
             "rgb": {
               "r": 255,
               "g": 255,
@@ -657,7 +654,6 @@
                 "parent": "Parent 1",
                 "minAge": 0,
                 "maxAge": 10,
-                "width": 210,
                 "rgb": {
                   "r": 100,
                   "g": 200,
@@ -868,7 +864,6 @@
                 "parent": "Parent 1",
                 "minAge": 0,
                 "maxAge": 0.234,
-                "width": 100,
                 "rgb": {
                   "r": 255,
                   "g": 255,
@@ -1081,7 +1076,6 @@
             "parent": "Chart Title",
             "minAge": 0,
             "maxAge": 433.35,
-            "width": 100,
             "rgb": {
               "r": 255,
               "g": 255,

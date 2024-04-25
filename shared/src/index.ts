@@ -208,7 +208,7 @@ export type ColumnInfo = {
   enableTitle: boolean;
   columnDisplayType: DisplayedColumnTypes;
   rgb: RGB;
-  width: number;
+  width?: number;
   units: string;
 };
 
@@ -822,7 +822,7 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   if (o.parent !== null && typeof o.parent !== "string") throwError("ColumnInfo", "parent", "string", o.parent);
   if (typeof o.minAge !== "number") throwError("ColumnInfo", "minAge", "number", o.minAge);
   if (typeof o.maxAge !== "number") throwError("ColumnInfo", "maxAge", "number", o.maxAge);
-  if (typeof o.width !== "number") throwError("ColumnInfo", "width", "number", o.width);
+  if ("width" in o && typeof o.width !== "number") throwError("ColumnInfo", "width", "number", o.width);
   if (typeof o.enableTitle !== "boolean") throwError("ColumnInfo", "enableTitle", "boolean", o.enableTitle);
   if (typeof o.units !== "string") throwError("ColumnInfo", "units", "string", o.units);
   if (!Array.isArray(o.fontOptions)) throwError("ColumnInfo", "fontOptions", "array", o.fontOptions);
