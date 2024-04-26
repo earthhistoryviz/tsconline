@@ -1129,9 +1129,10 @@
         "bottomAge": 5
       },
       "ageUnits": "Ma",
-      "defaultChronostrat": "UNESCO",
-      "formatVersion": 1.5,
-      "verticalScale": 6
+      "defaultChronostrat": "USGS",
+      "formatVersion": 1,
+      "verticalScale": 6,
+      "date": "2015-03-15"
     },
     "column-types-facies-key": {
         "FaciesOne": {
