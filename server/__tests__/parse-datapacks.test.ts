@@ -17,6 +17,7 @@ jest.mock("@tsconline/shared", () => ({
   assertSubFaciesInfo: jest.fn().mockImplementation(() => true),
   assertSubBlockInfo: jest.fn().mockImplementation(() => true),
   assertSubRangeInfo: jest.fn().mockImplementation(() => true),
+  assertDatapackParsingPack: jest.fn().mockReturnValue(true),
   assertRGB: jest.fn().mockImplementation((o) => {
     if (!o || typeof o !== "object") throw new Error("RGB must be a non-null object");
     if (typeof o.r !== "number") throw new Error("Invalid rgb");

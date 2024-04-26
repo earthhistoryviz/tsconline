@@ -145,12 +145,18 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
   let chartTitle = "Chart Title";
   let ageUnits = "Ma";
   let defaultChronostrat = "UNESCO"
+  let date: Date | null = null
+  let verticalScale: number | null = null
+  let formatVersion = 1.5;
   try {
     for (const decryptPath of decryptPaths) {
-      const { units, title, chronostrat } = await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
+      const { units, title, chronostrat, datapackDate, vertScale, version } = await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
       ageUnits = units;
       chartTitle = title;
       defaultChronostrat = chronostrat
+      if (datapackDate) date = datapackDate
+      if (vertScale) verticalScale = vertScale
+      if (version) formatVersion = version
       const allParsedEntries = Array.from(allEntries.keys()).concat(Array.from(isChild));
       await getColumnTypes(
         decryptPath,
@@ -254,8 +260,10 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     units: ageUnits,
     columnDisplayType: "RootColumn"
   };
-  const datapackParsingPack = { columnInfo: chartColumn, datapackAgeInfo, ageUnits, defaultChronostrat };
+  const datapackParsingPack = { columnInfo: chartColumn, datapackAgeInfo, ageUnits, defaultChronostrat, formatVersion };
   assertDatapackParsingPack(datapackParsingPack)
+  if (date) datapackParsingPack.date = date
+  if (verticalScale) datapackParsingPack.verticalScale = verticalScale
   return datapackParsingPack
 }
 /**
@@ -281,11 +289,13 @@ export async function getAllEntries(
   let ageUnits: string = "Ma";
   let chartTitle: string = "Chart Title";
   let defaultChronostrat = "UNESCO";
+  let formatVersion = 1.5;
+  let vertScale: number | null = null;
   for await (const line of readline) {
     if (!line) continue;
     // grab any datapack properties
     const split = line.split("\t")
-    const value = line[1]
+    let value = split[1]
     if (value) {
       switch (split[0]) {
         case "SetTop:":
@@ -310,9 +320,23 @@ export async function getAllEntries(
           defaultChronostrat = value.trim()
           break
         case "date:":
-          const parsedDate = new Date(Date.parse(value.trim()))
-          console.log(parsedDate)
+          if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) value = value.split('/').reverse().join('-')
+          date = new Date(value)
           break
+        case "format version:":
+          formatVersion = Number(value.trim())
+          if (isNaN(formatVersion)) {
+            console.error("Format version is not a number, setting to default 1.5")
+            formatVersion = 1.5
+          }
+          break
+        case "SetScale:":
+          vertScale = Number(value)
+          if (isNaN(vertScale)) {
+            console.error("Vertical scale is not a number, setting to default null")
+            vertScale = null
+          }
+          break;
       }
     }
     if (!line.includes("\t:\t")) {
@@ -344,7 +368,7 @@ export async function getAllEntries(
     datapackAgeInfo.topAge = topAge;
     datapackAgeInfo.bottomAge = bottomAge;
   }
-  return { title: chartTitle, units: ageUnits, chronostrat: defaultChronostrat };
+  return { title: chartTitle, units: ageUnits, chronostrat: defaultChronostrat, datapackDate: date, vertScale, version: formatVersion };
 }
 /**
  * This function will populate the maps with the parsed entries in the filename
