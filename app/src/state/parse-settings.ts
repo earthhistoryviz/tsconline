@@ -262,7 +262,7 @@ export function xmlToJson(xml: string): ChartInfoTSC {
  *             1 = text
  * @returns
  */
-function replaceSpecialChars(text: string, type: number): string {
+function escapeSpecialChars(text: string, type: number): string {
   text = text.replaceAll("&", "&amp;");
   text = text.replaceAll("<", " &lt; ");
   if (type == 0) {
@@ -305,7 +305,7 @@ function generateSettingsXml(stateSettings: ChartSettings, indent: string): stri
   return xml;
 }
 
-export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
+export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInfoTSC {
   let column: ColumnInfoTSC = JSON.parse(JSON.stringify(defaultColumnBasicInfoTSC));
   switch (state.columnDisplayType) {
     case "Event":
@@ -340,7 +340,7 @@ export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
     default:
       column._id = `class datastore.${state.columnDisplayType}Column:` + state.name;
   }
-  column.title = replaceSpecialChars(state.editName, 1);
+  column.title = escapeSpecialChars(state.editName, 1);
   column.isSelected = state.on;
   column.drawTitle = state.enableTitle;
   column.fonts = state.fontsInfo;
@@ -348,15 +348,14 @@ export function translateColumn(state: ColumnInfo): ColumnInfoTSC {
   column.backgroundColor.text = "rgb(" + state.rgb.r + "," + state.rgb.g + "," + state.rgb.b + ")";
   column.children = [];
   for (let i = 0; i < state.children.length; i++) {
-    column.children.push(translateColumn(state.children[i]));
+    column.children.push(translateColumnInfoToColumnInfoTSC(state.children[i]));
   }
   return column;
 }
 
 export function columnInfoToSettingsTSC(state: ColumnInfo, settings: ChartSettings): ChartInfoTSC {
   const settingsTSC: ChartInfoTSC = <ChartInfoTSC>{};
-  settingsTSC["class datastore.RootColumn:Chart Root"] = translateColumn(state);
-  settingsTSC["class datastore.RootColumn:Chart Root"]._id = "class datastore.RootColumn:Chart Root";
+  settingsTSC["class datastore.RootColumn:Chart Root"] = translateColumnInfoToColumnInfoTSC(state);
   settingsTSC.settings = JSON.parse(JSON.stringify(defaultChartSettingsInfoTSC));
   assertChartInfoTSC(settingsTSC);
   return settingsTSC;
@@ -739,14 +738,26 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       xml += `${indent}<setting name="title">${column[key]}</setting>\n`;
     } else if (key === "backgroundColor" || key === "customColor") {
       if ("standardized" in column[key] && "useNamed" in column[key]) {
-        xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}" 
-        useNamed="${column[key].useNamed}">${column[key].text}</setting>\n`;
+        if (column[key].text.length > 0) {
+          xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}" 
+          useNamed="${column[key].useNamed}">${column[key].text}</setting>\n`;
+        } else
+          xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}" 
+        useNamed="${column[key].useNamed}"/>\n`;
       } else if ("useNamed" in column[key]) {
-        xml += `${indent}<setting name="${key}" useNamed="${column[key].useNamed}">${column[key].text}</setting>\n`;
+        if (column[key].text.length > 0) {
+          xml += `${indent}<setting name="${key}"  
+          useNamed="${column[key].useNamed}">${column[key].text}</setting>\n`;
+        } else
+          xml += `${indent}<setting name="${key}" 
+        useNamed="${column[key].useNamed}"/>\n`;
       } else if ("standardized" in column[key]) {
-        xml += `${indent}<setting name="${key}" useNamed="${column[key].standardized}">${column[key].text}</setting>\n`;
-      } else if (column[key].text.length > 0) {
-        xml += `${indent}<setting name="${key}">${column[key].text}</setting>\n`;
+        if (column[key].text.length > 0) {
+          xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}" 
+          >${column[key].text}</setting>\n`;
+        } else
+          xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}" 
+        />\n`;
       } else if (column[key].text.length > 0) {
         xml += `${indent}<setting name="${key}">${column[key].text}</setting>\n`;
       } else {
@@ -758,7 +769,7 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       xml += `${indent}</fonts>\n`;
     } else if (key === "children") {
       for (let i = 0; i < column.children.length; i++) {
-        xml += `${indent}<column id="${replaceSpecialChars(column.children[i]._id, 0)}">\n`;
+        xml += `${indent}<column id="${escapeSpecialChars(column.children[i]._id, 0)}">\n`;
         xml += columnInfoTSCToXml(column.children[i], `${indent}    `);
         xml += `${indent}</column>\n`;
       }
