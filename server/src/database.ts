@@ -1,23 +1,6 @@
 import BetterSqlite3 from "better-sqlite3";
 import fs from "fs";
 
-export interface UserRow {
-  id: number;
-  username: string | null;
-  email: string;
-  hashedPassword: string | null;
-  uuid: string;
-  pictureUrl: string | null;
-  emailVerified: number;
-}
-
-export interface VerificationRow {
-  userId: number;
-  token: string;
-  expiresAt: string;
-  verifyOrReset: "verify" | "reset";
-}
-
 if (!fs.existsSync("../server/db")) {
   fs.mkdirSync("../server/db");
 }

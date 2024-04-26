@@ -132,7 +132,6 @@ export type ChartRequest = {
   datapacks: string[]; // active datapacks to be used on chart
   useCache: boolean; // whether to use the cache or not
   useSuggestedAge: boolean; // whether to use the suggested age or not
-  username: string; // the username of the user
 };
 
 export type ServerResponseError = {

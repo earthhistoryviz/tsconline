@@ -14,6 +14,7 @@ import { useLocation, useNavigate } from "react-router";
 import { fetcher } from "./util";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { displayServerError } from "./state/actions/util-actions";
+import Container from "@mui/material/Container";
 import "./Login.css";
 
 export const AccountRecovery: React.FC = observer(() => {
@@ -21,12 +22,9 @@ export const AccountRecovery: React.FC = observer(() => {
   const searchParams = new URLSearchParams(location.search);
   const token = searchParams.get("token");
   const theme = useTheme();
-  const [loading, setloading] = useState(false);
-  const [message, setMessage] = useState(
-    token === null ? "Enter your email to receive a password reset link." : "Please enter your new password."
-  );
-  const [showResendForm, setshowResendForm] = useState(token === null);
-  const [showPasswordForm, setshowPasswordForm] = useState(token !== null);
+  const [loading, setLoading] = useState(false);
+  const [showResendForm, setShowResendForm] = useState(token === null);
+  const [showPasswordForm, setShowPasswordForm] = useState(token !== null);
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
 
@@ -38,9 +36,8 @@ export const AccountRecovery: React.FC = observer(() => {
       actions.pushError(ErrorCodes.INVALID_FORM);
       return;
     }
-    setloading(true);
-    setMessage("Sending email...");
-    setshowResendForm(false);
+    setLoading(true);
+    setShowResendForm(false);
     try {
       const response = await fetcher("/auth/send-reset-email", {
         method: "POST",
@@ -51,17 +48,18 @@ export const AccountRecovery: React.FC = observer(() => {
       });
       if (response.ok) {
         actions.removeAllErrors();
-        actions.pushSnackbar("Email sent", "success");
-        setMessage("If an account with that email exists and is verfied, a password reset email has been sent.");
+        actions.pushSnackbar("If your account is verified, you will have received an email.", "success");
       } else {
-        const message = await response.json();
-        displayServerError(message, ErrorCodes.UNABLE_TO_SEND_EMAIL, message.error);
-        setMessage("Unable to send email. Please try again later.");
+        displayServerError(
+          await response.json(),
+          ErrorCodes.UNABLE_TO_SEND_EMAIL,
+          ErrorMessages[ErrorCodes.UNABLE_TO_SEND_EMAIL]
+        );
       }
     } catch {
       displayServerError(null, ErrorCodes.UNABLE_TO_SEND_EMAIL, ErrorMessages[ErrorCodes.UNABLE_TO_SEND_EMAIL]);
     } finally {
-      setloading(false);
+      setLoading(false);
     }
   };
 
@@ -73,9 +71,8 @@ export const AccountRecovery: React.FC = observer(() => {
       actions.pushError(ErrorCodes.INVALID_FORM);
       return;
     }
-    setloading(true);
-    setMessage("");
-    setshowPasswordForm(false);
+    setLoading(true);
+    setShowPasswordForm(false);
     try {
       const response = await fetcher("/auth/reset-password", {
         method: "POST",
@@ -89,7 +86,10 @@ export const AccountRecovery: React.FC = observer(() => {
         await actions.sessionCheck();
         if (!state.isLoggedIn) {
           displayServerError(null, ErrorCodes.UNABLE_TO_LOGIN_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]);
-          setMessage("We were able to reset your password, but we were unable to sign you in. Please try to sign in.");
+          actions.pushSnackbar(
+            "We were able to reset your password, but we were unable to sign you in. Please try to sign in.",
+            "warning"
+          );
         } else {
           actions.removeAllErrors();
           actions.pushSnackbar("Password reset", "success");
@@ -97,76 +97,80 @@ export const AccountRecovery: React.FC = observer(() => {
         }
       } else {
         const message = await response.json();
-        let errorCode = ErrorCodes.UNABLE_TO_SEND_EMAIL;
+        let errorCode = ErrorCodes.UNABLE_TO_RESET_PASSWORD;
         switch (response.status) {
           case 400:
             errorCode = ErrorCodes.INVALID_FORM;
             break;
           case 401:
             errorCode = ErrorCodes.TOKEN_EXPIRED_OR_INVALID;
-            setMessage(
-              "Unable to reset password. Your token is invalid or has expired. Please resend the verification email."
-            );
-            setshowResendForm(true);
+            setShowResendForm(true);
+            break;
+          case 404:
+            errorCode = ErrorCodes.TOKEN_EXPIRED_OR_INVALID;
+            setShowResendForm(true);
             break;
           default:
-            setMessage(
-              "Unable to reset password. Your token is invalid or has expired. Please resend the verification email."
-            );
-            setshowResendForm(true);
+            setShowResendForm(true);
             break;
         }
         displayServerError(message, errorCode, ErrorMessages[errorCode]);
       }
     } catch {
-      displayServerError(null, ErrorCodes.UNABLE_TO_SEND_EMAIL, ErrorMessages[ErrorCodes.UNABLE_TO_SEND_EMAIL]);
-      setMessage("Unable to reset password. Please try again later.");
+      displayServerError(null, ErrorCodes.UNABLE_TO_RESET_PASSWORD, ErrorMessages[ErrorCodes.UNABLE_TO_RESET_PASSWORD]);
     } finally {
-      setloading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <Box className="login-box">
-      <Avatar sx={{ "& .MuiSvgIcon-root": { mr: 0 }, bgcolor: theme.palette.navbar.dark }}>
-        <LockOutlinedIcon sx={{ color: theme.palette.selection.main }} />
-      </Avatar>
-      {loading && <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />}
-      <Typography variant="h5" sx={{ textAlign: "center", mt: 1 }}>
-        {message}
-      </Typography>
-      {showResendForm && (
-        <Box component="form" onSubmit={handleEmailSubmit} sx={{ mt: 3 }}>
-          <TextField
-            required
-            fullWidth
-            id="email"
-            label="Email Address"
-            name="email"
-            autoComplete="email"
-            type="email"
-          />
-          <TSCButton type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }} startIcon={<SendIcon />}>
-            Send
-          </TSCButton>
-        </Box>
-      )}
-      {showPasswordForm && (
-        <Box component="form" onSubmit={handlePasswordSubmit} sx={{ mt: 3 }}>
-          <TextField
-            required
-            fullWidth
-            id="password"
-            label="Password"
-            name="password"
-            autoComplete="new-password"
-            type="password"
-          />
-          <TSCButton type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }} startIcon={<SendIcon />}>
-            Send
-          </TSCButton>
-        </Box>
-      )}
-    </Box>
+    <Container component="main" maxWidth="xs">
+      <Box className="login-box">
+        <Avatar sx={{ "& .MuiSvgIcon-root": { mr: 0 }, bgcolor: theme.palette.navbar.dark }}>
+          <LockOutlinedIcon sx={{ color: theme.palette.selection.main }} />
+        </Avatar>
+        {loading && <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />}
+        <Typography variant="h5" sx={{ textAlign: "center", mt: 1 }}>
+          {(showPasswordForm || showResendForm) &&
+            (showResendForm ? "Enter your email to receive a password reset link." : "Please enter your new password.")}
+        </Typography>
+        {showResendForm && (
+          <Box component="form" onSubmit={handleEmailSubmit} className="account-form">
+            <TextField
+              required
+              fullWidth
+              id="email"
+              label="Email Address"
+              name="email"
+              autoComplete="email"
+              type="email"
+              autoFocus
+              margin="normal"
+            />
+            <TSCButton type="submit" fullWidth startIcon={<SendIcon />}>
+              Send
+            </TSCButton>
+          </Box>
+        )}
+        {showPasswordForm && (
+          <Box component="form" onSubmit={handlePasswordSubmit} className="account-form">
+            <TextField
+              required
+              fullWidth
+              id="password"
+              label="Password"
+              name="password"
+              autoComplete="new-password"
+              type="password"
+              autoFocus
+              margin="normal"
+            />
+            <TSCButton type="submit" fullWidth variant="contained" startIcon={<SendIcon />}>
+              Send
+            </TSCButton>
+          </Box>
+        )}
+      </Box>
+    </Container>
   );
 });

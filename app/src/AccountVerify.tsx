@@ -105,20 +105,20 @@ export const AccountVerify: React.FC = () => {
     setshowResendForm(false);
     const email = form.email.value;
     try {
-      const resposne = await fetcher("/auth/resend", {
+      const response = await fetcher("/auth/resend", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({ email })
       });
-      if (resposne.ok) {
+      if (response.ok) {
         actions.removeAllErrors();
         actions.pushSnackbar("Email sent", "success");
-        setMessage("If you email is registered, we have sent you an email. Please check your email.");
+        setMessage("If your email is registered, we have sent you an email. Please check your email.");
       } else {
-        const message = await resposne.json();
-        switch (resposne.status) {
+        const message = await response.json();
+        switch (response.status) {
           case 400:
             displayServerError(message, ErrorCodes.INVALID_FORM, ErrorMessages[ErrorCodes.INVALID_FORM]);
             setMessage(ErrorMessages[ErrorCodes.INVALID_FORM]);

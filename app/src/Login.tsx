@@ -73,7 +73,7 @@ export const Login: React.FC = observer(() => {
             navigate("/verify");
             break;
           case 409:
-            errorCode = ErrorCodes.UNABLE_TO_LOGIN_USER_EXISTS;
+            errorCode = ErrorCodes.UNABLE_TO_LOGIN_EXISTING_USER;
             break;
         }
         displayServerError(message, errorCode, ErrorMessages[errorCode]);
