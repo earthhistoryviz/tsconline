@@ -8,6 +8,7 @@
     "@mui/joy": "^5.0.0-alpha.79",
     "@mui/material": "^5.15.14",
     "@tsconline/shared": "1.0.0",
+    "app": "^0.1.0",
     "clsx": "^2.1.0",
     "color": "^4.2.3",
     "dompurify": "^3.0.11",
