@@ -413,7 +413,6 @@ export function translateSettings(state: ChartSettings): ChartSettingsInfoTSC {
   return settings;
 }
 
-
 function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
   let xml = "";
   for (let key in column) {
@@ -426,26 +425,26 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       // add if useNamed and standardized properties are implemented
       // if ("standardized" in column[key] && "useNamed" in column[key]) {
       //   if (column[key].text.length > 0) {
-      //     xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}" 
+      //     xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}"
       //     useNamed="${column[key].useNamed}">${column[key].text}</setting>\n`;
       //   } else
-      //     xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}" 
+      //     xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}"
       //   useNamed="${column[key].useNamed}"/>\n`;
       // } else if ("useNamed" in column[key]) {
       //   if (column[key].text.length > 0) {
-      //     xml += `${indent}<setting name="${key}"  
+      //     xml += `${indent}<setting name="${key}"
       //     useNamed="${column[key].useNamed}">${column[key].text}</setting>\n`;
       //   } else
-      //     xml += `${indent}<setting name="${key}" 
+      //     xml += `${indent}<setting name="${key}"
       //   useNamed="${column[key].useNamed}"/>\n`;
       // } else if ("standardized" in column[key]) {
       //   if (column[key].text.length > 0) {
-      //     xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}" 
+      //     xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}"
       //     >${column[key].text}</setting>\n`;
       //   } else
-      //     xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}" 
+      //     xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}"
       //   />\n`;
-      // } else 
+      // } else
       if (column[key].text.length > 0) {
         xml += `${indent}<setting name="${key}">${column[key].text}</setting>\n`;
       } else {
