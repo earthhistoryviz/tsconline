@@ -78,9 +78,9 @@ export const Time = observer(function Time() {
               const age = parseFloat(event.target.value);
               if (!isNaN(age)) {
                 actions.setTopStageAge(age);
-              }
-              else {
                 actions.removeError(ErrorCodes.TOP_STAGE_AGE_INVALID);
+              } else {
+                actions.pushError(ErrorCodes.TOP_STAGE_AGE_INVALID);
               }
             }}
           />
@@ -125,12 +125,7 @@ export const Time = observer(function Time() {
             value={state.settings.timeSettings[units].baseStageAge}
             onChange={(event) => {
               const age = parseFloat(event.target.value);
-              if (!isNaN(age) && age >= state.settings.topStageAge) {
-                actions.setBaseStageAge(age);
-              } 
-              else {
-                actions.pushError(ErrorCodes.BASE_STAGE_AGE_INVALID);
-              }
+              actions.setBaseStageAge(age);
             }}
           />
         </FormControl>
