@@ -91,7 +91,6 @@ export const setInheritable = action(
   }
 );
 
-
 export const setFontFace = action((target: ValidFontOptions, fontFace: "Arial" | "Courier" | "Verdana") => {
   if (!state.settingsTabs.columnSelected) {
     throw new Error("state.settingsTabs.columnSelected is null");

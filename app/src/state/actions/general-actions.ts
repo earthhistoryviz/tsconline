@@ -1,6 +1,5 @@
 import { action } from "mobx";
 import { ChartSettingsInfoTSC, TimescaleItem } from "@tsconline/shared";
-import { actions } from "../index";
 
 import {
   type MapInfo,
@@ -673,29 +672,57 @@ export const setMapHierarchy = action("setMapHierarchy", (mapHierarchy: MapHiera
 export const setChartHash = action("setChartHash", (charthash: string) => {
   state.chartHash = charthash;
 });
+
+// export const setTopStageAge = action("setTopStageAge", (age: number) => {
+//   state.settings.topStageAge = age;
+//   const correspondingTopStage = state.geologicalTopStageAges.find((item) => item.value === age);
+
+//   if (correspondingTopStage) {
+//     setSelectedTopStage(correspondingTopStage.key);
+//   } else {
+//     setSelectedTopStage("");
+//   }
+
+//   if (age > state.settings.baseStageAge) {
+//     const correspondingBaseStage = state.geologicalBaseStageAges.find((item) => item.value >= age);
+//     if (correspondingBaseStage) {
+//       setSelectedBaseStage(correspondingBaseStage.key);
+//       setBaseStageAge(Math.max(correspondingBaseStage.value, age));
+//     }
+//   }
+// });
+
 export const setTopStageAge = action("setTopStageAge", (age: number) => {
   state.settings.topStageAge = age;
   const correspondingTopStage = state.geologicalTopStageAges.find((item) => item.value === age);
-    if (correspondingTopStage) {
-      actions.setSelectedTopStage(correspondingTopStage.key);
-    } else {
-      actions.setSelectedTopStage("");
-    }
+  
+  if (correspondingTopStage) {
+    setSelectedTopStage(correspondingTopStage.key);
+  } else {
+    setSelectedTopStage("");
+  }
 
-    const correspondingBaseStage = state.geologicalBaseStageAges.find((item) => item.value >= age);
+  if (age > state.settings.baseStageAge) {
+    const gap = state.settings.baseStageAge - state.settings.topStageAge;
+    
+    const correspondingBaseStage = state.geologicalBaseStageAges.find((item) => item.value >= age + gap);
     if (correspondingBaseStage) {
-      actions.setSelectedBaseStage(correspondingBaseStage.key);
-      actions.setBaseStageAge(Math.max(correspondingBaseStage.value, age));
+      setSelectedBaseStage(correspondingBaseStage.key);
+      setBaseStageAge(Math.max(correspondingBaseStage.value, age + gap));
     }
+  }
 });
+
 export const setBaseStageAge = action("setBaseStageAge", (age: number) => {
   state.settings.baseStageAge = age;
 
   const correspondingBaseStage = state.geologicalBaseStageAges.find((item) => item.value === age);
   if (correspondingBaseStage) {
-    actions.setSelectedBaseStage(correspondingBaseStage.key);
+    setSelectedBaseStage(correspondingBaseStage.key);
+    removeError(ErrorCodes.BASE_STAGE_AGE_INVALID);
   } else {
-    actions.setSelectedBaseStage("");
+    setSelectedBaseStage("");
+    pushError(ErrorCodes.BASE_STAGE_AGE_INVALID);
   }
 });
 

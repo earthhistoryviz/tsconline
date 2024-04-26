@@ -54,11 +54,7 @@ export const ColumnMenu = observer(() => {
   return (
     <div className={`column-menu ${openMenu ? "open" : ""}`}>
       <div className="column-menu-header">
-        <ToggleButton
-          value="check"
-          selected={openMenu}
-          onChange={toggleMenu}
-          size="small">
+        <ToggleButton value="check" selected={openMenu} onChange={toggleMenu} size="small">
           <SettingsSharpIcon />
         </ToggleButton>
         <Typography>Settings</Typography>

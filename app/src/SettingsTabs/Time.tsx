@@ -5,7 +5,6 @@ import { TSCCheckbox } from "../components";
 import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import { useContext } from "react";
-import { useTheme } from "@mui/material/styles";
 import { context } from "../state/index";
 import "./Time.css";
 import { ErrorCodes } from "../util/error-codes";
@@ -28,7 +27,9 @@ export const Time = observer(function Time() {
               const selectedValue = event.target.value;
               const selectedAgeItem = state.geologicalTopStageAges.find((item) => item.key === selectedValue);
               const selectedAge = selectedAgeItem?.value || 0;
-              actions.setSelectedTopStage(selectedValue);
+              if (selectedAgeItem) {
+                actions.setSelectedTopStage(selectedValue);
+              }
               actions.setTopStageAge(selectedAge);
             }}>
             {state.geologicalTopStageAges.map((item) => (
@@ -47,9 +48,9 @@ export const Time = observer(function Time() {
               const age = parseFloat(event.target.value);
               if (!isNaN(age)) {
                 actions.setTopStageAge(age);
-              }
-              else {
                 actions.removeError(ErrorCodes.TOP_STAGE_AGE_INVALID);
+              } else {
+                actions.pushError(ErrorCodes.TOP_STAGE_AGE_INVALID);
               }
             }}
           />
@@ -66,13 +67,7 @@ export const Time = observer(function Time() {
               const selectedValue = event.target.value;
               const selectedAgeItem = state.geologicalBaseStageAges.find((item) => item.key === selectedValue);
               const selectedAge = selectedAgeItem?.value || 0;
-              if (selectedAge > state.settings.topStageAge) {
-                actions.setSelectedBaseStage(selectedValue);
-                actions.setBaseStageAge(selectedAge);
-                actions.removeError(ErrorCodes.BASE_STAGE_AGE_INVALID);
-              } else {
-                actions.pushError(ErrorCodes.BASE_STAGE_AGE_INVALID);
-              }
+              actions.setBaseStageAge(selectedAge);
             }}>
             {state.geologicalBaseStageAges
               .filter((item) => item.value >= state.settings.topStageAge)
@@ -90,12 +85,7 @@ export const Time = observer(function Time() {
             value={state.settings.baseStageAge}
             onChange={(event) => {
               const age = parseFloat(event.target.value);
-              if (!isNaN(age) && age >= state.settings.topStageAge) {
-                actions.setBaseStageAge(age);
-              } 
-              else {
-                actions.pushError(ErrorCodes.BASE_STAGE_AGE_INVALID);
-              }
+              actions.setBaseStageAge(age);
             }}
           />
         </FormControl>
