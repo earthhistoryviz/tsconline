@@ -1,6 +1,5 @@
 // Shared types between app and server (i.e. messages they send back and forth)
 
-import { isDate } from "util/types";
 import { defaultFontsInfoConstant } from "./constants.js";
 
 export * from "./constants.js";
@@ -18,7 +17,7 @@ export type DatapackParsingPack = {
   datapackAgeInfo: DatapackAgeInfo;
   ageUnits: string;
   defaultChronostrat: "USGS" | "UNESCO";
-  formatVersion?: number;
+  formatVersion: number;
   date?: Date;
   verticalScale?: number;
 };
@@ -625,9 +624,9 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
   if (typeof o.ageUnits !== "string") throwError("DatapackParsingPack", "ageUnits", "string", o.ageUnits);
   if (typeof o.defaultChronostrat !== "string") throwError("DatapackParsingPack", "defaultChronostrat", "string", o.defaultChronostrat);
   if (!/^(USGS|UNESCO)$/.test(o.defaultChronostrat)) throwError("DatapackParsingPack", "defaultChronostrat", "USGS | UNESCO", o.defaultChronostrat);
-  if ("formatVersion" in o && typeof o.formatVersion !== "number") throwError("DatapackParsingPack", "formatVersion", "number", o.formatVersion);
+  if (typeof o.formatVersion !== "number") throwError("DatapackParsingPack", "formatVersion", "number", o.formatVersion);
   if ("verticalScale" in o && typeof o.verticalScale !== "number") throwError("DatapackParsingPack", "verticalScale", "number", o.verticalScale);
-  if ("date" in o && !isDate(o.date)) throwError("DatapackParsingPack", "date", "Date", o.date);
+  if ("date" in o && !(o.date instanceof Date)) throwError("DatapackParsingPack", "date", "Date", o.date);
   assertColumnInfo(o.columnInfo);
   assertDatapackAgeInfo(o.datapackAgeInfo);
 }

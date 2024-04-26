@@ -415,7 +415,9 @@
       "datapackAgeInfo": {
         "datapackContainsSuggAge": false
       },
-      "ageUnits": "Ma"
+      "ageUnits": "Ma",
+      "defaultChronostrat": "UNESCO",
+      "formatVersion": 1.5
     },
     "general-parse-datapacks-test-2-key": {
       "columnInfo": {
@@ -1126,7 +1128,10 @@
         "topAge": 0,
         "bottomAge": 5
       },
-      "ageUnits": "Ma"
+      "ageUnits": "Ma",
+      "defaultChronostrat": "UNESCO",
+      "formatVersion": 1.5,
+      "verticalScale": 6
     },
     "column-types-facies-key": {
         "FaciesOne": {
@@ -2004,6 +2009,8 @@
             "datapackAgeInfo": {
               "datapackContainsSuggAge": false
             },
-            "ageUnits": "Ma"
+            "ageUnits": "Ma",
+            "defaultChronostrat": "UNESCO",
+            "formatVersion": 1.5
     }
 }
