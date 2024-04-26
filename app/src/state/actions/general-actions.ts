@@ -114,7 +114,7 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
       setDatapackIndex(datapackIndex);
       console.log("User Datapacks loaded");
     } catch (e) {
-      if (response.status != 401 && response.status != 404) {
+      if (response.status != 404) {
         displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
       }
     }
@@ -641,7 +641,7 @@ export const sessionCheck = action("sessionCheck", async () => {
     const data = await response.json();
     if (data.authenticated) {
       setIsLoggedIn(true);
-      await fetchUserDatapacks();
+      fetchUserDatapacks();
     } else {
       setIsLoggedIn(false);
     }

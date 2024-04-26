@@ -1,5 +1,22 @@
 import { throwError } from "@tsconline/shared";
 
+export type UserRow = {
+  id: number;
+  username: string | null;
+  email: string;
+  hashedPassword: string | null;
+  uuid: string;
+  pictureUrl: string | null;
+  emailVerified: number;
+};
+
+export type VerificationRow = {
+  userId: number;
+  token: string;
+  expiresAt: string;
+  verifyOrReset: "verify" | "reset";
+};
+
 export type Email = {
   from: string;
   to: string;
@@ -37,6 +54,29 @@ export type FileMetadata = {
   mapPackIndexFilepath: string;
   datapackIndexFilepath: string;
 };
+
+export function assertUserRow(row: any): asserts row is UserRow {
+  if (typeof row !== "object" || !row) throw "UserRow must be an object";
+  if (typeof row.id !== "number") throwError("UserRow", "id", "number", row.id);
+  if (!(typeof row.username === "string" || row.username === null))
+    throwError("UserRow", "username", "string or null", row.username);
+  if (typeof row.email !== "string") throwError("UserRow", "email", "string", row.email);
+  if (!(typeof row.hashedPassword === "string" || row.hashedPassword === null))
+    throwError("UserRow", "hashedPassword", "string or null", row.hashedPassword);
+  if (typeof row.uuid !== "string") throwError("UserRow", "uuid", "string", row.uuid);
+  if (!(typeof row.pictureUrl === "string" || row.pictureUrl === null))
+    throwError("UserRow", "pictureUrl", "string or null", row.pictureUrl);
+  if (typeof row.emailVerified !== "number") throwError("UserRow", "emailVerified", "number", row.emailVerified);
+}
+
+export function assertVerificationRow(row: any): asserts row is VerificationRow {
+  if (typeof row !== "object" || !row) throw "VerificationRow must be an object";
+  if (typeof row.userId !== "number") throwError("VerificationRow", "userId", "number", row.userId);
+  if (typeof row.token !== "string") throwError("VerificationRow", "token", "string", row.token);
+  if (typeof row.expiresAt !== "string") throwError("VerificationRow", "expiresAt", "string", row.expiresAt);
+  if (!(row.verifyOrReset === "verify" || row.verifyOrReset === "reset"))
+    throwError("VerificationRow", "verifyOrReset", "'verify' or 'reset'", row.verifyOrReset);
+}
 
 export function assertEmail(o: any): asserts o is Email {
   if (typeof o !== "object" || !o) throw "Email must be an object";

@@ -25,7 +25,7 @@ export enum ErrorCodes {
   UNABLE_TO_LOGIN_SERVER = "UNABLE_TO_LOGIN_SERVER",
   UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD = "UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD",
   UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL = "UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL",
-  UNABLE_TO_LOGIN_USER_EXISTS = "UNABLE_TO_LOGIN_USER_EXISTS",
+  UNABLE_TO_LOGIN_EXISTING_USER = "UNABLE_TO_LOGIN_EXISTING_USER",
   UNABLE_TO_LOGOUT = "UNABLE_TO_LOGOUT",
   UNABLE_TO_SIGNUP_SERVER = "UNABLE_TO_SIGNUP_SERVER",
   UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL = "UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL",
@@ -33,7 +33,8 @@ export enum ErrorCodes {
   UNABLE_TO_VERIFY_ACCOUNT = "UNABLE_TO_VERIFY_ACCOUNT",
   ALREADY_VERIFIED_ACCOUNT = "ALREADY_VERIFIED_ACCOUNT",
   TOKEN_EXPIRED_OR_INVALID = "SIGNUP_TOKEN_EXPIRED_OR_INVALID",
-  UNABLE_TO_SEND_EMAIL = "UNABLE_TO_SEND_EMAIL"
+  UNABLE_TO_SEND_EMAIL = "UNABLE_TO_SEND_EMAIL",
+  UNABLE_TO_RESET_PASSWORD = "UNABLE_TO_RESET_PASSWORD"
 }
 
 export const ErrorMessages = {
@@ -65,7 +66,7 @@ export const ErrorMessages = {
   [ErrorCodes.UNABLE_TO_LOGIN_SERVER]: "Unable to login due to server error. Please try again later.",
   [ErrorCodes.UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL]: "Unable to login with Google credentials. Please try again.",
   [ErrorCodes.UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD]: "Invalid username or password. Please try again.",
-  [ErrorCodes.UNABLE_TO_LOGIN_USER_EXISTS]:
+  [ErrorCodes.UNABLE_TO_LOGIN_EXISTING_USER]:
     "User with that email already exists. Please log in or sign up with a different email.",
   [ErrorCodes.UNABLE_TO_LOGOUT]: "Unable to logout. Please try again later.",
   [ErrorCodes.UNABLE_TO_SIGNUP_SERVER]: "Unable to sign up due to server error. Please try again later.",
@@ -75,6 +76,8 @@ export const ErrorMessages = {
   [ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT]:
     "Your email is not verified. Please verify your email first. If you did not receive an email, please resend.",
   [ErrorCodes.ALREADY_VERIFIED_ACCOUNT]: "Account is already verified. Please log in.",
-  [ErrorCodes.TOKEN_EXPIRED_OR_INVALID]: "Your token is invalid or has expired. Please send a new verification email.",
-  [ErrorCodes.UNABLE_TO_SEND_EMAIL]: "Unable to send email. Please try again later."
+  [ErrorCodes.TOKEN_EXPIRED_OR_INVALID]:
+    "Your token is either invalid or has expired. Please request a new verification email.",
+  [ErrorCodes.UNABLE_TO_SEND_EMAIL]: "Unable to send email. Please try again later.",
+  [ErrorCodes.UNABLE_TO_RESET_PASSWORD]: "Unable to reset password. Please try again later."
 };

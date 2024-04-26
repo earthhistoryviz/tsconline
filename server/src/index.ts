@@ -5,6 +5,7 @@ import process from "process";
 import { execSync } from "child_process";
 import { deleteDirectory } from "./util.js";
 import * as routes from "./routes.js";
+import * as loginRoutes from "./login-routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
 import fastifyCompress from "@fastify/compress";
 import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
@@ -169,11 +170,11 @@ server.get("/facies-patterns", (_request, reply) => {
 
 server.get("/user-datapacks", routes.fetchUserDatapacks);
 
-server.post("/auth/oauth", routes.googleLogin);
+server.post("/auth/oauth", loginRoutes.googleLogin);
 
-server.post("/auth/login", routes.login);
+server.post("/auth/login", loginRoutes.login);
 
-server.post("/auth/signup", routes.signup);
+server.post("/auth/signup", loginRoutes.signup);
 
 server.post("/auth/session-check", async (request, reply) => {
   if (request.session.get("uuid")) {
@@ -188,13 +189,13 @@ server.post("/auth/logout", async (request, reply) => {
   reply.send({ message: "Logged out" });
 });
 
-server.post("/auth/verify", routes.verifyEmail);
+server.post("/auth/verify", loginRoutes.verifyEmail);
 
-server.post("/auth/resend", routes.resendVerificationEmail);
+server.post("/auth/resend", loginRoutes.resendVerificationEmail);
 
-server.post("/auth/send-reset-email", routes.sendResetPasswordEmail);
+server.post("/auth/send-reset-email", loginRoutes.sendResetPasswordEmail);
 
-server.post("/auth/reset-password", routes.resetPassword);
+server.post("/auth/reset-password", loginRoutes.resetPassword);
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
