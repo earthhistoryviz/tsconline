@@ -145,7 +145,7 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
   let chartTitle = "Chart Title";
   let ageUnits = "Ma";
   let defaultChronostrat = "UNESCO"
-  let date: Date | null = null
+  let date: string | null = null
   let verticalScale: number | null = null
   let formatVersion = 1.5;
   try {
@@ -285,7 +285,7 @@ export async function getAllEntries(
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
   let topAge: number | null = null;
   let bottomAge: number | null = null;
-  let date: Date | null = null;
+  let date: string | null = null;
   let ageUnits: string = "Ma";
   let chartTitle: string = "Chart Title";
   let defaultChronostrat = "UNESCO";
@@ -321,7 +321,7 @@ export async function getAllEntries(
           break
         case "date:":
           if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) value = value.split('/').reverse().join('-')
-          date = new Date(value)
+          date = new Date(value).toISOString().split('T')[0] || null
           break
         case "format version:":
           formatVersion = Number(value.trim())

@@ -18,7 +18,7 @@ export type DatapackParsingPack = {
   ageUnits: string;
   defaultChronostrat: "USGS" | "UNESCO";
   formatVersion: number;
-  date?: Date;
+  date?: string;
   verticalScale?: number;
 };
 
@@ -626,7 +626,8 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
   if (!/^(USGS|UNESCO)$/.test(o.defaultChronostrat)) throwError("DatapackParsingPack", "defaultChronostrat", "USGS | UNESCO", o.defaultChronostrat);
   if (typeof o.formatVersion !== "number") throwError("DatapackParsingPack", "formatVersion", "number", o.formatVersion);
   if ("verticalScale" in o && typeof o.verticalScale !== "number") throwError("DatapackParsingPack", "verticalScale", "number", o.verticalScale);
-  if ("date" in o && !(o.date instanceof Date)) throwError("DatapackParsingPack", "date", "Date", o.date);
+  if ("date" in o && typeof o.date !== "string") throwError("DatapackParsingPack", "date", "string", o.date);
+  if ("date" in o && !/^(\d{4}-\d{2}-\d{2})$/.test(o.date)) throwError("DatapackParsingPack", "date", "YYYY-MM-DD", o.date);
   assertColumnInfo(o.columnInfo);
   assertDatapackAgeInfo(o.datapackAgeInfo);
 }
