@@ -173,25 +173,42 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
           const standardizedValue = child.getAttribute("standardized");
           const textValue = child.textContent!.trim();
           if (settingName === "backgroundColor" || settingName === "customColor") {
+            let rgb = textValue.substring(4, textValue.length - 1).split(",");
             if (standardizedValue && useNamedValue) {
               column[settingName] = {
                 standardized: standardizedValue === "true",
                 useNamed: useNamedValue === "true",
-                text: textValue as string
+                text: {
+                  r: Number(rgb[0]),
+                  g: Number(rgb[1]),
+                  b: Number(rgb[2])
+                }
               };
             } else if (useNamedValue) {
               column[settingName] = {
                 useNamed: useNamedValue === "true",
-                text: textValue as string
+                text: {
+                  r: Number(rgb[0]),
+                  g: Number(rgb[1]),
+                  b: Number(rgb[2])
+                }
               };
             } else if (standardizedValue) {
               column[settingName] = {
                 standardized: standardizedValue === "true",
-                text: textValue as string
+                text: {
+                  r: Number(rgb[0]),
+                  g: Number(rgb[1]),
+                  b: Number(rgb[2])
+                }
               };
             } else {
               column[settingName] = {
-                text: textValue as string
+                text: {
+                  r: Number(rgb[0]),
+                  g: Number(rgb[1]),
+                  b: Number(rgb[2])
+                }
               };
             }
           } else if (justificationValue) {
@@ -257,13 +274,13 @@ export function xmlToJson(xml: string): ChartInfoTSC {
  * https://stackoverflow.com/questions/1091945/what-characters-do-i-need-to-escape-in-xml-documents
  *
  * @param text the text to replace special chars
- * @param type att (attribute) or text,
+ * @param type attribute or text,
  * @returns
  */
-function escapeHtmlChars(text: string, type: "att" | "text"): string {
+function escapeHtmlChars(text: string, type: "attribute" | "text"): string {
   text = text.replaceAll("&", "&amp;");
   text = text.replaceAll("<", " &lt; ");
-  if (type == "att") {
+  if (type == "attribute") {
     text = text.replaceAll('"', "&quot;");
     text = text.replaceAll("'", "&apos;");
     text = text.replaceAll(">", " &gt; ");
@@ -343,8 +360,13 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
   column.drawTitle = state.enableTitle;
   column.fonts = state.fontsInfo;
   if (state.width) column.width = state.width;
-  column.backgroundColor.text = "rgb(" + state.rgb.r + "," + state.rgb.g + "," + state.rgb.b + ")";
-  column.customColor.text = "rgb(" + state.rgb.r + "," + state.rgb.g + "," + state.rgb.b + ")";
+  column.backgroundColor.text.r = state.rgb.r;
+  column.backgroundColor.text.g = state.rgb.g;
+  column.backgroundColor.text.b = state.rgb.b;
+  column.customColor.text.r = state.rgb.r;
+  column.customColor.text.g = state.rgb.g;
+  column.customColor.text.b = state.rgb.b;
+
   column.children = [];
   for (let i = 0; i < state.children.length; i++) {
     column.children.push(translateColumnInfoToColumnInfoTSC(state.children[i]));
@@ -426,10 +448,14 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       //     xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}"
       //   />\n`;
       // } else
-      if (column[key].text.length > 0) {
-        xml += `${indent}<setting name="${key}" useNamed="false">${column[key].text}</setting>\n`;
-      } else {
+      if (
+        column.backgroundColor.text.r == 255 &&
+        column.backgroundColor.text.g == 255 &&
+        column.backgroundColor.text.b == 255
+      ) {
         xml += `${indent}<setting name="${key}"/>\n`;
+      } else {
+        xml += `${indent}<setting name="${key}" useNamed="false">rgb(${column[key].text.r},${column[key].text.g},${column[key].text.b})</setting>\n`;
       }
     } else if (key === "fonts") {
       xml += `${indent}<fonts>\n`;
@@ -437,7 +463,7 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       xml += `${indent}</fonts>\n`;
     } else if (key === "children") {
       for (let i = 0; i < column.children.length; i++) {
-        xml += `${indent}<column id="${escapeHtmlChars(column.children[i]._id, "att")}">\n`;
+        xml += `${indent}<column id="${escapeHtmlChars(column.children[i]._id, "attribute")}">\n`;
         xml += columnInfoTSCToXml(column.children[i], `${indent}    `);
         xml += `${indent}</column>\n`;
       }

@@ -195,10 +195,18 @@ export const defaultColumnBasicInfoTSC: ColumnBasicInfoTSC = {
   pad: 0.2,
   "age pad": 2,
   backgroundColor: {
-    text: ""
+    text: {
+      r: 255,
+      g: 255,
+      b: 255
+    }
   },
   customColor: {
-    text: ""
+    text: {
+      r: 255,
+      g: 255,
+      b: 255
+    }
   },
   fonts: defaultFontsInfoConstant,
   children: []
