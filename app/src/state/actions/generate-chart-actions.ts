@@ -133,6 +133,8 @@ function changeManuallyAddedColumns(column: ColumnInfo) {
     column.name = "Chron";
   } else if (column.name === `${column.parent} Chron Label`) {
     column.name = "Chron Label";
+  } else if (column.name.substring(0, 14) === "Chart Title in") {
+    column.name = column.name.substring(15, column.name.length);
   }
   for (const child of column.children) {
     changeManuallyAddedColumns(child);

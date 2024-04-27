@@ -344,10 +344,6 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
   }
   switch (state.columnDisplayType) {
     case "RootColumn":
-      if (state.name.substring(0, 14) === "Chart Title in") {
-        column._id = `class datastore.${state.columnDisplayType}:` + state.name.substring(15, state.name.length);
-      } else column._id = `class datastore.${state.columnDisplayType}:` + state.name;
-      break;
     case "MetaColumn":
     case "BlockSeriesMetaColumn":
       column._id = `class datastore.${state.columnDisplayType}:` + state.name;
@@ -424,7 +420,7 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
     }
     if (key === "title") {
       xml += `${indent}<setting name="title">${column[key]}</setting>\n`;
-    } else if (key === "backgroundColor" || key === "customColor") {
+    } else if (key === "backgroundColor") {
       // add if useNamed and standardized properties are implemented
       // if ("standardized" in column[key] && "useNamed" in column[key]) {
       //   if (column[key].text.length > 0) {
@@ -457,6 +453,8 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       } else {
         xml += `${indent}<setting name="${key}" useNamed="false">rgb(${column[key].text.r},${column[key].text.g},${column[key].text.b})</setting>\n`;
       }
+    } else if (key === "customColor") {
+      xml += `${indent}<setting name="${key}" useNamed="false">rgb(${column[key].text.r},${column[key].text.g},${column[key].text.b})</setting>\n`;
     } else if (key === "fonts") {
       xml += `${indent}<fonts>\n`;
       xml += generateFontsXml(`${indent}    `, column.fonts);
