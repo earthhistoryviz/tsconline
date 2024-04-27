@@ -210,8 +210,8 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
   }
   const columnInfo = columnInfoArray.concat(loneColumns);
   columnInfo.unshift({
-    name: ageUnits.split(' ')[0]!,
-    editName: ageUnits.split(' ')[0]!,
+    name: ageUnits.split(" ")[0]!,
+    editName: ageUnits.split(" ")[0]!,
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
     fontOptions: ["Column Header", "Ruler Label"],
     on: true,
