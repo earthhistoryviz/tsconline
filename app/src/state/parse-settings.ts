@@ -7,11 +7,11 @@ import {
   ChartSettingsInfoTSC,
   ColumnInfo,
   ColumnInfoTSC,
-  FontLabelOptions,
   FontsInfo,
-  allFontOptions,
   assertChartInfoTSC,
   assertChartSettingsInfoTSC,
+  assertRulerColumnInfoTSC,
+  assertZoneColumnInfoTSC,
   defaultChartSettingsInfoTSC,
   defaultColumnBasicInfoTSC,
   defaultEventColumnInfoTSC,
@@ -344,6 +344,7 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
   column.fonts = state.fontsInfo;
   if (state.width) column.width = state.width;
   column.backgroundColor.text = "rgb(" + state.rgb.r + "," + state.rgb.g + "," + state.rgb.b + ")";
+  column.customColor.text = "rgb(" + state.rgb.r + "," + state.rgb.g + "," + state.rgb.b + ")";
   column.children = [];
   for (let i = 0; i < state.children.length; i++) {
     column.children.push(translateColumnInfoToColumnInfoTSC(state.children[i]));
@@ -393,26 +394,6 @@ function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
   return xml;
 }
 
-export function translateSettings(state: ChartSettings): ChartSettingsInfoTSC {
-  let settings: ChartSettingsInfoTSC = JSON.parse(JSON.stringify(defaultChartSettingsInfoTSC));
-  for (const unit in state.timeSettings) {
-    const timeSettings = state.timeSettings[unit];
-    console.log(JSON.parse(JSON.stringify(timeSettings)));
-
-    settings.topAge.push({ source: "text", unit: unit, text: timeSettings.topStageAge });
-    settings.baseAge.push({ source: "text", unit: unit, text: timeSettings.baseStageAge });
-    settings.unitsPerMY.push({ unit: unit, text: timeSettings.unitsPerMY * 30 });
-    settings.skipEmptyColumns.push({ unit: unit, text: timeSettings.skipEmptyColumns });
-  }
-  settings.noIndentPattern = state.noIndentPattern;
-  settings.enPriority = state.enablePriority;
-  settings.enChartLegend = state.enableChartLegend;
-  settings.enHideBlockLable = state.enableHideBlockLabel;
-  settings.enEventColBG = state.enableColumnBackground;
-  settings.doPopups = state.mouseOverPopupsEnabled;
-  return settings;
-}
-
 function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
   let xml = "";
   for (let key in column) {
@@ -446,7 +427,7 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       //   />\n`;
       // } else
       if (column[key].text.length > 0) {
-        xml += `${indent}<setting name="${key}">${column[key].text}</setting>\n`;
+        xml += `${indent}<setting name="${key}" useNamed="false">${column[key].text}</setting>\n`;
       } else {
         xml += `${indent}<setting name="${key}"/>\n`;
       }
@@ -461,9 +442,11 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
         xml += `${indent}</column>\n`;
       }
     } else if (key === "justification") {
-      xml += `${indent}<setting justification="${column[key as keyof ColumnInfoTSC]}" name="justification"/>\n`;
+      assertRulerColumnInfoTSC(column);
+      xml += `${indent}<setting justification="${column[key]}" name="justification"/>\n`;
     } else if (key === "orientation") {
-      xml += `${indent}<setting name="orientation" orientation="${column[key as keyof ColumnInfoTSC]}"/>\n`;
+      assertZoneColumnInfoTSC(column);
+      xml += `${indent}<setting name="orientation" orientation="${column[key]}"/>\n`;
     } else {
       xml += `${indent}<setting name="${key}">${column[key as keyof ColumnInfoTSC]}</setting>\n`;
     }
