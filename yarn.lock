@@ -2393,6 +2393,7 @@ __metadata:
     fastify: "npm:^4.17.0"
     glob: "npm:^10.3.10"
     google-auth-library: "npm:^9.8.0"
+    kysely: "npm:^0.27.3"
     md5: "npm:^2.3.0"
     mkdirp: "npm:^3.0.1"
     nearest-color: "npm:^0.4.4"
@@ -7248,6 +7249,13 @@ __metadata:
   version: 3.0.3
   resolution: "kleur@npm:3.0.3"
   checksum: 0c0ecaf00a5c6173d25059c7db2113850b5457016dfa1d0e3ef26da4704fbb186b4938d7611246d86f0ddf1bccf26828daa5877b1f232a65e7373d0122a83e7f
+  languageName: node
+  linkType: hard
+
+"kysely@npm:^0.27.3":
+  version: 0.27.3
+  resolution: "kysely@npm:0.27.3"
+  checksum: baa0b7219dc2ccf85be7931098f0b49f60d39ee61a11d455c32919694e42de2e96f7d8179a8d35755ea40877a4b9eb02e8f45817c1997c3ad1c7dec533ef3586
   languageName: node
   linkType: hard
 

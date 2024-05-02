@@ -1,10 +1,17 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { randomUUID, randomBytes } from "crypto";
-import { getDb } from "./database.js";
-import { UserRow, VerificationRow, assertUserRow, assertVerificationRow } from "./types.js";
+import {
+  db,
+  findUser,
+  createUser,
+  updateUser,
+  findVerification,
+  createVerification,
+  deleteVerification
+} from "./database.js";
 import { compare, hash } from "bcrypt-ts";
 import { OAuth2Client } from "google-auth-library";
-import { Email, assertEmail } from "./types.js";
+import { Email, assertEmail, NewUser, NewVerification } from "./types.js";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 
@@ -41,25 +48,27 @@ export const resetPassword = async function resetPassword(
     reply.status(400).send({ error: "Invalid form" });
     return;
   }
-  const db = getDb();
   try {
-    const row = db.prepare(`SELECT * FROM verification WHERE token = ?`).get(token);
-    if (!row) {
+    const verificationRow = (await findVerification({ token }))[0];
+    if (!verificationRow) {
       reply.status(404).send({ error: "Password reset token not found" });
       return;
     }
-    const { userId, expiresAt, verifyOrReset } = row as VerificationRow;
-    assertVerificationRow(row);
+    const { userId, expiresAt, verifyOrReset } = verificationRow;
     const expiresAtDate = new Date(expiresAt);
     if (expiresAtDate < new Date() || verifyOrReset !== "reset") {
-      db.prepare(`DELETE FROM verification WHERE token = ?`).run(token);
+      await deleteVerification({ token });
       reply.status(401).send({ error: "Password reset token expired or invalid" });
       return;
     }
     const hashedPassword = await hash(password, 10);
-    db.prepare(`UPDATE users SET hashedPassword = ? WHERE id = ?`).run(hashedPassword, userId);
-    db.prepare(`DELETE FROM verification WHERE token = ?`).run(token);
-    request.session.set("uuid", (db.prepare(`SELECT uuid FROM users WHERE id = ?`).get(userId) as UserRow)["uuid"]);
+    await updateUser({ userId }, { hashedPassword });
+    await deleteVerification({ token });
+    const userRow = (await findUser({ userId }))[0];
+    if (!userRow) {
+      throw new Error("User not found");
+    }
+    request.session.set("uuid", userRow["uuid"]);
     reply.send({ message: "Password reset" });
   } catch (error) {
     console.error("Error during reset:", error);
@@ -72,24 +81,22 @@ export const sendResetPasswordEmail = async function sendResetPasswordEmail(
   reply: FastifyReply
 ) {
   const email = request.body.email;
-  if (!email) {
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     reply.status(400).send({ error: "Invalid form" });
     return;
   }
-  const db = getDb();
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     reply.status(500).send({ error: "Email service not configured" });
     return;
   }
   try {
-    const row = db.prepare(`SELECT * FROM users WHERE email = ?`).get(email);
-    if (!row) {
+    const userRow = (await findUser({ email }))[0];
+    if (!userRow) {
       reply.send({ message: "Email sent" });
       return;
     }
-    const { hashedPassword, emailVerified } = row as UserRow;
-    assertUserRow(row);
-    if (!row || !emailVerified) {
+    const { userId, hashedPassword, emailVerified } = userRow;
+    if (!emailVerified) {
       reply.send({ message: "Email sent" });
       return;
     }
@@ -102,12 +109,14 @@ export const sendResetPasswordEmail = async function sendResetPasswordEmail(
       emailText = `Click on the following link to reset your password: ${process.env.APP_URL || "http://localhost:5173"}/account-recovery?token=${token}`;
       const expiresAt = new Date();
       expiresAt.setMinutes(expiresAt.getMinutes() + 15);
-      db.prepare(
-        `DELETE FROM verification WHERE userId = (SELECT id FROM users WHERE email = ?) AND verifyOrReset = ?`
-      ).run(email, "reset");
-      db.prepare(
-        `INSERT into verification (userId, token, expiresAt, verifyOrReset) VALUES ((SELECT id FROM users WHERE email = ?), ?, ?, ?)`
-      ).run(email, token, expiresAt.toISOString(), "reset");
+      await deleteVerification({ userId: userId, verifyOrReset: "reset" });
+      const verfication: NewVerification = {
+        userId: userId,
+        token: token,
+        expiresAt: expiresAt.toISOString(),
+        verifyOrReset: "reset"
+      };
+      await createVerification(verfication);
     }
     const authEmail: Email = {
       from: process.env.EMAIL_USER,
@@ -115,7 +124,7 @@ export const sendResetPasswordEmail = async function sendResetPasswordEmail(
       subject: "Reset Your Password",
       text: emailText
     };
-    await sendEmail(authEmail);
+    sendEmail(authEmail);
     reply.send({ message: "Email sent" });
   } catch (error) {
     console.error("Error during reset:", error);
@@ -128,37 +137,39 @@ export const resendVerificationEmail = async function resendVerificationEmail(
   reply: FastifyReply
 ) {
   const email = request.body.email;
-  if (!email) {
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     reply.status(400).send({ error: "Invalid form" });
     return;
   }
-  const db = getDb();
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     reply.status(500).send({ error: "Email service not configured" });
     return;
   }
   try {
-    const row = db.prepare(`SELECT * FROM users WHERE email = ?`).get(email);
-    if (!row) {
+    const userRow = (await findUser({ email }))[0];
+    if (!userRow) {
       reply.send({ message: "Email sent" });
       return;
     }
     let emailText = "";
     let token = "";
-    const { id, emailVerified } = row as UserRow;
-    assertUserRow(row);
+    const { userId, emailVerified } = userRow;
     if (emailVerified) {
       emailText =
         "Welcome back to TSC Online! Your email is already verified. If you did not request this email, please ignore it.";
     } else {
       token = randomBytes(16).toString("hex");
       emailText = `Welcome to TSC Online! Please verify your email by clicking on the following link: ${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`;
-      db.prepare(`DELETE FROM verification WHERE userId = ?`).run(id);
+      await deleteVerification({ userId: userId });
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 1);
-      db.prepare(
-        `INSERT into verification (userId, token, expiresAt, verifyOrReset) VALUES ((SELECT id FROM users WHERE email = ?), ?, ?, ?)`
-      ).run(email, token, expiresAt.toISOString(), "verify");
+      const verification: NewVerification = {
+        userId: userId,
+        token: token,
+        expiresAt: expiresAt.toISOString(),
+        verifyOrReset: "verify"
+      };
+      await createVerification(verification);
     }
     const authEmail: Email = {
       from: process.env.EMAIL_USER,
@@ -166,7 +177,7 @@ export const resendVerificationEmail = async function resendVerificationEmail(
       subject: "Welcome to TSC Online - Verify Your Email",
       text: emailText
     };
-    await sendEmail(authEmail);
+    sendEmail(authEmail);
     reply.send({ message: "Email sent" });
   } catch (error) {
     console.error("Error during resend:", error);
@@ -179,27 +190,31 @@ export const verifyEmail = async function verifyEmail(
   reply: FastifyReply
 ) {
   const token = request.body.token;
-  const db = getDb();
   try {
-    const row = db.prepare(`SELECT * FROM verification WHERE token = ?`).get(token);
-    if (!row) {
+    const verificationRow = (await findVerification({ token: token }))[0];
+    if (!verificationRow) {
       reply.status(404).send({ error: "Verification token not found" });
       return;
     }
-    const { userId, expiresAt, verifyOrReset } = row as VerificationRow;
-    const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(userId);
-    const { emailVerified, uuid } = user as UserRow;
+    const { expiresAt, verifyOrReset, userId } = verificationRow;
+    const userRow = (await findUser({ userId }))[0];
+    if (!userRow) {
+      reply.status(404).send({ error: "User not found" });
+      return;
+    }
+    const { emailVerified, uuid } = userRow;
     if (emailVerified) {
       reply.status(409).send({ error: "Email already verified" });
       return;
     }
     const expiresAtDate = new Date(expiresAt);
     if (expiresAtDate < new Date() || verifyOrReset !== "verify") {
-      db.prepare(`DELETE FROM verification WHERE token = ?`).run(token);
+      await deleteVerification({ token });
       reply.status(401).send({ error: "Verification token expired or invalid" });
       return;
     }
-    db.prepare(`UPDATE users SET emailVerified = 1 WHERE id = ?`).run(userId);
+    await updateUser({ userId }, { emailVerified: 1 });
+    await deleteVerification({ token });
     request.session.set("uuid", uuid);
     reply.send({ message: "Email verified" });
   } catch (error) {
@@ -221,17 +236,31 @@ export const signup = async function signup(
     reply.status(500).send({ error: "Email service not configured" });
     return;
   }
-  const db = getDb();
   try {
-    const rows = db.prepare(`SELECT * FROM users WHERE email = ? OR username = ?`).all(email, username);
-    if (rows.length > 0) {
+    const check = await db
+      .selectFrom("users")
+      .selectAll()
+      .where((eb) => eb("username", "=", username).or("email", "=", email))
+      .execute();
+    if (check.length > 0) {
       reply.status(409).send({ error: "User with this email or username already exists" });
       return;
     }
     const hashedPassword = await hash(password, 10);
-    db.prepare(
-      `INSERT INTO users (username, email, hashedPassword, uuid, pictureUrl, emailVerified) VALUES (?, ?, ?, ?, ?, ?)`
-    ).run(username, email, hashedPassword, randomUUID(), null, 0);
+    const newUser: NewUser = {
+      username: username,
+      email: email,
+      hashedPassword: hashedPassword,
+      uuid: randomUUID(),
+      pictureUrl: null,
+      emailVerified: 0
+    };
+    await createUser(newUser);
+    const insertedUser = (await findUser({ email }))[0];
+    if (!insertedUser) {
+      throw new Error("User not inserted");
+    }
+    const { userId } = insertedUser;
     const token = randomBytes(16).toString("hex");
     const authEmail: Email = {
       from: process.env.EMAIL_USER,
@@ -239,12 +268,17 @@ export const signup = async function signup(
       subject: "Welcome to TSC Online - Verify Your Email",
       text: `Welcome to TSC Online, ${username}! Please verify your email by clicking on the following link: ${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`
     };
-    await sendEmail(authEmail);
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 1);
-    db.prepare(
-      `INSERT into verification (userId, token, expiresAt, verifyOrReset) VALUES ((SELECT id FROM users WHERE email = ?), ?, ?, ?)`
-    ).run(email, token, expiresAt.toISOString(), "verify");
+    const newVerification: NewVerification = {
+      userId: userId,
+      token: token,
+      expiresAt: expiresAt.toISOString(),
+      verifyOrReset: "verify"
+    };
+    await createVerification(newVerification);
+    sendEmail(authEmail);
+    reply.send({ message: "Email sent   " });
   } catch (error) {
     console.error("Error during signup:", error);
     reply.status(500).send({ error: "Unknown Error" });
@@ -260,15 +294,13 @@ export const login = async function login(
     reply.status(400).send({ error: "Invalid form" });
     return;
   }
-  const db = getDb();
   try {
-    const row = db.prepare(`SELECT * FROM users WHERE username = ?`).get(username);
-    if (!row) {
+    const userRow = (await findUser({ username }))[0];
+    if (!userRow) {
       reply.status(401).send({ error: "Incorrect username or password" });
       return;
     }
-    const { uuid, hashedPassword, emailVerified } = row as UserRow;
-    assertUserRow(row);
+    const { uuid, hashedPassword, emailVerified } = userRow;
     if (hashedPassword && (await compare(password, hashedPassword))) {
       if (!emailVerified) {
         reply.status(403).send({ error: "Email not verified" });
@@ -295,17 +327,15 @@ export const googleLogin = async function googleLogin(
     audience: "1010066768032-cfp1hg2ad9euid20vjllfdqj18ki7hmb.apps.googleusercontent.com"
   });
   const payload = ticket.getPayload();
-  if (!payload) {
+  if (!payload || !payload.email) {
     reply.status(400).send({ error: "Invalid Google Credential" });
     return;
   }
   try {
-    const db = getDb();
-    const row = db.prepare(`SELECT * FROM users WHERE email = ?`).get(payload.email);
-    if (row) {
-      const { username, uuid } = row as UserRow;
-      assertUserRow(row);
-      if (username !== null) {
+    const userRow = (await findUser({ email: payload.email }))[0];
+    if (userRow) {
+      const { username, uuid } = userRow;
+      if (username) {
         reply.status(409).send({ error: "User already exists" });
       } else {
         request.session.set("uuid", uuid);
@@ -314,9 +344,15 @@ export const googleLogin = async function googleLogin(
       return;
     }
     const uuid = randomUUID();
-    db.prepare(
-      `INSERT INTO users (username, email, hashedPassword, uuid, pictureUrl, emailVerified) VALUES (?, ?, ?, ?, ?, ?)`
-    ).run(null, payload.email, null, uuid, payload.picture, 1);
+    const user: NewUser = {
+      username: null,
+      email: payload.email,
+      hashedPassword: null,
+      uuid: uuid,
+      pictureUrl: payload.picture,
+      emailVerified: 1
+    };
+    await createUser(user);
     request.session.set("uuid", uuid);
     reply.send({ message: "Login successful" });
   } catch (error) {

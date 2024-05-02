@@ -131,8 +131,11 @@ export const AccountRecovery: React.FC = observer(() => {
         </Avatar>
         {loading && <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />}
         <Typography variant="h5" sx={{ textAlign: "center", mt: 1 }}>
-          {(showPasswordForm || showResendForm) &&
-            (showResendForm ? "Enter your email to receive a password reset link." : "Please enter your new password.")}
+          {showPasswordForm || showResendForm
+            ? showResendForm
+              ? "Enter your email to receive a password reset link."
+              : "Please enter your new password."
+            : "Account Recovery"}
         </Typography>
         {showResendForm && (
           <Box component="form" onSubmit={handleEmailSubmit} className="account-form">

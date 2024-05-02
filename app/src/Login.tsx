@@ -166,11 +166,6 @@ export const Login: React.FC = observer(() => {
               width="400px"
             />
           </Box>
-          <Grid item sx={{ mt: 4 }}>
-            <Link href="/verify" sx={{ color: "black" }}>
-              Need to verify your account?
-            </Link>
-          </Grid>
         </>
       )}
     </Box>
