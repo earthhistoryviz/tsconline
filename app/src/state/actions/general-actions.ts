@@ -675,7 +675,6 @@ export const setUseCache = action((temp: boolean) => {
 export const setUsePreset = action((temp: boolean) => {
   state.useCache = temp;
 });
-
 export const setChartContent = action("setChartContent", (chartContent: string) => {
   state.chartContent = chartContent;
 });

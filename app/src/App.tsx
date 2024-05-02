@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Route, Routes, useNavigate } from "react-router-dom";
+import { Route, Routes, useNavigate, useLocation } from "react-router-dom";
 import Toolbar from "@mui/material/Toolbar";
 import { NavBar } from "./NavBar";
 import { Home } from "./Home";
@@ -21,11 +21,12 @@ import { CssBaseline } from "@mui/material";
 export default observer(function App() {
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
+  const location = useLocation();
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <NavBar />
+        {location.pathname != "/verify" && <NavBar />}
         <Toolbar />
         <Routes>
           <Route path="/" element={<Home />} />

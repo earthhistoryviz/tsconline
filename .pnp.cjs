@@ -3378,6 +3378,7 @@ const RAW_RUNTIME_STATE =
           ["fastify", "npm:4.17.0"],\
           ["glob", "npm:10.3.10"],\
           ["google-auth-library", "npm:9.8.0"],\
+          ["kysely", "npm:0.27.3"],\
           ["md5", "npm:2.3.0"],\
           ["mkdirp", "npm:3.0.1"],\
           ["nearest-color", "npm:0.4.4"],\
@@ -9014,6 +9015,15 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./.yarn/cache/kleur-npm-3.0.3-f6f53649a4-0c0ecaf00a.zip/node_modules/kleur/",\
         "packageDependencies": [\
           ["kleur", "npm:3.0.3"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["kysely", [\
+      ["npm:0.27.3", {\
+        "packageLocation": "./.yarn/cache/kysely-npm-0.27.3-79f63687e7-baa0b7219d.zip/node_modules/kysely/",\
+        "packageDependencies": [\
+          ["kysely", "npm:0.27.3"]\
         ],\
         "linkType": "HARD"\
       }]\

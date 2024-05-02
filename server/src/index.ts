@@ -14,9 +14,9 @@ import { AssetConfig, assertAssetConfig } from "./types.js";
 import { readFile } from "fs/promises";
 import fastifyMultipart from "@fastify/multipart";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
-import { getDb } from "./database.js";
 import fastifySecureSession from "@fastify/secure-session";
 import dotenv from "dotenv";
+import { setupDb } from "./database.js";
 
 const server = fastify({
   logger: false,
@@ -217,7 +217,7 @@ setInterval(() => {
 }, sunsetInterval);
 // Start the server...
 try {
-  await getDb();
+  setupDb();
   await server.listen({
     host: "0.0.0.0", // for this to work in Docker, you need 0.0.0.0
     port: +(process.env.port || 3000)

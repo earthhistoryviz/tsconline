@@ -31,6 +31,7 @@ export enum ErrorCodes {
   UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL = "UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL",
   INVALID_FORM = "INVALID_FORM",
   UNABLE_TO_VERIFY_ACCOUNT = "UNABLE_TO_VERIFY_ACCOUNT",
+  UNABLE_TO_VERIFY_ACCOUNT_SERVER = "UNABLE_TO_VERIFY_ACCOUNT_SERVER",
   ALREADY_VERIFIED_ACCOUNT = "ALREADY_VERIFIED_ACCOUNT",
   TOKEN_EXPIRED_OR_INVALID = "SIGNUP_TOKEN_EXPIRED_OR_INVALID",
   UNABLE_TO_SEND_EMAIL = "UNABLE_TO_SEND_EMAIL",
@@ -76,6 +77,7 @@ export const ErrorMessages = {
   [ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT]:
     "Your email is not verified. Please verify your email first. If you did not receive an email, please resend.",
   [ErrorCodes.ALREADY_VERIFIED_ACCOUNT]: "Account is already verified. Please log in.",
+  [ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT_SERVER]: "Unable to verify account due to server error. Please try again later.",
   [ErrorCodes.TOKEN_EXPIRED_OR_INVALID]:
     "Your token is either invalid or has expired. Please request a new verification email.",
   [ErrorCodes.UNABLE_TO_SEND_EMAIL]: "Unable to send email. Please try again later.",

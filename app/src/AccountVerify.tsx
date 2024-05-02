@@ -14,6 +14,7 @@ import { displayServerError } from "./state/actions/util-actions";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { useTheme } from "@mui/material/styles";
 import SendIcon from "@mui/icons-material/Send";
+import HomeIcon from "@mui/icons-material/Home";
 import "./Login.css";
 
 export const AccountVerify: React.FC = () => {
@@ -36,6 +37,7 @@ export const AccountVerify: React.FC = () => {
   }, [token]);
 
   const verifyToken = async (token: string) => {
+    setLoading(true);
     try {
       const response = await fetcher("/auth/verify", {
         method: "POST",
@@ -77,16 +79,20 @@ export const AccountVerify: React.FC = () => {
           default:
             displayServerError(
               message,
-              ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT,
-              ErrorMessages[ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT]
+              ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT_SERVER,
+              ErrorMessages[ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT_SERVER]
             );
-            setMessage(ErrorMessages[ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT]);
+            setMessage(ErrorMessages[ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT_SERVER]);
             break;
         }
       }
     } catch (error) {
-      displayServerError(null, ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT, ErrorMessages[ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT]);
-      setMessage(ErrorMessages[ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT]);
+      displayServerError(
+        null,
+        ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT_SERVER,
+        ErrorMessages[ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT_SERVER]
+      );
+      setMessage(ErrorMessages[ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT_SERVER]);
     } finally {
       setLoading(false);
     }
@@ -168,6 +174,9 @@ export const AccountVerify: React.FC = () => {
             </TSCButton>
           </Box>
         )}
+        <TSCButton fullWidth sx={{ mt: 1 }} startIcon={<HomeIcon />} onClick={() => navigate("/")}>
+          Return to Home
+        </TSCButton>
       </Box>
     </Container>
   );
