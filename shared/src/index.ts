@@ -622,12 +622,17 @@ export function assertFacies(o: any): asserts o is Facies {
 export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingPack {
   if (!o || typeof o !== "object") throw new Error("DatapackParsingPack must be a non-null object");
   if (typeof o.ageUnits !== "string") throwError("DatapackParsingPack", "ageUnits", "string", o.ageUnits);
-  if (typeof o.defaultChronostrat !== "string") throwError("DatapackParsingPack", "defaultChronostrat", "string", o.defaultChronostrat);
-  if (!/^(USGS|UNESCO)$/.test(o.defaultChronostrat)) throwError("DatapackParsingPack", "defaultChronostrat", "USGS | UNESCO", o.defaultChronostrat);
-  if (typeof o.formatVersion !== "number") throwError("DatapackParsingPack", "formatVersion", "number", o.formatVersion);
-  if ("verticalScale" in o && typeof o.verticalScale !== "number") throwError("DatapackParsingPack", "verticalScale", "number", o.verticalScale);
+  if (typeof o.defaultChronostrat !== "string")
+    throwError("DatapackParsingPack", "defaultChronostrat", "string", o.defaultChronostrat);
+  if (!/^(USGS|UNESCO)$/.test(o.defaultChronostrat))
+    throwError("DatapackParsingPack", "defaultChronostrat", "USGS | UNESCO", o.defaultChronostrat);
+  if (typeof o.formatVersion !== "number")
+    throwError("DatapackParsingPack", "formatVersion", "number", o.formatVersion);
+  if ("verticalScale" in o && typeof o.verticalScale !== "number")
+    throwError("DatapackParsingPack", "verticalScale", "number", o.verticalScale);
   if ("date" in o && typeof o.date !== "string") throwError("DatapackParsingPack", "date", "string", o.date);
-  if ("date" in o && !/^(\d{4}-\d{2}-\d{2})$/.test(o.date)) throwError("DatapackParsingPack", "date", "YYYY-MM-DD", o.date);
+  if ("date" in o && !/^(\d{4}-\d{2}-\d{2})$/.test(o.date))
+    throwError("DatapackParsingPack", "date", "YYYY-MM-DD", o.date);
   assertColumnInfo(o.columnInfo);
   assertDatapackAgeInfo(o.datapackAgeInfo);
 }
