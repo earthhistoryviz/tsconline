@@ -2,7 +2,6 @@ import { createReadStream } from "fs";
 import {
   ColumnInfo,
   Facies,
-  DatapackAgeInfo,
   DatapackParsingPack,
   SubBlockInfo,
   Block,
@@ -111,8 +110,6 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
  * Main Function...
  * Get columns based on a decrypt_filepath that leads to the decrypted directory
  * and an amount of files in a string array that should pop up in that decrypted directory
- * Have not checked edge cases in which a file doesn't show up, will only return any that are correct.
- * Maybe add functionality in the future to check if all the files exist
  * @param decryptFilePath the decryption folder location
  * @param files the files to be parsed
  * @returns
@@ -124,7 +121,6 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
   const columnInfoArray: ColumnInfo[] = [];
   const isChild: Set<string> = new Set();
   const allEntries: Map<string, ParsedColumnEntry> = new Map();
-  const datapackAgeInfo: DatapackAgeInfo = { datapackContainsSuggAge: false };
   const faciesMap: Map<string, Facies> = new Map();
   const blocksMap: Map<string, Block> = new Map();
   const eventMap: Map<string, Event> = new Map();
@@ -142,6 +138,8 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     maxAge: -99999,
     fontOptions: ["Column Header"]
   };
+  let topAge: number | null = null;
+  let baseAge: number | null = null;
   let chartTitle = "Chart Title";
   let ageUnits = "Ma";
   let defaultChronostrat = "UNESCO";
@@ -150,15 +148,16 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
   let formatVersion = 1.5;
   try {
     for (const decryptPath of decryptPaths) {
-      const { units, title, chronostrat, datapackDate, vertScale, version } = await getAllEntries(
+      const { units, title, chronostrat, datapackDate, vertScale, version, top, base } = await getAllEntries(
         decryptPath,
         allEntries,
-        isChild,
-        datapackAgeInfo
+        isChild
       );
-      ageUnits = units;
+      topAge = top;
+      baseAge = base;
       chartTitle = title;
       defaultChronostrat = chronostrat;
+      ageUnits = units;
       if (datapackDate) date = datapackDate;
       if (vertScale) verticalScale = vertScale;
       if (version) formatVersion = version;
@@ -265,9 +264,11 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     units: ageUnits,
     columnDisplayType: "RootColumn"
   };
-  const datapackParsingPack = { columnInfo: chartColumn, datapackAgeInfo, ageUnits, defaultChronostrat, formatVersion };
+  const datapackParsingPack = { columnInfo: chartColumn, ageUnits, defaultChronostrat, formatVersion };
   assertDatapackParsingPack(datapackParsingPack);
   if (date) datapackParsingPack.date = date;
+  if (topAge) datapackParsingPack.topAge = topAge;
+  if (baseAge) datapackParsingPack.baseAge = baseAge;
   if (verticalScale) datapackParsingPack.verticalScale = verticalScale;
   return datapackParsingPack;
 }
@@ -283,13 +284,12 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
 export async function getAllEntries(
   filename: string,
   allEntries: Map<string, ParsedColumnEntry>,
-  isChild: Set<string>,
-  datapackAgeInfo: DatapackAgeInfo
+  isChild: Set<string>
 ) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
-  let topAge: number | null = null;
-  let bottomAge: number | null = null;
+  let top: number | null = null;
+  let base: number | null = null;
   let date: string | null = null;
   let ageUnits: string = "Ma";
   let chartTitle: string = "Chart Title";
@@ -304,10 +304,10 @@ export async function getAllEntries(
     if (value) {
       switch (split[0]) {
         case "SetTop:":
-          if (!isNaN(Number(value))) topAge = Number(value);
+          if (!isNaN(Number(value))) top = Number(value);
           break;
         case "SetBase:":
-          if (!isNaN(Number(value))) bottomAge = Number(value);
+          if (!isNaN(Number(value))) base = Number(value);
           break;
         case "chart title:":
           chartTitle = value.trim();
@@ -367,15 +367,11 @@ export async function getAllEntries(
     }
     allEntries.set(parent, parsedChildren);
   }
-  //set the age info if it exists
-  datapackAgeInfo.datapackContainsSuggAge = topAge != null && bottomAge != null;
-  if (topAge != null && bottomAge != null) {
-    datapackAgeInfo.topAge = topAge;
-    datapackAgeInfo.bottomAge = bottomAge;
-  }
   return {
     title: chartTitle,
     units: ageUnits,
+    top,
+    base,
     chronostrat: defaultChronostrat,
     datapackDate: date,
     vertScale,

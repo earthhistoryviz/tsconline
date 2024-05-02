@@ -14,10 +14,11 @@ export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 
 export type DatapackParsingPack = {
   columnInfo: ColumnInfo;
-  datapackAgeInfo: DatapackAgeInfo;
   ageUnits: string;
   defaultChronostrat: "USGS" | "UNESCO";
   formatVersion: number;
+  topAge?: number;
+  baseAge?: number;
   date?: string;
   verticalScale?: number;
 };
@@ -59,12 +60,6 @@ export type RGB = {
 };
 export type Presets = {
   [type: string]: ChartConfig[];
-};
-
-export type DatapackAgeInfo = {
-  datapackContainsSuggAge: boolean; //Default Age is not age located in datapack. Should be false if age exists, otherwise true.
-  topAge?: number;
-  bottomAge?: number;
 };
 
 export type ColumnHeaderProps = {
@@ -582,16 +577,6 @@ export function assertDatapack(o: any): asserts o is Datapack {
   if (typeof o.file !== "string") throw new Error("Datapack must have a field file of type string");
 }
 
-export function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo {
-  if (typeof o !== "object") throw new Error("DatapackAgeInfo must be an object");
-  if (typeof o.datapackContainsSuggAge !== "boolean")
-    throwError("DatapackAgeInfo", "datapackContainsSuggAge", "boolean", o.datapackContainsSuggAge);
-  if (o.datapackContainsSuggAge) {
-    if (typeof o.bottomAge !== "number") throwError("DatapackAgeInfo", "bottomAge", "number", o.bottomAge);
-    if (typeof o.topAge !== "number") throwError("DatapackAgeInfo", "topAge", "number", o.topAge);
-  }
-}
-
 export function assertSubBlockInfo(o: any): asserts o is SubBlockInfo {
   if (!o || typeof o !== "object") throw new Error("SubBlockInfo must be a non-null object");
   if (typeof o.label !== "string") throwError("SubBlockInfo", "label", "string", o.label);
@@ -633,8 +618,10 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
   if ("date" in o && typeof o.date !== "string") throwError("DatapackParsingPack", "date", "string", o.date);
   if ("date" in o && !/^(\d{4}-\d{2}-\d{2})$/.test(o.date))
     throwError("DatapackParsingPack", "date", "YYYY-MM-DD", o.date);
+  if ("topAge" in o && typeof o.topAge !== "number") throwError("DatapackParsingPack", "topAge", "number", o.topAge);
+  if ("baseAge" in o && typeof o.baseAge !== "number")
+    throwError("DatapackParsingPack", "baseAge", "number", o.baseAge);
   assertColumnInfo(o.columnInfo);
-  assertDatapackAgeInfo(o.datapackAgeInfo);
 }
 export function assertDatapackIndex(o: any): asserts o is DatapackIndex {
   if (!o || typeof o !== "object") throw new Error("DatapackIndex must be a non-null object");
