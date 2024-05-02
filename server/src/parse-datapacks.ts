@@ -144,19 +144,24 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
   };
   let chartTitle = "Chart Title";
   let ageUnits = "Ma";
-  let defaultChronostrat = "UNESCO"
-  let date: string | null = null
-  let verticalScale: number | null = null
+  let defaultChronostrat = "UNESCO";
+  let date: string | null = null;
+  let verticalScale: number | null = null;
   let formatVersion = 1.5;
   try {
     for (const decryptPath of decryptPaths) {
-      const { units, title, chronostrat, datapackDate, vertScale, version } = await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
+      const { units, title, chronostrat, datapackDate, vertScale, version } = await getAllEntries(
+        decryptPath,
+        allEntries,
+        isChild,
+        datapackAgeInfo
+      );
       ageUnits = units;
       chartTitle = title;
-      defaultChronostrat = chronostrat
-      if (datapackDate) date = datapackDate
-      if (vertScale) verticalScale = vertScale
-      if (version) formatVersion = version
+      defaultChronostrat = chronostrat;
+      if (datapackDate) date = datapackDate;
+      if (vertScale) verticalScale = vertScale;
+      if (version) formatVersion = version;
       const allParsedEntries = Array.from(allEntries.keys()).concat(Array.from(isChild));
       await getColumnTypes(
         decryptPath,
@@ -261,10 +266,10 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     columnDisplayType: "RootColumn"
   };
   const datapackParsingPack = { columnInfo: chartColumn, datapackAgeInfo, ageUnits, defaultChronostrat, formatVersion };
-  assertDatapackParsingPack(datapackParsingPack)
-  if (date) datapackParsingPack.date = date
-  if (verticalScale) datapackParsingPack.verticalScale = verticalScale
-  return datapackParsingPack
+  assertDatapackParsingPack(datapackParsingPack);
+  if (date) datapackParsingPack.date = date;
+  if (verticalScale) datapackParsingPack.verticalScale = verticalScale;
+  return datapackParsingPack;
 }
 /**
  * This will populate a mapping of all parents : childen[]
@@ -294,47 +299,47 @@ export async function getAllEntries(
   for await (const line of readline) {
     if (!line) continue;
     // grab any datapack properties
-    const split = line.split("\t")
-    let value = split[1]
+    const split = line.split("\t");
+    let value = split[1];
     if (value) {
       switch (split[0]) {
         case "SetTop:":
-          const parsedTopAge = Number(value)
-          if (!isNaN(parsedTopAge)) topAge = parsedTopAge
-          break
+          if (!isNaN(Number(value))) topAge = Number(value);
+          break;
         case "SetBase:":
-          const parsedBaseAge = Number(value)
-          if (!isNaN(parsedBaseAge)) bottomAge = parsedBaseAge
-          break
+          if (!isNaN(Number(value))) bottomAge = Number(value);
+          break;
         case "chart title:":
-          chartTitle = value.trim()
-          break
+          chartTitle = value.trim();
+          break;
         case "age units:":
-          ageUnits = value.trim()
-          break
+          ageUnits = value.trim();
+          break;
         case "default chronostrat:":
           if (!/^(USGS|UNESCO)$/.test(value.trim())) {
-            console.error("Default chronostrat value in datapack is neither USGS nor UNESCO, setting to default UNESCO")
-            break
+            console.error(
+              "Default chronostrat value in datapack is neither USGS nor UNESCO, setting to default UNESCO"
+            );
+            break;
           }
-          defaultChronostrat = value.trim()
-          break
+          defaultChronostrat = value.trim();
+          break;
         case "date:":
-          if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) value = value.split('/').reverse().join('-')
-          date = new Date(value).toISOString().split('T')[0] || null
-          break
+          if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) value = value.split("/").reverse().join("-");
+          date = new Date(value).toISOString().split("T")[0] || null;
+          break;
         case "format version:":
-          formatVersion = Number(value.trim())
+          formatVersion = Number(value.trim());
           if (isNaN(formatVersion)) {
-            console.error("Format version is not a number, setting to default 1.5")
-            formatVersion = 1.5
+            console.error("Format version is not a number, setting to default 1.5");
+            formatVersion = 1.5;
           }
-          break
+          break;
         case "SetScale:":
-          vertScale = Number(value)
+          vertScale = Number(value);
           if (isNaN(vertScale)) {
-            console.error("Vertical scale is not a number, setting to default null")
-            vertScale = null
+            console.error("Vertical scale is not a number, setting to default null");
+            vertScale = null;
           }
           break;
       }
@@ -368,7 +373,14 @@ export async function getAllEntries(
     datapackAgeInfo.topAge = topAge;
     datapackAgeInfo.bottomAge = bottomAge;
   }
-  return { title: chartTitle, units: ageUnits, chronostrat: defaultChronostrat, datapackDate: date, vertScale, version: formatVersion };
+  return {
+    title: chartTitle,
+    units: ageUnits,
+    chronostrat: defaultChronostrat,
+    datapackDate: date,
+    vertScale,
+    version: formatVersion
+  };
 }
 /**
  * This function will populate the maps with the parsed entries in the filename
