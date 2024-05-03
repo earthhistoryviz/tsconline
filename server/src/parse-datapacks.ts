@@ -266,8 +266,8 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
   const datapackParsingPack = { columnInfo: chartColumn, ageUnits, defaultChronostrat, formatVersion };
   assertDatapackParsingPack(datapackParsingPack);
   if (date) datapackParsingPack.date = date;
-  if (topAge) datapackParsingPack.topAge = topAge;
-  if (baseAge) datapackParsingPack.baseAge = baseAge;
+  if (topAge || topAge === 0) datapackParsingPack.topAge = topAge;
+  if (baseAge || baseAge === 0) datapackParsingPack.baseAge = baseAge;
   if (verticalScale) datapackParsingPack.verticalScale = verticalScale;
   return datapackParsingPack;
 }
@@ -303,10 +303,10 @@ export async function getAllEntries(
     if (value) {
       switch (split[0]) {
         case "SetTop:":
-          if (!isNaN(Number(value))) top = Number(value);
+          if (!isNaN(Number(value.trim()))) top = Number(value);
           break;
         case "SetBase:":
-          if (!isNaN(Number(value))) base = Number(value);
+          if (!isNaN(Number(value.trim()))) base = Number(value);
           break;
         case "chart title:":
           chartTitle = value.trim();
