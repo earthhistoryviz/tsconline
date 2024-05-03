@@ -451,10 +451,10 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       ) {
         xml += `${indent}<setting name="${key}"/>\n`;
       } else {
-        xml += `${indent}<setting name="${key}" useNamed="false">rgb(${column[key].text.r},${column[key].text.g},${column[key].text.b})</setting>\n`;
+        xml += `${indent}<setting name="${key}" useNamed="false">rgb(${column.backgroundColor.text.r},${column.backgroundColor.text.g},${column.backgroundColor.text.b})</setting>\n`;
       }
     } else if (key === "customColor") {
-      xml += `${indent}<setting name="${key}" useNamed="false">rgb(${column[key].text.r},${column[key].text.g},${column[key].text.b})</setting>\n`;
+      xml += `${indent}<setting name="${key}" useNamed="false">rgb(${column.customColor.text.r},${column.customColor.text.g},${column.customColor.text.b})</setting>\n`;
     } else if (key === "fonts") {
       xml += `${indent}<fonts>\n`;
       xml += generateFontsXml(`${indent}    `, column.fonts);
@@ -467,10 +467,10 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       }
     } else if (key === "justification") {
       assertRulerColumnInfoTSC(column);
-      xml += `${indent}<setting justification="${column[key]}" name="justification"/>\n`;
+      xml += `${indent}<setting justification="${column.justification}" name="justification"/>\n`;
     } else if (key === "orientation") {
       assertZoneColumnInfoTSC(column);
-      xml += `${indent}<setting name="orientation" orientation="${column[key]}"/>\n`;
+      xml += `${indent}<setting name="orientation" orientation="${column.orientation}"/>\n`;
     } else {
       xml += `${indent}<setting name="${key}">${column[key as keyof ColumnInfoTSC]}</setting>\n`;
     }
