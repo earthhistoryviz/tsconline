@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import AppBar from "@mui/material/AppBar";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Toolbar from "@mui/material/Toolbar";
 import { useTheme } from "@mui/material/styles";
 import HomeIcon from "@mui/icons-material/Home";
@@ -16,6 +16,7 @@ export const NavBar = observer(function Navbar() {
   const theme = useTheme();
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
+  const location = useLocation();
   return (
     <AppBar position="fixed" sx={{ background: theme.palette.navbar.main, display: "flex" }}>
       <Toolbar>
@@ -62,7 +63,9 @@ export const NavBar = observer(function Navbar() {
           </TSCTabs>
         }
         <div style={{ flexGrow: 1 }} />
-        <TSCButton onClick={() => actions.initiateChartGeneration(navigate)}>Generate Chart</TSCButton>
+        <TSCButton onClick={() => actions.initiateChartGeneration(navigate, location.pathname)}>
+          Generate Chart
+        </TSCButton>
         {state.isLoggedIn ? (
           <Tab
             className="login-tab"

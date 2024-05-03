@@ -44,8 +44,8 @@ function setDatapackTimeDefaults() {
     }
     const unitValues = unitMap.get(pack.ageUnits)!;
     if ((pack.topAge || pack.topAge === 0) && (pack.baseAge || pack.baseAge === 0)) {
-      timeSettings.topStageAge = Math.min(unitValues.topStageAge, pack.topAge);
-      timeSettings.baseStageAge = Math.max(unitValues.baseStageAge, pack.baseAge);
+      unitValues.topStageAge = Math.min(unitValues.topStageAge, pack.topAge);
+      unitValues.baseStageAge = Math.max(unitValues.baseStageAge, pack.baseAge);
     }
     if (pack.verticalScale) unitValues.verticalScale = Math.max(unitValues.verticalScale, pack.verticalScale);
   }
@@ -54,23 +54,30 @@ function setDatapackTimeDefaults() {
   for (const [unit, values] of unitMap) {
     const timeSettings = state.settings.timeSettings[unit];
     if (values.topStageAge !== Number.MAX_SAFE_INTEGER && values.baseStageAge !== Number.MIN_SAFE_INTEGER) {
-      timeSettings.topStageAge = values.topStageAge;
-      timeSettings.baseStageAge = values.baseStageAge;
+      generalActions.setBaseStageAge(values.baseStageAge, unit);
+      generalActions.setTopStageAge(values.topStageAge, unit);
     }
     if (values.verticalScale !== Number.MIN_SAFE_INTEGER) {
-      timeSettings.unitsPerMY = values.verticalScale;
+      generalActions.setUnitsPerMY(values.verticalScale, unit);
     }
   }
 }
 
 // Shows the user a popup before chart generation if there are age spans on the datapack
-export const initiateChartGeneration = action("initiateChartGeneration", (navigate: NavigateFunction) => {
-  if (state.settings.datapackContainsSuggAge) {
-    state.showSuggestedAgePopup = true;
-  } else {
-    fetchChartFromServer(navigate);
+// only pops up if they are in the configure datapacks page, or not in the settings page
+export const initiateChartGeneration = action(
+  "initiateChartGeneration",
+  (navigate: NavigateFunction, location: string) => {
+    if (
+      state.settings.datapackContainsSuggAge &&
+      ((location === "/settings" && state.settingsTabs.selected === "datapacks") || location !== "/settings")
+    ) {
+      state.showSuggestedAgePopup = true;
+    } else {
+      fetchChartFromServer(navigate);
+    }
   }
-});
+);
 
 function areSettingsValidForGeneration() {
   if (!state.config.datapacks || state.config.datapacks.length === 0 || !state.settingsTabs.columns) {
