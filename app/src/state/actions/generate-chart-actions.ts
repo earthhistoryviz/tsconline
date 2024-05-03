@@ -43,7 +43,7 @@ function setDatapackTimeDefaults() {
       });
     }
     const unitValues = unitMap.get(pack.ageUnits)!;
-    if (pack.topAge && pack.baseAge) {
+    if ((pack.topAge || pack.topAge === 0) && (pack.baseAge || pack.baseAge === 0)) {
       timeSettings.topStageAge = Math.min(unitValues.topStageAge, pack.topAge);
       timeSettings.baseStageAge = Math.max(unitValues.baseStageAge, pack.baseAge);
     }
