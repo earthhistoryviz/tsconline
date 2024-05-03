@@ -43,7 +43,6 @@ export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, count, 
         zIndex: `${100000 - index}`
       }}
       onClose={handleCloseSnackbar}
-      autoHideDuration={5000}
       TransitionComponent={Slide}>
       <Alert
         style={{
