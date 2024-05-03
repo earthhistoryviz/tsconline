@@ -362,7 +362,6 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
   column.customColor.text.r = state.rgb.r;
   column.customColor.text.g = state.rgb.g;
   column.customColor.text.b = state.rgb.b;
-
   column.children = [];
   for (let i = 0; i < state.children.length; i++) {
     column.children.push(translateColumnInfoToColumnInfoTSC(state.children[i]));
