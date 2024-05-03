@@ -10,11 +10,9 @@ import {
   Presets,
   assertSVGStatus,
   IndexResponse,
-  assertDatapackAgeInfo,
   assertMapHierarchy,
   assertColumnInfo,
   assertMapInfo,
-  DatapackAgeInfo,
   defaultFontsInfo,
   assertIndexResponse,
   assertPresets,
@@ -233,14 +231,12 @@ const setChartSettings = action("setChartSettings", (settings: ChartSettingsInfo
 export const setDatapackConfig = action(
   "setChart",
   async (datapacks: string[], settingsPath?: string): Promise<boolean> => {
-    let datapackAgeInfo: DatapackAgeInfo = {
-      datapackContainsSuggAge: false
-    };
-    const unitMap = new Map<string, ColumnInfo>();
+    const unitMap: Map<string, ColumnInfo> = new Map();
     let mapInfo: MapInfo = {};
     let mapHierarchy: MapHierarchy = {};
-    let columnInfo: ColumnInfo;
+    let columnRoot: ColumnInfo;
     let chartSettings: ChartInfoTSC = <ChartInfoTSC>{};
+    let foundDefaultAge = false;
     try {
       if (settingsPath && settingsPath.length > 0) {
         await fetchSettingsXML(settingsPath)
@@ -259,7 +255,7 @@ export const setDatapackConfig = action(
           });
       }
       // the default overarching variable for the columnInfo
-      columnInfo = {
+      columnRoot = {
         name: "Chart Root", // if you change this, change parse-datapacks.ts :69
         editName: "Chart Root",
         fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
@@ -281,8 +277,8 @@ export const setDatapackConfig = action(
         columnDisplayType: "RootColumn"
       };
       // all chart root font options have inheritable on
-      for (const opt in columnInfo.fontsInfo) {
-        columnInfo.fontsInfo[opt as keyof FontsInfo].inheritable = true;
+      for (const opt in columnRoot.fontsInfo) {
+        columnRoot.fontsInfo[opt as keyof FontsInfo].inheritable = true;
       }
       // add everything together
       // uses preparsed data on server start and appends items together
@@ -291,16 +287,15 @@ export const setDatapackConfig = action(
           throw new Error(`File requested doesn't exist on server: ${datapack}`);
         const datapackParsingPack = state.datapackIndex[datapack]!;
         if (unitMap.has(datapackParsingPack.ageUnits)) {
-          const existingUnitChart = unitMap.get(datapackParsingPack.ageUnits)!;
+          const existingUnitColumnInfo = unitMap.get(datapackParsingPack.ageUnits)!;
           const newUnitChart = datapackParsingPack.columnInfo;
           // slice off the existing unit column
           const columnsToAdd = newUnitChart.children.slice(1);
-          existingUnitChart.children = existingUnitChart.children.concat(columnsToAdd);
+          existingUnitColumnInfo.children = existingUnitColumnInfo.children.concat(columnsToAdd);
         } else {
+          if (datapackParsingPack.topAge && datapackParsingPack.baseAge) foundDefaultAge = true;
           unitMap.set(datapackParsingPack.ageUnits, datapackParsingPack.columnInfo);
         }
-        if (!datapackAgeInfo) datapackAgeInfo = datapackParsingPack.datapackAgeInfo;
-        else Object.assign(datapackAgeInfo, datapackParsingPack.datapackAgeInfo);
         const mapPack = state.mapPackIndex[datapack]!;
         if (!mapInfo) mapInfo = mapPack.mapInfo;
         else Object.assign(mapInfo, mapPack.mapInfo);
@@ -316,12 +311,11 @@ export const setDatapackConfig = action(
             child.parent = column.name;
           }
         }
-        columnInfo.fontOptions = Array.from(new Set([...columnInfo.fontOptions, ...column.fontOptions]));
-        columnInfo.children.push(column);
+        columnRoot.fontOptions = Array.from(new Set([...columnRoot.fontOptions, ...column.fontOptions]));
+        columnRoot.children.push(column);
       }
-      assertDatapackAgeInfo(datapackAgeInfo);
       assertMapHierarchy(mapHierarchy);
-      assertColumnInfo(columnInfo);
+      assertColumnInfo(columnRoot);
       assertMapInfo(mapInfo);
     } catch (e) {
       console.error(e);
@@ -333,16 +327,16 @@ export const setDatapackConfig = action(
     if (chartSettings) {
       setChartSettings(chartSettings.settings);
     }
-    state.settings.datapackContainsSuggAge = datapackAgeInfo.datapackContainsSuggAge;
+    state.settings.datapackContainsSuggAge = foundDefaultAge;
     state.mapState.mapHierarchy = mapHierarchy;
-    state.settingsTabs.columns = columnInfo;
+    state.settingsTabs.columns = columnRoot;
     state.mapState.mapInfo = mapInfo;
     state.config.datapacks = datapacks;
     // this is for app start up or when all datapacks are removed
     if (datapacks.length === 0) {
       state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
     }
-    initializeColumnHashMap(columnInfo);
+    initializeColumnHashMap(columnRoot);
     return true;
   }
 );

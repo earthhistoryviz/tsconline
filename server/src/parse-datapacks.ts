@@ -65,7 +65,6 @@ type FaciesFoundAndAgeRange = {
 };
 /**
  * parses the METACOLUMN and info of the children string
- * TODO: add TITLEOFF
  * @param array the children string to parse
  * @returns the correctly parsed children string array
  */
