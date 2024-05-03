@@ -52,7 +52,6 @@ function setDatapackTimeDefaults() {
 
   // apply the combined values to the settings
   for (const [unit, values] of unitMap) {
-    const timeSettings = state.settings.timeSettings[unit];
     if (values.topStageAge !== Number.MAX_SAFE_INTEGER && values.baseStageAge !== Number.MIN_SAFE_INTEGER) {
       generalActions.setBaseStageAge(values.baseStageAge, unit);
       generalActions.setTopStageAge(values.topStageAge, unit);
