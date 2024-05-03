@@ -195,7 +195,9 @@ function changeManuallyAddedColumns(column: ColumnInfo) {
 function normalizeColumnProperties(column: ColumnInfo) {
   if (column.width !== undefined && (isNaN(column.width) || column.width < 20)) {
     column.width = 20;
-    pushSnackbar("Invalid width input found, updating column width to 20", "warning");
+    let name = column.name.substring(0, 17);
+    if (name.length < column.name.length) name += "...";
+    pushSnackbar("Invalid width input found, updating " + name + " width to 20", "warning");
   }
   for (const child of column.children) {
     normalizeColumnProperties(child);
