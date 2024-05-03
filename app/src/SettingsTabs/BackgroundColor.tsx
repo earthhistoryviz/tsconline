@@ -15,17 +15,6 @@ export const ChangeBackgroundColor: React.FC<ChangeBGColorProps> = observer(({ c
   const handleColorChange = (color: string) => {
     actions.setRGB(column, convertHexToRGB(color, false));
   };
-
-  if (column.children.length != 0) {
-    return (
-      <>
-        <FormLabel>
-          Background Color:
-          <Typography className="not-avail">Not Available</Typography>
-        </FormLabel>
-      </>
-    );
-  } else {
     return (
       <div>
         <FormLabel>Background Color:&nbsp;</FormLabel>
@@ -36,5 +25,4 @@ export const ChangeBackgroundColor: React.FC<ChangeBGColorProps> = observer(({ c
         />
       </div>
     );
-  }
 });
