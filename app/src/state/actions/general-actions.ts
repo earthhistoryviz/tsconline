@@ -293,7 +293,7 @@ export const setDatapackConfig = action(
           const columnsToAdd = newUnitChart.children.slice(1);
           existingUnitColumnInfo.children = existingUnitColumnInfo.children.concat(columnsToAdd);
         } else {
-          if (datapackParsingPack.topAge && datapackParsingPack.baseAge) foundDefaultAge = true;
+          if ((datapackParsingPack.topAge && datapackParsingPack.baseAge) || datapackParsingPack.verticalScale) foundDefaultAge = true;
           unitMap.set(datapackParsingPack.ageUnits, datapackParsingPack.columnInfo);
         }
         const mapPack = state.mapPackIndex[datapack]!;
