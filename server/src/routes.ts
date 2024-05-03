@@ -304,7 +304,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     });
     return;
   }
-  const { useCache, useSuggestedAge } = chartrequest;
+  const { useCache } = chartrequest;
   const uuid = request.session.get("uuid");
   const settingsXml = chartrequest.settings;
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
@@ -380,7 +380,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     // Tell it where to save chart
     `-o ${chartFilePath} ` +
     // Don't use datapacks suggested age (if useSuggestedAge is true then ignore datapack ages)
-    `${!useSuggestedAge ? "-a" : ""}`;
+    `-a`;
 
   // Exec Java command and send final reply to browser
   await new Promise<void>((resolve) => {

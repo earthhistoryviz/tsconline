@@ -106,7 +106,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                       );
                       // wait to see if we can grab necessary data
                       if (success) {
-                        actions.initiateChartGeneration(navigate);
+                        actions.initiateChartGeneration(navigate, "/home");
                       }
                       //TODO add an error message saying the data is irregular and can't be loaded
                     }}
