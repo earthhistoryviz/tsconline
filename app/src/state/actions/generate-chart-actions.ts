@@ -16,8 +16,52 @@ export const handlePopupResponse = action("handlePopupResponse", (response: bool
     state.settings.useDatapackSuggestedAge = response;
     generalActions.setUseCache(false);
   }
+  if (response) setDatapackTimeDefaults();
   fetchChartFromServer(navigate);
 });
+
+type UnitValues = {
+  topStageAge: number;
+  baseStageAge: number;
+  verticalScale: number;
+};
+
+function setDatapackTimeDefaults() {
+  const unitMap = new Map<string, UnitValues>();
+
+  // combine the datapacks and the min and max ages for their respective units
+  // (can't just min or max the time settings immediately, since we have to set it on top of the user settings)
+  for (const datapack of state.config.datapacks) {
+    const pack = state.datapackIndex[datapack];
+    const timeSettings = state.settings.timeSettings[pack.ageUnits];
+    if (!timeSettings) continue;
+    if (!unitMap.has(pack.ageUnits)) {
+      unitMap.set(pack.ageUnits, {
+        topStageAge: Number.MAX_SAFE_INTEGER,
+        baseStageAge: Number.MIN_SAFE_INTEGER,
+        verticalScale: Number.MIN_SAFE_INTEGER
+      });
+    }
+    const unitValues = unitMap.get(pack.ageUnits)!;
+    if (pack.topAge && pack.baseAge) {
+      timeSettings.topStageAge = Math.min(unitValues.topStageAge, pack.topAge);
+      timeSettings.baseStageAge = Math.max(unitValues.baseStageAge, pack.baseAge);
+    }
+    if (pack.verticalScale) unitValues.verticalScale = Math.max(unitValues.verticalScale, pack.verticalScale);
+  }
+
+  // apply the combined values to the settings
+  for (const [unit, values] of unitMap) {
+    const timeSettings = state.settings.timeSettings[unit];
+    if (values.topStageAge !== Number.MAX_SAFE_INTEGER && values.baseStageAge !== Number.MIN_SAFE_INTEGER) {
+      timeSettings.topStageAge = values.topStageAge;
+      timeSettings.baseStageAge = values.baseStageAge;
+    }
+    if (values.verticalScale !== Number.MIN_SAFE_INTEGER) {
+      timeSettings.unitsPerMY = values.verticalScale;
+    }
+  }
+}
 
 // Shows the user a popup before chart generation if there are age spans on the datapack
 export const initiateChartGeneration = action("initiateChartGeneration", (navigate: NavigateFunction) => {
