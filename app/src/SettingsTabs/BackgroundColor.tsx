@@ -15,14 +15,14 @@ export const ChangeBackgroundColor: React.FC<ChangeBGColorProps> = observer(({ c
   const handleColorChange = (color: string) => {
     actions.setRGB(column, convertHexToRGB(color, false));
   };
-    return (
-      <div>
-        <FormLabel>Background Color:&nbsp;</FormLabel>
-        <TSCColorPicker
-          key={column.name}
-          color={`rgb(${column.rgb.r}, ${column.rgb.g}, ${column.rgb.b})`}
-          onColorChange={handleColorChange}
-        />
-      </div>
-    );
+  return (
+    <div>
+      <FormLabel>Background Color:&nbsp;</FormLabel>
+      <TSCColorPicker
+        key={column.name}
+        color={`rgb(${column.rgb.r}, ${column.rgb.g}, ${column.rgb.b})`}
+        onColorChange={handleColorChange}
+      />
+    </div>
+  );
 });
