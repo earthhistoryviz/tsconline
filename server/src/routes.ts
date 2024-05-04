@@ -28,7 +28,7 @@ import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackInde
 import { glob } from "glob";
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
-  request: FastifyRequest<{ Querystring: { start?: string; increment?: string }}>,
+  request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
   reply: FastifyReply
 ) {
   const { start = 0, increment = 1 } = request.query;
@@ -57,10 +57,10 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   }
   const datapackInfoChunk: DatapackInfoChunk = { datapackIndex: chunk!, totalChunks: allDatapackKeys.length };
   reply.status(200).send(datapackInfoChunk);
-}
+};
 
 export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
-  request: FastifyRequest<{ Querystring: { start?: number; increment?: number }}>,
+  request: FastifyRequest<{ Querystring: { start?: number; increment?: number } }>,
   reply: FastifyReply
 ) {
   const { start = 0, increment = 1 } = request.query;
@@ -87,9 +87,9 @@ export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
     reply.status(404).send({ error: "No map packs found" });
     return;
   }
-  const mapPackInfoChunk: MapPackInfoChunk = { mapPackIndex: chunk!, totalChunks: allMapPackKeys.length};
+  const mapPackInfoChunk: MapPackInfoChunk = { mapPackIndex: chunk!, totalChunks: allMapPackKeys.length };
   reply.status(200).send(mapPackInfoChunk);
-}
+};
 
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(request: FastifyRequest, reply: FastifyReply) {

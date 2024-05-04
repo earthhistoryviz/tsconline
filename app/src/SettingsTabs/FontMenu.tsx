@@ -209,11 +209,11 @@ export const LeafColumnFontMenu: React.FC<FontMenuProps> = observer(({ column })
       <Grid item xs={12}>
         <Typography id="Bold">Change Font</Typography>
       </Grid>
-        {Array.from(column.fontOptions).map((target) => (
-          <Grid item xs={12} key={target}>
-            <FontMenuRow column={column} target={target} />
-          </Grid>
-        ))}
+      {Array.from(column.fontOptions).map((target) => (
+        <Grid item xs={12} key={target}>
+          <FontMenuRow column={column} target={target} />
+        </Grid>
+      ))}
     </Grid>
   );
 });

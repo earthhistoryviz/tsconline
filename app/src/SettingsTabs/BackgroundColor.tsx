@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import React, { useContext } from "react";
-import { FormLabel, Typography } from "@mui/material";
+import { FormLabel } from "@mui/material";
 import TSCColorPicker from "../components/TSCColorPicker";
 import "./BackgroundColor.css";
 import { convertHexToRGB } from "../util/util";

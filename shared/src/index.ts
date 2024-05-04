@@ -13,11 +13,11 @@ export type SuccessfulServerResponse = {
 export type DatapackInfoChunk = {
   datapackIndex: DatapackIndex;
   totalChunks: number;
-}
+};
 export type MapPackInfoChunk = {
   mapPackIndex: MapPackIndex;
   totalChunks: number;
-}
+};
 
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 
