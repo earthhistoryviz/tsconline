@@ -9,6 +9,7 @@ import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import DOMPurify from "dompurify";
 import { pushSnackbar } from "./general-actions";
+import { ChartSettings } from "../../types";
 
 export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
   if (state.settings.useDatapackSuggestedAge != response) {
@@ -61,14 +62,13 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   generalActions.setChartLoading(true);
   generalActions.setChartHash("");
   generalActions.setChartContent("");
-  //let xmlSettings = jsonToXml(state.settingsJSON); // Convert JSON to XML using jsonToXml function
-  // console.log("XML Settings:", xmlSettings); // Log the XML settings to the console
   let body;
   try {
     if (state.settingsTabs.columns !== undefined) normalizeColumnProperties(state.settingsTabs.columns);
     const columnCopy: ColumnInfo = JSON.parse(JSON.stringify(state.settingsTabs.columns));
     changeManuallyAddedColumns(columnCopy);
-    const xmlSettings = jsonToXml(state.settingsTSC, columnCopy, state.settings);
+    const chartSettingsCopy: ChartSettings = JSON.parse(JSON.stringify(state.settings));
+    const xmlSettings = jsonToXml(columnCopy, chartSettingsCopy);
     body = JSON.stringify({
       settings: xmlSettings,
       datapacks: state.config.datapacks,
@@ -133,6 +133,8 @@ function changeManuallyAddedColumns(column: ColumnInfo) {
     column.name = "Chron";
   } else if (column.name === `${column.parent} Chron Label`) {
     column.name = "Chron Label";
+  } else if (column.name.substring(0, 14) === "Chart Title in") {
+    column.name = column.name.substring(15, column.name.length);
   }
   for (const child of column.children) {
     changeManuallyAddedColumns(child);

@@ -10,6 +10,8 @@ import {
   FontsInfo,
   assertChartInfoTSC,
   assertChartSettingsInfoTSC,
+  assertRulerColumnInfoTSC,
+  assertZoneColumnInfoTSC,
   defaultChartSettingsInfoTSC,
   defaultColumnBasicInfoTSC,
   defaultEventColumnInfoTSC,
@@ -52,7 +54,7 @@ function updateProperty<T, K extends keyof T>(obj: T, key: K, value: string) {
  */
 
 function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
-  let settings: ChartSettingsInfoTSC = defaultChartSettingsInfoTSC;
+  let settings: ChartSettingsInfoTSC = JSON.parse(JSON.stringify(defaultChartSettingsInfoTSC));
   const settingNodes = settingsNode.getElementsByTagName("setting");
   for (let i = 0; i < settingNodes.length; i++) {
     const settingNode = settingNodes[i];
@@ -115,8 +117,7 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
  * @returns json object containing the font info
  */
 function processFonts(fontsNode: Element): FontsInfo {
-  const fonts: FontsInfo = <FontsInfo>{};
-  Object.assign(fonts, defaultFontsInfoConstant);
+  const fonts: FontsInfo = JSON.parse(JSON.stringify(defaultFontsInfoConstant));
   return fonts;
 }
 /**
@@ -131,25 +132,25 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
   switch (columnType) {
     case "EventColumn":
       //can't set it equal to default because it becomes reference to object
-      Object.assign(column, defaultEventColumnInfoTSC);
+      column = JSON.parse(JSON.stringify(defaultEventColumnInfoTSC));
       break;
     case "ZoneColumn":
-      Object.assign(column, defaultZoneColumnInfoTSC);
+      column = JSON.parse(JSON.stringify(defaultZoneColumnInfoTSC));
       break;
     case "SequenceColumn":
-      Object.assign(column, defaultSequenceColumnInfoTSC);
+      column = JSON.parse(JSON.stringify(defaultSequenceColumnInfoTSC));
       break;
     case "RangeColumn":
-      Object.assign(column, defaultRangeColumnInfoTSC);
+      column = JSON.parse(JSON.stringify(defaultRangeColumnInfoTSC));
       break;
     case "RulerColumn":
-      Object.assign(column, defaultRulerColumnInfoTSC);
+      column = JSON.parse(JSON.stringify(defaultRulerColumnInfoTSC));
       break;
     case "PointColumn":
-      Object.assign(column, defaultPointColumnInfoTSC);
+      column = JSON.parse(JSON.stringify(defaultPointColumnInfoTSC));
       break;
     default:
-      Object.assign(column, defaultColumnBasicInfoTSC);
+      column = JSON.parse(JSON.stringify(defaultColumnBasicInfoTSC));
   }
   column._id = id;
   column.children = [];
@@ -172,25 +173,42 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
           const standardizedValue = child.getAttribute("standardized");
           const textValue = child.textContent!.trim();
           if (settingName === "backgroundColor" || settingName === "customColor") {
+            let rgb = textValue.substring(4, textValue.length - 1).split(",");
             if (standardizedValue && useNamedValue) {
               column[settingName] = {
                 standardized: standardizedValue === "true",
                 useNamed: useNamedValue === "true",
-                text: textValue as string
+                text: {
+                  r: Number(rgb[0]),
+                  g: Number(rgb[1]),
+                  b: Number(rgb[2])
+                }
               };
             } else if (useNamedValue) {
               column[settingName] = {
                 useNamed: useNamedValue === "true",
-                text: textValue as string
+                text: {
+                  r: Number(rgb[0]),
+                  g: Number(rgb[1]),
+                  b: Number(rgb[2])
+                }
               };
             } else if (standardizedValue) {
               column[settingName] = {
                 standardized: standardizedValue === "true",
-                text: textValue as string
+                text: {
+                  r: Number(rgb[0]),
+                  g: Number(rgb[1]),
+                  b: Number(rgb[2])
+                }
               };
             } else {
               column[settingName] = {
-                text: textValue as string
+                text: {
+                  r: Number(rgb[0]),
+                  g: Number(rgb[1]),
+                  b: Number(rgb[2])
+                }
               };
             }
           } else if (justificationValue) {
@@ -222,7 +240,7 @@ export function xmlToJson(xml: string): ChartInfoTSC {
   //convert xml to a DOM document using a parser library
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xml, "text/xml");
-  const settingsTSC: ChartInfoTSC = {};
+  const settingsTSC: ChartInfoTSC = <ChartInfoTSC>{};
   const tsCreatorNode = xmlDoc.getElementsByTagName("TSCreator")[0];
   if (tsCreatorNode) {
     const settingsNode = tsCreatorNode.getElementsByTagName("settings")[0];
@@ -249,10 +267,6 @@ export function xmlToJson(xml: string): ChartInfoTSC {
 //                                          JSON to XML parser                                       //
 //-------------------------------------------------------------------------------------------------- //
 
-function extractName(text: string): string {
-  return text.substring(text.indexOf(":") + 1, text.length);
-}
-
 /**
  * for escaping special characters in xml (& " ' < >)
  * in text, " ' > do not need to be escaped.
@@ -260,26 +274,23 @@ function extractName(text: string): string {
  * https://stackoverflow.com/questions/1091945/what-characters-do-i-need-to-escape-in-xml-documents
  *
  * @param text the text to replace special chars
- * @param type number indicating the type of the text param
- *             0 = attribute
- *             1 = text
+ * @param type attribute or text,
  * @returns
  */
-function replaceSpecialChars(text: string, type: number): string {
+function escapeHtmlChars(text: string, type: "attribute" | "text"): string {
   text = text.replaceAll("&", "&amp;");
   text = text.replaceAll("<", " &lt; ");
-  if (type == 0) {
+  if (type == "attribute") {
     text = text.replaceAll('"', "&quot;");
     text = text.replaceAll("'", "&apos;");
     text = text.replaceAll(">", " &gt; ");
   }
-  //edge case for usa alaska mexico datapack
-  if (text.includes("Alaska")) {
-    text = text.replaceAll("&apos;", "'");
-  }
   return text;
 }
 
+function extractName(text: string): string {
+  return text.substring(text.indexOf(":") + 1, text.length);
+}
 /**
  *
  * @param settings settings json object
@@ -308,6 +319,64 @@ function generateSettingsXml(stateSettings: ChartSettings, indent: string): stri
   xml += `${indent}<setting name="enHideBlockLabel">${stateSettings.enableHideBlockLabel}</setting>\n`;
   return xml;
 }
+
+export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInfoTSC {
+  let column: ColumnInfoTSC = JSON.parse(JSON.stringify(defaultColumnBasicInfoTSC));
+  switch (state.columnDisplayType) {
+    case "Event":
+      //can't set it equal to default because it becomes reference to object
+      column = JSON.parse(JSON.stringify(defaultEventColumnInfoTSC));
+      break;
+    case "Zone":
+      column = JSON.parse(JSON.stringify(defaultZoneColumnInfoTSC));
+      break;
+    case "Sequence":
+      column = JSON.parse(JSON.stringify(defaultSequenceColumnInfoTSC));
+      break;
+    case "Range":
+      column = JSON.parse(JSON.stringify(defaultRangeColumnInfoTSC));
+      break;
+    case "Ruler":
+      column = JSON.parse(JSON.stringify(defaultRulerColumnInfoTSC));
+      break;
+    case "Point":
+      column = JSON.parse(JSON.stringify(defaultPointColumnInfoTSC));
+  }
+  switch (state.columnDisplayType) {
+    case "RootColumn":
+    case "MetaColumn":
+    case "BlockSeriesMetaColumn":
+      column._id = `class datastore.${state.columnDisplayType}:` + state.name;
+      break;
+    default:
+      column._id = `class datastore.${state.columnDisplayType}Column:` + state.name;
+  }
+  column.title = escapeHtmlChars(state.editName, "text");
+  column.isSelected = state.on;
+  column.drawTitle = state.enableTitle;
+  column.fonts = state.fontsInfo;
+  column.width = column.width;
+  column.backgroundColor.text.r = state.rgb.r;
+  column.backgroundColor.text.g = state.rgb.g;
+  column.backgroundColor.text.b = state.rgb.b;
+  column.customColor.text.r = state.rgb.r;
+  column.customColor.text.g = state.rgb.g;
+  column.customColor.text.b = state.rgb.b;
+  column.children = [];
+  for (let i = 0; i < state.children.length; i++) {
+    column.children.push(translateColumnInfoToColumnInfoTSC(state.children[i]));
+  }
+  return column;
+}
+
+export function columnInfoToSettingsTSC(state: ColumnInfo, settings: ChartSettings): ChartInfoTSC {
+  const settingsTSC: ChartInfoTSC = <ChartInfoTSC>{};
+  settingsTSC["class datastore.RootColumn:Chart Root"] = translateColumnInfoToColumnInfoTSC(state);
+  settingsTSC.settings = JSON.parse(JSON.stringify(defaultChartSettingsInfoTSC));
+  assertChartInfoTSC(settingsTSC);
+  return settingsTSC;
+}
+
 /**
  *
  * @param fonts font json object
@@ -342,124 +411,85 @@ function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
   return xml;
 }
 
-/**
- * generates xml string with column info
- * @param columnTSC json object with column info
- * @param stateColumn json object containing the state of the columns
- * @param indent the amount of indent to place in the xml file
- * @returns xml string with column info
- */
-function generateColumnXml(presetColumn: ColumnInfoTSC, stateColumn: ColumnInfo, indent: string): string {
+function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
   let xml = "";
-  for (let key in presetColumn) {
-    if (Object.prototype.hasOwnProperty.call(presetColumn, key)) {
-      let colName = extractName(presetColumn._id);
-      let xmlKey = replaceSpecialChars(key, 0);
-      // Skip the 'id' element.
-      if (key === "_id" || key === "id") {
-        continue;
-      }
-      if (key === "title") {
-        let useEditName = false;
-        if (colName !== "Chart Root" && colName !== "Ma") {
-          if (stateColumn && stateColumn !== undefined) {
-            if (stateColumn.editName !== undefined && stateColumn.editName !== colName) {
-              xml += `${indent}<setting name="title">${replaceSpecialChars(stateColumn.editName, 1)}</setting>\n`;
-              useEditName = true;
-            }
-          }
-        }
-        if (!useEditName) {
-          xml += `${indent}<setting name="title">${replaceSpecialChars(presetColumn[key], 1)}</setting>\n`;
-        }
-      } else if (key === "backgroundColor") {
-        if (stateColumn.rgb.r == 255 && stateColumn.rgb.g == 255 && stateColumn.rgb.b == 255) {
-          xml += `${indent}<setting name="${xmlKey}"/>\n`;
-        } else {
-          xml += `${indent}<setting name="${xmlKey}" useNamed="false">rgb(${stateColumn.rgb.r},${stateColumn.rgb.g},${stateColumn.rgb.b})</setting>\n`;
-        }
-      } else if (key == "customColor") {
-        xml += `${indent}<setting name="${xmlKey}" useNamed="false">rgb(${stateColumn.rgb.r},${stateColumn.rgb.g},${stateColumn.rgb.b})</setting>\n`;
-      } else if (key === "width") {
-        if (stateColumn && stateColumn.width !== undefined) {
-          xml += `${indent}<setting name="width">${stateColumn.width}</setting>\n`;
-        }
-      } else if (key === "isSelected") {
-        //TODO: remove later when event columns are covered
-        if (presetColumn._id.includes("EventColumn")) {
-          xml += `${indent}<setting name="${xmlKey}">${presetColumn["isSelected"]}</setting>\n`;
-        }
-        //if column isn't in state, then use default given by the original xml
-        else if (stateColumn === undefined) {
-          xml += `${indent}<setting name="${xmlKey}">${presetColumn["isSelected"]}</setting>\n`;
-        }
-        //check if column is checked or not, and change the isSelected field to true or false
-        else if (stateColumn) {
-          if (stateColumn.on) {
-            xml += `${indent}<setting name="${xmlKey}">true</setting>\n`;
-          } else {
-            xml += `${indent}<setting name="${xmlKey}">false</setting>\n`;
-            if (stateColumn.name === "Central Africa Cenozoic") {
-            }
-          }
-        }
-      } else if (key === "orientation") {
-        xml += `${indent}<setting name="${xmlKey}" orientation="${presetColumn[key as keyof ColumnInfoTSC]}"/>\n`;
-      } else if (key === "fonts") {
-        xml += `${indent}<fonts>\n`;
-        xml += generateFontsXml(`${indent}    `, stateColumn.fontsInfo);
-        xml += `${indent}</fonts>\n`;
-      } else if (key === "children") {
-        let currName = extractName(presetColumn._id);
-        if (presetColumn.children) {
-          for (let i = 0; i < presetColumn.children.length; i++) {
-            // will need to remove this
-            if (!stateColumn.children[i]) {
-              console.error(
-                JSON.stringify(presetColumn.children[i]._id, null, 2) + "\n" + "doesn't exist in the state"
-              );
-              continue;
-            }
-            xml += `${indent}<column id="${replaceSpecialChars(presetColumn.children[i]._id, 0)}">\n`;
-            xml += generateColumnXml(presetColumn.children[i], stateColumn.children[i], `${indent}    `);
-            xml += `${indent}</column>\n`;
-          }
-        }
-      } else if (key === "drawTitle") {
-        xml += `${indent}<setting name="${xmlKey}">${stateColumn.enableTitle}</setting>\n`;
+  for (let key in column) {
+    if (key === "_id") {
+      continue;
+    }
+    if (key === "title") {
+      xml += `${indent}<setting name="title">${column[key]}</setting>\n`;
+    } else if (key === "backgroundColor") {
+      // add if useNamed and standardized properties are implemented
+      // if ("standardized" in column[key] && "useNamed" in column[key]) {
+      //   if (column[key].text.length > 0) {
+      //     xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}"
+      //     useNamed="${column[key].useNamed}">${column[key].text}</setting>\n`;
+      //   } else
+      //     xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}"
+      //   useNamed="${column[key].useNamed}"/>\n`;
+      // } else if ("useNamed" in column[key]) {
+      //   if (column[key].text.length > 0) {
+      //     xml += `${indent}<setting name="${key}"
+      //     useNamed="${column[key].useNamed}">${column[key].text}</setting>\n`;
+      //   } else
+      //     xml += `${indent}<setting name="${key}"
+      //   useNamed="${column[key].useNamed}"/>\n`;
+      // } else if ("standardized" in column[key]) {
+      //   if (column[key].text.length > 0) {
+      //     xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}"
+      //     >${column[key].text}</setting>\n`;
+      //   } else
+      //     xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}"
+      //   />\n`;
+      // } else
+      if (
+        column.backgroundColor.text.r == 255 &&
+        column.backgroundColor.text.g == 255 &&
+        column.backgroundColor.text.b == 255
+      ) {
+        xml += `${indent}<setting name="backgroundColor"/>\n`;
       } else {
-        xml += `${indent}<setting name="${xmlKey}">${presetColumn[key as keyof ColumnInfoTSC]}</setting>\n`;
+        xml += `${indent}<setting name="backgroundColor" useNamed="false">rgb(${column.backgroundColor.text.r},${column.backgroundColor.text.g},${column.backgroundColor.text.b})</setting>\n`;
       }
+    } else if (key === "customColor") {
+      xml += `${indent}<setting name="customColor" useNamed="false">rgb(${column.customColor.text.r},${column.customColor.text.g},${column.customColor.text.b})</setting>\n`;
+    } else if (key === "width") {
+      if (column.width) {
+        xml += `${indent}<setting name="width">${column.width}</setting>\n`;
+      }
+    } else if (key === "fonts") {
+      xml += `${indent}<fonts>\n`;
+      xml += generateFontsXml(`${indent}    `, column.fonts);
+      xml += `${indent}</fonts>\n`;
+    } else if (key === "children") {
+      for (let i = 0; i < column.children.length; i++) {
+        xml += `${indent}<column id="${escapeHtmlChars(column.children[i]._id, "attribute")}">\n`;
+        xml += columnInfoTSCToXml(column.children[i], `${indent}    `);
+        xml += `${indent}</column>\n`;
+      }
+    } else if (key === "justification") {
+      assertRulerColumnInfoTSC(column);
+      xml += `${indent}<setting justification="${column.justification}" name="justification"/>\n`;
+    } else if (key === "orientation") {
+      assertZoneColumnInfoTSC(column);
+      xml += `${indent}<setting name="orientation" orientation="${column.orientation}"/>\n`;
+    } else {
+      xml += `${indent}<setting name="${key}">${column[key as keyof ColumnInfoTSC]}</setting>\n`;
     }
   }
   return xml;
 }
-/**
- * main parser
- * a major aspect for the parser is that it can only add fields that were part of the initial input settings
- * for example, if the settings doesn't have "isSelected" fields, it won't add "isSelected" settings in the final xml.
- * only works for the entire settings file (not individual columns)
- * @param settings the initial json object created by TSC using the datapack
- * @param columnSettings json object containing the state of the columns
- * @param chartSettings the chart settings in state such as age
- * @param version the version of the jar file (TimeScale Creator)
- * @returns xml string with the entire settings info
- */
-export function jsonToXml(
-  settingsTSC: ChartInfoTSC,
-  columnSettings: ColumnInfo,
-  chartSettings: ChartSettings,
-  version: string = "PRO8.1"
-): string {
+
+export function jsonToXml(state: ColumnInfo, settings: ChartSettings, version: string = "PRO8.1"): string {
+  let settingsTSC = JSON.parse(JSON.stringify(columnInfoToSettingsTSC(state, settings)));
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
-  if (settingsTSC["settings"]) {
-    xml += '    <settings version="1.0">\n';
-    xml += generateSettingsXml(chartSettings, "        ");
-    xml += "    </settings>\n";
-  }
+  xml += '    <settings version="1.0">\n';
+  xml += generateSettingsXml(settings, "        ");
+  xml += "    </settings>\n";
   xml += '    <column id="class datastore.RootColumn:Chart Root">\n';
-  xml += generateColumnXml(settingsTSC["class datastore.RootColumn:Chart Root"]!, columnSettings, "        ");
+  xml += columnInfoTSCToXml(settingsTSC["class datastore.RootColumn:Chart Root"], "        ");
   xml += "    </column>\n";
   xml += "</TSCreator>\n";
   return xml;
