@@ -55,7 +55,7 @@ export const AccountVerify: React.FC = () => {
         } else {
           actions.removeAllErrors();
           actions.pushSnackbar("Account verified, redirecting...", "success");
-          setMessage("Your account has been verified. Thank you! Redirecting...");
+          setMessage("Your account has been verified. Thank you!");
           setTimeout(() => navigate("/"), 2000);
         }
       } else {
@@ -73,7 +73,7 @@ export const AccountVerify: React.FC = () => {
           case 409:
             actions.removeAllErrors();
             actions.pushSnackbar("Account already verified, redirecting...", "info");
-            setMessage("Your account has already been verified. Thank you! Redirecting...");
+            setMessage("Your account has already been verified. Thank you!");
             setTimeout(() => navigate("/"), 2000);
             break;
           default:
@@ -155,6 +155,8 @@ export const AccountVerify: React.FC = () => {
         {loading && <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />}
         <Typography component="h1" variant="h5" sx={{ mt: 6, textAlign: "center" }}>
           {message}
+          {message.includes("Thank you!") && <br />}
+          {message.includes("Thank you!") && "Redirecting..."}
         </Typography>
         {showResendForm && (
           <Box component="form" onSubmit={handleSubmit}>
