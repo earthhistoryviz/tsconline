@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { Route, Routes, useNavigate } from "react-router-dom";
+import { Route, Routes, useNavigate, useLocation } from "react-router-dom";
 import Toolbar from "@mui/material/Toolbar";
 import { NavBar } from "./NavBar";
 import { Home } from "./Home";
@@ -14,17 +14,19 @@ import { About } from "./About";
 import { Login } from "./Login";
 import { SignUp } from "./SignUp";
 import { AccountRecovery } from "./AccountRecovery";
+import { AccountVerify } from "./AccountVerify";
 import { TSCPopupDialog, TSCError, TSCSnackbar } from "./components";
 import { CssBaseline } from "@mui/material";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
+  const location = useLocation();
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <NavBar />
+        {location.pathname != "/verify" && <NavBar />}
         <Toolbar />
         <Routes>
           <Route path="/" element={<Home />} />
@@ -35,6 +37,7 @@ export default observer(function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/account-recovery" element={<AccountRecovery />} />
+          <Route path="/verify" element={<AccountVerify />} />
         </Routes>
         {Array.from(state.errors.errorAlerts.entries()).map(([context, error], index) => (
           <TSCError

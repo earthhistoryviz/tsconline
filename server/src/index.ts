@@ -5,6 +5,7 @@ import process from "process";
 import { execSync } from "child_process";
 import { deleteDirectory } from "./util.js";
 import * as routes from "./routes.js";
+import * as loginRoutes from "./login-routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
 import fastifyCompress from "@fastify/compress";
 import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
@@ -13,6 +14,9 @@ import { AssetConfig, assertAssetConfig } from "./types.js";
 import { readFile } from "fs/promises";
 import fastifyMultipart from "@fastify/multipart";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
+import fastifySecureSession from "@fastify/secure-session";
+import dotenv from "dotenv";
+import { setupDb } from "./database.js";
 
 const server = fastify({
   logger: false,
@@ -64,6 +68,28 @@ export const mapPackIndex: MapPackIndex = {};
 const patterns = await loadFaciesPatterns();
 await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, assetconfigs.activeDatapacks);
 
+declare module "@fastify/secure-session" {
+  interface SessionData {
+    uuid: string;
+  }
+}
+dotenv.config();
+const sessionKey = process.env.SESSION_KEY
+  ? Buffer.from(process.env.SESSION_KEY, "hex")
+  : "d30a7eae1e37a08d6d5c65ac91dfbc75b54ce34dd29153439979364046cc06ae";
+server.register(fastifySecureSession, {
+  cookieName: "loginSession",
+  key: sessionKey,
+  cookie: {
+    path: "/",
+    httpOnly: true,
+    domain: process.env.NODE_ENV === "production" ? "dev.timescalecreator.org" : "localhost",
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
+  }
+});
+
 server.register(fastifyMultipart, {
   limits: {
     fieldNameSize: 100,
@@ -112,7 +138,7 @@ server.get("/presets", async (_request, reply) => {
   reply.send(presets);
 });
 // uploads datapack
-server.post<{ Params: { username: string } }>("/upload/:username", routes.uploadDatapack);
+server.post("/upload", routes.uploadDatapack);
 
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", routes.fetchSettingsXml);
@@ -142,7 +168,34 @@ server.get("/facies-patterns", (_request, reply) => {
   }
 });
 
-server.get("/user-datapacks/:username", routes.fetchUserDatapacks);
+server.get("/user-datapacks", routes.fetchUserDatapacks);
+
+server.post("/auth/oauth", loginRoutes.googleLogin);
+
+server.post("/auth/login", loginRoutes.login);
+
+server.post("/auth/signup", loginRoutes.signup);
+
+server.post("/auth/session-check", async (request, reply) => {
+  if (request.session.get("uuid")) {
+    reply.send({ authenticated: true });
+  } else {
+    reply.send({ authenticated: false });
+  }
+});
+
+server.post("/auth/logout", async (request, reply) => {
+  request.session.delete();
+  reply.send({ message: "Logged out" });
+});
+
+server.post("/auth/verify", loginRoutes.verifyEmail);
+
+server.post("/auth/resend", loginRoutes.resendVerificationEmail);
+
+server.post("/auth/send-reset-email", loginRoutes.sendResetPasswordEmail);
+
+server.post("/auth/reset-password", loginRoutes.resetPassword);
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
@@ -164,6 +217,7 @@ setInterval(() => {
 }, sunsetInterval);
 // Start the server...
 try {
+  setupDb();
   await server.listen({
     host: "0.0.0.0", // for this to work in Docker, you need 0.0.0.0
     port: +(process.env.port || 3000)
