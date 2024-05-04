@@ -54,7 +54,7 @@ export type ColumnBasicInfoTSC = {
   drawAgeLabel: boolean;
   drawUncertaintyLabel: boolean;
   isSelected: boolean;
-  width: number;
+  width: number | undefined;
   pad: number;
   "age pad": number;
   backgroundColor: {
@@ -251,7 +251,8 @@ export function assertColumnBasicInfoTSC(o: any): asserts o is ColumnBasicInfoTS
   if (typeof o.drawUncertaintyLabel !== "boolean")
     throwError("ColumnInfoTSC", "drawUncertaintlyLabel", "boolean", o.drawUncertaintyLabel);
   if (typeof o.isSelected !== "boolean") throwError("ColumnInfoTSC", "isSelected", "boolean", o.isSelected);
-  if (typeof o.width !== "number") throwError("ColumnInfoTSC", "width", "number", o.width);
+  if (typeof o.width !== "number" && typeof o.width !== "undefined")
+    throwError("ColumnInfoTSC", "width", "number or undefined", o.width);
   if (typeof o.pad !== "number") throwError("ColumnInfoTSC", "pad", "number", o.pad);
   if (typeof o["age pad"] !== "number") throwError("ColumnInfoTSC", "age pad", "number", o["age pad"]);
   if (o.backgroundColor) {
