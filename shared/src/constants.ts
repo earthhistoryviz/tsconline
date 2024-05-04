@@ -191,7 +191,7 @@ export const defaultColumnBasicInfoTSC: ColumnBasicInfoTSC = {
   drawAgeLabel: false,
   drawUncertaintyLabel: false,
   isSelected: true,
-  width: -1,
+  width: undefined,
   pad: 0.2,
   "age pad": 2,
   backgroundColor: {

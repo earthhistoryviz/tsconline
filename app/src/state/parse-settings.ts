@@ -355,7 +355,7 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
   column.isSelected = state.on;
   column.drawTitle = state.enableTitle;
   column.fonts = state.fontsInfo;
-  if (state.width) column.width = state.width;
+  column.width = column.width ? column.width : undefined;
   column.backgroundColor.text.r = state.rgb.r;
   column.backgroundColor.text.g = state.rgb.g;
   column.backgroundColor.text.b = state.rgb.b;
@@ -448,12 +448,18 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
         column.backgroundColor.text.g == 255 &&
         column.backgroundColor.text.b == 255
       ) {
-        xml += `${indent}<setting name="${key}"/>\n`;
+        xml += `${indent}<setting name="backgroundColor"/>\n`;
       } else {
-        xml += `${indent}<setting name="${key}" useNamed="false">rgb(${column.backgroundColor.text.r},${column.backgroundColor.text.g},${column.backgroundColor.text.b})</setting>\n`;
+        xml += `${indent}<setting name="backgroundColor" useNamed="false">rgb(${column.backgroundColor.text.r},${column.backgroundColor.text.g},${column.backgroundColor.text.b})</setting>\n`;
       }
     } else if (key === "customColor") {
-      xml += `${indent}<setting name="${key}" useNamed="false">rgb(${column.customColor.text.r},${column.customColor.text.g},${column.customColor.text.b})</setting>\n`;
+      xml += `${indent}<setting name="customColor" useNamed="false">rgb(${column.customColor.text.r},${column.customColor.text.g},${column.customColor.text.b})</setting>\n`;
+    } else if (key === "width") {
+      if (column.width) {
+        xml += `${indent}<setting name="width">${column.width}</setting>\n`;
+      } else {
+        xml += `${indent}<setting name="width"></setting>\n`;
+      }
     } else if (key === "fonts") {
       xml += `${indent}<fonts>\n`;
       xml += generateFontsXml(`${indent}    `, column.fonts);
