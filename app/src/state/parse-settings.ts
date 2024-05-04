@@ -355,7 +355,7 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
   column.isSelected = state.on;
   column.drawTitle = state.enableTitle;
   column.fonts = state.fontsInfo;
-  column.width = column.width ? column.width : undefined;
+  column.width = column.width;
   column.backgroundColor.text.r = state.rgb.r;
   column.backgroundColor.text.g = state.rgb.g;
   column.backgroundColor.text.b = state.rgb.b;
@@ -457,8 +457,6 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
     } else if (key === "width") {
       if (column.width) {
         xml += `${indent}<setting name="width">${column.width}</setting>\n`;
-      } else {
-        xml += `${indent}<setting name="width"></setting>\n`;
       }
     } else if (key === "fonts") {
       xml += `${indent}<fonts>\n`;
