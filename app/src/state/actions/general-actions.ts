@@ -1,5 +1,14 @@
-import { action, set } from "mobx";
-import { ChartInfoTSC, ChartSettingsInfoTSC, Datapack, DatapackIndex, FontsInfo, MapPackIndex, TimescaleItem, assertDatapackIndex, assertDatapackInfoChunk, assertMapPackInfoChunk } from "@tsconline/shared";
+import { action } from "mobx";
+import {
+  ChartInfoTSC,
+  ChartSettingsInfoTSC,
+  DatapackIndex,
+  FontsInfo,
+  MapPackIndex,
+  TimescaleItem,
+  assertDatapackInfoChunk,
+  assertMapPackInfoChunk
+} from "@tsconline/shared";
 
 import {
   type MapInfo,
@@ -73,11 +82,7 @@ export const fetchDatapackIndex = action("fetchDatapackIndex", async () => {
         if (total == -1) total = index.totalChunks;
         start += increment;
       } catch (e) {
-        displayServerError(
-          index,
-          ErrorCodes.INVALID_DATAPACK_INFO,
-          ErrorMessages[ErrorCodes.INVALID_DATAPACK_INFO]
-        );
+        displayServerError(index, ErrorCodes.INVALID_DATAPACK_INFO, ErrorMessages[ErrorCodes.INVALID_DATAPACK_INFO]);
         return;
       }
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -88,7 +93,7 @@ export const fetchDatapackIndex = action("fetchDatapackIndex", async () => {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
   }
-})
+});
 
 export const fetchMapPackIndex = action("fetchMapPackIndex", async () => {
   let start = 0;
@@ -106,11 +111,7 @@ export const fetchMapPackIndex = action("fetchMapPackIndex", async () => {
         if (total == -1) total = index.totalChunks;
         start += increment;
       } catch (e) {
-        displayServerError(
-          index,
-          ErrorCodes.INVALID_MAPPACK_INFO,
-          ErrorMessages[ErrorCodes.INVALID_MAPPACK_INFO]
-        );
+        displayServerError(index, ErrorCodes.INVALID_MAPPACK_INFO, ErrorMessages[ErrorCodes.INVALID_MAPPACK_INFO]);
         return;
       }
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -228,7 +229,7 @@ export const setMapPackIndex = action("setMapPackIndex", async (mapPackIndex: Ma
     state.mapPackIndex[key] = mapPackIndex[key];
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
-})
+});
 
 export const setDatapackIndex = action("setDatapackIndex", async (datapackIndex: DatapackIndex) => {
   // This is to prevent the UI from lagging
@@ -237,7 +238,7 @@ export const setDatapackIndex = action("setDatapackIndex", async (datapackIndex:
     state.datapackIndex[key] = datapackIndex[key];
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
-})
+});
 
 export const loadIndexResponse = action("loadIndexResponse", async (response: IndexResponse) => {
   setDatapackIndex(response.datapackIndex);
