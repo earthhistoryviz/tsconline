@@ -57,13 +57,21 @@ export const resetSettings = action("resetSettings", () => {
 
 export const fetchDatapackInfo = action("fetchDatapackInfo", async () => {
   try {
+  console.time("fetchDatapackInfo");
+  console.time("serverFetch")
     const response = await fetcher("/datapackinfoindex", {
       method: "GET"
     });
     const indexResponse = await response.json();
+    console.timeEnd("serverFetch")
     try {
+      console.time("assertIndexResponse")
       assertIndexResponse(indexResponse);
+      console.timeEnd("assertIndexResponse")
+      console.time("loadIndexResponse")
       loadIndexResponse(indexResponse);
+      console.timeEnd("loadIndexResponse")
+  console.timeEnd("fetchDatapackInfo");
       console.log("Datapacks loaded");
     } catch (e) {
       displayServerError(
@@ -79,6 +87,7 @@ export const fetchDatapackInfo = action("fetchDatapackInfo", async () => {
 });
 
 export const fetchPresets = action("fetchPresets", async () => {
+  console.time("fetchPresets")
   try {
     const response = await fetcher("/presets");
     const presets = await response.json();
@@ -93,6 +102,7 @@ export const fetchPresets = action("fetchPresets", async () => {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
   }
+  console.timeEnd("fetchPresets")
 });
 
 /**
@@ -148,9 +158,19 @@ export const uploadDatapack = action("uploadDatapack", async (file: File, name: 
     console.error(e);
   }
 });
-export const loadIndexResponse = action("loadIndexResponse", (response: IndexResponse) => {
-  state.mapPackIndex = response.mapPackIndex;
-  state.datapackIndex = response.datapackIndex;
+export const loadIndexResponse = action("loadIndexResponse", async (response: IndexResponse) => {
+  // load in chunks to prevent ui from freezing
+  state.mapPackIndex ={};
+  for (const key in response.mapPackIndex) {
+    state.mapPackIndex[key] = response.mapPackIndex[key];
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  // load in chunks to prevent ui from freezing
+  state.datapackIndex = {};
+  for (const key in response.datapackIndex) {
+    state.datapackIndex[key] = response.datapackIndex[key];
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
 });
 export const fetchTimescaleDataAction = action("fetchTimescaleData", async () => {
   try {
