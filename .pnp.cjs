@@ -2932,7 +2932,7 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./.yarn/__virtual__/@react-oauth-google-virtual-bb7fe96f91/0/cache/@react-oauth-google-npm-0.12.1-3ab30462b7-89d9c2db5b.zip/node_modules/@react-oauth/google/",\
         "packageDependencies": [\
           ["@react-oauth/google", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:0.12.1"],\
-          ["@types/react", "npm:18.2.58"],\
+          ["@types/react", "npm:18.2.73"],\
           ["@types/react-dom", "npm:18.2.1"],\
           ["react", "npm:18.2.0"],\
           ["react-dom", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:18.2.0"]\

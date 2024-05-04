@@ -1,8 +1,8 @@
-import { FontsInfo, assertFontsInfo, throwError } from "./index.js";
+import { FontsInfo, RGB, assertFontsInfo, assertRGB, throwError } from "./index.js";
 
 export type ChartInfoTSC = {
-  settings?: ChartSettingsInfoTSC;
-  "class datastore.RootColumn:Chart Root"?: ColumnInfoTSC;
+  settings: ChartSettingsInfoTSC;
+  "class datastore.RootColumn:Chart Root": ColumnInfoTSC;
 };
 
 export type ChartSettingsInfoTSC = {
@@ -54,18 +54,18 @@ export type ColumnBasicInfoTSC = {
   drawAgeLabel: boolean;
   drawUncertaintyLabel: boolean;
   isSelected: boolean;
-  width: number;
+  width: number | undefined;
   pad: number;
   "age pad": number;
   backgroundColor: {
     standardized?: boolean;
     useNamed?: boolean;
-    text: string;
+    text: RGB;
   };
   customColor: {
     standardized?: boolean;
     useNamed?: boolean;
-    text: string;
+    text: RGB;
   };
   fonts: FontsInfo;
   children: ColumnInfoTSC[];
@@ -73,6 +73,7 @@ export type ColumnBasicInfoTSC = {
 
 export type EventColumnInfoTSC = ColumnBasicInfoTSC & {
   type: string;
+  rangeSort: string;
 };
 
 export type ZoneColumnInfoTSC = ColumnBasicInfoTSC & {
@@ -182,10 +183,13 @@ export function assertZoneColumnInfoTSC(o: any): asserts o is ZoneColumnInfoTSC 
   if (typeof o.autoFlip !== "boolean") throwError("ZoneColumnInfoTSC", "autoFlip", "boolean", o.autoFlip);
   if (o.orientation !== "vertical" && o.orientation !== "normal")
     throwError("ZoneColumnInfoTSC", "orientation", "vertical or normal", o.orientation);
+  assertColumnBasicInfoTSC(o);
 }
 
 export function assertEventColumnInfoTSC(o: any): asserts o is EventColumnInfoTSC {
   if (typeof o.type !== "string") throwError("EventColumnInfoTSC", "type", "string", o.type);
+  if (typeof o.rangeSort !== "string") throwError("EventColumnInfoTSC", "rangeSort", "string", o.type);
+  assertColumnBasicInfoTSC(o);
 }
 export function assertSequenceColumnInfoTSC(o: any): asserts o is SequenceColumnInfoTSC {
   if (typeof o.type !== "string") throwError("SequenceColumnInfoTSC", "type", "string", o.type);
@@ -196,15 +200,18 @@ export function assertSequenceColumnInfoTSC(o: any): asserts o is SequenceColumn
   if (typeof o.graphStyle !== "string") throwError("SequenceColumnInfoTSC", "graphStype", "string", o.graphStyle);
   if (typeof o.drawNameLabel !== "boolean")
     throwError("SequenceColumnInfoTSC", "drawNameLabel", "boolean", o.drawNameLabel);
+  assertColumnBasicInfoTSC(o);
 }
 
 export function assertRangeColumnInfoTSC(o: any): asserts o is RangeColumnInfoTSC {
   if (typeof o.rangeSort !== "string") throwError("RangeColumnInfoTSC", "rangeSort", "string", o.rangeSort);
+  assertColumnBasicInfoTSC(o);
 }
 
 export function assertRulerColumnInfoTSC(o: any): asserts o is RulerColumnInfoTSC {
   if (o.justification !== "left" && o.justification !== "right")
     throwError("RulerColumnInfoTSC", "justification", "left or right", o.justification);
+  assertColumnBasicInfoTSC(o);
 }
 
 export function assertPointColumnInfoTSC(o: any): asserts o is PointColumnInfoTSC {
@@ -233,6 +240,7 @@ export function assertPointColumnInfoTSC(o: any): asserts o is PointColumnInfoTS
   if (typeof o.scaleStep !== "number") throwError("PointColumnInfoTSC", "scaleStep", "number", o.scaleStep);
   if (o.pointType !== "rect" && o.pointType !== "round" && o.pointType !== "tick")
     throwError("ColumnInfoTSC", "pointType", "rect or round or tick", o.pointType);
+  assertColumnBasicInfoTSC(o);
 }
 export function assertColumnBasicInfoTSC(o: any): asserts o is ColumnBasicInfoTSC {
   if (typeof o.title !== "string") throwError("ColumnInfoTSC", "title", "string", o.title);
@@ -243,7 +251,8 @@ export function assertColumnBasicInfoTSC(o: any): asserts o is ColumnBasicInfoTS
   if (typeof o.drawUncertaintyLabel !== "boolean")
     throwError("ColumnInfoTSC", "drawUncertaintlyLabel", "boolean", o.drawUncertaintyLabel);
   if (typeof o.isSelected !== "boolean") throwError("ColumnInfoTSC", "isSelected", "boolean", o.isSelected);
-  if (typeof o.width !== "number") throwError("ColumnInfoTSC", "width", "number", o.width);
+  if (typeof o.width !== "number" && typeof o.width !== "undefined")
+    throwError("ColumnInfoTSC", "width", "number or undefined", o.width);
   if (typeof o.pad !== "number") throwError("ColumnInfoTSC", "pad", "number", o.pad);
   if (typeof o["age pad"] !== "number") throwError("ColumnInfoTSC", "age pad", "number", o["age pad"]);
   if (o.backgroundColor) {
@@ -255,8 +264,7 @@ export function assertColumnBasicInfoTSC(o: any): asserts o is ColumnBasicInfoTS
       if (typeof o.backgroundColor.useNamed !== "boolean")
         throwError("ColumnInfoTSC backgroundColor", "useNamed", "boolean", o.backgroundColor.useNamed);
     }
-    if (typeof o.backgroundColor.text !== "string")
-      throwError("ColumnInfoTSC backgroundColor", "text", "string", o.backgroundColor.text);
+    assertRGB(o.backgroundColor.text);
   } else throw new Error("ColumnInfoTSC must have backgroundColor");
   if (o.customColor) {
     if ("standardized" in o.customColor) {
@@ -267,15 +275,13 @@ export function assertColumnBasicInfoTSC(o: any): asserts o is ColumnBasicInfoTS
       if (typeof o.customColor.useNamed !== "boolean")
         throwError("ColumnInfoTSC customColor", "useNamed", "boolean", o.customColor.standardized);
     }
-    if (typeof o.customColor.text !== "string")
-      throwError("ColumnInfoTSC customColor", "text", "string", o.customColor.standardized);
+    assertRGB(o.customColor.text);
   } else throw new Error("ColumnInfoTSC must have customColor");
   assertFontsInfo(o.fonts);
 }
 
 export function assertColumnInfoTSC(o: any): asserts o is ColumnInfoTSC {
   if (!o || typeof o !== "object") throw new Error("ColumnInfoTSC must be a non-null object");
-  assertColumnBasicInfoTSC(o);
   if (typeof o._id !== "string") {
     throwError("ColumnInfoTSC", "_id", "string", o._id);
   } else {
@@ -308,9 +314,12 @@ export function assertColumnInfoTSC(o: any): asserts o is ColumnInfoTSC {
       case "FreehandColumn":
       case "TransectColumn":
       case "RootColumn":
+      case "BlankColumn":
+        assertColumnBasicInfoTSC(o);
         break;
       default:
         console.log("Warning: unknown column type", columnType);
+        assertColumnBasicInfoTSC(o);
     }
   }
   if ("children" in o) {
