@@ -342,6 +342,10 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
     case "Point":
       column = JSON.parse(JSON.stringify(defaultPointColumnInfoTSC));
   }
+  //strip surrounding quotations for id (ex. Belgium Datapack)
+  if (state.name.charAt(0) === '"' && state.name.charAt(state.name.length - 1) === '"') {
+    state.name = state.name.slice(1, -1);
+  }
   switch (state.columnDisplayType) {
     case "RootColumn":
     case "MetaColumn":

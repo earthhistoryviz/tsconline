@@ -421,7 +421,8 @@ export const setDatapackConfig = action(
     }
     resetSettings();
     //TODO: apply presets, temp code for applying just the chart settings
-    if (chartSettings) {
+    //check if chart settings is populated
+    if (Object.keys(chartSettings).length !== 0) {
       setChartSettings(chartSettings.settings);
     }
     state.settings.datapackContainsSuggAge = foundDefaultAge;
