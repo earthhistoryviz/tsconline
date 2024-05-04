@@ -187,18 +187,26 @@ export const defaultColumnBasicInfoTSC: ColumnBasicInfoTSC = {
   title: "",
   useNamedColor: false,
   placeHolder: false,
-  drawTitle: false,
+  drawTitle: true,
   drawAgeLabel: false,
   drawUncertaintyLabel: false,
-  isSelected: false,
-  width: 0,
-  pad: 0,
-  "age pad": 0,
+  isSelected: true,
+  width: undefined,
+  pad: 0.2,
+  "age pad": 2,
   backgroundColor: {
-    text: ""
+    text: {
+      r: 255,
+      g: 255,
+      b: 255
+    }
   },
   customColor: {
-    text: ""
+    text: {
+      r: 255,
+      g: 255,
+      b: 255
+    }
   },
   fonts: defaultFontsInfoConstant,
   children: []
@@ -206,7 +214,10 @@ export const defaultColumnBasicInfoTSC: ColumnBasicInfoTSC = {
 
 export const defaultEventColumnInfoTSC: EventColumnInfoTSC = {
   ...defaultColumnBasicInfoTSC,
-  type: ""
+  width: 150,
+  isSelected: false,
+  type: "events",
+  rangeSort: "first occurrence"
 };
 
 export const defaultZoneColumnInfoTSC: ZoneColumnInfoTSC = {
@@ -230,7 +241,7 @@ export const defaultSequenceColumnInfoTSC: SequenceColumnInfoTSC = {
 
 export const defaultRangeColumnInfoTSC: RangeColumnInfoTSC = {
   ...defaultColumnBasicInfoTSC,
-  rangeSort: ""
+  rangeSort: "first occurence"
 };
 
 export const defaultRulerColumnInfoTSC: RulerColumnInfoTSC = {
