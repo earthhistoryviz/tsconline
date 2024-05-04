@@ -240,7 +240,7 @@ export const setDatapackConfig = action(
     let mapInfo: MapInfo = {};
     let mapHierarchy: MapHierarchy = {};
     let columnInfo: ColumnInfo;
-    let chartSettings: ChartInfoTSC = {};
+    let chartSettings: ChartInfoTSC = <ChartInfoTSC>{};
     try {
       if (settingsPath && settingsPath.length > 0) {
         await fetchSettingsXML(settingsPath)
@@ -329,20 +329,20 @@ export const setDatapackConfig = action(
       return false;
     }
     resetSettings();
+    //TODO: apply presets, temp code for applying just the chart settings
+    if (chartSettings) {
+      setChartSettings(chartSettings.settings);
+    }
     state.settings.datapackContainsSuggAge = datapackAgeInfo.datapackContainsSuggAge;
     state.mapState.mapHierarchy = mapHierarchy;
     state.settingsTabs.columns = columnInfo;
     state.mapState.mapInfo = mapInfo;
     state.config.datapacks = datapacks;
-    state.settingsTSC = chartSettings;
     // this is for app start up or when all datapacks are removed
     if (datapacks.length === 0) {
       state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
     }
     initializeColumnHashMap(columnInfo);
-    if (state.settingsTSC.settings) {
-      setChartSettings(state.settingsTSC.settings);
-    }
     return true;
   }
 );
@@ -424,7 +424,6 @@ export const resetState = action("resetState", () => {
   setMapInfo({});
   state.settingsTabs.columnSelected = null;
   state.settingsXML = "";
-  state.settingsTSC = {};
 });
 
 export const loadPresets = action("loadPresets", (presets: Presets) => {
