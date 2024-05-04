@@ -10,6 +10,15 @@ export type SuccessfulServerResponse = {
   message: string;
 };
 
+export type DatapackInfoChunk = {
+  datapackIndex: DatapackIndex;
+  totalChunks: number;
+}
+export type MapPackInfoChunk = {
+  mapPackIndex: MapPackIndex;
+  totalChunks: number;
+}
+
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 
 export type DatapackParsingPack = {
@@ -400,6 +409,18 @@ export function assertTransect(o: any): asserts o is Transect {
   for (const subTransect of o.subTransectInfo) {
     assertSubTransectInfo(subTransect);
   }
+}
+
+export function assertMapPackInfoChunk(o: any): asserts o is MapPackInfoChunk {
+  if (!o || typeof o !== "object") throw new Error("MapPackInfoChunk must be a non-null object");
+  if (typeof o.totalChunks !== "number") throwError("MapPackInfoChunk", "totalChunks", "number", o.totalChunks);
+  assertMapPackIndex(o.mapPackIndex);
+}
+
+export function assertDatapackInfoChunk(o: any): asserts o is DatapackInfoChunk {
+  if (!o || typeof o !== "object") throw new Error("DatapackInfoChunk must be a non-null object");
+  if (typeof o.totalChunks !== "number") throwError("DatapackInfoChunk", "totalChunks", "number", o.totalChunks);
+  assertDatapackIndex(o.datapackIndex);
 }
 
 export function assertSubFreehandInfo(o: any): asserts o is SubFreehandInfo {
