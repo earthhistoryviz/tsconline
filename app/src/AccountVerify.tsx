@@ -153,7 +153,7 @@ export const AccountVerify: React.FC = () => {
           <LockOutlinedIcon sx={{ color: theme.palette.selection.main }} />
         </Avatar>
         {loading && <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />}
-        <Typography component="h1" variant="h5" sx={{ mt: 1, textAlign: "center" }}>
+        <Typography component="h1" variant="h5" sx={{ mt: 6, textAlign: "center" }}>
           {message}
         </Typography>
         {showResendForm && (
@@ -169,12 +169,16 @@ export const AccountVerify: React.FC = () => {
               autoComplete="username"
               autoFocus
             />
-            <TSCButton fullWidth type="submit" startIcon={<SendIcon />}>
+            <TSCButton fullWidth type="submit" startIcon={<SendIcon />} sx={{ mt: 6 }}>
               Send Verification Email
             </TSCButton>
           </Box>
         )}
-        <TSCButton fullWidth sx={{ mt: 1 }} startIcon={<HomeIcon />} onClick={() => navigate("/")}>
+        <TSCButton
+          fullWidth
+          sx={showResendForm ? { mt: 1 } : { mt: 6 }}
+          startIcon={<HomeIcon />}
+          onClick={() => navigate("/")}>
           Return to Home
         </TSCButton>
       </Box>

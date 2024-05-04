@@ -14,6 +14,9 @@ import { OAuth2Client } from "google-auth-library";
 import { Email, assertEmail, NewUser, NewVerification } from "./types.js";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import md5 from "md5";
+
+const emailTestRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 dotenv.config();
 const transporter = nodemailer.createTransport({
@@ -81,7 +84,7 @@ export const sendResetPasswordEmail = async function sendResetPasswordEmail(
   reply: FastifyReply
 ) {
   const email = request.body.email;
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!email || !emailTestRegex.test(email)) {
     reply.status(400).send({ error: "Invalid form" });
     return;
   }
@@ -95,7 +98,7 @@ export const sendResetPasswordEmail = async function sendResetPasswordEmail(
       reply.send({ message: "Email sent" });
       return;
     }
-    const { userId, hashedPassword, emailVerified } = userRow;
+    const { userId, hashedPassword, emailVerified, uuid } = userRow;
     if (!emailVerified) {
       reply.send({ message: "Email sent" });
       return;
@@ -105,7 +108,7 @@ export const sendResetPasswordEmail = async function sendResetPasswordEmail(
       emailText =
         "You have requested a password reset but there is no password set for this account. Please sign in with Google.";
     } else {
-      const token = randomBytes(16).toString("hex");
+      const token = randomBytes(16).toString("hex") + md5(uuid);
       emailText = `Click on the following link to reset your password: ${process.env.APP_URL || "http://localhost:5173"}/account-recovery?token=${token}`;
       const expiresAt = new Date();
       expiresAt.setMinutes(expiresAt.getMinutes() + 15);
@@ -137,7 +140,7 @@ export const resendVerificationEmail = async function resendVerificationEmail(
   reply: FastifyReply
 ) {
   const email = request.body.email;
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!email || !emailTestRegex.test(email)) {
     reply.status(400).send({ error: "Invalid form" });
     return;
   }
@@ -153,12 +156,12 @@ export const resendVerificationEmail = async function resendVerificationEmail(
     }
     let emailText = "";
     let token = "";
-    const { userId, emailVerified } = userRow;
+    const { userId, emailVerified, uuid } = userRow;
     if (emailVerified) {
       emailText =
         "Welcome back to TSC Online! Your email is already verified. If you did not request this email, please ignore it.";
     } else {
-      token = randomBytes(16).toString("hex");
+      token = randomBytes(16).toString("hex") + md5(uuid);
       emailText = `Welcome to TSC Online! Please verify your email by clicking on the following link: ${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`;
       await deleteVerification({ userId: userId });
       const expiresAt = new Date();
@@ -214,7 +217,6 @@ export const verifyEmail = async function verifyEmail(
       return;
     }
     await updateUser({ userId }, { emailVerified: 1 });
-    await deleteVerification({ token });
     request.session.set("uuid", uuid);
     reply.send({ message: "Email verified" });
   } catch (error) {
@@ -228,7 +230,7 @@ export const signup = async function signup(
   reply: FastifyReply
 ) {
   const { username, password, email } = request.body;
-  if (!username || !password || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!username || !password || !email || !emailTestRegex.test(email)) {
     reply.status(400).send({ error: "Invalid form" });
     return;
   }
@@ -260,8 +262,8 @@ export const signup = async function signup(
     if (!insertedUser) {
       throw new Error("User not inserted");
     }
-    const { userId } = insertedUser;
-    const token = randomBytes(16).toString("hex");
+    const { userId, uuid } = insertedUser;
+    const token = randomBytes(16).toString("hex") + md5(uuid);
     const authEmail: Email = {
       from: process.env.EMAIL_USER,
       to: email,
@@ -278,7 +280,7 @@ export const signup = async function signup(
     };
     await createVerification(newVerification);
     sendEmail(authEmail);
-    reply.send({ message: "Email sent   " });
+    reply.send({ message: "Email sent" });
   } catch (error) {
     console.error("Error during signup:", error);
     reply.status(500).send({ error: "Unknown Error" });
