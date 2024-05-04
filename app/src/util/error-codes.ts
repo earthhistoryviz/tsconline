@@ -22,6 +22,7 @@ export enum ErrorCodes {
   NO_DATAPACKS_SELECTED = "NO_DATAPACKS_SELECTED",
   NO_COLUMNS_SELECTED = "NO_COLUMNS_SELECTED",
   UNIT_RANGE_EMPTY = "UNIT_RANGE_EMPTY",
+  INVALID_MAPPACK_INFO = "INVALID_MAPPACK_INFO",
   UNABLE_TO_LOGIN_SERVER = "UNABLE_TO_LOGIN_SERVER",
   UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD = "UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD",
   UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL = "UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL",
@@ -63,6 +64,8 @@ export const ErrorMessages = {
   [ErrorCodes.DATAPACK_ALREADY_EXISTS]: "Datapack already exists. Please upload a new datapack file.",
   [ErrorCodes.NO_DATAPACKS_SELECTED]: "No datapacks selected. Please select at least one datapack to generate.",
   [ErrorCodes.NO_COLUMNS_SELECTED]: "No columns selected. Please select at least one column to generate.",
+  [ErrorCodes.UNIT_RANGE_EMPTY]: "Unit range is empty. Please enter a valid unit range.",
+  [ErrorCodes.INVALID_MAPPACK_INFO]: "Invalid mappack info received from server. Please try again later."
   [ErrorCodes.UNIT_RANGE_EMPTY]: "Unit range is empty. Please enter a valid unit range.",
   [ErrorCodes.UNABLE_TO_LOGIN_SERVER]: "Unable to login due to server error. Please try again later.",
   [ErrorCodes.UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL]: "Unable to login with Google credentials. Please try again.",

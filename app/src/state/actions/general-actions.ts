@@ -1,5 +1,5 @@
-import { action } from "mobx";
-import { ChartInfoTSC, ChartSettingsInfoTSC, FontsInfo, TimescaleItem } from "@tsconline/shared";
+import { action, set } from "mobx";
+import { ChartInfoTSC, ChartSettingsInfoTSC, Datapack, DatapackIndex, FontsInfo, MapPackIndex, TimescaleItem, assertDatapackIndex, assertDatapackInfoChunk, assertMapPackInfoChunk } from "@tsconline/shared";
 
 import {
   type MapInfo,
@@ -28,6 +28,8 @@ import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { equalChartSettings, equalConfig } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
 
+const increment = 1;
+
 export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   try {
     const response = await fetcher("/facies-patterns");
@@ -55,24 +57,86 @@ export const resetSettings = action("resetSettings", () => {
   state.settings = JSON.parse(JSON.stringify(settings));
 });
 
-export const fetchDatapackInfo = action("fetchDatapackInfo", async () => {
+export const fetchDatapackIndex = action("fetchDatapackIndex", async () => {
+  let start = 0;
+  let total = -1;
+  const datapackIndex: DatapackIndex = {};
   try {
-  console.time("fetchDatapackInfo");
-  console.time("serverFetch")
+    while (total == -1 || start < total) {
+      const response = await fetcher(`/datapack-index?start=${start}&increment=${increment}`, {
+        method: "GET"
+      });
+      const index = await response.json();
+      try {
+        assertDatapackInfoChunk(index);
+        Object.assign(datapackIndex, index.datapackIndex);
+        if (total == -1) total = index.totalChunks;
+        start += increment;
+      } catch (e) {
+        displayServerError(
+          index,
+          ErrorCodes.INVALID_DATAPACK_INFO,
+          ErrorMessages[ErrorCodes.INVALID_DATAPACK_INFO]
+        );
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    setDatapackIndex(datapackIndex);
+    console.log("Datapacks loaded");
+  } catch (e) {
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
+  }
+})
+
+export const fetchMapPackIndex = action("fetchMapPackIndex", async () => {
+  let start = 0;
+  let total = -1;
+  const mapPackIndex: MapPackIndex = {};
+  try {
+    while (total == -1 || start < total) {
+      const response = await fetcher(`/map-pack-index?start=${start}&increment=${increment}`, {
+        method: "GET"
+      });
+      const index = await response.json();
+      try {
+        assertMapPackInfoChunk(index);
+        Object.assign(mapPackIndex, index.mapPackIndex);
+        if (total == -1) total = index.totalChunks;
+        start += increment;
+      } catch (e) {
+        displayServerError(
+          index,
+          ErrorCodes.INVALID_MAPPACK_INFO,
+          ErrorMessages[ErrorCodes.INVALID_MAPPACK_INFO]
+        );
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    setMapPackIndex(mapPackIndex);
+    console.log("MapPacks loaded");
+  } catch (e) {
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
+  }
+});
+
+/**
+ * This is not used to prioritize chunk loading to prevent ui lag
+ * however, this will technichally load faster with the current datapacks 5/4/2024
+ */
+export const fetchAllIndexes = action("fetchAllIndexes", async () => {
+  try {
     const response = await fetcher("/datapackinfoindex", {
       method: "GET"
     });
     const indexResponse = await response.json();
-    console.timeEnd("serverFetch")
     try {
-      console.time("assertIndexResponse")
       assertIndexResponse(indexResponse);
-      console.timeEnd("assertIndexResponse")
-      console.time("loadIndexResponse")
       loadIndexResponse(indexResponse);
-      console.timeEnd("loadIndexResponse")
-  console.timeEnd("fetchDatapackInfo");
-      console.log("Datapacks loaded");
+      console.log("Indexes loaded");
     } catch (e) {
       displayServerError(
         indexResponse,
@@ -87,7 +151,6 @@ export const fetchDatapackInfo = action("fetchDatapackInfo", async () => {
 });
 
 export const fetchPresets = action("fetchPresets", async () => {
-  console.time("fetchPresets")
   try {
     const response = await fetcher("/presets");
     const presets = await response.json();
@@ -102,7 +165,6 @@ export const fetchPresets = action("fetchPresets", async () => {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
   }
-  console.timeEnd("fetchPresets")
 });
 
 /**
@@ -158,19 +220,28 @@ export const uploadDatapack = action("uploadDatapack", async (file: File, name: 
     console.error(e);
   }
 });
-export const loadIndexResponse = action("loadIndexResponse", async (response: IndexResponse) => {
-  // load in chunks to prevent ui from freezing
-  state.mapPackIndex ={};
-  for (const key in response.mapPackIndex) {
-    state.mapPackIndex[key] = response.mapPackIndex[key];
+
+export const setMapPackIndex = action("setMapPackIndex", async (mapPackIndex: MapPackIndex) => {
+  // This is to prevent the UI from lagging
+  state.mapPackIndex = {};
+  for (const key in mapPackIndex) {
+    state.mapPackIndex[key] = mapPackIndex[key];
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
-  // load in chunks to prevent ui from freezing
+})
+
+export const setDatapackIndex = action("setDatapackIndex", async (datapackIndex: DatapackIndex) => {
+  // This is to prevent the UI from lagging
   state.datapackIndex = {};
-  for (const key in response.datapackIndex) {
-    state.datapackIndex[key] = response.datapackIndex[key];
+  for (const key in datapackIndex) {
+    state.datapackIndex[key] = datapackIndex[key];
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
+})
+
+export const loadIndexResponse = action("loadIndexResponse", async (response: IndexResponse) => {
+  setDatapackIndex(response.datapackIndex);
+  setMapPackIndex(response.mapPackIndex);
 });
 export const fetchTimescaleDataAction = action("fetchTimescaleData", async () => {
   try {
