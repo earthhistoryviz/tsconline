@@ -412,9 +412,6 @@
         "units": "Ma",
         "columnDisplayType": "RootColumn"
       },
-      "datapackAgeInfo": {
-        "datapackContainsSuggAge": false
-      },
       "ageUnits": "Ma",
       "defaultChronostrat": "UNESCO",
       "formatVersion": 1.5
@@ -1123,11 +1120,8 @@
         "units": "Ma",
         "columnDisplayType": "RootColumn"
       },
-      "datapackAgeInfo": {
-        "datapackContainsSuggAge": true,
-        "topAge": 0,
-        "bottomAge": 5
-      },
+      "topAge": 0,
+      "baseAge": 5,
       "ageUnits": "Ma",
       "defaultChronostrat": "USGS",
       "formatVersion": 1,
@@ -2006,9 +2000,6 @@
               "maxAge": -99999,
               "units": "Ma",
               "columnDisplayType": "RootColumn"
-            },
-            "datapackAgeInfo": {
-              "datapackContainsSuggAge": false
             },
             "ageUnits": "Ma",
             "defaultChronostrat": "UNESCO",
