@@ -48,15 +48,20 @@ export const AccountRecovery: React.FC = observer(() => {
       });
       if (response.ok) {
         actions.removeAllErrors();
-        actions.pushSnackbar("If your account is verified, you will have received an email.", "success");
+        actions.pushSnackbar("If your account is verified, you will receive an email.", "success");
+        setTimeout(() => navigate("/login"), 2000);
       } else {
-        displayServerError(
-          await response.json(),
-          ErrorCodes.UNABLE_TO_SEND_EMAIL,
-          ErrorMessages[ErrorCodes.UNABLE_TO_SEND_EMAIL]
-        );
+        let errorCode = ErrorCodes.UNABLE_TO_SEND_EMAIL;
+        switch (response.status) {
+          case 400:
+            errorCode = ErrorCodes.INVALID_FORM;
+            break;
+        }
+        setShowResendForm(true);
+        displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
       }
     } catch {
+      setShowResendForm(true);
       displayServerError(null, ErrorCodes.UNABLE_TO_SEND_EMAIL, ErrorMessages[ErrorCodes.UNABLE_TO_SEND_EMAIL]);
     } finally {
       setLoading(false);
@@ -103,9 +108,6 @@ export const AccountRecovery: React.FC = observer(() => {
             errorCode = ErrorCodes.INVALID_FORM;
             break;
           case 401:
-            errorCode = ErrorCodes.TOKEN_EXPIRED_OR_INVALID;
-            setShowResendForm(true);
-            break;
           case 404:
             errorCode = ErrorCodes.TOKEN_EXPIRED_OR_INVALID;
             setShowResendForm(true);
