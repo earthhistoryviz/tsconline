@@ -85,7 +85,8 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   try {
     const response = await fetcher(`/charts/${state.useCache}/${state.settings.useDatapackSuggestedAge}/username`, {
       method: "POST",
-      body
+      body,
+      credentials: "include"
     });
     const answer = await response.json();
     // will check if svg is loaded

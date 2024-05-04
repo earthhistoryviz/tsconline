@@ -69,9 +69,7 @@ export const NavBar = observer(function Navbar() {
             value={5}
             label="Sign out"
             icon={<AccountCircleIcon />}
-            onClick={() => {
-              actions.logout();
-            }}
+            onClick={() => actions.logout()}
             sx={{
               color: theme.palette.primary.main,
               "&:hover": {
