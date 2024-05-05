@@ -76,7 +76,7 @@ declare module "@fastify/secure-session" {
 dotenv.config();
 const sessionKey = process.env.SESSION_KEY
   ? Buffer.from(process.env.SESSION_KEY, "hex")
-  : "d30a7eae1e37a08d6d5c65ac91dfbc75b54ce34dd29153439979364046cc06ae";
+  : Buffer.from("d30a7eae1e37a08d6d5c65ac91dfbc75b54ce34dd29153439979364046cc06ae", "hex");
 server.register(fastifySecureSession, {
   cookieName: "loginSession",
   key: sessionKey,
