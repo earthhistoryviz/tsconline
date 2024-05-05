@@ -91,7 +91,6 @@ export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
   reply.status(200).send(mapPackInfoChunk);
 };
 
-
 export const fetchUserDatapacks = async function fetchUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
   const uuid = request.session.get("uuid");
   if (!uuid) {

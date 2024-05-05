@@ -643,12 +643,6 @@ async function fetchSVGStatus(): Promise<boolean> {
   return data.ready;
 }
 
-export const setMapPackIndex = action("setMapPackIndex", (mapPackIndex: State["mapPackIndex"]) => {
-  state.mapPackIndex = mapPackIndex;
-});
-export const setDatapackIndex = action("setDatapackIndex", (datapackIndex: State["datapackIndex"]) => {
-  state.datapackIndex = datapackIndex;
-});
 export const removeAllErrors = action("removeAllErrors", () => {
   state.errors.errorAlerts.clear();
 });
