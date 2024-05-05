@@ -51,7 +51,7 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
     }
     chunk[key] = serverDatapackindex[key]!;
   }
-  if (!chunk) {
+  if (Object.keys(chunk).length === 0) {
     reply.status(404).send({ error: "No datapacks found" });
     return;
   }
@@ -83,7 +83,7 @@ export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
     }
     chunk[key] = serverMapPackIndex[key]!;
   }
-  if (!chunk) {
+  if (Object.keys(chunk).length === 0) {
     reply.status(404).send({ error: "No map packs found" });
     return;
   }
