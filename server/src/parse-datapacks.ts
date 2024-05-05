@@ -2,7 +2,6 @@ import { createReadStream } from "fs";
 import {
   ColumnInfo,
   Facies,
-  DatapackAgeInfo,
   DatapackParsingPack,
   SubBlockInfo,
   Block,
@@ -41,7 +40,8 @@ import {
   ColumnInfoTypeMap,
   ColumnInfoType,
   assertSubInfo,
-  SubInfo
+  SubInfo,
+  assertDatapackParsingPack
 } from "@tsconline/shared";
 import { trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter } from "./util.js";
 import { createInterface } from "readline";
@@ -65,7 +65,6 @@ type FaciesFoundAndAgeRange = {
 };
 /**
  * parses the METACOLUMN and info of the children string
- * TODO: add TITLEOFF
  * @param array the children string to parse
  * @returns the correctly parsed children string array
  */
@@ -110,8 +109,6 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
  * Main Function...
  * Get columns based on a decrypt_filepath that leads to the decrypted directory
  * and an amount of files in a string array that should pop up in that decrypted directory
- * Have not checked edge cases in which a file doesn't show up, will only return any that are correct.
- * Maybe add functionality in the future to check if all the files exist
  * @param decryptFilePath the decryption folder location
  * @param files the files to be parsed
  * @returns
@@ -123,7 +120,6 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
   const columnInfoArray: ColumnInfo[] = [];
   const isChild: Set<string> = new Set();
   const allEntries: Map<string, ParsedColumnEntry> = new Map();
-  const datapackAgeInfo: DatapackAgeInfo = { datapackContainsSuggAge: false };
   const faciesMap: Map<string, Facies> = new Map();
   const blocksMap: Map<string, Block> = new Map();
   const eventMap: Map<string, Event> = new Map();
@@ -141,13 +137,29 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     maxAge: -99999,
     fontOptions: ["Column Header"]
   };
+  let topAge: number | null = null;
+  let baseAge: number | null = null;
   let chartTitle = "Chart Title";
   let ageUnits = "Ma";
+  let defaultChronostrat = "UNESCO";
+  let date: string | null = null;
+  let verticalScale: number | null = null;
+  let formatVersion = 1.5;
   try {
     for (const decryptPath of decryptPaths) {
-      const { units, title } = await getAllEntries(decryptPath, allEntries, isChild, datapackAgeInfo);
-      ageUnits = units;
+      const { units, title, chronostrat, datapackDate, vertScale, version, top, base } = await getAllEntries(
+        decryptPath,
+        allEntries,
+        isChild
+      );
+      topAge = top;
+      baseAge = base;
       chartTitle = title;
+      defaultChronostrat = chronostrat;
+      ageUnits = units;
+      if (datapackDate) date = datapackDate;
+      if (vertScale) verticalScale = vertScale;
+      if (version) formatVersion = version;
       const allParsedEntries = Array.from(allEntries.keys()).concat(Array.from(isChild));
       await getColumnTypes(
         decryptPath,
@@ -251,7 +263,13 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     units: ageUnits,
     columnDisplayType: "RootColumn"
   };
-  return { columnInfo: chartColumn, datapackAgeInfo, ageUnits };
+  const datapackParsingPack = { columnInfo: chartColumn, ageUnits, defaultChronostrat, formatVersion };
+  assertDatapackParsingPack(datapackParsingPack);
+  if (date) datapackParsingPack.date = date;
+  if (topAge || topAge === 0) datapackParsingPack.topAge = topAge;
+  if (baseAge || baseAge === 0) datapackParsingPack.baseAge = baseAge;
+  if (verticalScale) datapackParsingPack.verticalScale = verticalScale;
+  return datapackParsingPack;
 }
 /**
  * This will populate a mapping of all parents : childen[]
@@ -265,49 +283,64 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
 export async function getAllEntries(
   filename: string,
   allEntries: Map<string, ParsedColumnEntry>,
-  isChild: Set<string>,
-  datapackAgeInfo: DatapackAgeInfo
+  isChild: Set<string>
 ) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
-  let topAge: number | null = null;
-  let bottomAge: number | null = null;
+  let top: number | null = null;
+  let base: number | null = null;
+  let date: string | null = null;
   let ageUnits: string = "Ma";
   let chartTitle: string = "Chart Title";
+  let defaultChronostrat = "UNESCO";
+  let formatVersion = 1.5;
+  let vertScale: number | null = null;
   for await (const line of readline) {
     if (!line) continue;
-    if (line.includes("SetTop") || line.includes("SetBase")) {
-      const parts = line.split(":");
-      if (parts.length >= 2) {
-        const key = parts[0] ? parts[0].trim() : null;
-        const value = parts[1] ? parseInt(parts[1].trim(), 10) : NaN;
-        if (!isNaN(value)) {
-          if (key === "SetTop") {
-            topAge = value;
-          } else if (key === "SetBase") {
-            bottomAge = value;
+    // grab any datapack properties
+    const split = line.split("\t");
+    let value = split[1];
+    if (value) {
+      switch (split[0]) {
+        case "SetTop:":
+          if (!isNaN(Number(value.trim()))) top = Number(value);
+          break;
+        case "SetBase:":
+          if (!isNaN(Number(value.trim()))) base = Number(value);
+          break;
+        case "chart title:":
+          chartTitle = value.trim();
+          break;
+        case "age units:":
+          ageUnits = value.trim();
+          break;
+        case "default chronostrat:":
+          if (!/^(USGS|UNESCO)$/.test(value.trim())) {
+            console.error(
+              "Default chronostrat value in datapack is neither USGS nor UNESCO, setting to default UNESCO"
+            );
+            break;
           }
-        }
-      }
-    }
-    if (line.includes("chart title")) {
-      const parts = line.split("\t");
-      if (parts.length == 2) {
-        const key = parts[0] ? parts[0].trim() : null;
-        const value = parts[1] ? parts[1].trim() : null;
-        if (key === "chart title:" && value) {
-          chartTitle = value;
-        }
-      }
-    }
-    if (line.includes("age units")) {
-      const parts = line.split("\t");
-      if (parts.length == 2) {
-        const key = parts[0] ? parts[0].trim() : null;
-        const value = parts[1] ? parts[1].trim() : null;
-        if (key === "age units:" && value) {
-          ageUnits = value;
-        }
+          defaultChronostrat = value.trim();
+          break;
+        case "date:":
+          if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) value = value.split("/").reverse().join("-");
+          date = new Date(value).toISOString().split("T")[0] || null;
+          break;
+        case "format version:":
+          formatVersion = Number(value.trim());
+          if (isNaN(formatVersion)) {
+            console.error("Format version is not a number, setting to default 1.5");
+            formatVersion = 1.5;
+          }
+          break;
+        case "SetScale:":
+          vertScale = Number(value);
+          if (isNaN(vertScale)) {
+            console.error("Vertical scale is not a number, setting to default null");
+            vertScale = null;
+          }
+          break;
       }
     }
     if (!line.includes("\t:\t")) {
@@ -333,13 +366,16 @@ export async function getAllEntries(
     }
     allEntries.set(parent, parsedChildren);
   }
-  //set the age info if it exists
-  datapackAgeInfo.datapackContainsSuggAge = topAge != null && bottomAge != null;
-  if (topAge != null && bottomAge != null) {
-    datapackAgeInfo.topAge = topAge;
-    datapackAgeInfo.bottomAge = bottomAge;
-  }
-  return { title: chartTitle, units: ageUnits };
+  return {
+    title: chartTitle,
+    units: ageUnits,
+    top,
+    base,
+    chronostrat: defaultChronostrat,
+    datapackDate: date,
+    vertScale,
+    version: formatVersion
+  };
 }
 /**
  * This function will populate the maps with the parsed entries in the filename

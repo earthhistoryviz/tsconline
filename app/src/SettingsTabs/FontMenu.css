@@ -81,6 +81,10 @@
   margin-right: 10px;
 }
 
+#LeafColumnGridContainer {
+  width: auto;
+}
+
 #FontFaceForm {
   width: 150px;
   margin-right: 10px;

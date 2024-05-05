@@ -3,7 +3,9 @@ import { exec } from "child_process";
 import { writeFile, stat, readFile, access } from "fs/promises";
 import {
   DatapackIndex,
+  DatapackInfoChunk,
   MapPackIndex,
+  MapPackInfoChunk,
   TimescaleItem,
   assertChartRequest,
   assertDatapackIndex,
@@ -24,6 +26,70 @@ import { loadIndexes } from "./load-packs.js";
 import { writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
+
+export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
+  request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
+  reply: FastifyReply
+) {
+  const { start = 0, increment = 1 } = request.query;
+  const startIndex = Number(start);
+  let incrementValue = Number(increment);
+  const allDatapackKeys = Object.keys(serverDatapackindex);
+  if (isNaN(Number(startIndex)) || isNaN(Number(incrementValue)) || startIndex < 0 || incrementValue <= 0) {
+    reply.status(400).send({ error: "Invalid range" });
+    return;
+  }
+  if (startIndex + incrementValue > allDatapackKeys.length) {
+    incrementValue = allDatapackKeys.length - startIndex;
+  }
+  const keys = allDatapackKeys.slice(startIndex, startIndex + incrementValue);
+  const chunk: DatapackIndex = {};
+  for (const key of keys) {
+    if (!serverDatapackindex[key]) {
+      reply.status(500).send({ error: "Failed to load datapack" });
+      return;
+    }
+    chunk[key] = serverDatapackindex[key]!;
+  }
+  if (Object.keys(chunk).length === 0) {
+    reply.status(404).send({ error: "No datapacks found" });
+    return;
+  }
+  const datapackInfoChunk: DatapackInfoChunk = { datapackIndex: chunk!, totalChunks: allDatapackKeys.length };
+  reply.status(200).send(datapackInfoChunk);
+};
+
+export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
+  request: FastifyRequest<{ Querystring: { start?: number; increment?: number } }>,
+  reply: FastifyReply
+) {
+  const { start = 0, increment = 1 } = request.query;
+  const startIndex = Number(start);
+  let incrementValue = Number(increment);
+  const allMapPackKeys = Object.keys(serverMapPackIndex);
+  if (isNaN(Number(startIndex)) || isNaN(Number(incrementValue)) || startIndex < 0 || incrementValue <= 0) {
+    reply.status(400).send({ error: "Invalid range" });
+    return;
+  }
+  if (startIndex + incrementValue > allMapPackKeys.length) {
+    incrementValue = allMapPackKeys.length - startIndex;
+  }
+  const keys = allMapPackKeys.slice(startIndex, startIndex + incrementValue);
+  const chunk: MapPackIndex = {};
+  for (const key of keys) {
+    if (!serverMapPackIndex[key]) {
+      reply.status(500).send({ error: "Failed to load map pack" });
+      return;
+    }
+    chunk[key] = serverMapPackIndex[key]!;
+  }
+  if (Object.keys(chunk).length === 0) {
+    reply.status(404).send({ error: "No map packs found" });
+    return;
+  }
+  const mapPackInfoChunk: MapPackInfoChunk = { mapPackIndex: chunk!, totalChunks: allMapPackKeys.length };
+  reply.status(200).send(mapPackInfoChunk);
+};
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
   const uuid = request.session.get("uuid");
@@ -304,7 +370,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     });
     return;
   }
-  const { useCache, useSuggestedAge } = chartrequest;
+  const { useCache } = chartrequest;
   const uuid = request.session.get("uuid");
   const settingsXml = chartrequest.settings;
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
@@ -380,7 +446,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     // Tell it where to save chart
     `-o ${chartFilePath} ` +
     // Don't use datapacks suggested age (if useSuggestedAge is true then ignore datapack ages)
-    `${!useSuggestedAge ? "-a" : ""}`;
+    `-a`;
 
   // Exec Java command and send final reply to browser
   await new Promise<void>((resolve) => {
