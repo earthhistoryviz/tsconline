@@ -273,6 +273,13 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
   return datapackParsingPack;
 }
 
+/**
+ * @Paolo I chose to implement this way to avoid creating crazy conditionals in the many ways we create columns since we have
+ * to check multiple different types of columns and if the font options include a certain type of font option.
+ * I also am not 100% sure of whether or not being specific about the font options is necessary, but I think it is.
+ * (The xml gives everyone the ability to show labels, but I think it is better to be specific about it)
+ * @param column 
+ */
 function setShowLabels(column: ColumnInfo) {
   if (column.columnDisplayType !== "RootColumn" && column.columnDisplayType !== "MetaColumn" && column.columnDisplayType !== "BlockSeriesMetaColumn") {
     if (column.fontOptions.includes("Age Label")) column.showAgeLabels = false;
