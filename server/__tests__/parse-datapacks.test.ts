@@ -17,6 +17,7 @@ jest.mock("@tsconline/shared", () => ({
   assertSubFaciesInfo: jest.fn().mockImplementation(() => true),
   assertSubBlockInfo: jest.fn().mockImplementation(() => true),
   assertSubRangeInfo: jest.fn().mockImplementation(() => true),
+  assertDatapackParsingPack: jest.fn().mockReturnValue(true),
   assertRGB: jest.fn().mockImplementation((o) => {
     if (!o || typeof o !== "object") throw new Error("RGB must be a non-null object");
     if (typeof o.r !== "number") throw new Error("Invalid rgb");
@@ -50,7 +51,6 @@ import { readFileSync } from "fs";
 import {
   Block,
   Range,
-  DatapackAgeInfo,
   Facies,
   Event,
   Chron,
@@ -657,10 +657,9 @@ describe("getColumnTypes tests", () => {
 });
 
 describe("getAllEntries tests", () => {
-  let entriesMap: Map<string, ParsedColumnEntry>, datapackAgeInfo: DatapackAgeInfo, isChild: Set<string>;
+  let entriesMap: Map<string, ParsedColumnEntry>, isChild: Set<string>;
   beforeEach(() => {
     entriesMap = new Map<string, ParsedColumnEntry>();
-    datapackAgeInfo = { datapackContainsSuggAge: false };
     isChild = new Set<string>();
   });
 
@@ -669,7 +668,7 @@ describe("getAllEntries tests", () => {
    */
   it("should create correct basic entries map", async () => {
     const file = "server/__tests__/__data__/get-all-entries-test-1.txt";
-    await getAllEntries(file, entriesMap, isChild, datapackAgeInfo);
+    await getAllEntries(file, entriesMap, isChild);
     const expectedEntriesMap = new Map<string, ParsedColumnEntry>();
     expectedEntriesMap.set("Parent 1", {
       children: ["Child 11", "Child 12"],
@@ -691,7 +690,7 @@ describe("getAllEntries tests", () => {
    */
   it("should create correct entries map with meta and title", async () => {
     const file = "server/__tests__/__data__/get-all-entries-test-2.txt";
-    await getAllEntries(file, entriesMap, isChild, datapackAgeInfo);
+    await getAllEntries(file, entriesMap, isChild);
     const expectedEntriesMap = new Map<string, ParsedColumnEntry>();
     expectedEntriesMap.set("Parent 1", {
       children: ["Child 11", "Child 12"],
@@ -714,7 +713,7 @@ describe("getAllEntries tests", () => {
    */
   it("should create correct entries map with meta and title and info", async () => {
     const file = "server/__tests__/__data__/get-all-entries-test-3.txt";
-    await getAllEntries(file, entriesMap, isChild, datapackAgeInfo);
+    await getAllEntries(file, entriesMap, isChild);
     const expectedEntriesMap = new Map<string, ParsedColumnEntry>();
     expectedEntriesMap.set("Parent 1", {
       children: ["Child 11", "Child 12"],
@@ -738,22 +737,11 @@ describe("getAllEntries tests", () => {
   });
 
   /**
-   * Simply checks for the correct creation of the datapackAgeInfo object
-   * Given SetTopAge and SetBaseAge headers
-   */
-  it("should create correct datapackAgeInfo", async () => {
-    const file = "server/__tests__/__data__/get-all-entries-test-4.txt";
-    await getAllEntries(file, entriesMap, isChild, datapackAgeInfo);
-    const correctDatapackInfo = { datapackContainsSuggAge: true, topAge: 100, bottomAge: 200 };
-    expect(datapackAgeInfo).toEqual(correctDatapackInfo);
-  });
-
-  /**
    * Bad file should not initialize maps
    */
   it("should not initialize maps on bad file", async () => {
     const file = "server/__tests__/__data__/bad-data.txt";
-    await getAllEntries(file, entriesMap, isChild, datapackAgeInfo);
+    await getAllEntries(file, entriesMap, isChild);
     expect(entriesMap.size).toBe(0);
   });
 });

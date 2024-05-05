@@ -10,12 +10,26 @@ export type SuccessfulServerResponse = {
   message: string;
 };
 
+export type DatapackInfoChunk = {
+  datapackIndex: DatapackIndex;
+  totalChunks: number;
+};
+export type MapPackInfoChunk = {
+  mapPackIndex: MapPackIndex;
+  totalChunks: number;
+};
+
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 
 export type DatapackParsingPack = {
   columnInfo: ColumnInfo;
-  datapackAgeInfo: DatapackAgeInfo;
   ageUnits: string;
+  defaultChronostrat: "USGS" | "UNESCO";
+  formatVersion: number;
+  topAge?: number;
+  baseAge?: number;
+  date?: string;
+  verticalScale?: number;
 };
 
 export type IndexResponse = {
@@ -55,12 +69,6 @@ export type RGB = {
 };
 export type Presets = {
   [type: string]: ChartConfig[];
-};
-
-export type DatapackAgeInfo = {
-  datapackContainsSuggAge: boolean; //Default Age is not age located in datapack. Should be false if age exists, otherwise true.
-  topAge?: number;
-  bottomAge?: number;
 };
 
 export type ColumnHeaderProps = {
@@ -131,7 +139,6 @@ export type ChartRequest = {
   settings: string; // JSON string representing the settings file you want to use to make a chart
   datapacks: string[]; // active datapacks to be used on chart
   useCache: boolean; // whether to use the cache or not
-  useSuggestedAge: boolean; // whether to use the suggested age or not
 };
 
 export type ServerResponseError = {
@@ -404,6 +411,18 @@ export function assertTransect(o: any): asserts o is Transect {
   }
 }
 
+export function assertMapPackInfoChunk(o: any): asserts o is MapPackInfoChunk {
+  if (!o || typeof o !== "object") throw new Error("MapPackInfoChunk must be a non-null object");
+  if (typeof o.totalChunks !== "number") throwError("MapPackInfoChunk", "totalChunks", "number", o.totalChunks);
+  assertMapPackIndex(o.mapPackIndex);
+}
+
+export function assertDatapackInfoChunk(o: any): asserts o is DatapackInfoChunk {
+  if (!o || typeof o !== "object") throw new Error("DatapackInfoChunk must be a non-null object");
+  if (typeof o.totalChunks !== "number") throwError("DatapackInfoChunk", "totalChunks", "number", o.totalChunks);
+  assertDatapackIndex(o.datapackIndex);
+}
+
 export function assertSubFreehandInfo(o: any): asserts o is SubFreehandInfo {
   if (!o || typeof o !== "object") throw new Error("SubFreehandInfo must be a non-null object");
   if (typeof o.topAge !== "number" || isNaN(o.topAge)) throwError("SubFreehandInfo", "topAge", "number", o.topAge);
@@ -578,16 +597,6 @@ export function assertDatapack(o: any): asserts o is Datapack {
   if (typeof o.file !== "string") throw new Error("Datapack must have a field file of type string");
 }
 
-export function assertDatapackAgeInfo(o: any): asserts o is DatapackAgeInfo {
-  if (typeof o !== "object") throw new Error("DatapackAgeInfo must be an object");
-  if (typeof o.datapackContainsSuggAge !== "boolean")
-    throwError("DatapackAgeInfo", "datapackContainsSuggAge", "boolean", o.datapackContainsSuggAge);
-  if (o.datapackContainsSuggAge) {
-    if (typeof o.bottomAge !== "number") throwError("DatapackAgeInfo", "bottomAge", "number", o.bottomAge);
-    if (typeof o.topAge !== "number") throwError("DatapackAgeInfo", "topAge", "number", o.topAge);
-  }
-}
-
 export function assertSubBlockInfo(o: any): asserts o is SubBlockInfo {
   if (!o || typeof o !== "object") throw new Error("SubBlockInfo must be a non-null object");
   if (typeof o.label !== "string") throwError("SubBlockInfo", "label", "string", o.label);
@@ -618,8 +627,21 @@ export function assertFacies(o: any): asserts o is Facies {
 export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingPack {
   if (!o || typeof o !== "object") throw new Error("DatapackParsingPack must be a non-null object");
   if (typeof o.ageUnits !== "string") throwError("DatapackParsingPack", "ageUnits", "string", o.ageUnits);
+  if (typeof o.defaultChronostrat !== "string")
+    throwError("DatapackParsingPack", "defaultChronostrat", "string", o.defaultChronostrat);
+  if (!/^(USGS|UNESCO)$/.test(o.defaultChronostrat))
+    throwError("DatapackParsingPack", "defaultChronostrat", "USGS | UNESCO", o.defaultChronostrat);
+  if (typeof o.formatVersion !== "number")
+    throwError("DatapackParsingPack", "formatVersion", "number", o.formatVersion);
+  if ("verticalScale" in o && typeof o.verticalScale !== "number")
+    throwError("DatapackParsingPack", "verticalScale", "number", o.verticalScale);
+  if ("date" in o && typeof o.date !== "string") throwError("DatapackParsingPack", "date", "string", o.date);
+  if ("date" in o && !/^(\d{4}-\d{2}-\d{2})$/.test(o.date))
+    throwError("DatapackParsingPack", "date", "YYYY-MM-DD", o.date);
+  if ("topAge" in o && typeof o.topAge !== "number") throwError("DatapackParsingPack", "topAge", "number", o.topAge);
+  if ("baseAge" in o && typeof o.baseAge !== "number")
+    throwError("DatapackParsingPack", "baseAge", "number", o.baseAge);
   assertColumnInfo(o.columnInfo);
-  assertDatapackAgeInfo(o.datapackAgeInfo);
 }
 export function assertDatapackIndex(o: any): asserts o is DatapackIndex {
   if (!o || typeof o !== "object") throw new Error("DatapackIndex must be a non-null object");

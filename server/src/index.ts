@@ -142,6 +142,9 @@ server.post("/upload", routes.uploadDatapack);
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", routes.fetchSettingsXml);
 
+server.get("/datapack-index", routes.fetchServerDatapackInfo);
+server.get("/map-pack-index", routes.fetchServerMapPackInfo);
+
 server.get("/datapackinfoindex", (_request, reply) => {
   if (!datapackIndex || !mapPackIndex) {
     reply.send({ error: "datapackIndex/mapPackIndex is null" });

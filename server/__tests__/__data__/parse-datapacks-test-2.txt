@@ -2,6 +2,9 @@ age units:	Ma
 SetTop:	0
 SetBase:	5
 SetScale:	6
+date:	15/03/2015
+format version:	1.0
+default chronostrat:	USGS
 
 Parent 1	:	Block	Facies	Event	Range	Chron	Point	Sequence	Freehand	Blank	Transect
 

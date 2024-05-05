@@ -205,15 +205,15 @@ const MetaColumnFontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
 
 export const LeafColumnFontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
   return (
-    <Grid container rowSpacing={2} columnSpacing={0}>
+    <Grid id="LeafColumnGridContainer" container rowSpacing={2} columnSpacing={0}>
       <Grid item xs={12}>
         <Typography id="Bold">Change Font</Typography>
-        {Array.from(column.fontOptions).map((target) => (
-          <Grid item xs={12} key={target}>
-            <FontMenuRow column={column} target={target} />
-          </Grid>
-        ))}
       </Grid>
+      {Array.from(column.fontOptions).map((target) => (
+        <Grid item xs={12} key={target}>
+          <FontMenuRow column={column} target={target} />
+        </Grid>
+      ))}
     </Grid>
   );
 });

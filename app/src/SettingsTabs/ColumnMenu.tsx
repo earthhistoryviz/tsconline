@@ -92,11 +92,11 @@ export const ColumnMenu = observer(() => {
       </div>
       <div id="ColumnMenuContent" className="column-menu-content">
         {column && <EditNameField />}
-        {column && <ChangeBackgroundColor column={column} />}
+        {column && column.children.length === 0 && <ChangeBackgroundColor column={column} />}
         {column && <FontMenu column={column} />}
         {column && <ShowTitles column={column} />}
         {column && column.width !== undefined && column.columnDisplayType !== "Ruler" && (
-          <EditWidthField width={column.width} key={column.name} columnObject={column} />
+          <EditWidthField key={column.name} columnObject={column} />
         )}
         {!!info && <InfoBox info={info} />}
       </div>
