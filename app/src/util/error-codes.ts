@@ -65,8 +65,7 @@ export const ErrorMessages = {
   [ErrorCodes.NO_DATAPACKS_SELECTED]: "No datapacks selected. Please select at least one datapack to generate.",
   [ErrorCodes.NO_COLUMNS_SELECTED]: "No columns selected. Please select at least one column to generate.",
   [ErrorCodes.UNIT_RANGE_EMPTY]: "Unit range is empty. Please enter a valid unit range.",
-  [ErrorCodes.INVALID_MAPPACK_INFO]: "Invalid mappack info received from server. Please try again later."
-  [ErrorCodes.UNIT_RANGE_EMPTY]: "Unit range is empty. Please enter a valid unit range.",
+  [ErrorCodes.INVALID_MAPPACK_INFO]: "Invalid mappack info received from server. Please try again later.",
   [ErrorCodes.UNABLE_TO_LOGIN_SERVER]: "Unable to login due to server error. Please try again later.",
   [ErrorCodes.UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL]: "Unable to login with Google credentials. Please try again.",
   [ErrorCodes.UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD]: "Invalid username or password. Please try again.",
