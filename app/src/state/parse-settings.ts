@@ -24,6 +24,7 @@ import {
   defaultZoneColumnInfoTSC
 } from "@tsconline/shared";
 import { ChartSettings } from "../types";
+import { trimQuotes } from "../util/util";
 
 /**
  * casts a string to a specified type
@@ -342,10 +343,9 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
     case "Point":
       column = JSON.parse(JSON.stringify(defaultPointColumnInfoTSC));
   }
+  //TODO: check with Ogg about quote usage
   //strip surrounding quotations for id (ex. Belgium Datapack)
-  if (state.name.charAt(0) === '"' && state.name.charAt(state.name.length - 1) === '"') {
-    state.name = state.name.slice(1, -1);
-  }
+  state.name = trimQuotes(state.name);
   switch (state.columnDisplayType) {
     case "RootColumn":
     case "MetaColumn":
