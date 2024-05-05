@@ -3,15 +3,10 @@ import BetterSqlite3 from "better-sqlite3";
 import { Kysely, SqliteDialect } from "kysely";
 import fs from "fs";
 
-export const db = new Kysely<Database>({
-  dialect: new SqliteDialect({
-    database: new BetterSqlite3("../server/db/TSC.db")
-  })
-});
-
 export async function setupDb() {
   try {
     await fs.promises.mkdir("../server/db", { recursive: true });
+    await fs.promises.writeFile("../server/db/TSC.db", "");
   } catch (err) {
     const error = err as NodeJS.ErrnoException;
     if (error.code !== "EEXIST") throw err;
@@ -37,6 +32,14 @@ export async function setupDb() {
     .addColumn("verifyOrReset", "text", (col) => col.notNull())
     .execute();
 }
+
+setupDb();
+
+export const db = new Kysely<Database>({
+  dialect: new SqliteDialect({
+    database: new BetterSqlite3("../server/db/TSC.db")
+  })
+});
 
 export async function createUser(newUser: NewUser) {
   return await db.insertInto("users").values(newUser).execute();
