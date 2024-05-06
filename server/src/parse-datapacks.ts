@@ -41,7 +41,8 @@ import {
   ColumnInfoType,
   assertSubInfo,
   SubInfo,
-  assertDatapackParsingPack
+  assertDatapackParsingPack,
+  defaultEventSettings
 } from "@tsconline/shared";
 import { trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter } from "./util.js";
 import { createInterface } from "readline";
@@ -278,10 +279,14 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
  * to check multiple different types of columns and if the font options include a certain type of font option.
  * I also am not 100% sure of whether or not being specific about the font options is necessary, but I think it is.
  * (The xml gives everyone the ability to show labels, but I think it is better to be specific about it)
- * @param column 
+ * @param column
  */
 function setShowLabels(column: ColumnInfo) {
-  if (column.columnDisplayType !== "RootColumn" && column.columnDisplayType !== "MetaColumn" && column.columnDisplayType !== "BlockSeriesMetaColumn") {
+  if (
+    column.columnDisplayType !== "RootColumn" &&
+    column.columnDisplayType !== "MetaColumn" &&
+    column.columnDisplayType !== "BlockSeriesMetaColumn"
+  ) {
     if (column.fontOptions.includes("Age Label")) column.showAgeLabels = false;
     if (column.fontOptions.includes("Uncertainty Label")) column.showUncertaintyLabels = false;
   }
@@ -583,10 +588,7 @@ export async function getColumnTypes(
       Object.assign(blank, { ...createDefaultColumnHeaderProps() });
       continue;
     }
-    if (
-      !inFreehandBlock &&
-      (tabSeparated[1] === "freehand")
-    ) {
+    if (!inFreehandBlock && tabSeparated[1] === "freehand") {
       setColumnHeaders(freehand, tabSeparated);
       inFreehandBlock = true;
     } else if (inFreehandBlock) {
@@ -1407,7 +1409,7 @@ function recursive(
     const { width, subChronInfo, ...currentChron } = chronMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentChron,
-      columnDisplayType: "Chron",
+      columnDisplayType: "BlockSeriesMetaColumn",
       subInfo: JSON.parse(JSON.stringify(subChronInfo))
     });
     addChronChildren(
@@ -1449,12 +1451,15 @@ function recursive(
   if (blankMap.has(currentColumn)) {
     const currentBlank = blankMap.get(currentColumn)!;
     // TODO NOTE FOR FUTURE: @Paolo - Java file appends all fonts to this, but from trial and error, only column header makes sense. If this case changes here we would change it
-    Object.assign({
-      ...currentBlank,
-      columnDisplayType: "Blank"
-    }, currentBlank);
+    Object.assign(
+      {
+        ...currentBlank,
+        columnDisplayType: "Blank"
+      },
+      currentBlank
+    );
   }
-
+  addColumnSettings(currentColumnInfo)
   childrenArray.push(currentColumnInfo);
 
   if (parsedColumnEntry) {
@@ -1716,7 +1721,7 @@ function createLoneColumn(
 ): ColumnInfo {
   // block changes to zone for display
   if (type === "Block") type = "Zone";
-  return {
+  const column: ColumnInfo = {
     ...props,
     editName: props.name,
     fontOptions,
@@ -1727,6 +1732,18 @@ function createLoneColumn(
     subInfo,
     columnDisplayType: type
   };
+  addColumnSettings(column);
+  return column;
+}
+
+function addColumnSettings(column: ColumnInfo) {
+  switch (column.columnDisplayType) {
+    case "Event":
+      column.columnSpecificSettings = JSON.parse(JSON.stringify(defaultEventSettings));
+      break;
+    default:
+      break;
+  }
 }
 
 function getValidFontOptions(type: DisplayedColumnTypes): ValidFontOptions[] {
@@ -1773,7 +1790,7 @@ function processColumn<T extends ColumnInfoType>(
   } else {
     const { [subInfoKey]: subInfo, ...columnHeaderProps } = column;
     assertColumnHeaderProps(columnHeaderProps);
-    assertSubInfo(subInfo);
+    assertSubInfo(subInfo, type);
     loneColumns.push(createLoneColumn(columnHeaderProps, getValidFontOptions(type), units, subInfo, type));
   }
   return false;

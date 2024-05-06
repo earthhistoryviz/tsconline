@@ -10,6 +10,8 @@ import { ColumnInfo } from "@tsconline/shared";
 import { TSCCheckbox } from "../components";
 import { InfoBox } from "./InfoBox";
 import { EditWidthField } from "./EditWidthField";
+import { Edit } from "@mui/icons-material";
+import { TSCRadioGroup } from "../components/TSCRadioGroup";
 
 const EditNameField = observer(() => {
   const { state, actions } = useContext(context);
@@ -53,10 +55,6 @@ export const ColumnMenu = observer(() => {
   const [openMenu, setOpenMenu] = useState(false);
   const selectedColumn = state.settingsTabs.columnSelected;
   const column = selectedColumn ? state.settingsTabs.columnHashMap.get(selectedColumn!) : undefined;
-  const info =
-    state.settingsTabs.columnSelected === null
-      ? ""
-      : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)?.popup;
   function showMenu() {
     const menu = document.getElementById("ColumnMenuContent");
     const label = document.getElementById("ColumnMenuLabel");
@@ -91,14 +89,18 @@ export const ColumnMenu = observer(() => {
         </div>
       </div>
       <div id="ColumnMenuContent" className="column-menu-content">
-        {column && <EditNameField />}
-        {column && column.children.length === 0 && <ChangeBackgroundColor column={column} />}
-        {column && <FontMenu column={column} />}
-        {column && <ShowTitles column={column} />}
-        {column && column.width !== undefined && column.columnDisplayType !== "Ruler" && (
-          <EditWidthField key={column.name} columnObject={column} />
+        {column && (
+          <>
+            <EditNameField />
+            {column.children.length === 0 && <ChangeBackgroundColor column={column} />}
+            <FontMenu column={column} />
+            <ShowTitles column={column} />
+            {column.width !== undefined && column.columnDisplayType !== "Ruler" && (
+              <EditWidthField key={column.name} columnObject={column} />
+            )}
+            {!!column.popup && <InfoBox info={column.popup} />}
+          </>
         )}
-        {!!info && <InfoBox info={info} />}
       </div>
     </div>
   );
@@ -121,32 +123,36 @@ const ShowTitles = observer(({ column }: { column: ColumnInfo }) => {
           />
         }
       />
-      {column.showAgeLabels !== undefined && <FormControlLabel
-        name="showAgeLabel"
-        label="Show Age Label"
-        control={
-          <TSCCheckbox
-            outlineColor="gray"
-            checked={column.showAgeLabels}
-            onChange={() => {
-              actions.setShowAgeLabels(!column.showAgeLabels, column);
-            }}
-          />
-        }
-      />}
-      {column.showUncertaintyLabels !== undefined && <FormControlLabel
-        name="showUncertaintyLabels"
-        label="Show Uncertainty Labels"
-        control={
-          <TSCCheckbox
-            outlineColor="gray"
-            checked={column.showUncertaintyLabels}
-            onChange={() => {
-              actions.setShowUncertaintyLabels(!column.showUncertaintyLabels, column);
-            }}
-          />
-        }
-      />}
+      {column.showAgeLabels !== undefined && (
+        <FormControlLabel
+          name="showAgeLabel"
+          label="Show Age Label"
+          control={
+            <TSCCheckbox
+              outlineColor="gray"
+              checked={column.showAgeLabels}
+              onChange={() => {
+                actions.setShowAgeLabels(!column.showAgeLabels, column);
+              }}
+            />
+          }
+        />
+      )}
+      {column.showUncertaintyLabels !== undefined && (
+        <FormControlLabel
+          name="showUncertaintyLabels"
+          label="Show Uncertainty Labels"
+          control={
+            <TSCCheckbox
+              outlineColor="gray"
+              checked={column.showUncertaintyLabels}
+              onChange={() => {
+                actions.setShowUncertaintyLabels(!column.showUncertaintyLabels, column);
+              }}
+            />
+          }
+        />
+      )}
     </div>
   );
 });
