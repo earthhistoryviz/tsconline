@@ -460,16 +460,13 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
         } else {
           xml += `${indent}<setting name="backgroundColor" useNamed="false">rgb(${column.backgroundColor.text.r},${column.backgroundColor.text.g},${column.backgroundColor.text.b})</setting>\n`;
         }
-      }
-      else {
+      } else {
         xml += `${indent}<setting name="backgroundColor"/>\n`;
       }
-      
     } else if (key === "customColor") {
       if (column.customColor.text) {
         xml += `${indent}<setting name="customColor" useNamed="false">rgb(${column.customColor.text.r},${column.customColor.text.g},${column.customColor.text.b})</setting>\n`;
-      }
-      else {
+      } else {
         xml += `${indent}<setting name="customColor"/>\n`;
       }
     } else if (key === "width") {
