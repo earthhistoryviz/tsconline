@@ -60,12 +60,12 @@ export type ColumnBasicInfoTSC = {
   backgroundColor: {
     standardized?: boolean;
     useNamed?: boolean;
-    text: RGB;
+    text?: RGB;
   };
   customColor: {
     standardized?: boolean;
     useNamed?: boolean;
-    text: RGB;
+    text?: RGB;
   };
   fonts: FontsInfo;
   children: ColumnInfoTSC[];
@@ -264,7 +264,9 @@ export function assertColumnBasicInfoTSC(o: any): asserts o is ColumnBasicInfoTS
       if (typeof o.backgroundColor.useNamed !== "boolean")
         throwError("ColumnInfoTSC backgroundColor", "useNamed", "boolean", o.backgroundColor.useNamed);
     }
-    assertRGB(o.backgroundColor.text);
+    if ("text" in o.backgroundColor) {
+      assertRGB(o.backgroundColor.text);
+    }
   } else throw new Error("ColumnInfoTSC must have backgroundColor");
   if (o.customColor) {
     if ("standardized" in o.customColor) {

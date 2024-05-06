@@ -6,6 +6,7 @@ import {
   FontsInfo,
   MapPackIndex,
   TimescaleItem,
+  assertChartInfoTSC,
   assertDatapackInfoChunk,
   assertMapPackInfoChunk
 } from "@tsconline/shared";
@@ -327,7 +328,7 @@ export const setDatapackConfig = action(
     let mapInfo: MapInfo = {};
     let mapHierarchy: MapHierarchy = {};
     let columnRoot: ColumnInfo;
-    let chartSettings: ChartInfoTSC = <ChartInfoTSC>{};
+    let chartSettings: ChartInfoTSC | null = null;
     let foundDefaultAge = false;
     try {
       if (settingsPath && settingsPath.length > 0) {
@@ -335,7 +336,7 @@ export const setDatapackConfig = action(
           .then((settings) => {
             if (settings) {
               removeError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
-              chartSettings = settings;
+              chartSettings = JSON.parse(JSON.stringify(settings));
             } else {
               return false;
             }
@@ -417,12 +418,15 @@ export const setDatapackConfig = action(
     } catch (e) {
       console.error(e);
       pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
+      chartSettings = null;
       return false;
     }
     resetSettings();
     //TODO: apply presets, temp code for applying just the chart settings
     //check if chart settings is populated
-    if (Object.keys(chartSettings).length !== 0) {
+    if (chartSettings !== null) {
+      assertChartInfoTSC(chartSettings);
+      chartSettings = <ChartInfoTSC>chartSettings;
       setChartSettings(chartSettings.settings);
     }
     state.settings.datapackContainsSuggAge = foundDefaultAge;

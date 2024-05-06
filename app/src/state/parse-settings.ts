@@ -212,6 +212,9 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
                 }
               };
             }
+            if (rgb.length !== 3) {
+              delete column[settingName].text;
+            }
           } else if (justificationValue) {
             updateProperty(column, settingName as keyof ColumnInfoTSC, justificationValue);
           } else if (orientationValue) {
@@ -447,17 +450,28 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       //     xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}"
       //   />\n`;
       // } else
-      if (
-        column.backgroundColor.text.r == 255 &&
-        column.backgroundColor.text.g == 255 &&
-        column.backgroundColor.text.b == 255
-      ) {
-        xml += `${indent}<setting name="backgroundColor"/>\n`;
-      } else {
-        xml += `${indent}<setting name="backgroundColor" useNamed="false">rgb(${column.backgroundColor.text.r},${column.backgroundColor.text.g},${column.backgroundColor.text.b})</setting>\n`;
+      if (column.backgroundColor.text) {
+        if (
+          column.backgroundColor.text.r == 255 &&
+          column.backgroundColor.text.g == 255 &&
+          column.backgroundColor.text.b == 255
+        ) {
+          xml += `${indent}<setting name="backgroundColor"/>\n`;
+        } else {
+          xml += `${indent}<setting name="backgroundColor" useNamed="false">rgb(${column.backgroundColor.text.r},${column.backgroundColor.text.g},${column.backgroundColor.text.b})</setting>\n`;
+        }
       }
+      else {
+        xml += `${indent}<setting name="backgroundColor"/>\n`;
+      }
+      
     } else if (key === "customColor") {
-      xml += `${indent}<setting name="customColor" useNamed="false">rgb(${column.customColor.text.r},${column.customColor.text.g},${column.customColor.text.b})</setting>\n`;
+      if (column.customColor.text) {
+        xml += `${indent}<setting name="customColor" useNamed="false">rgb(${column.customColor.text.r},${column.customColor.text.g},${column.customColor.text.b})</setting>\n`;
+      }
+      else {
+        xml += `${indent}<setting name="customColor"/>\n`;
+      }
     } else if (key === "width") {
       if (column.width) {
         xml += `${indent}<setting name="width">${column.width}</setting>\n`;
