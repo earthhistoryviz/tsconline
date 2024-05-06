@@ -52,6 +52,8 @@ function TSCRadio(props: RadioProps) {
 
 type TSCRadioGroupProps = {
   name: string;
+  value: string;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   radioArray: {
     value: string;
     label: string;
@@ -59,12 +61,12 @@ type TSCRadioGroupProps = {
   }[];
 };
 
-export const TSCRadioGroup: React.FC<TSCRadioGroupProps> = ({ name, radioArray }) => {
+export const TSCRadioGroup: React.FC<TSCRadioGroupProps> = ({ name, radioArray, value, onChange }) => {
   if (radioArray.length === 0) return null;
   return (
     <FormControl>
       <FormLabel>{name}</FormLabel>
-      <RadioGroup defaultValue={radioArray[0].value} name="customized-radios">
+      <RadioGroup value={value} onChange={onChange} name="customized-radios">
         {radioArray.map((radio, index) => (
           <FormControlLabel
             key={index}

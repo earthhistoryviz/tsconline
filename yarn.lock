@@ -2342,12 +2342,14 @@ __metadata:
     "@tsconline/shared": "npm:1.0.0"
     "@types/color": "npm:^3.0.6"
     "@types/dompurify": "npm:^3"
+    "@types/lodash": "npm:^4"
     "@types/react": "npm:^18.0.27"
     "@types/react-dom": "npm:^18.0.10"
     "@vitejs/plugin-react": "npm:^4.2.1"
     clsx: "npm:^2.1.0"
     color: "npm:^4.2.3"
     dompurify: "npm:^3.0.11"
+    lodash: "npm:^4.17.21"
     lottie-web: "npm:^5.12.2"
     mobx: "npm:^6.8.0"
     mobx-react-lite: "npm:^3.4.0"
@@ -2627,6 +2629,13 @@ __metadata:
   version: 4.14.202
   resolution: "@types/lodash@npm:4.14.202"
   checksum: 1bb9760a5b1dda120132c4b987330d67979c95dbc22612678682cd61b00302e190f4207228f3728580059cdab5582362262e3819aea59960c1017bd2b9fb26f6
+  languageName: node
+  linkType: hard
+
+"@types/lodash@npm:^4":
+  version: 4.17.1
+  resolution: "@types/lodash@npm:4.17.1"
+  checksum: 384bdd29348a000f8e815f94839a1a8c7f5a4ca856b016ade7f2abdc1df0b4e3e009c113b69db320a8fde51d1f38e60c19462b9bf3e82e0e2e32d3ac3e7ba2c4
   languageName: node
   linkType: hard
 
