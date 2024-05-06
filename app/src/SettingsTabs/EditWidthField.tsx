@@ -24,7 +24,6 @@ export const EditWidthField: React.FC<{
           const floatValue = values.floatValue;
           actions.updateWidth(columnObject, floatValue ?? NaN);
         }}
-        style={{ height: "20px" }}
       />
     </div>
   );

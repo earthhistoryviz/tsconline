@@ -10,6 +10,7 @@ import { ColumnInfo } from "@tsconline/shared";
 import { TSCCheckbox } from "../components";
 import { InfoBox } from "./InfoBox";
 import { EditWidthField } from "./EditWidthField";
+import { EventSpecificSettings } from "./EventSpecificSettings";
 
 const EditNameField = observer(() => {
   const { state, actions } = useContext(context);
@@ -96,6 +97,7 @@ export const ColumnMenu = observer(() => {
             {column.width !== undefined && column.columnDisplayType !== "Ruler" && (
               <EditWidthField key={column.name} columnObject={column} />
             )}
+            <EventSpecificSettings column={column} />
             {!!column.popup && <InfoBox info={column.popup} />}
           </>
         )}
