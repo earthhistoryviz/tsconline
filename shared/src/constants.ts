@@ -13,7 +13,7 @@ import {
 } from "./index";
 
 export const defaultEventSettings: EventSettings = {
-  type: "event",
+  type: "events",
   rangeSort: "first occurrence",
 };
 

@@ -1,6 +1,6 @@
 import { action } from "mobx";
 import { state } from "../state";
-import { ColumnInfo, RGB, ValidFontOptions } from "@tsconline/shared";
+import { ColumnInfo, EventSettings, RGB, ValidFontOptions } from "@tsconline/shared";
 
 export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
   state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
@@ -40,6 +40,11 @@ export const toggleSettingsTabColumn = action((name: string) => {
     } else curcol = state.settingsTabs.columnHashMap.get(curcol.parent!)!;
   }
 });
+
+export const setEventColumnSettings = action((eventSettings: EventSettings, newSettings: Partial<EventSettings>) => {
+  if (newSettings.type) eventSettings.type = newSettings.type;
+  if (newSettings.rangeSort) eventSettings.rangeSort = newSettings.rangeSort;
+})
 
 export const updateEditName = action((newName: string) => {
   if (state.settingsTabs.columnSelected === null) {

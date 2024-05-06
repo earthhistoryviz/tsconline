@@ -160,6 +160,8 @@ export type ColumnInfoTypeMap = {
   Blank: Blank;
 };
 
+type EventType = "events" | "ranges";
+
 export type ColumnInfoType = keyof ColumnInfoTypeMap;
 
 export type DisplayedColumnTypes =
@@ -224,7 +226,7 @@ export type ColumnInfo = {
 };
 
 export type EventSettings = {
-  type: "event" | "range";
+  type: EventType;
   rangeSort: "first occurrence" | "last occurrence" | "alphabetical";
 };
 
@@ -423,8 +425,8 @@ export function assertTransect(o: any): asserts o is Transect {
 
 export function assertEventSettings(o: any): asserts o is EventSettings {
   if (!o || typeof o !== "object") throw new Error("EventSettings must be a non-null object");
-  if (typeof o.type !== "string" || !/^(event|range)$/.test(o.type))
-    throwError("EventSettings", "type", "string and event | range", o.type);
+  if (typeof o.type !== "string" || !isEventType(o.type))
+    throwError("EventSettings", "type", "string and events | ranges", o.type);
   if (typeof o.rangeSort !== "string" || !/^(first occurrence|last occurrence|alphabetical)$/.test(o.rangeSort))
     throwError("EventSettings", "rangeSort", "string and first occurrence | last occurrence | alphabetical", o.rangeSort);
 }
@@ -888,6 +890,12 @@ export function assertMapHierarchy(o: any): asserts o is MapHierarchy {
     const map = o[key];
     if (!Array.isArray(map)) throwError("MapHierarchy", `value for key ${key}`, "string array", map);
   }
+}
+
+export function isEventType(o: any): o is EventType {
+  if (typeof o !== "string") return false;
+  if (!/^(events|ranges)$/.test(o)) return false;
+  return true;
 }
 
 export function assertMapInfo(o: any): asserts o is MapInfo {

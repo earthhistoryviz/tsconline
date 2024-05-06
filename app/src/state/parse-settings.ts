@@ -10,6 +10,8 @@ import {
   FontsInfo,
   assertChartInfoTSC,
   assertChartSettingsInfoTSC,
+  assertEventColumnInfoTSC,
+  assertEventSettings,
   assertRulerColumnInfoTSC,
   assertZoneColumnInfoTSC,
   defaultChartSettingsInfoTSC,
@@ -25,6 +27,7 @@ import {
 } from "@tsconline/shared";
 import { ChartSettings } from "../types";
 import { trimQuotes } from "../util/util";
+import { cloneDeep } from "lodash";
 
 /**
  * casts a string to a specified type
@@ -329,7 +332,12 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
   switch (state.columnDisplayType) {
     case "Event":
       //can't set it equal to default because it becomes reference to object
-      column = JSON.parse(JSON.stringify(defaultEventColumnInfoTSC));
+      assertEventSettings(state.columnSpecificSettings)
+      column = {
+        ...cloneDeep(defaultEventColumnInfoTSC),
+        type: state.columnSpecificSettings.type,
+        rangeSort: state.columnSpecificSettings.rangeSort
+      }
       break;
     case "Zone":
       column = JSON.parse(JSON.stringify(defaultZoneColumnInfoTSC));
