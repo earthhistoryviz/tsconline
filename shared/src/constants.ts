@@ -2,6 +2,7 @@ import {
   ChartSettingsInfoTSC,
   ColumnBasicInfoTSC,
   EventColumnInfoTSC,
+  EventSettings,
   FontsInfo,
   PointColumnInfoTSC,
   RangeColumnInfoTSC,
@@ -11,9 +12,9 @@ import {
   ZoneColumnInfoTSC
 } from "./index";
 
-export const defaultEventSettings = {
-  type: "events",
-  "range sort": "first occurrence"
+export const defaultEventSettings: EventSettings = {
+  type: "event",
+  rangeSort: "first occurrence",
 };
 
 export const allFontOptions: ValidFontOptions[] = [
@@ -246,7 +247,7 @@ export const defaultSequenceColumnInfoTSC: SequenceColumnInfoTSC = {
 
 export const defaultRangeColumnInfoTSC: RangeColumnInfoTSC = {
   ...defaultColumnBasicInfoTSC,
-  rangeSort: "first occurence"
+  rangeSort: "first occurrence"
 };
 
 export const defaultRulerColumnInfoTSC: RulerColumnInfoTSC = {

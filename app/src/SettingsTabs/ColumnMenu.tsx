@@ -10,8 +10,6 @@ import { ColumnInfo } from "@tsconline/shared";
 import { TSCCheckbox } from "../components";
 import { InfoBox } from "./InfoBox";
 import { EditWidthField } from "./EditWidthField";
-import { Edit } from "@mui/icons-material";
-import { TSCRadioGroup } from "../components/TSCRadioGroup";
 
 const EditNameField = observer(() => {
   const { state, actions } = useContext(context);

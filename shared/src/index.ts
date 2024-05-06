@@ -225,7 +225,7 @@ export type ColumnInfo = {
 
 export type EventSettings = {
   type: "event" | "range";
-  rangeSort: "first occurence" | "last occurence" | "alphabetical";
+  rangeSort: "first occurrence" | "last occurrence" | "alphabetical";
 };
 
 export type Range = ColumnHeaderProps & {
@@ -425,8 +425,8 @@ export function assertEventSettings(o: any): asserts o is EventSettings {
   if (!o || typeof o !== "object") throw new Error("EventSettings must be a non-null object");
   if (typeof o.type !== "string" || !/^(event|range)$/.test(o.type))
     throwError("EventSettings", "type", "string and event | range", o.type);
-  if (typeof o.rangeSort !== "string" || !/^(first occurence|last occurence|alphabetical)$/.test(o.rangeSort))
-    throwError("EventSettings", "rangeSort", "string and first occurence | last occurence | alphabetical", o.rangeSort);
+  if (typeof o.rangeSort !== "string" || !/^(first occurrence|last occurrence|alphabetical)$/.test(o.rangeSort))
+    throwError("EventSettings", "rangeSort", "string and first occurrence | last occurrence | alphabetical", o.rangeSort);
 }
 
 export function assertMapPackInfoChunk(o: any): asserts o is MapPackInfoChunk {
@@ -735,6 +735,14 @@ export function isRGB(o: any): o is RGB {
   if (o.g < 0 || o.g > 255) return false;
   if (typeof o.b !== "number") return false;
   if (o.b < 0 || o.b > 255) return false;
+  return true;
+}
+
+export function isSubFaciesInfoArray(o: any): o is SubFaciesInfo[] {
+  if (!o || !Array.isArray(o)) return false;
+  for (const sub of o) {
+    if (!isSubFaciesInfo(sub)) return false;
+  }
   return true;
 }
 
