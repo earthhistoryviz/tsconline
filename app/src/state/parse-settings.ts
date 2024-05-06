@@ -24,6 +24,7 @@ import {
   defaultZoneColumnInfoTSC
 } from "@tsconline/shared";
 import { ChartSettings } from "../types";
+import { trimQuotes } from "../util/util";
 
 /**
  * casts a string to a specified type
@@ -211,6 +212,9 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
                 }
               };
             }
+            if (rgb.length !== 3) {
+              delete column[settingName].text;
+            }
           } else if (justificationValue) {
             updateProperty(column, settingName as keyof ColumnInfoTSC, justificationValue);
           } else if (orientationValue) {
@@ -342,6 +346,9 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
     case "Point":
       column = JSON.parse(JSON.stringify(defaultPointColumnInfoTSC));
   }
+  //TODO: check with Ogg about quote usage
+  //strip surrounding quotations for id (ex. Belgium Datapack)
+  state.name = trimQuotes(state.name);
   switch (state.columnDisplayType) {
     case "RootColumn":
     case "MetaColumn":
@@ -356,12 +363,12 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
   column.drawTitle = state.enableTitle;
   column.fonts = state.fontsInfo;
   column.width = column.width;
-  column.backgroundColor.text.r = state.rgb.r;
-  column.backgroundColor.text.g = state.rgb.g;
-  column.backgroundColor.text.b = state.rgb.b;
-  column.customColor.text.r = state.rgb.r;
-  column.customColor.text.g = state.rgb.g;
-  column.customColor.text.b = state.rgb.b;
+  column.backgroundColor.text!.r = state.rgb.r;
+  column.backgroundColor.text!.g = state.rgb.g;
+  column.backgroundColor.text!.b = state.rgb.b;
+  column.customColor.text!.r = state.rgb.r;
+  column.customColor.text!.g = state.rgb.g;
+  column.customColor.text!.b = state.rgb.b;
   column.children = [];
   for (let i = 0; i < state.children.length; i++) {
     column.children.push(translateColumnInfoToColumnInfoTSC(state.children[i]));
@@ -443,17 +450,25 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       //     xml += `${indent}<setting name="${key}" standardized="${column[key].standardized}"
       //   />\n`;
       // } else
-      if (
-        column.backgroundColor.text.r == 255 &&
-        column.backgroundColor.text.g == 255 &&
-        column.backgroundColor.text.b == 255
-      ) {
-        xml += `${indent}<setting name="backgroundColor"/>\n`;
+      if (column.backgroundColor.text) {
+        if (
+          column.backgroundColor.text.r == 255 &&
+          column.backgroundColor.text.g == 255 &&
+          column.backgroundColor.text.b == 255
+        ) {
+          xml += `${indent}<setting name="backgroundColor"/>\n`;
+        } else {
+          xml += `${indent}<setting name="backgroundColor" useNamed="false">rgb(${column.backgroundColor.text.r},${column.backgroundColor.text.g},${column.backgroundColor.text.b})</setting>\n`;
+        }
       } else {
-        xml += `${indent}<setting name="backgroundColor" useNamed="false">rgb(${column.backgroundColor.text.r},${column.backgroundColor.text.g},${column.backgroundColor.text.b})</setting>\n`;
+        xml += `${indent}<setting name="backgroundColor"/>\n`;
       }
     } else if (key === "customColor") {
-      xml += `${indent}<setting name="customColor" useNamed="false">rgb(${column.customColor.text.r},${column.customColor.text.g},${column.customColor.text.b})</setting>\n`;
+      if (column.customColor.text) {
+        xml += `${indent}<setting name="customColor" useNamed="false">rgb(${column.customColor.text.r},${column.customColor.text.g},${column.customColor.text.b})</setting>\n`;
+      } else {
+        xml += `${indent}<setting name="customColor"/>\n`;
+      }
     } else if (key === "width") {
       if (column.width) {
         xml += `${indent}<setting name="width">${column.width}</setting>\n`;
