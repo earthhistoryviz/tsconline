@@ -708,9 +708,20 @@ export const loadActiveDatapacks = action(async () => {
 
 export const requestDownload = action(async (needEncryption: boolean, filePath: string, datapackDir: string) => {
   const response = await fetcher(`/requestDownload/${needEncryption}/${filePath}/${datapackDir}`, {
-    method: "POST"
+    method: "GET"
   })
   // TODO: finish download
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error("File not found");
+    } else if (response.status === 500) {
+      throw new Error("Server error");
+    } else {
+      throw new Error("Unknown error");
+    }
+  }
+  const file = response.blob();
+  return file;
 });
 export const logout = action("logout", async () => {
   try {
