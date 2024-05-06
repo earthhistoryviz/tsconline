@@ -11,6 +11,11 @@ import {
   ZoneColumnInfoTSC
 } from "./index";
 
+export const defaultEventSettings = {
+  type: "events",
+  "range sort": "first occurrence"
+};
+
 export const allFontOptions: ValidFontOptions[] = [
   "Column Header",
   "Age Label",

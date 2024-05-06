@@ -199,6 +199,8 @@ export type SubInfo =
   | SubSequenceInfo
   | SubTransectInfo;
 
+export type ColumnSpecificSettings = EventSettings;
+
 export type ColumnInfo = {
   name: string;
   editName: string;
@@ -218,6 +220,12 @@ export type ColumnInfo = {
   units: string;
   showAgeLabels?: boolean;
   showUncertaintyLabels?: boolean;
+  columnSpecificSettings?: ColumnSpecificSettings;
+};
+
+export type EventSettings = {
+  type: "event" | "range";
+  rangeSort: "first occurence" | "last occurence" | "alphabetical";
 };
 
 export type Range = ColumnHeaderProps & {
@@ -411,6 +419,14 @@ export function assertTransect(o: any): asserts o is Transect {
   for (const subTransect of o.subTransectInfo) {
     assertSubTransectInfo(subTransect);
   }
+}
+
+export function assertEventSettings(o: any): asserts o is EventSettings {
+  if (!o || typeof o !== "object") throw new Error("EventSettings must be a non-null object");
+  if (typeof o.type !== "string" || !/^(event|range)$/.test(o.type))
+    throwError("EventSettings", "type", "string and event | range", o.type);
+  if (typeof o.rangeSort !== "string" || !/^(first occurence|last occurence|alphabetical)$/.test(o.rangeSort))
+    throwError("EventSettings", "rangeSort", "string and first occurence | last occurence | alphabetical", o.rangeSort);
 }
 
 export function assertMapPackInfoChunk(o: any): asserts o is MapPackInfoChunk {
@@ -722,25 +738,7 @@ export function isRGB(o: any): o is RGB {
   return true;
 }
 
-export function isSubBlockInfo(o: any): o is SubBlockInfo {
-  if (!o || typeof o !== "object") return false;
-  if (typeof o.label !== "string") return false;
-  if (typeof o.age !== "number") return false;
-  if (typeof o.popup !== "string") return false;
-  if (o.lineStyle !== "solid" && o.lineStyle !== "dotted" && o.lineStyle !== "dashed") return false;
-  if (!isRGB(o.rgb)) return false;
-  return true;
-}
-
-export function isSubFaciesInfoArray(o: any): o is SubFaciesInfo[] {
-  if (!o || !Array.isArray(o)) return false;
-  for (const sub of o) {
-    if (!isSubFaciesInfo(sub)) return false;
-  }
-  return true;
-}
-
-export function isSubFaciesInfo(o: any): o is SubFaciesInfo {
+function isSubFaciesInfo(o: any): o is SubFaciesInfo {
   if (!o || typeof o !== "object") return false;
   if (typeof o.rockType !== "string") return false;
   if (typeof o.info !== "string") return false;
@@ -749,79 +747,56 @@ export function isSubFaciesInfo(o: any): o is SubFaciesInfo {
   return true;
 }
 
-export function isSubEventInfo(o: any): o is SubEventInfo {
+function isSubChronInfo(o: any): o is SubChronInfo {
   if (!o || typeof o !== "object") return false;
-  if (typeof o.label !== "string") return false;
-  if (typeof o.age !== "number") return false;
-  if (typeof o.popup !== "string") return false;
-  if (typeof o.lineStyle !== "string" || !/(^dotted|dashed|solid)$/.test(o.lineStyle)) return false;
-  return true;
-}
-
-export function isSubRangeInfo(o: any): o is SubRangeInfo {
-  if (!o || typeof o !== "object") return false;
-  if (typeof o.label !== "string") return false;
-  if (typeof o.age !== "number") return false;
-  if (typeof o.abundance !== "string") return false;
-  if (!/^(TOP|missing|rare|common|frequent|abundant|sample|flood)$/.test(o.abundance)) return false;
-  if (typeof o.popup !== "string") return false;
-  return true;
-}
-
-export function isSubChronInfo(o: any): o is SubChronInfo {
-  if (!o || typeof o !== "object") return false;
-  if (typeof o.polarity !== "string" || !/^(TOP|N|R|U|No Data)$/.test(o.polarity)) return false;
+  if (typeof o.polarity !== "string") return false;
   if (o.label && typeof o.label !== "string") return false;
   if (typeof o.age !== "number") return false;
   if (typeof o.popup !== "string") return false;
   return true;
 }
 
-export function isSubPointInfo(o: any): o is SubPointInfo {
-  if (!o || typeof o !== "object") return false;
-  if (typeof o.age !== "number") return false;
-  if (typeof o.xVal !== "number") return false;
-  if (typeof o.popup !== "string") return false;
-  return true;
-}
-
-export function isSubSequenceInfo(o: any): o is SubSequenceInfo {
-  if (!o || typeof o !== "object") return false;
-  if (o.label && typeof o.label !== "string") return false;
-  if (typeof o.direction !== "string" || !/^(SB|MFS)$/.test(o.direction)) return false;
-  if (typeof o.age !== "number") return false;
-  if (typeof o.severity !== "string" || !/^(Major|Minor|Medium)$/.test(o.severity)) return false;
-  if (typeof o.popup !== "string") return false;
-  return true;
-}
-
-export function isSubTransectInfo(o: any): o is SubTransectInfo {
-  if (!o || typeof o !== "object") return false;
-  if (typeof o.age !== "number") return false;
-  return true;
-}
-
-export function isSubFreehandInfo(o: any): o is SubFreehandInfo {
-  if (!o || typeof o !== "object") return false;
-  if (typeof o.topAge !== "number") return false;
-  if (typeof o.baseAge !== "number") return false;
-  return true;
-}
-
-export function assertSubInfo(o: any): asserts o is SubInfo[] {
+export function assertSubInfo(o: any, type: DisplayedColumnTypes): asserts o is SubInfo[] {
   if (!o || !Array.isArray(o)) throw new Error("SubInfo must be an array");
   for (const sub of o) {
     if (typeof sub !== "object") throw new Error("SubInfo must be an array of objects");
-    if (isSubBlockInfo(sub)) assertSubBlockInfo(sub);
-    else if (isSubFaciesInfo(sub)) assertSubFaciesInfo(sub);
-    else if (isSubEventInfo(sub)) assertSubEventInfo(sub);
-    else if (isSubRangeInfo(sub)) assertSubRangeInfo(sub);
-    else if (isSubChronInfo(sub)) assertSubChronInfo(sub);
-    else if (isSubPointInfo(sub)) assertSubPointInfo(sub);
-    else if (isSubSequenceInfo(sub)) assertSubSequenceInfo(sub);
-    else if (isSubTransectInfo(sub)) assertSubTransectInfo(sub);
-    else if (isSubFreehandInfo(sub)) assertSubFreehandInfo(sub);
-    else throw new Error("SubInfo must be an array of valid subInfo objects");
+    switch (type) {
+      case "Block":
+      case "Zone":
+        assertSubBlockInfo(sub);
+        break;
+      // cases where the column parent inherits facies information
+      case "MetaColumn":
+        assertSubFaciesInfo(sub);
+        break;
+      case "Event":
+        assertSubEventInfo(sub);
+        break;
+      case "Range":
+        assertSubRangeInfo(sub);
+        break;
+      case "Chron":
+        assertSubChronInfo(sub);
+        break;
+      case "Point":
+        assertSubPointInfo(sub);
+        break;
+      case "Sequence":
+        assertSubSequenceInfo(sub);
+        break;
+      case "Transect":
+        assertSubTransectInfo(sub);
+        break;
+      case "Freehand":
+        assertSubFreehandInfo(sub);
+        break;
+      case "BlockSeriesMetaColumn":
+        if (!isSubFaciesInfo(sub) && !isSubChronInfo(sub))
+          throw new Error("A block series meta column must have either facies or chronostratigraphy information");
+        break;
+      default:
+        throw new Error("SubInfo must be an array of valid subInfo objects, found value of " + type);
+    }
   }
 }
 export function assertDisplayedColumnTypes(o: any): asserts o is DisplayedColumnTypes {
@@ -848,8 +823,10 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   if ("width" in o && typeof o.width !== "number") throwError("ColumnInfo", "width", "number", o.width);
   if (typeof o.enableTitle !== "boolean") throwError("ColumnInfo", "enableTitle", "boolean", o.enableTitle);
   if (typeof o.units !== "string") throwError("ColumnInfo", "units", "string", o.units);
-  if ("showAgeLabels" in o && typeof o.showAgeLabels !== "boolean") throwError("ColumnInfo", "showAgeLabels", "boolean", o.showAgeLabels);
-  if ("showUncertaintyLabels" in o && typeof o.showUncertaintyLabels !== "boolean") throwError("ColumnInfo", "showUncertaintyLabels", "boolean", o.showUncertaintyLabels);
+  if ("showAgeLabels" in o && typeof o.showAgeLabels !== "boolean")
+    throwError("ColumnInfo", "showAgeLabels", "boolean", o.showAgeLabels);
+  if ("showUncertaintyLabels" in o && typeof o.showUncertaintyLabels !== "boolean")
+    throwError("ColumnInfo", "showUncertaintyLabels", "boolean", o.showUncertaintyLabels);
   if (!Array.isArray(o.fontOptions)) throwError("ColumnInfo", "fontOptions", "array", o.fontOptions);
   for (const fontOption of o.fontOptions) {
     assertValidFontOptions(fontOption);
@@ -860,7 +837,22 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
     assertColumnInfo(child);
   }
   assertFontsInfo(o.fontsInfo);
-  if (o.subInfo) assertSubInfo(o.subInfo);
+  if (o.subInfo) assertSubInfo(o.subInfo, o.columnDisplayType);
+  if (o.columnSpecificSettings) assertColumnSpecificSettings(o.columnSpecificSettings, o.columnDisplayType);
+}
+
+export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes): asserts o is ColumnSpecificSettings {
+  switch (type) {
+    case "Event":
+      assertEventSettings(o);
+      break;
+    default:
+      throw new Error(
+        "ColumnSpecificSettings must be an object of a valid column type. Found value of " +
+          type +
+          " which is not a valid column type"
+      );
+  }
 }
 
 export function assertFontsInfo(o: any): asserts o is FontsInfo {

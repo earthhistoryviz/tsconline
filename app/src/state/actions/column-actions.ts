@@ -108,8 +108,8 @@ export const setRGB = action((column: ColumnInfo, color: RGB) => {
 
 export const setShowAgeLabels = action((isOn: boolean, column: ColumnInfo) => {
   column.showAgeLabels = isOn;
-})
+});
 
 export const setShowUncertaintyLabels = action((isOn: boolean, column: ColumnInfo) => {
   column.showUncertaintyLabels = isOn;
-})
+});
