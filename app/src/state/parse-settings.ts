@@ -363,12 +363,12 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
   column.drawTitle = state.enableTitle;
   column.fonts = state.fontsInfo;
   column.width = column.width;
-  column.backgroundColor.text.r = state.rgb.r;
-  column.backgroundColor.text.g = state.rgb.g;
-  column.backgroundColor.text.b = state.rgb.b;
-  column.customColor.text.r = state.rgb.r;
-  column.customColor.text.g = state.rgb.g;
-  column.customColor.text.b = state.rgb.b;
+  column.backgroundColor.text!.r = state.rgb.r;
+  column.backgroundColor.text!.g = state.rgb.g;
+  column.backgroundColor.text!.b = state.rgb.b;
+  column.customColor.text!.r = state.rgb.r;
+  column.customColor.text!.g = state.rgb.g;
+  column.customColor.text!.b = state.rgb.b;
   column.children = [];
   for (let i = 0; i < state.children.length; i++) {
     column.children.push(translateColumnInfoToColumnInfoTSC(state.children[i]));
