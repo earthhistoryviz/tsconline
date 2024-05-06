@@ -184,7 +184,7 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
         // if the parent is not a child
         if (!isChild.has(parent)) {
           const compare = recursive(
-            chartTitle,
+            "Chart Title",
             parent,
             children,
             columnInfoArray,
@@ -236,14 +236,14 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     },
     popup: "",
     children: [],
-    parent: chartTitle,
+    parent: "Chart Title",
     minAge: Number.MIN_VALUE,
     maxAge: Number.MAX_VALUE,
     units: ageUnits,
     columnDisplayType: "Ruler"
   });
   const chartColumn: ColumnInfo = {
-    name: chartTitle,
+    name: "Chart Title",
     editName: chartTitle,
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
     fontOptions: returnValue.fontOptions,
