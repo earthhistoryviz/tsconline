@@ -340,19 +340,19 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       }
       break;
     case "Zone":
-      column = JSON.parse(JSON.stringify(defaultZoneColumnInfoTSC));
+      column = cloneDeep(defaultZoneColumnInfoTSC);
       break;
     case "Sequence":
-      column = JSON.parse(JSON.stringify(defaultSequenceColumnInfoTSC));
+      column = cloneDeep(defaultSequenceColumnInfoTSC);
       break;
     case "Range":
-      column = JSON.parse(JSON.stringify(defaultRangeColumnInfoTSC));
+      column = cloneDeep(defaultRangeColumnInfoTSC);
       break;
     case "Ruler":
-      column = JSON.parse(JSON.stringify(defaultRulerColumnInfoTSC));
+      column = cloneDeep(defaultRulerColumnInfoTSC);
       break;
     case "Point":
-      column = JSON.parse(JSON.stringify(defaultPointColumnInfoTSC));
+      column = cloneDeep(defaultPointColumnInfoTSC);
   }
   //TODO: check with Ogg about quote usage
   //strip surrounding quotations for id (ex. Belgium Datapack)

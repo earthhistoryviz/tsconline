@@ -10,6 +10,7 @@ import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import DOMPurify from "dompurify";
 import { pushSnackbar } from "./general-actions";
 import { ChartSettings } from "../../types";
+import { cloneDeep } from "lodash";
 
 export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
   if (state.settings.useDatapackSuggestedAge != response) {
@@ -102,6 +103,7 @@ function areSettingsValidForGeneration() {
 }
 
 export const fetchChartFromServer = action("fetchChartFromServer", async (navigate: NavigateFunction) => {
+  // asserts column is not null
   if (!areSettingsValidForGeneration()) return;
   state.showSuggestedAgePopup = false;
   navigate("/chart");
@@ -114,8 +116,8 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   generalActions.setChartContent("");
   let body;
   try {
-    if (state.settingsTabs.columns !== undefined) normalizeColumnProperties(state.settingsTabs.columns);
-    const columnCopy: ColumnInfo = JSON.parse(JSON.stringify(state.settingsTabs.columns));
+    normalizeColumnProperties(state.settingsTabs.columns!);
+    const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
     changeManuallyAddedColumns(columnCopy);
     const chartSettingsCopy: ChartSettings = JSON.parse(JSON.stringify(state.settings));
     const xmlSettings = jsonToXml(columnCopy, chartSettingsCopy);
