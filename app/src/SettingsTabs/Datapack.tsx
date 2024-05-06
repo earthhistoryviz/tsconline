@@ -12,6 +12,7 @@ import { Menu, MenuItem } from '@szhsin/react-menu';
 import "./Datapack.css";
 import { Dialog } from "@mui/material";
 import { action, set } from "mobx";
+import { ErrorCodes } from "../util/error-codes";
 
 export const Datapacks = observer(function Datapacks() {
   const theme = useTheme();
@@ -41,25 +42,60 @@ export const Datapacks = observer(function Datapacks() {
 
       <div>
         <Menu menuButton={<DownloadIcon className="download-icon" />} transition>
-          <MenuItem onClick={(e) => handleDownload(true)}><Typography>encrypted download</Typography></MenuItem>
-          <MenuItem onClick={(e) => handleDownload(false)}><Typography>download</Typography></MenuItem>
+          <MenuItem onClick={() => handleDownload(true, name)}><Typography>encrypted download</Typography></MenuItem>
+          <MenuItem onClick={() => handleDownload(false, name)}><Typography>download</Typography></MenuItem>
         </Menu>
 
       </div>
     )
   }
-
-  function handleDownload(needEncryption: boolean) {
-    //TODO: find a way to pass the real file path and datapack directory to requestDownload. Might need to know the username
-    //      probably need to implement a search route/function. The file path will be used for download.
+  async function getFileURL(needEncryption: boolean, filePath: string, fileDir: string) {
+    let fileBlob;
     if (needEncryption) {
       console.log("encrypted download");
-      actions.requestDownload(true, "dummy/file/path", "dummy/datapack/dir");
+      fileBlob = await actions.requestDownload(true, filePath, fileDir);
     } else {
       console.log("download");
-      actions.requestDownload(false, "dummy/file/path", "dummy/datapack/dir");
+      fileBlob = await actions.requestDownload(false, filePath, fileDir);
+    }
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(fileBlob);
+      await new Promise((resolve, reject) => {
+        reader.onloadend = resolve;
+        reader.onerror = reject;
+      });
+      console.log("reader.result: " + reader.result);
+      return reader.result;
+    } catch (error) {
+      actions.pushError(ErrorCodes.INVALID_PATH);
+      return "";
     }
   }
+
+  const handleDownload = async (needEncryption: boolean, fileName: string) => {
+    //TODO: find a way to pass the real file path and datapack directory to requestDownload. Might need to know the username
+    //      probably need to implement a search route/function. The file path will be used for download.
+
+    const fileURL = await getFileURL(needEncryption, fileName, "username");
+    console.log(fileURL);
+    console.log(fileName);
+    const aTag = document.createElement('a');
+    if (typeof fileURL === "string") {
+      aTag.href = fileURL;
+      //const fileName = fileURL.split('/').pop();
+      if (1) {
+        aTag.setAttribute('download', fileName);
+      }
+      document.body.appendChild(aTag);
+      aTag.click();
+      aTag.remove();
+    }
+
+
+
+  }
+
 
   async function checkActiveDatapacks(name: string, key: number) {
     const activeDatapacks = await actions.loadActiveDatapacks();

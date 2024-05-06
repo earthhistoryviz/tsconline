@@ -58,17 +58,34 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   const datapackInfoChunk: DatapackInfoChunk = { datapackIndex: chunk!, totalChunks: allDatapackKeys.length };
   reply.status(200).send(datapackInfoChunk);
 };
-export const requestDownload = async function requestDownload(request: FastifyRequest<{ Params: { needEncryption: string, filePath: string, datapackDir: string } }>, reply: FastifyReply) {
+
+
+export const requestDownload = async function requestDownload(request: FastifyRequest<{ Params: { needEncryption: string, filename: string, username: string } }>, reply: FastifyReply) {
   const { needEncryption } = request.params;
-  const { filePath } = request.params;
-  const { datapackDir } = request.params;
-  if (needEncryption) {
+  //const { filePath } = request.params;
+  const { filename } = request.params;
+  // const { datapackDir } = request.params;
+  const { username } = request.params;
+
+  //const filename = file.filename;
+  const ext = path.extname(filename);
+  const filenameWithoutExtension = path.basename(filename, ext);
+  const hash = md5(username);
+  const userDir = path.join(assetconfigs.uploadDirectory, hash);
+  const datapackDir = path.join(userDir, "datapacks");
+  const decryptDir = path.join(userDir, "decrypted");
+  const filepath = path.join(datapackDir, filename);
+  const decryptedFilepathDir = path.join(decryptDir, filenameWithoutExtension);
+  //const mapPackIndexFilepath = path.join(userDir, "MapPackIndex.json");
+  //const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json");
+  let downloadPath;
+  if (needEncryption === "true") {
     try {
-      await new Promise<void>((resolve, reject) => {
+      await new Promise<void>((resolve) => {
         const cmd =
           `java -jar ${assetconfigs.activeJar} ` +
           // datapacks:
-          `-d "${filePath.replaceAll("\\", "/")}" ` +
+          `-d "${filepath.replaceAll("\\", "/")}" ` +
           // Tell it where to send the datapacks
           `-enc ${datapackDir.replaceAll("\\", "/")} ` +
           `-node`;
@@ -92,9 +109,26 @@ export const requestDownload = async function requestDownload(request: FastifyRe
       reply.status(500).send({ error: "Failed to encrypt datapacks with error " + e });
       return;
     }
+    downloadPath = path.join(datapackDir.replaceAll("\\", "/"), filename);
+
+  } else {
+    downloadPath = path.join(decryptedFilepathDir, "datapacks", filename);
   }
-  //TODO: finish download. Encypted download -> Encrypted file path; Normal download -> original file path;
+  try {
+    await access(downloadPath);
+    const file = await readFile(downloadPath);
+    reply.send(file);
+
+  } catch (e) {
+    const error = e as NodeJS.ErrnoException;
+    if (error.code === "ENOENT") {
+      reply.status(404).send({ error: "File not found" });
+    } else {
+      reply.status(500).send({ error: "An error occurred" });
+    }
+  }
 }
+
 
 export const loadActiveDatapacks = async function loadActiveDatapacks(request: FastifyRequest, reply: FastifyReply) {
   const activeDatapacks = assetconfigs.activeDatapacks;
