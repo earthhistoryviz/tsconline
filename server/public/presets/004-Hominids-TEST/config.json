@@ -7,6 +7,10 @@
   "settings": "settings.tsc",
   "datapacks": [
     {
+      "name": "Evolution of Modern Life",
+      "file": "TimeTree_of_Life_GTS2020_ENCRYPTED_23Jan2020.dpk"
+    },
+    {
       "name": "Hominids Datapack",
       "file": "Hominids_wImages_GTS2020_Encrypted.dpk"
     }
