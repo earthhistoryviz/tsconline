@@ -122,6 +122,37 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
  */
 function processFonts(fontsNode: Element): FontsInfo {
   const fonts: FontsInfo = JSON.parse(JSON.stringify(defaultFontsInfoConstant));
+  const childNodes = fontsNode.childNodes;
+  for (let i = 0; i < childNodes.length; i++) {
+    const maybeChild = childNodes[i];
+    if (maybeChild.nodeType === Node.ELEMENT_NODE) {
+      const child = <Element> maybeChild;
+      const fontProps = child.textContent!.trim().split(";");
+      for (let i = 0; i < fontProps.length; i++) {
+        if (fontProps[i].includes("font-family")) {
+          fonts[child.getAttribute("function")! as keyof FontsInfo].fontFace = fontProps[i].split(": ")[1] === "Arial" || "Courier" || "Verdana" ? <"Arial" | "Courier" | "Verdana">fontProps[i].split(": ")[1] : "Arial";
+        }
+        if (fontProps[i].includes("font-size")) {
+          //ex 14px
+          const size = fontProps[i].split(": ")[1];
+          fonts[child.getAttribute("function")! as keyof FontsInfo].size = Number(size.substring(0, size.length - 2));
+        }
+        if (fontProps[i].includes("font-style")) {
+          if (fontProps[i].includes("italic")) {
+            fonts[child.getAttribute("function")! as keyof FontsInfo].italic = true;
+          }
+        }
+        if (fontProps[i].includes("font-weight")) {
+          if (fontProps[i].includes("bold")) {
+            fonts[child.getAttribute("function")! as keyof FontsInfo].bold = true;
+          }
+        }
+        if (fontProps[i].includes("fill")) {
+          fonts[child.getAttribute("function")! as keyof FontsInfo].color = fontProps[i].split(": ")[1];
+        }
+      }
+    }
+  }
   return fonts;
 }
 /**
@@ -162,7 +193,7 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
   if (childNodes.length > 0) {
     for (let i = 0; i < childNodes.length; i++) {
       const maybeChild = childNodes[i];
-      if (maybeChild.nodeType === node.ELEMENT_NODE) {
+      if (maybeChild.nodeType === Node.ELEMENT_NODE) {
         const child = <Element>maybeChild;
         const childName = child.getAttribute("id");
         if (child.nodeName === "column") {
