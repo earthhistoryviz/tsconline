@@ -1,5 +1,4 @@
 import React from "react";
-import "./TSCRadioGroup.css";
 import {
   Radio,
   RadioProps,
