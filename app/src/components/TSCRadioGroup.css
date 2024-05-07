@@ -1,10 +1,10 @@
 .radio-label-information {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .radio-img-label {
-    width: 20px;
-    height: 20px;
-    margin-right: 8px;
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
 }
