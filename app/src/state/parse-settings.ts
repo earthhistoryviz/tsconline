@@ -332,12 +332,12 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
   switch (state.columnDisplayType) {
     case "Event":
       //can't set it equal to default because it becomes reference to object
-      assertEventSettings(state.columnSpecificSettings)
+      assertEventSettings(state.columnSpecificSettings);
       column = {
         ...cloneDeep(defaultEventColumnInfoTSC),
         type: state.columnSpecificSettings.type,
         rangeSort: state.columnSpecificSettings.rangeSort
-      }
+      };
       break;
     case "Zone":
       column = cloneDeep(defaultZoneColumnInfoTSC);

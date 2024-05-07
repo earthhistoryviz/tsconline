@@ -46,9 +46,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
     const hasChildren = details.children && Object.keys(details.children).length > 0;
     const columnName = (
       <div>
-        <Typography className="column-display-name">
-          {details.editName}
-        </Typography>
+        <Typography className="column-display-name">{details.editName}</Typography>
       </div>
     );
 

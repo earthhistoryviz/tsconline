@@ -373,7 +373,6 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   const { useCache } = chartrequest;
   const uuid = request.session.get("uuid");
   const settingsXml = chartrequest.settings;
-  console.log(settingsXml)
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
   const hash = md5(settingsXml + chartrequest.datapacks.join(","));
   const chartDirUrlPath = `/${assetconfigs.chartsDirectory}/${hash}`;

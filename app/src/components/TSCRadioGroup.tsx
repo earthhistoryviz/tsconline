@@ -1,53 +1,57 @@
 import React from "react";
 import "./TSCRadioGroup.css";
-import { Radio, RadioProps, FormControl, FormLabel, RadioGroup, FormControlLabel, styled } from "@mui/material";
+import {
+  Radio,
+  RadioProps,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  FormControlLabel,
+  styled,
+  RadioGroupProps
+} from "@mui/material";
 
-const BpIcon = styled('span')({
-  borderRadius: '50%',
+const UncheckedIcon = styled("span")({
+  borderRadius: "50%",
   width: 16,
   height: 16,
-  boxShadow: '0 0 0 1px rgb(16 22 26 / 40%)',
-  backgroundColor: '#f5f8fa',
-  backgroundImage:'linear-gradient(180deg,hsla(0,0%,100%,.05),hsla(0,0%,100%,0))',
-  '.Mui-focusVisible &': {
-    outline: '2px auto rgba(19,124, 189, .6)',
-    outlineOffset: 2,
+  boxShadow: "0 0 0 1px rgb(16 22 26 / 40%)",
+  backgroundColor: "#f5f8fa",
+  backgroundImage: "linear-gradient(180deg,hsla(0,0%,100%,.05),hsla(0,0%,100%,0))",
+  ".Mui-focusVisible &": {
+    outline: "2px auto rgba(19,124, 189, .6)",
+    outlineOffset: 2
   },
-  'input:hover ~ &': {
-    backgroundColor:'#d0dee7',
+  "input:hover ~ &": {
+    backgroundColor: "#d0dee7"
   },
-  'input:disabled ~ &': {
-    boxShadow: 'none',
-    background: 'rgba(57,75,89,.5)',
-  },
+  "input:disabled ~ &": {
+    boxShadow: "none",
+    background: "rgba(57,75,89,.5)"
+  }
 });
 
-const BpCheckedIcon = styled(BpIcon)({
-  backgroundColor: '#137cbd',
-  backgroundImage: 'linear-gradient(180deg,hsla(0,0%,100%,.1),hsla(0,0%,100%,0))',
-  '&::before': {
-    display: 'block',
+const CheckedIcon = styled(UncheckedIcon)({
+  backgroundColor: "#137cbd",
+  backgroundImage: "linear-gradient(180deg,hsla(0,0%,100%,.1),hsla(0,0%,100%,0))",
+  "&::before": {
+    display: "block",
     width: 16,
     height: 16,
-    backgroundImage: 'radial-gradient(#fff,#fff 28%,transparent 32%)',
-    content: '""',
+    backgroundImage: "radial-gradient(#fff,#fff 28%,transparent 32%)",
+    content: '""'
   },
-  'input:hover ~ &': {
-    backgroundColor: '#106ba3',
+  "input:hover ~ &": {
+    backgroundColor: "#106ba3"
   },
+  "input:disabled ~ &": {
+    boxShadow: "none",
+    background: "rgba(57,75,89,.5)"
+  }
 });
 
-
 function TSCRadio(props: RadioProps) {
-  return (
-    <Radio
-      disableRipple
-      color="default"
-      checkedIcon={<BpCheckedIcon/>}
-      icon={<BpIcon/>}
-      {...props}
-    />
-  );
+  return <Radio disableRipple color="default" checkedIcon={<CheckedIcon />} icon={<UncheckedIcon />} {...props} />;
 }
 
 type TSCRadioGroupProps = {
@@ -59,14 +63,22 @@ type TSCRadioGroupProps = {
     label: string;
     imageSrc?: string;
   }[];
-};
+  disabled?: boolean;
+} & RadioGroupProps;
 
-export const TSCRadioGroup: React.FC<TSCRadioGroupProps> = ({ name, radioArray, value, onChange }) => {
+export const TSCRadioGroup: React.FC<TSCRadioGroupProps> = ({
+  name,
+  radioArray,
+  value,
+  onChange,
+  disabled,
+  ...props
+}) => {
   if (radioArray.length === 0) return null;
   return (
-    <FormControl>
+    <FormControl disabled={disabled}>
       <FormLabel>{name}</FormLabel>
-      <RadioGroup value={value} onChange={onChange} name="customized-radios">
+      <RadioGroup {...props} value={value} onChange={onChange} name="customized-radios">
         {radioArray.map((radio, index) => (
           <FormControlLabel
             key={index}

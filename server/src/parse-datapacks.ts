@@ -1459,7 +1459,7 @@ function recursive(
       currentBlank
     );
   }
-  addColumnSettings(currentColumnInfo)
+  addColumnSettings(currentColumnInfo);
   childrenArray.push(currentColumnInfo);
 
   if (parsedColumnEntry) {
