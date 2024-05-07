@@ -62,7 +62,7 @@ export type FileMetadataIndex = {
 
 export type FileMetadata = {
   fileName: string;
-  uploadedAt: string;
+  lastUpdated: string;
   decryptedFilepath: string;
   mapPackIndexFilepath: string;
   datapackIndexFilepath: string;
