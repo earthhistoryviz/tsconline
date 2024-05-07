@@ -127,8 +127,10 @@ function processFonts(fontsNode: Element): FontsInfo {
     const maybeChild = childNodes[i];
     if (maybeChild.nodeType === Node.ELEMENT_NODE) {
       const child = <Element> maybeChild;
+
       const fontProps = child.textContent!.trim().split(";");
       for (let i = 0; i < fontProps.length; i++) {
+        fonts[child.getAttribute("function")! as keyof FontsInfo].inheritable = Boolean(child.getAttribute("inheritable"));
         if (fontProps[i].includes("font-family")) {
           fonts[child.getAttribute("function")! as keyof FontsInfo].fontFace = fontProps[i].split(": ")[1] === "Arial" || "Courier" || "Verdana" ? <"Arial" | "Courier" | "Verdana">fontProps[i].split(": ")[1] : "Arial";
         }
