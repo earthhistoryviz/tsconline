@@ -21,6 +21,15 @@
   overflow: auto;
   width: 80vw;
   max-height: 80vh;
+  border: 1px solid gray;
+  border-radius: 4px;
+  z-index: 0;
+  padding: 10px;
+}
+
+.MuiTypography-root.column-display-name {
+  font-size: 0.97rem;
+  padding: 6px;
 }
 
 .column-checkbox {
