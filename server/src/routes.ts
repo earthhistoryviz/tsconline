@@ -23,7 +23,7 @@ import { parseExcelFile } from "./parse-excel-file.js";
 import path from "path";
 import pump from "pump";
 import { loadIndexes } from "./load-packs.js";
-import { writeFileMetadata } from "./file-metadata-handler.js";
+import { updateFileMetadata, writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
 
@@ -411,11 +411,12 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   const userDatapackFilepaths = await glob(`${assetconfigs.uploadDirectory}/${uuid}/datapacks/*`);
   const userDatapackNames = userDatapackFilepaths.map((datapack) => path.basename(datapack));
   const datapacks = [];
+  const userDatapacks = [];
   for (const datapack of chartrequest.datapacks) {
     if (assetconfigs.activeDatapacks.includes(datapack)) {
       datapacks.push(`"${assetconfigs.datapacksDirectory}/${datapack}"`);
     } else if (userDatapackNames.includes(datapack)) {
-      datapacks.push(`"${assetconfigs.uploadDirectory}/${uuid}/datapacks/${datapack}"`);
+      userDatapacks.push(`"${assetconfigs.uploadDirectory}/${uuid}/datapacks/${datapack}"`);
     } else {
       console.log("ERROR: datapack: ", datapack, " is not included in activeDatapacks");
       console.log("assetconfig.activeDatapacks:", assetconfigs.activeDatapacks);
@@ -423,6 +424,8 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       reply.send({ error: "ERROR: failed to load datapacks" });
     }
   }
+  datapacks.push(...userDatapacks)
+  updateFileMetadata(assetconfigs.fileMetadata, userDatapacks);
   // Call the Java monster...
   //const jarArgs: string[] = ['xvfb-run', '-jar', './jar/TSC.jar', '-node', '-s', `../files/${title}settings.tsc`, '-ss', `../files/${title}settings.tsc`, '-d', `../files/${title}datapack.txt`, '-o', `../files/${title}save.pdf`];
   //const jarArgs: string[] = ['-jar', './jar/TSC.jar', '-d', `./files/${title}datapack.txt`, '-s', `./files/${title}settings.tsc`];
