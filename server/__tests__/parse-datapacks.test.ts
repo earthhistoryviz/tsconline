@@ -29,6 +29,7 @@ jest.mock("@tsconline/shared", () => ({
   }),
   allFontOptions: ["Column Header", "Popup Body"],
   defaultFontsInfo: { font: "Arial" },
+  defaultEventSettings: { type: "events", rangeSort: "first occurrence" },
   assertFontsInfo: jest.fn().mockImplementation((fonts) => {
     if (fonts.font !== "Arial") throw new Error("Invalid font");
   })
@@ -68,6 +69,7 @@ describe("general parse-datapacks tests", () => {
    */
   it("should parse africa general datapack", async () => {
     const datapacks = await parseDatapacks("", "parse-datapacks-test-1.txt");
+    console.log(JSON.stringify(datapacks, null, 2));
     expect(datapacks).toEqual(key["general-parse-datapacks-test-1-key"]);
   });
 

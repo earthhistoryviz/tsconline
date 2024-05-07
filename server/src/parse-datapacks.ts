@@ -1451,13 +1451,10 @@ function recursive(
   if (blankMap.has(currentColumn)) {
     const currentBlank = blankMap.get(currentColumn)!;
     // TODO NOTE FOR FUTURE: @Paolo - Java file appends all fonts to this, but from trial and error, only column header makes sense. If this case changes here we would change it
-    Object.assign(
-      {
-        ...currentBlank,
-        columnDisplayType: "Blank"
-      },
-      currentBlank
-    );
+    Object.assign(currentColumnInfo, {
+      ...currentBlank,
+      columnDisplayType: "Blank"
+    });
   }
   addColumnSettings(currentColumnInfo);
   childrenArray.push(currentColumnInfo);
