@@ -261,7 +261,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     await errorHandler("Failed to load and write metadata for file", 500, e);
     return;
   }
-  console.log("File uploaded: ", filename);
   reply.status(200).send({ message: "File uploaded" });
 };
 
