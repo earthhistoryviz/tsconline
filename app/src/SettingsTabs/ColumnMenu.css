@@ -12,6 +12,11 @@
   flex-grow: 1;
   background-color: lightblue;
 }
+.column-menu-header {
+  display: flex;
+  flex-direction: row;
+  width: 20vw;
+}
 .column-menu-content {
   display: none;
   flex-direction: column;

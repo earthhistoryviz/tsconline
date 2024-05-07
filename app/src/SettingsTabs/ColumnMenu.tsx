@@ -71,7 +71,7 @@ export const ColumnMenu = observer(() => {
   }
   return (
     <div className={openMenu ? "column-menu" : ""}>
-      <div style={{ display: "flex", flexDirection: "row", minWidth: "300px" }}>
+      <div className="column-menu-header">
         <div style={{ backgroundColor: "lightgray" }}>
           <ToggleButton
             value="check"
