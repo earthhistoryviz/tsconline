@@ -9,6 +9,7 @@ import {
   styled,
   RadioGroupProps
 } from "@mui/material";
+import "./TSCRadioGroup.css"
 
 const UncheckedIcon = styled("span")({
   borderRadius: "50%",
@@ -84,12 +85,12 @@ export const TSCRadioGroup: React.FC<TSCRadioGroupProps> = ({
             value={radio.value}
             control={<TSCRadio />}
             label={
-              <div style={{ display: "flex", alignItems: "center" }}>
+              <div className="radio-label-information">
                 {radio.imageSrc && (
                   <img
                     src={radio.imageSrc}
                     alt={radio.label}
-                    style={{ width: "20px", height: "20px", marginRight: "8px" }}
+                    className="radio-img-label"
                   />
                 )}
                 {radio.label}
