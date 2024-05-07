@@ -72,7 +72,7 @@ export const ColumnMenu = observer(() => {
   return (
     <div className={openMenu ? "column-menu" : ""}>
       <div className="column-menu-header">
-        <div style={{ backgroundColor: "lightgray" }}>
+        <div className="column-settings-cog">
           <ToggleButton
             value="check"
             selected={openMenu}
