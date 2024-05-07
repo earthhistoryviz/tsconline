@@ -30,7 +30,7 @@ import {
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { fetcher } from "../../util";
-import { initializeColumnHashMap } from "./column-actions";
+import { applyChartColumnSettings, initializeColumnHashMap } from "./column-actions";
 import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
@@ -271,7 +271,7 @@ export const fetchTimescaleDataAction = action("fetchTimescaleData", async () =>
   }
 });
 
-const setChartSettings = action("setChartSettings", (settings: ChartSettingsInfoTSC) => {
+const applyChartSettings = action("applyChartSettings", (settings: ChartSettingsInfoTSC) => {
   const {
     topAge,
     baseAge,
@@ -284,6 +284,7 @@ const setChartSettings = action("setChartSettings", (settings: ChartSettingsInfo
     enHideBlockLable,
     enPriority
   } = settings;
+  //TODO: account for settings with only stages, no number/text.
   for (const unit of topAge) {
     if (!state.settings.timeSettings[unit.unit]) {
       state.settings.timeSettings[unit.unit] = JSON.parse(JSON.stringify(defaultTimeSettings));
@@ -428,7 +429,8 @@ export const setDatapackConfig = action(
     if (chartSettings !== null) {
       assertChartInfoTSC(chartSettings);
       chartSettings = <ChartInfoTSC>chartSettings;
-      setChartSettings(chartSettings.settings);
+      applyChartSettings(chartSettings.settings);
+      applyChartColumnSettings(chartSettings["class datastore.RootColumn:Chart Root"]);
     }
     state.settings.datapackContainsSuggAge = foundDefaultAge;
     state.mapState.mapHierarchy = mapHierarchy;

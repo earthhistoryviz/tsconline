@@ -1,6 +1,11 @@
 import { action } from "mobx";
 import { state } from "../state";
-import { ColumnInfo, EventSettings, RGB, ValidFontOptions } from "@tsconline/shared";
+import { ColumnInfo, EventSettings, ColumnInfoTSC, RGB, ValidFontOptions } from "@tsconline/shared";
+
+export const applyChartColumnSettings = action("applyChartColumnSettings", (settings: ColumnInfoTSC) => {
+  for (let i = 0; i < settings.children.length; i++) {
+  }
+})
 
 export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
   state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
