@@ -35,7 +35,7 @@ export const Settings = observer(function Settings() {
   }
 
   return (
-    <div style={{ background: theme.palette.settings.light, overflow: "auto"}}>
+    <div style={{ background: theme.palette.settings.light, overflow: "auto" }}>
       <TSCTabs value={selectedTabIndex} onChange={handleChange} centered>
         <TSCTab label="Time" onClick={() => actions.setSettingsTabsSelected("time")} />
         <TSCTab label="Column" onClick={() => actions.setSettingsTabsSelected("column")} />

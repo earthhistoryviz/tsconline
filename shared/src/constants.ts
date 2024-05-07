@@ -14,7 +14,7 @@ import {
 
 export const defaultEventSettings: EventSettings = {
   type: "events",
-  rangeSort: "first occurrence",
+  rangeSort: "first occurrence"
 };
 
 export const allFontOptions: ValidFontOptions[] = [

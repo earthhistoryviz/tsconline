@@ -225,9 +225,11 @@ export type ColumnInfo = {
   columnSpecificSettings?: ColumnSpecificSettings;
 };
 
+export type RangeSort = "first occurrence" | "last occurrence" | "alphabetical";
+
 export type EventSettings = {
   type: EventType;
-  rangeSort: "first occurrence" | "last occurrence" | "alphabetical";
+  rangeSort: RangeSort;
 };
 
 export type Range = ColumnHeaderProps & {
@@ -427,8 +429,13 @@ export function assertEventSettings(o: any): asserts o is EventSettings {
   if (!o || typeof o !== "object") throw new Error("EventSettings must be a non-null object");
   if (typeof o.type !== "string" || !isEventType(o.type))
     throwError("EventSettings", "type", "string and events | ranges", o.type);
-  if (typeof o.rangeSort !== "string" || !/^(first occurrence|last occurrence|alphabetical)$/.test(o.rangeSort))
-    throwError("EventSettings", "rangeSort", "string and first occurrence | last occurrence | alphabetical", o.rangeSort);
+  if (typeof o.rangeSort !== "string" || !isRangeSort(o.rangeSort))
+    throwError(
+      "EventSettings",
+      "rangeSort",
+      "string and first occurrence | last occurrence | alphabetical",
+      o.rangeSort
+    );
 }
 
 export function assertMapPackInfoChunk(o: any): asserts o is MapPackInfoChunk {
@@ -895,6 +902,11 @@ export function assertMapHierarchy(o: any): asserts o is MapHierarchy {
 export function isEventType(o: any): o is EventType {
   if (typeof o !== "string") return false;
   if (!/^(events|ranges)$/.test(o)) return false;
+  return true;
+}
+export function isRangeSort(o: any): o is RangeSort {
+  if (typeof o !== "string") return false;
+  if (!/^(first occurrence|last occurrence|alphabetical)$/.test(o)) return false;
   return true;
 }
 

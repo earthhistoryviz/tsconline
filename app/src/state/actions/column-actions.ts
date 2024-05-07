@@ -44,7 +44,7 @@ export const toggleSettingsTabColumn = action((name: string) => {
 export const setEventColumnSettings = action((eventSettings: EventSettings, newSettings: Partial<EventSettings>) => {
   if (newSettings.type) eventSettings.type = newSettings.type;
   if (newSettings.rangeSort) eventSettings.rangeSort = newSettings.rangeSort;
-})
+});
 
 export const updateEditName = action((newName: string) => {
   if (state.settingsTabs.columnSelected === null) {
