@@ -1,4 +1,3 @@
-import { existsSync } from "fs";
 import { access, readFile, rm, writeFile } from "fs/promises";
 import { assertFileMetadataIndex } from "./types.js";
 import { assertDatapackIndex, assertMapPackIndex } from "@tsconline/shared";

@@ -79,7 +79,7 @@ export function assertEmail(o: any): asserts o is Email {
 export function assertFileMetadata(o: any): asserts o is FileMetadata {
   if (typeof o !== "object" || !o) throw "FileMetadata must be an object";
   if (typeof o.fileName !== "string") throwError("FileMetadata", "fileName", "string", o.fileName);
-  if (typeof o.uploadedAt !== "string") throwError("FileMetadata", "uploadedAt", "string", o.uploadedAt);
+  if (typeof o.lastUpdated !== "string") throwError("FileMetadata", "lastUpdated", "string", o.lastUpdated);
   if (typeof o.decryptedFilepath !== "string")
     throwError("FileMetadata", "decryptedFilepath", "string", o.decryptedFilepath);
   if (typeof o.mapPackIndexFilepath !== "string")
