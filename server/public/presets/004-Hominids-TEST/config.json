@@ -1,14 +1,14 @@
 {
   "icon": "evolution-icon.png",
   "background": "hominid_image.jpeg",
-  "title": "Hominids and TimeTree",
+  "title": "Hominids and Vertabrates",
   "date": "01.31.2024",
   "description": "TimeTree:\n3 main suites, 1200 organisms each\n\n From Archea microbes to primates, spanning 4 billion years. View as super-tree, individual microbe/plant/animal trees, or as trees for specific types of life (ca. 50 groups). Based on molecular clocks and the fossil record (but only for extant life) from TimeTree of Life (Hedges, S.B., and Kumar, S., eds, Oxford Univ. Press, 2009). [NOTE: Evolution branching is best visualized using intervals greater than 60 myr and with a vertical scale of 0.5 or less.]\n\nHominids: \n5 columns, includes 20 images.\n Tool intervals, main Homo and Australopithecus ranges (ca. 5 Ma, includes images) and major events in Primate evolution (ca. 50 Ma). Pop-ups have detailed informtion and links. [Images courtesy of American Museum of History and Smithsonian, Mar2011.] [NOTE: Suggest beginning with 0.05 to 2 Ma with vertical scale of 8",
   "settings": "settings.tsc",
   "datapacks": [
     {
-      "name": "Evolution of Modern Life",
-      "file": "TimeTree_of_Life_GTS2020_ENCRYPTED_23Jan2020.dpk"
+      "name": "Vertabrates",
+      "file": "Vertebrates w_Images GTS2020 23Jan2021.dpk"
     },
     {
       "name": "Hominids Datapack",
