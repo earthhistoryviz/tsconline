@@ -3325,12 +3325,14 @@ const RAW_RUNTIME_STATE =
           ["@tsconline/shared", "workspace:shared"],\
           ["@types/color", "npm:3.0.6"],\
           ["@types/dompurify", "npm:3.0.5"],\
+          ["@types/lodash", "npm:4.17.1"],\
           ["@types/react", "npm:18.2.73"],\
           ["@types/react-dom", "npm:18.2.1"],\
           ["@vitejs/plugin-react", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:4.2.1"],\
           ["clsx", "npm:2.1.0"],\
           ["color", "npm:4.2.3"],\
           ["dompurify", "npm:3.0.11"],\
+          ["lodash", "npm:4.17.21"],\
           ["lottie-web", "npm:5.12.2"],\
           ["mobx", "npm:6.9.0"],\
           ["mobx-react-lite", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:3.4.3"],\
@@ -3636,6 +3638,13 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./.yarn/cache/@types-lodash-npm-4.14.202-76de3e302b-1bb9760a5b.zip/node_modules/@types/lodash/",\
         "packageDependencies": [\
           ["@types/lodash", "npm:4.14.202"]\
+        ],\
+        "linkType": "HARD"\
+      }],\
+      ["npm:4.17.1", {\
+        "packageLocation": "./.yarn/cache/@types-lodash-npm-4.17.1-8c731628b2-384bdd2934.zip/node_modules/@types/lodash/",\
+        "packageDependencies": [\
+          ["@types/lodash", "npm:4.17.1"]\
         ],\
         "linkType": "HARD"\
       }]\

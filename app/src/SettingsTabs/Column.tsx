@@ -46,9 +46,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
     const hasChildren = details.children && Object.keys(details.children).length > 0;
     const columnName = (
       <div>
-        <Typography className="ColumnName" sx={{ fontSize: "0.97rem" }} style={{ padding: "6px" }}>
-          {details.editName}
-        </Typography>
+        <Typography className="column-display-name">{details.editName}</Typography>
       </div>
     );
 
@@ -183,14 +181,7 @@ export const Column = observer(function Column() {
   return (
     <div className="column-top-level">
       <div className="column-accordion-and-menu">
-        <Box
-          className="hide-scrollbar column-accordion-wrapper"
-          sx={{
-            border: `1px solid gray`,
-            borderRadius: "4px",
-            zIndex: 0,
-            padding: "10px"
-          }}>
+        <Box className="hide-scrollbar column-accordion-wrapper">
           <TSCButton
             id="column-expand-buttons"
             onClick={() => {

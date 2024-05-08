@@ -10,6 +10,7 @@ import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import DOMPurify from "dompurify";
 import { pushSnackbar } from "./general-actions";
 import { ChartSettings } from "../../types";
+import { cloneDeep } from "lodash";
 
 export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
   if (state.settings.useDatapackSuggestedAge != response) {
@@ -102,6 +103,7 @@ function areSettingsValidForGeneration() {
 }
 
 export const fetchChartFromServer = action("fetchChartFromServer", async (navigate: NavigateFunction) => {
+  // asserts column is not null
   if (!areSettingsValidForGeneration()) return;
   state.showSuggestedAgePopup = false;
   navigate("/chart");
@@ -114,8 +116,8 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   generalActions.setChartContent("");
   let body;
   try {
-    if (state.settingsTabs.columns !== undefined) normalizeColumnProperties(state.settingsTabs.columns);
-    const columnCopy: ColumnInfo = JSON.parse(JSON.stringify(state.settingsTabs.columns));
+    normalizeColumnProperties(state.settingsTabs.columns!);
+    const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
     changeManuallyAddedColumns(columnCopy);
     const chartSettingsCopy: ChartSettings = JSON.parse(JSON.stringify(state.settings));
     const xmlSettings = jsonToXml(columnCopy, chartSettingsCopy);
@@ -171,28 +173,32 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
  * However, this is asyncronous, which makes it less likely to cause problems.
  * @param column
  */
-function changeManuallyAddedColumns(column: ColumnInfo) {
-  if (column.name === `${column.parent} Facies Label`) {
-    column.name = "Facies Label";
-  } else if (column.name === `${column.parent} Series Label`) {
-    column.name = "Series Label";
-  } else if (column.name === `${column.parent} Members`) {
-    column.name = "Members";
-  } else if (column.name === `${column.parent} Facies`) {
-    column.name = "Facies";
-  } else if (column.name === `${column.parent} Chron`) {
-    column.name = "Chron";
-  } else if (column.name === `${column.parent} Chron Label`) {
-    column.name = "Chron Label";
-  } else if (column.name.substring(0, 14) === "Chart Title in") {
+const changeManuallyAddedColumns = action((column: ColumnInfo) => {
+  const parent = column.parent && state.settingsTabs.columnHashMap.get(column.parent);
+  if (parent && parent.columnDisplayType === "BlockSeriesMetaColumn") {
+    if (column.name === `${column.parent} Facies Label`) {
+      column.name = "Facies Label";
+    } else if (column.name === `${column.parent} Series Label`) {
+      column.name = "Series Label";
+    } else if (column.name === `${column.parent} Members`) {
+      column.name = "Members";
+    } else if (column.name === `${column.parent} Facies`) {
+      column.name = "Facies";
+    } else if (column.name === `${column.parent} Chron`) {
+      column.name = "Chron";
+    } else if (column.name === `${column.parent} Chron Label`) {
+      column.name = "Chron Label";
+    }
+  }
+  if (column.columnDisplayType === "RootColumn" && column.name.substring(0, 14) === "Chart Title in") {
     column.name = column.name.substring(15, column.name.length);
   }
   for (const child of column.children) {
     changeManuallyAddedColumns(child);
   }
-}
+});
 
-function normalizeColumnProperties(column: ColumnInfo) {
+const normalizeColumnProperties = action((column: ColumnInfo) => {
   if (column.width !== undefined && (isNaN(column.width) || column.width < 20)) {
     column.width = 20;
     let name = column.name.substring(0, 17);
@@ -202,7 +208,7 @@ function normalizeColumnProperties(column: ColumnInfo) {
   for (const child of column.children) {
     normalizeColumnProperties(child);
   }
-}
+});
 
 const savePreviousSettings = action("savePreviousSettings", () => {
   state.prevSettings = JSON.parse(JSON.stringify(state.settings));

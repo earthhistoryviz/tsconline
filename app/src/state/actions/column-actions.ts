@@ -1,6 +1,6 @@
 import { action } from "mobx";
 import { state } from "../state";
-import { ColumnInfo, RGB, ValidFontOptions } from "@tsconline/shared";
+import { ColumnInfo, EventSettings, RGB, ValidFontOptions } from "@tsconline/shared";
 
 export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
   state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
@@ -39,6 +39,11 @@ export const toggleSettingsTabColumn = action((name: string) => {
       return;
     } else curcol = state.settingsTabs.columnHashMap.get(curcol.parent!)!;
   }
+});
+
+export const setEventColumnSettings = action((eventSettings: EventSettings, newSettings: Partial<EventSettings>) => {
+  if (newSettings.type) eventSettings.type = newSettings.type;
+  if (newSettings.rangeSort) eventSettings.rangeSort = newSettings.rangeSort;
 });
 
 export const updateEditName = action((newName: string) => {
@@ -104,4 +109,12 @@ export const setEnableTitle = action((isOn: boolean, column: ColumnInfo) => {
 
 export const setRGB = action((column: ColumnInfo, color: RGB) => {
   column.rgb = color;
+});
+
+export const setShowAgeLabels = action((isOn: boolean, column: ColumnInfo) => {
+  column.showAgeLabels = isOn;
+});
+
+export const setShowUncertaintyLabels = action((isOn: boolean, column: ColumnInfo) => {
+  column.showUncertaintyLabels = isOn;
 });

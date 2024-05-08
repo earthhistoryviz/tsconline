@@ -73,6 +73,8 @@
                     "editName": "Nigeria Coast",
                     "on": true,
                     "enableTitle": false,
+                    "showAgeLabels": false,
+                    "showUncertaintyLabels": false,
                     "fontsInfo": {
                       "font": "Arial"
                     },
@@ -108,6 +110,7 @@
                     "fontsInfo": {
                       "font": "Arial"
                     },
+                    "showAgeLabels": false,
                     "popup": "",
                     "children": [],
                     "parent": "Nigeria Coast",
@@ -135,6 +138,7 @@
                       "Age Label",
                       "Zone Column Label"
                     ],
+                    "showAgeLabels": false,
                     "popup": "",
                     "children": [],
                     "parent": "Nigeria Coast",
@@ -162,6 +166,7 @@
                       "Age Label",
                       "Zone Column Label"
                     ],
+                    "showAgeLabels": false,
                     "popup": "",
                     "children": [],
                     "parent": "Nigeria Coast",
@@ -236,6 +241,8 @@
                       "Age Label",
                       "Uncertainty Label"
                     ],
+                    "showAgeLabels": false,
+                    "showUncertaintyLabels": false,
                     "popup": "",
                     "children": [],
                     "parent": "South Atlantic",
@@ -255,6 +262,7 @@
                     "editName": "Members",
                     "on": false,
                     "enableTitle": false,
+                    "showAgeLabels": false,
                     "fontOptions": [
                       "Column Header",
                       "Age Label",
@@ -285,6 +293,7 @@
                     "fontsInfo": {
                       "font": "Arial"
                     },
+                    "showAgeLabels": false,
                     "fontOptions": [
                       "Column Header",
                       "Age Label",
@@ -312,6 +321,7 @@
                     "fontsInfo": {
                       "font": "Arial"
                     },
+                    "showAgeLabels": false,
                     "fontOptions": [
                       "Column Header",
                       "Age Label",
@@ -499,6 +509,7 @@
                   "g": 217,
                   "b": 234
                 },
+                "showAgeLabels": false,
                 "fontOptions": [
                   "Column Header",
                   "Age Label",
@@ -549,6 +560,8 @@
                     "fontsInfo": {
                       "font": "Arial"
                     },
+                    "showAgeLabels": false,
+                    "showUncertaintyLabels": false,
                     "fontOptions": [
                       "Column Header",
                       "Age Label",
@@ -573,6 +586,7 @@
                     "editName": "Members",
                     "on": false,
                     "enableTitle": false,
+                    "showAgeLabels": false,
                     "fontOptions": [
                       "Column Header",
                       "Age Label",
@@ -603,6 +617,7 @@
                     "fontsInfo": {
                       "font": "Arial"
                     },
+                    "showAgeLabels": false,
                     "fontOptions": [
                       "Column Header",
                       "Age Label",
@@ -630,6 +645,7 @@
                     "fontsInfo": {
                       "font": "Arial"
                     },
+                    "showAgeLabels": false,
                     "fontOptions": [
                       "Column Header",
                       "Age Label",
@@ -705,6 +721,12 @@
                   "g": 200,
                   "b": 255
                 },
+                "showAgeLabels": false,
+                "showUncertaintyLabels": false,
+                "columnSpecificSettings": {
+                  "type": "events",
+                  "rangeSort": "first occurrence"
+                },
                 "fontOptions": [
                   "Column Header",
                   "Age Label",
@@ -713,7 +735,7 @@
                   "Range Label"
                 ],
                 "units": "Ma",
-                "columnDisplayType": "MetaColumn",
+                "columnDisplayType": "Event",
                 "subInfo": [
                   {
                     "label": "SubEventInfo 1",
@@ -784,6 +806,7 @@
                     "editName": "Chron",
                     "on": true,
                     "enableTitle": false,
+                    "showAgeLabels": false,
                     "fontOptions": [
                       "Column Header",
                       "Age Label"
@@ -810,6 +833,7 @@
                     "editName": "Chron Label",
                     "on": false,
                     "enableTitle": false,
+                    "showAgeLabels": false,
                     "fontOptions": [
                       "Column Header",
                       "Age Label",
@@ -837,6 +861,7 @@
                     "editName": "Series Label",
                     "on": true,
                     "enableTitle": false,
+                    "showAgeLabels": false,
                     "fontOptions": [
                       "Column Header",
                       "Age Label",
@@ -874,7 +899,7 @@
                   "Zone Column Label"
                 ],
                 "units": "Ma",
-                "columnDisplayType": "MetaColumn",
+                "columnDisplayType": "BlockSeriesMetaColumn",
                 "subInfo": [
                   {
                     "polarity": "TOP",
@@ -919,7 +944,7 @@
                   "Point Column Scale Label"
                 ],
                 "units": "Ma",
-                "columnDisplayType": "MetaColumn",
+                "columnDisplayType": "Point",
                 "subInfo": [
                   {
                     "age": 4,
@@ -952,6 +977,7 @@
                   "g": 255,
                   "b": 255
                 },
+                "showAgeLabels": false,
                 "fontOptions": [
                   "Column Header",
                   "Age Label",
@@ -998,7 +1024,7 @@
                   "Column Header"
                 ],
                 "units": "Ma",
-                "columnDisplayType": "MetaColumn",
+                "columnDisplayType": "Freehand",
                 "subInfo": [
                   {
                     "topAge": 0,
@@ -1033,7 +1059,7 @@
                   "Column Header"
                 ],
                 "units": "Ma",
-                "columnDisplayType": "MetaColumn"
+                "columnDisplayType": "Blank"
               },
               {
                 "name": "Transect",
