@@ -115,6 +115,6 @@
 .szh-menu__submenu.color-menu > .szh-menu__item {
   padding-left: 16px;
 }
-.szh-menu-container.menu > .szh-menu {
+.szh-menu-container.filter-menu > .szh-menu {
   z-index: 1300;
 }

@@ -1,4 +1,4 @@
-import { ChartSettings, SettingsTabs } from "./types";
+import { ChartSettings } from "./types";
 
 export const settings: ChartSettings = {
   timeSettings: {

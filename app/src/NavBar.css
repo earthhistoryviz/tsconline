@@ -15,3 +15,9 @@
 .login-tab .MuiTab-iconWrapper {
   margin-bottom: 0px;
 }
+.settings-sub-menu-item {
+  justify-content: center;
+}
+.szh-menu-container.settings-sub-menu > .szh-menu {
+  min-width: 130px;
+}

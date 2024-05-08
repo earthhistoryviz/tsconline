@@ -37,7 +37,7 @@ export const SettingsMenuOptionLabels = {
   column: "Column",
   mappoints: "Map Points",
   datapacks: "Datapacks"
-}; 
+};
 
 export type SettingsTabs = keyof typeof SettingsMenuOptionLabels;
 
