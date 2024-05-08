@@ -195,6 +195,8 @@ server.post("/auth/reset-password", loginRoutes.resetPassword);
 
 server.post("/auth/reset-email", loginRoutes.resetEmail);
 
+server.post("/auth/account-recovery", loginRoutes.accountRecovery);
+
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
 server.post<{ Params: { usecache: string; useSuggestedAge: string; username: string } }>(

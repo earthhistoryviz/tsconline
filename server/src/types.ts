@@ -14,7 +14,7 @@ export interface UserTable {
   uuid: string;
   pictureUrl: string | null;
   emailVerified: number;
-  invalidateSession: boolean;
+  invalidateSession: number;
 }
 
 export interface VerificationTable {
