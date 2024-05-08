@@ -1,6 +1,6 @@
 .column-menu {
-  width: 300px;
-  height: 550px;
+  width: fit-content;
+  height: fit-content;
   background-color: lightblue;
   display: flex;
   flex-direction: column;
@@ -11,6 +11,14 @@
   align-items: center;
   flex-grow: 1;
   background-color: lightblue;
+}
+.column-menu-header {
+  display: flex;
+  flex-direction: row;
+  width: 20vw;
+}
+.column-settings-cog {
+  background-color: lightgray;
 }
 .column-menu-content {
   display: none;

@@ -10,6 +10,8 @@ import {
   FontsInfo,
   assertChartInfoTSC,
   assertChartSettingsInfoTSC,
+  assertEventColumnInfoTSC,
+  assertEventSettings,
   assertRulerColumnInfoTSC,
   assertZoneColumnInfoTSC,
   defaultChartSettingsInfoTSC,
@@ -25,6 +27,7 @@ import {
 } from "@tsconline/shared";
 import { ChartSettings } from "../types";
 import { trimQuotes } from "../util/util";
+import { cloneDeep } from "lodash";
 
 /**
  * casts a string to a specified type
@@ -329,22 +332,27 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
   switch (state.columnDisplayType) {
     case "Event":
       //can't set it equal to default because it becomes reference to object
-      column = JSON.parse(JSON.stringify(defaultEventColumnInfoTSC));
+      assertEventSettings(state.columnSpecificSettings);
+      column = {
+        ...cloneDeep(defaultEventColumnInfoTSC),
+        type: state.columnSpecificSettings.type,
+        rangeSort: state.columnSpecificSettings.rangeSort
+      };
       break;
     case "Zone":
-      column = JSON.parse(JSON.stringify(defaultZoneColumnInfoTSC));
+      column = cloneDeep(defaultZoneColumnInfoTSC);
       break;
     case "Sequence":
-      column = JSON.parse(JSON.stringify(defaultSequenceColumnInfoTSC));
+      column = cloneDeep(defaultSequenceColumnInfoTSC);
       break;
     case "Range":
-      column = JSON.parse(JSON.stringify(defaultRangeColumnInfoTSC));
+      column = cloneDeep(defaultRangeColumnInfoTSC);
       break;
     case "Ruler":
-      column = JSON.parse(JSON.stringify(defaultRulerColumnInfoTSC));
+      column = cloneDeep(defaultRulerColumnInfoTSC);
       break;
     case "Point":
-      column = JSON.parse(JSON.stringify(defaultPointColumnInfoTSC));
+      column = cloneDeep(defaultPointColumnInfoTSC);
   }
   //TODO: check with Ogg about quote usage
   //strip surrounding quotations for id (ex. Belgium Datapack)
@@ -370,6 +378,8 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
   column.customColor.text!.g = state.rgb.g;
   column.customColor.text!.b = state.rgb.b;
   column.children = [];
+  if (state.showAgeLabels) column.drawAgeLabel = state.showAgeLabels;
+  if (state.showUncertaintyLabels) column.drawUncertaintyLabel = state.showUncertaintyLabels;
   for (let i = 0; i < state.children.length; i++) {
     column.children.push(translateColumnInfoToColumnInfoTSC(state.children[i]));
   }

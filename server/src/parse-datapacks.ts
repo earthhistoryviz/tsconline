@@ -41,7 +41,8 @@ import {
   ColumnInfoType,
   assertSubInfo,
   SubInfo,
-  assertDatapackParsingPack
+  assertDatapackParsingPack,
+  defaultEventSettings
 } from "@tsconline/shared";
 import { trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter } from "./util.js";
 import { createInterface } from "readline";
@@ -225,7 +226,7 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     name: ageUnits.split(" ")[0]!,
     editName: ageUnits.split(" ")[0]!,
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
-    fontOptions: ["Column Header", "Ruler Label"],
+    fontOptions: getValidFontOptions("Ruler"),
     on: true,
     width: 100,
     enableTitle: true,
@@ -263,6 +264,7 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     units: ageUnits,
     columnDisplayType: "RootColumn"
   };
+  setShowLabels(chartColumn);
   const datapackParsingPack = { columnInfo: chartColumn, ageUnits, defaultChronostrat, formatVersion };
   assertDatapackParsingPack(datapackParsingPack);
   if (date) datapackParsingPack.date = date;
@@ -271,6 +273,28 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
   if (verticalScale) datapackParsingPack.verticalScale = verticalScale;
   return datapackParsingPack;
 }
+
+/**
+ * @Paolo I chose to implement this way to avoid creating crazy conditionals in the many ways we create columns since we have
+ * to check multiple different types of columns and if the font options include a certain type of font option.
+ * I also am not 100% sure of whether or not being specific about the font options is necessary, but I think it is.
+ * (The xml gives everyone the ability to show labels, but I think it is better to be specific about it)
+ * @param column
+ */
+function setShowLabels(column: ColumnInfo) {
+  if (
+    column.columnDisplayType !== "RootColumn" &&
+    column.columnDisplayType !== "MetaColumn" &&
+    column.columnDisplayType !== "BlockSeriesMetaColumn"
+  ) {
+    if (column.fontOptions.includes("Age Label")) column.showAgeLabels = false;
+    if (column.fontOptions.includes("Uncertainty Label")) column.showUncertaintyLabels = false;
+  }
+  for (const child of column.children) {
+    setShowLabels(child);
+  }
+}
+
 /**
  * This will populate a mapping of all parents : childen[]
  * We need this to recursively iterate correctly. We do not want
@@ -564,12 +588,7 @@ export async function getColumnTypes(
       Object.assign(blank, { ...createDefaultColumnHeaderProps() });
       continue;
     }
-    if (
-      !inFreehandBlock &&
-      (tabSeparated[1] === "freehand" ||
-        tabSeparated[1] === "freehand-overlay" ||
-        tabSeparated[1] === "freehand-underlay")
-    ) {
+    if (!inFreehandBlock && tabSeparated[1] === "freehand") {
       setColumnHeaders(freehand, tabSeparated);
       inFreehandBlock = true;
     } else if (inFreehandBlock) {
@@ -1378,6 +1397,7 @@ function recursive(
     Object.assign(currentColumnInfo, {
       ...currentEvent,
       fontOptions: getValidFontOptions("Event"),
+      columnDisplayType: "Event",
       subInfo: JSON.parse(JSON.stringify(subEventInfo))
     });
     returnValue.fontOptions = currentColumnInfo.fontOptions;
@@ -1389,6 +1409,7 @@ function recursive(
     const { width, subChronInfo, ...currentChron } = chronMap.get(currentColumn)!;
     Object.assign(currentColumnInfo, {
       ...currentChron,
+      columnDisplayType: "BlockSeriesMetaColumn",
       subInfo: JSON.parse(JSON.stringify(subChronInfo))
     });
     addChronChildren(
@@ -1409,6 +1430,7 @@ function recursive(
     Object.assign(currentColumnInfo, {
       ...currentPoint,
       fontOptions: getValidFontOptions("Point"),
+      columnDisplayType: "Point",
       subInfo: JSON.parse(JSON.stringify(subPointInfo))
     });
     returnValue.fontOptions = currentColumnInfo.fontOptions;
@@ -1420,6 +1442,7 @@ function recursive(
     // TODO NOTE FOR FUTURE: @Paolo - Java file appends all fonts to this, but from trial and error, only column header makes sense. If this case changes here we would change it
     Object.assign(currentColumnInfo, {
       ...currentFreehand,
+      columnDisplayType: "Freehand",
       subInfo: JSON.parse(JSON.stringify(subFreehandInfo))
     });
     returnValue.maxAge = currentColumnInfo.maxAge;
@@ -1428,9 +1451,12 @@ function recursive(
   if (blankMap.has(currentColumn)) {
     const currentBlank = blankMap.get(currentColumn)!;
     // TODO NOTE FOR FUTURE: @Paolo - Java file appends all fonts to this, but from trial and error, only column header makes sense. If this case changes here we would change it
-    Object.assign(currentColumnInfo, currentBlank);
+    Object.assign(currentColumnInfo, {
+      ...currentBlank,
+      columnDisplayType: "Blank"
+    });
   }
-
+  addColumnSettings(currentColumnInfo);
   childrenArray.push(currentColumnInfo);
 
   if (parsedColumnEntry) {
@@ -1692,7 +1718,7 @@ function createLoneColumn(
 ): ColumnInfo {
   // block changes to zone for display
   if (type === "Block") type = "Zone";
-  return {
+  const column: ColumnInfo = {
     ...props,
     editName: props.name,
     fontOptions,
@@ -1703,6 +1729,18 @@ function createLoneColumn(
     subInfo,
     columnDisplayType: type
   };
+  addColumnSettings(column);
+  return column;
+}
+
+function addColumnSettings(column: ColumnInfo) {
+  switch (column.columnDisplayType) {
+    case "Event":
+      column.columnSpecificSettings = JSON.parse(JSON.stringify(defaultEventSettings));
+      break;
+    default:
+      break;
+  }
 }
 
 function getValidFontOptions(type: DisplayedColumnTypes): ValidFontOptions[] {
@@ -1724,7 +1762,7 @@ function getValidFontOptions(type: DisplayedColumnTypes): ValidFontOptions[] {
       return ["Column Header", "Age Label", "Sequence Column Label"];
     case "Ruler":
     case "AgeAge":
-      return ["Column Header", "Age Label"];
+      return ["Column Header", "Ruler Label"];
     case "Transect":
       return ["Column Header"];
     case "Freehand":
@@ -1749,7 +1787,7 @@ function processColumn<T extends ColumnInfoType>(
   } else {
     const { [subInfoKey]: subInfo, ...columnHeaderProps } = column;
     assertColumnHeaderProps(columnHeaderProps);
-    assertSubInfo(subInfo);
+    assertSubInfo(subInfo, type);
     loneColumns.push(createLoneColumn(columnHeaderProps, getValidFontOptions(type), units, subInfo, type));
   }
   return false;
