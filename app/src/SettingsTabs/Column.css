@@ -11,6 +11,20 @@
   font-size: 1rem;
 }
 
+#column-search-bar {
+  width: 400px;
+}
+
+#column-search-term {
+  margin-bottom: 10px;
+}
+
+.column-search-bar-container {
+  margin-top: 10px;
+  margin-bottom: 20px;
+  position: relative;
+}
+
 .column-accordion-and-menu {
   display: flex;
   justify-content: center;

@@ -1664,7 +1664,7 @@ function addChronChildren(
     rgb,
     units,
     columnDisplayType: "Chron",
-    show: true,
+    show: true
   });
   children.push({
     name: `${name} Chron Label`,
@@ -1682,7 +1682,7 @@ function addChronChildren(
     rgb,
     units,
     columnDisplayType: "Zone",
-    show: true,
+    show: true
   });
   children.push({
     name: `${name} Series Label`,
@@ -1700,7 +1700,7 @@ function addChronChildren(
     rgb,
     units,
     columnDisplayType: "Zone",
-    show: true,
+    show: true
   });
   for (const child of children) {
     for (const fontOption of child.fontOptions) {
