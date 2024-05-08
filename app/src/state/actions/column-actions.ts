@@ -9,7 +9,11 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
   let columnName = extractName(settings._id);
   let curcol: ColumnInfo | undefined = state.settingsTabs.columnHashMap.get(columnName);
   if (curcol !== undefined) {
-    //updateEditName()
+    updateEditName(settings.title, curcol);
+    setEnableTitle(settings.drawTitle, curcol);
+    if (settings.width) updateWidth(settings.width, curcol);
+    if (settings.backgroundColor.text) setRGB(settings.backgroundColor.text, curcol);
+
   }
   for (let i = 0; i < settings.children.length; i++) {}
 });
@@ -58,13 +62,13 @@ export const setEventColumnSettings = action((eventSettings: EventSettings, newS
   if (newSettings.rangeSort) eventSettings.rangeSort = newSettings.rangeSort;
 });
 
-export const updateEditName = action((column: ColumnInfo, newName: string) => {
+export const updateEditName = action(( newName: string, column: ColumnInfo) => {
   column.editName = newName;
   return;
 });
 
-export const updateWidth = action((columnObject: ColumnInfo, newWidth: number) => {
-  columnObject.width = newWidth;
+export const updateWidth = action(( newWidth: number, column: ColumnInfo) => {
+  column.width = newWidth;
 });
 
 export const setcolumnSelected = action((name: string) => {
@@ -108,7 +112,7 @@ export const setEnableTitle = action((isOn: boolean, column: ColumnInfo) => {
   column.enableTitle = isOn;
 });
 
-export const setRGB = action((column: ColumnInfo, color: RGB) => {
+export const setRGB = action((color: RGB, column: ColumnInfo) => {
   column.rgb = color;
 });
 
