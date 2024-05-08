@@ -5,17 +5,24 @@ import { Kysely, Migrator, SqliteDialect, FileMigrationProvider } from "kysely";
 import { Database } from "../dist/types.js";
 
 /*
-!!!BE EXTREMELY CAREFUL WITH MIGRATIONS THAT DELETE DATA. ENSURE YOU HAVE A BACKUP OF THE DATABASE BEFORE RUNNING MIGRATIONS THAT DELETE DATA AS INFORMATION WILL BE LOST AND THE MIGRATION SCRIPT IS AUTOMATICALLY APPLIED ON SERVER STARTUP.!!!
+IMPORTANT: Exercise extreme caution when performing migrations that delete data. Always ensure a backup of the database exists before running such migrations, as the data deletion is irreversible. 
+The migration script is executed automatically upon server startup.
 
-Migrations are a way to manage changes to the database schema over time. Especially for the server, we don't want to manually enter the SQL commands to update the database schema every time we make a change while not losing the data in the database. 
-Instead, we can write a migration file that contains the SQL commands to update the database schema. Then, we can run a script that will apply all the migrations to the database. This script will run on server startup, so the database schema will always be up to date.
+Database migrations are essential for managing schema changes over time without the need for manually entering SQL commands on the server. Without this you would need to run ALTER TABLE commands manually.
+Locally, it is easy to just delete your db file and start fresh, but in production, this is not an option.
+This is particularly important for the dev server where dropping or recreating the database is impractical due to the loss of existing data.
+Instead, we can write a migration file that contains the SQL commands to update the database schema. Then, we can run a script that will apply all the migrations to the database. 
+This script will run on server startup, so the database schema will always be up to date.
 Another advantage of migrations is that they allow us to roll back changes to the database schema if something goes wrong.
+
 Steps to do this:
 1. Run ./migrationTemplate.sh <migration-name> to create a new migration file in the migrations folder. It will add the current timestamp to the filename.
-2. Write the SQL commands to update the database schema in the up function of the migration file. There is also a down function that contains the SQL commands to roll back the changes. There is migration file you can copy from in the migrations folder.
-3. (Mostly Optional) Run the migrate.ts script to apply the migrations to the database. You can run it with the command `yarn tsx migrate.ts up`. This will apply all the migrations that haven't been applied yet. 
-You don't need to run this script manually, as it will run on server startup. To roll back the migrations, you can run `yarn tsx migrate.ts down`. The up command will apply all the migrations, and the down command will roll back the last migration.
-4. Make sure to update the types in the Database type in server/src/types.ts to match the new schema. This will ensure that the queries in the server code are type-safe.
+2. Write the SQL commands to update the database schema in the up function of the migration file. There is also a down function that contains the SQL commands to roll back the changes. 
+There is migration file you can copy in the migrations folder.
+3. (Mostly Optional) Run the migrate.ts script to apply the migrations to the database. You can run it with the command `yarn tsx migrate.ts up`. 
+This will apply all the migrations that haven't been applied yet.  You don't need to run this script manually, as it will run on server startup. 
+To roll back the migrations, you can run `yarn tsx migrate.ts down`. The up command will apply all the migrations, and the down command will roll back the last migration.
+4. Make sure to update the Database type in server/src/types.ts to match the new schema. This will ensure that the queries in the server code are type-safe.
 */
 
 export async function migrateToLatest() {
