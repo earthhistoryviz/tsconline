@@ -4,7 +4,6 @@ import Typography from "@mui/material/Typography";
 import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
 import { Box, TextField } from "@mui/material";
-import { useNavigate } from "react-router-dom";
 import { ColumnContainer, AccordionDetails, TSCCheckbox, AccordionSummary, Accordion, TSCButton } from "../components";
 
 import { ColumnMenu } from "./ColumnMenu";
@@ -45,7 +44,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
     }
     //for keeping the original name for array access
     function clickColumnName() {
-      actions.setcolumnSelected(details.name);
+      actions.setColumnSelected(details.name);
     }
     const hasChildren = details.children && Object.keys(details.children).length > 0;
     const columnName = (
@@ -137,7 +136,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
                   key={childName}
                   details={childDetails}
                   expandedAccordions={expandedAccordions}
-                  accordionClicked={accordionClicked} 
+                  accordionClicked={accordionClicked}
                 />
               ))}
           </>
@@ -153,13 +152,9 @@ export const Column = observer(function Column() {
   //state array of column names that are expanded
   const accordions = state.settingsTabs.columns ? stringToHash(state.settingsTabs.columns.name) : 0;
   const [expandedAccordions, setExpandedAccordions] = useState<number[]>([accordions]);
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const [searchTermDisplay, setSearchTermDisplay] = useState("");
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const term = event.target.value;
-    console.log(term)
-    setSearchTerm(term);
-    setSearchTermDisplay(term);
+    actions.setColumnSearchTerm(term);
     actions.searchColumns(term);
   };
   //if column not in expanded list, add it
@@ -193,39 +188,26 @@ export const Column = observer(function Column() {
 
   return (
     <div className="column-top-level">
-      <Box sx={{ 
-        marginTop: '30px',
-        marginBottom: '10px',
-        position: 'relative' }}>
+      <div className="column-search-bar-container">
+        {state.settingsTabs.columnSearchTerm && (
+          <Typography variant="body2" color="textSecondary" id="column-search-term">
+            <span style={{ color: "red" }}>Filtered For: &quot;{state.settingsTabs.columnSearchTerm}&quot;</span>
+          </Typography>
+        )}
         <TextField
-          id="search-bar"
+          id="column-search-bar"
           label="Search"
           variant="outlined"
           size="small"
           fullWidth
-          sx={{ marginBottom: '10px', width: '400px' }}
-          onChange={handleSearch} 
-          value={searchTerm}
+          onChange={handleSearch}
+          value={state.settingsTabs.columnSearchTerm}
         />
-        {searchTerm && (
-          <Typography 
-            variant="body2" 
-            color="textSecondary"
-            sx={{ position: 'absolute', top: '-24px' }}>
-            <span style={{ color: 'red' }}>Filtered For: "{searchTermDisplay}"</span>
-          </Typography>
-        )}
-      </Box>
+      </div>
       <div className="column-accordion-and-menu">
         <Box
-          className={`hide-scrollbar column-accordion-wrapper ${searchTerm ? 'filtered-border' : ''}`}
-          sx={{
-            border: `1px solid gray`,
-            borderRadius: "4px",
-            zIndex: 0,
-            padding: "10px"
-          }}>
-            <TSCButton
+          className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}>
+          <TSCButton
             id="column-expand-buttons"
             onClick={() => {
               expandAll();
@@ -252,5 +234,5 @@ export const Column = observer(function Column() {
         <ColumnMenu />
       </div>
     </div>
-  );    
+  );
 });

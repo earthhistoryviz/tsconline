@@ -54,10 +54,6 @@ export const ColumnMenu = observer(() => {
   const [openMenu, setOpenMenu] = useState(false);
   const selectedColumn = state.settingsTabs.columnSelected;
   const column = selectedColumn ? state.settingsTabs.columnHashMap.get(selectedColumn!) : undefined;
-  const info =
-    state.settingsTabs.columnSelected === null
-      ? ""
-      : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)?.popup;
   function showMenu() {
     const menu = document.getElementById("ColumnMenuContent");
     const label = document.getElementById("ColumnMenuLabel");
@@ -73,18 +69,23 @@ export const ColumnMenu = observer(() => {
       }
     }
   }
-
   return (
-    <>
+    <div className={openMenu ? "column-menu" : ""}>
       <div className="column-menu-header">
-        <ToggleButton
-          value="check"
-          selected={openMenu}
-          onChange={showMenu}
-          size="small">
-          <SettingsSharpIcon />
-        </ToggleButton>
-        <Typography>Settings</Typography>
+        <div className="column-settings-cog">
+          <ToggleButton
+            value="check"
+            selected={openMenu}
+            onChange={() => {
+              showMenu();
+            }}
+            size="small">
+            <SettingsSharpIcon />
+          </ToggleButton>
+        </div>
+        <div id="ColumnMenuLabel" className="column-menu-label">
+          <Typography>Settings</Typography>
+        </div>
       </div>
       <div id="ColumnMenuContent" className="column-menu-content">
         {column && (
@@ -101,7 +102,7 @@ export const ColumnMenu = observer(() => {
           </>
         )}
       </div>
-    </>
+    </div>
   );
 });
 
