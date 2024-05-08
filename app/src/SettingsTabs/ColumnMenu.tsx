@@ -58,17 +58,29 @@ export const ColumnMenu = observer(() => {
     state.settingsTabs.columnSelected === null
       ? ""
       : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)?.popup;
-  const toggleMenu = () => {
-    setOpenMenu(!openMenu);
-  };
+  function showMenu() {
+    const menu = document.getElementById("ColumnMenuContent");
+    const label = document.getElementById("ColumnMenuLabel");
+    if (menu !== null && label !== null) {
+      if (!openMenu) {
+        menu.style.display = "flex";
+        label.style.display = "flex";
+        setOpenMenu(true);
+      } else {
+        menu.style.display = "none";
+        label.style.display = "none";
+        setOpenMenu(false);
+      }
+    }
+  }
 
   return (
-    <div className={`column-menu ${openMenu ? "open" : ""}`}>
+    <>
       <div className="column-menu-header">
         <ToggleButton
           value="check"
           selected={openMenu}
-          onChange={toggleMenu}
+          onChange={showMenu}
           size="small">
           <SettingsSharpIcon />
         </ToggleButton>
@@ -89,7 +101,7 @@ export const ColumnMenu = observer(() => {
           </>
         )}
       </div>
-    </div>
+    </>
   );
 });
 
