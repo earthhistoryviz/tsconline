@@ -4,3 +4,4 @@ app/src/state/parse-settings.ts
 app/src/state/actions/util-actions.ts
 server/dist
 shared/dist
+server/db
