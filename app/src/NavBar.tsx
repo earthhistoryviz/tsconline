@@ -50,6 +50,7 @@ export const NavBar = observer(function Navbar() {
             <TSCTabs
               value={state.tab !== 0 ? state.tab : false}
               onChange={(_e, value) => {
+                if (value === 2) settingsMenuToggle(false)
                 actions.setTab(value);
               }}
               //override the TSCTabs since it has the dark navbar
@@ -73,6 +74,7 @@ export const NavBar = observer(function Navbar() {
             {...hoverProps}
             {...settingsMenuState}
             anchorRef={settingsRef}
+            menuStyle={{ color: theme.palette.primary.main, backgroundColor: theme.palette.menuDropdown.main }}
             onClose={() => settingsMenuToggle(false)}
             >
               {Object.entries(SettingsMenuOptionLabels).map(([ key, label ]) => (
