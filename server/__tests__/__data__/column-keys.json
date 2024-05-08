@@ -15,6 +15,7 @@
         "on": true,
         "width": 100,
         "enableTitle": true,
+        "show": true,
         "rgb": {
           "r": 255,
           "g": 255,
@@ -32,6 +33,7 @@
               "Column Header",
               "Ruler Label"
             ],
+            "show": true,
             "on": true,
             "width": 100,
             "enableTitle": true,
@@ -53,6 +55,7 @@
             "editName": "Central Africa Cenozoic",
             "on": true,
             "enableTitle": true,
+            "show": true,
             "fontsInfo": {
               "font": "Arial"
             },
@@ -67,6 +70,7 @@
                   "font": "Arial"
                 },
                 "popup": "",
+                "show": true,
                 "children": [
                   {
                     "name": "Nigeria Coast Facies",
@@ -88,6 +92,7 @@
                     "parent": "Nigeria Coast",
                     "minAge": 0,
                     "maxAge": 10,
+                    "show": true,
                     "width": 84,
                     "rgb": {
                       "r": 255,
@@ -117,6 +122,7 @@
                     "minAge": 0,
                     "maxAge": 10,
                     "width": 210,
+                    "show": true,
                     "rgb": {
                       "r": 255,
                       "g": 255,
@@ -142,6 +148,7 @@
                     "popup": "",
                     "children": [],
                     "parent": "Nigeria Coast",
+                    "show": true,
                     "minAge": 0,
                     "maxAge": 10,
                     "width": 84,
@@ -156,6 +163,7 @@
                   {
                     "name": "Nigeria Coast Series Label",
                     "editName": "Series Label",
+                    "show": true,
                     "on": true,
                     "enableTitle": false,
                     "fontsInfo": {
@@ -223,6 +231,7 @@
                 "editName": "South Atlantic",
                 "on": true,
                 "enableTitle": true,
+                "show": true,
                 "fontsInfo": {
                   "font": "Arial"
                 },
@@ -233,6 +242,7 @@
                     "editName": "South Atlantic",
                     "on": true,
                     "enableTitle": false,
+                    "show": true,
                     "fontsInfo": {
                       "font": "Arial"
                     },
@@ -260,6 +270,7 @@
                   {
                     "name": "South Atlantic Members",
                     "editName": "Members",
+                    "show": true,
                     "on": false,
                     "enableTitle": false,
                     "showAgeLabels": false,
@@ -288,6 +299,7 @@
                   {
                     "name": "South Atlantic Facies Label",
                     "editName": "Facies Label",
+                    "show": true,
                     "on": true,
                     "enableTitle": false,
                     "fontsInfo": {
@@ -316,6 +328,7 @@
                   {
                     "name": "South Atlantic Series Label",
                     "editName": "Series Label",
+                    "show": true,
                     "on": true,
                     "enableTitle": false,
                     "fontsInfo": {
@@ -445,6 +458,7 @@
           "Sequence Column Label"
         ],
         "on": true,
+        "show": true,
         "width": 100,
         "enableTitle": true,
         "rgb": {
@@ -465,6 +479,7 @@
               "Ruler Label"
             ],
             "on": true,
+            "show": true,
             "width": 100,
             "enableTitle": true,
             "rgb": {
@@ -484,6 +499,7 @@
             "name": "Parent 1",
             "editName": "Parent 1",
             "on": true,
+            "show": true,
             "enableTitle": true,
             "fontsInfo": {
               "font": "Arial"
@@ -494,6 +510,7 @@
                 "name": "Block",
                 "editName": "Block",
                 "on": false,
+                "show": true,
                 "enableTitle": false,
                 "fontsInfo": {
                   "font": "Arial"
@@ -547,6 +564,7 @@
                 "editName": "Facies",
                 "on": false,
                 "enableTitle": false,
+                "show": true,
                 "fontsInfo": {
                   "font": "Arial"
                 },
@@ -555,6 +573,7 @@
                   {
                     "name": "Facies Facies",
                     "editName": "Facies",
+                    "show": true,
                     "on": true,
                     "enableTitle": false,
                     "fontsInfo": {
@@ -585,6 +604,7 @@
                     "name": "Facies Members",
                     "editName": "Members",
                     "on": false,
+                    "show": true,
                     "enableTitle": false,
                     "showAgeLabels": false,
                     "fontOptions": [
@@ -613,6 +633,7 @@
                     "name": "Facies Facies Label",
                     "editName": "Facies Label",
                     "on": true,
+                    "show": true,
                     "enableTitle": false,
                     "fontsInfo": {
                       "font": "Arial"
@@ -642,6 +663,7 @@
                     "editName": "Series Label",
                     "on": true,
                     "enableTitle": false,
+                    "show": true,
                     "fontsInfo": {
                       "font": "Arial"
                     },
@@ -706,6 +728,7 @@
                 "name": "Event",
                 "editName": "Event",
                 "on": true,
+                "show": true,
                 "enableTitle": true,
                 "fontsInfo": {
                   "font": "Arial"
@@ -755,6 +778,7 @@
                 "name": "Range",
                 "editName": "Range",
                 "on": true,
+                "show": true,
                 "enableTitle": true,
                 "fontsInfo": {
                   "font": "Arial"
@@ -795,6 +819,7 @@
                 "name": "Chron",
                 "editName": "Chron",
                 "on": true,
+                "show": true,
                 "enableTitle": false,
                 "fontsInfo": {
                   "font": "Arial"
@@ -805,6 +830,7 @@
                     "name": "Chron Chron",
                     "editName": "Chron",
                     "on": true,
+                    "show": true,
                     "enableTitle": false,
                     "showAgeLabels": false,
                     "fontOptions": [
@@ -831,6 +857,7 @@
                   {
                     "name": "Chron Chron Label",
                     "editName": "Chron Label",
+                    "show": true,
                     "on": false,
                     "enableTitle": false,
                     "showAgeLabels": false,
@@ -859,6 +886,7 @@
                   {
                     "name": "Chron Series Label",
                     "editName": "Series Label",
+                    "show": true,
                     "on": true,
                     "enableTitle": false,
                     "showAgeLabels": false,
@@ -923,6 +951,7 @@
               {
                 "name": "Point",
                 "editName": "Point",
+                "show": true,
                 "on": false,
                 "enableTitle": true,
                 "fontsInfo": {
@@ -961,6 +990,7 @@
               {
                 "name": "Sequence",
                 "editName": "Sequence",
+                "show": true,
                 "on": true,
                 "enableTitle": false,
                 "fontsInfo": {
@@ -1004,6 +1034,7 @@
               {
                 "name": "Freehand",
                 "editName": "Freehand",
+                "show": true,
                 "on": true,
                 "enableTitle": false,
                 "fontsInfo": {
@@ -1039,6 +1070,7 @@
               {
                 "name": "Blank",
                 "editName": "Blank",
+                "show": true,
                 "on": false,
                 "enableTitle": false,
                 "fontsInfo": {
@@ -1064,6 +1096,7 @@
               {
                 "name": "Transect",
                 "editName": "Transect",
+                "show": true,
                 "on": true,
                 "enableTitle": true,
                 "fontsInfo": {
@@ -1985,6 +2018,7 @@
                 "Column Header"
               ],
               "on": true,
+              "show": true,
               "width": 100,
               "enableTitle": true,
               "rgb": {
@@ -2005,6 +2039,7 @@
                     "Ruler Label"
                   ],
                   "on": true,
+                  "show": true,
                   "width": 100,
                   "enableTitle": true,
                   "rgb": {
