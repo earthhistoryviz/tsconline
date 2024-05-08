@@ -192,6 +192,7 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
     }
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
   }
 });
 

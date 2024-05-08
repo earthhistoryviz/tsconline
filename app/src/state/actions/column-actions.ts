@@ -17,7 +17,6 @@ export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
 
 export const toggleSettingsTabColumn = action((name: string) => {
   let curcol: ColumnInfo;
-
   if (state.settingsTabs.columnHashMap.get(name) === undefined) {
     console.log("WARNING: tried to get", name, "in state.columnHashMap, but is undefined");
     return;
