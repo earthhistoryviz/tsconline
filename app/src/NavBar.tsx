@@ -10,10 +10,10 @@ import { context } from "./state";
 import { TSCButton, TSCTabs } from "./components";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { ControlledMenu, useHover, useMenuState } from "@szhsin/react-menu";
-import { settingsTabs } from "./constants";
 import "./NavBar.css";
 import '@szhsin/react-menu/dist/index.css';
 import '@szhsin/react-menu/dist/transitions/slide.css';
+import { SettingsMenuOptionLabels, assertSettingsTabs } from "./types";
 
 export const NavBar = observer(function Navbar() {
   const theme = useTheme();
@@ -75,13 +75,14 @@ export const NavBar = observer(function Navbar() {
             anchorRef={settingsRef}
             onClose={() => settingsMenuToggle(false)}
             >
-              {settingsTabs.map((tab) => (
-                <MenuItem key={tab} onClick={() => {
-                  actions.setSettingsTabsSelected(tab)
+              {Object.entries(SettingsMenuOptionLabels).map(([ key, label ]) => (
+                <MenuItem key={key} onClick={() => {
+                  assertSettingsTabs(key)
+                  actions.setSettingsTabsSelected(key)
                   navigate("/settings")
                   settingsMenuToggle(false)
                 }}>
-                {tab}
+                {label}
                 </MenuItem>))}
             </ControlledMenu>
           </>
