@@ -178,13 +178,7 @@ server.post("/auth/login", loginRoutes.login);
 
 server.post("/auth/signup", loginRoutes.signup);
 
-server.post("/auth/session-check", async (request, reply) => {
-  if (request.session.get("uuid")) {
-    reply.send({ authenticated: true });
-  } else {
-    reply.send({ authenticated: false });
-  }
-});
+server.post("/auth/session-check", loginRoutes.sessionCheck);
 
 server.post("/auth/logout", async (request, reply) => {
   request.session.delete();
@@ -195,9 +189,11 @@ server.post("/auth/verify", loginRoutes.verifyEmail);
 
 server.post("/auth/resend", loginRoutes.resendVerificationEmail);
 
-server.post("/auth/send-reset-email", loginRoutes.sendResetPasswordEmail);
+server.post("/auth/send-resetpassword-email", loginRoutes.sendResetPasswordEmail);
 
 server.post("/auth/reset-password", loginRoutes.resetPassword);
+
+server.post("/auth/reset-email", loginRoutes.resetEmail);
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it

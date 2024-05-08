@@ -1,44 +1,42 @@
 import { Database, User, NewUser, UpdatedUser, Verification, NewVerification } from "./types.js";
 import BetterSqlite3 from "better-sqlite3";
 import { Kysely, SqliteDialect } from "kysely";
-import fs from "fs";
-
-export async function setupDb() {
-  try {
-    await fs.promises.mkdir("../server/db", { recursive: true });
-    await fs.promises.writeFile("../server/db/TSC.db", "");
-  } catch (err) {
-    const error = err as NodeJS.ErrnoException;
-    if (error.code !== "EEXIST") throw err;
-  }
-  await db.schema
-    .createTable("users")
-    .ifNotExists()
-    .addColumn("userId", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("username", "text", (col) => col.unique())
-    .addColumn("email", "text", (col) => col.unique())
-    .addColumn("hashedPassword", "text", (col) => col.unique())
-    .addColumn("uuid", "text", (col) => col.notNull().unique())
-    .addColumn("pictureUrl", "text", (col) => col.unique())
-    .addColumn("emailVerified", "integer", (col) => col.notNull().defaultTo(0))
-    .execute();
-
-  await db.schema
-    .createTable("verification")
-    .ifNotExists()
-    .addColumn("userId", "integer", (col) => col.notNull().unique())
-    .addColumn("token", "text", (col) => col.notNull().unique())
-    .addColumn("expiresAt", "datetime", (col) => col.notNull())
-    .addColumn("verifyOrReset", "text", (col) => col.notNull())
-    .execute();
-}
-
-setupDb();
+import { exec } from "child_process";
 
 export const db = new Kysely<Database>({
   dialect: new SqliteDialect({
-    database: new BetterSqlite3("../server/db/TSC.db")
+    database: new BetterSqlite3("db/TSC.db")
   })
+});
+
+await db.schema
+  .createTable("users")
+  .ifNotExists()
+  .addColumn("userId", "integer", (col) => col.primaryKey().autoIncrement())
+  .addColumn("username", "text", (col) => col.unique())
+  .addColumn("email", "text", (col) => col.unique())
+  .addColumn("hashedPassword", "text", (col) => col.unique())
+  .addColumn("uuid", "text", (col) => col.notNull().unique())
+  .addColumn("pictureUrl", "text", (col) => col.unique())
+  .addColumn("emailVerified", "integer", (col) => col.notNull().defaultTo(0))
+  .execute();
+
+await db.schema
+  .createTable("verification")
+  .ifNotExists()
+  .addColumn("userId", "integer", (col) => col.notNull())
+  .addColumn("token", "text", (col) => col.notNull().unique())
+  .addColumn("expiresAt", "datetime", (col) => col.notNull())
+  .addColumn("reason", "text", (col) => col.notNull())
+  .execute();
+
+exec("cd db && yarn tsx migrate.ts up", (error, stdout, stderr) => {
+  if (error) {
+    console.error(`exec error: ${error}`);
+    return;
+  }
+  stdout && console.log(stdout);
+  stderr && console.error(stderr);
 });
 
 export async function createUser(newUser: NewUser) {
@@ -81,7 +79,7 @@ export async function findVerification(criteria: Partial<Verification>) {
   if (criteria.userId) query = query.where("userId", "=", criteria.userId);
   if (criteria.token) query = query.where("token", "=", criteria.token);
   if (criteria.expiresAt) query = query.where("expiresAt", "=", criteria.expiresAt);
-  if (criteria.verifyOrReset) query = query.where("verifyOrReset", "=", criteria.verifyOrReset);
+  if (criteria.reason) query = query.where("reason", "=", criteria.reason);
   return await query.selectAll().execute();
 }
 
@@ -90,15 +88,15 @@ export async function updateVerification(criteria: Partial<Verification>, update
   if (criteria.userId) query = query.where("userId", "=", criteria.userId);
   if (criteria.token) query = query.where("token", "=", criteria.token);
   if (criteria.expiresAt) query = query.where("expiresAt", "=", criteria.expiresAt);
-  if (criteria.verifyOrReset) query = query.where("verifyOrReset", "=", criteria.verifyOrReset);
+  if (criteria.reason) query = query.where("reason", "=", criteria.reason);
   return await query.set(updatedVerification).execute();
 }
 
 export async function deleteVerification(criteria: Partial<Verification>) {
   let query = db.deleteFrom("verification");
+  if (!criteria.reason) throw new Error("Must provide reason assigned to verification token");
   if (criteria.userId) query = query.where("userId", "=", criteria.userId);
   if (criteria.token) query = query.where("token", "=", criteria.token);
   if (criteria.expiresAt) query = query.where("expiresAt", "=", criteria.expiresAt);
-  if (criteria.verifyOrReset) query = query.where("verifyOrReset", "=", criteria.verifyOrReset);
   return await query.execute();
 }

@@ -14,13 +14,14 @@ export interface UserTable {
   uuid: string;
   pictureUrl: string | null;
   emailVerified: number;
+  invalidateSession: boolean;
 }
 
 export interface VerificationTable {
   userId: number;
   token: string;
   expiresAt: string;
-  verifyOrReset: "verify" | "reset";
+  reason: "email" | "password" | "invalidate" | "verify";
 }
 
 export type User = Selectable<UserTable>;
