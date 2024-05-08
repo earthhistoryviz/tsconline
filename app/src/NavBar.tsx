@@ -1,18 +1,18 @@
-import { useContext, useRef, useState } from "react";
+import { useContext, useRef } from "react";
 import { observer } from "mobx-react-lite";
 import AppBar from "@mui/material/AppBar";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Toolbar from "@mui/material/Toolbar";
 import { useTheme } from "@mui/material/styles";
 import HomeIcon from "@mui/icons-material/Home";
-import { IconButton, MenuItem, Tab } from "@mui/material";
+import { IconButton, Tab } from "@mui/material";
 import { context } from "./state";
-import { TSCButton, TSCTabs } from "./components";
+import { TSCMenuItem, TSCButton, TSCTabs } from "./components";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { ControlledMenu, useHover, useMenuState } from "@szhsin/react-menu";
 import "./NavBar.css";
-import '@szhsin/react-menu/dist/index.css';
-import '@szhsin/react-menu/dist/transitions/slide.css';
+import "@szhsin/react-menu/dist/index.css";
+import "@szhsin/react-menu/dist/transitions/slide.css";
 import { SettingsMenuOptionLabels, assertSettingsTabs } from "./types";
 
 export const NavBar = observer(function Navbar() {
@@ -20,7 +20,7 @@ export const NavBar = observer(function Navbar() {
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
   const settingsRef = useRef(null);
-  const [settingsMenuState, settingsMenuToggle] = useMenuState({ transition: true})
+  const [settingsMenuState, settingsMenuToggle] = useMenuState({ transition: true });
   const { anchorProps, hoverProps } = useHover(settingsMenuState.state, settingsMenuToggle);
 
   const location = useLocation();
@@ -50,7 +50,7 @@ export const NavBar = observer(function Navbar() {
             <TSCTabs
               value={state.tab !== 0 ? state.tab : false}
               onChange={(_e, value) => {
-                if (value === 2) settingsMenuToggle(false)
+                if (value === 2) settingsMenuToggle(false);
                 actions.setTab(value);
               }}
               //override the TSCTabs since it has the dark navbar
@@ -71,21 +71,26 @@ export const NavBar = observer(function Navbar() {
               <Tab value={4} label="About" to="/about" component={Link} />
             </TSCTabs>
             <ControlledMenu
-            {...hoverProps}
-            {...settingsMenuState}
-            anchorRef={settingsRef}
-            menuStyle={{ color: theme.palette.primary.main, backgroundColor: theme.palette.menuDropdown.main }}
-            onClose={() => settingsMenuToggle(false)}
-            >
-              {Object.entries(SettingsMenuOptionLabels).map(([ key, label ]) => (
-                <MenuItem key={key} onClick={() => {
-                  assertSettingsTabs(key)
-                  actions.setSettingsTabsSelected(key)
-                  navigate("/settings")
-                  settingsMenuToggle(false)
-                }}>
-                {label}
-                </MenuItem>))}
+              {...hoverProps}
+              {...settingsMenuState}
+              anchorRef={settingsRef}
+              className="settings-sub-menu"
+              align="center"
+              menuStyle={{ color: theme.palette.primary.main, backgroundColor: theme.palette.menuDropdown.main }}
+              onClose={() => settingsMenuToggle(false)}>
+              {Object.entries(SettingsMenuOptionLabels).map(([key, label]) => (
+                <TSCMenuItem
+                  key={key}
+                  className="settings-sub-menu-item"
+                  onClick={() => {
+                    assertSettingsTabs(key);
+                    actions.setSettingsTabsSelected(key);
+                    navigate("/settings");
+                    settingsMenuToggle(false);
+                  }}>
+                  {label}
+                </TSCMenuItem>
+              ))}
             </ControlledMenu>
           </>
         }
