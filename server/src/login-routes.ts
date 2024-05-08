@@ -46,8 +46,7 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
   if (request.session.get("uuid")) {
     const user = (await findUser({ uuid: request.session.get("uuid") }))[0];
     if (!user || user.invalidateSession) {
-      request.session.delete();
-      reply.send({ authenticated: false });
+      reply.status(423).send({ error: "Account locked" });
       return;
     } else {
       reply.send({ authenticated: true });
@@ -55,15 +54,15 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
   } else {
     reply.send({ authenticated: false });
   }
-}
+};
 
-export const invalidateCredentials = async function invalidateCredentials(
-  request: FastifyRequest<{ Body: { token: string; } }>,
+export const accountRecovery = async function accountRecovery(
+  request: FastifyRequest<{ Body: { token: string; email: string } }>,
   reply: FastifyReply
 ) {
-  const { token } = request.body;
+  const { token, email } = request.body;
   if (!token) {
-    reply.status(400).send({ error: "Invalid form" });
+    reply.status(400).send({ error: "No token" });
     return;
   }
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
@@ -86,7 +85,6 @@ export const invalidateCredentials = async function invalidateCredentials(
     if (!user) {
       throw new Error("User not found");
     }
-    const { email } = user;
     const randomPassword = randomBytes(16).toString("hex");
     const newEmail: Email = {
       from: process.env.EMAIL_USER,
@@ -95,7 +93,10 @@ export const invalidateCredentials = async function invalidateCredentials(
       text: `Your account credentials have been invalidated. Your new password is: ${randomPassword}. Please use this password to sign in and reset your email and password.`
     };
     sendEmail(newEmail);
-    await updateUser({ userId }, { email: undefined, emailVerified: 0, hashedPassword: await hash(randomPassword, 10), invalidateSession: true });
+    await updateUser(
+      { userId },
+      { email: email, emailVerified: 1, hashedPassword: await hash(randomPassword, 10), invalidateSession: 1 }
+    );
     reply.send({ message: "Email sent" });
   } catch (error) {
     console.error("Error during invalidation:", error);
@@ -104,7 +105,7 @@ export const invalidateCredentials = async function invalidateCredentials(
 };
 
 export const resetEmail = async function resetEmail(
-  request: FastifyRequest<{ Body: { email: string; password: string } }>,
+  request: FastifyRequest<{ Body: { newEmail: string; password: string } }>,
   reply: FastifyReply
 ) {
   const uuid = request.session.get("uuid");
@@ -116,8 +117,8 @@ export const resetEmail = async function resetEmail(
     reply.status(500).send({ error: "Email service not configured" });
     return;
   }
-  const { email, password } = request.body;
-  if (!email || !password || !emailTestRegex.test(email)) {
+  const { newEmail, password } = request.body;
+  if (!newEmail || !password || !emailTestRegex.test(newEmail)) {
     reply.status(400).send({ error: "Invalid form" });
     return;
   }
@@ -126,23 +127,27 @@ export const resetEmail = async function resetEmail(
     if (!userRow) {
       throw new Error("User not found");
     }
-    const { userId, hashedPassword } = userRow;
+    const { userId, hashedPassword, email } = userRow;
+    if (email === newEmail) {
+      reply.status(409).send({ error: "Email already in use" });
+      return;
+    }
     if (hashedPassword && !(await compare(password, hashedPassword))) {
       reply.status(401).send({ error: "Incorrect password" });
       return;
     }
-    await updateUser({ userId }, { email, emailVerified: 0 });
+    await updateUser({ userId }, { email: newEmail, emailVerified: 0 });
     let token = randomBytes(16).toString("hex") + md5(uuid);
     let expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getHours() + 1);
     await deleteVerification({ userId: userId, reason: "email" });
-    const newEmail: Email = {
+    const verifyEmail: Email = {
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Email Changed",
       text: `Please verify your new email by clicking on the following link: ${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`
     };
-    sendEmail(newEmail);
+    sendEmail(verifyEmail);
     const verifyVerification: NewVerification = {
       userId: userId,
       token: token,
@@ -153,13 +158,14 @@ export const resetEmail = async function resetEmail(
     token = randomBytes(16).toString("hex") + md5(uuid);
     expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getHours() + 24);
-    const oldEmail: Email = {
+    const invalidateEmail: Email = {
       from: process.env.EMAIL_USER,
       to: userRow.email,
       subject: "Email Changed",
-      text: `Your email has been changed. If you did not request this change, please click on the following link to reset your email and password: ${process.env.APP_URL || "http://localhost:5173"}/account-recovery?token=${token}. This link will expire in 24 hours. If your link has expired, please contact support.`
+      text: `Your email has been changed. If you did not request this change, please click on the following link to reset your email and password: ${process.env.APP_URL || "http://localhost:5173"}/account-recovery?token=${token}?email=${email}. 
+      This link will expire in 24 hours. If your link has expired, please contact support.`
     };
-    sendEmail(oldEmail);
+    sendEmail(invalidateEmail);
     const invalidateVerification: NewVerification = {
       userId: userId,
       token: token,
@@ -192,13 +198,13 @@ export const resetPassword = async function resetPassword(
     const { userId, expiresAt, reason } = verificationRow;
     const expiresAtDate = new Date(expiresAt);
     if (expiresAtDate < new Date() || reason !== "password") {
-      await deleteVerification({ token, reason: "password"});
+      await deleteVerification({ token, reason: "password" });
       reply.status(401).send({ error: "Password reset token expired or invalid" });
       return;
     }
     const hashedPassword = await hash(password, 10);
-    await updateUser({ userId }, { hashedPassword });
-    await deleteVerification({ token, reason: "password"});
+    await updateUser({ userId }, { hashedPassword, invalidateSession: 0 });
+    await deleteVerification({ token, reason: "password" });
     const userRow = (await findUser({ userId }))[0];
     if (!userRow) {
       throw new Error("User not found");
@@ -295,7 +301,7 @@ export const resendVerificationEmail = async function resendVerificationEmail(
     } else {
       token = randomBytes(16).toString("hex") + md5(uuid);
       emailText = `Welcome to TSC Online! Please verify your email by clicking on the following link: ${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`;
-      await deleteVerification({ userId, reason: "verify"});
+      await deleteVerification({ userId, reason: "verify" });
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 1);
       const verification: NewVerification = {
@@ -344,7 +350,7 @@ export const verifyEmail = async function verifyEmail(
     }
     const expiresAtDate = new Date(expiresAt);
     if (expiresAtDate < new Date() || reason !== "verify") {
-      await deleteVerification({ token, reason: "verify"});
+      await deleteVerification({ token, reason: "verify" });
       reply.status(401).send({ error: "Verification token expired or invalid" });
       return;
     }
@@ -388,7 +394,7 @@ export const signup = async function signup(
       uuid: randomUUID(),
       pictureUrl: null,
       emailVerified: 0,
-      invalidateSession: false
+      invalidateSession: 0
     };
     await createUser(newUser);
     const insertedUser = (await findUser({ email }))[0];
@@ -490,7 +496,7 @@ export const googleLogin = async function googleLogin(
       uuid: uuid,
       pictureUrl: payload.picture,
       emailVerified: 1,
-      invalidateSession: false
+      invalidateSession: 0
     };
     await createUser(user);
     request.session.set("uuid", uuid);
