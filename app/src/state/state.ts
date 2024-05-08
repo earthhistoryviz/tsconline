@@ -1,6 +1,6 @@
 import { observable } from "mobx";
 
-import { SnackbarInfo, ChartSettings, ErrorAlert, FaciesOptions, MapHistory, Config } from "../types";
+import { SnackbarInfo, ChartSettings, ErrorAlert, FaciesOptions, MapHistory, Config, SettingsTabs } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
   MapHierarchy,
@@ -28,7 +28,7 @@ export type State = {
   geologicalTopStageAges: TimescaleItem[];
   geologicalBaseStageAges: TimescaleItem[];
   settingsTabs: {
-    selected: "time" | "font" | "column" | "mappoints" | "datapacks";
+    selected: SettingsTabs;
     columns: ColumnInfo | undefined;
     columnSelected: string | null;
     geologicalTopStages: GeologicalStages;

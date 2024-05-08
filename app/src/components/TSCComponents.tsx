@@ -1,4 +1,5 @@
 import { Divider, IconButton, SvgIcon, Typography, styled } from "@mui/material";
+import { SubMenu, MenuItem } from "@szhsin/react-menu";
 import Color from "color";
 import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
@@ -103,3 +104,19 @@ export const BorderedIcon = ({
     />
   );
 };
+export const TSCSubMenu = styled(SubMenu)(({ theme }) => ({
+  "&.szh-menu__submenu > .szh-menu__item--hover": {
+    backgroundColor: theme.palette.menuDropdown.light
+  },
+  "&.szh-menu__submenu > .szh-menu__item--checked": {
+    color: theme.palette.primary.main
+  }
+}));
+export const TSCMenuItem = styled(MenuItem)(({ theme }) => ({
+  "&.szh-menu__item--hover": {
+    backgroundColor: theme.palette.menuDropdown.light
+  },
+  "&.szh-menu__item--checked": {
+    color: theme.palette.primary.main
+  }
+}));
