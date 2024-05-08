@@ -1,5 +1,4 @@
-import { existsSync } from "fs";
-import { readFile, rm, writeFile } from "fs/promises";
+import { access, readFile, rm, writeFile } from "fs/promises";
 import { assertFileMetadataIndex } from "./types.js";
 import { assertDatapackIndex, assertMapPackIndex } from "@tsconline/shared";
 
@@ -11,11 +10,15 @@ export const sunsetInterval = 1000 * 60 * 60 * 24 * 14;
  * @returns
  */
 export async function loadFileMetadata(destination: string) {
-  if (!existsSync(destination)) {
+  try {
+    await access(destination);
+  } catch (e) {
     await writeFile(destination, "{}");
   }
   const metadata = await readFile(destination, "utf-8");
-  return JSON.parse(metadata);
+  const parsedMetadata = JSON.parse(metadata);
+  assertFileMetadataIndex(parsedMetadata);
+  return parsedMetadata;
 }
 
 /**
@@ -33,10 +36,9 @@ export async function writeFileMetadata(
   datapackIndexFilepath: string
 ) {
   const metadata = await loadFileMetadata(fileMetadataFilepath);
-  assertFileMetadataIndex(metadata);
   metadata[filepath] = {
     fileName,
-    uploadedAt: new Date().toISOString(),
+    lastUpdated: new Date().toISOString(),
     decryptedFilepath,
     mapPackIndexFilepath,
     datapackIndexFilepath
@@ -52,10 +54,9 @@ export async function checkFileMetadata(fileMetadataFilepath: string) {
   console.log("Checking file metadata for sunsetted files");
   try {
     const metadata = await loadFileMetadata(fileMetadataFilepath);
-    assertFileMetadataIndex(metadata);
     const twoWeeksAgo = Date.now() - sunsetInterval;
     for (const file in metadata) {
-      if (new Date(metadata[file]!.uploadedAt).getTime() < twoWeeksAgo) {
+      if (new Date(metadata[file]!.lastUpdated).getTime() < twoWeeksAgo) {
         console.log("Deleting file: ", file, " for being older than 2 weeks");
         const datapackIndex = JSON.parse(await readFile(metadata[file]!.datapackIndexFilepath, "utf-8"));
         assertDatapackIndex(datapackIndex);
@@ -74,4 +75,13 @@ export async function checkFileMetadata(fileMetadataFilepath: string) {
   } catch (e) {
     console.error("Error checking file metadata for sunsetted files: ", e);
   }
+}
+
+export async function updateFileMetadata(fileMetadataFilepath: string, filepath: string[]) {
+  const metadata = await loadFileMetadata(fileMetadataFilepath);
+  for (const file of filepath) {
+    if (!metadata[file]) throw new Error(`File ${file} not found in metadata`);
+    metadata[file]!.lastUpdated = new Date().toISOString();
+  }
+  await writeFile(fileMetadataFilepath, JSON.stringify(metadata));
 }

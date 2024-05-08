@@ -23,7 +23,7 @@ import { parseExcelFile } from "./parse-excel-file.js";
 import path from "path";
 import pump from "pump";
 import { loadIndexes } from "./load-packs.js";
-import { writeFileMetadata } from "./file-metadata-handler.js";
+import { updateFileMetadata, writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
 
@@ -382,6 +382,25 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   const chartFilePath = chartUrlPath.slice(1);
   const settingsFilePath = chartDirFilePath + "/settings.tsc";
 
+  const userDatapackFilepaths = await glob(`${assetconfigs.uploadDirectory}/${uuid}/datapacks/*`);
+  const userDatapackNames = userDatapackFilepaths.map((datapack) => path.basename(datapack));
+  const datapacks = [];
+  const userDatapacks = [];
+
+  for (const datapack of chartrequest.datapacks) {
+    if (assetconfigs.activeDatapacks.includes(datapack)) {
+      datapacks.push(`"${assetconfigs.datapacksDirectory}/${datapack}"`);
+    } else if (uuid && userDatapackNames.includes(datapack)) {
+      userDatapacks.push(path.join(assetconfigs.uploadDirectory, uuid, "datapacks", datapack));
+    } else {
+      console.log("ERROR: datapack: ", datapack, " is not included in activeDatapacks");
+      console.log("assetconfig.activeDatapacks:", assetconfigs.activeDatapacks);
+      console.log("chartrequest.datapacks: ", chartrequest.datapacks);
+      reply.send({ error: "ERROR: failed to load datapacks" });
+    }
+  }
+  datapacks.push(...userDatapacks);
+  updateFileMetadata(assetconfigs.fileMetadata, userDatapacks);
   // If this setting already has a chart, just return that
   try {
     await stat(chartFilePath);
@@ -407,21 +426,6 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     console.log("ERROR: failed to save settings at", settingsFilePath, "  Error was:", e);
     reply.send({ error: "ERROR: failed to save settings" });
     return;
-  }
-  const userDatapackFilepaths = await glob(`${assetconfigs.uploadDirectory}/${uuid}/datapacks/*`);
-  const userDatapackNames = userDatapackFilepaths.map((datapack) => path.basename(datapack));
-  const datapacks = [];
-  for (const datapack of chartrequest.datapacks) {
-    if (assetconfigs.activeDatapacks.includes(datapack)) {
-      datapacks.push(`"${assetconfigs.datapacksDirectory}/${datapack}"`);
-    } else if (userDatapackNames.includes(datapack)) {
-      datapacks.push(`"${assetconfigs.uploadDirectory}/${uuid}/datapacks/${datapack}"`);
-    } else {
-      console.log("ERROR: datapack: ", datapack, " is not included in activeDatapacks");
-      console.log("assetconfig.activeDatapacks:", assetconfigs.activeDatapacks);
-      console.log("chartrequest.datapacks: ", chartrequest.datapacks);
-      reply.send({ error: "ERROR: failed to load datapacks" });
-    }
   }
   // Call the Java monster...
   //const jarArgs: string[] = ['xvfb-run', '-jar', './jar/TSC.jar', '-node', '-s', `../files/${title}settings.tsc`, '-ss', `../files/${title}settings.tsc`, '-d', `../files/${title}datapack.txt`, '-o', `../files/${title}save.pdf`];

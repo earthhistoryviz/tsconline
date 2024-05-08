@@ -732,6 +732,8 @@ export const sessionCheck = action("sessionCheck", async () => {
       setIsLoggedIn(true);
       fetchUserDatapacks();
     } else {
+      fetchDatapackIndex();
+      fetchMapPackIndex();
       setIsLoggedIn(false);
     }
   } catch (error) {
