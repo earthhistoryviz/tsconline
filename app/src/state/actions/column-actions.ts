@@ -2,10 +2,17 @@ import { action } from "mobx";
 import { state } from "../state";
 import { ColumnInfo, EventSettings, ColumnInfoTSC, RGB, ValidFontOptions } from "@tsconline/shared";
 
+function extractName(text: string): string {
+  return text.substring(text.indexOf(":") + 1, text.length);
+}
 export const applyChartColumnSettings = action("applyChartColumnSettings", (settings: ColumnInfoTSC) => {
-  for (let i = 0; i < settings.children.length; i++) {
+  let columnName = extractName(settings._id);
+  let curcol: ColumnInfo | undefined = state.settingsTabs.columnHashMap.get(columnName);
+  if (curcol !== undefined) {
+    //updateEditName()
   }
-})
+  for (let i = 0; i < settings.children.length; i++) {}
+});
 
 export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
   state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
@@ -51,19 +58,8 @@ export const setEventColumnSettings = action((eventSettings: EventSettings, newS
   if (newSettings.rangeSort) eventSettings.rangeSort = newSettings.rangeSort;
 });
 
-export const updateEditName = action((newName: string) => {
-  if (state.settingsTabs.columnSelected === null) {
-    console.log("WARNING: tried to access state.settingsTabs.columnSelected, but is null");
-    return;
-  }
-  if (!state.settingsTabs.columnHashMap.has(state.settingsTabs.columnSelected)) {
-    console.log(
-      "WARNING: tried to access",
-      state.settingsTabs.columnSelected,
-      "in state.settingsTabs.columnHashMap, but map does not this key"
-    );
-  }
-  state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.editName = newName;
+export const updateEditName = action((column: ColumnInfo, newName: string) => {
+  column.editName = newName;
   return;
 });
 

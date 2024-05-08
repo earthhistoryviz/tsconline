@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite";
-import { useContext, useRef, useState } from "react";
+import { useContext, useState } from "react";
 import { context } from "../state";
-import { Button, FormControlLabel, TextField, ToggleButton, Typography } from "@mui/material";
+import { FormControlLabel, ToggleButton, Typography } from "@mui/material";
 import SettingsSharpIcon from "@mui/icons-material/SettingsSharp";
 import "./ColumnMenu.css";
 import { FontMenu } from "./FontMenu";
@@ -11,43 +11,7 @@ import { TSCCheckbox } from "../components";
 import { InfoBox } from "./InfoBox";
 import { EditWidthField } from "./EditWidthField";
 import { EventSpecificSettings } from "./EventSpecificSettings";
-
-const EditNameField = observer(() => {
-  const { state, actions } = useContext(context);
-  const editName = useRef("");
-  const name =
-    state.settingsTabs.columnSelected === null
-      ? ""
-      : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.editName;
-  return (
-    <div>
-      <Typography style={{ padding: "5px" }}>Edit Title</Typography>
-      <div style={{ display: "flex", flexDirection: "row" }}>
-        <TextField
-          hiddenLabel
-          id="editNameTextField"
-          defaultValue={name}
-          key={name}
-          onChange={(event) => {
-            editName.current = event.target.value;
-          }}
-          variant="filled"
-          size="small"
-        />
-        <div className="edit-title-button">
-          <Button
-            color="secondary"
-            variant="contained"
-            onClick={() => {
-              actions.updateEditName(editName.current);
-            }}>
-            Confirm
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-});
+import { EditNameField } from "./EditNameField";
 
 export const ColumnMenu = observer(() => {
   const { state } = useContext(context);
@@ -90,7 +54,7 @@ export const ColumnMenu = observer(() => {
       <div id="ColumnMenuContent" className="column-menu-content">
         {column && (
           <>
-            <EditNameField />
+            <EditNameField column={column} />
             {column.children.length === 0 && <ChangeBackgroundColor column={column} />}
             <FontMenu column={column} />
             <ShowTitles column={column} />
