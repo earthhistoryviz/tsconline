@@ -54,7 +54,6 @@ export type ParsedColumnEntry = {
   children: string[];
   on: boolean;
   info: string;
-  show: boolean;
   enableTitle: boolean;
 };
 
@@ -75,7 +74,6 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
     children: [],
     on: true,
     info: "",
-    show: true,
     enableTitle: true
   };
   for (let i = 0; i < array.length; i++) {
@@ -243,7 +241,8 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     minAge: Number.MIN_VALUE,
     maxAge: Number.MAX_VALUE,
     units: ageUnits,
-    columnDisplayType: "Ruler"
+    columnDisplayType: "Ruler",
+    show: true
   });
   const chartColumn: ColumnInfo = {
     name: "Chart Title",
@@ -264,7 +263,8 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     minAge: returnValue.minAge,
     maxAge: returnValue.maxAge,
     units: ageUnits,
-    columnDisplayType: "RootColumn"
+    columnDisplayType: "RootColumn",
+    show: true
   };
   setShowLabels(chartColumn);
   const datapackParsingPack = { columnInfo: chartColumn, ageUnits, defaultChronostrat, formatVersion };
@@ -1305,7 +1305,6 @@ function recursive(
     minAge: Number.MAX_VALUE,
     maxAge: Number.MIN_VALUE,
     show: true,
-    width: 100,
     rgb: {
       r: 255,
       g: 255,
@@ -1576,7 +1575,7 @@ function addFaciesChildren(
     parent: name,
     minAge,
     maxAge,
-    show: false,
+    show: true,
     width,
     rgb,
     units,
@@ -1615,7 +1614,8 @@ function addFaciesChildren(
     rgb,
     width: width * 0.2,
     units,
-    columnDisplayType: "Zone"
+    columnDisplayType: "Zone",
+    show: true
   });
   for (const child of children) {
     for (const fontOption of child.fontOptions) {
@@ -1663,7 +1663,7 @@ function addChronChildren(
     width: 60,
     rgb,
     units,
-    columnDisplayType: "Chron"
+    columnDisplayType: "Chron",
     show: true,
   });
   children.push({
@@ -1681,7 +1681,7 @@ function addChronChildren(
     width: 40,
     rgb,
     units,
-    columnDisplayType: "Zone"
+    columnDisplayType: "Zone",
     show: true,
   });
   children.push({
@@ -1699,7 +1699,7 @@ function addChronChildren(
     width: 40,
     rgb,
     units,
-    columnDisplayType: "Zone"
+    columnDisplayType: "Zone",
     show: true,
   });
   for (const child of children) {
@@ -1737,7 +1737,8 @@ function createLoneColumn(
     parent: "",
     units,
     subInfo,
-    columnDisplayType: type
+    columnDisplayType: type,
+    show: true
   };
   addColumnSettings(column);
   return column;
