@@ -1,4 +1,4 @@
-import { ChartSettings } from "./types";
+import { ChartSettings, SettingsTabs } from "./types";
 
 export const settings: ChartSettings = {
   timeSettings: {
@@ -30,3 +30,5 @@ export const defaultTimeSettings = {
   unitsPerMY: 2,
   skipEmptyColumns: true
 };
+
+export const settingsTabs: SettingsTabs[] = ["time", "column", "font", "mappoints", "datapacks"];

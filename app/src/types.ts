@@ -31,6 +31,8 @@ export type Config = {
   settingsPath: string;
 };
 
+export type SettingsTabs = "time" | "column" | "font" | "mappoints" | "datapacks";
+
 export type SnackbarInfo = {
   snackbarText: string;
   snackbarCount: number;
