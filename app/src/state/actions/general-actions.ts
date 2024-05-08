@@ -35,7 +35,7 @@ import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import { equalChartSettings, equalConfig } from "../../types";
+import { SettingsTabs, equalChartSettings, equalConfig } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
 
 const increment = 1;
@@ -554,7 +554,7 @@ export const settingOptions = [
 /**
  * set the settings tab based on a string or number
  */
-export const setSettingsTabsSelected = action((newtab: number | State["settingsTabs"]["selected"]) => {
+export const setSettingsTabsSelected = action((newtab: number | SettingsTabs) => {
   if (typeof newtab === "string") {
     state.settingsTabs.selected = newtab;
     return;

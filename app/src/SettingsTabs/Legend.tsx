@@ -1,4 +1,4 @@
-import { Box, Button, IconButton, Typography, styled, useTheme } from "@mui/material";
+import { Box, Button, IconButton, Typography, useTheme } from "@mui/material";
 import React, { useState, useContext, ChangeEvent, useRef, useEffect } from "react";
 import {
   StyledScrollbar,
@@ -7,7 +7,9 @@ import {
   TypographyText,
   TSCTextField,
   TSCInputAdornment,
-  Lottie
+  Lottie,
+  TSCMenuItem,
+  TSCSubMenu
 } from "../components";
 import { context } from "../state";
 import { LegendItem } from "../types";
@@ -18,7 +20,7 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import "./Legend.css";
 import "@szhsin/react-menu/dist/index.css";
 import "@szhsin/react-menu/dist/transitions/slide.css";
-import { ControlledMenu, MenuDivider, MenuItem, SubMenu, useClick, useMenuState } from "@szhsin/react-menu";
+import { ControlledMenu, MenuDivider, useClick, useMenuState } from "@szhsin/react-menu";
 import { observer } from "mobx-react-lite";
 import ColorLensIcon from "@mui/icons-material/ColorLens";
 import SimpleBarCore from "simplebar-core";
@@ -197,25 +199,22 @@ const FilterMenu: React.FC<FilterMenuProps> = observer(
           {...menuState}
           viewScroll="close"
           portal={!state.isFullscreen}
-          className="menu"
+          className="filter-menu"
           menuStyle={style}
           anchorRef={menuRef}
           onClose={(event) => {
             if (event.reason === "click") return;
             toggleMenu(false);
           }}>
-          <CustomMenuItem
+          <TSCMenuItem
             checked={alphabeticalSort}
             onClick={() => setAlphabeticalSort(!alphabeticalSort)}
             type="checkbox">
             <TypographyText>Sort A-Z</TypographyText>
-          </CustomMenuItem>
-          <CustomMenuItem
-            checked={filterByPresent}
-            onClick={() => setFilterByPresent(!filterByPresent)}
-            type="checkbox">
+          </TSCMenuItem>
+          <TSCMenuItem checked={filterByPresent} onClick={() => setFilterByPresent(!filterByPresent)} type="checkbox">
             <TypographyText>Present in map</TypographyText>
-          </CustomMenuItem>
+          </TSCMenuItem>
           <MenuDivider />
           <ColorSubMenu
             colorHash={colorHash}
@@ -267,9 +266,9 @@ type ColorSubMenuProps = {
 
 const ColorSubMenu: React.FC<ColorSubMenuProps> = ({ colorHash, style, colors, colorFilter, toggleColor }) => {
   return (
-    <CustomSubMenu className="color-menu" menuStyle={style} label={SubMenuIcon}>
+    <TSCSubMenu className="color-menu" menuStyle={style} label={SubMenuIcon}>
       {Array.from(colors).map((color) => (
-        <CustomMenuItem
+        <TSCMenuItem
           className="sub-menu-item"
           key={color}
           checked={colorFilter.has(color)}
@@ -281,9 +280,9 @@ const ColorSubMenu: React.FC<ColorSubMenuProps> = ({ colorHash, style, colors, c
             </TypographyText>
             <div className="colored-box" style={{ backgroundColor: colorHash.get(color)?.hex }} />
           </>
-        </CustomMenuItem>
+        </TSCMenuItem>
       ))}
-    </CustomSubMenu>
+    </TSCSubMenu>
   );
 };
 
@@ -323,19 +322,3 @@ const DisplayLegendItem = ({ legendItem }: { legendItem: LegendItem }) => {
     </Box>
   );
 };
-const CustomSubMenu = styled(SubMenu)(({ theme }) => ({
-  "&.szh-menu__submenu > .szh-menu__item--hover": {
-    backgroundColor: theme.palette.menuDropdown.light
-  },
-  "&.szh-menu__submenu > .szh-menu__item--checked": {
-    color: theme.palette.primary.main
-  }
-}));
-const CustomMenuItem = styled(MenuItem)(({ theme }) => ({
-  "&.szh-menu__item--hover": {
-    backgroundColor: theme.palette.menuDropdown.light
-  },
-  "&.szh-menu__item--checked": {
-    color: theme.palette.primary.main
-  }
-}));
