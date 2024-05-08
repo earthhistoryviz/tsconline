@@ -3,7 +3,7 @@ import { type Kysely } from "kysely";
 export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
     .alterTable("users")
-    .addColumn("invalidateSession", "boolean", (col) => col.notNull().defaultTo(false))
+    .addColumn("invalidateSession", "integer", (col) => col.notNull().defaultTo(0))
     .execute();
 }
 
