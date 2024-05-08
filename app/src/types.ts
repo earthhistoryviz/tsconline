@@ -31,7 +31,15 @@ export type Config = {
   settingsPath: string;
 };
 
-export type SettingsTabs = "time" | "column" | "font" | "mappoints" | "datapacks";
+export const SettingsMenuOptionLabels = {
+  time: "Time",
+  font: "Font",
+  column: "Column",
+  mappoints: "Map Points",
+  datapacks: "Datapacks"
+}; 
+
+export type SettingsTabs = keyof typeof SettingsMenuOptionLabels;
 
 export type SnackbarInfo = {
   snackbarText: string;
@@ -96,4 +104,10 @@ export function equalConfig(a: Config, b: Config): boolean {
   return (
     a.datapacks.length === b.datapacks.length && a.datapacks.every((aValue, index) => aValue === b.datapacks[index])
   );
+}
+
+export function assertSettingsTabs(value: string): asserts value is SettingsTabs {
+  if (!(value in SettingsMenuOptionLabels)) {
+    throw new Error(`Invalid settings tab: ${value}`);
+  }
 }
