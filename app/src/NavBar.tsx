@@ -9,11 +9,11 @@ import { IconButton, MenuItem, Tab } from "@mui/material";
 import { context } from "./state";
 import { TSCButton, TSCTabs } from "./components";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import { ControlledMenu, useHover, useMenuState } from "@szhsin/react-menu";
+import { settingsTabs } from "./constants";
 import "./NavBar.css";
 import '@szhsin/react-menu/dist/index.css';
 import '@szhsin/react-menu/dist/transitions/slide.css';
-import { ControlledMenu, useHover, useMenuState } from "@szhsin/react-menu";
-import { settingsTabs } from "./constants";
 
 export const NavBar = observer(function Navbar() {
   const theme = useTheme();
@@ -76,7 +76,11 @@ export const NavBar = observer(function Navbar() {
             onClose={() => settingsMenuToggle(false)}
             >
               {settingsTabs.map((tab) => (
-                <MenuItem key={tab} onClick={() => actions.setSettingsTabsSelected(tab)}>
+                <MenuItem key={tab} onClick={() => {
+                  actions.setSettingsTabsSelected(tab)
+                  navigate("/settings")
+                  settingsMenuToggle(false)
+                }}>
                 {tab}
                 </MenuItem>))}
             </ControlledMenu>
