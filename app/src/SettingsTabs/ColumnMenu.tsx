@@ -59,7 +59,7 @@ export const ColumnMenu = observer(() => {
             <FontMenu column={column} />
             <ShowTitles column={column} />
             {column.width !== undefined && column.columnDisplayType !== "Ruler" && (
-              <EditWidthField key={column.name} columnObject={column} />
+              <EditWidthField key={column.name} column={column} />
             )}
             <EventSpecificSettings column={column} />
             {!!column.popup && <InfoBox info={column.popup} />}

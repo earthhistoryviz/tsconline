@@ -34,7 +34,7 @@ export const EditNameField: React.FC<{
             color="secondary"
             variant="contained"
             onClick={() => {
-              actions.updateEditName(column, editName.current);
+              actions.updateEditName(editName.current, column);
             }}>
             Confirm
           </Button>
