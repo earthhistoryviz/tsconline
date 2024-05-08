@@ -197,7 +197,6 @@ const FilterMenu: React.FC<FilterMenuProps> = observer(
           {...menuState}
           viewScroll="close"
           portal={!state.isFullscreen}
-          className="menu"
           menuStyle={style}
           anchorRef={menuRef}
           onClose={(event) => {
