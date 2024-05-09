@@ -290,7 +290,7 @@ export const defaultPointSettings: PointSettings = {
   },
   smoothed: true,
   drawFill: true,
-  fillColor: {
+  fill: {
     r: 64,
     g: 233,
     b: 191
@@ -332,7 +332,7 @@ export const defaultPoint: Partial<Point> ={
   subPointInfo: [],
   lowerRange: 0,
   upperRange: 0,
-  smoothed: false,
+  smoothed: true,
   drawLine: false,
   pointShape: "rect",
   drawFill: true,

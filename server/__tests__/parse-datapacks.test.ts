@@ -5,19 +5,29 @@ jest.mock("./util.js", () => ({
     return Promise.resolve([`server/__tests__/__data__/${decrypt_filepath}`]);
   })
 }));
+jest.mock("lodash", () => ({
+  default: {
+    cloneDeep: jest.fn().mockImplementation((o) => JSON.parse(JSON.stringify(o))),
+  }
+}));
+
 jest.mock("@tsconline/shared", () => ({
-  assertSubInfo: jest.fn().mockImplementation(() => true),
-  assertSubEventInfo: jest.fn().mockImplementation(() => true),
-  assertSubTransectInfo: jest.fn().mockImplementation(() => true),
-  assertSubFreehandInfo: jest.fn().mockImplementation(() => true),
-  assertSubChronInfo: jest.fn().mockImplementation(() => true),
-  assertColumnHeaderProps: jest.fn().mockImplementation(() => true),
-  assertSubPointInfo: jest.fn().mockImplementation(() => true),
-  assertSubSequenceInfo: jest.fn().mockImplementation(() => true),
-  assertSubFaciesInfo: jest.fn().mockImplementation(() => true),
-  assertSubBlockInfo: jest.fn().mockImplementation(() => true),
-  assertSubRangeInfo: jest.fn().mockImplementation(() => true),
+  assertSubInfo: jest.fn().mockReturnValue(true),
+  assertSubEventInfo: jest.fn().mockReturnValue(true),
+  assertSubTransectInfo: jest.fn().mockReturnValue(true),
+  assertSubFreehandInfo: jest.fn().mockReturnValue(true),
+  assertSubChronInfo: jest.fn().mockReturnValue(true),
+  assertColumnHeaderProps: jest.fn().mockReturnValue(true),
+  assertSubPointInfo: jest.fn().mockReturnValue(true),
+  assertSubSequenceInfo: jest.fn().mockReturnValue(true),
+  assertSubFaciesInfo: jest.fn().mockReturnValue(true),
+  assertSubBlockInfo: jest.fn().mockReturnValue(true),
+  assertSubRangeInfo: jest.fn().mockReturnValue(true),
   assertDatapackParsingPack: jest.fn().mockReturnValue(true),
+  isPointShape: jest.fn().mockImplementation((shape) => {
+    return /^(nopoints|rect|circle|cross)$/.test(shape);
+  }),
+  assertPoint: jest.fn().mockReturnValue(true),
   assertRGB: jest.fn().mockImplementation((o) => {
     if (!o || typeof o !== "object") throw new Error("RGB must be a non-null object");
     if (typeof o.r !== "number") throw new Error("Invalid rgb");
@@ -32,7 +42,69 @@ jest.mock("@tsconline/shared", () => ({
   defaultEventSettings: { type: "events", rangeSort: "first occurrence" },
   assertFontsInfo: jest.fn().mockImplementation((fonts) => {
     if (fonts.font !== "Arial") throw new Error("Invalid font");
-  })
+  }),
+  defaultPoint: {
+    subPointInfo: [],
+    lowerRange: 0,
+    upperRange: 0,
+    smoothed: true,
+    drawLine: false,
+    pointShape: "rect",
+    drawFill: true,
+    fill: {
+      r: 64,
+      g: 233,
+      b: 191
+    },
+    minX: Number.MAX_SAFE_INTEGER,
+    maxX: Number.MIN_SAFE_INTEGER,
+  },
+  defaultPointSettings: {
+    drawLine: true,
+    lineColor: {
+      r: 0,
+      g: 0,
+      b: 0
+    },
+    smoothed: true,
+    drawFill: true,
+    fill: {
+      r: 64,
+      g: 233,
+      b: 191
+    },
+    lowerRange: 0,
+    upperRange: 0,
+    drawScale: true,
+    drawBackgroundGradient: false,
+    backgroundGradientStart: {
+      r: 0,
+      g: 0,
+      b: 0
+    },
+    backgroundGradientEnd: {
+      r: 255,
+      g: 255,
+      b: 255
+    },
+    drawCurveGradient: false,
+    curveGradientStart: {
+      r: 0,
+      g: 0,
+      b: 0
+    },
+    curveGradientEnd: {
+      r: 255,
+      g: 255,
+      b: 255
+    },
+    flipScale: false,
+    scaleStart: 0,
+    scaleStep: 0,
+    pointShape: "rect",
+    minX: Number.MAX_SAFE_INTEGER,
+    maxX: Number.MIN_SAFE_INTEGER
+  }
 }));
 import {
   ParsedColumnEntry,
@@ -69,7 +141,6 @@ describe("general parse-datapacks tests", () => {
    */
   it("should parse africa general datapack", async () => {
     const datapacks = await parseDatapacks("", "parse-datapacks-test-1.txt");
-    console.log(JSON.stringify(datapacks, null, 2));
     expect(datapacks).toEqual(key["general-parse-datapacks-test-1-key"]);
   });
 
