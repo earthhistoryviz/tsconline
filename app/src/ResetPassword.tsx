@@ -39,7 +39,7 @@ export const ResetPassword: React.FC = observer(() => {
     setLoading(true);
     setShowResendForm(false);
     try {
-      const response = await fetcher("/auth/send-reset-email", {
+      const response = await fetcher("/auth/send-resetpassword-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -49,7 +49,7 @@ export const ResetPassword: React.FC = observer(() => {
       if (response.ok) {
         actions.removeAllErrors();
         actions.pushSnackbar("If your account is verified, you will receive an email.", "success");
-        setTimeout(() => navigate("/login"), 2000);
+        navigate("/login");
       } else {
         let errorCode = ErrorCodes.UNABLE_TO_SEND_EMAIL;
         switch (response.status) {

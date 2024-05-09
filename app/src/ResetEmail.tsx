@@ -10,7 +10,7 @@ import SendIcon from "@mui/icons-material/Send";
 import Box from "@mui/material/Box";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
-import { useLocation, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { fetcher } from "./util";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { displayServerError } from "./state/actions/util-actions";
@@ -18,12 +18,9 @@ import Container from "@mui/material/Container";
 import "./Login.css";
 
 export const ResetEmail: React.FC = observer(() => {
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const token = searchParams.get("token");
   const theme = useTheme();
   const [loading, setLoading] = useState(false);
-  const [showForm, setShowForm] = useState(token !== null);
+  const [showForm, setShowForm] = useState(true);
   const { actions } = useContext(context);
   const navigate = useNavigate();
 
@@ -38,13 +35,13 @@ export const ResetEmail: React.FC = observer(() => {
     setLoading(true);
     setShowForm(false);
     try {
-      const response = await fetcher("/auth/send-emailreset-email", {
+      const response = await fetcher("/auth/reset-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         credentials: "include",
-        body: JSON.stringify({ email: form.email.value })
+        body: JSON.stringify({ newEmail: form.email.value, password: form.password.value })
       });
       if (response.ok) {
         actions.removeAllErrors();
@@ -106,10 +103,9 @@ export const ResetEmail: React.FC = observer(() => {
               name="password"
               autoComplete="password"
               type="password"
-              autoFocus
               margin="normal"
             />
-            <TSCButton type="submit" fullWidth variant="contained" startIcon={<SendIcon />}>
+            <TSCButton type="submit" fullWidth startIcon={<SendIcon />}>
               Send
             </TSCButton>
           </Box>

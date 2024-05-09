@@ -45,7 +45,7 @@ export const AccountRecovery: React.FC = observer(() => {
       });
       if (response.ok) {
         actions.removeAllErrors();
-        actions.pushSnackbar("Please change your password", "info");
+        actions.pushSnackbar("Please check your inbox for details on resetting your password.", "info");
         navigate("/reset-password");
       } else {
         displayServerError(
@@ -53,6 +53,7 @@ export const AccountRecovery: React.FC = observer(() => {
           ErrorCodes.UNABLE_TO_RECOVER_ACCOUNT,
           ErrorMessages[ErrorCodes.UNABLE_TO_RECOVER_ACCOUNT]
         );
+        navigate("/home");
       }
     } catch {
       displayServerError(
@@ -60,6 +61,7 @@ export const AccountRecovery: React.FC = observer(() => {
         ErrorCodes.UNABLE_TO_RECOVER_ACCOUNT,
         ErrorMessages[ErrorCodes.UNABLE_TO_RECOVER_ACCOUNT]
       );
+      navigate("/home");
     } finally {
       setLoading(false);
     }

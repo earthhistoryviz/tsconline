@@ -9,6 +9,28 @@ export const db = new Kysely<Database>({
   })
 });
 
+/*
+These schemas should not be changed. The problem with changing them is that on the dev server the database will have to be either deleted or the schema will have to be manually updated.
+Manually updating the server every single time will become a problem because we have to make sure that data is not lost. This is why we have migrations. If you need to change the schema, read the instructions in migrate.ts.
+Because of this we will document the schema after migrations here:
+users:
+  userId: integer, primary key, auto increment
+  username: text, unique
+  email: text, unique
+  hashedPassword: text, unique
+  uuid: text, not null, unique
+  pictureUrl: text, unique
+  emailVerified: integer, not null, default 0
+  invalidateSession: integer, not null, default 0
+
+verification:
+  id: integer, primary key, auto increment
+  userId: integer, not null
+  token: text, not null, unique
+  expiresAt: datetime, not null
+  reason: text, not null
+*/
+
 await db.schema
   .createTable("users")
   .ifNotExists()
@@ -24,10 +46,10 @@ await db.schema
 await db.schema
   .createTable("verification")
   .ifNotExists()
-  .addColumn("userId", "integer", (col) => col.notNull())
+  .addColumn("userId", "integer", (col) => col.notNull().unique())
   .addColumn("token", "text", (col) => col.notNull().unique())
   .addColumn("expiresAt", "datetime", (col) => col.notNull())
-  .addColumn("reason", "text", (col) => col.notNull())
+  .addColumn("verifyOrReset", "text", (col) => col.notNull())
   .execute();
 
 exec("cd db && yarn tsx migrate.ts up", (error, stdout, stderr) => {

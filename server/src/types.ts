@@ -21,7 +21,7 @@ export interface VerificationTable {
   userId: number;
   token: string;
   expiresAt: string;
-  reason: "email" | "password" | "invalidate" | "verify";
+  reason: "password" | "invalidate" | "verify";
 }
 
 export type User = Selectable<UserTable>;
