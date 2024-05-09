@@ -277,6 +277,8 @@ export type Point = ColumnHeaderProps & {
   upperRange: number;
   smoothed: boolean;
   pointShape: PointShape;
+  minX: number,
+  maxX: number
 };
 
 export type Sequence = ColumnHeaderProps & {
@@ -525,6 +527,8 @@ export function assertPoint(o: any): asserts o is Point {
   for (const subPoint of o.subPointInfo) {
     assertSubPointInfo(subPoint);
   }
+  if (typeof o.minX !== "number") throwError("Point", "minX", "number", o.minX);
+  if (typeof o.maxX !== "number") throwError("Point", "maxX", "number", o.maxX);
   if (typeof o.drawLine !== "boolean") throwError("Point", "drawLine", "boolean", o.drawLine);
   if (typeof o.lowerRange !== "number") throwError("Point", "lowerRange", "number", o.lowerRange);
   if (typeof o.upperRange !== "number") throwError("Point", "upperRange", "number", o.upperRange);
