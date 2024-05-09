@@ -3,7 +3,7 @@ import React, { useContext, useState } from "react";
 import Typography from "@mui/material/Typography";
 import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
-import { Box } from "@mui/material";
+import { Box, TextField } from "@mui/material";
 import { ColumnContainer, AccordionDetails, TSCCheckbox, AccordionSummary, Accordion, TSCButton } from "../components";
 
 import { ColumnMenu } from "./ColumnMenu";
@@ -39,9 +39,12 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
   ({ details, expandedAccordions, accordionClicked }) => {
     const { actions, state } = useContext(context);
     const theme = useTheme();
+    if (!details.show) {
+      return null;
+    }
     //for keeping the original name for array access
     function clickColumnName() {
-      actions.setcolumnSelected(details.name);
+      actions.setColumnSelected(details.name);
     }
     const hasChildren = details.children && Object.keys(details.children).length > 0;
     const columnName = (
@@ -145,10 +148,15 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
 
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
-  const { state } = useContext(context);
+  const { state, actions } = useContext(context);
   //state array of column names that are expanded
   const accordions = state.settingsTabs.columns ? stringToHash(state.settingsTabs.columns.name) : 0;
   const [expandedAccordions, setExpandedAccordions] = useState<number[]>([accordions]);
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const term = event.target.value;
+    actions.setColumnSearchTerm(term);
+    actions.searchColumns(term);
+  };
   //if column not in expanded list, add it
   //if column in expanded list, remove it
   const accordionClicked = (name: string) => {
@@ -171,8 +179,8 @@ export const Column = observer(function Column() {
   }
   //adds every column to the expand list
   const expandAll = () => {
-    const newArray: number[] = [];
     if (!state.settingsTabs.columns) return;
+    const newArray: number[] = [];
     newArray.push(stringToHash(state.settingsTabs.columns!.name));
     recurseThroughColumn(newArray, state.settingsTabs.columns!.children);
     setExpandedAccordions(newArray);
@@ -180,8 +188,25 @@ export const Column = observer(function Column() {
 
   return (
     <div className="column-top-level">
+      <div className="column-search-bar-container">
+        {state.settingsTabs.columnSearchTerm && (
+          <Typography variant="body2" color="textSecondary" id="column-search-term">
+            <span style={{ color: "red" }}>Filtered For: &quot;{state.settingsTabs.columnSearchTerm}&quot;</span>
+          </Typography>
+        )}
+        <TextField
+          id="column-search-bar"
+          label="Search"
+          variant="outlined"
+          size="small"
+          fullWidth
+          onChange={handleSearch}
+          value={state.settingsTabs.columnSearchTerm}
+        />
+      </div>
       <div className="column-accordion-and-menu">
-        <Box className="hide-scrollbar column-accordion-wrapper">
+        <Box
+          className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}>
           <TSCButton
             id="column-expand-buttons"
             onClick={() => {

@@ -4,11 +4,25 @@
   align-items: center;
 }
 
-#column-expand-buttons {
+#column-generate-button-top {
   margin-top: 1%;
   margin-bottom: 1%;
   width: 200px;
   font-size: 1rem;
+}
+
+#column-search-bar {
+  width: 400px;
+}
+
+#column-search-term {
+  margin-bottom: 10px;
+}
+
+.column-search-bar-container {
+  margin-top: 10px;
+  margin-bottom: 20px;
+  position: relative;
 }
 
 .column-accordion-and-menu {
@@ -68,4 +82,12 @@
   margin-left: 10px;
   margin-right: 10px;
   margin-top: 6px;
+}
+
+.filtered-border {
+  outline: 1px solid red;
+}
+
+.column-top-level .MuiTypography-root {
+  margin: 10;
 }
