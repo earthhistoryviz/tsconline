@@ -1486,7 +1486,7 @@ function recursive(
       ...currentPoint,
       fontOptions: getValidFontOptions("Point"),
       columnDisplayType: "Point",
-      subInfo: JSON.parse(JSON.stringify(subPointInfo)),
+      subInfo: _.cloneDeep(subPointInfo),
       columnSpecificSettings: setCommonProperties(_.cloneDeep(defaultPointSettings), deconstructedPointSettings)
     });
     if (currentColumn.includes("Tropical")) console.log(currentColumnInfo.columnSpecificSettings);
