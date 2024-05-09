@@ -224,7 +224,7 @@ export type PointSettings = {
   smoothed: boolean;
   minX: number;
   maxX: number;
-}
+};
 
 export type ColumnInfo = {
   name: string;
@@ -279,8 +279,8 @@ export type Point = ColumnHeaderProps & {
   upperRange: number;
   smoothed: boolean;
   pointShape: PointShape;
-  minX: number,
-  maxX: number
+  minX: number;
+  maxX: number;
 };
 
 export type Sequence = ColumnHeaderProps & {
@@ -468,8 +468,10 @@ export function assertPointSettings(o: any): asserts o is PointSettings {
   if (typeof o.drawLine !== "boolean") throwError("PointSettings", "drawLine", "boolean", o.drawLine);
   if (typeof o.drawFill !== "boolean") throwError("PointSettings", "drawFill", "boolean", o.drawFill);
   if (typeof o.drawScale !== "boolean") throwError("PointSettings", "drawScale", "boolean", o.drawScale);
-  if (typeof o.drawCurveGradient !== "boolean") throwError("PointSettings", "drawCurveGradient", "boolean", o.drawCurveGradient);
-  if (typeof o.drawBackgroundGradient !== "boolean") throwError("PointSettings", "drawBackgroundGradient", "boolean", o.drawBackgroundGradient);
+  if (typeof o.drawCurveGradient !== "boolean")
+    throwError("PointSettings", "drawCurveGradient", "boolean", o.drawCurveGradient);
+  if (typeof o.drawBackgroundGradient !== "boolean")
+    throwError("PointSettings", "drawBackgroundGradient", "boolean", o.drawBackgroundGradient);
   assertRGB(o.backgroundGradientStart);
   assertRGB(o.backgroundGradientEnd);
   assertRGB(o.curveGradientStart);
@@ -479,7 +481,8 @@ export function assertPointSettings(o: any): asserts o is PointSettings {
   if (typeof o.scaleStart !== "number") throwError("PointSettings", "scaleStart", "number", o.scaleStart);
   if (typeof o.scaleStep !== "number") throwError("PointSettings", "scaleStep", "number", o.scaleStep);
   assertRGB(o.fill);
-  if (typeof o.pointShape !== "string" || !isPointShape(o.pointShape)) throwError("PointSettings", "pointShape", "string", o.pointShape);
+  if (typeof o.pointShape !== "string" || !isPointShape(o.pointShape))
+    throwError("PointSettings", "pointShape", "string", o.pointShape);
   if (typeof o.lowerRange !== "number") throwError("PointSettings", "lowerRange", "number", o.lowerRange);
   if (typeof o.upperRange !== "number") throwError("PointSettings", "upperRange", "number", o.upperRange);
   if (typeof o.smoothed !== "boolean") throwError("PointSettings", "smoothed", "boolean", o.smoothed);
@@ -537,7 +540,8 @@ export function assertPoint(o: any): asserts o is Point {
   if (typeof o.lowerRange !== "number") throwError("Point", "lowerRange", "number", o.lowerRange);
   if (typeof o.upperRange !== "number") throwError("Point", "upperRange", "number", o.upperRange);
   if (typeof o.smoothed !== "boolean") throwError("Point", "smoothed", "boolean", o.smoothed);
-  if (typeof o.pointShape !== "string" || !isPointShape(o.pointShape)) throwError("Point", "pointShape", "string", o.pointShape);
+  if (typeof o.pointShape !== "string" || !isPointShape(o.pointShape))
+    throwError("Point", "pointShape", "string", o.pointShape);
   if (typeof o.drawFill !== "boolean") throwError("Point", "drawFill", "boolean", o.drawFill);
   assertRGB(o.fill);
   assertColumnHeaderProps(o);

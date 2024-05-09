@@ -7,7 +7,7 @@ jest.mock("./util.js", () => ({
 }));
 jest.mock("lodash", () => ({
   default: {
-    cloneDeep: jest.fn().mockImplementation((o) => JSON.parse(JSON.stringify(o))),
+    cloneDeep: jest.fn().mockImplementation((o) => JSON.parse(JSON.stringify(o)))
   }
 }));
 
@@ -57,7 +57,7 @@ jest.mock("@tsconline/shared", () => ({
       b: 191
     },
     minX: Number.MAX_SAFE_INTEGER,
-    maxX: Number.MIN_SAFE_INTEGER,
+    maxX: Number.MIN_SAFE_INTEGER
   },
   defaultPointSettings: {
     drawLine: true,

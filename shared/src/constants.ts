@@ -328,7 +328,7 @@ export const defaultPointSettings: PointSettings = {
   maxX: Number.MIN_SAFE_INTEGER
 };
 
-export const defaultPoint: Partial<Point> ={
+export const defaultPoint: Partial<Point> = {
   subPointInfo: [],
   lowerRange: 0,
   upperRange: 0,
@@ -342,5 +342,5 @@ export const defaultPoint: Partial<Point> ={
     b: 255
   },
   minX: Number.MAX_SAFE_INTEGER,
-  maxX: Number.MIN_SAFE_INTEGER,
-}
+  maxX: Number.MIN_SAFE_INTEGER
+};
