@@ -1489,7 +1489,6 @@ function recursive(
       subInfo: _.cloneDeep(subPointInfo),
       columnSpecificSettings: setCommonProperties(_.cloneDeep(defaultPointSettings), deconstructedPointSettings)
     });
-    if (currentColumn.includes("Tropical")) console.log(currentColumnInfo.columnSpecificSettings);
     returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.maxAge = currentColumnInfo.maxAge;
     returnValue.minAge = currentColumnInfo.minAge;
