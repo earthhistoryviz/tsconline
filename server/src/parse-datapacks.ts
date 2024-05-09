@@ -42,7 +42,9 @@ import {
   assertSubInfo,
   SubInfo,
   assertDatapackParsingPack,
-  defaultEventSettings
+  defaultEventSettings,
+  isPointShape,
+  assertPoint
 } from "@tsconline/shared";
 import { trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter } from "./util.js";
 import { createInterface } from "readline";
@@ -442,7 +444,18 @@ export async function getColumnTypes(
   };
   const point: Point = {
     ...createDefaultColumnHeaderProps(),
-    subPointInfo: []
+    subPointInfo: [],
+    lowerRange: 0,
+    upperRange: 0,
+    smoothed: false,
+    drawLine: false,
+    pointShape: "rect",
+    drawFill: true,
+    fill: {
+      r: 255,
+      g: 255,
+      b: 255
+    }
   };
   const range: Range = {
     ...createDefaultColumnHeaderProps(),
@@ -626,6 +639,9 @@ export async function getColumnTypes(
       setColumnHeaders(point, tabSeparated);
       inPointBlock = true;
     } else if (inPointBlock) {
+      if (tabSeparated[0] && isPointShape(tabSeparated[0])) {
+        configureOptionalPointSettings(tabSeparated, point);
+      }
       const subPointInfo = processPoint(line);
       if (subPointInfo) {
         point.subPointInfo.push(subPointInfo);
@@ -1803,3 +1819,31 @@ function processColumn<T extends ColumnInfoType>(
   }
   return false;
 }
+function configureOptionalPointSettings(tabSeparated: string[], point: Point) {
+  if (tabSeparated.length !== 6) {
+    console.log("Error adding optional point configuration, line is not formatted correctly: + " + tabSeparated);
+    return;
+  }
+  if (isPointShape(tabSeparated[0])) {
+    point.pointShape = tabSeparated[0];
+  } else {
+    // this is the only required parameter if this optional line exists
+    console.log("Error adding optional point configuration, point shape is not valid: " + tabSeparated[0]);
+    return;
+  }
+  if (tabSeparated[1] && /^(line|noline)$/.test(tabSeparated[1])) point.drawLine = tabSeparated[1] === "line";
+  if (tabSeparated[2] && patternForColor.test(tabSeparated[2])) {
+    const rgb = tabSeparated[2].split("/");
+    point.rgb = {
+      r: Number(rgb[0]),
+      g: Number(rgb[1]),
+      b: Number(rgb[2])
+    };
+    point.drawFill = true;
+  }
+  if (tabSeparated[3] && !isNaN(Number(tabSeparated[3]))) point.lowerRange = Number(tabSeparated[3]);
+  if (tabSeparated[4] && !isNaN(Number(tabSeparated[4]))) point.upperRange = Number(tabSeparated[4]);
+  if (tabSeparated[5]) point.smoothed = tabSeparated[5] === "smoothed";
+  assertPoint(point)
+}
+
