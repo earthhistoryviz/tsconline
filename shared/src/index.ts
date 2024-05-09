@@ -531,9 +531,6 @@ export function assertPoint(o: any): asserts o is Point {
   if (typeof o.smoothed !== "boolean") throwError("Point", "smoothed", "boolean", o.smoothed);
   if (typeof o.pointShape !== "string" || !isPointShape(o.pointShape)) throwError("Point", "pointShape", "string", o.pointShape);
   if (typeof o.drawFill !== "boolean") throwError("Point", "drawFill", "boolean", o.drawFill);
-  if (o.lowerRange < 0) throwError("Point", "lowerRange", "number greater than 0", o.lowerRange);
-  if (o.upperRange < 0) throwError("Point", "upperRange", "number greater than 0", o.upperRange);
-  if (o.lowerRange > o.upperRange) throwError("Point", "lowerRange", "number less than upperRange", o.lowerRange);
   assertRGB(o.fill);
   assertColumnHeaderProps(o);
 }

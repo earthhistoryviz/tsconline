@@ -290,9 +290,9 @@ export const defaultPointSettings: PointSettings = {
   smoothed: true,
   drawFill: true,
   fillColor: {
-    r: 255,
-    g: 255,
-    b: 255
+    r: 64,
+    g: 233,
+    b: 191
   },
   lowerRange: 0,
   upperRange: 0,

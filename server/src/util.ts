@@ -155,3 +155,13 @@ export async function resetUploadDirectory(uploadedFile: string, decryptedUpload
     deleteDirectory(decryptedUploadedDirectory);
   }
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function setCommonProperties(o1: any, o2: any) {
+  for (const key in o1) {
+    if (o2.hasOwnProperty(key)) {
+      o1[key] = o2[key];
+    }
+  }
+  return o1;
+}

@@ -44,10 +44,13 @@ import {
   assertDatapackParsingPack,
   defaultEventSettings,
   isPointShape,
-  assertPoint
+  assertPoint,
+  defaultPointSettings,
+  PointSettings
 } from "@tsconline/shared";
-import { trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter } from "./util.js";
+import { trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter, setCommonProperties } from "./util.js";
 import { createInterface } from "readline";
+import _ from "lodash";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;
 const patternForAbundance = /^(TOP|missing|rare|common|frequent|abundant|sample|flood)$/;
@@ -851,9 +854,17 @@ function addSequenceToSequenceMap(sequence: Sequence, sequenceMap: Map<string, S
  * @param pointMap
  */
 function addPointToPointMap(point: Point, pointMap: Map<string, Point>) {
+  let lowerRange = Number.MAX_SAFE_INTEGER;
+  let upperRange = Number.MIN_SAFE_INTEGER;
   for (const subPoint of point.subPointInfo) {
     point.minAge = Math.min(subPoint.age, point.minAge);
     point.maxAge = Math.max(subPoint.age, point.maxAge);
+    lowerRange = Math.min(subPoint.age, lowerRange);
+    upperRange = Math.max(subPoint.age, upperRange);
+  }
+  if (point.lowerRange === 0 && point.upperRange === 0) {
+    point.lowerRange = lowerRange;
+    point.upperRange = upperRange;
   }
   pointMap.set(point.name, JSON.parse(JSON.stringify(point)));
   Object.assign(point, { ...createDefaultColumnHeaderProps(), subPointInfo: [] });
@@ -1450,7 +1461,8 @@ function recursive(
       ...currentPoint,
       fontOptions: getValidFontOptions("Point"),
       columnDisplayType: "Point",
-      subInfo: JSON.parse(JSON.stringify(subPointInfo))
+      subInfo: JSON.parse(JSON.stringify(subPointInfo)),
+      columnSpecificSettings: setCommonProperties(_.cloneDeep(defaultPointSettings), currentPoint)
     });
     returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.maxAge = currentColumnInfo.maxAge;
@@ -1820,8 +1832,8 @@ function processColumn<T extends ColumnInfoType>(
   return false;
 }
 function configureOptionalPointSettings(tabSeparated: string[], point: Point) {
-  if (tabSeparated.length !== 6) {
-    console.log("Error adding optional point configuration, line is not formatted correctly: + " + tabSeparated);
+  if (tabSeparated.length < 1 || tabSeparated.length > 6) {
+    console.log("Error adding optional point configuration, line is not formatted correctly: " + tabSeparated + " with size " + tabSeparated.length);
     return;
   }
   if (isPointShape(tabSeparated[0])) {
