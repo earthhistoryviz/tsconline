@@ -46,7 +46,8 @@ import {
   isPointShape,
   assertPoint,
   defaultPointSettings,
-  PointSettings
+  PointSettings,
+  defaultPoint
 } from "@tsconline/shared";
 import { trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter, setCommonProperties } from "./util.js";
 import { createInterface } from "readline";
@@ -445,21 +446,11 @@ export async function getColumnTypes(
     ...createDefaultColumnHeaderProps(),
     subSequenceInfo: []
   };
-  const point: Point = {
+  const point = {
     ...createDefaultColumnHeaderProps(),
-    subPointInfo: [],
-    lowerRange: 0,
-    upperRange: 0,
-    smoothed: false,
-    drawLine: false,
-    pointShape: "rect",
-    drawFill: true,
-    fill: {
-      r: 255,
-      g: 255,
-      b: 255
-    }
+    ..._.cloneDeep(defaultPoint),
   };
+  assertPoint(point)
   const range: Range = {
     ...createDefaultColumnHeaderProps(),
     subRangeInfo: []
@@ -856,18 +847,20 @@ function addSequenceToSequenceMap(sequence: Sequence, sequenceMap: Map<string, S
 function addPointToPointMap(point: Point, pointMap: Map<string, Point>) {
   let lowerRange = Number.MAX_SAFE_INTEGER;
   let upperRange = Number.MIN_SAFE_INTEGER;
+  const margin = 0.10;
   for (const subPoint of point.subPointInfo) {
     point.minAge = Math.min(subPoint.age, point.minAge);
     point.maxAge = Math.max(subPoint.age, point.maxAge);
-    lowerRange = Math.min(subPoint.age, lowerRange);
-    upperRange = Math.max(subPoint.age, upperRange);
+    lowerRange = Math.min(subPoint.xVal, lowerRange);
+    upperRange = Math.max(subPoint.xVal, upperRange);
   }
   if (point.lowerRange === 0 && point.upperRange === 0) {
-    point.lowerRange = lowerRange;
-    point.upperRange = upperRange;
+    const outerMargin = ((upperRange - lowerRange) * margin) / 2;
+    point.lowerRange = lowerRange - outerMargin;
+    point.upperRange = upperRange + outerMargin;
   }
   pointMap.set(point.name, JSON.parse(JSON.stringify(point)));
-  Object.assign(point, { ...createDefaultColumnHeaderProps(), subPointInfo: [] });
+  Object.assign(point, { ...createDefaultColumnHeaderProps(), ..._.cloneDeep(defaultPoint)});
 }
 
 /**
@@ -1464,6 +1457,7 @@ function recursive(
       subInfo: JSON.parse(JSON.stringify(subPointInfo)),
       columnSpecificSettings: setCommonProperties(_.cloneDeep(defaultPointSettings), currentPoint)
     });
+    if (currentColumn.includes("Tropical")) console.log(currentColumnInfo.columnSpecificSettings); 
     returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.maxAge = currentColumnInfo.maxAge;
     returnValue.minAge = currentColumnInfo.minAge;
