@@ -10,9 +10,6 @@ function extractColumnType(text: string): string {
   return text.substring(text.indexOf(".") + 1, text.indexOf(":"));
 }
 export const applyChartColumnSettings = action("applyChartColumnSettings", (settings: ColumnInfoTSC) => {
-  const columnName = extractName(settings._id);
-  let curcol: ColumnInfo | undefined = state.settingsTabs.columnHashMap.get(columnName);
-  let blockSeriesColumns: boolean = false;
   function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
     updateEditName(settings.title, column);
     setEnableTitle(settings.drawTitle, column);
@@ -20,18 +17,14 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
     if (settings.backgroundColor.text) setRGB(settings.backgroundColor.text, column);
     column.fontsInfo = cloneDeep(settings.fonts);
   }
+  const columnName = extractName(settings._id);
+  let curcol: ColumnInfo | undefined = state.settingsTabs.columnHashMap.get(columnName);
+  let blockSeriesColumns: boolean = false;
   if (curcol === undefined) {
     if (extractColumnType(settings._id) === "RootColumn") {
       curcol = state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
     }
   }
-  if (curcol === undefined) {
-    curcol = state.settingsTabs.columnHashMap.get('"' + columnName + '"');
-  }
-  //edge case for names with spaces at the end (ex. N-E)
-  // if (curcol === undefined) {
-  //   curcol = state.settingsTabs.columnHashMap.get(columnName + ' ');
-  // }
   if (curcol === undefined) {
     pushSnackbar("Unknown column name '" + columnName + "' found while loading settings", "warning");
     console.log("Unknown column name " + columnName + " found while loading settings")
