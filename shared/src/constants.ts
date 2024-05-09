@@ -323,7 +323,9 @@ export const defaultPointSettings: PointSettings = {
   flipScale: false,
   scaleStart: 0,
   scaleStep: 0,
-  pointShape: "rect"
+  pointShape: "rect",
+  minX: Number.MAX_SAFE_INTEGER,
+  maxX: Number.MIN_SAFE_INTEGER
 };
 
 export const defaultPoint: Partial<Point> ={
