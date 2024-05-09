@@ -201,7 +201,15 @@ export type SubInfo =
   | SubSequenceInfo
   | SubTransectInfo;
 
-export type ColumnSpecificSettings = EventSettings;
+export type ColumnSpecificSettings = EventSettings | PointSettings;
+
+export type PointSettings = {
+  drawLine: boolean;
+  fill?: RGB;
+  lowerRange: number;
+  upperRange: number;
+  smoothed: boolean;
+}
 
 export type ColumnInfo = {
   name: string;
@@ -424,6 +432,15 @@ export function assertTransect(o: any): asserts o is Transect {
   for (const subTransect of o.subTransectInfo) {
     assertSubTransectInfo(subTransect);
   }
+}
+
+export function assertPointSettings(o: any): asserts o is PointSettings {
+  if (!o || typeof o !== "object") throw new Error("PointSettings must be a non-null object");
+  if (typeof o.drawLine !== "boolean") throwError("PointSettings", "drawLine", "boolean", o.drawLine);
+  if (typeof o.lowerRange !== "number") throwError("PointSettings", "lowerRange", "number", o.lowerRange);
+  if (typeof o.upperRange !== "number") throwError("PointSettings", "upperRange", "number", o.upperRange);
+  if (typeof o.smoothed !== "boolean") throwError("PointSettings", "smoothed", "boolean", o.smoothed);
+  if (o.fill) assertRGB(o.fill);
 }
 
 export function assertEventSettings(o: any): asserts o is EventSettings {
@@ -864,6 +881,9 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
   switch (type) {
     case "Event":
       assertEventSettings(o);
+      break;
+    case "Point":
+      assertPointSettings(o);
       break;
     default:
       throw new Error(
