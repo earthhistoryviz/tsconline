@@ -15,6 +15,7 @@ export const EventSpecificSettings: React.FC<EventSpecificSettingsProps> = obser
   if (column.columnDisplayType !== "Event" || !column.columnSpecificSettings) return null;
   assertEventSettings(column.columnSpecificSettings);
   const handleTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    assertEventSettings(column.columnSpecificSettings);
     const value = event.target.value;
     if (!isEventType(value) || !column.columnSpecificSettings) {
       actions.pushSnackbar("This feature is not yet implemented for value " + value + ".", "warning");
@@ -23,6 +24,7 @@ export const EventSpecificSettings: React.FC<EventSpecificSettingsProps> = obser
     actions.setEventColumnSettings(column.columnSpecificSettings, { type: value });
   };
   const handleRangeSortChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    assertEventSettings(column.columnSpecificSettings);
     const value = event.target.value;
     if (!isRangeSort(value) || !column.columnSpecificSettings) {
       actions.pushSnackbar("This feature is not yet implemented for value " + value + ".", "warning");
