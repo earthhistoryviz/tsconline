@@ -4,6 +4,7 @@ import {
   EventColumnInfoTSC,
   EventSettings,
   FontsInfo,
+  Point,
   PointColumnInfoTSC,
   PointSettings,
   RangeColumnInfoTSC,
@@ -324,3 +325,18 @@ export const defaultPointSettings: PointSettings = {
   scaleStep: 0,
   pointShape: "rect"
 };
+
+export const defaultPoint: Partial<Point> ={
+  subPointInfo: [],
+  lowerRange: 0,
+  upperRange: 0,
+  smoothed: false,
+  drawLine: false,
+  pointShape: "rect",
+  drawFill: true,
+  fill: {
+    r: 255,
+    g: 255,
+    b: 255
+  }
+}

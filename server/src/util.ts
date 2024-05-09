@@ -156,6 +156,12 @@ export async function resetUploadDirectory(uploadedFile: string, decryptedUpload
   }
 }
 
+/**
+ * This is different from Object.assign because it only sets the properties that are common between the two objects
+ * @param o1 
+ * @param o2 
+ * @returns 
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function setCommonProperties(o1: any, o2: any) {
   for (const key in o1) {
