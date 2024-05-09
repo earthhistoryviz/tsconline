@@ -5,6 +5,7 @@ import {
   EventSettings,
   FontsInfo,
   PointColumnInfoTSC,
+  PointSettings,
   RangeColumnInfoTSC,
   RulerColumnInfoTSC,
   SequenceColumnInfoTSC,
@@ -277,4 +278,49 @@ export const defaultPointColumnInfoTSC: PointColumnInfoTSC = {
   scaleStart: 0,
   scaleStep: 0,
   pointType: "rect"
+};
+
+export const defaultPointSettings: PointSettings = {
+  drawLine: true,
+  lineColor: {
+    r: 0,
+    g: 0,
+    b: 0
+  },
+  smoothed: true,
+  drawFill: true,
+  fillColor: {
+    r: 255,
+    g: 255,
+    b: 255
+  },
+  lowerRange: 0,
+  upperRange: 0,
+  drawScale: true,
+  drawBackgroundGradient: false,
+  backgroundGradientStart: {
+    r: 0,
+    g: 0,
+    b: 0
+  },
+  backgroundGradientEnd: {
+    r: 255,
+    g: 255,
+    b: 255
+  },
+  drawCurveGradient: false,
+  curveGradientStart: {
+    r: 0,
+    g: 0,
+    b: 0
+  },
+  curveGradientEnd: {
+    r: 255,
+    g: 255,
+    b: 255
+  },
+  flipScale: false,
+  scaleStart: 0,
+  scaleStep: 0,
+  pointShape: "rect"
 };

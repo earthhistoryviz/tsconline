@@ -205,7 +205,20 @@ export type ColumnSpecificSettings = EventSettings | PointSettings;
 
 export type PointSettings = {
   drawLine: boolean;
-  fill?: RGB;
+  drawFill: boolean;
+  drawScale: boolean;
+  drawCurveGradient: boolean;
+  drawBackgroundGradient: boolean;
+  backgroundGradientStart: RGB;
+  backgroundGradientEnd: RGB;
+  curveGradientStart: RGB;
+  curveGradientEnd: RGB;
+  lineColor: RGB;
+  flipScale: boolean;
+  scaleStart: number;
+  scaleStep: number;
+  fillColor: RGB;
+  pointShape: PointShape;
   lowerRange: number;
   upperRange: number;
   smoothed: boolean;
@@ -253,9 +266,19 @@ export type Freehand = ColumnHeaderProps & {
   subFreehandInfo: SubFreehandInfo[];
 };
 
+export type PointShape = "nopoints" | "rect" | "circle" | "cross";
+
 export type Point = ColumnHeaderProps & {
   subPointInfo: SubPointInfo[];
+  drawLine: boolean;
+  drawFill: boolean;
+  fill: RGB;
+  lowerRange: number;
+  upperRange: number;
+  smoothed: boolean;
+  pointShape: PointShape;
 };
+
 export type Sequence = ColumnHeaderProps & {
   subSequenceInfo: SubSequenceInfo[];
 };
@@ -437,10 +460,23 @@ export function assertTransect(o: any): asserts o is Transect {
 export function assertPointSettings(o: any): asserts o is PointSettings {
   if (!o || typeof o !== "object") throw new Error("PointSettings must be a non-null object");
   if (typeof o.drawLine !== "boolean") throwError("PointSettings", "drawLine", "boolean", o.drawLine);
+  if (typeof o.drawFill !== "boolean") throwError("PointSettings", "drawFill", "boolean", o.drawFill);
+  if (typeof o.drawScale !== "boolean") throwError("PointSettings", "drawScale", "boolean", o.drawScale);
+  if (typeof o.drawCurveGradient !== "boolean") throwError("PointSettings", "drawCurveGradient", "boolean", o.drawCurveGradient);
+  if (typeof o.drawBackgroundGradient !== "boolean") throwError("PointSettings", "drawBackgroundGradient", "boolean", o.drawBackgroundGradient);
+  assertRGB(o.backgroundGradientStart);
+  assertRGB(o.backgroundGradientEnd);
+  assertRGB(o.curveGradientStart);
+  assertRGB(o.curveGradientEnd);
+  assertRGB(o.lineColor);
+  if (typeof o.flipScale !== "boolean") throwError("PointSettings", "flipScale", "boolean", o.flipScale);
+  if (typeof o.scaleStart !== "number") throwError("PointSettings", "scaleStart", "number", o.scaleStart);
+  if (typeof o.scaleStep !== "number") throwError("PointSettings", "scaleStep", "number", o.scaleStep);
+  assertRGB(o.fillColor);
+  if (typeof o.pointShape !== "string" || !isPointShape(o.pointShape)) throwError("PointSettings", "pointShape", "string", o.pointShape);
   if (typeof o.lowerRange !== "number") throwError("PointSettings", "lowerRange", "number", o.lowerRange);
   if (typeof o.upperRange !== "number") throwError("PointSettings", "upperRange", "number", o.upperRange);
   if (typeof o.smoothed !== "boolean") throwError("PointSettings", "smoothed", "boolean", o.smoothed);
-  if (o.fill) assertRGB(o.fill);
 }
 
 export function assertEventSettings(o: any): asserts o is EventSettings {
@@ -479,12 +515,26 @@ export function assertSubTransectInfo(o: any): asserts o is SubTransectInfo {
   if (typeof o.age !== "number") throwError("SubTransectInfo", "age", "number", o.age);
 }
 
+export function isPointShape(o: any): o is PointShape {
+  return /^(nopoints|rect|circle|cross)$/.test(o);
+}
+
 export function assertPoint(o: any): asserts o is Point {
   if (!o || typeof o !== "object") throw new Error("Point must be a non-null object");
   if (!Array.isArray(o.subPointInfo)) throwError("Point", "subPointInfo", "array", o.subPointInfo);
   for (const subPoint of o.subPointInfo) {
     assertSubPointInfo(subPoint);
   }
+  if (typeof o.drawLine !== "boolean") throwError("Point", "drawLine", "boolean", o.drawLine);
+  if (typeof o.lowerRange !== "number") throwError("Point", "lowerRange", "number", o.lowerRange);
+  if (typeof o.upperRange !== "number") throwError("Point", "upperRange", "number", o.upperRange);
+  if (typeof o.smoothed !== "boolean") throwError("Point", "smoothed", "boolean", o.smoothed);
+  if (typeof o.pointShape !== "string" || !isPointShape(o.pointShape)) throwError("Point", "pointShape", "string", o.pointShape);
+  if (typeof o.drawFill !== "boolean") throwError("Point", "drawFill", "boolean", o.drawFill);
+  if (o.lowerRange < 0) throwError("Point", "lowerRange", "number greater than 0", o.lowerRange);
+  if (o.upperRange < 0) throwError("Point", "upperRange", "number greater than 0", o.upperRange);
+  if (o.lowerRange > o.upperRange) throwError("Point", "lowerRange", "number less than upperRange", o.lowerRange);
+  assertRGB(o.fill);
   assertColumnHeaderProps(o);
 }
 export function assertSubPointInfo(o: any): asserts o is SubPointInfo {
