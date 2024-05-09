@@ -222,6 +222,8 @@ export type PointSettings = {
   lowerRange: number;
   upperRange: number;
   smoothed: boolean;
+  minX: number;
+  maxX: number;
 }
 
 export type ColumnInfo = {
@@ -461,6 +463,8 @@ export function assertTransect(o: any): asserts o is Transect {
 
 export function assertPointSettings(o: any): asserts o is PointSettings {
   if (!o || typeof o !== "object") throw new Error("PointSettings must be a non-null object");
+  if (typeof o.minX !== "number") throwError("PointSettings", "minX", "number", o.minX);
+  if (typeof o.maxX !== "number") throwError("PointSettings", "maxX", "number", o.maxX);
   if (typeof o.drawLine !== "boolean") throwError("PointSettings", "drawLine", "boolean", o.drawLine);
   if (typeof o.drawFill !== "boolean") throwError("PointSettings", "drawFill", "boolean", o.drawFill);
   if (typeof o.drawScale !== "boolean") throwError("PointSettings", "drawScale", "boolean", o.drawScale);
