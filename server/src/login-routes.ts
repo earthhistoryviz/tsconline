@@ -43,17 +43,17 @@ const sendEmail = async (email: Email) => {
 };
 
 export const sessionCheck = async function sessionCheck(request: FastifyRequest, reply: FastifyReply) {
-  if (request.session.get("uuid")) {
-    const user = (await findUser({ uuid: request.session.get("uuid") }))[0];
-    if (!user || user.invalidateSession) {
-      reply.status(423).send({ error: "Account locked" });
-      return;
-    } else {
-      reply.send({ authenticated: true });
-    }
-  } else {
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
     reply.send({ authenticated: false });
+    return;
   }
+  const user = (await findUser({ uuid }))[0];
+  if (!user || user.invalidateSession) {
+    reply.send({ authenticated: false });
+    return;
+  }
+  reply.send({ authenticated: true });
 };
 
 export const accountRecovery = async function accountRecovery(
@@ -61,8 +61,8 @@ export const accountRecovery = async function accountRecovery(
   reply: FastifyReply
 ) {
   const { token, email } = request.body;
-  if (!token) {
-    reply.status(400).send({ error: "No token" });
+  if (!token || !email) {
+    reply.status(400).send({ error: "No token or email" });
     return;
   }
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
@@ -90,13 +90,14 @@ export const accountRecovery = async function accountRecovery(
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Account Recovery",
-      text: `Your account credentials have been invalidated. Your new password is: ${randomPassword}. Please use this password to sign in and reset your email and password.`
+      text: `Your account credentials have been invalidated. To regain access, please reset your password by visiting ${process.env.APP_URL || "http://localhost:5173"}/forgot-password. If you did not request this change or need further assistance, please contact our support team.`
     };
     sendEmail(newEmail);
     await updateUser(
       { userId },
       { email: email, emailVerified: 1, hashedPassword: await hash(randomPassword, 10), invalidateSession: 1 }
     );
+    await deleteVerification({ userId, reason: "verify" });
     reply.send({ message: "Email sent" });
   } catch (error) {
     console.error("Error during invalidation:", error);
@@ -129,8 +130,14 @@ export const resetEmail = async function resetEmail(
     }
     const { userId, hashedPassword, email } = userRow;
     if (email === newEmail) {
-      reply.status(409).send({ error: "Email already in use" });
-      return;
+      const sameEmail: Email = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "Email Changed",
+        text: "You have requested to change your email to the same email. If you did not request this change, please change your password and contact support."
+      };
+      sendEmail(sameEmail);
+      reply.send({ message: "Email changed" });
     }
     if (hashedPassword && !(await compare(password, hashedPassword))) {
       reply.status(401).send({ error: "Incorrect password" });
@@ -139,11 +146,11 @@ export const resetEmail = async function resetEmail(
     await updateUser({ userId }, { email: newEmail, emailVerified: 0 });
     let token = randomBytes(16).toString("hex") + md5(uuid);
     let expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getHours() + 1);
-    await deleteVerification({ userId: userId, reason: "email" });
+    expiresAt.setHours(expiresAt.getHours() + 1);
+    await deleteVerification({ userId: userId, reason: "verify" });
     const verifyEmail: Email = {
       from: process.env.EMAIL_USER,
-      to: email,
+      to: newEmail,
       subject: "Email Changed",
       text: `Please verify your new email by clicking on the following link: ${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`
     };
@@ -157,13 +164,12 @@ export const resetEmail = async function resetEmail(
     await createVerification(verifyVerification);
     token = randomBytes(16).toString("hex") + md5(uuid);
     expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getHours() + 24);
+    expiresAt.setHours(expiresAt.getHours() + 24);
     const invalidateEmail: Email = {
       from: process.env.EMAIL_USER,
-      to: userRow.email,
+      to: email,
       subject: "Email Changed",
-      text: `Your email has been changed. If you did not request this change, please click on the following link to reset your email and password: ${process.env.APP_URL || "http://localhost:5173"}/account-recovery?token=${token}?email=${email}. 
-      This link will expire in 24 hours. If your link has expired, please contact support.`
+      text: `Your email has been changed. If you did not request this change, please click on the following link to reset your email and password: ${process.env.APP_URL || "http://localhost:5173"}/account-recovery?token=${token}&email=${email}. This link will expire in 24 hours. If your link has expired, please contact support.`
     };
     sendEmail(invalidateEmail);
     const invalidateVerification: NewVerification = {
@@ -448,7 +454,7 @@ export const login = async function login(
         return;
       }
       if (invalidateSession) {
-        reply.status(423).send({ error: "Account locked" });
+        reply.status(409).send({ error: "Account locked" });
         return;
       }
       request.session.set("uuid", uuid);

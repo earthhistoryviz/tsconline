@@ -73,9 +73,6 @@ export const Login: React.FC = observer(() => {
             navigate("/verify");
             break;
           case 409:
-            errorCode = ErrorCodes.UNABLE_TO_LOGIN_EXISTING_USER;
-            break;
-          case 423:
             errorCode = ErrorCodes.UNABLE_TO_LOGIN_ACCOUNT_LOCKED;
             break;
         }
@@ -168,11 +165,6 @@ export const Login: React.FC = observer(() => {
               onError={() => actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_SERVER)}
               width="400px"
             />
-            {state.isLoggedIn && (
-              <TSCButton fullWidth sx={{ mt: 2 }} onClick={() => navigate("/reset-email")}>
-                Reset Email
-              </TSCButton>
-            )}
           </Box>
         </>
       )}

@@ -6,7 +6,7 @@ import { Database } from "../dist/types.js";
 
 /*
 IMPORTANT: Exercise extreme caution when performing migrations that delete data. Always ensure a backup of the database exists before running such migrations, as the data deletion is irreversible. 
-The migration script is executed automatically upon server startup.
+The migration script is executed automatically upon server startup. If you need an example on alterations that can delete data, see 2024.05.08-17.59.45-adjust-columns-in-verification-table.ts.
 
 Database migrations are essential for managing schema changes over time without the need for manually entering SQL commands on the server. Without this you would need to run ALTER TABLE commands manually.
 Locally, it is easy to just delete your db file and start fresh, but in production, this is not an option.
@@ -22,7 +22,7 @@ There is migration file you can copy in the migrations folder.
 3. (Mostly Optional) Run the migrate.ts script to apply the migrations to the database. You can run it with the command `yarn tsx migrate.ts up`. 
 This will apply all the migrations that haven't been applied yet.  You don't need to run this script manually, as it will run on server startup. 
 To roll back the migrations, you can run `yarn tsx migrate.ts down`. The up command will apply all the migrations, and the down command will roll back the last migration.
-4. Make sure to update the Database type in server/src/types.ts to match the new schema. This will ensure that the queries in the server code are type-safe.
+4. Make sure to update the Database type in server/src/types.ts to match the new schema as well as documenting the change in database.ts. This will ensure that the queries in the server code are type-safe.
 */
 
 export async function migrateToLatest() {
