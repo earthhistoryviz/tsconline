@@ -845,19 +845,17 @@ function addSequenceToSequenceMap(sequence: Sequence, sequenceMap: Map<string, S
  * @param pointMap
  */
 function addPointToPointMap(point: Point, pointMap: Map<string, Point>) {
-  let lowerRange = Number.MAX_SAFE_INTEGER;
-  let upperRange = Number.MIN_SAFE_INTEGER;
   const margin = 0.10;
   for (const subPoint of point.subPointInfo) {
     point.minAge = Math.min(subPoint.age, point.minAge);
     point.maxAge = Math.max(subPoint.age, point.maxAge);
-    lowerRange = Math.min(subPoint.xVal, lowerRange);
-    upperRange = Math.max(subPoint.xVal, upperRange);
+    point.minX = Math.min(subPoint.xVal, point.minX);
+    point.maxX = Math.max(subPoint.xVal, point.maxX);
   }
-  if (point.lowerRange === 0 && point.upperRange === 0) {
-    const outerMargin = ((upperRange - lowerRange) * margin) / 2;
-    point.lowerRange = lowerRange - outerMargin;
-    point.upperRange = upperRange + outerMargin;
+  if (point.lowerRange === 0 && point.upperRange === 0 && point.minX !== Number.MAX_VALUE && point.maxX !== Number.MIN_VALUE) {
+    const outerMargin = ((point.maxX - point.minX) * margin) / 2;
+    point.lowerRange = point.minX - outerMargin;
+    point.upperRange = point.maxX + outerMargin;
   }
   pointMap.set(point.name, JSON.parse(JSON.stringify(point)));
   Object.assign(point, { ...createDefaultColumnHeaderProps(), ..._.cloneDeep(defaultPoint)});

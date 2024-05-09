@@ -338,5 +338,7 @@ export const defaultPoint: Partial<Point> ={
     r: 255,
     g: 255,
     b: 255
-  }
+  },
+  minX: Number.MAX_SAFE_INTEGER,
+  maxX: Number.MIN_SAFE_INTEGER,
 }
