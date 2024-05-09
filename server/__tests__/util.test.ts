@@ -11,7 +11,7 @@ jest.mock("glob", () => ({
   })
 }));
 
-import { trimInvisibleCharacters, componentToHex, rgbToHex, trimQuotes, grabFilepaths } from "../src/util";
+import { trimInvisibleCharacters, componentToHex, rgbToHex, trimQuotes, grabFilepaths, setCommonProperties, capitalizeFirstLetter } from "../src/util";
 
 describe("grabFilepaths", () => {
   test('grabFilepaths(["file1.txt", "file2.txt"], "/top/directory", "bot") returns ["/top/directory/file1/bot/file.txt", "/top/directory/file2/bot/file.txt"]', async () => {
@@ -69,5 +69,26 @@ describe("trimInvisibleCharacters tests", () => {
   });
   test("trimInvisibleCharacters(`test`) returns test", () => {
     expect(trimInvisibleCharacters("test")).toBe("test");
+  });
+});
+
+describe("setCommonProperties", () => {
+  test.each([
+    [{ prop1: "value1", prop2: "value2" }, { prop1: "value1", prop2: "value2" }, { prop1: "value1", prop2: "value2" }],
+    [{ prop1: "value1", prop2: "value2" }, { prop1: "value1", prop2: "value2", prop3: "value3" }, { prop1: "value1", prop2: "value2" }],
+    [{ prop1: "value1", prop2: "value2" }, { prop1: "value1", prop2: "value3" }, { prop1: "value1", prop2: "value3" }],
+  ])("setCommonProperties(%j, %j) returns %j", (obj1, obj2, expected) => {
+    expect(setCommonProperties(obj1, obj2)).toEqual(expected);
+  });
+})
+
+describe("capitalizeFirstLetter tests", () => {
+  test.each([
+    ["test", "Test"],
+    ["TEST", "Test"],
+    ["tEST", "Test"],
+    ["", ""],
+  ])("capitalizeFirstLetter(%j) returns %j", (input, expected) => {
+    expect(capitalizeFirstLetter(input)).toBe(expected);
   });
 });
