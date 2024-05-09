@@ -217,7 +217,7 @@ export type PointSettings = {
   flipScale: boolean;
   scaleStart: number;
   scaleStep: number;
-  fillColor: RGB;
+  fill: RGB;
   pointShape: PointShape;
   lowerRange: number;
   upperRange: number;
@@ -478,7 +478,7 @@ export function assertPointSettings(o: any): asserts o is PointSettings {
   if (typeof o.flipScale !== "boolean") throwError("PointSettings", "flipScale", "boolean", o.flipScale);
   if (typeof o.scaleStart !== "number") throwError("PointSettings", "scaleStart", "number", o.scaleStart);
   if (typeof o.scaleStep !== "number") throwError("PointSettings", "scaleStep", "number", o.scaleStep);
-  assertRGB(o.fillColor);
+  assertRGB(o.fill);
   if (typeof o.pointShape !== "string" || !isPointShape(o.pointShape)) throwError("PointSettings", "pointShape", "string", o.pointShape);
   if (typeof o.lowerRange !== "number") throwError("PointSettings", "lowerRange", "number", o.lowerRange);
   if (typeof o.upperRange !== "number") throwError("PointSettings", "upperRange", "number", o.upperRange);

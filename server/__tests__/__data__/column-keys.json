@@ -985,7 +985,53 @@
                     "xVal": 9,
                     "popup": "SubPointInfo Popup 2"
                   }
-                ]
+                ],
+                "columnSpecificSettings": {
+                  "drawFill": true,
+                  "drawLine": true,
+                  "lowerRange": 0,
+                  "upperRange": 10,
+                  "smoothed": true,
+                  "minX": 0,
+                  "maxX": 9,
+                  "pointShape": "nopoints",
+                  "backgroundGradientStart": {
+                    "r": 0,
+                    "g": 0,
+                    "b": 0
+                  },
+                  "backgroundGradientEnd": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                  },
+                  "curveGradientStart": {
+                    "r": 0,
+                    "g": 0,
+                    "b": 0
+                  },
+                  "curveGradientEnd": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                  },
+                  "drawBackgroundGradient": false,
+                  "drawCurveGradient": false,
+                  "drawScale": true,
+                  "fill": {
+                    "r": 64,
+                    "g": 233,
+                    "b": 191
+                  },
+                  "flipScale": false,
+                  "lineColor": {
+                    "r": 0,
+                    "g": 0,
+                    "b": 0
+                  },
+                  "scaleStart": 0,
+                  "scaleStep": 0
+                }
               },
               {
                 "name": "Sequence",
@@ -1517,7 +1563,20 @@
                 "xVal": 9,
                 "popup": "SubPointInfo Popup 2"
               }
-            ]
+            ],
+            "drawFill": true,
+            "drawLine": true,
+            "lowerRange": 0,
+            "upperRange": 10,
+            "smoothed": true,
+            "minX": 0,
+            "maxX": 9,
+            "pointShape": "nopoints",
+            "fill": {
+              "r": 64,
+              "g": 233,
+              "b": 191
+            }
         },
         "Sequence": {
             "name": "Sequence",
@@ -1809,7 +1868,20 @@
                 "xVal": 60,
                 "popup": ""
               }
-            ]
+            ],
+            "drawFill": true,
+            "drawLine": true,
+            "fill": {
+              "r": 64,
+              "g": 233,
+              "b": 191
+            },
+            "lowerRange": 0,
+            "upperRange": 230,
+            "minX": 0,
+            "maxX": 60,
+            "pointShape": "nopoints",
+            "smoothed": true
         },
         "Point 2": {
             "name": "Point 2",
@@ -1835,7 +1907,20 @@
                 "xVal": 9,
                 "popup": "Popup 2"
             }
-            ]
+            ],
+            "fill": {
+              "r": 1,
+              "g": 2,
+              "b": 3
+            },
+            "drawFill": true,
+            "drawLine": false,
+            "lowerRange": 8.975,
+            "upperRange": 9.525,
+            "minX": 9,
+            "maxX": 9.5,
+            "pointShape": "cross",
+            "smoothed": true
         }
     },
     "column-types-sequence-key": {

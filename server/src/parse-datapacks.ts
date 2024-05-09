@@ -46,7 +46,6 @@ import {
   isPointShape,
   assertPoint,
   defaultPointSettings,
-  PointSettings,
   defaultPoint
 } from "@tsconline/shared";
 import { trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter, setCommonProperties } from "./util.js";
@@ -1447,13 +1446,14 @@ function recursive(
     returnValue.minAge = currentColumnInfo.minAge;
   }
   if (pointMap.has(currentColumn)) {
-    const { subPointInfo, ...currentPoint } = pointMap.get(currentColumn)!;
+    const { subPointInfo, drawLine, drawFill, fill, lowerRange, upperRange, smoothed, pointShape, minX, maxX, ...currentPoint} = pointMap.get(currentColumn)!;
+    const deconstructedPointSettings = { subPointInfo, drawLine, drawFill, fill, lowerRange, upperRange, smoothed, pointShape, minX, maxX }
     Object.assign(currentColumnInfo, {
       ...currentPoint,
       fontOptions: getValidFontOptions("Point"),
       columnDisplayType: "Point",
       subInfo: JSON.parse(JSON.stringify(subPointInfo)),
-      columnSpecificSettings: setCommonProperties(_.cloneDeep(defaultPointSettings), currentPoint)
+      columnSpecificSettings: setCommonProperties(_.cloneDeep(defaultPointSettings), deconstructedPointSettings)
     });
     if (currentColumn.includes("Tropical")) console.log(currentColumnInfo.columnSpecificSettings); 
     returnValue.fontOptions = currentColumnInfo.fontOptions;
@@ -1838,7 +1838,7 @@ function configureOptionalPointSettings(tabSeparated: string[], point: Point) {
   if (tabSeparated[1] && /^(line|noline)$/.test(tabSeparated[1])) point.drawLine = tabSeparated[1] === "line";
   if (tabSeparated[2] && patternForColor.test(tabSeparated[2])) {
     const rgb = tabSeparated[2].split("/");
-    point.rgb = {
+    point.fill = {
       r: Number(rgb[0]),
       g: Number(rgb[1]),
       b: Number(rgb[2])
