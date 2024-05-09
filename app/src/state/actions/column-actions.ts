@@ -1,21 +1,54 @@
 import { action } from "mobx";
 import { state } from "../state";
 import { ColumnInfo, EventSettings, ColumnInfoTSC, RGB, ValidFontOptions } from "@tsconline/shared";
-
+import { cloneDeep } from "lodash";
+import { pushSnackbar } from "./general-actions";
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
 }
+function extractColumnType(text: string): string {
+  return text.substring(text.indexOf(".") + 1, text.indexOf(":"));
+}
 export const applyChartColumnSettings = action("applyChartColumnSettings", (settings: ColumnInfoTSC) => {
-  let columnName = extractName(settings._id);
+  const columnName = extractName(settings._id);
   let curcol: ColumnInfo | undefined = state.settingsTabs.columnHashMap.get(columnName);
-  if (curcol !== undefined) {
-    updateEditName(settings.title, curcol);
-    setEnableTitle(settings.drawTitle, curcol);
-    if (settings.width) updateWidth(settings.width, curcol);
-    if (settings.backgroundColor.text) setRGB(settings.backgroundColor.text, curcol);
-
+  let blockSeriesColumns: boolean = false;
+  function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
+    updateEditName(settings.title, column);
+    setEnableTitle(settings.drawTitle, column);
+    if (settings.width) updateWidth(settings.width, column);
+    if (settings.backgroundColor.text) setRGB(settings.backgroundColor.text, column);
+    column.fontsInfo = cloneDeep(settings.fonts);
   }
-  for (let i = 0; i < settings.children.length; i++) {}
+  if (curcol === undefined) {
+    if (extractColumnType(settings._id) === "RootColumn") {
+      curcol = state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
+    }
+  }
+  if (curcol === undefined) {
+    curcol = state.settingsTabs.columnHashMap.get('"' + columnName + '"');
+  }
+  //edge case for names with spaces at the end (ex. N-E)
+  // if (curcol === undefined) {
+  //   curcol = state.settingsTabs.columnHashMap.get(columnName + ' ');
+  // }
+  if (curcol === undefined) {
+    pushSnackbar("Unknown column name '" + columnName + "' found while loading settings", "warning");
+    console.log("Unknown column name " + columnName + " found while loading settings")
+  } else setColumnProperties(curcol, settings);
+
+  if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
+    blockSeriesColumns = true;
+    for (let i = 0; i < settings.children.length; i++) {
+      curcol = state.settingsTabs.columnHashMap.get(columnName + " " + extractName(settings.children[i]._id));
+      if (curcol !== undefined) setColumnProperties(curcol, settings.children[i]);
+    }
+  }
+  if (blockSeriesColumns === false) {
+    for (let i = 0; i < settings.children.length; i++) {
+      applyChartColumnSettings(settings.children[i]);
+    }
+  }
 });
 
 export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
@@ -62,12 +95,12 @@ export const setEventColumnSettings = action((eventSettings: EventSettings, newS
   if (newSettings.rangeSort) eventSettings.rangeSort = newSettings.rangeSort;
 });
 
-export const updateEditName = action(( newName: string, column: ColumnInfo) => {
+export const updateEditName = action((newName: string, column: ColumnInfo) => {
   column.editName = newName;
   return;
 });
 
-export const updateWidth = action(( newWidth: number, column: ColumnInfo) => {
+export const updateWidth = action((newWidth: number, column: ColumnInfo) => {
   column.width = newWidth;
 });
 

@@ -44,7 +44,13 @@ import {
   assertDatapackParsingPack,
   defaultEventSettings
 } from "@tsconline/shared";
-import { trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter } from "./util.js";
+import {
+  trimInvisibleCharacters,
+  grabFilepaths,
+  hasVisibleCharacters,
+  capitalizeFirstLetter,
+  trimQuotes
+} from "./util.js";
 import { createInterface } from "readline";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;
@@ -1293,6 +1299,18 @@ function recursive(
   blankMap: Map<string, ColumnHeaderProps>,
   units: string
 ): FaciesFoundAndAgeRange {
+  //for maintaing the same format of column name as tscreator
+  //reference stringNoQuotes function from loader1.java
+  currentColumn = trimQuotes(currentColumn.trim());
+  currentColumn = currentColumn.replaceAll('""', '"');
+  let commaPos = currentColumn.indexOf(",");
+  while (commaPos !== -1) {
+    if (!Number.isNaN(Number(currentColumn.charAt(commaPos - 1)))) {
+      currentColumn =
+        currentColumn.substring(0, commaPos) + "." + currentColumn.substring(commaPos + 1, currentColumn.length);
+    }
+    commaPos = currentColumn.indexOf(",", commaPos + 1);
+  }
   const currentColumnInfo: ColumnInfo = {
     name: trimInvisibleCharacters(currentColumn),
     editName: trimInvisibleCharacters(currentColumn),
