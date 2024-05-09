@@ -34,6 +34,7 @@ export type State = {
     geologicalTopStages: GeologicalStages;
     geologicalBaseStages: GeologicalStages;
     columnHashMap: Map<string, ColumnInfo>;
+    columnSearchTerm: string;
   };
   mapState: {
     mapInfo: MapInfo;
@@ -89,7 +90,8 @@ export const state = observable<State>({
     columnSelected: null,
     geologicalTopStages: {},
     geologicalBaseStages: {},
-    columnHashMap: new Map<string, ColumnInfo>()
+    columnHashMap: new Map<string, ColumnInfo>(),
+    columnSearchTerm: ""
   },
   mapState: {
     mapInfo: {},

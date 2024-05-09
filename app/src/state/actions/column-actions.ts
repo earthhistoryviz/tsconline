@@ -66,11 +66,39 @@ export const updateWidth = action((columnObject: ColumnInfo, newWidth: number) =
   columnObject.width = newWidth;
 });
 
-export const setcolumnSelected = action((name: string) => {
+export const setColumnSelected = action((name: string) => {
   state.settingsTabs.columnSelected = name;
   if (!state.settingsTabs.columnHashMap.has(name)) {
     console.log("WARNING: state.settingsTabs.columnHashMap does not have", name);
   }
+});
+
+export const searchColumns = action(async (searchTerm: string) => {
+  if (searchTerm === "") {
+    state.settingsTabs.columnHashMap.forEach((columnInfo) => {
+      columnInfo.show = true;
+    });
+    return;
+  }
+  state.settingsTabs.columnHashMap.forEach((columnInfo) => {
+    columnInfo.show = false;
+  });
+
+  state.settingsTabs.columnHashMap.forEach((columnInfo) => {
+    if (columnInfo.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+      columnInfo.show = true;
+      let parentName = columnInfo.parent;
+      while (parentName) {
+        const parentColumnInfo = state.settingsTabs.columnHashMap.get(parentName);
+        if (parentColumnInfo) {
+          parentColumnInfo.show = true;
+          parentName = parentColumnInfo.parent;
+        } else {
+          break;
+        }
+      }
+    }
+  });
 });
 
 export const setInheritable = action((target: ValidFontOptions, isInheritable: boolean, column: ColumnInfo) => {
@@ -117,4 +145,8 @@ export const setShowAgeLabels = action((isOn: boolean, column: ColumnInfo) => {
 
 export const setShowUncertaintyLabels = action((isOn: boolean, column: ColumnInfo) => {
   column.showUncertaintyLabels = isOn;
+});
+
+export const setColumnSearchTerm = action((term: string) => {
+  state.settingsTabs.columnSearchTerm = term;
 });
