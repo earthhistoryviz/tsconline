@@ -59,26 +59,19 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   reply.status(200).send(datapackInfoChunk);
 };
 
-
-export const requestDownload = async function requestDownload(request: FastifyRequest<{ Params: { needEncryption: string, filename: string, username: string } }>, reply: FastifyReply) {
+export const requestDownload = async function requestDownload(
+  request: FastifyRequest<{ Params: { needEncryption: string; filename: string; username: string } }>,
+  reply: FastifyReply
+) {
   const { needEncryption } = request.params;
-  //const { filePath } = request.params;
   const { filename } = request.params;
-  // const { datapackDir } = request.params;
   const { username } = request.params;
-
-  //const filename = file.filename;
-  const ext = path.extname(filename);
-  const filenameWithoutExtension = path.basename(filename, ext);
   const hash = md5(username);
   const userDir = path.join(assetconfigs.uploadDirectory, hash);
   const datapackDir = path.join(userDir, "datapacks");
-  const decryptDir = path.join(userDir, "decrypted");
   const filepath = path.join(datapackDir, filename);
-  const decryptedFilepathDir = path.join(decryptDir, filenameWithoutExtension);
   const encryptedFilepathDir = path.join(datapackDir, "encrypted");
-  //const mapPackIndexFilepath = path.join(userDir, "MapPackIndex.json");
-  //const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json");
+
   let downloadPath;
   if (needEncryption === "true") {
     try {
@@ -111,7 +104,6 @@ export const requestDownload = async function requestDownload(request: FastifyRe
       return;
     }
     downloadPath = path.join(encryptedFilepathDir.replaceAll("\\", "/"), filename);
-
   } else {
     downloadPath = path.join(datapackDir.replaceAll("\\", "/"), filename);
   }
@@ -119,7 +111,6 @@ export const requestDownload = async function requestDownload(request: FastifyRe
     await access(downloadPath);
     const file = await readFile(downloadPath);
     reply.send(file);
-
   } catch (e) {
     const error = e as NodeJS.ErrnoException;
     if (error.code === "ENOENT") {
@@ -128,15 +119,13 @@ export const requestDownload = async function requestDownload(request: FastifyRe
       reply.status(500).send({ error: "An error occurred" });
     }
   }
-}
-
+};
 
 export const loadActiveDatapacks = async function loadActiveDatapacks(request: FastifyRequest, reply: FastifyReply) {
   const activeDatapacks = assetconfigs.activeDatapacks;
   reply.status(200).send({ activeDatapacks });
   return;
-}
-
+};
 
 export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
   request: FastifyRequest<{ Querystring: { start?: number; increment?: number } }>,
@@ -214,7 +203,11 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     return;
   }
   // only accept a binary file (encoded) or an unecnrypted text file or a zip file
-  if (file.mimetype !== "application/octet-stream" && file.mimetype !== "text/plain" && file.mimetype !== "application/zip") {
+  if (
+    file.mimetype !== "application/octet-stream" &&
+    file.mimetype !== "text/plain" &&
+    file.mimetype !== "application/zip"
+  ) {
     reply.status(400).send({ error: `Invalid mimetype of uploaded file, received ${file.mimetype}` });
     return;
   }
