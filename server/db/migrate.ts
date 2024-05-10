@@ -15,14 +15,17 @@ Instead, we can write a migration file that contains the SQL commands to update 
 This script will run on server startup, so the database schema will always be up to date.
 Another advantage of migrations is that they allow us to roll back changes to the database schema if something goes wrong.
 
+Note: Migrations in the migrations folder are executed in the order of their filenames (sorted by timestamp) and should be considered immutable once they are applied. 
+Once pushed to main, they should not be modified. Each migration depends on the previous migrations being applied in order to work correctly. Changing one means potentially breaking all subsequent migrations.
+
 Steps to do this:
 1. Run ./migrationTemplate.sh <migration-name> to create a new migration file in the migrations folder. It will add the current timestamp to the filename.
 2. Write the SQL commands to update the database schema in the up function of the migration file. There is also a down function that contains the SQL commands to roll back the changes. 
-There is migration file you can copy in the migrations folder.
+Look at examples in the migrations folder to understand what your commands should look like.
 3. (Mostly Optional) Run the migrate.ts script to apply the migrations to the database. You can run it with the command `yarn tsx migrate.ts up`. 
 This will apply all the migrations that haven't been applied yet.  You don't need to run this script manually, as it will run on server startup. 
 To roll back the migrations, you can run `yarn tsx migrate.ts down`. The up command will apply all the migrations, and the down command will roll back the last migration.
-4. Make sure to update the Database type in server/src/types.ts to match the new schema as well as documenting the change in database.ts. This will ensure that the queries in the server code are type-safe.
+4. Make sure to update the Database types in server/src/types.ts to match the new schema as well as documenting the change in database.ts. This will ensure that the queries in the server code are type-safe.
 */
 
 export async function migrateToLatest() {

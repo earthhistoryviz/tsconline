@@ -74,9 +74,11 @@ export const AccountRecovery: React.FC = observer(() => {
           <LockOutlinedIcon sx={{ color: theme.palette.selection.main }} />
         </Avatar>
         {loading && <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />}
-        <Typography variant="h5" sx={{ textAlign: "center", mt: 1 }}>
-          {(!token || !email) && "Invadid token or email. Please check your email for the correct link."}
-        </Typography>
+        {(!token || !email) && (
+          <Typography variant="h5" sx={{ textAlign: "center", mt: 1 }}>
+            Invalid token or email. Please check your email for the correct link.
+          </Typography>
+        )}
       </Box>
     </Container>
   );

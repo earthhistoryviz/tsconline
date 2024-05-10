@@ -24,7 +24,7 @@ export const ResetEmail: React.FC = observer(() => {
   const { actions } = useContext(context);
   const navigate = useNavigate();
 
-  const handlelSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.currentTarget;
     if (form.checkValidity() === false) {
@@ -41,7 +41,7 @@ export const ResetEmail: React.FC = observer(() => {
           "Content-Type": "application/json"
         },
         credentials: "include",
-        body: JSON.stringify({ newEmail: form.email.value, password: form.password.value })
+        body: JSON.stringify({ newEmail: form.email.value })
       });
       if (response.ok) {
         actions.removeAllErrors();
@@ -56,9 +56,6 @@ export const ResetEmail: React.FC = observer(() => {
           case 401:
             errorCode = ErrorCodes.NOT_LOGGED_IN;
             navigate("/login");
-            break;
-          case 409:
-            errorCode = ErrorCodes.EMAIL_ALREADY_EXISTS;
             break;
         }
         setShowForm(true);
@@ -83,7 +80,7 @@ export const ResetEmail: React.FC = observer(() => {
           {showForm && "Enter your new email address and password to receive an email verification link."}
         </Typography>
         {showForm && (
-          <Box component="form" onSubmit={handlelSubmit} className="account-form">
+          <Box component="form" onSubmit={handleSubmit} className="account-form">
             <TextField
               required
               fullWidth
@@ -93,16 +90,6 @@ export const ResetEmail: React.FC = observer(() => {
               autoComplete="email"
               type="email"
               autoFocus
-              margin="normal"
-            />
-            <TextField
-              required
-              fullWidth
-              id="password"
-              label="Password"
-              name="password"
-              autoComplete="password"
-              type="password"
               margin="normal"
             />
             <TSCButton type="submit" fullWidth startIcon={<SendIcon />}>

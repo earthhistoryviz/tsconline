@@ -10,25 +10,36 @@ export const db = new Kysely<Database>({
 });
 
 /*
-These schemas should not be changed. The problem with changing them is that on the dev server the database will have to be either deleted or the schema will have to be manually updated.
-Manually updating the server every single time will become a problem because we have to make sure that data is not lost. This is why we have migrations. If you need to change the schema, read the instructions in migrate.ts.
-Because of this we will document the schema after migrations here:
-users:
-  userId: integer, primary key, auto increment
-  username: text, unique
-  email: text, unique
-  hashedPassword: text, unique
-  uuid: text, not null, unique
-  pictureUrl: text, unique
-  emailVerified: integer, not null, default 0
-  invalidateSession: integer, not null, default 0
+If updating the database schema please update the schema details below.
+Database Schema Details (Post-Migration):
 
-verification:
-  id: integer, primary key, auto increment
-  userId: integer, not null
-  token: text, not null, unique
-  expiresAt: datetime, not null
-  reason: text, not null
+- users Table:
+  - userId (integer): Primary key, auto-increment.
+  - username (text): Must be unique.
+  - email (text): Must be unique.
+  - hashedPassword (text): Must be unique, stores encrypted user passwords.
+  - uuid (text): Non-nullable, must be unique, used for identifying a user's datapack folder.
+  - pictureUrl (text): Must be unique, URL to the user's profile picture.
+  - emailVerified (integer): Non-nullable, default is 0, indicates if the user's email has been verified.
+  - invalidateSession (integer): Non-nullable, default is 0, flag for invalidating user sessions.
+
+- verification Table:
+  - id (integer): Primary key, auto-increment.
+  - userId (integer): Non-nullable, links to the users table.
+  - token (text): Non-nullable, must be unique, used for email verification or password reset.
+  - expiresAt (datetime): Non-nullable, the expiration date/time of the token. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
+  - reason (text): Non-nullable, describes the purpose of the token (e.g., 'email verification', 'password reset').
+
+Important Note on Schema Changes:
+To ensure data consistency and minimize manual interventions on the development server, you should not modify the schema commands below.
+For instance, if you need to add a new column like 'invalidateSession' to the 'users' table, you would typically modify the schema directly by adding this column. 
+However, these schema creation commands are designed to execute only if the tables do not yet exist, which prevents unnecessary overwriting of existing tables.
+Without migrations there would be two ways to update the schema on the server:
+1. Simply delete the database and allow the commands to run (losing all data). 
+2. Log into the server, export data, execute ALTER TABLE commands, and reinsert data. 
+This manual approach is prone to errors and time-consuming.
+Instead, we leverage a migration system through the 'migrate.ts' script, allowing for controlled and automated schema updates. 
+Another point is that altering these schema commands could break the migration system, as it depends on the schema commands to be immutable.
 */
 
 await db.schema
@@ -52,13 +63,17 @@ await db.schema
   .addColumn("verifyOrReset", "text", (col) => col.notNull())
   .execute();
 
-exec("cd db && yarn tsx migrate.ts up", (error, stdout, stderr) => {
-  if (error) {
-    console.error(`exec error: ${error}`);
-    return;
-  }
-  stdout && console.log(stdout);
-  stderr && console.error(stderr);
+await new Promise<void>((resolve, reject) => {
+  exec("cd db && yarn tsx migrate.ts up", (error, stdout, stderr) => {
+    if (error) {
+      console.error(`exec error: ${error}`);
+      reject(error);
+      throw new Error(`Migration failed: ${error}`);
+    }
+    if (stdout) console.log(stdout);
+    if (stderr) console.error(stderr);
+    resolve();
+  });
 });
 
 export async function createUser(newUser: NewUser) {
