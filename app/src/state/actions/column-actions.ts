@@ -27,7 +27,7 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
   }
   if (curcol === undefined) {
     pushSnackbar("Unknown column name '" + columnName + "' found while loading settings", "warning");
-    console.log("Unknown column name " + columnName + " found while loading settings")
+    console.log("Unknown column name " + columnName + " found while loading settings");
   } else setColumnProperties(curcol, settings);
 
   if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
