@@ -225,7 +225,6 @@ export const uploadDatapack = action("uploadDatapack", async (file: File, name: 
   }
 });
 
-
 export const setMapPackIndex = action("setMapPackIndex", async (mapPackIndex: MapPackIndex) => {
   // This is to prevent the UI from lagging
   state.mapPackIndex = {};
@@ -712,13 +711,7 @@ export const requestDownload = action(async (needEncryption: boolean, filename: 
   });
   if (!response.ok) {
     if (response.status === 404) {
-      if (needEncryption) {
-        displayServerError(null, ErrorCodes.ALREADY_ENCRYPTED_FILE, ErrorMessages[ErrorCodes.ALREADY_ENCRYPTED_FILE]);
-        throw new Error("File not found in encrypted dir");
-      } else {
-        throw new Error("File not found");
-      }
-
+      throw new Error("File not found");
     } else if (response.status === 500) {
       throw new Error("Server error");
     } else {
