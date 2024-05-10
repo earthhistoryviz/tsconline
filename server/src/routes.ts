@@ -76,6 +76,7 @@ export const requestDownload = async function requestDownload(request: FastifyRe
   const decryptDir = path.join(userDir, "decrypted");
   const filepath = path.join(datapackDir, filename);
   const decryptedFilepathDir = path.join(decryptDir, filenameWithoutExtension);
+  const encryptedFilepathDir = path.join(datapackDir, "encrypted");
   //const mapPackIndexFilepath = path.join(userDir, "MapPackIndex.json");
   //const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json");
   let downloadPath;
@@ -87,7 +88,7 @@ export const requestDownload = async function requestDownload(request: FastifyRe
           // datapacks:
           `-d "${filepath.replaceAll("\\", "/")}" ` +
           // Tell it where to send the datapacks
-          `-enc ${datapackDir.replaceAll("\\", "/")} ` +
+          `-enc ${encryptedFilepathDir.replaceAll("\\", "/")} ` +
           `-node`;
 
         // java -jar <jar file> -d <datapack> <datapack> -enc <destination directory> -node
@@ -109,10 +110,10 @@ export const requestDownload = async function requestDownload(request: FastifyRe
       reply.status(500).send({ error: "Failed to encrypt datapacks with error " + e });
       return;
     }
-    downloadPath = path.join(datapackDir.replaceAll("\\", "/"), filename);
+    downloadPath = path.join(encryptedFilepathDir.replaceAll("\\", "/"), filename);
 
   } else {
-    downloadPath = path.join(decryptedFilepathDir, "datapacks", filename);
+    downloadPath = path.join(datapackDir.replaceAll("\\", "/"), filename);
   }
   try {
     await access(downloadPath);
