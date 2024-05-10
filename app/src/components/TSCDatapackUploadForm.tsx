@@ -9,7 +9,6 @@ import { ErrorCodes } from "../util/error-codes";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { CustomDivider } from "./TSCComponents";
-import { TSCCheckbox } from "./TSCCheckbox";
 
 type TSCDatapackUploadFormProps = {
   close: () => void;
@@ -19,14 +18,6 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
   const [datapackName, setDatapackName] = useState("");
   const [datapackDescription, setDatapackDescription] = useState("");
   const [datapackFile, setDatapackFile] = useState<File | null>(null);
-  const [datapackEncrypt, setDatapackEncrypt] = useState(false);
-  function handleCheckboxChange() {
-    if (datapackEncrypt) {
-      setDatapackEncrypt(false);
-    } else {
-      setDatapackEncrypt(true);
-    }
-  };
   return (
     <>
       <div className="close-upload-form">
@@ -103,11 +94,6 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
           value={datapackDescription}
           onChange={(event) => setDatapackDescription(event.target.value)}
         />
-        {/*  <div className="encrypt-file">
-          <TSCCheckbox checked={datapackEncrypt} onChange={handleCheckboxChange} />
-          <Typography>encrypt file</Typography>
-
-        </div> */}
         <div className="file-upload-button">
           <TSCButton
             onClick={() => {
@@ -129,7 +115,7 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
               }
               actions.removeError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
               actions.removeError(ErrorCodes.UNFINISHED_DATAPACK_UPLOAD_FORM);
-              actions.uploadDatapack(datapackFile!, "username", datapackName, `${datapackEncrypt}`);
+              actions.uploadDatapack(datapackFile!, "username", datapackName);
             }}>
             Finish & Upload
           </TSCButton>

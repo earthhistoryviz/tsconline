@@ -703,13 +703,12 @@ export const loadActiveDatapacks = action(async () => {
     console.error("failed loading active datapacks");
     return "";
   }
-
 });
 
 export const requestDownload = action(async (needEncryption: boolean, filePath: string, datapackDir: string) => {
   const response = await fetcher(`/requestDownload/${needEncryption}/${filePath}/${datapackDir}`, {
     method: "GET"
-  })
+  });
   // TODO: finish download
   if (!response.ok) {
     if (response.status === 404) {
