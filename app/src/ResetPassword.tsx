@@ -95,6 +95,7 @@ export const ResetPassword: React.FC = observer(() => {
             "We were able to reset your password, but we were unable to sign you in. Please try to sign in.",
             "warning"
           );
+          navigate("/login");
         } else {
           actions.removeAllErrors();
           actions.pushSnackbar("Password reset", "success");

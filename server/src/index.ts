@@ -16,6 +16,7 @@ import fastifyMultipart from "@fastify/multipart";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import fastifySecureSession from "@fastify/secure-session";
 import dotenv from "dotenv";
+import { db } from "./database.js";
 
 const server = fastify({
   logger: false,
@@ -215,6 +216,12 @@ server.get<{ Params: { datapackName: string; imageName: string } }>(
 setInterval(() => {
   checkFileMetadata(assetconfigs.fileMetadata);
 }, sunsetInterval);
+setInterval(
+  () => {
+    db.deleteFrom("verification").where("expiresAt", "<", new Date().toISOString()).execute();
+  },
+  1000 * 60 * 60 * 24 * 7
+); // 1 week
 // Start the server...
 try {
   await server.listen({

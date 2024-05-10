@@ -73,6 +73,9 @@ export const Login: React.FC = observer(() => {
             navigate("/verify");
             break;
           case 409:
+            errorCode = ErrorCodes.UNABLE_TO_LOGIN_EXISTING_USER;
+            break;
+          case 423:
             errorCode = ErrorCodes.UNABLE_TO_LOGIN_ACCOUNT_LOCKED;
             break;
         }

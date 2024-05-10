@@ -11,7 +11,7 @@ import {
 } from "./database.js";
 import { compare, hash } from "bcrypt-ts";
 import { OAuth2Client } from "google-auth-library";
-import { Email, assertEmail, NewUser, NewVerification } from "./types.js";
+import { Email, assertEmail, NewUser, NewVerification, UpdatedUser } from "./types.js";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import md5 from "md5";
@@ -61,7 +61,7 @@ export const accountRecovery = async function accountRecovery(
   reply: FastifyReply
 ) {
   const { token, email } = request.body;
-  if (!token || !email) {
+  if (!token || !email || emailTestRegex.test(email)) {
     reply.status(400).send({ error: "No token or email" });
     return;
   }
@@ -106,7 +106,7 @@ export const accountRecovery = async function accountRecovery(
 };
 
 export const resetEmail = async function resetEmail(
-  request: FastifyRequest<{ Body: { newEmail: string; password: string } }>,
+  request: FastifyRequest<{ Body: { newEmail: string } }>,
   reply: FastifyReply
 ) {
   const uuid = request.session.get("uuid");
@@ -118,8 +118,8 @@ export const resetEmail = async function resetEmail(
     reply.status(500).send({ error: "Email service not configured" });
     return;
   }
-  const { newEmail, password } = request.body;
-  if (!newEmail || !password || !emailTestRegex.test(newEmail)) {
+  const { newEmail } = request.body;
+  if (!newEmail || !emailTestRegex.test(newEmail)) {
     reply.status(400).send({ error: "Invalid form" });
     return;
   }
@@ -138,32 +138,58 @@ export const resetEmail = async function resetEmail(
       };
       sendEmail(sameEmail);
       reply.send({ message: "Email changed" });
-    }
-    if (hashedPassword && !(await compare(password, hashedPassword))) {
-      reply.status(401).send({ error: "Incorrect password" });
       return;
     }
-    await updateUser({ userId }, { email: newEmail, emailVerified: 0 });
-    let token = randomBytes(16).toString("hex") + md5(uuid);
-    let expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 1);
-    await deleteVerification({ userId: userId, reason: "verify" });
-    const verifyEmail: Email = {
-      from: process.env.EMAIL_USER,
-      to: newEmail,
-      subject: "Email Changed",
-      text: `Please verify your new email by clicking on the following link: ${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`
-    };
-    sendEmail(verifyEmail);
-    const verifyVerification: NewVerification = {
-      userId: userId,
-      token: token,
-      expiresAt: expiresAt.toISOString(),
-      reason: "verify"
-    };
-    await createVerification(verifyVerification);
-    token = randomBytes(16).toString("hex") + md5(uuid);
-    expiresAt = new Date();
+    if (!hashedPassword) {
+      const randomPassword = randomBytes(16).toString("hex");
+      const token = randomBytes(16).toString("hex") + md5(uuid);
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 1);
+      const googleEmail: Email = {
+        from: process.env.EMAIL_USER,
+        to: newEmail,
+        subject: "Email Changed",
+        text: `You have requested to change your email. As your account is Google authenticated, no password or username is set. We have set a random password for you: ${randomPassword} and your username is your new email address. 
+        Please verify your new email address by clicking on the following link: ${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`
+      };
+      sendEmail(googleEmail);
+      const googleUser: UpdatedUser = {
+        username: newEmail,
+        email: newEmail,
+        hashedPassword: await hash(randomPassword, 10),
+        emailVerified: 0
+      };
+      await updateUser({ userId }, googleUser);
+      const newVerification: NewVerification = {
+        userId: userId,
+        token: token,
+        expiresAt: expiresAt.toISOString(),
+        reason: "verify"
+      };
+      await createVerification(newVerification);
+    } else {
+      await updateUser({ userId }, { email: newEmail, emailVerified: 0 });
+      const token = randomBytes(16).toString("hex") + md5(uuid);
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 1);
+      await deleteVerification({ userId: userId, reason: "verify" });
+      const verifyEmail: Email = {
+        from: process.env.EMAIL_USER,
+        to: newEmail,
+        subject: "Email Changed",
+        text: `Please verify your new email by clicking on the following link: ${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`
+      };
+      sendEmail(verifyEmail);
+      const verifyVerification: NewVerification = {
+        userId: userId,
+        token: token,
+        expiresAt: expiresAt.toISOString(),
+        reason: "verify"
+      };
+      await createVerification(verifyVerification);
+    }
+    const token = randomBytes(16).toString("hex") + md5(uuid);
+    const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24);
     const invalidateEmail: Email = {
       from: process.env.EMAIL_USER,
@@ -454,7 +480,7 @@ export const login = async function login(
         return;
       }
       if (invalidateSession) {
-        reply.status(409).send({ error: "Account locked" });
+        reply.status(423).send({ error: "Account locked" });
         return;
       }
       request.session.set("uuid", uuid);
