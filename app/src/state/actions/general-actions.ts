@@ -284,7 +284,6 @@ const applyChartSettings = action("applyChartSettings", (settings: ChartSettings
     enHideBlockLable,
     enPriority
   } = settings;
-  //TODO: account for settings with only stages, no number/text.
   for (const unit of topAge) {
     if (!state.settings.timeSettings[unit.unit]) {
       state.settings.timeSettings[unit.unit] = JSON.parse(JSON.stringify(defaultTimeSettings));
@@ -434,13 +433,13 @@ export const setDatapackConfig = action(
       state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
     }
     initializeColumnHashMap(columnRoot);
-    //TODO: apply presets, temp code for applying just the chart settings
     //check if chart settings is populated
     if (chartSettings !== null) {
       assertChartInfoTSC(chartSettings);
       chartSettings = <ChartInfoTSC>chartSettings;
       applyChartSettings(chartSettings.settings);
       applyChartColumnSettings(chartSettings["class datastore.RootColumn:Chart Root"]);
+      //TODO: align row order
     }
     return true;
   }
