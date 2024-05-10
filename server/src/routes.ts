@@ -60,24 +60,51 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
 };
 
 export const requestDownload = async function requestDownload(
-  request: FastifyRequest<{ Params: { needEncryption: string; filename: string; } }>,
+  request: FastifyRequest<{ Params: { needEncryption: string; filename: string } }>,
   reply: FastifyReply
 ) {
-  /* const uuid = request.session.get("uuid");
+  const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
-  } */
-  const uuid = "username";
+  }
+  //For test usage: const uuid = "username";
   const { needEncryption } = request.params;
   const { filename } = request.params;
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
   const datapackDir = path.join(userDir, "datapacks");
   const filepath = path.join(datapackDir, filename);
   const encryptedFilepathDir = path.join(datapackDir, "encrypted");
-  console.log("!!filepath" + filepath);
-  let downloadPath;
+  const checkIfAlreadyEncrypted = path.join(encryptedFilepathDir.replaceAll("\\", "/"), filename);
+  if (fs.existsSync(checkIfAlreadyEncrypted)) {
+    const file = fs.readFileSync(checkIfAlreadyEncrypted);
+    reply.send(file);
+    console.log("file is encrpted when uploaded");
+    return;
+  }
+  let downloadPath = filepath.replaceAll("\\", "/");
+
   if (needEncryption === "true") {
+    try {
+      await access(downloadPath);
+      const file = await readFile(downloadPath);
+      const fileContent = file.toString();
+      const lines = fileContent.split("\n");
+
+      if (lines[0] && lines[0].includes("TSCreator Encrypted Datafile")) {
+        reply.send(file);
+        console.log("file is already encrpted before");
+        return;
+      }
+    } catch (e) {
+      const error = e as NodeJS.ErrnoException;
+      if (error.code === "ENOENT") {
+        reply.status(404).send({ error: "File not found" });
+      } else {
+        reply.status(500).send({ error: "An error occurred" });
+      }
+      return;
+    }
     await mkdirp(encryptedFilepathDir);
     try {
       await new Promise<void>((resolve) => {
@@ -109,8 +136,6 @@ export const requestDownload = async function requestDownload(
       return;
     }
     downloadPath = path.join(encryptedFilepathDir.replaceAll("\\", "/"), filename);
-  } else {
-    downloadPath = path.join(datapackDir.replaceAll("\\", "/"), filename);
   }
   try {
     await access(downloadPath);
@@ -165,12 +190,12 @@ export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
 };
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
-  /* const uuid = request.session.get("uuid");
+  const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
-  } */
-  const uuid = "username";
+  }
+  //For test usage: const uuid = "username";
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
   try {
     await access(userDir);
@@ -198,12 +223,12 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
 
 // If at some point a delete datapack function is needed, this function needs to be modified for race conditions
 export const uploadDatapack = async function uploadDatapack(request: FastifyRequest, reply: FastifyReply) {
-  /* const uuid = request.session.get("uuid");
+  const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
-  } */
-  const uuid = "username";
+  }
+  //For test usage: const uuid = "username";
   const file = await request.file();
   if (!file) {
     reply.status(404).send({ error: "No file uploaded" });

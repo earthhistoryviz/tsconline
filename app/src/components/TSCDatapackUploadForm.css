@@ -26,8 +26,8 @@
   width: 50vw;
 }
 
-.MuiTextField-root.datapack-name-input>.MuiInputLabel-root,
-.MuiTextField-root.datapack-description-input>.MuiInputLabel-root {
+.MuiTextField-root.datapack-name-input > .MuiInputLabel-root,
+.MuiTextField-root.datapack-description-input > .MuiInputLabel-root {
   color: gray;
 }
 

@@ -41,7 +41,7 @@ export const Datapacks = observer(function Datapacks() {
               <Typography>encrypted download</Typography>
             </MenuItem>
             <MenuItem onClick={() => handleDownload(false, name)}>
-              <Typography>download</Typography>
+              <Typography>retrieve original file</Typography>
             </MenuItem>
           </Menu>
         </div>

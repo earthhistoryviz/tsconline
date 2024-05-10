@@ -140,7 +140,7 @@ server.get("/presets", async (_request, reply) => {
 // uploads datapack
 server.post<{ Params: { username: string } }>("/upload", routes.uploadDatapack);
 //download datapack
-server.get<{ Params: { needEncryption: string; filename: string; } }>(
+server.get<{ Params: { needEncryption: string; filename: string } }>(
   "/requestDownload/:needEncryption/:filename",
   routes.requestDownload
 );
