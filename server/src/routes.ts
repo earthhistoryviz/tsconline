@@ -235,7 +235,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     return;
   }
   // only accept a binary file (encoded) or an unecnrypted text file or a zip file
-  console.log("hithere");
   if (
     file.mimetype !== "application/octet-stream" &&
     file.mimetype !== "text/plain" &&
@@ -254,9 +253,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   const decryptedFilepathDir = path.join(decryptDir, filenameWithoutExtension);
   const mapPackIndexFilepath = path.join(userDir, "MapPackIndex.json");
   const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json");
-  console.log(userDir);
-  console.log(datapackDir);
-  console.log(decryptDir);
   async function errorHandler(message: string, errorStatus: number, e?: unknown) {
     e && console.error(e);
     await resetUploadDirectory(filepath, decryptedFilepathDir);
