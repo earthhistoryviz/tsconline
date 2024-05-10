@@ -60,20 +60,25 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
 };
 
 export const requestDownload = async function requestDownload(
-  request: FastifyRequest<{ Params: { needEncryption: string; filename: string; username: string } }>,
+  request: FastifyRequest<{ Params: { needEncryption: string; filename: string; } }>,
   reply: FastifyReply
 ) {
+  /* const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  } */
+  const uuid = "username";
   const { needEncryption } = request.params;
   const { filename } = request.params;
-  const { username } = request.params;
-  const hash = md5(username);
-  const userDir = path.join(assetconfigs.uploadDirectory, hash);
+  const userDir = path.join(assetconfigs.uploadDirectory, uuid);
   const datapackDir = path.join(userDir, "datapacks");
   const filepath = path.join(datapackDir, filename);
   const encryptedFilepathDir = path.join(datapackDir, "encrypted");
-
+  console.log("!!filepath" + filepath);
   let downloadPath;
   if (needEncryption === "true") {
+    await mkdirp(encryptedFilepathDir);
     try {
       await new Promise<void>((resolve) => {
         const cmd =
@@ -160,11 +165,12 @@ export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
 };
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
-  const uuid = request.session.get("uuid");
+  /* const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
-  }
+  } */
+  const uuid = "username";
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
   try {
     await access(userDir);
@@ -192,17 +198,19 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
 
 // If at some point a delete datapack function is needed, this function needs to be modified for race conditions
 export const uploadDatapack = async function uploadDatapack(request: FastifyRequest, reply: FastifyReply) {
-  const uuid = request.session.get("uuid");
+  /* const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
-  }
+  } */
+  const uuid = "username";
   const file = await request.file();
   if (!file) {
     reply.status(404).send({ error: "No file uploaded" });
     return;
   }
   // only accept a binary file (encoded) or an unecnrypted text file or a zip file
+  console.log("hithere");
   if (
     file.mimetype !== "application/octet-stream" &&
     file.mimetype !== "text/plain" &&
@@ -221,6 +229,9 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   const decryptedFilepathDir = path.join(decryptDir, filenameWithoutExtension);
   const mapPackIndexFilepath = path.join(userDir, "MapPackIndex.json");
   const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json");
+  console.log(userDir);
+  console.log(datapackDir);
+  console.log(decryptDir);
   async function errorHandler(message: string, errorStatus: number, e?: unknown) {
     e && console.error(e);
     await resetUploadDirectory(filepath, decryptedFilepathDir);

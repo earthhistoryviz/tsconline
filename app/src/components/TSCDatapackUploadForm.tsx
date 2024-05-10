@@ -45,12 +45,11 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
               }
               const ext = file.name.split(".").pop();
               // either an unencoded file (text file) or an encoded file that we have no type for
-
-              if (file.type !== "text/plain" && file.type !== "" && file.type !== "application/zip") {
+              if (file.type !== "text/plain" && file.type !== "") {
                 actions.pushError(ErrorCodes.UNRECOGNIZED_DATAPACK_FILE);
                 return;
               }
-              if (!ext || !/^(dpk|mdpk|txt|map|zip)$/.test(ext)) {
+              if (!ext || !/^(dpk|mdpk|txt|map)$/.test(ext)) {
                 actions.pushError(ErrorCodes.UNRECOGNIZED_DATAPACK_EXTENSION);
                 return;
               }
@@ -115,7 +114,7 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
               }
               actions.removeError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
               actions.removeError(ErrorCodes.UNFINISHED_DATAPACK_UPLOAD_FORM);
-              actions.uploadDatapack(datapackFile!, "username", datapackName);
+              actions.uploadDatapack(datapackFile!, datapackName);
             }}>
             Finish & Upload
           </TSCButton>
