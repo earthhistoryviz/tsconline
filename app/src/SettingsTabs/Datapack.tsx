@@ -48,12 +48,12 @@ export const Datapacks = observer(function Datapacks() {
       )
     );
   };
-  async function getFileURL(needEncryption: boolean, filePath: string, fileDir: string) {
+  async function getFileURL(needEncryption: boolean, fileName: string) {
     let fileBlob;
     if (needEncryption) {
-      fileBlob = await actions.requestDownload(true, filePath, fileDir);
+      fileBlob = await actions.requestDownload(true, fileName);
     } else {
-      fileBlob = await actions.requestDownload(false, filePath, fileDir);
+      fileBlob = await actions.requestDownload(false, fileName);
     }
     try {
       const reader = new FileReader();
@@ -70,7 +70,7 @@ export const Datapacks = observer(function Datapacks() {
   }
 
   const handleDownload = async (needEncryption: boolean, fileName: string) => {
-    const fileURL = await getFileURL(needEncryption, fileName, "username");
+    const fileURL = await getFileURL(needEncryption, fileName);
     const aTag = document.createElement("a");
     if (typeof fileURL === "string") {
       aTag.href = fileURL;

@@ -26,8 +26,8 @@
   width: 50vw;
 }
 
-.MuiTextField-root.datapack-name-input > .MuiInputLabel-root,
-.MuiTextField-root.datapack-description-input > .MuiInputLabel-root {
+.MuiTextField-root.datapack-name-input>.MuiInputLabel-root,
+.MuiTextField-root.datapack-description-input>.MuiInputLabel-root {
   color: gray;
 }
 
@@ -63,11 +63,4 @@
 
 .file-upload {
   margin-top: 30px;
-}
-
-.encrypt-file {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: left;
 }

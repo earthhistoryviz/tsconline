@@ -225,6 +225,7 @@ export const uploadDatapack = action("uploadDatapack", async (file: File, name: 
   }
 });
 
+
 export const setMapPackIndex = action("setMapPackIndex", async (mapPackIndex: MapPackIndex) => {
   // This is to prevent the UI from lagging
   state.mapPackIndex = {};
@@ -705,14 +706,19 @@ export const loadActiveDatapacks = action(async () => {
   }
 });
 
-export const requestDownload = action(async (needEncryption: boolean, filePath: string, datapackDir: string) => {
-  const response = await fetcher(`/requestDownload/${needEncryption}/${filePath}/${datapackDir}`, {
+export const requestDownload = action(async (needEncryption: boolean, filename: string) => {
+  const response = await fetcher(`/requestDownload/${needEncryption}/${filename}`, {
     method: "GET"
   });
-  // TODO: finish download
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error("File not found");
+      if (needEncryption) {
+        displayServerError(null, ErrorCodes.ALREADY_ENCRYPTED_FILE, ErrorMessages[ErrorCodes.ALREADY_ENCRYPTED_FILE]);
+        throw new Error("File not found in encrypted dir");
+      } else {
+        throw new Error("File not found");
+      }
+
     } else if (response.status === 500) {
       throw new Error("Server error");
     } else {
@@ -722,6 +728,7 @@ export const requestDownload = action(async (needEncryption: boolean, filePath: 
   const file = response.blob();
   return file;
 });
+
 export const logout = action("logout", async () => {
   try {
     const response = await fetcher("/auth/logout", {
