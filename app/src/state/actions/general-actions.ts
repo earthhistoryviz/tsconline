@@ -31,6 +31,7 @@ import {
 import { state, State } from "../state";
 import { fetcher } from "../../util";
 import { applyChartColumnSettings, initializeColumnHashMap } from "./column-actions";
+import { applyChartColumnSettings, initializeColumnHashMap } from "./column-actions";
 import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
