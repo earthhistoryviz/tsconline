@@ -162,11 +162,11 @@ export async function resetUploadDirectory(uploadedFile: string, decryptedUpload
  * @param o2
  * @returns
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function setCommonProperties(o1: any, o2: any) {
+export function setCommonProperties<T>(o1: T, o2: Partial<T>): T {
   for (const key in o1) {
-    if (Object.hasOwnProperty.call(o2, key)) {
-      o1[key] = o2[key];
+    if (key in o2 && o2[key as keyof T] !== undefined) {
+      const k = key as keyof T;
+      o1[k] = o2[k]!;
     }
   }
   return o1;
