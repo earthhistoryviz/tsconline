@@ -22,7 +22,7 @@ export const EditWidthField: React.FC<{
         customInput={WidthTextField}
         onValueChange={(values) => {
           const floatValue = values.floatValue;
-          actions.updateWidth(floatValue ?? NaN, column);
+          actions.setWidth(floatValue ?? NaN, column);
         }}
       />
     </div>

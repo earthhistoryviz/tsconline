@@ -1,6 +1,13 @@
 import { action } from "mobx";
 import { state } from "../state";
-import { ColumnInfo, EventSettings, ColumnInfoTSC, RGB, ValidFontOptions } from "@tsconline/shared";
+import {
+  ColumnInfo,
+  EventSettings,
+  ColumnInfoTSC,
+  RGB,
+  ValidFontOptions,
+  assertEventColumnInfoTSC
+} from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { pushSnackbar } from "./general-actions";
 function extractName(text: string): string {
@@ -11,11 +18,20 @@ function extractColumnType(text: string): string {
 }
 export const applyChartColumnSettings = action("applyChartColumnSettings", (settings: ColumnInfoTSC) => {
   function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
-    updateEditName(settings.title, column);
+    setEditName(settings.title, column);
     setEnableTitle(settings.drawTitle, column);
-    if (settings.width) updateWidth(settings.width, column);
+    setShowUncertaintyLabels(settings.drawUncertaintyLabel, column);
+    setShowAgeLabels(settings.drawAgeLabel, column);
+    setColumnOn(settings.isSelected, column);
+    if (settings.width) setWidth(settings.width, column);
     if (settings.backgroundColor.text) setRGB(settings.backgroundColor.text, column);
     column.fontsInfo = cloneDeep(settings.fonts);
+    switch (extractColumnType(settings._id)) {
+      case "EventColumn":
+        assertEventColumnInfoTSC(settings);
+        if (column.columnSpecificSettings)
+          setEventColumnSettings(column.columnSpecificSettings, { type: settings.type, rangeSort: settings.rangeSort });
+    }
   }
   const columnName = extractName(settings._id);
   let curcol: ColumnInfo | undefined = state.settingsTabs.columnHashMap.get(columnName);
@@ -88,12 +104,14 @@ export const setEventColumnSettings = action((eventSettings: EventSettings, newS
   if (newSettings.rangeSort) eventSettings.rangeSort = newSettings.rangeSort;
 });
 
-export const updateEditName = action((newName: string, column: ColumnInfo) => {
+export const setColumnOn = action((isOn: boolean, column: ColumnInfo) => {
+  column.on = isOn;
+});
+export const setEditName = action((newName: string, column: ColumnInfo) => {
   column.editName = newName;
-  return;
 });
 
-export const updateWidth = action((newWidth: number, column: ColumnInfo) => {
+export const setWidth = action((newWidth: number, column: ColumnInfo) => {
   column.width = newWidth;
 });
 

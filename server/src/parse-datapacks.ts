@@ -1301,16 +1301,19 @@ function recursive(
 ): FaciesFoundAndAgeRange {
   //for maintaing the same format of column name as tscreator
   //reference stringNoQuotes function from loader1.java
-  currentColumn = trimQuotes(currentColumn.trim());
-  currentColumn = currentColumn.replaceAll('""', '"');
-  let commaPos = currentColumn.indexOf(",");
-  while (commaPos !== -1) {
-    if (!Number.isNaN(Number(currentColumn.charAt(commaPos - 1)))) {
-      currentColumn =
-        currentColumn.substring(0, commaPos) + "." + currentColumn.substring(commaPos + 1, currentColumn.length);
+  function formatColumnName(text: string): string {
+    text = trimQuotes(text.trim());
+    text = text.replaceAll('""', '"');
+    let commaPos = text.indexOf(",");
+    while (commaPos !== -1) {
+      if (!Number.isNaN(Number(text.charAt(commaPos - 1)))) {
+        text = text.substring(0, commaPos) + "." + text.substring(commaPos + 1, text.length);
+      }
+      commaPos = text.indexOf(",", commaPos + 1);
     }
-    commaPos = currentColumn.indexOf(",", commaPos + 1);
+    return text;
   }
+  currentColumn = formatColumnName(currentColumn);
   const currentColumnInfo: ColumnInfo = {
     name: trimInvisibleCharacters(currentColumn),
     editName: trimInvisibleCharacters(currentColumn),

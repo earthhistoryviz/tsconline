@@ -127,12 +127,17 @@ function processFonts(fontsNode: Element): FontsInfo {
     const maybeChild = childNodes[i];
     if (maybeChild.nodeType === Node.ELEMENT_NODE) {
       const child = <Element>maybeChild;
-
-      const fontProps = child.textContent!.trim().split(";");
+      let fontProps: string[] = [];
+      if (child.textContent) {
+        fontProps = child.textContent.trim().split(";");
+      }
       for (let i = 0; i < fontProps.length; i++) {
-        fonts[child.getAttribute("function")! as keyof FontsInfo].inheritable = Boolean(
-          child.getAttribute("inheritable")
-        );
+        let key = "" as keyof FontsInfo;
+        if (child.getAttribute("function")) {
+          key = child.getAttribute("function")! as keyof FontsInfo;
+        } else continue;
+        fonts[key].inheritable = Boolean(child.getAttribute("inheritable"));
+
         if (fontProps[i].includes("font-family")) {
           fonts[child.getAttribute("function")! as keyof FontsInfo].fontFace =
             fontProps[i].split(": ")[1] === "Arial" || "Courier" || "Verdana"
@@ -142,20 +147,20 @@ function processFonts(fontsNode: Element): FontsInfo {
         if (fontProps[i].includes("font-size")) {
           //ex 14px
           const size = fontProps[i].split(": ")[1];
-          fonts[child.getAttribute("function")! as keyof FontsInfo].size = Number(size.substring(0, size.length - 2));
+          fonts[key].size = Number(size.substring(0, size.length - 2));
         }
         if (fontProps[i].includes("font-style")) {
           if (fontProps[i].includes("italic")) {
-            fonts[child.getAttribute("function")! as keyof FontsInfo].italic = true;
+            fonts[key].italic = true;
           }
         }
         if (fontProps[i].includes("font-weight")) {
           if (fontProps[i].includes("bold")) {
-            fonts[child.getAttribute("function")! as keyof FontsInfo].bold = true;
+            fonts[key].bold = true;
           }
         }
         if (fontProps[i].includes("fill")) {
-          fonts[child.getAttribute("function")! as keyof FontsInfo].color = fontProps[i].split(": ")[1];
+          fonts[key].color = fontProps[i].split(": ")[1];
         }
       }
     }

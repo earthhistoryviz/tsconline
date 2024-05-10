@@ -8,12 +8,9 @@ import { ColumnInfo } from "@tsconline/shared";
 export const EditNameField: React.FC<{
   column: ColumnInfo;
 }> = observer(({ column }) => {
-  const { state, actions } = useContext(context);
+  const { actions } = useContext(context);
   const editName = useRef("");
-  const name =
-    state.settingsTabs.columnSelected === null
-      ? ""
-      : state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.editName;
+  const name = column.editName;
   return (
     <div>
       <Typography style={{ padding: "5px" }}>Edit Title</Typography>
@@ -34,7 +31,7 @@ export const EditNameField: React.FC<{
             color="secondary"
             variant="contained"
             onClick={() => {
-              actions.updateEditName(editName.current, column);
+              actions.setEditName(editName.current, column);
             }}>
             Confirm
           </Button>
