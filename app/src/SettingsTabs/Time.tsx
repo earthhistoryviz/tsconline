@@ -51,16 +51,7 @@ export const Time = observer(function Time() {
             disabled={disabled}
             value={state.settings.timeSettings[units].topStageKey}
             onChange={(event) => {
-              const selectedValue = event.target.value;
-              const selectedAgeItem = state.geologicalTopStageAges.find((item) => item.key === selectedValue);
-              const selectedAge = selectedAgeItem?.value || 0;
-              if (selectedAge >= 0 && selectedAge <= state.settings.timeSettings[units].baseStageAge) {
-                actions.setTopStageKey(selectedValue, units);
-                actions.setTopStageAge(selectedAge, units);
-                actions.removeError(ErrorCodes.TOP_STAGE_AGE_INVALID);
-              } else {
-                actions.pushError(ErrorCodes.TOP_STAGE_AGE_INVALID);
-              }
+              actions.setTopStageAge(parseFloat(event.target.value), units);
             }}>
             {state.geologicalTopStageAges.map((item) => (
               <MenuItem key={item.key} value={item.key}>
@@ -75,13 +66,7 @@ export const Time = observer(function Time() {
             name="vertical-scale-text-field"
             value={state.settings.timeSettings[units].topStageAge}
             onChange={(event) => {
-              const age = parseFloat(event.target.value);
-              if (!isNaN(age)) {
-                actions.setTopStageAge(age);
-                actions.removeError(ErrorCodes.TOP_STAGE_AGE_INVALID);
-              } else {
-                actions.pushError(ErrorCodes.TOP_STAGE_AGE_INVALID);
-              }
+              actions.setTopStageAge(parseFloat(event.target.value), units);
             }}
           />
         </FormControl>
@@ -98,19 +83,10 @@ export const Time = observer(function Time() {
             name="base-age-stage-name"
             value={state.settings.timeSettings[units].baseStageKey}
             onChange={(event) => {
-              const selectedValue = event.target.value;
-              const selectedAgeItem = state.geologicalBaseStageAges.find((item) => item.key === selectedValue);
-              const selectedAge = selectedAgeItem?.value || 0;
-              if (selectedAge >= 0 && selectedAge >= state.settings.timeSettings[units].topStageAge) {
-                actions.setBaseStageKey(selectedValue, units);
-                actions.setBaseStageAge(selectedAge, units);
-                actions.removeError(ErrorCodes.BASE_STAGE_AGE_INVALID);
-              } else {
-                actions.pushError(ErrorCodes.BASE_STAGE_AGE_INVALID);
-              }
+              actions.setBaseStageAge(parseFloat(event.target.value), units);
             }}>
             {state.geologicalBaseStageAges
-              .filter((item) => item.value >= state.settings.topStageAge)
+              .filter((item) => item.value >= state.settings.timeSettings[units].topStageAge)
               .map((item) => (
                 <MenuItem key={item.key} value={item.key}>
                   {item.key} ({item.value} Ma)
@@ -124,8 +100,7 @@ export const Time = observer(function Time() {
             name="vertical-scale-text-field"
             value={state.settings.timeSettings[units].baseStageAge}
             onChange={(event) => {
-              const age = parseFloat(event.target.value);
-              actions.setBaseStageAge(age);
+              actions.setBaseStageAge(parseFloat(event.target.value), units);
             }}
           />
         </FormControl>
