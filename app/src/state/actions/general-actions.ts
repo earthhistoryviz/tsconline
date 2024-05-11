@@ -15,7 +15,6 @@ import {
   type MapInfo,
   type ColumnInfo,
   type MapHierarchy,
-  type GeologicalStages,
   assertSuccessfulServerResponse,
   Presets,
   assertSVGStatus,
@@ -470,23 +469,6 @@ const fetchSettingsXML = async (settingsPath: string): Promise<ChartInfoTSC | nu
 };
 
 /**
- * Sets the geological top stages and the base stages
- * Assuming the given stages includes the stages[TOP] = 0
- */
-export const setGeologicalStages = action("setGeologicalStages", (stages: GeologicalStages) => {
-  let top = stages["TOP"];
-  const geologicalTopStages: GeologicalStages = { Present: 0 };
-  Object.keys(stages).map((key) => {
-    geologicalTopStages[key] = top;
-    top = stages[key];
-  });
-  delete stages["TOP"];
-  delete geologicalTopStages["TOP"];
-  state.settingsTabs.geologicalTopStages = geologicalTopStages;
-  state.settingsTabs.geologicalBaseStages = stages;
-});
-
-/**
  * Removes cache in public dir on server
  */
 export const removeCache = action("removeCache", async () => {
@@ -829,13 +811,35 @@ export const setTopStageAge = action("setTopStageAge", (age: number, unit: strin
   if (!state.settings.timeSettings[unit]) {
     throw new Error(`Unit ${unit} not found in timeSettings`);
   }
+  if (isNaN(age)) {
+    pushError(ErrorCodes.TOP_STAGE_AGE_INVALID);
+    return;
+  }
+  removeError(ErrorCodes.TOP_STAGE_AGE_INVALID);
+  const gap = state.settings.timeSettings[unit].baseStageAge - state.settings.timeSettings[unit].topStageAge;
   state.settings.timeSettings[unit].topStageAge = age;
+  const correspondingKey = state.geologicalTopStageAges.find((item) => item.value === age);
+  if (correspondingKey) {
+    setTopStageKey(correspondingKey.key, unit);
+  } else setTopStageKey("", unit);
+  if (state.settings.timeSettings[unit].baseStageAge <= state.settings.timeSettings[unit].topStageAge) {
+    setBaseStageAge(state.settings.timeSettings[unit].topStageAge + gap, unit);
+  }
 });
 export const setBaseStageAge = action("setBaseStageAge", (age: number, unit: string) => {
   if (!state.settings.timeSettings[unit]) {
     throw new Error(`Unit ${unit} not found in timeSettings`);
   }
+  if (isNaN(age) || age < state.settings.timeSettings[unit].topStageAge) {
+    pushError(ErrorCodes.BASE_STAGE_AGE_INVALID);
+    return;
+  }
+  removeError(ErrorCodes.BASE_STAGE_AGE_INVALID);
   state.settings.timeSettings[unit].baseStageAge = age;
+  const correspondingKey = state.geologicalBaseStageAges.find((item) => item.value === age);
+  if (correspondingKey) {
+    setBaseStageKey(correspondingKey.key, unit);
+  } else setBaseStageKey("", unit);
 });
 
 export const settingsXML = action("settingsXML", (xml: string) => {

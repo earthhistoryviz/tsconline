@@ -5,10 +5,8 @@ import { CustomDivider, TSCCheckbox } from "../components";
 import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import { useContext, useState } from "react";
-import { useTheme } from "@mui/material/styles";
 import { context } from "../state/index";
 import "./Time.css";
-import { ErrorCodes } from "../util/error-codes";
 
 export const Time = observer(function Time() {
   const { state, actions } = useContext(context);
@@ -51,7 +49,9 @@ export const Time = observer(function Time() {
             disabled={disabled}
             value={state.settings.timeSettings[units].topStageKey}
             onChange={(event) => {
-              actions.setTopStageAge(parseFloat(event.target.value), units);
+              const age = state.geologicalTopStageAges.find((item) => item.key === event.target.value);
+              if (!age) return;
+              actions.setTopStageAge(age.value, units);
             }}>
             {state.geologicalTopStageAges.map((item) => (
               <MenuItem key={item.key} value={item.key}>
@@ -83,7 +83,9 @@ export const Time = observer(function Time() {
             name="base-age-stage-name"
             value={state.settings.timeSettings[units].baseStageKey}
             onChange={(event) => {
-              actions.setBaseStageAge(parseFloat(event.target.value), units);
+              const age = state.geologicalBaseStageAges.find((item) => item.key === event.target.value);
+              if (!age) return;
+              actions.setBaseStageAge(age.value, units);
             }}>
             {state.geologicalBaseStageAges
               .filter((item) => item.value >= state.settings.timeSettings[units].topStageAge)
@@ -192,7 +194,12 @@ export const Time = observer(function Time() {
           />
           <FormControlLabel
             name="use-suggested-age-spans"
-            control={<TSCCheckbox onChange={(e) => actions.setuseDatapackSuggestedAge(!e.target.checked)} />}
+            control={
+              <TSCCheckbox
+                onChange={(e) => actions.setuseDatapackSuggestedAge(!e.target.checked)}
+                checked={!state.settings.useDatapackSuggestedAge}
+              />
+            }
             label="Do not use the Data-Pack's suggested age span"
           />
         </FormGroup>
