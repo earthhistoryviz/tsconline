@@ -98,6 +98,7 @@ export const accountRecovery = async function accountRecovery(
       { email: email, emailVerified: 1, hashedPassword: await hash(randomPassword, 10), invalidateSession: 1 }
     );
     await deleteVerification({ userId, reason: "verify" });
+    await deleteVerification({ userId, reason: "invalidate" });
     reply.send({ message: "Email sent" });
   } catch (error) {
     console.error("Error during invalidation:", error);
@@ -173,6 +174,7 @@ export const resetEmail = async function resetEmail(
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 1);
       await deleteVerification({ userId: userId, reason: "verify" });
+      await deleteVerification({ userId: userId, reason: "password" });
       const verifyEmail: Email = {
         from: process.env.EMAIL_USER,
         to: newEmail,

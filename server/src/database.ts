@@ -132,6 +132,7 @@ export async function updateVerification(criteria: Partial<Verification>, update
 export async function deleteVerification(criteria: Partial<Verification>) {
   let query = db.deleteFrom("verification");
   if (!criteria.reason) throw new Error("Must provide reason assigned to verification token");
+  query = query.where("reason", "=", criteria.reason);
   if (criteria.userId) query = query.where("userId", "=", criteria.userId);
   if (criteria.token) query = query.where("token", "=", criteria.token);
   if (criteria.expiresAt) query = query.where("expiresAt", "=", criteria.expiresAt);

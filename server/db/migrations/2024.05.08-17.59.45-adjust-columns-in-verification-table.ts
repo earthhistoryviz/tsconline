@@ -1,7 +1,7 @@
-import { type Kysely, sql } from "kysely";
-import { Verification } from "../../dist/types";
+import { type Kysely } from "kysely";
 
-//I need userId to not be unique, but I can't alter that since it's a primary key. So I need to create a new table and copy over all the data.
+// I need userId to not be unique, but I can't alter that since it's a primary key. So I need to create a new table and copy over all the data.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable("verification_new")
@@ -18,6 +18,7 @@ export async function up(db: Kysely<any>): Promise<void> {
   await db.schema.alterTable("verification").renameColumn("verifyOrReset", "reason").execute();
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function down(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable("verification_old")
