@@ -12,7 +12,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("verifyOrReset", "text", (col) => col.notNull())
     .execute();
   const oldData = await db.selectFrom("verification").selectAll().execute();
-  await db.insertInto("verification_new").values(oldData).execute();
+  if (oldData.length != 0) await db.insertInto("verification_new").values(oldData).execute();
   await db.schema.dropTable("verification").execute();
   await db.schema.alterTable("verification_new").renameTo("verification").execute();
   await db.schema.alterTable("verification").renameColumn("verifyOrReset", "reason").execute();
@@ -29,7 +29,7 @@ export async function down(db: Kysely<any>): Promise<void> {
     .addColumn("reason", "text", (col) => col.notNull())
     .execute();
   const oldData = await db.selectFrom("verification").selectAll().execute();
-  await db.insertInto("verification_old").values(oldData).execute();
+  if (oldData.length != 0) await db.insertInto("verification_old").values(oldData).execute();
   await db.schema.dropTable("verification").execute();
   await db.schema.alterTable("verification_old").renameTo("verification").execute();
   await db.schema.alterTable("verification").renameColumn("reason", "verifyOrReset").execute();
