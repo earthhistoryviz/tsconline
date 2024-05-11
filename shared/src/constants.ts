@@ -4,7 +4,9 @@ import {
   EventColumnInfoTSC,
   EventSettings,
   FontsInfo,
+  Point,
   PointColumnInfoTSC,
+  PointSettings,
   RangeColumnInfoTSC,
   RulerColumnInfoTSC,
   SequenceColumnInfoTSC,
@@ -277,4 +279,68 @@ export const defaultPointColumnInfoTSC: PointColumnInfoTSC = {
   scaleStart: 0,
   scaleStep: 0,
   pointType: "rect"
+};
+
+export const defaultPointSettings: PointSettings = {
+  drawLine: true,
+  lineColor: {
+    r: 0,
+    g: 0,
+    b: 0
+  },
+  smoothed: true,
+  drawFill: true,
+  fill: {
+    r: 64,
+    g: 233,
+    b: 191
+  },
+  lowerRange: 0,
+  upperRange: 0,
+  drawScale: true,
+  drawBackgroundGradient: false,
+  backgroundGradientStart: {
+    r: 0,
+    g: 0,
+    b: 0
+  },
+  backgroundGradientEnd: {
+    r: 255,
+    g: 255,
+    b: 255
+  },
+  drawCurveGradient: false,
+  curveGradientStart: {
+    r: 0,
+    g: 0,
+    b: 0
+  },
+  curveGradientEnd: {
+    r: 255,
+    g: 255,
+    b: 255
+  },
+  flipScale: false,
+  scaleStart: 0,
+  scaleStep: 0,
+  pointShape: "rect",
+  minX: Number.MAX_SAFE_INTEGER,
+  maxX: Number.MIN_SAFE_INTEGER
+};
+
+export const defaultPoint: Partial<Point> = {
+  subPointInfo: [],
+  lowerRange: 0,
+  upperRange: 0,
+  smoothed: true,
+  drawLine: false,
+  pointShape: "rect",
+  drawFill: true,
+  fill: {
+    r: 255,
+    g: 255,
+    b: 255
+  },
+  minX: Number.MAX_SAFE_INTEGER,
+  maxX: Number.MIN_SAFE_INTEGER
 };

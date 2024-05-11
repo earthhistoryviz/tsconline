@@ -3366,6 +3366,7 @@ const RAW_RUNTIME_STATE =
           ["@tsconline/shared", "workspace:shared"],\
           ["@types/better-sqlite3", "npm:7.6.9"],\
           ["@types/color-thief-node", "npm:1.0.4"],\
+          ["@types/lodash", "npm:4.17.1"],\
           ["@types/md5", "npm:2.3.5"],\
           ["@types/nearest-color", "npm:0.4.1"],\
           ["@types/node", "npm:20.11.28"],\
@@ -3381,6 +3382,7 @@ const RAW_RUNTIME_STATE =
           ["glob", "npm:10.3.10"],\
           ["google-auth-library", "npm:9.8.0"],\
           ["kysely", "npm:0.27.3"],\
+          ["lodash", "npm:4.17.21"],\
           ["md5", "npm:2.3.0"],\
           ["mkdirp", "npm:3.0.1"],\
           ["nearest-color", "npm:0.4.4"],\

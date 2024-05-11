@@ -20,6 +20,7 @@
     "glob": "^10.3.10",
     "google-auth-library": "^9.8.0",
     "kysely": "^0.27.3",
+    "lodash": "^4.17.21",
     "md5": "^2.3.0",
     "mkdirp": "^3.0.1",
     "nearest-color": "^0.4.4",
@@ -37,6 +38,7 @@
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.9",
     "@types/color-thief-node": "^1",
+    "@types/lodash": "^4",
     "@types/md5": "^2.3.5",
     "@types/nearest-color": "^0.4.1",
     "@types/node": "^20.11.28",
