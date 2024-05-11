@@ -7,7 +7,6 @@ import type {
   MapInfo,
   ChartConfig,
   ColumnInfo,
-  GeologicalStages,
   Presets,
   DatapackIndex,
   MapPackIndex,
@@ -31,8 +30,6 @@ export type State = {
     selected: SettingsTabs;
     columns: ColumnInfo | undefined;
     columnSelected: string | null;
-    geologicalTopStages: GeologicalStages;
-    geologicalBaseStages: GeologicalStages;
     columnHashMap: Map<string, ColumnInfo>;
     columnSearchTerm: string;
   };
@@ -88,8 +85,6 @@ export const state = observable<State>({
     selected: "time",
     columns: undefined,
     columnSelected: null,
-    geologicalTopStages: {},
-    geologicalBaseStages: {},
     columnHashMap: new Map<string, ColumnInfo>(),
     columnSearchTerm: ""
   },
