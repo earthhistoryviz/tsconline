@@ -193,9 +193,8 @@ const HtmlTemplate = (
             </tr>
             <!-- end copy -->
             ${
-              buttonText &&
-              link &&
-              `
+              buttonText && link
+                ? `
               <!-- start button -->
               <tr>
                 <td align="left" bgcolor="#ffffff">
@@ -224,6 +223,7 @@ const HtmlTemplate = (
               </tr>
               <!-- end copy -->
             `
+                : ""
             }
   
             <!-- start copy -->
@@ -282,6 +282,7 @@ const HtmlTemplate = (
 export const sendEmail = async (email: Email) => {
   assertEmail(email);
   const html = HtmlTemplate(email.preHeader, email.title, email.message, email.action, email.link, email.buttonText);
+  console.log(html);
   try {
     await transporter.sendMail({
       from: email.from,
