@@ -15,12 +15,12 @@ const HtmlTemplate = (
   preHeader: string,
   title: string,
   message: string,
-  link: string | undefined,
-  buttonText: string | undefined,
-  action: string
+  action: string,
+  link?: string,
+  buttonText?: string
 ) => {
   return `
-  <<!DOCTYPE html>
+  <!DOCTYPE html>
   <html>
   <head>
   
@@ -229,7 +229,7 @@ const HtmlTemplate = (
             <!-- start copy -->
             <tr>
               <td align="left" bgcolor="#ffffff" style="padding: 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px; border-bottom: 3px solid #d4dadf">
-                <p style="margin: 0;">Thank You,<br> TSCOnline</p>
+                <p style="margin: 0;">Thank You,<br> TSC Online</p>
               </td>
             </tr>
             <!-- end copy -->
@@ -281,7 +281,7 @@ const HtmlTemplate = (
 
 export const sendEmail = async (email: Email) => {
   assertEmail(email);
-  const html = HtmlTemplate(email.preHeader, email.title, email.message, email.link, email.buttonText, email.action);
+  const html = HtmlTemplate(email.preHeader, email.title, email.message, email.action, email.link, email.buttonText);
   try {
     await transporter.sendMail({
       from: email.from,
