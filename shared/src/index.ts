@@ -372,10 +372,6 @@ export type ChartResponseInfo = {
   hash: string; // hash for where it is stored
 };
 
-export type GeologicalStages = {
-  [key: string]: number;
-};
-
 export type Transects = {
   [name: string]: {
     startMapPoint: string;

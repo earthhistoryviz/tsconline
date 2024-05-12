@@ -7,7 +7,6 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import { useContext, useState } from "react";
 import { context } from "../state/index";
 import "./Time.css";
-import { ErrorCodes } from "../util/error-codes";
 
 export const Time = observer(function Time() {
   const { state, actions } = useContext(context);
@@ -50,16 +49,9 @@ export const Time = observer(function Time() {
             disabled={disabled}
             value={state.settings.timeSettings[units].topStageKey}
             onChange={(event) => {
-              const selectedValue = event.target.value;
-              const selectedAgeItem = state.geologicalTopStageAges.find((item) => item.key === selectedValue);
-              const selectedAge = selectedAgeItem?.value || 0;
-              if (selectedAge >= 0 && selectedAge <= state.settings.timeSettings[units].baseStageAge) {
-                actions.setTopStageKey(selectedValue, units);
-                actions.setTopStageAge(selectedAge, units);
-                actions.removeError(ErrorCodes.TOP_STAGE_AGE_INVALID);
-              } else {
-                actions.pushError(ErrorCodes.TOP_STAGE_AGE_INVALID);
-              }
+              const age = state.geologicalTopStageAges.find((item) => item.key === event.target.value);
+              if (!age) return;
+              actions.setTopStageAge(age.value, units);
             }}>
             {state.geologicalTopStageAges.map((item) => (
               <MenuItem key={item.key} value={item.key}>
@@ -74,14 +66,7 @@ export const Time = observer(function Time() {
             name="vertical-scale-text-field"
             value={state.settings.timeSettings[units].topStageAge}
             onChange={(event) => {
-              const age = parseFloat(event.target.value);
-              if (!isNaN(age) && age >= 0 && age <= state.settings.timeSettings[units].baseStageAge) {
-                actions.setTopStageKey("", units);
-                actions.setTopStageAge(age, units);
-                actions.removeError(ErrorCodes.TOP_STAGE_AGE_INVALID);
-              } else {
-                actions.pushError(ErrorCodes.TOP_STAGE_AGE_INVALID);
-              }
+              actions.setTopStageAge(parseFloat(event.target.value), units);
             }}
           />
         </FormControl>
@@ -98,22 +83,17 @@ export const Time = observer(function Time() {
             name="base-age-stage-name"
             value={state.settings.timeSettings[units].baseStageKey}
             onChange={(event) => {
-              const selectedValue = event.target.value;
-              const selectedAgeItem = state.geologicalBaseStageAges.find((item) => item.key === selectedValue);
-              const selectedAge = selectedAgeItem?.value || 0;
-              if (selectedAge >= 0 && selectedAge >= state.settings.timeSettings[units].topStageAge) {
-                actions.setBaseStageKey(selectedValue, units);
-                actions.setBaseStageAge(selectedAge, units);
-                actions.removeError(ErrorCodes.BASE_STAGE_AGE_INVALID);
-              } else {
-                actions.pushError(ErrorCodes.BASE_STAGE_AGE_INVALID);
-              }
+              const age = state.geologicalBaseStageAges.find((item) => item.key === event.target.value);
+              if (!age) return;
+              actions.setBaseStageAge(age.value, units);
             }}>
-            {state.geologicalBaseStageAges.map((item) => (
-              <MenuItem key={item.key} value={item.key}>
-                {item.key} ({item.value} Ma)
-              </MenuItem>
-            ))}
+            {state.geologicalBaseStageAges
+              .filter((item) => item.value >= state.settings.timeSettings[units].topStageAge)
+              .map((item) => (
+                <MenuItem key={item.key} value={item.key}>
+                  {item.key} ({item.value} Ma)
+                </MenuItem>
+              ))}
           </Select>
           <TextField
             className="UnitTextField"
@@ -122,14 +102,7 @@ export const Time = observer(function Time() {
             name="vertical-scale-text-field"
             value={state.settings.timeSettings[units].baseStageAge}
             onChange={(event) => {
-              const age = parseFloat(event.target.value);
-              if (!isNaN(age) && age >= 0 && state.settings.timeSettings[units].topStageAge <= age) {
-                actions.setBaseStageKey("", units);
-                actions.setBaseStageAge(age, units);
-                actions.removeError(ErrorCodes.BASE_STAGE_AGE_INVALID);
-              } else {
-                actions.pushError(ErrorCodes.BASE_STAGE_AGE_INVALID);
-              }
+              actions.setBaseStageAge(parseFloat(event.target.value), units);
             }}
           />
         </FormControl>
