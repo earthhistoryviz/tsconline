@@ -1,4 +1,13 @@
-import {  EventType, FontsInfo, RGB, RangeSort, assertEventSettings, assertFontsInfo, assertRGB, throwError } from "./index.js";
+import {
+  EventType,
+  FontsInfo,
+  RGB,
+  RangeSort,
+  assertEventSettings,
+  assertFontsInfo,
+  assertRGB,
+  throwError
+} from "./index.js";
 
 export type ChartInfoTSC = {
   settings: ChartSettingsInfoTSC;
