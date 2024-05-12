@@ -75,6 +75,9 @@ export const Login: React.FC = observer(() => {
           case 409:
             errorCode = ErrorCodes.UNABLE_TO_LOGIN_EXISTING_USER;
             break;
+          case 423:
+            errorCode = ErrorCodes.UNABLE_TO_LOGIN_ACCOUNT_LOCKED;
+            break;
         }
         displayServerError(message, errorCode, ErrorMessages[errorCode]);
       }
@@ -138,7 +141,7 @@ export const Login: React.FC = observer(() => {
             </TSCButton>
             <Grid container className="grid-container">
               <Grid item xs>
-                <Link href="/account-recovery" sx={{ color: "black" }}>
+                <Link href="/reset-password" sx={{ color: "black" }}>
                   Forgot password?
                 </Link>
               </Grid>
