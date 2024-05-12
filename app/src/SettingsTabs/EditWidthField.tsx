@@ -11,18 +11,18 @@ const WidthTextField = ({ ...props }: TextFieldProps) => (
 );
 
 export const EditWidthField: React.FC<{
-  columnObject: ColumnInfo;
-}> = observer(({ columnObject }) => {
+  column: ColumnInfo;
+}> = observer(({ column }) => {
   const { actions } = useContext(context);
   return (
     <div>
       <Typography id="edit-width-text">Edit Width</Typography>
       <NumericFormat
-        value={columnObject.width || ""}
+        value={column.width || ""}
         customInput={WidthTextField}
         onValueChange={(values) => {
           const floatValue = values.floatValue;
-          actions.updateWidth(columnObject, floatValue ?? NaN);
+          actions.setWidth(floatValue ?? NaN, column);
         }}
       />
     </div>
