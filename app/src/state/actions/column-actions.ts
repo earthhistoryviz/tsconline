@@ -46,24 +46,15 @@ export const setEventColumnSettings = action((eventSettings: EventSettings, newS
   if (newSettings.rangeSort) eventSettings.rangeSort = newSettings.rangeSort;
 });
 
-export const updateEditName = action((newName: string) => {
-  if (state.settingsTabs.columnSelected === null) {
-    console.log("WARNING: tried to access state.settingsTabs.columnSelected, but is null");
-    return;
-  }
-  if (!state.settingsTabs.columnHashMap.has(state.settingsTabs.columnSelected)) {
-    console.log(
-      "WARNING: tried to access",
-      state.settingsTabs.columnSelected,
-      "in state.settingsTabs.columnHashMap, but map does not this key"
-    );
-  }
-  state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.editName = newName;
-  return;
+export const setColumnOn = action((isOn: boolean, column: ColumnInfo) => {
+  column.on = isOn;
+});
+export const setEditName = action((newName: string, column: ColumnInfo) => {
+  column.editName = newName;
 });
 
-export const updateWidth = action((columnObject: ColumnInfo, newWidth: number) => {
-  columnObject.width = newWidth;
+export const setWidth = action((newWidth: number, column: ColumnInfo) => {
+  column.width = newWidth;
 });
 
 export const setColumnSelected = action((name: string) => {
@@ -135,7 +126,7 @@ export const setEnableTitle = action((isOn: boolean, column: ColumnInfo) => {
   column.enableTitle = isOn;
 });
 
-export const setRGB = action((column: ColumnInfo, color: RGB) => {
+export const setRGB = action((color: RGB, column: ColumnInfo) => {
   column.rgb = color;
 });
 

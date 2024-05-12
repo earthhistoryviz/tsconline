@@ -13,7 +13,7 @@ interface ChangeBGColorProps {
 export const ChangeBackgroundColor: React.FC<ChangeBGColorProps> = observer(({ column }) => {
   const { actions } = useContext(context);
   const handleColorChange = (color: string) => {
-    actions.setRGB(column, convertHexToRGB(color, false));
+    actions.setRGB(convertHexToRGB(color, false), column);
   };
   return (
     <div>
