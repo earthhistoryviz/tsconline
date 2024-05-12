@@ -1,6 +1,67 @@
 import { action } from "mobx";
 import { state } from "../state";
-import { ColumnInfo, EventSettings, RGB, ValidFontOptions } from "@tsconline/shared";
+import {
+  ColumnInfo,
+  ColumnInfoTSC,
+  EventSettings,
+  RGB,
+  ValidFontOptions,
+  assertEventColumnInfoTSC,
+  assertEventSettings
+} from "@tsconline/shared";
+import { cloneDeep } from "lodash";
+import { pushSnackbar } from "./general-actions";
+
+function extractName(text: string): string {
+  return text.substring(text.indexOf(":") + 1, text.length);
+}
+function extractColumnType(text: string): string {
+  return text.substring(text.indexOf(".") + 1, text.indexOf(":"));
+}
+export const applyChartColumnSettings = action("applyChartColumnSettings", (settings: ColumnInfoTSC) => {
+  function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
+    setEditName(settings.title, column);
+    setEnableTitle(settings.drawTitle, column);
+    setShowUncertaintyLabels(settings.drawUncertaintyLabel, column);
+    setShowAgeLabels(settings.drawAgeLabel, column);
+    setColumnOn(settings.isSelected, column);
+    if (settings.width) setWidth(settings.width, column);
+    if (settings.backgroundColor.text) setRGB(settings.backgroundColor.text, column);
+    column.fontsInfo = cloneDeep(settings.fonts);
+    switch (extractColumnType(settings._id)) {
+      case "EventColumn":
+        assertEventColumnInfoTSC(settings);
+        assertEventSettings(column.columnSpecificSettings);
+        if (column.columnSpecificSettings)
+          setEventColumnSettings(column.columnSpecificSettings, { type: settings.type, rangeSort: settings.rangeSort });
+    }
+  }
+  const columnName = extractName(settings._id);
+  let curcol: ColumnInfo | undefined = state.settingsTabs.columnHashMap.get(columnName);
+  let blockSeriesColumns: boolean = false;
+  if (curcol === undefined) {
+    if (extractColumnType(settings._id) === "RootColumn") {
+      curcol = state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
+    }
+  }
+  if (curcol === undefined) {
+    pushSnackbar("Unknown column name '" + columnName + "' found while loading settings", "warning");
+    console.log("Unknown column name " + columnName + " found while loading settings");
+  } else setColumnProperties(curcol, settings);
+
+  if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
+    blockSeriesColumns = true;
+    for (let i = 0; i < settings.children.length; i++) {
+      curcol = state.settingsTabs.columnHashMap.get(columnName + " " + extractName(settings.children[i]._id));
+      if (curcol !== undefined) setColumnProperties(curcol, settings.children[i]);
+    }
+  }
+  if (blockSeriesColumns === false) {
+    for (let i = 0; i < settings.children.length; i++) {
+      applyChartColumnSettings(settings.children[i]);
+    }
+  }
+});
 
 export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
   state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
