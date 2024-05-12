@@ -3395,6 +3395,7 @@ const RAW_RUNTIME_STATE =
           ["sqlite3", "virtual:f400f1facecebc164f3b8826224462ee6165ba2a289af45d35511e5194135aec0e2b33199c69e89fd109ab94e6d817043a2c4cc1150135f9e3fe0bd583a0cf60#npm:5.1.7"],\
           ["svgson", "npm:5.3.1"],\
           ["tsc", "npm:2.0.4"],\
+          ["tsx", "npm:4.9.3"],\
           ["typescript", "patch:typescript@npm%3A5.2.2#optional!builtin<compat/typescript>::version=5.2.2&hash=f3b441"],\
           ["xlsx", "npm:0.18.5"]\
         ],\
@@ -7253,6 +7254,16 @@ const RAW_RUNTIME_STATE =
           ["call-bind", "npm:1.0.7"],\
           ["es-errors", "npm:1.3.0"],\
           ["get-intrinsic", "npm:1.2.4"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["get-tsconfig", [\
+      ["npm:4.7.4", {\
+        "packageLocation": "./.yarn/cache/get-tsconfig-npm-4.7.4-bea50a826d-cd403df998.zip/node_modules/get-tsconfig/",\
+        "packageDependencies": [\
+          ["get-tsconfig", "npm:4.7.4"],\
+          ["resolve-pkg-maps", "npm:1.0.0"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -11140,6 +11151,15 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["resolve-pkg-maps", [\
+      ["npm:1.0.0", {\
+        "packageLocation": "./.yarn/cache/resolve-pkg-maps-npm-1.0.0-135b70c854-0763150adf.zip/node_modules/resolve-pkg-maps/",\
+        "packageDependencies": [\
+          ["resolve-pkg-maps", "npm:1.0.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["resolve.exports", [\
       ["npm:2.0.2", {\
         "packageLocation": "./.yarn/cache/resolve.exports-npm-2.0.2-f59b42bbe5-f1cc0b6680.zip/node_modules/resolve.exports/",\
@@ -12457,6 +12477,18 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./.yarn/cache/tslib-npm-2.5.0-bb364efebd-ea556fbdf3.zip/node_modules/tslib/",\
         "packageDependencies": [\
           ["tslib", "npm:2.5.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["tsx", [\
+      ["npm:4.9.3", {\
+        "packageLocation": "./.yarn/cache/tsx-npm-4.9.3-5e97eda101-17ed7b748d.zip/node_modules/tsx/",\
+        "packageDependencies": [\
+          ["tsx", "npm:4.9.3"],\
+          ["esbuild", "npm:0.20.2"],\
+          ["fsevents", "patch:fsevents@npm%3A2.3.3#optional!builtin<compat/fsevents>::version=2.3.3&hash=df0bf1"],\
+          ["get-tsconfig", "npm:4.7.4"]\
         ],\
         "linkType": "HARD"\
       }]\

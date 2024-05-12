@@ -13,8 +13,10 @@ import { context } from "./state";
 import { About } from "./About";
 import { Login } from "./Login";
 import { SignUp } from "./SignUp";
-import { AccountRecovery } from "./AccountRecovery";
+import { ResetPassword } from "./ResetPassword";
 import { AccountVerify } from "./AccountVerify";
+import { AccountRecovery } from "./AccountRecovery";
+import { ResetEmail } from "./ResetEmail";
 import { TSCPopupDialog, TSCError, TSCSnackbar } from "./components";
 import { CssBaseline } from "@mui/material";
 
@@ -36,8 +38,10 @@ export default observer(function App() {
           <Route path="/about" element={<About />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/account-recovery" element={<AccountRecovery />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify" element={<AccountVerify />} />
+          <Route path="/reset-email" element={<ResetEmail />} />
+          <Route path="/account-recovery" element={<AccountRecovery />} />
         </Routes>
         {Array.from(state.errors.errorAlerts.entries()).map(([context, error], index) => (
           <TSCError

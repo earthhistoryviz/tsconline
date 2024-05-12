@@ -1,44 +1,79 @@
 import { Database, User, NewUser, UpdatedUser, Verification, NewVerification } from "./types.js";
 import BetterSqlite3 from "better-sqlite3";
 import { Kysely, SqliteDialect } from "kysely";
-import fs from "fs";
-
-export async function setupDb() {
-  try {
-    await fs.promises.mkdir("../server/db", { recursive: true });
-    await fs.promises.writeFile("../server/db/TSC.db", "");
-  } catch (err) {
-    const error = err as NodeJS.ErrnoException;
-    if (error.code !== "EEXIST") throw err;
-  }
-  await db.schema
-    .createTable("users")
-    .ifNotExists()
-    .addColumn("userId", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("username", "text", (col) => col.unique())
-    .addColumn("email", "text", (col) => col.unique())
-    .addColumn("hashedPassword", "text", (col) => col.unique())
-    .addColumn("uuid", "text", (col) => col.notNull().unique())
-    .addColumn("pictureUrl", "text", (col) => col.unique())
-    .addColumn("emailVerified", "integer", (col) => col.notNull().defaultTo(0))
-    .execute();
-
-  await db.schema
-    .createTable("verification")
-    .ifNotExists()
-    .addColumn("userId", "integer", (col) => col.notNull().unique())
-    .addColumn("token", "text", (col) => col.notNull().unique())
-    .addColumn("expiresAt", "datetime", (col) => col.notNull())
-    .addColumn("verifyOrReset", "text", (col) => col.notNull())
-    .execute();
-}
-
-setupDb();
+import { exec } from "child_process";
 
 export const db = new Kysely<Database>({
   dialect: new SqliteDialect({
-    database: new BetterSqlite3("../server/db/TSC.db")
+    database: new BetterSqlite3("db/TSC.db")
   })
+});
+
+/*
+If updating the database schema please update the schema details below.
+Database Schema Details (Post-Migration):
+
+- users Table:
+  - userId (integer): Primary key, auto-increment.
+  - username (text): Must be unique.
+  - email (text): Must be unique.
+  - hashedPassword (text): Must be unique, stores encrypted user passwords.
+  - uuid (text): Non-nullable, must be unique, used for identifying a user's datapack folder.
+  - pictureUrl (text): Must be unique, URL to the user's profile picture.
+  - emailVerified (integer): Non-nullable, default is 0, indicates if the user's email has been verified.
+  - invalidateSession (integer): Non-nullable, default is 0, flag for invalidating user sessions.
+
+- verification Table:
+  - id (integer): Primary key, auto-increment.
+  - userId (integer): Non-nullable, links to the users table.
+  - token (text): Non-nullable, must be unique, used for email verification or password reset.
+  - expiresAt (datetime): Non-nullable, the expiration date/time of the token. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
+  - reason (text): Non-nullable, describes the purpose of the token (e.g., 'email verification', 'password reset').
+
+Important Note on Schema Changes:
+To ensure data consistency and minimize manual interventions on the development server, you should not modify the schema commands below.
+For instance, if you need to add a new column like 'invalidateSession' to the 'users' table, you would typically modify the schema directly by adding this column. 
+However, these schema creation commands are designed to execute only if the tables do not yet exist, which prevents unnecessary overwriting of existing tables.
+Without migrations there would be two ways to update the schema on the server:
+1. Simply delete the database and allow the commands to run (losing all data). 
+2. Log into the server, export data, execute ALTER TABLE commands, and reinsert data. 
+This manual approach is prone to errors and time-consuming.
+Instead, we leverage a migration system through the 'migrate.ts' script, allowing for controlled and automated schema updates. 
+Another point is that altering these schema commands could break the migration system, as it depends on the schema commands to be immutable.
+*/
+
+await db.schema
+  .createTable("users")
+  .ifNotExists()
+  .addColumn("userId", "integer", (col) => col.primaryKey().autoIncrement())
+  .addColumn("username", "text", (col) => col.unique())
+  .addColumn("email", "text", (col) => col.unique())
+  .addColumn("hashedPassword", "text", (col) => col.unique())
+  .addColumn("uuid", "text", (col) => col.notNull().unique())
+  .addColumn("pictureUrl", "text", (col) => col.unique())
+  .addColumn("emailVerified", "integer", (col) => col.notNull().defaultTo(0))
+  .execute();
+
+await db.schema
+  .createTable("verification")
+  .ifNotExists()
+  .addColumn("userId", "integer", (col) => col.notNull().unique())
+  .addColumn("token", "text", (col) => col.notNull().unique())
+  .addColumn("expiresAt", "datetime", (col) => col.notNull())
+  .addColumn("verifyOrReset", "text", (col) => col.notNull())
+  .execute();
+
+await new Promise<void>((resolve, reject) => {
+  exec("cd db && yarn tsx migrate.ts up", (error, stdout, stderr) => {
+    if (error) {
+      console.error(`exec error: ${error}`);
+      reject(error);
+      throw new Error(`Migration failed: ${error}`);
+    }
+    if (stdout) console.log(stdout);
+    if (stderr) console.error(stderr);
+    resolve();
+  });
 });
 
 export async function createUser(newUser: NewUser) {
@@ -81,7 +116,7 @@ export async function findVerification(criteria: Partial<Verification>) {
   if (criteria.userId) query = query.where("userId", "=", criteria.userId);
   if (criteria.token) query = query.where("token", "=", criteria.token);
   if (criteria.expiresAt) query = query.where("expiresAt", "=", criteria.expiresAt);
-  if (criteria.verifyOrReset) query = query.where("verifyOrReset", "=", criteria.verifyOrReset);
+  if (criteria.reason) query = query.where("reason", "=", criteria.reason);
   return await query.selectAll().execute();
 }
 
@@ -90,15 +125,16 @@ export async function updateVerification(criteria: Partial<Verification>, update
   if (criteria.userId) query = query.where("userId", "=", criteria.userId);
   if (criteria.token) query = query.where("token", "=", criteria.token);
   if (criteria.expiresAt) query = query.where("expiresAt", "=", criteria.expiresAt);
-  if (criteria.verifyOrReset) query = query.where("verifyOrReset", "=", criteria.verifyOrReset);
+  if (criteria.reason) query = query.where("reason", "=", criteria.reason);
   return await query.set(updatedVerification).execute();
 }
 
 export async function deleteVerification(criteria: Partial<Verification>) {
   let query = db.deleteFrom("verification");
+  if (!criteria.reason) throw new Error("Must provide reason assigned to verification token");
+  query = query.where("reason", "=", criteria.reason);
   if (criteria.userId) query = query.where("userId", "=", criteria.userId);
   if (criteria.token) query = query.where("token", "=", criteria.token);
   if (criteria.expiresAt) query = query.where("expiresAt", "=", criteria.expiresAt);
-  if (criteria.verifyOrReset) query = query.where("verifyOrReset", "=", criteria.verifyOrReset);
   return await query.execute();
 }

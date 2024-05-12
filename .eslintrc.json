@@ -59,7 +59,8 @@
         },
         {
             "files": [
-                "main.tsx"
+                "main.tsx",
+                "server/db/migrations/*"
             ],
             "rules": {
                 "check-file/filename-naming-convention": "off"
