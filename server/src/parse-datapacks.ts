@@ -42,10 +42,21 @@ import {
   assertSubInfo,
   SubInfo,
   assertDatapackParsingPack,
-  defaultEventSettings
+  defaultEventSettings,
+  isPointShape,
+  assertPoint,
+  defaultPointSettings,
+  defaultPoint
 } from "@tsconline/shared";
-import { trimInvisibleCharacters, grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter } from "./util.js";
+import {
+  trimInvisibleCharacters,
+  grabFilepaths,
+  hasVisibleCharacters,
+  capitalizeFirstLetter,
+  setCommonProperties
+} from "./util.js";
 import { createInterface } from "readline";
+import _ from "lodash";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;
 const patternForAbundance = /^(TOP|missing|rare|common|frequent|abundant|sample|flood)$/;
@@ -440,10 +451,11 @@ export async function getColumnTypes(
     ...createDefaultColumnHeaderProps(),
     subSequenceInfo: []
   };
-  const point: Point = {
+  const point = {
     ...createDefaultColumnHeaderProps(),
-    subPointInfo: []
+    ..._.cloneDeep(defaultPoint)
   };
+  assertPoint(point);
   const range: Range = {
     ...createDefaultColumnHeaderProps(),
     subRangeInfo: []
@@ -626,6 +638,9 @@ export async function getColumnTypes(
       setColumnHeaders(point, tabSeparated);
       inPointBlock = true;
     } else if (inPointBlock) {
+      if (tabSeparated[0] && isPointShape(tabSeparated[0])) {
+        configureOptionalPointSettings(tabSeparated, point);
+      }
       const subPointInfo = processPoint(line);
       if (subPointInfo) {
         point.subPointInfo.push(subPointInfo);
@@ -835,12 +850,25 @@ function addSequenceToSequenceMap(sequence: Sequence, sequenceMap: Map<string, S
  * @param pointMap
  */
 function addPointToPointMap(point: Point, pointMap: Map<string, Point>) {
+  const margin = 0.1;
   for (const subPoint of point.subPointInfo) {
     point.minAge = Math.min(subPoint.age, point.minAge);
     point.maxAge = Math.max(subPoint.age, point.maxAge);
+    point.minX = Math.min(subPoint.xVal, point.minX);
+    point.maxX = Math.max(subPoint.xVal, point.maxX);
+  }
+  if (
+    point.lowerRange === 0 &&
+    point.upperRange === 0 &&
+    point.minX !== Number.MAX_VALUE &&
+    point.maxX !== Number.MIN_VALUE
+  ) {
+    const outerMargin = ((point.maxX - point.minX) * margin) / 2;
+    point.lowerRange = point.minX - outerMargin;
+    point.upperRange = point.maxX + outerMargin;
   }
   pointMap.set(point.name, JSON.parse(JSON.stringify(point)));
-  Object.assign(point, { ...createDefaultColumnHeaderProps(), subPointInfo: [] });
+  Object.assign(point, { ...createDefaultColumnHeaderProps(), ..._.cloneDeep(defaultPoint) });
 }
 
 /**
@@ -1429,12 +1457,37 @@ function recursive(
     returnValue.minAge = currentColumnInfo.minAge;
   }
   if (pointMap.has(currentColumn)) {
-    const { subPointInfo, ...currentPoint } = pointMap.get(currentColumn)!;
+    const {
+      subPointInfo,
+      drawLine,
+      drawFill,
+      fill,
+      lowerRange,
+      upperRange,
+      smoothed,
+      pointShape,
+      minX,
+      maxX,
+      ...currentPoint
+    } = pointMap.get(currentColumn)!;
+    const deconstructedPointSettings = {
+      subPointInfo,
+      drawLine,
+      drawFill,
+      fill,
+      lowerRange,
+      upperRange,
+      smoothed,
+      pointShape,
+      minX,
+      maxX
+    };
     Object.assign(currentColumnInfo, {
       ...currentPoint,
       fontOptions: getValidFontOptions("Point"),
       columnDisplayType: "Point",
-      subInfo: JSON.parse(JSON.stringify(subPointInfo))
+      subInfo: _.cloneDeep(subPointInfo),
+      columnSpecificSettings: setCommonProperties(_.cloneDeep(defaultPointSettings), deconstructedPointSettings)
     });
     returnValue.fontOptions = currentColumnInfo.fontOptions;
     returnValue.maxAge = currentColumnInfo.maxAge;
@@ -1802,4 +1855,36 @@ function processColumn<T extends ColumnInfoType>(
     loneColumns.push(createLoneColumn(columnHeaderProps, getValidFontOptions(type), units, subInfo, type));
   }
   return false;
+}
+function configureOptionalPointSettings(tabSeparated: string[], point: Point) {
+  if (tabSeparated.length < 1 || tabSeparated.length > 6) {
+    console.log(
+      "Error adding optional point configuration, line is not formatted correctly: " +
+        tabSeparated +
+        " with size " +
+        tabSeparated.length
+    );
+    return;
+  }
+  if (isPointShape(tabSeparated[0])) {
+    point.pointShape = tabSeparated[0];
+  } else {
+    // this is the only required parameter if this optional line exists
+    console.log("Error adding optional point configuration, point shape is not valid: " + tabSeparated[0]);
+    return;
+  }
+  if (tabSeparated[1] && /^(line|noline)$/.test(tabSeparated[1])) point.drawLine = tabSeparated[1] === "line";
+  if (tabSeparated[2] && patternForColor.test(tabSeparated[2])) {
+    const rgb = tabSeparated[2].split("/");
+    point.fill = {
+      r: Number(rgb[0]),
+      g: Number(rgb[1]),
+      b: Number(rgb[2])
+    };
+    point.drawFill = true;
+  }
+  if (tabSeparated[3] && !isNaN(Number(tabSeparated[3]))) point.lowerRange = Number(tabSeparated[3]);
+  if (tabSeparated[4] && !isNaN(Number(tabSeparated[4]))) point.upperRange = Number(tabSeparated[4]);
+  if (tabSeparated[5]) point.smoothed = tabSeparated[5] === "smoothed";
+  assertPoint(point);
 }

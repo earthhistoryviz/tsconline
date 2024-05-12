@@ -188,6 +188,9 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
     } catch (e) {
       if (response.status != 404) {
         displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
+      } else {
+        fetchDatapackIndex();
+        fetchMapPackIndex();
       }
     }
   } catch (e) {
