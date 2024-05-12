@@ -29,7 +29,7 @@ import {
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { fetcher } from "../../util";
-import { initializeColumnHashMap } from "./column-actions";
+import { applyChartColumnSettings, initializeColumnHashMap } from "./column-actions";
 import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
@@ -273,7 +273,7 @@ export const fetchTimescaleDataAction = action("fetchTimescaleData", async () =>
   }
 });
 
-const setChartSettings = action("setChartSettings", (settings: ChartSettingsInfoTSC) => {
+const applyChartSettings = action("applyChartSettings", (settings: ChartSettingsInfoTSC) => {
   const {
     topAge,
     baseAge,
@@ -425,13 +425,6 @@ export const setDatapackConfig = action(
       return false;
     }
     resetSettings();
-    //TODO: apply presets, temp code for applying just the chart settings
-    //check if chart settings is populated
-    if (chartSettings !== null) {
-      assertChartInfoTSC(chartSettings);
-      chartSettings = <ChartInfoTSC>chartSettings;
-      setChartSettings(chartSettings.settings);
-    }
     state.settings.datapackContainsSuggAge = foundDefaultAge;
     state.mapState.mapHierarchy = mapHierarchy;
     state.settingsTabs.columns = columnRoot;
@@ -442,6 +435,13 @@ export const setDatapackConfig = action(
       state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
     }
     initializeColumnHashMap(columnRoot);
+    if (chartSettings !== null) {
+      assertChartInfoTSC(chartSettings);
+      chartSettings = <ChartInfoTSC>chartSettings;
+      applyChartSettings(chartSettings.settings);
+      applyChartColumnSettings(chartSettings["class datastore.RootColumn:Chart Root"]);
+      //TODO: align row order
+    }
     return true;
   }
 );

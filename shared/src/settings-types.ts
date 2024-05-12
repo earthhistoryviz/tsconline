@@ -1,4 +1,4 @@
-import { FontsInfo, RGB, assertFontsInfo, assertRGB, throwError } from "./index.js";
+import {  EventType, FontsInfo, RGB, RangeSort, assertEventSettings, assertFontsInfo, assertRGB, throwError } from "./index.js";
 
 export type ChartInfoTSC = {
   settings: ChartSettingsInfoTSC;
@@ -72,8 +72,8 @@ export type ColumnBasicInfoTSC = {
 };
 
 export type EventColumnInfoTSC = ColumnBasicInfoTSC & {
-  type: string;
-  rangeSort: string;
+  type: EventType;
+  rangeSort: RangeSort;
 };
 
 export type ZoneColumnInfoTSC = ColumnBasicInfoTSC & {
@@ -187,8 +187,7 @@ export function assertZoneColumnInfoTSC(o: any): asserts o is ZoneColumnInfoTSC 
 }
 
 export function assertEventColumnInfoTSC(o: any): asserts o is EventColumnInfoTSC {
-  if (typeof o.type !== "string") throwError("EventColumnInfoTSC", "type", "string", o.type);
-  if (typeof o.rangeSort !== "string") throwError("EventColumnInfoTSC", "rangeSort", "string", o.type);
+  assertEventSettings(o);
   assertColumnBasicInfoTSC(o);
 }
 export function assertSequenceColumnInfoTSC(o: any): asserts o is SequenceColumnInfoTSC {
