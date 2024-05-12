@@ -11,7 +11,7 @@ import {
 } from "./database.js";
 import { compare, hash } from "bcrypt-ts";
 import { OAuth2Client } from "google-auth-library";
-import { Email, assertEmail, NewUser, NewVerification } from "./types.js";
+import { Email, assertEmail, NewUser, NewVerification, UpdatedUser } from "./types.js";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import md5 from "md5";
@@ -42,6 +42,178 @@ const sendEmail = async (email: Email) => {
   }
 };
 
+export const sessionCheck = async function sessionCheck(request: FastifyRequest, reply: FastifyReply) {
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.send({ authenticated: false });
+    return;
+  }
+  const user = (await findUser({ uuid }))[0];
+  if (!user || user.invalidateSession) {
+    reply.send({ authenticated: false });
+    return;
+  }
+  reply.send({ authenticated: true });
+};
+
+export const accountRecovery = async function accountRecovery(
+  request: FastifyRequest<{ Body: { token: string; email: string } }>,
+  reply: FastifyReply
+) {
+  const { token, email } = request.body;
+  if (!token || !email || emailTestRegex.test(email)) {
+    reply.status(400).send({ error: "No token or email" });
+    return;
+  }
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    reply.status(500).send({ error: "Email service not configured" });
+    return;
+  }
+  try {
+    const verificationRow = (await findVerification({ token }))[0];
+    if (!verificationRow || verificationRow.reason !== "invalidate") {
+      reply.status(404).send({ error: "Token not found" });
+      return;
+    }
+    if (new Date(verificationRow.expiresAt) < new Date()) {
+      await deleteVerification({ token, reason: "invalidate" });
+      reply.status(401).send({ error: "Token expired" });
+      return;
+    }
+    const { userId } = verificationRow;
+    const user = (await findUser({ userId }))[0];
+    if (!user) {
+      throw new Error("User not found");
+    }
+    const randomPassword = randomBytes(16).toString("hex");
+    const newEmail: Email = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Account Recovery",
+      text: `Your account credentials have been invalidated. To regain access, please reset your password by visiting ${process.env.APP_URL || "http://localhost:5173"}/forgot-password. If you did not request this change or need further assistance, please contact our support team.`
+    };
+    sendEmail(newEmail);
+    await updateUser(
+      { userId },
+      { email: email, emailVerified: 1, hashedPassword: await hash(randomPassword, 10), invalidateSession: 1 }
+    );
+    await deleteVerification({ userId, reason: "verify" });
+    await deleteVerification({ userId, reason: "invalidate" });
+    reply.send({ message: "Email sent" });
+  } catch (error) {
+    console.error("Error during invalidation:", error);
+    reply.status(500).send({ error: "Unknown Error" });
+  }
+};
+
+export const resetEmail = async function resetEmail(
+  request: FastifyRequest<{ Body: { newEmail: string } }>,
+  reply: FastifyReply
+) {
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "Not logged in" });
+    return;
+  }
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    reply.status(500).send({ error: "Email service not configured" });
+    return;
+  }
+  const { newEmail } = request.body;
+  if (!newEmail || !emailTestRegex.test(newEmail)) {
+    reply.status(400).send({ error: "Invalid form" });
+    return;
+  }
+  try {
+    const userRow = (await findUser({ uuid }))[0];
+    if (!userRow) {
+      throw new Error("User not found");
+    }
+    const { userId, hashedPassword, email } = userRow;
+    if (email === newEmail) {
+      const sameEmail: Email = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "Email Changed",
+        text: "You have requested to change your email to the same email. If you did not request this change, please change your password and contact support."
+      };
+      sendEmail(sameEmail);
+      reply.send({ message: "Email changed" });
+      return;
+    }
+    if (!hashedPassword) {
+      const randomPassword = randomBytes(16).toString("hex");
+      const token = randomBytes(16).toString("hex") + md5(uuid);
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 1);
+      const googleEmail: Email = {
+        from: process.env.EMAIL_USER,
+        to: newEmail,
+        subject: "Email Changed",
+        text: `You have requested to change your email. As your account is Google authenticated, no password or username is set. We have set a random password for you: ${randomPassword} and your username is your new email address. 
+        Please verify your new email address by clicking on the following link: ${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`
+      };
+      sendEmail(googleEmail);
+      const googleUser: UpdatedUser = {
+        username: newEmail,
+        email: newEmail,
+        hashedPassword: await hash(randomPassword, 10),
+        emailVerified: 0
+      };
+      await updateUser({ userId }, googleUser);
+      const newVerification: NewVerification = {
+        userId: userId,
+        token: token,
+        expiresAt: expiresAt.toISOString(),
+        reason: "verify"
+      };
+      await createVerification(newVerification);
+    } else {
+      await updateUser({ userId }, { email: newEmail, emailVerified: 0 });
+      const token = randomBytes(16).toString("hex") + md5(uuid);
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 1);
+      await deleteVerification({ userId: userId, reason: "verify" });
+      await deleteVerification({ userId: userId, reason: "password" });
+      const verifyEmail: Email = {
+        from: process.env.EMAIL_USER,
+        to: newEmail,
+        subject: "Email Changed",
+        text: `Please verify your new email by clicking on the following link: ${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`
+      };
+      sendEmail(verifyEmail);
+      const verifyVerification: NewVerification = {
+        userId: userId,
+        token: token,
+        expiresAt: expiresAt.toISOString(),
+        reason: "verify"
+      };
+      await createVerification(verifyVerification);
+    }
+    const token = randomBytes(16).toString("hex") + md5(uuid);
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+    const invalidateEmail: Email = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Email Changed",
+      text: `Your email has been changed. If you did not request this change, please click on the following link to reset your email and password: ${process.env.APP_URL || "http://localhost:5173"}/account-recovery?token=${token}&email=${email}. This link will expire in 24 hours. If your link has expired, please contact support.`
+    };
+    sendEmail(invalidateEmail);
+    const invalidateVerification: NewVerification = {
+      userId: userId,
+      token: token,
+      expiresAt: expiresAt.toISOString(),
+      reason: "invalidate"
+    };
+    await createVerification(invalidateVerification);
+    reply.send({ message: "Email changed" });
+  } catch (error) {
+    console.error("Error during reset:", error);
+    reply.status(500).send({ error: "Unknown Error" });
+  }
+};
+
 export const resetPassword = async function resetPassword(
   request: FastifyRequest<{ Body: { token: string; password: string } }>,
   reply: FastifyReply
@@ -53,20 +225,20 @@ export const resetPassword = async function resetPassword(
   }
   try {
     const verificationRow = (await findVerification({ token }))[0];
-    if (!verificationRow) {
+    if (!verificationRow || verificationRow.reason !== "password") {
       reply.status(404).send({ error: "Password reset token not found" });
       return;
     }
-    const { userId, expiresAt, verifyOrReset } = verificationRow;
+    const { userId, expiresAt, reason } = verificationRow;
     const expiresAtDate = new Date(expiresAt);
-    if (expiresAtDate < new Date() || verifyOrReset !== "reset") {
-      await deleteVerification({ token });
+    if (expiresAtDate < new Date() || reason !== "password") {
+      await deleteVerification({ token, reason: "password" });
       reply.status(401).send({ error: "Password reset token expired or invalid" });
       return;
     }
     const hashedPassword = await hash(password, 10);
-    await updateUser({ userId }, { hashedPassword });
-    await deleteVerification({ token });
+    await updateUser({ userId }, { hashedPassword, invalidateSession: 0 });
+    await deleteVerification({ token, reason: "password" });
     const userRow = (await findUser({ userId }))[0];
     if (!userRow) {
       throw new Error("User not found");
@@ -109,15 +281,15 @@ export const sendResetPasswordEmail = async function sendResetPasswordEmail(
         "You have requested a password reset but there is no password set for this account. Please sign in with Google.";
     } else {
       const token = randomBytes(16).toString("hex") + md5(uuid);
-      emailText = `Click on the following link to reset your password: ${process.env.APP_URL || "http://localhost:5173"}/account-recovery?token=${token}`;
+      emailText = `Click on the following link to reset your password: ${process.env.APP_URL || "http://localhost:5173"}/reset-password?token=${token}`;
       const expiresAt = new Date();
       expiresAt.setMinutes(expiresAt.getMinutes() + 15);
-      await deleteVerification({ userId: userId, verifyOrReset: "reset" });
+      await deleteVerification({ userId, reason: "password" });
       const verfication: NewVerification = {
         userId: userId,
         token: token,
         expiresAt: expiresAt.toISOString(),
-        verifyOrReset: "reset"
+        reason: "password"
       };
       await createVerification(verfication);
     }
@@ -163,14 +335,14 @@ export const resendVerificationEmail = async function resendVerificationEmail(
     } else {
       token = randomBytes(16).toString("hex") + md5(uuid);
       emailText = `Welcome to TSC Online! Please verify your email by clicking on the following link: ${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`;
-      await deleteVerification({ userId: userId });
+      await deleteVerification({ userId, reason: "verify" });
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 1);
       const verification: NewVerification = {
         userId: userId,
         token: token,
         expiresAt: expiresAt.toISOString(),
-        verifyOrReset: "verify"
+        reason: "verify"
       };
       await createVerification(verification);
     }
@@ -199,7 +371,7 @@ export const verifyEmail = async function verifyEmail(
       reply.status(404).send({ error: "Verification token not found" });
       return;
     }
-    const { expiresAt, verifyOrReset, userId } = verificationRow;
+    const { expiresAt, reason, userId } = verificationRow;
     const userRow = (await findUser({ userId }))[0];
     if (!userRow) {
       reply.status(404).send({ error: "User not found" });
@@ -211,8 +383,8 @@ export const verifyEmail = async function verifyEmail(
       return;
     }
     const expiresAtDate = new Date(expiresAt);
-    if (expiresAtDate < new Date() || verifyOrReset !== "verify") {
-      await deleteVerification({ token });
+    if (expiresAtDate < new Date() || reason !== "verify") {
+      await deleteVerification({ token, reason: "verify" });
       reply.status(401).send({ error: "Verification token expired or invalid" });
       return;
     }
@@ -255,7 +427,8 @@ export const signup = async function signup(
       hashedPassword: hashedPassword,
       uuid: randomUUID(),
       pictureUrl: null,
-      emailVerified: 0
+      emailVerified: 0,
+      invalidateSession: 0
     };
     await createUser(newUser);
     const insertedUser = (await findUser({ email }))[0];
@@ -276,7 +449,7 @@ export const signup = async function signup(
       userId: userId,
       token: token,
       expiresAt: expiresAt.toISOString(),
-      verifyOrReset: "verify"
+      reason: "verify"
     };
     await createVerification(newVerification);
     sendEmail(authEmail);
@@ -302,10 +475,14 @@ export const login = async function login(
       reply.status(401).send({ error: "Incorrect username or password" });
       return;
     }
-    const { uuid, hashedPassword, emailVerified } = userRow;
+    const { uuid, hashedPassword, emailVerified, invalidateSession } = userRow;
     if (hashedPassword && (await compare(password, hashedPassword))) {
       if (!emailVerified) {
         reply.status(403).send({ error: "Email not verified" });
+        return;
+      }
+      if (invalidateSession) {
+        reply.status(423).send({ error: "Account locked" });
         return;
       }
       request.session.set("uuid", uuid);
@@ -352,7 +529,8 @@ export const googleLogin = async function googleLogin(
       hashedPassword: null,
       uuid: uuid,
       pictureUrl: payload.picture,
-      emailVerified: 1
+      emailVerified: 1,
+      invalidateSession: 0
     };
     await createUser(user);
     request.session.set("uuid", uuid);
