@@ -53,7 +53,8 @@ import {
   grabFilepaths,
   hasVisibleCharacters,
   capitalizeFirstLetter,
-  setCommonProperties
+  setCommonProperties,
+  trimQuotes
 } from "./util.js";
 import { createInterface } from "readline";
 import _ from "lodash";
@@ -1287,6 +1288,15 @@ export function processFacies(line: string): SubFaciesInfo | null {
   }
   return subFaciesInfo;
 }
+
+function formatColumnName(text: string): string {
+  text = trimQuotes(text.trim());
+  return text
+    .replace(/^"(.*)"$/, "$1")
+    .replace(/""/g, '"')
+    .replace(/(\d),(\d)/g, "$1.$2");
+}
+
 /**
  * This is a recursive function meant to instantiate all columns.
  * Datapack is encrypted as <parent>\t:\t<child>\t<child>\t<child>
@@ -1321,6 +1331,7 @@ function recursive(
   blankMap: Map<string, ColumnHeaderProps>,
   units: string
 ): FaciesFoundAndAgeRange {
+  currentColumn = formatColumnName(currentColumn);
   const currentColumnInfo: ColumnInfo = {
     name: trimInvisibleCharacters(currentColumn),
     editName: trimInvisibleCharacters(currentColumn),
