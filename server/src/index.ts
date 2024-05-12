@@ -16,6 +16,7 @@ import fastifyMultipart from "@fastify/multipart";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import fastifySecureSession from "@fastify/secure-session";
 import dotenv from "dotenv";
+import { db } from "./database.js";
 
 const server = fastify({
   logger: false,
@@ -178,13 +179,7 @@ server.post("/auth/login", loginRoutes.login);
 
 server.post("/auth/signup", loginRoutes.signup);
 
-server.post("/auth/session-check", async (request, reply) => {
-  if (request.session.get("uuid")) {
-    reply.send({ authenticated: true });
-  } else {
-    reply.send({ authenticated: false });
-  }
-});
+server.post("/auth/session-check", loginRoutes.sessionCheck);
 
 server.post("/auth/logout", async (request, reply) => {
   request.session.delete();
@@ -195,9 +190,13 @@ server.post("/auth/verify", loginRoutes.verifyEmail);
 
 server.post("/auth/resend", loginRoutes.resendVerificationEmail);
 
-server.post("/auth/send-reset-email", loginRoutes.sendResetPasswordEmail);
+server.post("/auth/send-resetpassword-email", loginRoutes.sendResetPasswordEmail);
 
 server.post("/auth/reset-password", loginRoutes.resetPassword);
+
+server.post("/auth/reset-email", loginRoutes.resetEmail);
+
+server.post("/auth/account-recovery", loginRoutes.accountRecovery);
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
@@ -217,6 +216,12 @@ server.get<{ Params: { datapackName: string; imageName: string } }>(
 setInterval(() => {
   checkFileMetadata(assetconfigs.fileMetadata);
 }, sunsetInterval);
+setInterval(
+  () => {
+    db.deleteFrom("verification").where("expiresAt", "<", new Date().toISOString()).execute();
+  },
+  1000 * 60 * 60 * 24 * 7
+); // 1 week
 // Start the server...
 try {
   await server.listen({
