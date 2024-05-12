@@ -72,7 +72,7 @@ export const accountRecovery = async function accountRecovery(
       buttonText: "Reset Password",
       action: "Account Recovery"
     };
-    sendEmail(newEmail);
+    await sendEmail(newEmail);
     await updateUser(
       { userId },
       { email: email, emailVerified: 1, hashedPassword: await hash(randomPassword, 10), invalidateSession: 1 }
@@ -120,7 +120,7 @@ export const resetEmail = async function resetEmail(
         message: `We noticed an attempt to change your email address to the same one currently in use. If you did not initiate this change, it's important to secure your account immediately. Please review your account settings and update your password. Contact our support team if you need assistance.`,
         action: "an Email Change"
       };
-      sendEmail(sameEmail);
+      await sendEmail(sameEmail);
       reply.send({ message: "Email changed" });
       return;
     }
@@ -137,12 +137,12 @@ export const resetEmail = async function resetEmail(
         title: "Email Update Confirmation",
         message: `Your account email has been successfully updated. Since your account is authenticated via Google, no password or username is set by default. We have generated a temporary password for you, and your username is now your new email address.<br/><br/>
                   Temporary Password: <strong>${randomPassword}</strong><br/>
-                  Please verify your new email address to complete the update process.`,
+                  Please verify your new email address to complete the update process. The link will expire in 1 hour for security reasons. If your link has expired, you can request a new one by signing in. If you did not request this change, please contact our support team immediately.`,
         link: `${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`,
         buttonText: "Verify Email",
         action: "Verify Email"
       };
-      sendEmail(googleEmail);
+      await sendEmail(googleEmail);
       const googleUser: UpdatedUser = {
         username: newEmail,
         email: newEmail,
@@ -175,7 +175,7 @@ export const resetEmail = async function resetEmail(
         buttonText: "Verify Email",
         action: "Email Verification"
       };
-      sendEmail(verifyEmail);
+      await sendEmail(verifyEmail);
       const verifyVerification: NewVerification = {
         userId: userId,
         token: token,
@@ -199,7 +199,7 @@ export const resetEmail = async function resetEmail(
       buttonText: "Reset Email and Password",
       action: "Account Recovery"
     };
-    sendEmail(invalidateEmail);
+    await sendEmail(invalidateEmail);
     const invalidateVerification: NewVerification = {
       userId: userId,
       token: token,
@@ -308,8 +308,7 @@ export const sendResetPasswordEmail = async function sendResetPasswordEmail(
       buttonText: hashedPassword ? "Reset Password" : undefined,
       action: "Password Reset"
     };
-
-    sendEmail(authEmail);
+    await sendEmail(authEmail);
     reply.send({ message: "Email sent" });
   } catch (error) {
     console.error("Error during reset:", error);
@@ -339,7 +338,6 @@ export const resendVerificationEmail = async function resendVerificationEmail(
     let emailText = "";
     let token = "";
     const { userId, emailVerified, uuid } = userRow;
-
     if (emailVerified) {
       emailText =
         "Welcome back to TSC Online! It looks like your email has already been verified. If you did not request this email or suspect any unusual activity, please contact our support team.";
@@ -357,7 +355,6 @@ export const resendVerificationEmail = async function resendVerificationEmail(
       };
       await createVerification(verification);
     }
-
     const authEmail: Email = {
       from: process.env.EMAIL_USER,
       to: email,
@@ -369,8 +366,7 @@ export const resendVerificationEmail = async function resendVerificationEmail(
       buttonText: emailVerified ? undefined : "Verify Your Email Now",
       action: "Email Verification"
     };
-
-    sendEmail(authEmail);
+    await sendEmail(authEmail);
     reply.send({ message: "Email sent" });
   } catch (error) {
     console.error("Error during resend:", error);
@@ -475,7 +471,7 @@ export const signup = async function signup(
       reason: "verify"
     };
     await createVerification(newVerification);
-    sendEmail(authEmail);
+    await sendEmail(authEmail);
     reply.send({ message: "Email sent" });
   } catch (error) {
     console.error("Error during signup:", error);
