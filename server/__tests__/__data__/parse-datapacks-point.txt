@@ -6,6 +6,6 @@ nopoints	line		0	230	smoothed
 	8	60
 
 Point 2	point				off	Point 2 Popup
-nopoints	line		0	10	smoothed
+cross	noline	1/2/3			
 	1	9.5	Popup 1
 	1000	9	Popup 2
