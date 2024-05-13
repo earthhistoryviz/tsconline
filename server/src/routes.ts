@@ -64,12 +64,12 @@ export const requestDownload = async function requestDownload(
   request: FastifyRequest<{ Params: { filename: string }; Querystring: { needEncryption: boolean } }>,
   reply: FastifyReply
 ) {
-  /*const uuid = request.session.get("uuid");
+  const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
-  }*/
-  const uuid = "username";
+  }
+  //for test usage: const uuid = "username";
   const { needEncryption } = request.query;
   const { filename } = request.params;
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
@@ -215,12 +215,12 @@ export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
 };
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
-  /*const uuid = request.session.get("uuid");
+  const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
-  }*/
-  const uuid = "username";
+  }
+  //for test usage: const uuid = "username";
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
   try {
     await access(userDir);
@@ -248,12 +248,12 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
 
 // If at some point a delete datapack function is needed, this function needs to be modified for race conditions
 export const uploadDatapack = async function uploadDatapack(request: FastifyRequest, reply: FastifyReply) {
-  /* const uuid = request.session.get("uuid");
-   if (!uuid) {
-     reply.status(401).send({ error: "User not logged in" });
-     return;
-   }*/
-  const uuid = "username";
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  }
+  //for test usage: const uuid = "username";
   const file = await request.file();
   if (!file) {
     reply.status(404).send({ error: "No file uploaded" });
