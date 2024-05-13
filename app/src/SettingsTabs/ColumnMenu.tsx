@@ -11,6 +11,7 @@ import { TSCCheckbox } from "../components";
 import { InfoBox } from "./InfoBox";
 import { EditWidthField } from "./EditWidthField";
 import { EventSpecificSettings } from "./EventSpecificSettings";
+import { PointSettingsPopup } from "./PointSettingsPopup";
 import { EditNameField } from "./EditNameField";
 
 export const ColumnMenu = observer(() => {
@@ -63,6 +64,7 @@ export const ColumnMenu = observer(() => {
             )}
             <EventSpecificSettings column={column} />
             {!!column.popup && <InfoBox info={column.popup} />}
+            <PointSettingsPopup column={column} />
           </>
         )}
       </div>
