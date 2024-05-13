@@ -13,7 +13,7 @@ import {
   assertMapPackIndex,
   assertTimescale
 } from "@tsconline/shared";
-import { deleteDirectory, resetUploadDirectory } from "./util.js";
+import { deleteDirectory, resetUploadDirectory, checkHeader } from "./util.js";
 import { mkdirp } from "mkdirp";
 import md5 from "md5";
 import { assetconfigs } from "./index.js";
@@ -64,12 +64,12 @@ export const requestDownload = async function requestDownload(
   request: FastifyRequest<{ Params: { filename: string }; Querystring: { needEncryption: boolean } }>,
   reply: FastifyReply
 ) {
-  const uuid = request.session.get("uuid");
+  /*const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
-  }
-  //for test usage: const uuid = "username";
+  }*/
+  const uuid = "username";
   const { needEncryption } = request.query;
   const { filename } = request.params;
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
@@ -77,36 +77,32 @@ export const requestDownload = async function requestDownload(
   const filepath = path.join(datapackDir, filename);
   const encryptedFilepathDir = path.join(userDir, "encrypted-datapacks");
   const maybeEncryptedFilepath = path.join(encryptedFilepathDir, filename);
-  try {
-    await access(maybeEncryptedFilepath);
-    const file = await readFile(maybeEncryptedFilepath);
-    const fileContent = file.toString();
-    const lines = fileContent.split("\n");
-
-    if (lines[0] && lines[0].includes("TSCreator Encrypted Datafile")) {
-      reply.send(file);
-      return;
-    } else {
-      await rm(maybeEncryptedFilepath, { force: true });
-    }
-  } catch (e) {
-    const error = e as NodeJS.ErrnoException;
-    if (error.code !== "ENOENT") {
-      reply.status(500).send({ error: "An error occurred" });
-      return;
-    }
-  }
-
-  let downloadPath = filepath;
-
-  if (needEncryption) {
+  if (needEncryption === undefined) {
+    await access(filepath);
+    const file = await readFile(filepath);
+    reply.send(file);
+    return;
+  } else if (needEncryption) {
     try {
-      await access(downloadPath);
-      const file = await readFile(downloadPath);
-      const fileContent = file.toString();
-      const lines = fileContent.split("\n");
-
-      if (lines[0] && lines[0].includes("TSCreator Encrypted Datafile")) {
+      await access(maybeEncryptedFilepath);
+      const file = await readFile(maybeEncryptedFilepath);
+      if (await checkHeader(maybeEncryptedFilepath)) {
+        reply.send(file);
+        return;
+      } else {
+        await rm(maybeEncryptedFilepath, { force: true });
+      }
+    } catch (e) {
+      const error = e as NodeJS.ErrnoException;
+      if (error.code !== "ENOENT") {
+        reply.status(500).send({ error: "An error occurred: " + e });
+        return;
+      }
+    }
+    try {
+      await access(filepath);
+      const file = await readFile(filepath);
+      if (await checkHeader(filepath)) {
         reply.send(file);
         return;
       }
@@ -115,7 +111,7 @@ export const requestDownload = async function requestDownload(
       if (error.code === "ENOENT") {
         reply.status(404).send({ error: "File not found" });
       } else {
-        reply.status(500).send({ error: "An error occurred" });
+        reply.status(500).send({ error: "An error occurred: " + e });
       }
       return;
     }
@@ -157,36 +153,31 @@ export const requestDownload = async function requestDownload(
       reply.status(500).send({ error: "Failed to encrypt datapacks with error " + e });
       return;
     }
-    downloadPath = path.join(encryptedFilepathDir, filename);
-  }
-  try {
-    await access(downloadPath);
-    const file = await readFile(downloadPath);
-    if (!needEncryption) {
-      reply.send(file);
-      return;
-    }
-    const fileContent = file.toString();
-    const lines = fileContent.split("\n");
+    const downloadPath = path.join(encryptedFilepathDir, filename);
+    try {
+      await access(downloadPath);
+      const file = await readFile(downloadPath);
 
-    if (lines[0] && lines[0].includes("TSCreator Encrypted Datafile")) {
-      reply.send(file);
-      return;
-    } else {
-      await rm(downloadPath, { force: true });
-      const errormsg =
-        "Java file was unable to encrypt the file" + filename + ", resulting in an incorrect encryption header.";
-      reply.status(422).send({
-        error: errormsg
-      });
-      return;
-    }
-  } catch (e) {
-    const error = e as NodeJS.ErrnoException;
-    if (error.code === "ENOENT") {
-      reply.status(404).send({ error: "File not found" });
-    } else {
-      reply.status(500).send({ error: "An error occurred" });
+      if (await checkHeader(downloadPath)) {
+        reply.send(file);
+        return;
+      } else {
+        await rm(downloadPath, { force: true });
+        const errormsg =
+          "Java file was unable to encrypt the file " + filename + ", resulting in an incorrect encryption header.";
+        reply.status(422).send({
+          error: errormsg
+        });
+        return;
+      }
+    } catch (e) {
+      const error = e as NodeJS.ErrnoException;
+      if (error.code === "ENOENT") {
+        const errormsg = "The file requested " + filename + " does not exist within user's upload directory";
+        reply.status(404).send({ error: errormsg });
+      } else {
+        reply.status(500).send({ error: "An error occurred: " + e });
+      }
     }
   }
 };
@@ -224,12 +215,12 @@ export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
 };
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
-  const uuid = request.session.get("uuid");
+  /*const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
-  }
-  //for test usage: const uuid = "username";
+  }*/
+  const uuid = "username";
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
   try {
     await access(userDir);
@@ -257,12 +248,12 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
 
 // If at some point a delete datapack function is needed, this function needs to be modified for race conditions
 export const uploadDatapack = async function uploadDatapack(request: FastifyRequest, reply: FastifyReply) {
-  const uuid = request.session.get("uuid");
-  if (!uuid) {
-    reply.status(401).send({ error: "User not logged in" });
-    return;
-  }
-  //for test usage:const uuid = "username";
+  /* const uuid = request.session.get("uuid");
+   if (!uuid) {
+     reply.status(401).send({ error: "User not logged in" });
+     return;
+   }*/
+  const uuid = "username";
   const file = await request.file();
   if (!file) {
     reply.status(404).send({ error: "No file uploaded" });

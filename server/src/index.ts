@@ -138,10 +138,10 @@ server.get("/presets", async (_request, reply) => {
   reply.send(presets);
 });
 // uploads datapack
-server.post<{ Params: { username: string } }>("/upload", routes.uploadDatapack);
+server.post("/upload", routes.uploadDatapack);
 //download datapack
 server.get<{ Params: { filename: string }; Querystring: { needEncryption: boolean } }>(
-  "/requestDownload/:filename",
+  "/download/user-datapacks/:filename",
   routes.requestDownload
 );
 
