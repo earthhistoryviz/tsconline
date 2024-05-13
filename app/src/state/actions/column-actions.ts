@@ -11,6 +11,7 @@ import {
 } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { pushSnackbar } from "./general-actions";
+import { snackbarTextLengthLimit } from "../../util/constant";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -37,26 +38,21 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
     }
   }
   const columnName = extractName(settings._id);
-  let curcol: ColumnInfo | undefined = state.settingsTabs.columnHashMap.get(columnName);
-  let blockSeriesColumns: boolean = false;
+  let curcol: ColumnInfo | undefined =
+    state.settingsTabs.columnHashMap.get(columnName) ||
+    state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
   if (curcol === undefined) {
-    if (extractColumnType(settings._id) === "RootColumn") {
-      curcol = state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
-    }
-  }
-  if (curcol === undefined) {
-    pushSnackbar("Unknown column name '" + columnName + "' found while loading settings", "warning");
-    console.log("Unknown column name " + columnName + " found while loading settings");
+    pushSnackbar(
+      "Unknown column name '" + columnName.substring(0, snackbarTextLengthLimit) + "' found while loading settings",
+      "warning"
+    );
   } else setColumnProperties(curcol, settings);
-
   if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
-    blockSeriesColumns = true;
     for (let i = 0; i < settings.children.length; i++) {
       curcol = state.settingsTabs.columnHashMap.get(columnName + " " + extractName(settings.children[i]._id));
       if (curcol !== undefined) setColumnProperties(curcol, settings.children[i]);
     }
-  }
-  if (blockSeriesColumns === false) {
+  } else {
     for (let i = 0; i < settings.children.length; i++) {
       applyChartColumnSettings(settings.children[i]);
     }
