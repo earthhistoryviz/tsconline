@@ -298,9 +298,9 @@ function formatAllColumnNames(o: ColumnInfo) {
 
 function formatColumnName(text: string): string {
   return trimQuotes(text.trim())
-  .replace(/^"(.*)"$/, '$1')
-  .replace(/""/g, '"')
-  .replace(/(\d),/g, '$1.');
+    .replace(/^"(.*)"$/, "$1")
+    .replace(/""/g, '"')
+    .replace(/(\d),/g, "$1.");
   // text = trimInvisibleCharacters(text);
   // text = trimQuotes(text);
   // text = text.replaceAll('""', '"');
@@ -313,8 +313,6 @@ function formatColumnName(text: string): string {
   // }
   // return text;
 }
-
-
 
 /**
  * @Paolo I chose to implement this way to avoid creating crazy conditionals in the many ways we create columns since we have
@@ -1317,7 +1315,6 @@ export function processFacies(line: string): SubFaciesInfo | null {
   return subFaciesInfo;
 }
 
-
 /**
  * This is a recursive function meant to instantiate all columns.
  * Datapack is encrypted as <parent>\t:\t<child>\t<child>\t<child>
@@ -1352,7 +1349,6 @@ function recursive(
   blankMap: Map<string, ColumnHeaderProps>,
   units: string
 ): FaciesFoundAndAgeRange {
-
   const currentColumnInfo: ColumnInfo = {
     name: trimInvisibleCharacters(currentColumn),
     editName: trimInvisibleCharacters(currentColumn),

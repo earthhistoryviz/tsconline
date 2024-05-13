@@ -36,6 +36,7 @@ import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { SettingsTabs, equalChartSettings, equalConfig } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
+import { snackbarTextLengthLimit } from "../../util/constant";
 
 const increment = 1;
 
@@ -655,7 +656,7 @@ export const removeSnackbar = action("removeSnackbar", (text: string) => {
   state.snackbars = state.snackbars.filter((info) => info.snackbarText !== text);
 });
 export const pushSnackbar = action("pushSnackbar", (text: string, severity: "success" | "info" | "warning") => {
-  if (text.length > 70) {
+  if (text.length > snackbarTextLengthLimit) {
     console.error("The length of snackbar text must be less than 70");
     return;
   }
