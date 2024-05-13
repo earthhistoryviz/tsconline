@@ -45,7 +45,7 @@ export const Datapacks = observer(function Datapacks() {
     );
   };
   async function getFileURL(needEncryption: boolean, fileName: string) {
-    const fileBlob = await actions.requestDownload(needEncryption, fileName);
+    const fileBlob = await actions.requestDownload(fileName, needEncryption);
     try {
       const reader = new FileReader();
       reader.readAsDataURL(fileBlob);

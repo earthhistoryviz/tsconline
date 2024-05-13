@@ -689,8 +689,14 @@ export const fetchImage = action("fetchImage", async (datapackName: string, imag
   return image;
 });
 
-export const requestDownload = action(async (needEncryption: boolean, filename: string) => {
-  const response = await fetcher(`/requestDownload/${filename}?needEncryption=${needEncryption}`, {
+export const requestDownload = action(async (filename: string, needEncryption: boolean) => {
+  let route;
+  if (!needEncryption) {
+    route = `/download/user-datapacks/${filename}`;
+  } else {
+    route = `/download/user-datapacks/${filename}?needEncryption=${needEncryption}`;
+  }
+  const response = await fetcher(route, {
     method: "GET"
   });
   if (!response.ok) {
