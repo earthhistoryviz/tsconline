@@ -26,6 +26,7 @@ import { loadIndexes } from "./load-packs.js";
 import { updateFileMetadata, writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
+import { rm } from "fs/promises";
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
@@ -60,7 +61,7 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
 };
 
 export const requestDownload = async function requestDownload(
-  request: FastifyRequest<{ Params: { needEncryption: string; filename: string } }>,
+  request: FastifyRequest<{ Params: { filename: string }; Querystring: { needEncryption: boolean } }>,
   reply: FastifyReply
 ) {
   const uuid = request.session.get("uuid");
@@ -68,23 +69,37 @@ export const requestDownload = async function requestDownload(
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
-  //For test usage: const uuid = "username";
-  const { needEncryption } = request.params;
+  //for test usage: const uuid = "username";
+  const { needEncryption } = request.query;
   const { filename } = request.params;
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
   const datapackDir = path.join(userDir, "datapacks");
   const filepath = path.join(datapackDir, filename);
-  const encryptedFilepathDir = path.join(datapackDir, "encrypted");
-  const checkIfAlreadyEncrypted = path.join(encryptedFilepathDir.replaceAll("\\", "/"), filename);
-  if (fs.existsSync(checkIfAlreadyEncrypted)) {
-    const file = fs.readFileSync(checkIfAlreadyEncrypted);
-    reply.send(file);
-    console.log("file is encrpted when uploaded");
-    return;
-  }
-  let downloadPath = filepath.replaceAll("\\", "/");
+  const encryptedFilepathDir = path.join(userDir, "encrypted-datapacks");
+  const maybeEncryptedFilepath = path.join(encryptedFilepathDir, filename);
+  try {
+    await access(maybeEncryptedFilepath);
+    const file = await readFile(maybeEncryptedFilepath);
+    const fileContent = file.toString();
+    const lines = fileContent.split("\n");
 
-  if (needEncryption === "true") {
+    if (lines[0] && lines[0].includes("TSCreator Encrypted Datafile")) {
+      reply.send(file);
+      return;
+    } else {
+      await rm(maybeEncryptedFilepath, { force: true });
+    }
+  } catch (e) {
+    const error = e as NodeJS.ErrnoException;
+    if (error.code !== "ENOENT") {
+      reply.status(500).send({ error: "An error occurred" });
+      return;
+    }
+  }
+
+  let downloadPath = filepath;
+
+  if (needEncryption) {
     try {
       await access(downloadPath);
       const file = await readFile(downloadPath);
@@ -93,7 +108,6 @@ export const requestDownload = async function requestDownload(
 
       if (lines[0] && lines[0].includes("TSCreator Encrypted Datafile")) {
         reply.send(file);
-        console.log("file is already encrpted before");
         return;
       }
     } catch (e) {
@@ -105,7 +119,15 @@ export const requestDownload = async function requestDownload(
       }
       return;
     }
-    await mkdirp(encryptedFilepathDir);
+
+    try {
+      await mkdirp(encryptedFilepathDir);
+    } catch (e) {
+      console.error(e);
+      reply.status(500).send({ error: "Failed to create encrypted directory with error " + e });
+      return;
+    }
+
     try {
       await new Promise<void>((resolve) => {
         const cmd =
@@ -135,12 +157,30 @@ export const requestDownload = async function requestDownload(
       reply.status(500).send({ error: "Failed to encrypt datapacks with error " + e });
       return;
     }
-    downloadPath = path.join(encryptedFilepathDir.replaceAll("\\", "/"), filename);
+    downloadPath = path.join(encryptedFilepathDir, filename);
   }
   try {
     await access(downloadPath);
     const file = await readFile(downloadPath);
-    reply.send(file);
+    if (!needEncryption) {
+      reply.send(file);
+      return;
+    }
+    const fileContent = file.toString();
+    const lines = fileContent.split("\n");
+
+    if (lines[0] && lines[0].includes("TSCreator Encrypted Datafile")) {
+      reply.send(file);
+      return;
+    } else {
+      await rm(downloadPath, { force: true });
+      const errormsg =
+        "Java file was unable to encrypt the file" + filename + ", resulting in an incorrect encryption header.";
+      reply.status(422).send({
+        error: errormsg
+      });
+      return;
+    }
   } catch (e) {
     const error = e as NodeJS.ErrnoException;
     if (error.code === "ENOENT") {
@@ -149,12 +189,6 @@ export const requestDownload = async function requestDownload(
       reply.status(500).send({ error: "An error occurred" });
     }
   }
-};
-
-export const loadActiveDatapacks = async function loadActiveDatapacks(request: FastifyRequest, reply: FastifyReply) {
-  const activeDatapacks = assetconfigs.activeDatapacks;
-  reply.status(200).send({ activeDatapacks });
-  return;
 };
 
 export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
@@ -195,7 +229,7 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
-  //For test usage: const uuid = "username";
+  //for test usage: const uuid = "username";
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
   try {
     await access(userDir);
@@ -228,7 +262,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
-  //For test usage: const uuid = "username";
+  //for test usage:const uuid = "username";
   const file = await request.file();
   if (!file) {
     reply.status(404).send({ error: "No file uploaded" });
@@ -341,7 +375,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       return;
     }
   }
-  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [filename]);
+  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [filename], true);
   if (!datapackIndex[filename]) {
     await errorHandler("Failed to load decrypted datapack", 500);
     return;

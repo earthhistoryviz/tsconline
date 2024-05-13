@@ -125,7 +125,11 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
  * @param files the files to be parsed
  * @returns
  */
-export async function parseDatapacks(file: string, decryptFilePath: string): Promise<DatapackParsingPack | null> {
+export async function parseDatapacks(
+  file: string,
+  decryptFilePath: string,
+  isUserDataPack?: boolean
+): Promise<DatapackParsingPack | null> {
   const decryptPaths = await grabFilepaths([file], decryptFilePath, "datapacks");
   if (decryptPaths.length == 0)
     throw new Error(`Did not find any datapacks for ${file} in decryptFilePath ${decryptFilePath}`);
@@ -284,6 +288,7 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
   if (topAge || topAge === 0) datapackParsingPack.topAge = topAge;
   if (baseAge || baseAge === 0) datapackParsingPack.baseAge = baseAge;
   if (verticalScale) datapackParsingPack.verticalScale = verticalScale;
+  if (isUserDataPack) datapackParsingPack.isUserDatapack = isUserDataPack;
   return datapackParsingPack;
 }
 

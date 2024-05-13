@@ -40,7 +40,9 @@ export enum ErrorCodes {
   UNABLE_TO_RESET_EMAIL = "UNABLE_TO_RESET_EMAIL",
   UNABLE_TO_LOGIN_ACCOUNT_LOCKED = "UNABLE_TO_LOGIN_ACCOUNT_LOCKED",
   UNABLE_TO_RECOVER_ACCOUNT = "UNABLE_TO_RECOVER_ACCOUNT",
-  NOT_LOGGED_IN = "NOT_LOGGED_IN"
+  NOT_LOGGED_IN = "NOT_LOGGED_IN",
+  FILE_NOT_FOUND = "FILE_NOT_FOUND",
+  INCORRET_ENCRYPTION_HEADER = "INCORRET_ENCRYPTION_HEADER"
 }
 
 export const ErrorMessages = {
@@ -92,5 +94,8 @@ export const ErrorMessages = {
   [ErrorCodes.UNABLE_TO_LOGIN_ACCOUNT_LOCKED]:
     "Your account has been locked. Please check your email for more information or contact support.",
   [ErrorCodes.UNABLE_TO_RECOVER_ACCOUNT]: "Unable to recover account. Please contact support for more information.",
-  [ErrorCodes.NOT_LOGGED_IN]: "You are not logged in. Please log in to access this page."
+  [ErrorCodes.NOT_LOGGED_IN]: "You are not logged in. Please log in to access this page.",
+  [ErrorCodes.FILE_NOT_FOUND]: "The file you want to download was not found.",
+  [ErrorCodes.INCORRET_ENCRYPTION_HEADER]:
+    "Java file was unable to encrypt the file you want to download, resulting in an incorrect encryption header."
 };
