@@ -140,12 +140,10 @@ server.get("/presets", async (_request, reply) => {
 // uploads datapack
 server.post<{ Params: { username: string } }>("/upload", routes.uploadDatapack);
 //download datapack
-server.get<{ Params: { needEncryption: string; filename: string } }>(
-  "/requestDownload/:needEncryption/:filename",
+server.get<{ Params: { filename: string }; Querystring: { needEncryption: boolean } }>(
+  "/requestDownload/:filename",
   routes.requestDownload
 );
-//fetch json object of recorded active datapacks
-server.get("/loadActiveDatapacks", routes.loadActiveDatapacks);
 
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", routes.fetchSettingsXml);

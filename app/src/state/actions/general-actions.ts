@@ -689,33 +689,21 @@ export const fetchImage = action("fetchImage", async (datapackName: string, imag
   return image;
 });
 
-export const loadActiveDatapacks = action(async () => {
-  const response = await fetcher(`/loadActiveDatapacks`, {
-    method: "GET"
-  });
-  let data;
-  let datapacks;
-  if (response.ok) {
-    data = await response.json();
-    datapacks = JSON.stringify(data.activeDatapacks);
-    return datapacks;
-  } else {
-    console.error("failed loading active datapacks");
-    return "";
-  }
-});
-
 export const requestDownload = action(async (needEncryption: boolean, filename: string) => {
-  const response = await fetcher(`/requestDownload/${needEncryption}/${filename}`, {
+  const response = await fetcher(`/requestDownload/${filename}?needEncryption=${needEncryption}`, {
     method: "GET"
   });
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error("File not found");
+      displayServerError(null, ErrorCodes.FILE_NOT_FOUND, ErrorMessages[ErrorCodes.FILE_NOT_FOUND]);
     } else if (response.status === 500) {
-      throw new Error("Server error");
-    } else {
-      throw new Error("Unknown error");
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    } else if (response.status === 422) {
+      displayServerError(
+        null,
+        ErrorCodes.INCORRET_ENCRYPTION_HEADER,
+        ErrorMessages[ErrorCodes.INCORRET_ENCRYPTION_HEADER]
+      );
     }
   }
   const file = response.blob();

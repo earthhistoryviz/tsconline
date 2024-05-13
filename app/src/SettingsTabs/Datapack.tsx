@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { Fragment, useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useTheme } from "@mui/material/styles";
 import { TSCCheckbox, TSCDatapackUploadForm, TSCButton } from "../components";
@@ -17,9 +17,6 @@ export const Datapacks = observer(function Datapacks() {
   const theme = useTheme();
   const { actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
-  const numberOfDatapackIndexes = Object.keys(state.datapackIndex).length;
-  const defaultDownloadButton = Array(numberOfDatapackIndexes).fill(false);
-  const [downloadButton, setDownloadButton] = useState(defaultDownloadButton);
 
   const handleCheckboxChange = (name: string) => {
     if (state.config.datapacks.includes(name)) {
@@ -31,30 +28,24 @@ export const Datapacks = observer(function Datapacks() {
       actions.setDatapackConfig([...state.config.datapacks, name], "");
     }
   };
-  const download = (name: string, key: number) => {
-    checkActiveDatapacks(name, key);
+  const download = (name: string) => {
     return (
-      downloadButton[key] && (
-        <div>
+      state.datapackIndex[name].isUserDatapack && (
+        <Fragment>
           <Menu menuButton={<DownloadIcon className="download-icon" />} transition>
             <MenuItem onClick={() => handleDownload(true, name)}>
-              <Typography>encrypted download</Typography>
+              <Typography>Encrypted Download</Typography>
             </MenuItem>
             <MenuItem onClick={() => handleDownload(false, name)}>
-              <Typography>retrieve original file</Typography>
+              <Typography>Retrieve Original File</Typography>
             </MenuItem>
           </Menu>
-        </div>
+        </Fragment>
       )
     );
   };
   async function getFileURL(needEncryption: boolean, fileName: string) {
-    let fileBlob;
-    if (needEncryption) {
-      fileBlob = await actions.requestDownload(true, fileName);
-    } else {
-      fileBlob = await actions.requestDownload(false, fileName);
-    }
+    const fileBlob = await actions.requestDownload(needEncryption, fileName);
     try {
       const reader = new FileReader();
       reader.readAsDataURL(fileBlob);
@@ -83,16 +74,6 @@ export const Datapacks = observer(function Datapacks() {
     }
   };
 
-  async function checkActiveDatapacks(name: string, key: number) {
-    const activeDatapacks = await actions.loadActiveDatapacks();
-    const isSystemDatapack = activeDatapacks.includes(name);
-    if (!isSystemDatapack) {
-      const newButtonState = [...downloadButton];
-      newButtonState[key] = true;
-      setDownloadButton(newButtonState);
-    }
-  }
-
   return (
     <div style={{ background: theme.palette.settings.light }}>
       <div className="container">
@@ -116,7 +97,7 @@ export const Datapacks = observer(function Datapacks() {
                       <Typography>{datapack}</Typography>
                     </div>
                   </td>
-                  <td className="download-cell">{download(datapack, index)}</td>
+                  <td className="download-cell">{download(datapack)}</td>
 
                   <td className="info-cell">
                     <div>
