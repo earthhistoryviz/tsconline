@@ -54,7 +54,6 @@ import {
   hasVisibleCharacters,
   capitalizeFirstLetter,
   setCommonProperties,
-  trimQuotes,
   formatColumnName
 } from "./util.js";
 import { createInterface } from "readline";
@@ -390,8 +389,8 @@ export async function getAllEntries(
     const childrenstring = line.split("\t:\t")[1];
     if (!parent || !hasVisibleCharacters(parent) || !childrenstring || !hasVisibleCharacters(childrenstring)) continue;
     parent = formatColumnName(parent);
-    let parsedChildren = spliceArrayAtFirstSpecialMatch(childrenstring!.split("\t"));
-    //doesn't seem necessary, but added just in case
+    const parsedChildren = spliceArrayAtFirstSpecialMatch(childrenstring!.split("\t"));
+    //for formatted names in mapping
     for (let i = 0; i < parsedChildren.children.length; i++) {
       if (parsedChildren.children[i]) parsedChildren.children[i] = formatColumnName(parsedChildren.children[i]!);
     }
@@ -767,6 +766,7 @@ export async function getColumnTypes(
  * @param tabSeparated
  */
 function setColumnHeaders(column: ColumnHeaderProps, tabSeparated: string[]) {
+  //for formatted names in ColumnInfo object
   column.name = formatColumnName(tabSeparated[0]!);
   if (column.name.includes("Nanno Zone")) console.log(column.name);
   const width = Number(tabSeparated[2]!);

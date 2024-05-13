@@ -175,8 +175,8 @@ export function setCommonProperties<T>(o1: T, o2: Partial<T>): T {
 /**
  * formats column names by trimming quotes, removing duplicate quotes, and replacing commas after of digits to periods.
  * reference StringNoQuotes in loader1.java
- * @param text 
- * 
+ * @param text
+ *
  * @returns formatted string
  */
 export function formatColumnName(text: string): string {

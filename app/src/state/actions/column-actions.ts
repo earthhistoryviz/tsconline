@@ -4,10 +4,14 @@ import {
   ColumnInfo,
   ColumnInfoTSC,
   EventSettings,
+  PointSettings,
+  PointShape,
   RGB,
   ValidFontOptions,
   assertEventColumnInfoTSC,
-  assertEventSettings
+  assertEventSettings,
+  assertPointColumnInfoTSC,
+  assertPointSettings
 } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { pushSnackbar } from "./general-actions";
@@ -35,6 +39,43 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
         assertEventSettings(column.columnSpecificSettings);
         if (column.columnSpecificSettings)
           setEventColumnSettings(column.columnSpecificSettings, { type: settings.type, rangeSort: settings.rangeSort });
+        break;
+      case "PointColumn":
+        {
+          assertPointColumnInfoTSC(settings);
+          assertPointSettings(column.columnSpecificSettings);
+          let presetPointShape: PointShape = "nopoints";
+          if (settings.drawPoints === true) {
+            if (settings.pointType === "round") {
+              presetPointShape = "circle";
+            } else if (settings.pointType === "tick") {
+              presetPointShape = "cross";
+            } else {
+              presetPointShape = "rect";
+            }
+          }
+          setPointColumnSettings(column.columnSpecificSettings, {
+            drawLine: settings.drawLine,
+            drawFill: settings.drawFill,
+            drawScale: settings.drawScale,
+            drawCurveGradient: settings.drawCurveGradient,
+            drawBackgroundGradient: settings.drawBgrndGradient,
+            backgroundGradientStart: settings.backGradStart,
+            backgroundGradientEnd: settings.backGradEnd,
+            curveGradientStart: settings.curveGradStart,
+            curveGradientEnd: settings.curveGradEnd,
+            lineColor: settings.lineColor,
+            flipScale: settings.flipScale,
+            scaleStart: settings.scaleStart,
+            scaleStep: settings.scaleStep,
+            fill: settings.fillColor,
+            pointShape: presetPointShape,
+            smoothed: settings.drawSmooth,
+            lowerRange: settings.minWindow,
+            upperRange: settings.maxWindow
+          });
+        }
+        break;
     }
   }
   const columnName = extractName(settings._id);
@@ -43,7 +84,7 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
     state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
   if (curcol === undefined) {
     pushSnackbar(
-      "Unknown column name '" + columnName.substring(0, snackbarTextLengthLimit) + "' found while loading settings",
+      "Unknown column name '" + columnName.substring(0, snackbarTextLengthLimit - 1) + "' found while loading settings",
       "warning"
     );
     console.log(columnName);
@@ -97,6 +138,29 @@ export const toggleSettingsTabColumn = action((name: string) => {
       return;
     } else curcol = state.settingsTabs.columnHashMap.get(curcol.parent!)!;
   }
+});
+
+export const setPointColumnSettings = action((pointSettings: PointSettings, newSettings: Partial<PointSettings>) => {
+  if (newSettings.drawLine) pointSettings.drawLine = newSettings.drawLine;
+  if (newSettings.drawFill) pointSettings.drawFill = newSettings.drawFill;
+  if (newSettings.drawScale) pointSettings.drawScale = newSettings.drawScale;
+  if (newSettings.drawCurveGradient) pointSettings.drawCurveGradient = newSettings.drawCurveGradient;
+  if (newSettings.drawBackgroundGradient) pointSettings.drawBackgroundGradient = newSettings.drawBackgroundGradient;
+  if (newSettings.backgroundGradientStart) pointSettings.backgroundGradientStart = newSettings.backgroundGradientStart;
+  if (newSettings.backgroundGradientEnd) pointSettings.backgroundGradientEnd = newSettings.backgroundGradientEnd;
+  if (newSettings.curveGradientStart) pointSettings.curveGradientStart = newSettings.curveGradientStart;
+  if (newSettings.curveGradientEnd) pointSettings.curveGradientEnd = newSettings.curveGradientEnd;
+  if (newSettings.lineColor) pointSettings.lineColor = newSettings.lineColor;
+  if (newSettings.flipScale) pointSettings.flipScale = newSettings.flipScale;
+  if (newSettings.scaleStart) pointSettings.scaleStart = newSettings.scaleStart;
+  if (newSettings.scaleStep) pointSettings.scaleStep = newSettings.scaleStep;
+  if (newSettings.fill) pointSettings.fill = newSettings.fill;
+  if (newSettings.pointShape) pointSettings.pointShape = newSettings.pointShape;
+  if (newSettings.lowerRange) pointSettings.lowerRange = newSettings.lowerRange;
+  if (newSettings.upperRange) pointSettings.upperRange = newSettings.upperRange;
+  if (newSettings.smoothed) pointSettings.smoothed = newSettings.smoothed;
+  if (newSettings.minX) pointSettings.minX = newSettings.minX;
+  if (newSettings.maxX) pointSettings.maxX = newSettings.maxX;
 });
 
 export const setEventColumnSettings = action((eventSettings: EventSettings, newSettings: Partial<EventSettings>) => {

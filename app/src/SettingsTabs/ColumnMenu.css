@@ -24,13 +24,6 @@
   display: none;
   flex-direction: column;
 }
-.edit-title-button {
-  display: flex;
-  flex-grow: 1;
-  align-items: center;
-  justify-content: center;
-}
-
 .ShowTitlesContainer {
   display: flex;
   flex-direction: column;
