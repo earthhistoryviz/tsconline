@@ -279,6 +279,7 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     show: true
   };
   setShowLabels(chartColumn);
+  formatAllColumnNames(chartColumn);
   const datapackParsingPack = { columnInfo: chartColumn, ageUnits, defaultChronostrat, formatVersion };
   assertDatapackParsingPack(datapackParsingPack);
   if (date) datapackParsingPack.date = date;
@@ -287,6 +288,33 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
   if (verticalScale) datapackParsingPack.verticalScale = verticalScale;
   return datapackParsingPack;
 }
+
+function formatAllColumnNames(o: ColumnInfo) {
+  o.name = formatColumnName(o.name);
+  for (let i = 0; i < o.children.length; i++) {
+    if (o.children[i]) formatAllColumnNames(o.children[i]!);
+  }
+}
+
+function formatColumnName(text: string): string {
+  return trimQuotes(text.trim())
+  .replace(/^"(.*)"$/, '$1')
+  .replace(/""/g, '"')
+  .replace(/(\d),/g, '$1.');
+  // text = trimInvisibleCharacters(text);
+  // text = trimQuotes(text);
+  // text = text.replaceAll('""', '"');
+  // let commaPos = text.indexOf(",");
+  // while (commaPos !== -1) {
+  //   if (!Number.isNaN(Number(text.charAt(commaPos - 1)))) {
+  //     text = text.substring(0, commaPos) + "." + text.substring(commaPos + 1, text.length);
+  //   }
+  //   commaPos = text.indexOf(",", commaPos + 1);
+  // }
+  // return text;
+}
+
+
 
 /**
  * @Paolo I chose to implement this way to avoid creating crazy conditionals in the many ways we create columns since we have
@@ -1289,13 +1317,6 @@ export function processFacies(line: string): SubFaciesInfo | null {
   return subFaciesInfo;
 }
 
-function formatColumnName(text: string): string {
-  text = trimQuotes(text.trim());
-  return text
-    .replace(/^"(.*)"$/, "$1")
-    .replace(/""/g, '"')
-    .replace(/(\d),(\d)/g, "$1.$2");
-}
 
 /**
  * This is a recursive function meant to instantiate all columns.
@@ -1331,7 +1352,7 @@ function recursive(
   blankMap: Map<string, ColumnHeaderProps>,
   units: string
 ): FaciesFoundAndAgeRange {
-  currentColumn = formatColumnName(currentColumn);
+
   const currentColumnInfo: ColumnInfo = {
     name: trimInvisibleCharacters(currentColumn),
     editName: trimInvisibleCharacters(currentColumn),
