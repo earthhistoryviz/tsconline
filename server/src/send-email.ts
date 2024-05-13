@@ -1,6 +1,8 @@
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import { Email, assertEmail } from "./types.js";
+import { JSDOM } from "jsdom";
+import DOMPurify from "dompurify";
 
 dotenv.config();
 const transporter = nodemailer.createTransport({
@@ -281,8 +283,16 @@ const HtmlTemplate = (
 
 export const sendEmail = async (email: Email) => {
   assertEmail(email);
-  const html = HtmlTemplate(email.preHeader, email.title, email.message, email.action, email.link, email.buttonText);
-  console.log(html);
+  const window = new JSDOM("").window;
+  const purify = DOMPurify(window);
+  const html = HtmlTemplate(
+    purify.sanitize(email.preHeader),
+    purify.sanitize(email.title),
+    purify.sanitize(email.message),
+    purify.sanitize(email.action),
+    email.link ? purify.sanitize(email.link) : undefined,
+    email.buttonText ? purify.sanitize(email.buttonText) : undefined
+  );
   try {
     await transporter.sendMail({
       from: email.from,
