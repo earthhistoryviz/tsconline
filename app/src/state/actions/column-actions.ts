@@ -46,6 +46,7 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
       "Unknown column name '" + columnName.substring(0, snackbarTextLengthLimit) + "' found while loading settings",
       "warning"
     );
+    console.log(columnName);
   } else setColumnProperties(curcol, settings);
   if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
     for (let i = 0; i < settings.children.length; i++) {

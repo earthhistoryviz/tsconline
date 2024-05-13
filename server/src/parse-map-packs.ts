@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import { grabFilepaths, trimQuotes } from "./util.js";
+import { formatColumnName, grabFilepaths, trimQuotes } from "./util.js";
 import { assetconfigs } from "./index.js";
 import pmap from "p-map";
 import { MapHierarchy, MapInfo, MapPack, assertTransects } from "@tsconline/shared";
@@ -97,7 +97,7 @@ export function processLine(
           `Map info file: ${path.basename(map_info)}' is not in the correct format. HEADER-MAP INFO does not have proper format`
         );
       }
-      map.name = String(info[1]);
+      map.name = formatColumnName(String(info[1]));
       map.img = `/${assetconfigs.imagesDirectory}/${String(info[2])}`;
       map.note = String(info[3]);
       break;
