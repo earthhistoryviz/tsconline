@@ -54,7 +54,8 @@ import {
   hasVisibleCharacters,
   capitalizeFirstLetter,
   setCommonProperties,
-  trimQuotes
+  trimQuotes,
+  formatColumnName
 } from "./util.js";
 import { createInterface } from "readline";
 import _ from "lodash";
@@ -279,7 +280,6 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     show: true
   };
   setShowLabels(chartColumn);
-  formatAllColumnNames(chartColumn);
   const datapackParsingPack = { columnInfo: chartColumn, ageUnits, defaultChronostrat, formatVersion };
   assertDatapackParsingPack(datapackParsingPack);
   if (date) datapackParsingPack.date = date;
@@ -287,31 +287,6 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
   if (baseAge || baseAge === 0) datapackParsingPack.baseAge = baseAge;
   if (verticalScale) datapackParsingPack.verticalScale = verticalScale;
   return datapackParsingPack;
-}
-
-function formatAllColumnNames(o: ColumnInfo) {
-  o.name = formatColumnName(o.name);
-  for (let i = 0; i < o.children.length; i++) {
-    if (o.children[i]) formatAllColumnNames(o.children[i]!);
-  }
-}
-
-function formatColumnName(text: string): string {
-  return trimQuotes(text.trim())
-    .replace(/^"(.*)"$/, "$1")
-    .replace(/""/g, '"')
-    .replace(/(\d),/g, "$1.");
-  // text = trimInvisibleCharacters(text);
-  // text = trimQuotes(text);
-  // text = text.replaceAll('""', '"');
-  // let commaPos = text.indexOf(",");
-  // while (commaPos !== -1) {
-  //   if (!Number.isNaN(Number(text.charAt(commaPos - 1)))) {
-  //     text = text.substring(0, commaPos) + "." + text.substring(commaPos + 1, text.length);
-  //   }
-  //   commaPos = text.indexOf(",", commaPos + 1);
-  // }
-  // return text;
 }
 
 /**
@@ -410,20 +385,16 @@ export async function getAllEntries(
     if (!line.includes("\t:\t")) {
       continue;
     }
-    const parent = line.split("\t:\t")[0];
-
-    //THIS ACTUALLY DOESN'T MATTER ANYMORE BUT I WILL LEAVE IT HERE JUST IN CASE
-    //TODO
-    //to replace quotations surrounding the column name for future parsing access in state.
-    //if this is not done, then the keys in the state for columns have quotations surrounding it
-    //which is not consistent with the equivalent keys found in the parsed settings json object.
-    //ex "North Belgium -- Oostende, Brussels, Antwerp, Campine, Maastrichen" vs
-    //North Belgium -- Oostende, Brussels, Antwerp, Campine, Maastrichen
+    let parent = line.split("\t:\t")[0];
 
     const childrenstring = line.split("\t:\t")[1];
     if (!parent || !hasVisibleCharacters(parent) || !childrenstring || !hasVisibleCharacters(childrenstring)) continue;
-    // childrenstring = childrenstring!.split("\t\t")[0];
-    const parsedChildren = spliceArrayAtFirstSpecialMatch(childrenstring!.split("\t"));
+    parent = formatColumnName(parent);
+    let parsedChildren = spliceArrayAtFirstSpecialMatch(childrenstring!.split("\t"));
+    //doesn't seem necessary, but added just in case
+    for (let i = 0; i < parsedChildren.children.length; i++) {
+      if (parsedChildren.children[i]) parsedChildren.children[i] = formatColumnName(parsedChildren.children[i]!);
+    }
     //if the entry is a child, add it to a set.
     for (const child of parsedChildren.children) {
       isChild.add(child);
@@ -796,7 +767,8 @@ export async function getColumnTypes(
  * @param tabSeparated
  */
 function setColumnHeaders(column: ColumnHeaderProps, tabSeparated: string[]) {
-  column.name = tabSeparated[0]!;
+  column.name = formatColumnName(tabSeparated[0]!);
+  if (column.name.includes("Nanno Zone")) console.log(column.name);
   const width = Number(tabSeparated[2]!);
   const rgb = tabSeparated[3];
   const enableTitle = tabSeparated[4];
