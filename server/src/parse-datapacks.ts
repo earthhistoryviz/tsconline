@@ -1051,12 +1051,12 @@ export function processChron(line: string): SubChronInfo | null {
   if (isNaN(age) || !tabSeparated[3])
     throw new Error(
       "Error processing chron line with label: " +
-      label +
-      ", and polarity: " +
-      polarity +
-      ", age: " +
-      tabSeparated[3]! +
-      " is NaN"
+        label +
+        ", and polarity: " +
+        polarity +
+        ", age: " +
+        tabSeparated[3]! +
+        " is NaN"
     );
   const popup = tabSeparated[4] || "";
   if (label) {
@@ -1866,9 +1866,9 @@ function configureOptionalPointSettings(tabSeparated: string[], point: Point) {
   if (tabSeparated.length < 1 || tabSeparated.length > 6) {
     console.log(
       "Error adding optional point configuration, line is not formatted correctly: " +
-      tabSeparated +
-      " with size " +
-      tabSeparated.length
+        tabSeparated +
+        " with size " +
+        tabSeparated.length
     );
     return;
   }
