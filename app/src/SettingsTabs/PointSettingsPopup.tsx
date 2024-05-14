@@ -4,7 +4,7 @@ import { observer } from "mobx-react-lite";
 import { useContext, useState } from "react";
 import { context } from "../state";
 import "./PointSettingsPopup.css";
-import { TSCButton, TSCCheckbox } from "../components";
+import { RGBModifier, TSCButton, TSCCheckbox } from "../components";
 import { GenericTextField } from "../components";
 
 type PointSettingsPopupProps = {
@@ -93,6 +93,7 @@ export const PointSettingsPopup: React.FC<PointSettingsPopupProps> = observer(({
             }
           />
           </div>
+          <RGBModifier label="Line" checked={pointSettings.drawLine} rgb={pointSettings.lineColor} onCheckedChange={(value) => actions.setPointColumnSettings(pointSettings, { drawLine: value })} onRGBChange={(value) => actions.setPointColumnSettings(pointSettings, { lineColor: value })} />
         </Box>
       </Modal>
     </div>

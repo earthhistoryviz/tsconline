@@ -1,7 +1,10 @@
-import { TextFieldProps, TextField, Box, Typography } from "@mui/material";
+import { TextFieldProps, TextField, Box, Typography, FormControlLabel } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { NumericFormat } from "react-number-format";
 import "./TSCGenericSettings.css";
+import { RGB } from "@tsconline/shared";
+import { TSCCheckbox } from "./TSCCheckbox";
+import TSCColorPicker from "./TSCColorPicker";
 
 type GenericTextFieldProps = {
   header: string;
@@ -38,3 +41,28 @@ export const GenericTextField: React.FC<GenericTextFieldProps> = observer(({ hea
     </Box>
   );
 });
+
+
+type RGBModifierProps = {
+    label: string;
+    checked: boolean;
+    rgb: RGB;
+    onCheckedChange: (checked: boolean) => void;
+    onRGBChange: (rgb: RGB) => void;
+}
+
+export const RGBModifier: React.FC<RGBModifierProps> = observer(({ label, checked, rgb, onRGBChange, onCheckedChange }) => {
+    return (
+    <>
+    <FormControlLabel
+    label={label}
+    control={<TSCCheckbox checked={checked} onChange={(value) => onCheckedChange(value.target.checked)} />}
+    />
+    <TSCColorPicker
+    color={`rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`}
+    onColorChange={(color) => {onRGBChange({r: parseInt(color.slice(1, 3), 16), g: parseInt(color.slice(3, 5), 16), b: parseInt(color.slice(5, 7), 16)})}}
+    portal
+    />
+    </>
+    )
+})
