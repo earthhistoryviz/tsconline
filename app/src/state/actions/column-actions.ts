@@ -11,7 +11,8 @@ import {
   assertEventColumnInfoTSC,
   assertEventSettings,
   assertPointColumnInfoTSC,
-  assertPointSettings
+  assertPointSettings,
+  calculateAutoScale
 } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { pushSnackbar } from "./general-actions";
@@ -152,7 +153,21 @@ export const setColumnOn = action((isOn: boolean, column: ColumnInfo) => {
 });
 export const setEditName = action((newName: string, column: ColumnInfo) => {
   column.editName = newName;
+
+export const setAutoScale = action((pointSettings: PointSettings) => {
+  const { lowerRange, upperRange, scaleStep } = calculateAutoScale(pointSettings.minX, pointSettings.maxX);
+  pointSettings.scaleStep = scaleStep;
+  pointSettings.lowerRange = lowerRange;
+  pointSettings.upperRange = upperRange;
 });
+
+export const flipRange = action((pointSettings: PointSettings) => {
+  const temp = pointSettings.lowerRange;
+  pointSettings.lowerRange = pointSettings.upperRange;
+  pointSettings.upperRange = temp;
+  pointSettings.flipScale = !pointSettings.flipScale;
+});
+
 
 export const setWidth = action((newWidth: number, column: ColumnInfo) => {
   column.width = newWidth;

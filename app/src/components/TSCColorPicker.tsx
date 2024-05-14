@@ -90,7 +90,8 @@ const TSCColorPicker: React.FC<TSCColorPickerProps> = observer(
           }}
           disabled={disabled}
           className="cp-button"
-          style={{ backgroundColor: selectedColor }}></Button>
+          style={{ backgroundColor: selectedColor }}
+        />
         {showPicker && (portal && portalContainer ? createPortal(ColorPicker, portalContainer) : ColorPicker)}
       </>
     );

@@ -46,7 +46,8 @@ import {
   isPointShape,
   assertPoint,
   defaultPointSettings,
-  defaultPoint
+  defaultPoint,
+  calculateAutoScale
 } from "@tsconline/shared";
 import {
   trimInvisibleCharacters,
@@ -855,7 +856,6 @@ function addSequenceToSequenceMap(sequence: Sequence, sequenceMap: Map<string, S
  * @param pointMap
  */
 function addPointToPointMap(point: Point, pointMap: Map<string, Point>) {
-  const margin = 0.1;
   for (const subPoint of point.subPointInfo) {
     point.minAge = Math.min(subPoint.age, point.minAge);
     point.maxAge = Math.max(subPoint.age, point.maxAge);
@@ -868,10 +868,10 @@ function addPointToPointMap(point: Point, pointMap: Map<string, Point>) {
     point.minX !== Number.MAX_VALUE &&
     point.maxX !== Number.MIN_VALUE
   ) {
-    const outerMargin = ((point.maxX - point.minX) * margin) / 2;
-    point.lowerRange = point.minX - outerMargin;
-    point.upperRange = point.maxX + outerMargin;
-    point.scaleStep = (point.upperRange - point.lowerRange) * 0.2;
+    const { lowerRange, upperRange, scaleStep } = calculateAutoScale(point.minX, point.maxX);
+    point.lowerRange = lowerRange;
+    point.upperRange = upperRange;
+    point.scaleStep = scaleStep;
   }
 
   pointMap.set(point.name, JSON.parse(JSON.stringify(point)));
