@@ -72,28 +72,38 @@ export const PointSettingsPopup: React.FC<PointSettingsPopupProps> = observer(({
             ]}
           />
           <div className="point-settings-adjustment-buttons">
-          <FormControlLabel
-            name="drawScale"
-            label="Draw Scale"
-            control={
-              <TSCCheckbox
-                checked={pointSettings.drawScale}
-                onChange={(value) => actions.setPointColumnSettings(pointSettings, { drawScale: value.target.checked })}
-              />
-            }
-          />
-          <FormControlLabel
-            name="flipScale"
-            label="Flipped"
-            control={
-              <TSCCheckbox
-                checked={pointSettings.flipScale}
-                onChange={(value) => actions.setPointColumnSettings(pointSettings, { flipScale: value.target.checked })}
-              />
-            }
-          />
+            <FormControlLabel
+              name="drawScale"
+              label="Draw Scale"
+              control={
+                <TSCCheckbox
+                  checked={pointSettings.drawScale}
+                  onChange={(value) =>
+                    actions.setPointColumnSettings(pointSettings, { drawScale: value.target.checked })
+                  }
+                />
+              }
+            />
+            <FormControlLabel
+              name="flipScale"
+              label="Flipped"
+              control={
+                <TSCCheckbox
+                  checked={pointSettings.flipScale}
+                  onChange={(value) =>
+                    actions.setPointColumnSettings(pointSettings, { flipScale: value.target.checked })
+                  }
+                />
+              }
+            />
           </div>
-          <RGBModifier label="Line" checked={pointSettings.drawLine} rgb={pointSettings.lineColor} onCheckedChange={(value) => actions.setPointColumnSettings(pointSettings, { drawLine: value })} onRGBChange={(value) => actions.setPointColumnSettings(pointSettings, { lineColor: value })} />
+          <RGBModifier
+            label="Line"
+            checked={pointSettings.drawLine}
+            rgb={pointSettings.lineColor}
+            onCheckedChange={(value) => actions.setPointColumnSettings(pointSettings, { drawLine: value })}
+            onRGBChange={(value) => actions.setPointColumnSettings(pointSettings, { lineColor: value })}
+          />
         </Box>
       </Modal>
     </div>
