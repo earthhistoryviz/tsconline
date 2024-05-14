@@ -3,6 +3,7 @@ import BetterSqlite3 from "better-sqlite3";
 import { promises as fs } from "fs";
 import { Kysely, Migrator, SqliteDialect, FileMigrationProvider } from "kysely";
 import { Database } from "../dist/types.js";
+import { fileURLToPath, pathToFileURL } from "url";
 
 /*
 IMPORTANT: Exercise extreme caution when performing migrations that delete data. Always ensure a backup of the database exists before running such migrations, as the data deletion is irreversible. 
@@ -28,7 +29,7 @@ To roll back the migrations, you can run `yarn tsx migrate.ts down`. The up comm
 4. Make sure to update the Database types in server/src/types.ts to match the new schema as well as documenting the change in database.ts. This will ensure that the queries in the server code are type-safe.
 */
 
-export async function migrateToLatest() {
+async function migrateToLatest() {
   const db = new Kysely<Database>({
     dialect: new SqliteDialect({
       database: new BetterSqlite3("TSC.db")
@@ -41,7 +42,7 @@ export async function migrateToLatest() {
       fs,
       path,
       // This needs to be an absolute path.
-      migrationFolder: path.join(process.cwd(), "migrations")
+      migrationFolder: new URL("migrations", import.meta.url).pathname
     })
   });
 
@@ -76,7 +77,7 @@ async function rollback() {
     provider: new FileMigrationProvider({
       fs,
       path,
-      migrationFolder: path.join(process.cwd(), "migrations")
+      migrationFolder: new URL("migrations", import.meta.url).pathname
     })
   });
 
@@ -99,14 +100,12 @@ async function rollback() {
   await db.destroy();
 }
 
-if (new URL(import.meta.url).pathname === process.argv[1]) {
-  const command = process.argv[2];
+const command = process.argv[2];
 
-  if (command === "up") {
-    migrateToLatest();
-  } else if (command === "down") {
-    rollback();
-  } else {
-    console.log('Please specify "up" for migrations or "down" for rollbacks');
-  }
+if (command === "up") {
+  migrateToLatest();
+} else if (command === "down") {
+  rollback();
+} else {
+  console.log('Please specify "up" for migrations or "down" for rollbacks');
 }
