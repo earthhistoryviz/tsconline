@@ -101,6 +101,17 @@ export const searchColumns = action(async (searchTerm: string) => {
   });
 });
 
+export const setExpanded = action((column: ColumnInfo, isExpanded: boolean) => {
+  column.expanded = isExpanded;
+});
+
+export const setExpansionOfAll = action((column: ColumnInfo, isExpanded: boolean) => {
+  column.expanded = isExpanded;
+  column.children.forEach((child) => {
+    setExpansionOfAll(child, isExpanded);
+  });
+});
+
 export const setInheritable = action((target: ValidFontOptions, isInheritable: boolean, column: ColumnInfo) => {
   column.fontsInfo[target].inheritable = isInheritable;
 });
