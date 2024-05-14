@@ -121,7 +121,7 @@ export const PointSettingsPopup: React.FC<PointSettingsPopupProps> = observer(({
               ]}
             />
           </div>
-          <div className="point-settings-adjustment-buttons">
+          <div className="point-settings-gradient-buttons">
             <RGBModifier
               label="Background Gradient"
               checked={pointSettings.drawBackgroundGradient}
@@ -139,6 +139,25 @@ export const PointSettingsPopup: React.FC<PointSettingsPopupProps> = observer(({
                   rgb: pointSettings.backgroundGradientEnd,
                   onRGBChange: (value) =>
                     actions.setPointColumnSettings(pointSettings, { backgroundGradientEnd: value }),
+                  label: "End"
+                }
+              ]}
+            />
+          </div>
+          <div className="point-settings-gradient-buttons">
+            <RGBModifier
+              label="Curve Gradient"
+              checked={pointSettings.drawCurveGradient}
+              onCheckedChange={(value) => actions.setPointColumnSettings(pointSettings, { drawCurveGradient: value })}
+              rgbInputs={[
+                {
+                  rgb: pointSettings.curveGradientStart,
+                  onRGBChange: (value) => actions.setPointColumnSettings(pointSettings, { curveGradientStart: value }),
+                  label: "Start"
+                },
+                {
+                  rgb: pointSettings.curveGradientEnd,
+                  onRGBChange: (value) => actions.setPointColumnSettings(pointSettings, { curveGradientEnd: value }),
                   label: "End"
                 }
               ]}

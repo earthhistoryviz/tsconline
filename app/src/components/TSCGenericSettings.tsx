@@ -61,20 +61,22 @@ export const RGBModifier: React.FC<RGBModifierProps> = observer(({ label, checke
         label={label}
         control={<TSCCheckbox checked={checked} onChange={(value) => onCheckedChange(value.target.checked)} />}
       />
-      {rgbInputs.map((rgbInput, index) => (
-        <div className="color-picker-rgb-modifier">
-          <div className={rgbInput.label ? "generic-color-picker" : ""}>
-            <TSCColorPicker
-              color={`rgb(${rgbInput.rgb.r}, ${rgbInput.rgb.g}, ${rgbInput.rgb.b})`}
-              onColorChange={(color) => {
-                rgbInput.onRGBChange(convertHexToRGB(color, false));
-              }}
-              portal
-            />
+      <div className="color-picker-rgb-modifier-container">
+        {rgbInputs.map((rgbInput, index) => (
+          <div className="color-picker-rgb-modifier">
+            <div className={rgbInput.label ? "generic-color-picker" : ""}>
+              <TSCColorPicker
+                color={`rgb(${rgbInput.rgb.r}, ${rgbInput.rgb.g}, ${rgbInput.rgb.b})`}
+                onColorChange={(color) => {
+                  rgbInput.onRGBChange(convertHexToRGB(color, false));
+                }}
+                portal
+              />
+            </div>
+            <Typography fontSize={12}>{rgbInput.label}</Typography>
           </div>
-          <Typography fontSize={12}>{rgbInput.label}</Typography>
-        </div>
-      ))}
+        ))}
+      </div>
     </>
   );
 });
