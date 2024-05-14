@@ -361,10 +361,11 @@ export const defaultPoint: Partial<Point> = {
   pointShape: "rect",
   drawFill: true,
   fill: {
-    r: 255,
-    g: 255,
-    b: 255
+    r: 64,
+    g: 233,
+    b: 191
   },
   minX: Number.MAX_SAFE_INTEGER,
-  maxX: Number.MIN_SAFE_INTEGER
+  maxX: Number.MIN_SAFE_INTEGER,
+  scaleStep: 1
 };
