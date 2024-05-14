@@ -27,3 +27,10 @@
   margin-top: 10px;
   margin-bottom: 10px;
 }
+.point-settings-gradient-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
