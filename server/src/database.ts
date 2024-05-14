@@ -2,11 +2,10 @@ import { Database, User, NewUser, UpdatedUser, Verification, NewVerification } f
 import BetterSqlite3 from "better-sqlite3";
 import { Kysely, SqliteDialect } from "kysely";
 import { exec } from "child_process";
-import path from "path";
 
 export const db = new Kysely<Database>({
   dialect: new SqliteDialect({
-    database: new BetterSqlite3(path.join("db", "TSC.db"))
+    database: new BetterSqlite3("db/TSC.db")
   })
 });
 
