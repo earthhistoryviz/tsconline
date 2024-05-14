@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext, useState, useRef, useEffect, useMemo, useLayoutEffect } from "react";
+import React, { useContext, useState, useRef, useEffect, useLayoutEffect } from "react";
 import { SketchPicker, ColorResult } from "@hello-pangea/color-picker";
 import Button from "@mui/material/Button";
 import "./TSCColorPicker.css";

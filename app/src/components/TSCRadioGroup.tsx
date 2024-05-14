@@ -80,7 +80,12 @@ export const TSCRadioGroup: React.FC<TSCRadioGroupProps> = ({
   return (
     <FormControl disabled={disabled}>
       <FormLabel>{name}</FormLabel>
-      <RadioGroup {...props} value={value} onChange={onChange} name="customized-radios" style={{ flexDirection: direction === "horizontal" ? "row" : "column"}}>
+      <RadioGroup
+        {...props}
+        value={value}
+        onChange={onChange}
+        name="customized-radios"
+        style={{ flexDirection: direction === "horizontal" ? "row" : "column" }}>
         {radioArray.map((radio, index) => (
           <FormControlLabel
             key={index}

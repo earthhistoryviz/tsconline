@@ -3,6 +3,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  min-width: 30%;
   max-width: 60%;
   background-color: #fff;
   border: 2px solid #000;
@@ -11,6 +12,16 @@
   max-height: 80%;
   overflow: auto;
   align-items: start;
+}
+.MuiSvgIcon-root.exit-button-icon-point-settings {
+  padding: 0px;
+  margin: 0px;
+}
+.exit-button-point-settings {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  cursor: pointer;
 }
 .point-shape-checkbox {
   display: flex;
