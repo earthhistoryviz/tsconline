@@ -16,6 +16,7 @@
         "width": 100,
         "enableTitle": true,
         "show": true,
+        "expanded": true,
         "rgb": {
           "r": 255,
           "g": 255,
@@ -34,6 +35,7 @@
               "Ruler Label"
             ],
             "show": true,
+            "expanded": false,
             "on": true,
             "width": 100,
             "enableTitle": true,
@@ -56,6 +58,7 @@
             "on": true,
             "enableTitle": true,
             "show": true,
+            "expanded": false,
             "fontsInfo": {
               "font": "Arial"
             },
@@ -71,6 +74,7 @@
                 },
                 "popup": "",
                 "show": true,
+                "expanded": false,
                 "children": [
                   {
                     "name": "Nigeria Coast Facies",
@@ -78,6 +82,7 @@
                     "on": true,
                     "enableTitle": false,
                     "showAgeLabels": false,
+                    "expanded": false,
                     "showUncertaintyLabels": false,
                     "fontsInfo": {
                       "font": "Arial"
@@ -123,6 +128,7 @@
                     "maxAge": 10,
                     "width": 210,
                     "show": true,
+                    "expanded": false,
                     "rgb": {
                       "r": 255,
                       "g": 255,
@@ -149,6 +155,7 @@
                     "children": [],
                     "parent": "Nigeria Coast",
                     "show": true,
+                    "expanded": false,
                     "minAge": 0,
                     "maxAge": 10,
                     "width": 84,
@@ -164,6 +171,7 @@
                     "name": "Nigeria Coast Series Label",
                     "editName": "Series Label",
                     "show": true,
+                    "expanded": false,
                     "on": true,
                     "enableTitle": false,
                     "fontsInfo": {
@@ -232,6 +240,7 @@
                 "on": true,
                 "enableTitle": true,
                 "show": true,
+                "expanded": false,
                 "fontsInfo": {
                   "font": "Arial"
                 },
@@ -243,6 +252,7 @@
                     "on": true,
                     "enableTitle": false,
                     "show": true,
+                    "expanded": false,
                     "fontsInfo": {
                       "font": "Arial"
                     },
@@ -271,6 +281,7 @@
                     "name": "South Atlantic Members",
                     "editName": "Members",
                     "show": true,
+                    "expanded": false,
                     "on": false,
                     "enableTitle": false,
                     "showAgeLabels": false,
@@ -300,6 +311,7 @@
                     "name": "South Atlantic Facies Label",
                     "editName": "Facies Label",
                     "show": true,
+                    "expanded": false,
                     "on": true,
                     "enableTitle": false,
                     "fontsInfo": {
@@ -329,6 +341,7 @@
                     "name": "South Atlantic Series Label",
                     "editName": "Series Label",
                     "show": true,
+                    "expanded": false,
                     "on": true,
                     "enableTitle": false,
                     "fontsInfo": {
@@ -459,6 +472,7 @@
         ],
         "on": true,
         "show": true,
+        "expanded": true,
         "width": 100,
         "enableTitle": true,
         "rgb": {
@@ -480,6 +494,7 @@
             ],
             "on": true,
             "show": true,
+            "expanded": false,
             "width": 100,
             "enableTitle": true,
             "rgb": {
@@ -500,6 +515,7 @@
             "editName": "Parent 1",
             "on": true,
             "show": true,
+            "expanded": false,
             "enableTitle": true,
             "fontsInfo": {
               "font": "Arial"
@@ -511,6 +527,7 @@
                 "editName": "Block",
                 "on": false,
                 "show": true,
+                "expanded": false,
                 "enableTitle": false,
                 "fontsInfo": {
                   "font": "Arial"
@@ -565,6 +582,7 @@
                 "on": false,
                 "enableTitle": false,
                 "show": true,
+                "expanded": false,
                 "fontsInfo": {
                   "font": "Arial"
                 },
@@ -574,6 +592,7 @@
                     "name": "Facies Facies",
                     "editName": "Facies",
                     "show": true,
+                    "expanded": false,
                     "on": true,
                     "enableTitle": false,
                     "fontsInfo": {
@@ -605,6 +624,7 @@
                     "editName": "Members",
                     "on": false,
                     "show": true,
+                    "expanded": false,
                     "enableTitle": false,
                     "showAgeLabels": false,
                     "fontOptions": [
@@ -634,6 +654,7 @@
                     "editName": "Facies Label",
                     "on": true,
                     "show": true,
+                    "expanded": false,
                     "enableTitle": false,
                     "fontsInfo": {
                       "font": "Arial"
@@ -664,6 +685,7 @@
                     "on": true,
                     "enableTitle": false,
                     "show": true,
+                    "expanded": false,
                     "fontsInfo": {
                       "font": "Arial"
                     },
@@ -729,6 +751,7 @@
                 "editName": "Event",
                 "on": true,
                 "show": true,
+                "expanded": false,
                 "enableTitle": true,
                 "fontsInfo": {
                   "font": "Arial"
@@ -779,6 +802,7 @@
                 "editName": "Range",
                 "on": true,
                 "show": true,
+                "expanded": false,
                 "enableTitle": true,
                 "fontsInfo": {
                   "font": "Arial"
@@ -820,6 +844,7 @@
                 "editName": "Chron",
                 "on": true,
                 "show": true,
+                "expanded": false,
                 "enableTitle": false,
                 "fontsInfo": {
                   "font": "Arial"
@@ -831,6 +856,7 @@
                     "editName": "Chron",
                     "on": true,
                     "show": true,
+                    "expanded": false,
                     "enableTitle": false,
                     "showAgeLabels": false,
                     "fontOptions": [
@@ -858,6 +884,7 @@
                     "name": "Chron Chron Label",
                     "editName": "Chron Label",
                     "show": true,
+                    "expanded": false,
                     "on": false,
                     "enableTitle": false,
                     "showAgeLabels": false,
@@ -887,6 +914,7 @@
                     "name": "Chron Series Label",
                     "editName": "Series Label",
                     "show": true,
+                    "expanded": false,
                     "on": true,
                     "enableTitle": false,
                     "showAgeLabels": false,
@@ -952,6 +980,7 @@
                 "name": "Point",
                 "editName": "Point",
                 "show": true,
+                "expanded": false,
                 "on": false,
                 "enableTitle": true,
                 "fontsInfo": {
@@ -1037,6 +1066,7 @@
                 "name": "Sequence",
                 "editName": "Sequence",
                 "show": true,
+                "expanded": false,
                 "on": true,
                 "enableTitle": false,
                 "fontsInfo": {
@@ -1081,6 +1111,7 @@
                 "name": "Freehand",
                 "editName": "Freehand",
                 "show": true,
+                "expanded": false,
                 "on": true,
                 "enableTitle": false,
                 "fontsInfo": {
@@ -1117,6 +1148,7 @@
                 "name": "Blank",
                 "editName": "Blank",
                 "show": true,
+                "expanded": false,
                 "on": false,
                 "enableTitle": false,
                 "fontsInfo": {
@@ -1143,6 +1175,7 @@
                 "name": "Transect",
                 "editName": "Transect",
                 "show": true,
+                "expanded": false,
                 "on": true,
                 "enableTitle": true,
                 "fontsInfo": {
@@ -2104,6 +2137,7 @@
               ],
               "on": true,
               "show": true,
+              "expanded": true,
               "width": 100,
               "enableTitle": true,
               "rgb": {
@@ -2125,6 +2159,7 @@
                   ],
                   "on": true,
                   "show": true,
+                  "expanded": false,
                   "width": 100,
                   "enableTitle": true,
                   "rgb": {
