@@ -12,6 +12,18 @@
   overflow: auto;
   align-items: start;
 }
+.point-shape-checkbox {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.point-shape-radio-group {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
 .point-settings-header {
   display: flex;
   justify-content: center;

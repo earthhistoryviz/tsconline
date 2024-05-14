@@ -63,7 +63,7 @@ export const RGBModifier: React.FC<RGBModifierProps> = observer(({ label, checke
       />
       <div className="color-picker-rgb-modifier-container">
         {rgbInputs.map((rgbInput, index) => (
-          <div className="color-picker-rgb-modifier">
+          <div key={index} className="color-picker-rgb-modifier">
             <div className={rgbInput.label ? "generic-color-picker" : ""}>
               <TSCColorPicker
                 color={`rgb(${rgbInput.rgb.r}, ${rgbInput.rgb.g}, ${rgbInput.rgb.b})`}
