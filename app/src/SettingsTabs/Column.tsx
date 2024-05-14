@@ -12,31 +12,14 @@ import { useTheme } from "@mui/material/styles";
 import { Tooltip } from "@mui/material";
 import "./Column.css";
 import { checkIfDataIsInRange } from "../util/util";
+import { setExpanded } from "../state/actions";
 
 type ColumnAccordionProps = {
   details: ColumnInfo;
-  expandedAccordions: number[];
-  accordionClicked: (name: string) => void;
 };
 
-//for using integers instead of strings inside expandAccordion state array
-//to increase speed
-function stringToHash(string: string): number {
-  let hash = 0;
-
-  if (string.length == 0) return hash;
-
-  for (let i = 0; i < string.length; i++) {
-    const char = string.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-
-  return hash;
-}
-
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
-  ({ details, expandedAccordions, accordionClicked }) => {
+  ({ details }) => {
     const { actions, state } = useContext(context);
     const theme = useTheme();
     if (!details.show) {
@@ -115,10 +98,8 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
     return (
       <Accordion
         //checks if column name is in expand list
-        expanded={expandedAccordions.includes(stringToHash(details.name))}
-        onChange={() => {
-          accordionClicked(details.name);
-        }}>
+        expanded={details.expanded}
+        onChange={() => setExpanded(details, !details.expanded)}>
         <AccordionSummary aria-controls="panel-content" id="panel-header">
           <div
             onClick={(event) => {
@@ -135,8 +116,6 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
                 <ColumnAccordion
                   key={childName}
                   details={childDetails}
-                  expandedAccordions={expandedAccordions}
-                  accordionClicked={accordionClicked}
                 />
               ))}
           </>
@@ -150,42 +129,11 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(
 export const Column = observer(function Column() {
   const { state, actions } = useContext(context);
   //state array of column names that are expanded
-  const accordions = state.settingsTabs.columns ? stringToHash(state.settingsTabs.columns.name) : 0;
-  const [expandedAccordions, setExpandedAccordions] = useState<number[]>([accordions]);
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const term = event.target.value;
     actions.setColumnSearchTerm(term);
     actions.searchColumns(term);
   };
-  //if column not in expanded list, add it
-  //if column in expanded list, remove it
-  const accordionClicked = (name: string) => {
-    if (expandedAccordions.includes(stringToHash(name))) {
-      setExpandedAccordions(expandedAccordions.filter((number) => number !== stringToHash(name)));
-    } else setExpandedAccordions([...expandedAccordions, stringToHash(name)]);
-  };
-  //replaces expanded list with only top level column open
-  //which collpases everything
-  const collapseAll = () => {
-    if (!state.settingsTabs.columns) return;
-    setExpandedAccordions([stringToHash(state.settingsTabs.columns!.name)]);
-  };
-  //helper function for expand all for going through all the columns
-  function recurseThroughColumn(array: number[], columns: ColumnInfo[]) {
-    columns.forEach((elem) => {
-      array.push(stringToHash(elem.name));
-      recurseThroughColumn(array, elem.children);
-    });
-  }
-  //adds every column to the expand list
-  const expandAll = () => {
-    if (!state.settingsTabs.columns) return;
-    const newArray: number[] = [];
-    newArray.push(stringToHash(state.settingsTabs.columns!.name));
-    recurseThroughColumn(newArray, state.settingsTabs.columns!.children);
-    setExpandedAccordions(newArray);
-  };
-
   return (
     <div className="column-top-level">
       <div className="column-search-bar-container">
@@ -210,14 +158,16 @@ export const Column = observer(function Column() {
           <TSCButton
             id="column-expand-buttons"
             onClick={() => {
-              expandAll();
+              if (!state.settingsTabs.columns) return;
+              actions.setExpansionOfAll(state.settingsTabs.columns, true)
             }}>
             Expand All
           </TSCButton>
           <TSCButton
             id="column-expand-buttons"
             onClick={() => {
-              collapseAll();
+              if (!state.settingsTabs.columns) return;
+              actions.setExpansionOfAll(state.settingsTabs.columns, false)
             }}>
             collapse All
           </TSCButton>
@@ -226,8 +176,6 @@ export const Column = observer(function Column() {
               <ColumnAccordion
                 key={childName}
                 details={childDetails}
-                expandedAccordions={expandedAccordions}
-                accordionClicked={accordionClicked}
               />
             ))}
         </Box>
