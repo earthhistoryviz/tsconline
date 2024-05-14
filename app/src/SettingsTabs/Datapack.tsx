@@ -1,4 +1,4 @@
-import { Fragment, useContext, useState } from "react";
+import { useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useTheme } from "@mui/material/styles";
 import { TSCCheckbox, TSCDatapackUploadForm, TSCButton } from "../components";
@@ -31,16 +31,14 @@ export const Datapacks = observer(function Datapacks() {
   const download = (name: string) => {
     return (
       state.datapackIndex[name].isUserDatapack && (
-        <Fragment>
-          <Menu menuButton={<DownloadIcon className="download-icon" />} transition>
-            <MenuItem onClick={() => handleDownload(true, name)}>
-              <Typography>Encrypted Download</Typography>
-            </MenuItem>
-            <MenuItem onClick={() => handleDownload(false, name)}>
-              <Typography>Retrieve Original File</Typography>
-            </MenuItem>
-          </Menu>
-        </Fragment>
+        <Menu menuButton={<DownloadIcon className="download-icon" />} transition>
+          <MenuItem onClick={() => handleDownload(true, name)}>
+            <Typography>Encrypted Download</Typography>
+          </MenuItem>
+          <MenuItem onClick={() => handleDownload(false, name)}>
+            <Typography>Retrieve Original File</Typography>
+          </MenuItem>
+        </Menu>
       )
     );
   };
@@ -63,7 +61,7 @@ export const Datapacks = observer(function Datapacks() {
   const handleDownload = async (needEncryption: boolean, fileName: string) => {
     const fileURL = await getFileURL(needEncryption, fileName);
     const aTag = document.createElement("a");
-    if (typeof fileURL === "string") {
+    if (fileURL && typeof fileURL === "string") {
       aTag.href = fileURL;
 
       aTag.setAttribute("download", fileName);

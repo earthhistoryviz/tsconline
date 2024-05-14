@@ -128,7 +128,7 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
 export async function parseDatapacks(
   file: string,
   decryptFilePath: string,
-  isUserDataPack?: boolean
+  isUserDataPack: boolean = false
 ): Promise<DatapackParsingPack | null> {
   const decryptPaths = await grabFilepaths([file], decryptFilePath, "datapacks");
   if (decryptPaths.length == 0)
@@ -282,13 +282,14 @@ export async function parseDatapacks(
     show: true
   };
   setShowLabels(chartColumn);
-  const datapackParsingPack = { columnInfo: chartColumn, ageUnits, defaultChronostrat, formatVersion };
+  const isUserDatapack = isUserDataPack;
+  const datapackParsingPack = { columnInfo: chartColumn, ageUnits, defaultChronostrat, formatVersion, isUserDatapack };
+
   assertDatapackParsingPack(datapackParsingPack);
   if (date) datapackParsingPack.date = date;
   if (topAge || topAge === 0) datapackParsingPack.topAge = topAge;
   if (baseAge || baseAge === 0) datapackParsingPack.baseAge = baseAge;
   if (verticalScale) datapackParsingPack.verticalScale = verticalScale;
-  if (isUserDataPack) datapackParsingPack.isUserDatapack = isUserDataPack;
   return datapackParsingPack;
 }
 

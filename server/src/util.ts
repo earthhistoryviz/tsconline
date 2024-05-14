@@ -174,12 +174,18 @@ export function setCommonProperties<T>(o1: T, o2: Partial<T>): T {
 }
 
 export async function checkHeader(filepath: string) {
-  const fileStream = createReadStream(filepath);
-  const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
   let isEncrypted;
-  for await (const line of readline) {
-    isEncrypted = line.includes("TSCreator Encrypted Datafile");
-    break;
+  try {
+    const fileStream = createReadStream(filepath);
+    const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
+
+    for await (const line of readline) {
+      isEncrypted = line.includes("TSCreator Encrypted Datafile");
+      break;
+    }
+  } catch (e) {
+    return false;
   }
+
   return isEncrypted;
 }

@@ -700,16 +700,27 @@ export const requestDownload = action(async (filename: string, needEncryption: b
     method: "GET"
   });
   if (!response.ok) {
-    if (response.status === 404) {
-      displayServerError(null, ErrorCodes.FILE_NOT_FOUND, ErrorMessages[ErrorCodes.FILE_NOT_FOUND]);
-    } else if (response.status === 500) {
-      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    } else if (response.status === 422) {
-      displayServerError(
-        null,
-        ErrorCodes.INCORRET_ENCRYPTION_HEADER,
-        ErrorMessages[ErrorCodes.INCORRET_ENCRYPTION_HEADER]
-      );
+    switch (response.status) {
+      case 404: {
+        displayServerError(
+          response,
+          ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD,
+          ErrorMessages[ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD]
+        );
+        break;
+      }
+      case 500: {
+        displayServerError(response, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+        break;
+      }
+      case 422: {
+        displayServerError(
+          response,
+          ErrorCodes.INCORRECT_ENCRYPTION_HEADER,
+          ErrorMessages[ErrorCodes.INCORRECT_ENCRYPTION_HEADER]
+        );
+        break;
+      }
     }
   }
   const file = response.blob();
