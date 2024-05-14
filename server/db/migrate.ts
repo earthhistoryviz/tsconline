@@ -3,7 +3,6 @@ import BetterSqlite3 from "better-sqlite3";
 import { promises as fs } from "fs";
 import { Kysely, Migrator, SqliteDialect, FileMigrationProvider } from "kysely";
 import { Database } from "../dist/types.js";
-import { fileURLToPath, pathToFileURL } from "url";
 
 /*
 IMPORTANT: Exercise extreme caution when performing migrations that delete data. Always ensure a backup of the database exists before running such migrations, as the data deletion is irreversible. 
