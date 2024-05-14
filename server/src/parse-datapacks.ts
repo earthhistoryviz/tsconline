@@ -679,6 +679,7 @@ export async function getColumnTypes(
       }
     }
 
+    // TODO chron-only
     if (!inChronBlock && (tabSeparated[1] === "chron" || tabSeparated[1] === "chron-only")) {
       setColumnHeaders(chron, tabSeparated);
       inChronBlock = true;
@@ -870,7 +871,9 @@ function addPointToPointMap(point: Point, pointMap: Map<string, Point>) {
     const outerMargin = ((point.maxX - point.minX) * margin) / 2;
     point.lowerRange = point.minX - outerMargin;
     point.upperRange = point.maxX + outerMargin;
+    point.scaleStep = (point.upperRange - point.lowerRange) * 0.2;
   }
+
   pointMap.set(point.name, JSON.parse(JSON.stringify(point)));
   Object.assign(point, { ...createDefaultColumnHeaderProps(), ..._.cloneDeep(defaultPoint) });
 }
@@ -1159,8 +1162,8 @@ export function processPoint(line: string): SubPointInfo | null {
   };
   const tabSeparated = line.split("\t");
   if (tabSeparated.length < 2 || tabSeparated.length > 4 || tabSeparated[0]) return null;
-  const age = Number(tabSeparated[1]!);
-  const xVal = Number(tabSeparated[2]!);
+  const age = parseFloat(tabSeparated[1]!);
+  const xVal = parseFloat(tabSeparated[2]!);
   const popup = tabSeparated[3];
   if (isNaN(age) || !tabSeparated[1])
     throw new Error("Error processing point line, age: " + tabSeparated[1]! + " is NaN");
@@ -1473,6 +1476,7 @@ function recursive(
       pointShape,
       minX,
       maxX,
+      scaleStep,
       ...currentPoint
     } = pointMap.get(currentColumn)!;
     const deconstructedPointSettings = {
@@ -1485,7 +1489,8 @@ function recursive(
       smoothed,
       pointShape,
       minX,
-      maxX
+      maxX,
+      scaleStep
     };
     Object.assign(currentColumnInfo, {
       ...currentPoint,

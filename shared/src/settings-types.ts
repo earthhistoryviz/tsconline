@@ -1,6 +1,6 @@
 import {
   EventType,
-  FontsInfo,
+  FontsInfo, PointShape,
   RGB,
   RangeSort,
   assertEventSettings,
@@ -130,7 +130,7 @@ export type PointColumnInfoTSC = ColumnBasicInfoTSC & {
   flipScale: boolean;
   scaleStart: number;
   scaleStep: number;
-  pointType: "rect" | "round" | "tick";
+  pointType: PointShape;
 };
 
 export function assertChartInfoTSC(o: any): asserts o is ChartInfoTSC {

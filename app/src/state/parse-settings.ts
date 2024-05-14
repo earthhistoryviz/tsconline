@@ -12,6 +12,8 @@ import {
   assertChartSettingsInfoTSC,
   assertEventColumnInfoTSC,
   assertEventSettings,
+  assertPointColumnInfoTSC,
+  assertPointSettings,
   assertRulerColumnInfoTSC,
   assertZoneColumnInfoTSC,
   defaultChartSettingsInfoTSC,
@@ -26,7 +28,7 @@ import {
   defaultZoneColumnInfoTSC
 } from "@tsconline/shared";
 import { ChartSettings } from "../types";
-import { convertTSCColorToRGB, trimQuotes } from "../util/util";
+import { convertHexToRGB, convertRgbToString, convertTSCColorToRGB, trimQuotes } from "../util/util";
 import { cloneDeep } from "lodash";
 
 /**
@@ -383,7 +385,29 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       column = cloneDeep(defaultRulerColumnInfoTSC);
       break;
     case "Point":
-      column = cloneDeep(defaultPointColumnInfoTSC);
+      assertPointSettings(state.columnSpecificSettings);
+      column = {
+        ...cloneDeep(defaultPointColumnInfoTSC),
+        pointType: state.columnSpecificSettings.pointShape,
+        drawPoints: state.columnSpecificSettings.pointShape === "nopoints",
+        drawLine: state.columnSpecificSettings.drawLine,
+        lineColor: convertRgbToString(state.columnSpecificSettings.lineColor),
+        drawSmooth: state.columnSpecificSettings.smoothed,
+        drawFill: state.columnSpecificSettings.drawFill,
+        fillColor: convertRgbToString(state.columnSpecificSettings.fill),
+        minWindow: state.columnSpecificSettings.lowerRange,
+        maxWindow: state.columnSpecificSettings.upperRange,
+        drawScale: state.columnSpecificSettings.drawScale,
+        drawBgrndGradient: state.columnSpecificSettings.drawBackgroundGradient,
+        backGradStart: convertRgbToString(state.columnSpecificSettings.backgroundGradientStart),
+        backGradEnd: convertRgbToString(state.columnSpecificSettings.backgroundGradientEnd),
+        drawCurveGradient: state.columnSpecificSettings.drawCurveGradient,
+        curveGradStart: convertRgbToString(state.columnSpecificSettings.curveGradientStart),
+        curveGradEnd: convertRgbToString(state.columnSpecificSettings.curveGradientEnd),
+        flipScale: state.columnSpecificSettings.flipScale,
+        scaleStart: state.columnSpecificSettings.scaleStart,
+        scaleStep: state.columnSpecificSettings.scaleStep,
+      };
   }
   //TODO: check with Ogg about quote usage
   //strip surrounding quotations for id (ex. Belgium Datapack)

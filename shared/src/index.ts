@@ -283,6 +283,7 @@ export type Point = ColumnHeaderProps & {
   pointShape: PointShape;
   minX: number;
   maxX: number;
+  scaleStep: number;
 };
 
 export type Sequence = ColumnHeaderProps & {
