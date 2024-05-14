@@ -64,6 +64,7 @@ type TSCRadioGroupProps = {
     imageSrc?: string;
   }[];
   disabled?: boolean;
+  direction?: "horizontal" | "vertical";
 } & RadioGroupProps;
 
 export const TSCRadioGroup: React.FC<TSCRadioGroupProps> = ({
@@ -72,16 +73,18 @@ export const TSCRadioGroup: React.FC<TSCRadioGroupProps> = ({
   value,
   onChange,
   disabled,
+  direction = "vertical",
   ...props
 }) => {
   if (radioArray.length === 0) return null;
   return (
     <FormControl disabled={disabled}>
       <FormLabel>{name}</FormLabel>
-      <RadioGroup {...props} value={value} onChange={onChange} name="customized-radios">
+      <RadioGroup {...props} value={value} onChange={onChange} name="customized-radios" style={{ flexDirection: direction === "horizontal" ? "row" : "column"}}>
         {radioArray.map((radio, index) => (
           <FormControlLabel
             key={index}
+            className="radio-form-label"
             value={radio.value}
             control={<TSCRadio />}
             label={

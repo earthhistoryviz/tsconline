@@ -130,8 +130,19 @@ export type PointColumnInfoTSC = ColumnBasicInfoTSC & {
   flipScale: boolean;
   scaleStart: number;
   scaleStep: number;
-  pointType: PointShape;
+  pointType: "rect" | "round" | "tick";
 };
+
+export function convertPointShapeToPointType(shape: PointShape): "rect" | "round" | "tick" {
+  switch (shape) {
+    case "circle":
+      return "round";
+    case "cross":
+      return "tick";
+    default:
+      return "rect";
+  }
+}
 
 export function assertChartInfoTSC(o: any): asserts o is ChartInfoTSC {
   if (!o || typeof o !== "object") throw new Error("ChartInfoTSC must be a non-null object");

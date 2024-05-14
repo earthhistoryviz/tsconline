@@ -16,6 +16,7 @@ import {
   assertPointSettings,
   assertRulerColumnInfoTSC,
   assertZoneColumnInfoTSC,
+  convertPointShapeToPointType,
   defaultChartSettingsInfoTSC,
   defaultColumnBasicInfoTSC,
   defaultEventColumnInfoTSC,
@@ -388,7 +389,7 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       assertPointSettings(state.columnSpecificSettings);
       column = {
         ...cloneDeep(defaultPointColumnInfoTSC),
-        pointType: state.columnSpecificSettings.pointShape,
+        pointType: convertPointShapeToPointType(state.columnSpecificSettings.pointShape),
         drawPoints: state.columnSpecificSettings.pointShape === "nopoints",
         drawLine: state.columnSpecificSettings.drawLine,
         lineColor: convertRgbToString(state.columnSpecificSettings.lineColor),
@@ -554,6 +555,9 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
     } else if (key === "orientation") {
       assertZoneColumnInfoTSC(column);
       xml += `${indent}<setting name="orientation" orientation="${column.orientation}"/>\n`;
+    } else if (key === "pointType") {
+      assertPointColumnInfoTSC(column);
+      xml += `${indent}<setting name="pointType" pointType="${column.pointType}"/>\n`;
     } else {
       xml += `${indent}<setting name="${key}">${column[key as keyof ColumnInfoTSC]}</setting>\n`;
     }

@@ -1,11 +1,12 @@
 import { Box, Button, FormControlLabel, Modal, TextField, TextFieldProps, Typography } from "@mui/material";
-import { ColumnInfo, assertPointSettings } from "@tsconline/shared";
+import { ColumnInfo, assertPointSettings, isPointShape } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
 import { useContext, useState } from "react";
 import { context } from "../state";
 import "./PointSettingsPopup.css";
 import { RGBModifier, TSCButton, TSCCheckbox } from "../components";
 import { GenericTextField } from "../components";
+import { TSCRadioGroup } from "../components/TSCRadioGroup";
 
 type PointSettingsPopupProps = {
   column: ColumnInfo;
@@ -71,6 +72,32 @@ export const PointSettingsPopup: React.FC<PointSettingsPopupProps> = observer(({
               }
             ]}
           />
+            <FormControlLabel
+            name="drawPoints"
+            label="Draw Points"
+            className="point-shape-checkbox"
+            control={<TSCCheckbox
+              checked={pointSettings.pointShape !== "nopoints"}
+              onChange={(event) => actions.setPointColumnSettings(pointSettings, { pointShape: event.target.checked ? "rect" : "nopoints" })} />}
+            />
+          <div className="point-shape-radio-group">
+          <TSCRadioGroup
+            name="Point Type"
+            value={pointSettings.pointShape}
+            onChange={(event) => {
+              if (isPointShape(event.target.value)) {
+                actions.setPointColumnSettings(pointSettings, { pointShape: event.target.value });
+              }
+            }}
+            disabled={pointSettings.pointShape === "nopoints"}
+            radioArray={[
+              { value: "rect", label: "Rectangle" },
+              { value: "circle", label: "Circle" },
+              { value: "cross", label: "Cross" }
+            ]}
+            direction="horizontal"
+            />
+            </div>
           <div className="point-settings-adjustment-buttons">
             <FormControlLabel
               name="drawScale"
