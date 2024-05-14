@@ -1,6 +1,7 @@
 import {
   ChartSettingsInfoTSC,
   ColumnBasicInfoTSC,
+  ColumnInfo,
   EventColumnInfoTSC,
   EventSettings,
   FontsInfo,
