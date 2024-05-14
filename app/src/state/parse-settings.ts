@@ -407,7 +407,7 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
         curveGradEnd: convertRgbToString(state.columnSpecificSettings.curveGradientEnd),
         flipScale: state.columnSpecificSettings.flipScale,
         scaleStart: state.columnSpecificSettings.scaleStart,
-        scaleStep: state.columnSpecificSettings.scaleStep,
+        scaleStep: state.columnSpecificSettings.scaleStep
       };
   }
   //TODO: check with Ogg about quote usage

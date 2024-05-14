@@ -1,4 +1,4 @@
-import { TextFieldProps, TextField, Box, Typography, FormControlLabel, hexToRgb } from "@mui/material";
+import { TextFieldProps, TextField, Box, Typography, FormControlLabel } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { NumericFormat } from "react-number-format";
 import "./TSCGenericSettings.css";
