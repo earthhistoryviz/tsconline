@@ -390,7 +390,7 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       column = {
         ...cloneDeep(defaultPointColumnInfoTSC),
         pointType: convertPointShapeToPointType(state.columnSpecificSettings.pointShape),
-        drawPoints: state.columnSpecificSettings.pointShape === "nopoints",
+        drawPoints: state.columnSpecificSettings.pointShape !== "nopoints",
         drawLine: state.columnSpecificSettings.drawLine,
         lineColor: convertRgbToString(state.columnSpecificSettings.lineColor),
         drawSmooth: state.columnSpecificSettings.smoothed,

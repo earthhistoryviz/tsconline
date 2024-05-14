@@ -37,6 +37,9 @@ jest.mock("@tsconline/shared", () => ({
     if (typeof o.b !== "number") throw new Error("Invalid rgb");
     if (o.b < 0 || o.b > 255) throw new Error("Invalid rgb");
   }),
+  calculateAutoScale: jest.fn().mockImplementation((min: number, max: number) => {
+    return { lowerRange: min, upperRange: max, scaleStep: 0.18 };
+  }),
   allFontOptions: ["Column Header", "Popup Body"],
   defaultFontsInfo: { font: "Arial" },
   defaultEventSettings: { type: "events", rangeSort: "first occurrence" },
