@@ -768,7 +768,6 @@ export async function getColumnTypes(
 function setColumnHeaders(column: ColumnHeaderProps, tabSeparated: string[]) {
   //for formatted names in ColumnInfo object
   column.name = formatColumnName(tabSeparated[0]!);
-  if (column.name.includes("Nanno Zone")) console.log(column.name);
   const width = Number(tabSeparated[2]!);
   const rgb = tabSeparated[3];
   const enableTitle = tabSeparated[4];
