@@ -61,7 +61,7 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
 };
 
 export const requestDownload = async function requestDownload(
-  request: FastifyRequest<{ Params: { filename: string }; Querystring: { needEncryption: boolean } }>,
+  request: FastifyRequest<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>,
   reply: FastifyReply
 ) {
   const uuid = request.session.get("uuid");
@@ -69,7 +69,7 @@ export const requestDownload = async function requestDownload(
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
-  //for test usage: const uuid = "username";
+  // for test usage: const uuid = "username";
   const { needEncryption } = request.query;
   const { filename } = request.params;
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
@@ -78,98 +78,11 @@ export const requestDownload = async function requestDownload(
   const encryptedFilepathDir = path.join(userDir, "encrypted-datapacks");
   const maybeEncryptedFilepath = path.join(encryptedFilepathDir, filename);
   if (needEncryption === undefined) {
-    await access(filepath);
-    const file = await readFile(filepath);
-    reply.send(file);
-    return;
-  } else if (needEncryption) {
-    try {
-      await access(maybeEncryptedFilepath);
-      const file = await readFile(maybeEncryptedFilepath);
-      if (await checkHeader(maybeEncryptedFilepath)) {
-        reply.send(file);
-        return;
-      } else {
-        await rm(maybeEncryptedFilepath, { force: true });
-      }
-    } catch (e) {
-      const error = e as NodeJS.ErrnoException;
-      if (error.code !== "ENOENT") {
-        reply.status(500).send({ error: "An error occurred: " + e });
-        return;
-      }
-    }
     try {
       await access(filepath);
       const file = await readFile(filepath);
-      if (await checkHeader(filepath)) {
-        reply.send(file);
-        return;
-      }
-    } catch (e) {
-      const error = e as NodeJS.ErrnoException;
-      if (error.code === "ENOENT") {
-        reply.status(404).send({ error: "File not found" });
-      } else {
-        reply.status(500).send({ error: "An error occurred: " + e });
-      }
+      reply.send(file);
       return;
-    }
-
-    try {
-      await mkdirp(encryptedFilepathDir);
-    } catch (e) {
-      console.error(e);
-      reply.status(500).send({ error: "Failed to create encrypted directory with error " + e });
-      return;
-    }
-
-    try {
-      await new Promise<void>((resolve) => {
-        const cmd =
-          `java -jar ${assetconfigs.activeJar} ` +
-          // datapacks:
-          `-d "${filepath.replaceAll("\\", "/")}" ` +
-          // Tell it where to send the datapacks
-          `-enc ${encryptedFilepathDir.replaceAll("\\", "/")} ` +
-          `-node`;
-
-        // java -jar <jar file> -d <datapack> <datapack> -enc <destination directory> -node
-        console.log("Calling Java encrypt.jar: ", cmd);
-        exec(cmd, function (error, stdout, stderror) {
-          console.log("Java encrypt.jar finished, sending reply to browser");
-          if (error) {
-            console.error("Java error param: " + error);
-            console.error("Java stderr: " + stderror.toString());
-            resolve();
-          } else {
-            console.log("Java stdout: " + stdout.toString());
-            resolve();
-          }
-        });
-      });
-    } catch (e) {
-      console.error(e);
-      reply.status(500).send({ error: "Failed to encrypt datapacks with error " + e });
-      return;
-    }
-    const downloadPath = path.join(encryptedFilepathDir, filename);
-    try {
-      await access(downloadPath);
-      const file = await readFile(downloadPath);
-
-      if (await checkHeader(downloadPath)) {
-        reply.send(file);
-        return;
-      } else {
-        await rm(downloadPath, { force: true });
-        const errormsg =
-          "Java file was unable to encrypt the file " + filename + ", resulting in an incorrect encryption header.";
-        reply.status(422).send({
-          error: errormsg
-        });
-        return;
-      }
     } catch (e) {
       const error = e as NodeJS.ErrnoException;
       if (error.code === "ENOENT") {
@@ -178,6 +91,104 @@ export const requestDownload = async function requestDownload(
       } else {
         reply.status(500).send({ error: "An error occurred: " + e });
       }
+      return;
+    }
+  }
+  try {
+    await access(maybeEncryptedFilepath);
+    const file = await readFile(maybeEncryptedFilepath);
+    if (await checkHeader(maybeEncryptedFilepath)) {
+      reply.send(file);
+      return;
+    } else {
+      await rm(maybeEncryptedFilepath, { force: true });
+    }
+  } catch (e) {
+    const error = e as NodeJS.ErrnoException;
+    if (error.code !== "ENOENT") {
+      reply.status(500).send({ error: "An error occurred: " + e });
+      return;
+    }
+  }
+  try {
+    await access(filepath);
+    const file = await readFile(filepath);
+    if (await checkHeader(filepath)) {
+      reply.send(file);
+      return;
+    }
+  } catch (e) {
+    const error = e as NodeJS.ErrnoException;
+    if (error.code === "ENOENT") {
+      const errormsg = "The file requested " + filename + " does not exist within user's upload directory";
+      reply.status(404).send({ error: errormsg });
+    } else {
+      reply.status(500).send({ error: "An error occurred: " + e });
+    }
+    return;
+  }
+
+  try {
+    await mkdirp(encryptedFilepathDir);
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Failed to create encrypted directory with error " + e });
+    return;
+  }
+
+  try {
+    await new Promise<void>((resolve) => {
+      const cmd =
+        `java -jar ${assetconfigs.activeJar} ` +
+        // datapacks:
+        `-d "${filepath.replaceAll("\\", "/")}" ` +
+        // Tell it where to send the datapacks
+        `-enc ${encryptedFilepathDir.replaceAll("\\", "/")} ` +
+        `-node`;
+
+      // java -jar <jar file> -d <datapack> <datapack> -enc <destination directory> -node
+      console.log("Calling Java encrypt.jar: ", cmd);
+      exec(cmd, function (error, stdout, stderror) {
+        console.log("Java encrypt.jar finished, sending reply to browser");
+        if (error) {
+          console.error("Java error param: " + error);
+          console.error("Java stderr: " + stderror.toString());
+          resolve();
+        } else {
+          console.log("Java stdout: " + stdout.toString());
+          resolve();
+        }
+      });
+    });
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Failed to encrypt datapacks with error " + e });
+    return;
+  }
+
+  try {
+    await access(maybeEncryptedFilepath);
+    const file = await readFile(maybeEncryptedFilepath);
+
+    if (await checkHeader(maybeEncryptedFilepath)) {
+      reply.send(file);
+      return;
+    } else {
+      await rm(maybeEncryptedFilepath, { force: true });
+      const errormsg =
+        "Java file was unable to encrypt the file " + filename + ", resulting in an incorrect encryption header.";
+      reply.status(422).send({
+        error: errormsg
+      });
+      return;
+    }
+  } catch (e) {
+    const error = e as NodeJS.ErrnoException;
+    if (error.code === "ENOENT") {
+      const errormsg = "The file requested " + filename + " does not exist within user's upload directory";
+      reply.status(404).send({ error: errormsg });
+    } else {
+      reply.status(500).send({ error: "An error occurred: " + e });
     }
   }
 };
@@ -220,7 +231,7 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
-  //for test usage: const uuid = "username";
+  // for test usage: const uuid = "username";
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
   try {
     await access(userDir);
@@ -253,7 +264,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
-  //for test usage: const uuid = "username";
+  // for test usage: const uuid = "username";
   const file = await request.file();
   if (!file) {
     reply.status(404).send({ error: "No file uploaded" });
