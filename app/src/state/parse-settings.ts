@@ -297,8 +297,7 @@ export function xmlToJson(xml: string): ChartInfoTSC {
       settingsTSC["class datastore.RootColumn:Chart Root"]._id = "class datastore.RootColumn:Chart Root";
     }
   }
-
-  //assertChartInfoTSC(settingsTSC);
+  assertChartInfoTSC(settingsTSC);
   return settingsTSC;
 }
 

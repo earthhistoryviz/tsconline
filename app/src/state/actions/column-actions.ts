@@ -44,14 +44,18 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
         {
           assertPointColumnInfoTSC(settings);
           assertPointSettings(column.columnSpecificSettings);
+
           let presetPointShape: PointShape = "nopoints";
           if (settings.drawPoints === true) {
-            if (settings.pointType === "round") {
-              presetPointShape = "circle";
-            } else if (settings.pointType === "tick") {
-              presetPointShape = "cross";
-            } else {
-              presetPointShape = "rect";
+            switch (settings.pointType) {
+              case "round":
+                presetPointShape = "circle";
+                break;
+              case "tick":
+                presetPointShape = "cross";
+                break;
+              case "rect":
+                presetPointShape = "rect";
             }
           }
           setPointColumnSettings(column.columnSpecificSettings, {
@@ -87,7 +91,6 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
       "Unknown column name '" + columnName.substring(0, snackbarTextLengthLimit - 1) + "' found while loading settings",
       "warning"
     );
-    console.log(columnName);
   } else setColumnProperties(curcol, settings);
   if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
     for (let i = 0; i < settings.children.length; i++) {
@@ -139,35 +142,13 @@ export const toggleSettingsTabColumn = action((name: string) => {
     } else curcol = state.settingsTabs.columnHashMap.get(curcol.parent!)!;
   }
 });
+export const setEventColumnSettings = action((eventSettings: EventSettings, newSettings: Partial<EventSettings>) => {
+  Object.assign(eventSettings, newSettings);
+});
 
 export const setPointColumnSettings = action((pointSettings: PointSettings, newSettings: Partial<PointSettings>) => {
-  if (newSettings.drawLine) pointSettings.drawLine = newSettings.drawLine;
-  if (newSettings.drawFill) pointSettings.drawFill = newSettings.drawFill;
-  if (newSettings.drawScale) pointSettings.drawScale = newSettings.drawScale;
-  if (newSettings.drawCurveGradient) pointSettings.drawCurveGradient = newSettings.drawCurveGradient;
-  if (newSettings.drawBackgroundGradient) pointSettings.drawBackgroundGradient = newSettings.drawBackgroundGradient;
-  if (newSettings.backgroundGradientStart) pointSettings.backgroundGradientStart = newSettings.backgroundGradientStart;
-  if (newSettings.backgroundGradientEnd) pointSettings.backgroundGradientEnd = newSettings.backgroundGradientEnd;
-  if (newSettings.curveGradientStart) pointSettings.curveGradientStart = newSettings.curveGradientStart;
-  if (newSettings.curveGradientEnd) pointSettings.curveGradientEnd = newSettings.curveGradientEnd;
-  if (newSettings.lineColor) pointSettings.lineColor = newSettings.lineColor;
-  if (newSettings.flipScale) pointSettings.flipScale = newSettings.flipScale;
-  if (newSettings.scaleStart) pointSettings.scaleStart = newSettings.scaleStart;
-  if (newSettings.scaleStep) pointSettings.scaleStep = newSettings.scaleStep;
-  if (newSettings.fill) pointSettings.fill = newSettings.fill;
-  if (newSettings.pointShape) pointSettings.pointShape = newSettings.pointShape;
-  if (newSettings.lowerRange) pointSettings.lowerRange = newSettings.lowerRange;
-  if (newSettings.upperRange) pointSettings.upperRange = newSettings.upperRange;
-  if (newSettings.smoothed) pointSettings.smoothed = newSettings.smoothed;
-  if (newSettings.minX) pointSettings.minX = newSettings.minX;
-  if (newSettings.maxX) pointSettings.maxX = newSettings.maxX;
+  Object.assign(pointSettings, newSettings);
 });
-
-export const setEventColumnSettings = action((eventSettings: EventSettings, newSettings: Partial<EventSettings>) => {
-  if (newSettings.type) eventSettings.type = newSettings.type;
-  if (newSettings.rangeSort) eventSettings.rangeSort = newSettings.rangeSort;
-});
-
 export const setColumnOn = action((isOn: boolean, column: ColumnInfo) => {
   column.on = isOn;
 });
