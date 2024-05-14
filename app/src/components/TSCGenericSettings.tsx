@@ -1,10 +1,11 @@
-import { TextFieldProps, TextField, Box, Typography, FormControlLabel } from "@mui/material";
+import { TextFieldProps, TextField, Box, Typography, FormControlLabel, hexToRgb } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { NumericFormat } from "react-number-format";
 import "./TSCGenericSettings.css";
 import { RGB } from "@tsconline/shared";
 import { TSCCheckbox } from "./TSCCheckbox";
 import TSCColorPicker from "./TSCColorPicker";
+import { convertHexToRGB } from "../util/util";
 
 type GenericTextFieldProps = {
   header: string;
@@ -45,31 +46,35 @@ export const GenericTextField: React.FC<GenericTextFieldProps> = observer(({ hea
 type RGBModifierProps = {
   label: string;
   checked: boolean;
-  rgb: RGB;
   onCheckedChange: (checked: boolean) => void;
-  onRGBChange: (rgb: RGB) => void;
+  rgbInputs: {
+    rgb: RGB;
+    onRGBChange: (rgb: RGB) => void;
+    label?: string;
+  }[];
 };
 
-export const RGBModifier: React.FC<RGBModifierProps> = observer(
-  ({ label, checked, rgb, onRGBChange, onCheckedChange }) => {
-    return (
-      <>
-        <FormControlLabel
-          label={label}
-          control={<TSCCheckbox checked={checked} onChange={(value) => onCheckedChange(value.target.checked)} />}
-        />
-        <TSCColorPicker
-          color={`rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`}
-          onColorChange={(color) => {
-            onRGBChange({
-              r: parseInt(color.slice(1, 3), 16),
-              g: parseInt(color.slice(3, 5), 16),
-              b: parseInt(color.slice(5, 7), 16)
-            });
-          }}
-          portal
-        />
-      </>
-    );
-  }
-);
+export const RGBModifier: React.FC<RGBModifierProps> = observer(({ label, checked, rgbInputs, onCheckedChange }) => {
+  return (
+    <>
+      <FormControlLabel
+        label={label}
+        control={<TSCCheckbox checked={checked} onChange={(value) => onCheckedChange(value.target.checked)} />}
+      />
+      {rgbInputs.map((rgbInput, index) => (
+        <div className="color-picker-rgb-modifier">
+          <div className={rgbInput.label ? "generic-color-picker" : ""}>
+            <TSCColorPicker
+              color={`rgb(${rgbInput.rgb.r}, ${rgbInput.rgb.g}, ${rgbInput.rgb.b})`}
+              onColorChange={(color) => {
+                rgbInput.onRGBChange(convertHexToRGB(color, false));
+              }}
+              portal
+            />
+          </div>
+          <Typography fontSize={12}>{rgbInput.label}</Typography>
+        </div>
+      ))}
+    </>
+  );
+});

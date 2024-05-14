@@ -24,3 +24,17 @@
   justify-content: center;
   align-items: center;
 }
+
+.generic-color-picker {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.color-picker-rgb-modifier {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}

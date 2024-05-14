@@ -97,13 +97,53 @@ export const PointSettingsPopup: React.FC<PointSettingsPopupProps> = observer(({
               }
             />
           </div>
-          <RGBModifier
-            label="Line"
-            checked={pointSettings.drawLine}
-            rgb={pointSettings.lineColor}
-            onCheckedChange={(value) => actions.setPointColumnSettings(pointSettings, { drawLine: value })}
-            onRGBChange={(value) => actions.setPointColumnSettings(pointSettings, { lineColor: value })}
-          />
+          <div className="point-settings-adjustment-buttons">
+            <RGBModifier
+              label="Line"
+              checked={pointSettings.drawLine}
+              onCheckedChange={(value) => actions.setPointColumnSettings(pointSettings, { drawLine: value })}
+              rgbInputs={[
+                {
+                  rgb: pointSettings.lineColor,
+                  onRGBChange: (value) => actions.setPointColumnSettings(pointSettings, { lineColor: value })
+                }
+              ]}
+            />
+            <RGBModifier
+              label="Fill"
+              checked={pointSettings.drawFill}
+              onCheckedChange={(value) => actions.setPointColumnSettings(pointSettings, { drawFill: value })}
+              rgbInputs={[
+                {
+                  rgb: pointSettings.fill,
+                  onRGBChange: (value) => actions.setPointColumnSettings(pointSettings, { fill: value })
+                }
+              ]}
+            />
+          </div>
+          <div className="point-settings-adjustment-buttons">
+            <RGBModifier
+              label="Background Gradient"
+              checked={pointSettings.drawBackgroundGradient}
+              onCheckedChange={(value) =>
+                actions.setPointColumnSettings(pointSettings, { drawBackgroundGradient: value })
+              }
+              rgbInputs={[
+                {
+                  rgb: pointSettings.backgroundGradientStart,
+                  onRGBChange: (value) =>
+                    actions.setPointColumnSettings(pointSettings, { backgroundGradientStart: value }),
+                  label: "Start"
+                },
+                {
+                  rgb: pointSettings.backgroundGradientEnd,
+                  onRGBChange: (value) =>
+                    actions.setPointColumnSettings(pointSettings, { backgroundGradientEnd: value }),
+                  label: "End"
+                }
+              ]}
+            />
+          </div>
         </Box>
       </Modal>
     </div>
