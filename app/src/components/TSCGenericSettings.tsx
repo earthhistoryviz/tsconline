@@ -1,5 +1,4 @@
 import { TextFieldProps, TextField, Box, Typography, FormControlLabel } from "@mui/material";
-import { observer } from "mobx-react-lite";
 import { NumericFormat } from "react-number-format";
 import "./TSCGenericSettings.css";
 import { RGB } from "@tsconline/shared";
@@ -16,9 +15,9 @@ type GenericTextFieldProps = {
   }[];
 };
 
-export const GenericTextField: React.FC<GenericTextFieldProps> = observer(({ header, inputs }) => {
-  const InputTextField = ({ ...props }: TextFieldProps) => <TextField {...props} className="generic-text-field" />;
+const InputTextField = ({ ...props }: TextFieldProps) => <TextField {...props} className="generic-text-field" />;
 
+export const GenericTextField: React.FC<GenericTextFieldProps> = ({ header, inputs }) => {
   return (
     <Box className="generic-text-field-container">
       <Typography className="generic-text-field-header">{header}</Typography>
@@ -41,7 +40,7 @@ export const GenericTextField: React.FC<GenericTextFieldProps> = observer(({ hea
       </div>
     </Box>
   );
-});
+};
 
 type RGBModifierProps = {
   label: string;
@@ -54,7 +53,7 @@ type RGBModifierProps = {
   }[];
 };
 
-export const RGBModifier: React.FC<RGBModifierProps> = observer(({ label, checked, rgbInputs, onCheckedChange }) => {
+export const RGBModifier: React.FC<RGBModifierProps> = ({ label, checked, rgbInputs, onCheckedChange }) => {
   return (
     <>
       <FormControlLabel
@@ -79,4 +78,4 @@ export const RGBModifier: React.FC<RGBModifierProps> = observer(({ label, checke
       </div>
     </>
   );
-});
+};
