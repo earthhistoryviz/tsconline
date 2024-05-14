@@ -8,6 +8,9 @@ import { RGBModifier, TSCButton, TSCCheckbox } from "../components";
 import { GenericTextField } from "../components";
 import { TSCRadioGroup } from "../components/TSCRadioGroup";
 import CloseIcon from "@mui/icons-material/Close";
+import Rect from "../assets/settings_icons/rect.gif"
+import Circle from "../assets/settings_icons/round.gif"
+import Tick from "../assets/settings_icons/tick.gif"
 
 type PointSettingsPopupProps = {
   column: ColumnInfo;
@@ -102,9 +105,9 @@ export const PointSettingsPopup: React.FC<PointSettingsPopupProps> = observer(({
               }}
               disabled={pointSettings.pointShape === "nopoints"}
               radioArray={[
-                { value: "rect", label: "Rectangle" },
-                { value: "circle", label: "Circle" },
-                { value: "cross", label: "Cross" }
+                { value: "rect", imageSrc: Rect },
+                { value: "circle", imageSrc: Circle },
+                { value: "cross", imageSrc: Tick}
               ]}
               direction="horizontal"
             />

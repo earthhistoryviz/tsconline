@@ -60,7 +60,7 @@ type TSCRadioGroupProps = {
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   radioArray: {
     value: string;
-    label: string;
+    label?: string;
     imageSrc?: string;
   }[];
   disabled?: boolean;
