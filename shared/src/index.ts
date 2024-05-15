@@ -3,7 +3,7 @@
 import { defaultFontsInfoConstant } from "./constants.js";
 
 export * from "./constants.js";
-
+export * from "./util.js";
 export * from "./settings-types.js";
 
 export type SuccessfulServerResponse = {
@@ -284,6 +284,7 @@ export type Point = ColumnHeaderProps & {
   pointShape: PointShape;
   minX: number;
   maxX: number;
+  scaleStep: number;
 };
 
 export type Sequence = ColumnHeaderProps & {

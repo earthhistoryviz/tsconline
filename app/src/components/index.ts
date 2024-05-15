@@ -15,3 +15,4 @@ export * from "./TSCSnackbar";
 export * from "./TSCComponents";
 export { default as Lottie } from "./TSCLottie";
 export { Accordion, AccordionSummary, AccordionDetails, ColumnContainer } from "./TSCColumns";
+export * from "./TSCGenericSettings";

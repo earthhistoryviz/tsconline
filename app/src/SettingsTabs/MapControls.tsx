@@ -25,13 +25,19 @@ const AgeTextField = ({ ...props }: TextFieldProps) => (
     {...props}
     height={"40px"}
     className="age-text-field"
+    inputProps={{ className: "age-text-form-input" }}
     InputProps={{
       endAdornment: <TSCInputAdornment>MA</TSCInputAdornment>
     }}
   />
 );
 const DotSizeTextField = ({ ...props }: TextFieldProps) => (
-  <TSCTextField height={"40px"} {...props} className="dot-input-form" />
+  <TSCTextField
+    height={"40px"}
+    {...props}
+    className="dot-input-form"
+    inputProps={{ className: "dot-text-form-input" }}
+  />
 );
 
 export const FaciesControls = observer(() => {
