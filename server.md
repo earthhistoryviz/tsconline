@@ -232,3 +232,9 @@ Simple route that sends the presets we generated at the [yarn start](#yarn-start
 This flowchart shows all the current flows for the login routes:
 
 ![flowchart](assets/Login-Flows.drawio.png)
+
+### Database Structure:
+
+---
+
+![database](assets/Database-Structure.drawio.png)
