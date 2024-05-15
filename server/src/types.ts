@@ -35,7 +35,12 @@ export type Email = {
   from: string;
   to: string;
   subject: string;
-  text: string;
+  preHeader: string;
+  title: string;
+  message: string;
+  link?: string;
+  buttonText?: string;
+  action: string;
 };
 
 export type AssetConfig = {
@@ -74,7 +79,12 @@ export function assertEmail(o: any): asserts o is Email {
   if (typeof o.from !== "string") throwError("Email", "from", "string", o.from);
   if (typeof o.to !== "string") throwError("Email", "to", "string", o.to);
   if (typeof o.subject !== "string") throwError("Email", "subject", "string", o.subject);
-  if (typeof o.text !== "string") throwError("Email", "text", "string", o.text);
+  if (typeof o.preHeader !== "string") throwError("Email", "preHeader", "string", o.preHeader);
+  if (typeof o.title !== "string") throwError("Email", "title", "string", o.title);
+  if (typeof o.message !== "string") throwError("Email", "message", "string", o.message);
+  if (typeof o.action !== "string") throwError("Email", "action", "string", o.action);
+  if (o.link && typeof o.link !== "string") throwError("Email", "link", "string", o.link);
+  if (o.buttonText && typeof o.buttonText !== "string") throwError("Email", "buttonText", "string", o.buttonText);
 }
 
 export function assertFileMetadata(o: any): asserts o is FileMetadata {
