@@ -78,15 +78,13 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
       );
 
     return (
-      <>
-        <ColumnContainer>
-          <div className={"column-checkbox " + leaf} onClick={() => clickColumnName()}>
-            {tooltipOrCheckBox}
+      <ColumnContainer>
+        <div className={"column-checkbox " + leaf} onClick={() => clickColumnName()}>
+          {tooltipOrCheckBox}
 
-            {columnName}
-          </div>
-        </ColumnContainer>
-      </>
+          {columnName}
+        </div>
+      </ColumnContainer>
     );
   }
 
@@ -109,12 +107,10 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
         </div>
       </AccordionSummary>
       <AccordionDetails>
-        <>
-          {details.children &&
-            Object.entries(details.children).map(([childName, childDetails]) => (
-              <ColumnAccordion key={childName} details={childDetails} />
-            ))}
-        </>
+        {details.children &&
+          Object.entries(details.children).map(([childName, childDetails]) => (
+            <ColumnAccordion key={childName} details={childDetails} />
+          ))}
       </AccordionDetails>
     </Accordion>
   );
