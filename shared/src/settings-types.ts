@@ -1,4 +1,13 @@
-import { FontsInfo, RGB, assertFontsInfo, assertRGB, throwError } from "./index.js";
+import {
+  EventType,
+  FontsInfo,
+  RGB,
+  RangeSort,
+  assertEventSettings,
+  assertFontsInfo,
+  assertRGB,
+  throwError
+} from "./index.js";
 
 export type ChartInfoTSC = {
   settings: ChartSettingsInfoTSC;
@@ -72,8 +81,8 @@ export type ColumnBasicInfoTSC = {
 };
 
 export type EventColumnInfoTSC = ColumnBasicInfoTSC & {
-  type: string;
-  rangeSort: string;
+  type: EventType;
+  rangeSort: RangeSort;
 };
 
 export type ZoneColumnInfoTSC = ColumnBasicInfoTSC & {
@@ -104,20 +113,20 @@ export type RulerColumnInfoTSC = ColumnBasicInfoTSC & {
 export type PointColumnInfoTSC = ColumnBasicInfoTSC & {
   drawPoints: boolean;
   drawLine: boolean;
-  lineColor: string;
+  lineColor: RGB;
   drawSmooth: boolean;
   drawFill: boolean;
-  fillColor: string;
+  fillColor: RGB;
   doNotSetWindowAuto: boolean;
   minWindow: number;
   maxWindow: number;
   drawScale: boolean;
   drawBgrndGradient: boolean;
-  backGradStart: string;
-  backGradEnd: string;
+  backGradStart: RGB;
+  backGradEnd: RGB;
   drawCurveGradient: boolean;
-  curveGradStart: string;
-  curveGradEnd: string;
+  curveGradStart: RGB;
+  curveGradEnd: RGB;
   flipScale: boolean;
   scaleStart: number;
   scaleStep: number;
@@ -187,8 +196,7 @@ export function assertZoneColumnInfoTSC(o: any): asserts o is ZoneColumnInfoTSC 
 }
 
 export function assertEventColumnInfoTSC(o: any): asserts o is EventColumnInfoTSC {
-  if (typeof o.type !== "string") throwError("EventColumnInfoTSC", "type", "string", o.type);
-  if (typeof o.rangeSort !== "string") throwError("EventColumnInfoTSC", "rangeSort", "string", o.type);
+  assertEventSettings(o);
   assertColumnBasicInfoTSC(o);
 }
 export function assertSequenceColumnInfoTSC(o: any): asserts o is SequenceColumnInfoTSC {
@@ -217,10 +225,10 @@ export function assertRulerColumnInfoTSC(o: any): asserts o is RulerColumnInfoTS
 export function assertPointColumnInfoTSC(o: any): asserts o is PointColumnInfoTSC {
   if (typeof o.drawPoints !== "boolean") throwError("PointColumnInfoTSC", "drawPoints", "boolean", o.drawPoints);
   if (typeof o.drawLine !== "boolean") throwError("PointColumnInfoTSC", "drawLine", "boolean", o.drawLine);
-  if (typeof o.lineColor !== "string") throwError("PointColumnInfoTSC", "lineColor", "string", o.lineColor);
+  assertRGB(o.lineColor);
   if (typeof o.drawSmooth !== "boolean") throwError("PointColumnInfoTSC", "drawSmooth", "boolean", o.drawSmooth);
   if (typeof o.drawFill !== "boolean") throwError("PointColumnInfoTSC", "drawFill", "boolean", o.drawFill);
-  if (typeof o.fillColor !== "string") throwError("PointColumnInfoTSC", "fillColor", "string", o.fillColor);
+  assertRGB(o.fillColor);
   if (typeof o.doNotSetWindowAuto !== "boolean")
     throwError("PointColumnInfoTSC", "doNotSetWindowAuto", "boolean", o.doNotSetWindowAuto);
   if (typeof o.minWindow !== "number") throwError("PointColumnInfoTSC", "minWindow", "number", o.minWindow);
@@ -228,13 +236,12 @@ export function assertPointColumnInfoTSC(o: any): asserts o is PointColumnInfoTS
   if (typeof o.drawScale !== "boolean") throwError("PointColumnInfoTSC", "drawScale", "boolean", o.drawScale);
   if (typeof o.drawBgrndGradient !== "boolean")
     throwError("PointColumnInfoTSC", "drawBgrndGradient", "boolean", o.drawBgrndGradient);
-  if (typeof o.backGradStart !== "string") throwError("PointColumnInfoTSC", "backGradStart", "string", o.backGradStart);
-  if (typeof o.backGradEnd !== "string") throwError("PointColumnInfoTSC", "backGradEnd", "string", o.backGradEnd);
+  assertRGB(o.backGradStart);
+  assertRGB(o.backGradEnd);
   if (typeof o.drawCurveGradient !== "boolean")
     throwError("PointColumnInfoTSC", "drawCurveGradient", "boolean", o.drawCurveGradient);
-  if (typeof o.curveGradStart !== "string")
-    throwError("PointColumnInfoTSC", "curveGradStart", "string", o.curveGradStart);
-  if (typeof o.curveGradEnd !== "string") throwError("PointColumnInfoTSC", "curveGradEnd", "string", o.curveGradEnd);
+  assertRGB(o.curveGradStart);
+  assertRGB(o.curveGradEnd);
   if (typeof o.flipScale !== "boolean") throwError("PointColumnInfoTSC", "flipScale", "boolean", o.flipScale);
   if (typeof o.scaleStart !== "number") throwError("PointColumnInfoTSC", "scaleStart", "number", o.scaleStart);
   if (typeof o.scaleStep !== "number") throwError("PointColumnInfoTSC", "scaleStep", "number", o.scaleStep);

@@ -173,6 +173,20 @@ export function setCommonProperties<T>(o1: T, o2: Partial<T>): T {
   return o1;
 }
 
+/**
+ * formats column names by trimming quotes, removing duplicate quotes, and replacing commas after digits to periods.
+ * reference StringNoQuotes in loader1.java
+ * @param text
+ *
+ * @returns formatted string
+ */
+export function formatColumnName(text: string): string {
+  return trimQuotes(text.trim())
+    .replace(/^"(.*)"$/, "$1")
+    .replace(/""/g, '"')
+    .replace(/(\d),/g, "$1.");
+}
+
 export async function checkHeader(filepath: string) {
   let isEncrypted;
   try {

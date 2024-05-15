@@ -1,6 +1,106 @@
 import { action } from "mobx";
 import { state } from "../state";
-import { ColumnInfo, EventSettings, RGB, ValidFontOptions } from "@tsconline/shared";
+import {
+  ColumnInfo,
+  ColumnInfoTSC,
+  EventSettings,
+  PointSettings,
+  PointShape,
+  RGB,
+  ValidFontOptions,
+  assertEventColumnInfoTSC,
+  assertEventSettings,
+  assertPointColumnInfoTSC,
+  assertPointSettings
+} from "@tsconline/shared";
+import { cloneDeep } from "lodash";
+import { pushSnackbar } from "./general-actions";
+import { snackbarTextLengthLimit } from "../../util/constant";
+
+function extractName(text: string): string {
+  return text.substring(text.indexOf(":") + 1, text.length);
+}
+function extractColumnType(text: string): string {
+  return text.substring(text.indexOf(".") + 1, text.indexOf(":"));
+}
+export const applyChartColumnSettings = action("applyChartColumnSettings", (settings: ColumnInfoTSC) => {
+  function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
+    setEditName(settings.title, column);
+    setEnableTitle(settings.drawTitle, column);
+    setShowUncertaintyLabels(settings.drawUncertaintyLabel, column);
+    setShowAgeLabels(settings.drawAgeLabel, column);
+    setColumnOn(settings.isSelected, column);
+    if (settings.width) setWidth(settings.width, column);
+    if (settings.backgroundColor.text) setRGB(settings.backgroundColor.text, column);
+    column.fontsInfo = cloneDeep(settings.fonts);
+    switch (extractColumnType(settings._id)) {
+      case "EventColumn":
+        assertEventColumnInfoTSC(settings);
+        assertEventSettings(column.columnSpecificSettings);
+        if (column.columnSpecificSettings)
+          setEventColumnSettings(column.columnSpecificSettings, { type: settings.type, rangeSort: settings.rangeSort });
+        break;
+      case "PointColumn":
+        {
+          assertPointColumnInfoTSC(settings);
+          assertPointSettings(column.columnSpecificSettings);
+
+          let presetPointShape: PointShape = "nopoints";
+          if (settings.drawPoints === true) {
+            switch (settings.pointType) {
+              case "round":
+                presetPointShape = "circle";
+                break;
+              case "tick":
+                presetPointShape = "cross";
+                break;
+              case "rect":
+                presetPointShape = "rect";
+            }
+          }
+          setPointColumnSettings(column.columnSpecificSettings, {
+            drawLine: settings.drawLine,
+            drawFill: settings.drawFill,
+            drawScale: settings.drawScale,
+            drawCurveGradient: settings.drawCurveGradient,
+            drawBackgroundGradient: settings.drawBgrndGradient,
+            backgroundGradientStart: settings.backGradStart,
+            backgroundGradientEnd: settings.backGradEnd,
+            curveGradientStart: settings.curveGradStart,
+            curveGradientEnd: settings.curveGradEnd,
+            lineColor: settings.lineColor,
+            flipScale: settings.flipScale,
+            scaleStart: settings.scaleStart,
+            scaleStep: settings.scaleStep,
+            fill: settings.fillColor,
+            pointShape: presetPointShape,
+            smoothed: settings.drawSmooth,
+            lowerRange: settings.minWindow,
+            upperRange: settings.maxWindow
+          });
+        }
+        break;
+    }
+  }
+  const columnName = extractName(settings._id);
+  let curcol: ColumnInfo | undefined =
+    state.settingsTabs.columnHashMap.get(columnName) ||
+    state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
+  if (curcol === undefined) {
+    const errorDesc: string = "Unknown column name found while loading settings: ";
+    pushSnackbar(errorDesc + columnName.substring(0, snackbarTextLengthLimit - errorDesc.length - 1), "warning");
+  } else setColumnProperties(curcol, settings);
+  if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
+    for (let i = 0; i < settings.children.length; i++) {
+      curcol = state.settingsTabs.columnHashMap.get(columnName + " " + extractName(settings.children[i]._id));
+      if (curcol !== undefined) setColumnProperties(curcol, settings.children[i]);
+    }
+  } else {
+    for (let i = 0; i < settings.children.length; i++) {
+      applyChartColumnSettings(settings.children[i]);
+    }
+  }
+});
 
 export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
   state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
@@ -40,30 +140,22 @@ export const toggleSettingsTabColumn = action((name: string) => {
     } else curcol = state.settingsTabs.columnHashMap.get(curcol.parent!)!;
   }
 });
-
 export const setEventColumnSettings = action((eventSettings: EventSettings, newSettings: Partial<EventSettings>) => {
-  if (newSettings.type) eventSettings.type = newSettings.type;
-  if (newSettings.rangeSort) eventSettings.rangeSort = newSettings.rangeSort;
+  Object.assign(eventSettings, newSettings);
 });
 
-export const updateEditName = action((newName: string) => {
-  if (state.settingsTabs.columnSelected === null) {
-    console.log("WARNING: tried to access state.settingsTabs.columnSelected, but is null");
-    return;
-  }
-  if (!state.settingsTabs.columnHashMap.has(state.settingsTabs.columnSelected)) {
-    console.log(
-      "WARNING: tried to access",
-      state.settingsTabs.columnSelected,
-      "in state.settingsTabs.columnHashMap, but map does not this key"
-    );
-  }
-  state.settingsTabs.columnHashMap.get(state.settingsTabs.columnSelected)!.editName = newName;
-  return;
+export const setPointColumnSettings = action((pointSettings: PointSettings, newSettings: Partial<PointSettings>) => {
+  Object.assign(pointSettings, newSettings);
+});
+export const setColumnOn = action((isOn: boolean, column: ColumnInfo) => {
+  column.on = isOn;
+});
+export const setEditName = action((newName: string, column: ColumnInfo) => {
+  column.editName = newName;
 });
 
-export const updateWidth = action((columnObject: ColumnInfo, newWidth: number) => {
-  columnObject.width = newWidth;
+export const setWidth = action((newWidth: number, column: ColumnInfo) => {
+  column.width = newWidth;
 });
 
 export const setColumnSelected = action((name: string) => {
@@ -135,7 +227,7 @@ export const setEnableTitle = action((isOn: boolean, column: ColumnInfo) => {
   column.enableTitle = isOn;
 });
 
-export const setRGB = action((column: ColumnInfo, color: RGB) => {
+export const setRGB = action((color: RGB, column: ColumnInfo) => {
   column.rgb = color;
 });
 

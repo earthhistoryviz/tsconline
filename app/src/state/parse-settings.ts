@@ -26,7 +26,7 @@ import {
   defaultZoneColumnInfoTSC
 } from "@tsconline/shared";
 import { ChartSettings } from "../types";
-import { trimQuotes } from "../util/util";
+import { convertTSCColorToRGB, trimQuotes } from "../util/util";
 import { cloneDeep } from "lodash";
 
 /**
@@ -36,6 +36,9 @@ import { cloneDeep } from "lodash";
  */
 function castValue(value: string) {
   let castValue;
+  const RGBregex = new RegExp(
+    /^rgb\(\s*(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*,\s*(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*,\s*(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*\)$/
+  );
   if (value === "") {
     castValue = "";
   } else if (value === "true") {
@@ -44,6 +47,8 @@ function castValue(value: string) {
     castValue = false;
   } else if (!isNaN(Number(value))) {
     castValue = Number(value);
+  } else if (RGBregex.test(value)) {
+    castValue = convertTSCColorToRGB(value);
   } else castValue = String(value);
   return castValue;
 }
@@ -122,6 +127,47 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
  */
 function processFonts(fontsNode: Element): FontsInfo {
   const fonts: FontsInfo = JSON.parse(JSON.stringify(defaultFontsInfoConstant));
+  const childNodes = fontsNode.childNodes;
+  for (let i = 0; i < childNodes.length; i++) {
+    const maybeChild = childNodes[i];
+    if (maybeChild.nodeType === Node.ELEMENT_NODE) {
+      const child = <Element>maybeChild;
+      let fontProps: string[] = [];
+      if (child.textContent) {
+        fontProps = child.textContent.trim().split(";");
+      }
+      for (let i = 0; i < fontProps.length; i++) {
+        let key = "" as keyof FontsInfo;
+        if (child.getAttribute("function")) {
+          key = child.getAttribute("function")! as keyof FontsInfo;
+        } else continue;
+        fonts[key].inheritable = Boolean(child.getAttribute("inheritable"));
+        let fontPropsValue = fontProps[i].split(": ")[1];
+        if (fontProps[i].includes("font-family")) {
+          fonts[key].fontFace =
+            fontPropsValue === "Arial" || "Courier" || "Verdana"
+              ? <"Arial" | "Courier" | "Verdana">fontPropsValue
+              : "Arial";
+        }
+        if (fontProps[i].includes("font-size")) {
+          fonts[key].size = Number(fontPropsValue.substring(0, fontPropsValue.length - 2));
+        }
+        if (fontProps[i].includes("font-style")) {
+          if (fontProps[i].includes("italic")) {
+            fonts[key].italic = true;
+          }
+        }
+        if (fontProps[i].includes("font-weight")) {
+          if (fontProps[i].includes("bold")) {
+            fonts[key].bold = true;
+          }
+        }
+        if (fontProps[i].includes("fill")) {
+          fonts[key].color = fontPropsValue;
+        }
+      }
+    }
+  }
   return fonts;
 }
 /**
@@ -162,7 +208,7 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
   if (childNodes.length > 0) {
     for (let i = 0; i < childNodes.length; i++) {
       const maybeChild = childNodes[i];
-      if (maybeChild.nodeType === node.ELEMENT_NODE) {
+      if (maybeChild.nodeType === Node.ELEMENT_NODE) {
         const child = <Element>maybeChild;
         const childName = child.getAttribute("id");
         if (child.nodeName === "column") {
@@ -175,6 +221,7 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
           const orientationValue = child.getAttribute("orientation");
           const useNamedValue = child.getAttribute("useNamed");
           const standardizedValue = child.getAttribute("standardized");
+          const RGBregex = new RegExp("rgb([0-2]+[0-5]*,[0-2]+[0-5]*,[0-2]+[0-5]*)");
           const textValue = child.textContent!.trim();
           if (settingName === "backgroundColor" || settingName === "customColor") {
             let rgb = textValue.substring(4, textValue.length - 1).split(",");
@@ -182,37 +229,21 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
               column[settingName] = {
                 standardized: standardizedValue === "true",
                 useNamed: useNamedValue === "true",
-                text: {
-                  r: Number(rgb[0]),
-                  g: Number(rgb[1]),
-                  b: Number(rgb[2])
-                }
+                text: convertTSCColorToRGB(textValue)
               };
             } else if (useNamedValue) {
               column[settingName] = {
                 useNamed: useNamedValue === "true",
-                text: {
-                  r: Number(rgb[0]),
-                  g: Number(rgb[1]),
-                  b: Number(rgb[2])
-                }
+                text: convertTSCColorToRGB(textValue)
               };
             } else if (standardizedValue) {
               column[settingName] = {
                 standardized: standardizedValue === "true",
-                text: {
-                  r: Number(rgb[0]),
-                  g: Number(rgb[1]),
-                  b: Number(rgb[2])
-                }
+                text: convertTSCColorToRGB(textValue)
               };
             } else {
               column[settingName] = {
-                text: {
-                  r: Number(rgb[0]),
-                  g: Number(rgb[1]),
-                  b: Number(rgb[2])
-                }
+                text: convertTSCColorToRGB(textValue)
               };
             }
             if (rgb.length !== 3) {

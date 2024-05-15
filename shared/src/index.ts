@@ -162,7 +162,7 @@ export type ColumnInfoTypeMap = {
   Blank: Blank;
 };
 
-type EventType = "events" | "ranges";
+export type EventType = "events" | "ranges";
 
 export type ColumnInfoType = keyof ColumnInfoTypeMap;
 
