@@ -125,6 +125,7 @@ const FontMenuRow: React.FC<{
             color={fontOpts.color}
             onColorChange={handleColor}
             disabled={!fontOpts.on}
+            portal
           />
         </div>
         <Typography
