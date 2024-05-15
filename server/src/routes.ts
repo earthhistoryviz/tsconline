@@ -13,7 +13,7 @@ import {
   assertMapPackIndex,
   assertTimescale
 } from "@tsconline/shared";
-import { deleteDirectory, resetUploadDirectory } from "./util.js";
+import { deleteDirectory, resetUploadDirectory, checkHeader } from "./util.js";
 import { mkdirp } from "mkdirp";
 import md5 from "md5";
 import { assetconfigs } from "./index.js";
@@ -26,6 +26,7 @@ import { loadIndexes } from "./load-packs.js";
 import { updateFileMetadata, writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
+import { rm } from "fs/promises";
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
@@ -57,6 +58,139 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   }
   const datapackInfoChunk: DatapackInfoChunk = { datapackIndex: chunk!, totalChunks: allDatapackKeys.length };
   reply.status(200).send(datapackInfoChunk);
+};
+
+export const requestDownload = async function requestDownload(
+  request: FastifyRequest<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>,
+  reply: FastifyReply
+) {
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  }
+  // for test usage: const uuid = "username";
+  const { needEncryption } = request.query;
+  const { filename } = request.params;
+  const userDir = path.join(assetconfigs.uploadDirectory, uuid);
+  const datapackDir = path.join(userDir, "datapacks");
+  const filepath = path.join(datapackDir, filename);
+  const encryptedFilepathDir = path.join(userDir, "encrypted-datapacks");
+  const maybeEncryptedFilepath = path.join(encryptedFilepathDir, filename);
+  if (needEncryption === undefined) {
+    try {
+      await access(filepath);
+      const file = await readFile(filepath);
+      reply.send(file);
+      return;
+    } catch (e) {
+      const error = e as NodeJS.ErrnoException;
+      if (error.code === "ENOENT") {
+        const errormsg = "The file requested " + filename + " does not exist within user's upload directory";
+        reply.status(404).send({ error: errormsg });
+      } else {
+        reply.status(500).send({ error: "An error occurred: " + e });
+      }
+      return;
+    }
+  }
+  try {
+    await access(maybeEncryptedFilepath);
+    const file = await readFile(maybeEncryptedFilepath);
+    if (await checkHeader(maybeEncryptedFilepath)) {
+      reply.send(file);
+      return;
+    } else {
+      await rm(maybeEncryptedFilepath, { force: true });
+    }
+  } catch (e) {
+    const error = e as NodeJS.ErrnoException;
+    if (error.code !== "ENOENT") {
+      reply.status(500).send({ error: "An error occurred: " + e });
+      return;
+    }
+  }
+  try {
+    await access(filepath);
+    const file = await readFile(filepath);
+    if (await checkHeader(filepath)) {
+      reply.send(file);
+      return;
+    }
+  } catch (e) {
+    const error = e as NodeJS.ErrnoException;
+    if (error.code === "ENOENT") {
+      const errormsg = "The file requested " + filename + " does not exist within user's upload directory";
+      reply.status(404).send({ error: errormsg });
+    } else {
+      reply.status(500).send({ error: "An error occurred: " + e });
+    }
+    return;
+  }
+
+  try {
+    await mkdirp(encryptedFilepathDir);
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Failed to create encrypted directory with error " + e });
+    return;
+  }
+
+  try {
+    await new Promise<void>((resolve) => {
+      const cmd =
+        `java -jar ${assetconfigs.activeJar} ` +
+        // datapacks:
+        `-d "${filepath.replaceAll("\\", "/")}" ` +
+        // Tell it where to send the datapacks
+        `-enc ${encryptedFilepathDir.replaceAll("\\", "/")} ` +
+        `-node`;
+
+      // java -jar <jar file> -d <datapack> <datapack> -enc <destination directory> -node
+      console.log("Calling Java encrypt.jar: ", cmd);
+      exec(cmd, function (error, stdout, stderror) {
+        console.log("Java encrypt.jar finished, sending reply to browser");
+        if (error) {
+          console.error("Java error param: " + error);
+          console.error("Java stderr: " + stderror.toString());
+          resolve();
+        } else {
+          console.log("Java stdout: " + stdout.toString());
+          resolve();
+        }
+      });
+    });
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Failed to encrypt datapacks with error " + e });
+    return;
+  }
+
+  try {
+    await access(maybeEncryptedFilepath);
+    const file = await readFile(maybeEncryptedFilepath);
+
+    if (await checkHeader(maybeEncryptedFilepath)) {
+      reply.send(file);
+      return;
+    } else {
+      await rm(maybeEncryptedFilepath, { force: true });
+      const errormsg =
+        "Java file was unable to encrypt the file " + filename + ", resulting in an incorrect encryption header.";
+      reply.status(422).send({
+        error: errormsg
+      });
+      return;
+    }
+  } catch (e) {
+    const error = e as NodeJS.ErrnoException;
+    if (error.code === "ENOENT") {
+      const errormsg = "The file requested " + filename + " does not exist within user's upload directory";
+      reply.status(404).send({ error: errormsg });
+    } else {
+      reply.status(500).send({ error: "An error occurred: " + e });
+    }
+  }
 };
 
 export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
@@ -97,6 +231,7 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
+  // for test usage: const uuid = "username";
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
   try {
     await access(userDir);
@@ -129,13 +264,18 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
+  // for test usage: const uuid = "username";
   const file = await request.file();
   if (!file) {
     reply.status(404).send({ error: "No file uploaded" });
     return;
   }
-  // only accept a binary file (encoded) or an unecnrypted text file
-  if (file.mimetype !== "application/octet-stream" && file.mimetype !== "text/plain") {
+  // only accept a binary file (encoded) or an unecnrypted text file or a zip file
+  if (
+    file.mimetype !== "application/octet-stream" &&
+    file.mimetype !== "text/plain" &&
+    file.mimetype !== "application/zip"
+  ) {
     reply.status(400).send({ error: `Invalid mimetype of uploaded file, received ${file.mimetype}` });
     return;
   }
@@ -212,6 +352,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     await errorHandler("Failed to decrypt file", 500);
     return;
   }
+
   const datapackIndex: DatapackIndex = {};
   const mapPackIndex: MapPackIndex = {};
   // check for if this user has a datapack index already
@@ -236,7 +377,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       return;
     }
   }
-  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [filename]);
+  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [filename], true);
   if (!datapackIndex[filename]) {
     await errorHandler("Failed to load decrypted datapack", 500);
     return;

@@ -7,9 +7,11 @@ import Box from "@mui/material/Box";
 import InfoIcon from "@mui/icons-material/Info";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-
+import DownloadIcon from "@mui/icons-material/Download";
+import { Menu, MenuItem } from "@szhsin/react-menu";
 import "./Datapack.css";
 import { Dialog } from "@mui/material";
+import { ErrorCodes } from "../util/error-codes";
 
 export const Datapacks = observer(function Datapacks() {
   const theme = useTheme();
@@ -24,6 +26,49 @@ export const Datapacks = observer(function Datapacks() {
       );
     } else {
       actions.setDatapackConfig([...state.config.datapacks, name], "");
+    }
+  };
+  const download = (name: string) => {
+    return (
+      state.datapackIndex[name].isUserDatapack && (
+        <Menu menuButton={<DownloadIcon className="download-icon" />} transition>
+          <MenuItem onClick={() => handleDownload(true, name)}>
+            <Typography>Encrypted Download</Typography>
+          </MenuItem>
+          <MenuItem onClick={() => handleDownload(false, name)}>
+            <Typography>Retrieve Original File</Typography>
+          </MenuItem>
+        </Menu>
+      )
+    );
+  };
+  async function getFileURL(needEncryption: boolean, fileName: string) {
+    const fileBlob = await actions.requestDownload(fileName, needEncryption);
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(fileBlob);
+      await new Promise((resolve, reject) => {
+        reader.onloadend = resolve;
+        reader.onerror = reject;
+      });
+      return reader.result;
+    } catch (error) {
+      actions.pushError(ErrorCodes.INVALID_PATH);
+      return "";
+    }
+  }
+
+  const handleDownload = async (needEncryption: boolean, fileName: string) => {
+    const fileURL = await getFileURL(needEncryption, fileName);
+    const aTag = document.createElement("a");
+    if (fileURL && typeof fileURL === "string") {
+      aTag.href = fileURL;
+
+      aTag.setAttribute("download", fileName);
+
+      document.body.appendChild(aTag);
+      aTag.click();
+      aTag.remove();
     }
   };
 
@@ -50,6 +95,8 @@ export const Datapacks = observer(function Datapacks() {
                       <Typography>{datapack}</Typography>
                     </div>
                   </td>
+                  <td className="download-cell">{download(datapack)}</td>
+
                   <td className="info-cell">
                     <div>
                       <Tooltip title="Description" arrow placement="right">
