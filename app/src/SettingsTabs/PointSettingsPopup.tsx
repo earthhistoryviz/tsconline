@@ -79,21 +79,35 @@ export const PointSettingsPopup: React.FC<PointSettingsPopupProps> = observer(({
               }
             ]}
           />
-          <FormControlLabel
-            name="drawPoints"
-            label="Draw Points"
-            className="point-shape-checkbox"
-            control={
-              <TSCCheckbox
-                checked={pointSettings.pointShape !== "nopoints"}
-                onChange={(event) =>
-                  actions.setPointColumnSettings(pointSettings, {
-                    pointShape: event.target.checked ? "rect" : "nopoints"
-                  })
-                }
-              />
-            }
-          />
+          <div className="point-settings-adjustment-buttons">
+            <FormControlLabel
+              name="drawScale"
+              label="Draw Scale"
+              control={
+                <TSCCheckbox
+                  checked={pointSettings.drawScale}
+                  onChange={(value) =>
+                    actions.setPointColumnSettings(pointSettings, { drawScale: value.target.checked })
+                  }
+                />
+              }
+            />
+            <FormControlLabel
+              name="drawPoints"
+              label="Draw Points"
+              className="point-shape-checkbox"
+              control={
+                <TSCCheckbox
+                  checked={pointSettings.pointShape !== "nopoints"}
+                  onChange={(event) =>
+                    actions.setPointColumnSettings(pointSettings, {
+                      pointShape: event.target.checked ? "rect" : "nopoints"
+                    })
+                  }
+                />
+              }
+            />
+          </div>
           <div className="point-shape-radio-group">
             <TSCRadioGroup
               name="Point Type"
@@ -110,32 +124,6 @@ export const PointSettingsPopup: React.FC<PointSettingsPopupProps> = observer(({
                 { value: "cross", imageSrc: Tick }
               ]}
               direction="horizontal"
-            />
-          </div>
-          <div className="point-settings-adjustment-buttons">
-            <FormControlLabel
-              name="drawScale"
-              label="Draw Scale"
-              control={
-                <TSCCheckbox
-                  checked={pointSettings.drawScale}
-                  onChange={(value) =>
-                    actions.setPointColumnSettings(pointSettings, { drawScale: value.target.checked })
-                  }
-                />
-              }
-            />
-            <FormControlLabel
-              name="flipScale"
-              label="Flipped"
-              control={
-                <TSCCheckbox
-                  checked={pointSettings.flipScale}
-                  onChange={(value) =>
-                    actions.setPointColumnSettings(pointSettings, { flipScale: value.target.checked })
-                  }
-                />
-              }
             />
           </div>
           <div className="point-settings-adjustment-buttons">
