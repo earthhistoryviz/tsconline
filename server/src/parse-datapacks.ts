@@ -53,7 +53,8 @@ import {
   grabFilepaths,
   hasVisibleCharacters,
   capitalizeFirstLetter,
-  setCommonProperties
+  setCommonProperties,
+  formatColumnName
 } from "./util.js";
 import { createInterface } from "readline";
 import _ from "lodash";
@@ -389,20 +390,16 @@ export async function getAllEntries(
     if (!line.includes("\t:\t")) {
       continue;
     }
-    const parent = line.split("\t:\t")[0];
-
-    //THIS ACTUALLY DOESN'T MATTER ANYMORE BUT I WILL LEAVE IT HERE JUST IN CASE
-    //TODO
-    //to replace quotations surrounding the column name for future parsing access in state.
-    //if this is not done, then the keys in the state for columns have quotations surrounding it
-    //which is not consistent with the equivalent keys found in the parsed settings json object.
-    //ex "North Belgium -- Oostende, Brussels, Antwerp, Campine, Maastrichen" vs
-    //North Belgium -- Oostende, Brussels, Antwerp, Campine, Maastrichen
+    let parent = line.split("\t:\t")[0];
 
     const childrenstring = line.split("\t:\t")[1];
     if (!parent || !hasVisibleCharacters(parent) || !childrenstring || !hasVisibleCharacters(childrenstring)) continue;
-    // childrenstring = childrenstring!.split("\t\t")[0];
+    parent = formatColumnName(parent);
     const parsedChildren = spliceArrayAtFirstSpecialMatch(childrenstring!.split("\t"));
+    //for formatted names in mapping
+    for (let i = 0; i < parsedChildren.children.length; i++) {
+      if (parsedChildren.children[i]) parsedChildren.children[i] = formatColumnName(parsedChildren.children[i]!);
+    }
     //if the entry is a child, add it to a set.
     for (const child of parsedChildren.children) {
       isChild.add(child);
@@ -775,7 +772,8 @@ export async function getColumnTypes(
  * @param tabSeparated
  */
 function setColumnHeaders(column: ColumnHeaderProps, tabSeparated: string[]) {
-  column.name = tabSeparated[0]!;
+  //for formatted names in ColumnInfo object
+  column.name = formatColumnName(tabSeparated[0]!);
   const width = Number(tabSeparated[2]!);
   const rgb = tabSeparated[3];
   const enableTitle = tabSeparated[4];
@@ -1293,6 +1291,7 @@ export function processFacies(line: string): SubFaciesInfo | null {
   }
   return subFaciesInfo;
 }
+
 /**
  * This is a recursive function meant to instantiate all columns.
  * Datapack is encrypted as <parent>\t:\t<child>\t<child>\t<child>

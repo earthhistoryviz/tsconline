@@ -261,20 +261,44 @@ export const defaultPointColumnInfoTSC: PointColumnInfoTSC = {
   ...defaultColumnBasicInfoTSC,
   drawPoints: false,
   drawLine: false,
-  lineColor: "",
+  lineColor: {
+    r: 0,
+    g: 0,
+    b: 0
+  },
   drawSmooth: false,
   drawFill: false,
-  fillColor: "",
+  fillColor: {
+    r: 64,
+    g: 233,
+    b: 191
+  },
   doNotSetWindowAuto: false,
   minWindow: 0,
   maxWindow: 0,
   drawScale: false,
   drawBgrndGradient: false,
-  backGradStart: "",
-  backGradEnd: "",
+  backGradStart: {
+    r: 0,
+    g: 0,
+    b: 0
+  },
+  backGradEnd: {
+    r: 255,
+    g: 255,
+    b: 255
+  },
   drawCurveGradient: false,
-  curveGradStart: "",
-  curveGradEnd: "",
+  curveGradStart: {
+    r: 0,
+    g: 0,
+    b: 0
+  },
+  curveGradEnd: {
+    r: 255,
+    g: 255,
+    b: 255
+  },
   flipScale: false,
   scaleStart: 0,
   scaleStep: 0,

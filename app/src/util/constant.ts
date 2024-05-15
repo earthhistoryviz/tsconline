@@ -10,3 +10,5 @@ export const defaultColors: string[] = [
   "#00796B",
   "#388E3C"
 ];
+
+export const snackbarTextLengthLimit: number = 70;
