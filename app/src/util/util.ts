@@ -105,6 +105,10 @@ export function convertHexToRGB(hex: string, returnAsString: boolean = false): R
   return rgb;
 }
 
+export function convertRgbToString(rgb: RGB): string {
+  return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+}
+
 export function convertTSCColorToRGB(text: string): RGB {
   const rgb = text.substring(4, text.length - 1).split(",");
   return {

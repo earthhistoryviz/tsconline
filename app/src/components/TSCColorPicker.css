@@ -5,5 +5,5 @@
 
 .color-picker {
   position: absolute;
-  z-index: 2;
+  z-index: 10000;
 }

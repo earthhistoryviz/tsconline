@@ -136,8 +136,10 @@
   .MuiTextField-root.age-text-field > .MuiInputBase-root {
     padding-right: 0;
   }
-  .MuiInputBase-root > .MuiInputBase-input {
+  .MuiInputBase-root > .MuiInputBase-input.age-text-form-input,
+  .MuiInputBase-root > .MuiInputBase-input.dot-text-form-input {
     padding-left: 4px;
+    padding-right: 0px;
   }
   .MuiTextField-root.age-text-field {
     padding-right: 20px;
