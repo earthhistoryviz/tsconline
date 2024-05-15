@@ -689,6 +689,44 @@ export const fetchImage = action("fetchImage", async (datapackName: string, imag
   return image;
 });
 
+export const requestDownload = action(async (filename: string, needEncryption: boolean) => {
+  let route;
+  if (!needEncryption) {
+    route = `/download/user-datapacks/${filename}`;
+  } else {
+    route = `/download/user-datapacks/${filename}?needEncryption=${needEncryption}`;
+  }
+  const response = await fetcher(route, {
+    method: "GET"
+  });
+  if (!response.ok) {
+    switch (response.status) {
+      case 404: {
+        displayServerError(
+          response,
+          ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD,
+          ErrorMessages[ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD]
+        );
+        break;
+      }
+      case 500: {
+        displayServerError(response, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+        break;
+      }
+      case 422: {
+        displayServerError(
+          response,
+          ErrorCodes.INCORRECT_ENCRYPTION_HEADER,
+          ErrorMessages[ErrorCodes.INCORRECT_ENCRYPTION_HEADER]
+        );
+        break;
+      }
+    }
+  }
+  const file = response.blob();
+  return file;
+});
+
 export const logout = action("logout", async () => {
   try {
     const response = await fetcher("/auth/logout", {
@@ -730,6 +768,7 @@ export const sessionCheck = action("sessionCheck", async () => {
 export const setIsLoggedIn = action("setIsLoggedIn", (newval: boolean) => {
   state.isLoggedIn = newval;
 });
+
 export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
   state.settings.useDatapackSuggestedAge = isChecked;
 });
