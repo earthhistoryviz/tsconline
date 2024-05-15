@@ -87,10 +87,8 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
     state.settingsTabs.columnHashMap.get(columnName) ||
     state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
   if (curcol === undefined) {
-    pushSnackbar(
-      "Unknown column name '" + columnName.substring(0, snackbarTextLengthLimit - 1) + "' found while loading settings",
-      "warning"
-    );
+    const errorDesc: string = "Unknown column name found while loading settings: ";
+    pushSnackbar(errorDesc + columnName.substring(0, snackbarTextLengthLimit - errorDesc.length - 1), "warning");
   } else setColumnProperties(curcol, settings);
   if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
     for (let i = 0; i < settings.children.length; i++) {
