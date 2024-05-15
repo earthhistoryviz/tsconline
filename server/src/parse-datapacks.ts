@@ -126,7 +126,11 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
  * @param files the files to be parsed
  * @returns
  */
-export async function parseDatapacks(file: string, decryptFilePath: string): Promise<DatapackParsingPack | null> {
+export async function parseDatapacks(
+  file: string,
+  decryptFilePath: string,
+  isUserDatapack: boolean = false
+): Promise<DatapackParsingPack | null> {
   const decryptPaths = await grabFilepaths([file], decryptFilePath, "datapacks");
   if (decryptPaths.length == 0)
     throw new Error(`Did not find any datapacks for ${file} in decryptFilePath ${decryptFilePath}`);
@@ -279,7 +283,9 @@ export async function parseDatapacks(file: string, decryptFilePath: string): Pro
     show: true
   };
   setShowLabels(chartColumn);
-  const datapackParsingPack = { columnInfo: chartColumn, ageUnits, defaultChronostrat, formatVersion };
+
+  const datapackParsingPack = { columnInfo: chartColumn, ageUnits, defaultChronostrat, formatVersion, isUserDatapack };
+
   assertDatapackParsingPack(datapackParsingPack);
   if (date) datapackParsingPack.date = date;
   if (topAge || topAge === 0) datapackParsingPack.topAge = topAge;
