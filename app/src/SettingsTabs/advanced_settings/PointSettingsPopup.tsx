@@ -2,15 +2,15 @@ import { Box, Button, FormControlLabel, IconButton, Modal, Typography } from "@m
 import { ColumnInfo, assertPointSettings, isPointShape } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
 import { useContext, useState } from "react";
-import { context } from "../state";
+import { context } from "../../state";
 import "./PointSettingsPopup.css";
-import { RGBModifier, TSCButton, TSCCheckbox } from "../components";
-import { GenericTextField } from "../components";
-import { TSCRadioGroup } from "../components/TSCRadioGroup";
+import { RGBModifier, TSCButton, TSCCheckbox } from "../../components";
+import { GenericTextField } from "../../components";
+import { TSCRadioGroup } from "../../components/TSCRadioGroup";
 import CloseIcon from "@mui/icons-material/Close";
-import Rect from "../assets/settings_icons/rect.gif";
-import Circle from "../assets/settings_icons/round.gif";
-import Tick from "../assets/settings_icons/tick.gif";
+import Rect from "../../assets/settings_icons/rect.gif";
+import Circle from "../../assets/settings_icons/round.gif";
+import Tick from "../../assets/settings_icons/tick.gif";
 
 type PointSettingsPopupProps = {
   column: ColumnInfo;

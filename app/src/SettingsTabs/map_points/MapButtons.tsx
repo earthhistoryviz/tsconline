@@ -1,5 +1,5 @@
 import { Button, IconButton, Theme, Tooltip, TooltipProps, styled, useTheme } from "@mui/material";
-import { FaciesOptions } from "../types";
+import { FaciesOptions } from "../../types";
 import {
   Bounds,
   ColumnInfo,
@@ -12,15 +12,15 @@ import {
 } from "@tsconline/shared";
 import { useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
-import { actions, context } from "../state";
+import { actions, context } from "../../state";
 import { useTransformEffect } from "react-zoom-pan-pinch";
-import { calculateRectBoundsPosition, calculateRectButton, calculateVertBoundsPosition } from "../util/coordinates";
+import { calculateRectBoundsPosition, calculateRectButton, calculateVertBoundsPosition } from "../../util/coordinates";
 import NotListedLocationIcon from "@mui/icons-material/NotListedLocation";
 import LocationOffIcon from "@mui/icons-material/LocationOff";
 import LocationOnSharpIcon from "@mui/icons-material/LocationOnSharp";
-import { devSafeUrl } from "../util";
-import { BorderedIcon } from "../components";
-import { checkIfDataIsInRange } from "../util/util";
+import { devSafeUrl } from "../../util";
+import { BorderedIcon } from "../../components";
+import { checkIfDataIsInRange } from "../../util/util";
 
 const IconSize = 40;
 export const InfoIcon = NotListedLocationIcon;
