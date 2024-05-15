@@ -10,7 +10,6 @@ import {
   FontsInfo,
   assertChartInfoTSC,
   assertChartSettingsInfoTSC,
-  assertEventColumnInfoTSC,
   assertEventSettings,
   assertPointColumnInfoTSC,
   assertPointSettings,
@@ -26,10 +25,11 @@ import {
   defaultRangeColumnInfoTSC,
   defaultRulerColumnInfoTSC,
   defaultSequenceColumnInfoTSC,
-  defaultZoneColumnInfoTSC
+  defaultZoneColumnInfoTSC,
+  isRGB
 } from "@tsconline/shared";
 import { ChartSettings } from "../types";
-import { convertHexToRGB, convertRgbToString, convertTSCColorToRGB, trimQuotes } from "../util/util";
+import { convertRgbToString, convertTSCColorToRGB, trimQuotes } from "../util/util";
 import { cloneDeep } from "lodash";
 
 /**
@@ -392,19 +392,19 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
         pointType: convertPointShapeToPointType(state.columnSpecificSettings.pointShape),
         drawPoints: state.columnSpecificSettings.pointShape !== "nopoints",
         drawLine: state.columnSpecificSettings.drawLine,
-        lineColor: convertRgbToString(state.columnSpecificSettings.lineColor),
+        lineColor: state.columnSpecificSettings.lineColor,
         drawSmooth: state.columnSpecificSettings.smoothed,
         drawFill: state.columnSpecificSettings.drawFill,
-        fillColor: convertRgbToString(state.columnSpecificSettings.fill),
+        fillColor: state.columnSpecificSettings.fill,
         minWindow: state.columnSpecificSettings.lowerRange,
         maxWindow: state.columnSpecificSettings.upperRange,
         drawScale: state.columnSpecificSettings.drawScale,
         drawBgrndGradient: state.columnSpecificSettings.drawBackgroundGradient,
-        backGradStart: convertRgbToString(state.columnSpecificSettings.backgroundGradientStart),
-        backGradEnd: convertRgbToString(state.columnSpecificSettings.backgroundGradientEnd),
+        backGradStart: state.columnSpecificSettings.backgroundGradientStart,
+        backGradEnd: state.columnSpecificSettings.backgroundGradientEnd,
         drawCurveGradient: state.columnSpecificSettings.drawCurveGradient,
-        curveGradStart: convertRgbToString(state.columnSpecificSettings.curveGradientStart),
-        curveGradEnd: convertRgbToString(state.columnSpecificSettings.curveGradientEnd),
+        curveGradStart: state.columnSpecificSettings.curveGradientStart,
+        curveGradEnd: state.columnSpecificSettings.curveGradientEnd,
         flipScale: state.columnSpecificSettings.flipScale,
         scaleStart: state.columnSpecificSettings.scaleStart,
         scaleStep: state.columnSpecificSettings.scaleStep
@@ -487,6 +487,7 @@ function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
 function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
   let xml = "";
   for (let key in column) {
+    const keyValue = column[key as keyof ColumnInfoTSC];
     if (key === "_id") {
       continue;
     }
@@ -558,8 +559,10 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
     } else if (key === "pointType") {
       assertPointColumnInfoTSC(column);
       xml += `${indent}<setting name="pointType" pointType="${column.pointType}"/>\n`;
+    } else if (isRGB(keyValue)) {
+      xml += `${indent}<setting name="${key}">${convertRgbToString(keyValue)}</setting>\n`;
     } else {
-      xml += `${indent}<setting name="${key}">${column[key as keyof ColumnInfoTSC]}</setting>\n`;
+      xml += `${indent}<setting name="${key}">${keyValue}</setting>\n`;
     }
   }
   return xml;
