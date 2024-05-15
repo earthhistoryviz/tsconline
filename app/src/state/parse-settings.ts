@@ -10,10 +10,12 @@ import {
   FontsInfo,
   assertChartInfoTSC,
   assertChartSettingsInfoTSC,
-  assertEventColumnInfoTSC,
   assertEventSettings,
+  assertPointColumnInfoTSC,
+  assertPointSettings,
   assertRulerColumnInfoTSC,
   assertZoneColumnInfoTSC,
+  convertPointShapeToPointType,
   defaultChartSettingsInfoTSC,
   defaultColumnBasicInfoTSC,
   defaultEventColumnInfoTSC,
@@ -23,10 +25,11 @@ import {
   defaultRangeColumnInfoTSC,
   defaultRulerColumnInfoTSC,
   defaultSequenceColumnInfoTSC,
-  defaultZoneColumnInfoTSC
+  defaultZoneColumnInfoTSC,
+  isRGB
 } from "@tsconline/shared";
 import { ChartSettings } from "../types";
-import { convertTSCColorToRGB, trimQuotes } from "../util/util";
+import { convertRgbToString, convertTSCColorToRGB, trimQuotes } from "../util/util";
 import { cloneDeep } from "lodash";
 
 /**
@@ -383,7 +386,29 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       column = cloneDeep(defaultRulerColumnInfoTSC);
       break;
     case "Point":
-      column = cloneDeep(defaultPointColumnInfoTSC);
+      assertPointSettings(state.columnSpecificSettings);
+      column = {
+        ...cloneDeep(defaultPointColumnInfoTSC),
+        pointType: convertPointShapeToPointType(state.columnSpecificSettings.pointShape),
+        drawPoints: state.columnSpecificSettings.pointShape !== "nopoints",
+        drawLine: state.columnSpecificSettings.drawLine,
+        lineColor: state.columnSpecificSettings.lineColor,
+        drawSmooth: state.columnSpecificSettings.smoothed,
+        drawFill: state.columnSpecificSettings.drawFill,
+        fillColor: state.columnSpecificSettings.fill,
+        minWindow: state.columnSpecificSettings.lowerRange,
+        maxWindow: state.columnSpecificSettings.upperRange,
+        drawScale: state.columnSpecificSettings.drawScale,
+        drawBgrndGradient: state.columnSpecificSettings.drawBackgroundGradient,
+        backGradStart: state.columnSpecificSettings.backgroundGradientStart,
+        backGradEnd: state.columnSpecificSettings.backgroundGradientEnd,
+        drawCurveGradient: state.columnSpecificSettings.drawCurveGradient,
+        curveGradStart: state.columnSpecificSettings.curveGradientStart,
+        curveGradEnd: state.columnSpecificSettings.curveGradientEnd,
+        flipScale: state.columnSpecificSettings.flipScale,
+        scaleStart: state.columnSpecificSettings.scaleStart,
+        scaleStep: state.columnSpecificSettings.scaleStep
+      };
   }
   //TODO: check with Ogg about quote usage
   //strip surrounding quotations for id (ex. Belgium Datapack)
@@ -462,6 +487,7 @@ function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
 function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
   let xml = "";
   for (let key in column) {
+    const keyValue = column[key as keyof ColumnInfoTSC];
     if (key === "_id") {
       continue;
     }
@@ -530,8 +556,13 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
     } else if (key === "orientation") {
       assertZoneColumnInfoTSC(column);
       xml += `${indent}<setting name="orientation" orientation="${column.orientation}"/>\n`;
+    } else if (key === "pointType") {
+      assertPointColumnInfoTSC(column);
+      xml += `${indent}<setting name="pointType" pointType="${column.pointType}"/>\n`;
+    } else if (isRGB(keyValue)) {
+      xml += `${indent}<setting name="${key}">${convertRgbToString(keyValue)}</setting>\n`;
     } else {
-      xml += `${indent}<setting name="${key}">${column[key as keyof ColumnInfoTSC]}</setting>\n`;
+      xml += `${indent}<setting name="${key}">${keyValue}</setting>\n`;
     }
   }
   return xml;

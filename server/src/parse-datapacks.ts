@@ -46,7 +46,8 @@ import {
   isPointShape,
   assertPoint,
   defaultPointSettings,
-  defaultPoint
+  defaultPoint,
+  calculateAutoScale
 } from "@tsconline/shared";
 import {
   trimInvisibleCharacters,
@@ -679,6 +680,7 @@ export async function getColumnTypes(
       }
     }
 
+    // TODO chron-only
     if (!inChronBlock && (tabSeparated[1] === "chron" || tabSeparated[1] === "chron-only")) {
       setColumnHeaders(chron, tabSeparated);
       inChronBlock = true;
@@ -854,7 +856,6 @@ function addSequenceToSequenceMap(sequence: Sequence, sequenceMap: Map<string, S
  * @param pointMap
  */
 function addPointToPointMap(point: Point, pointMap: Map<string, Point>) {
-  const margin = 0.1;
   for (const subPoint of point.subPointInfo) {
     point.minAge = Math.min(subPoint.age, point.minAge);
     point.maxAge = Math.max(subPoint.age, point.maxAge);
@@ -867,10 +868,12 @@ function addPointToPointMap(point: Point, pointMap: Map<string, Point>) {
     point.minX !== Number.MAX_VALUE &&
     point.maxX !== Number.MIN_VALUE
   ) {
-    const outerMargin = ((point.maxX - point.minX) * margin) / 2;
-    point.lowerRange = point.minX - outerMargin;
-    point.upperRange = point.maxX + outerMargin;
+    const { lowerRange, upperRange, scaleStep } = calculateAutoScale(point.minX, point.maxX);
+    point.lowerRange = lowerRange;
+    point.upperRange = upperRange;
+    point.scaleStep = scaleStep;
   }
+
   pointMap.set(point.name, JSON.parse(JSON.stringify(point)));
   Object.assign(point, { ...createDefaultColumnHeaderProps(), ..._.cloneDeep(defaultPoint) });
 }
@@ -1159,8 +1162,8 @@ export function processPoint(line: string): SubPointInfo | null {
   };
   const tabSeparated = line.split("\t");
   if (tabSeparated.length < 2 || tabSeparated.length > 4 || tabSeparated[0]) return null;
-  const age = Number(tabSeparated[1]!);
-  const xVal = Number(tabSeparated[2]!);
+  const age = parseFloat(tabSeparated[1]!);
+  const xVal = parseFloat(tabSeparated[2]!);
   const popup = tabSeparated[3];
   if (isNaN(age) || !tabSeparated[1])
     throw new Error("Error processing point line, age: " + tabSeparated[1]! + " is NaN");
@@ -1473,6 +1476,7 @@ function recursive(
       pointShape,
       minX,
       maxX,
+      scaleStep,
       ...currentPoint
     } = pointMap.get(currentColumn)!;
     const deconstructedPointSettings = {
@@ -1485,7 +1489,8 @@ function recursive(
       smoothed,
       pointShape,
       minX,
-      maxX
+      maxX,
+      scaleStep
     };
     Object.assign(currentColumnInfo, {
       ...currentPoint,
