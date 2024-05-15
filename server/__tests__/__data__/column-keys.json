@@ -437,7 +437,8 @@
       },
       "ageUnits": "Ma",
       "defaultChronostrat": "UNESCO",
-      "formatVersion": 1.5
+      "formatVersion": 1.5,
+      "isUserDatapack": false
     },
     "general-parse-datapacks-test-2-key": {
       "columnInfo": {
@@ -1231,7 +1232,8 @@
       "defaultChronostrat": "USGS",
       "formatVersion": 1,
       "verticalScale": 6,
-      "date": "2015-03-15"
+      "date": "2015-03-15",
+      "isUserDatapack": false
     },
     "column-types-facies-key": {
         "FaciesOne": {
@@ -2149,6 +2151,7 @@
             },
             "ageUnits": "Ma",
             "defaultChronostrat": "UNESCO",
-            "formatVersion": 1.5
+            "formatVersion": 1.5,
+            "isUserDatapack": false
     }
 }

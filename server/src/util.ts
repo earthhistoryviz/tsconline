@@ -1,7 +1,8 @@
-import fs from "fs";
+import fs, { createReadStream } from "fs";
 import path from "path";
 import fsPromises, { rm } from "fs/promises";
 import { glob } from "glob";
+import { createInterface } from "readline/promises";
 
 /**
  * Recursively deletes directory INCLUDING directoryPath
@@ -184,4 +185,21 @@ export function formatColumnName(text: string): string {
     .replace(/^"(.*)"$/, "$1")
     .replace(/""/g, '"')
     .replace(/(\d),/g, "$1.");
+}
+
+export async function checkHeader(filepath: string) {
+  let isEncrypted;
+  try {
+    const fileStream = createReadStream(filepath);
+    const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
+
+    for await (const line of readline) {
+      isEncrypted = line.includes("TSCreator Encrypted Datafile");
+      break;
+    }
+  } catch (e) {
+    return false;
+  }
+
+  return isEncrypted;
 }

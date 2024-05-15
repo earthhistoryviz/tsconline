@@ -31,11 +31,12 @@ export async function loadIndexes(
   datapackIndex: DatapackIndex,
   mapPackIndex: MapPackIndex,
   decryptionDirectory: string,
-  datapacks: string[]
+  datapacks: string[],
+  userUploaded?: boolean
 ) {
   console.log(`\nParsing datapacks: ${datapacks}\n`);
   for (const datapack of datapacks) {
-    await parseDatapacks(datapack, decryptionDirectory)
+    await parseDatapacks(datapack, decryptionDirectory, userUploaded)
       .then((datapackParsingPack) => {
         if (!datapackParsingPack) {
           return;
