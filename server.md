@@ -224,3 +224,11 @@ This data structure is for the buttons that represent columns on the map itself.
 ---
 
 Simple route that sends the presets we generated at the [yarn start](#yarn-start) step
+
+### Login Routes
+
+---
+
+This flowchart shows all the current flows for the login routes:
+
+![flowchart](assets/Login-Flows.drawio.png)
