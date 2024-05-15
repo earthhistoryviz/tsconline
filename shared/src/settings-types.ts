@@ -1,6 +1,7 @@
 import {
   EventType,
-  FontsInfo, PointShape,
+  FontsInfo,
+  PointShape,
   RGB,
   RangeSort,
   assertEventSettings,
@@ -132,6 +133,17 @@ export type PointColumnInfoTSC = ColumnBasicInfoTSC & {
   scaleStep: number;
   pointType: "rect" | "round" | "tick";
 };
+
+export function convertPointTypeToPointShape(type: "rect" | "round" | "tick"): PointShape {
+  switch (type) {
+    case "round":
+      return "circle";
+    case "tick":
+      return "cross";
+    default:
+      return "rect";
+  }
+}
 
 export function convertPointShapeToPointType(shape: PointShape): "rect" | "round" | "tick" {
   switch (shape) {

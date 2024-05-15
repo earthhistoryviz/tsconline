@@ -5,14 +5,14 @@ import {
   ColumnInfoTSC,
   EventSettings,
   PointSettings,
-  PointShape,
   RGB,
   ValidFontOptions,
   assertEventColumnInfoTSC,
   assertEventSettings,
   assertPointColumnInfoTSC,
   assertPointSettings,
-  calculateAutoScale
+  calculateAutoScale,
+  convertPointTypeToPointShape
 } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { pushSnackbar } from "./general-actions";
@@ -45,20 +45,6 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
         {
           assertPointColumnInfoTSC(settings);
           assertPointSettings(column.columnSpecificSettings);
-
-          let presetPointShape: PointShape = "nopoints";
-          if (settings.drawPoints === true) {
-            switch (settings.pointType) {
-              case "round":
-                presetPointShape = "circle";
-                break;
-              case "tick":
-                presetPointShape = "cross";
-                break;
-              case "rect":
-                presetPointShape = "rect";
-            }
-          }
           setPointColumnSettings(column.columnSpecificSettings, {
             drawLine: settings.drawLine,
             drawFill: settings.drawFill,
@@ -74,7 +60,7 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
             scaleStart: settings.scaleStart,
             scaleStep: settings.scaleStep,
             fill: settings.fillColor,
-            pointShape: presetPointShape,
+            pointShape: convertPointTypeToPointShape(settings.pointType),
             smoothed: settings.drawSmooth,
             lowerRange: settings.minWindow,
             upperRange: settings.maxWindow
@@ -153,6 +139,7 @@ export const setColumnOn = action((isOn: boolean, column: ColumnInfo) => {
 });
 export const setEditName = action((newName: string, column: ColumnInfo) => {
   column.editName = newName;
+});
 
 export const setAutoScale = action((pointSettings: PointSettings) => {
   const { lowerRange, upperRange, scaleStep } = calculateAutoScale(pointSettings.minX, pointSettings.maxX);
@@ -167,7 +154,6 @@ export const flipRange = action((pointSettings: PointSettings) => {
   pointSettings.upperRange = temp;
   pointSettings.flipScale = !pointSettings.flipScale;
 });
-
 
 export const setWidth = action((newWidth: number, column: ColumnInfo) => {
   column.width = newWidth;
