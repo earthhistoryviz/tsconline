@@ -29,13 +29,14 @@ import {
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { fetcher } from "../../util";
-import { initializeColumnHashMap } from "./column-actions";
+import { applyChartColumnSettings, initializeColumnHashMap } from "./column-actions";
 import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { SettingsTabs, equalChartSettings, equalConfig } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
+import { snackbarTextLengthLimit } from "../../util/constant";
 
 const increment = 1;
 
@@ -273,7 +274,7 @@ export const fetchTimescaleDataAction = action("fetchTimescaleData", async () =>
   }
 });
 
-const setChartSettings = action("setChartSettings", (settings: ChartSettingsInfoTSC) => {
+const applyChartSettings = action("applyChartSettings", (settings: ChartSettingsInfoTSC) => {
   const {
     topAge,
     baseAge,
@@ -426,13 +427,6 @@ export const setDatapackConfig = action(
       return false;
     }
     resetSettings();
-    //TODO: apply presets, temp code for applying just the chart settings
-    //check if chart settings is populated
-    if (chartSettings !== null) {
-      assertChartInfoTSC(chartSettings);
-      chartSettings = <ChartInfoTSC>chartSettings;
-      setChartSettings(chartSettings.settings);
-    }
     state.settings.datapackContainsSuggAge = foundDefaultAge;
     state.mapState.mapHierarchy = mapHierarchy;
     state.settingsTabs.columns = columnRoot;
@@ -443,6 +437,13 @@ export const setDatapackConfig = action(
       state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
     }
     initializeColumnHashMap(columnRoot);
+    if (chartSettings !== null) {
+      assertChartInfoTSC(chartSettings);
+      chartSettings = <ChartInfoTSC>chartSettings;
+      applyChartSettings(chartSettings.settings);
+      applyChartColumnSettings(chartSettings["class datastore.RootColumn:Chart Root"]);
+      //TODO: align row order
+    }
     return true;
   }
 );
@@ -656,7 +657,7 @@ export const removeSnackbar = action("removeSnackbar", (text: string) => {
   state.snackbars = state.snackbars.filter((info) => info.snackbarText !== text);
 });
 export const pushSnackbar = action("pushSnackbar", (text: string, severity: "success" | "info" | "warning") => {
-  if (text.length > 70) {
+  if (text.length > snackbarTextLengthLimit) {
     console.error("The length of snackbar text must be less than 70");
     return;
   }
@@ -688,6 +689,44 @@ export const fetchImage = action("fetchImage", async (datapackName: string, imag
   }
   const image = await response.blob();
   return image;
+});
+
+export const requestDownload = action(async (filename: string, needEncryption: boolean) => {
+  let route;
+  if (!needEncryption) {
+    route = `/download/user-datapacks/${filename}`;
+  } else {
+    route = `/download/user-datapacks/${filename}?needEncryption=${needEncryption}`;
+  }
+  const response = await fetcher(route, {
+    method: "GET"
+  });
+  if (!response.ok) {
+    switch (response.status) {
+      case 404: {
+        displayServerError(
+          response,
+          ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD,
+          ErrorMessages[ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD]
+        );
+        break;
+      }
+      case 500: {
+        displayServerError(response, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+        break;
+      }
+      case 422: {
+        displayServerError(
+          response,
+          ErrorCodes.INCORRECT_ENCRYPTION_HEADER,
+          ErrorMessages[ErrorCodes.INCORRECT_ENCRYPTION_HEADER]
+        );
+        break;
+      }
+    }
+  }
+  const file = response.blob();
+  return file;
 });
 
 export const logout = action("logout", async () => {
@@ -731,6 +770,7 @@ export const sessionCheck = action("sessionCheck", async () => {
 export const setIsLoggedIn = action("setIsLoggedIn", (newval: boolean) => {
   state.isLoggedIn = newval;
 });
+
 export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
   state.settings.useDatapackSuggestedAge = isChecked;
 });

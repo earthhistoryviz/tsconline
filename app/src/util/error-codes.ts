@@ -40,7 +40,9 @@ export enum ErrorCodes {
   UNABLE_TO_RESET_EMAIL = "UNABLE_TO_RESET_EMAIL",
   UNABLE_TO_LOGIN_ACCOUNT_LOCKED = "UNABLE_TO_LOGIN_ACCOUNT_LOCKED",
   UNABLE_TO_RECOVER_ACCOUNT = "UNABLE_TO_RECOVER_ACCOUNT",
-  NOT_LOGGED_IN = "NOT_LOGGED_IN"
+  NOT_LOGGED_IN = "NOT_LOGGED_IN",
+  USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD = "USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD",
+  INCORRECT_ENCRYPTION_HEADER = "INCORRET_ENCRYPTION_HEADER"
 }
 
 export const ErrorMessages = {
@@ -92,5 +94,8 @@ export const ErrorMessages = {
   [ErrorCodes.UNABLE_TO_LOGIN_ACCOUNT_LOCKED]:
     "Your account has been locked. Please check your email for more information or contact support.",
   [ErrorCodes.UNABLE_TO_RECOVER_ACCOUNT]: "Unable to recover account. Please contact support for more information.",
-  [ErrorCodes.NOT_LOGGED_IN]: "You are not logged in. Please log in to access this page."
+  [ErrorCodes.NOT_LOGGED_IN]: "You are not logged in. Please log in to access this page.",
+  [ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD]:
+    "The datapack requested was not found on the server. Please try again later or contact our support team.",
+  [ErrorCodes.INCORRECT_ENCRYPTION_HEADER]: "Unable to encrypt the file, please try again later."
 };
