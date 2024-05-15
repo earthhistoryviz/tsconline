@@ -10,8 +10,8 @@ import { ColumnInfo } from "@tsconline/shared";
 import { TSCCheckbox } from "../components";
 import { InfoBox } from "./InfoBox";
 import { EditWidthField } from "./EditWidthField";
-import { EventSpecificSettings } from "./EventSpecificSettings";
-import { PointSettingsPopup } from "./PointSettingsPopup";
+import { EventSpecificSettings } from "./advanced_settings/EventSpecificSettings";
+import { PointSettingsPopup } from "./advanced_settings/PointSettingsPopup";
 import { EditNameField } from "./EditNameField";
 
 export const ColumnMenu = observer(() => {

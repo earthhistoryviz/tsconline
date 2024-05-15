@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { useContext } from "react";
-import { context } from "../state";
+import { context } from "../../state";
 import {
   BorderedIcon,
   ColoredDiv,
@@ -9,9 +9,9 @@ import {
   TSCInputAdornment,
   TSCTextField,
   TypographyText
-} from "../components";
+} from "../../components";
 import { Button, IconButton, Slider, TextFieldProps } from "@mui/material";
-import mapPointsAnimationData from "../assets/icons/map-points.json";
+import mapPointsAnimationData from "../../assets/icons/map-points.json";
 import CategoryIcon from "@mui/icons-material/Category";
 import MapSharpIcon from "@mui/icons-material/MapSharp";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
