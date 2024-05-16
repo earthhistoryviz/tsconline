@@ -1049,7 +1049,6 @@ function recursive(
   // lone column is a leaf column
   if (loneColumns.has(currentColumn)) {
     const currentColumnInfo = loneColumns.get(currentColumn)!;
-    childrenArray.push(currentColumnInfo);
     switch (currentColumnInfo.columnDisplayType) {
       case "Facies":
         currentColumnInfo.columnDisplayType = "BlockSeriesMetaColumn";
@@ -1063,6 +1062,7 @@ function recursive(
           currentColumnInfo.fontOptions,
           units
         );
+        delete currentColumnInfo.width;
         assertSubFaciesInfoArray(currentColumnInfo.subInfo);
         returnValue.subFaciesInfo = currentColumnInfo.subInfo;
         break;
@@ -1077,11 +1077,15 @@ function recursive(
           currentColumnInfo.fontOptions,
           units
         );
+        delete currentColumnInfo.width;
         break;
     }
     returnValue.minAge = currentColumnInfo.minAge;
     returnValue.maxAge = currentColumnInfo.maxAge;
     returnValue.fontOptions = currentColumnInfo.fontOptions;
+    currentColumnInfo.parent = parent;
+    childrenArray.push(currentColumnInfo);
+    loneColumns.delete(currentColumn);
     return returnValue;
   }
   const currentColumnInfo: ColumnInfo = {
@@ -1144,9 +1148,9 @@ function recursive(
       // parent -> child -> facies
       // displayed as parent -> facies
       // facies event exists for this map point
-      if (!returnValue.faciesFound && loneColumns.has(child) && isFacies(loneColumns.get(child)!)) {
+      if (!returnValue.faciesFound && compareValue.subFaciesInfo) {
         returnValue.faciesFound = true;
-        if (compareValue.subFaciesInfo) currentColumnInfo.subInfo = compareValue.subFaciesInfo;
+        currentColumnInfo.subInfo = compareValue.subFaciesInfo;
       }
     });
   }
@@ -1456,13 +1460,15 @@ function processColumn<T extends ColumnInfoType>(
   for (const sub of subInfo) {
     // subFreehandInfo has a topAge and baseAge instead of age
     if (isSubFreehandInfo(sub)) {
-      column.maxAge = Math.max(sub.baseAge, column.maxAge);
-      column.minAge = Math.min(sub.topAge, column.minAge);
+      columnHeaderProps.maxAge = Math.max(sub.baseAge, columnHeaderProps.maxAge);
+      columnHeaderProps.minAge = Math.min(sub.topAge, columnHeaderProps.minAge);
     } else {
-      column.maxAge = Math.max(sub.age, column.maxAge);
-      column.minAge = Math.min(sub.age, column.minAge);
+      columnHeaderProps.maxAge = Math.max(sub.age, columnHeaderProps.maxAge);
+      columnHeaderProps.minAge = Math.min(sub.age, columnHeaderProps.minAge);
     }
   }
+  column.minAge = columnHeaderProps.minAge;
+  column.maxAge = columnHeaderProps.maxAge;
   switch (type) {
     case "Point":
       assertPoint(column);
@@ -1475,14 +1481,19 @@ function processColumn<T extends ColumnInfoType>(
       );
       break;
   }
-  const partialColumn: Partial<ColumnHeaderProps> = {};
+  let partialColumn = {}
   switch (type) {
     case "Event":
-      partialColumn.width = 150;
-      partialColumn.on = false;
+      partialColumn = {
+        width: 150,
+        on: false
+      }
+      break;
+    case "Point":
+      partialColumn = { ..._.cloneDeep(defaultPoint) }
       break;
   }
-  Object.assign(column, { ...createDefaultColumnHeaderProps(partialColumn), [subInfoKey]: [] });
+  Object.assign(column, { ...createDefaultColumnHeaderProps(), [subInfoKey]: [], ...partialColumn });
   return false;
 }
 function configureOptionalPointSettings(tabSeparated: string[], point: Point) {
