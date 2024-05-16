@@ -1,4 +1,4 @@
-#PointSettingsPopupContainer {
+.popup-modal {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -35,7 +35,7 @@
   align-items: center;
   text-align: center;
 }
-.point-settings-header {
+.advanced-settings-header {
   display: flex;
   justify-content: center;
   text-align: center;
