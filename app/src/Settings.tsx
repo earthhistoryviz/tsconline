@@ -15,6 +15,7 @@ import { cloneDeep } from "lodash";
 import { ColumnInfo } from "@tsconline/shared";
 import { ChartSettings } from "./types";
 import FileSaver from "file-saver";
+import { Typography } from "@mui/material";
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
@@ -40,7 +41,6 @@ export const Settings = observer(function Settings() {
         return <Datapacks />;
     }
   }
-
   async function loadSettings(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files) {
       actions.pushSnackbar("failed to load settings: no files uploaded", "info");
@@ -58,10 +58,10 @@ export const Settings = observer(function Settings() {
 
   function saveSettings() {
     if (!state.settingsTabs.columns) {
-      actions.pushSnackbar("Column Root is not set, try again after selecting a datapack", "info")
+      actions.pushSnackbar("Column Root is not set, try again after selecting a datapack", "info");
       return;
     }
-    if ( state.settingsTabs.columns.children.length === 0) {
+    if (state.settingsTabs.columns.children.length === 0) {
       actions.pushSnackbar("No columns are set, proceeding...", "info");
     }
     const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
@@ -70,12 +70,33 @@ export const Settings = observer(function Settings() {
     FileSaver.saveAs(blob, "settings.tsc");
     actions.pushSnackbar("successfully saved settings!", "success");
   }
+
+  const SettingsHeader = () => {
+    return (
+      <div
+        style={{
+          display: "flex",
+          marginBottom: "1vh",
+          justifyContent: "space-evenly",
+          width: "100%"
+        }}>
+        {/* spacer for aligning items */}
+        <div style={{ flex: "1", textAlign: "left" }} />
+        <Typography style={{ flex: "1", textAlign: "center", fontSize: 48, marginBottom: "1vh", marginTop: "1vh" }}>
+          Settings
+        </Typography>
+        <div style={{ flex: "1", textAlign: "right", marginTop: "5vh" }}>
+          <InputFileUpload startIcon={<FileUploadIcon />} text={"load"} onChange={(e) => loadSettings(e)} />
+          <TSCButton startIcon={<DownloadIcon />} onClick={saveSettings}>
+            save
+          </TSCButton>
+        </div>
+      </div>
+    );
+  };
   return (
     <div style={{ background: theme.palette.settings.light, overflow: "auto" }}>
-      <InputFileUpload startIcon={<FileUploadIcon />} text={"load"} onChange={(e) => loadSettings(e)} />
-      <TSCButton startIcon={<DownloadIcon />} onClick={saveSettings}>
-        save
-      </TSCButton>
+      <SettingsHeader />
       <TSCTabs value={selectedTabIndex} onChange={handleChange} centered>
         <TSCTab label="Time" onClick={() => actions.setSettingsTabsSelected("time")} />
         <TSCTab label="Column" onClick={() => actions.setSettingsTabsSelected("column")} />
