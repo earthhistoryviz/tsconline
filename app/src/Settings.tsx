@@ -7,10 +7,15 @@ import { Font } from "./settings_tabs/Font";
 import { MapPoints } from "./settings_tabs/map_points/MapPoints";
 import { Datapacks } from "./settings_tabs/Datapack";
 import { useTheme } from "@mui/material/styles";
-import { TSCTabs, TSCTab, InputFileUpload } from "./components";
+import { TSCTabs, TSCTab, InputFileUpload, TSCButton } from "./components";
 import DownloadIcon from "@mui/icons-material/Download";
-import { applySettings, pushSnackbar } from "./state/actions";
-import { xmlToJson } from "./state/parse-settings";
+import FileUploadIcon from "@mui/icons-material/FileUpload";
+import { jsonToXml, xmlToJson } from "./state/parse-settings";
+import { cloneDeep } from "lodash";
+import { ColumnInfo } from "@tsconline/shared";
+import { ChartSettings } from "./types";
+import FileSaver from 'file-saver';
+
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
@@ -39,7 +44,7 @@ export const Settings = observer(function Settings() {
 
   function loadSettings(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files) {
-      pushSnackbar("failed to load settings: no files uploaded", "warning");
+      actions.pushSnackbar("failed to load settings: no files uploaded", "warning");
       return;
     }
     const file = e.target.files[0];
@@ -47,18 +52,28 @@ export const Settings = observer(function Settings() {
     reader.readAsText(file);
     if (reader.result && typeof reader.result === "string") {
       try {
-        applySettings(xmlToJson(reader.result));
+        actions.applySettings(xmlToJson(reader.result));
       } catch (e) {
-        pushSnackbar("Failed to load settings: file content is in wrong format", "warning");
+        actions.pushSnackbar("Failed to load settings: file content is in wrong format", "warning");
       }
     } else {
-      pushSnackbar("Falied to load settings: file content is not a string", "warning");
+      actions.pushSnackbar("Falied to load settings: file content is not a string", "warning");
     }
   }
-
+function saveSettings() {
+  if (!state.settingsTabs.columns || state.settingsTabs.columns.children.length === 0) {
+    actions.pushSnackbar("Failed to save settings: columns are empty", "warning");
+    return;
+  }
+  const columnCopy:ColumnInfo = cloneDeep(state.settingsTabs.columns!);
+  const settingsCopy:ChartSettings = cloneDeep(state.settings)
+  let blob = new Blob([jsonToXml(columnCopy, state.settings)], {type: "text/plain;charset=utf-8"});
+  FileSaver.saveAs(blob, "settings.tsc");
+}
   return (
     <div style={{ background: theme.palette.settings.light, overflow: "auto" }}>
-      <InputFileUpload startIcon={<DownloadIcon />} text={"load"} onChange={(e) => loadSettings(e)} />
+      <InputFileUpload startIcon={<FileUploadIcon />} text={"load"} onChange={(e) => loadSettings(e)} />
+      <TSCButton startIcon={<DownloadIcon />} onClick={saveSettings}>save</TSCButton>
       <TSCTabs value={selectedTabIndex} onChange={handleChange} centered>
         <TSCTab label="Time" onClick={() => actions.setSettingsTabsSelected("time")} />
         <TSCTab label="Column" onClick={() => actions.setSettingsTabsSelected("column")} />
