@@ -170,21 +170,31 @@ export const searchColumns = action(async (searchTerm: string) => {
   if (searchTerm === "") {
     state.settingsTabs.columnHashMap.forEach((columnInfo) => {
       columnInfo.show = true;
+      columnInfo.expanded = false;
     });
+    if (!state.settingsTabs.columns) return;
+    for (const child of state.settingsTabs.columns.children) {
+      child.expanded = true;
+    }
     return;
   }
   state.settingsTabs.columnHashMap.forEach((columnInfo) => {
     columnInfo.show = false;
+    columnInfo.expanded = false;
   });
 
   state.settingsTabs.columnHashMap.forEach((columnInfo) => {
-    if (columnInfo.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+    if (columnInfo.show != true && columnInfo.name.toLowerCase().includes(searchTerm.toLowerCase())) {
       columnInfo.show = true;
+      columnInfo.expanded = true;
       let parentName = columnInfo.parent;
+      setExpansionOfAllChildren(columnInfo, false);
+      setShowOfAllChildren(columnInfo, true);
       while (parentName) {
         const parentColumnInfo = state.settingsTabs.columnHashMap.get(parentName);
-        if (parentColumnInfo) {
+        if (parentColumnInfo && !parentColumnInfo.expanded && !parentColumnInfo.show) {
           parentColumnInfo.show = true;
+          parentColumnInfo.expanded = true;
           parentName = parentColumnInfo.parent;
         } else {
           break;
@@ -194,14 +204,21 @@ export const searchColumns = action(async (searchTerm: string) => {
   });
 });
 
+export const setShowOfAllChildren = action((column: ColumnInfo, isShown: boolean) => {
+  column.show = isShown;
+  column.children.forEach((child) => {
+    setShowOfAllChildren(child, isShown);
+  });
+});
+
 export const setExpanded = action((column: ColumnInfo, isExpanded: boolean) => {
   column.expanded = isExpanded;
 });
 
-export const setExpansionOfAll = action((column: ColumnInfo, isExpanded: boolean) => {
+export const setExpansionOfAllChildren = action((column: ColumnInfo, isExpanded: boolean) => {
   column.expanded = isExpanded;
   column.children.forEach((child) => {
-    setExpansionOfAll(child, isExpanded);
+    setExpansionOfAllChildren(child, isExpanded);
   });
 });
 

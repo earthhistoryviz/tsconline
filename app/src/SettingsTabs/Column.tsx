@@ -150,7 +150,7 @@ export const Column = observer(function Column() {
             id="column-expand-buttons"
             onClick={() => {
               if (!state.settingsTabs.columns) return;
-              actions.setExpansionOfAll(state.settingsTabs.columns, true);
+              actions.setExpansionOfAllChildren(state.settingsTabs.columns, true);
             }}>
             Expand All
           </TSCButton>
@@ -158,7 +158,7 @@ export const Column = observer(function Column() {
             id="column-expand-buttons"
             onClick={() => {
               if (!state.settingsTabs.columns) return;
-              actions.setExpansionOfAll(state.settingsTabs.columns, false);
+              actions.setExpansionOfAllChildren(state.settingsTabs.columns, false);
             }}>
             collapse All
           </TSCButton>
