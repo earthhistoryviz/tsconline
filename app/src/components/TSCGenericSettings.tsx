@@ -7,7 +7,7 @@ import TSCColorPicker from "./TSCColorPicker";
 import { convertHexToRGB } from "../util/util";
 
 type GenericTextFieldProps = {
-  header: string;
+  header?: string;
   inputs: {
     helperText: string;
     value: number;
@@ -20,7 +20,7 @@ const InputTextField = ({ ...props }: TextFieldProps) => <TextField {...props} c
 export const GenericTextField: React.FC<GenericTextFieldProps> = ({ header, inputs }) => {
   return (
     <Box className="generic-text-field-container">
-      <Typography className="generic-text-field-header">{header}</Typography>
+      {header && <Typography className="generic-text-field-header">{header}</Typography>}
       <div className="generic-text-fields">
         {inputs.map((input, index) => (
           <NumericFormat

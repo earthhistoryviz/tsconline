@@ -28,11 +28,11 @@ export const PointSettingsPopup: React.FC<PointSettingsPopupProps> = observer(({
         Point Settings
       </Button>
       <Modal open={openMenu} onClose={() => setOpenMenu(false)}>
-        <Box id="PointSettingsPopupContainer">
+        <Box className="popup-modal">
           <IconButton onClick={() => setOpenMenu(false)} className="exit-button-point-settings">
             <CloseIcon className="exit-button-icon-point-settings" />
           </IconButton>
-          <Typography variant="h6" className="point-settings-header">
+          <Typography variant="h6" className="advanced-settings-header">
             Point Settings
           </Typography>
           <GenericTextField

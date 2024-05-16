@@ -13,6 +13,7 @@ import { EditWidthField } from "./EditWidthField";
 import { EventSpecificSettings } from "./advanced_settings/EventSpecificSettings";
 import { PointSettingsPopup } from "./advanced_settings/PointSettingsPopup";
 import { EditNameField } from "./EditNameField";
+import { DataMiningModal } from "./advanced_settings/DataMiningSettings";
 
 export const ColumnMenu = observer(() => {
   const { state } = useContext(context);
@@ -65,6 +66,7 @@ export const ColumnMenu = observer(() => {
             <EventSpecificSettings column={column} />
             {!!column.popup && <InfoBox info={column.popup} />}
             <PointSettingsPopup column={column} />
+            <DataMiningModal column={column} />
           </>
         )}
       </div>
