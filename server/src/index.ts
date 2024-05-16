@@ -15,6 +15,8 @@ import { readFile } from "fs/promises";
 import fastifyMultipart from "@fastify/multipart";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import fastifySecureSession from "@fastify/secure-session";
+import fastifyRateLimit from "@fastify/rate-limit";
+import fastifySlowDown from "fastify-slow-down";
 import dotenv from "dotenv";
 import { db } from "./database.js";
 import path from "path";
@@ -103,6 +105,10 @@ server.register(fastifySecureSession, {
     sameSite: "strict",
     maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
   }
+});
+
+await server.register(fastifyRateLimit, {
+  global: false,
 });
 
 server.register(fastifyMultipart, {
@@ -195,9 +201,31 @@ server.get("/user-datapacks", routes.fetchUserDatapacks);
 
 server.post("/auth/oauth", loginRoutes.googleLogin);
 
-server.post("/auth/login", loginRoutes.login);
+server.post(
+  "/auth/login",
+  {
+    config: {
+      rateLimit: {
+        max: 10,
+        timeWindow: "1 minute"
+      }
+    }
+  },
+  loginRoutes.login
+);
 
-server.post("/auth/signup", loginRoutes.signup);
+server.post(
+  "/auth/signup",
+  {
+    config: {
+      rateLimit: {
+        max: 6,
+        timeWindow: "1 minute"
+      }
+    }
+  },
+  loginRoutes.signup
+);
 
 server.post("/auth/session-check", loginRoutes.sessionCheck);
 
