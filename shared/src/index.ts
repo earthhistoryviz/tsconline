@@ -720,7 +720,7 @@ export function assertBlock(o: any): asserts o is Block {
 }
 
 export function assertSubFaciesInfoArray(o: any): asserts o is SubFaciesInfo[] {
-  if (!o || typeof o !== "object") throw new Error("SubFaciesInfoArray must be an object")
+  if (!o || typeof o !== "object") throw new Error("SubFaciesInfoArray must be an object");
   if (!Array.isArray(o)) throw new Error("SubFaciesInfoArray must be an array");
   for (const subFacies of o) {
     assertSubFaciesInfo(subFacies);
