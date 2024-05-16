@@ -49,7 +49,10 @@ import {
   defaultPoint,
   calculateAutoScale,
   ColumnSpecificSettings,
-  assertColumnSpecificSettings
+  assertColumnSpecificSettings,
+  isSubFreehandInfo,
+  isFacies,
+  PointSettings
 } from "@tsconline/shared";
 import {
   trimInvisibleCharacters,
@@ -140,17 +143,7 @@ export async function parseDatapacks(
   const columnInfoArray: ColumnInfo[] = [];
   const isChild: Set<string> = new Set();
   const allEntries: Map<string, ParsedColumnEntry> = new Map();
-  const faciesMap: Map<string, Facies> = new Map();
-  const blocksMap: Map<string, Block> = new Map();
-  const eventMap: Map<string, Event> = new Map();
-  const rangeMap: Map<string, Range> = new Map();
-  const chronMap: Map<string, Chron> = new Map();
-  const pointMap: Map<string, Point> = new Map();
-  const sequenceMap: Map<string, Sequence> = new Map();
-  const transectMap: Map<string, Transect> = new Map();
-  const freehandMap: Map<string, Freehand> = new Map();
-  const blankMap: Map<string, ColumnHeaderProps> = new Map();
-  const loneColumns: ColumnInfo[] = [];
+  const loneColumns: Map<string, ColumnInfo> = new Map();
   const returnValue: FaciesFoundAndAgeRange = {
     faciesFound: false,
     minAge: 99999,
@@ -183,17 +176,6 @@ export async function parseDatapacks(
       const allParsedEntries = Array.from(allEntries.keys()).concat(Array.from(isChild));
       await getColumnTypes(
         decryptPath,
-        faciesMap,
-        blocksMap,
-        eventMap,
-        rangeMap,
-        chronMap,
-        pointMap,
-        sequenceMap,
-        transectMap,
-        freehandMap,
-        blankMap,
-        allParsedEntries,
         loneColumns,
         ageUnits
       );
@@ -209,16 +191,7 @@ export async function parseDatapacks(
             children,
             columnInfoArray,
             allEntries,
-            faciesMap,
-            blocksMap,
-            eventMap,
-            rangeMap,
-            chronMap,
-            pointMap,
-            sequenceMap,
-            transectMap,
-            freehandMap,
-            blankMap,
+            loneColumns,
             ageUnits
           );
           returnValue.maxAge = Math.max(returnValue.maxAge, compare.maxAge);
@@ -240,7 +213,7 @@ export async function parseDatapacks(
     console.log("ERROR: failed to read columns for path " + decryptPaths + ". ", e);
     return null;
   }
-  const columnInfo = columnInfoArray.concat(loneColumns);
+  const columnInfo = columnInfoArray.concat([...loneColumns.values()]);
   columnInfo.unshift({
     name: ageUnits.split(" ")[0]!,
     editName: ageUnits.split(" ")[0]!,
@@ -431,18 +404,7 @@ export async function getAllEntries(
  */
 export async function getColumnTypes(
   filename: string,
-  faciesMap: Map<string, Facies>,
-  blocksMap: Map<string, Block>,
-  eventMap: Map<string, Event>,
-  rangeMap: Map<string, Range>,
-  chronMap: Map<string, Chron>,
-  pointMap: Map<string, Point>,
-  sequenceMap: Map<string, Sequence>,
-  transectMap: Map<string, Transect>,
-  freehandMap: Map<string, Freehand>,
-  blankMap: Map<string, ColumnHeaderProps>,
-  allParsedEntries: string[],
-  loneColumns: ColumnInfo[],
+  loneColumns: Map<string, ColumnInfo>,
   units: string
 ) {
   const fileStream = createReadStream(filename);
@@ -505,9 +467,6 @@ export async function getColumnTypes(
           "Facies",
           facies,
           "subFaciesInfo",
-          allParsedEntries,
-          addFaciesToFaciesMap,
-          faciesMap,
           units,
           loneColumns
         );
@@ -516,9 +475,6 @@ export async function getColumnTypes(
           "Block",
           block,
           "subBlockInfo",
-          allParsedEntries,
-          addBlockToBlockMap,
-          blocksMap,
           units,
           loneColumns
         );
@@ -527,9 +483,6 @@ export async function getColumnTypes(
           "Event",
           event,
           "subEventInfo",
-          allParsedEntries,
-          addEventToEventMap,
-          eventMap,
           units,
           loneColumns
         );
@@ -538,9 +491,6 @@ export async function getColumnTypes(
           "Range",
           range,
           "subRangeInfo",
-          allParsedEntries,
-          addRangeToRangeMap,
-          rangeMap,
           units,
           loneColumns
         );
@@ -549,9 +499,6 @@ export async function getColumnTypes(
           "Chron",
           chron,
           "subChronInfo",
-          allParsedEntries,
-          addChronToChronMap,
-          chronMap,
           units,
           loneColumns
         );
@@ -560,9 +507,6 @@ export async function getColumnTypes(
           "Point",
           point,
           "subPointInfo",
-          allParsedEntries,
-          addPointToPointMap,
-          pointMap,
           units,
           loneColumns
         );
@@ -571,9 +515,6 @@ export async function getColumnTypes(
           "Sequence",
           sequence,
           "subSequenceInfo",
-          allParsedEntries,
-          addSequenceToSequenceMap,
-          sequenceMap,
           units,
           loneColumns
         );
@@ -582,9 +523,6 @@ export async function getColumnTypes(
           "Transect",
           transect,
           "subTransectInfo",
-          allParsedEntries,
-          addTransectToTransectMap,
-          transectMap,
           units,
           loneColumns
         );
@@ -593,9 +531,6 @@ export async function getColumnTypes(
           "Freehand",
           freehand,
           "subFreehandInfo",
-          allParsedEntries,
-          addFreehandToFreehandMap,
-          freehandMap,
           units,
           loneColumns
         );
@@ -605,9 +540,20 @@ export async function getColumnTypes(
 
     const tabSeparated = line.split("\t");
     if (tabSeparated[1] === "blank") {
+      // has no subInfo so add straight
       setColumnHeaders(blank, tabSeparated);
-      blankMap.set(blank.name, JSON.parse(JSON.stringify(blank)));
-      Object.assign(blank, { ...createDefaultColumnHeaderProps() });
+      loneColumns.set(blank.name, {
+        ...blank,
+        editName: blank.name,
+        fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+        fontOptions: getValidFontOptions("Blank"),
+        children: [],
+        parent: "",
+        units,
+        columnDisplayType: "Blank",
+        show: true
+      })
+      Object.assign(blank, { ...createDefaultColumnHeaderProps()});
       continue;
     }
     if (!inFreehandBlock && tabSeparated[1] === "freehand") {
@@ -624,7 +570,13 @@ export async function getColumnTypes(
       inTransectBlock = true;
     } else if (inTransectBlock) {
       if (tabSeparated[0] === "POLYGON" || tabSeparated[0] === "TEXT") {
-        addTransectToTransectMap(transect, transectMap);
+        processColumn(
+          "Transect",
+          transect,
+          "subTransectInfo",
+          units,
+          loneColumns
+        );
         inTransectBlock = false;
         continue;
       }
@@ -720,30 +672,24 @@ export async function getColumnTypes(
       "Facies",
       facies,
       "subFaciesInfo",
-      allParsedEntries,
-      addFaciesToFaciesMap,
-      faciesMap,
       units,
       loneColumns
     );
   } else if (inBlockBlock) {
-    processColumn("Block", block, "subBlockInfo", allParsedEntries, addBlockToBlockMap, blocksMap, units, loneColumns);
+    processColumn("Block", block, "subBlockInfo",   units, loneColumns);
   } else if (inEventBlock) {
-    processColumn("Event", event, "subEventInfo", allParsedEntries, addEventToEventMap, eventMap, units, loneColumns);
+    processColumn("Event", event, "subEventInfo",   units, loneColumns);
   } else if (inRangeBlock) {
-    processColumn("Range", range, "subRangeInfo", allParsedEntries, addRangeToRangeMap, rangeMap, units, loneColumns);
+    processColumn("Range", range, "subRangeInfo",   units, loneColumns);
   } else if (inChronBlock) {
-    processColumn("Chron", chron, "subChronInfo", allParsedEntries, addChronToChronMap, chronMap, units, loneColumns);
+    processColumn("Chron", chron, "subChronInfo",   units, loneColumns);
   } else if (inPointBlock) {
-    processColumn("Point", point, "subPointInfo", allParsedEntries, addPointToPointMap, pointMap, units, loneColumns);
+    processColumn("Point", point, "subPointInfo", units, loneColumns);
   } else if (inSequenceBlock) {
     processColumn(
       "Sequence",
       sequence,
       "subSequenceInfo",
-      allParsedEntries,
-      addSequenceToSequenceMap,
-      sequenceMap,
       units,
       loneColumns
     );
@@ -752,9 +698,6 @@ export async function getColumnTypes(
       "Transect",
       transect,
       "subTransectInfo",
-      allParsedEntries,
-      addTransectToTransectMap,
-      transectMap,
       units,
       loneColumns
     );
@@ -763,9 +706,6 @@ export async function getColumnTypes(
       "Freehand",
       freehand,
       "subFreehandInfo",
-      allParsedEntries,
-      addFreehandToFreehandMap,
-      freehandMap,
       units,
       loneColumns
     );
@@ -812,143 +752,6 @@ function setColumnHeaders(column: ColumnHeaderProps, tabSeparated: string[]) {
     console.log(`Error ${e} found while processing column header, setting to default`);
     Object.assign(column, { ...createDefaultColumnHeaderProps() });
   }
-}
-
-/**
- * adds a freehand object to the map. will reset the freehand object.
- * @param transect
- * @param transectMap
- */
-function addFreehandToFreehandMap(freehand: Freehand, freehandMap: Map<string, Freehand>) {
-  for (const subFreehand of freehand.subFreehandInfo) {
-    freehand.minAge = Math.min(subFreehand.topAge, freehand.minAge);
-    freehand.maxAge = Math.max(subFreehand.baseAge, freehand.maxAge);
-  }
-  freehandMap.set(freehand.name, JSON.parse(JSON.stringify(freehand)));
-  Object.assign(freehand, { ...createDefaultColumnHeaderProps(), subFreehandInfo: [] });
-}
-/**
- * adds a transect object to the map. will reset the transect object.
- * @param transect
- * @param transectMap
- */
-function addTransectToTransectMap(transect: Transect, transectMap: Map<string, Transect>) {
-  for (const subTransect of transect.subTransectInfo) {
-    transect.minAge = Math.min(subTransect.age, transect.minAge);
-    transect.maxAge = Math.max(subTransect.age, transect.maxAge);
-  }
-  transectMap.set(transect.name, JSON.parse(JSON.stringify(transect)));
-  Object.assign(transect, { ...createDefaultColumnHeaderProps(), subTransectInfo: [] });
-}
-/**
- * adds a sequence object to the map. will reset the sequence object.
- * @param sequence
- * @param sequenceMap
- */
-function addSequenceToSequenceMap(sequence: Sequence, sequenceMap: Map<string, Sequence>) {
-  for (const subSequence of sequence.subSequenceInfo) {
-    sequence.minAge = Math.min(subSequence.age, sequence.minAge);
-    sequence.maxAge = Math.max(subSequence.age, sequence.maxAge);
-  }
-  sequenceMap.set(sequence.name, JSON.parse(JSON.stringify(sequence)));
-  Object.assign(sequence, { ...createDefaultColumnHeaderProps(), subSequenceInfo: [] });
-}
-
-/**
- * adds a point object to the map. will reset the point object.
- * @param point
- * @param pointMap
- */
-function addPointToPointMap(point: Point, pointMap: Map<string, Point>) {
-  for (const subPoint of point.subPointInfo) {
-    point.minAge = Math.min(subPoint.age, point.minAge);
-    point.maxAge = Math.max(subPoint.age, point.maxAge);
-    point.minX = Math.min(subPoint.xVal, point.minX);
-    point.maxX = Math.max(subPoint.xVal, point.maxX);
-  }
-  if (
-    point.lowerRange === 0 &&
-    point.upperRange === 0 &&
-    point.minX !== Number.MAX_VALUE &&
-    point.maxX !== Number.MIN_VALUE
-  ) {
-    const { lowerRange, upperRange, scaleStep } = calculateAutoScale(point.minX, point.maxX);
-    point.lowerRange = lowerRange;
-    point.upperRange = upperRange;
-    point.scaleStep = scaleStep;
-  }
-
-  pointMap.set(point.name, JSON.parse(JSON.stringify(point)));
-  Object.assign(point, { ...createDefaultColumnHeaderProps(), ..._.cloneDeep(defaultPoint) });
-}
-
-/**
- * adds a chron object to the map. will reset the chron object.
- * @param chron
- * @param chronMap
- */
-function addChronToChronMap(chron: Chron, chronMap: Map<string, Chron>) {
-  for (const subChron of chron.subChronInfo) {
-    chron.minAge = Math.min(subChron.age, chron.minAge);
-    chron.maxAge = Math.max(subChron.age, chron.maxAge);
-  }
-  chronMap.set(chron.name, JSON.parse(JSON.stringify(chron)));
-  Object.assign(chron, { ...createDefaultColumnHeaderProps(), subChronInfo: [] });
-}
-
-/**
- * adds a range object to the range map and resets the range object
- * @param range
- * @param rangeMap
- */
-function addRangeToRangeMap(range: Range, rangeMap: Map<string, Range>) {
-  for (const subRange of range.subRangeInfo) {
-    range.minAge = Math.min(subRange.age, range.minAge);
-    range.maxAge = Math.max(subRange.age, range.maxAge);
-  }
-  rangeMap.set(range.name, JSON.parse(JSON.stringify(range)));
-  Object.assign(range, { ...createDefaultColumnHeaderProps(), subRangeInfo: [] });
-}
-/**
- * add an event object to the event map and resets event object
- * @param event
- * @param eventMap
- */
-function addEventToEventMap(event: Event, eventMap: Map<string, Event>) {
-  for (const subEvent of event.subEventInfo) {
-    event.minAge = Math.min(subEvent.age, event.minAge);
-    event.maxAge = Math.max(subEvent.age, event.maxAge);
-  }
-  eventMap.set(event.name, JSON.parse(JSON.stringify(event)));
-  Object.assign(event, { ...createDefaultColumnHeaderProps({ width: 150, on: false }), subEventInfo: [] });
-}
-
-/**
- * add a facies object to the map. will reset the facies object.
- * @param facies the facies objec to add
- * @param faciesMap the map to add to
- */
-function addFaciesToFaciesMap(facies: Facies, faciesMap: Map<string, Facies>) {
-  for (const block of facies.subFaciesInfo) {
-    facies.minAge = Math.min(block.age, facies.minAge);
-    facies.maxAge = Math.max(block.age, facies.maxAge);
-  }
-  faciesMap.set(facies.name, JSON.parse(JSON.stringify(facies)));
-  Object.assign(facies, { ...createDefaultColumnHeaderProps(), subFaciesInfo: [] });
-}
-
-/**
- * add a block into blocksMap. will reset the block var
- * @param block the block to be added
- * @param blocksMap the map of blocks
- */
-function addBlockToBlockMap(block: Block, blocksMap: Map<string, Block>) {
-  for (const subBlock of block.subBlockInfo) {
-    block.minAge = Math.min(subBlock.age, block.minAge);
-    block.maxAge = Math.max(subBlock.age, block.maxAge);
-  }
-  blocksMap.set(block.name, JSON.parse(JSON.stringify(block)));
-  Object.assign(block, { ...createDefaultColumnHeaderProps(), subBlockInfo: [] });
 }
 
 /**
@@ -1321,18 +1124,46 @@ function recursive(
   parsedColumnEntry: ParsedColumnEntry | null,
   childrenArray: ColumnInfo[],
   allEntries: Map<string, ParsedColumnEntry>,
-  faciesMap: Map<string, Facies>,
-  blocksMap: Map<string, Block>,
-  eventMap: Map<string, Event>,
-  rangeMap: Map<string, Range>,
-  chronMap: Map<string, Chron>,
-  pointMap: Map<string, Point>,
-  sequenceMap: Map<string, Sequence>,
-  transectMap: Map<string, Transect>,
-  freehandMap: Map<string, Freehand>,
-  blankMap: Map<string, ColumnHeaderProps>,
+  loneColumns: Map<string, ColumnInfo>,
   units: string
 ): FaciesFoundAndAgeRange {
+  if (!loneColumns.has(currentColumn) && !allEntries.has(currentColumn)) throw new Error("Error: Column not found in loneColumns or allEntries");
+  // lone column is a leaf column
+  if (loneColumns.has(currentColumn)) {
+    const currentColumnInfo = loneColumns.get(currentColumn)!;
+    childrenArray.push(currentColumnInfo);
+    switch (currentColumnInfo.columnDisplayType) {
+      case "Facies":
+        currentColumnInfo.columnDisplayType = "BlockSeriesMetaColumn";
+        addFaciesChildren(
+          currentColumnInfo.children,
+          currentColumnInfo.name,
+          currentColumnInfo.width,
+          currentColumnInfo.minAge,
+          currentColumnInfo.maxAge,
+          currentColumnInfo.rgb,
+          currentColumnInfo.fontOptions,
+          units
+        );
+      case "Chron":
+        currentColumnInfo.columnDisplayType = "BlockSeriesMetaColumn";
+        addChronChildren(
+          currentColumnInfo.children,
+          currentColumnInfo.name,
+          currentColumnInfo.minAge,
+          currentColumnInfo.maxAge,
+          currentColumnInfo.rgb,
+          currentColumnInfo.fontOptions,
+          units
+        );
+    }
+    return {
+      faciesFound: false,
+      minAge: currentColumnInfo.minAge,
+      maxAge: currentColumnInfo.maxAge,
+      fontOptions: currentColumnInfo.fontOptions
+    };
+  }
   const currentColumnInfo: ColumnInfo = {
     name: trimInvisibleCharacters(currentColumn),
     editName: trimInvisibleCharacters(currentColumn),
@@ -1357,8 +1188,8 @@ function recursive(
   };
   const returnValue: FaciesFoundAndAgeRange = {
     faciesFound: false,
-    minAge: 99999,
-    maxAge: -99999,
+    minAge: Number.MAX_SAFE_INTEGER,
+    maxAge: Number.MIN_SAFE_INTEGER,
     fontOptions: ["Column Header"]
   };
 
@@ -1367,167 +1198,6 @@ function recursive(
     currentColumnInfo.popup = parsedColumnEntry.info;
     currentColumnInfo.enableTitle = parsedColumnEntry.enableTitle;
   }
-  if (transectMap.has(currentColumn)) {
-    const { subTransectInfo, ...currentTransect } = transectMap.get(currentColumn)!;
-    // TODO NOTE FOR FUTURE: @Paolo - Java file appends all fonts to this, but from trial and error, only column header makes sense. If this case changes here we would change it
-    Object.assign(currentColumnInfo, {
-      ...currentTransect,
-      columnDisplayType: "Transect",
-      subInfo: JSON.parse(JSON.stringify(subTransectInfo))
-    });
-    returnValue.minAge = currentColumnInfo.minAge;
-    returnValue.maxAge = currentColumnInfo.maxAge;
-  }
-  if (sequenceMap.has(currentColumn)) {
-    const { subSequenceInfo, ...currentSequence } = sequenceMap.get(currentColumn)!;
-    Object.assign(currentColumnInfo, {
-      ...currentSequence,
-      fontOptions: getValidFontOptions("Sequence"),
-      columnDisplayType: "Sequence",
-      subInfo: JSON.parse(JSON.stringify(subSequenceInfo))
-    });
-    returnValue.fontOptions = currentColumnInfo.fontOptions;
-    returnValue.minAge = currentColumnInfo.minAge;
-    returnValue.maxAge = currentColumnInfo.maxAge;
-  }
-  if (blocksMap.has(currentColumn)) {
-    const { subBlockInfo, ...currentBlock } = blocksMap.get(currentColumn)!;
-    Object.assign(currentColumnInfo, {
-      ...currentBlock,
-      fontOptions: getValidFontOptions("Block"),
-      columnDisplayType: "Zone",
-      subInfo: JSON.parse(JSON.stringify(subBlockInfo))
-    });
-    returnValue.fontOptions = currentColumnInfo.fontOptions;
-    returnValue.minAge = currentColumnInfo.minAge;
-    returnValue.maxAge = currentColumnInfo.maxAge;
-  }
-  if (rangeMap.has(currentColumn)) {
-    const { subRangeInfo, ...currentRange } = rangeMap.get(currentColumn)!;
-    Object.assign(currentColumnInfo, {
-      ...currentRange,
-      fontOptions: getValidFontOptions("Range"),
-      columnDisplayType: "Range",
-      subInfo: JSON.parse(JSON.stringify(subRangeInfo))
-    });
-    returnValue.fontOptions = currentColumnInfo.fontOptions;
-    returnValue.minAge = currentColumnInfo.minAge;
-    returnValue.maxAge = currentColumnInfo.maxAge;
-  }
-  if (faciesMap.has(currentColumn)) {
-    const { width, subFaciesInfo, ...currentFacies } = faciesMap.get(currentColumn)!;
-    Object.assign(currentColumnInfo, {
-      ...currentFacies,
-      columnDisplayType: "BlockSeriesMetaColumn",
-      subInfo: JSON.parse(JSON.stringify(subFaciesInfo))
-    });
-    addFaciesChildren(
-      currentColumnInfo.children,
-      currentColumnInfo.name,
-      width,
-      currentColumnInfo.minAge,
-      currentColumnInfo.maxAge,
-      currentColumnInfo.rgb,
-      currentColumnInfo.fontOptions,
-      units
-    );
-    returnValue.fontOptions = currentColumnInfo.fontOptions;
-    returnValue.subFaciesInfo = subFaciesInfo;
-    returnValue.minAge = currentColumnInfo.minAge;
-    returnValue.maxAge = currentColumnInfo.maxAge;
-  }
-  if (eventMap.has(currentColumn)) {
-    const { subEventInfo, ...currentEvent } = eventMap.get(currentColumn)!;
-    Object.assign(currentColumnInfo, {
-      ...currentEvent,
-      fontOptions: getValidFontOptions("Event"),
-      columnDisplayType: "Event",
-      subInfo: JSON.parse(JSON.stringify(subEventInfo))
-    });
-    returnValue.fontOptions = currentColumnInfo.fontOptions;
-    returnValue.maxAge = currentColumnInfo.maxAge;
-    returnValue.minAge = currentColumnInfo.minAge;
-  }
-  if (chronMap.has(currentColumn)) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { width, subChronInfo, ...currentChron } = chronMap.get(currentColumn)!;
-    Object.assign(currentColumnInfo, {
-      ...currentChron,
-      columnDisplayType: "BlockSeriesMetaColumn",
-      subInfo: JSON.parse(JSON.stringify(subChronInfo))
-    });
-    addChronChildren(
-      currentColumnInfo.children,
-      currentColumnInfo.name,
-      currentColumnInfo.minAge,
-      currentColumnInfo.maxAge,
-      currentColumnInfo.rgb,
-      currentColumnInfo.fontOptions,
-      units
-    );
-    returnValue.fontOptions = currentColumnInfo.fontOptions;
-    returnValue.maxAge = currentColumnInfo.maxAge;
-    returnValue.minAge = currentColumnInfo.minAge;
-  }
-  if (pointMap.has(currentColumn)) {
-    const {
-      subPointInfo,
-      drawLine,
-      drawFill,
-      fill,
-      lowerRange,
-      upperRange,
-      smoothed,
-      pointShape,
-      minX,
-      maxX,
-      scaleStep,
-      ...currentPoint
-    } = pointMap.get(currentColumn)!;
-    const deconstructedPointSettings = {
-      subPointInfo,
-      drawLine,
-      drawFill,
-      fill,
-      lowerRange,
-      upperRange,
-      smoothed,
-      pointShape,
-      minX,
-      maxX,
-      scaleStep
-    };
-    Object.assign(currentColumnInfo, {
-      ...currentPoint,
-      fontOptions: getValidFontOptions("Point"),
-      columnDisplayType: "Point",
-      subInfo: _.cloneDeep(subPointInfo),
-      columnSpecificSettings: setCommonProperties(_.cloneDeep(defaultPointSettings), deconstructedPointSettings)
-    });
-    returnValue.fontOptions = currentColumnInfo.fontOptions;
-    returnValue.maxAge = currentColumnInfo.maxAge;
-    returnValue.minAge = currentColumnInfo.minAge;
-  }
-  if (freehandMap.has(currentColumn)) {
-    const { subFreehandInfo, ...currentFreehand } = freehandMap.get(currentColumn)!;
-    // TODO NOTE FOR FUTURE: @Paolo - Java file appends all fonts to this, but from trial and error, only column header makes sense. If this case changes here we would change it
-    Object.assign(currentColumnInfo, {
-      ...currentFreehand,
-      columnDisplayType: "Freehand",
-      subInfo: JSON.parse(JSON.stringify(subFreehandInfo))
-    });
-    returnValue.maxAge = currentColumnInfo.maxAge;
-    returnValue.minAge = currentColumnInfo.minAge;
-  }
-  if (blankMap.has(currentColumn)) {
-    const currentBlank = blankMap.get(currentColumn)!;
-    // TODO NOTE FOR FUTURE: @Paolo - Java file appends all fonts to this, but from trial and error, only column header makes sense. If this case changes here we would change it
-    Object.assign(currentColumnInfo, {
-      ...currentBlank,
-      columnDisplayType: "Blank"
-    });
-  }
-  addColumnSettings(currentColumnInfo);
   childrenArray.push(currentColumnInfo);
 
   if (parsedColumnEntry) {
@@ -1541,16 +1211,7 @@ function recursive(
         children, // the children that allEntries has or [] if this child is the parent to no children
         currentColumnInfo.children, // the array to push all the new children into
         allEntries, // the mapping of all parents to children
-        faciesMap,
-        blocksMap,
-        eventMap,
-        rangeMap,
-        chronMap,
-        pointMap,
-        sequenceMap,
-        transectMap,
-        freehandMap,
-        blankMap,
+        loneColumns,
         units
       );
       returnValue.minAge = Math.min(compareValue.minAge, returnValue.minAge);
@@ -1569,7 +1230,7 @@ function recursive(
       // parent -> child -> facies
       // displayed as parent -> facies
       // facies event exists for this map point
-      if (!returnValue.faciesFound && faciesMap.has(child)) {
+      if (!returnValue.faciesFound && loneColumns.has(child) && isFacies(loneColumns.get(child)!)) {
         returnValue.faciesFound = true;
         if (compareValue.subFaciesInfo) currentColumnInfo.subInfo = compareValue.subFaciesInfo;
       }
@@ -1606,7 +1267,7 @@ export function createDefaultColumnHeaderProps(overrides: Partial<ColumnHeaderPr
 function addFaciesChildren(
   children: ColumnInfo[],
   name: string,
-  width: number,
+  width: number = 150,
   minAge: number,
   maxAge: number,
   rgb: RGB,
@@ -1689,6 +1350,7 @@ function addFaciesChildren(
     show: true,
     expanded: false
   });
+  // add the font options present on children to parent
   for (const child of children) {
     for (const fontOption of child.fontOptions) {
       if (!fontOptions.includes(fontOption)) {
@@ -1777,6 +1439,7 @@ function addChronChildren(
     show: true,
     expanded: false
   });
+  // add the font options present on children to parent
   for (const child of children) {
     for (const fontOption of child.fontOptions) {
       if (!fontOptions.includes(fontOption)) {
@@ -1870,29 +1533,39 @@ function processColumn<T extends ColumnInfoType>(
   type: T,
   column: ColumnInfoTypeMap[T],
   subInfoKey: keyof ColumnInfoTypeMap[T],
-  allParsedEntries: string[],
-  addFunction: (col: ColumnInfoTypeMap[T], map: Map<string, ColumnInfoTypeMap[T]>) => void,
-  map: Map<string, ColumnInfoTypeMap[T]>,
   units: string,
-  loneColumns: ColumnInfo[]
+  loneColumns: Map<string, ColumnInfo>
 ): boolean {
-  if (allParsedEntries.includes(column.name)) {
-    addFunction(column, map);
-  } else {
-    const { [subInfoKey]: subInfo, ...columnHeaderProps } = column;
-    let columnSpecificSettings = undefined;
-    switch (type) {
-      case "Point":
-        assertPoint(column)
-        handlePointFields(column, loneColumns, units)
-        break;
-      default:
-        assertColumnHeaderProps(columnHeaderProps);
-        assertSubInfo(subInfo, type);
-        loneColumns.push(createLoneColumn(columnHeaderProps, getValidFontOptions(type), units, subInfo, type));
-        break;
+  const { [subInfoKey]: subInfo, ...columnHeaderProps } = column;
+  assertColumnHeaderProps(columnHeaderProps);
+  assertSubInfo(subInfo, type);
+  for (const sub of subInfo) {
+    // subFreehandInfo has a topAge and baseAge instead of age
+    if (isSubFreehandInfo(sub)) {
+      column.maxAge = Math.max(sub.baseAge, column.maxAge);
+      column.minAge = Math.min(sub.topAge, column.minAge);
+    } else {
+      column.maxAge = Math.max(sub.age, column.maxAge);
+      column.minAge = Math.min(sub.age, column.minAge);
     }
   }
+  switch (type) {
+    case "Point":
+      assertPoint(column)
+      handlePointFields(column, loneColumns, units)
+      break;
+    default:
+      loneColumns.set(column.name, createLoneColumn(columnHeaderProps, getValidFontOptions(type), units, subInfo, type));
+    break;
+  }
+  const partialColumn: Partial<ColumnHeaderProps> = {}
+  switch (type) {
+    case "Event":
+      partialColumn.width = 150;
+      partialColumn.on = false
+      break;
+  }
+  Object.assign(column, { ...createDefaultColumnHeaderProps(partialColumn), [subInfoKey]: []});
   return false;
 }
 function configureOptionalPointSettings(tabSeparated: string[], point: Point) {
@@ -1927,9 +1600,25 @@ function configureOptionalPointSettings(tabSeparated: string[], point: Point) {
   if (tabSeparated[5]) point.smoothed = tabSeparated[5] === "smoothed";
   assertPoint(point);
 }
-function handlePointFields(column: Point, loneColumns: ColumnInfo[], units: string) {
-  const { lowerRange, upperRange, minX, maxX, scaleStep, drawFill, drawLine, fill, smoothed, pointShape, subPointInfo, ...headerInfo } = column;
-  const columnSpecificSettings = {
+function handlePointFields(point: Point, loneColumns: Map<string, ColumnInfo>, units: string) {
+  for (const subPoint of point.subPointInfo) {
+    point.minX = Math.min(subPoint.xVal, point.minX);
+    point.maxX = Math.max(subPoint.xVal, point.maxX);
+  }
+  if (
+    point.lowerRange === 0 &&
+    point.upperRange === 0 &&
+    point.minX !== Number.MAX_VALUE &&
+    point.maxX !== Number.MIN_VALUE
+  ) {
+    const { lowerRange, upperRange, scaleStep } = calculateAutoScale(point.minX, point.maxX);
+    point.lowerRange = lowerRange;
+    point.upperRange = upperRange;
+    point.scaleStep = scaleStep;
+  }
+  const { lowerRange, upperRange, minX, maxX, scaleStep, drawFill, drawLine, fill, smoothed, pointShape, subPointInfo, ...headerInfo } = point;
+  const columnSpecificSettings: PointSettings = {
+    ..._.cloneDeep(defaultPointSettings),
     lowerRange,
     upperRange,
     minX,
@@ -1939,10 +1628,10 @@ function handlePointFields(column: Point, loneColumns: ColumnInfo[], units: stri
     drawLine,
     fill,
     smoothed,
-    pointShape
+    pointShape,
   };
   assertColumnSpecificSettings(columnSpecificSettings, "Point");
   assertColumnHeaderProps(headerInfo);
-  loneColumns.push(createLoneColumn(headerInfo, getValidFontOptions("Point"), units, subPointInfo, "Point", columnSpecificSettings))
+  loneColumns.set(point.name, createLoneColumn(headerInfo, getValidFontOptions("Point"), units, subPointInfo, "Point", columnSpecificSettings))
 }
 
