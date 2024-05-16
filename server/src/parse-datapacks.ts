@@ -57,7 +57,6 @@ import {
   assertSubFaciesInfoArray
 } from "@tsconline/shared";
 import {
-  trimInvisibleCharacters,
   grabFilepaths,
   hasVisibleCharacters,
   capitalizeFirstLetter,
@@ -453,7 +452,7 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
   let inFreehandBlock = false;
 
   for await (const line of readline) {
-    if (!line || trimInvisibleCharacters(line) === "") {
+    if (!line.trim()) {
       // we reached the end and store the key value pairs in to faciesMap
       if (inFaciesBlock) {
         inFaciesBlock = processColumn("Facies", facies, "subFaciesInfo", units, loneColumns);
@@ -476,9 +475,8 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
       }
       continue;
     }
-
     const tabSeparated = line.split("\t");
-    if (tabSeparated[1] === "blank") {
+    if (tabSeparated[1]?.trim() === "blank") {
       // has no subInfo so add straight
       setColumnHeaders(blank, tabSeparated);
       loneColumns.set(blank.name, {
@@ -495,7 +493,7 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
       Object.assign(blank, { ...createDefaultColumnHeaderProps() });
       continue;
     }
-    if (!inFreehandBlock && tabSeparated[1] === "freehand") {
+    if (!inFreehandBlock && tabSeparated[1]?.trim() === "freehand") {
       setColumnHeaders(freehand, tabSeparated);
       inFreehandBlock = true;
     } else if (inFreehandBlock) {
@@ -504,7 +502,7 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
         freehand.subFreehandInfo.push(subFreehandInfo);
       }
     }
-    if (!inTransectBlock && tabSeparated[1] === "transect") {
+    if (!inTransectBlock && tabSeparated[1]?.trim() === "transect") {
       setColumnHeaders(transect, tabSeparated);
       inTransectBlock = true;
     } else if (inTransectBlock) {
@@ -518,7 +516,7 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
         transect.subTransectInfo.push(subTransectInfo);
       }
     }
-    if (!inSequenceBlock && (tabSeparated[1] === "sequence" || tabSeparated[1] === "trend")) {
+    if (!inSequenceBlock && (tabSeparated[1]?.trim() === "sequence" || tabSeparated[1]?.trim() === "trend")) {
       setColumnHeaders(sequence, tabSeparated);
       inSequenceBlock = true;
     } else if (inSequenceBlock) {
@@ -527,7 +525,7 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
         sequence.subSequenceInfo.push(subSequenceInfo);
       }
     }
-    if (!inPointBlock && tabSeparated[1] === "point") {
+    if (!inPointBlock && tabSeparated[1]?.trim() === "point") {
       setColumnHeaders(point, tabSeparated);
       inPointBlock = true;
     } else if (inPointBlock) {
@@ -539,7 +537,7 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
         point.subPointInfo.push(subPointInfo);
       }
     }
-    if (!inRangeBlock && tabSeparated[1] === "range") {
+    if (!inRangeBlock && tabSeparated[1]?.trim() === "range") {
       setColumnHeaders(range, tabSeparated);
       inRangeBlock = true;
     } else if (inRangeBlock) {
@@ -549,7 +547,7 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
       }
     }
     // we found an event block
-    if (!inEventBlock && tabSeparated[1] === "event") {
+    if (!inEventBlock && tabSeparated[1]?.trim() === "event") {
       setColumnHeaders(event, tabSeparated);
       inEventBlock = true;
     } else if (inEventBlock) {
@@ -559,7 +557,7 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
       }
     }
     // we found a facies block
-    if (!inFaciesBlock && tabSeparated[1] === "facies") {
+    if (!inFaciesBlock && tabSeparated[1]?.trim() === "facies") {
       setColumnHeaders(facies, tabSeparated);
       inFaciesBlock = true;
     } else if (inFaciesBlock) {
@@ -570,7 +568,7 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
     }
 
     // TODO chron-only
-    if (!inChronBlock && (tabSeparated[1] === "chron" || tabSeparated[1] === "chron-only")) {
+    if (!inChronBlock && (tabSeparated[1]?.trim() === "chron" || tabSeparated[1]?.trim() === "chron-only")) {
       setColumnHeaders(chron, tabSeparated);
       inChronBlock = true;
     } else if (inChronBlock) {
@@ -581,7 +579,7 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
     }
 
     // we found a block
-    if (!inBlockBlock && tabSeparated[1] === "block") {
+    if (!inBlockBlock && tabSeparated[1]?.trim() === "block") {
       setColumnHeaders(block, tabSeparated);
       inBlockBlock = true;
     } else if (inBlockBlock) {
@@ -1089,8 +1087,8 @@ function recursive(
     return returnValue;
   }
   const currentColumnInfo: ColumnInfo = {
-    name: trimInvisibleCharacters(currentColumn),
-    editName: trimInvisibleCharacters(currentColumn),
+    name: currentColumn,
+    editName: currentColumn,
     on: true,
     enableTitle: true,
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),

@@ -76,6 +76,7 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
   if (curcol === undefined) {
     const errorDesc: string = "Unknown column name found while loading settings: ";
     pushSnackbar(errorDesc + columnName.substring(0, snackbarTextLengthLimit - errorDesc.length - 1), "warning");
+    console.log("WARNING: tried to get", columnName, "in state.columnHashMap, but is undefined")
   } else setColumnProperties(curcol, settings);
   if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
     for (let i = 0; i < settings.children.length; i++) {
