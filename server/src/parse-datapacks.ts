@@ -51,17 +51,10 @@ import {
   ColumnSpecificSettings,
   assertColumnSpecificSettings,
   isSubFreehandInfo,
-  isFacies,
   PointSettings,
-  assertFacies,
   assertSubFaciesInfoArray
 } from "@tsconline/shared";
-import {
-  grabFilepaths,
-  hasVisibleCharacters,
-  capitalizeFirstLetter,
-  formatColumnName
-} from "./util.js";
+import { grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter, formatColumnName } from "./util.js";
 import { createInterface } from "readline";
 import _ from "lodash";
 import chalk from "chalk";
@@ -116,6 +109,7 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
     }
     if (!array[i] && i + 1 < array.length) {
       parsedColumnEntry.info = array[i + 1]!;
+      array.splice(i + 2, 1);
       array.splice(i + 1, 1);
       array.splice(i, 1);
       i = i - 1;
@@ -1479,16 +1473,16 @@ function processColumn<T extends ColumnInfoType>(
       );
       break;
   }
-  let partialColumn = {}
+  let partialColumn = {};
   switch (type) {
     case "Event":
       partialColumn = {
         width: 150,
         on: false
-      }
+      };
       break;
     case "Point":
-      partialColumn = { ..._.cloneDeep(defaultPoint) }
+      partialColumn = { ..._.cloneDeep(defaultPoint) };
       break;
   }
   Object.assign(column, { ...createDefaultColumnHeaderProps(), [subInfoKey]: [], ...partialColumn });

@@ -372,7 +372,6 @@ describe("process sequence line tests", () => {
   });
 });
 
-
 describe("getAllEntries tests", () => {
   let entriesMap: Map<string, ParsedColumnEntry>, isChild: Set<string>;
   beforeEach(() => {
