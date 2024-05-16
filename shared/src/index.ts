@@ -1,5 +1,6 @@
 // Shared types between app and server (i.e. messages they send back and forth)
 
+import { assert } from "console";
 import { defaultFontsInfoConstant } from "./constants.js";
 
 export * from "./constants.js";
@@ -886,6 +887,12 @@ export function assertSubInfo(o: any, type: DisplayedColumnTypes): asserts o is 
       case "Freehand":
         assertSubFreehandInfo(sub);
         break;
+      case "Facies":
+        assertSubFaciesInfo(sub);
+        break;
+      case "Chron":
+        assertSubChronInfo(sub);
+        break;
       case "BlockSeriesMetaColumn":
         if (!isSubFaciesInfo(sub) && !isSubChronInfo(sub))
           throw new Error("A block series meta column must have either facies or chronostratigraphy information");
@@ -937,6 +944,29 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   assertFontsInfo(o.fontsInfo);
   if (o.subInfo) assertSubInfo(o.subInfo, o.columnDisplayType);
   if (o.columnSpecificSettings) assertColumnSpecificSettings(o.columnSpecificSettings, o.columnDisplayType);
+}
+
+export function isColumnHeaderProps(o: any): o is ColumnHeaderProps {
+  if (!o || typeof o !== "object") return false;
+  if (typeof o.name !== "string") return false;
+  if (typeof o.minAge !== "number") return false;
+  if (typeof o.maxAge !== "number") return false;
+  if (typeof o.enableTitle !== "boolean") return false;
+  if (typeof o.on !== "boolean") return false;
+  if (typeof o.width !== "number") return false;
+  if (typeof o.popup !== "string") return false;
+  if (!isRGB(o.rgb)) return false;
+  return true;
+}
+
+export function isFacies(o: any): o is Facies {
+  if (typeof o !== "object") return false;
+  if (!Array.isArray(o.subFaciesInfo)) return false;
+  for (const sub of o.subFaciesInfo) {
+    if (!isSubFaciesInfo(sub)) return false;
+  }
+  if (!isColumnHeaderProps(o)) return false;
+  return true;
 }
 
 export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes): asserts o is ColumnSpecificSettings {
@@ -991,6 +1021,13 @@ export function isEventType(o: any): o is EventType {
 export function isRangeSort(o: any): o is RangeSort {
   if (typeof o !== "string") return false;
   if (!/^(first occurrence|last occurrence|alphabetical)$/.test(o)) return false;
+  return true;
+}
+
+export function isSubFreehandInfo(o: any): o is SubFreehandInfo {
+  if (typeof o !== "object") return false;
+  if (typeof o.baseAge !== "number") return false;
+  if (typeof o.topAge !== "number") return false;
   return true;
 }
 
