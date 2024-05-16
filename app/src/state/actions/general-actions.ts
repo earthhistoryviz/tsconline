@@ -275,6 +275,12 @@ export const fetchTimescaleDataAction = action("fetchTimescaleData", async () =>
   }
 });
 
+export const applySettings = action("applySettings", (settings: ChartInfoTSC) => {
+  applyChartSettings(settings.settings);
+  applyChartColumnSettings(settings["class datastore.RootColumn:Chart Root"]);
+  //TODO: align row order
+});
+
 const applyChartSettings = action("applyChartSettings", (settings: ChartSettingsInfoTSC) => {
   const {
     topAge,
@@ -441,10 +447,7 @@ export const setDatapackConfig = action(
     initializeColumnHashMap(state.settingsTabs.columns);
     if (chartSettings !== null) {
       assertChartInfoTSC(chartSettings);
-      chartSettings = <ChartInfoTSC>chartSettings;
-      applyChartSettings(chartSettings.settings);
-      applyChartColumnSettings(chartSettings["class datastore.RootColumn:Chart Root"]);
-      //TODO: align row order
+      applySettings(chartSettings);
     }
     return true;
   }
