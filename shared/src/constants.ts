@@ -369,3 +369,4 @@ export const defaultPoint: Partial<Point> = {
   maxX: Number.MIN_SAFE_INTEGER,
   scaleStep: 1
 };
+
