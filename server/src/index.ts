@@ -18,6 +18,18 @@ import fastifySecureSession from "@fastify/secure-session";
 import dotenv from "dotenv";
 import { db } from "./database.js";
 
+// Function to check if a file exists
+async function checkFileExists(filePath: string): Promise<boolean> {
+  try {
+    await readFile(filePath);
+    console.log(`File exists: ${filePath}`);
+    return true;
+  } catch (error) {
+    console.log(`File does not exist: ${filePath}`, error);
+    return false;
+  }
+}
+
 const server = fastify({
   logger: false,
   bodyLimit: 1024 * 1024 * 100 // 10 mb
@@ -44,6 +56,21 @@ try {
   console.log("ERROR: Failed to load asset configs from assets/config.json.  Error was: ", e);
   process.exit(1);
 }
+
+// Check if the required JAR files exist
+const jar1Path = `${process.cwd()}/${assetconfigs.activeJar}`;
+const jar2Path = `${process.cwd()}/${assetconfigs.decryptionJar}`;
+const [jar1Exists, jar2Exists] = await Promise.all([checkFileExists(jar1Path), checkFileExists(jar2Path)]);
+
+if (!jar1Exists) {
+  console.error("ERROR: Required active JAR file does not exist:", jar1Path);
+  process.exit(1);
+}
+if (!jar2Exists) {
+  console.error("ERROR: Required decrypt JAR file does not exist:", jar2Path);
+  process.exit(1);
+}
+
 // this try will run the decryption jar to decrypt all files in the datapack folder
 try {
   const datapacks = assetconfigs.activeDatapacks.map(
