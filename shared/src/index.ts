@@ -719,13 +719,17 @@ export function assertBlock(o: any): asserts o is Block {
   assertColumnHeaderProps(o);
 }
 
+export function assertSubFaciesInfoArray(o: any): asserts o is SubFaciesInfo[] {
+  if (!o || typeof o !== "object") throw new Error("SubFaciesInfoArray must be an object")
+  if (!Array.isArray(o)) throw new Error("SubFaciesInfoArray must be an array");
+  for (const subFacies of o) {
+    assertSubFaciesInfo(subFacies);
+  }
+}
+
 export function assertFacies(o: any): asserts o is Facies {
   if (!o || typeof o !== "object") throw new Error("Facies must be a non-null object");
-  if (!Array.isArray(o.faciesTimeBlockInfo))
-    throw new Error("Facies must have a faciesTimeBlockInfo field with type array");
-  for (const block of o.faciesTimeBlockInfo) {
-    assertSubFaciesInfo(block);
-  }
+  assertSubFaciesInfoArray(o.subFaciesInfo);
   assertColumnHeaderProps(o);
 }
 export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingPack {

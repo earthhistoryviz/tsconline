@@ -52,7 +52,9 @@ import {
   assertColumnSpecificSettings,
   isSubFreehandInfo,
   isFacies,
-  PointSettings
+  PointSettings,
+  assertFacies,
+  assertSubFaciesInfoArray
 } from "@tsconline/shared";
 import {
   trimInvisibleCharacters,
@@ -63,6 +65,7 @@ import {
 } from "./util.js";
 import { createInterface } from "readline";
 import _ from "lodash";
+import chalk from "chalk";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;
 const patternForAbundance = /^(TOP|missing|rare|common|frequent|abundant|sample|flood)$/;
@@ -682,7 +685,7 @@ export function processFreehand(line: string): SubFreehandInfo | null {
   try {
     assertSubFreehandInfo(subFreehandInfo);
   } catch (e) {
-    console.log(`Error ${e} found while processing subFreehandInfo, returning null`);
+    console.log(chalk.dim.yellow(`Error ${e} found while processing subFreehandInfo, returning null`));
     return null;
   }
   return subFreehandInfo;
@@ -704,7 +707,7 @@ export function processTransect(line: string): SubTransectInfo | null {
   try {
     assertSubTransectInfo(subTransectInfo);
   } catch (e) {
-    console.log(`Error ${e} found while processing subTransectInfo, returning null`);
+    console.log(chalk.dim.yellow(`Error ${e} found while processing subTransectInfo, returning null`));
     return null;
   }
   return subTransectInfo;
@@ -745,7 +748,7 @@ export function processSequence(line: string): SubSequenceInfo | null {
   try {
     assertSubSequenceInfo(subSequenceInfo);
   } catch (e) {
-    console.log(`Error ${e} found while processing subSequenceInfo, returning null`);
+    console.log(chalk.dim.yellow(`Error ${e} found while processing subSequenceInfo, returning null`));
     return null;
   }
   return subSequenceInfo;
@@ -790,7 +793,7 @@ export function processChron(line: string): SubChronInfo | null {
   try {
     assertSubChronInfo(subChronInfo);
   } catch (e) {
-    console.log(`Error ${e} found while processing subBlockInfo, returning null`);
+    console.log(chalk.dim.yellow(`Error ${e} found while processing subBlockInfo, returning null`));
     return null;
   }
   return subChronInfo;
@@ -826,7 +829,7 @@ export function processRange(line: string): SubRangeInfo | null {
   try {
     assertSubRangeInfo(subRangeInfo);
   } catch (e) {
-    console.log(`Error ${e} found while processing subBlockInfo, returning null`);
+    console.log(chalk.dim.yellow(`Error ${e} found while processing subBlockInfo, returning null`));
     return null;
   }
   return subRangeInfo;
@@ -862,7 +865,7 @@ export function processEvent(line: string): SubEventInfo | null {
   try {
     assertSubEventInfo(subEventInfo);
   } catch (e) {
-    console.log(`Error ${e} found while processing subBlockInfo, returning null`);
+    console.log(chalk.dim.yellow(`Error ${e} found while processing subBlockInfo, returning null`));
     return null;
   }
   return subEventInfo;
@@ -891,7 +894,7 @@ export function processPoint(line: string): SubPointInfo | null {
   try {
     assertSubPointInfo(subPointInfo);
   } catch (e) {
-    console.log(`Error ${e} found while processing subPointInfo, returning null`);
+    console.log(chalk.dim.yellow(`Error ${e} found while processing subPointInfo, returning null`));
     return null;
   }
   return subPointInfo;
@@ -957,7 +960,7 @@ export function processBlock(line: string, defaultColor: RGB): SubBlockInfo | nu
   try {
     assertSubBlockInfo(currentSubBlockInfo);
   } catch (e) {
-    console.log(`Error ${e} found while processing subBlockInfo, returning null`);
+    console.log(chalk.dim.yellow(`Error ${e} found while processing subBlockInfo, returning null`));
     return null;
   }
   return currentSubBlockInfo;
@@ -1002,7 +1005,7 @@ export function processFacies(line: string): SubFaciesInfo | null {
   try {
     assertSubFaciesInfo(subFaciesInfo);
   } catch (e) {
-    console.log(`Error ${e} found while processing facies, returning null`);
+    console.log(chalk.dim.yellow(`Error ${e} found while processing facies, returning null`));
     return null;
   }
   return subFaciesInfo;
@@ -1033,8 +1036,16 @@ function recursive(
   loneColumns: Map<string, ColumnInfo>,
   units: string
 ): FaciesFoundAndAgeRange {
-  if (!loneColumns.has(currentColumn) && !allEntries.has(currentColumn))
-    throw new Error("Error: Column not found in loneColumns or allEntries");
+  const returnValue: FaciesFoundAndAgeRange = {
+    faciesFound: false,
+    minAge: Number.MAX_SAFE_INTEGER,
+    maxAge: Number.MIN_SAFE_INTEGER,
+    fontOptions: ["Column Header"]
+  };
+  if (!loneColumns.has(currentColumn) && !allEntries.has(currentColumn)) {
+    console.log(chalk.dim.yellow(`WARNING: Column ${currentColumn} not found in loneColumns or allEntries`));
+    return returnValue;
+  }
   // lone column is a leaf column
   if (loneColumns.has(currentColumn)) {
     const currentColumnInfo = loneColumns.get(currentColumn)!;
@@ -1052,6 +1063,8 @@ function recursive(
           currentColumnInfo.fontOptions,
           units
         );
+        assertSubFaciesInfoArray(currentColumnInfo.subInfo);
+        returnValue.subFaciesInfo = currentColumnInfo.subInfo;
         break;
       case "Chron":
         currentColumnInfo.columnDisplayType = "BlockSeriesMetaColumn";
@@ -1066,12 +1079,10 @@ function recursive(
         );
         break;
     }
-    return {
-      faciesFound: false,
-      minAge: currentColumnInfo.minAge,
-      maxAge: currentColumnInfo.maxAge,
-      fontOptions: currentColumnInfo.fontOptions
-    };
+    returnValue.minAge = currentColumnInfo.minAge;
+    returnValue.maxAge = currentColumnInfo.maxAge;
+    returnValue.fontOptions = currentColumnInfo.fontOptions;
+    return returnValue;
   }
   const currentColumnInfo: ColumnInfo = {
     name: trimInvisibleCharacters(currentColumn),
@@ -1094,12 +1105,6 @@ function recursive(
     units,
     columnDisplayType: "MetaColumn",
     expanded: false
-  };
-  const returnValue: FaciesFoundAndAgeRange = {
-    faciesFound: false,
-    minAge: Number.MAX_SAFE_INTEGER,
-    maxAge: Number.MIN_SAFE_INTEGER,
-    fontOptions: ["Column Header"]
   };
 
   if (parsedColumnEntry) {
