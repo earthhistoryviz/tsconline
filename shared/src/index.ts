@@ -1,6 +1,5 @@
 // Shared types between app and server (i.e. messages they send back and forth)
 
-import { assert } from "console";
 import { defaultFontsInfoConstant } from "./constants.js";
 
 export * from "./constants.js";
@@ -889,9 +888,6 @@ export function assertSubInfo(o: any, type: DisplayedColumnTypes): asserts o is 
         break;
       case "Facies":
         assertSubFaciesInfo(sub);
-        break;
-      case "Chron":
-        assertSubChronInfo(sub);
         break;
       case "BlockSeriesMetaColumn":
         if (!isSubFaciesInfo(sub) && !isSubChronInfo(sub))
