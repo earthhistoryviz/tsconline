@@ -47,7 +47,9 @@ import {
   assertPoint,
   defaultPointSettings,
   defaultPoint,
-  calculateAutoScale
+  calculateAutoScale,
+  ColumnSpecificSettings,
+  assertColumnSpecificSettings
 } from "@tsconline/shared";
 import {
   trimInvisibleCharacters,
@@ -1797,7 +1799,8 @@ function createLoneColumn(
   fontOptions: ValidFontOptions[],
   units: string,
   subInfo: SubInfo[],
-  type: DisplayedColumnTypes
+  type: DisplayedColumnTypes,
+  columnSpecificSettings?: ColumnSpecificSettings
 ): ColumnInfo {
   // block changes to zone for display
   if (type === "Block") type = "Zone";
@@ -1812,16 +1815,22 @@ function createLoneColumn(
     subInfo,
     columnDisplayType: type,
     show: true,
-    expanded: false
+    expanded: false,
   };
-  addColumnSettings(column);
+  addColumnSettings(column, columnSpecificSettings);
   return column;
 }
 
-function addColumnSettings(column: ColumnInfo) {
+function addColumnSettings(column: ColumnInfo, columnSpecificSettings?: ColumnSpecificSettings) {
   switch (column.columnDisplayType) {
     case "Event":
       column.columnSpecificSettings = JSON.parse(JSON.stringify(defaultEventSettings));
+      break;
+    case "Point":
+      if (!columnSpecificSettings) {
+        throw new Error("Error adding point column, no column specific settings found");
+      }
+      column.columnSpecificSettings = columnSpecificSettings;
       break;
     default:
       break;
@@ -1871,9 +1880,18 @@ function processColumn<T extends ColumnInfoType>(
     addFunction(column, map);
   } else {
     const { [subInfoKey]: subInfo, ...columnHeaderProps } = column;
-    assertColumnHeaderProps(columnHeaderProps);
-    assertSubInfo(subInfo, type);
-    loneColumns.push(createLoneColumn(columnHeaderProps, getValidFontOptions(type), units, subInfo, type));
+    let columnSpecificSettings = undefined;
+    switch (type) {
+      case "Point":
+        assertPoint(column)
+        handlePointFields(column, loneColumns, units)
+        break;
+      default:
+        assertColumnHeaderProps(columnHeaderProps);
+        assertSubInfo(subInfo, type);
+        loneColumns.push(createLoneColumn(columnHeaderProps, getValidFontOptions(type), units, subInfo, type));
+        break;
+    }
   }
   return false;
 }
@@ -1909,3 +1927,22 @@ function configureOptionalPointSettings(tabSeparated: string[], point: Point) {
   if (tabSeparated[5]) point.smoothed = tabSeparated[5] === "smoothed";
   assertPoint(point);
 }
+function handlePointFields(column: Point, loneColumns: ColumnInfo[], units: string) {
+  const { lowerRange, upperRange, minX, maxX, scaleStep, drawFill, drawLine, fill, smoothed, pointShape, subPointInfo, ...headerInfo } = column;
+  const columnSpecificSettings = {
+    lowerRange,
+    upperRange,
+    minX,
+    maxX,
+    scaleStep,
+    drawFill,
+    drawLine,
+    fill,
+    smoothed,
+    pointShape
+  };
+  assertColumnSpecificSettings(columnSpecificSettings, "Point");
+  assertColumnHeaderProps(headerInfo);
+  loneColumns.push(createLoneColumn(headerInfo, getValidFontOptions("Point"), units, subPointInfo, "Point", columnSpecificSettings))
+}
+
