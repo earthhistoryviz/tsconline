@@ -59,7 +59,6 @@ import {
   grabFilepaths,
   hasVisibleCharacters,
   capitalizeFirstLetter,
-  setCommonProperties,
   formatColumnName
 } from "./util.js";
 import { createInterface } from "readline";
@@ -173,12 +172,7 @@ export async function parseDatapacks(
       if (datapackDate) date = datapackDate;
       if (vertScale) verticalScale = vertScale;
       if (version) formatVersion = version;
-      const allParsedEntries = Array.from(allEntries.keys()).concat(Array.from(isChild));
-      await getColumnTypes(
-        decryptPath,
-        loneColumns,
-        ageUnits
-      );
+      await getColumnTypes(decryptPath, loneColumns, ageUnits);
       // all the entries parsed thus far (only from parent and child relationships)
       // only iterate over parents. if we encounter one that is a child, the recursive function
       // should have already processed it.
@@ -402,11 +396,7 @@ export async function getAllEntries(
  * @param faciesMap the facies map to add to
  * @param blocksMap  the blocks map to add to
  */
-export async function getColumnTypes(
-  filename: string,
-  loneColumns: Map<string, ColumnInfo>,
-  units: string
-) {
+export async function getColumnTypes(filename: string, loneColumns: Map<string, ColumnInfo>, units: string) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
   const freehand: Freehand = {
@@ -463,77 +453,23 @@ export async function getColumnTypes(
     if (!line || trimInvisibleCharacters(line) === "") {
       // we reached the end and store the key value pairs in to faciesMap
       if (inFaciesBlock) {
-        inFaciesBlock = processColumn(
-          "Facies",
-          facies,
-          "subFaciesInfo",
-          units,
-          loneColumns
-        );
+        inFaciesBlock = processColumn("Facies", facies, "subFaciesInfo", units, loneColumns);
       } else if (inBlockBlock) {
-        inBlockBlock = processColumn(
-          "Block",
-          block,
-          "subBlockInfo",
-          units,
-          loneColumns
-        );
+        inBlockBlock = processColumn("Block", block, "subBlockInfo", units, loneColumns);
       } else if (inEventBlock) {
-        inEventBlock = processColumn(
-          "Event",
-          event,
-          "subEventInfo",
-          units,
-          loneColumns
-        );
+        inEventBlock = processColumn("Event", event, "subEventInfo", units, loneColumns);
       } else if (inRangeBlock) {
-        inRangeBlock = processColumn(
-          "Range",
-          range,
-          "subRangeInfo",
-          units,
-          loneColumns
-        );
+        inRangeBlock = processColumn("Range", range, "subRangeInfo", units, loneColumns);
       } else if (inChronBlock) {
-        inChronBlock = processColumn(
-          "Chron",
-          chron,
-          "subChronInfo",
-          units,
-          loneColumns
-        );
+        inChronBlock = processColumn("Chron", chron, "subChronInfo", units, loneColumns);
       } else if (inPointBlock) {
-        inPointBlock = processColumn(
-          "Point",
-          point,
-          "subPointInfo",
-          units,
-          loneColumns
-        );
+        inPointBlock = processColumn("Point", point, "subPointInfo", units, loneColumns);
       } else if (inSequenceBlock) {
-        inSequenceBlock = processColumn(
-          "Sequence",
-          sequence,
-          "subSequenceInfo",
-          units,
-          loneColumns
-        );
+        inSequenceBlock = processColumn("Sequence", sequence, "subSequenceInfo", units, loneColumns);
       } else if (inTransectBlock) {
-        inTransectBlock = processColumn(
-          "Transect",
-          transect,
-          "subTransectInfo",
-          units,
-          loneColumns
-        );
+        inTransectBlock = processColumn("Transect", transect, "subTransectInfo", units, loneColumns);
       } else if (inFreehandBlock) {
-        inFreehandBlock = processColumn(
-          "Freehand",
-          freehand,
-          "subFreehandInfo",
-          units,
-          loneColumns
-        );
+        inFreehandBlock = processColumn("Freehand", freehand, "subFreehandInfo", units, loneColumns);
       }
       continue;
     }
@@ -552,8 +488,8 @@ export async function getColumnTypes(
         units,
         columnDisplayType: "Blank",
         show: true
-      })
-      Object.assign(blank, { ...createDefaultColumnHeaderProps()});
+      });
+      Object.assign(blank, { ...createDefaultColumnHeaderProps() });
       continue;
     }
     if (!inFreehandBlock && tabSeparated[1] === "freehand") {
@@ -570,13 +506,7 @@ export async function getColumnTypes(
       inTransectBlock = true;
     } else if (inTransectBlock) {
       if (tabSeparated[0] === "POLYGON" || tabSeparated[0] === "TEXT") {
-        processColumn(
-          "Transect",
-          transect,
-          "subTransectInfo",
-          units,
-          loneColumns
-        );
+        processColumn("Transect", transect, "subTransectInfo", units, loneColumns);
         inTransectBlock = false;
         continue;
       }
@@ -668,47 +598,23 @@ export async function getColumnTypes(
   }
 
   if (inFaciesBlock) {
-    processColumn(
-      "Facies",
-      facies,
-      "subFaciesInfo",
-      units,
-      loneColumns
-    );
+    processColumn("Facies", facies, "subFaciesInfo", units, loneColumns);
   } else if (inBlockBlock) {
-    processColumn("Block", block, "subBlockInfo",   units, loneColumns);
+    processColumn("Block", block, "subBlockInfo", units, loneColumns);
   } else if (inEventBlock) {
-    processColumn("Event", event, "subEventInfo",   units, loneColumns);
+    processColumn("Event", event, "subEventInfo", units, loneColumns);
   } else if (inRangeBlock) {
-    processColumn("Range", range, "subRangeInfo",   units, loneColumns);
+    processColumn("Range", range, "subRangeInfo", units, loneColumns);
   } else if (inChronBlock) {
-    processColumn("Chron", chron, "subChronInfo",   units, loneColumns);
+    processColumn("Chron", chron, "subChronInfo", units, loneColumns);
   } else if (inPointBlock) {
     processColumn("Point", point, "subPointInfo", units, loneColumns);
   } else if (inSequenceBlock) {
-    processColumn(
-      "Sequence",
-      sequence,
-      "subSequenceInfo",
-      units,
-      loneColumns
-    );
+    processColumn("Sequence", sequence, "subSequenceInfo", units, loneColumns);
   } else if (inTransectBlock) {
-    processColumn(
-      "Transect",
-      transect,
-      "subTransectInfo",
-      units,
-      loneColumns
-    );
+    processColumn("Transect", transect, "subTransectInfo", units, loneColumns);
   } else if (inFreehandBlock) {
-    processColumn(
-      "Freehand",
-      freehand,
-      "subFreehandInfo",
-      units,
-      loneColumns
-    );
+    processColumn("Freehand", freehand, "subFreehandInfo", units, loneColumns);
   }
 }
 
@@ -1127,7 +1033,8 @@ function recursive(
   loneColumns: Map<string, ColumnInfo>,
   units: string
 ): FaciesFoundAndAgeRange {
-  if (!loneColumns.has(currentColumn) && !allEntries.has(currentColumn)) throw new Error("Error: Column not found in loneColumns or allEntries");
+  if (!loneColumns.has(currentColumn) && !allEntries.has(currentColumn))
+    throw new Error("Error: Column not found in loneColumns or allEntries");
   // lone column is a leaf column
   if (loneColumns.has(currentColumn)) {
     const currentColumnInfo = loneColumns.get(currentColumn)!;
@@ -1145,6 +1052,7 @@ function recursive(
           currentColumnInfo.fontOptions,
           units
         );
+        break;
       case "Chron":
         currentColumnInfo.columnDisplayType = "BlockSeriesMetaColumn";
         addChronChildren(
@@ -1156,6 +1064,7 @@ function recursive(
           currentColumnInfo.fontOptions,
           units
         );
+        break;
     }
     return {
       faciesFound: false,
@@ -1477,7 +1386,7 @@ function createLoneColumn(
     units,
     subInfo,
     columnDisplayType: type,
-    show: true,
+    show: true
     expanded: false,
   };
   addColumnSettings(column, columnSpecificSettings);
@@ -1551,21 +1460,24 @@ function processColumn<T extends ColumnInfoType>(
   }
   switch (type) {
     case "Point":
-      assertPoint(column)
-      handlePointFields(column, loneColumns, units)
+      assertPoint(column);
+      handlePointFields(column, loneColumns, units);
       break;
     default:
-      loneColumns.set(column.name, createLoneColumn(columnHeaderProps, getValidFontOptions(type), units, subInfo, type));
-    break;
+      loneColumns.set(
+        column.name,
+        createLoneColumn(columnHeaderProps, getValidFontOptions(type), units, subInfo, type)
+      );
+      break;
   }
-  const partialColumn: Partial<ColumnHeaderProps> = {}
+  const partialColumn: Partial<ColumnHeaderProps> = {};
   switch (type) {
     case "Event":
       partialColumn.width = 150;
-      partialColumn.on = false
+      partialColumn.on = false;
       break;
   }
-  Object.assign(column, { ...createDefaultColumnHeaderProps(partialColumn), [subInfoKey]: []});
+  Object.assign(column, { ...createDefaultColumnHeaderProps(partialColumn), [subInfoKey]: [] });
   return false;
 }
 function configureOptionalPointSettings(tabSeparated: string[], point: Point) {
@@ -1616,7 +1528,20 @@ function handlePointFields(point: Point, loneColumns: Map<string, ColumnInfo>, u
     point.upperRange = upperRange;
     point.scaleStep = scaleStep;
   }
-  const { lowerRange, upperRange, minX, maxX, scaleStep, drawFill, drawLine, fill, smoothed, pointShape, subPointInfo, ...headerInfo } = point;
+  const {
+    lowerRange,
+    upperRange,
+    minX,
+    maxX,
+    scaleStep,
+    drawFill,
+    drawLine,
+    fill,
+    smoothed,
+    pointShape,
+    subPointInfo,
+    ...headerInfo
+  } = point;
   const columnSpecificSettings: PointSettings = {
     ..._.cloneDeep(defaultPointSettings),
     lowerRange,
@@ -1628,10 +1553,12 @@ function handlePointFields(point: Point, loneColumns: Map<string, ColumnInfo>, u
     drawLine,
     fill,
     smoothed,
-    pointShape,
+    pointShape
   };
   assertColumnSpecificSettings(columnSpecificSettings, "Point");
   assertColumnHeaderProps(headerInfo);
-  loneColumns.set(point.name, createLoneColumn(headerInfo, getValidFontOptions("Point"), units, subPointInfo, "Point", columnSpecificSettings))
+  loneColumns.set(
+    point.name,
+    createLoneColumn(headerInfo, getValidFontOptions("Point"), units, subPointInfo, "Point", columnSpecificSettings)
+  );
 }
-
