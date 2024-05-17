@@ -7,11 +7,10 @@ import { Font } from "./settings_tabs/Font";
 import { MapPoints } from "./settings_tabs/map_points/MapPoints";
 import { Datapacks } from "./settings_tabs/Datapack";
 import { useTheme } from "@mui/material/styles";
-import { TSCTabs, TSCTab, InputFileUpload } from "./components";
-import FileUploadIcon from "@mui/icons-material/FileUpload";
-import { xmlToJson } from "./state/parse-settings";
+import { TSCTabs, TSCTab } from "./components";
 import { Typography } from "@mui/material";
 import SaveSettings from "./SettingsTabs/SaveSettings";
+import LoadSettings from "./SettingsTabs/LoadSettings";
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
@@ -37,23 +36,6 @@ export const Settings = observer(function Settings() {
         return <Datapacks />;
     }
   }
-  async function loadSettings(e: React.ChangeEvent<HTMLInputElement>) {
-    if (!e.target.files) {
-      actions.pushSnackbar("failed to load settings: no files uploaded", "info");
-      return;
-    }
-    const file = e.target.files[0];
-    const data = await file.text();
-    //console.log(data);
-    try {
-      actions.applySettings(xmlToJson(data));
-    } catch (e) {
-      console.log(e);
-      actions.pushSnackbar("Failed to load settings: file content is in wrong format", "info");
-      return;
-    }
-    actions.pushSnackbar("successfully loaded settings!", "success");
-  }
 
   const SettingsHeader = () => {
     return (
@@ -70,7 +52,7 @@ export const Settings = observer(function Settings() {
           Settings
         </Typography>
         <div style={{ flex: "1", textAlign: "right", marginTop: "5vh" }}>
-          <InputFileUpload startIcon={<FileUploadIcon />} text={"load"} onChange={(e) => loadSettings(e)} />
+          <LoadSettings />
           <SaveSettings />
         </div>
       </div>

@@ -14,7 +14,8 @@ import { ChartSettings } from "../types";
 import { jsonToXml } from "../state/parse-settings";
 import { IconButton } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
-export default function FormDialog() {
+
+export default function SaveSettings() {
   const { state, actions } = React.useContext(context);
   function saveSettings(filename: string) {
     if (!state.settingsTabs.columns) {
