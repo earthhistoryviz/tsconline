@@ -242,7 +242,7 @@ export async function parseDatapacks(
   columnInfo.unshift({
     name: ageUnits.split(" ")[0]!,
     editName: ageUnits.split(" ")[0]!,
-    fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+    fontsInfo: _.cloneDeep(defaultFontsInfo),
     fontOptions: getValidFontOptions("Ruler"),
     on: true,
     width: 100,
@@ -259,7 +259,8 @@ export async function parseDatapacks(
     maxAge: Number.MAX_VALUE,
     units: ageUnits,
     columnDisplayType: "Ruler",
-    show: true
+    show: true,
+    expanded: false
   });
   const chartColumn: ColumnInfo = {
     name: "Chart Title",
@@ -281,7 +282,8 @@ export async function parseDatapacks(
     maxAge: returnValue.maxAge,
     units: ageUnits,
     columnDisplayType: "RootColumn",
-    show: true
+    show: true,
+    expanded: true
   };
   setShowLabels(chartColumn);
 
@@ -1348,7 +1350,8 @@ function recursive(
     },
     fontOptions: ["Column Header"],
     units,
-    columnDisplayType: "MetaColumn"
+    columnDisplayType: "MetaColumn",
+    expanded: false
   };
   const returnValue: FaciesFoundAndAgeRange = {
     faciesFound: false,
@@ -1624,7 +1627,8 @@ function addFaciesChildren(
     width: width * 0.4,
     rgb,
     units,
-    columnDisplayType: "Facies"
+    columnDisplayType: "Facies",
+    expanded: false
   });
   children.push({
     name: `${name} Members`,
@@ -1642,7 +1646,8 @@ function addFaciesChildren(
     width,
     rgb,
     units,
-    columnDisplayType: "Zone"
+    columnDisplayType: "Zone",
+    expanded: false
   });
   children.push({
     name: `${name} Facies Label`,
@@ -1660,7 +1665,8 @@ function addFaciesChildren(
     width: width * 0.4,
     rgb,
     units,
-    columnDisplayType: "Zone"
+    columnDisplayType: "Zone",
+    expanded: false
   });
   children.push({
     name: `${name} Series Label`,
@@ -1678,7 +1684,8 @@ function addFaciesChildren(
     width: width * 0.2,
     units,
     columnDisplayType: "Zone",
-    show: true
+    show: true,
+    expanded: false
   });
   for (const child of children) {
     for (const fontOption of child.fontOptions) {
@@ -1727,7 +1734,8 @@ function addChronChildren(
     rgb,
     units,
     columnDisplayType: "Chron",
-    show: true
+    show: true,
+    expanded: false
   });
   children.push({
     name: `${name} Chron Label`,
@@ -1745,7 +1753,8 @@ function addChronChildren(
     rgb,
     units,
     columnDisplayType: "Zone",
-    show: true
+    show: true,
+    expanded: false
   });
   children.push({
     name: `${name} Series Label`,
@@ -1763,7 +1772,8 @@ function addChronChildren(
     rgb,
     units,
     columnDisplayType: "Zone",
-    show: true
+    show: true,
+    expanded: false
   });
   for (const child of children) {
     for (const fontOption of child.fontOptions) {
@@ -1797,11 +1807,12 @@ function createLoneColumn(
     fontOptions,
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
     children: [],
-    parent: "",
+    parent: null,
     units,
     subInfo,
     columnDisplayType: type,
-    show: true
+    show: true,
+    expanded: false
   };
   addColumnSettings(column);
   return column;
