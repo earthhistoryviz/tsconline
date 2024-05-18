@@ -76,8 +76,8 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
     state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
   if (curcol === undefined) {
     const errorDesc: string = "Unknown column name found while loading settings: ";
-    pushSnackbar(errorDesc + columnName.substring(0, snackbarTextLengthLimit - errorDesc.length - 1), "warning");
-    console.log("WARNING: tried to get", columnName, "in state.columnHashMap, but is undefined");
+    //makes website super slow if a lot of unknown columns (ex. if loaded settings for a different datapack)
+    //pushSnackbar(errorDesc + columnName.substring(0, snackbarTextLengthLimit - errorDesc.length - 1), "warning");
   } else setColumnProperties(curcol, settings);
   if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
     for (let i = 0; i < settings.children.length; i++) {
