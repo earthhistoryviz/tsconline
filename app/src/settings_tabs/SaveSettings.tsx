@@ -77,8 +77,8 @@ export default function SaveSettings() {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button type="submit">Save</Button>
+          <Button color="warning" onClick={handleClose}>Cancel</Button>
+          <Button color="info" type="submit">Save</Button>
         </DialogActions>
       </Dialog>
     </React.Fragment>

@@ -8,14 +8,14 @@ import DialogTitle from "@mui/material/DialogTitle";
 import { useContext } from "react";
 import { context } from "../state";
 import { xmlToJson } from "../state/parse-settings";
-import { IconButton } from "@mui/material";
+import { CircularProgress, IconButton } from "@mui/material";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 import { InputFileUpload } from "../components";
 
 export default function LoadSettings() {
   const { actions } = useContext(context);
   const [open, setOpen] = React.useState(false);
-
+  const [isLoading, setIsLoading] = React.useState(false);
   async function loadSettings(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files) {
       actions.pushSnackbar("failed to load settings: no files uploaded", "info");
@@ -40,6 +40,23 @@ export default function LoadSettings() {
   const handleClose = () => {
     setOpen(false);
   };
+  const handleClick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsLoading(true);
+    try {
+      await loadSettings(e);
+    } finally {
+      setIsLoading(false);
+      setOpen(false);
+    }
+  };
+
+  const LoadButton = () => {
+    return (<div>
+      {isLoading === false && <InputFileUpload text="Load" onChange={(e) => {handleClick(e)}} />}
+      {isLoading === true && <CircularProgress />}
+    </div>)
+    
+  }
 
   return (
     <>
@@ -58,10 +75,8 @@ export default function LoadSettings() {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <div onClick={handleClose}>
-            <InputFileUpload text="Load" onChange={loadSettings} />
-          </div>
+          <Button color="warning" onClick={handleClose}>Cancel</Button>
+          <LoadButton />
         </DialogActions>
       </Dialog>
     </>
