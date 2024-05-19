@@ -4,6 +4,7 @@ import { Generated, Insertable, Selectable, Updateable } from "kysely";
 export interface Database {
   users: UserTable;
   verification: VerificationTable;
+  ip: IpTable;
 }
 
 export interface UserTable {
@@ -24,12 +25,22 @@ export interface VerificationTable {
   reason: "password" | "invalidate" | "verify";
 }
 
+export interface IpTable {
+  id: Generated<number>;
+  ip: string;
+  count: number;
+}
+
 export type User = Selectable<UserTable>;
 export type NewUser = Insertable<UserTable>;
 export type UpdatedUser = Updateable<UserTable>;
 
 export type Verification = Selectable<VerificationTable>;
 export type NewVerification = Insertable<VerificationTable>;
+
+export type Ip = Selectable<IpTable>;
+export type NewIp = Insertable<IpTable>;
+export type UpdatedIp = Updateable<IpTable>;
 
 export type Email = {
   from: string;

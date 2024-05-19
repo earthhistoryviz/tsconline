@@ -10,14 +10,16 @@ import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/sha
 import fastifyCompress from "@fastify/compress";
 import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
-import { AssetConfig, assertAssetConfig } from "./types.js";
+import { AssetConfig, assertAssetConfig, Email } from "./types.js";
 import { readFile } from "fs/promises";
 import fastifyMultipart from "@fastify/multipart";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import fastifySecureSession from "@fastify/secure-session";
 import fastifyRateLimit from "@fastify/rate-limit";
 import dotenv from "dotenv";
-import { db } from "./database.js";
+import { db, findIp, createIp, updateIp } from "./database.js";
+import { sendEmail } from "./send-email.js";
+import cron from "node-cron";
 import path from "path";
 
 const server = fastify({
@@ -107,7 +109,16 @@ server.register(fastifySecureSession, {
 });
 
 await server.register(fastifyRateLimit, {
-  global: false
+  global: false,
+  onExceeded: async (_request, key) => {
+    const clientIp = key;
+    const ip = (await findIp(clientIp))[0];
+    if (!ip) {
+      await createIp(clientIp);
+    } else {
+      await updateIp(clientIp, ip.count + 1);
+    }
+  }
 });
 
 server.register(fastifyMultipart, {
@@ -255,6 +266,36 @@ setInterval(
   },
   1000 * 60 * 60 * 24 * 7
 ); // 1 week
+dotenv.config();
+if (process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.NODE_ENV === "production") {
+  const emailUser = process.env.EMAIL_USER as string;
+  cron.schedule(
+    "0 0 * * 0", // every Sunday at midnight
+    async () => {
+      try {
+        const allIps = await db.selectFrom("ip").selectAll().execute();
+        if (allIps.length === 0) return;
+        const ipMessages = allIps
+          .map((ip) => `IP: ${ip.ip}, Count: ${ip.count}`)
+          .join("<br>")
+          .trim();
+        const notificationEmail: Email = {
+          from: emailUser,
+          to: emailUser,
+          subject: "Timescale Creator IP Notification",
+          preHeader: "Timescale Creator IP Notification",
+          title: "Timescale Creator IP Notification",
+          message: `The following IPs have been rate limited:<br>${ipMessages}`,
+          action: "Ip Notification"
+        };
+        await sendEmail(notificationEmail);
+        await db.deleteFrom("ip").execute();
+      } catch (e) {
+        console.error("Error sending email: ", e);
+      }
+    }
+  );
+}
 // Start the server...
 try {
   await server.listen({
