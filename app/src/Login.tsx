@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import Avatar from "@mui/material/Avatar";
 import TextField from "@mui/material/TextField";
@@ -12,7 +12,7 @@ import loader from "./assets/icons/loading.json";
 import { useTheme } from "@mui/material/styles";
 import LoginIcon from "@mui/icons-material/Login";
 import { GoogleLogin } from "@react-oauth/google";
-import { fetcher } from "./util";
+import { fetcher, loadRecaptcha, removeRecaptcha, executeRecaptcha } from "./util";
 import { actions, context } from "./state";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { useNavigate } from "react-router";
@@ -28,15 +28,30 @@ export const Login: React.FC = observer(() => {
   interface Form {
     username: FormDataEntryValue | null;
     password: FormDataEntryValue | null;
+    recaptchaToken: string | null;
   }
 
   interface Credential {
     credential: string | undefined;
+    recaptchaToken: string | null;
   }
+
+  useEffect(() => {
+    loadRecaptcha();
+    return () => {
+      removeRecaptcha();
+    };
+  }, []);
 
   const handleLogin = async (isGoogleLogin: boolean, body: Form | Credential) => {
     setLoading(true);
     try {
+      const recaptchaToken = await executeRecaptcha("login");
+      if (!recaptchaToken) {
+        actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
+        return;
+      }
+      body = { ...body, recaptchaToken };
       const response = await fetcher(`/auth/${isGoogleLogin ? "oauth" : "login"}`, {
         method: "POST",
         headers: {
@@ -59,11 +74,7 @@ export const Login: React.FC = observer(() => {
         let errorCode = ErrorCodes.UNABLE_TO_LOGIN_SERVER;
         switch (response.status) {
           case 400:
-            if (isGoogleLogin) {
-              errorCode = ErrorCodes.UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL;
-            } else {
-              errorCode = ErrorCodes.INVALID_FORM;
-            }
+            errorCode = isGoogleLogin ? ErrorCodes.UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL : ErrorCodes.INVALID_FORM;
             break;
           case 401:
             errorCode = ErrorCodes.UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD;
@@ -75,8 +86,15 @@ export const Login: React.FC = observer(() => {
           case 409:
             errorCode = ErrorCodes.UNABLE_TO_LOGIN_EXISTING_USER;
             break;
+          case 422:
+            errorCode = ErrorCodes.RECAPTCHA_FAILED;
+            break;
           case 423:
             errorCode = ErrorCodes.UNABLE_TO_LOGIN_ACCOUNT_LOCKED;
+            break;
+          case 429:
+            actions.removeAllErrors();
+            errorCode = ErrorCodes.TOO_MANY_REQUESTS;
             break;
         }
         displayServerError(message, errorCode, ErrorMessages[errorCode]);
@@ -100,7 +118,8 @@ export const Login: React.FC = observer(() => {
     const data = new FormData(event.currentTarget);
     const formData: Form = {
       username: data.get("username"),
-      password: data.get("password")
+      password: data.get("password"),
+      recaptchaToken: null
     };
     await handleLogin(false, formData);
   };
@@ -163,7 +182,7 @@ export const Login: React.FC = observer(() => {
             <GoogleLogin
               onSuccess={async (credentialResponse) => {
                 const credential = credentialResponse.credential;
-                await handleLogin(true, { credential });
+                await handleLogin(true, { credential, recaptchaToken: null });
               }}
               onError={() => actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_SERVER)}
               width="400px"

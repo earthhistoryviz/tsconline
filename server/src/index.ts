@@ -16,7 +16,6 @@ import fastifyMultipart from "@fastify/multipart";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import fastifySecureSession from "@fastify/secure-session";
 import fastifyRateLimit from "@fastify/rate-limit";
-import fastifySlowDown from "fastify-slow-down";
 import dotenv from "dotenv";
 import { db } from "./database.js";
 import path from "path";
@@ -108,7 +107,7 @@ server.register(fastifySecureSession, {
 });
 
 await server.register(fastifyRateLimit, {
-  global: false,
+  global: false
 });
 
 server.register(fastifyMultipart, {
@@ -199,52 +198,38 @@ server.get("/facies-patterns", (_request, reply) => {
 
 server.get("/user-datapacks", routes.fetchUserDatapacks);
 
-server.post("/auth/oauth", loginRoutes.googleLogin);
-
-server.post(
-  "/auth/login",
-  {
-    config: {
-      rateLimit: {
-        max: 10,
-        timeWindow: "1 minute"
-      }
+const strictRateLimit = {
+  config: {
+    rateLimit: {
+      max: 10,
+      timeWindow: "1 minute"
     }
-  },
-  loginRoutes.login
-);
+  }
+};
 
-server.post(
-  "/auth/signup",
-  {
-    config: {
-      rateLimit: {
-        max: 6,
-        timeWindow: "1 minute"
-      }
+const moderateRateLimit = {
+  config: {
+    rateLimit: {
+      max: 20,
+      timeWindow: "1 minute"
     }
-  },
-  loginRoutes.signup
-);
+  }
+};
 
-server.post("/auth/session-check", loginRoutes.sessionCheck);
-
-server.post("/auth/logout", async (request, reply) => {
+server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
+server.post("/auth/login", strictRateLimit, loginRoutes.login);
+server.post("/auth/signup", strictRateLimit, loginRoutes.signup);
+server.post("/auth/session-check", moderateRateLimit, loginRoutes.sessionCheck);
+server.post("/auth/logout", moderateRateLimit, async (request, reply) => {
   request.session.delete();
   reply.send({ message: "Logged out" });
 });
-
-server.post("/auth/verify", loginRoutes.verifyEmail);
-
-server.post("/auth/resend", loginRoutes.resendVerificationEmail);
-
-server.post("/auth/send-resetpassword-email", loginRoutes.sendResetPasswordEmail);
-
-server.post("/auth/reset-password", loginRoutes.resetPassword);
-
-server.post("/auth/reset-email", loginRoutes.resetEmail);
-
-server.post("/auth/account-recovery", loginRoutes.accountRecovery);
+server.post("/auth/verify", strictRateLimit, loginRoutes.verifyEmail);
+server.post("/auth/resend", moderateRateLimit, loginRoutes.resendVerificationEmail);
+server.post("/auth/send-resetpassword-email", strictRateLimit, loginRoutes.sendResetPasswordEmail);
+server.post("/auth/reset-password", strictRateLimit, loginRoutes.resetPassword);
+server.post("/auth/reset-email", strictRateLimit, loginRoutes.resetEmail);
+server.post("/auth/account-recovery", strictRateLimit, loginRoutes.accountRecovery);
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it

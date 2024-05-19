@@ -28,3 +28,37 @@ export async function fetcher(...args: Parameters<typeof fetch>): ReturnType<typ
   }
   return fetch(...args);
 }
+
+export function loadRecaptcha() {
+  const script = document.createElement("script");
+  script.src = "https://www.google.com/recaptcha/api.js?render=6LegnOApAAAAACIFXyvL_6_ejS2CHnt3rRzkDGL2";
+  document.body.appendChild(script);
+}
+
+export function removeRecaptcha() {
+  const nodeBadge = document.querySelector(".grecaptcha-badge");
+  if (nodeBadge && nodeBadge.parentNode) {
+    document.body.removeChild(nodeBadge.parentNode);
+  }
+  const script = document.querySelector('script[src^="https://www.gstatic.com/recaptcha/releases"]');
+  if (script) {
+    script.remove();
+  }
+}
+
+declare global {
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    grecaptcha: any;
+  }
+}
+
+export async function executeRecaptcha(action: string): Promise<string> {
+  try {
+    const token = await window.grecaptcha.execute("6LegnOApAAAAACIFXyvL_6_ejS2CHnt3rRzkDGL2", { action });
+    return token;
+  } catch (error) {
+    console.error("reCAPTCHA execution failed:", error);
+    return "";
+  }
+}
