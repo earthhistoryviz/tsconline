@@ -67,9 +67,6 @@ export default function SaveSettings() {
             autoFocus
             required
             margin="dense"
-            id="name"
-            name="filename"
-            label="filename"
             type="text"
             fullWidth
             variant="standard"
@@ -77,8 +74,12 @@ export default function SaveSettings() {
           />
         </DialogContent>
         <DialogActions>
-          <Button color="warning" onClick={handleClose}>Cancel</Button>
-          <Button color="info" type="submit">Save</Button>
+          <Button color="warning" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button color="info" type="submit">
+            Save
+          </Button>
         </DialogActions>
       </Dialog>
     </React.Fragment>

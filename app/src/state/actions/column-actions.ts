@@ -16,8 +16,6 @@ import {
   convertPointTypeToPointShape
 } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
-import { pushSnackbar } from "./general-actions";
-import { snackbarTextLengthLimit } from "../../util/constant";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -75,7 +73,7 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
     state.settingsTabs.columnHashMap.get(columnName) ||
     state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
   if (curcol === undefined) {
-    const errorDesc: string = "Unknown column name found while loading settings: ";
+    //const errorDesc: string = "Unknown column name found while loading settings: ";
     //makes website super slow if a lot of unknown columns (ex. if loaded settings for a different datapack)
     //pushSnackbar(errorDesc + columnName.substring(0, snackbarTextLengthLimit - errorDesc.length - 1), "warning");
   } else setColumnProperties(curcol, settings);
