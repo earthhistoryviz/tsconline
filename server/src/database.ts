@@ -31,6 +31,11 @@ Database Schema Details (Post-Migration):
   - expiresAt (datetime): Non-nullable, the expiration date/time of the token. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
   - reason (text): Non-nullable, describes the purpose of the token (e.g., 'email verification', 'password reset').
 
+- ip Table:
+  - id (integer): Primary key, auto-increment.
+  - ip (text): Non-nullable, must be unique, stores the user's IP address.
+  - count (integer): Non-nullable, default is 1, stores the number of times the IP has caused a rate limit violation.
+
 Important Note on Schema Changes:
 To ensure data consistency and minimize manual interventions on the development server, you should not modify the schema commands below.
 For instance, if you need to add a new column like 'invalidateSession' to the 'users' table, you would typically modify the schema directly by adding this column. 
@@ -138,4 +143,20 @@ export async function deleteVerification(criteria: Partial<Verification>) {
   if (criteria.token) query = query.where("token", "=", criteria.token);
   if (criteria.expiresAt) query = query.where("expiresAt", "=", criteria.expiresAt);
   return await query.execute();
+}
+
+export async function createIp(ip: string) {
+  return await db.insertInto("ip").values({ ip, count: 1 }).execute();
+}
+
+export async function findIp(ip: string) {
+  return await db.selectFrom("ip").where("ip", "=", ip).selectAll().execute();
+}
+
+export async function updateIp(ip: string, count: number) {
+  return await db.updateTable("ip").set({ count }).where("ip", "=", ip).execute();
+}
+
+export async function deleteIp(ip: string) {
+  return await db.deleteFrom("ip").where("ip", "=", ip).execute();
 }
