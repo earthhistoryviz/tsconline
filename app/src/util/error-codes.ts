@@ -42,7 +42,9 @@ export enum ErrorCodes {
   UNABLE_TO_RECOVER_ACCOUNT = "UNABLE_TO_RECOVER_ACCOUNT",
   NOT_LOGGED_IN = "NOT_LOGGED_IN",
   USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD = "USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD",
-  INCORRECT_ENCRYPTION_HEADER = "INCORRET_ENCRYPTION_HEADER"
+  INCORRECT_ENCRYPTION_HEADER = "INCORRET_ENCRYPTION_HEADER",
+  TOO_MANY_REQUESTS = "TOO_MANY_REQUESTS",
+  RECAPTCHA_FAILED = "RECAPTCHA_FAILED"
 }
 
 export const ErrorMessages = {
@@ -97,5 +99,7 @@ export const ErrorMessages = {
   [ErrorCodes.NOT_LOGGED_IN]: "You are not logged in. Please log in to access this page.",
   [ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD]:
     "The datapack requested was not found on the server. Please try again later or contact our support team.",
-  [ErrorCodes.INCORRECT_ENCRYPTION_HEADER]: "Unable to encrypt the file, please try again later."
+  [ErrorCodes.INCORRECT_ENCRYPTION_HEADER]: "Unable to encrypt the file, please try again later.",
+  [ErrorCodes.TOO_MANY_REQUESTS]: "You have made too many requests. Please try again later.",
+  [ErrorCodes.RECAPTCHA_FAILED]: "Recaptcha failed. Please try again."
 };
