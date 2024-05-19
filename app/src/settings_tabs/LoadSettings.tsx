@@ -51,12 +51,20 @@ export default function LoadSettings() {
   };
 
   const LoadButton = () => {
-    return (<div>
-      {isLoading === false && <InputFileUpload text="Load" onChange={(e) => {handleClick(e)}} />}
-      {isLoading === true && <CircularProgress />}
-    </div>)
-    
-  }
+    return (
+      <div>
+        {isLoading === false && (
+          <InputFileUpload
+            text="Load"
+            onChange={(e) => {
+              handleClick(e);
+            }}
+          />
+        )}
+        {isLoading === true && <CircularProgress />}
+      </div>
+    );
+  };
 
   return (
     <>
@@ -75,7 +83,9 @@ export default function LoadSettings() {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button color="warning" onClick={handleClose}>Cancel</Button>
+          <Button color="warning" onClick={handleClose}>
+            Cancel
+          </Button>
           <LoadButton />
         </DialogActions>
       </Dialog>

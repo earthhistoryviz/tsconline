@@ -43,18 +43,15 @@ export const Settings = observer(function Settings() {
         style={{
           display: "flex",
           marginBottom: "1vh",
-          justifyContent: "space-evenly",
-          width: "100%"
+          width: "100%",
+          flexDirection: "row",
+          justifyContent: "center"
         }}>
-        {/* spacer for aligning items */}
-        <div style={{ flex: "1", textAlign: "left" }} />
-        <Typography style={{ flex: "1", textAlign: "center", fontSize: 48, marginBottom: "1vh", marginTop: "1vh" }}>
+        <LoadSettings />
+        <Typography style={{ textAlign: "center", fontSize: 48, marginBottom: "1vh", marginTop: "1vh" }}>
           Settings
         </Typography>
-        <div style={{ flex: "1", textAlign: "right", marginTop: "5vh" }}>
-          <LoadSettings />
-          <SaveSettings />
-        </div>
+        <SaveSettings />
       </div>
     );
   };
