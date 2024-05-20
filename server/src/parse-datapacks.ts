@@ -485,7 +485,8 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
         parent: "",
         units,
         columnDisplayType: "Blank",
-        show: true
+        show: true,
+        expanded: false
       });
       Object.assign(blank, { ...createDefaultColumnHeaderProps() });
       continue;
@@ -1389,7 +1390,7 @@ function createLoneColumn(
     units,
     subInfo,
     columnDisplayType: type,
-    show: true
+    show: true,
     expanded: false,
   };
   addColumnSettings(column, columnSpecificSettings);
