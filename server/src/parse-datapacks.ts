@@ -59,7 +59,7 @@ import { createInterface } from "readline";
 import _ from "lodash";
 import chalk from "chalk";
 import { readFile } from "fs/promises";
-import { convertEncodingToBufferEncoding } from "./types.js";
+import iconv from "iconv-lite";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;
 const patternForAbundance = /^(TOP|missing|rare|common|frequent|abundant|sample|flood)$/;
@@ -155,21 +155,12 @@ export async function parseDatapacks(
   let date: string | null = null;
   let verticalScale: number | null = null;
   let formatVersion = 1.5;
-  let encoding: BufferEncoding = "utf8";
   try {
     for (const decryptPath of decryptPaths) {
-      if (decryptPath.includes("encoding.enc")) {
-        const encode = await readFile(decryptPath);
-        const tabSeparated = encode.toString().split("\t");
-        if (tabSeparated[0] !== "encoding:" || !tabSeparated[1]) throw new Error("Encoding file is not formatted properly. Found " + tabSeparated[0] + " and " + tabSeparated[1]);
-        encoding = convertEncodingToBufferEncoding(tabSeparated[1]!);
-        continue;
-      }
       const { units, title, chronostrat, datapackDate, vertScale, version, top, base } = await getAllEntries(
         decryptPath,
         allEntries,
-        isChild,
-        encoding
+        isChild
       );
       topAge = top;
       baseAge = base;
@@ -179,7 +170,7 @@ export async function parseDatapacks(
       if (datapackDate) date = datapackDate;
       if (vertScale) verticalScale = vertScale;
       if (version) formatVersion = version;
-      await getColumnTypes(decryptPath, loneColumns, ageUnits, encoding);
+      await getColumnTypes(decryptPath, loneColumns, ageUnits);
       // all the entries parsed thus far (only from parent and child relationships)
       // only iterate over parents. if we encounter one that is a child, the recursive function
       // should have already processed it.
@@ -310,9 +301,8 @@ export async function getAllEntries(
   filename: string,
   allEntries: Map<string, ParsedColumnEntry>,
   isChild: Set<string>,
-  encoding: BufferEncoding
 ) {
-  const fileStream = createReadStream(filename, { encoding });
+  const fileStream = createReadStream(filename).pipe(iconv.decodeStream("UTF-8"));
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
   let top: number | null = null;
   let base: number | null = null;
@@ -407,8 +397,8 @@ export async function getAllEntries(
  * @param faciesMap the facies map to add to
  * @param blocksMap  the blocks map to add to
  */
-export async function getColumnTypes(filename: string, loneColumns: Map<string, ColumnInfo>, units: string, encoding: BufferEncoding) {
-  const fileStream = createReadStream(filename, { encoding });
+export async function getColumnTypes(filename: string, loneColumns: Map<string, ColumnInfo>, units: string) {
+  const fileStream = createReadStream(filename).pipe(iconv.decodeStream("UTF-8"));
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
   const freehand: Freehand = {
     ...createDefaultColumnHeaderProps(),

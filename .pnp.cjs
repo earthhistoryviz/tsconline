@@ -3385,6 +3385,7 @@ const RAW_RUNTIME_STATE =
           ["fastify", "npm:4.17.0"],\
           ["glob", "npm:10.3.10"],\
           ["google-auth-library", "npm:9.8.0"],\
+          ["iconv-lite", "npm:0.6.3"],\
           ["jsdom", "virtual:f400f1facecebc164f3b8826224462ee6165ba2a289af45d35511e5194135aec0e2b33199c69e89fd109ab94e6d817043a2c4cc1150135f9e3fe0bd583a0cf60#npm:24.0.0"],\
           ["kysely", "npm:0.27.3"],\
           ["lodash", "npm:4.17.21"],\

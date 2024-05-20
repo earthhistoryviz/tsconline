@@ -74,28 +74,6 @@ export type FileMetadata = {
   datapackIndexFilepath: string;
 };
 
-export function convertEncodingToBufferEncoding(encoding: string): BufferEncoding {
-  encoding = encoding.toLowerCase();
-  switch (encoding) {
-    case "utf8":
-    case "utf16le":
-    case "latin1":
-    case "base64":
-    case "hex":
-    case "ascii":
-    case "binary":
-    case "ucs-2":
-    case "utf-8":
-    case "utf-16le":
-    case "base64url":
-    case "ucs2":
-      return encoding;
-    case "iso-8859-1":
-      return "latin1";
-  }
-  return "utf8"
-}
-
 export function assertEmail(o: any): asserts o is Email {
   if (typeof o !== "object" || !o) throw "Email must be an object";
   if (typeof o.from !== "string") throwError("Email", "from", "string", o.from);
