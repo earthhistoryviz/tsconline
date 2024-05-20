@@ -1271,13 +1271,28 @@
     "column-types-facies-key": {
         "FaciesOne": {
             "name": "FaciesOne",
+            "editName": "FaciesOne",
+            "show": true,
+            "expanded": false,
+            "units": "Ma",
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "columnDisplayType": "Facies",
+            "children": [],
+            "parent": null,
+            "fontOptions": [
+                "Column Header",
+                "Age Label",
+                "Uncertainty Label"
+            ],
             "width": 500,
             "rgb": {
                 "r": 255,
                 "g": 255,
                 "b": 255
             },
-            "subFaciesInfo": [
+            "subInfo": [
                 {
                     "rockType": "TOP",
                     "age": 374.64,
@@ -1298,7 +1313,22 @@
         },
         "FaciesTwo": {
             "name": "FaciesTwo",
-            "subFaciesInfo": [
+            "editName": "FaciesTwo",
+            "units": "Ma",
+            "show": true,
+            "expanded": false,
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "columnDisplayType": "Facies",
+            "children": [],
+            "parent": null,
+            "fontOptions": [
+                "Column Header",
+                "Age Label",
+                "Uncertainty Label"
+            ],
+            "subInfo": [
                 {
                     "rockType": "TOP",
                     "age": 311.59,
@@ -1340,7 +1370,7 @@
             "show": true,
             "expanded": false,
             "children": [],
-            "parent": "",
+            "parent": null,
             "subInfo": [
                 {
                     "label": "Sub Block Top",
@@ -1366,6 +1396,7 @@
                 }
             ],
             "width": 100,
+            "units": "Ma",
             "minAge": 0,
             "maxAge": 201.36,
             "popup": "",
@@ -1379,7 +1410,22 @@
         },
         "Block Child 2": {
             "name": "Block Child 2",
-            "subBlockInfo": [
+            "editName": "Block Child 2",
+            "columnDisplayType": "Zone",
+            "fontOptions": [
+                "Column Header",
+                "Age Label",
+                "Zone Column Label"
+            ],
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "show": true,
+            "expanded": false,
+            "children": [],
+            "parent": null,
+            "units": "Ma",
+            "subInfo": [
                 {
                     "label": "Sub Block Top",
                     "age": 0,
@@ -1723,7 +1769,28 @@
     "column-types-event-key": {
         "Event 1": {
             "name": "Event 1",
-            "subEventInfo": [
+            "editName": "Event 1",
+            "show": true,
+            "expanded": false,
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "fontOptions": [
+                "Column Header",
+                "Age Label",
+                "Event Column Label",
+                "Uncertainty Label",
+                "Range Label"
+            ],
+            "children": [],
+            "columnDisplayType": "Event",
+            "parent": null,
+            "columnSpecificSettings": {
+                "type": "events",
+                "rangeSort": "first occurrence"
+            },
+            "units": "Ma",
+            "subInfo": [
                 {
                 "label": "Event 1 SubEvent 1",
                 "age": 2,
@@ -1751,7 +1818,28 @@
         },
         "Event 2": {
             "name": "Event 2",
-            "subEventInfo": [
+            "editName": "Event 2",
+            "show": true,
+            "expanded": false,
+            "parent": null,
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "children": [],
+            "columnDisplayType": "Event",
+            "columnSpecificSettings": {
+                "type": "events",
+                "rangeSort": "first occurrence"
+            },
+            "fontOptions": [
+                "Column Header",
+                "Age Label",
+                "Event Column Label",
+                "Uncertainty Label",
+                "Range Label"
+            ],
+            "units": "Ma",
+            "subInfo": [
                 {
                 "label": "Event 2 SubEvent 1",
                 "age": 5,
@@ -1781,7 +1869,20 @@
     "column-types-range-key": {
         "Range 1": {
             "name": "Range 1",
-            "subRangeInfo": [
+            "editName": "Range 1",
+            "show": true,
+            "expanded": false,
+            "parent": null,
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "columnDisplayType": "Range",
+            "fontOptions": [
+              "Column Header",
+              "Popup Body"
+            ],
+            "units": "Ma",
+            "subInfo": [
               {
                 "label": "Range 1 SubRangeInfo 1",
                 "age": 28.4,
@@ -1796,6 +1897,7 @@
               }
             ],
             "enableTitle": true,
+            "children": [],
             "width": 100,
             "rgb": {
               "r": 198,
@@ -1809,7 +1911,21 @@
         },
         "Range 2": {
             "name": "Range 2",
-            "subRangeInfo": [
+            "editName": "Range 2",
+            "show": true,
+            "expanded": false,
+            "parent": null,
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "children": [],
+            "columnDisplayType": "Range",
+            "fontOptions": [
+              "Column Header",
+              "Popup Body"
+            ],
+            "units": "Ma",
+            "subInfo": [
               {
                 "label": "Range 2 SubRangeInfo 1",
                 "age": 0,
@@ -1839,18 +1955,32 @@
     "column-types-chron-key": {
         "Chron 1": {
             "name": "Chron 1",
+            "editName": "Chron 1",
+            "columnDisplayType": "Chron",
+            "show": true,
+            "expanded": false,
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "fontOptions": [
+                "Column Header",
+                "Age Label"
+            ],
+            "children": [],
+            "parent": null,
             "minAge": 28.4,
             "maxAge": 33.9,
             "enableTitle": true,
             "on": false,
             "width": 100,
+            "units": "Ma",
             "popup": "Chron 1 info",
             "rgb": {
                 "r": 198,
                 "g": 207,
                 "b": 174
             },
-            "subChronInfo": [
+            "subInfo": [
                 {
                     "polarity": "TOP",
                     "age": 28.4,
@@ -1866,6 +1996,20 @@
         },
         "Chron 2": {
             "name": "Chron 2",
+            "editName": "Chron 2",
+            "columnDisplayType": "Chron",
+            "show": true,
+            "expanded": false,
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "fontOptions": [
+                "Column Header",
+                "Age Label"
+            ],
+            "children": [],
+            "parent": null,
+            "units": "Ma",
             "minAge": 0,
             "maxAge": 0.01,
             "enableTitle": false,
@@ -1877,7 +2021,7 @@
                 "g": 207,
                 "b": 174
             },
-            "subChronInfo": [
+            "subInfo": [
                 {
                     "polarity": "TOP",
                     "age": 0,
@@ -1895,6 +2039,66 @@
     "column-types-point-key": {
         "Point 1": {
             "name": "Point 1",
+            "editName": "Point 1",
+            "columnDisplayType": "Point",
+            "show": true,
+            "expanded": false,
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "fontOptions": [
+              "Column Header",
+              "Point Column Scale Label"
+            ],
+            "children": [],
+            "parent": null,
+            "units": "Ma",
+            "columnSpecificSettings": {
+              "drawBackgroundGradient": false,
+              "drawCurveGradient": false,
+              "drawScale": true,
+              "flipScale": false,
+              "lineColor": {
+                "r": 0,
+                "g": 0,
+                "b": 0
+              },
+              "backgroundGradientEnd": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "backgroundGradientStart": {
+                "r": 0,
+                "g": 0,
+                "b": 0
+              },
+              "curveGradientEnd": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "curveGradientStart": {
+                "r": 0,
+                "g": 0,
+                "b": 0
+              },
+              "drawFill": true,
+              "drawLine": true,
+              "fill": {
+                "r": 64,
+                "g": 233,
+                "b": 191
+              },
+              "lowerRange": 0,
+              "maxX": 60,
+              "minX": 0,
+              "pointShape": "nopoints",
+              "smoothed": true,
+              "upperRange": 230,
+              "scaleStart": 0,
+              "scaleStep": 0
+            },
             "minAge": 7,
             "maxAge": 8,
             "enableTitle": true,
@@ -1906,7 +2110,7 @@
               "g": 255,
               "b": 255
             },
-            "subPointInfo": [
+            "subInfo": [
               {
                 "age": 7,
                 "xVal": 0,
@@ -1934,6 +2138,66 @@
         },
         "Point 2": {
             "name": "Point 2",
+            "editName": "Point 2",
+            "columnDisplayType": "Point",
+            "show": true,
+            "expanded": false,
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "fontOptions": [
+              "Column Header",
+              "Point Column Scale Label"
+            ],
+            "children": [],
+            "parent": null,
+            "units": "Ma",
+            "columnSpecificSettings": {
+              "drawBackgroundGradient": false,
+              "drawCurveGradient": false,
+              "drawScale": true,
+              "flipScale": false,
+              "lineColor": {
+                "r": 0,
+                "g": 0,
+                "b": 0
+              },
+              "backgroundGradientEnd": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "backgroundGradientStart": {
+                "r": 0,
+                "g": 0,
+                "b": 0
+              },
+              "curveGradientEnd": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "curveGradientStart": {
+                "r": 0,
+                "g": 0,
+                "b": 0
+              },
+              "drawFill": true,
+              "drawLine": false,
+              "fill": {
+                "r": 1,
+                "g": 2,
+                "b": 3
+              },
+              "lowerRange": 9,
+              "maxX": 9.5,
+              "minX": 9,
+              "pointShape": "cross",
+              "smoothed": true,
+              "upperRange": 9.5,
+              "scaleStart": 0,
+              "scaleStep": 0.18
+            },
             "minAge": 1,
             "maxAge": 1000,
             "enableTitle": true,
