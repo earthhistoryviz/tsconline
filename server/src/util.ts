@@ -3,6 +3,8 @@ import path from "path";
 import fsPromises, { rm } from "fs/promises";
 import { glob } from "glob";
 import { createInterface } from "readline/promises";
+import { access } from "fs/promises";
+import { constants } from "fs";
 
 /**
  * Recursively deletes directory INCLUDING directoryPath
@@ -202,4 +204,16 @@ export async function checkHeader(filepath: string) {
   }
 
   return isEncrypted;
+}
+
+// Function to check if a file exists
+export async function checkFileExists(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath, constants.F_OK);
+    console.log(`File exists: ${filePath}`);
+    return true;
+  } catch (error) {
+    console.log(`File does not exist: ${filePath}`, error);
+    return false;
+  }
 }
