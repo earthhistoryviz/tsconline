@@ -1045,7 +1045,7 @@ function recursive(
     fontOptions: ["Column Header"]
   };
   if (!loneColumns.has(currentColumn) && !allEntries.has(currentColumn)) {
-    console.log(chalk.dim.yellow(`WARNING: Column ${currentColumn} not found in loneColumns or allEntries`));
+    console.log(chalk.dim.yellow(`WARNING: Column ${currentColumn} not found during datapack processing`));
     return returnValue;
   }
   // lone column is a leaf column
