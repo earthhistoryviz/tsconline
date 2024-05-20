@@ -58,7 +58,7 @@
             <setting name="drawAgeLabel">false</setting>
             <setting name="drawUncertaintyLabel">false</setting>
             <setting name="isSelected">true</setting>
-            <setting name="width">100.0</setting>
+            <setting name="width">1134.0</setting>
             <setting name="pad">0.2</setting>
             <setting name="age pad">2.0</setting>
             <setting name="backgroundColor"/>
@@ -88,7 +88,7 @@
                 <setting name="drawAgeLabel">false</setting>
                 <setting name="drawUncertaintyLabel">false</setting>
                 <setting name="isSelected">true</setting>
-                <setting name="width">100.0</setting>
+                <setting name="width">44.6953125</setting>
                 <setting name="pad">0.2</setting>
                 <setting name="age pad">2.0</setting>
                 <setting name="backgroundColor" useNamed="false">rgb(255,255,255)</setting>
@@ -120,7 +120,7 @@
                 <setting name="drawAgeLabel">false</setting>
                 <setting name="drawUncertaintyLabel">false</setting>
                 <setting name="isSelected">true</setting>
-                <setting name="width">100.0</setting>
+                <setting name="width">314.0</setting>
                 <setting name="pad">0.2</setting>
                 <setting name="age pad">2.0</setting>
                 <setting name="backgroundColor"/>
@@ -4969,7 +4969,7 @@
                 <setting name="drawAgeLabel">false</setting>
                 <setting name="drawUncertaintyLabel">false</setting>
                 <setting name="isSelected">true</setting>
-                <setting name="width">100.0</setting>
+                <setting name="width">144.0</setting>
                 <setting name="pad">0.2</setting>
                 <setting name="age pad">2.0</setting>
                 <setting name="backgroundColor"/>
@@ -4999,7 +4999,7 @@
                     <setting name="drawAgeLabel">false</setting>
                     <setting name="drawUncertaintyLabel">false</setting>
                     <setting name="isSelected">true</setting>
-                    <setting name="width">100.0</setting>
+                    <setting name="width">144.0</setting>
                     <setting name="pad">0.2</setting>
                     <setting name="age pad">2.0</setting>
                     <setting name="backgroundColor"/>
@@ -5029,7 +5029,7 @@
                         <setting name="drawAgeLabel">false</setting>
                         <setting name="drawUncertaintyLabel">false</setting>
                         <setting name="isSelected">true</setting>
-                        <setting name="width">100.0</setting>
+                        <setting name="width">144.0</setting>
                         <setting name="pad">0.2</setting>
                         <setting name="age pad">2.0</setting>
                         <setting name="backgroundColor"/>
@@ -5114,10 +5114,10 @@
                                 <font function="Legend Column Source" inheritable="false"/>
                                 <font function="Range Box Label" inheritable="false"/>
                             </fonts>
-                            <setting name="crunchOuterMargin">5</setting>
+                            <setting name="crunchOuterMargin">0</setting>
                             <setting name="crunchInnerMargin">1</setting>
-                            <setting name="crunchAscendWidth">4</setting>
-                            <setting name="crunchOneSideSpaceUse">10</setting>
+                            <setting name="crunchAscendWidth">3</setting>
+                            <setting name="crunchOneSideSpaceUse">4</setting>
                             <setting name="autoFlip">false</setting>
                             <setting name="orientation" orientation="normal"/>
                         </column>
@@ -5152,10 +5152,10 @@
                                 <font function="Legend Column Source" inheritable="false"/>
                                 <font function="Range Box Label" inheritable="false"/>
                             </fonts>
-                            <setting name="crunchOuterMargin">5</setting>
+                            <setting name="crunchOuterMargin">0</setting>
                             <setting name="crunchInnerMargin">1</setting>
-                            <setting name="crunchAscendWidth">4</setting>
-                            <setting name="crunchOneSideSpaceUse">10</setting>
+                            <setting name="crunchAscendWidth">3</setting>
+                            <setting name="crunchOneSideSpaceUse">4</setting>
                             <setting name="autoFlip">false</setting>
                             <setting name="orientation" orientation="vertical"/>
                         </column>
@@ -5195,7 +5195,7 @@
                     <setting name="rangeSort">first occurrence</setting>
                 </column>
                 <column id="class datastore.MetaColumn:Other Deep-tow; and Jurassic and Triassic  outcrop reference scales">
-                    <setting name="title">Other Deep-tow; and Jurassic and Triassic  outcrop reference scales</setting>
+                    <setting name="title">Other Deep-tow; and Jurassic and Triassic outcrop reference scales</setting>
                     <setting name="useNamedColor">false</setting>
                     <setting name="placeHolder">false</setting>
                     <setting name="drawTitle">false</setting>
@@ -9862,7 +9862,7 @@
                             <setting name="orientation" orientation="normal"/>
                         </column>
                         <column id="class datastore.ZoneColumn:Balto-Scandia Belemnite Zone (Lt. Cret.);  Tethyan (Oxf-Haut)">
-                            <setting name="title">Balto-Scandia Belemnite Zone (Lt. Cret.);  Tethyan (Oxf-Haut)</setting>
+                            <setting name="title">Balto-Scandia Belemnite Zone (Lt. Cret.); Tethyan (Oxf-Haut)</setting>
                             <setting name="useNamedColor">false</setting>
                             <setting name="placeHolder">false</setting>
                             <setting name="drawTitle">true</setting>
@@ -11485,7 +11485,7 @@
                 <setting name="drawAgeLabel">false</setting>
                 <setting name="drawUncertaintyLabel">false</setting>
                 <setting name="isSelected">true</setting>
-                <setting name="width">100.0</setting>
+                <setting name="width">224.0</setting>
                 <setting name="pad">0.2</setting>
                 <setting name="age pad">2.0</setting>
                 <setting name="backgroundColor"/>
@@ -11515,7 +11515,7 @@
                     <setting name="drawAgeLabel">false</setting>
                     <setting name="drawUncertaintyLabel">false</setting>
                     <setting name="isSelected">true</setting>
-                    <setting name="width">100.0</setting>
+                    <setting name="width">120.0</setting>
                     <setting name="pad">0.2</setting>
                     <setting name="age pad">2.0</setting>
                     <setting name="backgroundColor"/>
@@ -11545,7 +11545,7 @@
                         <setting name="drawAgeLabel">false</setting>
                         <setting name="drawUncertaintyLabel">false</setting>
                         <setting name="isSelected">true</setting>
-                        <setting name="width">100.0</setting>
+                        <setting name="width">120.0</setting>
                         <setting name="pad">0.2</setting>
                         <setting name="age pad">2.0</setting>
                         <setting name="backgroundColor"/>
@@ -13618,7 +13618,7 @@
                     <setting name="drawAgeLabel">false</setting>
                     <setting name="drawUncertaintyLabel">false</setting>
                     <setting name="isSelected">true</setting>
-                    <setting name="width">100.0</setting>
+                    <setting name="width">102.0</setting>
                     <setting name="pad">0.2</setting>
                     <setting name="age pad">2.0</setting>
                     <setting name="backgroundColor"/>
@@ -13648,7 +13648,7 @@
                         <setting name="drawAgeLabel">false</setting>
                         <setting name="drawUncertaintyLabel">false</setting>
                         <setting name="isSelected">true</setting>
-                        <setting name="width">100.0</setting>
+                        <setting name="width">102.0</setting>
                         <setting name="pad">0.2</setting>
                         <setting name="age pad">2.0</setting>
                         <setting name="backgroundColor"/>
@@ -13678,7 +13678,7 @@
                             <setting name="drawAgeLabel">false</setting>
                             <setting name="drawUncertaintyLabel">false</setting>
                             <setting name="isSelected">true</setting>
-                            <setting name="width">100.0</setting>
+                            <setting name="width">60.0</setting>
                             <setting name="pad">0.2</setting>
                             <setting name="age pad">2.0</setting>
                             <setting name="backgroundColor"/>
@@ -13856,10 +13856,10 @@
                                 <font function="Legend Column Source" inheritable="false"/>
                                 <font function="Range Box Label" inheritable="false"/>
                             </fonts>
-                            <setting name="crunchOuterMargin">5</setting>
+                            <setting name="crunchOuterMargin">0</setting>
                             <setting name="crunchInnerMargin">1</setting>
-                            <setting name="crunchAscendWidth">4</setting>
-                            <setting name="crunchOneSideSpaceUse">10</setting>
+                            <setting name="crunchAscendWidth">3</setting>
+                            <setting name="crunchOneSideSpaceUse">4</setting>
                             <setting name="autoFlip">false</setting>
                             <setting name="orientation" orientation="normal"/>
                         </column>
@@ -20780,7 +20780,7 @@
                             <setting name="pointType" pointType="rect"/>
                         </column>
                         <column id="class datastore.PointColumn:Mean Sea Level (intermediate term;  synthetic)">
-                            <setting name="title">Mean Sea Level (intermediate term;  synthetic)</setting>
+                            <setting name="title">Mean Sea Level (intermediate term; synthetic)</setting>
                             <setting name="useNamedColor">false</setting>
                             <setting name="placeHolder">false</setting>
                             <setting name="drawTitle">true</setting>
@@ -21208,7 +21208,7 @@
                             </column>
                         </column>
                         <column id="class datastore.PointColumn:Cenozoic-Campanian  Oxygen-18 Composite (Benthic Foraminifera, per-mil PDB; Cramer, 2009)">
-                            <setting name="title">Cenozoic-Campanian  Oxygen-18 Composite (Benthic Foraminifera, per-mil PDB; Cramer, 2009)</setting>
+                            <setting name="title">Cenozoic-Campanian Oxygen-18 Composite (Benthic Foraminifera, per-mil PDB; Cramer, 2009)</setting>
                             <setting name="useNamedColor">false</setting>
                             <setting name="placeHolder">false</setting>
                             <setting name="drawTitle">true</setting>
@@ -21379,8 +21379,8 @@
                                 <setting name="scaleStep">2.1</setting>
                                 <setting name="pointType" pointType="rect"/>
                             </column>
-                            <column id="class datastore.PointColumn:Isotopic temperature (calcite; ¡C)">
-                                <setting name="title">Isotopic temperature (calcite; ¡C)</setting>
+                            <column id="class datastore.PointColumn:Isotopic temperature (calcite; ÁC)">
+                                <setting name="title">Isotopic temperature (calcite; ÁC)</setting>
                                 <setting name="useNamedColor">false</setting>
                                 <setting name="placeHolder">false</setting>
                                 <setting name="drawTitle">true</setting>
@@ -21521,8 +21521,8 @@
                                 <setting name="scaleStep">1.7000000000000002</setting>
                                 <setting name="pointType" pointType="rect"/>
                             </column>
-                            <column id="class datastore.PointColumn:Isotopic temperature (apatite; ¡C)">
-                                <setting name="title">Isotopic temperature (apatite; ¡C)</setting>
+                            <column id="class datastore.PointColumn:Isotopic temperature (apatite; ÁC)">
+                                <setting name="title">Isotopic temperature (apatite; ÁC)</setting>
                                 <setting name="useNamedColor">false</setting>
                                 <setting name="placeHolder">false</setting>
                                 <setting name="drawTitle">true</setting>
@@ -22230,7 +22230,7 @@
                 <setting name="drawAgeLabel">false</setting>
                 <setting name="drawUncertaintyLabel">false</setting>
                 <setting name="isSelected">true</setting>
-                <setting name="width">100.0</setting>
+                <setting name="width">400.0</setting>
                 <setting name="pad">0.2</setting>
                 <setting name="age pad">2.0</setting>
                 <setting name="backgroundColor"/>
@@ -24018,7 +24018,7 @@
                     </column>
                 </column>
                 <column id="class datastore.MetaColumn:Impacts  [dashed => est.; arrow UP => younger than this level; DOWN => older]">
-                    <setting name="title">Impacts  [dashed =&gt; est.; arrow UP =&gt; younger than this level; DOWN =&gt; older]</setting>
+                    <setting name="title">Impacts [dashed =&gt; est.; arrow UP =&gt; younger than this level; DOWN =&gt; older]</setting>
                     <setting name="useNamedColor">false</setting>
                     <setting name="placeHolder">false</setting>
                     <setting name="drawTitle">true</setting>

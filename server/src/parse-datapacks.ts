@@ -58,6 +58,8 @@ import { grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter, formatColum
 import { createInterface } from "readline";
 import _ from "lodash";
 import chalk from "chalk";
+import { readFile } from "fs/promises";
+import { convertEncodingToBufferEncoding } from "./types.js";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;
 const patternForAbundance = /^(TOP|missing|rare|common|frequent|abundant|sample|flood)$/;
@@ -153,12 +155,21 @@ export async function parseDatapacks(
   let date: string | null = null;
   let verticalScale: number | null = null;
   let formatVersion = 1.5;
+  let encoding: BufferEncoding = "utf8";
   try {
     for (const decryptPath of decryptPaths) {
+      if (decryptPath.includes("encoding.enc")) {
+        const encode = await readFile(decryptPath);
+        const tabSeparated = encode.toString().split("\t");
+        if (tabSeparated[0] !== "encoding:" || !tabSeparated[1]) throw new Error("Encoding file is not formatted properly. Found " + tabSeparated[0] + " and " + tabSeparated[1]);
+        encoding = convertEncodingToBufferEncoding(tabSeparated[1]!);
+        continue;
+      }
       const { units, title, chronostrat, datapackDate, vertScale, version, top, base } = await getAllEntries(
         decryptPath,
         allEntries,
-        isChild
+        isChild,
+        encoding
       );
       topAge = top;
       baseAge = base;
@@ -168,7 +179,7 @@ export async function parseDatapacks(
       if (datapackDate) date = datapackDate;
       if (vertScale) verticalScale = vertScale;
       if (version) formatVersion = version;
-      await getColumnTypes(decryptPath, loneColumns, ageUnits);
+      await getColumnTypes(decryptPath, loneColumns, ageUnits, encoding);
       // all the entries parsed thus far (only from parent and child relationships)
       // only iterate over parents. if we encounter one that is a child, the recursive function
       // should have already processed it.
@@ -200,10 +211,13 @@ export async function parseDatapacks(
     )
       throw new Error(`No columns found for path ${decryptPaths}`);
   } catch (e) {
-    console.log("ERROR: failed to read columns for path " + decryptPaths + ". ", e);
-    return null;
+    throw new Error(`ERROR: failed to read columns for path ${decryptPaths}. ${e}`);
   }
-  const columnInfo = columnInfoArray.concat([...loneColumns.values()]);
+  const columnInfo = columnInfoArray
+  loneColumns.forEach((column) => {
+    if (isChild.has(column.name)) return;
+    columnInfo.push(column);
+  })
   columnInfo.unshift({
     name: ageUnits.split(" ")[0]!,
     editName: ageUnits.split(" ")[0]!,
@@ -295,9 +309,10 @@ function setShowLabels(column: ColumnInfo) {
 export async function getAllEntries(
   filename: string,
   allEntries: Map<string, ParsedColumnEntry>,
-  isChild: Set<string>
+  isChild: Set<string>,
+  encoding: BufferEncoding
 ) {
-  const fileStream = createReadStream(filename);
+  const fileStream = createReadStream(filename, { encoding });
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
   let top: number | null = null;
   let base: number | null = null;
@@ -392,8 +407,8 @@ export async function getAllEntries(
  * @param faciesMap the facies map to add to
  * @param blocksMap  the blocks map to add to
  */
-export async function getColumnTypes(filename: string, loneColumns: Map<string, ColumnInfo>, units: string) {
-  const fileStream = createReadStream(filename);
+export async function getColumnTypes(filename: string, loneColumns: Map<string, ColumnInfo>, units: string, encoding: BufferEncoding) {
+  const fileStream = createReadStream(filename, { encoding });
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
   const freehand: Freehand = {
     ...createDefaultColumnHeaderProps(),
@@ -470,7 +485,7 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
       continue;
     }
     const tabSeparated = line.split("\t");
-    if (tabSeparated[1]?.trim() === "blank") {
+    if (tabSeparated[1]?.trim().toLowerCase() === "blank") {
       // has no subInfo so add straight
       setColumnHeaders(blank, tabSeparated);
       loneColumns.set(blank.name, {
@@ -487,7 +502,7 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
       Object.assign(blank, { ...createDefaultColumnHeaderProps() });
       continue;
     }
-    if (!inFreehandBlock && tabSeparated[1]?.trim() === "freehand") {
+    if (!inFreehandBlock && tabSeparated[1]?.trim().toLowerCase() === "freehand") {
       setColumnHeaders(freehand, tabSeparated);
       inFreehandBlock = true;
     } else if (inFreehandBlock) {
@@ -496,7 +511,7 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
         freehand.subFreehandInfo.push(subFreehandInfo);
       }
     }
-    if (!inTransectBlock && tabSeparated[1]?.trim() === "transect") {
+    if (!inTransectBlock && tabSeparated[1]?.trim().toLowerCase() === "transect") {
       setColumnHeaders(transect, tabSeparated);
       inTransectBlock = true;
     } else if (inTransectBlock) {
@@ -510,7 +525,7 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
         transect.subTransectInfo.push(subTransectInfo);
       }
     }
-    if (!inSequenceBlock && (tabSeparated[1]?.trim() === "sequence" || tabSeparated[1]?.trim() === "trend")) {
+    if (!inSequenceBlock && (tabSeparated[1]?.trim().toLowerCase() === "sequence" || tabSeparated[1]?.trim().toLowerCase() === "trend")) {
       setColumnHeaders(sequence, tabSeparated);
       inSequenceBlock = true;
     } else if (inSequenceBlock) {
@@ -519,7 +534,7 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
         sequence.subSequenceInfo.push(subSequenceInfo);
       }
     }
-    if (!inPointBlock && tabSeparated[1]?.trim() === "point") {
+    if (!inPointBlock && tabSeparated[1]?.trim().toLowerCase() === "point") {
       setColumnHeaders(point, tabSeparated);
       inPointBlock = true;
     } else if (inPointBlock) {
@@ -531,7 +546,7 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
         point.subPointInfo.push(subPointInfo);
       }
     }
-    if (!inRangeBlock && tabSeparated[1]?.trim() === "range") {
+    if (!inRangeBlock && tabSeparated[1]?.trim().toLowerCase() === "range") {
       setColumnHeaders(range, tabSeparated);
       inRangeBlock = true;
     } else if (inRangeBlock) {
@@ -541,7 +556,7 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
       }
     }
     // we found an event block
-    if (!inEventBlock && tabSeparated[1]?.trim() === "event") {
+    if (!inEventBlock && tabSeparated[1]?.trim().toLowerCase() === "event") {
       setColumnHeaders(event, tabSeparated);
       inEventBlock = true;
     } else if (inEventBlock) {
@@ -551,7 +566,7 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
       }
     }
     // we found a facies block
-    if (!inFaciesBlock && tabSeparated[1]?.trim() === "facies") {
+    if (!inFaciesBlock && tabSeparated[1]?.trim().toLowerCase() === "facies") {
       setColumnHeaders(facies, tabSeparated);
       inFaciesBlock = true;
     } else if (inFaciesBlock) {
@@ -562,7 +577,7 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
     }
 
     // TODO chron-only
-    if (!inChronBlock && (tabSeparated[1]?.trim() === "chron" || tabSeparated[1]?.trim() === "chron-only")) {
+    if (!inChronBlock && (tabSeparated[1]?.trim().toLowerCase() === "chron" || tabSeparated[1]?.trim().toLowerCase() === "chron-only")) {
       setColumnHeaders(chron, tabSeparated);
       inChronBlock = true;
     } else if (inChronBlock) {
@@ -573,7 +588,7 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
     }
 
     // we found a block
-    if (!inBlockBlock && tabSeparated[1]?.trim() === "block") {
+    if (!inBlockBlock && tabSeparated[1]?.trim().toLowerCase() === "block") {
       setColumnHeaders(block, tabSeparated);
       inBlockBlock = true;
     } else if (inBlockBlock) {
@@ -1038,6 +1053,7 @@ function recursive(
     console.log(chalk.dim.yellow(`WARNING: Column ${currentColumn} not found in loneColumns or allEntries`));
     return returnValue;
   }
+  if (currentColumn.includes("Isotopic")) console.log("Isotopic column found: " + currentColumn);
   // lone column is a leaf column
   if (loneColumns.has(currentColumn)) {
     const currentColumnInfo = loneColumns.get(currentColumn)!;
@@ -1077,7 +1093,6 @@ function recursive(
     returnValue.fontOptions = currentColumnInfo.fontOptions;
     currentColumnInfo.parent = parent;
     childrenArray.push(currentColumnInfo);
-    loneColumns.delete(currentColumn);
     return returnValue;
   }
   const currentColumnInfo: ColumnInfo = {

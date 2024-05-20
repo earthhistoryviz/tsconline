@@ -905,11 +905,11 @@ export function assertSubInfo(o: any, type: DisplayedColumnTypes): asserts o is 
 export function assertDisplayedColumnTypes(o: any): asserts o is DisplayedColumnTypes {
   if (!o || typeof o !== "string") throwError("DisplayedColumnTypes", "DisplayedColumnTypes", "string", o);
   if (
-    !/^(Block|Facies|Event|Range|Chron|Point|Sequence|Transect|Freehand|Zone|Ruler|AgeAge|MetaColumn|BlockSeriesMetaColumn|RootColumn)$/.test(
+    !/^(Block|Facies|Event|Range|Chron|Point|Sequence|Transect|Freehand|Zone|Ruler|AgeAge|MetaColumn|BlockSeriesMetaColumn|RootColumn|Blank)$/.test(
       o
     )
   )
-    throw new Error("DisplayedColumnTypes must be a string of a valid column type");
+    throw new Error("DisplayedColumnTypes must be a string of a valid column type. Found value + " + o);
 }
 
 export function assertColumnInfo(o: any): asserts o is ColumnInfo {
