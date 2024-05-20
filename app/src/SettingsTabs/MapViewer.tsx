@@ -90,13 +90,10 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
           }}
           minScale={1}
           maxScale={3}
-          limitToBounds={true}
-
-        >
-
+          limitToBounds={true}>
           {(utils) => (
             <>
-              <TransformComponent >
+              <TransformComponent>
                 <>
                   <img
                     id="map"
