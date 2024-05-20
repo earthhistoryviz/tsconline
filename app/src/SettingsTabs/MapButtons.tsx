@@ -455,41 +455,61 @@ function getFaciesIcon(
     pushPresentRockType
   );
   return (
-    /*  <svg width={`${iconSize / scale}px`} height={`${iconSize / scale}px`} viewBox="0 0 24 24">
-       <circle cx="12" cy="12" r="10" stroke="black" strokeWidth="1" fill="transparent" />
-       
-       <image
-         href={rockType.toLowerCase().trim() === "top" ? "" : devSafeUrl(`/public/patterns/${rockType.trim()}.PNG`)}
-         x="-10"
-         y="-10"
-         height="44px"
-         width="44px"
-         clipPath="url(#clipCircle)"
-       />
-       <clipPath id="clipCircle">
-         <circle cx="12" cy="12" r="10" />
-       </clipPath>
-     </svg> */
-    <svg width={`${iconSize / scale}px`} height={`${iconSize / scale}px`} viewBox="0 0 24 24">
-      <defs>
-        <pattern id="imgPattern" patternUnits="userSpaceOnUse" patternContentUnits="userSpaceOnUse" width="44"
-          height="44" patternTransform="translate(0,0)">
-          <image
-            href={rockType.toLowerCase().trim() === "top" ? "" : devSafeUrl(`/public/patterns/${rockType.trim()}.PNG`)}
-            x="0"
-            y="0"
-            preserveAspectRatio="none"
-            width="44"
-            height="44"
-          />
-        </pattern>
-      </defs>
-      <circle cx="12" cy="12" r="10" stroke="black" strokeWidth="1" fill="url(#imgPattern)" transform="translate(0, 0)" />
-      <clipPath id="clipCircle">
-        <circle cx="12" cy="12" r="10" />
-      </clipPath>
+
+    <svg width={`${iconSize / scale}px`} height={`${iconSize / scale}px`} viewBox="0 0 24 24" >
+
+
+      <pattern id="imgPattern"
+        height="16"
+        width="16"
+        patternUnits="userSpaceOnUse"
+        patternTransform={`scale(${scale / (iconSize / 46)})`}
+      >
+        <image
+          href={rockType.toLowerCase().trim() === "top" ? "" : devSafeUrl(`/public/patterns/${rockType.trim()}.PNG`)}
+          x="0"
+          y="0"
+          preserveAspectRatio="none"
+          width="16"
+          height="16"
+
+        />
+
+      </pattern>
+      <circle cx="12" cy="12" r="10" stroke="black" strokeWidth="1" fill="url(#imgPattern)" />
 
     </svg>
+
+    /*<svg width={`${iconSize / scale}px`} height={`${iconSize / scale}px`} viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" stroke="black" strokeWidth="1" fill="transparent" />
+          <defs>
+            <pattern id="imgPattern">
+              <image
+                href={rockType.toLowerCase().trim() === "top" ? "" : devSafeUrl(`/public/patterns/${rockType.trim()}.PNG`)}
+    
+                height="20px"
+                width="20px"
+                preserveAspectRatio="none"
+    
+              />
+            </pattern>
+          </defs>
+         
+          <image
+            href={rockType.toLowerCase().trim() === "top" ? "" : devSafeUrl(`/public/patterns/${rockType.trim()}.PNG`)}
+            x="-10"
+            y="-10"
+            height="44px"
+            width="44px"
+            clipPath="url(#clipCircle)"
+          />
+          <clipPath id="clipCircle">
+            <circle cx="12" cy="12" r="10" />
+          </clipPath>
+        </svg>
+    */
+
+
   );
 }
 
