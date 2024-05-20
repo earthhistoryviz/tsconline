@@ -2121,20 +2121,7 @@
                 "xVal": 60,
                 "popup": ""
               }
-            ],
-            "drawFill": true,
-            "drawLine": true,
-            "fill": {
-              "r": 64,
-              "g": 233,
-              "b": 191
-            },
-            "lowerRange": 0,
-            "upperRange": 230,
-            "minX": 0,
-            "maxX": 60,
-            "pointShape": "nopoints",
-            "smoothed": true
+            ]
         },
         "Point 2": {
             "name": "Point 2",
@@ -2209,7 +2196,7 @@
             "g": 255,
             "b": 255
             },
-            "subPointInfo": [
+            "subInfo": [
             {
                 "age": 1,
                 "xVal": 9.5,
@@ -2220,26 +2207,27 @@
                 "xVal": 9,
                 "popup": "Popup 2"
             }
-            ],
-            "fill": {
-              "r": 1,
-              "g": 2,
-              "b": 3
-            },
-            "drawFill": true,
-            "drawLine": false,
-            "lowerRange": 9,
-            "upperRange": 9.5,
-            "scaleStep": 0.18,
-            "minX": 9,
-            "maxX": 9.5,
-            "pointShape": "cross",
-            "smoothed": true
+            ]
         }
     },
     "column-types-sequence-key": {
         "Trend 1": {
             "name": "Trend 1",
+            "editName": "Trend 1",
+            "show": true,
+            "expanded": false,
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "fontOptions": [
+                "Column Header",
+                "Age Label",
+                "Sequence Column Label"
+            ],
+            "columnDisplayType": "Sequence",
+            "children": [],
+            "parent": null,
+            "units": "Ma",
             "minAge": 67,
             "maxAge": 69,
             "enableTitle": false,
@@ -2251,7 +2239,7 @@
                 "g": 255,
                 "b": 255
             },
-            "subSequenceInfo": [
+            "subInfo": [
                 {
                     "label": "Trend 1 label",
                     "direction": "SB",
@@ -2269,6 +2257,21 @@
         },
         "Sequence 1": {
             "name": "Sequence 1",
+            "editName": "Sequence 1",
+            "show": true,
+            "expanded": false,
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "fontOptions": [
+                "Column Header",
+                "Age Label",
+                "Sequence Column Label"
+            ],
+            "columnDisplayType": "Sequence",
+            "children": [],
+            "parent": null,
+            "units": "Ma",
             "minAge": 321.39,
             "maxAge": 322.34,
             "enableTitle": true,
@@ -2280,7 +2283,7 @@
                 "g": 20,
                 "b": 20
             },
-            "subSequenceInfo": [
+            "subInfo": [
                 {
                     "label": "SubSequenceInfo 1",
                     "direction": "SB",
@@ -2300,6 +2303,19 @@
     "column-types-transect-key": {
         "Transect Child 1": {
             "name": "Transect Child 1",
+            "editName": "Transect Child 1",
+            "show": true,
+            "expanded": false,
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "fontOptions": [
+                "Column Header"
+            ],
+            "columnDisplayType": "Transect",
+            "children": [],
+            "parent": null,
+            "units": "Ma",
             "minAge": 8.61,
             "maxAge": 530.46,
             "enableTitle": true,
@@ -2311,7 +2327,7 @@
               "g": 245,
               "b": 245
             },
-            "subTransectInfo": [
+            "subInfo": [
               {
                 "age": 8.61
               },
@@ -2328,6 +2344,19 @@
         },
         "Transect Child 2": {
             "name": "Transect Child 2",
+            "editName": "Transect Child 2",
+            "show": true,
+            "expanded": false,
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "fontOptions": [
+                "Column Header"
+            ],
+            "columnDisplayType": "Transect",
+            "children": [],
+            "parent": null,
+            "units": "Ma",
             "minAge": 0,
             "maxAge": 9.22,
             "enableTitle": true,
@@ -2339,7 +2368,7 @@
             "g": 255,
             "b": 255
             },
-            "subTransectInfo": [
+            "subInfo": [
             {
                 "age": 0
             },
@@ -2355,6 +2384,19 @@
     "column-types-freehand-key": {
         "Freehand Child 1": {
             "name": "Freehand Child 1",
+            "editName": "Freehand Child 1",
+            "show": true,
+            "expanded": false,
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "fontOptions": [
+                "Column Header"
+            ],
+            "columnDisplayType": "Freehand",
+            "children": [],
+            "parent": null,
+            "units": "Ma",
             "minAge": 0.07,
             "maxAge": 120.3,
             "enableTitle": false,
@@ -2366,7 +2408,7 @@
                 "g": 123,
                 "b": 104
             },
-            "subFreehandInfo": [
+            "subInfo": [
                 {
                 "topAge": 0.07,
                 "baseAge": 2.07
@@ -2383,6 +2425,19 @@
         },
         "Freehand Child 2": {
             "name": "Freehand Child 2",
+            "editName": "Freehand Child 2",
+            "show": true,
+            "expanded": false,
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "fontOptions": [
+                "Column Header"
+            ],
+            "columnDisplayType": "Freehand",
+            "children": [],
+            "parent": null,
+            "units": "Ma",
             "minAge": 35.9,
             "maxAge": 37.5,
             "enableTitle": false,
@@ -2394,7 +2449,7 @@
                 "g": 123,
                 "b": 106
             },
-            "subFreehandInfo": [
+            "subInfo": [
                 {
                 "topAge": 35.9,
                 "baseAge": 36.9
