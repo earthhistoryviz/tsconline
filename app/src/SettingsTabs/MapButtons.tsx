@@ -22,6 +22,7 @@ import { devSafeUrl } from "../util";
 import { BorderedIcon } from "../components";
 import { checkIfDataIsInRange } from "../util/util";
 
+
 const IconSize = 40;
 export const InfoIcon = NotListedLocationIcon;
 export const DisabledIcon = LocationOffIcon;
@@ -446,7 +447,8 @@ function getFaciesIcon(
   currentFaciesOptions: FaciesOptions,
   setSelectedMapAgeRange: (min: number, max: number) => void,
   pushPresentRockType: (rockType: string) => void,
-  column: ColumnInfo
+  column: ColumnInfo,
+
 ) {
   const rockType = getRockTypeForAge(
     column,
@@ -454,16 +456,22 @@ function getFaciesIcon(
     setSelectedMapAgeRange,
     pushPresentRockType
   );
+  const [adjustX, setAdjustX] = useState(0);
+  const [adjustY, setAdjustY] = useState(0);
+  useTransformEffect(({ state }) => {
+    setAdjustX(state.positionX);
+    setAdjustY(state.positionY);
+  });
   return (
 
-    <svg width={`${iconSize / scale}px`} height={`${iconSize / scale}px`} viewBox="0 0 24 24" >
+    <svg width={`${iconSize / scale}px`} height={`${iconSize / scale}px`} viewBox="0 0 24 24"  >
 
 
       <pattern id="imgPattern"
         height="16"
         width="16"
         patternUnits="userSpaceOnUse"
-        patternTransform={`scale(${scale / (iconSize / 46)})`}
+        patternTransform={`scale(${scale / (iconSize / 46)}) translate(${-adjustX},${-adjustY})`}
       >
         <image
           href={rockType.toLowerCase().trim() === "top" ? "" : devSafeUrl(`/public/patterns/${rockType.trim()}.PNG`)}
@@ -479,35 +487,6 @@ function getFaciesIcon(
       <circle cx="12" cy="12" r="10" stroke="black" strokeWidth="1" fill="url(#imgPattern)" />
 
     </svg>
-
-    /*<svg width={`${iconSize / scale}px`} height={`${iconSize / scale}px`} viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" stroke="black" strokeWidth="1" fill="transparent" />
-          <defs>
-            <pattern id="imgPattern">
-              <image
-                href={rockType.toLowerCase().trim() === "top" ? "" : devSafeUrl(`/public/patterns/${rockType.trim()}.PNG`)}
-    
-                height="20px"
-                width="20px"
-                preserveAspectRatio="none"
-    
-              />
-            </pattern>
-          </defs>
-         
-          <image
-            href={rockType.toLowerCase().trim() === "top" ? "" : devSafeUrl(`/public/patterns/${rockType.trim()}.PNG`)}
-            x="-10"
-            y="-10"
-            height="44px"
-            width="44px"
-            clipPath="url(#clipCircle)"
-          />
-          <clipPath id="clipCircle">
-            <circle cx="12" cy="12" r="10" />
-          </clipPath>
-        </svg>
-    */
 
 
   );
