@@ -143,9 +143,11 @@ import {
   processRange,
   processChron,
   processPoint,
-  processSequence
+  processSequence,
+  getColumnTypes
 } from "../src/parse-datapacks";
 import { readFileSync } from "fs";
+import { ColumnInfo } from "@tsconline/shared";
 const key = JSON.parse(readFileSync("server/__tests__/__data__/column-keys.json").toString());
 
 describe("general parse-datapacks tests", () => {
@@ -459,5 +461,22 @@ describe("getAllEntries tests", () => {
     const file = "server/__tests__/__data__/bad-data.txt";
     await getAllEntries(file, entriesMap, isChild);
     expect(entriesMap.size).toBe(0);
+  });
+});
+
+describe("getColumnTypes tests", () => {
+  let loneColumns: Map<string, ColumnInfo>, isChild: Set<string>, expectedLoneColumns: Map<string, ColumnInfo>;
+  beforeEach(() => {
+    loneColumns = new Map<string, ColumnInfo>();
+    expectedLoneColumns = new Map<string, ColumnInfo>();
+    isChild = new Set<string>();
+  });
+  it("should return correct column types", async () => {
+    const file = "server/__tests__/__data__/parse-datapacks-block.txt";
+    const columnTypes = await getColumnTypes(file, loneColumns, "Ma");
+    for (const index in key["column-types-block-key"]) {
+      expectedLoneColumns.set(index, key["column-types-block-key"][index]);
+    }
+    expect(loneColumns).toEqual(expectedLoneColumns);
   });
 });

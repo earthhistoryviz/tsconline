@@ -2400,7 +2400,6 @@ __metadata:
     fastify: "npm:^4.17.0"
     glob: "npm:^10.3.10"
     google-auth-library: "npm:^9.8.0"
-    iconv-lite: "npm:^0.6.3"
     jsdom: "npm:^24.0.0"
     kysely: "npm:^0.27.3"
     lodash: "npm:^4.17.21"
@@ -6238,7 +6237,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"iconv-lite@npm:0.6.3, iconv-lite@npm:^0.6.2, iconv-lite@npm:^0.6.3":
+"iconv-lite@npm:0.6.3, iconv-lite@npm:^0.6.2":
   version: 0.6.3
   resolution: "iconv-lite@npm:0.6.3"
   dependencies:

@@ -58,7 +58,6 @@ import { grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter, formatColum
 import { createInterface } from "readline";
 import _ from "lodash";
 import chalk from "chalk";
-import iconv from "iconv-lite";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;
 const patternForAbundance = /^(TOP|missing|rare|common|frequent|abundant|sample|flood)$/;
@@ -301,7 +300,7 @@ export async function getAllEntries(
   allEntries: Map<string, ParsedColumnEntry>,
   isChild: Set<string>,
 ) {
-  const fileStream = createReadStream(filename).pipe(iconv.decodeStream("UTF-8"));
+  const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
   let top: number | null = null;
   let base: number | null = null;
@@ -397,7 +396,7 @@ export async function getAllEntries(
  * @param blocksMap  the blocks map to add to
  */
 export async function getColumnTypes(filename: string, loneColumns: Map<string, ColumnInfo>, units: string) {
-  const fileStream = createReadStream(filename).pipe(iconv.decodeStream("UTF-8"));
+  const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
   const freehand: Freehand = {
     ...createDefaultColumnHeaderProps(),
