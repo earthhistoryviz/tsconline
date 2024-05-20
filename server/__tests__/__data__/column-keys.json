@@ -1327,7 +1327,21 @@
     "column-types-block-key": {
         "Block Child 1": {
             "name": "Block Child 1",
-            "subBlockInfo": [
+            "editName": "Block Child 1",
+            "columnDisplayType": "Zone",
+            "fontOptions": [
+                "Column Header",
+                "Age Label",
+                "Zone Column Label"
+            ],
+            "fontsInfo": {
+                "font": "Arial"
+            },
+            "show": true,
+            "expanded": false,
+            "children": [],
+            "parent": "",
+            "subInfo": [
                 {
                     "label": "Sub Block Top",
                     "age": 0,
