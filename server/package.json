@@ -21,6 +21,7 @@
     "fastify": "^4.17.0",
     "glob": "^10.3.10",
     "google-auth-library": "^9.8.0",
+    "iconv-lite": "^0.6.3",
     "jsdom": "^24.0.0",
     "kysely": "^0.27.3",
     "lodash": "^4.17.21",
