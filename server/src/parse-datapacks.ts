@@ -58,7 +58,6 @@ import { grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter, formatColum
 import { createInterface } from "readline";
 import _ from "lodash";
 import chalk from "chalk";
-import { readFile } from "fs/promises";
 import iconv from "iconv-lite";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;
@@ -1043,7 +1042,6 @@ function recursive(
     console.log(chalk.dim.yellow(`WARNING: Column ${currentColumn} not found in loneColumns or allEntries`));
     return returnValue;
   }
-  if (currentColumn.includes("Isotopic")) console.log("Isotopic column found: " + currentColumn);
   // lone column is a leaf column
   if (loneColumns.has(currentColumn)) {
     const currentColumnInfo = loneColumns.get(currentColumn)!;
