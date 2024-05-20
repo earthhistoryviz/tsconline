@@ -3,7 +3,7 @@ import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
 import { execSync } from "child_process";
-import { deleteDirectory } from "./util.js";
+import { deleteDirectory, checkFileExists } from "./util.js";
 import * as routes from "./routes.js";
 import * as loginRoutes from "./login-routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
@@ -17,18 +17,7 @@ import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import fastifySecureSession from "@fastify/secure-session";
 import dotenv from "dotenv";
 import { db } from "./database.js";
-
-// Function to check if a file exists
-async function checkFileExists(filePath: string): Promise<boolean> {
-  try {
-    await readFile(filePath);
-    console.log(`File exists: ${filePath}`);
-    return true;
-  } catch (error) {
-    console.log(`File does not exist: ${filePath}`, error);
-    return false;
-  }
-}
+import path from "path";
 
 const server = fastify({
   logger: false,
@@ -58,16 +47,15 @@ try {
 }
 
 // Check if the required JAR files exist
-const jar1Path = `${process.cwd()}/${assetconfigs.activeJar}`;
-const jar2Path = `${process.cwd()}/${assetconfigs.decryptionJar}`;
-const [jar1Exists, jar2Exists] = await Promise.all([checkFileExists(jar1Path), checkFileExists(jar2Path)]);
+const activeJarPath = path.join(assetconfigs.activeJar);
+const decryptionJarPath = path.join(assetconfigs.decryptionJar);
 
-if (!jar1Exists) {
-  console.error("ERROR: Required active JAR file does not exist:", jar1Path);
+if (!(await checkFileExists(activeJarPath))) {
+  console.error("ERROR: Required active JAR file does not exist:", activeJarPath);
   process.exit(1);
 }
-if (!jar2Exists) {
-  console.error("ERROR: Required decrypt JAR file does not exist:", jar2Path);
+if (!(await checkFileExists(decryptionJarPath))) {
+  console.error("ERROR: Required decryption JAR file does not exist:", decryptionJarPath);
   process.exit(1);
 }
 
