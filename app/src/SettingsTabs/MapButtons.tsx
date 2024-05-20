@@ -22,7 +22,6 @@ import { devSafeUrl } from "../util";
 import { BorderedIcon } from "../components";
 import { checkIfDataIsInRange } from "../util/util";
 
-
 const IconSize = 40;
 export const InfoIcon = NotListedLocationIcon;
 export const DisabledIcon = LocationOffIcon;
@@ -85,11 +84,11 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
     isInfo = isInfo || !column;
     const disabled = column
       ? !checkIfDataIsInRange(
-        column.minAge,
-        column.maxAge,
-        state.settings.timeSettings[column.units].topStageAge,
-        state.settings.timeSettings[column.units].baseStageAge
-      )
+          column.minAge,
+          column.maxAge,
+          state.settings.timeSettings[column.units].topStageAge,
+          state.settings.timeSettings[column.units].baseStageAge
+        )
       : false;
     const scaleButton = !isInfo && state.mapState.isFacies;
 
@@ -447,8 +446,7 @@ function getFaciesIcon(
   currentFaciesOptions: FaciesOptions,
   setSelectedMapAgeRange: (min: number, max: number) => void,
   pushPresentRockType: (rockType: string) => void,
-  column: ColumnInfo,
-
+  column: ColumnInfo
 ) {
   const rockType = getRockTypeForAge(
     column,
@@ -463,16 +461,13 @@ function getFaciesIcon(
     setAdjustY(state.positionY);
   });
   return (
-
-    <svg width={`${iconSize / scale}px`} height={`${iconSize / scale}px`} viewBox="0 0 24 24"  >
-
-
-      <pattern id="imgPattern"
+    <svg width={`${iconSize / scale}px`} height={`${iconSize / scale}px`} viewBox="0 0 24 24">
+      <pattern
+        id="imgPattern"
         height="16"
         width="16"
         patternUnits="userSpaceOnUse"
-        patternTransform={`scale(${scale / (iconSize / 46)}) translate(${-adjustX},${-adjustY})`}
-      >
+        patternTransform={`scale(${scale / (iconSize / 46)}) translate(${-adjustX},${-adjustY})`}>
         <image
           href={rockType.toLowerCase().trim() === "top" ? "" : devSafeUrl(`/public/patterns/${rockType.trim()}.PNG`)}
           x="0"
@@ -480,15 +475,10 @@ function getFaciesIcon(
           preserveAspectRatio="none"
           width="16"
           height="16"
-
         />
-
       </pattern>
       <circle cx="12" cy="12" r="10" stroke="black" strokeWidth="1" fill="url(#imgPattern)" />
-
     </svg>
-
-
   );
 }
 
