@@ -144,10 +144,11 @@ import {
   processChron,
   processPoint,
   processSequence,
-  getColumnTypes
+  getColumnTypes,
+  configureOptionalPointSettings
 } from "../src/parse-datapacks";
 import { readFileSync } from "fs";
-import { ColumnInfo } from "@tsconline/shared";
+import { ColumnInfo, Point } from "@tsconline/shared";
 const key = JSON.parse(readFileSync("server/__tests__/__data__/column-keys.json").toString());
 
 describe("general parse-datapacks tests", () => {
@@ -465,11 +466,10 @@ describe("getAllEntries tests", () => {
 });
 
 describe("getColumnTypes tests", () => {
-  let loneColumns: Map<string, ColumnInfo>, isChild: Set<string>, expectedLoneColumns: Map<string, ColumnInfo>;
+  let loneColumns: Map<string, ColumnInfo>, expectedLoneColumns: Map<string, ColumnInfo>;
   beforeEach(() => {
     loneColumns = new Map<string, ColumnInfo>();
     expectedLoneColumns = new Map<string, ColumnInfo>();
-    isChild = new Set<string>();
   });
   it("should return correct block columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-block.txt";
@@ -488,7 +488,7 @@ describe("getColumnTypes tests", () => {
     }
     expect(loneColumns).toEqual(expectedLoneColumns);
   });
-   
+
   it("should return correct event columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-event.txt";
     await getColumnTypes(file, loneColumns, "Ma");
@@ -505,7 +505,7 @@ describe("getColumnTypes tests", () => {
     }
     expect(loneColumns).toEqual(expectedLoneColumns);
   });
-  it ("should return correct chron columns", async () => {
+  it("should return correct chron columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-chron.txt";
     await getColumnTypes(file, loneColumns, "Ma");
     for (const index in key["column-types-chron-key"]) {
@@ -513,7 +513,7 @@ describe("getColumnTypes tests", () => {
     }
     expect(loneColumns).toEqual(expectedLoneColumns);
   });
-  it ("should return correct point columns", async () => {
+  it("should return correct point columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-point.txt";
     await getColumnTypes(file, loneColumns, "Ma");
     for (const index in key["column-types-point-key"]) {
@@ -521,7 +521,7 @@ describe("getColumnTypes tests", () => {
     }
     expect(loneColumns).toEqual(expectedLoneColumns);
   });
-  it ("should return correct sequence columns", async () => {
+  it("should return correct sequence columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-sequence.txt";
     await getColumnTypes(file, loneColumns, "Ma");
     for (const index in key["column-types-sequence-key"]) {
@@ -529,7 +529,7 @@ describe("getColumnTypes tests", () => {
     }
     expect(loneColumns).toEqual(expectedLoneColumns);
   });
-  it ("should return correct transect columns", async () => {
+  it("should return correct transect columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-transect.txt";
     await getColumnTypes(file, loneColumns, "Ma");
     for (const index in key["column-types-transect-key"]) {
@@ -537,12 +537,109 @@ describe("getColumnTypes tests", () => {
     }
     expect(loneColumns).toEqual(expectedLoneColumns);
   });
-  it ("should return correct freehand columns", async () => {
+  it("should return correct freehand columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-freehand.txt";
     await getColumnTypes(file, loneColumns, "Ma");
     for (const index in key["column-types-freehand-key"]) {
       expectedLoneColumns.set(index, key["column-types-freehand-key"][index]);
     }
     expect(loneColumns).toEqual(expectedLoneColumns);
+  });
+});
+describe("configureOptionalPointSettings tests", () => {
+  const point: Point = {
+    name: "test",
+    minAge: 0,
+    maxAge: 0,
+    enableTitle: true,
+    on: true,
+    width: 0,
+    popup: "",
+    rgb: { r: 0, g: 0, b: 0 },
+    subPointInfo: [],
+    lowerRange: 0,
+    upperRange: 0,
+    smoothed: true,
+    drawLine: false,
+    pointShape: "rect",
+    drawFill: true,
+    fill: {
+      r: 64,
+      g: 233,
+      b: 191
+    },
+    minX: Number.MAX_SAFE_INTEGER,
+    maxX: Number.MIN_SAFE_INTEGER,
+    scaleStep: 0
+  };
+
+  test.each([
+    [[], (point: Point) => point],
+    [
+      ["nopoints", "line", "22/22/22", "2", "22", "smoothed"],
+      (point: Point) => ({
+        ...point,
+        pointShape: "nopoints",
+        drawLine: true,
+        fill: { r: 22, g: 22, b: 22 },
+        lowerRange: 2,
+        upperRange: 22,
+        smoothed: true
+      })
+    ],
+    [
+      ["rect", "line", "22/22/22", "2", "22", "smoothed"],
+      (point: Point) => ({
+        ...point,
+        pointShape: "rect",
+        drawLine: true,
+        fill: { r: 22, g: 22, b: 22 },
+        lowerRange: 2,
+        upperRange: 22,
+        smoothed: true
+      })
+    ],
+    [
+      ["circle", "noline", "1/1/1", "1", "1", "smoothed"],
+      (point: Point) => ({
+        ...point,
+        pointShape: "circle",
+        drawLine: false,
+        fill: { r: 1, g: 1, b: 1 },
+        lowerRange: 1,
+        upperRange: 1,
+        smoothed: true
+      })
+    ],
+    [
+      ["cross", "line", "255/255/255", "0", "0", "smoothed"],
+      (point: Point) => ({
+        ...point,
+        pointShape: "cross",
+        drawLine: true,
+        fill: { r: 255, g: 255, b: 255 },
+        lowerRange: 0,
+        upperRange: 0,
+        smoothed: true
+      })
+    ],
+    [
+      ["rect", "noline", "255/255/255", "-100", "200", "unsmoothed"],
+      (point: Point) => ({
+        ...point,
+        pointShape: "rect",
+        drawLine: false,
+        fill: { r: 255, g: 255, b: 255 },
+        lowerRange: -100,
+        upperRange: 200,
+        smoothed: false
+      })
+    ],
+    [["rect", "", "", "", "", "unsmooth"], (point: Point) => ({ ...point, pointShape: "rect", smoothed: false })],
+    [["", "", "", "", "", "", ""], (point: Point) => point]
+  ])("should return point with correct settings for line: '%s'", (line, expected) => {
+    const testPoint = JSON.parse(JSON.stringify(point));
+    configureOptionalPointSettings(line, testPoint);
+    expect(testPoint).toEqual(expected(point));
   });
 });

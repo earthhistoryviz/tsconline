@@ -202,11 +202,11 @@ export async function parseDatapacks(
   } catch (e) {
     throw new Error(`ERROR: failed to read columns for path ${decryptPaths}. ${e}`);
   }
-  const columnInfo = columnInfoArray
+  const columnInfo = columnInfoArray;
   loneColumns.forEach((column) => {
     if (isChild.has(column.name)) return;
     columnInfo.push(column);
-  })
+  });
   columnInfo.unshift({
     name: ageUnits.split(" ")[0]!,
     editName: ageUnits.split(" ")[0]!,
@@ -298,7 +298,7 @@ function setShowLabels(column: ColumnInfo) {
 export async function getAllEntries(
   filename: string,
   allEntries: Map<string, ParsedColumnEntry>,
-  isChild: Set<string>,
+  isChild: Set<string>
 ) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
@@ -514,7 +514,10 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
         transect.subTransectInfo.push(subTransectInfo);
       }
     }
-    if (!inSequenceBlock && (tabSeparated[1]?.trim().toLowerCase() === "sequence" || tabSeparated[1]?.trim().toLowerCase() === "trend")) {
+    if (
+      !inSequenceBlock &&
+      (tabSeparated[1]?.trim().toLowerCase() === "sequence" || tabSeparated[1]?.trim().toLowerCase() === "trend")
+    ) {
       setColumnHeaders(sequence, tabSeparated);
       inSequenceBlock = true;
     } else if (inSequenceBlock) {
@@ -566,7 +569,10 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
     }
 
     // TODO chron-only
-    if (!inChronBlock && (tabSeparated[1]?.trim().toLowerCase() === "chron" || tabSeparated[1]?.trim().toLowerCase() === "chron-only")) {
+    if (
+      !inChronBlock &&
+      (tabSeparated[1]?.trim().toLowerCase() === "chron" || tabSeparated[1]?.trim().toLowerCase() === "chron-only")
+    ) {
       setColumnHeaders(chron, tabSeparated);
       inChronBlock = true;
     } else if (inChronBlock) {
@@ -1391,7 +1397,7 @@ function createLoneColumn(
     subInfo,
     columnDisplayType: type,
     show: true,
-    expanded: false,
+    expanded: false
   };
   addColumnSettings(column, columnSpecificSettings);
   return column;
@@ -1491,7 +1497,7 @@ function processColumn<T extends ColumnInfoType>(
   Object.assign(column, { ...createDefaultColumnHeaderProps(), [subInfoKey]: [], ...partialColumn });
   return false;
 }
-function configureOptionalPointSettings(tabSeparated: string[], point: Point) {
+export function configureOptionalPointSettings(tabSeparated: string[], point: Point) {
   if (tabSeparated.length < 1 || tabSeparated.length > 6) {
     console.log(
       "Error adding optional point configuration, line is not formatted correctly: " +
