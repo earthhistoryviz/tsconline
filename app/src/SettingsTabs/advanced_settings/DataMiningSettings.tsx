@@ -1,11 +1,11 @@
-import { ColumnInfo, assertEventSettings, assertPointSettings, isEventFrequency, isDataMiningDataType } from "@tsconline/shared";
+import { ColumnInfo, assertEventSettings, assertPointSettings, isEventFrequency, isDataMiningPointDataType, type DataMiningPointDataType, assertDataMiningSettings} from "@tsconline/shared";
 import { GenericTextField } from "../../components";
 import { Box, Button, Dialog, Typography } from "@mui/material";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
 import "./DataMiningSettings.css";
-import { setEventColumnSettings, setPointColumnSettings } from "../../state/actions";
 import { TSCRadioGroup } from "../../components/TSCRadioGroup";
+import { context } from "../../state";
 
 type DataMiningSettingsProps = {
   column: ColumnInfo;
@@ -26,6 +26,9 @@ export const DataMiningModal: React.FC<DataMiningSettingsProps> = observer(({ co
 });
 
 export const DataMiningSettings: React.FC<DataMiningSettingsProps> = ({ column }) => {
+  const { actions } = useContext(context);
+  const dataMiningSettings = column.columnSpecificSettings;
+  assertDataMiningSettings(dataMiningSettings);
   return (
     <Box className="data-mining-settings-container">
       <Typography className="advanced-settings-header">Data Mining Settings</Typography>
@@ -33,13 +36,17 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = ({ column }
         inputs={[
           {
             helperText: "Window Size",
-            value: 0,
-            onValueChange: () => {}
+            value: dataMiningSettings.windowSize,
+            onValueChange: (value) => {
+              actions.setDataMiningSettings(dataMiningSettings, { windowSize: value })
+            }
           },
           {
             helperText: "Step Size",
-            value: 0,
-            onValueChange: () => {}
+            value: dataMiningSettings.stepSize,
+            onValueChange: (value) => {
+              actions.setDataMiningSettings(dataMiningSettings, { stepSize: value })
+            }
           }
         ]}
       />
@@ -49,12 +56,13 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = ({ column }
   );
 };
 export const EventDataMiningOptions: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
+  const { actions } = useContext(context);
   if (column.columnDisplayType !== "Event") return;
   const eventSettings = column.columnSpecificSettings;
   assertEventSettings(eventSettings)
   const handleFrequencyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!isEventFrequency(event.target.value)) return;
-    setEventColumnSettings(eventSettings, { frequency: event.target.value });
+    actions.setEventColumnSettings(eventSettings, { frequency: event.target.value });
   }
   return (
     <Box className="data-mining-type-container">
@@ -73,25 +81,26 @@ export const EventDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
 });
 
 export const PointDataMiningOptions: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
+  const { actions } = useContext(context);
   if (column.columnDisplayType !== "Point") return;
   const pointSettings = column.columnSpecificSettings;
   assertPointSettings(pointSettings);
   const handleDataTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!isDataMiningDataType(event.target.value)) return;
-    setPointColumnSettings(pointSettings, { dataMiningDataType: event.target.value });
+    if (!isDataMiningPointDataType(event.target.value)) return;
+    actions.setPointColumnSettings(pointSettings, { dataMiningPointDataType: event.target.value });
   }
   return (
     <Box className="data-mining-type-container">
       <TSCRadioGroup
         onChange={handleDataTypeChange}
         name="Data Type to Plot"
-        value={pointSettings.dataMiningDataType}
+        value={pointSettings.dataMiningPointDataType}
         radioArray={[
-          { value: "Frequency", label: "Frequency" },
-          { value: "MaximumValue", label: "Maximum Value" },
-          { value: "MinimumValue", label: "Minimum Value" },
-          { value: "AverageValue", label: "Average Value" },
-          { value: "RateChange", label: "Rate of Change" }
+            { value: "Frequency", label: "Frequency" },
+            { value: "Maximum Value", label: "Maximum Value" },
+            { value: "Minimum Value", label: "Minimum Value" },
+            { value: "Average Value", label: "Average Value" },
+            { value: "Rate of Change", label: "Rate of Change"}
         ]}/>
     </Box>
   );

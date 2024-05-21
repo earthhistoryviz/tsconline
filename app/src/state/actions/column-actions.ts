@@ -3,6 +3,7 @@ import { state } from "../state";
 import {
   ColumnInfo,
   ColumnInfoTSC,
+  DataMiningSettings,
   EventSettings,
   PointSettings,
   RGB,
@@ -129,6 +130,10 @@ export const toggleSettingsTabColumn = action((name: string) => {
   }
 });
 export const setEventColumnSettings = action((eventSettings: EventSettings, newSettings: Partial<EventSettings>) => {
+  Object.assign(eventSettings, newSettings);
+});
+
+export const setDataMiningSettings = action((eventSettings: DataMiningSettings, newSettings: Partial<DataMiningSettings>) => {
   Object.assign(eventSettings, newSettings);
 });
 
