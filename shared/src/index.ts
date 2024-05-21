@@ -205,7 +205,13 @@ export type SubInfo =
 
 export type ColumnSpecificSettings = EventSettings | PointSettings;
 
-export type DataMiningPointDataType = "Frequency" | "Maximum Value" | "Minimum Value" | "Average Value" | "Rate of Change" | "Overlay";
+export type DataMiningPointDataType =
+  | "Frequency"
+  | "Maximum Value"
+  | "Minimum Value"
+  | "Average Value"
+  | "Rate of Change"
+  | "Overlay";
 
 export type PointSettings = {
   drawLine: boolean;
@@ -228,7 +234,7 @@ export type PointSettings = {
   smoothed: boolean;
   minX: number;
   maxX: number;
-  dataMiningPointDataType: DataMiningPointDataType;
+  dataMiningPointDataType: DataMiningPointDataType | null;
 } & DataMiningSettings;
 
 export type DataMiningSettings = {
@@ -261,13 +267,13 @@ export type ColumnInfo = {
 };
 
 export type RangeSort = "first occurrence" | "last occurrence" | "alphabetical";
-export type EventFrequency = "FAD" | "LAD" | "Combined"
+export type EventFrequency = "FAD" | "LAD" | "Combined";
 
 export type EventSettings = {
   type: EventType;
   rangeSort: RangeSort;
   drawExtraColumn: boolean;
-  frequency: EventFrequency;
+  frequency: EventFrequency | null;
 } & DataMiningSettings;
 
 export type Range = ColumnHeaderProps & {
@@ -497,7 +503,13 @@ export function assertPointSettings(o: any): asserts o is PointSettings {
   if (typeof o.lowerRange !== "number") throwError("PointSettings", "lowerRange", "number", o.lowerRange);
   if (typeof o.upperRange !== "number") throwError("PointSettings", "upperRange", "number", o.upperRange);
   if (typeof o.smoothed !== "boolean") throwError("PointSettings", "smoothed", "boolean", o.smoothed);
-  if (typeof o.dataMiningPointDataType !== "string" || !isDataMiningPointDataType(o.dataMiningPointDataType))
+  if (o.dataMiningPointDataType != null && !isDataMiningPointDataType(o.dataMiningPointDataType))
+    throwError(
+      "PointSettings",
+      "dataMiningPointDataType",
+      "string and Frequency | Maximum Value | Minimum Value | Average Value | Rate of Change | Overlay",
+      o.dataMiningPointDataType
+    );
   assertDataMiningSettings(o);
 }
 
@@ -522,8 +534,9 @@ export function assertEventSettings(o: any): asserts o is EventSettings {
       "string and first occurrence | last occurrence | alphabetical",
       o.rangeSort
     );
-  if (typeof o.drawExtraColumn !== "boolean") throwError("EventSettings", "drawExtraColumn", "boolean", o.drawExtraColumn);
-  if (typeof o.frequency !== "string" || !isEventFrequency(o.frequency))
+  if (typeof o.drawExtraColumn !== "boolean")
+    throwError("EventSettings", "drawExtraColumn", "boolean", o.drawExtraColumn);
+  if (o.frequency != null && (typeof o.frequency !== "string" || !isEventFrequency(o.frequency)))
     throwError("EventSettings", "frequency", "string and FAD | LAD | Combined", o.frequency);
   assertDataMiningSettings(o);
 }

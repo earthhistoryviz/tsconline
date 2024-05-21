@@ -222,7 +222,8 @@ export function assertZoneColumnInfoTSC(o: any): asserts o is ZoneColumnInfoTSC 
 
 export function assertEventColumnInfoTSC(o: any): asserts o is EventColumnInfoTSC {
   if (typeof o.type !== "string" || !isEventType(o.type)) throwError("EventColumnInfoTSC", "type", "string", o.type);
-  if (typeof o.rangeSort !== "string" || !isRangeSort(o.rangeSort)) throwError("EventColumnInfoTSC", "rangeSort", "string", o.rangeSort);
+  if (typeof o.rangeSort !== "string" || !isRangeSort(o.rangeSort))
+    throwError("EventColumnInfoTSC", "rangeSort", "string", o.rangeSort);
   assertColumnBasicInfoTSC(o);
 }
 export function assertSequenceColumnInfoTSC(o: any): asserts o is SequenceColumnInfoTSC {

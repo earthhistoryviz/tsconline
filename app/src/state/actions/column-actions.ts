@@ -133,9 +133,11 @@ export const setEventColumnSettings = action((eventSettings: EventSettings, newS
   Object.assign(eventSettings, newSettings);
 });
 
-export const setDataMiningSettings = action((eventSettings: DataMiningSettings, newSettings: Partial<DataMiningSettings>) => {
-  Object.assign(eventSettings, newSettings);
-});
+export const setDataMiningSettings = action(
+  (eventSettings: DataMiningSettings, newSettings: Partial<DataMiningSettings>) => {
+    Object.assign(eventSettings, newSettings);
+  }
+);
 
 export const setPointColumnSettings = action((pointSettings: PointSettings, newSettings: Partial<PointSettings>) => {
   Object.assign(pointSettings, newSettings);

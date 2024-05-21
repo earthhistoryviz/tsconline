@@ -18,7 +18,7 @@ export const defaultEventSettings: EventSettings = {
   type: "events",
   rangeSort: "first occurrence",
   drawExtraColumn: false,
-  frequency: "FAD",
+  frequency: null,
   stepSize: 1,
   windowSize: 2
 };
@@ -356,7 +356,7 @@ export const defaultPointSettings: PointSettings = {
   maxX: Number.MIN_SAFE_INTEGER,
   windowSize: 2,
   stepSize: 1,
-  dataMiningPointDataType: "Frequency",
+  dataMiningPointDataType: null
 };
 
 export const defaultPoint: Partial<Point> = {
