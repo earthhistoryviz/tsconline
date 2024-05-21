@@ -284,7 +284,7 @@ export const decrementColumnPosition = action((column: ColumnInfo) => {
   const parent = state.settingsTabs.columnHashMap.get(column.parent!);
   if (!parent) return;
   const index = parent.children.indexOf(column);
-  if (index < parent.children.length - 1) {
+  if (index < parent.children.length - 1 && index > -1) {
     [parent.children[index], parent.children[index + 1]] = [parent.children[index + 1], parent.children[index]];
   }
 });
