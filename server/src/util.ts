@@ -87,14 +87,6 @@ export async function grabFilepaths(files: string[], topDirectory: string, botDi
 }
 
 /**
- * Replace one or more invisible characters (excluding spaces) with an empty string
- * @param input
- * @returns
- */
-export function trimInvisibleCharacters(input: string): string {
-  return input.replace(/[^\S ]+/g, "").trim();
-}
-/**
  * trim the first and last character (most likely quotes) (will not check if it is though)
  * @param input
  * @returns

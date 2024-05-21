@@ -12,7 +12,6 @@ jest.mock("glob", () => ({
 }));
 
 import {
-  trimInvisibleCharacters,
   componentToHex,
   rgbToHex,
   trimQuotes,
@@ -68,15 +67,6 @@ describe("trimQuotes tests", () => {
 
   test("trimQuotes(noquotes) returns noquotes", () => {
     expect(trimQuotes("noquotes")).toBe("noquotes");
-  });
-});
-
-describe("trimInvisibleCharacters tests", () => {
-  test("trimInvisibleCharacters(`<tab>test<newline><space>`) returns test", () => {
-    expect(trimInvisibleCharacters("\ttest\n ")).toBe("test");
-  });
-  test("trimInvisibleCharacters(`test`) returns test", () => {
-    expect(trimInvisibleCharacters("test")).toBe("test");
   });
 });
 
