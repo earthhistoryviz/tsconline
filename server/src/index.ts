@@ -3,7 +3,7 @@ import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
 import { execSync } from "child_process";
-import { deleteDirectory } from "./util.js";
+import { deleteDirectory, checkFileExists } from "./util.js";
 import * as routes from "./routes.js";
 import * as loginRoutes from "./login-routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
@@ -17,6 +17,7 @@ import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import fastifySecureSession from "@fastify/secure-session";
 import dotenv from "dotenv";
 import { db } from "./database.js";
+import path from "path";
 
 const server = fastify({
   logger: false,
@@ -44,6 +45,20 @@ try {
   console.log("ERROR: Failed to load asset configs from assets/config.json.  Error was: ", e);
   process.exit(1);
 }
+
+// Check if the required JAR files exist
+const activeJarPath = path.join(assetconfigs.activeJar);
+const decryptionJarPath = path.join(assetconfigs.decryptionJar);
+
+if (!(await checkFileExists(activeJarPath))) {
+  console.error("ERROR: Required active JAR file does not exist:", activeJarPath);
+  process.exit(1);
+}
+if (!(await checkFileExists(decryptionJarPath))) {
+  console.error("ERROR: Required decryption JAR file does not exist:", decryptionJarPath);
+  process.exit(1);
+}
+
 // this try will run the decryption jar to decrypt all files in the datapack folder
 try {
   const datapacks = assetconfigs.activeDatapacks.map(
