@@ -14,12 +14,10 @@ import { EventSpecificSettings } from "./advanced_settings/EventSpecificSettings
 import { PointSettingsPopup } from "./advanced_settings/PointSettingsPopup";
 import { EditNameField } from "./EditNameField";
 import { DataMiningModal } from "./advanced_settings/DataMiningSettings";
-import IconButton from "@mui/material/IconButton";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import AccordionPositionControls from "./AccordionPositionControls";
 
 export const ColumnMenu = observer(() => {
-  const { state, actions } = useContext(context);
+  const { state } = useContext(context);
   const [openMenu, setOpenMenu] = useState(false);
   const selectedColumn = state.settingsTabs.columnSelected;
   const column = selectedColumn ? state.settingsTabs.columnHashMap.get(selectedColumn!) : undefined;
@@ -38,19 +36,6 @@ export const ColumnMenu = observer(() => {
       }
     }
   }
-
-  // Handle increment and decrement of accordion position
-  const incrementPosition = () => {
-    if (column) {
-      actions.incrementColumnPosition(column);
-    }
-  };
-
-  const decrementPosition = () => {
-    if (column) {
-      actions.decrementColumnPosition(column);
-    }
-  };
 
   return (
     <div className={openMenu ? "column-menu" : ""}>
@@ -84,17 +69,9 @@ export const ColumnMenu = observer(() => {
             <PointSettingsPopup column={column} />
             <DataMiningModal column={column} />
             {!!column.popup && <InfoBox info={column.popup} />}
-            <PointSettingsPopup column={column} />
 
             {/* Buttons to change order of accordion items */}
-            <div className="accordion-position-controls">
-              <IconButton onClick={incrementPosition}>
-                <ArrowUpwardIcon />
-              </IconButton>
-              <IconButton onClick={decrementPosition}>
-                <ArrowDownwardIcon />
-              </IconButton>
-            </div>
+            <AccordionPositionControls column={column} />
           </>
         )}
       </div>
