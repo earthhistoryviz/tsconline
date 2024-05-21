@@ -205,6 +205,8 @@ export type SubInfo =
 
 export type ColumnSpecificSettings = EventSettings | PointSettings;
 
+export type DataMiningDataType = "Frequency" | "Maximum Value" | "Minimum Value" | "Average Value" | "Rate of Change" | "Overlay";
+
 export type PointSettings = {
   drawLine: boolean;
   drawFill: boolean;
@@ -226,6 +228,9 @@ export type PointSettings = {
   smoothed: boolean;
   minX: number;
   maxX: number;
+  dataMiningDataType: DataMiningDataType;
+  windowSize: number;
+  stepSize: number;
 };
 
 export type ColumnInfo = {
@@ -253,10 +258,15 @@ export type ColumnInfo = {
 };
 
 export type RangeSort = "first occurrence" | "last occurrence" | "alphabetical";
+export type EventFrequency = "FAD" | "LAD" | "Combined"
 
 export type EventSettings = {
   type: EventType;
   rangeSort: RangeSort;
+  drawExtraColumn: boolean;
+  frequency: EventFrequency;
+  windowSize: number;
+  stepSize: number;
 };
 
 export type Range = ColumnHeaderProps & {
@@ -486,6 +496,13 @@ export function assertPointSettings(o: any): asserts o is PointSettings {
   if (typeof o.lowerRange !== "number") throwError("PointSettings", "lowerRange", "number", o.lowerRange);
   if (typeof o.upperRange !== "number") throwError("PointSettings", "upperRange", "number", o.upperRange);
   if (typeof o.smoothed !== "boolean") throwError("PointSettings", "smoothed", "boolean", o.smoothed);
+  if (typeof o.dataMiningDataType !== "string" || !isDataMiningDataType(o.dataMiningDataType))
+  if (typeof o.windowSize !== "number") throwError("PointSettings", "windowSize", "number", o.windowSize);
+  if (typeof o.stepSize !== "number") throwError("PointSettings", "stepSize", "number", o.stepSize);
+}
+
+export function isDataMiningDataType(o: any): o is DataMiningDataType {
+  return /^(Frequency|Maximum Value|Minimum Value|Average Value|Rate of Change|Overlay)$/.test(o);
 }
 
 export function assertEventSettings(o: any): asserts o is EventSettings {
@@ -499,6 +516,15 @@ export function assertEventSettings(o: any): asserts o is EventSettings {
       "string and first occurrence | last occurrence | alphabetical",
       o.rangeSort
     );
+  if (typeof o.drawExtraColumn !== "boolean") throwError("EventSettings", "drawExtraColumn", "boolean", o.drawExtraColumn);
+  if (typeof o.frequency !== "string" || !isEventFrequency(o.frequency))
+    throwError("EventSettings", "frequency", "string and FAD | LAD | Combined", o.frequency);
+  if (typeof o.windowSize !== "number") throwError("EventSettings", "windowSize", "number", o.windowSize);
+  if (typeof o.stepSize !== "number") throwError("EventSettings", "stepSize", "number", o.stepSize);
+}
+
+export function isEventFrequency(o: any): o is EventFrequency {
+  return /^(FAD|LAD|Combined)$/.test(o);
 }
 
 export function assertMapPackInfoChunk(o: any): asserts o is MapPackInfoChunk {
