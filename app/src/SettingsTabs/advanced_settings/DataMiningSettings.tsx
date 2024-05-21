@@ -1,9 +1,11 @@
-import { ColumnInfo } from "@tsconline/shared";
-import { GenericTextField, TSCCheckbox } from "../../components";
-import { Box, Button, FormControlLabel, Modal, Typography } from "@mui/material";
+import { ColumnInfo, assertEventSettings, assertPointSettings, isEventFrequency, isDataMiningDataType } from "@tsconline/shared";
+import { GenericTextField } from "../../components";
+import { Box, Button, Dialog, Typography } from "@mui/material";
 import { useState } from "react";
 import { observer } from "mobx-react-lite";
 import "./DataMiningSettings.css";
+import { setEventColumnSettings, setPointColumnSettings } from "../../state/actions";
+import { TSCRadioGroup } from "../../components/TSCRadioGroup";
 
 type DataMiningSettingsProps = {
   column: ColumnInfo;
@@ -16,16 +18,16 @@ export const DataMiningModal: React.FC<DataMiningSettingsProps> = observer(({ co
       <Button onClick={() => setOpenMenu(true)} variant="contained">
         Data Mining Settings
       </Button>
-      <Modal open={openMenu} onClose={() => setOpenMenu(false)}>
+      <Dialog open={openMenu} onClose={() => setOpenMenu(false)}>
         <DataMiningSettings column={column} />
-      </Modal>
+      </Dialog>
     </div>
   );
 });
 
 export const DataMiningSettings: React.FC<DataMiningSettingsProps> = ({ column }) => {
   return (
-    <Box className="popup-modal">
+    <Box className="data-mining-settings-container">
       <Typography className="advanced-settings-header">Data Mining Settings</Typography>
       <GenericTextField
         inputs={[
@@ -46,58 +48,51 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = ({ column }
     </Box>
   );
 };
-export const EventDataMiningOptions: React.FC<DataMiningSettingsProps> = ({ column }) => {
+export const EventDataMiningOptions: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
   if (column.columnDisplayType !== "Event") return;
+  const eventSettings = column.columnSpecificSettings;
+  assertEventSettings(eventSettings)
+  const handleFrequencyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isEventFrequency(event.target.value)) return;
+    setEventColumnSettings(eventSettings, { frequency: event.target.value });
+  }
   return (
     <Box className="data-mining-type-container">
-      <FormControlLabel
-        name="FAD"
-        label="Frequency of FAD"
-        control={<TSCCheckbox checked={false} onChange={() => {}} />}
-      />
-      <FormControlLabel
-        name="LAD"
-        label="Frequency of LAD"
-        control={<TSCCheckbox checked={false} onChange={() => {}} />}
-      />
-      <FormControlLabel
-        name="CombinedEvents"
-        label="Combined Events"
-        control={<TSCCheckbox checked={false} onChange={() => {}} />}
-      />
+      <TSCRadioGroup
+        onChange={handleFrequencyChange}
+        name="Event Type"
+        value={eventSettings.frequency}
+        radioArray={[
+          { value: "FAD", label: "Frequency of FAD" },
+          { value: "LAD", label: "Frequency of LAD" },
+          { value: "Combined", label: "Combined Events"}
+        ]}
+        />
     </Box>
   );
-};
+});
 
-export const PointDataMiningOptions: React.FC<DataMiningSettingsProps> = ({ column }) => {
+export const PointDataMiningOptions: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
   if (column.columnDisplayType !== "Point") return;
+  const pointSettings = column.columnSpecificSettings;
+  assertPointSettings(pointSettings);
+  const handleDataTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isDataMiningDataType(event.target.value)) return;
+    setPointColumnSettings(pointSettings, { dataMiningDataType: event.target.value });
+  }
   return (
     <Box className="data-mining-type-container">
-      <FormControlLabel
-        name="frequencry"
-        label="Frequency"
-        control={<TSCCheckbox checked={false} onChange={() => {}} />}
-      />
-      <FormControlLabel
-        name="MaximumValue"
-        label="Maximum Value"
-        control={<TSCCheckbox checked={false} onChange={() => {}} />}
-      />
-      <FormControlLabel
-        name="MinimumValue"
-        label="Minimum Value"
-        control={<TSCCheckbox checked={false} onChange={() => {}} />}
-      />
-      <FormControlLabel
-        name="AverageValue"
-        label="Average Value"
-        control={<TSCCheckbox checked={false} onChange={() => {}} />}
-      />
-      <FormControlLabel
-        name="RateChange"
-        label="Rate of Change"
-        control={<TSCCheckbox checked={false} onChange={() => {}} />}
-      />
+      <TSCRadioGroup
+        onChange={handleDataTypeChange}
+        name="Data Type to Plot"
+        value={pointSettings.dataMiningDataType}
+        radioArray={[
+          { value: "Frequency", label: "Frequency" },
+          { value: "MaximumValue", label: "Maximum Value" },
+          { value: "MinimumValue", label: "Minimum Value" },
+          { value: "AverageValue", label: "Average Value" },
+          { value: "RateChange", label: "Rate of Change" }
+        ]}/>
     </Box>
   );
-};
+});

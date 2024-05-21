@@ -65,6 +65,7 @@ type TSCRadioGroupProps = {
   }[];
   disabled?: boolean;
   direction?: "horizontal" | "vertical";
+  headerMargin?: string;
 } & RadioGroupProps;
 
 export const TSCRadioGroup: React.FC<TSCRadioGroupProps> = ({
@@ -74,12 +75,13 @@ export const TSCRadioGroup: React.FC<TSCRadioGroupProps> = ({
   onChange,
   disabled,
   direction = "vertical",
+  headerMargin = "5px",
   ...props
 }) => {
   if (radioArray.length === 0) return null;
   return (
     <FormControl disabled={disabled}>
-      <FormLabel>{name}</FormLabel>
+      <FormLabel sx={{ margin: headerMargin }} focused={false}>{name}</FormLabel>
       <RadioGroup
         {...props}
         value={value}
