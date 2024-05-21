@@ -3377,6 +3377,7 @@ const RAW_RUNTIME_STATE =
           ["@xmldom/xmldom", "npm:0.8.10"],\
           ["bcrypt-ts", "npm:5.0.2"],\
           ["better-sqlite3", "npm:9.5.0"],\
+          ["chalk", "npm:5.3.0"],\
           ["color-thief-node", "npm:1.0.4"],\
           ["cors", "npm:2.8.5"],\
           ["dompurify", "npm:3.1.3"],\
@@ -5274,6 +5275,13 @@ const RAW_RUNTIME_STATE =
           ["chalk", "npm:4.1.2"],\
           ["ansi-styles", "npm:4.3.0"],\
           ["supports-color", "npm:7.2.0"]\
+        ],\
+        "linkType": "HARD"\
+      }],\
+      ["npm:5.3.0", {\
+        "packageLocation": "./.yarn/cache/chalk-npm-5.3.0-d181999efb-6373caaab2.zip/node_modules/chalk/",\
+        "packageDependencies": [\
+          ["chalk", "npm:5.3.0"]\
         ],\
         "linkType": "HARD"\
       }]\

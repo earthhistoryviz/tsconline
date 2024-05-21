@@ -11,6 +11,15 @@ jest.mock("lodash", () => ({
   }
 }));
 
+jest.mock("chalk", () => ({
+  default: {
+    red: jest.fn().mockImplementation((s) => s),
+    green: jest.fn().mockImplementation((s) => s),
+    yellow: jest.fn().mockImplementation((s) => s),
+    dim: jest.fn().mockImplementation((s) => s)
+  }
+}));
+
 jest.mock("@tsconline/shared", () => ({
   assertSubInfo: jest.fn().mockReturnValue(true),
   assertSubEventInfo: jest.fn().mockReturnValue(true),
@@ -24,6 +33,19 @@ jest.mock("@tsconline/shared", () => ({
   assertSubBlockInfo: jest.fn().mockReturnValue(true),
   assertSubRangeInfo: jest.fn().mockReturnValue(true),
   assertDatapackParsingPack: jest.fn().mockReturnValue(true),
+  isSubFreehandInfo: jest.fn().mockImplementation((o) => {
+    if (typeof o !== "object") return false;
+    if (typeof o.baseAge !== "number") return false;
+    if (typeof o.topAge !== "number") return false;
+    return true;
+  }),
+  assertSubFaciesInfoArray: jest.fn().mockReturnValue(true),
+  assertColumnSpecificSettings: jest.fn().mockReturnValue(true),
+  isFacies: jest.fn().mockImplementation((o) => {
+    if (typeof o !== "object") return false;
+    if (!Array.isArray(o.subFaciesInfo)) return false;
+    return true;
+  }),
   isPointShape: jest.fn().mockImplementation((shape) => {
     return /^(nopoints|rect|circle|cross)$/.test(shape);
   }),
@@ -60,7 +82,8 @@ jest.mock("@tsconline/shared", () => ({
       b: 191
     },
     minX: Number.MAX_SAFE_INTEGER,
-    maxX: Number.MIN_SAFE_INTEGER
+    maxX: Number.MIN_SAFE_INTEGER,
+    scaleStep: 0
   },
   defaultPointSettings: {
     drawLine: true,
@@ -112,7 +135,6 @@ jest.mock("@tsconline/shared", () => ({
 import {
   ParsedColumnEntry,
   getAllEntries,
-  getColumnTypes,
   parseDatapacks,
   processEvent,
   processFacies,
@@ -121,21 +143,12 @@ import {
   processRange,
   processChron,
   processPoint,
-  processSequence
+  processSequence,
+  getColumnTypes,
+  configureOptionalPointSettings
 } from "../src/parse-datapacks";
 import { readFileSync } from "fs";
-import {
-  Block,
-  Range,
-  Facies,
-  Event,
-  Chron,
-  Point,
-  Sequence,
-  Transect,
-  Freehand,
-  ColumnHeaderProps
-} from "@tsconline/shared";
+import { ColumnInfo, Point } from "@tsconline/shared";
 const key = JSON.parse(readFileSync("server/__tests__/__data__/column-keys.json").toString());
 
 describe("general parse-datapacks tests", () => {
@@ -144,6 +157,7 @@ describe("general parse-datapacks tests", () => {
    */
   it("should parse africa general datapack", async () => {
     const datapacks = await parseDatapacks("", "parse-datapacks-test-1.txt");
+    // console.log(JSON.stringify(datapacks, null, 2))
     expect(datapacks).toEqual(key["general-parse-datapacks-test-1-key"]);
   });
 
@@ -361,377 +375,6 @@ describe("process sequence line tests", () => {
   });
 });
 
-describe("getColumnTypes tests", () => {
-  let faciesMap: Map<string, Facies>,
-    blockMap: Map<string, Block>,
-    eventMap: Map<string, Event>,
-    rangeMap: Map<string, Range>,
-    chronMap: Map<string, Chron>,
-    pointMap: Map<string, Point>,
-    transectMap: Map<string, Transect>,
-    sequenceMap: Map<string, Sequence>,
-    freehandMap: Map<string, Freehand>,
-    blankMap: Map<string, ColumnHeaderProps>,
-    expectedFaciesMap: Map<string, Facies>,
-    expectedBlockMap: Map<string, Block>,
-    expectedEventMap: Map<string, Event>,
-    expectedRangeMap: Map<string, Range>,
-    expectedChronMap: Map<string, Chron>,
-    expectedPointMap: Map<string, Point>,
-    expectedSequenceMap: Map<string, Sequence>,
-    expectedTransectMap: Map<string, Transect>,
-    expectedFreehandMap: Map<string, Freehand>,
-    expectedBlankMap: Map<string, ColumnHeaderProps>;
-  beforeEach(() => {
-    faciesMap = new Map<string, Facies>();
-    blockMap = new Map<string, Block>();
-    eventMap = new Map<string, Event>();
-    rangeMap = new Map<string, Range>();
-    chronMap = new Map<string, Chron>();
-    pointMap = new Map<string, Point>();
-    transectMap = new Map<string, Transect>();
-    sequenceMap = new Map<string, Sequence>();
-    freehandMap = new Map<string, Freehand>();
-    blankMap = new Map<string, ColumnHeaderProps>();
-    expectedFaciesMap = new Map<string, Facies>();
-    expectedBlockMap = new Map<string, Block>();
-    expectedEventMap = new Map<string, Event>();
-    expectedRangeMap = new Map<string, Range>();
-    expectedChronMap = new Map<string, Chron>();
-    expectedPointMap = new Map<string, Point>();
-    expectedSequenceMap = new Map<string, Sequence>();
-    expectedTransectMap = new Map<string, Transect>();
-    expectedFreehandMap = new Map<string, Freehand>();
-    expectedBlankMap = new Map<string, ColumnHeaderProps>();
-  });
-
-  /**
-   * Checks both map creation all column types
-   */
-  it("should create all column types correctly", async () => {
-    const file = "server/__tests__/__data__/parse-datapacks-test-2.txt";
-    await getColumnTypes(
-      file,
-      faciesMap,
-      blockMap,
-      eventMap,
-      rangeMap,
-      chronMap,
-      pointMap,
-      sequenceMap,
-      transectMap,
-      freehandMap,
-      blankMap,
-      Object.keys(key["column-types-all-column-types-key"]),
-      [],
-      "Ma"
-    );
-    expectedFaciesMap.set(
-      key["column-types-all-column-types-key"]["Facies"].name,
-      key["column-types-all-column-types-key"]["Facies"]
-    );
-    expectedBlockMap.set(
-      key["column-types-all-column-types-key"]["Block"].name,
-      key["column-types-all-column-types-key"]["Block"]
-    );
-    expectedEventMap.set(
-      key["column-types-all-column-types-key"]["Event"].name,
-      key["column-types-all-column-types-key"]["Event"]
-    );
-    expectedRangeMap.set(
-      key["column-types-all-column-types-key"]["Range"].name,
-      key["column-types-all-column-types-key"]["Range"]
-    );
-    expectedChronMap.set(
-      key["column-types-all-column-types-key"]["Chron"].name,
-      key["column-types-all-column-types-key"]["Chron"]
-    );
-    expectedPointMap.set(
-      key["column-types-all-column-types-key"]["Point"].name,
-      key["column-types-all-column-types-key"]["Point"]
-    );
-    expectedSequenceMap.set(
-      key["column-types-all-column-types-key"]["Sequence"].name,
-      key["column-types-all-column-types-key"]["Sequence"]
-    );
-    expectedTransectMap.set(
-      key["column-types-all-column-types-key"]["Transect"].name,
-      key["column-types-all-column-types-key"]["Transect"]
-    );
-    expectedFreehandMap.set(
-      key["column-types-all-column-types-key"]["Freehand"].name,
-      key["column-types-all-column-types-key"]["Freehand"]
-    );
-    expectedBlankMap.set(
-      key["column-types-all-column-types-key"]["Blank"].name,
-      key["column-types-all-column-types-key"]["Blank"]
-    );
-    expectMapsToBeEqual();
-  });
-
-  /**
-   * This test checks for the correct creation of the faciesMap
-   */
-  it("should create correct faciesMap only", async () => {
-    const file = "server/__tests__/__data__/parse-datapacks-facies.txt";
-    await getColumnTypes(
-      file,
-      faciesMap,
-      blockMap,
-      eventMap,
-      rangeMap,
-      chronMap,
-      pointMap,
-      sequenceMap,
-      transectMap,
-      freehandMap,
-      blankMap,
-      Object.keys(key["column-types-facies-key"]),
-      [],
-      "Ma"
-    );
-    for (const val in key["column-types-facies-key"]) {
-      expectedFaciesMap.set(val, key["column-types-facies-key"][val]);
-    }
-    expectMapsToBeEqual();
-  });
-
-  /**
-   * This test checks for the correct creation of the blockMap
-   */
-  it("should create correct blockMap only, the second block should has max amount of information", async () => {
-    const file = "server/__tests__/__data__/parse-datapacks-block.txt";
-    await getColumnTypes(
-      file,
-      faciesMap,
-      blockMap,
-      eventMap,
-      rangeMap,
-      chronMap,
-      pointMap,
-      sequenceMap,
-      transectMap,
-      freehandMap,
-      blankMap,
-      Object.keys(key["column-types-block-key"]),
-      [],
-      "Ma"
-    );
-    for (const val in key["column-types-block-key"]) {
-      expectedBlockMap.set(val, key["column-types-block-key"][val]);
-    }
-    expectMapsToBeEqual();
-  });
-
-  /**
-   * This checks a file with two events with two sub events each
-   */
-  it("should create correct eventMap only", async () => {
-    const file = "server/__tests__/__data__/parse-datapacks-event.txt";
-    await getColumnTypes(
-      file,
-      faciesMap,
-      blockMap,
-      eventMap,
-      rangeMap,
-      chronMap,
-      pointMap,
-      sequenceMap,
-      transectMap,
-      freehandMap,
-      blankMap,
-      Object.keys(key["column-types-event-key"]),
-      [],
-      "Ma"
-    );
-    for (const val in key["column-types-event-key"]) {
-      expectedEventMap.set(val, key["column-types-event-key"][val]);
-    }
-    expectMapsToBeEqual();
-  });
-
-  it("should create correct rangeMap only", async () => {
-    const file = "server/__tests__/__data__/parse-datapacks-range.txt";
-    await getColumnTypes(
-      file,
-      faciesMap,
-      blockMap,
-      eventMap,
-      rangeMap,
-      chronMap,
-      pointMap,
-      sequenceMap,
-      transectMap,
-      freehandMap,
-      blankMap,
-      Object.keys(key["column-types-range-key"]),
-      [],
-      "Ma"
-    );
-    for (const val in key["column-types-range-key"]) {
-      expectedRangeMap.set(val, key["column-types-range-key"][val]);
-    }
-    expectMapsToBeEqual();
-  });
-
-  it("should create correct chronMap only", async () => {
-    const file = "server/__tests__/__data__/parse-datapacks-chron.txt";
-    await getColumnTypes(
-      file,
-      faciesMap,
-      blockMap,
-      eventMap,
-      rangeMap,
-      chronMap,
-      pointMap,
-      sequenceMap,
-      transectMap,
-      freehandMap,
-      blankMap,
-      Object.keys(key["column-types-chron-key"]),
-      [],
-      "Ma"
-    );
-    for (const val in key["column-types-chron-key"]) {
-      expectedChronMap.set(val, key["column-types-chron-key"][val]);
-    }
-    expectMapsToBeEqual();
-  });
-
-  it("should create correct pointMap only", async () => {
-    const file = "server/__tests__/__data__/parse-datapacks-point.txt";
-    await getColumnTypes(
-      file,
-      faciesMap,
-      blockMap,
-      eventMap,
-      rangeMap,
-      chronMap,
-      pointMap,
-      sequenceMap,
-      transectMap,
-      freehandMap,
-      blankMap,
-      Object.keys(key["column-types-point-key"]),
-      [],
-      "Ma"
-    );
-    for (const val in key["column-types-point-key"]) {
-      expectedPointMap.set(val, key["column-types-point-key"][val]);
-    }
-    expectMapsToBeEqual();
-  });
-
-  it("should create correct sequenceMap only", async () => {
-    const file = "server/__tests__/__data__/parse-datapacks-sequence.txt";
-    await getColumnTypes(
-      file,
-      faciesMap,
-      blockMap,
-      eventMap,
-      rangeMap,
-      chronMap,
-      pointMap,
-      sequenceMap,
-      transectMap,
-      freehandMap,
-      blankMap,
-      Object.keys(key["column-types-sequence-key"]),
-      [],
-      "Ma"
-    );
-    for (const val in key["column-types-sequence-key"]) {
-      expectedSequenceMap.set(val, key["column-types-sequence-key"][val]);
-    }
-    expectMapsToBeEqual();
-  });
-
-  it("should create correct transectMap only", async () => {
-    const file = "server/__tests__/__data__/parse-datapacks-transect.txt";
-    await getColumnTypes(
-      file,
-      faciesMap,
-      blockMap,
-      eventMap,
-      rangeMap,
-      chronMap,
-      pointMap,
-      sequenceMap,
-      transectMap,
-      freehandMap,
-      blankMap,
-      Object.keys(key["column-types-transect-key"]),
-      [],
-      "Ma"
-    );
-    for (const val in key["column-types-transect-key"]) {
-      expectedTransectMap.set(val, key["column-types-transect-key"][val]);
-    }
-    expectMapsToBeEqual();
-  });
-
-  it("should create correct freehandMap only", async () => {
-    const file = "server/__tests__/__data__/parse-datapacks-freehand.txt";
-    await getColumnTypes(
-      file,
-      faciesMap,
-      blockMap,
-      eventMap,
-      rangeMap,
-      chronMap,
-      pointMap,
-      sequenceMap,
-      transectMap,
-      freehandMap,
-      blankMap,
-      Object.keys(key["column-types-freehand-key"]),
-      [],
-      "Ma"
-    );
-    for (const val in key["column-types-freehand-key"]) {
-      expectedFreehandMap.set(val, key["column-types-freehand-key"][val]);
-    }
-    expectMapsToBeEqual();
-  });
-
-  /**
-   * Given a bad file, the maps should not be initialized
-   */
-  it("should not initialize maps on bad file", async () => {
-    const file = "server/__tests__/__data__/bad-data.txt";
-    await getColumnTypes(
-      file,
-      faciesMap,
-      blockMap,
-      eventMap,
-      rangeMap,
-      chronMap,
-      pointMap,
-      sequenceMap,
-      transectMap,
-      freehandMap,
-      blankMap,
-      [],
-      [],
-      "Ma"
-    );
-    expectMapsToBeEqual();
-  });
-
-  function expectMapsToBeEqual() {
-    expect(blockMap).toEqual(expectedBlockMap);
-    expect(faciesMap).toEqual(expectedFaciesMap);
-    expect(eventMap).toEqual(expectedEventMap);
-    expect(rangeMap).toEqual(expectedRangeMap);
-    expect(chronMap).toEqual(expectedChronMap);
-    expect(pointMap).toEqual(expectedPointMap);
-    expect(blankMap).toEqual(expectedBlankMap);
-    expect(sequenceMap).toEqual(expectedSequenceMap);
-    expect(transectMap).toEqual(expectedTransectMap);
-    expect(freehandMap).toEqual(expectedFreehandMap);
-  }
-});
-
 describe("getAllEntries tests", () => {
   let entriesMap: Map<string, ParsedColumnEntry>, isChild: Set<string>;
   beforeEach(() => {
@@ -819,5 +462,184 @@ describe("getAllEntries tests", () => {
     const file = "server/__tests__/__data__/bad-data.txt";
     await getAllEntries(file, entriesMap, isChild);
     expect(entriesMap.size).toBe(0);
+  });
+});
+
+describe("getColumnTypes tests", () => {
+  let loneColumns: Map<string, ColumnInfo>, expectedLoneColumns: Map<string, ColumnInfo>;
+  beforeEach(() => {
+    loneColumns = new Map<string, ColumnInfo>();
+    expectedLoneColumns = new Map<string, ColumnInfo>();
+  });
+  it("should return correct block columns", async () => {
+    const file = "server/__tests__/__data__/parse-datapacks-block.txt";
+    await getColumnTypes(file, loneColumns, "Ma");
+    for (const index in key["column-types-block-key"]) {
+      expectedLoneColumns.set(index, key["column-types-block-key"][index]);
+    }
+    expect(loneColumns).toEqual(expectedLoneColumns);
+  });
+
+  it("should return correct facies columns", async () => {
+    const file = "server/__tests__/__data__/parse-datapacks-facies.txt";
+    await getColumnTypes(file, loneColumns, "Ma");
+    for (const index in key["column-types-facies-key"]) {
+      expectedLoneColumns.set(index, key["column-types-facies-key"][index]);
+    }
+    expect(loneColumns).toEqual(expectedLoneColumns);
+  });
+
+  it("should return correct event columns", async () => {
+    const file = "server/__tests__/__data__/parse-datapacks-event.txt";
+    await getColumnTypes(file, loneColumns, "Ma");
+    for (const index in key["column-types-event-key"]) {
+      expectedLoneColumns.set(index, key["column-types-event-key"][index]);
+    }
+    expect(loneColumns).toEqual(expectedLoneColumns);
+  });
+  it("should return correct range columns", async () => {
+    const file = "server/__tests__/__data__/parse-datapacks-range.txt";
+    await getColumnTypes(file, loneColumns, "Ma");
+    for (const index in key["column-types-range-key"]) {
+      expectedLoneColumns.set(index, key["column-types-range-key"][index]);
+    }
+    expect(loneColumns).toEqual(expectedLoneColumns);
+  });
+  it("should return correct chron columns", async () => {
+    const file = "server/__tests__/__data__/parse-datapacks-chron.txt";
+    await getColumnTypes(file, loneColumns, "Ma");
+    for (const index in key["column-types-chron-key"]) {
+      expectedLoneColumns.set(index, key["column-types-chron-key"][index]);
+    }
+    expect(loneColumns).toEqual(expectedLoneColumns);
+  });
+  it("should return correct point columns", async () => {
+    const file = "server/__tests__/__data__/parse-datapacks-point.txt";
+    await getColumnTypes(file, loneColumns, "Ma");
+    for (const index in key["column-types-point-key"]) {
+      expectedLoneColumns.set(index, key["column-types-point-key"][index]);
+    }
+    expect(loneColumns).toEqual(expectedLoneColumns);
+  });
+  it("should return correct sequence columns", async () => {
+    const file = "server/__tests__/__data__/parse-datapacks-sequence.txt";
+    await getColumnTypes(file, loneColumns, "Ma");
+    for (const index in key["column-types-sequence-key"]) {
+      expectedLoneColumns.set(index, key["column-types-sequence-key"][index]);
+    }
+    expect(loneColumns).toEqual(expectedLoneColumns);
+  });
+  it("should return correct transect columns", async () => {
+    const file = "server/__tests__/__data__/parse-datapacks-transect.txt";
+    await getColumnTypes(file, loneColumns, "Ma");
+    for (const index in key["column-types-transect-key"]) {
+      expectedLoneColumns.set(index, key["column-types-transect-key"][index]);
+    }
+    expect(loneColumns).toEqual(expectedLoneColumns);
+  });
+  it("should return correct freehand columns", async () => {
+    const file = "server/__tests__/__data__/parse-datapacks-freehand.txt";
+    await getColumnTypes(file, loneColumns, "Ma");
+    for (const index in key["column-types-freehand-key"]) {
+      expectedLoneColumns.set(index, key["column-types-freehand-key"][index]);
+    }
+    expect(loneColumns).toEqual(expectedLoneColumns);
+  });
+});
+describe("configureOptionalPointSettings tests", () => {
+  const point: Point = {
+    name: "test",
+    minAge: 0,
+    maxAge: 0,
+    enableTitle: true,
+    on: true,
+    width: 0,
+    popup: "",
+    rgb: { r: 0, g: 0, b: 0 },
+    subPointInfo: [],
+    lowerRange: 0,
+    upperRange: 0,
+    smoothed: true,
+    drawLine: false,
+    pointShape: "rect",
+    drawFill: true,
+    fill: {
+      r: 64,
+      g: 233,
+      b: 191
+    },
+    minX: Number.MAX_SAFE_INTEGER,
+    maxX: Number.MIN_SAFE_INTEGER,
+    scaleStep: 0
+  };
+
+  test.each([
+    [[], (point: Point) => point],
+    [
+      ["nopoints", "line", "22/22/22", "2", "22", "smoothed"],
+      (point: Point) => ({
+        ...point,
+        pointShape: "nopoints",
+        drawLine: true,
+        fill: { r: 22, g: 22, b: 22 },
+        lowerRange: 2,
+        upperRange: 22,
+        smoothed: true
+      })
+    ],
+    [
+      ["rect", "line", "22/22/22", "2", "22", "smoothed"],
+      (point: Point) => ({
+        ...point,
+        pointShape: "rect",
+        drawLine: true,
+        fill: { r: 22, g: 22, b: 22 },
+        lowerRange: 2,
+        upperRange: 22,
+        smoothed: true
+      })
+    ],
+    [
+      ["circle", "noline", "1/1/1", "1", "1", "smoothed"],
+      (point: Point) => ({
+        ...point,
+        pointShape: "circle",
+        drawLine: false,
+        fill: { r: 1, g: 1, b: 1 },
+        lowerRange: 1,
+        upperRange: 1,
+        smoothed: true
+      })
+    ],
+    [
+      ["cross", "line", "255/255/255", "0", "0", "smoothed"],
+      (point: Point) => ({
+        ...point,
+        pointShape: "cross",
+        drawLine: true,
+        fill: { r: 255, g: 255, b: 255 },
+        lowerRange: 0,
+        upperRange: 0,
+        smoothed: true
+      })
+    ],
+    [
+      ["rect", "noline", "255/255/255", "-100", "200", "unsmoothed"],
+      (point: Point) => ({
+        ...point,
+        pointShape: "rect",
+        drawLine: false,
+        fill: { r: 255, g: 255, b: 255 },
+        lowerRange: -100,
+        upperRange: 200,
+        smoothed: false
+      })
+    ],
+    [["rect", "", "", "", "", "unsmooth"], (point: Point) => ({ ...point, pointShape: "rect", smoothed: false })],
+    [["", "", "", "", "", "", ""], (point: Point) => point]
+  ])("should return point with correct settings for line: '%s'", (line, expected) => {
+    const testPoint = JSON.parse(JSON.stringify(point));
+    configureOptionalPointSettings(line, testPoint);
+    expect(testPoint).toEqual(expected(point));
   });
 });
