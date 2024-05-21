@@ -9,6 +9,19 @@
   margin-right: 8px;
 }
 
+.clear-button-radio-group-container {
+  display: flex;
+  justify-content: end;
+}
+
+.clear-button-tsc-radio-group {
+  width: fit-content;
+}
+
+.clear-button-radio-group-typography {
+  font-size: 12px;
+}
+
 .radio-form-label {
   margin: 0px;
 }

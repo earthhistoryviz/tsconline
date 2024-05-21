@@ -64,9 +64,9 @@ export const ColumnMenu = observer(() => {
               <EditWidthField key={column.name} column={column} />
             )}
             <EventSpecificSettings column={column} />
-            {!!column.popup && <InfoBox info={column.popup} />}
             <PointSettingsPopup column={column} />
             <DataMiningModal column={column} />
+            {!!column.popup && <InfoBox info={column.popup} />}
           </>
         )}
       </div>

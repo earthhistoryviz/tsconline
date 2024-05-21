@@ -1,4 +1,12 @@
-import { ColumnInfo, assertEventSettings, assertPointSettings, isEventFrequency, isDataMiningPointDataType, type DataMiningPointDataType, assertDataMiningSettings} from "@tsconline/shared";
+import {
+  ColumnInfo,
+  assertEventSettings,
+  assertPointSettings,
+  isEventFrequency,
+  isDataMiningPointDataType,
+  type DataMiningPointDataType,
+  assertDataMiningSettings
+} from "@tsconline/shared";
 import { GenericTextField } from "../../components";
 import { Box, Button, Dialog, Typography } from "@mui/material";
 import { useContext, useState } from "react";
@@ -38,14 +46,14 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = ({ column }
             helperText: "Window Size",
             value: dataMiningSettings.windowSize,
             onValueChange: (value) => {
-              actions.setDataMiningSettings(dataMiningSettings, { windowSize: value })
+              actions.setDataMiningSettings(dataMiningSettings, { windowSize: value });
             }
           },
           {
             helperText: "Step Size",
             value: dataMiningSettings.stepSize,
             onValueChange: (value) => {
-              actions.setDataMiningSettings(dataMiningSettings, { stepSize: value })
+              actions.setDataMiningSettings(dataMiningSettings, { stepSize: value });
             }
           }
         ]}
@@ -59,23 +67,24 @@ export const EventDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
   const { actions } = useContext(context);
   if (column.columnDisplayType !== "Event") return;
   const eventSettings = column.columnSpecificSettings;
-  assertEventSettings(eventSettings)
+  assertEventSettings(eventSettings);
   const handleFrequencyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!isEventFrequency(event.target.value)) return;
     actions.setEventColumnSettings(eventSettings, { frequency: event.target.value });
-  }
+  };
   return (
     <Box className="data-mining-type-container">
       <TSCRadioGroup
         onChange={handleFrequencyChange}
+        onClear={() => actions.setEventColumnSettings(eventSettings, { frequency: null })}
         name="Event Type"
         value={eventSettings.frequency}
         radioArray={[
           { value: "FAD", label: "Frequency of FAD" },
           { value: "LAD", label: "Frequency of LAD" },
-          { value: "Combined", label: "Combined Events"}
+          { value: "Combined", label: "Combined Events" }
         ]}
-        />
+      />
     </Box>
   );
 });
@@ -88,20 +97,22 @@ export const PointDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
   const handleDataTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!isDataMiningPointDataType(event.target.value)) return;
     actions.setPointColumnSettings(pointSettings, { dataMiningPointDataType: event.target.value });
-  }
+  };
   return (
     <Box className="data-mining-type-container">
       <TSCRadioGroup
         onChange={handleDataTypeChange}
+        onClear={() => actions.setPointColumnSettings(pointSettings, { dataMiningPointDataType: null })}
         name="Data Type to Plot"
         value={pointSettings.dataMiningPointDataType}
         radioArray={[
-            { value: "Frequency", label: "Frequency" },
-            { value: "Maximum Value", label: "Maximum Value" },
-            { value: "Minimum Value", label: "Minimum Value" },
-            { value: "Average Value", label: "Average Value" },
-            { value: "Rate of Change", label: "Rate of Change"}
-        ]}/>
+          { value: "Frequency", label: "Frequency" },
+          { value: "Maximum Value", label: "Maximum Value" },
+          { value: "Minimum Value", label: "Minimum Value" },
+          { value: "Average Value", label: "Average Value" },
+          { value: "Rate of Change", label: "Rate of Change" }
+        ]}
+      />
     </Box>
   );
 });
