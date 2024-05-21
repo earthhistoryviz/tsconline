@@ -356,7 +356,7 @@ export const defaultPointSettings: PointSettings = {
   maxX: Number.MIN_SAFE_INTEGER,
   windowSize: 2,
   stepSize: 1,
-  dataMiningDataType: "Frequency",
+  dataMiningPointDataType: "Frequency",
 };
 
 export const defaultPoint: Partial<Point> = {
