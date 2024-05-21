@@ -454,20 +454,30 @@ function getFaciesIcon(
     setSelectedMapAgeRange,
     pushPresentRockType
   );
+  const [adjustX, setAdjustX] = useState(0);
+  const [adjustY, setAdjustY] = useState(0);
+  useTransformEffect(({ state }) => {
+    setAdjustX(state.positionX);
+    setAdjustY(state.positionY);
+  });
   return (
     <svg width={`${iconSize / scale}px`} height={`${iconSize / scale}px`} viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="10" stroke="black" strokeWidth="1" fill="transparent" />
-      <image
-        href={rockType.toLowerCase().trim() === "top" ? "" : devSafeUrl(`/public/patterns/${rockType.trim()}.PNG`)}
-        x="-10"
-        y="-10"
-        height="44px"
-        width="44px"
-        clipPath="url(#clipCircle)"
-      />
-      <clipPath id="clipCircle">
-        <circle cx="12" cy="12" r="10" />
-      </clipPath>
+      <pattern
+        id="imgPattern"
+        height="16"
+        width="16"
+        patternUnits="userSpaceOnUse"
+        patternTransform={`scale(${scale / (iconSize / 46)}) translate(${-adjustX},${-adjustY})`}>
+        <image
+          href={rockType.toLowerCase().trim() === "top" ? "" : devSafeUrl(`/public/patterns/${rockType.trim()}.PNG`)}
+          x="0"
+          y="0"
+          preserveAspectRatio="none"
+          width="16"
+          height="16"
+        />
+      </pattern>
+      <circle cx="12" cy="12" r="10" stroke="black" strokeWidth="1" fill="url(#imgPattern)" />
     </svg>
   );
 }
