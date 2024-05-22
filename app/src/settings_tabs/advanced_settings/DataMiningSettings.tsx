@@ -96,7 +96,6 @@ export const PointDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
   const handleDataTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!isDataMiningPointDataType(event.target.value)) return;
     actions.setPointColumnSettings(pointSettings, { dataMiningPointDataType: event.target.value });
-    console.log(JSON.stringify(pointSettings, null, 2));
   };
   return (
     <Box className="data-mining-type-container">
