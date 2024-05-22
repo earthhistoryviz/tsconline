@@ -11,6 +11,7 @@ import { TSCTabs, TSCTab } from "./components";
 import { Typography } from "@mui/material";
 import SaveSettings from "./SettingsTabs/SaveSettings";
 import LoadSettings from "./SettingsTabs/LoadSettings";
+import "./Settings.css";
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
@@ -39,16 +40,9 @@ export const Settings = observer(function Settings() {
 
   const SettingsHeader = () => {
     return (
-      <div
-        style={{
-          display: "flex",
-          marginBottom: "1vh",
-          width: "100%",
-          flexDirection: "row",
-          justifyContent: "center"
-        }}>
+      <div className="settings-header">
         <LoadSettings />
-        <Typography style={{ textAlign: "center", fontSize: 48, marginBottom: "1vh", marginTop: "1vh" }}>
+        <Typography className="settings-header-title" variant="subtitle1">
           Settings
         </Typography>
         <SaveSettings />

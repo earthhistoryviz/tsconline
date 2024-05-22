@@ -32,12 +32,11 @@ export default function SaveSettings() {
     actions.pushSnackbar("successfully saved settings!", "success");
   }
   const [open, setOpen] = React.useState(false);
-  const [filename, setFilename] = React.useState("settings.tsc");
   const handleClickOpen = () => {
     setOpen(true);
   };
-  const handleChange = (e: { target: { value: React.SetStateAction<string> } }) => {
-    setFilename(e.target.value);
+  const handleChange = (e: { target: { value: string } }) => {
+    actions.setLoadSaveFilename(e.target.value);
   };
   const handleClose = () => {
     setOpen(false);
@@ -46,7 +45,7 @@ export default function SaveSettings() {
   return (
     <React.Fragment>
       <IconButton onClick={handleClickOpen}>
-        <DownloadIcon />
+        <DownloadIcon style={{ margin: "auto" }} />
       </IconButton>
       <Dialog
         open={open}
@@ -55,21 +54,21 @@ export default function SaveSettings() {
           component: "form",
           onSubmit: () => {
             //TODO: check filename format
-            saveSettings(filename);
+            saveSettings(state.loadSaveFilename);
             handleClose();
           }
         }}>
-        <DialogTitle>Subscribe</DialogTitle>
+        <DialogTitle>Save Settings</DialogTitle>
         <DialogContent>
           <DialogContentText>Please enter the filename below.</DialogContentText>
           <TextField
-            defaultValue={filename}
+            defaultValue={state.loadSaveFilename}
             autoFocus
             required
             margin="dense"
             type="text"
             fullWidth
-            variant="standard"
+            variant="outlined"
             onChange={handleChange}
           />
         </DialogContent>
@@ -77,7 +76,7 @@ export default function SaveSettings() {
           <Button color="warning" onClick={handleClose}>
             Cancel
           </Button>
-          <Button color="info" type="submit">
+          <Button color="success" type="submit">
             Save
           </Button>
         </DialogActions>

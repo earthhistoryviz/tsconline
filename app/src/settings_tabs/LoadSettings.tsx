@@ -27,10 +27,11 @@ export default function LoadSettings() {
       actions.applySettings(xmlToJson(data));
     } catch (e) {
       console.log(e);
-      actions.pushSnackbar("Failed to load settings: file content is in wrong format", "info");
+      actions.pushSnackbar("Failed to load settings: content of " + file.name + " is in wrong format", "info");
       return;
     }
-    actions.pushSnackbar("successfully loaded settings!", "success");
+    actions.pushSnackbar("successfully loaded settings from " + file.name + "!", "success");
+    actions.setLoadSaveFilename(file.name);
   }
 
   const handleClickOpen = () => {
@@ -56,6 +57,8 @@ export default function LoadSettings() {
         {isLoading === false && (
           <InputFileUpload
             text="Load"
+            variant="text"
+            color="success"
             onChange={(e) => {
               handleClick(e);
             }}
@@ -65,12 +68,12 @@ export default function LoadSettings() {
       </div>
     );
   };
-
   return (
     <>
       <IconButton onClick={handleClickOpen}>
-        <FileUploadIcon />
+        <FileUploadIcon style={{ margin: "auto" }} inheritViewBox={true} />
       </IconButton>
+
       <Dialog
         open={open}
         onClose={handleClose}

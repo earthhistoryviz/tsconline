@@ -17,6 +17,7 @@ import { defaultColors } from "../util/constant";
 import { settings } from "../constants";
 
 export type State = {
+  loadSaveFilename: string;
   isLoggedIn: boolean;
   chartLoading: boolean;
   tab: number;
@@ -72,6 +73,7 @@ export type State = {
 };
 
 export const state = observable<State>({
+  loadSaveFilename: "settings.tsc",
   isLoggedIn: false,
   chartLoading: false,
   madeChart: false,
