@@ -579,7 +579,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   // });
 
   const cmd =
-    `java -Xmx512m -XX:MaxDirectMemorySize=64m -XX:MaxRAM=1g -jar ${assetconfigs.activeJar} ` +
+    `java -jar ${assetconfigs.activeJar} ` +
     // Turns off GUI (e.g Suggested Age pop-up (defaults to yes if -a flag is not passed))
     `-node ` +
     // Add settings:
@@ -590,7 +590,6 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     `-d ${datapacks.join(" ")} ` +
     // Tell it where to save chart
     `-o ${chartFilePath} ` +
-    // Don't use datapacks suggested age (if useSuggestedAge is true then ignore datapack ages)
     `-a`;
 
   // Exec Java command and send final reply to browser

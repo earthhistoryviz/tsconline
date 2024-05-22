@@ -4,7 +4,6 @@ import {
   assertPointSettings,
   isEventFrequency,
   isDataMiningPointDataType,
-  type DataMiningPointDataType,
   assertDataMiningSettings
 } from "@tsconline/shared";
 import { GenericTextField } from "../../components";
@@ -33,7 +32,7 @@ export const DataMiningModal: React.FC<DataMiningSettingsProps> = observer(({ co
   );
 });
 
-export const DataMiningSettings: React.FC<DataMiningSettingsProps> = ({ column }) => {
+export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
   const { actions } = useContext(context);
   const dataMiningSettings = column.columnSpecificSettings;
   assertDataMiningSettings(dataMiningSettings);
@@ -62,7 +61,7 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = ({ column }
       <PointDataMiningOptions column={column} />
     </Box>
   );
-};
+});
 export const EventDataMiningOptions: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
   const { actions } = useContext(context);
   if (column.columnDisplayType !== "Event") return;
@@ -97,6 +96,7 @@ export const PointDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
   const handleDataTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!isDataMiningPointDataType(event.target.value)) return;
     actions.setPointColumnSettings(pointSettings, { dataMiningPointDataType: event.target.value });
+    console.log(JSON.stringify(pointSettings, null, 2))
   };
   return (
     <Box className="data-mining-type-container">

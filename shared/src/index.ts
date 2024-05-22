@@ -272,7 +272,6 @@ export type EventFrequency = "FAD" | "LAD" | "Combined";
 export type EventSettings = {
   type: EventType;
   rangeSort: RangeSort;
-  drawExtraColumn: boolean;
   frequency: EventFrequency | null;
 } & DataMiningSettings;
 
@@ -534,8 +533,6 @@ export function assertEventSettings(o: any): asserts o is EventSettings {
       "string and first occurrence | last occurrence | alphabetical",
       o.rangeSort
     );
-  if (typeof o.drawExtraColumn !== "boolean")
-    throwError("EventSettings", "drawExtraColumn", "boolean", o.drawExtraColumn);
   if (o.frequency != null && (typeof o.frequency !== "string" || !isEventFrequency(o.frequency)))
     throwError("EventSettings", "frequency", "string and FAD | LAD | Combined", o.frequency);
   assertDataMiningSettings(o);
