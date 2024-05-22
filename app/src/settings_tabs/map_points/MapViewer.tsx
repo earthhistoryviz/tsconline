@@ -1,11 +1,11 @@
 import { Drawer, Divider, IconButton } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import type { MapHierarchy, MapInfo } from "@tsconline/shared";
-import { devSafeUrl } from "../util";
+import { devSafeUrl } from "../../util";
 import React, { useEffect, useState, useRef, useContext } from "react";
-import { context } from "../state";
+import { context } from "../../state";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-import { DrawerHeader, ColoredIconButton, TypographyText, BorderedIcon } from "../components";
+import { DrawerHeader, ColoredIconButton, TypographyText, BorderedIcon } from "../../components";
 import CloseIcon from "@mui/icons-material/Close";
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
@@ -16,7 +16,7 @@ import "./MapViewer.css";
 import { createChildMapButton, loadMapPoints, loadTransects } from "./MapButtons";
 import { HeaderBar } from "./MapControls";
 import { FaciesHeaderHeight, LegendHeaderHeight, NormHeaderHeight } from "./MapPointConstants";
-import { compareVhAndPx } from "../util/util";
+import { compareVhAndPx } from "../../util/util";
 import { Legend } from "./Legend";
 
 type MapProps = {

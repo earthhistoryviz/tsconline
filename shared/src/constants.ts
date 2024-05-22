@@ -16,7 +16,10 @@ import {
 
 export const defaultEventSettings: EventSettings = {
   type: "events",
-  rangeSort: "first occurrence"
+  rangeSort: "first occurrence",
+  frequency: null,
+  stepSize: 1,
+  windowSize: 2
 };
 
 export const allFontOptions: ValidFontOptions[] = [
@@ -225,7 +228,10 @@ export const defaultEventColumnInfoTSC: EventColumnInfoTSC = {
   width: 150,
   isSelected: false,
   type: "events",
-  rangeSort: "first occurrence"
+  rangeSort: "first occurrence",
+  drawExtraColumn: null,
+  windowSize: 2,
+  stepSize: 1
 };
 
 export const defaultZoneColumnInfoTSC: ZoneColumnInfoTSC = {
@@ -302,7 +308,10 @@ export const defaultPointColumnInfoTSC: PointColumnInfoTSC = {
   flipScale: false,
   scaleStart: 0,
   scaleStep: 0,
-  pointType: "rect"
+  pointType: "rect",
+  drawExtraColumn: null,
+  windowSize: 2,
+  stepSize: 1
 };
 
 export const defaultPointSettings: PointSettings = {
@@ -349,7 +358,10 @@ export const defaultPointSettings: PointSettings = {
   scaleStep: 0,
   pointShape: "rect",
   minX: Number.MAX_SAFE_INTEGER,
-  maxX: Number.MIN_SAFE_INTEGER
+  maxX: Number.MIN_SAFE_INTEGER,
+  windowSize: 2,
+  stepSize: 1,
+  dataMiningPointDataType: null
 };
 
 export const defaultPoint: Partial<Point> = {
