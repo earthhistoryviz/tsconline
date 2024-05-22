@@ -1,0 +1,11 @@
+.MuiSvgIcon-root.load-button {
+  color: gray;
+  width: 25px;
+  height: 25px;
+  margin: 0;
+}
+
+.MuiIconButton-root.icon-load-button {
+  width: 35px;
+  height: 35px;
+}

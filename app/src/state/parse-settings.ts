@@ -116,7 +116,7 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
     else if (settingName === "unitsPerMY") {
       settings[settingName].push({ unit: settingNode.getAttribute("unit")!, text: Number(settingValue) });
     } else if (settingName === "skipEmptyColumns") {
-      settings[settingName].push({ unit: settingNode.getAttribute("unit")!, text: settingValue === "true"});
+      settings[settingName].push({ unit: settingNode.getAttribute("unit")!, text: settingValue === "true" });
     } else {
       updateProperty(settings, settingName as keyof ChartSettingsInfoTSC, settingValue);
     }

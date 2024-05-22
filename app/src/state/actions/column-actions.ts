@@ -32,9 +32,8 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
   if (settings.width) setWidth(settings.width, column);
   if (settings.backgroundColor.text) {
     setRGB(settings.backgroundColor.text, column);
-  } 
-  else {
-    setRGB({r: 255, g: 255, b: 255}, column);
+  } else {
+    setRGB({ r: 255, g: 255, b: 255 }, column);
   }
   column.fontsInfo = cloneDeep(settings.fonts);
   switch (extractColumnType(settings._id)) {
