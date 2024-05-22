@@ -17,7 +17,6 @@ import {
 export const defaultEventSettings: EventSettings = {
   type: "events",
   rangeSort: "first occurrence",
-  drawExtraColumn: false,
   frequency: null,
   stepSize: 1,
   windowSize: 2
@@ -229,7 +228,10 @@ export const defaultEventColumnInfoTSC: EventColumnInfoTSC = {
   width: 150,
   isSelected: false,
   type: "events",
-  rangeSort: "first occurrence"
+  rangeSort: "first occurrence",
+  drawExtraColumn: null,
+  windowSize: 2,
+  stepSize: 1,
 };
 
 export const defaultZoneColumnInfoTSC: ZoneColumnInfoTSC = {
@@ -306,7 +308,10 @@ export const defaultPointColumnInfoTSC: PointColumnInfoTSC = {
   flipScale: false,
   scaleStart: 0,
   scaleStep: 0,
-  pointType: "rect"
+  pointType: "rect",
+  drawExtraColumn: null,
+  windowSize: 2,
+  stepSize: 1,
 };
 
 export const defaultPointSettings: PointSettings = {
