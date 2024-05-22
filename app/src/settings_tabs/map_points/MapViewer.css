@@ -1,0 +1,90 @@
+.MuiSvgIcon-root.icon-button {
+  color: white;
+  width: inherit;
+  height: inherit;
+}
+.MuiIconButton-root.icon-view-button {
+  width: 35px;
+  height: 35px;
+}
+.view-buttons {
+  position: absolute;
+  left: calc(100% - 50px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  gap: 10px;
+}
+.map-viewer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.map {
+  min-width: none;
+  min-height: none;
+  height: 90vh;
+  max-width: 90vw;
+  max-height: 90vh;
+}
+.MuiIconButton-root.map-point {
+  position: absolute;
+  border-radius: 50%;
+  padding: 0;
+  z-index: 1;
+}
+.MuiSvgIcon-root.icon {
+  border-radius: 50%;
+  object-fit: contain;
+  width: inherit;
+  height: inherit;
+  padding: 0;
+  margin: 0;
+  z-index: 1;
+}
+.transect-lines {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+}
+.MuiIconButton-root.map-point:hover {
+  opacity: 0.7;
+}
+.MuiButton-root.child-map {
+  position: absolute;
+  transition:
+    background-color 0.3s ease,
+    opacity 0.3s ease,
+    border 0.3s ease;
+  border: 1px solid yellow;
+  z-index: 0;
+}
+.MuiButton-root.child-map:hover {
+  background-color: rgba(239, 239, 240, 0.05);
+}
+.header {
+  text-align: center;
+}
+.button-container {
+  border: 1px solid yellow;
+}
+.MuiDrawer-docked.drawer > .MuiDrawer-paper {
+  border: 0px;
+  width: 300px;
+}
+.child-map-icon {
+  width: 12px;
+  height: 12px;
+  margin-left: 2px;
+  border: 1px solid yellow;
+  background-color: transparent;
+}
+.child-map-icon-container {
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+}

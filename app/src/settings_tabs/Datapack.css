@@ -1,0 +1,61 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.datapack-dialog {
+  max-width: 100vw;
+  margin: 0px;
+}
+
+.MuiTypography-root.container {
+  font-size: 18px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.box-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border: 1px solid gray;
+  border-radius: 4px;
+  max-width: 600px;
+  margin: 0 auto;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  width: 85%;
+  /*this fixed the window scaling issue, changed from 100 */
+  overflow-x: hidden;
+}
+
+.data-table {
+  border-collapse: collapse;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.checkbox-cell {
+  padding: 8px;
+}
+
+.name-cell {
+  padding: 8px;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.upload-button {
+  margin-top: 20px;
+}
+
+.download-icon {
+  margin-top: 4px;
+}

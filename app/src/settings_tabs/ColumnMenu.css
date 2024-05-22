@@ -1,0 +1,32 @@
+.column-menu {
+  width: fit-content;
+  height: fit-content;
+  background-color: lightblue;
+  display: flex;
+  flex-direction: column;
+}
+.column-menu-label {
+  display: none;
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
+  background-color: lightblue;
+}
+.column-menu-header {
+  display: flex;
+  flex-direction: row;
+  width: 20vw;
+}
+.column-settings-cog {
+  background-color: lightgray;
+}
+.column-menu-content {
+  display: none;
+  flex-direction: column;
+}
+.ShowTitlesContainer {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+  margin-left: 10px;
+}
