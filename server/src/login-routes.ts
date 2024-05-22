@@ -17,6 +17,7 @@ import md5 from "md5";
 import dotenv from "dotenv";
 
 const emailTestRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const googleRecaptchaBotThreshold = 0.5;
 dotenv.config();
 
 async function checkRecaptchaToken(token: string): Promise<number> {
@@ -136,7 +137,7 @@ export const resetEmail = async function resetEmail(
   }
   try {
     const score = await checkRecaptchaToken(recaptchaToken);
-    if (score < 0.5) {
+    if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
     }
@@ -260,7 +261,7 @@ export const resetPassword = async function resetPassword(
   }
   try {
     const score = await checkRecaptchaToken(recaptchaToken);
-    if (score < 0.5) {
+    if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
     }
@@ -306,7 +307,7 @@ export const sendResetPasswordEmail = async function sendResetPasswordEmail(
   }
   try {
     const score = await checkRecaptchaToken(recaptchaToken);
-    if (score < 0.5) {
+    if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
     }
@@ -376,7 +377,7 @@ export const resendVerificationEmail = async function resendVerificationEmail(
   }
   try {
     const score = await checkRecaptchaToken(recaptchaToken);
-    if (score < 0.5) {
+    if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
     }
@@ -476,7 +477,7 @@ export const signup = async function signup(
   }
   try {
     const score = await checkRecaptchaToken(recaptchaToken);
-    if (score < 0.5) {
+    if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
     }
@@ -546,7 +547,7 @@ export const login = async function login(
   try {
     const score = await checkRecaptchaToken(recaptchaToken);
     // the score is a number between 0 and 1 that indicates the likelihood that the user is a bot
-    if (score < 0.5) {
+    if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
     }
@@ -587,7 +588,7 @@ export const googleLogin = async function googleLogin(
   }
   try {
     const score = await checkRecaptchaToken(recaptchaToken);
-    if (score < 0.5) {
+    if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
     }
