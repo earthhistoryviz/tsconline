@@ -14,7 +14,7 @@ import { ChartSettings } from "../types";
 import { jsonToXml } from "../state/parse-settings";
 import { IconButton } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
-
+import "./SaveSettings.css";
 export default function SaveSettings() {
   const { state, actions } = React.useContext(context);
   function saveSettings(filename: string) {
@@ -44,8 +44,8 @@ export default function SaveSettings() {
 
   return (
     <React.Fragment>
-      <IconButton onClick={handleClickOpen}>
-        <DownloadIcon style={{ margin: "auto" }} />
+      <IconButton className="icon-save-button" onClick={handleClickOpen}>
+        <DownloadIcon className="save-button" />
       </IconButton>
       <Dialog
         open={open}

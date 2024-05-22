@@ -11,7 +11,7 @@ import { xmlToJson } from "../state/parse-settings";
 import { CircularProgress, IconButton } from "@mui/material";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 import { InputFileUpload } from "../components";
-
+import "./LoadSettings.css";
 export default function LoadSettings() {
   const { actions } = useContext(context);
   const [open, setOpen] = React.useState(false);
@@ -70,8 +70,8 @@ export default function LoadSettings() {
   };
   return (
     <>
-      <IconButton onClick={handleClickOpen}>
-        <FileUploadIcon style={{ margin: "auto" }} inheritViewBox={true} />
+      <IconButton className="icon-load-button" onClick={handleClickOpen}>
+        <FileUploadIcon className="load-button" />
       </IconButton>
 
       <Dialog
