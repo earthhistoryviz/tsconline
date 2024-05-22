@@ -1,0 +1,14 @@
+.settings-header {
+  display: flex;
+  margin-bottom: 1vh;
+  width: 100%;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+.settings-header-title {
+  text-align: center;
+  font-size: 48;
+  margin-bottom: 1vh;
+  margin-top: 1vh;
+}

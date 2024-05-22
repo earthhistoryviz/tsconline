@@ -926,3 +926,7 @@ export const setEnablePriority = action("setEnablePriority", (newval: boolean) =
 export const setEnableHideBlockLabel = action("setEnableHideBlockLabel", (newval: boolean) => {
   state.settings.enableHideBlockLabel = newval;
 });
+
+export const setLoadSaveFilename = action("setLoadSaveFilename", (newval: string) => {
+  state.loadSaveFilename = newval;
+});

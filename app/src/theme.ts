@@ -133,7 +133,10 @@ let theme = createTheme({
     }
   },
   typography: {
-    fontFamily: '"Titillium Web", sans-serif'
+    fontFamily: '"Titillium Web", sans-serif',
+    subtitle1: {
+      fontSize: "48px"
+    }
   },
   components: {
     MuiButton: {
