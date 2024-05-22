@@ -240,7 +240,8 @@ export function assertEventColumnInfoTSC(o: any): asserts o is EventColumnInfoTS
   assertColumnBasicInfoTSC(o);
 }
 export function assertSequenceColumnInfoTSC(o: any): asserts o is SequenceColumnInfoTSC {
-  if (o.type !== "trend" && o.type !== "sequence") throwError("SequenceColumnInfoTSC", "type", "trend or sequence", o.type);
+  if (o.type !== "trend" && o.type !== "sequence")
+    throwError("SequenceColumnInfoTSC", "type", "trend or sequence", o.type);
   if (typeof o.labelMarginLeft !== "number")
     throwError("SequenceColumnInfoTSC", "labelMarginLeft", "number", o.labelMarginLeft);
   if (typeof o.labelMarginRight !== "number")
