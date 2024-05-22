@@ -52,7 +52,7 @@ export default function SaveSettings() {
         onClose={handleClose}
         PaperProps={{
           component: "form",
-          onSubmit: (e: { preventDefault: () => void; }) => {
+          onSubmit: (e: { preventDefault: () => void }) => {
             e.preventDefault(); // to stop website from reloading
             //TODO: check filename format
             saveSettings(state.loadSaveFilename);

@@ -30,7 +30,7 @@ import {
   isRGB
 } from "@tsconline/shared";
 import { ChartSettings } from "../types";
-import { convertRgbToString, convertTSCColorToRGB, trimQuotes } from "../util/util";
+import { convertRgbToString, convertTSCColorToRGB } from "../util/util";
 import { cloneDeep } from "lodash";
 
 /**
@@ -114,9 +114,9 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
     }
     //these two tags have units, so make an object storing its unit and value
     else if (settingName === "unitsPerMY") {
-      settings[settingName].push({ unit: "Ma", text: Number(settingValue) });
+      settings[settingName].push({ unit: settingNode.getAttribute("unit")!, text: Number(settingValue) });
     } else if (settingName === "skipEmptyColumns") {
-      settings[settingName].push({ unit: "Ma", text: Boolean(settingValue) });
+      settings[settingName].push({ unit: settingNode.getAttribute("unit")!, text: settingValue === "true"});
     } else {
       updateProperty(settings, settingName as keyof ChartSettingsInfoTSC, settingValue);
     }
@@ -349,7 +349,7 @@ function generateSettingsXml(stateSettings: ChartSettings, indent: string): stri
     xml += `${indent}    <setting name="text">${timeSettings.baseStageAge}</setting>\n`;
     xml += `${indent}</setting>\n`;
     xml += `${indent}<setting name="unitsPerMY" unit="${unit}">${timeSettings.unitsPerMY * 30}</setting>\n`;
-    xml += `${indent}<setting name="skipEmptyColumns">${timeSettings.skipEmptyColumns}</setting>\n`;
+    xml += `${indent}<setting name="skipEmptyColumns" unit="${unit}">${timeSettings.skipEmptyColumns}</setting>\n`;
   }
   xml += `${indent}<setting name="variableColors">UNESCO</setting>\n`;
   xml += `${indent}<setting name="negativeChk">false</setting>\n`;
@@ -416,9 +416,6 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
         stepSize: state.columnSpecificSettings.stepSize
       };
   }
-  //TODO: check with Ogg about quote usage
-  //strip surrounding quotations for id (ex. Belgium Datapack)
-  state.name = trimQuotes(state.name);
   switch (state.columnDisplayType) {
     case "RootColumn":
     case "MetaColumn":
@@ -432,7 +429,7 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
   column.isSelected = state.on;
   column.drawTitle = state.enableTitle;
   column.fonts = state.fontsInfo;
-  column.width = column.width;
+  column.width = state.width;
   column.backgroundColor.text!.r = state.rgb.r;
   column.backgroundColor.text!.g = state.rgb.g;
   column.backgroundColor.text!.b = state.rgb.b;
@@ -571,12 +568,10 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       xml += `${indent}<setting name="pointType" pointType="${column.pointType}"/>\n`;
     } else if (key === "drawExtraColumn" && !keyValue) {
       continue;
-    } 
-    else if (key === "type" && extractColumnType(column._id) === "sequence") {
+    } else if (key === "type" && extractColumnType(column._id) === "sequence") {
       assertSequenceColumnInfoTSC(column);
-      xml += `${indent}<setting name="type" type="${column.type}"/>\n`
-    }
-    else if (isRGB(keyValue)) {
+      xml += `${indent}<setting name="type" type="${column.type}"/>\n`;
+    } else if (isRGB(keyValue)) {
       xml += `${indent}<setting name="${key}">${convertRgbToString(keyValue)}</setting>\n`;
     } else {
       xml += `${indent}<setting name="${key}">${keyValue}</setting>\n`;

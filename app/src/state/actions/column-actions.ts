@@ -23,51 +23,56 @@ function extractName(text: string): string {
 function extractColumnType(text: string): string {
   return text.substring(text.indexOf(".") + 1, text.indexOf(":"));
 }
-export const applyChartColumnSettings = action("applyChartColumnSettings", (settings: ColumnInfoTSC) => {
-  function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
-    setEditName(settings.title, column);
-    setEnableTitle(settings.drawTitle, column);
-    setShowUncertaintyLabels(settings.drawUncertaintyLabel, column);
-    setShowAgeLabels(settings.drawAgeLabel, column);
-    setColumnOn(settings.isSelected, column);
-    if (settings.width) setWidth(settings.width, column);
-    if (settings.backgroundColor.text) setRGB(settings.backgroundColor.text, column);
-    column.fontsInfo = cloneDeep(settings.fonts);
-    switch (extractColumnType(settings._id)) {
-      case "EventColumn":
-        assertEventColumnInfoTSC(settings);
-        assertEventSettings(column.columnSpecificSettings);
-        if (column.columnSpecificSettings)
-          setEventColumnSettings(column.columnSpecificSettings, { type: settings.type, rangeSort: settings.rangeSort });
-        break;
-      case "PointColumn":
-        {
-          assertPointColumnInfoTSC(settings);
-          assertPointSettings(column.columnSpecificSettings);
-          setPointColumnSettings(column.columnSpecificSettings, {
-            drawLine: settings.drawLine,
-            drawFill: settings.drawFill,
-            drawScale: settings.drawScale,
-            drawCurveGradient: settings.drawCurveGradient,
-            drawBackgroundGradient: settings.drawBgrndGradient,
-            backgroundGradientStart: settings.backGradStart,
-            backgroundGradientEnd: settings.backGradEnd,
-            curveGradientStart: settings.curveGradStart,
-            curveGradientEnd: settings.curveGradEnd,
-            lineColor: settings.lineColor,
-            flipScale: settings.flipScale,
-            scaleStart: settings.scaleStart,
-            scaleStep: settings.scaleStep,
-            fill: settings.fillColor,
-            pointShape: convertPointTypeToPointShape(settings.pointType),
-            smoothed: settings.drawSmooth,
-            lowerRange: settings.minWindow,
-            upperRange: settings.maxWindow
-          });
-        }
-        break;
-    }
+function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
+  setEditName(settings.title, column);
+  setEnableTitle(settings.drawTitle, column);
+  if ("showUncertaintyLabels" in column) setShowUncertaintyLabels(settings.drawUncertaintyLabel, column);
+  if ("showAgeLabels" in column) setShowAgeLabels(settings.drawAgeLabel, column);
+  setColumnOn(settings.isSelected, column);
+  if (settings.width) setWidth(settings.width, column);
+  if (settings.backgroundColor.text) {
+    setRGB(settings.backgroundColor.text, column);
+  } 
+  else {
+    setRGB({r: 255, g: 255, b: 255}, column);
   }
+  column.fontsInfo = cloneDeep(settings.fonts);
+  switch (extractColumnType(settings._id)) {
+    case "EventColumn":
+      assertEventColumnInfoTSC(settings);
+      assertEventSettings(column.columnSpecificSettings);
+      if (column.columnSpecificSettings)
+        setEventColumnSettings(column.columnSpecificSettings, { type: settings.type, rangeSort: settings.rangeSort });
+      break;
+    case "PointColumn":
+      {
+        assertPointColumnInfoTSC(settings);
+        assertPointSettings(column.columnSpecificSettings);
+        setPointColumnSettings(column.columnSpecificSettings, {
+          drawLine: settings.drawLine,
+          drawFill: settings.drawFill,
+          drawScale: settings.drawScale,
+          drawCurveGradient: settings.drawCurveGradient,
+          drawBackgroundGradient: settings.drawBgrndGradient,
+          backgroundGradientStart: settings.backGradStart,
+          backgroundGradientEnd: settings.backGradEnd,
+          curveGradientStart: settings.curveGradStart,
+          curveGradientEnd: settings.curveGradEnd,
+          lineColor: settings.lineColor,
+          flipScale: settings.flipScale,
+          scaleStart: settings.scaleStart,
+          scaleStep: settings.scaleStep,
+          fill: settings.fillColor,
+          pointShape: settings.drawPoints === false ? "nopoints" : convertPointTypeToPointShape(settings.pointType),
+          smoothed: settings.drawSmooth,
+          lowerRange: settings.minWindow,
+          upperRange: settings.maxWindow
+        });
+      }
+      break;
+  }
+}
+export const applyChartColumnSettings = action("applyChartColumnSettings", (settings: ColumnInfoTSC) => {
   const columnName = extractName(settings._id);
   let curcol: ColumnInfo | undefined =
     state.settingsTabs.columnHashMap.get(columnName) ||
