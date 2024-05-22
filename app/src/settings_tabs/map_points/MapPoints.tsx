@@ -1,10 +1,10 @@
 import { useContext } from "react";
-import { context } from "../state";
+import { context } from "../../state";
 import { useTheme } from "@mui/material/styles";
 import { Typography, Dialog, List, Box, ListItemButton, ListItemAvatar, ListItemText, Avatar } from "@mui/material";
 import type { MapInfo } from "@tsconline/shared";
 import { styled } from "@mui/material/styles";
-import { devSafeUrl } from "../util";
+import { devSafeUrl } from "../../util";
 import { observer } from "mobx-react-lite";
 import React from "react";
 import { MapViewer } from "./MapViewer";

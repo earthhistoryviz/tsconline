@@ -579,7 +579,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   // });
 
   const cmd =
-    `java -Xmx512m -XX:MaxDirectMemorySize=64m -XX:MaxRAM=1g -jar ${assetconfigs.activeJar} ` +
+    `java -jar ${assetconfigs.activeJar} ` +
     // Turns off GUI (e.g Suggested Age pop-up (defaults to yes if -a flag is not passed))
     `-node ` +
     // Add settings:

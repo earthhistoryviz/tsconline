@@ -1,11 +1,11 @@
 import React, { useContext } from "react";
 import { context } from "./state";
 import { observer } from "mobx-react-lite";
-import { Column } from "./SettingsTabs/Column";
-import { Time } from "./SettingsTabs/Time";
-import { Font } from "./SettingsTabs/Font";
-import { MapPoints } from "./SettingsTabs/MapPoints";
-import { Datapacks } from "./SettingsTabs/Datapack";
+import { Column } from "./settings_tabs/Column";
+import { Time } from "./settings_tabs/Time";
+import { Font } from "./settings_tabs/Font";
+import { MapPoints } from "./settings_tabs/map_points/MapPoints";
+import { Datapacks } from "./settings_tabs/Datapack";
 import { useTheme } from "@mui/material/styles";
 import { TSCTabs, TSCTab } from "./components";
 

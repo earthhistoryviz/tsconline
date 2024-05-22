@@ -205,6 +205,14 @@ export type SubInfo =
 
 export type ColumnSpecificSettings = EventSettings | PointSettings;
 
+export type DataMiningPointDataType =
+  | "Frequency"
+  | "Maximum Value"
+  | "Minimum Value"
+  | "Average Value"
+  | "Rate of Change"
+  | "Overlay";
+
 export type PointSettings = {
   drawLine: boolean;
   drawFill: boolean;
@@ -226,6 +234,12 @@ export type PointSettings = {
   smoothed: boolean;
   minX: number;
   maxX: number;
+  dataMiningPointDataType: DataMiningPointDataType | null;
+} & DataMiningSettings;
+
+export type DataMiningSettings = {
+  windowSize: number;
+  stepSize: number;
 };
 
 export type ColumnInfo = {
@@ -253,11 +267,13 @@ export type ColumnInfo = {
 };
 
 export type RangeSort = "first occurrence" | "last occurrence" | "alphabetical";
+export type EventFrequency = "FAD" | "LAD" | "Combined";
 
 export type EventSettings = {
   type: EventType;
   rangeSort: RangeSort;
-};
+  frequency: EventFrequency | null;
+} & DataMiningSettings;
 
 export type Range = ColumnHeaderProps & {
   subRangeInfo: SubRangeInfo[];
@@ -486,6 +502,24 @@ export function assertPointSettings(o: any): asserts o is PointSettings {
   if (typeof o.lowerRange !== "number") throwError("PointSettings", "lowerRange", "number", o.lowerRange);
   if (typeof o.upperRange !== "number") throwError("PointSettings", "upperRange", "number", o.upperRange);
   if (typeof o.smoothed !== "boolean") throwError("PointSettings", "smoothed", "boolean", o.smoothed);
+  if (o.dataMiningPointDataType != null && !isDataMiningPointDataType(o.dataMiningPointDataType))
+    throwError(
+      "PointSettings",
+      "dataMiningPointDataType",
+      "string and Frequency | Maximum Value | Minimum Value | Average Value | Rate of Change | Overlay",
+      o.dataMiningPointDataType
+    );
+  assertDataMiningSettings(o);
+}
+
+export function assertDataMiningSettings(o: any): asserts o is DataMiningSettings {
+  if (!o || typeof o !== "object") throw new Error("DataMiningSettings must be a non-null object");
+  if (typeof o.windowSize !== "number") throwError("DataMiningSettings", "windowSize", "number", o.windowSize);
+  if (typeof o.stepSize !== "number") throwError("DataMiningSettings", "stepSize", "number", o.stepSize);
+}
+
+export function isDataMiningPointDataType(o: any): o is DataMiningPointDataType {
+  return /^(Frequency|Maximum Value|Minimum Value|Average Value|Rate of Change|Overlay)$/.test(o);
 }
 
 export function assertEventSettings(o: any): asserts o is EventSettings {
@@ -499,6 +533,13 @@ export function assertEventSettings(o: any): asserts o is EventSettings {
       "string and first occurrence | last occurrence | alphabetical",
       o.rangeSort
     );
+  if (o.frequency != null && (typeof o.frequency !== "string" || !isEventFrequency(o.frequency)))
+    throwError("EventSettings", "frequency", "string and FAD | LAD | Combined", o.frequency);
+  assertDataMiningSettings(o);
+}
+
+export function isEventFrequency(o: any): o is EventFrequency {
+  return /^(FAD|LAD|Combined)$/.test(o);
 }
 
 export function assertMapPackInfoChunk(o: any): asserts o is MapPackInfoChunk {

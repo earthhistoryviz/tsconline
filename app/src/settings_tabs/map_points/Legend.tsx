@@ -10,10 +10,10 @@ import {
   Lottie,
   TSCMenuItem,
   TSCSubMenu
-} from "../components";
-import { context } from "../state";
-import { LegendItem } from "../types";
-import { devSafeUrl } from "../util";
+} from "../../components";
+import { context } from "../../state";
+import { LegendItem } from "../../types";
+import { devSafeUrl } from "../../util";
 import { AvailableIcon, DisabledIcon, InfoIcon, ChildMapIcon } from "./MapButtons";
 import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
@@ -24,7 +24,7 @@ import { ControlledMenu, MenuDivider, useClick, useMenuState } from "@szhsin/rea
 import { observer } from "mobx-react-lite";
 import ColorLensIcon from "@mui/icons-material/ColorLens";
 import SimpleBarCore from "simplebar-core";
-import ArrowUpIcon from "../assets/icons/arrow-up.json";
+import ArrowUpIcon from "../../assets/icons/arrow-up.json";
 import { LegendHeaderHeight } from "./MapPointConstants";
 import { Color, Patterns } from "@tsconline/shared";
 
