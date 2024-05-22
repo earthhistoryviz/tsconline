@@ -65,8 +65,9 @@ export default function SaveSettings() {
             defaultValue={state.loadSaveFilename}
             autoFocus
             required
-            margin="dense"
+            margin="normal"
             type="text"
+            size="small"
             fullWidth
             variant="outlined"
             onChange={handleChange}
