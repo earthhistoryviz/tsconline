@@ -14,6 +14,7 @@ import {
   assertPointColumnInfoTSC,
   assertPointSettings,
   assertRulerColumnInfoTSC,
+  assertSequenceColumnInfoTSC,
   assertZoneColumnInfoTSC,
   convertPointShapeToPointType,
   defaultChartSettingsInfoTSC,
@@ -224,7 +225,6 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
           const orientationValue = child.getAttribute("orientation");
           const useNamedValue = child.getAttribute("useNamed");
           const standardizedValue = child.getAttribute("standardized");
-          const RGBregex = new RegExp("rgb([0-2]+[0-5]*,[0-2]+[0-5]*,[0-2]+[0-5]*)");
           const textValue = child.textContent!.trim();
           if (settingName === "backgroundColor" || settingName === "customColor") {
             let rgb = textValue.substring(4, textValue.length - 1).split(",");
@@ -490,6 +490,10 @@ function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
   return xml;
 }
 
+function extractColumnType(text: string): string {
+  return text.substring(text.indexOf(".") + 1, text.indexOf(":"));
+}
+
 function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
   let xml = "";
   for (let key in column) {
@@ -567,7 +571,12 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       xml += `${indent}<setting name="pointType" pointType="${column.pointType}"/>\n`;
     } else if (key === "drawExtraColumn" && !keyValue) {
       continue;
-    } else if (isRGB(keyValue)) {
+    } 
+    else if (key === "type" && extractColumnType(column._id) === "sequence") {
+      assertSequenceColumnInfoTSC(column);
+      xml += `${indent}<setting name="type" type="${column.type}"/>\n`
+    }
+    else if (isRGB(keyValue)) {
       xml += `${indent}<setting name="${key}">${convertRgbToString(keyValue)}</setting>\n`;
     } else {
       xml += `${indent}<setting name="${key}">${keyValue}</setting>\n`;

@@ -104,7 +104,7 @@ export type ZoneColumnInfoTSC = ColumnBasicInfoTSC & {
 };
 
 export type SequenceColumnInfoTSC = ColumnBasicInfoTSC & {
-  type: string;
+  type: "trend" | "sequence";
   labelMarginLeft: number;
   labelMarginRight: number;
   graphStyle: string;
@@ -240,7 +240,7 @@ export function assertEventColumnInfoTSC(o: any): asserts o is EventColumnInfoTS
   assertColumnBasicInfoTSC(o);
 }
 export function assertSequenceColumnInfoTSC(o: any): asserts o is SequenceColumnInfoTSC {
-  if (typeof o.type !== "string") throwError("SequenceColumnInfoTSC", "type", "string", o.type);
+  if (o.type !== "trend" && o.type !== "sequence") throwError("SequenceColumnInfoTSC", "type", "trend or sequence", o.type);
   if (typeof o.labelMarginLeft !== "number")
     throwError("SequenceColumnInfoTSC", "labelMarginLeft", "number", o.labelMarginLeft);
   if (typeof o.labelMarginRight !== "number")
