@@ -139,8 +139,8 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
               height: `${iconSize / scale}px`
             }}
             onClick={() => {
-              if (state.mapState.isFacies || disabled || isInfo) return;
-              actions.toggleSettingsTabColumn(name);
+              if (state.mapState.isFacies || disabled || isInfo || !column) return;
+              actions.toggleSettingsTabColumn(name, column);
             }}
             size="large">
             {getIcon(disabled, isInfo, iconSize, scale, column)}
@@ -201,8 +201,8 @@ const TransectLine: React.FC<TransectLineProps> = observer(
             strokeLinecap="round"
             stroke={clicked ? onColor : offColor}
             onClick={() => {
-              if (state.mapState.isFacies) return;
-              actions.toggleSettingsTabColumn(name);
+              if (state.mapState.isFacies || !column) return;
+              actions.toggleSettingsTabColumn(name, column);
             }}
           />
         </g>
