@@ -246,7 +246,7 @@ export const defaultZoneColumnInfoTSC: ZoneColumnInfoTSC = {
 
 export const defaultSequenceColumnInfoTSC: SequenceColumnInfoTSC = {
   ...defaultColumnBasicInfoTSC,
-  type: "",
+  type: "sequence",
   labelMarginLeft: 0,
   labelMarginRight: 0,
   graphStyle: "",
