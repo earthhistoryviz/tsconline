@@ -14,6 +14,7 @@ import { EventSpecificSettings } from "./advanced_settings/EventSpecificSettings
 import { PointSettingsPopup } from "./advanced_settings/PointSettingsPopup";
 import { EditNameField } from "./EditNameField";
 import { DataMiningModal } from "./advanced_settings/DataMiningSettings";
+import AccordionPositionControls from "./AccordionPositionControls";
 
 export const ColumnMenu = observer(() => {
   const { state } = useContext(context);
@@ -35,6 +36,7 @@ export const ColumnMenu = observer(() => {
       }
     }
   }
+
   return (
     <div className={openMenu ? "column-menu" : ""}>
       <div className="column-menu-header">
@@ -67,6 +69,9 @@ export const ColumnMenu = observer(() => {
             <PointSettingsPopup column={column} />
             <DataMiningModal column={column} />
             {!!column.popup && <InfoBox info={column.popup} />}
+
+            {/* Buttons to change order of accordion items */}
+            <AccordionPositionControls column={column} />
           </>
         )}
       </div>
