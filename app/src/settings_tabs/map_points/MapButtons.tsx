@@ -466,10 +466,12 @@ function getFaciesIcon(
     setSelectedMapAgeRange,
     pushPresentRockType
   );
+  //replace all non alphanumeric characters
+  const id = column.name.replaceAll(/[^a-z0-9]/ig, "_");
   return (
     <svg width={`${iconSize / scale}px`} height={`${iconSize / scale}px`} viewBox="0 0 24 24">
       <pattern
-        id="imgPattern"
+        id={id}
         height="16"
         width="16"
         patternUnits="userSpaceOnUse"
@@ -483,7 +485,7 @@ function getFaciesIcon(
           height="16"
         />
       </pattern>
-      <circle cx="12" cy="12" r="10" stroke="black" strokeWidth="1" fill="url(#imgPattern)" />
+      <circle cx="12" cy="12" r="10" stroke="black" strokeWidth="1" fill={`url(#${id})`} />
     </svg>
   );
 }
