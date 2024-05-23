@@ -416,6 +416,14 @@ export function loadTransects(
  */
 function getIcon(disabled: boolean, isInfo: boolean, iconSize: number, scale: number, column?: ColumnInfo) {
   const { state, actions } = useContext(context);
+  const [adjustX, setAdjustX] = useState(0);
+  const [adjustY, setAdjustY] = useState(0);
+  useTransformEffect(({ state }) => {
+    setAdjustX(state.positionX);
+    setAdjustY(state.positionY);
+    return () => {};
+  });
+  // must check is info first
   if (isInfo) {
     return <BorderedIcon strokeWidth={0.2} className="icon" component={InfoIcon} />;
   } else if (state.mapState.isFacies) {
@@ -425,7 +433,9 @@ function getIcon(disabled: boolean, isInfo: boolean, iconSize: number, scale: nu
       state.mapState.currentFaciesOptions,
       actions.setSelectedMapAgeRange,
       actions.pushPresentRockType,
-      column!
+      column!,
+      adjustX,
+      adjustY
     );
   } else if (disabled) {
     return <BorderedIcon className="icon" component={DisabledIcon} />;
@@ -446,7 +456,9 @@ function getFaciesIcon(
   currentFaciesOptions: FaciesOptions,
   setSelectedMapAgeRange: (min: number, max: number) => void,
   pushPresentRockType: (rockType: string) => void,
-  column: ColumnInfo
+  column: ColumnInfo,
+  adjustX: number,
+  adjustY: number
 ) {
   const rockType = getRockTypeForAge(
     column,
@@ -454,12 +466,6 @@ function getFaciesIcon(
     setSelectedMapAgeRange,
     pushPresentRockType
   );
-  const [adjustX, setAdjustX] = useState(0);
-  const [adjustY, setAdjustY] = useState(0);
-  useTransformEffect(({ state }) => {
-    setAdjustX(state.positionX);
-    setAdjustY(state.positionY);
-  });
   return (
     <svg width={`${iconSize / scale}px`} height={`${iconSize / scale}px`} viewBox="0 0 24 24">
       <pattern
@@ -495,7 +501,7 @@ function getRockTypeForAge(
   setSelectedMapAgeRange: (min: number, max: number) => void,
   pushPresentRockType: (rockType: string) => void
 ) {
-  if (!isSubFaciesInfoArray(column.subInfo) || column.subInfo.length === 0) {
+  if (!column.subInfo || !isSubFaciesInfoArray(column.subInfo) || column.subInfo.length === 0) {
     return "TOP"; // Return "TOP" if there's no subFaciesInfo or it's empty
   }
   setSelectedMapAgeRange(column.minAge, column.maxAge);
