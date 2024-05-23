@@ -467,7 +467,7 @@ function getFaciesIcon(
     pushPresentRockType
   );
   //replace all non alphanumeric characters
-  const id = column.name.replaceAll(/[^a-z0-9]/ig, "_");
+  const id = column.name.replaceAll(/[^a-z0-9]/gi, "_");
   return (
     <svg width={`${iconSize / scale}px`} height={`${iconSize / scale}px`} viewBox="0 0 24 24">
       <pattern
