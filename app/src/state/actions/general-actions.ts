@@ -37,6 +37,7 @@ import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { SettingsTabs, equalChartSettings, equalConfig } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
 import { snackbarTextLengthLimit } from "../../util/constant";
+import { cloneDeep } from "lodash";
 
 const increment = 1;
 
@@ -388,7 +389,7 @@ export const setDatapackConfig = action(
           const existingUnitColumnInfo = unitMap.get(datapackParsingPack.ageUnits)!;
           const newUnitChart = datapackParsingPack.columnInfo;
           // slice off the existing unit column
-          const columnsToAdd = newUnitChart.children.slice(1);
+          const columnsToAdd = cloneDeep(newUnitChart.children.slice(1));
           existingUnitColumnInfo.children = existingUnitColumnInfo.children.concat(columnsToAdd);
         } else {
           if (
@@ -397,7 +398,7 @@ export const setDatapackConfig = action(
             datapackParsingPack.verticalScale
           )
             foundDefaultAge = true;
-          unitMap.set(datapackParsingPack.ageUnits, datapackParsingPack.columnInfo);
+          unitMap.set(datapackParsingPack.ageUnits, cloneDeep(datapackParsingPack.columnInfo));
         }
         const mapPack = state.mapPackIndex[datapack]!;
         if (!mapInfo) mapInfo = mapPack.mapInfo;
@@ -432,11 +433,12 @@ export const setDatapackConfig = action(
     state.settingsTabs.columns = columnRoot;
     state.mapState.mapInfo = mapInfo;
     state.config.datapacks = datapacks;
+    state.settingsTabs.columnHashMap = new Map();
     // this is for app start up or when all datapacks are removed
     if (datapacks.length === 0) {
       state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
     }
-    initializeColumnHashMap(columnRoot);
+    initializeColumnHashMap(state.settingsTabs.columns);
     if (chartSettings !== null) {
       assertChartInfoTSC(chartSettings);
       chartSettings = <ChartInfoTSC>chartSettings;

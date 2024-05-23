@@ -19,6 +19,7 @@ import nearestColor from "nearest-color";
 import path from "path";
 import { assertColors } from "./types.js";
 import { grabFilepaths, rgbToHex } from "./util.js";
+import chalk from "chalk";
 
 /**
  * Loads all the indexes for the active datapacks and mapPacks (if they exist)
@@ -43,10 +44,10 @@ export async function loadIndexes(
         }
         assertDatapackParsingPack(datapackParsingPack);
         datapackIndex[datapack] = datapackParsingPack;
-        console.log(`Successfully parsed ${datapack}`);
+        console.log(chalk.green(`Successfully parsed ${datapack}`));
       })
       .catch((e) => {
-        console.log(`Cannot create a datapackParsingPack with datapack ${datapack} and error: ${e}`);
+        console.log(chalk.red(`Cannot create a datapackParsingPack with datapack ${datapack} and error: ${e}`));
       });
     await parseMapPacks([datapack], decryptionDirectory)
       .then((mapPack) => {
@@ -54,7 +55,7 @@ export async function loadIndexes(
         mapPackIndex[datapack] = mapPack;
       })
       .catch((e) => {
-        console.log(`Cannot create a mapPack with datapack ${datapack} and error: ${e}`);
+        console.log(chalk.red(`Cannot create a mapPack with datapack ${datapack} and error: ${e}`));
       });
   }
   await grabMapImages(datapacks, decryptionDirectory);
