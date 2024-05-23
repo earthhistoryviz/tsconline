@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { observer } from "mobx-react-lite";
 import Avatar from "@mui/material/Avatar";
 import { TSCButton } from "./components";
@@ -11,7 +11,7 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import LoginIcon from "@mui/icons-material/Login";
-import { fetcher } from "./util";
+import { fetcher, loadRecaptcha, removeRecaptcha, executeRecaptcha } from "./util";
 import { Lottie } from "./components";
 import loader from "./assets/icons/loading.json";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
@@ -25,6 +25,13 @@ export const SignUp: React.FC = observer(() => {
   const [loading, setLoading] = useState(false);
   const { actions } = useContext(context);
 
+  useEffect(() => {
+    loadRecaptcha();
+    return () => {
+      removeRecaptcha();
+    };
+  }, []);
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.currentTarget;
@@ -36,6 +43,11 @@ export const SignUp: React.FC = observer(() => {
     setLoading(true);
     const data = new FormData(event.currentTarget);
     try {
+      const recaptchaToken: string = await executeRecaptcha("signup");
+      if (!recaptchaToken) {
+        actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
+        return;
+      }
       const response = await fetcher("/auth/signup", {
         method: "POST",
         headers: {
@@ -45,7 +57,8 @@ export const SignUp: React.FC = observer(() => {
         body: JSON.stringify({
           username: data.get("username"),
           password: data.get("password"),
-          email: data.get("email")
+          email: data.get("email"),
+          recaptchaToken
         })
       });
       if (response.ok) {
@@ -60,6 +73,12 @@ export const SignUp: React.FC = observer(() => {
             break;
           case 409:
             errorCode = ErrorCodes.UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL;
+            break;
+          case 422:
+            errorCode = ErrorCodes.RECAPTCHA_FAILED;
+            break;
+          case 429:
+            errorCode = ErrorCodes.TOO_MANY_REQUESTS;
             break;
         }
         displayServerError(message, errorCode, ErrorMessages[errorCode]);
