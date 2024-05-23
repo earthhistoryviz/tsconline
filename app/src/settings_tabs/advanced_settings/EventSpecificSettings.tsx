@@ -1,10 +1,10 @@
 import { ColumnInfo, assertEventSettings, isEventType, isRangeSort } from "@tsconline/shared";
-import { TSCRadioGroup } from "../components/TSCRadioGroup";
-import EventLogo from "../assets/settings_icons/col_icon_event.png";
-import RangeLogo from "../assets/settings_icons/col_icon_range.png";
+import { TSCRadioGroup } from "../../components/TSCRadioGroup";
+import EventLogo from "../../assets/settings_icons/col_icon_event.png";
+import RangeLogo from "../../assets/settings_icons/col_icon_range.png";
 import { observer } from "mobx-react-lite";
 import { useContext } from "react";
-import { context } from "../state";
+import { context } from "../../state";
 import "./EventSpecificSettings.css";
 
 type EventSpecificSettingsProps = {

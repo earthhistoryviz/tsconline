@@ -7,7 +7,10 @@ import {
   RadioGroup,
   FormControlLabel,
   styled,
-  RadioGroupProps
+  RadioGroupProps,
+  Button,
+  Box,
+  Typography
 } from "@mui/material";
 import "./TSCRadioGroup.css";
 
@@ -55,9 +58,10 @@ function TSCRadio(props: RadioProps) {
 }
 
 type TSCRadioGroupProps = {
-  name: string;
-  value: string;
+  name?: string;
+  value: string | null;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onClear?: () => void;
   radioArray: {
     value: string;
     label?: string;
@@ -65,6 +69,7 @@ type TSCRadioGroupProps = {
   }[];
   disabled?: boolean;
   direction?: "horizontal" | "vertical";
+  headerMargin?: string;
 } & RadioGroupProps;
 
 export const TSCRadioGroup: React.FC<TSCRadioGroupProps> = ({
@@ -72,14 +77,20 @@ export const TSCRadioGroup: React.FC<TSCRadioGroupProps> = ({
   radioArray,
   value,
   onChange,
+  onClear,
   disabled,
   direction = "vertical",
+  headerMargin = "5px",
   ...props
 }) => {
   if (radioArray.length === 0) return null;
   return (
     <FormControl disabled={disabled}>
-      <FormLabel>{name}</FormLabel>
+      {name && (
+        <FormLabel sx={{ margin: headerMargin }} focused={false}>
+          {name}
+        </FormLabel>
+      )}
       <RadioGroup
         {...props}
         value={value}
@@ -101,6 +112,13 @@ export const TSCRadioGroup: React.FC<TSCRadioGroupProps> = ({
           />
         ))}
       </RadioGroup>
+      {onClear && (
+        <Box className="clear-button-radio-group-container">
+          <Button disableRipple onClick={() => onClear()} className="clear-button-tsc-radio-group">
+            <Typography className="clear-button-radio-group-typography">Clear</Typography>
+          </Button>
+        </Box>
+      )}
     </FormControl>
   );
 };

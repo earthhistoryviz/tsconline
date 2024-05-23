@@ -3,6 +3,7 @@ import { state } from "../state";
 import {
   ColumnInfo,
   ColumnInfoTSC,
+  DataMiningSettings,
   EventSettings,
   PointSettings,
   RGB,
@@ -76,6 +77,7 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
   if (curcol === undefined) {
     const errorDesc: string = "Unknown column name found while loading settings: ";
     pushSnackbar(errorDesc + columnName.substring(0, snackbarTextLengthLimit - errorDesc.length - 1), "warning");
+    console.log("WARNING: tried to get", columnName, "in state.columnHashMap, but is undefined");
   } else setColumnProperties(curcol, settings);
   if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
     for (let i = 0; i < settings.children.length; i++) {
@@ -102,34 +104,31 @@ export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
  * parents: list of names that indicates the path from top to the toggled column
  */
 
-export const toggleSettingsTabColumn = action((name: string) => {
-  let curcol: ColumnInfo;
-  if (state.settingsTabs.columnHashMap.get(name) === undefined) {
-    console.log("WARNING: tried to get", name, "in state.columnHashMap, but is undefined");
+export const toggleSettingsTabColumn = action((name: string, column: ColumnInfo) => {
+  column.on = !column.on;
+  if (!column.on || !column.parent) return;
+  if (state.settingsTabs.columnHashMap.get(column.parent) === undefined) {
+    console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
     return;
-  } else curcol = state.settingsTabs.columnHashMap.get(name)!;
-  //toggle current column, save it, and move to parent
-  curcol.on = !curcol.on;
-  const checkStatus = curcol.on;
-  if (!curcol.parent) return;
-  if (state.settingsTabs.columnHashMap.get(curcol.parent) === undefined) {
-    console.log("WARNING: tried to get", curcol.parent, "in state.settingsTabs.columnHashMap, but is undefined");
-    return;
-  } else curcol = state.settingsTabs.columnHashMap.get(curcol.parent!)!;
-  while (curcol) {
-    if (!curcol.on && checkStatus === true) {
-      curcol.on = true;
-    }
-    if (!curcol.parent) break;
-    if (state.settingsTabs.columnHashMap.get(curcol.parent) === undefined) {
-      console.log("WARNING: tried to get", curcol.parent, "in state.settingsTabs.columnHashMap, but is undefined");
+  } else column = state.settingsTabs.columnHashMap.get(column.parent!)!;
+  while (column) {
+    if (!column.on) column.on = true;
+    if (!column.parent) break;
+    if (state.settingsTabs.columnHashMap.get(column.parent) === undefined) {
+      console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
       return;
-    } else curcol = state.settingsTabs.columnHashMap.get(curcol.parent!)!;
+    } else column = state.settingsTabs.columnHashMap.get(column.parent!)!;
   }
 });
 export const setEventColumnSettings = action((eventSettings: EventSettings, newSettings: Partial<EventSettings>) => {
   Object.assign(eventSettings, newSettings);
 });
+
+export const setDataMiningSettings = action(
+  (dataMiningSettings: DataMiningSettings, newSettings: Partial<DataMiningSettings>) => {
+    Object.assign(dataMiningSettings, newSettings);
+  }
+);
 
 export const setPointColumnSettings = action((pointSettings: PointSettings, newSettings: Partial<PointSettings>) => {
   Object.assign(pointSettings, newSettings);

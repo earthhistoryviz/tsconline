@@ -370,7 +370,10 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       column = {
         ...cloneDeep(defaultEventColumnInfoTSC),
         type: state.columnSpecificSettings.type,
-        rangeSort: state.columnSpecificSettings.rangeSort
+        rangeSort: state.columnSpecificSettings.rangeSort,
+        drawExtraColumn: state.columnSpecificSettings.frequency,
+        windowSize: state.columnSpecificSettings.windowSize,
+        stepSize: state.columnSpecificSettings.stepSize
       };
       break;
     case "Zone":
@@ -407,7 +410,10 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
         curveGradEnd: state.columnSpecificSettings.curveGradientEnd,
         flipScale: state.columnSpecificSettings.flipScale,
         scaleStart: state.columnSpecificSettings.scaleStart,
-        scaleStep: state.columnSpecificSettings.scaleStep
+        scaleStep: state.columnSpecificSettings.scaleStep,
+        drawExtraColumn: state.columnSpecificSettings.dataMiningPointDataType,
+        windowSize: state.columnSpecificSettings.windowSize,
+        stepSize: state.columnSpecificSettings.stepSize
       };
   }
   //TODO: check with Ogg about quote usage
@@ -559,6 +565,8 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
     } else if (key === "pointType") {
       assertPointColumnInfoTSC(column);
       xml += `${indent}<setting name="pointType" pointType="${column.pointType}"/>\n`;
+    } else if (key === "drawExtraColumn" && !keyValue) {
+      continue;
     } else if (isRGB(keyValue)) {
       xml += `${indent}<setting name="${key}">${convertRgbToString(keyValue)}</setting>\n`;
     } else {

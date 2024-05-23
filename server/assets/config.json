@@ -1,5 +1,5 @@
 {
-  "activeJar": "assets/jars/TSCreatorBASE-8.1_15May2024.jar",
+  "activeJar": "assets/jars/TSCreatorBASE-8.1_22May2024.jar",
   "activeDatapacks": [
     "TSC2020_InternalDatapack_encrypted_13Feb2021.txt",
     "Hominids_wImages_GTS2020_Encrypted.dpk",
@@ -12,7 +12,7 @@
     "HumanCulture_ENCRYPTED_21Apr2020.txt",
     "Vertebrates w_Images GTS2020 23Jan2021.dpk"
   ],
-  "decryptionJar": "assets/jars/decrypt.jar",
+  "decryptionJar": "assets/jars/datapack-decrypter-1.0.jar",
   "decryptionDirectory": "assets/decrypted",
   "datapacksDirectory": "assets/datapacks",
   "chartsDirectory": "public/charts",

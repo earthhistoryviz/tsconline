@@ -1,5 +1,5 @@
 import { Button, IconButton, Theme, Tooltip, TooltipProps, styled, useTheme } from "@mui/material";
-import { FaciesOptions } from "../types";
+import { FaciesOptions } from "../../types";
 import {
   Bounds,
   ColumnInfo,
@@ -12,15 +12,15 @@ import {
 } from "@tsconline/shared";
 import { useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
-import { actions, context } from "../state";
+import { actions, context } from "../../state";
 import { useTransformEffect } from "react-zoom-pan-pinch";
-import { calculateRectBoundsPosition, calculateRectButton, calculateVertBoundsPosition } from "../util/coordinates";
+import { calculateRectBoundsPosition, calculateRectButton, calculateVertBoundsPosition } from "../../util/coordinates";
 import NotListedLocationIcon from "@mui/icons-material/NotListedLocation";
 import LocationOffIcon from "@mui/icons-material/LocationOff";
 import LocationOnSharpIcon from "@mui/icons-material/LocationOnSharp";
-import { devSafeUrl } from "../util";
-import { BorderedIcon } from "../components";
-import { checkIfDataIsInRange } from "../util/util";
+import { devSafeUrl } from "../../util";
+import { BorderedIcon } from "../../components";
+import { checkIfDataIsInRange } from "../../util/util";
 
 const IconSize = 40;
 export const InfoIcon = NotListedLocationIcon;
@@ -139,8 +139,8 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
               height: `${iconSize / scale}px`
             }}
             onClick={() => {
-              if (state.mapState.isFacies || disabled || isInfo) return;
-              actions.toggleSettingsTabColumn(name);
+              if (state.mapState.isFacies || disabled || isInfo || !column) return;
+              actions.toggleSettingsTabColumn(name, column);
             }}
             size="large">
             {getIcon(disabled, isInfo, iconSize, scale, column)}
@@ -201,8 +201,8 @@ const TransectLine: React.FC<TransectLineProps> = observer(
             strokeLinecap="round"
             stroke={clicked ? onColor : offColor}
             onClick={() => {
-              if (state.mapState.isFacies) return;
-              actions.toggleSettingsTabColumn(name);
+              if (state.mapState.isFacies || !column) return;
+              actions.toggleSettingsTabColumn(name, column);
             }}
           />
         </g>
@@ -416,6 +416,14 @@ export function loadTransects(
  */
 function getIcon(disabled: boolean, isInfo: boolean, iconSize: number, scale: number, column?: ColumnInfo) {
   const { state, actions } = useContext(context);
+  const [adjustX, setAdjustX] = useState(0);
+  const [adjustY, setAdjustY] = useState(0);
+  useTransformEffect(({ state }) => {
+    setAdjustX(state.positionX);
+    setAdjustY(state.positionY);
+    return () => {};
+  });
+  // must check is info first
   if (isInfo) {
     return <BorderedIcon strokeWidth={0.2} className="icon" component={InfoIcon} />;
   } else if (state.mapState.isFacies) {
@@ -425,7 +433,9 @@ function getIcon(disabled: boolean, isInfo: boolean, iconSize: number, scale: nu
       state.mapState.currentFaciesOptions,
       actions.setSelectedMapAgeRange,
       actions.pushPresentRockType,
-      column!
+      column!,
+      adjustX,
+      adjustY
     );
   } else if (disabled) {
     return <BorderedIcon className="icon" component={DisabledIcon} />;
@@ -446,7 +456,9 @@ function getFaciesIcon(
   currentFaciesOptions: FaciesOptions,
   setSelectedMapAgeRange: (min: number, max: number) => void,
   pushPresentRockType: (rockType: string) => void,
-  column: ColumnInfo
+  column: ColumnInfo,
+  adjustX: number,
+  adjustY: number
 ) {
   const rockType = getRockTypeForAge(
     column,
@@ -454,20 +466,26 @@ function getFaciesIcon(
     setSelectedMapAgeRange,
     pushPresentRockType
   );
+  //replace all non alphanumeric characters
+  const id = column.name.replaceAll(/[^a-z0-9]/gi, "_");
   return (
     <svg width={`${iconSize / scale}px`} height={`${iconSize / scale}px`} viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="10" stroke="black" strokeWidth="1" fill="transparent" />
-      <image
-        href={rockType.toLowerCase().trim() === "top" ? "" : devSafeUrl(`/public/patterns/${rockType.trim()}.PNG`)}
-        x="-10"
-        y="-10"
-        height="44px"
-        width="44px"
-        clipPath="url(#clipCircle)"
-      />
-      <clipPath id="clipCircle">
-        <circle cx="12" cy="12" r="10" />
-      </clipPath>
+      <pattern
+        id={id}
+        height="16"
+        width="16"
+        patternUnits="userSpaceOnUse"
+        patternTransform={`scale(${scale / (iconSize / 46)}) translate(${-adjustX},${-adjustY})`}>
+        <image
+          href={rockType.toLowerCase().trim() === "top" ? "" : devSafeUrl(`/public/patterns/${rockType.trim()}.PNG`)}
+          x="0"
+          y="0"
+          preserveAspectRatio="none"
+          width="16"
+          height="16"
+        />
+      </pattern>
+      <circle cx="12" cy="12" r="10" stroke="black" strokeWidth="1" fill={`url(#${id})`} />
     </svg>
   );
 }
@@ -485,7 +503,7 @@ function getRockTypeForAge(
   setSelectedMapAgeRange: (min: number, max: number) => void,
   pushPresentRockType: (rockType: string) => void
 ) {
-  if (!isSubFaciesInfoArray(column.subInfo) || column.subInfo.length === 0) {
+  if (!column.subInfo || !isSubFaciesInfoArray(column.subInfo) || column.subInfo.length === 0) {
     return "TOP"; // Return "TOP" if there's no subFaciesInfo or it's empty
   }
   setSelectedMapAgeRange(column.minAge, column.maxAge);

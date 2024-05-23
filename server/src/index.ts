@@ -74,7 +74,7 @@ try {
     // Tell it where to send the datapacks
     `-dest ${assetconfigs.decryptionDirectory} `;
   console.log("Calling Java decrypt.jar: ", cmd);
-  execSync(cmd);
+  execSync(cmd, { stdio: "inherit" });
   console.log("Finished decryption");
 } catch (e) {
   console.log("ERROR: Failed to decrypt activeDatapacks in AssetConfig with error: ", e);

@@ -205,6 +205,14 @@ export type SubInfo =
 
 export type ColumnSpecificSettings = EventSettings | PointSettings;
 
+export type DataMiningPointDataType =
+  | "Frequency"
+  | "Maximum Value"
+  | "Minimum Value"
+  | "Average Value"
+  | "Rate of Change"
+  | "Overlay";
+
 export type PointSettings = {
   drawLine: boolean;
   drawFill: boolean;
@@ -226,6 +234,12 @@ export type PointSettings = {
   smoothed: boolean;
   minX: number;
   maxX: number;
+  dataMiningPointDataType: DataMiningPointDataType | null;
+} & DataMiningSettings;
+
+export type DataMiningSettings = {
+  windowSize: number;
+  stepSize: number;
 };
 
 export type ColumnInfo = {
@@ -253,11 +267,13 @@ export type ColumnInfo = {
 };
 
 export type RangeSort = "first occurrence" | "last occurrence" | "alphabetical";
+export type EventFrequency = "FAD" | "LAD" | "Combined";
 
 export type EventSettings = {
   type: EventType;
   rangeSort: RangeSort;
-};
+  frequency: EventFrequency | null;
+} & DataMiningSettings;
 
 export type Range = ColumnHeaderProps & {
   subRangeInfo: SubRangeInfo[];
@@ -486,6 +502,24 @@ export function assertPointSettings(o: any): asserts o is PointSettings {
   if (typeof o.lowerRange !== "number") throwError("PointSettings", "lowerRange", "number", o.lowerRange);
   if (typeof o.upperRange !== "number") throwError("PointSettings", "upperRange", "number", o.upperRange);
   if (typeof o.smoothed !== "boolean") throwError("PointSettings", "smoothed", "boolean", o.smoothed);
+  if (o.dataMiningPointDataType != null && !isDataMiningPointDataType(o.dataMiningPointDataType))
+    throwError(
+      "PointSettings",
+      "dataMiningPointDataType",
+      "string and Frequency | Maximum Value | Minimum Value | Average Value | Rate of Change | Overlay",
+      o.dataMiningPointDataType
+    );
+  assertDataMiningSettings(o);
+}
+
+export function assertDataMiningSettings(o: any): asserts o is DataMiningSettings {
+  if (!o || typeof o !== "object") throw new Error("DataMiningSettings must be a non-null object");
+  if (typeof o.windowSize !== "number") throwError("DataMiningSettings", "windowSize", "number", o.windowSize);
+  if (typeof o.stepSize !== "number") throwError("DataMiningSettings", "stepSize", "number", o.stepSize);
+}
+
+export function isDataMiningPointDataType(o: any): o is DataMiningPointDataType {
+  return /^(Frequency|Maximum Value|Minimum Value|Average Value|Rate of Change|Overlay)$/.test(o);
 }
 
 export function assertEventSettings(o: any): asserts o is EventSettings {
@@ -499,6 +533,13 @@ export function assertEventSettings(o: any): asserts o is EventSettings {
       "string and first occurrence | last occurrence | alphabetical",
       o.rangeSort
     );
+  if (o.frequency != null && (typeof o.frequency !== "string" || !isEventFrequency(o.frequency)))
+    throwError("EventSettings", "frequency", "string and FAD | LAD | Combined", o.frequency);
+  assertDataMiningSettings(o);
+}
+
+export function isEventFrequency(o: any): o is EventFrequency {
+  return /^(FAD|LAD|Combined)$/.test(o);
 }
 
 export function assertMapPackInfoChunk(o: any): asserts o is MapPackInfoChunk {
@@ -719,13 +760,17 @@ export function assertBlock(o: any): asserts o is Block {
   assertColumnHeaderProps(o);
 }
 
+export function assertSubFaciesInfoArray(o: any): asserts o is SubFaciesInfo[] {
+  if (!o || typeof o !== "object") throw new Error("SubFaciesInfoArray must be an object");
+  if (!Array.isArray(o)) throw new Error("SubFaciesInfoArray must be an array");
+  for (const subFacies of o) {
+    assertSubFaciesInfo(subFacies);
+  }
+}
+
 export function assertFacies(o: any): asserts o is Facies {
   if (!o || typeof o !== "object") throw new Error("Facies must be a non-null object");
-  if (!Array.isArray(o.faciesTimeBlockInfo))
-    throw new Error("Facies must have a faciesTimeBlockInfo field with type array");
-  for (const block of o.faciesTimeBlockInfo) {
-    assertSubFaciesInfo(block);
-  }
+  assertSubFaciesInfoArray(o.subFaciesInfo);
   assertColumnHeaderProps(o);
 }
 export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingPack {
@@ -886,6 +931,9 @@ export function assertSubInfo(o: any, type: DisplayedColumnTypes): asserts o is 
       case "Freehand":
         assertSubFreehandInfo(sub);
         break;
+      case "Facies":
+        assertSubFaciesInfo(sub);
+        break;
       case "BlockSeriesMetaColumn":
         if (!isSubFaciesInfo(sub) && !isSubChronInfo(sub))
           throw new Error("A block series meta column must have either facies or chronostratigraphy information");
@@ -898,11 +946,11 @@ export function assertSubInfo(o: any, type: DisplayedColumnTypes): asserts o is 
 export function assertDisplayedColumnTypes(o: any): asserts o is DisplayedColumnTypes {
   if (!o || typeof o !== "string") throwError("DisplayedColumnTypes", "DisplayedColumnTypes", "string", o);
   if (
-    !/^(Block|Facies|Event|Range|Chron|Point|Sequence|Transect|Freehand|Zone|Ruler|AgeAge|MetaColumn|BlockSeriesMetaColumn|RootColumn)$/.test(
+    !/^(Block|Facies|Event|Range|Chron|Point|Sequence|Transect|Freehand|Zone|Ruler|AgeAge|MetaColumn|BlockSeriesMetaColumn|RootColumn|Blank)$/.test(
       o
     )
   )
-    throw new Error("DisplayedColumnTypes must be a string of a valid column type");
+    throw new Error("DisplayedColumnTypes must be a string of a valid column type. Found value + " + o);
 }
 
 export function assertColumnInfo(o: any): asserts o is ColumnInfo {
@@ -937,6 +985,29 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   assertFontsInfo(o.fontsInfo);
   if (o.subInfo) assertSubInfo(o.subInfo, o.columnDisplayType);
   if (o.columnSpecificSettings) assertColumnSpecificSettings(o.columnSpecificSettings, o.columnDisplayType);
+}
+
+export function isColumnHeaderProps(o: any): o is ColumnHeaderProps {
+  if (!o || typeof o !== "object") return false;
+  if (typeof o.name !== "string") return false;
+  if (typeof o.minAge !== "number") return false;
+  if (typeof o.maxAge !== "number") return false;
+  if (typeof o.enableTitle !== "boolean") return false;
+  if (typeof o.on !== "boolean") return false;
+  if (typeof o.width !== "number") return false;
+  if (typeof o.popup !== "string") return false;
+  if (!isRGB(o.rgb)) return false;
+  return true;
+}
+
+export function isFacies(o: any): o is Facies {
+  if (typeof o !== "object") return false;
+  if (!Array.isArray(o.subFaciesInfo)) return false;
+  for (const sub of o.subFaciesInfo) {
+    if (!isSubFaciesInfo(sub)) return false;
+  }
+  if (!isColumnHeaderProps(o)) return false;
+  return true;
 }
 
 export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes): asserts o is ColumnSpecificSettings {
@@ -991,6 +1062,13 @@ export function isEventType(o: any): o is EventType {
 export function isRangeSort(o: any): o is RangeSort {
   if (typeof o !== "string") return false;
   if (!/^(first occurrence|last occurrence|alphabetical)$/.test(o)) return false;
+  return true;
+}
+
+export function isSubFreehandInfo(o: any): o is SubFreehandInfo {
+  if (typeof o !== "object") return false;
+  if (typeof o.baseAge !== "number") return false;
+  if (typeof o.topAge !== "number") return false;
   return true;
 }
 
