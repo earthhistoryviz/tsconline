@@ -270,3 +270,21 @@ export const setShowUncertaintyLabels = action((isOn: boolean, column: ColumnInf
 export const setColumnSearchTerm = action((term: string) => {
   state.settingsTabs.columnSearchTerm = term;
 });
+
+export const incrementColumnPosition = action((column: ColumnInfo) => {
+  const parent = state.settingsTabs.columnHashMap.get(column.parent!);
+  if (!parent) return;
+  const index = parent.children.indexOf(column);
+  if (index > 0) {
+    [parent.children[index], parent.children[index - 1]] = [parent.children[index - 1], parent.children[index]];
+  }
+});
+
+export const decrementColumnPosition = action((column: ColumnInfo) => {
+  const parent = state.settingsTabs.columnHashMap.get(column.parent!);
+  if (!parent) return;
+  const index = parent.children.indexOf(column);
+  if (index < parent.children.length - 1 && index > -1) {
+    [parent.children[index], parent.children[index + 1]] = [parent.children[index + 1], parent.children[index]];
+  }
+});
