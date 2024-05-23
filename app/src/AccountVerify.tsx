@@ -5,7 +5,7 @@ import Avatar from "@mui/material/Avatar";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
-import { fetcher } from "./util";
+import { fetcher, loadRecaptcha, removeRecaptcha, executeRecaptcha } from "./util";
 import { Lottie, TSCButton } from "./components";
 import loader from "./assets/icons/loading.json";
 import { useLocation, useNavigate } from "react-router";
@@ -33,7 +33,12 @@ export const AccountVerify: React.FC = () => {
     if (token && !checkedRef.current) {
       checkedRef.current = true;
       verifyToken(token);
+    } else {
+      loadRecaptcha();
     }
+    return () => {
+      if (!token) removeRecaptcha();
+    };
   }, [token]);
 
   const verifyToken = async (token: string) => {
@@ -111,12 +116,17 @@ export const AccountVerify: React.FC = () => {
     setshowResendForm(false);
     const email = form.email.value;
     try {
+      const recaptchaToken = await executeRecaptcha("resend");
+      if (!recaptchaToken) {
+        actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
+        return;
+      }
       const response = await fetcher("/auth/resend", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email, recaptchaToken })
       });
       if (response.ok) {
         actions.removeAllErrors();
@@ -128,6 +138,15 @@ export const AccountVerify: React.FC = () => {
           case 400:
             displayServerError(message, ErrorCodes.INVALID_FORM, ErrorMessages[ErrorCodes.INVALID_FORM]);
             setMessage(ErrorMessages[ErrorCodes.INVALID_FORM]);
+            break;
+          case 422:
+            displayServerError(message, ErrorCodes.RECAPTCHA_FAILED, ErrorMessages[ErrorCodes.RECAPTCHA_FAILED]);
+            setMessage(ErrorMessages[ErrorCodes.RECAPTCHA_FAILED]);
+            break;
+          case 429:
+            actions.removeAllErrors();
+            displayServerError(message, ErrorCodes.TOO_MANY_REQUESTS, ErrorMessages[ErrorCodes.TOO_MANY_REQUESTS]);
+            setMessage(ErrorMessages[ErrorCodes.TOO_MANY_REQUESTS]);
             break;
           default:
             displayServerError(

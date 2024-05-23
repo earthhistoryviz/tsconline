@@ -14,8 +14,28 @@ import { OAuth2Client } from "google-auth-library";
 import { Email, NewUser, NewVerification, UpdatedUser } from "./types.js";
 import { sendEmail } from "./send-email.js";
 import md5 from "md5";
+import dotenv from "dotenv";
 
 const emailTestRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const googleRecaptchaBotThreshold = 0.5;
+dotenv.config();
+
+async function checkRecaptchaToken(token: string): Promise<number> {
+  try {
+    const response = await fetch(
+      `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`,
+      { method: "POST" }
+    );
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error("Recaptcha failed");
+    }
+    return data.score;
+  } catch (error) {
+    console.error("Recaptcha error:", error);
+    throw new Error("Recaptcha failed");
+  }
+}
 
 export const sessionCheck = async function sessionCheck(request: FastifyRequest, reply: FastifyReply) {
   const uuid = request.session.get("uuid");
@@ -36,12 +56,12 @@ export const accountRecovery = async function accountRecovery(
   reply: FastifyReply
 ) {
   const { token, email } = request.body;
-  if (!token || !email || emailTestRegex.test(email)) {
-    reply.status(400).send({ error: "No token or email" });
-    return;
-  }
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     reply.status(500).send({ error: "Email service not configured" });
+    return;
+  }
+  if (!token || !email || !emailTestRegex.test(email)) {
+    reply.status(400).send({ error: "No token or email" });
     return;
   }
   try {
@@ -60,19 +80,30 @@ export const accountRecovery = async function accountRecovery(
     if (!user) {
       throw new Error("User not found");
     }
-    const randomPassword = randomBytes(16).toString("hex");
+    const passwordToken = randomBytes(16).toString("hex") + md5(user.uuid);
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1);
+    await deleteVerification({ userId, reason: "password" });
+    const passwordVerification: NewVerification = {
+      userId: userId,
+      token: passwordToken,
+      expiresAt: expiresAt.toISOString(),
+      reason: "password"
+    };
+    await createVerification(passwordVerification);
     const newEmail: Email = {
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Account Recovery",
       preHeader: "Action Required: Reset your password now",
       title: "Account Recovery",
-      message: `We received a request to invalidate your account credentials. Tap the button below to reset your password. If you did not request this change or need further assistance, please contact our support team.`,
-      link: `${process.env.APP_URL || "http://localhost:5173"}/forgot-password`,
+      message: `We received a request to invalidate your account credentials. Tap the button below to reset your password. You will not be able to access your account until you have reset your password. If you did not request this change or need further assistance, please contact our support team.`,
+      link: `${process.env.APP_URL || "http://localhost:5173"}/reset-password?token=${passwordToken}`,
       buttonText: "Reset Password",
       action: "Account Recovery"
     };
     await sendEmail(newEmail);
+    const randomPassword = randomBytes(16).toString("hex");
     await updateUser(
       { userId },
       { email: email, emailVerified: 1, hashedPassword: await hash(randomPassword, 10), invalidateSession: 1 }
@@ -87,24 +118,29 @@ export const accountRecovery = async function accountRecovery(
 };
 
 export const resetEmail = async function resetEmail(
-  request: FastifyRequest<{ Body: { newEmail: string } }>,
+  request: FastifyRequest<{ Body: { newEmail: string; recaptchaToken: string } }>,
   reply: FastifyReply
 ) {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    reply.status(500).send({ error: "Email service not configured" });
+    return;
+  }
   const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "Not logged in" });
     return;
   }
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    reply.status(500).send({ error: "Email service not configured" });
-    return;
-  }
-  const { newEmail } = request.body;
-  if (!newEmail || !emailTestRegex.test(newEmail)) {
+  const { newEmail, recaptchaToken } = request.body;
+  if (!newEmail || !emailTestRegex.test(newEmail) || !recaptchaToken) {
     reply.status(400).send({ error: "Invalid form" });
     return;
   }
   try {
+    const score = await checkRecaptchaToken(recaptchaToken);
+    if (score < googleRecaptchaBotThreshold) {
+      reply.status(422).send({ error: "Recaptcha failed" });
+      return;
+    }
     const userRow = (await findUser({ uuid }))[0];
     if (!userRow) {
       throw new Error("User not found");
@@ -215,15 +251,20 @@ export const resetEmail = async function resetEmail(
 };
 
 export const resetPassword = async function resetPassword(
-  request: FastifyRequest<{ Body: { token: string; password: string } }>,
+  request: FastifyRequest<{ Body: { token: string; password: string; recaptchaToken: string } }>,
   reply: FastifyReply
 ) {
-  const { token, password } = request.body;
-  if (!password) {
+  const { token, password, recaptchaToken } = request.body;
+  if (!password || !token || !recaptchaToken) {
     reply.status(400).send({ error: "Invalid form" });
     return;
   }
   try {
+    const score = await checkRecaptchaToken(recaptchaToken);
+    if (score < googleRecaptchaBotThreshold) {
+      reply.status(422).send({ error: "Recaptcha failed" });
+      return;
+    }
     const verificationRow = (await findVerification({ token }))[0];
     if (!verificationRow || verificationRow.reason !== "password") {
       reply.status(404).send({ error: "Password reset token not found" });
@@ -252,19 +293,24 @@ export const resetPassword = async function resetPassword(
 };
 
 export const sendResetPasswordEmail = async function sendResetPasswordEmail(
-  request: FastifyRequest<{ Body: { email: string } }>,
+  request: FastifyRequest<{ Body: { email: string; recaptchaToken: string } }>,
   reply: FastifyReply
 ) {
-  const email = request.body.email;
-  if (!email || !emailTestRegex.test(email)) {
-    reply.status(400).send({ error: "Invalid form" });
-    return;
-  }
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     reply.status(500).send({ error: "Email service not configured" });
     return;
   }
+  const { email, recaptchaToken } = request.body;
+  if (!email || !emailTestRegex.test(email) || !recaptchaToken) {
+    reply.status(400).send({ error: "Invalid form" });
+    return;
+  }
   try {
+    const score = await checkRecaptchaToken(recaptchaToken);
+    if (score < googleRecaptchaBotThreshold) {
+      reply.status(422).send({ error: "Recaptcha failed" });
+      return;
+    }
     const userRow = (await findUser({ email }))[0];
     if (!userRow) {
       reply.send({ message: "Email sent" });
@@ -317,19 +363,24 @@ export const sendResetPasswordEmail = async function sendResetPasswordEmail(
 };
 
 export const resendVerificationEmail = async function resendVerificationEmail(
-  request: FastifyRequest<{ Body: { email: string } }>,
+  request: FastifyRequest<{ Body: { email: string; recaptchaToken: string } }>,
   reply: FastifyReply
 ) {
-  const email = request.body.email;
-  if (!email || !emailTestRegex.test(email)) {
-    reply.status(400).send({ error: "Invalid form" });
-    return;
-  }
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     reply.status(500).send({ error: "Email service not configured" });
     return;
   }
+  const { email, recaptchaToken } = request.body;
+  if (!email || !emailTestRegex.test(email) || !recaptchaToken) {
+    reply.status(400).send({ error: "Invalid form" });
+    return;
+  }
   try {
+    const score = await checkRecaptchaToken(recaptchaToken);
+    if (score < googleRecaptchaBotThreshold) {
+      reply.status(422).send({ error: "Recaptcha failed" });
+      return;
+    }
     const userRow = (await findUser({ email }))[0];
     if (!userRow) {
       reply.send({ message: "Email sent" });
@@ -412,19 +463,24 @@ export const verifyEmail = async function verifyEmail(
 };
 
 export const signup = async function signup(
-  request: FastifyRequest<{ Body: { username: string; password: string; email: string } }>,
+  request: FastifyRequest<{ Body: { username: string; password: string; email: string; recaptchaToken: string } }>,
   reply: FastifyReply
 ) {
-  const { username, password, email } = request.body;
-  if (!username || !password || !email || !emailTestRegex.test(email)) {
-    reply.status(400).send({ error: "Invalid form" });
-    return;
-  }
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     reply.status(500).send({ error: "Email service not configured" });
     return;
   }
+  const { username, password, email, recaptchaToken } = request.body;
+  if (!username || !password || !email || !emailTestRegex.test(email) || !recaptchaToken) {
+    reply.status(400).send({ error: "Invalid form" });
+    return;
+  }
   try {
+    const score = await checkRecaptchaToken(recaptchaToken);
+    if (score < googleRecaptchaBotThreshold) {
+      reply.status(422).send({ error: "Recaptcha failed" });
+      return;
+    }
     const check = await db
       .selectFrom("users")
       .selectAll()
@@ -480,15 +536,21 @@ export const signup = async function signup(
 };
 
 export const login = async function login(
-  request: FastifyRequest<{ Body: { username: string; password: string } }>,
+  request: FastifyRequest<{ Body: { username: string; password: string; recaptchaToken: string } }>,
   reply: FastifyReply
 ) {
-  const { username, password } = request.body;
-  if (!username || !password) {
+  const { username, password, recaptchaToken } = request.body;
+  if (!username || !password || !recaptchaToken) {
     reply.status(400).send({ error: "Invalid form" });
     return;
   }
   try {
+    const score = await checkRecaptchaToken(recaptchaToken);
+    // the score is a number between 0 and 1 that indicates the likelihood that the user is a bot
+    if (score < googleRecaptchaBotThreshold) {
+      reply.status(422).send({ error: "Recaptcha failed" });
+      return;
+    }
     const userRow = (await findUser({ username }))[0];
     if (!userRow) {
       reply.status(401).send({ error: "Incorrect username or password" });
@@ -516,20 +578,30 @@ export const login = async function login(
 };
 
 export const googleLogin = async function googleLogin(
-  request: FastifyRequest<{ Body: { credential: string } }>,
+  request: FastifyRequest<{ Body: { credential: string; recaptchaToken: string } }>,
   reply: FastifyReply
 ) {
-  const client = new OAuth2Client("1010066768032-cfp1hg2ad9euid20vjllfdqj18ki7hmb.apps.googleusercontent.com");
-  const ticket = await client.verifyIdToken({
-    idToken: request.body.credential,
-    audience: "1010066768032-cfp1hg2ad9euid20vjllfdqj18ki7hmb.apps.googleusercontent.com"
-  });
-  const payload = ticket.getPayload();
-  if (!payload || !payload.email) {
-    reply.status(400).send({ error: "Invalid Google Credential" });
+  const { credential, recaptchaToken } = request.body;
+  if (!credential || !recaptchaToken) {
+    reply.status(400).send({ error: "Invalid form" });
     return;
   }
   try {
+    const score = await checkRecaptchaToken(recaptchaToken);
+    if (score < googleRecaptchaBotThreshold) {
+      reply.status(422).send({ error: "Recaptcha failed" });
+      return;
+    }
+    const client = new OAuth2Client("1010066768032-cfp1hg2ad9euid20vjllfdqj18ki7hmb.apps.googleusercontent.com");
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: "1010066768032-cfp1hg2ad9euid20vjllfdqj18ki7hmb.apps.googleusercontent.com"
+    });
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) {
+      reply.status(400).send({ error: "Invalid Google Credential" });
+      return;
+    }
     const userRow = (await findUser({ email: payload.email }))[0];
     if (userRow) {
       const { username, uuid } = userRow;

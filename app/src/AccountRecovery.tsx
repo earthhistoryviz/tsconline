@@ -46,15 +46,14 @@ export const AccountRecovery: React.FC = observer(() => {
       if (response.ok) {
         actions.removeAllErrors();
         actions.pushSnackbar("Please check your inbox for details on resetting your password.", "info");
-        navigate("/reset-password");
       } else {
         displayServerError(
           await response.json(),
           ErrorCodes.UNABLE_TO_RECOVER_ACCOUNT,
           ErrorMessages[ErrorCodes.UNABLE_TO_RECOVER_ACCOUNT]
         );
-        navigate("/home");
       }
+      navigate("/home");
     } catch {
       displayServerError(
         null,

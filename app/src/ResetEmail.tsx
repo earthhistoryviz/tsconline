@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { context } from "./state";
 import { observer } from "mobx-react-lite";
 import Avatar from "@mui/material/Avatar";
@@ -11,7 +11,7 @@ import Box from "@mui/material/Box";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "react-router";
-import { fetcher } from "./util";
+import { fetcher, loadRecaptcha, removeRecaptcha, executeRecaptcha } from "./util";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { displayServerError } from "./state/actions/util-actions";
 import Container from "@mui/material/Container";
@@ -24,6 +24,13 @@ export const ResetEmail: React.FC = observer(() => {
   const { actions } = useContext(context);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    loadRecaptcha();
+    return () => {
+      removeRecaptcha();
+    };
+  }, []);
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.currentTarget;
@@ -35,13 +42,18 @@ export const ResetEmail: React.FC = observer(() => {
     setLoading(true);
     setShowForm(false);
     try {
+      const recaptchaToken = await executeRecaptcha("resetemail");
+      if (!recaptchaToken) {
+        actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
+        return;
+      }
       const response = await fetcher("/auth/reset-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         credentials: "include",
-        body: JSON.stringify({ newEmail: form.email.value })
+        body: JSON.stringify({ newEmail: form.email.value, recaptchaToken })
       });
       if (response.ok) {
         actions.removeAllErrors();
@@ -56,6 +68,13 @@ export const ResetEmail: React.FC = observer(() => {
           case 401:
             errorCode = ErrorCodes.NOT_LOGGED_IN;
             navigate("/login");
+            break;
+          case 422:
+            errorCode = ErrorCodes.RECAPTCHA_FAILED;
+            break;
+          case 429:
+            actions.removeAllErrors();
+            displayServerError(null, ErrorCodes.TOO_MANY_REQUESTS, ErrorMessages[ErrorCodes.TOO_MANY_REQUESTS]);
             break;
         }
         setShowForm(true);
