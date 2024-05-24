@@ -22,6 +22,10 @@ export default function LoadSettings() {
       return;
     }
     const file = e.target.files[0];
+    if (file.name.substring(file.name.length - 4, file.name.length) !== ".tsc") {
+      actions.pushSnackbar("Failed to load settings: file does not have .tsc extension", "warning");
+      return;
+    }
     const data = await file.text();
     try {
       actions.applySettings(xmlToJson(data));
@@ -31,7 +35,7 @@ export default function LoadSettings() {
       return;
     }
     actions.pushSnackbar("Successfully loaded settings from " + file.name + "!", "success");
-    actions.setLoadSaveFilename(file.name);
+    actions.setLoadSaveFilename(file.name.substring(0, file.name.length - 4)); //remove extension
   }
 
   const handleClickOpen = () => {

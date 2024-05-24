@@ -73,7 +73,7 @@ export type State = {
 };
 
 export const state = observable<State>({
-  loadSaveFilename: "settings.tsc",
+  loadSaveFilename: "settings", //name without extension (.tsc)
   isLoggedIn: false,
   chartLoading: false,
   madeChart: false,

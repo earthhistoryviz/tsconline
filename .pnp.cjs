@@ -1544,6 +1544,18 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["@fastify/rate-limit", [\
+      ["npm:9.1.0", {\
+        "packageLocation": "./.yarn/cache/@fastify-rate-limit-npm-9.1.0-5d8a5bfdc0-ffae0e4c9c.zip/node_modules/@fastify/rate-limit/",\
+        "packageDependencies": [\
+          ["@fastify/rate-limit", "npm:9.1.0"],\
+          ["@lukeed/ms", "npm:2.0.2"],\
+          ["fastify-plugin", "npm:4.5.1"],\
+          ["toad-cache", "npm:3.7.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["@fastify/secure-session", [\
       ["npm:7.5.1", {\
         "packageLocation": "./.yarn/cache/@fastify-secure-session-npm-7.5.1-fad792d208-9e3f520890.zip/node_modules/@fastify/secure-session/",\
@@ -3100,6 +3112,7 @@ const RAW_RUNTIME_STATE =
           ["@fastify/compress", "npm:7.0.3"],\
           ["@fastify/cors", "npm:9.0.1"],\
           ["@fastify/multipart", "npm:8.2.0"],\
+          ["@fastify/rate-limit", "npm:9.1.0"],\
           ["@fastify/secure-session", "npm:7.5.1"],\
           ["@fastify/static", "npm:6.12.0"],\
           ["@tsconline/shared", "workspace:shared"],\
@@ -3111,6 +3124,7 @@ const RAW_RUNTIME_STATE =
           ["@types/md5", "npm:2.3.5"],\
           ["@types/nearest-color", "npm:0.4.1"],\
           ["@types/node", "npm:20.12.12"],\
+          ["@types/node-cron", "npm:3.0.11"],\
           ["@types/nodemailer", "npm:6.4.15"],\
           ["@types/pump", "npm:1.1.3"],\
           ["@xmldom/xmldom", "npm:0.8.10"],\
@@ -3130,6 +3144,7 @@ const RAW_RUNTIME_STATE =
           ["md5", "npm:2.3.0"],\
           ["mkdirp", "npm:3.0.1"],\
           ["nearest-color", "npm:0.4.4"],\
+          ["node-cron", "npm:3.0.3"],\
           ["nodemailer", "npm:6.9.13"],\
           ["nodemon", "npm:2.0.22"],\
           ["p-map", "npm:6.0.0"],\
@@ -3452,6 +3467,15 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["@types/node", "npm:20.12.12"],\
           ["undici-types", "npm:5.26.5"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["@types/node-cron", [\
+      ["npm:3.0.11", {\
+        "packageLocation": "./.yarn/cache/@types-node-cron-npm-3.0.11-6930d3a671-a73f69bcca.zip/node_modules/@types/node-cron/",\
+        "packageDependencies": [\
+          ["@types/node-cron", "npm:3.0.11"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -9630,6 +9654,16 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["node-cron", [\
+      ["npm:3.0.3", {\
+        "packageLocation": "./.yarn/cache/node-cron-npm-3.0.3-fd539f5b81-f088043da4.zip/node_modules/node-cron/",\
+        "packageDependencies": [\
+          ["node-cron", "npm:3.0.3"],\
+          ["uuid", "npm:8.3.2"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["node-domexception", [\
       ["npm:1.0.0", {\
         "packageLocation": "./.yarn/cache/node-domexception-npm-1.0.0-e1e813b76f-e332522f24.zip/node_modules/node-domexception/",\
@@ -12799,6 +12833,13 @@ const RAW_RUNTIME_STATE =
       }]\
     ]],\
     ["uuid", [\
+      ["npm:8.3.2", {\
+        "packageLocation": "./.yarn/cache/uuid-npm-8.3.2-eca0baba53-9a5f7aa1d6.zip/node_modules/uuid/",\
+        "packageDependencies": [\
+          ["uuid", "npm:8.3.2"]\
+        ],\
+        "linkType": "HARD"\
+      }],\
       ["npm:9.0.1", {\
         "packageLocation": "./.yarn/cache/uuid-npm-9.0.1-39a8442bc6-9d0b6adb72.zip/node_modules/uuid/",\
         "packageDependencies": [\
