@@ -349,11 +349,14 @@ export type SubRangeInfo = {
   popup: string;
 };
 
+export type SubEventType = "FAD" | "LAD" | "EVENT" | "EVENTS";
+
 export type SubEventInfo = {
   label: string;
   age: number;
   lineStyle: "solid" | "dashed" | "dotted";
   popup: string;
+  subEventType: SubEventType;
 };
 
 export type SubFaciesInfo = {
@@ -689,6 +692,7 @@ export function assertSubEventInfo(o: any): asserts o is SubEventInfo {
   if (typeof o.popup !== "string") throwError("SubEventInfo", "popup", "string", o.popup);
   if (typeof o.lineStyle !== "string" || !/(^dotted|dashed|solid)$/.test(o.lineStyle))
     throwError("SubEventInfo", "lineStyle", "dotted | dashed | solid", o.lineStyle);
+  if (typeof o.subEventType !== "string" || !/(^FAD|LAD|EVENT)$/.test(o.subEventType)) throwError("SubEventInfo", "subEventType", "FAD | LAD | EVENT", o.subEventType);
 }
 
 export function assertColor(o: any): asserts o is Color {
@@ -1157,6 +1161,12 @@ export function assertVertBounds(vertBounds: any): asserts vertBounds is VertBou
   if (typeof vertBounds.scale !== "number") {
     throw new Error("VertBounds must have a scale number property");
   }
+}
+
+export function isSubEventType(o: any): o is SubEventType {
+  if (typeof o !== "string") return false;
+  if (!/^(EVENT|FAD|LAD|EVENTS)$/.test(o)) return false;
+  return true;
 }
 
 export function assertRectBounds(rectBounds: any): asserts rectBounds is RectBounds {
