@@ -1,4 +1,4 @@
-import fastify from "fastify";
+import fastify, { FastifyReply, FastifyRequest, RawReplyDefaultExpression, RawRequestDefaultExpression } from "fastify";
 import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
@@ -35,6 +35,9 @@ const server = fastify({
     }
   }*/
 });
+
+
+
 
 // Load up all the chart configs found in presets:
 const presets = await loadPresets();
