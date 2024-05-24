@@ -563,9 +563,13 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
       if (isSubEventType(parsedSubEventType)) {
         subEventType = parsedSubEventType;
       } else if (!subEventType) {
-        console.log(chalk.yellow.dim(`Error found while processing event block: ${event.name}, no subEventType of FAD, LAD, EVENTS, or EVENT found, skipping`));
+        console.log(
+          chalk.yellow.dim(
+            `Error found while processing event block: ${event.name}, no subEventType of FAD, LAD, EVENTS, or EVENT found, skipping`
+          )
+        );
         inEventBlock = false;
-        Object.assign(event, {...createDefaultColumnHeaderProps(), width: 150, on: false, subEventInfo: []});
+        Object.assign(event, { ...createDefaultColumnHeaderProps(), width: 150, on: false, subEventInfo: [] });
         continue;
       }
       const subEventInfo = processEvent(line, subEventType);

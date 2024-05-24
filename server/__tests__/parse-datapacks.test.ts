@@ -33,6 +33,10 @@ jest.mock("@tsconline/shared", () => ({
   assertSubBlockInfo: jest.fn().mockReturnValue(true),
   assertSubRangeInfo: jest.fn().mockReturnValue(true),
   assertDatapackParsingPack: jest.fn().mockReturnValue(true),
+  isSubEventType: jest.fn().mockImplementation((o) => {
+    if (typeof o !== "string") return false;
+    return /^(FAD|LAD|EVENT|EVENTS)$/.test(o);
+  }),
   isSubFreehandInfo: jest.fn().mockImplementation((o) => {
     if (typeof o !== "object") return false;
     if (typeof o.baseAge !== "number") return false;
@@ -261,24 +265,33 @@ describe("process blocks line tests", () => {
 
 describe("process event line tests", () => {
   test.each([
-    ["\tlabel\t120", { label: "label", age: 120, lineStyle: "solid", popup: "" }],
-    ["\tlabel\t120\t\tpopup", { label: "label", age: 120, lineStyle: "solid", popup: "popup" }],
-    ["\tlabel\t140\tdashed\tpopup", { label: "label", age: 140, lineStyle: "dashed", popup: "popup" }],
-    ["\tlabel\t160\tdotted\tpopup", { label: "label", age: 160, lineStyle: "dotted", popup: "popup" }],
-    ["\tlabel\t180\tbadLineStyle\tpopup", { label: "label", age: 180, lineStyle: "solid", popup: "popup" }],
+    ["\tlabel\t120", { label: "label", age: 120, lineStyle: "solid", popup: "", subEventType: "FAD" }],
+    ["\tlabel\t120\t\tpopup", { label: "label", age: 120, lineStyle: "solid", popup: "popup", subEventType: "FAD" }],
+    [
+      "\tlabel\t140\tdashed\tpopup",
+      { label: "label", age: 140, lineStyle: "dashed", popup: "popup", subEventType: "FAD" }
+    ],
+    [
+      "\tlabel\t160\tdotted\tpopup",
+      { label: "label", age: 160, lineStyle: "dotted", popup: "popup", subEventType: "FAD" }
+    ],
+    [
+      "\tlabel\t180\tbadLineStyle\tpopup",
+      { label: "label", age: 180, lineStyle: "solid", popup: "popup", subEventType: "FAD" }
+    ],
     ["\tlabel", null],
     ["\tlabel\t\t\t\t", null],
     ["", null]
   ])("should process '%s'", (line, expected) => {
     if (expected === null) {
-      expect(processEvent(line)).toBeNull();
+      expect(processEvent(line, "FAD")).toBeNull();
     } else {
-      expect(processEvent(line)).toEqual(expected);
+      expect(processEvent(line, "FAD")).toEqual(expected);
     }
   });
   it("should throw error on NaN age", () => {
     const line = "\tlabel\tbadNumber";
-    expect(() => processEvent(line)).toThrow();
+    expect(() => processEvent(line, "LAD")).toThrow();
   });
 });
 
