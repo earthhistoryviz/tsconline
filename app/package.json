@@ -7,7 +7,7 @@
     "@hello-pangea/color-picker": "^3.2.2",
     "@mui/icons-material": "^5.11.9",
     "@mui/joy": "^5.0.0-alpha.79",
-    "@mui/material": "^5.15.18",
+    "@mui/material": "^5.15.14",
     "@react-oauth/google": "^0.12.1",
     "@szhsin/react-menu": "^4.1.0",
     "@tsconline/shared": "1.0.0",
@@ -29,13 +29,14 @@
     "react-router-dom": "^6.8.1",
     "react-zoom-pan-pinch": "^3.3.0",
     "simplebar-core": "^1.2.4",
-    "simplebar-react": "^3.2.4"
+    "simplebar-react": "^3.2.4",
+    "valid-filename": "^4.0.0"
   },
   "devDependencies": {
     "@types/color": "^3.0.6",
     "@types/dompurify": "^3",
     "@types/file-saver": "^2.0.7",
-    "@types/lodash": "^4",
+    "@types/lodash": "^4.17.4",
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
     "@vitejs/plugin-react": "^4.2.1",

@@ -9,8 +9,8 @@ import { Datapacks } from "./settings_tabs/Datapack";
 import { useTheme } from "@mui/material/styles";
 import { TSCTabs, TSCTab } from "./components";
 import { Typography } from "@mui/material";
-import SaveSettings from "./SettingsTabs/SaveSettings";
-import LoadSettings from "./SettingsTabs/LoadSettings";
+import SaveSettings from "./settings_tabs/SaveSettings";
+import LoadSettings from "./settings_tabs/LoadSettings";
 import "./Settings.css";
 
 export const Settings = observer(function Settings() {
