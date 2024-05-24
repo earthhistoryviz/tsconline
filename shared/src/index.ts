@@ -692,7 +692,8 @@ export function assertSubEventInfo(o: any): asserts o is SubEventInfo {
   if (typeof o.popup !== "string") throwError("SubEventInfo", "popup", "string", o.popup);
   if (typeof o.lineStyle !== "string" || !/(^dotted|dashed|solid)$/.test(o.lineStyle))
     throwError("SubEventInfo", "lineStyle", "dotted | dashed | solid", o.lineStyle);
-  if (typeof o.subEventType !== "string" || !/(^FAD|LAD|EVENT)$/.test(o.subEventType)) throwError("SubEventInfo", "subEventType", "FAD | LAD | EVENT", o.subEventType);
+  if (typeof o.subEventType !== "string" || !/(^FAD|LAD|EVENT)$/.test(o.subEventType))
+    throwError("SubEventInfo", "subEventType", "FAD | LAD | EVENT", o.subEventType);
 }
 
 export function assertColor(o: any): asserts o is Color {

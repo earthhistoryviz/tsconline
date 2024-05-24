@@ -1,3 +1,11 @@
+export type WindowStats = {
+  windowStart: number;
+  windowEnd: number;
+  value: number;
+};
+
+export type DataMiningStatisticApproach = "average" | "minimum" | "maximum" | "rateOfChange" | "frequency";
+
 export type FaciesOptions = {
   faciesAge: number;
   dotSize: number;
@@ -75,6 +83,7 @@ export function equalTimeSettings(a: TimeSettings, b: TimeSettings): boolean {
     Object.keys(a).every((key) => {
       const aValue = a[key];
       const bValue = b[key];
+      if (bValue === undefined || aValue === undefined) return false;
       return (
         aValue.selectedStage === bValue.selectedStage &&
         aValue.topStageAge === bValue.topStageAge &&
@@ -86,6 +95,11 @@ export function equalTimeSettings(a: TimeSettings, b: TimeSettings): boolean {
       );
     })
   );
+}
+export function assertDataMiningStatisticApproach(value: string): asserts value is DataMiningStatisticApproach {
+  if (/^(average|minimum|maximum|rateOfChange|frequency)$/.test(value) === false) {
+    throw new Error(`Invalid statistic: ${value}`);
+  }
 }
 export function equalChartSettings(a: ChartSettings, b: ChartSettings): boolean {
   return (
