@@ -205,6 +205,7 @@ export async function parseDatapacks(
   const columnInfo = columnInfoArray;
   loneColumns.forEach((column) => {
     if (isChild.has(column.name)) return;
+    column.parent = "Chart Title";
     columnInfo.push(column);
   });
   columnInfo.unshift({

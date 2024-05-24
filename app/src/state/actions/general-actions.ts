@@ -385,6 +385,12 @@ export const setDatapackConfig = action(
         if (!datapack || !state.datapackIndex[datapack])
           throw new Error(`File requested doesn't exist on server: ${datapack}`);
         const datapackParsingPack = state.datapackIndex[datapack]!;
+        if (
+          ((datapackParsingPack.topAge || datapackParsingPack.topAge === 0) &&
+            (datapackParsingPack.baseAge || datapackParsingPack.baseAge === 0)) ||
+          datapackParsingPack.verticalScale
+        )
+          foundDefaultAge = true;
         if (unitMap.has(datapackParsingPack.ageUnits)) {
           const existingUnitColumnInfo = unitMap.get(datapackParsingPack.ageUnits)!;
           const newUnitChart = datapackParsingPack.columnInfo;
@@ -395,13 +401,9 @@ export const setDatapackConfig = action(
           }
           existingUnitColumnInfo.children = existingUnitColumnInfo.children.concat(columnsToAdd);
         } else {
-          if (
-            ((datapackParsingPack.topAge || datapackParsingPack.topAge === 0) &&
-              (datapackParsingPack.baseAge || datapackParsingPack.baseAge === 0)) ||
-            datapackParsingPack.verticalScale
-          )
-            foundDefaultAge = true;
-          unitMap.set(datapackParsingPack.ageUnits, cloneDeep(datapackParsingPack.columnInfo));
+          const columnInfo = cloneDeep(datapackParsingPack.columnInfo);
+          columnInfo.parent = columnRoot.name;
+          unitMap.set(datapackParsingPack.ageUnits, columnInfo);
         }
         const mapPack = state.mapPackIndex[datapack]!;
         if (!mapInfo) mapInfo = mapPack.mapInfo;
