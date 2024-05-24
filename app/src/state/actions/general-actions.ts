@@ -390,6 +390,9 @@ export const setDatapackConfig = action(
           const newUnitChart = datapackParsingPack.columnInfo;
           // slice off the existing unit column
           const columnsToAdd = cloneDeep(newUnitChart.children.slice(1));
+          for (const child of columnsToAdd) {
+            child.parent = existingUnitColumnInfo.name;
+          }
           existingUnitColumnInfo.children = existingUnitColumnInfo.children.concat(columnsToAdd);
         } else {
           if (

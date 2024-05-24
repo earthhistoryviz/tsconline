@@ -240,6 +240,7 @@ export type PointSettings = {
 export type DataMiningSettings = {
   windowSize: number;
   stepSize: number;
+  isDataMiningColumn: boolean;
 };
 
 export type ColumnInfo = {
@@ -267,7 +268,7 @@ export type ColumnInfo = {
 };
 
 export type RangeSort = "first occurrence" | "last occurrence" | "alphabetical";
-export type EventFrequency = "FAD" | "LAD" | "Combined";
+export type EventFrequency = "FAD" | "LAD" | "Combined Events";
 
 export type EventSettings = {
   type: EventType;
@@ -516,6 +517,8 @@ export function assertDataMiningSettings(o: any): asserts o is DataMiningSetting
   if (!o || typeof o !== "object") throw new Error("DataMiningSettings must be a non-null object");
   if (typeof o.windowSize !== "number") throwError("DataMiningSettings", "windowSize", "number", o.windowSize);
   if (typeof o.stepSize !== "number") throwError("DataMiningSettings", "stepSize", "number", o.stepSize);
+  if (typeof o.isDataMiningColumn !== "boolean")
+    throwError("DataMiningSettings", "isDataMiningColumn", "boolean", o.isDataMiningColumn);
 }
 
 export function isDataMiningPointDataType(o: any): o is DataMiningPointDataType {
@@ -539,7 +542,7 @@ export function assertEventSettings(o: any): asserts o is EventSettings {
 }
 
 export function isEventFrequency(o: any): o is EventFrequency {
-  return /^(FAD|LAD|Combined)$/.test(o);
+  return /^(FAD|LAD|Combined Events)$/.test(o);
 }
 
 export function assertMapPackInfoChunk(o: any): asserts o is MapPackInfoChunk {

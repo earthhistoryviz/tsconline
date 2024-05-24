@@ -69,19 +69,26 @@ export const EventDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
   assertEventSettings(eventSettings);
   const handleFrequencyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!isEventFrequency(event.target.value)) return;
+    if (eventSettings.frequency !== null) actions.removeDataMiningColumn(column, eventSettings.frequency);
     actions.setEventColumnSettings(eventSettings, { frequency: event.target.value });
+    actions.addDataMiningColumn(column, event.target.value);
+  };
+  const clearDataMiningColumn = () => {
+    if (eventSettings.frequency === null) return;
+    actions.setEventColumnSettings(eventSettings, { frequency: null });
+    actions.removeDataMiningColumn(column, eventSettings.frequency);
   };
   return (
     <Box className="data-mining-type-container">
       <TSCRadioGroup
         onChange={handleFrequencyChange}
-        onClear={() => actions.setEventColumnSettings(eventSettings, { frequency: null })}
+        onClear={clearDataMiningColumn}
         name="Event Type"
         value={eventSettings.frequency}
         radioArray={[
           { value: "FAD", label: "Frequency of FAD" },
           { value: "LAD", label: "Frequency of LAD" },
-          { value: "Combined", label: "Combined Events" }
+          { value: "Combined Events", label: "Combined Events" }
         ]}
       />
     </Box>
@@ -95,13 +102,21 @@ export const PointDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
   assertPointSettings(pointSettings);
   const handleDataTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!isDataMiningPointDataType(event.target.value)) return;
+    if (pointSettings.dataMiningPointDataType !== null)
+      actions.removeDataMiningColumn(column, pointSettings.dataMiningPointDataType);
     actions.setPointColumnSettings(pointSettings, { dataMiningPointDataType: event.target.value });
+    actions.addDataMiningColumn(column, event.target.value);
+  };
+  const clearDataMiningColumn = () => {
+    if (pointSettings.dataMiningPointDataType === null) return;
+    actions.setPointColumnSettings(pointSettings, { dataMiningPointDataType: null });
+    actions.removeDataMiningColumn(column, pointSettings.dataMiningPointDataType);
   };
   return (
     <Box className="data-mining-type-container">
       <TSCRadioGroup
         onChange={handleDataTypeChange}
-        onClear={() => actions.setPointColumnSettings(pointSettings, { dataMiningPointDataType: null })}
+        onClear={clearDataMiningColumn}
         name="Data Type to Plot"
         value={pointSettings.dataMiningPointDataType}
         radioArray={[

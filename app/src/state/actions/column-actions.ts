@@ -1,4 +1,4 @@
-import { action } from "mobx";
+import { action, observable } from "mobx";
 import { state } from "../state";
 import {
   ColumnInfo,
@@ -13,7 +13,8 @@ import {
   assertPointColumnInfoTSC,
   assertPointSettings,
   calculateAutoScale,
-  convertPointTypeToPointShape
+  convertPointTypeToPointShape,
+  defaultPointSettings
 } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { pushSnackbar } from "./general-actions";
@@ -201,6 +202,78 @@ export const searchColumns = action(async (searchTerm: string) => {
       }
     }
   });
+});
+
+export const addDataMiningColumn = action((column: ColumnInfo, type: string) => {
+  const dataMiningColumnName = type + " for " + column.name;
+  if (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") {
+    console.log("WARNING: tried to add a data mining column to a column that is not an event or point column");
+    return;
+  }
+  switch (column.columnDisplayType) {
+    case "Event":
+      assertEventSettings(column.columnSpecificSettings);
+      break;
+    default:
+      assertPointSettings(column.columnSpecificSettings);
+      break;
+  }
+  if (!column.parent) {
+    console.log("WARNING: tried to add a data mining column to a column with no parent");
+    return;
+  }
+  const parent = state.settingsTabs.columnHashMap.get(column.parent);
+  if (!parent) {
+    console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
+    return;
+  }
+  const index = parent.children.findIndex((child) => child.name === column.name);
+  if (index === -1) {
+    console.log("WARNING: ", column.name, "not found in parent's children when attempting to add data mining column");
+    return;
+  }
+  const dataMiningColumn: ColumnInfo = observable({
+    ...cloneDeep(column),
+    name: dataMiningColumnName,
+    editName: dataMiningColumnName,
+    columnDisplayType: "Point",
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    },
+    columnSpecificSettings: {
+      ...cloneDeep(defaultPointSettings),
+      minX: 0,
+      maxX: 5,
+      // TODO change these to auto scale
+      lowerRange: 0,
+      upperRange: 5,
+      scaleStep: 1,
+      isDataMiningColumn: true
+    }
+  });
+  parent.children.splice(index + 1, 0, dataMiningColumn);
+  state.settingsTabs.columnHashMap.set(dataMiningColumnName, dataMiningColumn);
+});
+
+export const removeDataMiningColumn = action((column: ColumnInfo, type: string) => {
+  const columnToRemove = type + " for " + column.name;
+  if (!column.parent) {
+    console.log("WARNING: tried to remove a data mining column from a column with no parent");
+    return;
+  }
+  const parent = state.settingsTabs.columnHashMap.get(column.parent);
+  if (!parent) {
+    console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
+    return;
+  }
+  const index = parent.children.findIndex((child) => child.name === columnToRemove);
+  if (index === -1) {
+    return;
+  }
+  parent.children.splice(index, 1);
+  state.settingsTabs.columnHashMap.delete(columnToRemove);
 });
 
 export const setShowOfAllChildren = action((column: ColumnInfo, isShown: boolean) => {
