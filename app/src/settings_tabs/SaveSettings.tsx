@@ -14,8 +14,10 @@ import { ChartSettings } from "../types";
 import { jsonToXml } from "../state/parse-settings";
 import { IconButton } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
+import isValidFilename from "valid-filename";
 import "./SaveSettings.css";
-export default function SaveSettings() {
+import { observer } from "mobx-react-lite";
+const SaveSettings = observer(() => {
   const { state, actions } = React.useContext(context);
   function saveSettings(filename: string) {
     if (!state.settingsTabs.columns) {
@@ -29,13 +31,13 @@ export default function SaveSettings() {
     const settingsCopy: ChartSettings = cloneDeep(state.settings);
     const blob = new Blob([jsonToXml(columnCopy, settingsCopy)], { type: "text/plain;charset=utf-8" });
     FileSaver.saveAs(blob, filename);
-    actions.pushSnackbar("successfully saved settings!", "success");
+    actions.pushSnackbar("Successfully saved settings!", "success");
   }
   const [open, setOpen] = React.useState(false);
   const handleClickOpen = () => {
     setOpen(true);
   };
-  const handleChange = (e: { target: { value: string } }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     actions.setLoadSaveFilename(e.target.value);
   };
   const handleClose = () => {
@@ -44,17 +46,20 @@ export default function SaveSettings() {
 
   return (
     <React.Fragment>
-      <IconButton className="icon-save-button" onClick={handleClickOpen}>
-        <DownloadIcon className="save-button" />
+      <IconButton className="icon-save-settings-button" onClick={handleClickOpen}>
+        <DownloadIcon className="save-settings-button" />
       </IconButton>
       <Dialog
         open={open}
         onClose={handleClose}
         PaperProps={{
           component: "form",
-          onSubmit: (e: { preventDefault: () => void }) => {
+          onSubmit: (e: React.FormEvent<HTMLFormElement>) => {
             e.preventDefault(); // to stop website from reloading
-            //TODO: check filename format
+            if (!isValidFilename(state.loadSaveFilename)) {
+              actions.pushSnackbar("Filename is not valid", "warning");
+              return;
+            }
             saveSettings(state.loadSaveFilename);
             handleClose();
           }
@@ -85,4 +90,6 @@ export default function SaveSettings() {
       </Dialog>
     </React.Fragment>
   );
-}
+});
+
+export default SaveSettings;

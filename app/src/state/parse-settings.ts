@@ -114,9 +114,11 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
     }
     //these two tags have units, so make an object storing its unit and value
     else if (settingName === "unitsPerMY") {
-      settings[settingName].push({ unit: settingNode.getAttribute("unit")!, text: Number(settingValue) });
+      if (settingNode.getAttribute("unit") !== null)
+        settings[settingName].push({ unit: settingNode.getAttribute("unit")!, text: Number(settingValue) });
     } else if (settingName === "skipEmptyColumns") {
-      settings[settingName].push({ unit: settingNode.getAttribute("unit")!, text: settingValue === "true" });
+      if (settingNode.getAttribute("unit") !== null)
+        settings[settingName].push({ unit: settingNode.getAttribute("unit")!, text: settingValue === "true" });
     } else {
       updateProperty(settings, settingName as keyof ChartSettingsInfoTSC, settingValue);
     }
@@ -487,7 +489,10 @@ function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
   return xml;
 }
 
-function extractColumnType(text: string): string {
+function extractColumnType(text: string): string | undefined {
+  if (text.indexOf(".") === -1 || text.indexOf(":") === -1) {
+    return undefined;
+  }
   return text.substring(text.indexOf(".") + 1, text.indexOf(":"));
 }
 
@@ -568,7 +573,7 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       xml += `${indent}<setting name="pointType" pointType="${column.pointType}"/>\n`;
     } else if (key === "drawExtraColumn" && !keyValue) {
       continue;
-    } else if (key === "type" && extractColumnType(column._id) === "sequence") {
+    } else if (key === "type" && extractColumnType(column._id) === "SequenceColumn") {
       assertSequenceColumnInfoTSC(column);
       xml += `${indent}<setting name="type" type="${column.type}"/>\n`;
     } else if (isRGB(keyValue)) {

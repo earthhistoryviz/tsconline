@@ -18,7 +18,7 @@ export default function LoadSettings() {
   const [isLoading, setIsLoading] = React.useState(false);
   async function loadSettings(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files) {
-      actions.pushSnackbar("failed to load settings: no files uploaded", "info");
+      actions.pushSnackbar("Failed to load settings: no files uploaded", "info");
       return;
     }
     const file = e.target.files[0];
@@ -30,7 +30,7 @@ export default function LoadSettings() {
       actions.pushSnackbar("Failed to load settings: content of " + file.name + " is in wrong format", "info");
       return;
     }
-    actions.pushSnackbar("successfully loaded settings from " + file.name + "!", "success");
+    actions.pushSnackbar("Successfully loaded settings from " + file.name + "!", "success");
     actions.setLoadSaveFilename(file.name);
   }
 
@@ -43,12 +43,9 @@ export default function LoadSettings() {
   };
   const handleClick = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsLoading(true);
-    try {
-      await loadSettings(e);
-    } finally {
-      setIsLoading(false);
-      setOpen(false);
-    }
+    await loadSettings(e);
+    setIsLoading(false);
+    setOpen(false);
   };
 
   const LoadButton = () => {
@@ -70,8 +67,8 @@ export default function LoadSettings() {
   };
   return (
     <>
-      <IconButton className="icon-load-button" onClick={handleClickOpen}>
-        <FileUploadIcon className="load-button" />
+      <IconButton className="icon-load-settings-button" onClick={handleClickOpen}>
+        <FileUploadIcon className="load-settings-button" />
       </IconButton>
 
       <Dialog
@@ -79,11 +76,9 @@ export default function LoadSettings() {
         onClose={handleClose}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description">
-        <DialogTitle id="alert-dialog-title">Load Settings</DialogTitle>
+        <DialogTitle>Load Settings</DialogTitle>
         <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            This will overwrite any changes you&apos;ve made!
-          </DialogContentText>
+          <DialogContentText>This will overwrite any changes you&apos;ve made!</DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button color="warning" onClick={handleClose}>
