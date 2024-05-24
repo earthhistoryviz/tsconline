@@ -92,6 +92,7 @@ export type EventColumnInfoTSC = ColumnBasicInfoTSC & {
   windowSize: number;
   stepSize: number;
   drawExtraColumn: EventFrequency | null;
+  isDataMiningColumn: boolean;
 };
 
 export type ZoneColumnInfoTSC = ColumnBasicInfoTSC & {
@@ -143,6 +144,7 @@ export type PointColumnInfoTSC = ColumnBasicInfoTSC & {
   drawExtraColumn: DataMiningPointDataType | null;
   windowSize: number;
   stepSize: number;
+  isDataMiningColumn: boolean;
 };
 
 export function convertPointTypeToPointShape(type: "rect" | "round" | "tick"): PointShape {
@@ -237,6 +239,8 @@ export function assertEventColumnInfoTSC(o: any): asserts o is EventColumnInfoTS
   if (typeof o.stepSize !== "number") throwError("EventColumnInfoTSC", "stepSize", "number", o.stepSize);
   if (o.drawExtraColumn != null && (typeof o.drawExtraColumn !== "string" || !isEventFrequency(o.drawExtraColumn)))
     throwError("EventColumnInfoTSC", "drawExtraColumn", "string", o.drawExtraColumn);
+  if (typeof o.isDataMiningColumn !== "boolean")
+    throwError("EventColumnInfoTSC", "isDataMiningColumn", "boolean", o.isDataMiningColumn);
   assertColumnBasicInfoTSC(o);
 }
 export function assertSequenceColumnInfoTSC(o: any): asserts o is SequenceColumnInfoTSC {
@@ -294,6 +298,8 @@ export function assertPointColumnInfoTSC(o: any): asserts o is PointColumnInfoTS
     throwError("PointColumnInfoTSC", "drawExtraColumn", "string", o.drawExtraColumn);
   if (typeof o.windowSize !== "number") throwError("PointColumnInfoTSC", "windowSize", "number", o.windowSize);
   if (typeof o.stepSize !== "number") throwError("PointColumnInfoTSC", "stepSize", "number", o.stepSize);
+  if (typeof o.isDataMiningColumn !== "boolean")
+    throwError("PointColumnInfoTSC", "isDataMiningColumn", "boolean", o.isDataMiningColumn);
   assertColumnBasicInfoTSC(o);
 }
 export function assertColumnBasicInfoTSC(o: any): asserts o is ColumnBasicInfoTSC {
