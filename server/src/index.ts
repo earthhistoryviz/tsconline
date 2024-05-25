@@ -1,4 +1,4 @@
-import fastify, { FastifyReply, FastifyRequest, RawReplyDefaultExpression, RawRequestDefaultExpression } from "fastify";
+import fastify from "fastify";
 import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
@@ -35,9 +35,6 @@ const server = fastify({
     }
   }*/
 });
-
-
-
 
 // Load up all the chart configs found in presets:
 const presets = await loadPresets();
@@ -299,7 +296,12 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.NODE_ENV ===
     }
   );
 }
-// Start the server...
+
+server.setNotFoundHandler((request, reply) => {
+  void reply.sendFile("index.html");
+});
+
+//Start the server...
 try {
   await server.listen({
     host: "0.0.0.0", // for this to work in Docker, you need 0.0.0.0

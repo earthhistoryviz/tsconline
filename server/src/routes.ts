@@ -641,5 +641,3 @@ export const fetchTimescale = async function (_request: FastifyRequest, reply: F
     reply.status(500).send({ error: "Internal Server Error" });
   }
 };
-
-
