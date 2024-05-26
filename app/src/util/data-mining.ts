@@ -11,13 +11,13 @@ import { DataMiningStatisticApproach, WindowStats } from "../types";
  */
 export function computeWindowStatistics(
   data: number[],
-  windows: number,
   windowSize: number,
   stat: DataMiningStatisticApproach
 ): WindowStats[] {
-  if (data.length === 0 || windows === 0 || windowSize === 0 || data.some((d) => isNaN(d))) {
+  if (data.length === 0 || windowSize === 0 || data.some((d) => isNaN(d))) {
     return [];
   }
+  const windows = Math.ceil(data.length / windowSize);
   data = data.sort((a, b) => a - b);
   const results: WindowStats[] = [];
   let start = data[0]!;
@@ -50,7 +50,7 @@ export function computeWindowStatistics(
     }
     results.push({ windowStart: start, windowEnd: end, value: value });
     const lastDataPoint = data[data.length - 1];
-    if (!lastDataPoint || end >= lastDataPoint) break;
+    if (!lastDataPoint || end > lastDataPoint) break;
     start = end;
     end = Math.min(end + windowSize, lastDataPoint);
   }

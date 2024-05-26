@@ -4,7 +4,6 @@ describe("computeWindowStatistics tests", () => {
   test.each([
     [
       [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-      2,
       3,
       "average",
       [
@@ -14,7 +13,6 @@ describe("computeWindowStatistics tests", () => {
     ],
     [
       [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-      2,
       3,
       "minimum",
       [
@@ -24,7 +22,6 @@ describe("computeWindowStatistics tests", () => {
     ],
     [
       [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-      2,
       3,
       "maximum",
       [
@@ -34,7 +31,6 @@ describe("computeWindowStatistics tests", () => {
     ],
     [
       [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-      2,
       3,
       "rateOfChange",
       [
@@ -44,16 +40,17 @@ describe("computeWindowStatistics tests", () => {
     ],
     [
       [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-      2,
       3,
       "frequency",
       [
         { windowStart: 1, windowEnd: 4, value: 3 },
-        { windowStart: 4, windowEnd: 7, value: 4 }
+        { windowStart: 4, windowEnd: 7, value: 3 },
+        { windowStart: 7, windowEnd: 10, value: 3 },
+        { windowStart: 10, windowEnd: 10, value: 1 }
       ]
     ]
-  ])("Computes %s %s %s %s correctly", (data, windows, windowSize, stat, expected) => {
+  ])("Computes %s %s %s %s correctly", (data, windowSize, stat, expected) => {
     assertDataMiningStatisticApproach(stat);
-    expect(computeWindowStatistics(data, windows, windowSize, stat)).toEqual(expected);
+    expect(computeWindowStatistics(data, windowSize, stat)).toEqual(expected);
   });
 });
