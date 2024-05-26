@@ -141,6 +141,21 @@ server.register(fastifyStatic, {
   decorateReply: false // first registration above already added the decorator
 });
 
+// Serve user profile images
+server.register(fastifyStatic, {
+  root: path.join(process.cwd(), assetconfigs.uploadDirectory),
+  prefix: "/profile-images/",
+  allowedPath: (pathName, _root, req) => {
+    const uuid = req.session.get("uuid");
+    if (!uuid) {
+      return false;
+    }
+    const uuidFolder = pathName.split("/")[1];
+    return uuidFolder === uuid;
+  },
+  decorateReply: false // Prevents conflict if sendFile decorator is already present
+});
+
 // Helpful for testing locally:
 server.register(cors, {
   origin: process.env.APP_ORIGIN || "http://localhost:5173",
@@ -237,10 +252,13 @@ server.post("/auth/logout", moderateRateLimit, async (request, reply) => {
 });
 server.post("/auth/verify", strictRateLimit, loginRoutes.verifyEmail);
 server.post("/auth/resend", moderateRateLimit, loginRoutes.resendVerificationEmail);
-server.post("/auth/send-resetpassword-email", strictRateLimit, loginRoutes.sendResetPasswordEmail);
-server.post("/auth/reset-password", strictRateLimit, loginRoutes.resetPassword);
-server.post("/auth/reset-email", strictRateLimit, loginRoutes.resetEmail);
+server.post("/auth/send-resetpassword-email", strictRateLimit, loginRoutes.sendForgotPasswordEmail);
+server.post("/auth/forgot-password", strictRateLimit, loginRoutes.forgotPassword);
+server.post("/auth/change-email", strictRateLimit, loginRoutes.changeEmail);
+server.post("/auth/change-username", moderateRateLimit, loginRoutes.changeUsername);
+server.post("/auth/change-password", strictRateLimit, loginRoutes.changePassword);
 server.post("/auth/account-recovery", strictRateLimit, loginRoutes.accountRecovery);
+server.post("/upload-profile-picture", moderateRateLimit, loginRoutes.uploadProfilePicture);
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it

@@ -7,7 +7,7 @@ import { useTheme } from "@mui/material/styles";
 import HomeIcon from "@mui/icons-material/Home";
 import { IconButton, Tab } from "@mui/material";
 import { context } from "./state";
-import { TSCMenuItem, TSCButton, TSCTabs } from "./components";
+import { TSCMenuItem, TSCButton, TSCTabs, TSCAccountMenu } from "./components";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { ControlledMenu, useHover, useMenuState } from "@szhsin/react-menu";
 import "./NavBar.css";
@@ -99,19 +99,7 @@ export const NavBar = observer(function Navbar() {
           Generate Chart
         </TSCButton>
         {state.isLoggedIn ? (
-          <Tab
-            className="login-tab"
-            value={5}
-            label="Sign out"
-            icon={<AccountCircleIcon />}
-            onClick={() => actions.logout()}
-            sx={{
-              color: theme.palette.primary.main,
-              "&:hover": {
-                color: theme.palette.selection.light
-              }
-            }}
-          />
+          <TSCAccountMenu />
         ) : (
           <Tab
             className="login-tab"

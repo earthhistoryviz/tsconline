@@ -46,6 +46,7 @@ export const AccountRecovery: React.FC = observer(() => {
       if (response.ok) {
         actions.removeAllErrors();
         actions.pushSnackbar("Please check your inbox for details on resetting your password.", "info");
+        navigate("/forgot-password");
       } else {
         displayServerError(
           await response.json(),

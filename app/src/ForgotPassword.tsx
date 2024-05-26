@@ -51,7 +51,7 @@ export const ResetPassword: React.FC = observer(() => {
         actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
         return;
       }
-      const response = await fetcher("/auth/send-resetpassword-email", {
+      const response = await fetcher("/auth/send-forgotpassword-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -103,7 +103,7 @@ export const ResetPassword: React.FC = observer(() => {
         actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
         return;
       }
-      const response = await fetcher("/auth/reset-password", {
+      const response = await fetcher("/auth/forgot-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -136,6 +136,13 @@ export const ResetPassword: React.FC = observer(() => {
           case 404:
             errorCode = ErrorCodes.TOKEN_EXPIRED_OR_INVALID;
             setShowResendForm(true);
+            break;
+          case 422:
+            errorCode = ErrorCodes.RECAPTCHA_FAILED;
+            break;
+          case 429:
+            actions.removeAllErrors();
+            errorCode = ErrorCodes.TOO_MANY_REQUESTS;
             break;
           default:
             setShowResendForm(true);

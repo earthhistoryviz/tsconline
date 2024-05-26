@@ -160,7 +160,7 @@ export const Login: React.FC = observer(() => {
             </TSCButton>
             <Grid container className="grid-container">
               <Grid item xs>
-                <Link href="/reset-password" sx={{ color: "black" }}>
+                <Link href="/forgot-password" sx={{ color: "black" }}>
                   Forgot password?
                 </Link>
               </Grid>

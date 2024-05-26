@@ -6,6 +6,17 @@ export * from "./constants.js";
 export * from "./util.js";
 export * from "./settings-types.js";
 
+export type SharedUser = {
+  username: string;
+  email: string;
+  pictureUrl: string | null;
+  isAdmin: boolean;
+  settings: {
+    darkMode: boolean;
+    language: string;
+  };
+};
+
 export type SuccessfulServerResponse = {
   message: string;
 };
@@ -465,6 +476,17 @@ export type TimescaleItem = {
   key: string;
   value: number;
 };
+
+export function assertSharedUser(o: any): asserts o is SharedUser {
+  if (!o || typeof o !== "object") throw new Error("User must be a non-null object");
+  if (typeof o.username !== "string") throwError("User", "username", "string", o.username);
+  if (typeof o.email !== "string") throwError("User", "email", "string", o.email);
+  if (o.pictureUrl && typeof o.pictureUrl !== "string") throwError("User", "pictureUrl", "string", o.pictureUrl);
+  if (typeof o.isAdmin !== "boolean") throwError("User", "isAdmin", "boolean", o.isAdmin);
+  if (!o.settings || typeof o.settings !== "object") throwError("User", "settings", "object", o.settings);
+  if (typeof o.settings.darkMode !== "boolean") throwError("User", "settings.darkMode", "boolean", o.settings.darkMode);
+  if (typeof o.settings.language !== "string") throwError("User", "settings.language", "string", o.settings.language);
+}
 
 export function assertFreehand(o: any): asserts o is Freehand {
   if (!o || typeof o !== "object") throw new Error("Freehand must be a non-null object");
