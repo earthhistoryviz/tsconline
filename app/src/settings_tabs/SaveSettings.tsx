@@ -68,7 +68,7 @@ const SaveSettings = observer(() => {
         <DialogContent>
           <DialogContentText>Please enter the filename below.</DialogContentText>
           <TextField
-            defaultValue={state.loadSaveFilename}
+            value={state.loadSaveFilename}
             autoFocus
             required
             margin="normal"
