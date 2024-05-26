@@ -1,11 +1,13 @@
 import { action } from "mobx";
 import {
+  SharedUser,
   ChartInfoTSC,
   ChartSettingsInfoTSC,
   DatapackIndex,
   FontsInfo,
   MapPackIndex,
   TimescaleItem,
+  assertSharedUser,
   assertChartInfoTSC,
   assertDatapackInfoChunk,
   assertMapPackInfoChunk
@@ -762,6 +764,8 @@ export const sessionCheck = action("sessionCheck", async () => {
     const data = await response.json();
     if (data.authenticated) {
       setIsLoggedIn(true);
+      assertSharedUser(data.user);
+      setUser(data.user);
       fetchUserDatapacks();
     } else {
       fetchDatapackIndex();
@@ -773,10 +777,22 @@ export const sessionCheck = action("sessionCheck", async () => {
   }
 });
 
+export const setUser = action("setUser", (user: SharedUser) => {
+  assertSharedUser(user);
+  state.user = user;
+});
+export const setPictureUrl = action("setPictureUrl", (url: string) => {
+  state.user.pictureUrl = url;
+});
+export const setDarkMode = action("setDarkMode", (newval: boolean) => {
+  state.user.settings.darkMode = newval;
+});
+export const setLanguage = action("setLanguage", (newval: string) => {
+  state.user.settings.language = newval;
+});
 export const setIsLoggedIn = action("setIsLoggedIn", (newval: boolean) => {
   state.isLoggedIn = newval;
 });
-
 export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
   state.settings.useDatapackSuggestedAge = isChecked;
 });

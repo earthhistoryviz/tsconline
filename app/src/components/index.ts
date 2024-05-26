@@ -9,6 +9,7 @@ export * from "./TSCFileUpload";
 export { TSCPopupDialog } from "./TSCPopupDialog";
 export { TSCSvgComponent } from "./TSCSvgComponent";
 export { TSCPopupManager } from "./TSCPopupManager";
+export { TSCAccountMenu } from "./TSCAccountMenu";
 export * from "./TSCComponents";
 export * from "./TSCError";
 export * from "./TSCSnackbar";

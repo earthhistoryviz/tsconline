@@ -3,13 +3,10 @@ import Accordion from "@mui/material/Accordion";
 import { observer } from "mobx-react-lite";
 import { useTheme } from "@mui/material/styles";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { useNavigate } from "react-router-dom";
-import { TSCButton } from "./components";
 
 export const Help = observer(function Help() {
   const theme = useTheme();
   const background = { background: "white" };
-  const navigate = useNavigate();
 
   return (
     <div
@@ -81,9 +78,6 @@ export const Help = observer(function Help() {
             <Typography>put about here</Typography>
           </AccordionDetails>
         </Accordion>
-        <TSCButton fullWidth sx={{ mt: 2 }} onClick={() => navigate("/reset-email")}>
-          Reset Email
-        </TSCButton>
       </div>
     </div>
   );

@@ -44,7 +44,10 @@ export enum ErrorCodes {
   USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD = "USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD",
   INCORRECT_ENCRYPTION_HEADER = "INCORRET_ENCRYPTION_HEADER",
   TOO_MANY_REQUESTS = "TOO_MANY_REQUESTS",
-  RECAPTCHA_FAILED = "RECAPTCHA_FAILED"
+  RECAPTCHA_FAILED = "RECAPTCHA_FAILED",
+  UNRECOGNIZED_IMAGE_FILE = "UNRECOGNIZED_IMAGE_FILE",
+  UPLOAD_PROFILE_PICTURE_FAILED = "UPLOAD_PROFILE_PICTURE_FAILED",
+  UNABLE_TO_CHANGE_USERNAME = "UNABLE_TO_CHANGE_USERNAME"
 }
 
 export const ErrorMessages = {
@@ -101,5 +104,8 @@ export const ErrorMessages = {
     "The datapack requested was not found on the server. Please try again later or contact our support team.",
   [ErrorCodes.INCORRECT_ENCRYPTION_HEADER]: "Unable to encrypt the file, please try again later.",
   [ErrorCodes.TOO_MANY_REQUESTS]: "You have made too many requests. Please try again later.",
-  [ErrorCodes.RECAPTCHA_FAILED]: "Recaptcha failed. Please try again."
+  [ErrorCodes.RECAPTCHA_FAILED]: "Recaptcha failed. Please try again.",
+  [ErrorCodes.UNRECOGNIZED_IMAGE_FILE]: "Unrecognized image extension. Please upload a valid image file.",
+  [ErrorCodes.UPLOAD_PROFILE_PICTURE_FAILED]: "Unable to upload profile picture. Please try again later.",
+  [ErrorCodes.UNABLE_TO_CHANGE_USERNAME]: "Unable to change username. Please try again later."
 };

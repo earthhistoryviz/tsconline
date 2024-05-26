@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
-import { writeFile, stat, readFile, access } from "fs/promises";
+import { writeFile, stat, readFile, access, rm } from "fs/promises";
 import {
   DatapackIndex,
   DatapackInfoChunk,
@@ -26,7 +26,6 @@ import { loadIndexes } from "./load-packs.js";
 import { updateFileMetadata, writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
-import { rm } from "fs/promises";
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,

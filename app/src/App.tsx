@@ -13,12 +13,12 @@ import { context } from "./state";
 import { About } from "./About";
 import { Login } from "./Login";
 import { SignUp } from "./SignUp";
-import { ResetPassword } from "./ResetPassword";
+import { ResetPassword } from "./ForgotPassword";
 import { AccountVerify } from "./AccountVerify";
 import { AccountRecovery } from "./AccountRecovery";
-import { ResetEmail } from "./ResetEmail";
 import { TSCPopupDialog, TSCError, TSCSnackbar } from "./components";
 import { CssBaseline } from "@mui/material";
+import { Profile } from "./Profile";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -38,10 +38,10 @@ export default observer(function App() {
           <Route path="/about" element={<About />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/forgot-password" element={<ResetPassword />} />
           <Route path="/verify" element={<AccountVerify />} />
-          <Route path="/reset-email" element={<ResetEmail />} />
           <Route path="/account-recovery" element={<AccountRecovery />} />
+          <Route path="/profile" element={<Profile pictureUrl={state.user.pictureUrl} />} />
         </Routes>
         {Array.from(state.errors.errorAlerts.entries()).map(([context, error], index) => (
           <TSCError

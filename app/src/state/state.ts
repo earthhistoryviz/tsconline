@@ -10,7 +10,8 @@ import type {
   Presets,
   DatapackIndex,
   MapPackIndex,
-  Patterns
+  Patterns,
+  SharedUser
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
@@ -19,6 +20,7 @@ import { settings } from "../constants";
 export type State = {
   loadSaveFilename: string;
   isLoggedIn: boolean;
+  user: SharedUser;
   chartLoading: boolean;
   tab: number;
   madeChart: boolean;
@@ -75,6 +77,16 @@ export type State = {
 export const state = observable<State>({
   loadSaveFilename: "settings", //name without extension (.tsc)
   isLoggedIn: false,
+  user: {
+    username: "",
+    email: "",
+    pictureUrl: "",
+    isAdmin: false,
+    settings: {
+      darkMode: false,
+      language: "English"
+    }
+  },
   chartLoading: false,
   madeChart: false,
   tab: 0,

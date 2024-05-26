@@ -15,6 +15,12 @@ import { Email, NewUser, NewVerification, UpdatedUser } from "./types.js";
 import { sendEmail } from "./send-email.js";
 import md5 from "md5";
 import dotenv from "dotenv";
+import { assetconfigs } from "./index.js";
+import path from "path";
+import { mkdirp } from "mkdirp";
+import fs from "fs";
+import pump from "pump";
+import { SharedUser, assertSharedUser } from "@tsconline/shared";
 
 const emailTestRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const googleRecaptchaBotThreshold = 0.5;
@@ -38,6 +44,127 @@ async function checkRecaptchaToken(token: string): Promise<number> {
   }
 }
 
+export const changePassword = async function changePassword(
+  request: FastifyRequest<{ Body: { currentPassword: string; newPassword: string } }>,
+  reply: FastifyReply
+) {
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "Not logged in" });
+    return;
+  }
+  const { currentPassword, newPassword } = request.body;
+  if (!currentPassword || !newPassword) {
+    reply.status(400).send({ error: "Invalid form" });
+    return;
+  }
+  try {
+    const user = (await findUser({ uuid }))[0];
+    if (!user) {
+      throw new Error("User not found");
+    }
+    const { hashedPassword } = user;
+    if (!hashedPassword) {
+      reply.status(403).send({ error: "Account authenticated via Google" });
+      return;
+    }
+    if (!(await compare(currentPassword, hashedPassword))) {
+      reply.status(401).send({ error: "Incorrect password" });
+      return;
+    }
+    const newHashedPassword = await hash(newPassword, 10);
+    await updateUser({ uuid }, { hashedPassword: newHashedPassword });
+    request.session.delete();
+    reply.send({ message: "Password changed" });
+  } catch (error) {
+    console.error("Error during password change:", error);
+    reply.status(500).send({ error: "Unknown Error" });
+  }
+};
+
+export const changeUsername = async function changeUsername(
+  request: FastifyRequest<{ Body: { newUsername: string } }>,
+  reply: FastifyReply
+) {
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "Not logged in" });
+    return;
+  }
+  const { newUsername } = request.body;
+  if (!newUsername) {
+    reply.status(400).send({ error: "Invalid form" });
+    return;
+  }
+  try {
+    const user = (await findUser({ uuid }))[0];
+    if (!user) {
+      throw new Error("User not found");
+    }
+    await updateUser({ uuid }, { username: newUsername });
+    request.session.delete();
+    reply.send({ message: "Username changed" });
+  } catch (error) {
+    console.error("Error during username change:", error);
+    reply.status(500).send({ error: "Unknown Error" });
+  }
+};
+
+export const uploadProfilePicture = async function uploadProfilePicture(request: FastifyRequest, reply: FastifyReply) {
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "Not logged in" });
+    return;
+  }
+  try {
+    const user = (await findUser({ uuid }))[0];
+    if (!user) {
+      throw new Error("User not found");
+    }
+    const file = await request.file();
+    if (!file) {
+      reply.status(404).send({ error: "No file uploaded" });
+      return;
+    }
+    const ext = file.filename.split(".").pop();
+    if (!file.mimetype.startsWith("image/") || !ext || !/^(jpg|jpeg|png|gif)$/.test(ext)) {
+      reply.status(400).send({ error: "Invalid file" });
+      return;
+    }
+    const pictureName = `profile-${uuid}.${ext}`;
+    const userDirectory = path.join(assetconfigs.uploadDirectory, uuid, "profile");
+    const filePath = path.join(userDirectory, pictureName);
+    await mkdirp(userDirectory);
+    const existingFiles = await fs.promises.readdir(userDirectory);
+    for (const existingFile of existingFiles) {
+      if (existingFile.startsWith("profile-") && /\.(jpg|jpeg|png|gif)$/i.test(existingFile)) {
+        await fs.promises.unlink(path.join(userDirectory, existingFile));
+      }
+    }
+    const fileStream = file.file;
+    await new Promise<void>((resolve, reject) => {
+      pump(fileStream, fs.createWriteStream(filePath), (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
+    if (file.file.truncated) {
+      throw new Error("File too large");
+    }
+    const pictureUrl =
+      (process.env.NODE_ENV === "production" ? process.env.APP_URL : "http://localhost:3000") +
+      `/profile-images/${uuid}/profile/${pictureName}`;
+    await updateUser({ uuid }, { pictureUrl: pictureUrl });
+    reply.send({ pictureUrl: pictureUrl });
+  } catch (error) {
+    console.error("Error during upload:", error);
+    reply.status(500).send({ error });
+  }
+};
+
 export const sessionCheck = async function sessionCheck(request: FastifyRequest, reply: FastifyReply) {
   const uuid = request.session.get("uuid");
   if (!uuid) {
@@ -49,7 +176,20 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
     reply.send({ authenticated: false });
     return;
   }
-  reply.send({ authenticated: true });
+  const { email, username, pictureUrl } = user;
+  if (!email || !username) {
+    reply.send({ authenticated: false });
+    return;
+  }
+  const sharedUser: SharedUser = {
+    email,
+    username,
+    pictureUrl,
+    isAdmin: false,
+    settings: { darkMode: false, language: "English" }
+  };
+  assertSharedUser(sharedUser);
+  reply.send({ authenticated: true, user: sharedUser });
 };
 
 export const accountRecovery = async function accountRecovery(
@@ -118,7 +258,7 @@ export const accountRecovery = async function accountRecovery(
   }
 };
 
-export const resetEmail = async function resetEmail(
+export const changeEmail = async function changeEmail(
   request: FastifyRequest<{ Body: { newEmail: string; recaptchaToken: string } }>,
   reply: FastifyReply
 ) {
@@ -251,7 +391,7 @@ export const resetEmail = async function resetEmail(
   }
 };
 
-export const resetPassword = async function resetPassword(
+export const forgotPassword = async function forgotPassword(
   request: FastifyRequest<{ Body: { token: string; password: string; recaptchaToken: string } }>,
   reply: FastifyReply
 ) {
@@ -293,7 +433,7 @@ export const resetPassword = async function resetPassword(
   }
 };
 
-export const sendResetPasswordEmail = async function sendResetPasswordEmail(
+export const sendForgotPasswordEmail = async function sendForgotPasswordEmail(
   request: FastifyRequest<{ Body: { email: string; recaptchaToken: string } }>,
   reply: FastifyReply
 ) {
@@ -350,7 +490,7 @@ export const sendResetPasswordEmail = async function sendResetPasswordEmail(
       title: "Reset Your Password",
       message: emailText,
       link: hashedPassword
-        ? `${process.env.APP_URL || "http://localhost:5173"}/reset-password?token=${token}`
+        ? `${process.env.APP_URL || "http://localhost:5173"}/forgot-password?token=${token}`
         : undefined,
       buttonText: hashedPassword ? "Reset Password" : undefined,
       action: "Password Reset"
@@ -605,8 +745,8 @@ export const googleLogin = async function googleLogin(
     }
     const userRow = (await findUser({ email: payload.email }))[0];
     if (userRow) {
-      const { username, uuid } = userRow;
-      if (username) {
+      const { hashedPassword, uuid } = userRow;
+      if (hashedPassword) {
         reply.status(409).send({ error: "User already exists" });
       } else {
         request.session.set("uuid", uuid);
@@ -616,7 +756,7 @@ export const googleLogin = async function googleLogin(
     }
     const uuid = randomUUID();
     const user: NewUser = {
-      username: null,
+      username: payload.email,
       email: payload.email,
       hashedPassword: null,
       uuid: uuid,

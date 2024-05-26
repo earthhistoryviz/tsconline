@@ -32,6 +32,7 @@
     visibility 0s 0.5s,
     transform 0.5s ease;
   transform: translateY(-2px);
+  margin-right: 8px;
 }
 .MuiIconButton-root.scroll-top.show {
   opacity: 1;
@@ -39,6 +40,7 @@
   pointer-events: auto;
   transform: translateY(0);
   transition-delay: 0s;
+  margin-right: 8px;
 }
 .szh-menu__item.sub-menu-item {
   justify-content: space-between;
@@ -100,6 +102,7 @@
 .MuiButton-root.filter-button {
   margin-left: 6px;
   margin-top: 5px;
+  margin-right: 8px;
 }
 .MuiButton-root.filter-button {
   margin-right: 10px;
@@ -109,7 +112,7 @@
   justify-content: space-between;
   width: 100%;
 }
-.MuiSvgIcon-root {
+.color-lens-icon {
   margin-right: 8px;
 }
 .szh-menu__submenu.color-menu > .szh-menu__item {
