@@ -4,7 +4,7 @@ import { DataMiningStatisticApproach, WindowStats } from "../types";
 /**
  * This function computes the statistics of a data set in a moving window.
  * assume data isn't sorted
- * @param data the data set
+ * @param data the data set, only considering the age of the data points (only one axis supported)
  * @param windows the number of windows
  * @param windowSize the size of the window
  * @param stat The statistic to compute in the window
@@ -63,6 +63,14 @@ type DataPoint = {
   value: number;
 };
 
+/**
+ * computes the statistics of a data set in a moving window
+ * considers age for windows and values for statistics
+ * @param data dataset to compute statistics on (age, value)
+ * @param windowSize size of the window
+ * @param stat statistic to compute in the window
+ * @returns window statistics (start, end, value)
+ */
 export function computeWindowStatisticsForDataPoints(
   data: DataPoint[],
   windowSize: number,
