@@ -61,22 +61,55 @@ export function computeWindowStatistics(
 type DataPoint = {
   age: number;
   value: number;
-}
+};
 
-export function computWindowStatisticsForDataSet(
+export function computeWindowStatisticsForDataSet(
   data: DataPoint[],
   windowSize: number,
   stat: DataMiningStatisticApproach
 ) {
-  if (data.length === 0 || windowSize === 0 || data.some((d) => isNaN(d.value))) {
+  if (data.length === 0 || windowSize === 0 || data.some((d) => isNaN(d.value) || isNaN(d.age))) {
     return [];
   }
-  const windows = Math.ceil(data.length / windowSize);
+  const lastDataPointAge = data[data.length - 1]!.age;
+  const windows = Math.ceil(lastDataPointAge / windowSize);
   data = data.sort((a, b) => a.age - b.age);
   const results: WindowStats[] = [];
   let start = data[0]!.age;
   let end = start + windowSize;
-  return []
+  if (stat === "frequency")
+    return computeWindowStatistics(
+      data.map((d) => d.value),
+      windowSize,
+      stat
+    );
+  for (let i = 0; i < windows; i++) {
+    const window = data.filter((d) => d.age >= start && (d.age < end || (i === windows - 1 && d.age === end)));
+    if (window.length === 0) results.push({ windowStart: start, windowEnd: end, value: 0 });
+    const firstWindowPoint = window[0];
+    const lastWindowPoint = window[window.length - 1];
+    let value = 0;
+    switch (stat) {
+      case "minimum":
+        value = Math.min(...window.map((d) => d.value));
+        break;
+      case "maximum":
+        value = Math.max(...window.map((d) => d.value));
+        break;
+      case "average":
+        value = window.reduce((a, b) => a + b.value, 0) / window.length;
+        break;
+      case "rateOfChange":
+        if (!firstWindowPoint || !lastWindowPoint) value = 0;
+        else value = (lastWindowPoint.value - firstWindowPoint.value) / firstWindowPoint.value;
+        break;
+    }
+    results.push({ windowStart: start, windowEnd: end, value: round(value, 2) });
+    if (!lastDataPointAge || end > lastDataPointAge) break;
+    start = end;
+    end = Math.min(end + windowSize, lastDataPointAge);
+  }
+  return results;
 }
 
 export function findRangeOfWindowStats(windowStats: WindowStats[]): { min: number; max: number } {
