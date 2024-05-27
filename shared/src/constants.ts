@@ -19,7 +19,8 @@ export const defaultEventSettings: EventSettings = {
   rangeSort: "first occurrence",
   frequency: null,
   stepSize: 1,
-  windowSize: 2
+  windowSize: 2,
+  isDataMiningColumn: false
 };
 
 export const allFontOptions: ValidFontOptions[] = [
@@ -231,7 +232,8 @@ export const defaultEventColumnInfoTSC: EventColumnInfoTSC = {
   rangeSort: "first occurrence",
   drawExtraColumn: null,
   windowSize: 2,
-  stepSize: 1
+  stepSize: 1,
+  isDataMiningColumn: false
 };
 
 export const defaultZoneColumnInfoTSC: ZoneColumnInfoTSC = {
@@ -265,6 +267,7 @@ export const defaultRulerColumnInfoTSC: RulerColumnInfoTSC = {
 
 export const defaultPointColumnInfoTSC: PointColumnInfoTSC = {
   ...defaultColumnBasicInfoTSC,
+  isDataMiningColumn: false,
   drawPoints: false,
   drawLine: false,
   lineColor: {
@@ -361,7 +364,8 @@ export const defaultPointSettings: PointSettings = {
   maxX: Number.MIN_SAFE_INTEGER,
   windowSize: 2,
   stepSize: 1,
-  dataMiningPointDataType: null
+  dataMiningPointDataType: null,
+  isDataMiningColumn: false
 };
 
 export const defaultPoint: Partial<Point> = {

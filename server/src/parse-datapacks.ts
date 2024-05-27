@@ -52,7 +52,9 @@ import {
   assertColumnSpecificSettings,
   isSubFreehandInfo,
   PointSettings,
-  assertSubFaciesInfoArray
+  assertSubFaciesInfoArray,
+  SubEventType,
+  isSubEventType
 } from "@tsconline/shared";
 import { grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter, formatColumnName } from "./util.js";
 import { createInterface } from "readline";
@@ -205,6 +207,7 @@ export async function parseDatapacks(
   const columnInfo = columnInfoArray;
   loneColumns.forEach((column) => {
     if (isChild.has(column.name)) return;
+    column.parent = "Chart Title";
     columnInfo.push(column);
   });
   columnInfo.unshift({
@@ -438,6 +441,8 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
     subChronInfo: []
   };
   const blank: ColumnHeaderProps = createDefaultColumnHeaderProps();
+
+  let subEventType: SubEventType | null = null;
   let inFaciesBlock = false;
   let inBlockBlock = false;
   let inEventBlock = false;
@@ -456,7 +461,9 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
       } else if (inBlockBlock) {
         inBlockBlock = processColumn("Block", block, "subBlockInfo", units, loneColumns);
       } else if (inEventBlock) {
+        // reset for any future event blocks
         inEventBlock = processColumn("Event", event, "subEventInfo", units, loneColumns);
+        subEventType = null;
       } else if (inRangeBlock) {
         inRangeBlock = processColumn("Range", range, "subRangeInfo", units, loneColumns);
       } else if (inChronBlock) {
@@ -552,7 +559,20 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
       setColumnHeaders(event, tabSeparated);
       inEventBlock = true;
     } else if (inEventBlock) {
-      const subEventInfo = processEvent(line);
+      const parsedSubEventType = tabSeparated[0]?.toUpperCase();
+      if (isSubEventType(parsedSubEventType)) {
+        subEventType = parsedSubEventType;
+      } else if (!subEventType) {
+        console.log(
+          chalk.yellow.dim(
+            `Error found while processing event block: ${event.name}, no subEventType of FAD, LAD, EVENTS, or EVENT found, skipping`
+          )
+        );
+        inEventBlock = false;
+        Object.assign(event, { ...createDefaultColumnHeaderProps(), width: 150, on: false, subEventInfo: [] });
+        continue;
+      }
+      const subEventInfo = processEvent(line, subEventType);
       if (subEventInfo) {
         event.subEventInfo.push(subEventInfo);
       }
@@ -795,7 +815,7 @@ export function processChron(line: string): SubChronInfo | null {
   try {
     assertSubChronInfo(subChronInfo);
   } catch (e) {
-    console.log(chalk.dim.yellow(`Error ${e} found while processing subBlockInfo, returning null`));
+    console.log(chalk.dim.yellow(`Error ${e} found while processing subChronInfo, returning null`));
     return null;
   }
   return subChronInfo;
@@ -831,7 +851,7 @@ export function processRange(line: string): SubRangeInfo | null {
   try {
     assertSubRangeInfo(subRangeInfo);
   } catch (e) {
-    console.log(chalk.dim.yellow(`Error ${e} found while processing subBlockInfo, returning null`));
+    console.log(chalk.dim.yellow(`Error ${e} found while processing subRangeInfo, returning null`));
     return null;
   }
   return subRangeInfo;
@@ -841,12 +861,13 @@ export function processRange(line: string): SubRangeInfo | null {
  * @param line
  * @returns
  */
-export function processEvent(line: string): SubEventInfo | null {
+export function processEvent(line: string, subEventType: SubEventType): SubEventInfo | null {
   const subEventInfo = {
     label: "",
     age: 0,
     popup: "",
-    lineStyle: "solid"
+    lineStyle: "solid",
+    subEventType
   };
   const tabSeparated = line.split("\t");
   if (tabSeparated.length < 3 || tabSeparated.length > 5) return null;
@@ -867,7 +888,7 @@ export function processEvent(line: string): SubEventInfo | null {
   try {
     assertSubEventInfo(subEventInfo);
   } catch (e) {
-    console.log(chalk.dim.yellow(`Error ${e} found while processing subBlockInfo, returning null`));
+    console.log(chalk.dim.yellow(`Error ${e} found while processing subEventInfo, returning null`));
     return null;
   }
   return subEventInfo;

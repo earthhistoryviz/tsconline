@@ -788,13 +788,15 @@
                     "label": "SubEventInfo 1",
                     "age": 0.02,
                     "popup": "Event SubEventInfo Popup 1",
-                    "lineStyle": "solid"
+                    "lineStyle": "solid",
+                    "subEventType": "EVENT"
                   },
                   {
                     "label": "SubEventInfo 2",
                     "age": 0.4,
                     "popup": "Event SubEventInfo Popup 2",
-                    "lineStyle": "solid"
+                    "lineStyle": "solid",
+                    "subEventType": "EVENT"
                   }
                 ]
               },
@@ -1795,13 +1797,15 @@
                 "label": "Event 1 SubEvent 1",
                 "age": 2,
                 "popup": "Event 1 SubEvent 1 Popup",
-                "lineStyle": "dashed"
+                "lineStyle": "dashed",
+                "subEventType": "EVENT"
                 },
                 {
                 "label": "Event 1 SubEvent 2",
                 "age": 4,
                 "popup": "Event 1 SubEvent 2 Popup",
-                "lineStyle": "solid"
+                "lineStyle": "solid",
+                "subEventType": "EVENT"
                 }
             ],
             "enableTitle": true,
@@ -1844,13 +1848,15 @@
                 "label": "Event 2 SubEvent 1",
                 "age": 5,
                 "popup": "",
-                "lineStyle": "solid"
+                "lineStyle": "solid",
+                "subEventType": "FAD"
                 },
                 {
                 "label": "Event 2 SubEvent 2",
                 "age": 6,
                 "popup": "",
-                "lineStyle": "solid"
+                "lineStyle": "solid",
+                "subEventType": "FAD"
                 }
             ],
             "enableTitle": false,
