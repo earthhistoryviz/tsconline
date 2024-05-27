@@ -296,7 +296,12 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.NODE_ENV ===
     }
   );
 }
-// Start the server...
+
+server.setNotFoundHandler((request, reply) => {
+  void reply.sendFile("index.html");
+});
+
+//Start the server...
 try {
   await server.listen({
     host: "0.0.0.0", // for this to work in Docker, you need 0.0.0.0
