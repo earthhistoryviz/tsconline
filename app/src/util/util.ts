@@ -117,3 +117,7 @@ export function convertTSCColorToRGB(text: string): RGB {
     b: Number(rgb[2])
   };
 }
+
+export function normalizeZero(value: number): number {
+  return value === 0 ? 0 : value;
+}

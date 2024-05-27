@@ -57,6 +57,15 @@ describe("computeWindowStatistics tests", () => {
         { windowStart: 7, windowEnd: 10, value: 3 },
         { windowStart: 10, windowEnd: 10, value: 1 }
       ]
+    ],
+    [[-1, 0, 0, 0, 0, 0, 0, 0, 0, 0], 3, "rateOfChange", [{ windowStart: -1, windowEnd: 2, value: -1 }]],
+    [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 3, "rateOfChange", [{ windowStart: 0, windowEnd: 3, value: 0 }]],
+    [[], 3, "rateOfChange", []],
+    [
+      [-10, -10, -10, -10, -10, -10, -10, -10, -10, -10],
+      3,
+      "rateOfChange",
+      [{ windowStart: -10, windowEnd: -7, value: 0 }]
     ]
   ])("Computes %s %s %s %s correctly", (data, windowSize, stat, expected) => {
     assertDataMiningStatisticApproach(stat);
@@ -132,6 +141,26 @@ describe("computeWindowStatisticsForDataSet tests", () => {
         { windowStart: 7, windowEnd: 10, value: -0.5 },
         { windowStart: 10, windowEnd: 10, value: 0 }
       ]
+    ],
+    [
+      [
+        { age: 1, value: 0 },
+        { age: 2, value: 0 },
+        { age: 3, value: 0 }
+      ],
+      3,
+      "rateOfChange",
+      [{ windowStart: 1, windowEnd: 4, value: 0 }]
+    ],
+    [
+      [
+        { age: 1, value: 0 },
+        { age: 2, value: 0 },
+        { age: 3, value: -10 }
+      ],
+      3,
+      "rateOfChange",
+      [{ windowStart: 1, windowEnd: 4, value: 0 }]
     ]
   ])(`Computes %s %s %s correctly`, (data, windowSize, stat, expected) => {
     assertDataMiningStatisticApproach(stat);

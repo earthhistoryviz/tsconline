@@ -1,5 +1,6 @@
 import { round } from "lodash";
 import { DataMiningStatisticApproach, WindowStats } from "../types";
+import { normalizeZero } from "./util";
 
 /**
  * This function computes the statistics of a data set in a moving window.
@@ -19,8 +20,9 @@ export function computeWindowStatistics(
     return [];
   }
   data = data.sort((a, b) => a - b);
+  const firstDataPoint = data[0]!;
   const lastDataPoint = data[data.length - 1]!;
-  const windows = Math.ceil(lastDataPoint / windowSize);
+  const windows = Math.ceil((lastDataPoint - firstDataPoint + 1) / windowSize);
   const results: WindowStats[] = [];
   let start = data[0]!; // inclusive
   let end = start + windowSize; // exclusive
@@ -31,8 +33,8 @@ export function computeWindowStatistics(
     if (window.length === 0) {
       results.push({ windowStart: start, windowEnd: end, value: 0 });
     } else {
-      const firstWindowPoint = window[0];
-      const lastWindowPoint = window[window.length - 1];
+      const firstWindowPoint = window[0]!;
+      const lastWindowPoint = window[window.length - 1]!;
       let value = 0;
       switch (stat) {
         case "frequency":
@@ -48,11 +50,11 @@ export function computeWindowStatistics(
           value = window.reduce((a, b) => a + b, 0) / window.length;
           break;
         case "rateOfChange":
-          if (!firstWindowPoint || !lastWindowPoint) value = 0;
+          if (!firstWindowPoint) value = 0;
           else value = (lastWindowPoint - firstWindowPoint) / firstWindowPoint;
           break;
       }
-      results.push({ windowStart: start, windowEnd: end, value: round(value, 2) });
+      results.push({ windowStart: start, windowEnd: end, value: round(normalizeZero(value), 2) });
     }
     if (end > lastDataPoint) break;
     start = end;
@@ -82,8 +84,9 @@ export function computeWindowStatisticsForDataPoints(
   if (data.length === 0 || windowSize <= 0 || data.some((d) => isNaN(d.value) || isNaN(d.age))) {
     return [];
   }
+  const firstDataPoint = data[0]!.age;
   const lastDataPointAge = data[data.length - 1]!.age;
-  const windows = Math.ceil(lastDataPointAge / windowSize);
+  const windows = Math.ceil((lastDataPointAge - firstDataPoint + 1) / windowSize);
   data = data.sort((a, b) => a.age - b.age);
   const results: WindowStats[] = [];
   let start = data[0]!.age;
@@ -99,8 +102,8 @@ export function computeWindowStatisticsForDataPoints(
     if (window.length === 0) {
       results.push({ windowStart: start, windowEnd: end, value: 0 });
     } else {
-      const firstWindowPoint = window[0];
-      const lastWindowPoint = window[window.length - 1];
+      const firstWindowPoint = window[0]!;
+      const lastWindowPoint = window[window.length - 1]!;
       let value = 0;
       switch (stat) {
         case "minimum":
@@ -113,7 +116,7 @@ export function computeWindowStatisticsForDataPoints(
           value = window.reduce((a, b) => a + b.value, 0) / window.length;
           break;
         case "rateOfChange":
-          if (!firstWindowPoint || !lastWindowPoint) value = 0;
+          if (!firstWindowPoint.value) value = 0;
           else value = (lastWindowPoint.value - firstWindowPoint.value) / firstWindowPoint.value;
           break;
       }
