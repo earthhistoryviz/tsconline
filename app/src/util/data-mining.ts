@@ -15,7 +15,7 @@ export function computeWindowStatistics(
   windowSize: number,
   stat: DataMiningStatisticApproach
 ): WindowStats[] {
-  if (data.length === 0 || windowSize === 0 || data.some((d) => isNaN(d))) {
+  if (data.length === 0 || windowSize <= 0 || data.some((d) => isNaN(d))) {
     return [];
   }
   data = data.sort((a, b) => a - b);
@@ -28,30 +28,33 @@ export function computeWindowStatistics(
   for (let i = 0; i < windows; i++) {
     // make sure to include the last value in the last window
     const window = data.filter((d) => d >= start && (d < end || (i === windows - 1 && d === end)));
-    if (window.length === 0) results.push({ windowStart: start, windowEnd: end, value: 0 });
-    const firstWindowPoint = window[0];
-    const lastWindowPoint = window[window.length - 1];
-    let value = 0;
-    switch (stat) {
-      case "frequency":
-        value = window.length;
-        break;
-      case "minimum":
-        value = Math.min(...window);
-        break;
-      case "maximum":
-        value = Math.max(...window);
-        break;
-      case "average":
-        value = window.reduce((a, b) => a + b, 0) / window.length;
-        break;
-      case "rateOfChange":
-        if (!firstWindowPoint || !lastWindowPoint) value = 0;
-        else value = (lastWindowPoint - firstWindowPoint) / firstWindowPoint;
-        break;
+    if (window.length === 0) {
+      results.push({ windowStart: start, windowEnd: end, value: 0 });
+    } else {
+      const firstWindowPoint = window[0];
+      const lastWindowPoint = window[window.length - 1];
+      let value = 0;
+      switch (stat) {
+        case "frequency":
+          value = window.length;
+          break;
+        case "minimum":
+          value = Math.min(...window);
+          break;
+        case "maximum":
+          value = Math.max(...window);
+          break;
+        case "average":
+          value = window.reduce((a, b) => a + b, 0) / window.length;
+          break;
+        case "rateOfChange":
+          if (!firstWindowPoint || !lastWindowPoint) value = 0;
+          else value = (lastWindowPoint - firstWindowPoint) / firstWindowPoint;
+          break;
+      }
+      results.push({ windowStart: start, windowEnd: end, value: round(value, 2) });
     }
-    results.push({ windowStart: start, windowEnd: end, value: round(value, 2) });
-    if (!lastDataPoint || end > lastDataPoint) break;
+    if (end > lastDataPoint) break;
     start = end;
     end = Math.min(end + windowSize, lastDataPoint);
   }
@@ -76,7 +79,7 @@ export function computeWindowStatisticsForDataPoints(
   windowSize: number,
   stat: DataMiningStatisticApproach
 ) {
-  if (data.length === 0 || windowSize === 0 || data.some((d) => isNaN(d.value) || isNaN(d.age))) {
+  if (data.length === 0 || windowSize <= 0 || data.some((d) => isNaN(d.value) || isNaN(d.age))) {
     return [];
   }
   const lastDataPointAge = data[data.length - 1]!.age;
@@ -93,27 +96,30 @@ export function computeWindowStatisticsForDataPoints(
     );
   for (let i = 0; i < windows; i++) {
     const window = data.filter((d) => d.age >= start && (d.age < end || (i === windows - 1 && d.age === end)));
-    if (window.length === 0) results.push({ windowStart: start, windowEnd: end, value: 0 });
-    const firstWindowPoint = window[0];
-    const lastWindowPoint = window[window.length - 1];
-    let value = 0;
-    switch (stat) {
-      case "minimum":
-        value = Math.min(...window.map((d) => d.value));
-        break;
-      case "maximum":
-        value = Math.max(...window.map((d) => d.value));
-        break;
-      case "average":
-        value = window.reduce((a, b) => a + b.value, 0) / window.length;
-        break;
-      case "rateOfChange":
-        if (!firstWindowPoint || !lastWindowPoint) value = 0;
-        else value = (lastWindowPoint.value - firstWindowPoint.value) / firstWindowPoint.value;
-        break;
+    if (window.length === 0) {
+      results.push({ windowStart: start, windowEnd: end, value: 0 });
+    } else {
+      const firstWindowPoint = window[0];
+      const lastWindowPoint = window[window.length - 1];
+      let value = 0;
+      switch (stat) {
+        case "minimum":
+          value = Math.min(...window.map((d) => d.value));
+          break;
+        case "maximum":
+          value = Math.max(...window.map((d) => d.value));
+          break;
+        case "average":
+          value = window.reduce((a, b) => a + b.value, 0) / window.length;
+          break;
+        case "rateOfChange":
+          if (!firstWindowPoint || !lastWindowPoint) value = 0;
+          else value = (lastWindowPoint.value - firstWindowPoint.value) / firstWindowPoint.value;
+          break;
+      }
+      results.push({ windowStart: start, windowEnd: end, value: round(value, 2) });
     }
-    results.push({ windowStart: start, windowEnd: end, value: round(value, 2) });
-    if (!lastDataPointAge || end > lastDataPointAge) break;
+    if (end > lastDataPointAge) break;
     start = end;
     end = Math.min(end + windowSize, lastDataPointAge);
   }
