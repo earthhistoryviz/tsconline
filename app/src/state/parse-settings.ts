@@ -375,7 +375,8 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
         rangeSort: state.columnSpecificSettings.rangeSort,
         drawExtraColumn: state.columnSpecificSettings.frequency,
         windowSize: state.columnSpecificSettings.windowSize,
-        stepSize: state.columnSpecificSettings.stepSize
+        stepSize: state.columnSpecificSettings.stepSize,
+        isDataMiningColumn: state.columnSpecificSettings.isDataMiningColumn
       };
       break;
     case "Zone":
@@ -415,7 +416,8 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
         scaleStep: state.columnSpecificSettings.scaleStep,
         drawExtraColumn: state.columnSpecificSettings.dataMiningPointDataType,
         windowSize: state.columnSpecificSettings.windowSize,
-        stepSize: state.columnSpecificSettings.stepSize
+        stepSize: state.columnSpecificSettings.stepSize,
+        isDataMiningColumn: state.columnSpecificSettings.isDataMiningColumn
       };
   }
   switch (state.columnDisplayType) {
@@ -557,9 +559,11 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       xml += generateFontsXml(`${indent}    `, column.fonts);
       xml += `${indent}</fonts>\n`;
     } else if (key === "children") {
-      for (let i = 0; i < column.children.length; i++) {
-        xml += `${indent}<column id="${escapeHtmlChars(column.children[i]._id, "attribute")}">\n`;
-        xml += columnInfoTSCToXml(column.children[i], `${indent}    `);
+      for (const child of column.children) {
+        const isDataMiningColumn =
+          "isDataMiningColumn" in child ? `isDataMiningColumn="${child.isDataMiningColumn}"` : "";
+        xml += `${indent}<column id="${escapeHtmlChars(child._id, "attribute")}" ${isDataMiningColumn}>\n`;
+        xml += columnInfoTSCToXml(child, `${indent}    `);
         xml += `${indent}</column>\n`;
       }
     } else if (key === "justification") {
@@ -571,7 +575,7 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
     } else if (key === "pointType") {
       assertPointColumnInfoTSC(column);
       xml += `${indent}<setting name="pointType" pointType="${column.pointType}"/>\n`;
-    } else if (key === "drawExtraColumn" && !keyValue) {
+    } else if ((key === "drawExtraColumn" && !keyValue) || key === "isDataMiningColumn") {
       continue;
     } else if (key === "type" && extractColumnType(column._id) === "SequenceColumn") {
       assertSequenceColumnInfoTSC(column);

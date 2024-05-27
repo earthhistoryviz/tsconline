@@ -1,3 +1,13 @@
+import { DataMiningPointDataType } from "@tsconline/shared";
+
+export type WindowStats = {
+  windowStart: number;
+  windowEnd: number;
+  value: number;
+};
+
+export type DataMiningStatisticApproach = "average" | "minimum" | "maximum" | "rateOfChange" | "frequency";
+
 export type FaciesOptions = {
   faciesAge: number;
   dotSize: number;
@@ -69,12 +79,32 @@ export type ChartSettings = {
   useDatapackSuggestedAge: boolean;
 };
 
+export function convertDataMiningPointDataTypeToDataMiningStatisticApproach(
+  value: DataMiningPointDataType
+): DataMiningStatisticApproach {
+  switch (value) {
+    case "Average Value":
+      return "average";
+    case "Minimum Value":
+      return "minimum";
+    case "Maximum Value":
+      return "maximum";
+    case "Rate of Change":
+      return "rateOfChange";
+    case "Frequency":
+      return "frequency";
+    default:
+      throw new Error(`Invalid DataMiningPointDataType: ${value}`);
+  }
+}
+
 export function equalTimeSettings(a: TimeSettings, b: TimeSettings): boolean {
   return (
     Object.keys(a).length === Object.keys(b).length &&
     Object.keys(a).every((key) => {
       const aValue = a[key];
       const bValue = b[key];
+      if (bValue === undefined || aValue === undefined) return false;
       return (
         aValue.selectedStage === bValue.selectedStage &&
         aValue.topStageAge === bValue.topStageAge &&
@@ -86,6 +116,11 @@ export function equalTimeSettings(a: TimeSettings, b: TimeSettings): boolean {
       );
     })
   );
+}
+export function assertDataMiningStatisticApproach(value: string): asserts value is DataMiningStatisticApproach {
+  if (/^(average|minimum|maximum|rateOfChange|frequency)$/.test(value) === false) {
+    throw new Error(`Invalid statistic: ${value}`);
+  }
 }
 export function equalChartSettings(a: ChartSettings, b: ChartSettings): boolean {
   return (
