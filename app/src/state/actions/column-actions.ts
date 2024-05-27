@@ -23,8 +23,6 @@ import {
   isEventFrequency
 } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
-import { pushSnackbar } from "./general-actions";
-import { snackbarTextLengthLimit } from "../../util/constant";
 import { WindowStats, convertDataMiningPointDataTypeToDataMiningStatisticApproach } from "../../types";
 import {
   computeWindowStatistics,
