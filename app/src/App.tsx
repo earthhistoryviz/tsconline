@@ -13,7 +13,7 @@ import { context } from "./state";
 import { About } from "./About";
 import { Login } from "./Login";
 import { SignUp } from "./SignUp";
-import { ResetPassword } from "./ForgotPassword";
+import { ForgotPassword } from "./ForgotPassword";
 import { AccountVerify } from "./AccountVerify";
 import { AccountRecovery } from "./AccountRecovery";
 import { TSCPopupDialog, TSCError, TSCSnackbar } from "./components";
@@ -38,7 +38,7 @@ export default observer(function App() {
           <Route path="/about" element={<About />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/forgot-password" element={<ResetPassword />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify" element={<AccountVerify />} />
           <Route path="/account-recovery" element={<AccountRecovery />} />
           <Route path="/profile" element={<Profile pictureUrl={state.user.pictureUrl} />} />

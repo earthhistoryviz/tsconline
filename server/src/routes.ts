@@ -225,15 +225,16 @@ export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
 };
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
+  // for test usage: const uuid = "username";
   const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
-  // for test usage: const uuid = "username";
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
   try {
     await access(userDir);
+    await access(path.join(userDir, "DatapackIndex.json"));
   } catch (e) {
     reply.status(404).send({ error: "User has no uploaded datapacks" });
     return;

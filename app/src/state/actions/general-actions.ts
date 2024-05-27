@@ -745,6 +745,7 @@ export const logout = action("logout", async () => {
     });
     if (response.ok) {
       setIsLoggedIn(false);
+      setDefaultUserState();
       pushSnackbar("Successfully signed out", "success");
     } else {
       pushError(ErrorCodes.UNABLE_TO_LOGOUT);
@@ -775,6 +776,19 @@ export const sessionCheck = action("sessionCheck", async () => {
   } catch (error) {
     console.error("Failed to check session:", error);
   }
+});
+
+export const setDefaultUserState = action(() => {
+  state.user = {
+    username: "",
+    email: "",
+    pictureUrl: "",
+    isAdmin: false,
+    settings: {
+      darkMode: false,
+      language: "en"
+    }
+  };
 });
 
 export const setUser = action("setUser", (user: SharedUser) => {
