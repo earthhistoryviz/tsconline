@@ -12,19 +12,29 @@ const VisuallyHiddenInput = styled("input")({
   width: 1
 });
 type InputFileUploadProps = {
-  startIcon: ReactElement<object>;
+  startIcon?: ReactElement<object>;
   text: string;
+  variant?: "text" | "outlined" | "contained";
+  color?: "inherit" | "primary" | "secondary" | "success" | "error" | "info" | "warning";
   onChange: ChangeEventHandler<HTMLInputElement>;
   multiple?: boolean;
 };
-export const InputFileUpload: React.FC<InputFileUploadProps> = ({ startIcon, text, onChange, multiple = false }) => {
+export const InputFileUpload: React.FC<InputFileUploadProps> = ({
+  startIcon,
+  text,
+  variant = "text",
+  color = "inherit",
+  onChange,
+  multiple = false
+}) => {
   return (
-    <Button component="label" variant="contained" startIcon={startIcon} onClick={resetHandler}>
+    <Button component="label" variant={variant} startIcon={startIcon} color={color} onClick={resetHandler}>
       {text}
       <VisuallyHiddenInput type="file" multiple={multiple} onChange={onChange} />
     </Button>
   );
 };
+
 /**
  * reset the input value so we can upload the same file again
  * @param event
