@@ -153,7 +153,7 @@ server.register(fastifyStatic, {
     const uuidFolder = pathName.split("/")[1];
     return uuidFolder === uuid;
   },
-  decorateReply: false // Prevents conflict if sendFile decorator is already present
+  decorateReply: false
 });
 
 // Helpful for testing locally:

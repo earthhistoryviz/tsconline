@@ -102,7 +102,11 @@ export const TSCAccountMenu = observer(() => {
             Admin Panel
           </MenuItem>
         )}
-        <MenuItem onClick={actions.logout}>
+        <MenuItem
+          onClick={() => {
+            actions.logout();
+            navigate("/login");
+          }}>
           <ListItemIcon>
             <Logout fontSize="small" />
           </ListItemIcon>

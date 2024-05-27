@@ -81,6 +81,7 @@ export const state = observable<State>({
     username: "",
     email: "",
     pictureUrl: "",
+    isGoogleUser: false,
     isAdmin: false,
     settings: {
       darkMode: false,

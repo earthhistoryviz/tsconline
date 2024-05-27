@@ -93,7 +93,7 @@ export const changePassword = async function changePassword(
       return;
     }
     if (!(await compare(currentPassword, hashedPassword))) {
-      reply.status(401).send({ error: "Incorrect password" });
+      reply.status(409).send({ error: "Incorrect password" });
       return;
     }
     const newHashedPassword = await hash(newPassword, 10);
@@ -205,7 +205,7 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
     reply.send({ authenticated: false });
     return;
   }
-  const { email, username, pictureUrl } = user;
+  const { email, username, pictureUrl, hashedPassword } = user;
   if (!email || !username) {
     reply.send({ authenticated: false });
     return;
@@ -214,6 +214,7 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
     email,
     username,
     pictureUrl,
+    isGoogleUser: !hashedPassword,
     isAdmin: false,
     settings: { darkMode: false, language: "English" }
   };
