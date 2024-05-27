@@ -117,3 +117,12 @@ export function convertTSCColorToRGB(text: string): RGB {
     b: Number(rgb[2])
   };
 }
+
+/**
+ * needed for display purposes since -0 == 0 but we want to display -0 as 0 and not -0
+ * @param value
+ * @returns
+ */
+export function normalizeZero(value: number): number {
+  return value === 0 ? 0 : value;
+}

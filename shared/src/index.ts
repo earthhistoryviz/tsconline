@@ -240,6 +240,7 @@ export type PointSettings = {
 export type DataMiningSettings = {
   windowSize: number;
   stepSize: number;
+  isDataMiningColumn: boolean;
 };
 
 export type ColumnInfo = {
@@ -267,7 +268,7 @@ export type ColumnInfo = {
 };
 
 export type RangeSort = "first occurrence" | "last occurrence" | "alphabetical";
-export type EventFrequency = "FAD" | "LAD" | "Combined";
+export type EventFrequency = "FAD" | "LAD" | "Combined Events";
 
 export type EventSettings = {
   type: EventType;
@@ -348,11 +349,14 @@ export type SubRangeInfo = {
   popup: string;
 };
 
+export type SubEventType = "FAD" | "LAD" | "EVENT" | "EVENTS";
+
 export type SubEventInfo = {
   label: string;
   age: number;
   lineStyle: "solid" | "dashed" | "dotted";
   popup: string;
+  subEventType: SubEventType;
 };
 
 export type SubFaciesInfo = {
@@ -516,6 +520,8 @@ export function assertDataMiningSettings(o: any): asserts o is DataMiningSetting
   if (!o || typeof o !== "object") throw new Error("DataMiningSettings must be a non-null object");
   if (typeof o.windowSize !== "number") throwError("DataMiningSettings", "windowSize", "number", o.windowSize);
   if (typeof o.stepSize !== "number") throwError("DataMiningSettings", "stepSize", "number", o.stepSize);
+  if (typeof o.isDataMiningColumn !== "boolean")
+    throwError("DataMiningSettings", "isDataMiningColumn", "boolean", o.isDataMiningColumn);
 }
 
 export function isDataMiningPointDataType(o: any): o is DataMiningPointDataType {
@@ -539,7 +545,7 @@ export function assertEventSettings(o: any): asserts o is EventSettings {
 }
 
 export function isEventFrequency(o: any): o is EventFrequency {
-  return /^(FAD|LAD|Combined)$/.test(o);
+  return /^(FAD|LAD|Combined Events)$/.test(o);
 }
 
 export function assertMapPackInfoChunk(o: any): asserts o is MapPackInfoChunk {
@@ -586,6 +592,12 @@ export function assertPoint(o: any): asserts o is Point {
   if (typeof o.drawFill !== "boolean") throwError("Point", "drawFill", "boolean", o.drawFill);
   assertRGB(o.fill);
   assertColumnHeaderProps(o);
+}
+export function assertSubPointInfoArray(o: any): asserts o is SubPointInfo[] {
+  if (!Array.isArray(o)) throw new Error("SubPointInfo must be an array");
+  for (const subPoint of o) {
+    assertSubPointInfo(subPoint);
+  }
 }
 export function assertSubPointInfo(o: any): asserts o is SubPointInfo {
   if (!o || typeof o !== "object") throw new Error("SubPointInfo must be a non-null object");
@@ -679,6 +691,13 @@ export function assertEvent(o: any): asserts o is Event {
   }
   assertColumnHeaderProps(o);
 }
+export function assertSubEventInfoArray(o: any): asserts o is SubEventInfo[] {
+  if (!Array.isArray(o)) throw new Error("SubEventInfo must be an array");
+  for (const subEvent of o) {
+    assertSubEventInfo(subEvent);
+  }
+}
+
 export function assertSubEventInfo(o: any): asserts o is SubEventInfo {
   if (!o || typeof o !== "object") throw new Error("SubEventInfo must be a non-null object");
   if (typeof o.label !== "string") throwError("SubEventInfo", "label", "string", o.label);
@@ -686,6 +705,8 @@ export function assertSubEventInfo(o: any): asserts o is SubEventInfo {
   if (typeof o.popup !== "string") throwError("SubEventInfo", "popup", "string", o.popup);
   if (typeof o.lineStyle !== "string" || !/(^dotted|dashed|solid)$/.test(o.lineStyle))
     throwError("SubEventInfo", "lineStyle", "dotted | dashed | solid", o.lineStyle);
+  if (typeof o.subEventType !== "string" || !/(^FAD|LAD|EVENT)$/.test(o.subEventType))
+    throwError("SubEventInfo", "subEventType", "FAD | LAD | EVENT", o.subEventType);
 }
 
 export function assertColor(o: any): asserts o is Color {
@@ -1154,6 +1175,12 @@ export function assertVertBounds(vertBounds: any): asserts vertBounds is VertBou
   if (typeof vertBounds.scale !== "number") {
     throw new Error("VertBounds must have a scale number property");
   }
+}
+
+export function isSubEventType(o: any): o is SubEventType {
+  if (typeof o !== "string") return false;
+  if (!/^(EVENT|FAD|LAD|EVENTS)$/.test(o)) return false;
+  return true;
 }
 
 export function assertRectBounds(rectBounds: any): asserts rectBounds is RectBounds {

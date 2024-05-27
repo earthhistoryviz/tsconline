@@ -1,9 +1,11 @@
-import { action } from "mobx";
+import { action, observable } from "mobx";
 import { state } from "../state";
 import {
   ColumnInfo,
   ColumnInfoTSC,
+  DataMiningPointDataType,
   DataMiningSettings,
+  EventFrequency,
   EventSettings,
   PointSettings,
   RGB,
@@ -12,12 +14,23 @@ import {
   assertEventSettings,
   assertPointColumnInfoTSC,
   assertPointSettings,
+  assertSubEventInfoArray,
+  assertSubPointInfoArray,
   calculateAutoScale,
-  convertPointTypeToPointShape
+  convertPointTypeToPointShape,
+  defaultPointSettings,
+  isDataMiningPointDataType,
+  isEventFrequency
 } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { pushSnackbar } from "./general-actions";
 import { snackbarTextLengthLimit } from "../../util/constant";
+import { WindowStats, convertDataMiningPointDataTypeToDataMiningStatisticApproach } from "../../types";
+import {
+  computeWindowStatistics,
+  computeWindowStatisticsForDataPoints,
+  findRangeOfWindowStats
+} from "../../util/data-mining";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -201,6 +214,111 @@ export const searchColumns = action(async (searchTerm: string) => {
       }
     }
   });
+});
+
+export const addDataMiningColumn = action((column: ColumnInfo, type: EventFrequency | DataMiningPointDataType) => {
+  const dataMiningColumnName = type + " for " + column.name;
+  if (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") {
+    console.log("WARNING: tried to add a data mining column to a column that is not an event or point column");
+    return;
+  }
+  if (!column.parent) {
+    console.log("WARNING: tried to add a data mining column to a column with no parent");
+    return;
+  }
+  const parent = state.settingsTabs.columnHashMap.get(column.parent);
+  if (!parent) {
+    console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
+    return;
+  }
+  const index = parent.children.findIndex((child) => child.name === column.name);
+  if (index === -1) {
+    console.log("WARNING: ", column.name, "not found in parent's children when attempting to add data mining column");
+    return;
+  }
+  let windowStats: WindowStats[] = [];
+  switch (column.columnDisplayType) {
+    case "Event":
+      assertEventSettings(column.columnSpecificSettings);
+      assertSubEventInfoArray(column.subInfo);
+      if (!isEventFrequency(type)) {
+        console.log("WARNING: unknown event frequency associated with an event", type);
+        return;
+      }
+      windowStats = computeWindowStatistics(
+        column.subInfo
+          .filter((subEvent) => {
+            if (type === "Combined Events") return true;
+            else return subEvent.subEventType === type;
+          })
+          .map((subEvent) => subEvent.age),
+        column.columnSpecificSettings.windowSize,
+        "frequency"
+      );
+      break;
+    case "Point":
+      assertPointSettings(column.columnSpecificSettings);
+      assertSubPointInfoArray(column.subInfo);
+      if (!isDataMiningPointDataType(type)) {
+        console.log("WARNING: unknown data mining type associated with a point", type);
+        return;
+      }
+      windowStats = computeWindowStatisticsForDataPoints(
+        column.subInfo.map((subPoint) => {
+          return { age: subPoint.age, value: subPoint.xVal };
+        }),
+        column.columnSpecificSettings.windowSize,
+        convertDataMiningPointDataTypeToDataMiningStatisticApproach(type)
+      );
+      break;
+    default:
+      console.log("WARNING: unknown column display type", column.columnDisplayType);
+      return;
+  }
+  const { min, max } = findRangeOfWindowStats(windowStats);
+  const { lowerRange, upperRange, scaleStep } = calculateAutoScale(min, max);
+  const dataMiningColumn: ColumnInfo = observable({
+    ...cloneDeep(column),
+    name: dataMiningColumnName,
+    editName: dataMiningColumnName,
+    columnDisplayType: "Point",
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    },
+    columnSpecificSettings: {
+      ...cloneDeep(defaultPointSettings),
+      minX: min,
+      maxX: max,
+      // TODO change these to auto scale
+      lowerRange,
+      upperRange,
+      scaleStep,
+      isDataMiningColumn: true
+    }
+  });
+  parent.children.splice(index + 1, 0, dataMiningColumn);
+  state.settingsTabs.columnHashMap.set(dataMiningColumnName, dataMiningColumn);
+});
+
+export const removeDataMiningColumn = action((column: ColumnInfo, type: string) => {
+  const columnToRemove = type + " for " + column.name;
+  if (!column.parent) {
+    console.log("WARNING: tried to remove a data mining column from a column with no parent");
+    return;
+  }
+  const parent = state.settingsTabs.columnHashMap.get(column.parent);
+  if (!parent) {
+    console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
+    return;
+  }
+  const index = parent.children.findIndex((child) => child.name === columnToRemove);
+  if (index === -1) {
+    return;
+  }
+  parent.children.splice(index, 1);
+  state.settingsTabs.columnHashMap.delete(columnToRemove);
 });
 
 export const setShowOfAllChildren = action((column: ColumnInfo, isShown: boolean) => {
