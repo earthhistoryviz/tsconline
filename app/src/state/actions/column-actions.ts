@@ -19,7 +19,8 @@ import {
   calculateAutoScale,
   convertPointTypeToPointShape,
   defaultPointSettings,
-  isDataMiningPointDataType
+  isDataMiningPointDataType,
+  isEventFrequency
 } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { pushSnackbar } from "./general-actions";
@@ -240,8 +241,17 @@ export const addDataMiningColumn = action((column: ColumnInfo, type: EventFreque
     case "Event":
       assertEventSettings(column.columnSpecificSettings);
       assertSubEventInfoArray(column.subInfo);
+      if (!isEventFrequency(type)) {
+        console.log("WARNING: unknown event frequency associated with an event", type);
+        return;
+      }
       windowStats = computeWindowStatistics(
-        column.subInfo.map((subEvent) => subEvent.age),
+        column.subInfo
+          .filter((subEvent) => {
+            if (type === "Combined Events") return true;
+            else return subEvent.subEventType === type;
+          })
+          .map((subEvent) => subEvent.age),
         column.columnSpecificSettings.windowSize,
         "frequency"
       );
