@@ -1,3 +1,4 @@
+import { round } from "lodash";
 import { DataMiningStatisticApproach, WindowStats } from "../types";
 
 /**
@@ -17,11 +18,12 @@ export function computeWindowStatistics(
   if (data.length === 0 || windowSize === 0 || data.some((d) => isNaN(d))) {
     return [];
   }
-  const windows = Math.ceil(data.length / windowSize);
   data = data.sort((a, b) => a - b);
+  const lastDataPoint = data[data.length - 1]!;
+  const windows = Math.ceil(lastDataPoint / windowSize);
   const results: WindowStats[] = [];
-  let start = data[0]!;
-  let end = start + windowSize;
+  let start = data[0]!; // inclusive
+  let end = start + windowSize; // exclusive
 
   for (let i = 0; i < windows; i++) {
     // make sure to include the last value in the last window
@@ -48,11 +50,42 @@ export function computeWindowStatistics(
         else value = (lastWindowPoint - firstWindowPoint) / firstWindowPoint;
         break;
     }
-    results.push({ windowStart: start, windowEnd: end, value: value });
-    const lastDataPoint = data[data.length - 1];
+    results.push({ windowStart: start, windowEnd: end, value: round(value, 2) });
     if (!lastDataPoint || end > lastDataPoint) break;
     start = end;
     end = Math.min(end + windowSize, lastDataPoint);
   }
   return results;
+}
+
+type DataPoint = {
+  age: number;
+  value: number;
+}
+
+export function computWindowStatisticsForDataSet(
+  data: DataPoint[],
+  windowSize: number,
+  stat: DataMiningStatisticApproach
+) {
+  if (data.length === 0 || windowSize === 0 || data.some((d) => isNaN(d.value))) {
+    return [];
+  }
+  const windows = Math.ceil(data.length / windowSize);
+  data = data.sort((a, b) => a.age - b.age);
+  const results: WindowStats[] = [];
+  let start = data[0]!.age;
+  let end = start + windowSize;
+  return []
+}
+
+export function findRangeOfWindowStats(windowStats: WindowStats[]): { min: number; max: number } {
+  return windowStats.reduce(
+    (acc, curr) => {
+      if (curr.value < acc.min) acc.min = curr.value;
+      if (curr.value > acc.max) acc.max = curr.value;
+      return acc;
+    },
+    { min: Infinity, max: -Infinity }
+  );
 }

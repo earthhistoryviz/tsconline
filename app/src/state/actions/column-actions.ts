@@ -3,7 +3,9 @@ import { state } from "../state";
 import {
   ColumnInfo,
   ColumnInfoTSC,
+  DataMiningPointDataType,
   DataMiningSettings,
+  EventFrequency,
   EventSettings,
   PointSettings,
   RGB,
@@ -12,13 +14,18 @@ import {
   assertEventSettings,
   assertPointColumnInfoTSC,
   assertPointSettings,
+  assertSubEventInfo,
+  assertSubEventInfoArray,
+  assertSubPointInfoArray,
   calculateAutoScale,
   convertPointTypeToPointShape,
-  defaultPointSettings
+  defaultPointSettings,
+  isEventFrequency
 } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { pushSnackbar } from "./general-actions";
 import { snackbarTextLengthLimit } from "../../util/constant";
+import { DataMiningStatisticApproach } from "../../types";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -204,19 +211,11 @@ export const searchColumns = action(async (searchTerm: string) => {
   });
 });
 
-export const addDataMiningColumn = action((column: ColumnInfo, type: string) => {
+export const addDataMiningColumn = action((column: ColumnInfo, type: EventFrequency | DataMiningPointDataType) => {
   const dataMiningColumnName = type + " for " + column.name;
   if (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") {
     console.log("WARNING: tried to add a data mining column to a column that is not an event or point column");
     return;
-  }
-  switch (column.columnDisplayType) {
-    case "Event":
-      assertEventSettings(column.columnSpecificSettings);
-      break;
-    default:
-      assertPointSettings(column.columnSpecificSettings);
-      break;
   }
   if (!column.parent) {
     console.log("WARNING: tried to add a data mining column to a column with no parent");
@@ -231,6 +230,46 @@ export const addDataMiningColumn = action((column: ColumnInfo, type: string) => 
   if (index === -1) {
     console.log("WARNING: ", column.name, "not found in parent's children when attempting to add data mining column");
     return;
+  }
+  let data: number[] = [];
+  switch (column.columnDisplayType) {
+    case "Event":
+      assertEventSettings(column.columnSpecificSettings);
+      assertSubEventInfoArray(column.subInfo);
+      data = column.subInfo.filter(subEvent => subEvent.subEventType === type).map(subEvent => subEvent.age);
+      break;
+    case "Point":
+      assertPointSettings(column.columnSpecificSettings);
+      assertSubPointInfoArray(column.subInfo);
+      data = column.subInfo.map(subPoint => subPoint.age);
+      break;
+    default:
+      console.log("WARNING: unknown column display type", column.columnDisplayType);
+      return;
+  }
+  let dataMiningType: DataMiningStatisticApproach = "frequency";
+  switch (type) {
+    case "Frequency":
+    case "FAD":
+    case "LAD":
+    case "Combined Events":
+      dataMiningType = "frequency";
+      break;
+    case "Average Value":
+      dataMiningType = "average";
+      break;
+    case "Minimum Value":
+      dataMiningType = "minimum";
+      break;
+    case "Maximum Value":
+      dataMiningType = "maximum";
+      break;
+    case "Rate of Change":
+      dataMiningType = "rateOfChange";
+      break;
+    default:
+      console.log("WARNING: unknown data mining type", type);
+      return;
   }
   const dataMiningColumn: ColumnInfo = observable({
     ...cloneDeep(column),

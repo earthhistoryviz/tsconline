@@ -8,7 +8,9 @@ describe("computeWindowStatistics tests", () => {
       "average",
       [
         { windowStart: 1, windowEnd: 4, value: 2 },
-        { windowStart: 4, windowEnd: 7, value: 5.5 }
+        { windowStart: 4, windowEnd: 7, value: 5 },
+        { windowStart: 7, windowEnd: 10, value: 8 },
+        { windowStart: 10, windowEnd: 10, value: 10 }
       ]
     ],
     [
@@ -17,7 +19,9 @@ describe("computeWindowStatistics tests", () => {
       "minimum",
       [
         { windowStart: 1, windowEnd: 4, value: 1 },
-        { windowStart: 4, windowEnd: 7, value: 4 }
+        { windowStart: 4, windowEnd: 7, value: 4 },
+        { windowStart: 7, windowEnd: 10, value: 7 },
+        { windowStart: 10, windowEnd: 10, value: 10}
       ]
     ],
     [
@@ -26,7 +30,9 @@ describe("computeWindowStatistics tests", () => {
       "maximum",
       [
         { windowStart: 1, windowEnd: 4, value: 3 },
-        { windowStart: 4, windowEnd: 7, value: 7 }
+        { windowStart: 4, windowEnd: 7, value: 6 },
+        { windowStart: 7, windowEnd: 10, value: 9 },
+        { windowStart: 10, windowEnd: 10, value: 10}
       ]
     ],
     [
@@ -35,7 +41,9 @@ describe("computeWindowStatistics tests", () => {
       "rateOfChange",
       [
         { windowStart: 1, windowEnd: 4, value: 2 },
-        { windowStart: 4, windowEnd: 7, value: 0.75 }
+        { windowStart: 4, windowEnd: 7, value: 0.5 },
+        { windowStart: 7, windowEnd: 10, value: 0.29},
+        { windowStart: 10, windowEnd: 10, value: 0 }
       ]
     ],
     [
