@@ -8,6 +8,10 @@ import { MapPoints } from "./settings_tabs/map_points/MapPoints";
 import { Datapacks } from "./settings_tabs/Datapack";
 import { useTheme } from "@mui/material/styles";
 import { TSCTabs, TSCTab } from "./components";
+import { Typography } from "@mui/material";
+import SaveSettings from "./settings_tabs/SaveSettings";
+import LoadSettings from "./settings_tabs/LoadSettings";
+import "./Settings.css";
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
@@ -34,8 +38,20 @@ export const Settings = observer(function Settings() {
     }
   }
 
+  const SettingsHeader = () => {
+    return (
+      <div className="settings-header">
+        <LoadSettings />
+        <Typography className="settings-header-title" variant="subtitle1">
+          Settings
+        </Typography>
+        <SaveSettings />
+      </div>
+    );
+  };
   return (
-    <div style={{ background: theme.palette.settings.light, overflow: "auto" }}>
+    <div style={{ background: theme.palette.settings.light, overflow: "auto", wordSpacing: "1" }}>
+      <SettingsHeader />
       <TSCTabs value={selectedTabIndex} onChange={handleChange} centered>
         <TSCTab label="Time" onClick={() => actions.setSettingsTabsSelected("time")} />
         <TSCTab label="Column" onClick={() => actions.setSettingsTabsSelected("column")} />

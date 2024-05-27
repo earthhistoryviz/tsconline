@@ -119,7 +119,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
     normalizeColumnProperties(state.settingsTabs.columns!);
     const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
     changeManuallyAddedColumns(columnCopy);
-    const chartSettingsCopy: ChartSettings = JSON.parse(JSON.stringify(state.settings));
+    const chartSettingsCopy: ChartSettings = cloneDeep(state.settings);
     const xmlSettings = jsonToXml(columnCopy, chartSettingsCopy);
     body = JSON.stringify({
       settings: xmlSettings,

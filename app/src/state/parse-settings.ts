@@ -14,6 +14,7 @@ import {
   assertPointColumnInfoTSC,
   assertPointSettings,
   assertRulerColumnInfoTSC,
+  assertSequenceColumnInfoTSC,
   assertZoneColumnInfoTSC,
   convertPointShapeToPointType,
   defaultChartSettingsInfoTSC,
@@ -29,7 +30,7 @@ import {
   isRGB
 } from "@tsconline/shared";
 import { ChartSettings } from "../types";
-import { convertRgbToString, convertTSCColorToRGB, trimQuotes } from "../util/util";
+import { convertRgbToString, convertTSCColorToRGB } from "../util/util";
 import { cloneDeep } from "lodash";
 
 /**
@@ -113,9 +114,11 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
     }
     //these two tags have units, so make an object storing its unit and value
     else if (settingName === "unitsPerMY") {
-      settings[settingName].push({ unit: "Ma", text: Number(settingValue) });
+      if (settingNode.getAttribute("unit") !== null)
+        settings[settingName].push({ unit: settingNode.getAttribute("unit")!, text: Number(settingValue) });
     } else if (settingName === "skipEmptyColumns") {
-      settings[settingName].push({ unit: "Ma", text: Boolean(settingValue) });
+      if (settingNode.getAttribute("unit") !== null)
+        settings[settingName].push({ unit: settingNode.getAttribute("unit")!, text: settingValue === "true" });
     } else {
       updateProperty(settings, settingName as keyof ChartSettingsInfoTSC, settingValue);
     }
@@ -224,7 +227,6 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
           const orientationValue = child.getAttribute("orientation");
           const useNamedValue = child.getAttribute("useNamed");
           const standardizedValue = child.getAttribute("standardized");
-          const RGBregex = new RegExp("rgb([0-2]+[0-5]*,[0-2]+[0-5]*,[0-2]+[0-5]*)");
           const textValue = child.textContent!.trim();
           if (settingName === "backgroundColor" || settingName === "customColor") {
             let rgb = textValue.substring(4, textValue.length - 1).split(",");
@@ -349,7 +351,7 @@ function generateSettingsXml(stateSettings: ChartSettings, indent: string): stri
     xml += `${indent}    <setting name="text">${timeSettings.baseStageAge}</setting>\n`;
     xml += `${indent}</setting>\n`;
     xml += `${indent}<setting name="unitsPerMY" unit="${unit}">${timeSettings.unitsPerMY * 30}</setting>\n`;
-    xml += `${indent}<setting name="skipEmptyColumns">${timeSettings.skipEmptyColumns}</setting>\n`;
+    xml += `${indent}<setting name="skipEmptyColumns" unit="${unit}">${timeSettings.skipEmptyColumns}</setting>\n`;
   }
   xml += `${indent}<setting name="variableColors">UNESCO</setting>\n`;
   xml += `${indent}<setting name="negativeChk">false</setting>\n`;
@@ -418,9 +420,6 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
         isDataMiningColumn: state.columnSpecificSettings.isDataMiningColumn
       };
   }
-  //TODO: check with Ogg about quote usage
-  //strip surrounding quotations for id (ex. Belgium Datapack)
-  state.name = trimQuotes(state.name);
   switch (state.columnDisplayType) {
     case "RootColumn":
     case "MetaColumn":
@@ -434,7 +433,7 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
   column.isSelected = state.on;
   column.drawTitle = state.enableTitle;
   column.fonts = state.fontsInfo;
-  column.width = column.width;
+  column.width = state.width;
   column.backgroundColor.text!.r = state.rgb.r;
   column.backgroundColor.text!.g = state.rgb.g;
   column.backgroundColor.text!.b = state.rgb.b;
@@ -490,6 +489,13 @@ function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
     }
   }
   return xml;
+}
+
+function extractColumnType(text: string): string | undefined {
+  if (text.indexOf(".") === -1 || text.indexOf(":") === -1) {
+    return undefined;
+  }
+  return text.substring(text.indexOf(".") + 1, text.indexOf(":"));
 }
 
 function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
@@ -571,6 +577,9 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       xml += `${indent}<setting name="pointType" pointType="${column.pointType}"/>\n`;
     } else if ((key === "drawExtraColumn" && !keyValue) || key === "isDataMiningColumn") {
       continue;
+    } else if (key === "type" && extractColumnType(column._id) === "SequenceColumn") {
+      assertSequenceColumnInfoTSC(column);
+      xml += `${indent}<setting name="type" type="${column.type}"/>\n`;
     } else if (isRGB(keyValue)) {
       xml += `${indent}<setting name="${key}">${convertRgbToString(keyValue)}</setting>\n`;
     } else {

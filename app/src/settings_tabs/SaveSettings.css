@@ -1,0 +1,11 @@
+.MuiSvgIcon-root.save-settings-button {
+  color: gray;
+  width: 25px;
+  height: 25px;
+  margin: 0;
+}
+
+.MuiIconButton-root.icon-save-settings-button {
+  width: 35px;
+  height: 35px;
+}

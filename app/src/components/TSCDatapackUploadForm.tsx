@@ -34,6 +34,7 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
           <InputFileUpload
             startIcon={<CloudUploadIcon />}
             text="Upload Datapack"
+            variant="contained"
             onChange={(event) => {
               const file = event.target.files![0];
               if (!file) {
