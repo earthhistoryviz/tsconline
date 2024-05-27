@@ -10,6 +10,7 @@ export type SharedUser = {
   username: string;
   email: string;
   pictureUrl: string | null;
+  isGoogleUser: boolean;
   isAdmin: boolean;
   settings: {
     darkMode: boolean;
@@ -482,6 +483,7 @@ export function assertSharedUser(o: any): asserts o is SharedUser {
   if (typeof o.username !== "string") throwError("User", "username", "string", o.username);
   if (typeof o.email !== "string") throwError("User", "email", "string", o.email);
   if (o.pictureUrl && typeof o.pictureUrl !== "string") throwError("User", "pictureUrl", "string", o.pictureUrl);
+  if (typeof o.isGoogleUser !== "boolean") throwError("User", "isGoogleUser", "boolean", o.isGoogleUser);
   if (typeof o.isAdmin !== "boolean") throwError("User", "isAdmin", "boolean", o.isAdmin);
   if (!o.settings || typeof o.settings !== "object") throwError("User", "settings", "object", o.settings);
   if (typeof o.settings.darkMode !== "boolean") throwError("User", "settings.darkMode", "boolean", o.settings.darkMode);

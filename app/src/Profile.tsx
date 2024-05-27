@@ -122,6 +122,9 @@ export const Profile: React.FC<Profile> = observer(({ pictureUrl }) => {
             errorCode = ErrorCodes.NOT_LOGGED_IN;
             navigate("/login");
             break;
+          case 409:
+            errorCode = ErrorCodes.INCORRECT_PASSWORD;
+            break;
           case 422:
             errorCode = ErrorCodes.RECAPTCHA_FAILED;
             break;
@@ -237,6 +240,7 @@ export const Profile: React.FC<Profile> = observer(({ pictureUrl }) => {
                         size="small"
                         autoComplete="username"
                         margin="dense"
+                        required
                       />
                       <Box sx={{ mt: 2 }}>
                         <TSCButton onClick={() => handleChangeProfile("username")} sx={{ mr: 1 }}>
@@ -274,6 +278,7 @@ export const Profile: React.FC<Profile> = observer(({ pictureUrl }) => {
                         size="small"
                         autoComplete="username"
                         margin="dense"
+                        required
                       />
                       <Box>
                         <TSCButton onClick={() => handleChangeProfile("email")} sx={{ mr: 1 }}>
@@ -289,72 +294,76 @@ export const Profile: React.FC<Profile> = observer(({ pictureUrl }) => {
                     </>
                   )}
                 </Grid>
-                <Grid
-                  item
-                  xs={12}
-                  sx={{
-                    display: editMode.password ? "block" : "flex",
-                    justifyContent: editMode.password ? "" : "space-between"
-                  }}
-                  alignItems="center">
-                  <Box sx={{ minWidth: 75 }}>
-                    <Typography>Password:</Typography>
-                  </Box>
-                  {editMode.password ? (
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        handleChangeProfile("password");
-                      }}>
-                      {/* The below hidden input field helps with accessibility and allows browsers to autofill. Chrome complains if this is missing.*/}
-                      <input
-                        type="text"
-                        defaultValue={formValues.username}
-                        autoComplete="username"
-                        style={{ display: "none" }}
-                      />
-                      <Grid container display="flex" flexDirection="column">
-                        <Grid item xs={12}>
-                          <TextField
-                            type="password"
-                            name="currentPassword"
-                            label="Current Password"
-                            value={formValues.currentPassword}
-                            onChange={handleChange}
-                            size="small"
-                            fullWidth
-                            autoComplete="current-password"
-                            margin="dense"
-                          />
+                {!state.user.isGoogleUser && (
+                  <Grid
+                    item
+                    xs={12}
+                    sx={{
+                      display: editMode.password ? "block" : "flex",
+                      justifyContent: editMode.password ? "" : "space-between"
+                    }}
+                    alignItems="center">
+                    <Box sx={{ minWidth: 75 }}>
+                      <Typography>Password:</Typography>
+                    </Box>
+                    {editMode.password ? (
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleChangeProfile("password");
+                        }}>
+                        {/* The below hidden input field helps with accessibility and allows browsers to autofill. Chrome complains if this is missing.*/}
+                        <input
+                          type="text"
+                          defaultValue={formValues.username}
+                          autoComplete="username"
+                          style={{ display: "none" }}
+                        />
+                        <Grid container display="flex" flexDirection="column">
+                          <Grid item xs={12}>
+                            <TextField
+                              type="password"
+                              name="currentPassword"
+                              label="Current Password"
+                              value={formValues.currentPassword}
+                              onChange={handleChange}
+                              size="small"
+                              fullWidth
+                              autoComplete="current-password"
+                              margin="dense"
+                              required
+                            />
+                          </Grid>
+                          <Grid item xs={12}>
+                            <TextField
+                              type="password"
+                              name="newPassword"
+                              label="New Password"
+                              value={formValues.newPassword}
+                              onChange={handleChange}
+                              size="small"
+                              fullWidth
+                              autoComplete="new-password"
+                              margin="dense"
+                              required
+                            />
+                          </Grid>
                         </Grid>
-                        <Grid item xs={12}>
-                          <TextField
-                            type="password"
-                            name="newPassword"
-                            label="New Password"
-                            value={formValues.newPassword}
-                            onChange={handleChange}
-                            size="small"
-                            fullWidth
-                            autoComplete="new-password"
-                            margin="dense"
-                          />
-                        </Grid>
-                      </Grid>
-                      <Box>
-                        <TSCButton type="submit" sx={{ mr: 1 }}>
-                          Save
-                        </TSCButton>
-                        <TSCButton onClick={() => handleEditToggle("password")}>Cancel</TSCButton>
-                      </Box>
-                    </form>
-                  ) : (
-                    <>
-                      <Typography>***********</Typography>
-                      <TSCButton onClick={() => handleEditToggle("password")}>Change</TSCButton>
-                    </>
-                  )}
-                </Grid>
+                        <Box>
+                          <TSCButton type="submit" sx={{ mr: 1 }}>
+                            Save
+                          </TSCButton>
+                          <TSCButton onClick={() => handleEditToggle("password")}>Cancel</TSCButton>
+                        </Box>
+                      </form>
+                    ) : (
+                      <>
+                        <Typography>***********</Typography>
+                        <TSCButton onClick={() => handleEditToggle("password")}>Change</TSCButton>
+                      </>
+                    )}
+                  </Grid>
+                )}
                 <Grid item xs={12}>
                   <InputFileUpload
                     startIcon={<PersonIcon />}
