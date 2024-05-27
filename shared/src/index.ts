@@ -593,6 +593,12 @@ export function assertPoint(o: any): asserts o is Point {
   assertRGB(o.fill);
   assertColumnHeaderProps(o);
 }
+export function assertSubPointInfoArray(o: any): asserts o is SubPointInfo[] {
+  if (!Array.isArray(o)) throw new Error("SubPointInfo must be an array");
+  for (const subPoint of o) {
+    assertSubPointInfo(subPoint);
+  }
+}
 export function assertSubPointInfo(o: any): asserts o is SubPointInfo {
   if (!o || typeof o !== "object") throw new Error("SubPointInfo must be a non-null object");
   if (typeof o.age !== "number") throwError("SubPointInfo", "age", "number", o.age);
@@ -685,6 +691,13 @@ export function assertEvent(o: any): asserts o is Event {
   }
   assertColumnHeaderProps(o);
 }
+export function assertSubEventInfoArray(o: any): asserts o is SubEventInfo[] {
+  if (!Array.isArray(o)) throw new Error("SubEventInfo must be an array");
+  for (const subEvent of o) {
+    assertSubEventInfo(subEvent);
+  }
+}
+
 export function assertSubEventInfo(o: any): asserts o is SubEventInfo {
   if (!o || typeof o !== "object") throw new Error("SubEventInfo must be a non-null object");
   if (typeof o.label !== "string") throwError("SubEventInfo", "label", "string", o.label);
