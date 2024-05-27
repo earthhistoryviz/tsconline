@@ -236,12 +236,12 @@ export const addDataMiningColumn = action((column: ColumnInfo, type: EventFreque
     case "Event":
       assertEventSettings(column.columnSpecificSettings);
       assertSubEventInfoArray(column.subInfo);
-      data = column.subInfo.filter(subEvent => subEvent.subEventType === type).map(subEvent => subEvent.age);
+      data = column.subInfo.filter((subEvent) => subEvent.subEventType === type).map((subEvent) => subEvent.age);
       break;
     case "Point":
       assertPointSettings(column.columnSpecificSettings);
       assertSubPointInfoArray(column.subInfo);
-      data = column.subInfo.map(subPoint => subPoint.age);
+      data = column.subInfo.map((subPoint) => subPoint.age);
       break;
     default:
       console.log("WARNING: unknown column display type", column.columnDisplayType);
