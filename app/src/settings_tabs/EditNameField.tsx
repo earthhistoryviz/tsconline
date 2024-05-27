@@ -15,7 +15,7 @@ export const EditNameField: React.FC<{
       <TextField
         hiddenLabel
         id="editNameTextField"
-        defaultValue={column.editName}
+        value={column.editName}
         onChange={(event) => {
           actions.setEditName(event.target.value, column);
         }}
