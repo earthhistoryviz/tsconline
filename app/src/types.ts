@@ -1,3 +1,5 @@
+import { DataMiningPointDataType } from "@tsconline/shared";
+
 export type WindowStats = {
   windowStart: number;
   windowEnd: number;
@@ -76,6 +78,25 @@ export type ChartSettings = {
   datapackContainsSuggAge: boolean;
   useDatapackSuggestedAge: boolean;
 };
+
+export function convertDataMiningPointDataTypeToDataMiningStatisticApproach(
+  value: DataMiningPointDataType
+): DataMiningStatisticApproach {
+  switch (value) {
+    case "Average Value":
+      return "average";
+    case "Minimum Value":
+      return "minimum";
+    case "Maximum Value":
+      return "maximum";
+    case "Rate of Change":
+      return "rateOfChange";
+    case "Frequency":
+      return "frequency";
+    default:
+      throw new Error(`Invalid DataMiningPointDataType: ${value}`);
+  }
+}
 
 export function equalTimeSettings(a: TimeSettings, b: TimeSettings): boolean {
   return (

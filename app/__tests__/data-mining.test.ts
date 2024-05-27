@@ -1,5 +1,5 @@
 import { assertDataMiningStatisticApproach } from "../src/types";
-import { computeWindowStatistics, computeWindowStatisticsForDataSet } from "../src/util/data-mining";
+import { computeWindowStatistics, computeWindowStatisticsForDataPoints } from "../src/util/data-mining";
 describe("computeWindowStatistics tests", () => {
   const dataArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   test.each([
@@ -76,7 +76,7 @@ describe("computeWindowStatisticsForDataSet tests", () => {
     { age: 8, value: 3 },
     { age: 9, value: 2 },
     { age: 10, value: 1 }
-  ]
+  ];
   test.each([
     [
       dataPoints,
@@ -131,10 +131,10 @@ describe("computeWindowStatisticsForDataSet tests", () => {
         { windowStart: 4, windowEnd: 7, value: -0.29 },
         { windowStart: 7, windowEnd: 10, value: -0.5 },
         { windowStart: 10, windowEnd: 10, value: 0 }
-      ],
-    ],
+      ]
+    ]
   ])(`Computes %s %s %s correctly`, (data, windowSize, stat, expected) => {
     assertDataMiningStatisticApproach(stat);
-    expect(computeWindowStatisticsForDataSet(data, windowSize, stat)).toEqual(expected);
+    expect(computeWindowStatisticsForDataPoints(data, windowSize, stat)).toEqual(expected);
   });
 });

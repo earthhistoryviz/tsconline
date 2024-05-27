@@ -63,7 +63,7 @@ type DataPoint = {
   value: number;
 };
 
-export function computeWindowStatisticsForDataSet(
+export function computeWindowStatisticsForDataPoints(
   data: DataPoint[],
   windowSize: number,
   stat: DataMiningStatisticApproach
