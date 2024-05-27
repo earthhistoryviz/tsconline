@@ -17,7 +17,7 @@ import { displayServerError } from "./state/actions/util-actions";
 import Container from "@mui/material/Container";
 import "./Login.css";
 
-export const ResetPassword: React.FC = observer(() => {
+export const ForgotPassword: React.FC = observer(() => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const token = searchParams.get("token");

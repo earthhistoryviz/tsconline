@@ -258,6 +258,7 @@ server.post("/auth/change-email", strictRateLimit, loginRoutes.changeEmail);
 server.post("/auth/change-username", moderateRateLimit, loginRoutes.changeUsername);
 server.post("/auth/change-password", strictRateLimit, loginRoutes.changePassword);
 server.post("/auth/account-recovery", strictRateLimit, loginRoutes.accountRecovery);
+server.post("/auth/delete-profile", moderateRateLimit, loginRoutes.deleteProfile);
 server.post("/upload-profile-picture", moderateRateLimit, loginRoutes.uploadProfilePicture);
 
 // generates chart and sends to proper directory

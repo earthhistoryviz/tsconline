@@ -47,7 +47,8 @@ export enum ErrorCodes {
   RECAPTCHA_FAILED = "RECAPTCHA_FAILED",
   UNRECOGNIZED_IMAGE_FILE = "UNRECOGNIZED_IMAGE_FILE",
   UPLOAD_PROFILE_PICTURE_FAILED = "UPLOAD_PROFILE_PICTURE_FAILED",
-  UNABLE_TO_CHANGE_USERNAME = "UNABLE_TO_CHANGE_USERNAME"
+  UNABLE_TO_CHANGE_USERNAME = "UNABLE_TO_CHANGE_USERNAME",
+  UNABLE_TO_DELETE_PROFILE = "UNABLE_TO_DELETE_PROFILE"
 }
 
 export const ErrorMessages = {
@@ -107,5 +108,6 @@ export const ErrorMessages = {
   [ErrorCodes.RECAPTCHA_FAILED]: "Recaptcha failed. Please try again.",
   [ErrorCodes.UNRECOGNIZED_IMAGE_FILE]: "Unrecognized image extension. Please upload a valid image file.",
   [ErrorCodes.UPLOAD_PROFILE_PICTURE_FAILED]: "Unable to upload profile picture. Please try again later.",
-  [ErrorCodes.UNABLE_TO_CHANGE_USERNAME]: "Unable to change username. Please try again later."
+  [ErrorCodes.UNABLE_TO_CHANGE_USERNAME]: "Unable to change username. Please try again later.",
+  [ErrorCodes.UNABLE_TO_DELETE_PROFILE]: "Unable to delete profile. Please try again later."
 };

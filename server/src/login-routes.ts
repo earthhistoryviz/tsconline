@@ -7,7 +7,8 @@ import {
   updateUser,
   findVerification,
   createVerification,
-  deleteVerification
+  deleteVerification,
+  deleteUser
 } from "./database.js";
 import { compare, hash } from "bcrypt-ts";
 import { OAuth2Client } from "google-auth-library";
@@ -44,8 +45,26 @@ async function checkRecaptchaToken(token: string): Promise<number> {
   }
 }
 
+export const deleteProfile = async function deleteProfile(request: FastifyRequest, reply: FastifyReply) {
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "Not logged in" });
+    return;
+  }
+  try {
+    await deleteUser({ uuid });
+    const userDirectory = path.join(assetconfigs.uploadDirectory, uuid);
+    await fs.promises.rm(userDirectory, { recursive: true });
+    request.session.delete();
+    reply.send({ message: "Profile deleted" });
+  } catch (error) {
+    console.error("Error during profile deletion:", error);
+    reply.status(500).send({ error: "Unknown Error" });
+  }
+};
+
 export const changePassword = async function changePassword(
-  request: FastifyRequest<{ Body: { currentPassword: string; newPassword: string } }>,
+  request: FastifyRequest<{ Body: { currentPassword: string; newPassword: string; recaptchaToken: string } }>,
   reply: FastifyReply
 ) {
   const uuid = request.session.get("uuid");
@@ -53,12 +72,17 @@ export const changePassword = async function changePassword(
     reply.status(401).send({ error: "Not logged in" });
     return;
   }
-  const { currentPassword, newPassword } = request.body;
+  const { currentPassword, newPassword, recaptchaToken } = request.body;
   if (!currentPassword || !newPassword) {
     reply.status(400).send({ error: "Invalid form" });
     return;
   }
   try {
+    const score = await checkRecaptchaToken(recaptchaToken);
+    if (score < googleRecaptchaBotThreshold) {
+      reply.status(422).send({ error: "Recaptcha failed" });
+      return;
+    }
     const user = (await findUser({ uuid }))[0];
     if (!user) {
       throw new Error("User not found");
@@ -83,7 +107,7 @@ export const changePassword = async function changePassword(
 };
 
 export const changeUsername = async function changeUsername(
-  request: FastifyRequest<{ Body: { newUsername: string } }>,
+  request: FastifyRequest<{ Body: { newUsername: string; recaptchaToken: string } }>,
   reply: FastifyReply
 ) {
   const uuid = request.session.get("uuid");
@@ -91,12 +115,17 @@ export const changeUsername = async function changeUsername(
     reply.status(401).send({ error: "Not logged in" });
     return;
   }
-  const { newUsername } = request.body;
+  const { newUsername, recaptchaToken } = request.body;
   if (!newUsername) {
     reply.status(400).send({ error: "Invalid form" });
     return;
   }
   try {
+    const score = await checkRecaptchaToken(recaptchaToken);
+    if (score < googleRecaptchaBotThreshold) {
+      reply.status(422).send({ error: "Recaptcha failed" });
+      return;
+    }
     const user = (await findUser({ uuid }))[0];
     if (!user) {
       throw new Error("User not found");
