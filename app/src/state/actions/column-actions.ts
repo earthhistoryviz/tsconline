@@ -14,18 +14,22 @@ import {
   assertEventSettings,
   assertPointColumnInfoTSC,
   assertPointSettings,
-  assertSubEventInfo,
   assertSubEventInfoArray,
   assertSubPointInfoArray,
   calculateAutoScale,
   convertPointTypeToPointShape,
   defaultPointSettings,
-  isEventFrequency
+  isDataMiningPointDataType
 } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { pushSnackbar } from "./general-actions";
 import { snackbarTextLengthLimit } from "../../util/constant";
-import { DataMiningStatisticApproach } from "../../types";
+import { WindowStats, convertDataMiningPointDataTypeToDataMiningStatisticApproach } from "../../types";
+import {
+  computeWindowStatistics,
+  computeWindowStatisticsForDataPoints,
+  findRangeOfWindowStats
+} from "../../util/data-mining";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -231,46 +235,38 @@ export const addDataMiningColumn = action((column: ColumnInfo, type: EventFreque
     console.log("WARNING: ", column.name, "not found in parent's children when attempting to add data mining column");
     return;
   }
-  let data: number[] = [];
+  let windowStats: WindowStats[] = [];
   switch (column.columnDisplayType) {
     case "Event":
       assertEventSettings(column.columnSpecificSettings);
       assertSubEventInfoArray(column.subInfo);
-      data = column.subInfo.filter((subEvent) => subEvent.subEventType === type).map((subEvent) => subEvent.age);
+      windowStats = computeWindowStatistics(
+        column.subInfo.map((subEvent) => subEvent.age),
+        column.columnSpecificSettings.windowSize,
+        "frequency"
+      );
       break;
     case "Point":
       assertPointSettings(column.columnSpecificSettings);
       assertSubPointInfoArray(column.subInfo);
-      data = column.subInfo.map((subPoint) => subPoint.age);
+      if (!isDataMiningPointDataType(type)) {
+        console.log("WARNING: unknown data mining type associated with a point", type);
+        return;
+      }
+      windowStats = computeWindowStatisticsForDataPoints(
+        column.subInfo.map((subPoint) => {
+          return { age: subPoint.age, value: subPoint.xVal };
+        }),
+        column.columnSpecificSettings.windowSize,
+        convertDataMiningPointDataTypeToDataMiningStatisticApproach(type)
+      );
       break;
     default:
       console.log("WARNING: unknown column display type", column.columnDisplayType);
       return;
   }
-  let dataMiningType: DataMiningStatisticApproach = "frequency";
-  switch (type) {
-    case "Frequency":
-    case "FAD":
-    case "LAD":
-    case "Combined Events":
-      dataMiningType = "frequency";
-      break;
-    case "Average Value":
-      dataMiningType = "average";
-      break;
-    case "Minimum Value":
-      dataMiningType = "minimum";
-      break;
-    case "Maximum Value":
-      dataMiningType = "maximum";
-      break;
-    case "Rate of Change":
-      dataMiningType = "rateOfChange";
-      break;
-    default:
-      console.log("WARNING: unknown data mining type", type);
-      return;
-  }
+  const { min, max } = findRangeOfWindowStats(windowStats);
+  const { lowerRange, upperRange, scaleStep } = calculateAutoScale(min, max);
   const dataMiningColumn: ColumnInfo = observable({
     ...cloneDeep(column),
     name: dataMiningColumnName,
@@ -283,12 +279,12 @@ export const addDataMiningColumn = action((column: ColumnInfo, type: EventFreque
     },
     columnSpecificSettings: {
       ...cloneDeep(defaultPointSettings),
-      minX: 0,
-      maxX: 5,
+      minX: min,
+      maxX: max,
       // TODO change these to auto scale
-      lowerRange: 0,
-      upperRange: 5,
-      scaleStep: 1,
+      lowerRange,
+      upperRange,
+      scaleStep,
       isDataMiningColumn: true
     }
   });
