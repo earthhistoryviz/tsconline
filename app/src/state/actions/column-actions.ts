@@ -106,6 +106,49 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
   }
 });
 
+/**
+ * aligns the row order of the columns to the order specified by the loaded settings file
+ * moves any rows in the column that's not in the settings file to the bottom (same as jar)
+ */
+
+export const applyRowOrder = action("applyRowOrder", (column: ColumnInfo | undefined, settings: ColumnInfoTSC) => {
+  if (!column) return;
+  //needed since number of children in column and settings file could be different
+  let columnIndex = 0;
+  for (const settingsChild of settings.children) {
+    let currName = extractName(settingsChild._id);
+    //for manually changed columns
+    if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
+      currName = extractName(settings._id) + " " + currName;
+    }
+    //column isn't in the loaded datapack(s) so skip
+    if (!state.settingsTabs.columnHashMap.get(currName)) {
+      continue;
+    }
+    //current index doesn't have the column specified by the settings file
+    if (
+      currName !== column.children[columnIndex].name ||
+      "Chart Title in " + currName !== column.children[columnIndex].name
+    ) {
+      //find the index of the correct column
+      let switchIndex = columnIndex;
+      for (let j = columnIndex; j < column.children.length; j++) {
+        if (currName === column.children[j].name || "Chart Title in " + currName === column.children[j].name) {
+          switchIndex = j;
+          break;
+        }
+      }
+      //switch the two columns
+      [column.children[columnIndex], column.children[switchIndex]] = [
+        column.children[switchIndex],
+        column.children[columnIndex]
+      ];
+    }
+    applyRowOrder(column.children[columnIndex], settingsChild);
+    columnIndex++;
+  }
+});
+
 export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
   state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
   for (const childColumn of columnInfo.children) {
