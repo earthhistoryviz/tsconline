@@ -41,8 +41,7 @@ export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, count, 
       open={true}
       style={{
         marginBottom: `${margin}px`,
-        zIndex: `${100000 - index}`,
-
+        zIndex: `${100000 - index}`
       }}
       autoHideDuration={5000}
       onClose={handleCloseSnackbar}
