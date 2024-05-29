@@ -30,6 +30,7 @@ export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, count, 
       : severity === "success"
         ? theme.palette.snackbarAlert.main
         : theme.palette.warningAlert.main;
+  const fontSize = text.length < 56 ? 1 : text.length < 59 ? 0.9 : 0.85;
   function handleCloseSnackbar(_event: React.SyntheticEvent | Event, reason?: string) {
     if (reason === "clickaway") return;
 
@@ -40,7 +41,8 @@ export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, count, 
       open={true}
       style={{
         marginBottom: `${margin}px`,
-        zIndex: `${100000 - index}`
+        zIndex: `${100000 - index}`,
+
       }}
       autoHideDuration={5000}
       onClose={handleCloseSnackbar}
@@ -58,7 +60,7 @@ export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, count, 
           info: <Lottie key={text} animationData={InfoIcon} speed={0.7} autoplay />,
           warning: <Lottie key={text} animationData={WarningIcon} speed={0.7} autoplay />
         }}>
-        <Typography>
+        <Typography style={{ fontSize: `${fontSize}rem` }}>
           {countDisplay} {text}
         </Typography>
       </Alert>
