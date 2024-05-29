@@ -22,6 +22,7 @@ dotenv.config();
 
 async function checkRecaptchaToken(token: string): Promise<number> {
   try {
+    if (process.env.NODE_ENV != "production" && !process.env.RECAPTCHA_SECRET_KEY) return 1.0;
     const response = await fetch(
       `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`,
       { method: "POST" }
