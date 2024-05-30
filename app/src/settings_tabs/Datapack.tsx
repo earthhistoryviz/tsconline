@@ -58,7 +58,6 @@ export const Datapacks = observer(function Datapacks() {
         return "";
       }
     }
-
   }
 
   const handleDownload = async (needEncryption: boolean, fileName: string) => {
