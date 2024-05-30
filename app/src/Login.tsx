@@ -90,7 +90,7 @@ export const Login: React.FC = observer(() => {
             errorCode = ErrorCodes.RECAPTCHA_FAILED;
             break;
           case 423:
-            errorCode = ErrorCodes.UNABLE_TO_LOGIN_ACCOUNT_LOCKED;
+            errorCode = s.UNABLE_TO_LOGIN_ACCOUNT_LOCKED;
             break;
           case 429:
             actions.removeAllErrors();
