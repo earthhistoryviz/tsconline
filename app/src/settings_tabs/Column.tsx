@@ -22,78 +22,12 @@ type ColumnAccordionProps = {
 };
 
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) => {
-  const { actions, state } = useContext(context);
-  const theme = useTheme();
   if (!details.show) {
     return null;
   }
-  //for keeping the original name for array access
-  const hasChildren = details.children && Object.keys(details.children).length > 0;
-  const columnName = (
-    <div>
-      <Typography className="column-display-name">{details.editName}</Typography>
-    </div>
-  );
-
-  const dataInrange = checkIfDataIsInRange(
-    details.minAge,
-    details.maxAge,
-    state.settings.timeSettings[details.units].topStageAge,
-    state.settings.timeSettings[details.units].baseStageAge
-  );
-
-  function checkbox(leaf: string) {
-    const tooltipOrCheckBox =
-      !dataInrange && !(details.name === "Ma" || details.name === "Root") ? (
-        <Tooltip
-          title="Data not included in time range"
-          placement="top"
-          arrow
-          slotProps={{
-            popper: {
-              modifiers: [
-                {
-                  name: "offset",
-                  options: {
-                    offset: [0, -10]
-                  }
-                }
-              ]
-            }
-          }}>
-          <ErrorOutlineIcon
-            className="column-error-icon"
-            style={{
-              color: theme.palette.error.main
-            }}
-          />
-        </Tooltip>
-      ) : (
-        <TSCCheckbox
-          checked={details.on}
-          className="column-checkbox"
-          onChange={() => {
-            actions.toggleSettingsTabColumn(details.name, details);
-          }}
-        />
-      );
-
-    return (
-      <ColumnContainer
-        className={"column-icon-container " + leaf}
-        onClick={(event) => {
-          event.stopPropagation();
-          actions.setColumnSelected(details.name);
-        }}>
-        {tooltipOrCheckBox}
-        {columnName}
-      </ColumnContainer>
-    );
-  }
-
   // if there are no children, don't make an accordion
-  if (!hasChildren) {
-    return checkbox("column-leaf");
+  if (details.children.length == 0) {
+    return <ColumnIcon column={details} />;
   }
   return (
     <div className="column-accordion-container">
@@ -106,7 +40,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
           expandIcon={<ArrowForwardIosSharpIcon sx={{ fontSize: "0.9rem" }} />}
           aria-controls="panel-content"
           className="column-accordion-summary">
-          {checkbox("")}
+          <ColumnIcon column={details} />
         </MuiAccordionSummary>
         <MuiAccordionDetails className="column-accordion-details">
           {details.children &&
@@ -153,6 +87,67 @@ export const Column = observer(function Column() {
         <ColumnMenu />
       </div>
     </div>
+  );
+});
+
+const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
+  const { state, actions } = useContext(context);
+  const theme = useTheme();
+  const dataInrange = checkIfDataIsInRange(
+    column.minAge,
+    column.maxAge,
+    state.settings.timeSettings[column.units].topStageAge,
+    state.settings.timeSettings[column.units].baseStageAge
+  );
+  const columnName = (
+    <div>
+      <Typography className="column-display-name">{column.editName}</Typography>
+    </div>
+  );
+  const tooltipOrCheckBox =
+    !dataInrange && !(column.name === "Ma" || column.name === "Root") ? (
+      <Tooltip
+        title="Data not included in time range"
+        placement="top"
+        arrow
+        slotProps={{
+          popper: {
+            modifiers: [
+              {
+                name: "offset",
+                options: {
+                  offset: [0, -10]
+                }
+              }
+            ]
+          }
+        }}>
+        <ErrorOutlineIcon
+          className="column-error-icon"
+          style={{
+            color: theme.palette.error.main
+          }}
+        />
+      </Tooltip>
+    ) : (
+      <TSCCheckbox
+        checked={column.on}
+        className="column-checkbox"
+        onChange={() => {
+          actions.toggleSettingsTabColumn(column);
+        }}
+      />
+    );
+  return (
+    <ColumnContainer
+      className={`column-icon-container ${column.children.length > 0 ? "column-parent" : "column-leaf"}`}
+      onClick={(event) => {
+        event.stopPropagation();
+        actions.setColumnSelected(column.name);
+      }}>
+      {tooltipOrCheckBox}
+      {columnName}
+    </ColumnContainer>
   );
 });
 
