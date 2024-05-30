@@ -735,11 +735,7 @@ export const requestDownload = action(async (filename: string, needEncryption: b
         break;
       }
       case 401: {
-        displayServerError(
-          response,
-          ErrorCodes.NOT_LOGGED_IN,
-          ErrorMessages[ErrorCodes.NOT_LOGGED_IN]
-        );
+        displayServerError(response, ErrorCodes.NOT_LOGGED_IN, ErrorMessages[ErrorCodes.NOT_LOGGED_IN]);
         break;
       }
     }
