@@ -7,7 +7,7 @@ import { NumericFormat } from "react-number-format";
 import { ColumnInfo } from "@tsconline/shared";
 
 const WidthTextField = ({ ...props }: TextFieldProps) => (
-  <TextField {...props} hiddenLabel variant="filled" size="small" />
+  <TextField {...props} hiddenLabel variant="outlined" className="edit-width-text-field" />
 );
 
 export const EditWidthField: React.FC<{

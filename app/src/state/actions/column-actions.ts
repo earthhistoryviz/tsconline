@@ -43,7 +43,7 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
   if ("showUncertaintyLabels" in column) setShowUncertaintyLabels(settings.drawUncertaintyLabel, column);
   if ("showAgeLabels" in column) setShowAgeLabels(settings.drawAgeLabel, column);
   setColumnOn(settings.isSelected, column);
-  if (settings.width) setWidth(settings.width, column);
+  if (settings.width && column.children.length == 0) setWidth(settings.width, column);
   if (settings.backgroundColor.text) {
     setRGB(settings.backgroundColor.text, column);
   } else {
