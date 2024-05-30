@@ -43,12 +43,13 @@
 
 .MuiTypography-root.column-display-name {
   font-size: 0.97rem;
-  padding: 6px;
+  padding-bottom: 4px;
 }
 
-.column-checkbox {
+.column-icon-container {
   display: flex;
   cursor: pointer;
+  align-items: center;
 }
 
 .column-leaf {
@@ -90,4 +91,49 @@
 
 .column-top-level .MuiTypography-root {
   margin: 10;
+}
+
+.column-checkbox {
+  padding: 0 9px 0 9px;
+}
+.column-accordion-details {
+  padding: 0 0 0 12px;
+}
+.accordion-line {
+  position: absolute;
+  left: 7.196px;
+  top: 28px;
+  bottom: 0;
+  width: 1px;
+  background-color: #ccc; /* Adjust the color as needed */
+  z-index: 1;
+}
+.column-accordion-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.column-accordion-summary {
+  padding-left: 0px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-right: 0px;
+  min-height: 30px;
+  white-space: nowrap;
+}
+
+.column-accordion-summary > .MuiAccordionSummary-expandIconWrapper.Mui-expanded {
+  transform: rotate(90deg);
+  display: flex;
+  order: -1;
+}
+
+.column-accordion-summary > .MuiAccordionSummary-content {
+  order: 2;
+  flex-grow: 1;
+  align-items: center;
+  margin: 0;
 }
