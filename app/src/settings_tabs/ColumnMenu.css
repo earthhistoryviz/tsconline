@@ -1,32 +1,35 @@
 .column-menu {
-  width: fit-content;
-  height: fit-content;
-  background-color: lightblue;
   display: flex;
+  align-items: center;
   flex-direction: column;
+  flex-grow: 1;
+}
+.settings-header-divider {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  width: 90%;
 }
 .column-menu-label {
-  display: none;
+  display: flex;
   justify-content: center;
   align-items: center;
   flex-grow: 1;
-  background-color: lightblue;
 }
 .column-menu-header {
   display: flex;
   flex-direction: row;
   width: 20vw;
 }
-.column-settings-cog {
-  background-color: lightgray;
-}
 .column-menu-content {
-  display: none;
-  flex-direction: column;
-}
-.ShowTitlesContainer {
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
+  padding: 0 10px;
+  gap: 10px;
+  width: 100%;
+}
+.ShowTitlesContainer {
+  flex-direction: row;
   margin-top: 10px;
   margin-left: 10px;
 }
@@ -53,9 +56,22 @@
 .custom-icon-button {
   background-color: transparent;
   border: none;
-  padding-left: 17px;
   margin: 0;
   width: 100%;
   height: 100%;
-  border-radius: 5px; /* Match the border-radius of the parent */
+  border-radius: 5px;
+}
+
+.column-advanced-controls {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+.column-color-and-font {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
 }

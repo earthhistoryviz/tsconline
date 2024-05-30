@@ -1,13 +1,13 @@
 import { observer } from "mobx-react-lite";
 import { useContext, useState } from "react";
 import { context } from "../state";
-import { FormControlLabel, ToggleButton, Typography } from "@mui/material";
+import { Divider, FormControlLabel, ToggleButton, Typography } from "@mui/material";
 import SettingsSharpIcon from "@mui/icons-material/SettingsSharp";
 import "./ColumnMenu.css";
 import { FontMenu } from "./FontMenu";
 import { ChangeBackgroundColor } from "./BackgroundColor";
 import { ColumnInfo } from "@tsconline/shared";
-import { TSCCheckbox } from "../components";
+import { CustomDivider, TSCCheckbox } from "../components";
 import { InfoBox } from "./InfoBox";
 import { EditWidthField } from "./EditWidthField";
 import { EventSpecificSettings } from "./advanced_settings/EventSpecificSettings";
@@ -18,60 +18,38 @@ import AccordionPositionControls from "./AccordionPositionControls";
 
 export const ColumnMenu = observer(() => {
   const { state } = useContext(context);
-  const [openMenu, setOpenMenu] = useState(false);
   const selectedColumn = state.settingsTabs.columnSelected;
   const column = selectedColumn ? state.settingsTabs.columnHashMap.get(selectedColumn!) : undefined;
-  function showMenu() {
-    const menu = document.getElementById("ColumnMenuContent");
-    const label = document.getElementById("ColumnMenuLabel");
-    if (menu !== null && label !== null) {
-      if (!openMenu) {
-        menu.style.display = "flex";
-        label.style.display = "flex";
-        setOpenMenu(true);
-      } else {
-        menu.style.display = "none";
-        label.style.display = "none";
-        setOpenMenu(false);
-      }
-    }
-  }
 
   return (
-    <div className={openMenu ? "column-menu" : ""}>
+    <div className="column-menu">
       <div className="column-menu-header">
-        <div className="column-settings-cog">
-          <ToggleButton
-            value="check"
-            selected={openMenu}
-            onChange={() => {
-              showMenu();
-            }}
-            size="small">
-            <SettingsSharpIcon />
-          </ToggleButton>
-        </div>
         <div id="ColumnMenuLabel" className="column-menu-label">
-          <Typography>Settings</Typography>
+          <Typography component="h1" variant="h5">
+            Column Customization
+          </Typography>
         </div>
       </div>
-      <div id="ColumnMenuContent" className="column-menu-content">
+      <CustomDivider className="settings-header-divider" />
+      <div className="column-menu-content">
         {column && (
           <>
             <EditNameField column={column} />
-            {column.children.length === 0 && <ChangeBackgroundColor column={column} />}
-            <FontMenu column={column} />
-            <ShowTitles column={column} />
+            <div className="column-color-and-font">
+              <FontMenu column={column} />
+              {column.children.length === 0 && <ChangeBackgroundColor column={column} />}
+            </div>
             {column.width !== undefined && column.columnDisplayType !== "Ruler" && (
               <EditWidthField key={column.name} column={column} />
             )}
+            <div className="column-advanced-controls">
+              <PointSettingsPopup column={column} />
+              <DataMiningModal column={column} />
+              <AccordionPositionControls column={column} />
+            </div>
+            <ShowTitles column={column} />
             <EventSpecificSettings column={column} />
-            <PointSettingsPopup column={column} />
-            <DataMiningModal column={column} />
             {!!column.popup && <InfoBox info={column.popup} />}
-
-            {/* Buttons to change order of accordion items */}
-            <AccordionPositionControls column={column} />
           </>
         )}
       </div>

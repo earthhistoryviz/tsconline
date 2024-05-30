@@ -160,20 +160,29 @@ const ColumnSearchBar = observer(() => {
   };
   return (
     <div className="column-search-bar-container">
-      {state.settingsTabs.columnSearchTerm && (
-        <Typography variant="body2" color="textSecondary" id="column-search-term">
-          <span style={{ color: "red" }}>Filtered For: &quot;{state.settingsTabs.columnSearchTerm}&quot;</span>
-        </Typography>
-      )}
       <TextField
-        id="column-search-bar"
+        className="column-search-bar"
         label="Search"
+        helperText={<FilterHelperText helperText={state.settingsTabs.columnSearchTerm} />}
         variant="outlined"
         size="small"
         fullWidth
         onChange={handleSearch}
         value={state.settingsTabs.columnSearchTerm}
       />
+    </div>
+  );
+});
+
+const FilterHelperText = observer(({ helperText }: { helperText: string }) => {
+  if (helperText.length > 50) helperText = helperText.substring(0, 50) + "...";
+  return (
+    <div className="search-filter-helper-text">
+      {helperText && (
+        <Typography variant="body2" color="textSecondary" id="column-search-term">
+          <span style={{ color: "red" }}>Filtered For: &quot;{helperText}&quot;</span>
+        </Typography>
+      )}
     </div>
   );
 });

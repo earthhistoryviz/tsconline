@@ -14,12 +14,13 @@ export const EditNameField: React.FC<{
       <Typography id="edit-name-text">Edit Title</Typography>
       <TextField
         hiddenLabel
+        fullWidth
         id="editNameTextField"
         value={column.editName}
         onChange={(event) => {
           actions.setEditName(event.target.value, column);
         }}
-        variant="filled"
+        variant="outlined"
         size="small"
       />
     </div>
