@@ -709,7 +709,8 @@ export const requestDownload = action(async (filename: string, needEncryption: b
     route = `/download/user-datapacks/${filename}?needEncryption=${needEncryption}`;
   }
   const response = await fetcher(route, {
-    method: "GET"
+    method: "GET",
+    credentials: "include"
   });
   if (!response.ok) {
     switch (response.status) {
@@ -733,7 +734,16 @@ export const requestDownload = action(async (filename: string, needEncryption: b
         );
         break;
       }
+      case 401: {
+        displayServerError(
+          response,
+          ErrorCodes.NOT_LOGGED_IN,
+          ErrorMessages[ErrorCodes.NOT_LOGGED_IN]
+        );
+        break;
+      }
     }
+    return;
   }
   const file = response.blob();
   return file;
