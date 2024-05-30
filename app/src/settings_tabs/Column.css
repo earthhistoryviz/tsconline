@@ -52,10 +52,6 @@
   align-items: center;
 }
 
-.column-leaf {
-  padding-left: 14.7px;
-}
-
 /* Hide scrollbar for Chrome, Safari and Opera */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
@@ -78,11 +74,8 @@
 }
 
 .MuiSvgIcon-root.column-error-icon {
-  font-size: 1.3rem;
-  margin-right: 0px;
-  margin-left: 10px;
-  margin-right: 10px;
-  margin-top: 6px;
+  width: 20px;
+  height: 20px;
 }
 
 .filtered-border {
@@ -93,15 +86,17 @@
   margin: 10;
 }
 
-.column-checkbox {
-  padding: 0 9px 0 9px;
+.column-checkbox,
+.MuiSvgIcon-root.column-error-icon {
+  margin: 0 9px 0 0px;
+  padding: 0px;
 }
 .column-accordion-details {
   padding: 0 0 0 12px;
 }
 .accordion-line {
   position: absolute;
-  left: 7.196px;
+  left: 4px;
   top: 28px;
   bottom: 0;
   width: 1px;
@@ -129,6 +124,14 @@
   transform: rotate(90deg);
   display: flex;
   order: -1;
+}
+
+.column-accordion-summary > .MuiAccordionSummary-expandIconWrapper {
+  margin-right: 5px;
+}
+
+.column-leaf {
+  margin-left: 7.4px;
 }
 
 .column-accordion-summary > .MuiAccordionSummary-content {

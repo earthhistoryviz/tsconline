@@ -160,7 +160,7 @@ export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
  * parents: list of names that indicates the path from top to the toggled column
  */
 
-export const toggleSettingsTabColumn = action((name: string, column: ColumnInfo) => {
+export const toggleSettingsTabColumn = action((column: ColumnInfo) => {
   column.on = !column.on;
   if (!column.on || !column.parent) return;
   if (state.settingsTabs.columnHashMap.get(column.parent) === undefined) {
