@@ -37,10 +37,10 @@
 }
 
 .column-accordion-wrapper {
-  overflow: auto;
   width: 500px;
   max-height: 80vh;
   border: 1px solid gray;
+  overflow: auto;
   border-radius: 4px;
   z-index: 0;
   padding: 10px;
@@ -48,13 +48,9 @@
 
 .MuiTypography-root.column-display-name {
   font-size: 0.97rem;
-  padding-bottom: 4px;
-}
-
-.column-icon-container {
-  display: flex;
-  cursor: pointer;
-  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
@@ -121,6 +117,12 @@
   justify-content: flex-end;
 }
 
+.column-accordion {
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
 .MuiIconButton-root.expand-collapse-column-buttons {
   width: 30px;
   height: 30px;
@@ -130,14 +132,11 @@
 .column-accordion-summary {
   padding-left: 0px;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   padding-right: 0px;
   min-height: 30px;
-  white-space: nowrap;
-}
-.column-accordion-summary:hover {
-  background-color: #ccc;
+  text-overflow: ellipsis;
 }
 
 .column-accordion-summary > .MuiAccordionSummary-expandIconWrapper.Mui-expanded {
@@ -160,7 +159,15 @@
   align-items: center;
   margin: 0;
 }
-
+.column-row-container {
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  justify-content: flex-start;
+}
+.column-accordion-summary:hover, .column-leaf-row-container:hover {
+  background-color: #ccc;
+}
 .search-filter-helper-text {
   height: 10px;
   width: 400px;

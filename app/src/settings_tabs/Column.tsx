@@ -29,7 +29,11 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
   }
   // if there are no children, don't make an accordion
   if (details.children.length == 0) {
-    return <ColumnIcon column={details} />;
+    return (
+      <div className="column-leaf-row-container">
+        <ColumnIcon column={details} />
+      </div>
+    )
   }
   return (
     <div className="column-accordion-container">
@@ -37,6 +41,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
       <Accordion
         //checks if column name is in expand list
         expanded={details.expanded}
+        className="column-accordion"
         onChange={() => setExpanded(!details.expanded, details)}>
         <MuiAccordionSummary
           expandIcon={<ArrowForwardIosSharpIcon sx={{ fontSize: "0.9rem" }} />}
@@ -106,9 +111,7 @@ const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
     state.settings.timeSettings[column.units].baseStageAge
   );
   const columnName = (
-    <div>
       <Typography className="column-display-name">{column.editName}</Typography>
-    </div>
   );
   const tooltipOrCheckBox =
     !dataInrange && !(column.name === "Ma" || column.name === "Root") ? (
@@ -146,7 +149,7 @@ const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
     );
   return (
     <ColumnContainer
-      className={`column-icon-container ${column.children.length > 0 ? "column-parent" : "column-leaf"}`}
+      className={`column-row-container ${column.children.length > 0 ? "" : "column-leaf"}`}
       onClick={(event) => {
         event.stopPropagation();
         actions.setColumnSelected(column.name);
