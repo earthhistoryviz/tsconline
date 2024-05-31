@@ -37,7 +37,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
       <Accordion
         //checks if column name is in expand list
         expanded={details.expanded}
-        onChange={() => setExpanded(details, !details.expanded)}>
+        onChange={() => setExpanded(!details.expanded, details)}>
         <MuiAccordionSummary
           expandIcon={<ArrowForwardIosSharpIcon sx={{ fontSize: "0.9rem" }} />}
           aria-controls="panel-content"
