@@ -9,8 +9,8 @@ import { Accordion, AccordionSummary, AccordionDetails, Grid, Typography } from 
 import { useTheme, styled } from "@mui/material/styles";
 import { TSCIcon, TSCButton, TSCCard, StyledScrollbar } from "./components";
 import TSCreatorLogo from "./assets/TSCreatorLogo.png";
-
 import "./Home.css";
+import CookieConsent from "./CookieConsent";
 
 const HeaderContainer = styled("div")(({ theme }) => ({
   display: "flex",
@@ -62,6 +62,7 @@ export const Home = observer(function Home() {
           Remove Cache
         </TSCButton>
       </div>
+      <CookieConsent />
     </div>
   );
 });
