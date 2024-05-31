@@ -1,10 +1,9 @@
-import { assetconfigs } from "./index.js";
 import { exec } from "child_process";
 
-export async function runJavaEncrypt(filepath: string, encryptedFilepathDir: string) {
+export async function runJavaEncrypt(activeJar: string, filepath: string, encryptedFilepathDir: string) {
     return new Promise<void>((resolve, reject) => {
         const cmd =
-            `java -jar ${assetconfigs.activeJar} ` +
+            `java -jar ${activeJar} ` +
             `-d "${filepath.replaceAll("\\", "/")}" ` +
             `-enc ${encryptedFilepathDir.replaceAll("\\", "/")} ` +
             `-node`;
