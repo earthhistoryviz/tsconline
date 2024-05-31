@@ -117,33 +117,38 @@ export const applyRowOrder = action("applyRowOrder", (column: ColumnInfo | undef
   //needed since number of children in column and settings file could be different
   let columnIndex = 0;
   for (const settingsChild of settings.children) {
-    let currName = extractName(settingsChild._id);
+    if (columnIndex === column.children.length) break;
+    
+    let childName = extractName(settingsChild._id);
     //for manually changed columns
     if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
-      currName = extractName(settings._id) + " " + currName;
+      childName = extractName(settings._id) + " " + childName;
+    }
+    //for chart titles with different units
+    else if (!column.parent) {
+      if (state.settingsTabs.columnHashMap.get(altUnitNamePrefix + childName))
+        childName = altUnitNamePrefix + childName;
     }
     //column isn't in the loaded datapack(s) so skip
-    if (!state.settingsTabs.columnHashMap.get(currName)) {
+    if (!state.settingsTabs.columnHashMap.get(childName)) {
       continue;
     }
     //current index doesn't have the column specified by the settings file
-    if (
-      currName !== column.children[columnIndex].name ||
-      "Chart Title in " + currName !== column.children[columnIndex].name
-    ) {
-      //find the index of the correct column
-      let switchIndex = columnIndex;
+    if (childName !== column.children[columnIndex].name) {
+      //find the index of the column that matches
+      let indexOfMatch = -1;
       for (let j = columnIndex; j < column.children.length; j++) {
-        if (currName === column.children[j].name || "Chart Title in " + currName === column.children[j].name) {
-          switchIndex = j;
+        if (childName === column.children[j].name) {
+          indexOfMatch = j;
           break;
         }
       }
       //switch the two columns
-      [column.children[columnIndex], column.children[switchIndex]] = [
-        column.children[switchIndex],
-        column.children[columnIndex]
-      ];
+      if (indexOfMatch !== -1)
+        [column.children[columnIndex], column.children[indexOfMatch]] = [
+          column.children[indexOfMatch],
+          column.children[columnIndex]
+        ];
     }
     applyRowOrder(column.children[columnIndex], settingsChild);
     columnIndex++;
