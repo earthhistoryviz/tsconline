@@ -118,7 +118,7 @@ export const applyRowOrder = action("applyRowOrder", (column: ColumnInfo | undef
   let columnIndex = 0;
   for (const settingsChild of settings.children) {
     if (columnIndex === column.children.length) break;
-    
+
     let childName = extractName(settingsChild._id);
     //for manually changed columns
     if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
