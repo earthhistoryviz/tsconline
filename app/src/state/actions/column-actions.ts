@@ -226,32 +226,32 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
   await yieldControl(counter, 30);
   if (searchTerm === "") {
     state.settingsTabs.columnHashMap.forEach((columnInfo) => {
-      columnInfo.show = true;
-      columnInfo.expanded = false;
+      setExpanded(false, columnInfo);
+      setShow(true, columnInfo);
     });
     if (!state.settingsTabs.columns) return;
     for (const child of state.settingsTabs.columns.children) {
-      child.expanded = true;
+      setExpanded(true, child);
     }
     return;
   }
   for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
-    columnInfo.show = false;
-    columnInfo.expanded = false;
+    setShow(false, columnInfo);
+    setExpanded(false, columnInfo);
   }
 
   for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
     if (columnInfo.show != true && columnInfo.name.toLowerCase().includes(searchTerm.toLowerCase())) {
-      columnInfo.show = true;
-      columnInfo.expanded = true;
+      setShow(true, columnInfo);
+      setExpanded(true, columnInfo);
       let parentName = columnInfo.parent;
       await setExpansionOfAllChildren(columnInfo, false);
       await setShowOfAllChildren(columnInfo, true);
       while (parentName) {
         const parentColumnInfo = state.settingsTabs.columnHashMap.get(parentName);
         if (parentColumnInfo && !parentColumnInfo.expanded && !parentColumnInfo.show) {
-          parentColumnInfo.show = true;
-          parentColumnInfo.expanded = true;
+          setShow(true, parentColumnInfo);
+          setExpanded(true, parentColumnInfo);
           parentName = parentColumnInfo.parent;
         } else {
           break;
@@ -374,10 +374,6 @@ export const setShowOfAllChildren = action(async (column: ColumnInfo, isShown: b
   }
 });
 
-export const setExpanded = action((column: ColumnInfo, isExpanded: boolean) => {
-  column.expanded = isExpanded;
-});
-
 export const setExpansionOfAllChildren = action(
   async (column: ColumnInfo, isExpanded: boolean, counter = { count: 0 }) => {
     column.expanded = isExpanded;
@@ -424,6 +420,14 @@ export const setEnableTitle = action((isOn: boolean, column: ColumnInfo) => {
 
 export const setRGB = action((color: RGB, column: ColumnInfo) => {
   column.rgb = color;
+});
+
+export const setShow = action((show: boolean, column: ColumnInfo) => {
+  column.show = show;
+});
+
+export const setExpanded = action((expanded: boolean, column: ColumnInfo) => {
+  column.expanded = expanded;
 });
 
 export const setShowAgeLabels = action((isOn: boolean, column: ColumnInfo) => {
