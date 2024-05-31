@@ -713,32 +713,26 @@ export const requestDownload = action(async (filename: string, needEncryption: b
     credentials: "include"
   });
   if (!response.ok) {
+    let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
+    let errorMessage = ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR];
     switch (response.status) {
       case 404: {
-        displayServerError(
-          response,
-          ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD,
-          ErrorMessages[ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD]
-        );
-        break;
-      }
-      case 500: {
-        displayServerError(response, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+        errorCode = ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD;
+        errorMessage = ErrorMessages[ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD];
         break;
       }
       case 422: {
-        displayServerError(
-          response,
-          ErrorCodes.INCORRECT_ENCRYPTION_HEADER,
-          ErrorMessages[ErrorCodes.INCORRECT_ENCRYPTION_HEADER]
-        );
+        errorCode = ErrorCodes.INCORRECT_ENCRYPTION_HEADER;
+        errorMessage = ErrorMessages[ErrorCodes.INCORRECT_ENCRYPTION_HEADER];
         break;
       }
       case 401: {
-        displayServerError(response, ErrorCodes.NOT_LOGGED_IN, ErrorMessages[ErrorCodes.NOT_LOGGED_IN]);
+        errorCode = ErrorCodes.NOT_LOGGED_IN;
+        errorMessage = ErrorMessages[ErrorCodes.NOT_LOGGED_IN];
         break;
       }
     }
+    displayServerError(response, errorCode, errorMessage);
     return;
   }
   const file = response.blob();
