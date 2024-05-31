@@ -62,8 +62,8 @@ export const Datapacks = observer(function Datapacks() {
 
   const handleDownload = async (needEncryption: boolean, fileName: string) => {
     const fileURL = await getFileURL(needEncryption, fileName);
-    const aTag = document.createElement("a");
     if (fileURL && typeof fileURL === "string") {
+      const aTag = document.createElement("a");
       aTag.href = fileURL;
 
       aTag.setAttribute("download", fileName);
