@@ -3,10 +3,18 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "allowJs": true
+    "allowJs": true,
+    "plugins": [
+      {
+        "transform": "ts-auto-mock/transformer",
+        "cacheBetweenTests": false
+      }
+    ]
   },
-  "exclude": ["assets/uploads"],
-  "include": [ 
+  "exclude": [
+    "assets/uploads"
+  ],
+  "include": [
     "src",
   ]
 }
