@@ -139,7 +139,7 @@ export const requestDownload = async function requestDownload(
   }
 
   try {
-    runJavaEncrypt(filepath, encryptedFilepathDir);
+    runJavaEncrypt(assetconfigs.activeJar, filepath, encryptedFilepathDir);
   } catch (e) {
     console.error(e);
     reply.status(500).send({ error: "Failed to encrypt datapacks with error " + e });
