@@ -59,6 +59,8 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   reply.status(200).send(datapackInfoChunk);
 };
 
+
+
 export const requestDownload = async function requestDownload(
   request: FastifyRequest<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>,
   reply: FastifyReply
@@ -148,33 +150,7 @@ export const requestDownload = async function requestDownload(
   }
 
   try {
-    await new Promise<void>((resolve) => {
-      const cmd =
-        `java -jar ${assetconfigs.activeJar} ` +
-        // datapacks:
-        `-d "${filepath.replaceAll("\\", "/")}" ` +
-        // Tell it where to send the datapacks
-        `-enc ${encryptedFilepathDir.replaceAll("\\", "/")} ` +
-        `-node`;
-
-      // java -jar <jar file> -d <datapack> <datapack> -enc <destination directory> -node
-      console.log("Calling Java encrypt.jar: ", cmd);
-      try {
-        const stdout = execFileSync("java", [
-          "-jar",
-          assetconfigs.activeJar,
-          "-d",
-          filepath.replaceAll("\\", "/"),
-          "-enc",
-          encryptedFilepathDir,
-          "-node"
-        ]);
-        console.log("Java stdout: " + stdout.toString());
-      } catch (e) {
-        console.error("Java error param: " + e);
-      }
-      resolve();
-    });
+    runJavaEncrypt(filepath, encryptedFilepathDir);
   } catch (e) {
     console.error(e);
     reply.status(500).send({ error: "Failed to encrypt datapacks with error " + e });
