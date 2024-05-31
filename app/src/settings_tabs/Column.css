@@ -20,8 +20,8 @@
 
 .column-search-bar-container {
   margin-top: 10px;
-  margin-bottom: 20px;
   align-items: center;
+  margin-bottom: 5px;
   justify-content: center;
   position: relative;
   display: flex;
@@ -38,7 +38,7 @@
 
 .column-accordion-wrapper {
   overflow: auto;
-  min-width: 500px;
+  width: 500px;
   max-height: 80vh;
   border: 1px solid gray;
   border-radius: 4px;
@@ -115,6 +115,18 @@
   align-items: flex-start;
 }
 
+.column-filter-buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.MuiIconButton-root.expand-collapse-column-buttons {
+  width: 30px;
+  height: 30px;
+  padding: 2px;
+}
+
 .column-accordion-summary {
   padding-left: 0px;
   display: flex;
@@ -147,7 +159,8 @@
 }
 
 .search-filter-helper-text {
-  height: 24px;
+  height: 10px;
+  width: 400px;
   display: flex;
   white-space: nowrap;
 }
