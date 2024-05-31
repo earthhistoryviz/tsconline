@@ -714,25 +714,21 @@ export const requestDownload = action(async (filename: string, needEncryption: b
   });
   if (!response.ok) {
     let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
-    let errorMessage = ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR];
     switch (response.status) {
       case 404: {
         errorCode = ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD;
-        errorMessage = ErrorMessages[ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD];
         break;
       }
       case 422: {
         errorCode = ErrorCodes.INCORRECT_ENCRYPTION_HEADER;
-        errorMessage = ErrorMessages[ErrorCodes.INCORRECT_ENCRYPTION_HEADER];
         break;
       }
       case 401: {
         errorCode = ErrorCodes.NOT_LOGGED_IN;
-        errorMessage = ErrorMessages[ErrorCodes.NOT_LOGGED_IN];
         break;
       }
     }
-    displayServerError(response, errorCode, errorMessage);
+    displayServerError(response, errorCode, ErrorMessages[errorCode]);
     return;
   }
   const file = response.blob();
