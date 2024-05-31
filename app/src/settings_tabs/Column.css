@@ -136,6 +136,9 @@
   min-height: 30px;
   white-space: nowrap;
 }
+.column-accordion-summary:hover {
+  background-color: #ccc;
+}
 
 .column-accordion-summary > .MuiAccordionSummary-expandIconWrapper.Mui-expanded {
   transform: rotate(90deg);

@@ -25,7 +25,7 @@ export const ColumnMenu = observer(() => {
     <div className="column-menu">
       <div className="column-menu-header">
         <div id="ColumnMenuLabel" className="column-menu-label">
-          <Typography component="h1" variant="h5">
+          <Typography component="h1" variant="h5" whiteSpace={"nowrap"}>
             Column Customization
           </Typography>
         </div>
