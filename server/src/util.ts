@@ -184,11 +184,15 @@ export function formatColumnName(text: string): string {
 
 export async function checkHeader(filepath: string) {
   let isEncrypted;
+
   try {
+
     const fileStream = createReadStream(filepath);
+
     const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
 
     for await (const line of readline) {
+      console.log(line);
       isEncrypted = line.includes("TSCreator Encrypted Datafile");
       break;
     }
