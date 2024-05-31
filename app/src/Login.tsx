@@ -18,6 +18,7 @@ import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { useNavigate } from "react-router";
 import { displayServerError } from "./state/actions/util-actions";
 import "./Login.css";
+import CookieConsent from "./CookieConsent";
 
 export const Login: React.FC = observer(() => {
   const { state } = useContext(context);
@@ -46,6 +47,13 @@ export const Login: React.FC = observer(() => {
   const handleLogin = async (isGoogleLogin: boolean, body: Form | Credential) => {
     setLoading(true);
     try {
+      // Don't allow sign in if not accepting cookies
+      const cookieConsent = localStorage.getItem("cookieConsent");
+      if (cookieConsent !== "accepted") {
+        actions.pushError(ErrorCodes.COOKIE_REJECTED);
+        return;
+      }
+
       const recaptchaToken = await executeRecaptcha("login");
       if (!recaptchaToken) {
         actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
@@ -66,7 +74,7 @@ export const Login: React.FC = observer(() => {
           displayServerError(null, ErrorCodes.UNABLE_TO_LOGIN_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]);
         } else {
           actions.removeAllErrors();
-          actions.pushSnackbar("Succesfully signed in", "success");
+          actions.pushSnackbar("Successfully signed in", "success");
           navigate("/");
         }
       } else {
@@ -190,6 +198,7 @@ export const Login: React.FC = observer(() => {
           </Box>
         </>
       )}
+      <CookieConsent persistent={true} />
     </Box>
   );
 });
