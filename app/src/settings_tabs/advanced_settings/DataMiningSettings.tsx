@@ -75,8 +75,8 @@ export const EventDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
   };
   const clearDataMiningColumn = () => {
     if (eventSettings.frequency === null) return;
-    actions.setEventColumnSettings(eventSettings, { frequency: null });
     actions.removeDataMiningColumn(column, eventSettings.frequency);
+    actions.setEventColumnSettings(eventSettings, { frequency: null });
   };
   return (
     <Box className="data-mining-type-container">
@@ -109,8 +109,8 @@ export const PointDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
   };
   const clearDataMiningColumn = () => {
     if (pointSettings.dataMiningPointDataType === null) return;
-    actions.setPointColumnSettings(pointSettings, { dataMiningPointDataType: null });
     actions.removeDataMiningColumn(column, pointSettings.dataMiningPointDataType);
+    actions.setPointColumnSettings(pointSettings, { dataMiningPointDataType: null });
   };
   return (
     <Box className="data-mining-type-container">
