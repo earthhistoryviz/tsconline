@@ -22,13 +22,14 @@ import {
   isDataMiningPointDataType,
   isEventFrequency
 } from "@tsconline/shared";
-import { cloneDeep } from "lodash";
+import { cloneDeep, set } from "lodash";
 import { WindowStats, convertDataMiningPointDataTypeToDataMiningStatisticApproach } from "../../types";
 import {
   computeWindowStatistics,
   computeWindowStatisticsForDataPoints,
   findRangeOfWindowStats
 } from "../../util/data-mining";
+import { yieldControl } from "../../util";
 import { altUnitNamePrefix } from "../../util/constant";
 
 function extractName(text: string): string {
@@ -221,7 +222,8 @@ export const setColumnSelected = action((name: string) => {
   }
 });
 
-export const searchColumns = action(async (searchTerm: string) => {
+export const searchColumns = action(async (searchTerm: string, counter = { count: 0 }) => {
+  await yieldControl(counter, 30);
   if (searchTerm === "") {
     state.settingsTabs.columnHashMap.forEach((columnInfo) => {
       columnInfo.show = true;
@@ -233,18 +235,18 @@ export const searchColumns = action(async (searchTerm: string) => {
     }
     return;
   }
-  state.settingsTabs.columnHashMap.forEach((columnInfo) => {
+  for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
     columnInfo.show = false;
     columnInfo.expanded = false;
-  });
+  }
 
-  state.settingsTabs.columnHashMap.forEach((columnInfo) => {
+  for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
     if (columnInfo.show != true && columnInfo.name.toLowerCase().includes(searchTerm.toLowerCase())) {
       columnInfo.show = true;
       columnInfo.expanded = true;
       let parentName = columnInfo.parent;
-      setExpansionOfAllChildren(columnInfo, false);
-      setShowOfAllChildren(columnInfo, true);
+      await setExpansionOfAllChildren(columnInfo, false);
+      await setShowOfAllChildren(columnInfo, true);
       while (parentName) {
         const parentColumnInfo = state.settingsTabs.columnHashMap.get(parentName);
         if (parentColumnInfo && !parentColumnInfo.expanded && !parentColumnInfo.show) {
@@ -256,7 +258,7 @@ export const searchColumns = action(async (searchTerm: string) => {
         }
       }
     }
-  });
+  }
 });
 
 export const addDataMiningColumn = action((column: ColumnInfo, type: EventFrequency | DataMiningPointDataType) => {
@@ -364,23 +366,27 @@ export const removeDataMiningColumn = action((column: ColumnInfo, type: string) 
   state.settingsTabs.columnHashMap.delete(columnToRemove);
 });
 
-export const setShowOfAllChildren = action((column: ColumnInfo, isShown: boolean) => {
+export const setShowOfAllChildren = action(async (column: ColumnInfo, isShown: boolean, counter = { count: 0 }) => {
   column.show = isShown;
-  column.children.forEach((child) => {
-    setShowOfAllChildren(child, isShown);
-  });
+  await yieldControl(counter, 30);
+  for (const child of column.children) {
+    await setShowOfAllChildren(child, isShown, counter);
+  }
 });
 
 export const setExpanded = action((column: ColumnInfo, isExpanded: boolean) => {
   column.expanded = isExpanded;
 });
 
-export const setExpansionOfAllChildren = action((column: ColumnInfo, isExpanded: boolean) => {
-  column.expanded = isExpanded;
-  column.children.forEach((child) => {
-    setExpansionOfAllChildren(child, isExpanded);
-  });
-});
+export const setExpansionOfAllChildren = action(
+  async (column: ColumnInfo, isExpanded: boolean, counter = { count: 0 }) => {
+    column.expanded = isExpanded;
+    await yieldControl(counter, 30);
+    for (const child of column.children) {
+      await setExpansionOfAllChildren(child, isExpanded, counter);
+    }
+  }
+);
 
 export const setInheritable = action((target: ValidFontOptions, isInheritable: boolean, column: ColumnInfo) => {
   column.fontsInfo[target].inheritable = isInheritable;

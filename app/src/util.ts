@@ -62,3 +62,17 @@ export async function executeRecaptcha(action: string): Promise<string> {
     return "";
   }
 }
+
+/**
+ * yields control to the event loop every `limit` calls
+ * needs to be called with an object that has a count property
+ * so that the count can be incremented and checked uniformly
+ * @param counter
+ * @param limit
+ */
+export async function yieldControl(counter: { count: number }, limit: number) {
+  counter.count++;
+  if (counter.count % limit === 0) {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+}

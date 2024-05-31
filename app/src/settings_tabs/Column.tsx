@@ -3,7 +3,7 @@ import React, { useContext } from "react";
 import Typography from "@mui/material/Typography";
 import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
-import { Box, TextField } from "@mui/material";
+import { Box, Icon, IconButton, TextField } from "@mui/material";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
 import { ColumnContainer, TSCCheckbox, Accordion, TSCButton } from "../components";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
@@ -16,6 +16,8 @@ import "./Column.css";
 import { checkIfDataIsInRange } from "../util/util";
 import { setExpanded } from "../state/actions";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
+import ExpandIcon from "@mui/icons-material/Expand";
+import CompressIcon from "@mui/icons-material/Compress";
 
 type ColumnAccordionProps = {
   details: ColumnInfo;
@@ -63,22 +65,26 @@ export const Column = observer(function Column() {
       <div className="column-accordion-and-menu">
         <Box
           className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}>
-          <TSCButton
-            id="column-expand-buttons"
-            onClick={() => {
-              if (!state.settingsTabs.columns) return;
-              actions.setExpansionOfAllChildren(state.settingsTabs.columns, true);
-            }}>
-            Expand All
-          </TSCButton>
-          <TSCButton
-            id="column-expand-buttons"
-            onClick={() => {
-              if (!state.settingsTabs.columns) return;
-              actions.setExpansionOfAllChildren(state.settingsTabs.columns, false);
-            }}>
-            collapse All
-          </TSCButton>
+          <div className="column-filter-buttons">
+            <IconButton
+              disableRipple
+              className="expand-collapse-column-buttons"
+              onClick={() => {
+                if (!state.settingsTabs.columns) return;
+                actions.setExpansionOfAllChildren(state.settingsTabs.columns, true);
+              }}>
+              <ExpandIcon />
+            </IconButton>
+            <IconButton
+              disableRipple
+              className="expand-collapse-column-buttons"
+              onClick={() => {
+                if (!state.settingsTabs.columns) return;
+                actions.setExpansionOfAllChildren(state.settingsTabs.columns, false);
+              }}>
+              <CompressIcon />
+            </IconButton>
+          </div>
           {state.settingsTabs.columns &&
             Object.entries(state.settingsTabs.columns.children).map(([childName, childDetails]) => (
               <ColumnAccordion key={childName} details={childDetails} />
@@ -163,13 +169,13 @@ const ColumnSearchBar = observer(() => {
       <TextField
         className="column-search-bar"
         label="Search"
-        helperText={<FilterHelperText helperText={state.settingsTabs.columnSearchTerm} />}
         variant="outlined"
         size="small"
         fullWidth
         onChange={handleSearch}
         value={state.settingsTabs.columnSearchTerm}
       />
+      <FilterHelperText helperText={state.settingsTabs.columnSearchTerm} />
     </div>
   );
 });
