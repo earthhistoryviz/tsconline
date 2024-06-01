@@ -44,24 +44,26 @@ export const Datapacks = observer(function Datapacks() {
   };
   async function getFileURL(needEncryption: boolean, fileName: string) {
     const fileBlob = await actions.requestDownload(fileName, needEncryption);
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(fileBlob);
-      await new Promise((resolve, reject) => {
-        reader.onloadend = resolve;
-        reader.onerror = reject;
-      });
-      return reader.result;
-    } catch (error) {
-      actions.pushError(ErrorCodes.INVALID_PATH);
-      return "";
+    if (fileBlob) {
+      try {
+        const reader = new FileReader();
+        reader.readAsDataURL(fileBlob);
+        await new Promise((resolve, reject) => {
+          reader.onloadend = resolve;
+          reader.onerror = reject;
+        });
+        return reader.result;
+      } catch (error) {
+        actions.pushError(ErrorCodes.INVALID_PATH);
+        return "";
+      }
     }
   }
 
   const handleDownload = async (needEncryption: boolean, fileName: string) => {
     const fileURL = await getFileURL(needEncryption, fileName);
-    const aTag = document.createElement("a");
     if (fileURL && typeof fileURL === "string") {
+      const aTag = document.createElement("a");
       aTag.href = fileURL;
 
       aTag.setAttribute("download", fileName);
