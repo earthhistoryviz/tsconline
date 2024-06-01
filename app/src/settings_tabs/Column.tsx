@@ -19,47 +19,6 @@ import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ExpandIcon from "@mui/icons-material/Expand";
 import CompressIcon from "@mui/icons-material/Compress";
 
-type ColumnAccordionProps = {
-  details: ColumnInfo;
-};
-
-const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) => {
-  if (!details.show) {
-    return null;
-  }
-  // if there are no children, don't make an accordion
-  if (details.children.length == 0) {
-    return (
-      <div className="column-leaf-row-container">
-        <ColumnIcon column={details} />
-      </div>
-    )
-  }
-  return (
-    <div className="column-accordion-container">
-      {details.expanded && <div className="accordion-line" />}
-      <Accordion
-        //checks if column name is in expand list
-        expanded={details.expanded}
-        className="column-accordion"
-        onChange={() => setExpanded(!details.expanded, details)}>
-        <MuiAccordionSummary
-          expandIcon={<ArrowForwardIosSharpIcon sx={{ fontSize: "0.9rem" }} />}
-          aria-controls="panel-content"
-          className="column-accordion-summary">
-          <ColumnIcon column={details} />
-        </MuiAccordionSummary>
-        <MuiAccordionDetails className="column-accordion-details">
-          {details.children &&
-            Object.entries(details.children).map(([childName, childDetails]) => (
-              <ColumnAccordion key={childName} details={childDetails} />
-            ))}
-        </MuiAccordionDetails>
-      </Accordion>
-    </div>
-  );
-});
-
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
   const { state, actions } = useContext(context);
@@ -101,6 +60,47 @@ export const Column = observer(function Column() {
   );
 });
 
+type ColumnAccordionProps = {
+  details: ColumnInfo;
+};
+
+const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) => {
+  if (!details.show) {
+    return null;
+  }
+  // if there are no children, don't make an accordion
+  if (details.children.length == 0) {
+    return (
+      <div className="column-leaf-row-container">
+        <ColumnIcon column={details} />
+      </div>
+    );
+  }
+  return (
+    <div className="column-accordion-container">
+      {details.expanded && <div className="accordion-line" />}
+      <Accordion
+        //checks if column name is in expand list
+        expanded={details.expanded}
+        className="column-accordion"
+        onChange={() => setExpanded(!details.expanded, details)}>
+        <MuiAccordionSummary
+          expandIcon={<ArrowForwardIosSharpIcon sx={{ fontSize: "0.9rem" }} />}
+          aria-controls="panel-content"
+          className="column-accordion-summary">
+          <ColumnIcon column={details} />
+        </MuiAccordionSummary>
+        <MuiAccordionDetails className="column-accordion-details">
+          {details.children &&
+            Object.entries(details.children).map(([childName, childDetails]) => (
+              <ColumnAccordion key={childName} details={childDetails} />
+            ))}
+        </MuiAccordionDetails>
+      </Accordion>
+    </div>
+  );
+});
+
 const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
   const { state, actions } = useContext(context);
   const theme = useTheme();
@@ -109,9 +109,6 @@ const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
     column.maxAge,
     state.settings.timeSettings[column.units].topStageAge,
     state.settings.timeSettings[column.units].baseStageAge
-  );
-  const columnName = (
-      <Typography className="column-display-name">{column.editName}</Typography>
   );
   const tooltipOrCheckBox =
     !dataInrange && !(column.name === "Ma" || column.name === "Root") ? (
@@ -155,7 +152,7 @@ const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
         actions.setColumnSelected(column.name);
       }}>
       {tooltipOrCheckBox}
-      {columnName}
+      <Typography className="column-display-name">{column.editName}</Typography>
     </ColumnContainer>
   );
 });
