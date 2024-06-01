@@ -46,13 +46,6 @@
   padding: 10px;
 }
 
-.MuiTypography-root.column-display-name {
-  font-size: 0.97rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 /* Hide scrollbar for Chrome, Safari and Opera */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
@@ -101,7 +94,7 @@
   top: 28px;
   bottom: 0;
   width: 1px;
-  background-color: #ccc; /* Adjust the color as needed */
+  background-color: #ccc;
   z-index: 1;
 }
 .column-accordion-container {
@@ -136,6 +129,12 @@
   align-items: center;
   padding-right: 0px;
   min-height: 30px;
+}
+
+.MuiTypography-root.column-display-name {
+  font-size: 0.97rem;
+  white-space: nowrap;
+  overflow: hidden;
   text-overflow: ellipsis;
 }
 
@@ -158,14 +157,19 @@
   flex-grow: 1;
   align-items: center;
   margin: 0;
+  display: flex;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .column-row-container {
   display: flex;
   cursor: pointer;
   align-items: center;
   justify-content: flex-start;
+  overflow: hidden;
 }
-.column-accordion-summary:hover, .column-leaf-row-container:hover {
+.column-accordion-summary:hover,
+.column-leaf-row-container:hover {
   background-color: #ccc;
 }
 .search-filter-helper-text {
