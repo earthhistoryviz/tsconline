@@ -120,7 +120,7 @@ export const applyRowOrder = action("applyRowOrder", (column: ColumnInfo | undef
     if (columnIndex === column.children.length) break;
 
     let childName = extractName(settingsChild._id);
-    //for manually changed columns
+    //for manually changed columns (facies, chron, etc.)
     if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
       childName = extractName(settings._id) + " " + childName;
     }
@@ -129,26 +129,18 @@ export const applyRowOrder = action("applyRowOrder", (column: ColumnInfo | undef
       if (state.settingsTabs.columnHashMap.get(altUnitNamePrefix + childName))
         childName = altUnitNamePrefix + childName;
     }
-    //column isn't in the loaded datapack(s) so skip
-    if (!state.settingsTabs.columnHashMap.get(childName)) {
+    let indexOfMatch = -1;
+    //column doesn't exist in the childrens of loaded column, so skip
+    if ((indexOfMatch = column.children.slice(columnIndex).findIndex((child) => child.name === childName)) === -1) {
       continue;
     }
-    //current index doesn't have the column specified by the settings file
-    if (childName !== column.children[columnIndex].name) {
-      //find the index of the column that matches
-      let indexOfMatch = -1;
-      for (let j = columnIndex; j < column.children.length; j++) {
-        if (childName === column.children[j].name) {
-          indexOfMatch = j;
-          break;
-        }
-      }
-      //switch the two columns
-      if (indexOfMatch !== -1)
-        [column.children[columnIndex], column.children[indexOfMatch]] = [
-          column.children[indexOfMatch],
-          column.children[columnIndex]
-        ];
+    indexOfMatch += columnIndex;
+    //place matched column into correct position
+    if (indexOfMatch != columnIndex) {
+      [column.children[columnIndex], column.children[indexOfMatch]] = [
+        column.children[indexOfMatch],
+        column.children[columnIndex]
+      ];
     }
     applyRowOrder(column.children[columnIndex], settingsChild);
     columnIndex++;
