@@ -709,31 +709,27 @@ export const requestDownload = action(async (filename: string, needEncryption: b
     route = `/download/user-datapacks/${filename}?needEncryption=${needEncryption}`;
   }
   const response = await fetcher(route, {
-    method: "GET"
+    method: "GET",
+    credentials: "include"
   });
   if (!response.ok) {
+    let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
     switch (response.status) {
       case 404: {
-        displayServerError(
-          response,
-          ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD,
-          ErrorMessages[ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD]
-        );
-        break;
-      }
-      case 500: {
-        displayServerError(response, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+        errorCode = ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD;
         break;
       }
       case 422: {
-        displayServerError(
-          response,
-          ErrorCodes.INCORRECT_ENCRYPTION_HEADER,
-          ErrorMessages[ErrorCodes.INCORRECT_ENCRYPTION_HEADER]
-        );
+        errorCode = ErrorCodes.INCORRECT_ENCRYPTION_HEADER;
+        break;
+      }
+      case 401: {
+        errorCode = ErrorCodes.NOT_LOGGED_IN;
         break;
       }
     }
+    displayServerError(response, errorCode, ErrorMessages[errorCode]);
+    return;
   }
   const file = response.blob();
   return file;
