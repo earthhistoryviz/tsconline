@@ -35,7 +35,6 @@ export type State = {
     columnSelected: string | null;
     columnHashMap: Map<string, ColumnInfo>;
     columnSearchTerm: string;
-    isHoveringAccordion: boolean;
   };
   mapState: {
     mapInfo: MapInfo;
@@ -102,8 +101,7 @@ export const state = observable<State>({
     columns: undefined,
     columnSelected: null,
     columnHashMap: new Map<string, ColumnInfo>(),
-    columnSearchTerm: "",
-    isHoveringAccordion: false
+    columnSearchTerm: ""
   },
   mapState: {
     mapInfo: {},

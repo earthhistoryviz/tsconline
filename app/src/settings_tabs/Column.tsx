@@ -28,9 +28,7 @@ export const Column = observer(function Column() {
       <ColumnSearchBar />
       <div className="column-accordion-and-menu-container">
         <Box
-          className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}
-          onMouseEnter={() => actions.setIsHoveringAccordion(true)}
-          onMouseLeave={() => actions.setIsHoveringAccordion(false)}>
+          className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}>
           <div className="column-filter-buttons">
             <IconButton
               disableRipple
@@ -83,13 +81,13 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
       </div>
     );
   }
+  // for keeping the selected column hierarchy line highlighted
+  const containsSelectedChild = details.children.some((column) => column.name === state.settingsTabs.columnSelected) ? { opacity: 100 } : {};
   return (
     <div className="column-accordion-container">
       {details.expanded &&
-        (state.settingsTabs.isHoveringAccordion ||
-          details.children.some((column) => column.name === state.settingsTabs.columnSelected)) && (
-          <div className="accordion-line" />
-        )}
+          <div className="accordion-line" style={containsSelectedChild}/>
+        }
       <Accordion
         //checks if column name is in expand list
         expanded={details.expanded}

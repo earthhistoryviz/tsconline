@@ -96,8 +96,13 @@
   top: 30px;
   bottom: 0;
   width: 1px;
+  opacity: 0;
   background-color: #ccc;
   z-index: 1;
+  transition: opacity 0.2s ease;
+}
+.column-accordion-wrapper:hover .accordion-line {
+  opacity: 100;
 }
 .column-accordion-container {
   position: relative;
