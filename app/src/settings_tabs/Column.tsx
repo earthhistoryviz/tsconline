@@ -3,9 +3,9 @@ import React, { useContext } from "react";
 import Typography from "@mui/material/Typography";
 import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
-import { Box, Icon, IconButton, TextField } from "@mui/material";
+import { Box, IconButton, TextField } from "@mui/material";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
-import { ColumnContainer, TSCCheckbox, Accordion, TSCButton } from "../components";
+import { ColumnContainer, TSCCheckbox, Accordion } from "../components";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 
 import { ColumnMenu } from "./ColumnMenu";
@@ -28,7 +28,9 @@ export const Column = observer(function Column() {
       <ColumnSearchBar />
       <div className="column-accordion-and-menu-container">
         <Box
-          className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}>
+          className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}
+          onMouseEnter={() => actions.setIsHoveringAccordion(true)}
+          onMouseLeave={() => actions.setIsHoveringAccordion(false)}>
           <div className="column-filter-buttons">
             <IconButton
               disableRipple
@@ -83,7 +85,11 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
   }
   return (
     <div className="column-accordion-container">
-      {details.expanded && <div className="accordion-line" />}
+      {details.expanded &&
+        (state.settingsTabs.isHoveringAccordion ||
+          details.children.some((column) => column.name === state.settingsTabs.columnSelected)) && (
+          <div className="accordion-line" />
+        )}
       <Accordion
         //checks if column name is in expand list
         expanded={details.expanded}
