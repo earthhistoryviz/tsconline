@@ -41,7 +41,7 @@
 .column-accordion-wrapper {
   width: 500px;
   max-height: 80vh;
-  border: 1px solid gray;
+  border: 1px solid lightgray;
   overflow: auto;
   border-radius: 4px;
   z-index: 0;
@@ -75,7 +75,7 @@
 }
 
 .filtered-border {
-  outline: 1px solid red;
+  border: 1px solid lightcoral;
 }
 
 .column-top-level .MuiTypography-root {

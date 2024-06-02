@@ -962,3 +962,6 @@ export const setEnableHideBlockLabel = action("setEnableHideBlockLabel", (newval
 export const setLoadSaveFilename = action("setLoadSaveFilename", (newval: string) => {
   state.loadSaveFilename = newval;
 });
+export const setIsHoveringAccordion = action("setIsHoveringAccordion", (newval: boolean) => {
+  state.settingsTabs.isHoveringAccordion = newval;
+});
