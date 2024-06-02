@@ -42,7 +42,7 @@ export const Settings = observer(function Settings() {
     return (
       <div className="settings-header">
         <LoadSettings />
-        <Typography className="settings-header-title" variant="subtitle1">
+        <Typography className="settings-header-title" variant="h3">
           Settings
         </Typography>
         <SaveSettings />

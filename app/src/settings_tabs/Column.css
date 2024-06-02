@@ -1,6 +1,7 @@
 .column-top-level-container {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 #column-generate-button-top {
@@ -32,7 +33,7 @@
   display: flex;
   justify-content: start;
   width: auto;
-  min-height: 100vh;
+  height: 78vh;
   padding-top: 10px;
   flex-grow: 1;
 }
@@ -92,7 +93,7 @@
 .accordion-line {
   position: absolute;
   left: 8px;
-  top: 28px;
+  top: 30px;
   bottom: 0;
   width: 1px;
   background-color: #ccc;
@@ -175,7 +176,13 @@
 .column-accordion-summary:hover,
 .column-leaf-row-container:hover {
   transition: background-color 0.05s;
-  background-color: #dee9f8;
+  background-color: #e0eaf9;
+}
+.Mui-focusVisible.column-accordion-summary,
+.column-accordion-summary:focus-visible,
+.column-leaf-row-container:focus-visible {
+  outline: none;
+  background-color: #e0eaf9;
 }
 .search-filter-helper-text {
   height: 10px;
@@ -185,5 +192,38 @@
 }
 
 .selected-column {
-  background-color: #dae7f8 !important;
+  background-color: #d1e1f6 !important;
+  position: relative;
+}
+/* highlight the selected column */
+.selected-column::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -4px;
+  z-index: 1;
+  width: 1px;
+  height: 100%;
+  background-color: #88afe6;
+}
+
+/* highlight on focus */
+.selected-column:focus::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 1px solid #88afe685;
+  border-right: none;
+  pointer-events: none;
+  transition: border-color 0.2s;
+}
+
+.selected-column:focus::after,
+.column-accordion-summary,
+.column-leaf-row-container {
+  border-top-left-radius: 7px;
+  border-bottom-left-radius: 7px;
 }
