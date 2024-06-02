@@ -1,4 +1,4 @@
-import { Button, SxProps, styled } from "@mui/material";
+import { Button, styled } from "@mui/material";
 import { ChangeEventHandler, ReactElement } from "react";
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -18,7 +18,6 @@ type InputFileUploadProps = {
   color?: "inherit" | "primary" | "secondary" | "success" | "error" | "info" | "warning";
   onChange: ChangeEventHandler<HTMLInputElement>;
   multiple?: boolean;
-  sx?: SxProps;
 };
 export const InputFileUpload: React.FC<InputFileUploadProps> = ({
   startIcon,
