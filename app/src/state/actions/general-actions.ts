@@ -29,7 +29,7 @@ import {
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { fetcher } from "../../util";
-import { applyChartColumnSettings, initializeColumnHashMap } from "./column-actions";
+import { applyChartColumnSettings, applyRowOrder, initializeColumnHashMap } from "./column-actions";
 import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
@@ -278,7 +278,7 @@ export const fetchTimescaleDataAction = action("fetchTimescaleData", async () =>
 export const applySettings = action("applySettings", (settings: ChartInfoTSC) => {
   applyChartSettings(settings.settings);
   applyChartColumnSettings(settings["class datastore.RootColumn:Chart Root"]);
-  //TODO: align row order
+  applyRowOrder(state.settingsTabs.columns, settings["class datastore.RootColumn:Chart Root"]);
 });
 
 const applyChartSettings = action("applyChartSettings", (settings: ChartSettingsInfoTSC) => {
