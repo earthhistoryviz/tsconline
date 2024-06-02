@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useRef } from "react";
 import Container from "@mui/material/Container";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
@@ -14,20 +14,18 @@ import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import PersonIcon from "@mui/icons-material/Person";
-import { observer } from "mobx-react-lite";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { fetcher, loadRecaptcha, removeRecaptcha, executeRecaptcha } from "./util";
 import { displayServerError } from "./state/actions/util-actions";
-import { Lottie, TSCButton, TSCPopupDialog, InputFileUpload } from "./components";
+import { Lottie, TSCButton, TSCPopupDialog } from "./components";
 import loader from "./assets/icons/loading.json";
 import { useNavigate } from "react-router";
 import Button from "@mui/material/Button";
+import Badge from "@mui/material/Badge";
+import { observer } from "mobx-react-lite";
+import "./Profile.css";
 
-type Profile = {
-  pictureUrl: string | null;
-};
-
-export const Profile: React.FC<Profile> = observer(({ pictureUrl }) => {
+export const Profile = observer(() => {
   const navigate = useNavigate();
   const { state, actions } = useContext(context);
   const [editMode, setEditMode] = useState({
@@ -43,6 +41,7 @@ export const Profile: React.FC<Profile> = observer(({ pictureUrl }) => {
   });
   const [popupOpen, setPopupOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadRecaptcha();
@@ -50,6 +49,12 @@ export const Profile: React.FC<Profile> = observer(({ pictureUrl }) => {
       removeRecaptcha();
     };
   }, []);
+
+  const handleBadgeClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
 
   const handleEditToggle = (field: keyof typeof editMode) => {
     setEditMode((prev) => {
@@ -82,7 +87,7 @@ export const Profile: React.FC<Profile> = observer(({ pictureUrl }) => {
       };
     }
     try {
-      const recaptchaToken: string = await executeRecaptcha("signup");
+      const recaptchaToken: string = await executeRecaptcha("profile-customization");
       if (!recaptchaToken) {
         actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
         return;
@@ -157,7 +162,7 @@ export const Profile: React.FC<Profile> = observer(({ pictureUrl }) => {
       });
       if (response.ok) {
         actions.removeAllErrors();
-        actions.pushSnackbar("Profile deleted successfully. Please log in again.", "success");
+        actions.pushSnackbar("Profile deleted successfully.", "success");
         actions.setDefaultUserState();
         navigate("/login");
       } else {
@@ -184,6 +189,45 @@ export const Profile: React.FC<Profile> = observer(({ pictureUrl }) => {
     }
   };
 
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    setLoading(true);
+    const file = event.target.files![0];
+    const ext = file.name.split(".").pop();
+    if (!file || !file.type.startsWith("image/") || !ext || !/^(jpg|jpeg|png|gif)$/.test(ext)) {
+      actions.pushError(ErrorCodes.UNRECOGNIZED_IMAGE_FILE);
+      setLoading(false);
+      return;
+    }
+    actions.removeAllErrors();
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const response = await fetcher("/upload-profile-picture", {
+        method: "POST",
+        body: formData,
+        credentials: "include"
+      });
+      if (response.ok) {
+        const data = await response.json();
+        actions.setPictureUrl(data.pictureUrl + `?${new Date().getTime()}`);
+      } else {
+        displayServerError(
+          await response.json(),
+          ErrorCodes.UPLOAD_PROFILE_PICTURE_FAILED,
+          ErrorMessages[ErrorCodes.UPLOAD_PROFILE_PICTURE_FAILED]
+        );
+      }
+    } catch (error) {
+      displayServerError(
+        null,
+        ErrorCodes.UPLOAD_PROFILE_PICTURE_FAILED,
+        ErrorMessages[ErrorCodes.UPLOAD_PROFILE_PICTURE_FAILED]
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return loading ? (
     <Box display="flex" justifyContent="center" alignItems="center">
       <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />
@@ -199,14 +243,22 @@ export const Profile: React.FC<Profile> = observer(({ pictureUrl }) => {
         onClose={() => setPopupOpen(false)}
       />
       <Box display="flex" alignItems="center" mt={10} mb={2}>
-        {pictureUrl ? (
-          <Avatar src={pictureUrl} />
-        ) : (
-          <Avatar>
-            <PersonIcon />
-          </Avatar>
-        )}
-        <Typography variant="h4" component="h1" sx={{ ml: 1 }}>
+        <Badge
+          overlap="circular"
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          badgeContent={<Avatar src="./src/assets/icons/blue-pencil.webp" className="badge" />}
+          style={{ cursor: "pointer" }}
+          onClick={handleBadgeClick}>
+          {state.user.pictureUrl ? (
+            <Avatar src={state.user.pictureUrl} className="editable-profile-picture" />
+          ) : (
+            <Avatar className="editable-profile-picture">
+              <PersonIcon />
+            </Avatar>
+          )}
+        </Badge>
+        <input type="file" style={{ display: "none" }} onChange={handleUpload} ref={fileInputRef} />
+        <Typography variant="h4" component="h1" sx={{ ml: 2 }}>
           {`Welcome, ${state.user.username}`}
         </Typography>
       </Box>
@@ -364,55 +416,6 @@ export const Profile: React.FC<Profile> = observer(({ pictureUrl }) => {
                     )}
                   </Grid>
                 )}
-                <Grid item xs={12}>
-                  <InputFileUpload
-                    startIcon={<PersonIcon />}
-                    text="Upload Profile Picture"
-                    sx={{ width: "100%" }}
-                    onChange={async (event) => {
-                      const file = event.target.files![0];
-                      if (!file) {
-                        return;
-                      }
-                      const ext = file.name.split(".").pop();
-                      if (!file.type.startsWith("image/")) {
-                        actions.pushError(ErrorCodes.UNRECOGNIZED_IMAGE_FILE);
-                        return;
-                      }
-                      if (!ext || !/^(jpg|jpeg|png|gif)$/.test(ext)) {
-                        actions.pushError(ErrorCodes.UNRECOGNIZED_IMAGE_FILE);
-                        return;
-                      }
-                      actions.removeAllErrors();
-                      const formData = new FormData();
-                      formData.append("file", file);
-                      try {
-                        const response = await fetcher("/upload-profile-picture", {
-                          method: "POST",
-                          body: formData,
-                          credentials: "include"
-                        });
-                        if (response.ok) {
-                          const data = await response.json();
-                          actions.setPictureUrl(data.pictureUrl);
-                          window.location.reload();
-                        } else {
-                          displayServerError(
-                            await response.json(),
-                            ErrorCodes.UPLOAD_PROFILE_PICTURE_FAILED,
-                            ErrorMessages[ErrorCodes.UPLOAD_PROFILE_PICTURE_FAILED]
-                          );
-                        }
-                      } catch (error) {
-                        displayServerError(
-                          null,
-                          ErrorCodes.UPLOAD_PROFILE_PICTURE_FAILED,
-                          ErrorMessages[ErrorCodes.UPLOAD_PROFILE_PICTURE_FAILED]
-                        );
-                      }
-                    }}
-                  />
-                </Grid>
               </Grid>
             </Box>
           </Paper>

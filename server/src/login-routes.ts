@@ -19,9 +19,11 @@ import dotenv from "dotenv";
 import { assetconfigs } from "./index.js";
 import path from "path";
 import { mkdirp } from "mkdirp";
-import fs from "fs";
 import pump from "pump";
+import fs from "fs";
 import { SharedUser, assertSharedUser } from "@tsconline/shared";
+import { loadFileMetadata } from "./file-metadata-handler.js";
+import { readdir, rm, writeFile } from "fs/promises";
 
 const emailTestRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const googleRecaptchaBotThreshold = 0.5;
@@ -54,12 +56,24 @@ export const deleteProfile = async function deleteProfile(request: FastifyReques
   try {
     await deleteUser({ uuid });
     const userDirectory = path.join(assetconfigs.uploadDirectory, uuid);
-    await fs.promises.rm(userDirectory, { recursive: true });
+    try {
+      await rm(userDirectory, { recursive: true, force: true });
+    } catch (error) {
+      console.error("Error removing user directory:", error);
+    }
+    const metadata = await loadFileMetadata(assetconfigs.fileMetadata);
+    for (const file in metadata) {
+      if (file.includes(uuid)) {
+        delete metadata[file];
+      }
+    }
+    await writeFile(assetconfigs.fileMetadata, JSON.stringify(metadata));
     request.session.delete();
     reply.send({ message: "Profile deleted" });
   } catch (error) {
     console.error("Error during profile deletion:", error);
-    reply.status(500).send({ error: "Unknown Error" });
+    request.session.delete();
+    reply.status(500).send({ error });
   }
 };
 
@@ -102,7 +116,7 @@ export const changePassword = async function changePassword(
     reply.send({ message: "Password changed" });
   } catch (error) {
     console.error("Error during password change:", error);
-    reply.status(500).send({ error: "Unknown Error" });
+    reply.status(500).send({ error });
   }
 };
 
@@ -164,10 +178,10 @@ export const uploadProfilePicture = async function uploadProfilePicture(request:
     const userDirectory = path.join(assetconfigs.uploadDirectory, uuid, "profile");
     const filePath = path.join(userDirectory, pictureName);
     await mkdirp(userDirectory);
-    const existingFiles = await fs.promises.readdir(userDirectory);
+    const existingFiles = await readdir(userDirectory);
     for (const existingFile of existingFiles) {
       if (existingFile.startsWith("profile-") && /\.(jpg|jpeg|png|gif)$/i.test(existingFile)) {
-        await fs.promises.unlink(path.join(userDirectory, existingFile));
+        await rm(path.join(userDirectory, existingFile));
       }
     }
     const fileStream = file.file;

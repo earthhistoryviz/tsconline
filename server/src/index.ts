@@ -252,7 +252,7 @@ server.post("/auth/logout", moderateRateLimit, async (request, reply) => {
 });
 server.post("/auth/verify", strictRateLimit, loginRoutes.verifyEmail);
 server.post("/auth/resend", moderateRateLimit, loginRoutes.resendVerificationEmail);
-server.post("/auth/send-forgotpassword-email", strictRateLimit, loginRoutes.sendForgotPasswordEmail);
+server.post("/auth/send-forgot-password-email", strictRateLimit, loginRoutes.sendForgotPasswordEmail);
 server.post("/auth/forgot-password", strictRateLimit, loginRoutes.forgotPassword);
 server.post("/auth/change-email", strictRateLimit, loginRoutes.changeEmail);
 server.post("/auth/change-username", moderateRateLimit, loginRoutes.changeUsername);
