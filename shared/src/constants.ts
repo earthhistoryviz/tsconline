@@ -42,15 +42,6 @@ export const allFontOptions: ValidFontOptions[] = [
 ];
 
 export const defaultFontsInfoConstant: FontsInfo = {
-  "Age Label": {
-    on: false,
-    bold: false,
-    color: "rgb(0, 0, 0)",
-    fontFace: "Arial",
-    inheritable: false,
-    italic: false,
-    size: 6
-  },
   "Column Header": {
     on: false,
     bold: false,
@@ -60,6 +51,42 @@ export const defaultFontsInfoConstant: FontsInfo = {
     italic: false,
     size: 14
   },
+  "Age Label": {
+    on: false,
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 6
+  },
+  "Uncertainty Label": {
+    on: false,
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: true,
+    size: 5
+  },
+  "Zone Column Label": {
+    on: false,
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 12
+  },
+  "Sequence Column Label": {
+    on: false,
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 12
+  },
   "Event Column Label": {
     on: false,
     bold: false,
@@ -68,6 +95,60 @@ export const defaultFontsInfoConstant: FontsInfo = {
     inheritable: false,
     italic: false,
     size: 11
+  },
+  "Popup Body": {
+    on: false,
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 12
+  },
+  "Ruler Label": {
+    on: false,
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 12
+  },
+  "Point Column Scale Label": {
+    on: false,
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 6
+  },
+  "Range Label": {
+    on: false,
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 12
+  },
+  "Ruler Tick Mark Label": {
+    on: false,
+    bold: false,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Arial",
+    inheritable: false,
+    italic: false,
+    size: 7
+  },
+  "Legend Title": {
+    on: false,
+    bold: true,
+    color: "rgb(0, 0, 0)",
+    fontFace: "Verdana",
+    inheritable: false,
+    italic: false,
+    size: 14
   },
   "Legend Column Name": {
     on: false,
@@ -87,33 +168,6 @@ export const defaultFontsInfoConstant: FontsInfo = {
     italic: true,
     size: 12
   },
-  "Legend Title": {
-    on: false,
-    bold: true,
-    color: "rgb(0, 0, 0)",
-    fontFace: "Verdana",
-    inheritable: false,
-    italic: false,
-    size: 14
-  },
-  "Point Column Scale Label": {
-    on: false,
-    bold: false,
-    color: "rgb(0, 0, 0)",
-    fontFace: "Arial",
-    inheritable: false,
-    italic: false,
-    size: 6
-  },
-  "Popup Body": {
-    on: false,
-    bold: false,
-    color: "rgb(0, 0, 0)",
-    fontFace: "Arial",
-    inheritable: false,
-    italic: false,
-    size: 12
-  },
   "Range Box Label": {
     on: false,
     bold: false,
@@ -122,60 +176,6 @@ export const defaultFontsInfoConstant: FontsInfo = {
     inheritable: false,
     italic: true,
     size: 14
-  },
-  "Range Label": {
-    on: false,
-    bold: false,
-    color: "rgb(0, 0, 0)",
-    fontFace: "Arial",
-    inheritable: false,
-    italic: false,
-    size: 12
-  },
-  "Ruler Label": {
-    on: false,
-    bold: false,
-    color: "rgb(0, 0, 0)",
-    fontFace: "Arial",
-    inheritable: false,
-    italic: false,
-    size: 12
-  },
-  "Ruler Tick Mark Label": {
-    on: false,
-    bold: false,
-    color: "rgb(0, 0, 0)",
-    fontFace: "Arial",
-    inheritable: false,
-    italic: false,
-    size: 7
-  },
-  "Sequence Column Label": {
-    on: false,
-    bold: false,
-    color: "rgb(0, 0, 0)",
-    fontFace: "Arial",
-    inheritable: false,
-    italic: false,
-    size: 12
-  },
-  "Uncertainty Label": {
-    on: false,
-    bold: false,
-    color: "rgb(0, 0, 0)",
-    fontFace: "Arial",
-    inheritable: false,
-    italic: true,
-    size: 5
-  },
-  "Zone Column Label": {
-    on: false,
-    bold: false,
-    color: "rgb(0, 0, 0)",
-    fontFace: "Arial",
-    inheritable: false,
-    italic: false,
-    size: 12
   }
 };
 
