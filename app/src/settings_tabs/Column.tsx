@@ -65,8 +65,7 @@ type ColumnAccordionProps = {
 };
 
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) => {
-  const { state } = useContext(context);
-  const theme = useTheme();
+  const { actions, state } = useContext(context);
   if (!details.show) {
     return null;
   }
@@ -74,7 +73,10 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
   // if there are no children, don't make an accordion
   if (details.children.length == 0) {
     return (
-      <div className={`column-leaf-row-container ${selectedClass}`}>
+      <div
+        className={`column-leaf-row-container ${selectedClass}`}
+        onClick={() => actions.setColumnSelected(details.name)}
+        tabIndex={0}>
         <ColumnIcon column={details} />
       </div>
     );
@@ -85,10 +87,21 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
       <Accordion
         //checks if column name is in expand list
         expanded={details.expanded}
-        className="column-accordion"
-        onChange={() => setExpanded(!details.expanded, details)}>
+        className="column-accordion">
         <MuiAccordionSummary
-          expandIcon={<ArrowForwardIosSharpIcon sx={{ fontSize: "0.9rem" }} />}
+          onClick={() => {
+            actions.setColumnSelected(details.name);
+          }}
+          tabIndex={0}
+          expandIcon={
+            <ArrowForwardIosSharpIcon
+              sx={{ fontSize: "0.9rem" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded(!details.expanded, details);
+              }}
+            />
+          }
           aria-controls="panel-content"
           className={`column-accordion-summary ${selectedClass}`}>
           <ColumnIcon column={details} />
@@ -142,18 +155,15 @@ const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
       <TSCCheckbox
         checked={column.on}
         className="column-checkbox"
-        onChange={() => {
+        onClick={(event) => {
+          // to stop selection of column when clicking on checkbox
+          event.stopPropagation();
           actions.toggleSettingsTabColumn(column);
         }}
       />
     );
   return (
-    <ColumnContainer
-      className={`column-row-container ${column.children.length > 0 ? "" : "column-leaf"}`}
-      onClick={(event) => {
-        event.stopPropagation();
-        actions.setColumnSelected(column.name);
-      }}>
+    <ColumnContainer className={`column-row-container ${column.children.length > 0 ? "" : "column-leaf"}`}>
       {tooltipOrCheckBox}
       <Typography className="column-display-name">{column.editName}</Typography>
     </ColumnContainer>

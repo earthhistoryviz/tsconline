@@ -31,6 +31,7 @@ export const TSCTab = styled((props: TabProps) => <Tab disableRipple {...props} 
     fontWeight: theme.typography.fontWeightRegular,
     fontSize: theme.typography.pxToRem(15),
     marginRight: theme.spacing(1),
+    padding: "0px",
     color: theme.palette.dark.main,
     "&:hover": {
       color: theme.palette.selection.light,
