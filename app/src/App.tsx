@@ -41,7 +41,7 @@ export default observer(function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify" element={<AccountVerify />} />
           <Route path="/account-recovery" element={<AccountRecovery />} />
-          <Route path="/profile" element={<Profile pictureUrl={state.user.pictureUrl} />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
         {Array.from(state.errors.errorAlerts.entries()).map(([context, error], index) => (
           <TSCError

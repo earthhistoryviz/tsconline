@@ -14,6 +14,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import { useNavigate } from "react-router";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
+import "../Profile.css";
 
 export const TSCAccountMenu = observer(() => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -38,9 +39,9 @@ export const TSCAccountMenu = observer(() => {
             aria-haspopup="true"
             aria-expanded={open ? "true" : undefined}>
             {state.user.pictureUrl ? (
-              <Avatar src={state.user.pictureUrl} />
+              <Avatar src={state.user.pictureUrl} className="profile-picture" />
             ) : (
-              <Avatar>
+              <Avatar className="profile-picture">
                 <PersonIcon />
               </Avatar>
             )}

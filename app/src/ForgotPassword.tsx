@@ -51,7 +51,7 @@ export const ForgotPassword: React.FC = observer(() => {
         actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
         return;
       }
-      const response = await fetcher("/auth/send-forgotpassword-email", {
+      const response = await fetcher("/auth/send-forgot-password-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
