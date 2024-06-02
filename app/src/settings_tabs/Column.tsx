@@ -24,9 +24,9 @@ export const Column = observer(function Column() {
   const { state, actions } = useContext(context);
   //state array of column names that are expanded
   return (
-    <div className="column-top-level">
+    <div className="column-top-level-container">
       <ColumnSearchBar />
-      <div className="column-accordion-and-menu">
+      <div className="column-accordion-and-menu-container">
         <Box
           className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}>
           <div className="column-filter-buttons">
@@ -65,13 +65,16 @@ type ColumnAccordionProps = {
 };
 
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) => {
+  const { state } = useContext(context);
+  const theme = useTheme();
   if (!details.show) {
     return null;
   }
+  const selectedClass = details.name === state.settingsTabs.columnSelected ? "selected-column" : "";
   // if there are no children, don't make an accordion
   if (details.children.length == 0) {
     return (
-      <div className="column-leaf-row-container">
+      <div className={`column-leaf-row-container ${selectedClass}`}>
         <ColumnIcon column={details} />
       </div>
     );
@@ -87,7 +90,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
         <MuiAccordionSummary
           expandIcon={<ArrowForwardIosSharpIcon sx={{ fontSize: "0.9rem" }} />}
           aria-controls="panel-content"
-          className="column-accordion-summary">
+          className={`column-accordion-summary ${selectedClass}`}>
           <ColumnIcon column={details} />
         </MuiAccordionSummary>
         <MuiAccordionDetails className="column-accordion-details">
