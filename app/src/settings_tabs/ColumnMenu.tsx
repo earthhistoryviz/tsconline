@@ -1,8 +1,7 @@
 import { observer } from "mobx-react-lite";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { context } from "../state";
-import { Divider, FormControlLabel, ToggleButton, Typography } from "@mui/material";
-import SettingsSharpIcon from "@mui/icons-material/SettingsSharp";
+import { FormControlLabel, Typography } from "@mui/material";
 import "./ColumnMenu.css";
 import { FontMenu } from "./FontMenu";
 import { ChangeBackgroundColor } from "./BackgroundColor";
