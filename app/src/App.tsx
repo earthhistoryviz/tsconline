@@ -19,6 +19,7 @@ import { AccountRecovery } from "./AccountRecovery";
 import { TSCPopupDialog, TSCError, TSCSnackbar } from "./components";
 import { CssBaseline } from "@mui/material";
 import { Profile } from "./Profile";
+import "./App.css";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);

@@ -38,7 +38,7 @@ export const ColumnMenu = observer(() => {
           tabIndicatorLength={29}
           orientation="vertical-right"
           width={90}
-          tabs={["General", "Font Options", "Data Mining"]}
+          tabs={["General", "Font", "Data Mining"]}
         />
         <div className="column-menu-content">
           {column && (
