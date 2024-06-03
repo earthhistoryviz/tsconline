@@ -6,7 +6,7 @@ type CustomTabsProps = {
   width?: number;
   height?: number;
   tabIndicatorLength?: number;
-  orientation?: "horizontal" | "vertical";
+  orientation?: "horizontal" | "vertical-left" | "vertical-right";
 } & HTMLAttributes<HTMLDivElement>;
 export const CustomTabs: React.FC<CustomTabsProps> = ({
   tabs,
@@ -25,7 +25,7 @@ export const CustomTabs: React.FC<CustomTabsProps> = ({
   width = Math.min(width, 200);
   let tabIndicatorLengthDiff;
   // to center the tab indicator
-  if (orientation === "vertical") {
+  if (orientation === "vertical-left" || orientation === "vertical-right") {
     tabIndicatorLength = tabIndicatorLength || height;
     tabIndicatorLengthDiff = Math.abs(tabIndicatorLength - height);
   } else {
@@ -45,7 +45,7 @@ export const CustomTabs: React.FC<CustomTabsProps> = ({
     transform: `translateY(calc(${selectedTab * height}px + ${tabIndicatorLengthDiff / 2}px))`,
     height: `${tabIndicatorLength}px`,
     width: `2px`,
-    left: `${width}px`,
+    left: `${orientation === "vertical-left" ? "0" : `${width}px`}`,
     ...style
   };
   return (
