@@ -183,6 +183,7 @@
   transition: background-color 0.05s;
   background-color: #e0eaf9;
 }
+/* for tab focus */
 .Mui-focusVisible.column-accordion-summary,
 .column-accordion-summary:focus-visible,
 .column-leaf-row-container:focus-visible {
@@ -226,6 +227,7 @@
   transition: border-color 0.2s;
 }
 
+/* round the corners of highlighted columns*/
 .selected-column:focus::after,
 .column-accordion-summary,
 .column-leaf-row-container {
