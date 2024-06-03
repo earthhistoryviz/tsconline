@@ -36,7 +36,7 @@ export const ColumnMenu = observer(() => {
         <CustomTabs
           className="column-menu-custom-tabs"
           tabIndicatorLength={29}
-          orientation="vertical"
+          orientation="vertical-right"
           width={90}
           tabs={["General", "Font Options", "Data Mining"]}
         />
