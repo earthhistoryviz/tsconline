@@ -2,11 +2,34 @@
   border: 2px solid #188de6;
 }
 .badge {
-  width: 70px;
-  height: 70px;
+  width: 30px;
+  height: 30px;
+  border: 2px solid #188de6;
+  background-color: #353639;
+}
+.pencil {
+  color: gainsboro;
+}
+.pencil-hover {
+  color: #188de6;
 }
 .editable-profile-picture {
   border: 2px solid #188de6;
-  width: 50px;
-  height: 50px;
+  width: 75px;
+  height: 75px;
+  cursor: pointer;
+}
+.editable-profile-picture::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.editable-profile-picture:hover::after {
+  opacity: 1;
 }
