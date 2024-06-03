@@ -82,12 +82,12 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
     );
   }
   // for keeping the selected column hierarchy line highlighted
-  const containsSelectedChild = details.children.some((column) => column.name === state.settingsTabs.columnSelected) ? { opacity: 100 } : {};
+  const containsSelectedChild = details.children.some((column) => column.name === state.settingsTabs.columnSelected)
+    ? { opacity: 100 }
+    : {};
   return (
     <div className="column-accordion-container">
-      {details.expanded &&
-          <div className="accordion-line" style={containsSelectedChild}/>
-        }
+      {details.expanded && <div className="accordion-line" style={containsSelectedChild} />}
       <Accordion
         //checks if column name is in expand list
         expanded={details.expanded}

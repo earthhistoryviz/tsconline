@@ -75,3 +75,22 @@
   align-items: center;
   gap: 10px;
 }
+
+.column-menu-content-container {
+  display: flex;
+  flex-direction: row;
+  align-self: flex-start;
+  width: 100%;
+}
+.column-menu-tabs {
+  padding: 10px;
+  width: 100px;
+}
+.column-menu-tab {
+  min-width: 0;
+  white-space: wrap;
+}
+
+.column-menu-custom-tabs {
+  padding: 10px;
+}

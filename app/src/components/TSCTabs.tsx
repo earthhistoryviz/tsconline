@@ -1,13 +1,8 @@
 import { TabsProps, Tabs, TabProps, Tab } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
-interface TSCTabsProps extends TabsProps {
-  children?: React.ReactNode;
-  value: number | boolean;
-  onChange: (event: React.SyntheticEvent, newValue: number) => void;
-}
 // wraps tabs from mui to be able to change certain properties
-export const TSCTabs = styled((props: TSCTabsProps) => (
+export const TSCTabs = styled((props: TabsProps) => (
   <Tabs {...props} TabIndicatorProps={{ children: <span className="MuiTabs-indicatorSpan" /> }} />
 ))(({ theme }) => {
   return {
