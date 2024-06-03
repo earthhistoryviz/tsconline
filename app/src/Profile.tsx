@@ -23,6 +23,7 @@ import { useNavigate } from "react-router";
 import Button from "@mui/material/Button";
 import Badge from "@mui/material/Badge";
 import { observer } from "mobx-react-lite";
+import EditIcon from "@mui/icons-material/Edit";
 import "./Profile.css";
 
 export const Profile = observer(() => {
@@ -41,6 +42,7 @@ export const Profile = observer(() => {
   });
   const [popupOpen, setPopupOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -246,11 +248,19 @@ export const Profile = observer(() => {
         <Badge
           overlap="circular"
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-          badgeContent={<Avatar src="./src/assets/icons/blue-pencil.webp" className="badge" />}
-          style={{ cursor: "pointer" }}
+          badgeContent={
+            <Avatar className="badge">
+              <EditIcon className={`pencil${isHovered ? "-hover" : ""}`} fontSize="small" />
+            </Avatar>
+          }
           onClick={handleBadgeClick}>
           {state.user.pictureUrl ? (
-            <Avatar src={state.user.pictureUrl} className="editable-profile-picture" />
+            <Avatar
+              src={state.user.pictureUrl}
+              className="editable-profile-picture"
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+            />
           ) : (
             <Avatar className="editable-profile-picture">
               <PersonIcon />
