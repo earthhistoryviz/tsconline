@@ -1,6 +1,5 @@
 import { HTMLAttributes, useState } from "react";
 import "./TSCCustomTabs.css";
-import { useTheme } from "@mui/material";
 type CustomTabsProps = {
   tabs: string[];
   width?: number;
@@ -17,7 +16,6 @@ export const CustomTabs: React.FC<CustomTabsProps> = ({
   ...props
 }) => {
   const [selectedTab, setSelectedTab] = useState<number>(0);
-  const theme = useTheme();
   const handleTabClick = (index: number) => {
     setSelectedTab(index);
   };
@@ -32,21 +30,16 @@ export const CustomTabs: React.FC<CustomTabsProps> = ({
     tabIndicatorLength = tabIndicatorLength || width;
     tabIndicatorLengthDiff = Math.abs(tabIndicatorLength - width);
   }
-  const style = {
-    backgroundColor: theme.palette.selection.main
-  };
   const horizontalOrientation = {
     transform: `translateX(calc(${selectedTab * 100}% + ${tabIndicatorLengthDiff / 2}px))`,
     height: `3px`,
     width: `${tabIndicatorLength}px`,
-    ...style
   };
   const verticalOrientation = {
     transform: `translateY(calc(${selectedTab * height}px + ${tabIndicatorLengthDiff / 2}px))`,
     height: `${tabIndicatorLength}px`,
     width: `2px`,
     left: `${orientation === "vertical-left" ? "0" : `${width}px`}`,
-    ...style
   };
   return (
     <div
@@ -64,9 +57,8 @@ export const CustomTabs: React.FC<CustomTabsProps> = ({
             style={{
               width: `${width}px`,
               height: `${height}px`,
-              color: `${selectedTab === index ? theme.palette.selection.main : `rgb(0, 26, 35)`}`
             }}
-            className={`tsc-tab-panel`}
+            className={`tsc-tab-panel ${selectedTab === index ? "tsc-tab-panel-selected" : ""}`}
             onClick={() => handleTabClick(index)}>
             {tab}
           </button>
