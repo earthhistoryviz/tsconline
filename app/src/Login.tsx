@@ -131,7 +131,7 @@ export const Login: React.FC = observer(() => {
     };
     await handleLogin(false, formData);
   };
-
+  const cookieConsent = localStorage.getItem("cookieConsent");
   return (
     <Box className="login-box">
       <Avatar sx={{ "& .MuiSvgIcon-root": { mr: 0 }, bgcolor: theme.palette.navbar.dark }}>
@@ -163,9 +163,11 @@ export const Login: React.FC = observer(() => {
               id="password"
               autoComplete="current-password"
             />
-            <TSCButton type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }} endIcon={<LoginIcon />}>
-              Sign In
-            </TSCButton>
+            {cookieConsent === "accepted" ? (
+              <TSCButton type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }} endIcon={<LoginIcon />}>
+                Sign In
+              </TSCButton>
+            ) : null}
             <Grid container className="grid-container">
               <Grid item xs>
                 <Link href="/forgot-password" sx={{ color: "black" }}>
@@ -187,14 +189,16 @@ export const Login: React.FC = observer(() => {
               </Box>
               <Box className="divider-line"></Box>
             </Box>
-            <GoogleLogin
-              onSuccess={async (credentialResponse) => {
-                const credential = credentialResponse.credential;
-                await handleLogin(true, { credential, recaptchaToken: null });
-              }}
-              onError={() => actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_SERVER)}
-              width="400px"
-            />
+            {cookieConsent === "accepted" ? (
+              <GoogleLogin
+                onSuccess={async (credentialResponse) => {
+                  const credential = credentialResponse.credential;
+                  await handleLogin(true, { credential, recaptchaToken: null });
+                }}
+                onError={() => actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_SERVER)}
+                width="400px"
+              />
+            ) : null}
           </Box>
         </>
       )}
