@@ -25,30 +25,29 @@ const CookieConsent: React.FC<CookieConsentProps> = ({ persistent = false }) => 
   const theme = useTheme();
 
   // uncomment the following line to see the cookie consent banner
-  // localStorage.removeItem('cookieConsent');
+  // localStorage.removeItem("cookieConsent");
 
   useEffect(() => {
     const savedConsent = localStorage.getItem("cookieConsent");
     if (!savedConsent) {
       setIsVisible(true);
+    } else if (persistent && savedConsent !== "accepted") {
+      setIsVisible(true);
     }
-  }, []);
+  }, [persistent]);
 
   const handleAccept = () => {
     localStorage.setItem("cookieConsent", "accepted");
-    if (!persistent) {
-      setIsVisible(false);
-    }
+    setIsVisible(false);
+    window.location.reload(); // Refresh the page after accepting cookies
   };
 
   const handleReject = () => {
     localStorage.setItem("cookieConsent", "rejected");
-    if (!persistent) {
-      setIsVisible(false);
-    }
+    setIsVisible(false);
   };
 
-  if (!isVisible && !persistent) {
+  if (!isVisible) {
     return null;
   }
 
@@ -59,7 +58,9 @@ const CookieConsent: React.FC<CookieConsentProps> = ({ persistent = false }) => 
           This site uses cookies for the purpose of user logins and keeping track of user sessions. To see these
           settings again, please visit the &apos;Sign in&apos; page.
         </div>
-        <div>Note: If you reject, you will not be able to sign in, but other features will still work.</div>
+        <div>
+          Note: <strong>If you reject, you will not be able to sign in.</strong> Other features will still work.
+        </div>
       </Typography>
       <Box>
         <Button
@@ -68,9 +69,11 @@ const CookieConsent: React.FC<CookieConsentProps> = ({ persistent = false }) => 
           style={{ marginRight: theme.spacing(1), color: "white", backgroundColor: "green" }}>
           Accept
         </Button>
-        <Button onClick={handleReject} variant="outlined" style={{ color: "red", borderColor: "red" }}>
-          Reject
-        </Button>
+        {!persistent && (
+          <Button onClick={handleReject} variant="outlined" style={{ color: "red", borderColor: "red" }}>
+            Reject
+          </Button>
+        )}
       </Box>
     </CookieConsentContainer>
   );
