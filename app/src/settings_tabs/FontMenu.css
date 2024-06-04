@@ -27,16 +27,17 @@
   display: inline-block;
 }
 
-#FontRowContainer {
+.font-row-container {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   margin-bottom: 10px;
 }
 
-.font-checkbox {
+.font-checkbox-form {
   width: 100px;
 }
-.font-checkbox > .MuiTypography-root {
+.font-checkbox-form > .MuiTypography-root {
   font-size: 0.8rem;
 }
 
@@ -92,12 +93,12 @@
   margin-right: 10px;
 }
 
-#LeafColumnGridContainer {
-  width: auto;
-}
-
 #FontFaceForm {
   margin-right: 10px;
+}
+
+.leaf-column-font-menu {
+  width: auto;
 }
 
 .text-format-icon-svg {
@@ -115,7 +116,7 @@
 }
 
 @media screen and (max-width: 982px) {
-  #FontRowContainer {
+  .font-row-container {
     display: flex;
     flex-wrap: wrap;
     row-gap: 8px;
