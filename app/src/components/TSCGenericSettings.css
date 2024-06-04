@@ -13,16 +13,23 @@
   text-align: center;
 }
 
-.generic-text-field {
-  padding-left: 10px;
-  padding-right: 10px;
-  width: 123px;
+.generic-text-form {
+  display: flex;
+  justify-content: center;
+  align-items: left;
+  flex-direction: column;
+}
+
+.generic-text-field-helper-text {
+  text-align: left;
+  font-size: 0.7rem;
 }
 
 .generic-text-fields {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
+  gap: 10px;
 }
 
 .generic-color-picker {

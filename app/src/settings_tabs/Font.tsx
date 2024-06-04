@@ -21,7 +21,7 @@ export const Font = observer(function Font() {
               NOTE: These fonts can be changed on a column by column basis by using the Font button for each column
             </Typography>
           </div>
-          <div style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
             <LeafColumnFontMenu className="font-menu-setting-tab-config" column={rootColumn} />
           </div>
         </div>

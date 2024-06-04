@@ -6,8 +6,13 @@ import { TSCCheckbox } from "./TSCCheckbox";
 import TSCColorPicker from "./TSCColorPicker";
 import { convertHexToRGB } from "../util/util";
 
+const defaultWidth = 100;
+const defaultHeight = 40;
 type GenericTextFieldProps = {
   header?: string;
+  className?: string;
+  width?: number;
+  height?: number;
   inputs: {
     helperText: string;
     value: number;
@@ -15,27 +20,42 @@ type GenericTextFieldProps = {
   }[];
 };
 
-const InputTextField = ({ ...props }: TextFieldProps) => <TextField {...props} className="generic-text-field" />;
-
-export const GenericTextField: React.FC<GenericTextFieldProps> = ({ header, inputs }) => {
+export const GenericTextField: React.FC<GenericTextFieldProps> = ({
+  className,
+  width = defaultWidth,
+  height = defaultHeight,
+  header,
+  inputs
+}) => {
+  width = Math.max(width, defaultWidth);
+  height = Math.max(height, defaultHeight);
+  const InputStyle = { width: `${width}px`, height: `${height}px` };
+  // adjust interior input for padding
+  const inputStyle = { width: `${width - 28}px`, height: `${height - 33}px` };
   return (
-    <Box className="generic-text-field-container">
+    <Box className={`generic-text-field-container ${className}`}>
       {header && <Typography className="generic-text-field-header">{header}</Typography>}
       <div className="generic-text-fields">
         {inputs.map((input, index) => (
-          <NumericFormat
-            key={index}
-            helperText={input.helperText}
-            value={input.value}
-            customInput={InputTextField}
-            onValueChange={(values) => {
-              const floatValue = values.floatValue;
-              if (!floatValue) {
-                return;
-              }
-              input.onValueChange(floatValue);
-            }}
-          />
+          <div className="generic-text-form">
+            <Typography className="generic-text-field-helper-text">{input.helperText}</Typography>
+            <NumericFormat
+              key={index}
+              value={input.value}
+              customInput={TextField}
+              className={`generic-text-field`}
+              InputProps={{ style: InputStyle }}
+              inputProps={{ style: inputStyle }}
+              placeholder="Enter Size"
+              onValueChange={(values) => {
+                const floatValue = values.floatValue;
+                if (!floatValue) {
+                  return;
+                }
+                input.onValueChange(floatValue);
+              }}
+            />
+          </div>
         ))}
       </div>
     </Box>

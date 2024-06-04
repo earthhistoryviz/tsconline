@@ -12,7 +12,7 @@ import { EditWidthField } from "./EditWidthField";
 import { EventSpecificSettings } from "./advanced_settings/EventSpecificSettings";
 import { PointSettingsPopup } from "./advanced_settings/PointSettingsPopup";
 import { EditNameField } from "./EditNameField";
-import { DataMiningModal } from "./advanced_settings/DataMiningSettings";
+import { DataMiningModal, DataMiningSettings } from "./advanced_settings/DataMiningSettings";
 import AccordionPositionControls from "./AccordionPositionControls";
 import { CustomTabs } from "../components/TSCCustomTabs";
 
@@ -47,27 +47,7 @@ export const ColumnMenu = observer(() => {
           width={90}
           tabs={tabs}
         />
-        <div className="column-menu-content">
-          {column && <ColumnContent tab={tabs[tabValue]} column={column} />}
-          {/* {column && (
-            <>
-              <EditNameField column={column} />
-              <FontMenu column={column} />
-              {column.children.length === 0 && <ChangeBackgroundColor column={column} />}
-              {column.width !== undefined && column.columnDisplayType !== "Ruler" && (
-                <EditWidthField key={column.name} column={column} />
-              )}
-              <div className="column-advanced-controls">
-                <PointSettingsPopup column={column} />
-                <DataMiningModal column={column} />
-                <AccordionPositionControls column={column} />
-              </div>
-              <ShowTitles column={column} />
-              <EventSpecificSettings column={column} />
-              {!!column.popup && <InfoBox info={column.popup} />}
-            </>
-          )} */}
-        </div>
+        <div className="column-menu-content">{column && <ColumnContent tab={tabs[tabValue]} column={column} />}</div>
       </div>
     </div>
   );
@@ -100,7 +80,7 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
     case "Font":
       return <FontMenu column={column} />;
     case "Data Mining":
-      return <DataMiningModal column={column} />;
+      return <DataMiningSettings column={column} />;
     default:
       return null;
   }
