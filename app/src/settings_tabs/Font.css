@@ -4,15 +4,34 @@
   flex-direction: column;
   margin-top: 40px;
   padding-bottom: 80px;
+  justify-content: center;
   min-height: 100vh;
 }
 .root-font-description {
-  text-align: center;
   margin-bottom: 10px;
+  text-align: center;
 }
 .chart-root-not-available {
   display: flex;
   justify-content: center;
   width: 100%;
   min-height: 100vh;
+}
+.font-menu-setting-tab-config {
+  width: 610px;
+}
+
+@media screen and (max-width: 982px) {
+  .font-menu-setting-tab-config > .MuiGrid-root > .font-row-container {
+    flex-wrap: nowrap;
+  }
+}
+
+@media screen and (max-width: 620px) {
+  .font-menu-setting-tab-config {
+    width: 100%;
+  }
+  .font-menu-setting-tab-config > .MuiGrid-root > .font-row-container {
+    flex-wrap: wrap;
+  }
 }

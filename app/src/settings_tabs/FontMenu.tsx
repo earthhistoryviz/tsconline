@@ -50,8 +50,7 @@ const FontMenuRow: React.FC<{
   };
 
   return (
-    <div>
-      <div id="FontRowContainer">
+      <div className="font-row-container">
         <FormControlLabel
           control={
             <TSCCheckbox
@@ -65,7 +64,7 @@ const FontMenuRow: React.FC<{
             />
           }
           label={target}
-          className="font-checkbox"
+          className="font-checkbox-form"
         />
         <FormControlLabel
           control={
@@ -80,7 +79,7 @@ const FontMenuRow: React.FC<{
               disabled={!fontOpts.on || column.name === "Chart Root"}
             />
           }
-          className="font-checkbox"
+          className="font-checkbox-form"
           label="Inheritable"
         />
         <FormControl id="FontFaceForm">
@@ -143,7 +142,6 @@ const FontMenuRow: React.FC<{
           Sample Text
         </Typography>
       </div>
-    </div>
   );
 });
 
@@ -189,9 +187,12 @@ const MetaColumnFontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
   );
 });
 
-export const LeafColumnFontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
+type LeafColumnFontMenuProps = {
+  className?: string;
+} & FontMenuProps;
+export const LeafColumnFontMenu: React.FC<LeafColumnFontMenuProps> = observer(({ className, column }) => {
   return (
-    <Grid id="LeafColumnGridContainer" container rowSpacing={2} columnSpacing={0}>
+    <Grid className={`leaf-column-font-menu ${className}`} container rowSpacing={2} columnSpacing={0} >
       <Grid item xs={12}>
         <Typography className="change-font-header">Change Font</Typography>
       </Grid>
