@@ -1,10 +1,8 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import { context } from "../state";
 import {
   Box,
-  Button,
-  Checkbox,
   Divider,
   FormControlLabel,
   Grid,
@@ -12,26 +10,23 @@ import {
   TextFieldProps,
   ToggleButton,
   ToggleButtonGroup,
-  Typography,
-  useTheme
+  Typography
 } from "@mui/material";
-import Modal from "@mui/material/Modal";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import FormatBoldIcon from "@mui/icons-material/FormatBold";
 import FormatItalicIcon from "@mui/icons-material/FormatItalic";
-import CloseIcon from "@mui/icons-material/Close";
 import "./FontMenu.css";
 import { ValidFontOptions } from "@tsconline/shared";
 import TSCColorPicker from "../components/TSCColorPicker";
 import { NumericFormat } from "react-number-format";
 import { ColumnInfo } from "@tsconline/shared";
 import { convertHexToRGB } from "../util/util";
-import { StyledScrollbar } from "../components";
+import { StyledScrollbar, TSCCheckbox } from "../components";
 const FontSizeTextField = ({ ...props }: TextFieldProps) => (
-  <TextField {...props} className="FontSizeContainer" label="Size" variant="outlined" />
+  <TextField {...props} className="font-size-container" label="Size" size="small" variant="outlined" />
 );
 
 const FontMenuRow: React.FC<{
@@ -59,8 +54,10 @@ const FontMenuRow: React.FC<{
       <div id="FontRowContainer">
         <FormControlLabel
           control={
-            <Checkbox
+            <TSCCheckbox
+              focusRipple={false}
               checked={fontOpts.on}
+              size="small"
               onChange={() => {
                 actions.setFontOptionOn(target, !fontOpts.on, column);
               }}
@@ -68,12 +65,14 @@ const FontMenuRow: React.FC<{
             />
           }
           label={target}
-          id="TargetInput"
+          className="font-checkbox"
         />
         <FormControlLabel
           control={
-            <Checkbox
+            <TSCCheckbox
+              focusRipple={false}
               checked={fontOpts.inheritable}
+              size="small"
               onChange={() => {
                 actions.setInheritable(target, !fontOpts.inheritable, column);
               }}
@@ -81,6 +80,7 @@ const FontMenuRow: React.FC<{
               disabled={!fontOpts.on || column.name === "Chart Root"}
             />
           }
+          className="font-checkbox"
           label="Inheritable"
         />
         <FormControl id="FontFaceForm">
@@ -89,6 +89,8 @@ const FontMenuRow: React.FC<{
             value={fontOpts.fontFace}
             label="Font Face"
             onChange={handleFontChange}
+            className="font-family-select"
+            size="small"
             disabled={!fontOpts.on}
             displayEmpty>
             <MenuItem value={"Arial"}>Arial</MenuItem>
@@ -110,14 +112,15 @@ const FontMenuRow: React.FC<{
         <ToggleButtonGroup
           value={[fontOpts.bold ? "bold" : "", fontOpts.italic ? "italic" : ""]}
           onChange={handleFormat}
+          size="small"
           aria-label="text formatting"
           sx={{ marginRight: "10px" }}
           disabled={!fontOpts.on}>
-          <ToggleButton value="bold" aria-label="bold" color="info">
-            <FormatBoldIcon />
+          <ToggleButton value="bold" aria-label="bold" color="info" className="text-format-toggle-button">
+            <FormatBoldIcon className="text-format-icon-svg" />
           </ToggleButton>
-          <ToggleButton value="italic" aria-label="italic" color="info">
-            <FormatItalicIcon />
+          <ToggleButton value="italic" aria-label="italic" color="info" className="text-format-toggle-button">
+            <FormatItalicIcon className="text-format-icon-svg" />
           </ToggleButton>
         </ToggleButtonGroup>
         <div id="ColorInputContainer">
@@ -153,9 +156,9 @@ export const FontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
   return (
     <Box id="FontMenuContainer">
       <StyledScrollbar>
-      <div id="HeadingContainer">
-        <Typography id="FontOptionsTitle">Font Options for {`"${column.name}"`}</Typography>
-      </div>
+        <div id="HeadingContainer">
+          <Typography id="FontOptionsTitle">Font Options for {`"${column.name}"`}</Typography>
+        </div>
         {metaColumn ? <MetaColumnFontMenu column={column} /> : <LeafColumnFontMenu column={column} />}
       </StyledScrollbar>
     </Box>
