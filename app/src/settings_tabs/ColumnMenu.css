@@ -27,6 +27,8 @@
   padding: 0 10px;
   gap: 10px;
   width: 100%;
+  border: 1px solid lightgray;
+  min-height: 78vh;
 }
 .ShowTitlesContainer {
   flex-direction: row;
@@ -66,12 +68,6 @@
   display: flex;
   flex-wrap: wrap;
   flex-direction: row;
-  align-items: center;
-  gap: 10px;
-}
-.column-color-and-font {
-  display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
 }

@@ -2,20 +2,24 @@ import { HTMLAttributes, useState } from "react";
 import "./TSCCustomTabs.css";
 type CustomTabsProps = {
   tabs: string[];
+  value?: number;
+  onChange?: (index: number) => void;
   width?: number;
   height?: number;
   tabIndicatorLength?: number;
   orientation?: "horizontal" | "vertical-left" | "vertical-right";
-} & HTMLAttributes<HTMLDivElement>;
+} & Omit<HTMLAttributes<HTMLDivElement>, "onChange">;
 export const CustomTabs: React.FC<CustomTabsProps> = ({
   tabs,
+  value = 0,
   orientation = "horizontal",
   width = 80,
   height = 40,
   tabIndicatorLength,
+  onChange,
   ...props
 }) => {
-  const [selectedTab, setSelectedTab] = useState<number>(0);
+  const [selectedTab, setSelectedTab] = useState<number>(value);
   const handleTabClick = (index: number) => {
     setSelectedTab(index);
   };
@@ -33,13 +37,13 @@ export const CustomTabs: React.FC<CustomTabsProps> = ({
   const horizontalOrientation = {
     transform: `translateX(calc(${selectedTab * 100}% + ${tabIndicatorLengthDiff / 2}px))`,
     height: `3px`,
-    width: `${tabIndicatorLength}px`,
+    width: `${tabIndicatorLength}px`
   };
   const verticalOrientation = {
     transform: `translateY(calc(${selectedTab * height}px + ${tabIndicatorLengthDiff / 2}px))`,
     height: `${tabIndicatorLength}px`,
     width: `2px`,
-    left: `${orientation === "vertical-left" ? "0" : `${width}px`}`,
+    left: `${orientation === "vertical-left" ? "0" : `${width}px`}`
   };
   return (
     <div
@@ -56,10 +60,13 @@ export const CustomTabs: React.FC<CustomTabsProps> = ({
             tabIndex={0}
             style={{
               width: `${width}px`,
-              height: `${height}px`,
+              height: `${height}px`
             }}
             className={`tsc-tab-panel ${selectedTab === index ? "tsc-tab-panel-selected" : ""}`}
-            onClick={() => handleTabClick(index)}>
+            onClick={() => {
+              handleTabClick(index);
+              if (onChange) onChange(index);
+            }}>
             {tab}
           </button>
         ))}

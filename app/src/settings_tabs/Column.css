@@ -1,7 +1,7 @@
 .column-top-level-container {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: hidden;
 }
 
 #column-generate-button-top {
@@ -33,7 +33,7 @@
   display: flex;
   justify-content: start;
   width: auto;
-  height: 78vh;
+  height: 73vh;
   padding-top: 10px;
   flex-grow: 1;
 }
@@ -42,7 +42,6 @@
   width: 500px;
   max-height: 80vh;
   border: 1px solid lightgray;
-  overflow: auto;
   border-radius: 4px;
   z-index: 0;
   padding-left: 10px;
