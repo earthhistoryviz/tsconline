@@ -4,6 +4,7 @@
   flex-direction: column;
   min-height: 78vh;
   min-width: 200px;
+  flex-grow: 1;
 }
 .settings-header-divider {
   margin-top: 10px;
@@ -25,6 +26,7 @@
   align-self: flex-start;
   flex-grow: 1;
   height: 100%;
+  width: 100%;
 }
 .column-menu-content {
   display: flex;
@@ -32,6 +34,8 @@
   padding: 0 10px;
   gap: 10px;
   border: 1px solid lightgray;
+  max-width: calc(100% - 110px);
+  flex-grow: 1;
 }
 .ShowTitlesContainer {
   flex-direction: row;
@@ -86,6 +90,7 @@
 
 .column-menu-custom-tabs {
   padding: 10px;
+  flex-shrink: 0;
 }
 
 @media screen and (max-width: 530px) {
@@ -93,6 +98,9 @@
     font-size: 0.9rem;
     white-space: wrap;
     text-align: center;
+  }
+  .column-menu-content {
+    max-width: calc(100% - 70px);
   }
   .column-menu-custom-tabs > .tsc-tab-buttons {
     width: 50px;
@@ -105,4 +113,3 @@
     left: 55px !important;
   }
 }
-

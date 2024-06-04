@@ -20,8 +20,11 @@
 }
 
 #FontMenuContainer {
-  padding: 24px;
+  padding-left: 10px;
+  padding-top: 10px;
   width: 100%;
+  overflow: auto;
+  display: inline-block;
 }
 
 #FontRowContainer {
@@ -30,14 +33,25 @@
   margin-bottom: 10px;
 }
 
-#TargetInput {
-  width: 180px;
+.font-checkbox {
+  width: 100px;
+}
+.font-checkbox > .MuiTypography-root {
+  font-size: 0.8rem;
 }
 
-.MuiTextField-root.FontSizeContainer {
+.MuiTextField-root.font-size-container {
   width: 60px;
   margin-right: 10px;
-  min-width: 60px;
+  min-width: 50px;
+}
+.font-size-container > .MuiInputBase-root > .MuiInputBase-input {
+  font-size: 0.8rem;
+  height: 15px;
+}
+
+.font-family-select {
+  width: 105px;
 }
 
 #HeadingContainer {
@@ -68,7 +82,6 @@
 }
 
 #ColorInputContainer {
-  width: 150px;
   margin-right: 10px;
 }
 
@@ -77,23 +90,19 @@
 }
 
 #FontFaceForm {
-  width: 150px;
   margin-right: 10px;
-  min-width: 80px;
 }
 
-/* @media screen and (max-width: 1080px) {
-  #FontMenuContainer {
-    width: 75%;
-  }
-} */
+.text-format-icon-svg {
+  width: 17px;
+  height: 17px;
+}
 
-@media screen and (max-width: 890px) {
-  #FontMenuContainer {
-    /* width: 80%; */
-    padding: 15px;
-  }
+.text-format-toggle-button {
+  padding: 5px;
+}
 
+@media screen and (max-width: 982px) {
   #FontRowContainer {
     display: flex;
     flex-wrap: wrap;
