@@ -68,8 +68,6 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
             <EditWidthField key={column.name} column={column} />
           )}
           <div className="column-advanced-controls">
-            <PointSettingsPopup column={column} />
-            <DataMiningModal column={column} />
             <AccordionPositionControls column={column} />
           </div>
           <ShowTitles column={column} />

@@ -31,7 +31,7 @@
 .column-menu-content {
   display: flex;
   flex-direction: column;
-  padding: 0 10px;
+  padding: 15px 10px;
   gap: 10px;
   border: 1px solid lightgray;
   max-width: calc(100% - 110px);
