@@ -1,12 +1,12 @@
 import { observer } from "mobx-react-lite";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { context } from "../state";
-import { FormControlLabel, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { FormControlLabel, Typography } from "@mui/material";
 import "./ColumnMenu.css";
 import { FontMenu } from "./FontMenu";
 import { ChangeBackgroundColor } from "./BackgroundColor";
 import { ColumnInfo } from "@tsconline/shared";
-import { CustomDivider, TSCCheckbox, TSCTab, TSCTabs } from "../components";
+import { CustomDivider, TSCCheckbox } from "../components";
 import { InfoBox } from "./InfoBox";
 import { EditWidthField } from "./EditWidthField";
 import { EventSpecificSettings } from "./advanced_settings/EventSpecificSettings";
@@ -18,10 +18,15 @@ import { CustomTabs } from "../components/TSCCustomTabs";
 
 export const ColumnMenu = observer(() => {
   const { state } = useContext(context);
+  const [tabs, setTabs] = useState<string[]>(["General", "Font"]);
   const [tabValue, setTabValue] = useState(0);
   const selectedColumn = state.settingsTabs.columnSelected;
   const column = selectedColumn ? state.settingsTabs.columnHashMap.get(selectedColumn!) : undefined;
-
+  useEffect(() => {
+    if (column && (column.columnDisplayType === "Event" || column.columnDisplayType === "Point")) {
+      setTabs(["General", "Font", "Curve Drawing", "Data Mining"]);
+    } else setTabs(["General", "Font"]);
+  }, [column]);
   return (
     <div className="column-menu">
       <div className="column-menu-header">
@@ -36,18 +41,19 @@ export const ColumnMenu = observer(() => {
         <CustomTabs
           className="column-menu-custom-tabs"
           tabIndicatorLength={29}
+          value={tabValue}
+          onChange={(index) => setTabValue(index)}
           orientation="vertical-right"
           width={90}
-          tabs={["General", "Font", "Data Mining"]}
+          tabs={tabs}
         />
         <div className="column-menu-content">
-          {column && (
+          {column && <ColumnContent tab={tabs[tabValue]} column={column} />}
+          {/* {column && (
             <>
               <EditNameField column={column} />
-              <div className="column-color-and-font">
-                <FontMenu column={column} />
-                {column.children.length === 0 && <ChangeBackgroundColor column={column} />}
-              </div>
+              <FontMenu column={column} />
+              {column.children.length === 0 && <ChangeBackgroundColor column={column} />}
               {column.width !== undefined && column.columnDisplayType !== "Ruler" && (
                 <EditWidthField key={column.name} column={column} />
               )}
@@ -60,11 +66,44 @@ export const ColumnMenu = observer(() => {
               <EventSpecificSettings column={column} />
               {!!column.popup && <InfoBox info={column.popup} />}
             </>
-          )}
+          )} */}
         </div>
       </div>
     </div>
   );
+});
+
+type ColumnContentProps = {
+  tab: string;
+  column: ColumnInfo;
+};
+const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) => {
+  switch (tab) {
+    case "General":
+      return (
+        <>
+          <EditNameField column={column} />
+          {column.children.length === 0 && <ChangeBackgroundColor column={column} />}
+          {column.width !== undefined && column.columnDisplayType !== "Ruler" && (
+            <EditWidthField key={column.name} column={column} />
+          )}
+          <div className="column-advanced-controls">
+            <PointSettingsPopup column={column} />
+            <DataMiningModal column={column} />
+            <AccordionPositionControls column={column} />
+          </div>
+          <ShowTitles column={column} />
+          <EventSpecificSettings column={column} />
+          {!!column.popup && <InfoBox info={column.popup} />}
+        </>
+      );
+    case "Font":
+      return <FontMenu column={column} />;
+    case "Data Mining":
+      return <DataMiningModal column={column} />;
+    default:
+      return null;
+  }
 });
 
 const ShowTitles = observer(({ column }: { column: ColumnInfo }) => {

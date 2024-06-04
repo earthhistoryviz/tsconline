@@ -26,12 +26,12 @@
 }
 
 .tsc-tab-panel:hover {
-    color: var(--selection-color);
-    filter: saturate(0.12);
+  color: var(--selection-color);
+  filter: saturate(0.12);
 }
 .tsc-tab-panel-selected {
-    color: var(--selection-color) !important;
-    filter: saturate(1) !important;
+  color: var(--selection-color) !important;
+  filter: saturate(1) !important;
 }
 
 .tsc-tab-panel:focus-visible {

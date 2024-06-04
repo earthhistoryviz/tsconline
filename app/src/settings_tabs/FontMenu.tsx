@@ -29,6 +29,7 @@ import TSCColorPicker from "../components/TSCColorPicker";
 import { NumericFormat } from "react-number-format";
 import { ColumnInfo } from "@tsconline/shared";
 import { convertHexToRGB } from "../util/util";
+import { StyledScrollbar } from "../components";
 const FontSizeTextField = ({ ...props }: TextFieldProps) => (
   <TextField {...props} className="FontSizeContainer" label="Size" variant="outlined" />
 );
@@ -148,34 +149,16 @@ type FontMenuProps = {
 };
 
 export const FontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
-  const theme = useTheme();
-  const [open, setOpen] = useState(false);
   const metaColumn = column.children.length > 0;
-  const handleOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
   return (
-    <div>
-      <Button onClick={handleOpen} variant="contained">
-        Fonts
-      </Button>
-      <Modal open={open} onClose={handleClose}>
-        <Box id="FontMenuContainer">
-          <div id="HeadingContainer">
-            <Typography id="FontOptionsTitle">Font Options for {`"${column.name}"`}</Typography>
-            <div onClick={handleClose}>
-              <CloseIcon sx={{ color: theme.palette.primary.main }} />
-            </div>
-          </div>
-          {metaColumn ? <MetaColumnFontMenu column={column} /> : <LeafColumnFontMenu column={column} />}
-        </Box>
-      </Modal>
-    </div>
+    <Box id="FontMenuContainer">
+      <div id="HeadingContainer">
+        <Typography id="FontOptionsTitle">Font Options for {`"${column.name}"`}</Typography>
+      </div>
+      <StyledScrollbar>
+        {metaColumn ? <MetaColumnFontMenu column={column} /> : <LeafColumnFontMenu column={column} />}
+      </StyledScrollbar>
+    </Box>
   );
 });
 
