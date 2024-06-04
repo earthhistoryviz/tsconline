@@ -30,7 +30,7 @@ export const ColumnMenu = observer(() => {
   return (
     <div className="column-menu">
       <div className="column-menu-header">
-        <div id="ColumnMenuLabel" className="column-menu-label">
+        <div className="column-menu-label">
           <Typography component="h1" variant="h5" whiteSpace={"nowrap"}>
             Column Customization
           </Typography>
@@ -40,7 +40,7 @@ export const ColumnMenu = observer(() => {
       <div className="column-menu-content-container">
         <CustomTabs
           className="column-menu-custom-tabs"
-          tabIndicatorLength={29}
+          tabIndicatorLength={25}
           value={tabValue}
           onChange={(index) => setTabValue(index)}
           orientation="vertical-right"
