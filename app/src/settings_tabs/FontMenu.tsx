@@ -152,10 +152,10 @@ export const FontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
   const metaColumn = column.children.length > 0;
   return (
     <Box id="FontMenuContainer">
+      <StyledScrollbar>
       <div id="HeadingContainer">
         <Typography id="FontOptionsTitle">Font Options for {`"${column.name}"`}</Typography>
       </div>
-      <StyledScrollbar>
         {metaColumn ? <MetaColumnFontMenu column={column} /> : <LeafColumnFontMenu column={column} />}
       </StyledScrollbar>
     </Box>

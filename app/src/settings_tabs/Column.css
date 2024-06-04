@@ -1,7 +1,9 @@
 .column-top-level-container {
   display: flex;
   flex-direction: column;
-  overflow-y: hidden;
+  overflow: hidden;
+  height: 81vh;
+  min-width: 0px;
 }
 
 #column-generate-button-top {
@@ -32,15 +34,16 @@
 .column-accordion-and-menu-container {
   display: flex;
   justify-content: start;
-  width: auto;
-  height: 73vh;
   padding-top: 10px;
   flex-grow: 1;
+  overflow-y: hidden;
 }
 
 .column-accordion-wrapper {
-  width: 500px;
-  max-height: 80vh;
+  min-width: 200px;
+  max-width: 300px;
+  flex-grow: 1;
+  overflow: auto;
   border: 1px solid lightgray;
   border-radius: 4px;
   z-index: 0;
@@ -232,4 +235,10 @@
 .column-leaf-row-container {
   border-top-left-radius: 7px;
   border-bottom-left-radius: 7px;
+}
+
+@media screen and (max-width: 530px) {
+  .MuiTypography-root.column-display-name {
+    font-size: 0.8rem;
+  }
 }

@@ -2,7 +2,8 @@
   display: flex;
   align-items: center;
   flex-direction: column;
-  flex-grow: 1;
+  min-height: 78vh;
+  min-width: 200px;
 }
 .settings-header-divider {
   margin-top: 10px;
@@ -13,22 +14,24 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-grow: 1;
 }
 .column-menu-header {
   display: flex;
   flex-direction: row;
-  width: 20vw;
+}
+.column-menu-content-container {
+  display: flex;
+  flex-direction: row;
+  align-self: flex-start;
+  flex-grow: 1;
+  height: 100%;
 }
 .column-menu-content {
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
   padding: 0 10px;
   gap: 10px;
-  width: 100%;
   border: 1px solid lightgray;
-  min-height: 78vh;
 }
 .ShowTitlesContainer {
   flex-direction: row;
@@ -72,21 +75,34 @@
   gap: 10px;
 }
 
-.column-menu-content-container {
-  display: flex;
-  flex-direction: row;
-  align-self: flex-start;
-  width: 100%;
-}
 .column-menu-tabs {
   padding: 10px;
   width: 100px;
 }
 .column-menu-tab {
-  min-width: 0;
+  min-width: 0px;
   white-space: wrap;
 }
 
 .column-menu-custom-tabs {
   padding: 10px;
 }
+
+@media screen and (max-width: 530px) {
+  .column-menu-label > .MuiTypography-root {
+    font-size: 0.9rem;
+    white-space: wrap;
+    text-align: center;
+  }
+  .column-menu-custom-tabs > .tsc-tab-buttons {
+    width: 50px;
+  }
+  .column-menu-custom-tabs > .tsc-tab-buttons > .tsc-tab-panel {
+    padding-left: 0px !important;
+    width: 50px !important;
+  }
+  .column-menu-custom-tabs > .tsc-tab-buttons > .tsc-tab-indicator {
+    left: 55px !important;
+  }
+}
+

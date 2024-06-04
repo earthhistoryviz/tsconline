@@ -21,7 +21,7 @@
 
 #FontMenuContainer {
   padding: 24px;
-  max-height: 80%;
+  width: 100%;
 }
 
 #FontRowContainer {
@@ -82,15 +82,15 @@
   min-width: 80px;
 }
 
-@media screen and (max-width: 1080px) {
+/* @media screen and (max-width: 1080px) {
   #FontMenuContainer {
     width: 75%;
   }
-}
+} */
 
 @media screen and (max-width: 890px) {
   #FontMenuContainer {
-    width: 80%;
+    /* width: 80%; */
     padding: 15px;
   }
 
