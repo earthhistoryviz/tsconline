@@ -24,7 +24,7 @@ import TSCColorPicker from "../components/TSCColorPicker";
 import { NumericFormat } from "react-number-format";
 import { ColumnInfo } from "@tsconline/shared";
 import { convertHexToRGB } from "../util/util";
-import { StyledScrollbar, TSCCheckbox } from "../components";
+import { CustomDivider, StyledScrollbar, TSCCheckbox } from "../components";
 const FontSizeTextField = ({ ...props }: TextFieldProps) => (
   <TextField {...props} className="font-size-container" label="Size" size="small" variant="outlined" />
 );
@@ -156,9 +156,8 @@ export const FontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
   return (
     <Box id="FontMenuContainer">
       <StyledScrollbar>
-        <div id="HeadingContainer">
-          <Typography id="FontOptionsTitle">Font Options for {`"${column.name}"`}</Typography>
-        </div>
+        <Typography variant="h6" className="font-menu-header">Font Options for {`"${column.name}"`}</Typography>
+        <CustomDivider className="settings-header-divider" />
         {metaColumn ? <MetaColumnFontMenu column={column} /> : <LeafColumnFontMenu column={column} />}
       </StyledScrollbar>
     </Box>
@@ -169,14 +168,14 @@ const MetaColumnFontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
   return (
     <Grid container rowSpacing={2} columnSpacing={0}>
       <Grid item xs={12}>
-        <Typography id="Bold">Change Font</Typography>
+        <Typography className="change-font-header">Change Font</Typography>
         <FontMenuRow column={column} target="Column Header" />
       </Grid>
       <Grid item xs={12}>
         <Divider />
       </Grid>
       <Grid item xs={12} style={{ marginBottom: "-16px" }}>
-        <Typography id="AdditionalFontsText">Additional fonts for child columns</Typography>
+        <Typography className="change-font-header">Additional fonts for child columns</Typography>
       </Grid>
       {Array.from(column.fontOptions).map((target) => {
         if (target === "Column Header") return null;
@@ -194,7 +193,7 @@ export const LeafColumnFontMenu: React.FC<FontMenuProps> = observer(({ column })
   return (
     <Grid id="LeafColumnGridContainer" container rowSpacing={2} columnSpacing={0}>
       <Grid item xs={12}>
-        <Typography id="Bold">Change Font</Typography>
+        <Typography className="change-font-header">Change Font</Typography>
       </Grid>
       {Array.from(column.fontOptions).map((target) => (
         <Grid item xs={12} key={target}>
