@@ -42,8 +42,6 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({
       <CustomDivider className="settings-header-divider" />
       <div className="data-mining-settings-content">
         <GenericTextField
-          // width={100}
-          // height={100}
           inputs={[
             {
               helperText: "Window Size",

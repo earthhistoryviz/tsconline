@@ -1,6 +1,7 @@
 .data-mining-type-container {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
+  text-align: left;
   gap: 20px;
   margin-top: 10px;
 }
