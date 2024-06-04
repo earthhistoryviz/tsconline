@@ -7,6 +7,7 @@ type CustomTabsProps = {
   width?: number;
   height?: number;
   tabIndicatorLength?: number;
+  centered?: boolean;
   orientation?: "horizontal" | "vertical-left" | "vertical-right";
 } & Omit<HTMLAttributes<HTMLDivElement>, "onChange">;
 export const CustomTabs: React.FC<CustomTabsProps> = ({
@@ -16,6 +17,7 @@ export const CustomTabs: React.FC<CustomTabsProps> = ({
   width = 80,
   height = 40,
   tabIndicatorLength,
+  centered = false,
   onChange,
   ...props
 }) => {
@@ -35,8 +37,9 @@ export const CustomTabs: React.FC<CustomTabsProps> = ({
     tabIndicatorLengthDiff = Math.abs(tabIndicatorLength - width);
   }
   const horizontalOrientation = {
-    transform: `translateX(calc(${selectedTab * 100}% + ${tabIndicatorLengthDiff / 2}px))`,
-    height: `3px`,
+    transform: `translateX(calc(${selectedTab * width}px + ${tabIndicatorLengthDiff / 2}px))`,
+    height: `2px`,
+    top: `${height}px`,
     width: `${tabIndicatorLength}px`
   };
   const verticalOrientation = {
@@ -48,9 +51,8 @@ export const CustomTabs: React.FC<CustomTabsProps> = ({
   return (
     <div
       className="tsc-custom-tabs"
-      style={{ flexDirection: `${orientation === "horizontal" ? "row" : "column"}` }}
       {...props}>
-      <div className="tsc-tab-buttons">
+      <div className="tsc-tab-buttons" style ={{ flexDirection: `${orientation === "horizontal" ? "row" : "column"}` }}>
         <div
           className={`tsc-tab-indicator`}
           style={orientation === "horizontal" ? horizontalOrientation : verticalOrientation}
@@ -61,7 +63,9 @@ export const CustomTabs: React.FC<CustomTabsProps> = ({
             tabIndex={0}
             style={{
               width: `${width}px`,
-              height: `${height}px`
+              height: `${height}px`,
+              textAlign: `${centered ? "center" : "left"}`,
+              padding: `${centered ? "0" : orientation === "vertical-left" ? "10px 5px 10px 15px" : "10px 15px 10px 5px"}`,
             }}
             className={`tsc-tab-panel ${selectedTab === index ? "tsc-tab-panel-selected" : ""}`}
             onClick={() => {

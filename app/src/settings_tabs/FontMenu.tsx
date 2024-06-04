@@ -172,7 +172,7 @@ const MetaColumnFontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
         <FontMenuRow column={column} target="Column Header" />
       </Grid>
       <Grid item xs={12}>
-        <Divider />
+        <CustomDivider className="settings-header-divider" />
       </Grid>
       <Grid item xs={12} style={{ marginBottom: "-16px" }}>
         <Typography className="change-font-header">Additional fonts for child columns</Typography>

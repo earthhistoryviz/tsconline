@@ -3,6 +3,7 @@
 }
 .tsc-tab-buttons {
   position: relative;
+  display: flex;
 }
 .tsc-tab-panel {
   text-align: left;
@@ -13,12 +14,8 @@
   min-width: 50px;
   min-height: 40px;
   max-height: 100px;
-  padding-right: 15px;
-  padding-top: 10px;
-  padding-bottom: 10px;
   background-color: transparent;
   color: rgb(0, 26, 35);
-  padding-left: 5px;
   white-space: nowrap;
   font-family: "Titillium Web", sans-serif;
   transition: color 0.2s ease-in-out;

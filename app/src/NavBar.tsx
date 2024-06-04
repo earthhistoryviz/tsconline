@@ -5,9 +5,9 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import Toolbar from "@mui/material/Toolbar";
 import { useTheme } from "@mui/material/styles";
 import HomeIcon from "@mui/icons-material/Home";
-import { IconButton, Tab } from "@mui/material";
+import { IconButton, Tab, Tabs } from "@mui/material";
 import { context } from "./state";
-import { TSCMenuItem, TSCButton, TSCTabs, TSCAccountMenu } from "./components";
+import { TSCMenuItem, TSCButton, TSCAccountMenu } from "./components";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { ControlledMenu, useHover, useMenuState } from "@szhsin/react-menu";
 import "./NavBar.css";
@@ -48,7 +48,7 @@ export const NavBar = observer(function Navbar() {
         </Link>
         {
           <>
-            <TSCTabs
+            <Tabs
               value={state.tab !== 0 ? state.tab : false}
               onChange={(_e, value) => {
                 if (value === 2) settingsMenuToggle(false);
@@ -70,7 +70,7 @@ export const NavBar = observer(function Navbar() {
               <Tab value={2} label="Settings" to="/settings" component={Link} ref={settingsRef} {...anchorProps} />
               <Tab value={3} label="Help" to="/help" component={Link} />
               <Tab value={4} label="About" to="/about" component={Link} />
-            </TSCTabs>
+            </Tabs>
             <ControlledMenu
               {...hoverProps}
               {...settingsMenuState}
