@@ -34,12 +34,18 @@ export const Settings = observer(function Settings() {
   return (
     <div className="settings-container" style={{ background: theme.palette.settings.light }}>
       <SettingsHeader />
-      <CustomTabs tabs={tabs} value={tabIndex} onChange={actions.setSettingsTabsSelected} tabIndicatorLength={70} centered className="main-settings-tabs"/>
+      <CustomTabs
+        tabs={tabs}
+        value={tabIndex}
+        onChange={actions.setSettingsTabsSelected}
+        tabIndicatorLength={70}
+        centered
+        className="main-settings-tabs"
+      />
       <SettingsTab tab={state.settingsTabs.selected} />
     </div>
   );
 });
-
 
 const SettingsTab = observer(function SettingsTab({ tab }: { tab: SettingsTabs }) {
   switch (tab) {

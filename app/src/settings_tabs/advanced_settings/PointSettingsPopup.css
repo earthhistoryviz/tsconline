@@ -39,8 +39,8 @@
   display: flex;
   justify-content: center;
   text-align: center;
-  margin-bottom: 20px;
   font-weight: bold;
+  align-self: center;
 }
 
 .point-settings-adjustment-buttons {

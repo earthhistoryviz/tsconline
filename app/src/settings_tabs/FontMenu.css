@@ -75,7 +75,7 @@
 .change-font-header {
   font-size: 0.9rem;
   font-weight: 600;
-  padding-bottom: 5px;;
+  padding-bottom: 5px;
 }
 
 #AdditionalFontsText {
@@ -109,7 +109,7 @@
 .text-format-toggle-button {
   padding: 5px;
 }
-.font-menu-header{
+.font-menu-header {
   text-align: center;
   font-size: 1.2rem;
   font-weight: 600;
@@ -121,7 +121,7 @@
     flex-wrap: wrap;
     row-gap: 8px;
   }
-  .font-menu-header{
+  .font-menu-header {
     font-size: 0.9rem;
   }
 }

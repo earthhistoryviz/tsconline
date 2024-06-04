@@ -49,10 +49,8 @@ export const CustomTabs: React.FC<CustomTabsProps> = ({
     left: `${orientation === "vertical-left" ? "0" : `${width}px`}`
   };
   return (
-    <div
-      className="tsc-custom-tabs"
-      {...props}>
-      <div className="tsc-tab-buttons" style ={{ flexDirection: `${orientation === "horizontal" ? "row" : "column"}` }}>
+    <div className="tsc-custom-tabs" {...props}>
+      <div className="tsc-tab-buttons" style={{ flexDirection: `${orientation === "horizontal" ? "row" : "column"}` }}>
         <div
           className={`tsc-tab-indicator`}
           style={orientation === "horizontal" ? horizontalOrientation : verticalOrientation}
@@ -65,7 +63,7 @@ export const CustomTabs: React.FC<CustomTabsProps> = ({
               width: `${width}px`,
               height: `${height}px`,
               textAlign: `${centered ? "center" : "left"}`,
-              padding: `${centered ? "0" : orientation === "vertical-left" ? "10px 5px 10px 15px" : "10px 15px 10px 5px"}`,
+              padding: `${centered ? "0" : orientation === "vertical-left" ? "10px 5px 10px 15px" : "10px 15px 10px 5px"}`
             }}
             className={`tsc-tab-panel ${selectedTab === index ? "tsc-tab-panel-selected" : ""}`}
             onClick={() => {

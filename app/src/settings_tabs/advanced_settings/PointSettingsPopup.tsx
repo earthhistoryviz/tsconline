@@ -4,7 +4,7 @@ import { observer } from "mobx-react-lite";
 import { useContext, useState } from "react";
 import { context } from "../../state";
 import "./PointSettingsPopup.css";
-import { RGBModifier, TSCButton, TSCCheckbox } from "../../components";
+import { CustomDivider, RGBModifier, TSCButton, TSCCheckbox } from "../../components";
 import { GenericTextField } from "../../components";
 import { TSCRadioGroup } from "../../components/TSCRadioGroup";
 import CloseIcon from "@mui/icons-material/Close";
@@ -35,6 +35,7 @@ export const PointSettingsPopup: React.FC<PointSettingsPopupProps> = observer(({
           <Typography variant="h6" className="advanced-settings-header">
             Point Settings
           </Typography>
+          <CustomDivider className="settings-header-divider" />
           <GenericTextField
             header="Range"
             key="range"

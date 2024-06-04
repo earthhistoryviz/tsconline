@@ -6,7 +6,7 @@ import {
   isDataMiningPointDataType,
   assertDataMiningSettings
 } from "@tsconline/shared";
-import { GenericTextField } from "../../components";
+import { CustomDivider, GenericTextField } from "../../components";
 import { Box, Button, Dialog, Typography } from "@mui/material";
 import { useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
@@ -39,26 +39,31 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({
   return (
     <Box className="data-mining-settings-container">
       <Typography className="advanced-settings-header">Data Mining Settings</Typography>
-      <GenericTextField
-        inputs={[
-          {
-            helperText: "Window Size",
-            value: dataMiningSettings.windowSize,
-            onValueChange: (value) => {
-              actions.setDataMiningSettings(dataMiningSettings, { windowSize: value });
+      <CustomDivider className="settings-header-divider" />
+      <div className="data-mining-settings-content">
+        <GenericTextField
+          // width={100}
+          // height={100}
+          inputs={[
+            {
+              helperText: "Window Size",
+              value: dataMiningSettings.windowSize,
+              onValueChange: (value) => {
+                actions.setDataMiningSettings(dataMiningSettings, { windowSize: value });
+              }
+            },
+            {
+              helperText: "Step Size",
+              value: dataMiningSettings.stepSize,
+              onValueChange: (value) => {
+                actions.setDataMiningSettings(dataMiningSettings, { stepSize: value });
+              }
             }
-          },
-          {
-            helperText: "Step Size",
-            value: dataMiningSettings.stepSize,
-            onValueChange: (value) => {
-              actions.setDataMiningSettings(dataMiningSettings, { stepSize: value });
-            }
-          }
-        ]}
-      />
-      <EventDataMiningOptions column={column} />
-      <PointDataMiningOptions column={column} />
+          ]}
+        />
+        <EventDataMiningOptions column={column} />
+        <PointDataMiningOptions column={column} />
+      </div>
     </Box>
   );
 });
