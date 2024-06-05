@@ -1,7 +1,7 @@
-import { Box, Button, FormControlLabel, IconButton, Modal, Tooltip, Typography } from "@mui/material";
+import { IconButton, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { ColumnInfo, assertPointSettings, isPointShape } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { context } from "../../state";
 import "./PointSettingsPopup.css";
 import {
@@ -10,16 +10,9 @@ import {
   RGBModifier,
   CustomFormControlLabel,
   StyledScrollbar,
-  TSCButton,
   TSCCheckbox
 } from "../../components";
 import { GenericTextField } from "../../components";
-import { TSCRadioGroup } from "../../components/TSCRadioGroup";
-import Rect from "../../assets/settings_icons/rect.gif";
-import Circle from "../../assets/settings_icons/round.gif";
-import Tick from "../../assets/settings_icons/tick.gif";
-import AutoFixNormalIcon from "@mui/icons-material/AutoFixNormal";
-import FlipCameraAndroidIcon from "@mui/icons-material/FlipCameraAndroid";
 
 type PointSettingsPopupProps = {
   column: ColumnInfo;
@@ -44,7 +37,7 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
             <div>
               <div className="point-range-settings-container">
                 <div className="point-range-settings-header-container">
-                  <Typography className="point-range-settings-header">Range</Typography>
+                  <Typography className="point-range-settings-header">Range of Data</Typography>
                   <div>
                     <CustomTooltip title="Auto Scale" placement="top" arrow>
                       <IconButton onClick={() => actions.setAutoScale(pointSettings)}>
@@ -77,34 +70,24 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
                       onValueChange: (value) => {
                         actions.setPointColumnSettings(pointSettings, { upperRange: value });
                       }
-                    }
-                  ]}
-                />
-              </div>
-              <GenericTextField
-                header="Scale"
-                key="scale"
-                orientation="start"
-                helperOrientation="start"
-                helperPosition="bottom"
-                className="point-scale-settings"
-                inputs={[
+                    },
                   {
-                    helperText: "Start",
+                    helperText: "Scale Start",
                     value: pointSettings.scaleStart,
                     onValueChange: (value) => {
                       actions.setPointColumnSettings(pointSettings, { scaleStart: value });
                     }
                   },
                   {
-                    helperText: "Step",
+                    helperText: "Scale Step",
                     value: pointSettings.scaleStep,
                     onValueChange: (value) => {
                       actions.setPointColumnSettings(pointSettings, { scaleStep: value });
                     }
                   }
-                ]}
-              />
+                  ]}
+                />
+              </div>
             </div>
             <div className="draw-buttons-and-point-shape-container">
               <div className="point-settings-adjustment-buttons draw-point-scale-checkboxes">
@@ -138,22 +121,29 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
                 />
               </div>
               <div className="point-shape-radio-group">
-                <TSCRadioGroup
-                  name="Point Type"
-                  value={pointSettings.pointShape}
-                  onChange={(event) => {
-                    if (isPointShape(event.target.value)) {
-                      actions.setPointColumnSettings(pointSettings, { pointShape: event.target.value });
-                    }
-                  }}
-                  disabled={pointSettings.pointShape === "nopoints"}
-                  radioArray={[
-                    { value: "rect", imageSrc: Rect },
-                    { value: "circle", imageSrc: Circle },
-                    { value: "cross", imageSrc: Tick }
-                  ]}
-                  direction="vertical"
-                />
+                <ToggleButtonGroup exclusive value={pointSettings.pointShape} onChange={(_e, val) => {
+                  if (!isPointShape(val)) return;
+                  actions.setPointColumnSettings(pointSettings, { pointShape: val });
+                }}>
+                  <ToggleButton
+                    disabled={pointSettings.pointShape === "nopoints"}
+                    disableRipple
+                    value="rect">
+                      <span className="rectangle-icon"/>
+                  </ToggleButton>
+                  <ToggleButton
+                    disableRipple
+                    disabled={pointSettings.pointShape === "nopoints"}
+                    value="circle">
+                      <span className="circle-icon"/>
+                  </ToggleButton>
+                  <ToggleButton
+                    disableRipple
+                    disabled={pointSettings.pointShape === "nopoints"}
+                    value="cross">
+                      <span className="cross-icon"/>
+                  </ToggleButton>
+                </ToggleButtonGroup>
               </div>
             </div>
           <div className="point-settings-adjustment-buttons">
