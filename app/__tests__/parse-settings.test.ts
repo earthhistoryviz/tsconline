@@ -1,6 +1,5 @@
 import { ChartInfoTSC, ColumnInfo, ColumnInfoTSC, FontsInfo } from "@tsconline/shared";
 import * as parseSettings from "../src/state/parse-settings";
-import { readFileSync } from "fs";
 import { ChartSettings } from "../src/types";
 jest.mock("@tsconline/shared", () => {
   const fontsInfo = {
@@ -1061,34 +1060,34 @@ describe("columnInfoTSC to xml", () => {
   it("should generate basic column xml", async () => {
     mock.mockReturnValue("");
     const test = {
-      "_id": "class datastore.RootColumn:Chart Root",
-      "title": "Chart Root",
-      "useNamedColor": false,
-      "placeHolder": false,
-      "drawTitle": true,
-      "drawAgeLabel": false,
-      "drawUncertaintyLabel": false,
-      "isSelected": true,
-      "pad": 0.2,
+      _id: "class datastore.RootColumn:Chart Root",
+      title: "Chart Root",
+      useNamedColor: false,
+      placeHolder: false,
+      drawTitle: true,
+      drawAgeLabel: false,
+      drawUncertaintyLabel: false,
+      isSelected: true,
+      pad: 0.2,
       "age pad": 2,
-      "backgroundColor": {
-          "text": {
-              "r": 255,
-              "g": 255,
-              "b": 255
-          }
+      backgroundColor: {
+        text: {
+          r: 255,
+          g: 255,
+          b: 255
+        }
       },
-      "customColor": {
-          "text": {
-              "r": 255,
-              "g": 255,
-              "b": 255
-          }
+      customColor: {
+        text: {
+          r: 255,
+          g: 255,
+          b: 255
+        }
       },
-      "fonts": {},
-      "children": [],
-      "width": 100
-    } as unknown as ColumnInfoTSC
+      fonts: {},
+      children: [],
+      width: 100
+    } as unknown as ColumnInfoTSC;
     const key =
       `    <setting name="title">Chart Root</setting>\n` +
       `    <setting name="useNamedColor">false</setting>\n` +
@@ -1109,40 +1108,40 @@ describe("columnInfoTSC to xml", () => {
   it("should generate event column xml", async () => {
     mock.mockReturnValue("");
     const test = {
-      "_id": "class datastore.EventColumn:Events (Venusian)",
-      "title": "Events (Venusian)",
-      "useNamedColor": false,
-      "placeHolder": false,
-      "drawTitle": false,
-      "drawAgeLabel": false,
-      "drawUncertaintyLabel": false,
-      "isSelected": false,
-      "width": 150,
-      "pad": 0.2,
+      _id: "class datastore.EventColumn:Events (Venusian)",
+      title: "Events (Venusian)",
+      useNamedColor: false,
+      placeHolder: false,
+      drawTitle: false,
+      drawAgeLabel: false,
+      drawUncertaintyLabel: false,
+      isSelected: false,
+      width: 150,
+      pad: 0.2,
       "age pad": 2,
-      "backgroundColor": {
-          "text": {
-              "r": 224,
-              "g": 232,
-              "b": 239
-          }
+      backgroundColor: {
+        text: {
+          r: 224,
+          g: 232,
+          b: 239
+        }
       },
-      "customColor": {
-          "text": {
-              "r": 224,
-              "g": 232,
-              "b": 239
-          }
+      customColor: {
+        text: {
+          r: 224,
+          g: 232,
+          b: 239
+        }
       },
-      "fonts": {},
-      "children": [],
-      "type": "events",
-      "rangeSort": "first occurrence",
-      "drawExtraColumn": null,
-      "windowSize": 2,
-      "stepSize": 1,
-      "isDataMiningColumn": false
-  } as unknown as ColumnInfoTSC;
+      fonts: {},
+      children: [],
+      type: "events",
+      rangeSort: "first occurrence",
+      drawExtraColumn: null,
+      windowSize: 2,
+      stepSize: 1,
+      isDataMiningColumn: false
+    } as unknown as ColumnInfoTSC;
     const key =
       `    <setting name="title">Events (Venusian)</setting>\n` +
       `    <setting name="useNamedColor">false</setting>\n` +
@@ -1162,89 +1161,87 @@ describe("columnInfoTSC to xml", () => {
       `    <setting name="rangeSort">first occurrence</setting>\n` +
       `    <setting name="windowSize">2</setting>\n` +
       `    <setting name="stepSize">1</setting>\n`;
-    expect(parseSettings.columnInfoTSCToXml(test, "    ")).toEqual(
-      key
-    );
+    expect(parseSettings.columnInfoTSCToXml(test, "    ")).toEqual(key);
   });
   it("should generate point column xml", async () => {
     mock.mockReturnValue("");
-    const test =   {
-      "_id": "class datastore.PointColumn:Long-Term Phanerozoic",
-      "title": "Long-Term Phanerozoic",
-      "useNamedColor": false,
-      "placeHolder": false,
-      "drawTitle": true,
-      "drawAgeLabel": false,
-      "drawUncertaintyLabel": false,
-      "isSelected": false,
-      "width": 100,
-      "pad": 0.2,
+    const test = {
+      _id: "class datastore.PointColumn:Long-Term Phanerozoic",
+      title: "Long-Term Phanerozoic",
+      useNamedColor: false,
+      placeHolder: false,
+      drawTitle: true,
+      drawAgeLabel: false,
+      drawUncertaintyLabel: false,
+      isSelected: false,
+      width: 100,
+      pad: 0.2,
       "age pad": 2,
-      "backgroundColor": {
-          "text": {
-              "r": 255,
-              "g": 255,
-              "b": 255
-          }
+      backgroundColor: {
+        text: {
+          r: 255,
+          g: 255,
+          b: 255
+        }
       },
-      "customColor": {
-          "text": {
-              "r": 255,
-              "g": 255,
-              "b": 255
-          }
+      customColor: {
+        text: {
+          r: 255,
+          g: 255,
+          b: 255
+        }
       },
-      "fonts": {},
-      "children": [],
-      "isDataMiningColumn": false,
-      "drawPoints": false,
-      "drawLine": true,
-      "lineColor": {
-          "r": 0,
-          "g": 0,
-          "b": 0
+      fonts: {},
+      children: [],
+      isDataMiningColumn: false,
+      drawPoints: false,
+      drawLine: true,
+      lineColor: {
+        r: 0,
+        g: 0,
+        b: 0
       },
-      "drawSmooth": true,
-      "drawFill": true,
-      "fillColor": {
-          "r": 64,
-          "g": 233,
-          "b": 191
+      drawSmooth: true,
+      drawFill: true,
+      fillColor: {
+        r: 64,
+        g: 233,
+        b: 191
       },
-      "doNotSetWindowAuto": true,
-      "minWindow": -150,
-      "maxWindow": 280,
-      "drawScale": true,
-      "drawBgrndGradient": false,
-      "backGradStart": {
-          "r": 0,
-          "g": 0,
-          "b": 0
+      doNotSetWindowAuto: true,
+      minWindow: -150,
+      maxWindow: 280,
+      drawScale: true,
+      drawBgrndGradient: false,
+      backGradStart: {
+        r: 0,
+        g: 0,
+        b: 0
       },
-      "backGradEnd": {
-          "r": 255,
-          "g": 255,
-          "b": 255
+      backGradEnd: {
+        r: 255,
+        g: 255,
+        b: 255
       },
-      "drawCurveGradient": false,
-      "curveGradStart": {
-          "r": 0,
-          "g": 0,
-          "b": 0
+      drawCurveGradient: false,
+      curveGradStart: {
+        r: 0,
+        g: 0,
+        b: 0
       },
-      "curveGradEnd": {
-          "r": 255,
-          "g": 255,
-          "b": 255
+      curveGradEnd: {
+        r: 255,
+        g: 255,
+        b: 255
       },
-      "flipScale": false,
-      "scaleStart": 0,
-      "scaleStep": 1,
-      "pointType": "rect",
-      "drawExtraColumn": null,
-      "windowSize": 2,
-      "stepSize": 1
-  } as unknown as ColumnInfoTSC
+      flipScale: false,
+      scaleStart: 0,
+      scaleStep: 1,
+      pointType: "rect",
+      drawExtraColumn: null,
+      windowSize: 2,
+      stepSize: 1
+    } as unknown as ColumnInfoTSC;
     const key =
       `    <setting name="title">Long-Term Phanerozoic</setting>\n` +
       `    <setting name="useNamedColor">false</setting>\n` +
@@ -1282,9 +1279,7 @@ describe("columnInfoTSC to xml", () => {
       `    <setting name="pointType" pointType="rect"/>\n` +
       `    <setting name="windowSize">2</setting>\n` +
       `    <setting name="stepSize">1</setting>\n`;
-    expect(parseSettings.columnInfoTSCToXml(test, "    ")).toEqual(
-      key
-    );
+    expect(parseSettings.columnInfoTSCToXml(test, "    ")).toEqual(key);
   });
 });
 
