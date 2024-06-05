@@ -676,7 +676,7 @@ describe("generate fonts xml", () => {
 });
 
 describe("columnInfoTSC to xml", () => {
-    const mock = jest.spyOn(parseSettings, 'generateFontsXml');
+  const mock = jest.spyOn(parseSettings, "generateFontsXml");
   it("should generate basic column xml", async () => {
     mock.mockReturnValue("");
     expect(parseSettings.columnInfoTSCToXml(tests["generate-basic-column-xml-test"], "    ")).toEqual(
@@ -698,13 +698,13 @@ describe("columnInfoTSC to xml", () => {
 });
 
 describe("json to xml", () => {
-    const mock1 = jest.spyOn(parseSettings, 'generateSettingsXml');
-    const mock2 = jest.spyOn(parseSettings, 'columnInfoTSCToXml');
-    it("should generate prolog and root of xml", async () => {
-        mock1.mockReturnValue("");
-        mock2.mockReturnValue("");
-        expect(parseSettings.jsonToXml(tests["generate-prolog-and-root-xml-test"], tests["default-settings-test"])).toEqual(
-          readFileSync("app/__tests__/__data__/generate-prolog-and-root-xml-key.tsc").toString()
-        );
-      });
-  })
+  const mock1 = jest.spyOn(parseSettings, "generateSettingsXml");
+  const mock2 = jest.spyOn(parseSettings, "columnInfoTSCToXml");
+  it("should generate prolog and root of xml", async () => {
+    mock1.mockReturnValue("");
+    mock2.mockReturnValue("");
+    expect(parseSettings.jsonToXml(tests["generate-prolog-and-root-xml-test"], tests["default-settings-test"])).toEqual(
+      readFileSync("app/__tests__/__data__/generate-prolog-and-root-xml-key.tsc").toString()
+    );
+  });
+});
