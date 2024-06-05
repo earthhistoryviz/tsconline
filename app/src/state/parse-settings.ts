@@ -32,6 +32,9 @@ import {
 import { ChartSettings } from "../types";
 import { convertRgbToString, convertTSCColorToRGB } from "../util/util";
 import { cloneDeep } from "lodash";
+//for testing purposes
+//https://stackoverflow.com/questions/51269431/jest-mock-inner-function
+import * as parseSettings from "./parse-settings"
 
 /**
  * casts a string to a specified type
@@ -325,27 +328,24 @@ export function xmlToJson(xml: string): ChartInfoTSC {
  * @param type attribute or text,
  * @returns
  */
-function escapeHtmlChars(text: string, type: "attribute" | "text"): string {
+export function escapeHtmlChars(text: string, type: "attribute" | "text"): string {
   text = text.replaceAll("&", "&amp;");
-  text = text.replaceAll("<", " &lt; ");
+  text = text.replaceAll("<", "&lt;");
   if (type == "attribute") {
     text = text.replaceAll('"', "&quot;");
     text = text.replaceAll("'", "&apos;");
-    text = text.replaceAll(">", " &gt; ");
+    text = text.replaceAll(">", "&gt;");
   }
   return text;
 }
 
-function extractName(text: string): string {
-  return text.substring(text.indexOf(":") + 1, text.length);
-}
 /**
  *
  * @param settings settings json object
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with settings info
  */
-function generateSettingsXml(stateSettings: ChartSettings, indent: string): string {
+export function generateSettingsXml(stateSettings: ChartSettings, indent: string): string {
   let xml = "";
   for (const unit in stateSettings.timeSettings) {
     const timeSettings = stateSettings.timeSettings[unit];
@@ -470,7 +470,7 @@ export function columnInfoToSettingsTSC(state: ColumnInfo, settings: ChartSettin
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with fonts info
  */
-function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
+export function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
   if (!fontsInfo) {
     return "";
   }
@@ -498,12 +498,13 @@ function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
   return xml;
 }
 
-function extractColumnType(text: string): string | undefined {
+export function extractColumnType(text: string): string | undefined {
   if (text.indexOf(".") === -1 || text.indexOf(":") === -1) {
     return undefined;
   }
   return text.substring(text.indexOf(".") + 1, text.indexOf(":"));
 }
+
 
 export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
   let xml = "";
@@ -563,7 +564,8 @@ export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): strin
       }
     } else if (key === "fonts") {
       xml += `${indent}<fonts>\n`;
-      xml += generateFontsXml(`${indent}    `, column.fonts);
+      //parseSettings. needed for mocking in tests
+      xml += parseSettings.generateFontsXml(`${indent}    `, column.fonts);
       xml += `${indent}</fonts>\n`;
     } else if (key === "children") {
       for (const child of column.children) {
@@ -601,10 +603,12 @@ export function jsonToXml(state: ColumnInfo, settings: ChartSettings, version: s
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
   xml += '    <settings version="1.0">\n';
-  xml += generateSettingsXml(settings, "        ");
+  //parseSettings. needed for mocking in tests
+  xml += parseSettings.generateSettingsXml(settings, "        ");
   xml += "    </settings>\n";
   xml += '    <column id="class datastore.RootColumn:Chart Root">\n';
-  xml += columnInfoTSCToXml(settingsTSC["class datastore.RootColumn:Chart Root"], "        ");
+  //parseSettings. needed for mocking in tests
+  xml += parseSettings.columnInfoTSCToXml(settingsTSC["class datastore.RootColumn:Chart Root"], "        ");
   xml += "    </column>\n";
   xml += "</TSCreator>";
   return xml;

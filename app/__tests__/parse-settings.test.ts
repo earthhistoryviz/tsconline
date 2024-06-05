@@ -1,9 +1,7 @@
-import { ColumnInfo } from "@tsconline/shared";
-import { columnInfoTSCToXml, jsonToXml, translateColumnInfoToColumnInfoTSC } from "../src/state/parse-settings";
+import * as parseSettings from "../src/state/parse-settings";
 import { readFileSync } from "fs";
-import { ChartSettings } from "../src/types";
-const inputs = JSON.parse(readFileSync("app/__tests__/__data__/column-inputs.json", "utf-8").toString());
-
+const tests = JSON.parse(readFileSync("app/__tests__/__data__/parse-settings-tests.json", "utf-8").toString());
+const keys = JSON.parse(readFileSync("app/__tests__/__data__/parse-settings-keys.json", "utf-8").toString());
 jest.mock("@tsconline/shared", () => ({
   defaultColumnBasicInfoTSC: {
     _id: "",
@@ -595,36 +593,118 @@ jest.mock("@tsconline/shared", () => ({
   defaultFontsInfo: { font: "Arial" }
 }));
 
-describe("parseSettings tests", () => {
-  it("should parse root column only", async () => {
-    const settings = jsonToXml(inputs["basic-column-test"] as ColumnInfo, inputs["default-settings"] as ChartSettings);
-    expect(settings).toEqual(readFileSync("app/__tests__/__data__/root-column-key.tsc").toString());
+describe("escape html chars", () => {
+  test.each([
+    ["&", "&amp;"],
+    ["<", "&lt;"],
+    ['"', "&quot;"],
+    ["'", "&apos;"],
+    [">", "&gt;"]
+  ])("escape attribute", (input, expected) => {
+    expect(parseSettings.escapeHtmlChars(input, "attribute")).toEqual(expected);
   });
-  /**
-   * basic columns are columns with no extra settings.
-   * (Meta, Facies, BlockSeriesMeta, Chron, Freehand, Transect, Root, Blank)
-   * could change later if jar file is changed so that these columns accept more parameters
-   */
-  it("should parse basic column", async () => {
-    const settings = columnInfoTSCToXml(translateColumnInfoToColumnInfoTSC(inputs["basic-column-test"]), "    ");
-    expect(settings).toEqual(readFileSync("app/__tests__/__data__/basic-column-key.tsc").toString());
-  });
-
-  it("should parse event column", async () => {
-    const settings = columnInfoTSCToXml(translateColumnInfoToColumnInfoTSC(inputs["event-column-test"]), "    ");
-    expect(settings).toEqual(readFileSync("app/__tests__/__data__/event-column-key.tsc").toString());
-  });
-
-  it("should parse point column", async () => {
-    const settings = columnInfoTSCToXml(translateColumnInfoToColumnInfoTSC(inputs["point-column-test"]), "    ");
-    expect(settings).toEqual(readFileSync("app/__tests__/__data__/point-column-key.tsc").toString());
-  });
-  it("should parse font change", async () => {
-    const settings = columnInfoTSCToXml(translateColumnInfoToColumnInfoTSC(inputs["font-change-test"]), "    ");
-    expect(settings).toEqual(readFileSync("app/__tests__/__data__/font-change-key.tsc").toString());
-  });
-  it("should parse all columns and settings", async () => {
-    const settings = jsonToXml(inputs["all-column-test"], inputs["default-settings"]);
-    expect(settings).toEqual(readFileSync("app/__tests__/__data__/all-column-key.tsc").toString());
+  test.each([
+    ["&", "&amp;"],
+    ["<", "&lt;"],
+    ['"', '"'],
+    ["'", "'"],
+    [">", ">"]
+  ])("escape attribute", (input, expected) => {
+    expect(parseSettings.escapeHtmlChars(input, "text")).toEqual(expected);
   });
 });
+
+describe("extract column type", () => {
+  it("should extract column type for correctly formatted id", async () => {
+    expect(parseSettings.extractColumnType("class datastore.RootColumn:Chart Root")).toEqual("RootColumn");
+  });
+  test.each([
+    ["", undefined],
+    ["RootColumn", undefined],
+    ["class datastoreRootColumn:Chart Root", undefined],
+    ["class datastore.RootColumn Chart Root", undefined]
+  ])("should return undefined for incorrectly formatted id", (input, expected) => {
+    expect(parseSettings.extractColumnType(input)).toEqual(expected);
+  });
+});
+
+describe("translate columnInfo to columnInfoTSC", () => {
+  it("should translate basic column", async () => {
+    expect(parseSettings.translateColumnInfoToColumnInfoTSC(tests["translate-basic-column-test"])).toEqual(
+      keys["translate-basic-column-key"]
+    );
+  });
+  it("should translate event column", async () => {
+    expect(parseSettings.translateColumnInfoToColumnInfoTSC(tests["translate-event-column-test"])).toEqual(
+      keys["translate-event-column-key"]
+    );
+  });
+  it("should translate point column", async () => {
+    expect(parseSettings.translateColumnInfoToColumnInfoTSC(tests["translate-point-column-test"])).toEqual(
+      keys["translate-point-column-key"]
+    );
+  });
+});
+
+describe("generate settings xml", () => {
+  it("should generate default settings", async () => {
+    expect(parseSettings.generateSettingsXml(tests["default-settings-test"], "    ")).toEqual(
+      readFileSync("app/__tests__/__data__/generate-settings-xml-key-1.tsc").toString()
+    );
+  });
+  it("should generate multiunit settings", async () => {
+    expect(parseSettings.generateSettingsXml(tests["multiunit-settings-test"], "    ")).toEqual(
+      readFileSync("app/__tests__/__data__/generate-settings-xml-key-2.tsc").toString()
+    );
+  });
+});
+
+describe("generate fonts xml", () => {
+  it("should generate default fonts", async () => {
+    expect(parseSettings.generateFontsXml("    ", tests["default-fonts-test"])).toEqual(
+      readFileSync("app/__tests__/__data__/generate-fonts-xml-key-1.tsc").toString()
+    );
+  });
+  it("should generate changed fonts", async () => {
+    expect(parseSettings.generateFontsXml("    ", tests["changed-fonts-test"])).toEqual(
+      readFileSync("app/__tests__/__data__/generate-fonts-xml-key-2.tsc").toString()
+    );
+  });
+  it("should return undefined", async () => {
+    expect(parseSettings.generateFontsXml("", undefined)).toEqual("");
+  });
+});
+
+describe("columnInfoTSC to xml", () => {
+    const mock = jest.spyOn(parseSettings, 'generateFontsXml');
+  it("should generate basic column xml", async () => {
+    mock.mockReturnValue("");
+    expect(parseSettings.columnInfoTSCToXml(tests["generate-basic-column-xml-test"], "    ")).toEqual(
+      readFileSync("app/__tests__/__data__/generate-basic-column-xml-key.tsc").toString()
+    );
+  });
+  it("should generate event column xml", async () => {
+    mock.mockReturnValue("");
+    expect(parseSettings.columnInfoTSCToXml(tests["generate-event-column-xml-test"], "    ")).toEqual(
+      readFileSync("app/__tests__/__data__/generate-event-column-xml-key.tsc").toString()
+    );
+  });
+  it("should generate point column xml", async () => {
+    mock.mockReturnValue("");
+    expect(parseSettings.columnInfoTSCToXml(tests["generate-point-column-xml-test"], "    ")).toEqual(
+      readFileSync("app/__tests__/__data__/generate-point-column-xml-key.tsc").toString()
+    );
+  });
+});
+
+describe("json to xml", () => {
+    const mock1 = jest.spyOn(parseSettings, 'generateSettingsXml');
+    const mock2 = jest.spyOn(parseSettings, 'columnInfoTSCToXml');
+    it("should generate prolog and root of xml", async () => {
+        mock1.mockReturnValue("");
+        mock2.mockReturnValue("");
+        expect(parseSettings.jsonToXml(tests["generate-prolog-and-root-xml-test"], tests["default-settings-test"])).toEqual(
+          readFileSync("app/__tests__/__data__/generate-prolog-and-root-xml-key.tsc").toString()
+        );
+      });
+  })

@@ -1,0 +1,14 @@
+    <setting name="title">Chart Root</setting>
+    <setting name="useNamedColor">false</setting>
+    <setting name="placeHolder">false</setting>
+    <setting name="drawTitle">true</setting>
+    <setting name="drawAgeLabel">false</setting>
+    <setting name="drawUncertaintyLabel">false</setting>
+    <setting name="isSelected">true</setting>
+    <setting name="pad">0.2</setting>
+    <setting name="age pad">2</setting>
+    <setting name="backgroundColor"/>
+    <setting name="customColor" useNamed="false">rgb(255,255,255)</setting>
+    <fonts>
+    </fonts>
+    <setting name="width">100</setting>
