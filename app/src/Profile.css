@@ -9,9 +9,7 @@
 }
 .pencil {
   color: gainsboro;
-}
-.pencil-hover {
-  color: #188de6;
+  transition: color 0.3s;
 }
 .editable-profile-picture {
   border: 2px solid #188de6;
@@ -32,4 +30,7 @@
 }
 .editable-profile-picture:hover::after {
   opacity: 1;
+}
+.editable-profile-picture:hover + .MuiBadge-badge .badge .pencil {
+  color: #188de6;
 }
