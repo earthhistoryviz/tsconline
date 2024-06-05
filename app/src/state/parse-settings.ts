@@ -34,7 +34,7 @@ import { convertRgbToString, convertTSCColorToRGB } from "../util/util";
 import { cloneDeep } from "lodash";
 //for testing purposes
 //https://stackoverflow.com/questions/51269431/jest-mock-inner-function
-import * as parseSettings from "./parse-settings"
+import * as parseSettings from "./parse-settings";
 
 /**
  * casts a string to a specified type
@@ -504,7 +504,6 @@ export function extractColumnType(text: string): string | undefined {
   }
   return text.substring(text.indexOf(".") + 1, text.indexOf(":"));
 }
-
 
 export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
   let xml = "";
