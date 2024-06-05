@@ -282,7 +282,7 @@ export const defaultPointColumnInfoTSC: PointColumnInfoTSC = {
     g: 233,
     b: 191
   },
-  doNotSetWindowAuto: false,
+  doNotSetWindowAuto: true,
   minWindow: 0,
   maxWindow: 0,
   drawScale: false,

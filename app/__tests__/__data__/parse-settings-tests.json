@@ -1,0 +1,2037 @@
+{
+    "default-settings-test": {
+        "timeSettings": {
+            "Ma": {
+                "selectedStage": "",
+                "topStageAge": 0,
+                "topStageKey": "",
+                "baseStageAge": 0,
+                "baseStageKey": "",
+                "unitsPerMY": 2,
+                "skipEmptyColumns": true
+            }
+        },
+        "noIndentPattern": false,
+        "enableColumnBackground": false,
+        "enableChartLegend": false,
+        "enablePriority": false,
+        "enableHideBlockLabel": false,
+        "mouseOverPopupsEnabled": false,
+        "datapackContainsSuggAge": false,
+        "useDatapackSuggestedAge": true
+    },
+    "multiunit-settings-test":{
+      "timeSettings": {
+        "Ma": {
+          "selectedStage": "",
+          "topStageAge": 0,
+          "topStageKey": "Holocene",
+          "baseStageAge": 10,
+          "baseStageKey": "",
+          "unitsPerMY": 2,
+          "skipEmptyColumns": true
+        },
+        "ka (before AD2000)": {
+          "selectedStage": "",
+          "topStageAge": 0,
+          "topStageKey": "Holocene",
+          "baseStageAge": 15,
+          "baseStageKey": "",
+          "unitsPerMY": 2,
+          "skipEmptyColumns": true
+        }
+      },
+      "noIndentPattern": false,
+      "enableColumnBackground": false,
+      "enableChartLegend": false,
+      "enablePriority": false,
+      "enableHideBlockLabel": false,
+      "mouseOverPopupsEnabled": false,
+      "datapackContainsSuggAge": true,
+      "useDatapackSuggestedAge": false
+    },
+    "translate-basic-column-test": {
+        "name": "Chart Root",
+        "editName": "Chart Root",
+        "fontsInfo": {
+            "Column Header": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": false,
+                "size": 14
+            },
+            "Age Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": false,
+                "size": 6
+            },
+            "Uncertainty Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": true,
+                "size": 5
+            },
+            "Zone Column Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": false,
+                "size": 12
+            },
+            "Sequence Column Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": false,
+                "size": 12
+            },
+            "Event Column Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": false,
+                "size": 11
+            },
+            "Popup Body": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": false,
+                "size": 12
+            },
+            "Ruler Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": false,
+                "size": 12
+            },
+            "Point Column Scale Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": false,
+                "size": 6
+            },
+            "Range Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": false,
+                "size": 12
+            },
+            "Ruler Tick Mark Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": false,
+                "size": 7
+            },
+            "Legend Title": {
+                "on": false,
+                "bold": true,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Verdana",
+                "inheritable": true,
+                "italic": false,
+                "size": 14
+            },
+            "Legend Column Name": {
+                "on": false,
+                "bold": true,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Verdana",
+                "inheritable": true,
+                "italic": false,
+                "size": 12
+            },
+            "Legend Column Source": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Verdana",
+                "inheritable": true,
+                "italic": true,
+                "size": 12
+            },
+            "Range Box Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": true,
+                "size": 14
+            }
+        },
+        "fontOptions": [
+            "Column Header"
+        ],
+        "popup": "",
+        "on": true,
+        "width": 100,
+        "enableTitle": true,
+        "rgb": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+        },
+        "minAge": 1.7976931348623157e+308,
+        "maxAge": 5e-324,
+        "children": [],
+        "parent": null,
+        "units": "",
+        "columnDisplayType": "RootColumn",
+        "show": true,
+        "expanded": true
+    },
+    "translate-event-column-test": {
+        "name": "Events (Venusian)",
+        "minAge": 400,
+        "maxAge": 4600,
+        "enableTitle": false,
+        "on": false,
+        "width": 150,
+        "popup": "\"Events from Tanaka, K.L., Hartman, W., 2012. The Planetary Time Scale. In: The Geologic Time Scale 2012; therefore may be slightly offset from the GTS2020 ages for Epochs.\"",
+        "rgb": {
+          "r": 224,
+          "g": 232,
+          "b": 239
+        },
+        "editName": "Events (Venusian)",
+        "fontOptions": [
+          "Column Header",
+          "Age Label",
+          "Event Column Label",
+          "Uncertainty Label",
+          "Range Label"
+        ],
+        "fontsInfo": {
+          "Column Header": {
+            "on": false,
+            "bold": false,
+            "color": "rgb(0, 0, 0)",
+            "fontFace": "Arial",
+            "inheritable": false,
+            "italic": false,
+            "size": 14
+          },
+          "Age Label": {
+            "on": false,
+            "bold": false,
+            "color": "rgb(0, 0, 0)",
+            "fontFace": "Arial",
+            "inheritable": false,
+            "italic": false,
+            "size": 6
+          },
+          "Uncertainty Label": {
+            "on": false,
+            "bold": false,
+            "color": "rgb(0, 0, 0)",
+            "fontFace": "Arial",
+            "inheritable": false,
+            "italic": true,
+            "size": 5
+          },
+          "Zone Column Label": {
+            "on": false,
+            "bold": false,
+            "color": "rgb(0, 0, 0)",
+            "fontFace": "Arial",
+            "inheritable": false,
+            "italic": false,
+            "size": 12
+          },
+          "Sequence Column Label": {
+            "on": false,
+            "bold": false,
+            "color": "rgb(0, 0, 0)",
+            "fontFace": "Arial",
+            "inheritable": false,
+            "italic": false,
+            "size": 12
+          },
+          "Event Column Label": {
+            "on": false,
+            "bold": false,
+            "color": "rgb(0, 0, 0)",
+            "fontFace": "Arial",
+            "inheritable": false,
+            "italic": false,
+            "size": 11
+          },
+          "Popup Body": {
+            "on": false,
+            "bold": false,
+            "color": "rgb(0, 0, 0)",
+            "fontFace": "Arial",
+            "inheritable": false,
+            "italic": false,
+            "size": 12
+          },
+          "Ruler Label": {
+            "on": false,
+            "bold": false,
+            "color": "rgb(0, 0, 0)",
+            "fontFace": "Arial",
+            "inheritable": false,
+            "italic": false,
+            "size": 12
+          },
+          "Point Column Scale Label": {
+            "on": false,
+            "bold": false,
+            "color": "rgb(0, 0, 0)",
+            "fontFace": "Arial",
+            "inheritable": false,
+            "italic": false,
+            "size": 6
+          },
+          "Range Label": {
+            "on": false,
+            "bold": false,
+            "color": "rgb(0, 0, 0)",
+            "fontFace": "Arial",
+            "inheritable": false,
+            "italic": false,
+            "size": 12
+          },
+          "Ruler Tick Mark Label": {
+            "on": false,
+            "bold": false,
+            "color": "rgb(0, 0, 0)",
+            "fontFace": "Arial",
+            "inheritable": false,
+            "italic": false,
+            "size": 7
+          },
+          "Legend Title": {
+            "on": false,
+            "bold": true,
+            "color": "rgb(0, 0, 0)",
+            "fontFace": "Verdana",
+            "inheritable": false,
+            "italic": false,
+            "size": 14
+          },
+          "Legend Column Name": {
+            "on": false,
+            "bold": true,
+            "color": "rgb(0, 0, 0)",
+            "fontFace": "Verdana",
+            "inheritable": false,
+            "italic": false,
+            "size": 12
+          },
+          "Legend Column Source": {
+            "on": false,
+            "bold": false,
+            "color": "rgb(0, 0, 0)",
+            "fontFace": "Verdana",
+            "inheritable": false,
+            "italic": true,
+            "size": 12
+          },
+          "Range Box Label": {
+            "on": false,
+            "bold": false,
+            "color": "rgb(0, 0, 0)",
+            "fontFace": "Arial",
+            "inheritable": false,
+            "italic": true,
+            "size": 14
+          }
+        },
+        "children": [],
+        "parent": "Venus",
+        "units": "Ma",
+        "subInfo": [
+          {
+            "label": "volcanic resurfacing and extensive tectonism",
+            "age": 400,
+            "popup": "",
+            "lineStyle": "dashed",
+            "subEventType": "EVENT"
+          },
+          {
+            "label": "average surface age",
+            "age": 650,
+            "popup": "",
+            "lineStyle": "dashed",
+            "subEventType": "EVENT"
+          },
+          {
+            "label": "tessera terrains form",
+            "age": 800,
+            "popup": "",
+            "lineStyle": "dashed",
+            "subEventType": "EVENT"
+          },
+          {
+            "label": "Venus formed from solar nebula",
+            "age": 4600,
+            "popup": "",
+            "lineStyle": "dashed",
+            "subEventType": "EVENT"
+          }
+        ],
+        "columnDisplayType": "Event",
+        "show": true,
+        "expanded": false,
+        "columnSpecificSettings": {
+          "type": "events",
+          "rangeSort": "first occurrence",
+          "frequency": null,
+          "stepSize": 1,
+          "windowSize": 2,
+          "isDataMiningColumn": false
+        },
+        "showAgeLabels": false,
+        "showUncertaintyLabels": false
+    },
+    "translate-point-column-test": {
+      "name": "Long-Term Phanerozoic",
+      "minAge": 0,
+      "maxAge": 545.75,
+      "enableTitle": true,
+      "on": false,
+      "width": 100,
+      "popup": "\"CENOZOIC = offsets from long-term curve are directly from Hardenbol et al. (SEPM charts, 1998). MESOZOIC-PALEOZOIC = Schematic with SB Falls set from Bilal Haq's diagrams as Minor SB = 20m, Medium = 45m, Major = 80m relative to long-term envelope, based on advise from B. Haq to J.Ogg.  [Cret = Haq'2014; Jur = Haq'2017; Tri = Haq'2018; Paleozoic = Haq and Schutter, 2008]\"",
+      "rgb": {
+        "r": 255,
+        "g": 255,
+        "b": 255
+      },
+      "editName": "Long-Term Phanerozoic",
+      "fontOptions": [
+        "Column Header",
+        "Point Column Scale Label"
+      ],
+      "fontsInfo": {
+        "Column Header": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0, 0, 0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": false,
+          "size": 14
+        },
+        "Age Label": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0, 0, 0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": false,
+          "size": 6
+        },
+        "Uncertainty Label": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0, 0, 0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": true,
+          "size": 5
+        },
+        "Zone Column Label": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0, 0, 0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": false,
+          "size": 12
+        },
+        "Sequence Column Label": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0, 0, 0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": false,
+          "size": 12
+        },
+        "Event Column Label": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0, 0, 0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": false,
+          "size": 11
+        },
+        "Popup Body": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0, 0, 0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": false,
+          "size": 12
+        },
+        "Ruler Label": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0, 0, 0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": false,
+          "size": 12
+        },
+        "Point Column Scale Label": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0, 0, 0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": false,
+          "size": 6
+        },
+        "Range Label": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0, 0, 0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": false,
+          "size": 12
+        },
+        "Ruler Tick Mark Label": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0, 0, 0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": false,
+          "size": 7
+        },
+        "Legend Title": {
+          "on": false,
+          "bold": true,
+          "color": "rgb(0, 0, 0)",
+          "fontFace": "Verdana",
+          "inheritable": false,
+          "italic": false,
+          "size": 14
+        },
+        "Legend Column Name": {
+          "on": false,
+          "bold": true,
+          "color": "rgb(0, 0, 0)",
+          "fontFace": "Verdana",
+          "inheritable": false,
+          "italic": false,
+          "size": 12
+        },
+        "Legend Column Source": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0, 0, 0)",
+          "fontFace": "Verdana",
+          "inheritable": false,
+          "italic": true,
+          "size": 12
+        },
+        "Range Box Label": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0, 0, 0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": true,
+          "size": 14
+        }
+      },
+      "children": [],
+      "parent": "Sea-level (m relative to present)",
+      "units": "Ma",
+      "subInfo": [
+      ],
+      "columnDisplayType": "Point",
+      "show": true,
+      "expanded": false,
+      "columnSpecificSettings": {
+        "drawLine": true,
+        "lineColor": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "smoothed": true,
+        "drawFill": true,
+        "fill": {
+          "r": 64,
+          "g": 233,
+          "b": 191
+        },
+        "lowerRange": -150,
+        "upperRange": 280,
+        "drawScale": true,
+        "drawBackgroundGradient": false,
+        "backgroundGradientStart": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "backgroundGradientEnd": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "drawCurveGradient": false,
+        "curveGradientStart": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "curveGradientEnd": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "flipScale": false,
+        "scaleStart": 0,
+        "scaleStep": 1,
+        "pointShape": "nopoints",
+        "minX": -41,
+        "maxX": 277,
+        "windowSize": 2,
+        "stepSize": 1,
+        "dataMiningPointDataType": null,
+        "isDataMiningColumn": false
+      }
+    },
+    "default-fonts-test": {
+      "Column Header": {
+        "on": false,
+        "bold": false,
+        "color": "rgb(0, 0, 0)",
+        "fontFace": "Arial",
+        "inheritable": false,
+        "italic": false,
+        "size": 14
+      },
+      "Age Label": {
+        "on": false,
+        "bold": false,
+        "color": "rgb(0, 0, 0)",
+        "fontFace": "Arial",
+        "inheritable": false,
+        "italic": false,
+        "size": 6
+      },
+      "Uncertainty Label": {
+        "on": false,
+        "bold": false,
+        "color": "rgb(0, 0, 0)",
+        "fontFace": "Arial",
+        "inheritable": false,
+        "italic": true,
+        "size": 5
+      },
+      "Zone Column Label": {
+        "on": false,
+        "bold": false,
+        "color": "rgb(0, 0, 0)",
+        "fontFace": "Arial",
+        "inheritable": false,
+        "italic": false,
+        "size": 12
+      },
+      "Sequence Column Label": {
+        "on": false,
+        "bold": false,
+        "color": "rgb(0, 0, 0)",
+        "fontFace": "Arial",
+        "inheritable": false,
+        "italic": false,
+        "size": 12
+      },
+      "Event Column Label": {
+        "on": false,
+        "bold": false,
+        "color": "rgb(0, 0, 0)",
+        "fontFace": "Arial",
+        "inheritable": false,
+        "italic": false,
+        "size": 11
+      },
+      "Popup Body": {
+        "on": false,
+        "bold": false,
+        "color": "rgb(0, 0, 0)",
+        "fontFace": "Arial",
+        "inheritable": false,
+        "italic": false,
+        "size": 12
+      },
+      "Ruler Label": {
+        "on": false,
+        "bold": false,
+        "color": "rgb(0, 0, 0)",
+        "fontFace": "Arial",
+        "inheritable": false,
+        "italic": false,
+        "size": 12
+      },
+      "Point Column Scale Label": {
+        "on": false,
+        "bold": false,
+        "color": "rgb(0, 0, 0)",
+        "fontFace": "Arial",
+        "inheritable": false,
+        "italic": false,
+        "size": 6
+      },
+      "Range Label": {
+        "on": false,
+        "bold": false,
+        "color": "rgb(0, 0, 0)",
+        "fontFace": "Arial",
+        "inheritable": false,
+        "italic": false,
+        "size": 12
+      },
+      "Ruler Tick Mark Label": {
+        "on": false,
+        "bold": false,
+        "color": "rgb(0, 0, 0)",
+        "fontFace": "Arial",
+        "inheritable": false,
+        "italic": false,
+        "size": 7
+      },
+      "Legend Title": {
+        "on": false,
+        "bold": true,
+        "color": "rgb(0, 0, 0)",
+        "fontFace": "Verdana",
+        "inheritable": false,
+        "italic": false,
+        "size": 14
+      },
+      "Legend Column Name": {
+        "on": false,
+        "bold": true,
+        "color": "rgb(0, 0, 0)",
+        "fontFace": "Verdana",
+        "inheritable": false,
+        "italic": false,
+        "size": 12
+      },
+      "Legend Column Source": {
+        "on": false,
+        "bold": false,
+        "color": "rgb(0, 0, 0)",
+        "fontFace": "Verdana",
+        "inheritable": false,
+        "italic": true,
+        "size": 12
+      },
+      "Range Box Label": {
+        "on": false,
+        "bold": false,
+        "color": "rgb(0, 0, 0)",
+        "fontFace": "Arial",
+        "inheritable": false,
+        "italic": true,
+        "size": 14
+      }
+    },
+    "changed-fonts-test": {
+        "Column Header": {
+          "on": true,
+          "bold": false,
+          "color": "rgb(127,61,61)",
+          "fontFace": "Courier",
+          "inheritable": false,
+          "italic": false,
+          "size": 14
+        },
+        "Age Label": {
+          "on": true,
+          "bold": false,
+          "color": "rgb(107,125,171)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": false,
+          "size": 6
+        },
+        "Uncertainty Label": {
+          "on": true,
+          "bold": false,
+          "color": "rgb(0,0,0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": true,
+          "size": 5
+        },
+        "Zone Column Label": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0,0,0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": false,
+          "size": 12
+        },
+        "Sequence Column Label": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0,0,0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": false,
+          "size": 12
+        },
+        "Event Column Label": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0,0,0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": false,
+          "size": 11
+        },
+        "Popup Body": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0,0,0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": false,
+          "size": 12
+        },
+        "Ruler Label": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0,0,0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": false,
+          "size": 12
+        },
+        "Point Column Scale Label": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0,0,0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": false,
+          "size": 6
+        },
+        "Range Label": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0,0,0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": false,
+          "size": 12
+        },
+        "Ruler Tick Mark Label": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0,0,0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": false,
+          "size": 7
+        },
+        "Legend Title": {
+          "on": false,
+          "bold": true,
+          "color": "rgb(0,0,0)",
+          "fontFace": "Verdana",
+          "inheritable": false,
+          "italic": false,
+          "size": 14
+        },
+        "Legend Column Name": {
+          "on": false,
+          "bold": true,
+          "color": "rgb(0,0,0)",
+          "fontFace": "Verdana",
+          "inheritable": false,
+          "italic": false,
+          "size": 12
+        },
+        "Legend Column Source": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0,0,0)",
+          "fontFace": "Verdana",
+          "inheritable": false,
+          "italic": true,
+          "size": 12
+        },
+        "Range Box Label": {
+          "on": false,
+          "bold": false,
+          "color": "rgb(0,0,0)",
+          "fontFace": "Arial",
+          "inheritable": false,
+          "italic": true,
+          "size": 14
+        }
+    },
+    "generate-basic-column-xml-test": {
+      "_id": "class datastore.RootColumn:Chart Root",
+      "title": "Chart Root",
+      "useNamedColor": false,
+      "placeHolder": false,
+      "drawTitle": true,
+      "drawAgeLabel": false,
+      "drawUncertaintyLabel": false,
+      "isSelected": true,
+      "pad": 0.2,
+      "age pad": 2,
+      "backgroundColor": {
+          "text": {
+              "r": 255,
+              "g": 255,
+              "b": 255
+          }
+      },
+      "customColor": {
+          "text": {
+              "r": 255,
+              "g": 255,
+              "b": 255
+          }
+      },
+      "fonts": {
+          "Column Header": {
+              "on": false,
+              "bold": false,
+              "color": "rgb(0, 0, 0)",
+              "fontFace": "Arial",
+              "inheritable": true,
+              "italic": false,
+              "size": 14
+          },
+          "Age Label": {
+              "on": false,
+              "bold": false,
+              "color": "rgb(0, 0, 0)",
+              "fontFace": "Arial",
+              "inheritable": true,
+              "italic": false,
+              "size": 6
+          },
+          "Uncertainty Label": {
+              "on": false,
+              "bold": false,
+              "color": "rgb(0, 0, 0)",
+              "fontFace": "Arial",
+              "inheritable": true,
+              "italic": true,
+              "size": 5
+          },
+          "Zone Column Label": {
+              "on": false,
+              "bold": false,
+              "color": "rgb(0, 0, 0)",
+              "fontFace": "Arial",
+              "inheritable": true,
+              "italic": false,
+              "size": 12
+          },
+          "Sequence Column Label": {
+              "on": false,
+              "bold": false,
+              "color": "rgb(0, 0, 0)",
+              "fontFace": "Arial",
+              "inheritable": true,
+              "italic": false,
+              "size": 12
+          },
+          "Event Column Label": {
+              "on": false,
+              "bold": false,
+              "color": "rgb(0, 0, 0)",
+              "fontFace": "Arial",
+              "inheritable": true,
+              "italic": false,
+              "size": 11
+          },
+          "Popup Body": {
+              "on": false,
+              "bold": false,
+              "color": "rgb(0, 0, 0)",
+              "fontFace": "Arial",
+              "inheritable": true,
+              "italic": false,
+              "size": 12
+          },
+          "Ruler Label": {
+              "on": false,
+              "bold": false,
+              "color": "rgb(0, 0, 0)",
+              "fontFace": "Arial",
+              "inheritable": true,
+              "italic": false,
+              "size": 12
+          },
+          "Point Column Scale Label": {
+              "on": false,
+              "bold": false,
+              "color": "rgb(0, 0, 0)",
+              "fontFace": "Arial",
+              "inheritable": true,
+              "italic": false,
+              "size": 6
+          },
+          "Range Label": {
+              "on": false,
+              "bold": false,
+              "color": "rgb(0, 0, 0)",
+              "fontFace": "Arial",
+              "inheritable": true,
+              "italic": false,
+              "size": 12
+          },
+          "Ruler Tick Mark Label": {
+              "on": false,
+              "bold": false,
+              "color": "rgb(0, 0, 0)",
+              "fontFace": "Arial",
+              "inheritable": true,
+              "italic": false,
+              "size": 7
+          },
+          "Legend Title": {
+              "on": false,
+              "bold": true,
+              "color": "rgb(0, 0, 0)",
+              "fontFace": "Verdana",
+              "inheritable": true,
+              "italic": false,
+              "size": 14
+          },
+          "Legend Column Name": {
+              "on": false,
+              "bold": true,
+              "color": "rgb(0, 0, 0)",
+              "fontFace": "Verdana",
+              "inheritable": true,
+              "italic": false,
+              "size": 12
+          },
+          "Legend Column Source": {
+              "on": false,
+              "bold": false,
+              "color": "rgb(0, 0, 0)",
+              "fontFace": "Verdana",
+              "inheritable": true,
+              "italic": true,
+              "size": 12
+          },
+          "Range Box Label": {
+              "on": false,
+              "bold": false,
+              "color": "rgb(0, 0, 0)",
+              "fontFace": "Arial",
+              "inheritable": true,
+              "italic": true,
+              "size": 14
+          }
+      },
+      "children": [],
+      "width": 100
+    },
+    "generate-event-column-xml-test": {
+        "_id": "class datastore.EventColumn:Events (Venusian)",
+        "title": "Events (Venusian)",
+        "useNamedColor": false,
+        "placeHolder": false,
+        "drawTitle": false,
+        "drawAgeLabel": false,
+        "drawUncertaintyLabel": false,
+        "isSelected": false,
+        "width": 150,
+        "pad": 0.2,
+        "age pad": 2,
+        "backgroundColor": {
+            "text": {
+                "r": 224,
+                "g": 232,
+                "b": 239
+            }
+        },
+        "customColor": {
+            "text": {
+                "r": 224,
+                "g": 232,
+                "b": 239
+            }
+        },
+        "fonts": {
+            "Column Header": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 14
+            },
+            "Age Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 6
+            },
+            "Uncertainty Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": true,
+                "size": 5
+            },
+            "Zone Column Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+            },
+            "Sequence Column Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+            },
+            "Event Column Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 11
+            },
+            "Popup Body": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+            },
+            "Ruler Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+            },
+            "Point Column Scale Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 6
+            },
+            "Range Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+            },
+            "Ruler Tick Mark Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 7
+            },
+            "Legend Title": {
+                "on": false,
+                "bold": true,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Verdana",
+                "inheritable": false,
+                "italic": false,
+                "size": 14
+            },
+            "Legend Column Name": {
+                "on": false,
+                "bold": true,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Verdana",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+            },
+            "Legend Column Source": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Verdana",
+                "inheritable": false,
+                "italic": true,
+                "size": 12
+            },
+            "Range Box Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": true,
+                "size": 14
+            }
+        },
+        "children": [],
+        "type": "events",
+        "rangeSort": "first occurrence",
+        "drawExtraColumn": null,
+        "windowSize": 2,
+        "stepSize": 1,
+        "isDataMiningColumn": false
+    },
+    "generate-point-column-xml-test":                                         {
+        "_id": "class datastore.PointColumn:Long-Term Phanerozoic",
+        "title": "Long-Term Phanerozoic",
+        "useNamedColor": false,
+        "placeHolder": false,
+        "drawTitle": true,
+        "drawAgeLabel": false,
+        "drawUncertaintyLabel": false,
+        "isSelected": false,
+        "width": 100,
+        "pad": 0.2,
+        "age pad": 2,
+        "backgroundColor": {
+            "text": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+            }
+        },
+        "customColor": {
+            "text": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+            }
+        },
+        "fonts": {
+            "Column Header": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 14
+            },
+            "Age Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 6
+            },
+            "Uncertainty Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": true,
+                "size": 5
+            },
+            "Zone Column Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+            },
+            "Sequence Column Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+            },
+            "Event Column Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 11
+            },
+            "Popup Body": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+            },
+            "Ruler Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+            },
+            "Point Column Scale Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 6
+            },
+            "Range Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+            },
+            "Ruler Tick Mark Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 7
+            },
+            "Legend Title": {
+                "on": false,
+                "bold": true,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Verdana",
+                "inheritable": false,
+                "italic": false,
+                "size": 14
+            },
+            "Legend Column Name": {
+                "on": false,
+                "bold": true,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Verdana",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+            },
+            "Legend Column Source": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Verdana",
+                "inheritable": false,
+                "italic": true,
+                "size": 12
+            },
+            "Range Box Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": true,
+                "size": 14
+            }
+        },
+        "children": [],
+        "isDataMiningColumn": false,
+        "drawPoints": false,
+        "drawLine": true,
+        "lineColor": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+        },
+        "drawSmooth": true,
+        "drawFill": true,
+        "fillColor": {
+            "r": 64,
+            "g": 233,
+            "b": 191
+        },
+        "doNotSetWindowAuto": true,
+        "minWindow": -150,
+        "maxWindow": 280,
+        "drawScale": true,
+        "drawBgrndGradient": false,
+        "backGradStart": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+        },
+        "backGradEnd": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+        },
+        "drawCurveGradient": false,
+        "curveGradStart": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+        },
+        "curveGradEnd": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+        },
+        "flipScale": false,
+        "scaleStart": 0,
+        "scaleStep": 1,
+        "pointType": "rect",
+        "drawExtraColumn": null,
+        "windowSize": 2,
+        "stepSize": 1
+    },
+    "generate-prolog-and-root-xml-test": {
+        "name": "Chart Root",
+        "editName": "Chart Root",
+        "fontsInfo": {
+            "Column Header": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": false,
+                "size": 14
+            },
+            "Age Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": false,
+                "size": 6
+            },
+            "Uncertainty Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": true,
+                "size": 5
+            },
+            "Zone Column Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": false,
+                "size": 12
+            },
+            "Sequence Column Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": false,
+                "size": 12
+            },
+            "Event Column Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": false,
+                "size": 11
+            },
+            "Popup Body": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": false,
+                "size": 12
+            },
+            "Ruler Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": false,
+                "size": 12
+            },
+            "Point Column Scale Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": false,
+                "size": 6
+            },
+            "Range Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": false,
+                "size": 12
+            },
+            "Ruler Tick Mark Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": false,
+                "size": 7
+            },
+            "Legend Title": {
+                "on": false,
+                "bold": true,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Verdana",
+                "inheritable": true,
+                "italic": false,
+                "size": 14
+            },
+            "Legend Column Name": {
+                "on": false,
+                "bold": true,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Verdana",
+                "inheritable": true,
+                "italic": false,
+                "size": 12
+            },
+            "Legend Column Source": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Verdana",
+                "inheritable": true,
+                "italic": true,
+                "size": 12
+            },
+            "Range Box Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": true,
+                "italic": true,
+                "size": 14
+            }
+        },
+        "fontOptions": [
+            "Column Header"
+        ],
+        "popup": "",
+        "on": true,
+        "width": 100,
+        "enableTitle": true,
+        "rgb": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+        },
+        "minAge": 1.7976931348623157e+308,
+        "maxAge": 5e-324,
+        "children": [
+          {
+            "name": "Events (Venusian)",
+            "minAge": 400,
+            "maxAge": 4600,
+            "enableTitle": false,
+            "on": false,
+            "width": 150,
+            "popup": "\"Events from Tanaka, K.L., Hartman, W., 2012. The Planetary Time Scale. In: The Geologic Time Scale 2012; therefore may be slightly offset from the GTS2020 ages for Epochs.\"",
+            "rgb": {
+              "r": 224,
+              "g": 232,
+              "b": 239
+            },
+            "editName": "Events (Venusian)",
+            "fontOptions": [
+              "Column Header",
+              "Age Label",
+              "Event Column Label",
+              "Uncertainty Label",
+              "Range Label"
+            ],
+            "fontsInfo": {
+              "Column Header": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 14
+              },
+              "Age Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 6
+              },
+              "Uncertainty Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": true,
+                "size": 5
+              },
+              "Zone Column Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+              },
+              "Sequence Column Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+              },
+              "Event Column Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 11
+              },
+              "Popup Body": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+              },
+              "Ruler Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+              },
+              "Point Column Scale Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 6
+              },
+              "Range Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+              },
+              "Ruler Tick Mark Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 7
+              },
+              "Legend Title": {
+                "on": false,
+                "bold": true,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Verdana",
+                "inheritable": false,
+                "italic": false,
+                "size": 14
+              },
+              "Legend Column Name": {
+                "on": false,
+                "bold": true,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Verdana",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+              },
+              "Legend Column Source": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Verdana",
+                "inheritable": false,
+                "italic": true,
+                "size": 12
+              },
+              "Range Box Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": true,
+                "size": 14
+              }
+            },
+            "children": [],
+            "parent": "Venus",
+            "units": "Ma",
+            "subInfo": [
+              {
+                "label": "volcanic resurfacing and extensive tectonism",
+                "age": 400,
+                "popup": "",
+                "lineStyle": "dashed",
+                "subEventType": "EVENT"
+              },
+              {
+                "label": "average surface age",
+                "age": 650,
+                "popup": "",
+                "lineStyle": "dashed",
+                "subEventType": "EVENT"
+              },
+              {
+                "label": "tessera terrains form",
+                "age": 800,
+                "popup": "",
+                "lineStyle": "dashed",
+                "subEventType": "EVENT"
+              },
+              {
+                "label": "Venus formed from solar nebula",
+                "age": 4600,
+                "popup": "",
+                "lineStyle": "dashed",
+                "subEventType": "EVENT"
+              }
+            ],
+            "columnDisplayType": "Event",
+            "show": true,
+            "expanded": false,
+            "columnSpecificSettings": {
+              "type": "events",
+              "rangeSort": "first occurrence",
+              "frequency": null,
+              "stepSize": 1,
+              "windowSize": 2,
+              "isDataMiningColumn": false
+            },
+            "showAgeLabels": false,
+            "showUncertaintyLabels": false
+          },{
+            "name": "Long-Term Phanerozoic",
+            "minAge": 0,
+            "maxAge": 545.75,
+            "enableTitle": true,
+            "on": false,
+            "width": 100,
+            "popup": "\"CENOZOIC = offsets from long-term curve are directly from Hardenbol et al. (SEPM charts, 1998). MESOZOIC-PALEOZOIC = Schematic with SB Falls set from Bilal Haq's diagrams as Minor SB = 20m, Medium = 45m, Major = 80m relative to long-term envelope, based on advise from B. Haq to J.Ogg.  [Cret = Haq'2014; Jur = Haq'2017; Tri = Haq'2018; Paleozoic = Haq and Schutter, 2008]\"",
+            "rgb": {
+              "r": 255,
+              "g": 255,
+              "b": 255
+            },
+            "editName": "Long-Term Phanerozoic",
+            "fontOptions": [
+              "Column Header",
+              "Point Column Scale Label"
+            ],
+            "fontsInfo": {
+              "Column Header": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 14
+              },
+              "Age Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 6
+              },
+              "Uncertainty Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": true,
+                "size": 5
+              },
+              "Zone Column Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+              },
+              "Sequence Column Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+              },
+              "Event Column Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 11
+              },
+              "Popup Body": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+              },
+              "Ruler Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+              },
+              "Point Column Scale Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 6
+              },
+              "Range Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+              },
+              "Ruler Tick Mark Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": false,
+                "size": 7
+              },
+              "Legend Title": {
+                "on": false,
+                "bold": true,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Verdana",
+                "inheritable": false,
+                "italic": false,
+                "size": 14
+              },
+              "Legend Column Name": {
+                "on": false,
+                "bold": true,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Verdana",
+                "inheritable": false,
+                "italic": false,
+                "size": 12
+              },
+              "Legend Column Source": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Verdana",
+                "inheritable": false,
+                "italic": true,
+                "size": 12
+              },
+              "Range Box Label": {
+                "on": false,
+                "bold": false,
+                "color": "rgb(0, 0, 0)",
+                "fontFace": "Arial",
+                "inheritable": false,
+                "italic": true,
+                "size": 14
+              }
+            },
+            "children": [],
+            "parent": "Sea-level (m relative to present)",
+            "units": "Ma",
+            "subInfo": [
+            ],
+            "columnDisplayType": "Point",
+            "show": true,
+            "expanded": false,
+            "columnSpecificSettings": {
+              "drawLine": true,
+              "lineColor": {
+                "r": 0,
+                "g": 0,
+                "b": 0
+              },
+              "smoothed": true,
+              "drawFill": true,
+              "fill": {
+                "r": 64,
+                "g": 233,
+                "b": 191
+              },
+              "lowerRange": -150,
+              "upperRange": 280,
+              "drawScale": true,
+              "drawBackgroundGradient": false,
+              "backgroundGradientStart": {
+                "r": 0,
+                "g": 0,
+                "b": 0
+              },
+              "backgroundGradientEnd": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "drawCurveGradient": false,
+              "curveGradientStart": {
+                "r": 0,
+                "g": 0,
+                "b": 0
+              },
+              "curveGradientEnd": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "flipScale": false,
+              "scaleStart": 0,
+              "scaleStep": 1,
+              "pointShape": "nopoints",
+              "minX": -41,
+              "maxX": 277,
+              "windowSize": 2,
+              "stepSize": 1,
+              "dataMiningPointDataType": null,
+              "isDataMiningColumn": false
+            }
+          }
+        ],
+        "parent": null,
+        "units": "",
+        "columnDisplayType": "RootColumn",
+        "show": true,
+        "expanded": true
+    }
+      
+}

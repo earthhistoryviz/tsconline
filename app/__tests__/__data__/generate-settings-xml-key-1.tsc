@@ -1,0 +1,16 @@
+    <setting name="topAge" source="text" unit="Ma">
+        <setting name="text">0</setting>
+    </setting>
+    <setting name="baseAge" source="text" unit="Ma">
+        <setting name="text">0</setting>
+    </setting>
+    <setting name="unitsPerMY" unit="Ma">60</setting>
+    <setting name="skipEmptyColumns" unit="Ma">true</setting>
+    <setting name="variableColors">UNESCO</setting>
+    <setting name="noIndentPattern">false</setting>
+    <setting name="negativeChk">false</setting>
+    <setting name="doPopups">false</setting>
+    <setting name="enEventColBG">false</setting>
+    <setting name="enChartLegend">false</setting>
+    <setting name="enPriority">false</setting>
+    <setting name="enHideBlockLable">false</setting>
