@@ -598,7 +598,7 @@ export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): strin
 }
 
 export function jsonToXml(state: ColumnInfo, settings: ChartSettings, version: string = "PRO8.1"): string {
-  let settingsTSC = JSON.parse(JSON.stringify(columnInfoToSettingsTSC(state, settings)));
+  let settingsTSC = JSON.parse(JSON.stringify(parseSettings.columnInfoToSettingsTSC(state, settings)));
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
   xml += '    <settings version="1.0">\n';
