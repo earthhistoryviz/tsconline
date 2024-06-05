@@ -152,6 +152,7 @@ export const Login: React.FC = observer(() => {
               name="username"
               autoComplete="username"
               autoFocus
+              disabled={cookieConsent !== "accepted"}
             />
             <TextField
               margin="normal"
@@ -162,12 +163,17 @@ export const Login: React.FC = observer(() => {
               type="password"
               id="password"
               autoComplete="current-password"
+              disabled={cookieConsent !== "accepted"}
             />
-            {cookieConsent === "accepted" ? (
-              <TSCButton type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }} endIcon={<LoginIcon />}>
-                Sign In
-              </TSCButton>
-            ) : null}
+            <TSCButton
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3, mb: 2 }}
+              endIcon={<LoginIcon />}
+              disabled={cookieConsent !== "accepted"}>
+              Sign In
+            </TSCButton>
             <Grid container className="grid-container">
               <Grid item xs>
                 <Link href="/forgot-password" sx={{ color: "black" }}>
@@ -189,7 +195,8 @@ export const Login: React.FC = observer(() => {
               </Box>
               <Box className="divider-line"></Box>
             </Box>
-            {cookieConsent === "accepted" ? (
+            {/* GoogleLogin does not have a "disable" property */}
+            <div className={cookieConsent !== "accepted" ? "disabled" : ""}>
               <GoogleLogin
                 onSuccess={async (credentialResponse) => {
                   const credential = credentialResponse.credential;
@@ -198,7 +205,7 @@ export const Login: React.FC = observer(() => {
                 onError={() => actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_SERVER)}
                 width="400px"
               />
-            ) : null}
+            </div>
           </Box>
         </>
       )}
