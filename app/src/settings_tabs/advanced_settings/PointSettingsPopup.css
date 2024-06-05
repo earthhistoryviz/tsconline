@@ -60,11 +60,8 @@
   display: flex;
   align-items: center;
   font-weight: 600;
+  flex-grow: 1;
 }
-.point-scale-settings {
-  gap: 0px;
-}
-
 .draw-point-scale-checkboxes {
   flex-direction: column;
 }
@@ -140,4 +137,51 @@
   top: -3px;
   left: -1px;
   transform: rotate(-68deg);
+}
+
+.rectangle-icon {
+  display: block;
+  width: 12px;
+  height: 12px;
+  box-sizing: border-box;
+  position: relative;
+  background-color: black;
+}
+.circle-icon {
+  display: block;
+  width: 12px;
+  height: 12px;
+  box-sizing: border-box;
+  position: relative;
+  background-color: black;
+  border-radius: 50%;
+}
+
+.cross-icon,
+.cross-icon::after {
+    display: block;
+    box-sizing: border-box;
+    background: black;
+    border-radius: 10px
+}
+.cross-icon {
+    margin-top: -2px;
+    position: relative;
+    transform: scale(var(--ggs, 0.75));
+    width: 16px;
+    height: 2px
+}
+.cross-icon::after {
+    content: "";
+    position: absolute;
+    width: 2px;
+    height: 16px;
+    top: -7px;
+    left: 7px
+}
+
+.MuiToggleButton-root.Mui-disabled .rectangle-icon,
+.MuiToggleButton-root.Mui-disabled .circle-icon,
+.MuiToggleButton-root.Mui-disabled .cross-icon {
+  opacity: 0.5;
 }
