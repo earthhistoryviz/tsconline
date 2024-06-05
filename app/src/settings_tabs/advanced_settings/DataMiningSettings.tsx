@@ -38,7 +38,9 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({
   assertDataMiningSettings(dataMiningSettings);
   return (
     <Box className="data-mining-settings-container">
-      <Typography className="advanced-settings-header">Data Mining Settings</Typography>
+      <Typography className="advanced-settings-header" variant="h6">
+        Data Mining Settings
+      </Typography>
       <CustomDivider className="settings-header-divider" />
       <div className="data-mining-settings-content">
         <GenericTextField
