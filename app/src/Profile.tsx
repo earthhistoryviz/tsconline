@@ -42,7 +42,6 @@ export const Profile = observer(() => {
   });
   const [popupOpen, setPopupOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -250,17 +249,12 @@ export const Profile = observer(() => {
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
           badgeContent={
             <Avatar className="badge">
-              <EditIcon className={`pencil${isHovered ? "-hover" : ""}`} fontSize="small" />
+              <EditIcon className="pencil" fontSize="small" />
             </Avatar>
           }
           onClick={handleBadgeClick}>
           {state.user.pictureUrl ? (
-            <Avatar
-              src={state.user.pictureUrl}
-              className="editable-profile-picture"
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-            />
+            <Avatar src={state.user.pictureUrl} className="editable-profile-picture" />
           ) : (
             <Avatar className="editable-profile-picture">
               <PersonIcon />
