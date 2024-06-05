@@ -24,7 +24,7 @@ import TSCColorPicker from "../components/TSCColorPicker";
 import { NumericFormat } from "react-number-format";
 import { ColumnInfo } from "@tsconline/shared";
 import { convertHexToRGB } from "../util/util";
-import { CustomDivider, StyledScrollbar, TSCCheckbox } from "../components";
+import { CustomDivider, CustomFormControlLabel, StyledScrollbar, TSCCheckbox } from "../components";
 const FontSizeTextField = ({ ...props }: TextFieldProps) => (
   <TextField {...props} className="font-size-container" label="Size" size="small" variant="outlined" />
 );
@@ -51,7 +51,7 @@ const FontMenuRow: React.FC<{
 
   return (
     <div className="font-row-container">
-      <FormControlLabel
+      <CustomFormControlLabel
         control={
           <TSCCheckbox
             focusRipple={false}
@@ -64,9 +64,8 @@ const FontMenuRow: React.FC<{
           />
         }
         label={target}
-        className="font-checkbox-form"
       />
-      <FormControlLabel
+      <CustomFormControlLabel
         control={
           <TSCCheckbox
             focusRipple={false}
@@ -79,7 +78,6 @@ const FontMenuRow: React.FC<{
             disabled={!fontOpts.on || column.name === "Chart Root"}
           />
         }
-        className="font-checkbox-form"
         label="Inheritable"
       />
       <FormControl id="FontFaceForm">

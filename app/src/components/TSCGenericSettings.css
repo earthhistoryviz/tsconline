@@ -1,16 +1,29 @@
 .generic-text-field-header {
   display: flex;
   justify-content: center;
-  text-align: center;
-  margin-bottom: 5px;
   font-weight: 600;
+}
+
+.generic-text-field-helper-text.generic-text-field-helper-text-start {
+  text-align: left;
+}
+.generic-text-field-helper-text.generic-text-field-helper-text-end {
+  text-align: right;
 }
 
 .generic-text-field-container {
   display: flex;
+  justify-content: center;
+  align-items: center;
   flex-direction: column;
-  gap: 10px;
-  text-align: center;
+  gap: 8px;
+}
+
+.generic-text-field-container-start {
+  align-items: flex-start;
+}
+.generic-text-field-container-end {
+  align-items: flex-end;
 }
 
 .generic-text-form {
@@ -21,7 +34,7 @@
 }
 
 .generic-text-field-helper-text {
-  text-align: left;
+  text-align: center;
   font-size: 0.7rem;
 }
 
@@ -37,6 +50,11 @@
   justify-content: center;
   align-items: center;
   margin-top: 10px;
+}
+.rgb-modifier-container {
+  display: flex;
+  flex-direction: row;
+  height: min-content;
 }
 
 .color-picker-rgb-modifier {

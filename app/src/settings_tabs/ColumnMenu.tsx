@@ -10,9 +10,9 @@ import { CustomDivider, TSCCheckbox } from "../components";
 import { InfoBox } from "./InfoBox";
 import { EditWidthField } from "./EditWidthField";
 import { EventSpecificSettings } from "./advanced_settings/EventSpecificSettings";
-import { PointSettingsPopup } from "./advanced_settings/PointSettingsPopup";
+import { PointSettingsDisplay } from "./advanced_settings/PointSettingsPopup";
 import { EditNameField } from "./EditNameField";
-import { DataMiningModal, DataMiningSettings } from "./advanced_settings/DataMiningSettings";
+import { DataMiningSettings } from "./advanced_settings/DataMiningSettings";
 import AccordionPositionControls from "./AccordionPositionControls";
 import { CustomTabs } from "../components/TSCCustomTabs";
 
@@ -79,6 +79,8 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
       return <FontMenu column={column} />;
     case "Data Mining":
       return <DataMiningSettings column={column} />;
+    case "Curve Drawing":
+      return <PointSettingsDisplay column={column} />;
     default:
       return null;
   }

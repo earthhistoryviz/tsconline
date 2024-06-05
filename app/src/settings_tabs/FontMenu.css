@@ -34,13 +34,6 @@
   margin-bottom: 10px;
 }
 
-.font-checkbox-form {
-  width: 100px;
-}
-.font-checkbox-form > .MuiTypography-root {
-  font-size: 0.8rem;
-}
-
 .MuiTextField-root.font-size-container {
   width: 60px;
   margin-right: 10px;
