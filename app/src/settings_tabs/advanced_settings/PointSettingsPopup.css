@@ -57,22 +57,19 @@
 .point-range-settings-header-container {
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 
 .point-range-settings-header {
   display: flex;
   align-items: center;
   font-weight: 600;
-  margin-right: 290px;
 }
 
 @media screen and (max-width: 870px) {
   .point-range-settings-header {
     flex-grow: 1;
     margin-right: 0px;
-  }
-  .point-range-settings-container .point-range-settings-divider {
-    width: 100%;
   }
 }
 @media screen and (max-width: 641px) {
@@ -83,7 +80,7 @@
 }
 
 .point-range-settings-divider {
-  width: 440px;
+  width: 100%;
   margin: 0 0 10px 0;
 }
 .point-shape-and-toggle-container {

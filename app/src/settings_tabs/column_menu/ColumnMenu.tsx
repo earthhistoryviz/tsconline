@@ -14,7 +14,6 @@ import {
   TSCCheckbox
 } from "../../components";
 import { InfoBox } from "./InfoBox";
-import { EditWidthField } from "./EditWidthField";
 import { EventSpecificSettings } from "../advanced_settings/EventSpecificSettings";
 import { PointSettingsDisplay } from "../advanced_settings/PointSettingsPopup";
 import { EditNameField } from "./EditNameField";
