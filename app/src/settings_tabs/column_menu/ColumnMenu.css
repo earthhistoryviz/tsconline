@@ -2,8 +2,8 @@
   display: flex;
   align-items: center;
   flex-direction: column;
-  min-width: 200px;
   flex-grow: 1;
+  min-width: 0;
 }
 .settings-header-divider {
   margin-top: 10px;
