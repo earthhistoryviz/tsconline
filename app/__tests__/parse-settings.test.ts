@@ -1,6 +1,9 @@
-import { ChartInfoTSC, ColumnInfo, ColumnInfoTSC, FontsInfo } from "@tsconline/shared";
+import { ChartInfoTSC, ColumnInfo, FontsInfo } from "@tsconline/shared";
 import * as parseSettings from "../src/state/parse-settings";
 import { ChartSettings } from "../src/types";
+import { readFileSync } from "fs";
+const tests = JSON.parse(readFileSync("./app/__tests__/__data__/parse-settings-tests.json").toString());
+const keys = JSON.parse(readFileSync("./app/__tests__/__data__/parse-settings-keys.json").toString());
 jest.mock("@tsconline/shared", () => {
   const fontsInfo = {
     "Column Header": {
@@ -360,249 +363,20 @@ describe("extract column type", () => {
 });
 
 describe("translate columnInfo to columnInfoTSC", () => {
-  const basicColumn = {
-    name: "Chart Root",
-    editName: "Chart Root",
-    fontsInfo: {},
-    fontOptions: ["Column Header"],
-    popup: "",
-    on: true,
-    width: 100,
-    enableTitle: true,
-    rgb: {
-      r: 255,
-      g: 255,
-      b: 255
-    },
-    minAge: 1.7976931348623157e308,
-    maxAge: 5e-324,
-    children: [],
-    parent: null,
-    units: "",
-    columnDisplayType: "RootColumn",
-    show: true,
-    expanded: true
-  } as unknown as ColumnInfo;
   it("should translate basic column", async () => {
-    const test = basicColumn;
-    const key = {
-      _id: "class datastore.RootColumn:Chart Root",
-      title: "Chart Root",
-      useNamedColor: false,
-      placeHolder: false,
-      drawTitle: true,
-      drawAgeLabel: false,
-      drawUncertaintyLabel: false,
-      isSelected: true,
-      pad: 0.2,
-      "age pad": 2,
-      backgroundColor: {
-        text: {
-          r: 255,
-          g: 255,
-          b: 255
-        }
-      },
-      customColor: {
-        text: {
-          r: 255,
-          g: 255,
-          b: 255
-        }
-      },
-      fonts: {},
-      children: [],
-      width: 100
-    };
-    expect(parseSettings.translateColumnInfoToColumnInfoTSC(test)).toEqual(key);
+    expect(parseSettings.translateColumnInfoToColumnInfoTSC(tests["translate-basic-column-test"])).toEqual(
+      keys["translate-basic-column-key"]
+    );
   });
   it("should translate event column", async () => {
-    const test = {
-      ...basicColumn,
-      name: "Events (Venusian)",
-      editName: "Events (Venusian)",
-      columnDisplayType: "Event",
-      columnSpecificSettings: {
-        type: "events",
-        rangeSort: "first occurrence",
-        frequency: null,
-        stepSize: 1,
-        windowSize: 2,
-        isDataMiningColumn: false
-      }
-    } as unknown as ColumnInfo;
-    const key = {
-      _id: "class datastore.EventColumn:Events (Venusian)",
-      title: "Events (Venusian)",
-      useNamedColor: false,
-      placeHolder: false,
-      drawTitle: true,
-      drawAgeLabel: false,
-      drawUncertaintyLabel: false,
-      isSelected: true,
-      width: 100,
-      pad: 0.2,
-      "age pad": 2,
-      backgroundColor: {
-        text: {
-          r: 255,
-          g: 255,
-          b: 255
-        }
-      },
-      customColor: {
-        text: {
-          r: 255,
-          g: 255,
-          b: 255
-        }
-      },
-      fonts: {},
-      children: [],
-      type: "events",
-      rangeSort: "first occurrence",
-      drawExtraColumn: null,
-      windowSize: 2,
-      stepSize: 1,
-      isDataMiningColumn: false
-    };
-    expect(parseSettings.translateColumnInfoToColumnInfoTSC(test)).toEqual(key);
+    expect(parseSettings.translateColumnInfoToColumnInfoTSC(tests["translate-event-column-test"])).toEqual(
+      keys["translate-event-column-key"]
+    );
   });
   it("should translate point column", async () => {
-    const test = {
-      ...basicColumn,
-      columnDisplayType: "Point",
-      name: "Long-Term Phanerozoic",
-      editName: "Long-Term Phanerozoic",
-      columnSpecificSettings: {
-        drawLine: true,
-        lineColor: {
-          r: 0,
-          g: 0,
-          b: 0
-        },
-        smoothed: true,
-        drawFill: true,
-        fill: {
-          r: 64,
-          g: 233,
-          b: 191
-        },
-        lowerRange: -150,
-        upperRange: 280,
-        drawScale: true,
-        drawBackgroundGradient: false,
-        backgroundGradientStart: {
-          r: 0,
-          g: 0,
-          b: 0
-        },
-        backgroundGradientEnd: {
-          r: 255,
-          g: 255,
-          b: 255
-        },
-        drawCurveGradient: false,
-        curveGradientStart: {
-          r: 0,
-          g: 0,
-          b: 0
-        },
-        curveGradientEnd: {
-          r: 255,
-          g: 255,
-          b: 255
-        },
-        flipScale: false,
-        scaleStart: 0,
-        scaleStep: 1,
-        pointShape: "nopoints",
-        minX: -41,
-        maxX: 277,
-        windowSize: 2,
-        stepSize: 1,
-        dataMiningPointDataType: null,
-        isDataMiningColumn: false
-      }
-    } as unknown as ColumnInfo;
-    const key = {
-      _id: "class datastore.PointColumn:Long-Term Phanerozoic",
-      title: "Long-Term Phanerozoic",
-      useNamedColor: false,
-      placeHolder: false,
-      drawTitle: true,
-      drawAgeLabel: false,
-      drawUncertaintyLabel: false,
-      isSelected: true,
-      width: 100,
-      pad: 0.2,
-      "age pad": 2,
-      backgroundColor: {
-        text: {
-          r: 255,
-          g: 255,
-          b: 255
-        }
-      },
-      customColor: {
-        text: {
-          r: 255,
-          g: 255,
-          b: 255
-        }
-      },
-      fonts: {},
-      children: [],
-      isDataMiningColumn: false,
-      drawPoints: false,
-      drawLine: true,
-      lineColor: {
-        r: 0,
-        g: 0,
-        b: 0
-      },
-      drawSmooth: true,
-      drawFill: true,
-      fillColor: {
-        r: 64,
-        g: 233,
-        b: 191
-      },
-      doNotSetWindowAuto: false,
-      minWindow: -150,
-      maxWindow: 280,
-      drawScale: true,
-      drawBgrndGradient: false,
-      backGradStart: {
-        r: 0,
-        g: 0,
-        b: 0
-      },
-      backGradEnd: {
-        r: 255,
-        g: 255,
-        b: 255
-      },
-      drawCurveGradient: false,
-      curveGradStart: {
-        r: 0,
-        g: 0,
-        b: 0
-      },
-      curveGradEnd: {
-        r: 255,
-        g: 255,
-        b: 255
-      },
-      flipScale: false,
-      scaleStart: 0,
-      scaleStep: 1,
-      pointType: "rect",
-      drawExtraColumn: null,
-      windowSize: 2,
-      stepSize: 1
-    };
-    expect(parseSettings.translateColumnInfoToColumnInfoTSC(test)).toEqual(key);
+    expect(parseSettings.translateColumnInfoToColumnInfoTSC(tests["translate-point-column-test"])).toEqual(
+      keys["translate-point-column-key"]
+    );
   });
   const defaultEventSettings = {
     type: "events",
@@ -662,8 +436,9 @@ describe("translate columnInfo to columnInfoTSC", () => {
     dataMiningPointDataType: null,
     isDataMiningColumn: false
   };
+  const basicColumn = tests["translate-basic-column-test"];
   test.each([
-    [basicColumn.name, basicColumn.columnDisplayType, "class datastore.RootColumn:Chart Root", basicColumn],
+    [basicColumn.name, "Root", "class datastore.RootColumn:Chart Root", basicColumn],
     [
       basicColumn.name,
       "Block",
@@ -1059,35 +834,6 @@ describe("columnInfoTSC to xml", () => {
   const mock = jest.spyOn(parseSettings, "generateFontsXml");
   it("should generate basic column xml", async () => {
     mock.mockReturnValue("");
-    const test = {
-      _id: "class datastore.RootColumn:Chart Root",
-      title: "Chart Root",
-      useNamedColor: false,
-      placeHolder: false,
-      drawTitle: true,
-      drawAgeLabel: false,
-      drawUncertaintyLabel: false,
-      isSelected: true,
-      pad: 0.2,
-      "age pad": 2,
-      backgroundColor: {
-        text: {
-          r: 255,
-          g: 255,
-          b: 255
-        }
-      },
-      customColor: {
-        text: {
-          r: 255,
-          g: 255,
-          b: 255
-        }
-      },
-      fonts: {},
-      children: [],
-      width: 100
-    } as unknown as ColumnInfoTSC;
     const key =
       `    <setting name="title">Chart Root</setting>\n` +
       `    <setting name="useNamedColor">false</setting>\n` +
@@ -1103,145 +849,33 @@ describe("columnInfoTSC to xml", () => {
       `    <fonts>\n` +
       `    </fonts>\n` +
       `    <setting name="width">100</setting>\n`;
-    expect(parseSettings.columnInfoTSCToXml(test, "    ")).toEqual(key);
+    expect(parseSettings.columnInfoTSCToXml(tests["generate-basic-column-xml-test"], "    ")).toEqual(key);
   });
   it("should generate event column xml", async () => {
     mock.mockReturnValue("");
-    const test = {
-      _id: "class datastore.EventColumn:Events (Venusian)",
-      title: "Events (Venusian)",
-      useNamedColor: false,
-      placeHolder: false,
-      drawTitle: false,
-      drawAgeLabel: false,
-      drawUncertaintyLabel: false,
-      isSelected: false,
-      width: 150,
-      pad: 0.2,
-      "age pad": 2,
-      backgroundColor: {
-        text: {
-          r: 224,
-          g: 232,
-          b: 239
-        }
-      },
-      customColor: {
-        text: {
-          r: 224,
-          g: 232,
-          b: 239
-        }
-      },
-      fonts: {},
-      children: [],
-      type: "events",
-      rangeSort: "first occurrence",
-      drawExtraColumn: null,
-      windowSize: 2,
-      stepSize: 1,
-      isDataMiningColumn: false
-    } as unknown as ColumnInfoTSC;
     const key =
       `    <setting name="title">Events (Venusian)</setting>\n` +
       `    <setting name="useNamedColor">false</setting>\n` +
       `    <setting name="placeHolder">false</setting>\n` +
-      `    <setting name="drawTitle">false</setting>\n` +
+      `    <setting name="drawTitle">true</setting>\n` +
       `    <setting name="drawAgeLabel">false</setting>\n` +
       `    <setting name="drawUncertaintyLabel">false</setting>\n` +
-      `    <setting name="isSelected">false</setting>\n` +
-      `    <setting name="width">150</setting>\n` +
+      `    <setting name="isSelected">true</setting>\n` +
+      `    <setting name="width">100</setting>\n` +
       `    <setting name="pad">0.2</setting>\n` +
       `    <setting name="age pad">2</setting>\n` +
-      `    <setting name="backgroundColor" useNamed="false">rgb(224,232,239)</setting>\n` +
-      `    <setting name="customColor" useNamed="false">rgb(224,232,239)</setting>\n` +
+      `    <setting name="backgroundColor" useNamed="false">rgb(239,232,224)</setting>\n` +
+      `    <setting name="customColor" useNamed="false">rgb(239,232,224)</setting>\n` +
       `    <fonts>\n` +
       `    </fonts>\n` +
       `    <setting name="type">events</setting>\n` +
       `    <setting name="rangeSort">first occurrence</setting>\n` +
       `    <setting name="windowSize">2</setting>\n` +
       `    <setting name="stepSize">1</setting>\n`;
-    expect(parseSettings.columnInfoTSCToXml(test, "    ")).toEqual(key);
+    expect(parseSettings.columnInfoTSCToXml(tests["generate-event-column-xml-test"], "    ")).toEqual(key);
   });
   it("should generate point column xml", async () => {
     mock.mockReturnValue("");
-    const test = {
-      _id: "class datastore.PointColumn:Long-Term Phanerozoic",
-      title: "Long-Term Phanerozoic",
-      useNamedColor: false,
-      placeHolder: false,
-      drawTitle: true,
-      drawAgeLabel: false,
-      drawUncertaintyLabel: false,
-      isSelected: false,
-      width: 100,
-      pad: 0.2,
-      "age pad": 2,
-      backgroundColor: {
-        text: {
-          r: 255,
-          g: 255,
-          b: 255
-        }
-      },
-      customColor: {
-        text: {
-          r: 255,
-          g: 255,
-          b: 255
-        }
-      },
-      fonts: {},
-      children: [],
-      isDataMiningColumn: false,
-      drawPoints: false,
-      drawLine: true,
-      lineColor: {
-        r: 0,
-        g: 0,
-        b: 0
-      },
-      drawSmooth: true,
-      drawFill: true,
-      fillColor: {
-        r: 64,
-        g: 233,
-        b: 191
-      },
-      doNotSetWindowAuto: true,
-      minWindow: -150,
-      maxWindow: 280,
-      drawScale: true,
-      drawBgrndGradient: false,
-      backGradStart: {
-        r: 0,
-        g: 0,
-        b: 0
-      },
-      backGradEnd: {
-        r: 255,
-        g: 255,
-        b: 255
-      },
-      drawCurveGradient: false,
-      curveGradStart: {
-        r: 0,
-        g: 0,
-        b: 0
-      },
-      curveGradEnd: {
-        r: 255,
-        g: 255,
-        b: 255
-      },
-      flipScale: false,
-      scaleStart: 0,
-      scaleStep: 1,
-      pointType: "rect",
-      drawExtraColumn: null,
-      windowSize: 2,
-      stepSize: 1
-    } as unknown as ColumnInfoTSC;
     const key =
       `    <setting name="title">Long-Term Phanerozoic</setting>\n` +
       `    <setting name="useNamedColor">false</setting>\n` +
@@ -1263,7 +897,7 @@ describe("columnInfoTSC to xml", () => {
       `    <setting name="drawSmooth">true</setting>\n` +
       `    <setting name="drawFill">true</setting>\n` +
       `    <setting name="fillColor">rgb(64,233,191)</setting>\n` +
-      `    <setting name="doNotSetWindowAuto">true</setting>\n` +
+      `    <setting name="doNotSetWindowAuto">false</setting>\n` +
       `    <setting name="minWindow">-150</setting>\n` +
       `    <setting name="maxWindow">280</setting>\n` +
       `    <setting name="drawScale">true</setting>\n` +
@@ -1279,7 +913,13 @@ describe("columnInfoTSC to xml", () => {
       `    <setting name="pointType" pointType="rect"/>\n` +
       `    <setting name="windowSize">2</setting>\n` +
       `    <setting name="stepSize">1</setting>\n`;
-    expect(parseSettings.columnInfoTSCToXml(test, "    ")).toEqual(key);
+    expect(parseSettings.columnInfoTSCToXml(tests["generate-point-column-xml-test"], "    ")).toEqual(key);
+  });
+  it("should generate basic column with point column child xml", async () => {
+    mock.mockReturnValue("");
+    expect(parseSettings.columnInfoTSCToXml(tests["generate-basic-column-with-point-child-xml-test"], "    ")).toEqual(
+      readFileSync("./app/__tests__/__data__/generate-basic-column-with-point-child-xml-key.tsc").toString()
+    );
   });
 });
 
