@@ -1,12 +1,12 @@
 import { observer } from "mobx-react-lite";
 import { useContext, useEffect, useState } from "react";
 import { context } from "../../state";
-import { FormControlLabel, Typography } from "@mui/material";
+import { Box, FormControlLabel, Typography } from "@mui/material";
 import "./ColumnMenu.css";
 import { FontMenu } from "../FontMenu";
 import { ChangeBackgroundColor } from "./BackgroundColor";
 import { ColumnInfo } from "@tsconline/shared";
-import { CustomDivider, TSCCheckbox } from "../../components";
+import { CustomDivider, CustomFormControlLabel, GenericTextField, StyledScrollbar, TSCCheckbox } from "../../components";
 import { InfoBox } from "./InfoBox";
 import { EditWidthField } from "./EditWidthField";
 import { EventSpecificSettings } from "../advanced_settings/EventSpecificSettings";
@@ -23,9 +23,12 @@ export const ColumnMenu = observer(() => {
   const selectedColumn = state.settingsTabs.columnSelected;
   const column = selectedColumn ? state.settingsTabs.columnHashMap.get(selectedColumn!) : undefined;
   useEffect(() => {
-    if (column && (column.columnDisplayType === "Event" || column.columnDisplayType === "Point")) {
-      setTabs(["General", "Font", "Curve Drawing", "Data Mining"]);
-    } else setTabs(["General", "Font"]);
+    setTabValue(0)
+    if (column && (column.columnDisplayType === "Event")) {
+      setTabs([...tabs, "Data Mining"])
+    } else if (column && (column.columnDisplayType === "Point")) {
+      setTabs([...tabs, "Curve Drawing", "Data Mining"]);
+    } else setTabs(["General", "Font"])
   }, [column]);
   return (
     <div className="column-menu">
@@ -58,22 +61,36 @@ type ColumnContentProps = {
   column: ColumnInfo;
 };
 const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) => {
+  const { actions } = useContext(context)
   switch (tab) {
     case "General":
       return (
-        <>
-          <EditNameField column={column} />
-          {column.children.length === 0 && <ChangeBackgroundColor column={column} />}
-          {column.width !== undefined && column.columnDisplayType !== "Ruler" && (
-            <EditWidthField key={column.name} column={column} />
-          )}
-          <div className="column-advanced-controls">
-            <AccordionPositionControls column={column} />
-          </div>
-          <ShowTitles column={column} />
-          <EventSpecificSettings column={column} />
-          {!!column.popup && <InfoBox info={column.popup} />}
-        </>
+        <StyledScrollbar>
+          <Box display="flex" flexDirection="column" gap="10px">
+            <EditNameField column={column} />
+            {column.children.length === 0 && <ChangeBackgroundColor column={column} />}
+            {column.width !== undefined && column.columnDisplayType !== "Ruler" && (
+              <GenericTextField
+                orientation="start"
+                helperOrientation="start"
+              inputs={[
+                {
+                helperText: "Edit Width",
+                value: column.width,
+                onValueChange: (value) => {
+                  actions.setWidth(value, column)
+                }
+              }
+              ]}/>
+            )}
+            <div className="column-advanced-controls">
+              <AccordionPositionControls column={column} />
+            </div>
+            <ShowTitles column={column} />
+            <EventSpecificSettings column={column} />
+            {!!column.popup && <InfoBox info={column.popup} />}
+          </Box>
+        </StyledScrollbar>
       );
     case "Font":
       return <FontMenu column={column} />;
@@ -90,7 +107,7 @@ const ShowTitles = observer(({ column }: { column: ColumnInfo }) => {
   const { actions } = useContext(context);
   return (
     <div className="ShowTitlesContainer">
-      <FormControlLabel
+      <CustomFormControlLabel
         name="enableTitle"
         label="Enable Title"
         control={
@@ -104,7 +121,8 @@ const ShowTitles = observer(({ column }: { column: ColumnInfo }) => {
         }
       />
       {column.showAgeLabels !== undefined && (
-        <FormControlLabel
+        <CustomFormControlLabel
+          width={130}
           name="showAgeLabel"
           label="Show Age Label"
           control={
@@ -119,7 +137,8 @@ const ShowTitles = observer(({ column }: { column: ColumnInfo }) => {
         />
       )}
       {column.showUncertaintyLabels !== undefined && (
-        <FormControlLabel
+        <CustomFormControlLabel
+          width={175}
           name="showUncertaintyLabels"
           label="Show Uncertainty Labels"
           control={
