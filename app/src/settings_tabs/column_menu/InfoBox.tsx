@@ -2,8 +2,8 @@ import { observer } from "mobx-react-lite";
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import "./InfoBox.css";
-import { StyledScrollbar } from "../components";
-import { trimQuotes } from "../util/util";
+import { StyledScrollbar } from "../../components";
+import { trimQuotes } from "../../util/util";
 
 export const InfoBox: React.FC<{ info: string }> = observer(({ info }) => {
   return (

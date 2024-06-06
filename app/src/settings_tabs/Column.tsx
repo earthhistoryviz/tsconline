@@ -8,7 +8,7 @@ import MuiAccordionSummary from "@mui/material/AccordionSummary";
 import { ColumnContainer, TSCCheckbox, Accordion } from "../components";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 
-import { ColumnMenu } from "./ColumnMenu";
+import { ColumnMenu } from "./column_menu/ColumnMenu";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { useTheme } from "@mui/material/styles";
 import { Tooltip } from "@mui/material";

@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { useContext } from "react";
-import { context } from "../state";
+import { context } from "../../state";
 import { TextField, Typography } from "@mui/material";
 import "./ColumnMenu.css";
 import { ColumnInfo } from "@tsconline/shared";

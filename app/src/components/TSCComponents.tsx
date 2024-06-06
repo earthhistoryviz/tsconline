@@ -140,7 +140,7 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({ title, offset = [0
   );
 };
 
-export const CustomFormControlLabel = styled(FormControlLabel)(({ width }: {width?: number}) => ({
+export const CustomFormControlLabel = styled(FormControlLabel)(({ width }: { width?: number }) => ({
   width: width || "105px",
   "& .MuiTypography-root": {
     fontSize: "0.8rem"
