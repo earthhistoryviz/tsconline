@@ -6,7 +6,13 @@ import "./ColumnMenu.css";
 import { FontMenu } from "../FontMenu";
 import { ChangeBackgroundColor } from "./BackgroundColor";
 import { ColumnInfo } from "@tsconline/shared";
-import { CustomDivider, CustomFormControlLabel, GenericTextField, StyledScrollbar, TSCCheckbox } from "../../components";
+import {
+  CustomDivider,
+  CustomFormControlLabel,
+  GenericTextField,
+  StyledScrollbar,
+  TSCCheckbox
+} from "../../components";
 import { InfoBox } from "./InfoBox";
 import { EditWidthField } from "./EditWidthField";
 import { EventSpecificSettings } from "../advanced_settings/EventSpecificSettings";
@@ -23,12 +29,12 @@ export const ColumnMenu = observer(() => {
   const selectedColumn = state.settingsTabs.columnSelected;
   const column = selectedColumn ? state.settingsTabs.columnHashMap.get(selectedColumn!) : undefined;
   useEffect(() => {
-    setTabValue(0)
-    if (column && (column.columnDisplayType === "Event")) {
-      setTabs([...tabs, "Data Mining"])
-    } else if (column && (column.columnDisplayType === "Point")) {
-      setTabs([...tabs, "Curve Drawing", "Data Mining"]);
-    } else setTabs(["General", "Font"])
+    setTabValue(0);
+    if (column && column.columnDisplayType === "Event") {
+      setTabs(["General", "Font", "Data Mining"]);
+    } else if (column && column.columnDisplayType === "Point") {
+      setTabs(["General", "Font", "Curve Drawing", "Data Mining"]);
+    } else setTabs(["General", "Font"]);
   }, [column]);
   return (
     <div className="column-menu">
@@ -61,7 +67,7 @@ type ColumnContentProps = {
   column: ColumnInfo;
 };
 const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) => {
-  const { actions } = useContext(context)
+  const { actions } = useContext(context);
   switch (tab) {
     case "General":
       return (
@@ -73,15 +79,16 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
               <GenericTextField
                 orientation="start"
                 helperOrientation="start"
-              inputs={[
-                {
-                helperText: "Edit Width",
-                value: column.width,
-                onValueChange: (value) => {
-                  actions.setWidth(value, column)
-                }
-              }
-              ]}/>
+                inputs={[
+                  {
+                    helperText: "Edit Width",
+                    value: column.width,
+                    onValueChange: (value) => {
+                      actions.setWidth(value, column);
+                    }
+                  }
+                ]}
+              />
             )}
             <div className="column-advanced-controls">
               <AccordionPositionControls column={column} />

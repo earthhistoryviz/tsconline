@@ -35,38 +35,38 @@ export const DataMiningModal: React.FC<DataMiningSettingsProps> = observer(({ co
 export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
   const { actions } = useContext(context);
   const dataMiningSettings = column.columnSpecificSettings;
-  if (!dataMiningSettings) return
+  if (!dataMiningSettings) return;
   assertDataMiningSettings(dataMiningSettings);
   return (
     <StyledScrollbar>
-    <Box className="data-mining-settings-container">
-      <Typography className="advanced-settings-header" variant="h6">
-        Data Mining Settings
-      </Typography>
-      <CustomDivider className="settings-header-divider" />
-      <div className="data-mining-settings-content">
-        <GenericTextField
-          inputs={[
-            {
-              helperText: "Window Size",
-              value: dataMiningSettings.windowSize,
-              onValueChange: (value) => {
-                actions.setDataMiningSettings(dataMiningSettings, { windowSize: value });
+      <Box className="data-mining-settings-container">
+        <Typography className="advanced-settings-header" variant="h6">
+          Data Mining Settings
+        </Typography>
+        <CustomDivider className="settings-header-divider" />
+        <div className="data-mining-settings-content">
+          <GenericTextField
+            inputs={[
+              {
+                helperText: "Window Size",
+                value: dataMiningSettings.windowSize,
+                onValueChange: (value) => {
+                  actions.setDataMiningSettings(dataMiningSettings, { windowSize: value });
+                }
+              },
+              {
+                helperText: "Step Size",
+                value: dataMiningSettings.stepSize,
+                onValueChange: (value) => {
+                  actions.setDataMiningSettings(dataMiningSettings, { stepSize: value });
+                }
               }
-            },
-            {
-              helperText: "Step Size",
-              value: dataMiningSettings.stepSize,
-              onValueChange: (value) => {
-                actions.setDataMiningSettings(dataMiningSettings, { stepSize: value });
-              }
-            }
-          ]}
-        />
-        <EventDataMiningOptions column={column} />
-        <PointDataMiningOptions column={column} />
-      </div>
-    </Box>
+            ]}
+          />
+          <EventDataMiningOptions column={column} />
+          <PointDataMiningOptions column={column} />
+        </div>
+      </Box>
     </StyledScrollbar>
   );
 });
