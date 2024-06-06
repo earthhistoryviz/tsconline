@@ -43,15 +43,15 @@ export const Column = observer(function Column() {
               </IconButton>
             </CustomTooltip>
             <CustomTooltip title="Collapse All" placement="top">
-            <IconButton
-              disableRipple
-              className="expand-collapse-column-buttons"
-              onClick={() => {
-                if (!state.settingsTabs.columns) return;
-                actions.setExpansionOfAllChildren(state.settingsTabs.columns, false);
-              }}>
-              <CompressIcon />
-            </IconButton>
+              <IconButton
+                disableRipple
+                className="expand-collapse-column-buttons"
+                onClick={() => {
+                  if (!state.settingsTabs.columns) return;
+                  actions.setExpansionOfAllChildren(state.settingsTabs.columns, false);
+                }}>
+                <CompressIcon />
+              </IconButton>
             </CustomTooltip>
           </div>
           {state.settingsTabs.columns &&

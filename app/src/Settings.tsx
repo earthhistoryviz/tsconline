@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { context } from "./state";
 import { observer } from "mobx-react-lite";
 import { Column } from "./settings_tabs/Column";

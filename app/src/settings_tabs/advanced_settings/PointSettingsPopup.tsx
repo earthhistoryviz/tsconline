@@ -1,4 +1,4 @@
-import { Box, IconButton, Switch, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Box, IconButton, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { ColumnInfo, assertPointSettings, isPointShape } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
 import { useContext } from "react";
