@@ -1,20 +1,20 @@
 import { observer } from "mobx-react-lite";
 import { useContext, useEffect, useState } from "react";
-import { context } from "../state";
+import { context } from "../../state";
 import { FormControlLabel, Typography } from "@mui/material";
 import "./ColumnMenu.css";
-import { FontMenu } from "./FontMenu";
+import { FontMenu } from "../FontMenu";
 import { ChangeBackgroundColor } from "./BackgroundColor";
 import { ColumnInfo } from "@tsconline/shared";
-import { CustomDivider, TSCCheckbox } from "../components";
+import { CustomDivider, TSCCheckbox } from "../../components";
 import { InfoBox } from "./InfoBox";
 import { EditWidthField } from "./EditWidthField";
-import { EventSpecificSettings } from "./advanced_settings/EventSpecificSettings";
-import { PointSettingsDisplay } from "./advanced_settings/PointSettingsPopup";
+import { EventSpecificSettings } from "../advanced_settings/EventSpecificSettings";
+import { PointSettingsDisplay } from "../advanced_settings/PointSettingsPopup";
 import { EditNameField } from "./EditNameField";
-import { DataMiningSettings } from "./advanced_settings/DataMiningSettings";
+import { DataMiningSettings } from "../advanced_settings/DataMiningSettings";
 import AccordionPositionControls from "./AccordionPositionControls";
-import { CustomTabs } from "../components/TSCCustomTabs";
+import { CustomTabs } from "../../components/TSCCustomTabs";
 
 export const ColumnMenu = observer(() => {
   const { state } = useContext(context);

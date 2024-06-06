@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import React, { useContext } from "react";
-import { context } from "../state";
+import { context } from "../../state";
 import { TextFieldProps, Typography, TextField } from "@mui/material";
 import "./EditWidthField.css";
 import { NumericFormat } from "react-number-format";

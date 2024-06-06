@@ -4,11 +4,14 @@
   align-items: center;
 }
 
-.point-shape-radio-group {
+.point-shape-toggle-group {
   display: flex;
-  justify-content: flex-start;
-  align-items: center;
+  justify-self: center;
+  align-self: flex-end;
   text-align: left;
+  flex-direction: column;
+  padding-left: 2px;
+  padding-bottom:10px;
 }
 .advanced-settings-header {
   display: flex;
@@ -30,21 +33,21 @@
 }
 .point-settings-content {
   display: flex;
-  flex-direction: row;
-  align-items: center;
+  flex-direction: column;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 20px;
 }
 .draw-buttons-and-point-shape-container {
   display: flex;
-  flex-direction: column;
-  align-items: left;
-  justify-content: center;
+  flex-direction: row;
+  align-items: flex-start;
+  padding-left: 30px;
 }
 .point-range-settings-container {
   display: flex;
   flex-direction: column;
-  width: fit-content;
+  height: min-content;
 }
 .point-range-settings-container .MuiIconButton-root {
   padding: 5px;
@@ -53,33 +56,61 @@
 .point-range-settings-header-container {
   display: flex;
   align-items: center;
-  justify-content: space-between;
 }
 
 .point-range-settings-header {
   display: flex;
   align-items: center;
   font-weight: 600;
-  flex-grow: 1;
+  margin-right: 290px;
+}
+
+@media screen and (max-width: 870px) {
+  .point-range-settings-header {
+    flex-grow: 1;
+    margin-right: 0px;
+  }
+  .point-range-settings-container .point-range-settings-divider {
+    width: 100%;
+  }
+}
+@media screen and (max-width: 641px) {
+  .point-range-and-toggle-container {
+    flex-basis: 100px;
+    min-height: 300px;
+  }
+}
+
+.point-range-settings-divider {
+  width: 440px;
+  margin: 0 0 10px 0;
 }
 .draw-point-scale-checkboxes {
   flex-direction: column;
 }
 
-.point-settings-adjustment-buttons {
+.point-range-and-toggle-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.point-settings-adjustment-buttons,
+.point-adjustment-rgb-modifier {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
   align-items: center;
   margin-top: 10px;
+  text-align: left;
   margin-bottom: 10px;
+}
+.point-adjustment-rgb-modifier {
+  align-items: center;
+  gap: 10px;
 }
 .point-settings-gradient-buttons {
   display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  margin-top: 10px;
-  margin-bottom: 10px;
 }
 
 .flip-button-icon {
@@ -159,25 +190,25 @@
 
 .cross-icon,
 .cross-icon::after {
-    display: block;
-    box-sizing: border-box;
-    background: black;
-    border-radius: 10px
+  display: block;
+  box-sizing: border-box;
+  background: black;
+  border-radius: 10px;
 }
 .cross-icon {
-    margin-top: -2px;
-    position: relative;
-    transform: scale(var(--ggs, 0.75));
-    width: 16px;
-    height: 2px
+  margin-top: -2px;
+  position: relative;
+  transform: scale(var(--ggs, 0.75));
+  width: 16px;
+  height: 2px;
 }
 .cross-icon::after {
-    content: "";
-    position: absolute;
-    width: 2px;
-    height: 16px;
-    top: -7px;
-    left: 7px
+  content: "";
+  position: absolute;
+  width: 2px;
+  height: 16px;
+  top: -7px;
+  left: 7px;
 }
 
 .MuiToggleButton-root.Mui-disabled .rectangle-icon,
