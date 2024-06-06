@@ -1,17 +1,7 @@
 import { observer } from "mobx-react-lite";
 import React, { useContext } from "react";
 import { context } from "../state";
-import {
-  Box,
-  Divider,
-  FormControlLabel,
-  Grid,
-  TextField,
-  TextFieldProps,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography
-} from "@mui/material";
+import { Box, Grid, TextField, TextFieldProps, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";

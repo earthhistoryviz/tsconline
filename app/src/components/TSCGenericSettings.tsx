@@ -1,4 +1,4 @@
-import { TextField, Box, Typography, FormControlLabel } from "@mui/material";
+import { TextField, Box, Typography } from "@mui/material";
 import { NumericFormat } from "react-number-format";
 import "./TSCGenericSettings.css";
 import { RGB } from "@tsconline/shared";
