@@ -57,7 +57,7 @@ export const CustomTabs: React.FC<CustomTabsProps> = ({
         />
         {tabs.map((tab, index) => (
           <button
-            key={tab}
+            key={tab + index}
             tabIndex={0}
             style={{
               width: `${width}px`,

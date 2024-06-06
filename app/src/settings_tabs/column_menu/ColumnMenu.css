@@ -106,8 +106,10 @@
     width: 50px;
   }
   .column-menu-custom-tabs > .tsc-tab-buttons > .tsc-tab-panel {
-    padding-left: 0px !important;
     width: 50px !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 10px 0px 10px 0px !important;
   }
   .column-menu-custom-tabs > .tsc-tab-buttons > .tsc-tab-indicator {
     left: 55px !important;

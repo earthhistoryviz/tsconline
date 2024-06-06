@@ -51,7 +51,7 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
                     </CustomTooltip>
                   </div>
                 </div>
-                <CustomDivider className="point-range-settings-divider"/>
+                <CustomDivider className="point-range-settings-divider" />
                 <GenericTextField
                   key="range"
                   orientation="start"
@@ -89,8 +89,7 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
                   ]}
                 />
               </div>
-            <div className="draw-buttons-and-point-shape-container">
-              <div className="point-settings-adjustment-buttons draw-point-scale-checkboxes">
+              <div className="draw-buttons-and-point-shape-container">
                 <CustomFormControlLabel
                   name="drawScale"
                   label="Draw Scale"
@@ -104,43 +103,46 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
                     />
                   }
                 />
-                <CustomFormControlLabel
-                  name="drawPoints"
-                  label="Draw Points"
-                  className="point-shape-checkbox"
-                  control={
-                    <TSCCheckbox
-                      checked={pointSettings.pointShape !== "nopoints"}
-                      onChange={(event) =>
-                        actions.setPointColumnSettings(pointSettings, {
-                          pointShape: event.target.checked ? "rect" : "nopoints"
-                        })
-                      }
-                    />
-                  }
-                />
+                <section className="point-shape-and-toggle-container">
+                  <CustomFormControlLabel
+                    name="drawPoints"
+                    label="Draw Points"
+                    className="point-shape-checkbox"
+                    control={
+                      <TSCCheckbox
+                        checked={pointSettings.pointShape !== "nopoints"}
+                        onChange={(event) =>
+                          actions.setPointColumnSettings(pointSettings, {
+                            pointShape: event.target.checked ? "rect" : "nopoints"
+                          })
+                        }
+                      />
+                    }
+                  />
+                  <div className="point-shape-toggle-group">
+                    <Typography fontSize="0.8rem" mb="5px" textAlign="center">
+                      Point Shape
+                    </Typography>
+                    <ToggleButtonGroup
+                      exclusive
+                      value={pointSettings.pointShape}
+                      onChange={(_e, val) => {
+                        if (!isPointShape(val)) return;
+                        actions.setPointColumnSettings(pointSettings, { pointShape: val });
+                      }}>
+                      <ToggleButton disabled={pointSettings.pointShape === "nopoints"} disableRipple value="rect">
+                        <span className="rectangle-icon" />
+                      </ToggleButton>
+                      <ToggleButton disableRipple disabled={pointSettings.pointShape === "nopoints"} value="circle">
+                        <span className="circle-icon" />
+                      </ToggleButton>
+                      <ToggleButton disableRipple disabled={pointSettings.pointShape === "nopoints"} value="cross">
+                        <span className="cross-icon" />
+                      </ToggleButton>
+                    </ToggleButtonGroup>
+                  </div>
+                </section>
               </div>
-              <div className="point-shape-toggle-group">
-                <Typography fontSize="0.8rem" mb="5px" textAlign="center">Point Shape</Typography>
-                <ToggleButtonGroup
-                  exclusive
-                  value={pointSettings.pointShape}
-                  onChange={(_e, val) => {
-                    if (!isPointShape(val)) return;
-                    actions.setPointColumnSettings(pointSettings, { pointShape: val });
-                  }}>
-                  <ToggleButton disabled={pointSettings.pointShape === "nopoints"} disableRipple value="rect">
-                    <span className="rectangle-icon" />
-                  </ToggleButton>
-                  <ToggleButton disableRipple disabled={pointSettings.pointShape === "nopoints"} value="circle">
-                    <span className="circle-icon" />
-                  </ToggleButton>
-                  <ToggleButton disableRipple disabled={pointSettings.pointShape === "nopoints"} value="cross">
-                    <span className="cross-icon" />
-                  </ToggleButton>
-                </ToggleButtonGroup>
-              </div>
-            </div>
             </div>
             <div className="point-adjustment-rgb-modifier">
               <Box display="flex" flexDirection="column" gap="20px">

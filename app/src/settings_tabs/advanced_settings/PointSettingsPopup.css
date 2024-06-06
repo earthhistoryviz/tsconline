@@ -11,7 +11,7 @@
   text-align: left;
   flex-direction: column;
   padding-left: 2px;
-  padding-bottom:10px;
+  padding-bottom: 10px;
 }
 .advanced-settings-header {
   display: flex;
@@ -41,8 +41,9 @@
 .draw-buttons-and-point-shape-container {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
   padding-left: 30px;
+  padding-top: 20px;
+  flex-wrap: wrap;
 }
 .point-range-settings-container {
   display: flex;
@@ -85,8 +86,9 @@
   width: 440px;
   margin: 0 0 10px 0;
 }
-.draw-point-scale-checkboxes {
-  flex-direction: column;
+.point-shape-and-toggle-container {
+  display: flex;
+  flex-direction: row;
 }
 
 .point-range-and-toggle-container {
