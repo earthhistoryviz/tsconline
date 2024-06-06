@@ -6,7 +6,7 @@ import {
   isDataMiningPointDataType,
   assertDataMiningSettings
 } from "@tsconline/shared";
-import { CustomDivider, GenericTextField } from "../../components";
+import { CustomDivider, GenericTextField, StyledScrollbar } from "../../components";
 import { Box, Button, Dialog, Typography } from "@mui/material";
 import { useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
@@ -35,8 +35,10 @@ export const DataMiningModal: React.FC<DataMiningSettingsProps> = observer(({ co
 export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
   const { actions } = useContext(context);
   const dataMiningSettings = column.columnSpecificSettings;
+  if (!dataMiningSettings) return
   assertDataMiningSettings(dataMiningSettings);
   return (
+    <StyledScrollbar>
     <Box className="data-mining-settings-container">
       <Typography className="advanced-settings-header" variant="h6">
         Data Mining Settings
@@ -65,6 +67,7 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({
         <PointDataMiningOptions column={column} />
       </div>
     </Box>
+    </StyledScrollbar>
   );
 });
 export const EventDataMiningOptions: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
