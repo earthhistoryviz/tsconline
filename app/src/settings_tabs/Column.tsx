@@ -28,6 +28,7 @@ export const Column = observer(function Column() {
       <ColumnSearchBar />
       <div className="column-accordion-and-menu-container">
         <Box
+          id="ResizableColumnAccordionWrapper"
           className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}>
           <div className="column-filter-buttons">
             <IconButton

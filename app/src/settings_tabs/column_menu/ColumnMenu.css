@@ -115,3 +115,16 @@
     left: 55px !important;
   }
 }
+
+.column-menu-tabs-small > .tsc-tab-buttons {
+  width: 50px;
+}
+.column-menu-tabs-small > .tsc-tab-buttons > .tsc-tab-panel {
+  width: 50px !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 10px 0px 10px 0px !important;
+}
+.column-menu-tabs-small > .tsc-tab-buttons > .tsc-tab-indicator {
+  left: 55px !important;
+}
