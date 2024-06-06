@@ -27,6 +27,29 @@ export const ColumnMenu = observer(() => {
   const [tabValue, setTabValue] = useState(0);
   const selectedColumn = state.settingsTabs.columnSelected;
   const column = selectedColumn ? state.settingsTabs.columnHashMap.get(selectedColumn!) : undefined;
+
+  // Resize the column menu tabs based on the width of the column menu
+  const columnAccordionWrapper = document.getElementById("ResizableColumnAccordionWrapper");
+  const columnMenuTabs = document.getElementById("ColumnMenuCustomTabs");
+  useEffect(() => {
+    if (!columnAccordionWrapper || !columnMenuTabs) return;
+    function resizeColumnMenuTabs() {
+      const width = columnAccordionWrapper?.clientWidth;
+      const viewPortWidth = window.innerWidth;
+      if (columnAccordionWrapper && width !== undefined && width / viewPortWidth > 0.5) {
+        columnMenuTabs?.classList.add("column-menu-tabs-small");
+      } else {
+        columnMenuTabs?.classList.remove("column-menu-tabs-small");
+      }
+    }
+    const resizeObserver = new ResizeObserver(resizeColumnMenuTabs);
+    resizeObserver.observe(columnAccordionWrapper);
+    return () => {
+      resizeObserver.unobserve(columnAccordionWrapper);
+      resizeObserver.disconnect();
+    };
+  });
+  // Set the tabs based on the column type
   useEffect(() => {
     setTabValue(0);
     if (column && column.columnDisplayType === "Event") {
@@ -47,6 +70,7 @@ export const ColumnMenu = observer(() => {
       <CustomDivider className="settings-header-divider" />
       <div className="column-menu-content-container">
         <CustomTabs
+          id="ColumnMenuCustomTabs"
           className="column-menu-custom-tabs"
           tabIndicatorLength={25}
           value={tabValue}
