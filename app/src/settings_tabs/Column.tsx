@@ -5,7 +5,7 @@ import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
 import { Box, IconButton, TextField } from "@mui/material";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
-import { ColumnContainer, TSCCheckbox, Accordion } from "../components";
+import { ColumnContainer, TSCCheckbox, Accordion, CustomTooltip } from "../components";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 
 import { ColumnMenu } from "./column_menu/ColumnMenu";
@@ -31,15 +31,18 @@ export const Column = observer(function Column() {
           id="ResizableColumnAccordionWrapper"
           className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}>
           <div className="column-filter-buttons">
-            <IconButton
-              disableRipple
-              className="expand-collapse-column-buttons"
-              onClick={() => {
-                if (!state.settingsTabs.columns) return;
-                actions.setExpansionOfAllChildren(state.settingsTabs.columns, true);
-              }}>
-              <ExpandIcon />
-            </IconButton>
+            <CustomTooltip title="Expand All" placement="top">
+              <IconButton
+                disableRipple
+                className="expand-collapse-column-buttons"
+                onClick={() => {
+                  if (!state.settingsTabs.columns) return;
+                  actions.setExpansionOfAllChildren(state.settingsTabs.columns, true);
+                }}>
+                <ExpandIcon />
+              </IconButton>
+            </CustomTooltip>
+            <CustomTooltip title="Collapse All" placement="top">
             <IconButton
               disableRipple
               className="expand-collapse-column-buttons"
@@ -49,6 +52,7 @@ export const Column = observer(function Column() {
               }}>
               <CompressIcon />
             </IconButton>
+            </CustomTooltip>
           </div>
           {state.settingsTabs.columns &&
             Object.entries(state.settingsTabs.columns.children).map(([childName, childDetails]) => (
