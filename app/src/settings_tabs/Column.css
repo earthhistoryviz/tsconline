@@ -41,13 +41,14 @@
 
 .column-accordion-wrapper {
   min-width: 200px;
-  max-width: 300px;
-  flex-grow: 1;
+  width: 300px;
+  max-width: 70vw;
   overflow: auto;
   border: 1px solid lightgray;
   border-radius: 4px;
   z-index: 0;
   padding-left: 10px;
+  resize: horizontal;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
