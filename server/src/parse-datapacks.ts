@@ -72,7 +72,7 @@ import {
 } from "./util.js";
 import { createInterface } from "readline";
 import _ from "lodash";
-import { DatapackDescriptionInfo} from "./types.js";
+import { DatapackDescriptionInfo } from "./types.js";
 import chalk from "chalk";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;

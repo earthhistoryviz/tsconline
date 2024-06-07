@@ -1,7 +1,7 @@
 import { Database, User, NewUser, UpdatedUser, Verification, NewVerification } from "./types.js";
 import BetterSqlite3 from "better-sqlite3";
 import { Kysely, SqliteDialect } from "kysely";
-import { exec } from "child_process";
+//import { exec } from "child_process";
 import path from "path";
 
 /*

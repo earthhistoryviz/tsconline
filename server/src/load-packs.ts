@@ -37,14 +37,14 @@ export async function loadIndexes(
   let successful = true;
   console.log(`\nParsing datapacks: ${datapacks}\n`);
   for (const datapack of datapacks) {
-    console.log(`\nParsing datapack file: ${datapack}\n`);
+    console.log(`\nParsing datapack file: ${datapack.file}\n`);
     await parseDatapacks(datapack, decryptionDirectory, userUploaded)
       .then((datapackParsingPack) => {
         if (!datapackParsingPack) {
           return;
         }
         assertDatapackParsingPack(datapackParsingPack);
-        datapackIndex[datapack.file] = datapackParsingPack;
+        datapackIndex[datapack.file] = datapackParsingPack; //now includes description properties
         console.log(chalk.green(`Successfully parsed ${datapack.file}`));
       })
       .catch((e) => {
@@ -121,7 +121,6 @@ export async function loadFaciesPatterns() {
  * Finds all map images and puts them in the public directory
  * For access from fastify server servicing
  */
-//changed datapacks to DatapackDescriptionInfo[] to match the type in the function
 export async function grabMapImages(
   datapacks: string[] = assetconfigs.activeDatapacks.map((datapack) => datapack.file),
   decryptionDirectory: string = assetconfigs.decryptionDirectory

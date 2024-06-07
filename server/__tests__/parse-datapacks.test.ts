@@ -49,9 +49,17 @@ describe("general parse-datapacks tests", () => {
   /**
    * Parses the general Africa Bight map pack
    */
-  const datapack: DatapackDescriptionInfo = { description: "", title: "", file: "", size: "" };
+  const datapack: DatapackDescriptionInfo = {
+    description: "description",
+    title: "Title",
+    file: "file.dpk",
+    size: "size"
+  };
   it("should parse africa general datapack", async () => {
-    const datapacks = await parseDatapacks(datapack, "parse-datapacks-test-1.txt");
+    const datapacks = await parseDatapacks(
+      { title: "Africa Bight", description: "Africa Bight Map", file: "AfricaBight.map", size: "200.98 KB" },
+      "parse-datapacks-test-1.txt"
+    );
     expect(datapacks).toEqual(key["general-parse-datapacks-test-1-key"]);
   });
 

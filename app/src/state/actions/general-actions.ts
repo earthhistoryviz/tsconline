@@ -202,13 +202,16 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
   }
 });
 
-export const uploadDatapack = action("uploadDatapack", async (file: File, name: string) => {
+export const uploadDatapack = action("uploadDatapack", async (file: File, name: string, description: string) => {
   if (state.datapackIndex[file.name]) {
     pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
     return;
   }
   const formData = new FormData();
+  //add the description and title to these forms and need to change how it is grabbed in routes
   formData.append("file", file);
+  formData.append("name", name);
+  formData.append("description", description);
   try {
     const response = await fetcher(`/upload`, {
       method: "POST",
