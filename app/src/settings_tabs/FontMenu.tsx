@@ -89,7 +89,7 @@ const FontMenuRow: React.FC<{
         customInput={FontSizeTextField}
         value={fontOpts.size}
         onValueChange={(values) => {
-          if (!values.floatValue) {
+          if (values.floatValue === undefined || values.floatValue === null || isNaN(values.floatValue)) {
             return;
           }
           actions.setFontSize(target, values.floatValue, column);
@@ -101,7 +101,7 @@ const FontMenuRow: React.FC<{
         onChange={handleFormat}
         size="small"
         aria-label="text formatting"
-        sx={{ marginRight: "10px" }}
+        className="toggle-button-font-menu-group"
         disabled={!fontOpts.on}>
         <ToggleButton value="bold" aria-label="bold" color="info" className="text-format-toggle-button">
           <FormatBoldIcon className="text-format-icon-svg" />

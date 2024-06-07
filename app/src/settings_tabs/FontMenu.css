@@ -108,6 +108,9 @@
   font-size: 1.2rem;
   font-weight: 600;
 }
+.toggle-button-font-menu-group {
+  margin-right: 10px;
+}
 
 @media screen and (max-width: 982px) {
   .font-row-container {
