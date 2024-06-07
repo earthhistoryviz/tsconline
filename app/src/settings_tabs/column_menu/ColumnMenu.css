@@ -37,7 +37,7 @@
   flex-grow: 1;
   height: calc(100% - 33px); /* 33px is the height of the header, needed for the scrolling */
 }
-.ShowTitlesContainer {
+.show-titles-container {
   flex-direction: row;
   margin-top: 10px;
   margin-left: 10px;

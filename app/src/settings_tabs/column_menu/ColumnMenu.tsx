@@ -48,7 +48,7 @@ export const ColumnMenu = observer(() => {
       resizeObserver.unobserve(columnAccordionWrapper);
       resizeObserver.disconnect();
     };
-  });
+  }, []);
   // Set the tabs based on the column type
   useEffect(() => {
     setTabValue(0);
@@ -136,7 +136,7 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
 const ShowTitles = observer(({ column }: { column: ColumnInfo }) => {
   const { actions } = useContext(context);
   return (
-    <div className="ShowTitlesContainer">
+    <div className="show-titles-container">
       <CustomFormControlLabel
         name="enableTitle"
         label="Enable Title"

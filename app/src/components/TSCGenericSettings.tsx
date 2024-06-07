@@ -75,7 +75,7 @@ export const GenericTextField: React.FC<GenericTextFieldProps> = ({
               placeholder="Enter Size"
               onValueChange={(values) => {
                 const floatValue = values.floatValue;
-                if (!floatValue) {
+                if (floatValue === undefined || floatValue === null || isNaN(floatValue)) {
                   return;
                 }
                 input.onValueChange(floatValue);
