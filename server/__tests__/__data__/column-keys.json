@@ -491,10 +491,10 @@
       "formatVersion": 1.5,
       "image": "",
       "isUserDatapack": false,
-      "file": "",
-      "description": "",
-      "title": "",
-      "size": ""
+      "file": "AfricaBight.map",
+      "description": "Africa Bight Map",
+      "title": "Africa Bight",
+      "size": "200.98 KB"
     },
     "general-parse-datapacks-test-2-key": {
       "columnInfo": {
@@ -1375,10 +1375,10 @@
       "verticalScale": 6,
       "date": "2015-03-15",
       "isUserDatapack": false,
-      "file": "",
-      "description": "",
-      "title": "",
-      "size": ""
+      "file": "file.dpk",
+      "description": "description",
+      "title": "Title",
+      "size": "size"
     },
     "column-types-facies-key": {
         "FaciesOne": {
@@ -2677,9 +2677,9 @@
             "formatVersion": 1.5,
             "image": "",
             "isUserDatapack": false,
-            "file": "",
-            "description": "",
-            "title": "",
-            "size": ""
+            "file": "file.dpk",
+            "description": "description",
+            "title": "Title",
+            "size": "size"
     }
 }

@@ -4900,7 +4900,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fastify@npm:^4.17.0":
+"fastify@npm:^4.17.0, fastify@npm:^4.27.0":
   version: 4.27.0
   resolution: "fastify@npm:4.27.0"
   dependencies:

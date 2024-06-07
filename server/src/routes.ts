@@ -4,7 +4,6 @@ import { writeFile, stat, readFile, access, rm, mkdir } from "fs/promises";
 import {
   DatapackIndex,
   DatapackInfoChunk,
-  DatapackParsingPack,
   MapPackIndex,
   MapPackInfoChunk,
   TimescaleItem,
@@ -25,8 +24,8 @@ import { loadIndexes } from "./load-packs.js";
 import { updateFileMetadata, writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
-import { rm } from "fs/promises";
 import { DatapackDescriptionInfo } from "./types.js";
+import { MultipartFile } from "@fastify/multipart";
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
@@ -277,9 +276,13 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     return;
   }
   // for test usage: const uuid = "username";
-  const file = await request.file();
-  if (!file) {
-    reply.status(404).send({ error: "No file uploaded" });
+  const { file, name, description } = request.body as {
+    file: MultipartFile;
+    name: string;
+    description: string;
+  };
+  if (!file || !name || !description) {
+    reply.status(404).send({ error: "No file uploaded or missing fields" });
     return;
   }
   // only accept a binary file (encoded) or an unecnrypted text file or a zip file
@@ -303,9 +306,9 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json");
   const datapackInfo: DatapackDescriptionInfo = {
     file: filename,
-    description: "",
-    title: "",
-    size: ""
+    description: description,
+    title: name,
+    size: file.file.bytesRead.toString()
   };
   async function errorHandler(message: string, errorStatus: number, e?: unknown) {
     e && console.error(e);
