@@ -340,7 +340,7 @@ describe('runJavaEncrypt', () => {
 
 
 // Tests for route. runJaveEncrypt is mocked
-jest.mock('./route.js', () => ({
+jest.mock('./routes.js', () => ({
     runJavaEncrypt: jest.fn()
         .mockImplementationOnce(() => {
             return Promise.resolve();
