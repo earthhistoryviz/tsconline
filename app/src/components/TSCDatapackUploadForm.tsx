@@ -58,11 +58,7 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
                 actions.pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
                 return;
               }
-              actions.removeError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
-              actions.removeError(ErrorCodes.UNRECOGNIZED_DATAPACK_FILE);
-              actions.removeError(ErrorCodes.UNRECOGNIZED_DATAPACK_EXTENSION);
-              actions.removeError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
-              actions.removeError(ErrorCodes.DATAPACK_FILE_NAME_TOO_LONG);
+              actions.removeAllErrors();
               setDatapackFile(file);
             }}
           />

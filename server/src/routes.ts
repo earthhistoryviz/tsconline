@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
-import { writeFile, stat, readFile, access } from "fs/promises";
+import { writeFile, stat, readFile, access, rm } from "fs/promises";
 import {
   DatapackIndex,
   DatapackInfoChunk,
@@ -26,7 +26,6 @@ import { loadIndexes } from "./load-packs.js";
 import { updateFileMetadata, writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
-import { rm } from "fs/promises";
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
@@ -226,15 +225,16 @@ export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
 };
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
+  // for test usage: const uuid = "username";
   const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
-  // for test usage: const uuid = "username";
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
   try {
     await access(userDir);
+    await access(path.join(userDir, "DatapackIndex.json"));
   } catch (e) {
     reply.status(404).send({ error: "User has no uploaded datapacks" });
     return;

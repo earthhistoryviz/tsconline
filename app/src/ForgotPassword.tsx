@@ -17,7 +17,7 @@ import { displayServerError } from "./state/actions/util-actions";
 import Container from "@mui/material/Container";
 import "./Login.css";
 
-export const ResetPassword: React.FC = observer(() => {
+export const ForgotPassword: React.FC = observer(() => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const token = searchParams.get("token");
@@ -51,7 +51,7 @@ export const ResetPassword: React.FC = observer(() => {
         actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
         return;
       }
-      const response = await fetcher("/auth/send-resetpassword-email", {
+      const response = await fetcher("/auth/send-forgot-password-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -103,7 +103,7 @@ export const ResetPassword: React.FC = observer(() => {
         actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
         return;
       }
-      const response = await fetcher("/auth/reset-password", {
+      const response = await fetcher("/auth/forgot-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -136,6 +136,13 @@ export const ResetPassword: React.FC = observer(() => {
           case 404:
             errorCode = ErrorCodes.TOKEN_EXPIRED_OR_INVALID;
             setShowResendForm(true);
+            break;
+          case 422:
+            errorCode = ErrorCodes.RECAPTCHA_FAILED;
+            break;
+          case 429:
+            actions.removeAllErrors();
+            errorCode = ErrorCodes.TOO_MANY_REQUESTS;
             break;
           default:
             setShowResendForm(true);
