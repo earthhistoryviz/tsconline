@@ -102,6 +102,10 @@
   .column-menu-content {
     max-width: calc(100% - 70px);
   }
+  .column-menu-content-container {
+    min-height: 40vh;
+    height: 40vh;
+  }
   .column-menu-custom-tabs > .tsc-tab-buttons {
     width: 50px;
   }
