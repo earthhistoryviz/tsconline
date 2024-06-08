@@ -2,9 +2,7 @@
   "name": "tsconline-monorepo",
   "type": "module",
   "dependencies": {
-    "fastify": "^4.17.0",
-    "jest-ts-auto-mock": "^2.1.0",
-    "ts-auto-mock": "^3.7.3"
+    "fastify": "^4.17.0"
   },
   "devDependencies": {
     "@types/eslint": "^8",

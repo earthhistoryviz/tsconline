@@ -14,7 +14,7 @@ export async function runJavaEncrypt(activeJar: string, filepath: string, encryp
             if (error) {
                 console.error("Java error param: " + error);
                 console.error("Java stderr: " + stderror.toString());
-                reject(error);
+                resolve();
             } else {
                 console.log("Java stdout: " + stdout.toString());
                 resolve();

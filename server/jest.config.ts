@@ -2,9 +2,7 @@
  * For a detailed explanation regarding each configuration property, visit:
  * https://jestjs.io/docs/configuration
  */
-import type { Config } from "jest";
-
-const config: Config = {
+module.exports = {
   // All imported modules in your tests should be mocked automatically
   // automock: false,
 
@@ -107,7 +105,7 @@ const config: Config = {
   // notifyMode: "failure-change",
 
   // A preset that is used as a base for Jest's configuration
-  preset: "ts-jest",
+  //preset: "ts-jest",
 
   // Run tests from one or more projects
   // projects: undefined,
@@ -139,7 +137,7 @@ const config: Config = {
   // runner: "jest-runner",
 
   // The paths to modules that run some code to configure or set up the testing environment before each test
-  setupFiles: ["<rootDir>/server/jest-auto-mock.config.ts"],
+  setupFiles: ["<rootDir>jest-auto-mock.config.ts"],
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
   // setupFilesAfterEnv: [],
@@ -204,4 +202,3 @@ const config: Config = {
   // watchman: true,
 };
 
-export default config;
