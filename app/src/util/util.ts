@@ -99,14 +99,14 @@ export function convertHexToRGB(hex: string, returnAsString: boolean = false): R
   const rgb: RGB = { r, g, b };
 
   if (returnAsString) {
-    return `rgb(${r}, ${g}, ${b})`;
+    return `rgb(${r},${g},${b})`;
   }
 
   return rgb;
 }
 
 export function convertRgbToString(rgb: RGB): string {
-  return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+  return `rgb(${rgb.r},${rgb.g},${rgb.b})`;
 }
 
 export function convertTSCColorToRGB(text: string): RGB {
