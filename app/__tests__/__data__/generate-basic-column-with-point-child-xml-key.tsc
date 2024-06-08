@@ -1,0 +1,51 @@
+    <setting name="title">Chart Root</setting>
+    <setting name="useNamedColor">false</setting>
+    <setting name="placeHolder">false</setting>
+    <setting name="drawTitle">true</setting>
+    <setting name="drawAgeLabel">false</setting>
+    <setting name="drawUncertaintyLabel">false</setting>
+    <setting name="isSelected">true</setting>
+    <setting name="pad">0.2</setting>
+    <setting name="age pad">2</setting>
+    <setting name="backgroundColor"/>
+    <setting name="customColor" useNamed="false">rgb(255,255,255)</setting>
+    <fonts>
+    </fonts>
+    <column id="class datastore.PointColumn:Long-Term Phanerozoic" isDataMiningColumn="false">
+        <setting name="title">Long-Term Phanerozoic</setting>
+        <setting name="useNamedColor">false</setting>
+        <setting name="placeHolder">false</setting>
+        <setting name="drawTitle">true</setting>
+        <setting name="drawAgeLabel">false</setting>
+        <setting name="drawUncertaintyLabel">false</setting>
+        <setting name="isSelected">true</setting>
+        <setting name="pad">0.2</setting>
+        <setting name="age pad">2</setting>
+        <setting name="backgroundColor"/>
+        <setting name="customColor" useNamed="false">rgb(255,255,255)</setting>
+        <fonts>
+        </fonts>
+        <setting name="drawPoints">false</setting>
+        <setting name="drawLine">true</setting>
+        <setting name="lineColor">rgb(0,0,0)</setting>
+        <setting name="drawSmooth">true</setting>
+        <setting name="drawFill">true</setting>
+        <setting name="fillColor">rgb(64,233,191)</setting>
+        <setting name="doNotSetWindowAuto">false</setting>
+        <setting name="minWindow">-150</setting>
+        <setting name="maxWindow">280</setting>
+        <setting name="drawScale">true</setting>
+        <setting name="drawBgrndGradient">false</setting>
+        <setting name="backGradStart">rgb(0,0,0)</setting>
+        <setting name="backGradEnd">rgb(255,255,255)</setting>
+        <setting name="drawCurveGradient">false</setting>
+        <setting name="curveGradStart">rgb(0,0,0)</setting>
+        <setting name="curveGradEnd">rgb(255,255,255)</setting>
+        <setting name="flipScale">false</setting>
+        <setting name="scaleStart">0</setting>
+        <setting name="scaleStep">1</setting>
+        <setting name="pointType" pointType="rect"/>
+        <setting name="windowSize">2</setting>
+        <setting name="stepSize">1</setting>
+    </column>
+    <setting name="width">100</setting>

@@ -32,6 +32,9 @@ import {
 import { ChartSettings } from "../types";
 import { convertRgbToString, convertTSCColorToRGB } from "../util/util";
 import { cloneDeep } from "lodash";
+//for testing purposes
+//https://stackoverflow.com/questions/51269431/jest-mock-inner-function
+import * as parseSettings from "./parse-settings";
 
 /**
  * casts a string to a specified type
@@ -71,11 +74,13 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
   const settingNodes = settingsNode.getElementsByTagName("setting");
   for (let i = 0; i < settingNodes.length; i++) {
     const settingNode = settingNodes[i];
+    if (!settingNode) continue;
+
     const settingName = settingNode.getAttribute("name");
-    if (settingName === null) {
-      continue;
-    }
+    if (!settingName) continue;
+
     const nestedSettingsNode = settingNode.getElementsByTagName("setting")[0];
+    if (!nestedSettingsNode) continue;
     let settingValue: string = "";
     if (nestedSettingsNode && nestedSettingsNode.textContent) {
       settingValue = nestedSettingsNode.textContent.trim();
@@ -96,9 +101,9 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
         text = settingValue;
       }
       if (settingNode.getElementsByTagName("setting")[1]) {
-        if (settingNode.getElementsByTagName("setting")[1].textContent) {
-          settingValue = settingNode.getElementsByTagName("setting")[1].textContent!.trim();
-          if (settingNode.getElementsByTagName("setting")[1].getAttribute("name") === "stage") {
+        if (settingNode.getElementsByTagName("setting")[1]!.textContent) {
+          settingValue = settingNode.getElementsByTagName("setting")[1]!.textContent!.trim();
+          if (settingNode.getElementsByTagName("setting")[1]!.getAttribute("name") === "stage") {
             stage = settingValue;
           } else {
             text = settingValue;
@@ -136,7 +141,7 @@ function processFonts(fontsNode: Element): FontsInfo {
   const childNodes = fontsNode.childNodes;
   for (let i = 0; i < childNodes.length; i++) {
     const maybeChild = childNodes[i];
-    if (maybeChild.nodeType === Node.ELEMENT_NODE) {
+    if (maybeChild && maybeChild.nodeType === Node.ELEMENT_NODE) {
       const child = <Element>maybeChild;
       let fontProps: string[] = [];
       if (child.textContent) {
@@ -148,27 +153,30 @@ function processFonts(fontsNode: Element): FontsInfo {
           key = child.getAttribute("function")! as keyof FontsInfo;
         } else continue;
         fonts[key].inheritable = Boolean(child.getAttribute("inheritable"));
-        let fontPropsValue = fontProps[i].split(": ")[1];
-        if (fontProps[i].includes("font-family")) {
+        if (!fontProps[i]) continue;
+
+        let fontPropsValue = fontProps[i]!.split(": ")[1];
+        if (!fontPropsValue) continue;
+        if (fontProps[i]!.includes("font-family")) {
           fonts[key].fontFace =
             fontPropsValue === "Arial" || "Courier" || "Verdana"
               ? <"Arial" | "Courier" | "Verdana">fontPropsValue
               : "Arial";
         }
-        if (fontProps[i].includes("font-size")) {
+        if (fontProps[i]!.includes("font-size")) {
           fonts[key].size = Number(fontPropsValue.substring(0, fontPropsValue.length - 2));
         }
-        if (fontProps[i].includes("font-style")) {
-          if (fontProps[i].includes("italic")) {
+        if (fontProps[i]!.includes("font-style")) {
+          if (fontProps[i]!.includes("italic")) {
             fonts[key].italic = true;
           }
         }
-        if (fontProps[i].includes("font-weight")) {
-          if (fontProps[i].includes("bold")) {
+        if (fontProps[i]!.includes("font-weight")) {
+          if (fontProps[i]!.includes("bold")) {
             fonts[key].bold = true;
           }
         }
-        if (fontProps[i].includes("fill")) {
+        if (fontProps[i]!.includes("fill")) {
           fonts[key].color = fontPropsValue;
         }
       }
@@ -214,7 +222,7 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
   if (childNodes.length > 0) {
     for (let i = 0; i < childNodes.length; i++) {
       const maybeChild = childNodes[i];
-      if (maybeChild.nodeType === Node.ELEMENT_NODE) {
+      if (maybeChild && maybeChild.nodeType === Node.ELEMENT_NODE) {
         const child = <Element>maybeChild;
         const childName = child.getAttribute("id");
         if (child.nodeName === "column") {
@@ -320,30 +328,28 @@ export function xmlToJson(xml: string): ChartInfoTSC {
  * @param type attribute or text,
  * @returns
  */
-function escapeHtmlChars(text: string, type: "attribute" | "text"): string {
+export function escapeHtmlChars(text: string, type: "attribute" | "text"): string {
   text = text.replaceAll("&", "&amp;");
-  text = text.replaceAll("<", " &lt; ");
+  text = text.replaceAll("<", "&lt;");
   if (type == "attribute") {
     text = text.replaceAll('"', "&quot;");
     text = text.replaceAll("'", "&apos;");
-    text = text.replaceAll(">", " &gt; ");
+    text = text.replaceAll(">", "&gt;");
   }
   return text;
 }
 
-function extractName(text: string): string {
-  return text.substring(text.indexOf(":") + 1, text.length);
-}
 /**
  *
  * @param settings settings json object
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with settings info
  */
-function generateSettingsXml(stateSettings: ChartSettings, indent: string): string {
+export function generateSettingsXml(stateSettings: ChartSettings, indent: string): string {
   let xml = "";
   for (const unit in stateSettings.timeSettings) {
     const timeSettings = stateSettings.timeSettings[unit];
+    if (!timeSettings) continue;
     xml += `${indent}<setting name="topAge" source="text" unit="${unit}">\n`;
     xml += `${indent}    <setting name="text">${timeSettings.topStageAge}</setting>\n`;
     xml += `${indent}</setting>\n`;
@@ -354,12 +360,13 @@ function generateSettingsXml(stateSettings: ChartSettings, indent: string): stri
     xml += `${indent}<setting name="skipEmptyColumns" unit="${unit}">${timeSettings.skipEmptyColumns}</setting>\n`;
   }
   xml += `${indent}<setting name="variableColors">UNESCO</setting>\n`;
+  xml += `${indent}<setting name="noIndentPattern">false</setting>\n`;
   xml += `${indent}<setting name="negativeChk">false</setting>\n`;
   xml += `${indent}<setting name="doPopups">${stateSettings.mouseOverPopupsEnabled}</setting>\n`;
   xml += `${indent}<setting name="enEventColBG">${stateSettings.enableColumnBackground}</setting>\n`;
   xml += `${indent}<setting name="enChartLegend">${stateSettings.enableChartLegend}</setting>\n`;
   xml += `${indent}<setting name="enPriority">${stateSettings.enablePriority}</setting>\n`;
-  xml += `${indent}<setting name="enHideBlockLabel">${stateSettings.enableHideBlockLabel}</setting>\n`;
+  xml += `${indent}<setting name="enHideBlockLable">${stateSettings.enableHideBlockLabel}</setting>\n`;
   return xml;
 }
 
@@ -444,7 +451,7 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
   if (state.showAgeLabels) column.drawAgeLabel = state.showAgeLabels;
   if (state.showUncertaintyLabels) column.drawUncertaintyLabel = state.showUncertaintyLabels;
   for (let i = 0; i < state.children.length; i++) {
-    column.children.push(translateColumnInfoToColumnInfoTSC(state.children[i]));
+    column.children.push(translateColumnInfoToColumnInfoTSC(state.children[i]!));
   }
   return column;
 }
@@ -463,7 +470,7 @@ export function columnInfoToSettingsTSC(state: ColumnInfo, settings: ChartSettin
  * @param indent the amount of indent to place in the xml file
  * @returns xml string with fonts info
  */
-function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
+export function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
   if (!fontsInfo) {
     return "";
   }
@@ -477,9 +484,9 @@ function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
       xml += `${indent}<font function="${key}" inheritable="${fontTarget.inheritable}">`;
       xml += `font-family: ${fontTarget.fontFace};`;
       // removed px from font size because jar uses parseDouble and doesn't parse px
-      xml += `font-size: ${fontTarget.size};`;
+      xml += ` font-size: ${fontTarget.size};`;
       if (fontTarget.italic) {
-        xml += `font-style: italic;`;
+        xml += ` font-style: italic;`;
       }
       if (fontTarget.bold) {
         xml += `font-weight: bold;`;
@@ -491,14 +498,14 @@ function generateFontsXml(indent: string, fontsInfo?: FontsInfo): string {
   return xml;
 }
 
-function extractColumnType(text: string): string | undefined {
+export function extractColumnType(text: string): string | undefined {
   if (text.indexOf(".") === -1 || text.indexOf(":") === -1) {
     return undefined;
   }
   return text.substring(text.indexOf(".") + 1, text.indexOf(":"));
 }
 
-function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
+export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
   let xml = "";
   for (let key in column) {
     const keyValue = column[key as keyof ColumnInfoTSC];
@@ -556,7 +563,8 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
       }
     } else if (key === "fonts") {
       xml += `${indent}<fonts>\n`;
-      xml += generateFontsXml(`${indent}    `, column.fonts);
+      //parseSettings. needed for mocking in tests
+      xml += parseSettings.generateFontsXml(`${indent}    `, column.fonts);
       xml += `${indent}</fonts>\n`;
     } else if (key === "children") {
       for (const child of column.children) {
@@ -590,15 +598,17 @@ function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): string {
 }
 
 export function jsonToXml(state: ColumnInfo, settings: ChartSettings, version: string = "PRO8.1"): string {
-  let settingsTSC = JSON.parse(JSON.stringify(columnInfoToSettingsTSC(state, settings)));
+  let settingsTSC = JSON.parse(JSON.stringify(parseSettings.columnInfoToSettingsTSC(state, settings)));
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
   xml += '    <settings version="1.0">\n';
-  xml += generateSettingsXml(settings, "        ");
+  //parseSettings. needed for mocking in tests
+  xml += parseSettings.generateSettingsXml(settings, "        ");
   xml += "    </settings>\n";
   xml += '    <column id="class datastore.RootColumn:Chart Root">\n';
-  xml += columnInfoTSCToXml(settingsTSC["class datastore.RootColumn:Chart Root"], "        ");
+  //parseSettings. needed for mocking in tests
+  xml += parseSettings.columnInfoTSCToXml(settingsTSC["class datastore.RootColumn:Chart Root"], "        ");
   xml += "    </column>\n";
-  xml += "</TSCreator>\n";
+  xml += "</TSCreator>";
   return xml;
 }

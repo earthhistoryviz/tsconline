@@ -1,0 +1,376 @@
+{
+    "translate-basic-column-test": {
+        "name": "Chart Root",
+        "editName": "Chart Root",
+        "fontsInfo": {},
+        "fontOptions": ["Column Header"],
+        "popup": "",
+        "on": true,
+        "width": 100,
+        "enableTitle": true,
+        "rgb": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "minAge": 1.7976931348623157e308,
+        "maxAge": 5e-324,
+        "children": [],
+        "parent": null,
+        "units": "",
+        "columnDisplayType": "RootColumn",
+        "show": true,
+        "expanded": true
+      },
+      "translate-event-column-test": {
+        "name": "Events (Venusian)",
+        "editName": "Events (Venusian)",
+        "fontsInfo": {},
+        "fontOptions": ["Column Header"],
+        "popup": "",
+        "on": true,
+        "width": 100,
+        "enableTitle": true,
+        "rgb": {
+          "r": 224,
+          "g": 232,
+          "b": 239
+        },
+        "minAge": 1.7976931348623157e308,
+        "maxAge": 5e-324,
+        "children": [],
+        "parent": null,
+        "units": "",
+        "columnDisplayType": "Event",
+        "columnSpecificSettings": {
+            "type": "events",
+            "rangeSort": "first occurrence",
+            "frequency": null,
+            "stepSize": 1,
+            "windowSize": 2,
+            "isDataMiningColumn": false
+        },
+        "show": true,
+        "expanded": true
+      },
+      "translate-point-column-test": {
+        "name": "Long-Term Phanerozoic",
+        "editName": "Long-Term Phanerozoic",
+        "fontsInfo": {},
+        "fontOptions": ["Column Header"],
+        "popup": "",
+        "on": true,
+        "width": 100,
+        "enableTitle": true,
+        "rgb": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "minAge": 1.7976931348623157e308,
+        "maxAge": 5e-324,
+        "children": [],
+        "parent": null,
+        "units": "",
+        "columnDisplayType": "Point",
+        "columnSpecificSettings": {
+            "drawLine": true,
+            "lineColor": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            },
+            "smoothed": true,
+            "drawFill": true,
+            "fill": {
+              "r": 64,
+              "g": 233,
+              "b": 191
+            },
+            "lowerRange": -150,
+            "upperRange": 280,
+            "drawScale": true,
+            "drawBackgroundGradient": false,
+            "backgroundGradientStart": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            },
+            "backgroundGradientEnd": {
+              "r": 255,
+              "g": 255,
+              "b": 255
+            },
+            "drawCurveGradient": false,
+            "curveGradientStart": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            },
+            "curveGradientEnd": {
+              "r": 255,
+              "g": 255,
+              "b": 255
+            },
+            "flipScale": false,
+            "scaleStart": 0,
+            "scaleStep": 1,
+            "pointShape": "nopoints",
+            "minX": -41,
+            "maxX": 277,
+            "windowSize": 2,
+            "stepSize": 1,
+            "dataMiningPointDataType": null,
+            "isDataMiningColumn": false
+          },
+        "show": true,
+        "expanded": true
+      },
+      "generate-basic-column-xml-test": {
+        "_id": "class datastore.RootColumn:Chart Root",
+        "title": "Chart Root",
+        "useNamedColor": false,
+        "placeHolder": false,
+        "drawTitle": true,
+        "drawAgeLabel": false,
+        "drawUncertaintyLabel": false,
+        "isSelected": true,
+        "pad": 0.2,
+        "age pad": 2,
+        "backgroundColor": {
+          "text": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          }
+        },
+        "customColor": {
+          "text": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          }
+        },
+        "fonts": {},
+        "children": [],
+        "width": 100
+      },
+      "generate-event-column-xml-test": {
+        "_id": "class datastore.EventColumn:Events (Venusian)",
+        "title": "Events (Venusian)",
+        "useNamedColor": false,
+        "placeHolder": false,
+        "drawTitle": true,
+        "drawAgeLabel": false,
+        "drawUncertaintyLabel": false,
+        "isSelected": true,
+        "width": 100,
+        "pad": 0.2,
+        "age pad": 2,
+        "backgroundColor": {
+          "text": {
+            "r": 239,
+            "g": 232,
+            "b": 224
+          }
+        },
+        "customColor": {
+          "text": {
+            "r": 239,
+            "g": 232,
+            "b": 224
+          }
+        },
+        "fonts": {},
+        "children": [],
+        "type": "events",
+        "rangeSort": "first occurrence",
+        "drawExtraColumn": null,
+        "windowSize": 2,
+        "stepSize": 1,
+        "isDataMiningColumn": false
+      },
+      "generate-point-column-xml-test": {
+        "_id": "class datastore.PointColumn:Long-Term Phanerozoic",
+        "title": "Long-Term Phanerozoic",
+        "useNamedColor": false,
+        "placeHolder": false,
+        "drawTitle": true,
+        "drawAgeLabel": false,
+        "drawUncertaintyLabel": false,
+        "isSelected": false,
+        "width": 100,
+        "pad": 0.2,
+        "age pad": 2,
+        "backgroundColor": {
+          "text": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          }
+        },
+        "customColor": {
+          "text": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          }
+        },
+        "fonts": {},
+        "children": [],
+        "isDataMiningColumn": false,
+        "drawPoints": false,
+        "drawLine": true,
+        "lineColor": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "drawSmooth": true,
+        "drawFill": true,
+        "fillColor": {
+          "r": 64,
+          "g": 233,
+          "b": 191
+        },
+        "doNotSetWindowAuto": false,
+        "minWindow": -150,
+        "maxWindow": 280,
+        "drawScale": true,
+        "drawBgrndGradient": false,
+        "backGradStart": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "backGradEnd": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "drawCurveGradient": false,
+        "curveGradStart": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "curveGradEnd": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "flipScale": false,
+        "scaleStart": 0,
+        "scaleStep": 1,
+        "pointType": "rect",
+        "drawExtraColumn": null,
+        "windowSize": 2,
+        "stepSize": 1
+      },
+      "generate-basic-column-with-point-child-xml-test": {
+        "_id": "class datastore.RootColumn:Chart Root",
+        "title": "Chart Root",
+        "useNamedColor": false,
+        "placeHolder": false,
+        "drawTitle": true,
+        "drawAgeLabel": false,
+        "drawUncertaintyLabel": false,
+        "isSelected": true,
+        "pad": 0.2,
+        "age pad": 2,
+        "backgroundColor": {
+          "text": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          }
+        },
+        "customColor": {
+          "text": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          }
+        },
+        "fonts": {},
+        "children": [
+            {
+            "_id": "class datastore.PointColumn:Long-Term Phanerozoic",
+            "title": "Long-Term Phanerozoic",
+            "useNamedColor": false,
+            "placeHolder": false,
+            "drawTitle": true,
+            "drawAgeLabel": false,
+            "drawUncertaintyLabel": false,
+            "isSelected": true,
+            "pad": 0.2,
+            "age pad": 2,
+            "backgroundColor": {
+              "text": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              }
+            },
+            "customColor": {
+              "text": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              }
+            },
+            "fonts": {},
+            "children": [],
+            "isDataMiningColumn": false,
+            "drawPoints": false,
+            "drawLine": true,
+            "lineColor": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            },
+            "drawSmooth": true,
+            "drawFill": true,
+            "fillColor": {
+              "r": 64,
+              "g": 233,
+              "b": 191
+            },
+            "doNotSetWindowAuto": false,
+            "minWindow": -150,
+            "maxWindow": 280,
+            "drawScale": true,
+            "drawBgrndGradient": false,
+            "backGradStart": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            },
+            "backGradEnd": {
+              "r": 255,
+              "g": 255,
+              "b": 255
+            },
+            "drawCurveGradient": false,
+            "curveGradStart": {
+              "r": 0,
+              "g": 0,
+              "b": 0
+            },
+            "curveGradEnd": {
+              "r": 255,
+              "g": 255,
+              "b": 255
+            },
+            "flipScale": false,
+            "scaleStart": 0,
+            "scaleStep": 1,
+            "pointType": "rect",
+            "drawExtraColumn": null,
+            "windowSize": 2,
+            "stepSize": 1
+          }
+        ],
+        "width": 100
+      }
+}
