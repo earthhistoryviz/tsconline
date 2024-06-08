@@ -1,13 +1,13 @@
 import { observer } from "mobx-react-lite";
 import React, { useContext } from "react";
-import { context } from "../state";
+import { context } from "../../state";
 import { TextFieldProps, Typography, TextField } from "@mui/material";
 import "./EditWidthField.css";
 import { NumericFormat } from "react-number-format";
 import { ColumnInfo } from "@tsconline/shared";
 
 const WidthTextField = ({ ...props }: TextFieldProps) => (
-  <TextField {...props} hiddenLabel variant="filled" size="small" />
+  <TextField {...props} hiddenLabel variant="outlined" className="edit-width-text-field" />
 );
 
 export const EditWidthField: React.FC<{

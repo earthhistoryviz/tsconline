@@ -6,6 +6,7 @@ import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "../../state";
 import "./EventSpecificSettings.css";
+import { Box } from "@mui/material";
 
 type EventSpecificSettingsProps = {
   column: ColumnInfo;
@@ -33,7 +34,7 @@ export const EventSpecificSettings: React.FC<EventSpecificSettingsProps> = obser
     actions.setEventColumnSettings(column.columnSpecificSettings, { rangeSort: value });
   };
   return (
-    <>
+    <Box display="flex" flexDirection="column">
       <TSCRadioGroup
         onChange={handleTypeChange}
         value={column.columnSpecificSettings.type}
@@ -55,6 +56,6 @@ export const EventSpecificSettings: React.FC<EventSpecificSettingsProps> = obser
           { value: "alphabetical", label: "Alphabetical" }
         ]}
       />
-    </>
+    </Box>
   );
 });

@@ -1,36 +1,22 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import { context } from "../state";
-import {
-  Box,
-  Button,
-  Checkbox,
-  Divider,
-  FormControlLabel,
-  Grid,
-  TextField,
-  TextFieldProps,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-  useTheme
-} from "@mui/material";
-import Modal from "@mui/material/Modal";
+import { Box, Grid, TextField, TextFieldProps, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import FormatBoldIcon from "@mui/icons-material/FormatBold";
 import FormatItalicIcon from "@mui/icons-material/FormatItalic";
-import CloseIcon from "@mui/icons-material/Close";
 import "./FontMenu.css";
 import { ValidFontOptions } from "@tsconline/shared";
 import TSCColorPicker from "../components/TSCColorPicker";
 import { NumericFormat } from "react-number-format";
 import { ColumnInfo } from "@tsconline/shared";
 import { convertHexToRGB } from "../util/util";
+import { CustomDivider, CustomFormControlLabel, StyledScrollbar, TSCCheckbox } from "../components";
 const FontSizeTextField = ({ ...props }: TextFieldProps) => (
-  <TextField {...props} className="FontSizeContainer" label="Size" variant="outlined" />
+  <TextField {...props} className="font-size-container" label="Size" size="small" variant="outlined" />
 );
 
 const FontMenuRow: React.FC<{
@@ -54,91 +40,95 @@ const FontMenuRow: React.FC<{
   };
 
   return (
-    <div>
-      <div id="FontRowContainer">
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={fontOpts.on}
-              onChange={() => {
-                actions.setFontOptionOn(target, !fontOpts.on, column);
-              }}
-              inputProps={{ "aria-label": "controlled" }}
-            />
-          }
-          label={target}
-          id="TargetInput"
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={fontOpts.inheritable}
-              onChange={() => {
-                actions.setInheritable(target, !fontOpts.inheritable, column);
-              }}
-              inputProps={{ "aria-label": "controlled" }}
-              disabled={!fontOpts.on || column.name === "Chart Root"}
-            />
-          }
-          label="Inheritable"
-        />
-        <FormControl id="FontFaceForm">
-          <InputLabel>Font Face</InputLabel>
-          <Select
-            value={fontOpts.fontFace}
-            label="Font Face"
-            onChange={handleFontChange}
-            disabled={!fontOpts.on}
-            displayEmpty>
-            <MenuItem value={"Arial"}>Arial</MenuItem>
-            <MenuItem value={"Courier"}>Courier</MenuItem>
-            <MenuItem value={"Verdana"}>Verdana</MenuItem>
-          </Select>
-        </FormControl>
-        <NumericFormat
-          customInput={FontSizeTextField}
-          value={fontOpts.size}
-          onValueChange={(values) => {
-            if (!values.floatValue) {
-              return;
-            }
-            actions.setFontSize(target, values.floatValue, column);
-          }}
-          disabled={!fontOpts.on}
-        />
-        <ToggleButtonGroup
-          value={[fontOpts.bold ? "bold" : "", fontOpts.italic ? "italic" : ""]}
-          onChange={handleFormat}
-          aria-label="text formatting"
-          sx={{ marginRight: "10px" }}
-          disabled={!fontOpts.on}>
-          <ToggleButton value="bold" aria-label="bold" color="info">
-            <FormatBoldIcon />
-          </ToggleButton>
-          <ToggleButton value="italic" aria-label="italic" color="info">
-            <FormatItalicIcon />
-          </ToggleButton>
-        </ToggleButtonGroup>
-        <div id="ColorInputContainer">
-          <TSCColorPicker
-            key={column.name}
-            color={fontOpts.color}
-            onColorChange={handleColor}
-            disabled={!fontOpts.on}
-            portal
+    <div className="font-row-container">
+      <CustomFormControlLabel
+        control={
+          <TSCCheckbox
+            focusRipple={false}
+            checked={fontOpts.on}
+            size="small"
+            onChange={() => {
+              actions.setFontOptionOn(target, !fontOpts.on, column);
+            }}
+            inputProps={{ "aria-label": "controlled" }}
           />
-        </div>
-        <Typography
-          sx={{
-            fontWeight: fontOpts.bold ? "bold" : "",
-            fontStyle: fontOpts.italic ? "italic" : "",
-            fontSize: fontOpts.size,
-            color: fontOpts.color
-          }}
-          id={fontOpts.fontFace}>
-          Sample Text
-        </Typography>
+        }
+        label={target}
+      />
+      <CustomFormControlLabel
+        control={
+          <TSCCheckbox
+            focusRipple={false}
+            checked={fontOpts.inheritable}
+            size="small"
+            onChange={() => {
+              actions.setInheritable(target, !fontOpts.inheritable, column);
+            }}
+            inputProps={{ "aria-label": "controlled" }}
+            disabled={!fontOpts.on || column.name === "Chart Root"}
+          />
+        }
+        label="Inheritable"
+      />
+      <FormControl id="FontFaceForm">
+        <InputLabel>Font Face</InputLabel>
+        <Select
+          value={fontOpts.fontFace}
+          label="Font Face"
+          onChange={handleFontChange}
+          className="font-family-select"
+          size="small"
+          disabled={!fontOpts.on}
+          displayEmpty>
+          <MenuItem value={"Arial"}>Arial</MenuItem>
+          <MenuItem value={"Courier"}>Courier</MenuItem>
+          <MenuItem value={"Verdana"}>Verdana</MenuItem>
+        </Select>
+      </FormControl>
+      <NumericFormat
+        customInput={FontSizeTextField}
+        value={fontOpts.size}
+        onValueChange={(values) => {
+          if (values.floatValue === undefined || values.floatValue === null || isNaN(values.floatValue)) {
+            return;
+          }
+          actions.setFontSize(target, values.floatValue, column);
+        }}
+        disabled={!fontOpts.on}
+      />
+      <ToggleButtonGroup
+        value={[fontOpts.bold ? "bold" : "", fontOpts.italic ? "italic" : ""]}
+        onChange={handleFormat}
+        size="small"
+        aria-label="text formatting"
+        className="toggle-button-font-menu-group"
+        disabled={!fontOpts.on}>
+        <ToggleButton value="bold" aria-label="bold" color="info" className="text-format-toggle-button">
+          <FormatBoldIcon className="text-format-icon-svg" />
+        </ToggleButton>
+        <ToggleButton value="italic" aria-label="italic" color="info" className="text-format-toggle-button">
+          <FormatItalicIcon className="text-format-icon-svg" />
+        </ToggleButton>
+      </ToggleButtonGroup>
+      <div id="ColorInputContainer">
+        <TSCColorPicker
+          key={column.name}
+          color={fontOpts.color}
+          onColorChange={handleColor}
+          disabled={!fontOpts.on}
+          portal
+        />
       </div>
+      <Typography
+        sx={{
+          fontWeight: fontOpts.bold ? "bold" : "",
+          fontStyle: fontOpts.italic ? "italic" : "",
+          fontSize: fontOpts.size,
+          color: fontOpts.color
+        }}
+        id={fontOpts.fontFace}>
+        Sample Text
+      </Typography>
     </div>
   );
 });
@@ -148,34 +138,17 @@ type FontMenuProps = {
 };
 
 export const FontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
-  const theme = useTheme();
-  const [open, setOpen] = useState(false);
   const metaColumn = column.children.length > 0;
-  const handleOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
   return (
-    <div>
-      <Button onClick={handleOpen} variant="contained">
-        Fonts
-      </Button>
-      <Modal open={open} onClose={handleClose}>
-        <Box id="FontMenuContainer">
-          <div id="HeadingContainer">
-            <Typography id="FontOptionsTitle">Font Options for {`"${column.name}"`}</Typography>
-            <div onClick={handleClose}>
-              <CloseIcon sx={{ color: theme.palette.primary.main }} />
-            </div>
-          </div>
-          {metaColumn ? <MetaColumnFontMenu column={column} /> : <LeafColumnFontMenu column={column} />}
-        </Box>
-      </Modal>
-    </div>
+    <Box id="FontMenuContainer">
+      <StyledScrollbar>
+        <Typography variant="h6" className="font-menu-header">
+          Font Options for {`"${column.name}"`}
+        </Typography>
+        <CustomDivider className="settings-header-divider" />
+        {metaColumn ? <MetaColumnFontMenu column={column} /> : <LeafColumnFontMenu column={column} />}
+      </StyledScrollbar>
+    </Box>
   );
 });
 
@@ -183,14 +156,14 @@ const MetaColumnFontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
   return (
     <Grid container rowSpacing={2} columnSpacing={0}>
       <Grid item xs={12}>
-        <Typography id="Bold">Change Font</Typography>
+        <Typography className="change-font-header">Change Font</Typography>
         <FontMenuRow column={column} target="Column Header" />
       </Grid>
       <Grid item xs={12}>
-        <Divider />
+        <CustomDivider className="settings-header-divider" />
       </Grid>
       <Grid item xs={12} style={{ marginBottom: "-16px" }}>
-        <Typography id="AdditionalFontsText">Additional fonts for child columns</Typography>
+        <Typography className="change-font-header">Additional fonts for child columns</Typography>
       </Grid>
       {Array.from(column.fontOptions).map((target) => {
         if (target === "Column Header") return null;
@@ -204,11 +177,14 @@ const MetaColumnFontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
   );
 });
 
-export const LeafColumnFontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
+type LeafColumnFontMenuProps = {
+  className?: string;
+} & FontMenuProps;
+export const LeafColumnFontMenu: React.FC<LeafColumnFontMenuProps> = observer(({ className, column }) => {
   return (
-    <Grid id="LeafColumnGridContainer" container rowSpacing={2} columnSpacing={0}>
+    <Grid className={`leaf-column-font-menu ${className}`} container rowSpacing={2} columnSpacing={0}>
       <Grid item xs={12}>
-        <Typography id="Bold">Change Font</Typography>
+        <Typography className="change-font-header">Change Font</Typography>
       </Grid>
       {Array.from(column.fontOptions).map((target) => (
         <Grid item xs={12} key={target}>

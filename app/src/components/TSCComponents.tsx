@@ -1,4 +1,13 @@
-import { Divider, IconButton, SvgIcon, Typography, styled } from "@mui/material";
+import {
+  Divider,
+  FormControlLabel,
+  IconButton,
+  SvgIcon,
+  Tooltip,
+  TooltipProps,
+  Typography,
+  styled
+} from "@mui/material";
 import { SubMenu, MenuItem } from "@szhsin/react-menu";
 import Color from "color";
 import SimpleBar from "simplebar-react";
@@ -118,5 +127,22 @@ export const TSCMenuItem = styled(MenuItem)(({ theme }) => ({
   },
   "&.szh-menu__item--checked": {
     color: theme.palette.primary.main
+  }
+}));
+
+type CustomTooltipProps = {
+  title: string;
+  offset?: number[];
+} & TooltipProps;
+export const CustomTooltip: React.FC<CustomTooltipProps> = ({ title, offset = [0, -10], ...props }) => {
+  return (
+    <Tooltip title={title} arrow PopperProps={{ modifiers: [{ name: "offset", options: { offset } }] }} {...props} />
+  );
+};
+
+export const CustomFormControlLabel = styled(FormControlLabel)(({ width }: { width?: number }) => ({
+  width: width || "105px",
+  "& .MuiTypography-root": {
+    fontSize: "0.8rem"
   }
 }));

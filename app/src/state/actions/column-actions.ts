@@ -29,6 +29,7 @@ import {
   computeWindowStatisticsForDataPoints,
   findRangeOfWindowStats
 } from "../../util/data-mining";
+import { yieldControl } from "../../util";
 import { altUnitNamePrefix } from "../../util/constant";
 
 function extractName(text: string): string {
@@ -43,7 +44,7 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
   if ("showUncertaintyLabels" in column) setShowUncertaintyLabels(settings.drawUncertaintyLabel, column);
   if ("showAgeLabels" in column) setShowAgeLabels(settings.drawAgeLabel, column);
   setColumnOn(settings.isSelected, column);
-  if (settings.width) setWidth(settings.width, column);
+  if (settings.width && column.children.length == 0) setWidth(settings.width, column);
   if (settings.backgroundColor.text) {
     setRGB(settings.backgroundColor.text, column);
   } else {
@@ -160,7 +161,7 @@ export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
  * parents: list of names that indicates the path from top to the toggled column
  */
 
-export const toggleSettingsTabColumn = action((name: string, column: ColumnInfo) => {
+export const toggleSettingsTabColumn = action((column: ColumnInfo) => {
   column.on = !column.on;
   if (!column.on || !column.parent) return;
   if (state.settingsTabs.columnHashMap.get(column.parent) === undefined) {
@@ -221,42 +222,43 @@ export const setColumnSelected = action((name: string) => {
   }
 });
 
-export const searchColumns = action(async (searchTerm: string) => {
+export const searchColumns = action(async (searchTerm: string, counter = { count: 0 }) => {
+  await yieldControl(counter, 30);
   if (searchTerm === "") {
     state.settingsTabs.columnHashMap.forEach((columnInfo) => {
-      columnInfo.show = true;
-      columnInfo.expanded = false;
+      setExpanded(false, columnInfo);
+      setShow(true, columnInfo);
     });
     if (!state.settingsTabs.columns) return;
     for (const child of state.settingsTabs.columns.children) {
-      child.expanded = true;
+      setExpanded(true, child);
     }
     return;
   }
-  state.settingsTabs.columnHashMap.forEach((columnInfo) => {
-    columnInfo.show = false;
-    columnInfo.expanded = false;
-  });
+  for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
+    setShow(false, columnInfo);
+    setExpanded(false, columnInfo);
+  }
 
-  state.settingsTabs.columnHashMap.forEach((columnInfo) => {
+  for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
     if (columnInfo.show != true && columnInfo.name.toLowerCase().includes(searchTerm.toLowerCase())) {
-      columnInfo.show = true;
-      columnInfo.expanded = true;
+      setShow(true, columnInfo);
+      setExpanded(true, columnInfo);
       let parentName = columnInfo.parent;
-      setExpansionOfAllChildren(columnInfo, false);
-      setShowOfAllChildren(columnInfo, true);
+      await setExpansionOfAllChildren(columnInfo, false);
+      await setShowOfAllChildren(columnInfo, true);
       while (parentName) {
         const parentColumnInfo = state.settingsTabs.columnHashMap.get(parentName);
         if (parentColumnInfo && !parentColumnInfo.expanded && !parentColumnInfo.show) {
-          parentColumnInfo.show = true;
-          parentColumnInfo.expanded = true;
+          setShow(true, parentColumnInfo);
+          setExpanded(true, parentColumnInfo);
           parentName = parentColumnInfo.parent;
         } else {
           break;
         }
       }
     }
-  });
+  }
 });
 
 export const addDataMiningColumn = action((column: ColumnInfo, type: EventFrequency | DataMiningPointDataType) => {
@@ -364,23 +366,23 @@ export const removeDataMiningColumn = action((column: ColumnInfo, type: string) 
   state.settingsTabs.columnHashMap.delete(columnToRemove);
 });
 
-export const setShowOfAllChildren = action((column: ColumnInfo, isShown: boolean) => {
+export const setShowOfAllChildren = action(async (column: ColumnInfo, isShown: boolean, counter = { count: 0 }) => {
   column.show = isShown;
-  column.children.forEach((child) => {
-    setShowOfAllChildren(child, isShown);
-  });
+  await yieldControl(counter, 30);
+  for (const child of column.children) {
+    await setShowOfAllChildren(child, isShown, counter);
+  }
 });
 
-export const setExpanded = action((column: ColumnInfo, isExpanded: boolean) => {
-  column.expanded = isExpanded;
-});
-
-export const setExpansionOfAllChildren = action((column: ColumnInfo, isExpanded: boolean) => {
-  column.expanded = isExpanded;
-  column.children.forEach((child) => {
-    setExpansionOfAllChildren(child, isExpanded);
-  });
-});
+export const setExpansionOfAllChildren = action(
+  async (column: ColumnInfo, isExpanded: boolean, counter = { count: 0 }) => {
+    column.expanded = isExpanded;
+    await yieldControl(counter, 30);
+    for (const child of column.children) {
+      await setExpansionOfAllChildren(child, isExpanded, counter);
+    }
+  }
+);
 
 export const setInheritable = action((target: ValidFontOptions, isInheritable: boolean, column: ColumnInfo) => {
   column.fontsInfo[target].inheritable = isInheritable;
@@ -418,6 +420,14 @@ export const setEnableTitle = action((isOn: boolean, column: ColumnInfo) => {
 
 export const setRGB = action((color: RGB, column: ColumnInfo) => {
   column.rgb = color;
+});
+
+export const setShow = action((show: boolean, column: ColumnInfo) => {
+  column.show = show;
+});
+
+export const setExpanded = action((expanded: boolean, column: ColumnInfo) => {
+  column.expanded = expanded;
 });
 
 export const setShowAgeLabels = action((isOn: boolean, column: ColumnInfo) => {

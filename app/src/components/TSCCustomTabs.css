@@ -1,0 +1,44 @@
+.tsc-custom-tabs {
+  display: flex;
+}
+.tsc-tab-buttons {
+  position: relative;
+  display: flex;
+}
+.tsc-tab-panel {
+  text-align: left;
+  display: block;
+  cursor: pointer;
+  border: none;
+  max-width: 200px;
+  min-width: 50px;
+  min-height: 40px;
+  max-height: 100px;
+  background-color: transparent;
+  color: rgb(0, 26, 35);
+  white-space: nowrap;
+  font-family: "Titillium Web", sans-serif;
+  transition: color 0.2s ease-in-out;
+  transition: filter 0.2s ease-in-out;
+}
+
+.tsc-tab-panel:hover {
+  color: var(--selection-color);
+  filter: saturate(0.12);
+}
+.tsc-tab-panel-selected {
+  color: var(--selection-color) !important;
+  filter: saturate(1) !important;
+}
+
+.tsc-tab-panel:focus-visible {
+  outline: none;
+}
+
+.tsc-tab-indicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transition: transform 0.2s ease-in-out;
+  background-color: var(--selection-color);
+}

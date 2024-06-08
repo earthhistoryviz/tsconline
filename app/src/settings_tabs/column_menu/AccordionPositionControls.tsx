@@ -3,7 +3,7 @@ import { Typography, IconButton } from "@mui/material";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { ColumnInfo } from "@tsconline/shared";
-import { context } from "../state"; // Import the context
+import { context } from "../../state"; // Import the context
 
 interface AccordionPositionControlsProps {
   column: ColumnInfo;

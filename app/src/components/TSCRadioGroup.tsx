@@ -13,11 +13,13 @@ import {
   Typography
 } from "@mui/material";
 import "./TSCRadioGroup.css";
+const width = 10;
+const height = 10;
 
 const UncheckedIcon = styled("span")({
   borderRadius: "50%",
-  width: 16,
-  height: 16,
+  width,
+  height,
   boxShadow: "0 0 0 1px rgb(16 22 26 / 40%)",
   backgroundColor: "#f5f8fa",
   backgroundImage: "linear-gradient(180deg,hsla(0,0%,100%,.05),hsla(0,0%,100%,0))",
@@ -39,8 +41,8 @@ const CheckedIcon = styled(UncheckedIcon)({
   backgroundImage: "linear-gradient(180deg,hsla(0,0%,100%,.1),hsla(0,0%,100%,0))",
   "&::before": {
     display: "block",
-    width: 16,
-    height: 16,
+    width,
+    height,
     backgroundImage: "radial-gradient(#fff,#fff 28%,transparent 32%)",
     content: '""'
   },

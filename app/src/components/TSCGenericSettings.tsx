@@ -1,41 +1,92 @@
-import { TextFieldProps, TextField, Box, Typography, FormControlLabel } from "@mui/material";
+import { TextField, Box, Typography } from "@mui/material";
 import { NumericFormat } from "react-number-format";
 import "./TSCGenericSettings.css";
 import { RGB } from "@tsconline/shared";
 import { TSCCheckbox } from "./TSCCheckbox";
 import TSCColorPicker from "./TSCColorPicker";
 import { convertHexToRGB } from "../util/util";
+import { HTMLAttributes } from "react";
+import { CustomFormControlLabel } from "./TSCComponents";
 
+const defaultWidth = 100;
+const defaultHeight = 40;
 type GenericTextFieldProps = {
   header?: string;
+  className?: string;
+  width?: number;
+  height?: number;
   inputs: {
-    helperText: string;
+    helperText?: string;
+    label?: string;
     value: number;
     onValueChange: (value: number) => void;
   }[];
-};
+  orientation?: "start" | "center" | "end";
+  helperOrientation?: "start" | "center" | "end";
+  helperPosition?: "top" | "bottom";
+} & HTMLAttributes<HTMLDivElement>;
 
-const InputTextField = ({ ...props }: TextFieldProps) => <TextField {...props} className="generic-text-field" />;
-
-export const GenericTextField: React.FC<GenericTextFieldProps> = ({ header, inputs }) => {
+export const GenericTextField: React.FC<GenericTextFieldProps> = ({
+  className,
+  width = defaultWidth,
+  height = defaultHeight,
+  header,
+  orientation = "center",
+  helperOrientation = "center",
+  inputs,
+  helperPosition = "top"
+}) => {
+  width = Math.max(width, defaultWidth);
+  height = Math.max(height, defaultHeight);
+  const InputStyle = { width: `${width}px`, height: `${height}px` };
+  // adjust interior input for padding
+  const inputStyle = { width: `${width - 28}px`, height: `${height - 33}px` };
+  const containerAlignmentClass =
+    orientation === "start"
+      ? "generic-text-field-container-start"
+      : orientation === "end"
+        ? "generic-text-field-container-end"
+        : "";
+  const helperAlignmentClass =
+    helperOrientation === "start"
+      ? "generic-text-field-helper-text-start"
+      : helperOrientation === "end"
+        ? "generic-text-field-helper-text-end"
+        : "";
   return (
-    <Box className="generic-text-field-container">
-      {header && <Typography className="generic-text-field-header">{header}</Typography>}
+    <Box className={`generic-text-field-container ${containerAlignmentClass} ${className}`}>
+      {header && <Typography className={`generic-text-field-header`}>{header}</Typography>}
       <div className="generic-text-fields">
         {inputs.map((input, index) => (
-          <NumericFormat
-            key={index}
-            helperText={input.helperText}
-            value={input.value}
-            customInput={InputTextField}
-            onValueChange={(values) => {
-              const floatValue = values.floatValue;
-              if (!floatValue) {
-                return;
-              }
-              input.onValueChange(floatValue);
-            }}
-          />
+          <div className="generic-text-form" key={input.value}>
+            {helperPosition === "top" && (
+              <Typography className={`generic-text-field-helper-text ${helperAlignmentClass}`}>
+                {input.helperText}
+              </Typography>
+            )}
+            <NumericFormat
+              key={index}
+              value={input.value}
+              customInput={TextField}
+              className={`generic-text-field`}
+              label={input.label}
+              InputProps={{ style: InputStyle }}
+              inputProps={{ style: inputStyle }}
+              placeholder="Enter Size"
+              onValueChange={(values) => {
+                const floatValue = values.floatValue;
+                if (floatValue === undefined || floatValue === null || isNaN(floatValue)) {
+                  return;
+                }
+                input.onValueChange(floatValue);
+              }}
+            />
+            {helperPosition === "bottom" && (
+              <Typography className={`generic-text-field-helper-text ${helperAlignmentClass}`}>
+                {input.helperText}
+              </Typography>
+            )}
+          </div>
         ))}
       </div>
     </Box>
@@ -55,8 +106,9 @@ type RGBModifierProps = {
 
 export const RGBModifier: React.FC<RGBModifierProps> = ({ label, checked, rgbInputs, onCheckedChange }) => {
   return (
-    <>
-      <FormControlLabel
+    <div className="rgb-modifier-container">
+      <CustomFormControlLabel
+        width={120}
         label={label}
         control={<TSCCheckbox checked={checked} onChange={(value) => onCheckedChange(value.target.checked)} />}
       />
@@ -76,6 +128,6 @@ export const RGBModifier: React.FC<RGBModifierProps> = ({ label, checked, rgbInp
           </div>
         ))}
       </div>
-    </>
+    </div>
   );
 };
