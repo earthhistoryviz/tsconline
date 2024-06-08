@@ -1,11 +1,11 @@
 import { observer } from "mobx-react-lite";
 import React, { useContext } from "react";
 import { FormLabel } from "@mui/material";
-import TSCColorPicker from "../components/TSCColorPicker";
+import TSCColorPicker from "../../components/TSCColorPicker";
 import "./BackgroundColor.css";
-import { convertHexToRGB } from "../util/util";
+import { convertHexToRGB } from "../../util/util";
 import { ColumnInfo } from "@tsconline/shared";
-import { context } from "../state";
+import { context } from "../../state";
 
 interface ChangeBGColorProps {
   column: ColumnInfo;

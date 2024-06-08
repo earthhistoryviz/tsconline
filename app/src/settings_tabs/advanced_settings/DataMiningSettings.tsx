@@ -6,7 +6,7 @@ import {
   isDataMiningPointDataType,
   assertDataMiningSettings
 } from "@tsconline/shared";
-import { GenericTextField } from "../../components";
+import { CustomDivider, GenericTextField, StyledScrollbar } from "../../components";
 import { Box, Button, Dialog, Typography } from "@mui/material";
 import { useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
@@ -35,31 +35,39 @@ export const DataMiningModal: React.FC<DataMiningSettingsProps> = observer(({ co
 export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
   const { actions } = useContext(context);
   const dataMiningSettings = column.columnSpecificSettings;
+  if (!dataMiningSettings) return;
   assertDataMiningSettings(dataMiningSettings);
   return (
-    <Box className="data-mining-settings-container">
-      <Typography className="advanced-settings-header">Data Mining Settings</Typography>
-      <GenericTextField
-        inputs={[
-          {
-            helperText: "Window Size",
-            value: dataMiningSettings.windowSize,
-            onValueChange: (value) => {
-              actions.setDataMiningSettings(dataMiningSettings, { windowSize: value });
-            }
-          },
-          {
-            helperText: "Step Size",
-            value: dataMiningSettings.stepSize,
-            onValueChange: (value) => {
-              actions.setDataMiningSettings(dataMiningSettings, { stepSize: value });
-            }
-          }
-        ]}
-      />
-      <EventDataMiningOptions column={column} />
-      <PointDataMiningOptions column={column} />
-    </Box>
+    <StyledScrollbar>
+      <Box className="data-mining-settings-container">
+        <Typography className="advanced-settings-header" variant="h6">
+          Data Mining Settings
+        </Typography>
+        <CustomDivider className="settings-header-divider" />
+        <div className="data-mining-settings-content">
+          <GenericTextField
+            inputs={[
+              {
+                helperText: "Window Size",
+                value: dataMiningSettings.windowSize,
+                onValueChange: (value) => {
+                  actions.setDataMiningSettings(dataMiningSettings, { windowSize: value });
+                }
+              },
+              {
+                helperText: "Step Size",
+                value: dataMiningSettings.stepSize,
+                onValueChange: (value) => {
+                  actions.setDataMiningSettings(dataMiningSettings, { stepSize: value });
+                }
+              }
+            ]}
+          />
+          <EventDataMiningOptions column={column} />
+          <PointDataMiningOptions column={column} />
+        </div>
+      </Box>
+    </StyledScrollbar>
   );
 });
 export const EventDataMiningOptions: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
@@ -75,8 +83,8 @@ export const EventDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
   };
   const clearDataMiningColumn = () => {
     if (eventSettings.frequency === null) return;
-    actions.setEventColumnSettings(eventSettings, { frequency: null });
     actions.removeDataMiningColumn(column, eventSettings.frequency);
+    actions.setEventColumnSettings(eventSettings, { frequency: null });
   };
   return (
     <Box className="data-mining-type-container">
@@ -109,8 +117,8 @@ export const PointDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
   };
   const clearDataMiningColumn = () => {
     if (pointSettings.dataMiningPointDataType === null) return;
-    actions.setPointColumnSettings(pointSettings, { dataMiningPointDataType: null });
     actions.removeDataMiningColumn(column, pointSettings.dataMiningPointDataType);
+    actions.setPointColumnSettings(pointSettings, { dataMiningPointDataType: null });
   };
   return (
     <Box className="data-mining-type-container">

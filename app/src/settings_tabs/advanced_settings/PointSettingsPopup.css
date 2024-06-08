@@ -1,59 +1,217 @@
-.popup-modal {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  min-width: 30%;
-  max-width: 60%;
-  background-color: #fff;
-  border: 2px solid #000;
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.5);
-  padding: 24px;
-  max-height: 80%;
-  overflow: auto;
-  align-items: start;
-}
-.MuiSvgIcon-root.exit-button-icon-point-settings {
-  padding: 0px;
-  margin: 0px;
-}
-.exit-button-point-settings {
-  position: absolute;
-  top: 15px;
-  left: 15px;
-  cursor: pointer;
-}
 .point-shape-checkbox {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.point-shape-radio-group {
+.point-shape-toggle-group {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
+  justify-self: center;
+  align-self: flex-end;
+  text-align: left;
+  flex-direction: column;
+  padding-left: 2px;
+  padding-bottom: 10px;
 }
 .advanced-settings-header {
   display: flex;
   justify-content: center;
   text-align: center;
-  margin-bottom: 20px;
-  font-weight: bold;
+  align-self: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+.point-header-subsection {
+  flex: 0 0 50px;
 }
 
-.point-settings-adjustment-buttons {
+.point-settings-content-container {
   display: flex;
+  overflow: hidden;
+  height: calc(100% - 50px);
+  flex: 1;
+}
+.point-settings-content {
+  display: flex;
+  flex-direction: column;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 20px;
+}
+.draw-buttons-and-point-shape-container {
+  display: flex;
+  flex-direction: row;
+  padding-left: 30px;
+  padding-top: 20px;
+  flex-wrap: wrap;
+}
+.point-range-settings-container {
+  display: flex;
+  flex-direction: column;
+  height: min-content;
+}
+.point-range-settings-container .MuiIconButton-root {
+  padding: 5px;
+}
+
+.point-range-settings-header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.point-range-settings-header {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+}
+
+@media screen and (max-width: 870px) {
+  .point-range-settings-header {
+    flex-grow: 1;
+    margin-right: 0px;
+  }
+}
+@media screen and (max-width: 641px) {
+  .point-range-and-toggle-container {
+    flex-basis: 100px;
+    min-height: 300px;
+  }
+}
+
+.point-range-settings-divider {
+  width: 100%;
+  margin: 0 0 10px 0;
+}
+.point-shape-and-toggle-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.point-range-and-toggle-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.point-settings-adjustment-buttons,
+.point-adjustment-rgb-modifier {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   margin-top: 10px;
+  text-align: left;
   margin-bottom: 10px;
+}
+.point-adjustment-rgb-modifier {
+  align-items: center;
+  gap: 10px;
 }
 .point-settings-gradient-buttons {
   display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  margin-top: 10px;
-  margin-bottom: 10px;
+}
+
+.flip-button-icon {
+  box-sizing: border-box;
+  position: relative;
+  display: block;
+  width: 18px;
+  height: 18px;
+  transform: scale(var(--ggs, 0.8));
+  background: linear-gradient(to left, currentColor 22px, transparent 0) no-repeat center/2px 22px;
+}
+.flip-button-icon::after,
+.flip-button-icon::before {
+  content: "";
+  display: block;
+  box-sizing: border-box;
+  position: absolute;
+  width: 6px;
+  height: 14px;
+  border: 2px solid;
+  top: 2px;
+}
+.flip-button-icon::before {
+  border-right: 0;
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+}
+.flip-button-icon::after {
+  opacity: 0.5;
+  border-left: 0;
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+  right: 0;
+}
+.auto-button-icon {
+  box-sizing: border-box;
+  position: relative;
+  display: block;
+  transform: scale(var(--ggs, 0.8));
+  width: 14px;
+  height: 14px;
+  border: 2px solid;
+  border-left-color: transparent;
+  border-radius: 100px;
+}
+.auto-button-icon::before {
+  content: "";
+  display: block;
+  box-sizing: border-box;
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+  top: -3px;
+  left: -1px;
+  transform: rotate(-68deg);
+}
+
+.rectangle-icon {
+  display: block;
+  width: 12px;
+  height: 12px;
+  box-sizing: border-box;
+  position: relative;
+  background-color: black;
+}
+.circle-icon {
+  display: block;
+  width: 12px;
+  height: 12px;
+  box-sizing: border-box;
+  position: relative;
+  background-color: black;
+  border-radius: 50%;
+}
+
+.cross-icon,
+.cross-icon::after {
+  display: block;
+  box-sizing: border-box;
+  background: black;
+  border-radius: 10px;
+}
+.cross-icon {
+  margin-top: -2px;
+  position: relative;
+  transform: scale(var(--ggs, 0.75));
+  width: 16px;
+  height: 2px;
+}
+.cross-icon::after {
+  content: "";
+  position: absolute;
+  width: 2px;
+  height: 16px;
+  top: -7px;
+  left: 7px;
+}
+
+.MuiToggleButton-root.Mui-disabled .rectangle-icon,
+.MuiToggleButton-root.Mui-disabled .circle-icon,
+.MuiToggleButton-root.Mui-disabled .cross-icon {
+  opacity: 0.5;
 }

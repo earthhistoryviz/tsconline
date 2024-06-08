@@ -6,3 +6,8 @@
   display: flex;
   flex-direction: row;
 }
+
+.edit-width-text-field {
+  width: 100px;
+  margin-right: 10px;
+}

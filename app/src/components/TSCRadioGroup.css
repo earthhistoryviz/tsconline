@@ -1,6 +1,7 @@
 .radio-label-information {
   display: flex;
   align-items: center;
+  font-size: 0.9rem;
 }
 
 .radio-img-label {
@@ -16,10 +17,12 @@
 
 .clear-button-tsc-radio-group {
   width: fit-content;
+  padding-top: 0px;
 }
 
 .clear-button-radio-group-typography {
   font-size: 12px;
+  color: gray;
 }
 
 .radio-form-label {

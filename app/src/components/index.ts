@@ -1,7 +1,6 @@
 export { TSCCheckbox } from "./TSCCheckbox";
 export { TSCDatapackUploadForm } from "./TSCDatapackUploadForm";
 export { TSCButton } from "./TSCButton";
-export { TSCTab, TSCTabs } from "./TSCTabs";
 export { TSCTextField } from "./TSCTextField";
 export { TSCCard } from "./TSCCard";
 export { TSCIcon } from "./TSCIcon";
@@ -15,5 +14,5 @@ export * from "./TSCError";
 export * from "./TSCSnackbar";
 export * from "./TSCComponents";
 export { default as Lottie } from "./TSCLottie";
-export { Accordion, AccordionSummary, AccordionDetails, ColumnContainer } from "./TSCColumns";
+export { Accordion, ColumnContainer } from "./TSCColumns";
 export * from "./TSCGenericSettings";

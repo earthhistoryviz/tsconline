@@ -1,0 +1,134 @@
+.column-menu {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  flex-grow: 1;
+  min-width: 0;
+}
+.settings-header-divider {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  width: 90%;
+}
+.column-menu-label {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.column-menu-header {
+  display: flex;
+  flex-direction: row;
+}
+.column-menu-content-container {
+  display: flex;
+  flex-direction: row;
+  align-self: flex-start;
+  flex-grow: 1;
+  height: 100%;
+  width: 100%;
+}
+.column-menu-content {
+  display: flex;
+  flex-direction: column;
+  padding: 15px 10px;
+  gap: 10px;
+  border: 1px solid lightgray;
+  max-width: calc(100% - 110px); /* 110px is the width of the tabs, needed for proper scrolling */
+  flex-grow: 1;
+  height: calc(100% - 33px); /* 33px is the height of the header, needed for the scrolling */
+}
+.show-titles-container {
+  flex-direction: row;
+  margin-top: 10px;
+  margin-left: 10px;
+}
+
+.accordion-position-controls {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+  margin-left: 10px;
+  margin-bottom: 10px;
+}
+
+.lightgray-square {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 35px;
+  height: 35px;
+  background-color: lightgray;
+  margin: 0 5px;
+  border-radius: 5px;
+}
+
+.custom-icon-button {
+  background-color: transparent;
+  border: none;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 5px;
+}
+
+.column-advanced-controls {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.column-menu-tabs {
+  padding: 10px;
+  width: 100px;
+}
+.column-menu-tab {
+  min-width: 0px;
+  white-space: wrap;
+}
+
+.column-menu-custom-tabs {
+  padding: 10px;
+  flex-shrink: 0;
+}
+
+@media screen and (max-width: 530px) {
+  .column-menu-label > .MuiTypography-root {
+    font-size: 0.9rem;
+    white-space: wrap;
+    text-align: center;
+  }
+  .column-menu-content {
+    max-width: calc(100% - 70px);
+  }
+  .column-menu-content-container {
+    min-height: 40vh;
+    height: 40vh;
+  }
+  .column-menu-custom-tabs > .tsc-tab-buttons {
+    width: 50px;
+  }
+  .column-menu-custom-tabs > .tsc-tab-buttons > .tsc-tab-panel {
+    width: 50px !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 10px 0px 10px 0px !important;
+  }
+  .column-menu-custom-tabs > .tsc-tab-buttons > .tsc-tab-indicator {
+    left: 55px !important;
+  }
+}
+
+.column-menu-tabs-small > .tsc-tab-buttons {
+  width: 50px;
+}
+.column-menu-tabs-small > .tsc-tab-buttons > .tsc-tab-panel {
+  width: 50px !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 10px 0px 10px 0px !important;
+}
+.column-menu-tabs-small > .tsc-tab-buttons > .tsc-tab-indicator {
+  left: 55px !important;
+}
