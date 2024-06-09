@@ -849,7 +849,9 @@ describe("columnInfoTSC to xml", () => {
       `    <fonts>\n` +
       `    </fonts>\n` +
       `    <setting name="width">100</setting>\n`;
-    expect(parseSettings.columnInfoTSCToXml(tests["generate-basic-column-xml-test"], "    ")).toEqual(key);
+    expect(
+      parseSettings.columnInfoTSCToXml(tests["generate-basic-column-xml-test"], "    ").replace(/\r\n/g, "\n")
+    ).toEqual(key);
   });
   it("should generate event column xml", async () => {
     mock.mockReturnValue("");
@@ -872,7 +874,9 @@ describe("columnInfoTSC to xml", () => {
       `    <setting name="rangeSort">first occurrence</setting>\n` +
       `    <setting name="windowSize">2</setting>\n` +
       `    <setting name="stepSize">1</setting>\n`;
-    expect(parseSettings.columnInfoTSCToXml(tests["generate-event-column-xml-test"], "    ")).toEqual(key);
+    expect(
+      parseSettings.columnInfoTSCToXml(tests["generate-event-column-xml-test"], "    ").replace(/\r\n/g, "\n")
+    ).toEqual(key);
   });
   it("should generate point column xml", async () => {
     mock.mockReturnValue("");
@@ -913,12 +917,20 @@ describe("columnInfoTSC to xml", () => {
       `    <setting name="pointType" pointType="rect"/>\n` +
       `    <setting name="windowSize">2</setting>\n` +
       `    <setting name="stepSize">1</setting>\n`;
-    expect(parseSettings.columnInfoTSCToXml(tests["generate-point-column-xml-test"], "    ")).toEqual(key);
+    expect(
+      parseSettings.columnInfoTSCToXml(tests["generate-point-column-xml-test"], "    ").replace(/\r\n/g, "\n")
+    ).toEqual(key);
   });
   it("should generate basic column with point column child xml", async () => {
     mock.mockReturnValue("");
-    expect(parseSettings.columnInfoTSCToXml(tests["generate-basic-column-with-point-child-xml-test"], "    ")).toEqual(
-      readFileSync("./app/__tests__/__data__/generate-basic-column-with-point-child-xml-key.tsc").toString()
+    expect(
+      parseSettings
+        .columnInfoTSCToXml(tests["generate-basic-column-with-point-child-xml-test"], "    ")
+        .replace(/\r\n/g, "\n")
+    ).toEqual(
+      readFileSync("./app/__tests__/__data__/generate-basic-column-with-point-child-xml-key.tsc")
+        .toString()
+        .replace(/\r\n/g, "\n")
     );
   });
 });
