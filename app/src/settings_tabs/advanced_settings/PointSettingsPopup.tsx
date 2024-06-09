@@ -60,6 +60,7 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
                   inputs={[
                     {
                       helperText: "Lower Range",
+                      id: "lowerRange",
                       value: pointSettings.lowerRange,
                       onValueChange: (value) => {
                         actions.setPointColumnSettings(pointSettings, { lowerRange: value });
@@ -67,6 +68,7 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
                     },
                     {
                       helperText: "Upper Range",
+                      id: "upperRange",
                       value: pointSettings.upperRange,
                       onValueChange: (value) => {
                         actions.setPointColumnSettings(pointSettings, { upperRange: value });
@@ -74,6 +76,7 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
                     },
                     {
                       helperText: "Scale Start",
+                      id: "scaleStart",
                       value: pointSettings.scaleStart,
                       onValueChange: (value) => {
                         actions.setPointColumnSettings(pointSettings, { scaleStart: value });
@@ -82,6 +85,7 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
                     {
                       helperText: "Scale Step",
                       value: pointSettings.scaleStep,
+                      id: "scaleStep",
                       onValueChange: (value) => {
                         actions.setPointColumnSettings(pointSettings, { scaleStep: value });
                       }
