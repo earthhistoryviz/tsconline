@@ -49,6 +49,7 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({
             inputs={[
               {
                 helperText: "Window Size",
+                id: "windowSize",
                 value: dataMiningSettings.windowSize,
                 onValueChange: (value) => {
                   actions.setDataMiningSettings(dataMiningSettings, { windowSize: value });
@@ -56,6 +57,7 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({
               },
               {
                 helperText: "Step Size",
+                id: "stepSize",
                 value: dataMiningSettings.stepSize,
                 onValueChange: (value) => {
                   actions.setDataMiningSettings(dataMiningSettings, { stepSize: value });

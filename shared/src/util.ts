@@ -9,5 +9,6 @@ export function calculateAutoScale(min: number, max: number) {
   const lowerRange = roundToDecimalPlace(min - outerMargin, 3);
   const upperRange = roundToDecimalPlace(max + outerMargin, 3);
   const scaleStep = roundToDecimalPlace((upperRange - lowerRange) * 0.2, 3);
-  return { lowerRange, upperRange, scaleStep };
+  const scaleStart = 0;
+  return { lowerRange, upperRange, scaleStep, scaleStart };
 }

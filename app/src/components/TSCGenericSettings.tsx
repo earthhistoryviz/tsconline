@@ -18,6 +18,7 @@ type GenericTextFieldProps = {
   inputs: {
     helperText?: string;
     label?: string;
+    id: string;
     value: number;
     onValueChange: (value: number) => void;
   }[];
@@ -57,15 +58,14 @@ export const GenericTextField: React.FC<GenericTextFieldProps> = ({
     <Box className={`generic-text-field-container ${containerAlignmentClass} ${className}`}>
       {header && <Typography className={`generic-text-field-header`}>{header}</Typography>}
       <div className="generic-text-fields">
-        {inputs.map((input, index) => (
-          <div className="generic-text-form" key={input.value}>
+        {inputs.map((input) => (
+          <div className="generic-text-form" key={input.id}>
             {helperPosition === "top" && (
               <Typography className={`generic-text-field-helper-text ${helperAlignmentClass}`}>
                 {input.helperText}
               </Typography>
             )}
             <NumericFormat
-              key={index}
               value={input.value}
               customInput={TextField}
               className={`generic-text-field`}

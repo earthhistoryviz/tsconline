@@ -198,10 +198,11 @@ export const setEditName = action((newName: string, column: ColumnInfo) => {
 });
 
 export const setAutoScale = action((pointSettings: PointSettings) => {
-  const { lowerRange, upperRange, scaleStep } = calculateAutoScale(pointSettings.minX, pointSettings.maxX);
+  const { lowerRange, upperRange, scaleStep, scaleStart } = calculateAutoScale(pointSettings.minX, pointSettings.maxX);
   pointSettings.scaleStep = scaleStep;
   pointSettings.lowerRange = lowerRange;
   pointSettings.upperRange = upperRange;
+  pointSettings.scaleStart = scaleStart;
 });
 
 export const flipRange = action((pointSettings: PointSettings) => {
@@ -321,7 +322,7 @@ export const addDataMiningColumn = action((column: ColumnInfo, type: EventFreque
       return;
   }
   const { min, max } = findRangeOfWindowStats(windowStats);
-  const { lowerRange, upperRange, scaleStep } = calculateAutoScale(min, max);
+  const { lowerRange, upperRange, scaleStep, scaleStart } = calculateAutoScale(min, max);
   const dataMiningColumn: ColumnInfo = observable({
     ...cloneDeep(column),
     name: dataMiningColumnName,
@@ -340,6 +341,7 @@ export const addDataMiningColumn = action((column: ColumnInfo, type: EventFreque
       lowerRange,
       upperRange,
       scaleStep,
+      scaleStart,
       isDataMiningColumn: true
     }
   });
