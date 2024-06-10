@@ -94,6 +94,10 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
     enableTitle: true
   };
   for (let i = 0; i < array.length; i++) {
+    if (array[i]?.includes("off")) {
+      array.splice(i, 1);
+      i = i - 1;
+    }
     if (array[i]?.includes("METACOLUMN")) {
       if (array[i] === "_METACOLUMN_ON") {
         parsedColumnEntry.on = true;
