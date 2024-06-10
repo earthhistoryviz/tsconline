@@ -30,6 +30,7 @@ export type State = {
   chartTimelineEnabled: boolean;
   chartTimelineLocked: boolean;
   loadSaveFilename: string;
+  cookieConsent: boolean | null;
   isLoggedIn: boolean;
   user: SharedUser;
   chartLoading: boolean;
@@ -91,6 +92,7 @@ export const state = observable<State>({
   chartTimelineEnabled: false,
   chartTimelineLocked: false,
   loadSaveFilename: "settings", //name without extension (.tsc)
+  cookieConsent: null,
   isLoggedIn: false,
   user: {
     username: "",

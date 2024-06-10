@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { observer } from "mobx-react-lite";
 import { useTheme, Button, Typography, Box } from "@mui/material";
 import styled from "@mui/material/styles/styled";
 import Slide from "@mui/material/Slide";
+import { context, state } from "./state";
 
 const CookieConsentContainer = styled(Box)(({ theme }) => ({
   position: "fixed",
@@ -22,22 +24,22 @@ interface CookieConsentProps {
 }
 
 const CookieConsent: React.FC<CookieConsentProps> = ({ persistent = false }) => {
-  const savedConsent = localStorage.getItem("cookieConsent");
-  const shouldShowConsent = !savedConsent || (persistent && savedConsent !== "accepted");
+  const savedConsent = state.cookieConsent;
+  const shouldShowConsent = !savedConsent || (persistent && savedConsent !== true);
   const [isVisible, setIsVisible] = useState(shouldShowConsent);
   const theme = useTheme();
+  const { actions } = useContext(context);
 
   // uncomment the following line to see the cookie consent banner
   // localStorage.removeItem("cookieConsent");
 
   const handleAccept = () => {
-    localStorage.setItem("cookieConsent", "accepted");
+    actions.setCookies(true);
     setIsVisible(false);
-    if (persistent) window.location.reload(); // Refresh the page after accepting cookies so sign in shows
   };
 
   const handleReject = () => {
-    localStorage.setItem("cookieConsent", "rejected");
+    actions.setCookies(false);
     setIsVisible(false);
   };
 
@@ -75,4 +77,4 @@ const CookieConsent: React.FC<CookieConsentProps> = ({ persistent = false }) => 
   );
 };
 
-export default CookieConsent;
+export default observer(CookieConsent);
