@@ -169,6 +169,7 @@ export async function parseDatapacks(
   let date: string | null = null;
   let verticalScale: number | null = null;
   let formatVersion = 1.5;
+  const warnings: string[] = [];
   try {
     for (const decryptPath of decryptPaths) {
       const { units, title, chronostrat, datapackDate, vertScale, version, top, base, filePropertyLines } =
@@ -181,7 +182,7 @@ export async function parseDatapacks(
       if (datapackDate) date = datapackDate;
       if (vertScale) verticalScale = vertScale;
       if (version) formatVersion = version;
-      await getColumnTypes(decryptPath, loneColumns, ageUnits, filePropertyLines);
+      await getColumnTypes(decryptPath, loneColumns, ageUnits, filePropertyLines, warnings);
       // all the entries parsed thus far (only from parent and child relationships)
       // only iterate over parents. if we encounter one that is a child, the recursive function
       // should have already processed it.
@@ -283,6 +284,7 @@ export async function parseDatapacks(
   if (topAge || topAge === 0) datapackParsingPack.topAge = topAge;
   if (baseAge || baseAge === 0) datapackParsingPack.baseAge = baseAge;
   if (verticalScale) datapackParsingPack.verticalScale = verticalScale;
+  if (warnings && warnings.length > 0) datapackParsingPack.warnings = warnings;
   return datapackParsingPack;
 }
 
@@ -431,7 +433,8 @@ export async function getColumnTypes(
   filename: string,
   loneColumns: Map<string, ColumnInfo>,
   units: string,
-  filePropertyLines: number
+  filePropertyLines: number,
+  warnings: string[]
 ) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
@@ -683,13 +686,13 @@ export async function getColumnTypes(
     if (!tabSeparated.includes(":") && tabSeparated[0] && tabSeparated[1]) {
       const closest = getClosestMatch(tabSeparated[1]!, allColumnTypes, 3);
       if (closest) {
-        console.log(
-          chalk.yellow.dim(
-            `Error found while processing column header: ${tabSeparated[1]!}, closest match found: ${closest}`
-          )
+        warnings.push(
+          `Error found while processing column type: ${tabSeparated[1]!}, closest match to existing column types found: ${closest} on line ${lineCount}`
         );
       } else {
-        console.log(chalk.yellow.dim(`Error found while processing column header: ${tabSeparated[1]!}`));
+        warnings.push(
+          `Error found while processing column type: ${tabSeparated[1]!} that doesn't match any existing column types (${allColumnTypes.join(", ")}) on line ${lineCount}`
+        );
       }
     }
   }
@@ -713,6 +716,7 @@ export async function getColumnTypes(
   } else if (inFreehandBlock) {
     processColumn("Freehand", freehand, "subFreehandInfo", units, loneColumns);
   }
+  return warnings;
 }
 
 /**
