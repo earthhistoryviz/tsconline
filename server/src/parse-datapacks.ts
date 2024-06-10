@@ -57,9 +57,16 @@ import {
   isSubEventType,
   defaultChronSettings,
   assertSubChronInfoArray,
+  allColumnTypes,
   defaultRangeSettings
 } from "@tsconline/shared";
-import { grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter, formatColumnName } from "./util.js";
+import {
+  grabFilepaths,
+  hasVisibleCharacters,
+  capitalizeFirstLetter,
+  formatColumnName,
+  getClosestMatch
+} from "./util.js";
 import { createInterface } from "readline";
 import _ from "lodash";
 import chalk from "chalk";
@@ -164,11 +171,8 @@ export async function parseDatapacks(
   let formatVersion = 1.5;
   try {
     for (const decryptPath of decryptPaths) {
-      const { units, title, chronostrat, datapackDate, vertScale, version, top, base } = await getAllEntries(
-        decryptPath,
-        allEntries,
-        isChild
-      );
+      const { units, title, chronostrat, datapackDate, vertScale, version, top, base, filePropertyLines } =
+        await getAllEntries(decryptPath, allEntries, isChild);
       topAge = top;
       baseAge = base;
       chartTitle = title;
@@ -177,7 +181,7 @@ export async function parseDatapacks(
       if (datapackDate) date = datapackDate;
       if (vertScale) verticalScale = vertScale;
       if (version) formatVersion = version;
-      await getColumnTypes(decryptPath, loneColumns, ageUnits);
+      await getColumnTypes(decryptPath, loneColumns, ageUnits, filePropertyLines);
       // all the entries parsed thus far (only from parent and child relationships)
       // only iterate over parents. if we encounter one that is a child, the recursive function
       // should have already processed it.
@@ -327,26 +331,32 @@ export async function getAllEntries(
   let defaultChronostrat = "UNESCO";
   let formatVersion = 1.5;
   let vertScale: number | null = null;
+  let filePropertyLines = 0;
   for await (const line of readline) {
     if (!line) continue;
     // grab any datapack properties
     const split = line.split("\t");
     let value = split[1];
     if (value) {
-      switch (split[0]) {
-        case "SetTop:":
+      switch (split[0]?.toLowerCase().trim()) {
+        case "settop:":
           if (!isNaN(Number(value.trim()))) top = Number(value);
+          filePropertyLines++;
           break;
-        case "SetBase:":
+        case "setbase:":
           if (!isNaN(Number(value.trim()))) base = Number(value);
+          filePropertyLines++;
           break;
         case "chart title:":
           chartTitle = value.trim();
+          filePropertyLines++;
           break;
         case "age units:":
           ageUnits = value.trim();
+          filePropertyLines++;
           break;
         case "default chronostrat:":
+          filePropertyLines++;
           if (!/^(USGS|UNESCO)$/.test(value.trim())) {
             console.error(
               "Default chronostrat value in datapack is neither USGS nor UNESCO, setting to default UNESCO"
@@ -358,6 +368,7 @@ export async function getAllEntries(
         case "date:":
           if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) value = value.split("/").reverse().join("-");
           date = new Date(value).toISOString().split("T")[0] || null;
+          filePropertyLines++;
           break;
         case "format version:":
           formatVersion = Number(value.trim());
@@ -365,13 +376,15 @@ export async function getAllEntries(
             console.error("Format version is not a number, setting to default 1.5");
             formatVersion = 1.5;
           }
+          filePropertyLines++;
           break;
-        case "SetScale:":
+        case "setscale:":
           vertScale = Number(value);
           if (isNaN(vertScale)) {
             console.error("Vertical scale is not a number, setting to default null");
             vertScale = null;
           }
+          filePropertyLines++;
           break;
       }
     }
@@ -402,17 +415,24 @@ export async function getAllEntries(
     chronostrat: defaultChronostrat,
     datapackDate: date,
     vertScale,
-    version: formatVersion
+    version: formatVersion,
+    filePropertyLines
   };
 }
 /**
  * This function will populate the maps with the parsed entries in the filename
  * using a read stream
  * @param filename the filename
- * @param faciesMap the facies map to add to
- * @param blocksMap  the blocks map to add to
+ * @param loneColumns the lone columns
+ * @param units the units
+ * @param filePropertyLines the number of lines that are file properties
  */
-export async function getColumnTypes(filename: string, loneColumns: Map<string, ColumnInfo>, units: string) {
+export async function getColumnTypes(
+  filename: string,
+  loneColumns: Map<string, ColumnInfo>,
+  units: string,
+  filePropertyLines: number
+) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
   const freehand: Freehand = {
@@ -466,8 +486,13 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
   let inSequenceBlock = false;
   let inTransectBlock = false;
   let inFreehandBlock = false;
-
+  let inSkipBlock = false;
+  let lineCount = 0;
   for await (const line of readline) {
+    lineCount++;
+    if (lineCount <= filePropertyLines) {
+      continue;
+    }
     if (!line.trim()) {
       // we reached the end and store the key value pairs in to faciesMap
       if (inFaciesBlock) {
@@ -490,11 +515,20 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
         inTransectBlock = processColumn("Transect", transect, "subTransectInfo", units, loneColumns);
       } else if (inFreehandBlock) {
         inFreehandBlock = processColumn("Freehand", freehand, "subFreehandInfo", units, loneColumns);
+      } else if (inSkipBlock) {
+        inSkipBlock = false;
       }
       continue;
     }
     const tabSeparated = line.split("\t");
-    if (tabSeparated[1]?.trim().toLowerCase() === "blank") {
+    const colType = tabSeparated[1]?.trim().toLowerCase();
+    if (colType?.includes("overlay")) {
+      inSkipBlock = true;
+      continue;
+    } else if (inSkipBlock) {
+      continue;
+    }
+    if (colType === "blank") {
       // has no subInfo so add straight
       setColumnHeaders(blank, tabSeparated);
       loneColumns.set(blank.name, {
@@ -512,44 +546,47 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
       Object.assign(blank, { ...createDefaultColumnHeaderProps() });
       continue;
     }
-    if (!inFreehandBlock && tabSeparated[1]?.trim().toLowerCase() === "freehand") {
+    if (!inFreehandBlock && colType === "freehand") {
       setColumnHeaders(freehand, tabSeparated);
       inFreehandBlock = true;
+      continue;
     } else if (inFreehandBlock) {
       const subFreehandInfo = processFreehand(line);
       if (subFreehandInfo) {
         freehand.subFreehandInfo.push(subFreehandInfo);
       }
+      continue;
     }
-    if (!inTransectBlock && tabSeparated[1]?.trim().toLowerCase() === "transect") {
+    if (!inTransectBlock && colType === "transect") {
       setColumnHeaders(transect, tabSeparated);
       inTransectBlock = true;
+      continue;
     } else if (inTransectBlock) {
       if (tabSeparated[0] === "POLYGON" || tabSeparated[0] === "TEXT") {
         processColumn("Transect", transect, "subTransectInfo", units, loneColumns);
-        inTransectBlock = false;
         continue;
       }
       const subTransectInfo = processTransect(line);
       if (subTransectInfo) {
         transect.subTransectInfo.push(subTransectInfo);
       }
+      continue;
     }
-    if (
-      !inSequenceBlock &&
-      (tabSeparated[1]?.trim().toLowerCase() === "sequence" || tabSeparated[1]?.trim().toLowerCase() === "trend")
-    ) {
+    if (!inSequenceBlock && (colType === "sequence" || colType === "trend")) {
       setColumnHeaders(sequence, tabSeparated);
       inSequenceBlock = true;
+      continue;
     } else if (inSequenceBlock) {
       const subSequenceInfo = processSequence(line);
       if (subSequenceInfo) {
         sequence.subSequenceInfo.push(subSequenceInfo);
       }
+      continue;
     }
-    if (!inPointBlock && tabSeparated[1]?.trim().toLowerCase() === "point") {
+    if (!inPointBlock && colType === "point") {
       setColumnHeaders(point, tabSeparated);
       inPointBlock = true;
+      continue;
     } else if (inPointBlock) {
       if (tabSeparated[0] && isPointShape(tabSeparated[0])) {
         configureOptionalPointSettings(tabSeparated, point);
@@ -558,20 +595,24 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
       if (subPointInfo) {
         point.subPointInfo.push(subPointInfo);
       }
+      continue;
     }
-    if (!inRangeBlock && tabSeparated[1]?.trim().toLowerCase() === "range") {
+    if (!inRangeBlock && colType === "range") {
       setColumnHeaders(range, tabSeparated);
       inRangeBlock = true;
+      continue;
     } else if (inRangeBlock) {
       const subRangeInfo = processRange(line);
       if (subRangeInfo) {
         range.subRangeInfo.push(subRangeInfo);
       }
+      continue;
     }
     // we found an event block
-    if (!inEventBlock && tabSeparated[1]?.trim().toLowerCase() === "event") {
+    if (!inEventBlock && colType === "event") {
       setColumnHeaders(event, tabSeparated);
       inEventBlock = true;
+      continue;
     } else if (inEventBlock) {
       const parsedSubEventType = tabSeparated[0]?.toUpperCase();
       if (isSubEventType(parsedSubEventType)) {
@@ -590,36 +631,39 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
       if (subEventInfo) {
         event.subEventInfo.push(subEventInfo);
       }
+      continue;
     }
     // we found a facies block
-    if (!inFaciesBlock && tabSeparated[1]?.trim().toLowerCase() === "facies") {
+    if (!inFaciesBlock && colType === "facies") {
       setColumnHeaders(facies, tabSeparated);
       inFaciesBlock = true;
+      continue;
     } else if (inFaciesBlock) {
       const subFaciesInfo = processFacies(line);
       if (subFaciesInfo) {
         facies.subFaciesInfo.push(subFaciesInfo);
       }
+      continue;
     }
 
     // TODO chron-only
-    if (
-      !inChronBlock &&
-      (tabSeparated[1]?.trim().toLowerCase() === "chron" || tabSeparated[1]?.trim().toLowerCase() === "chron-only")
-    ) {
+    if (!inChronBlock && (colType === "chron" || colType === "chron-only")) {
       setColumnHeaders(chron, tabSeparated);
       inChronBlock = true;
+      continue;
     } else if (inChronBlock) {
       const subChronInfo = processChron(line);
       if (subChronInfo) {
         chron.subChronInfo.push(subChronInfo);
       }
+      continue;
     }
 
     // we found a block
-    if (!inBlockBlock && tabSeparated[1]?.trim().toLowerCase() === "block") {
+    if (!inBlockBlock && colType === "block") {
       setColumnHeaders(block, tabSeparated);
       inBlockBlock = true;
+      continue;
     } else if (inBlockBlock) {
       //get a single sub block
 
@@ -632,6 +676,20 @@ export async function getColumnTypes(filename: string, loneColumns: Map<string, 
 
       if (subBlockInfo) {
         block.subBlockInfo.push(subBlockInfo);
+      }
+      continue;
+    }
+    // make sure it's not a parent-child relationship and not a file property
+    if (!tabSeparated.includes(":") && tabSeparated[0] && tabSeparated[1]) {
+      const closest = getClosestMatch(tabSeparated[1]!, allColumnTypes, 3);
+      if (closest) {
+        console.log(
+          chalk.yellow.dim(
+            `Error found while processing column header: ${tabSeparated[1]!}, closest match found: ${closest}`
+          )
+        );
+      } else {
+        console.log(chalk.yellow.dim(`Error found while processing column header: ${tabSeparated[1]!}`));
       }
     }
   }

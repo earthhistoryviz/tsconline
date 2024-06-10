@@ -355,7 +355,7 @@ export type SubSequenceInfo = {
 };
 
 export type SubChronInfo = {
-  polarity: "TOP" | "N" | "R" | "U" | "No Data";
+  polarity: "TOP" | "N" | "R" | "U" | "No Data" | "Unknown";
   label?: string;
   age: number;
   popup: string;
@@ -688,7 +688,7 @@ export function assertSubChronInfoArray(o: any): asserts o is SubChronInfo[] {
 }
 export function assertSubChronInfo(o: any): asserts o is SubChronInfo {
   if (!o || typeof o !== "object") throw new Error("SubChronInfo must be a non-null object");
-  if (typeof o.polarity !== "string" || !/^(TOP|N|R|U|No Data)$/.test(o.polarity))
+  if (typeof o.polarity !== "string" || !/^(TOP|N|R|U|No Data|Unknown)$/.test(o.polarity))
     throwError("SubChronInfo", "polarity", "string and TOP | N | R| U | No Data", o.polarity);
   if (o.label && typeof o.label !== "string") throwError("SubChronInfo", "label", "string", o.label);
   if (typeof o.age !== "number") throwError("SubChronInfo", "age", "number", o.age);
