@@ -28,7 +28,7 @@
 .account-form {
   width: 100%;
 }
-.disabled {
+.disabled-google-login {
   pointer-events: none;
   opacity: 0.5;
 }

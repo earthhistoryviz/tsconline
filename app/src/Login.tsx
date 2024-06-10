@@ -17,8 +17,8 @@ import { actions, context } from "./state";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { useNavigate } from "react-router";
 import { displayServerError } from "./state/actions/util-actions";
-import "./Login.css";
 import CookieConsent from "./CookieConsent";
+import "./Login.css";
 
 export const Login: React.FC = observer(() => {
   const { state } = useContext(context);
@@ -48,8 +48,7 @@ export const Login: React.FC = observer(() => {
     setLoading(true);
     try {
       // Don't allow sign in if not accepting cookies
-      const cookieConsent = localStorage.getItem("cookieConsent");
-      if (cookieConsent !== "accepted") {
+      if (!state.cookieConsent) {
         actions.pushError(ErrorCodes.COOKIE_REJECTED);
         return;
       }
@@ -131,7 +130,7 @@ export const Login: React.FC = observer(() => {
     };
     await handleLogin(false, formData);
   };
-  const cookieConsent = localStorage.getItem("cookieConsent");
+
   return (
     <Box className="login-box">
       <Avatar sx={{ "& .MuiSvgIcon-root": { mr: 0 }, bgcolor: theme.palette.navbar.dark }}>
@@ -152,7 +151,7 @@ export const Login: React.FC = observer(() => {
               name="username"
               autoComplete="username"
               autoFocus
-              disabled={cookieConsent !== "accepted"}
+              disabled={state.cookieConsent === false}
             />
             <TextField
               margin="normal"
@@ -163,7 +162,7 @@ export const Login: React.FC = observer(() => {
               type="password"
               id="password"
               autoComplete="current-password"
-              disabled={cookieConsent !== "accepted"}
+              disabled={state.cookieConsent === false}
             />
             <TSCButton
               type="submit"
@@ -171,7 +170,7 @@ export const Login: React.FC = observer(() => {
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
               endIcon={<LoginIcon />}
-              disabled={cookieConsent !== "accepted"}>
+              disabled={state.cookieConsent === false}>
               Sign In
             </TSCButton>
             <Grid container className="grid-container">
@@ -196,7 +195,7 @@ export const Login: React.FC = observer(() => {
               <Box className="divider-line"></Box>
             </Box>
             {/* GoogleLogin does not have a "disable" property */}
-            <div className={cookieConsent !== "accepted" ? "disabled" : ""}>
+            <div className={state.cookieConsent === false ? "disabled-google-login" : ""}>
               <GoogleLogin
                 onSuccess={async (credentialResponse) => {
                   const credential = credentialResponse.credential;
