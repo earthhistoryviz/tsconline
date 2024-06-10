@@ -43,6 +43,7 @@ export type DatapackParsingPack = {
   date?: string;
   verticalScale?: number;
   isUserDatapack: boolean;
+  warnings?: string[];
   image: string;
 };
 
@@ -867,6 +868,12 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
     throwError("DatapackParsingPack", "baseAge", "number", o.baseAge);
   if (typeof o.isUserDatapack !== "boolean")
     throwError("DatapackParingPack", "isUserDatapack", "boolean", o.isUserDatapack);
+  if ("warnings" in o) {
+    if (!Array.isArray(o.warnings)) throwError("DatapackParsingPack", "warnings", "array", o.warnings);
+    for (const warning of o.warnings) {
+      if (typeof warning !== "string") throwError("DatapackParsingPack", "warning", "string", warning);
+    }
+  }
   if (typeof o.image !== "string") throwError("DatapackParsingPack", "image", "string", o.image);
   assertColumnInfo(o.columnInfo);
 }
