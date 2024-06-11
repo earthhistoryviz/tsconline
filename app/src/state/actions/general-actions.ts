@@ -792,6 +792,14 @@ export const setDefaultUserState = action(() => {
   };
 });
 
+export const setChartTimelineEnabled = action("setChartTimelineEnabled", (enabled: boolean) => {
+  state.chartTimelineEnabled = enabled;
+});
+
+export const setChartTimelineLocked = action("setChartTimelineLocked", (locked: boolean) => {
+  state.chartTimelineLocked = locked;
+});
+
 export const setUser = action("setUser", (user: SharedUser) => {
   assertSharedUser(user);
   state.user = user;
