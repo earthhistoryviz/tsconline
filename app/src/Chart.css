@@ -31,3 +31,7 @@
   line-height: 1;
   grid-row: 4;
 }
+
+.timeline-button {
+  color: red;
+}

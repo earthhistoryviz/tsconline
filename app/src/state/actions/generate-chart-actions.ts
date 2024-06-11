@@ -148,7 +148,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
       await generalActions.checkSVGStatus();
       const content = await (await fetcher(answer.chartpath)).text();
       const domPurifyConfig = {
-        ADD_ATTR: ["docbase", "popuptext"],
+        ADD_ATTR: ["docbase", "popuptext", "minY", "maxY", "vertScale", "topAge", "baseAge"],
         ADD_URI_SAFE_ATTR: ["docbase", "popuptext"]
       };
       const sanitizedSVG = DOMPurify.sanitize(content, domPurifyConfig);
