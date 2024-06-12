@@ -1,6 +1,7 @@
 .card {
     width: 234px;
     height: 320px;
+    border-radius: 10%;
 }
 .header {
     -webkit-line-clamp: 2;
@@ -11,6 +12,21 @@
     -webkit-box-orient: vertical;
     word-break: break-all;
     margin-right: 10px;
+    line-height: 1.5em;
+    height: 3em;
+    font-weight: 600;
+}
+
+.description {
+    -webkit-line-clamp: 3;
+    display: -webkit-box;
+    text-wrap: wrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-box-orient: vertical;
+    word-break: break-all;
+    font-size: 0.8rem;
+    height: 4.5em;
 }
 
 .headerContainer {
@@ -18,6 +34,7 @@
     flex-direction: row;
     align-items: flex-start;
     justify-content: space-between;
+    margin-bottom: 5px;
 }
 
 .other {

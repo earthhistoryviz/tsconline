@@ -19,19 +19,21 @@
 
 .box-container {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   padding: 16px;
   border: 1px solid gray;
   border-radius: 4px;
-  max-width: 600px;
   margin: 0 auto;
   margin-top: 20px;
   margin-bottom: 20px;
-  width: 85%;
-  /*this fixed the window scaling issue, changed from 100 */
-  overflow-x: hidden;
+  overflow: auto;
+  max-width: 100%;
+}
+
+.box-container > * {
+  flex: 0 0 auto;
 }
 
 .data-table {
