@@ -153,6 +153,8 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
       };
       const sanitizedSVG = DOMPurify.sanitize(content, domPurifyConfig);
       generalActions.setChartContent(sanitizedSVG);
+      generalActions.setChartTimelineEnabled(false);
+      generalActions.setChartTimelineLocked(false);
       generalActions.pushSnackbar("Successfully generated chart", "success");
     } catch (e) {
       displayServerError(answer, ErrorCodes.INVALID_CHART_RESPONSE, ErrorMessages[ErrorCodes.INVALID_CHART_RESPONSE]);

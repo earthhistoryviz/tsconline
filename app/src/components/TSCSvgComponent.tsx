@@ -59,24 +59,6 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ chart
     }
   };
 
-  useEffect(() => {
-    if (!state.settings.mouseOverPopupsEnabled) return;
-
-    const container = svgContainerRef.current;
-    if (!container) return;
-
-    const eventListenerWrapper = (evt: MouseEvent) => handleSvgEvent(evt, container);
-    container.addEventListener("mouseover", eventListenerWrapper);
-    container.addEventListener("mouseout", eventListenerWrapper);
-    container.addEventListener("click", eventListenerWrapper);
-
-    return () => {
-      container.removeEventListener("mouseover", eventListenerWrapper);
-      container.removeEventListener("mouseout", eventListenerWrapper);
-      container.removeEventListener("click", eventListenerWrapper);
-    };
-  }, [chartContent, state.settings.mouseOverPopupsEnabled]);
-
   const setupTimelineAndLabel = (svg: SVGSVGElement) => {
     if (svg.getElementById("timeline")) return;
     //sanitizing the svg removes timeline id, so add it back
@@ -182,6 +164,24 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ chart
       }
     }
   };
+
+  useEffect(() => {
+    if (!state.prevSettings.mouseOverPopupsEnabled || state.chartTimelineEnabled) return;
+
+    const container = svgContainerRef.current;
+    if (!container) return;
+
+    const eventListenerWrapper = (evt: MouseEvent) => handleSvgEvent(evt, container);
+    container.addEventListener("mouseover", eventListenerWrapper);
+    container.addEventListener("mouseout", eventListenerWrapper);
+    container.addEventListener("click", eventListenerWrapper);
+
+    return () => {
+      container.removeEventListener("mouseover", eventListenerWrapper);
+      container.removeEventListener("mouseout", eventListenerWrapper);
+      container.removeEventListener("click", eventListenerWrapper);
+    };
+  }, [chartContent, state.prevSettings.mouseOverPopupsEnabled, state.chartTimelineEnabled]);
 
   useEffect(() => {
     const container = svgContainerRef.current;
