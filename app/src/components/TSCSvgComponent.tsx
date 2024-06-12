@@ -79,18 +79,13 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ chart
   };
 
   const handleTimeline = (evt: MouseEvent, svg: SVGSVGElement) => {
+    if (!state.chartTimelineEnabled) return;
     const timeline = svg.getElementById("timeline");
     const timelineUp = svg.getElementById("timeline_up");
     const timelineDown = svg.getElementById("timeline_down");
     const timeLabel = svg.getElementById("TimeLineLabel");
     const timeLabelUp = svg.getElementById("TimeLineLabelUp");
     const timeLabelDown = svg.getElementById("TimeLineLabelDown");
-
-    if (!state.chartTimelineEnabled) {
-      hideTimeline([timeline, timelineUp, timelineDown, timeLabel, timeLabelUp, timeLabelDown]);
-      return;
-    } else showTimeline([timeline, timelineUp, timelineDown, timeLabel, timeLabelUp, timeLabelDown]);
-
     //cursor location
     let point = new DOMPoint();
     point.x = evt.clientX;
@@ -139,65 +134,55 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ chart
     }
   };
 
-  const showTimeline = (elements: Element[]) => {
-    for (const element of elements) {
-      //timelines
-      if (element.tagName === "line") {
-        element.setAttribute("style", "stroke: red; stroke-width: 0.5; stroke-opacity: 1;");
-      }
-      //timelabels
-      if (element.tagName === "text") {
-        element.setAttribute("style", "font-size: 10; fill: red; fill-opacity: 0.7;");
-      }
-    }
+  const hideOrShowTimeline = (svg: SVGSVGElement, show: boolean) => {
+    const timeline = svg.getElementById("timeline");
+    const timelineUp = svg.getElementById("timeline_up");
+    const timelineDown = svg.getElementById("timeline_down");
+    const timeLabel = svg.getElementById("TimeLineLabel");
+    const timeLabelUp = svg.getElementById("TimeLineLabelUp");
+    const timeLabelDown = svg.getElementById("TimeLineLabelDown");
+    timeline.setAttribute("style", show ? "stroke: red; stroke-width: 0.5; stroke-opacity: 1;" : "stroke-opacity: 0;");
+    timelineUp.setAttribute(
+      "style",
+      show ? "stroke: red; stroke-width: 0.5; stroke-opacity: 1;" : "stroke-opacity: 0;"
+    );
+    timelineDown.setAttribute(
+      "style",
+      show ? "stroke: red; stroke-width: 0.5; stroke-opacity: 1;" : "stroke-opacity: 0;"
+    );
+    timeLabel.setAttribute("style", show ? "font-size: 10; fill: red; fill-opacity: 0.7;" : "fill-opacity: 0;");
+    timeLabelUp.setAttribute("style", show ? "font-size: 10; fill: red; fill-opacity: 0.7;" : "fill-opacity: 0;");
+    timeLabelDown.setAttribute("style", show ? "font-size: 10; fill: red; fill-opacity: 0.7;" : "fill-opacity: 0;");
   };
-
-  const hideTimeline = (elements: Element[]) => {
-    for (const element of elements) {
-      //timelines
-      if (element.tagName === "line") {
-        element.setAttribute("style", "stroke-opacity: 0;");
-      }
-      //timelabels
-      if (element.tagName === "text") {
-        element.setAttribute("style", "fill-opacity: 0;");
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (!state.prevSettings.mouseOverPopupsEnabled || state.chartTimelineEnabled) return;
-
-    const container = svgContainerRef.current;
-    if (!container) return;
-
-    const eventListenerWrapper = (evt: MouseEvent) => handleSvgEvent(evt, container);
-    container.addEventListener("mouseover", eventListenerWrapper);
-    container.addEventListener("mouseout", eventListenerWrapper);
-    container.addEventListener("click", eventListenerWrapper);
-
-    return () => {
-      container.removeEventListener("mouseover", eventListenerWrapper);
-      container.removeEventListener("mouseout", eventListenerWrapper);
-      container.removeEventListener("click", eventListenerWrapper);
-    };
-  }, [chartContent, state.prevSettings.mouseOverPopupsEnabled, state.chartTimelineEnabled]);
 
   useEffect(() => {
     const container = svgContainerRef.current;
     if (!container) return;
-    if (!container.querySelector("svg")) return;
-    const svg = container.querySelector("svg")!;
+    const svg = container.querySelector("svg");
+    if (!svg) return;
     setupTimelineAndLabel(svg);
-    const eventListenerWrapper = (evt: MouseEvent) => handleTimeline(evt, svg);
-    const lockTimeline = () => actions.setChartTimelineLocked(!state.chartTimelineLocked);
-    container.addEventListener("mousemove", eventListenerWrapper);
-    container.addEventListener("click", lockTimeline);
-    return () => {
-      container.removeEventListener("mousemove", eventListenerWrapper);
-      container.removeEventListener("click", lockTimeline);
-    };
-  }, [chartContent, state.chartTimelineEnabled, state.chartTimelineLocked]);
+    hideOrShowTimeline(svg, state.chartTimelineEnabled);
+    if (state.chartTimelineEnabled) {
+      const eventListenerWrapper = (evt: MouseEvent) => handleTimeline(evt, svg);
+      const lockTimeline = () => actions.setChartTimelineLocked(!state.chartTimelineLocked);
+      container.addEventListener("mousemove", eventListenerWrapper);
+      container.addEventListener("click", lockTimeline);
+      return () => {
+        container.removeEventListener("mousemove", eventListenerWrapper);
+        container.removeEventListener("click", lockTimeline);
+      };
+    } else if (state.prevSettings.mouseOverPopupsEnabled) {
+      const eventListenerWrapper = (evt: MouseEvent) => handleSvgEvent(evt, container);
+      container.addEventListener("mouseover", eventListenerWrapper);
+      container.addEventListener("mouseout", eventListenerWrapper);
+      container.addEventListener("click", eventListenerWrapper);
+      return () => {
+        container.removeEventListener("mouseover", eventListenerWrapper);
+        container.removeEventListener("mouseout", eventListenerWrapper);
+        container.removeEventListener("click", eventListenerWrapper);
+      };
+    }
+  }, [chartContent, state.chartTimelineEnabled, state.chartTimelineLocked, state.prevSettings.mouseOverPopupsEnabled]);
 
   return <div ref={svgContainerRef} dangerouslySetInnerHTML={{ __html: chartContent }} />;
 });
