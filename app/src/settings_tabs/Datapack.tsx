@@ -1,15 +1,13 @@
 import { useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useTheme } from "@mui/material/styles";
-import { TSCCheckbox, TSCDatapackUploadForm, TSCButton } from "../components";
+import { TSCDatapackUploadForm, TSCButton } from "../components";
 import { context, state } from "../state";
 import Box from "@mui/material/Box";
-import InfoIcon from "@mui/icons-material/Info";
-import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Menu, MenuItem } from "@szhsin/react-menu";
-import "./Datapack.css";
+import styles from "./Datapack.module.css";
 import { Dialog } from "@mui/material";
 import { ErrorCodes } from "../util/error-codes";
 import { TSCDatapackCard } from "../components/TSCDatapackCard";
@@ -77,12 +75,12 @@ export const Datapacks = observer(function Datapacks() {
 
   return (
     <div style={{ background: theme.palette.settings.light }}>
-      <div className="container">
-        <Typography variant="h3" className="heading">
+      <div className={styles.dc}>
+        <Typography variant="h3" className="header">
           TimeScale Creator Datapacks
         </Typography>
         <Typography>Add a datapack by clicking the checkbox</Typography>
-        <Box className="box-container">
+        <Box className={styles.container}>
           {Object.keys(state.datapackIndex).map((datapack) => (
             <TSCDatapackCard key={datapack} name={datapack} datapack={state.datapackIndex[datapack]} />
           ))}
@@ -94,7 +92,7 @@ export const Datapacks = observer(function Datapacks() {
           Upload Datapack
         </TSCButton>
 
-        <Dialog classes={{ paper: "datapack-dialog" }} open={formOpen} onClose={() => setFormOpen(false)}>
+        <Dialog classes={{ paper: styles.dd }} open={formOpen} onClose={() => setFormOpen(false)}>
           <TSCDatapackUploadForm close={() => setFormOpen(false)} />
         </Dialog>
       </div>
