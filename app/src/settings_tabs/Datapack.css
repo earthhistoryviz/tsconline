@@ -19,21 +19,14 @@
 
 .box-container {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 16px;
-  border: 1px solid gray;
-  border-radius: 4px;
-  margin: 0 auto;
-  margin-top: 20px;
-  margin-bottom: 20px;
-  overflow: auto;
-  max-width: 100%;
+  overflow-y: auto;
+  flex-wrap: wrap;
+  padding: 4px;
 }
 
 .box-container > * {
-  flex: 0 0 auto;
+  margin: 10px;
+  overflow: hidden;
 }
 
 .data-table {
