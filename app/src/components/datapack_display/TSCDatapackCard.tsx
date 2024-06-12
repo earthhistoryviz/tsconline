@@ -1,10 +1,10 @@
 import { Card, CardActions, CardContent, CardMedia, IconButton, Typography } from "@mui/material";
 import { DatapackParsingPack } from "@tsconline/shared";
-import { devSafeUrl } from "../util";
+import { devSafeUrl } from "../../util";
 import { useState } from "react";
 import styles from "./TSCDatapackCard.module.css";
-import { TSCCheckbox } from "./TSCCheckbox";
-import { CustomFormControlLabel } from "./TSCComponents";
+import { TSCCheckbox } from "../TSCCheckbox";
+import { CustomFormControlLabel } from "../TSCComponents";
 
 type TSCDatapackCardProps = {
   name: string;
