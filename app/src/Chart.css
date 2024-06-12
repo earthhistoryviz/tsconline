@@ -35,3 +35,13 @@
 .timeline-button {
   color: red;
 }
+.chart-and-options-bar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.chart-options-bar {
+  display: flex;
+  flex-direction: row;
+}

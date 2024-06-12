@@ -15,7 +15,7 @@ export const TSCPopupManager = () => {
   const { state, actions } = useContext(context);
 
   useEffect(() => {
-    if (!state.settings.mouseOverPopupsEnabled) return;
+    if (!state.prevSettings.mouseOverPopupsEnabled) return;
 
     const processImages = async (text: string) => {
       const srcMatches = [...text.matchAll(/src="([^"]+)"/g)];

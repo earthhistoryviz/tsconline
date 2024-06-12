@@ -24,12 +24,14 @@ export const Chart = observer(function () {
       {state.chartLoading ? (
         <LoadingChart />
       ) : state.madeChart ? (
-        <div>
-          <IconButton
-            title="Timeline On/Off"
-            onClick={() => actions.setChartTimelineEnabled(!state.chartTimelineEnabled)}>
-            <HorizontalRuleIcon className="timeline-button" />
-          </IconButton>
+        <div className="chart-and-options-bar-container">
+          <div className="chart-options-bar">
+            <IconButton
+              title="Timeline On/Off"
+              onClick={() => actions.setChartTimelineEnabled(!state.chartTimelineEnabled)}>
+              <HorizontalRuleIcon className="timeline-button" />
+            </IconButton>
+          </div>
           <TransformWrapper minScale={0.01} maxScale={3} limitToBounds={false}>
             <TransformComponent>
               <TSCSvgComponent chartContent={state.chartContent} />
