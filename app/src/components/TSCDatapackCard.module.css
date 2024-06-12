@@ -1,0 +1,56 @@
+.card {
+    width: 234px;
+    height: 320px;
+}
+.header {
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    text-wrap: wrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-box-orient: vertical;
+    word-break: break-all;
+    margin-right: 10px;
+}
+
+.headerContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.other {
+    margin: -1px -8px 0 0;
+}
+ .more {
+ transform: scale(var(--ggs,1))
+}
+
+.more,
+.more::after,
+.more::before {
+ box-sizing: border-box;
+ position: relative;
+ display: block;
+ width: 4px;
+ height: 4px;
+ background: currentColor;
+ border-radius: 100%
+}
+
+.more::after,
+.more::before {
+ content: "";
+ position: absolute
+}
+
+.more::after {
+ left: 0;
+ top: 6px
+}
+
+.more::before {
+ top: -6px;
+ right: 0
+} 
