@@ -11,8 +11,9 @@ import styles from "./Datapack.module.css";
 import { Dialog, ToggleButtonGroup, ToggleButton } from "@mui/material";
 import { ErrorCodes } from "../util/error-codes";
 import { TSCDatapackCard } from "../components/datapack_display/TSCDatapackCard";
-import TableRowsIcon from '@mui/icons-material/TableRows';
-import DashboardIcon from '@mui/icons-material/Dashboard';
+import TableRowsIcon from "@mui/icons-material/TableRows";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import { TSCDatapackRow } from "../components/datapack_display/TSCDatapackRow";
 
 export const Datapacks = observer(function Datapacks() {
   const theme = useTheme();
@@ -82,17 +83,28 @@ export const Datapacks = observer(function Datapacks() {
           TimeScale Creator Datapacks
         </Typography>
         <Typography>Add a datapack by clicking the checkbox</Typography>
-        <ToggleButtonGroup value={state.settingsTabs.datapackDisplayType} onChange={() => {
-          actions.setDatapackDisplayType(state.settingsTabs.datapackDisplayType === "rows" ? "cards" : "rows");
-        }}
-        exclusive
-        >
-          <ToggleButton disableRipple value="rows"> <TableRowsIcon /> </ToggleButton>
-          <ToggleButton disableRipple value="cards"> <DashboardIcon /> </ToggleButton>
+        <ToggleButtonGroup
+          value={state.settingsTabs.datapackDisplayType}
+          onChange={() => {
+            actions.setDatapackDisplayType(state.settingsTabs.datapackDisplayType === "rows" ? "cards" : "rows");
+          }}
+          exclusive>
+          <ToggleButton disableRipple value="rows">
+            {" "}
+            <TableRowsIcon />{" "}
+          </ToggleButton>
+          <ToggleButton disableRipple value="cards">
+            {" "}
+            <DashboardIcon />{" "}
+          </ToggleButton>
         </ToggleButtonGroup>
         <Box className={styles.container}>
-          {Object.keys(state.datapackIndex).map((datapack) =>{ 
-            return state.settingsTabs.datapackDisplayType === "rows" ? <> </>: <TSCDatapackCard key={datapack} name={datapack} datapack={state.datapackIndex[datapack]} />
+          {Object.keys(state.datapackIndex).map((datapack) => {
+            return state.settingsTabs.datapackDisplayType === "rows" ? (
+              <TSCDatapackRow key={datapack} name={datapack} datapack={state.datapackIndex[datapack]} />
+            ) : (
+              <TSCDatapackCard key={datapack} name={datapack} datapack={state.datapackIndex[datapack]} />
+            );
           })}
         </Box>
         <TSCButton
