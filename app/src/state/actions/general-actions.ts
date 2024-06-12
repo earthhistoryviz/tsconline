@@ -983,6 +983,9 @@ export const setLoadSaveFilename = action("setLoadSaveFilename", (newval: string
   state.loadSaveFilename = newval;
 });
 
-export const setDatapackDisplayType = action("setDatapackDisplayType", (newval: State["settingsTabs"]["datapackDisplayType"]) => {
-  state.settingsTabs.datapackDisplayType = newval;
-})
+export const setDatapackDisplayType = action(
+  "setDatapackDisplayType",
+  (newval: State["settingsTabs"]["datapackDisplayType"]) => {
+    state.settingsTabs.datapackDisplayType = newval;
+  }
+);
