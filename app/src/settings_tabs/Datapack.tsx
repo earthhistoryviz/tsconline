@@ -12,6 +12,7 @@ import { Menu, MenuItem } from "@szhsin/react-menu";
 import "./Datapack.css";
 import { Dialog } from "@mui/material";
 import { ErrorCodes } from "../util/error-codes";
+import { TSCDatapackCard } from "../components/TSCDatapackCard";
 
 export const Datapacks = observer(function Datapacks() {
   const theme = useTheme();
@@ -82,34 +83,9 @@ export const Datapacks = observer(function Datapacks() {
         </Typography>
         <Typography>Add a datapack by clicking the checkbox</Typography>
         <Box className="box-container">
-          <table className="data-table">
-            <tbody>
-              {Object.keys(state.datapackIndex).map((datapack, index) => (
-                <tr key={index}>
-                  <td className="checkbox-cell">
-                    <TSCCheckbox
-                      checked={state.config.datapacks.includes(datapack)}
-                      onChange={() => handleCheckboxChange(datapack)}
-                    />
-                  </td>
-                  <td>
-                    <div className="name-cell">
-                      <Typography>{datapack}</Typography>
-                    </div>
-                  </td>
-                  <td className="download-cell">{download(datapack)}</td>
-
-                  <td className="info-cell">
-                    <div>
-                      <Tooltip title="Description" arrow placement="right">
-                        <InfoIcon className="info-icon" />
-                      </Tooltip>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {Object.keys(state.datapackIndex).map((datapack) => (
+              <TSCDatapackCard key={datapack} name={datapack} datapack={state.datapackIndex[datapack]}/>
+          ))}
         </Box>
         <TSCButton
           onClick={() => {

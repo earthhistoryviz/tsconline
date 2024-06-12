@@ -43,6 +43,7 @@ export type DatapackParsingPack = {
   date?: string;
   verticalScale?: number;
   isUserDatapack: boolean;
+  image: string;
 };
 
 export type IndexResponse = {
@@ -837,6 +838,7 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
     throwError("DatapackParsingPack", "baseAge", "number", o.baseAge);
   if (typeof o.isUserDatapack !== "boolean")
     throwError("DatapackParingPack", "isUserDatapack", "boolean", o.isUserDatapack);
+  if (typeof o.image !== "string") throwError("DatapackParsingPack", "image", "string", o.image);
   assertColumnInfo(o.columnInfo);
 }
 export function assertDatapackIndex(o: any): asserts o is DatapackIndex {
