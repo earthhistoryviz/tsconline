@@ -135,7 +135,7 @@ server.register(fastifyStatic, {
   root: path.join(process.cwd(), assetconfigs.datapackImagesDirectory),
   prefix: "/datapack-images/",
   decorateReply: false
-})
+});
 
 // Serve user profile images
 server.register(fastifyStatic, {

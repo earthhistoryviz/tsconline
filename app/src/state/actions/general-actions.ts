@@ -242,7 +242,9 @@ export const setDatapackIndex = action("setDatapackIndex", async (datapackIndex:
   // This is to prevent the UI from lagging
   state.datapackIndex = {};
   for (const key in datapackIndex) {
-    runInAction(() => {state.datapackIndex[key] = datapackIndex[key];});
+    runInAction(() => {
+      state.datapackIndex[key] = datapackIndex[key];
+    });
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
 });

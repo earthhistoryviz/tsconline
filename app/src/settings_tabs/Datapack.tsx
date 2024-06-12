@@ -84,7 +84,7 @@ export const Datapacks = observer(function Datapacks() {
         <Typography>Add a datapack by clicking the checkbox</Typography>
         <Box className="box-container">
           {Object.keys(state.datapackIndex).map((datapack) => (
-              <TSCDatapackCard key={datapack} name={datapack} datapack={state.datapackIndex[datapack]}/>
+            <TSCDatapackCard key={datapack} name={datapack} datapack={state.datapackIndex[datapack]} />
           ))}
         </Box>
         <TSCButton
