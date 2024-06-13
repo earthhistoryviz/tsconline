@@ -8,6 +8,7 @@ import { IconButton, Typography } from "@mui/material";
 import { CustomDivider, TagButton } from "./components";
 import { CustomTabs } from "./components/TSCCustomTabs";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Discussion } from "./components/TSCDiscussion";
 
 const tags: string[] = ["Large", "Small", "Medium", "Huge", "Tiny", "Normal", "Abnormal"];
 export const DatapackProfile = observer(() => {
@@ -34,14 +35,32 @@ export const DatapackProfile = observer(() => {
           centered
           value={tabIndex}
           onChange={(val) => setTabIndex(val)}
-          tabs={["About", "Discussion (0)", "Data"]}
+          tabs={["About", "View Data", "Discussion (0)", "Warnings"]}
         />
         <CustomDivider className={styles.divider} />
-        <About />
+        <DatapackProfileContent index={tabIndex} />
       </div>
     </div>
   );
 });
+
+type DatapackProfileContentProps = {
+  index: number;
+};
+const DatapackProfileContent: React.FC<DatapackProfileContentProps> = ({ index }) => {
+  switch (index) {
+    case 0:
+      return <About />;
+    case 1:
+      return <div>View Data</div>;
+    case 2:
+      return <Discussion />;
+    case 3:
+      return <div>Warnings</div>;
+    default:
+      return <About />;
+  }
+};
 
 const About: React.FC = () => {
   return (
