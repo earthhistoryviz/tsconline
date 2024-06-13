@@ -276,6 +276,7 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
             updateProperty(column, settingName as keyof ColumnInfoTSC, child.getAttribute("pointType")!);
           } else if (settingName === "drawExtraColumn") {
             if (textValue === "") updateProperty(column, settingName as keyof ColumnInfoTSC, null);
+            else updateProperty(column, settingName as keyof ColumnInfoTSC, textValue);
           } else {
             updateProperty(column, settingName as keyof ColumnInfoTSC, textValue);
           }
