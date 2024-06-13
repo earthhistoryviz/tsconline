@@ -90,7 +90,12 @@ const config: Config = {
   // A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
   moduleNameMapper: {
     "./util.js": "../dist/util.js",
-    "./index.js": "../dist/index.js"
+    "./index.js": "../dist/index.js",
+    "./database.js": "../dist/database.js",
+    "./send-email.js": "../dist/send-email.js",
+    "./file-metadata-handler.js": "../dist/file-metadata-handler.js",
+    "./login-routes.js": "../dist/login-routes.js",
+    "./verify.js": "../dist/verify.js",
   },
 
   // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
