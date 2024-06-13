@@ -79,9 +79,6 @@ export const Datapacks = observer(function Datapacks() {
   return (
     <div style={{ background: theme.palette.settings.light }}>
       <div className={styles.dc}>
-        <Typography variant="h3" className="header">
-          TimeScale Creator Datapacks
-        </Typography>
         <Typography>Add a datapack by clicking the checkbox</Typography>
         <ToggleButtonGroup
           value={state.settingsTabs.datapackDisplayType}

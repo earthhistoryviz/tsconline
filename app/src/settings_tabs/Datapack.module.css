@@ -12,12 +12,6 @@
   margin: 0px;
 }
 
-.header {
-  font-size: 18px;
-  margin-top: 20px;
-  margin-bottom: 20px;
-}
-
 .container {
   display: flex;
   overflow-y: auto;
