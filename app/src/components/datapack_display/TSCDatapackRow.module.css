@@ -5,6 +5,7 @@
   flex-direction: row;
   overflow: hidden;
   border-bottom: 2px solid #e0e0e0;
+  container-type: size;
 }
 
 .cc {
@@ -134,4 +135,16 @@
 }
 .rc:hover {
   background-color: rgba(203, 203, 203, 0.15);
+}
+
+@container (max-width: 240px) {
+  .image {
+    display: none;
+  }
+  .vc {
+    display: none;
+  }
+  .right {
+    justify-content: flex-end;
+  }
 }
