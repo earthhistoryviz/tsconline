@@ -12,6 +12,8 @@ import { SubMenu, MenuItem } from "@szhsin/react-menu";
 import Color from "color";
 import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
+import styles from "./TSCComponents.module.css";
+import { HTMLAttributes } from "react";
 
 export const TypographyText = styled(Typography)(({ theme }) => ({
   color: theme.palette.primary.main
@@ -148,3 +150,6 @@ export const CustomFormControlLabel = styled(FormControlLabel)(
     }
   })
 );
+export const TagButton: React.FC<HTMLAttributes<HTMLButtonElement>> = ({ ...props }) => {
+  return <button {...props} className={styles.tagbutton} />;
+};

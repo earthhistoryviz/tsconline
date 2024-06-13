@@ -1,15 +1,20 @@
+.adjcontainer {
+  display: flex;
+  justify-content: center;
+}
 .container {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
+  width: 90%;
 }
 .header {
   display: flex;
   flex-direction: row;
   align-items: center;
   width: 100%;
-  justify-content: flex-start;
+  justify-content: space-between;
   padding: 16px;
   gap: 20px;
 }
@@ -21,9 +26,10 @@
   height: 150px;
   object-fit: cover;
   border-radius: 15%;
+  flex-shrink: 0;
 }
 .ht {
-  font-size: 1.7rem;
+  font-size: 2rem;
   font-weight: 700;
   -webkit-line-clamp: 3;
   display: -webkit-box;
@@ -36,7 +42,14 @@
 }
 
 .back {
-  align-self: flex-start;
+  flex-shrink: 0;
+  width: 35px;
+  height: 35px;
+}
+
+.icon {
+  width: inherit;
+  height: inherit;
 }
 .divider {
   width: 100%;
@@ -45,29 +58,46 @@
   padding: 16px;
   display: flex;
   flex-direction: row;
+  gap: 10px;
+}
+
+.ah {
+  flex: 3 1 0;
 }
 
 .additional {
+  flex: 1 1 0;
   flex-shrink: 0;
-  border: 1px solid lightgray;
+  border-left: 1px solid #e0e0e0;
   padding: 16px;
 }
-
 .ai {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  margin-bottom: 5px;
 }
 .aih {
   font-size: 1.1rem;
   font-weight: 600;
   white-space: nowrap;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .dt {
-  font-size: 1.4rem;
+  font-size: 1.6rem;
+  font-weight: 600;
 }
 
 .description {
-  font-size: 1rem;
+  font-size: 1.1rem;
+}
+
+.tags {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  flex-wrap: wrap;
+  max-width: 170px;
 }
