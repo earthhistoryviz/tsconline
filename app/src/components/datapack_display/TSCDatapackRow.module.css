@@ -7,6 +7,11 @@
   border-bottom: 2px solid #e0e0e0;
 }
 
+.cc {
+  display: flex;
+  align-content: center;
+  justify-content: center;
+}
 .image {
   align-self: center;
   justify-content: center;
@@ -32,9 +37,11 @@
   font-size: 1.1rem;
   font-weight: 600;
   margin-top: 10px;
+  color: rgba(0, 0, 0, 0.87);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-decoration: none;
 }
 .fd,
 .ci {
@@ -119,4 +126,12 @@
   border: 2px solid;
   bottom: 4px;
   left: 8px;
+}
+
+.image,
+.middle {
+  cursor: pointer;
+}
+.rc:hover {
+  background-color: rgba(203, 203, 203, 0.15);
 }
