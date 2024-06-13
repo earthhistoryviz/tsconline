@@ -1,5 +1,6 @@
 import { HTMLAttributes, useState } from "react";
 import "./TSCCustomTabs.css";
+import { observer } from "mobx-react-lite";
 type CustomTabsProps = {
   tabs: string[];
   value?: number;
@@ -10,9 +11,9 @@ type CustomTabsProps = {
   centered?: boolean;
   orientation?: "horizontal" | "vertical-left" | "vertical-right";
 } & Omit<HTMLAttributes<HTMLDivElement>, "onChange">;
-export const CustomTabs: React.FC<CustomTabsProps> = ({
+export const CustomTabs: React.FC<CustomTabsProps> = observer(({
   tabs,
-  value = 0,
+  value,
   orientation = "horizontal",
   width = 80,
   height = 40,
@@ -21,7 +22,7 @@ export const CustomTabs: React.FC<CustomTabsProps> = ({
   onChange,
   ...props
 }) => {
-  const [selectedTab, setSelectedTab] = useState<number>(value);
+  const [selectedTab, setSelectedTab] = useState<number>(value || 0);
   const handleTabClick = (index: number) => {
     setSelectedTab(index);
   };
@@ -37,13 +38,13 @@ export const CustomTabs: React.FC<CustomTabsProps> = ({
     tabIndicatorLengthDiff = Math.abs(tabIndicatorLength - width);
   }
   const horizontalOrientation = {
-    transform: `translateX(calc(${selectedTab * width}px + ${tabIndicatorLengthDiff / 2}px))`,
+    transform: `translateX(calc(${(value ?? selectedTab) * width}px + ${tabIndicatorLengthDiff / 2}px))`,
     height: `2px`,
     top: `${height}px`,
     width: `${tabIndicatorLength}px`
   };
   const verticalOrientation = {
-    transform: `translateY(calc(${selectedTab * height}px + ${tabIndicatorLengthDiff / 2}px))`,
+    transform: `translateY(calc(${(value ?? selectedTab) * height}px + ${tabIndicatorLengthDiff / 2}px))`,
     height: `${tabIndicatorLength}px`,
     width: `2px`,
     left: `${orientation === "vertical-left" ? "0" : `${width}px`}`
@@ -65,7 +66,7 @@ export const CustomTabs: React.FC<CustomTabsProps> = ({
               textAlign: `${centered ? "center" : "left"}`,
               padding: `${centered ? "0" : orientation === "vertical-left" ? "10px 5px 10px 15px" : "10px 15px 10px 5px"}`
             }}
-            className={`tsc-tab-panel ${selectedTab === index ? "tsc-tab-panel-selected" : ""}`}
+            className={`tsc-tab-panel ${(value ?? selectedTab) === index ? "tsc-tab-panel-selected" : ""}`}
             onClick={() => {
               handleTabClick(index);
               if (onChange) onChange(index);
@@ -76,4 +77,4 @@ export const CustomTabs: React.FC<CustomTabsProps> = ({
       </div>
     </div>
   );
-};
+});
