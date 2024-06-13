@@ -300,13 +300,27 @@ const applyChartSettings = action("applyChartSettings", (settings: ChartSettings
     if (!state.settings.timeSettings[unit.unit]) {
       state.settings.timeSettings[unit.unit] = JSON.parse(JSON.stringify(defaultTimeSettings));
     }
-    setTopStageAge(unit.text, unit.unit);
+    if (unit.text) {
+      setTopStageAge(unit.text, unit.unit);
+    } else if (unit.stage) {
+      const result = state.geologicalTopStageAges.filter((value) =>
+        value.key.includes(unit.stage!.substring(0, unit.stage!.indexOf("(") - 1))
+      );
+      setTopStageAge(result[0].value, unit.unit);
+    }
   }
   for (const unit of baseAge) {
     if (!state.settings.timeSettings[unit.unit]) {
       state.settings.timeSettings[unit.unit] = JSON.parse(JSON.stringify(defaultTimeSettings));
     }
-    setBaseStageAge(unit.text, unit.unit);
+    if (unit.text) {
+      setBaseStageAge(unit.text, unit.unit);
+    } else if (unit.stage) {
+      const result = state.geologicalBaseStageAges.filter((value) =>
+        value.key.includes(unit.stage!.substring(0, unit.stage!.indexOf("(") - 1))
+      );
+      setBaseStageAge(result[0].value, unit.unit);
+    }
   }
   for (const unit of unitsPerMY) {
     if (!state.settings.timeSettings[unit.unit]) {

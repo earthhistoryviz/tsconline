@@ -41,12 +41,14 @@ import * as parseSettings from "./parse-settings";
  * @param value a string that we want to cast to a type
  * @returns the casted value
  */
-function castValue(value: string) {
+function castValue(value: any) {
   let castValue;
   const RGBregex = new RegExp(
     /^rgb\(\s*(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*,\s*(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*,\s*(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*\)$/
   );
-  if (value === "") {
+  if (value === null) {
+    return null;
+  } else if (value === "") {
     castValue = "";
   } else if (value === "true") {
     castValue = true;
@@ -60,7 +62,7 @@ function castValue(value: string) {
   return castValue;
 }
 
-function updateProperty<T, K extends keyof T>(obj: T, key: K, value: string) {
+function updateProperty<T, K extends keyof T>(obj: T, key: K, value: any) {
   obj[key] = castValue(value) as T[K];
 }
 /**
@@ -94,11 +96,11 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
     }
     if (settingName === "topAge" || settingName === "baseAge") {
       let stage = "",
-        text = "";
+        text = 0;
       if (nestedSettingsNode.getAttribute("name") === "stage") {
         stage = settingValue;
       } else {
-        text = settingValue;
+        text = Number(settingValue);
       }
       if (settingNode.getElementsByTagName("setting")[1]) {
         if (settingNode.getElementsByTagName("setting")[1]!.textContent) {
@@ -106,7 +108,7 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
           if (settingNode.getElementsByTagName("setting")[1]!.getAttribute("name") === "stage") {
             stage = settingValue;
           } else {
-            text = settingValue;
+            text = Number(settingValue);
           }
         }
       }
@@ -114,7 +116,7 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
         source: settingNode.getAttribute("source") as string,
         unit: settingNode.getAttribute("unit") as string,
         stage: castValue(stage) as string,
-        text: castValue(text) as number
+        text: text
       });
     }
     //these two tags have units, so make an object storing its unit and value
@@ -272,6 +274,8 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
             } else updateProperty(column, settingName as keyof ColumnInfoTSC, textValue);
           } else if (settingName === "pointType") {
             updateProperty(column, settingName as keyof ColumnInfoTSC, child.getAttribute("pointType")!);
+          } else if (settingName === "drawExtraColumn") {
+            if (textValue === "") updateProperty(column, settingName as keyof ColumnInfoTSC, null);
           } else {
             updateProperty(column, settingName as keyof ColumnInfoTSC, textValue);
           }
