@@ -300,26 +300,38 @@ const applyChartSettings = action("applyChartSettings", (settings: ChartSettings
     if (!state.settings.timeSettings[unit.unit]) {
       state.settings.timeSettings[unit.unit] = JSON.parse(JSON.stringify(defaultTimeSettings));
     }
-    if (unit.text) {
-      setTopStageAge(unit.text, unit.unit);
-    } else if (unit.stage) {
-      const result = state.geologicalTopStageAges.filter((value) =>
+    if (unit.source === "stage" && unit.stage) {
+      const result = state.geologicalTopStageAges.find((value) =>
         value.key.includes(unit.stage!.substring(0, unit.stage!.indexOf("(") - 1))
       );
-      setTopStageAge(result[0].value, unit.unit);
+      if (result) {
+        setTopStageKey(result.key, unit.unit);
+        setTopStageAge(result.value, unit.unit);
+      }
+    } else if (unit.source === "text" && unit.text) {
+      setTopStageAge(unit.text, unit.unit);
+    } else {
+      pushSnackbar(`${unit.unit} ${unit.source} not provided, using default`, "warning");
+      state.settings.timeSettings[unit.unit] = JSON.parse(JSON.stringify(defaultTimeSettings));
     }
   }
   for (const unit of baseAge) {
     if (!state.settings.timeSettings[unit.unit]) {
       state.settings.timeSettings[unit.unit] = JSON.parse(JSON.stringify(defaultTimeSettings));
     }
-    if (unit.text) {
-      setBaseStageAge(unit.text, unit.unit);
-    } else if (unit.stage) {
-      const result = state.geologicalBaseStageAges.filter((value) =>
+    if (unit.source === "stage" && unit.stage) {
+      const result = state.geologicalBaseStageAges.find((value) =>
         value.key.includes(unit.stage!.substring(0, unit.stage!.indexOf("(") - 1))
       );
-      setBaseStageAge(result[0].value, unit.unit);
+      if (result) {
+        setBaseStageKey(result.key, unit.unit);
+        setBaseStageAge(result.value, unit.unit);
+      }
+    } else if (unit.source === "text" && unit.text) {
+      setBaseStageAge(unit.text, unit.unit);
+    } else {
+      pushSnackbar(`${unit.unit} ${unit.source} not provided, using default`, "warning");
+      state.settings.timeSettings[unit.unit] = JSON.parse(JSON.stringify(defaultTimeSettings));
     }
   }
   for (const unit of unitsPerMY) {
