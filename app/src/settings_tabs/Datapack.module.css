@@ -4,6 +4,7 @@
   align-items: center;
   width: 100%;
   min-height: 100vh;
+  justify-content: center;
 }
 
 .dd {
@@ -23,9 +24,5 @@
   flex-wrap: wrap;
   padding: 4px;
   width: 70%;
-}
-
-.container > * {
-  margin: 10px;
-  overflow: hidden;
+  justify-content: center;
 }
