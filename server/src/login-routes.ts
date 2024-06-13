@@ -15,7 +15,7 @@ import { OAuth2Client } from "google-auth-library";
 import { Email, NewUser, NewVerification, UpdatedUser } from "./types.js";
 import { sendEmail } from "./send-email.js";
 import md5 from "md5";
-import dotenv from "dotenv";
+import { config } from "dotenv";
 import { assetconfigs } from "./index.js";
 import path from "path";
 import { mkdirp } from "mkdirp";
@@ -24,28 +24,11 @@ import fs from "fs";
 import { SharedUser, assertSharedUser } from "@tsconline/shared";
 import { loadFileMetadata } from "./file-metadata-handler.js";
 import { readdir, rm, writeFile } from "fs/promises";
+import { checkRecaptchaToken } from "./verify.js";
 
 const emailTestRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const googleRecaptchaBotThreshold = 0.5;
-dotenv.config();
-
-async function checkRecaptchaToken(token: string): Promise<number> {
-  try {
-    if (process.env.NODE_ENV != "production" && !process.env.RECAPTCHA_SECRET_KEY) return 1.0;
-    const response = await fetch(
-      `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`,
-      { method: "POST" }
-    );
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error("Recaptcha failed");
-    }
-    return data.score;
-  } catch (error) {
-    console.error("Recaptcha error:", error);
-    throw new Error("Recaptcha failed");
-  }
-}
+config({path: "server/.env"});
 
 export const deleteProfile = async function deleteProfile(request: FastifyRequest, reply: FastifyReply) {
   const uuid = request.session.get("uuid");
