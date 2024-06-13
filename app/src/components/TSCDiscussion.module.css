@@ -1,0 +1,45 @@
+.discussion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-top: 20px;
+  width: 100%;
+}
+.header {
+  align-self: flex-start;
+}
+.user {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  width: 100%;
+  padding: 16px;
+  gap: 30px;
+}
+.usercomment {
+  width: 100%;
+}
+.userinput {
+  height: 10px;
+}
+.userInput {
+  border-radius: 30px;
+}
+.usercomment:hover .notchedOutline {
+  border-color: lightgray;
+}
+.ht {
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.dc {
+  padding: 16px;
+}
+
+.send {
+  width: 20px;
+  height: 20px;
+}
