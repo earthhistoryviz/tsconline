@@ -1,4 +1,4 @@
-import { round } from "lodash";
+import { first, round } from "lodash";
 import { DataMiningStatisticApproach, WindowStats } from "../types";
 import { normalizeZero } from "./util";
 
@@ -20,15 +20,22 @@ export function computeWindowStatistics(
     return [];
   }
   data = data.sort((a, b) => a - b);
+  console.log("sorted filted data:" + data);
   const firstDataPoint = data[0]!;
   const lastDataPoint = data[data.length - 1]!;
   const windows = Math.ceil((lastDataPoint - firstDataPoint + 1) / windowSize);
+
+  console.log("windows:" + windows);
+  console.log("firstDatapoint:" + firstDataPoint);
+  console.log("lastDatapoint:" + lastDataPoint);
+
   const results: WindowStats[] = [];
   let start = data[0]!; // inclusive
   let end = start + windowSize; // exclusive
 
   for (let i = 0; i < windows; i++) {
     // make sure to include the last value in the last window
+    console.log("i:" + i);
     const window = data.filter((d) => d >= start && (d < end || (i === windows - 1 && d === end)));
     if (window.length === 0) {
       results.push({ windowStart: start, windowEnd: end, value: 0 });
@@ -91,9 +98,13 @@ export function computeWindowStatisticsForDataPoints(
   const results: WindowStats[] = [];
   let start = data[0]!.age;
   let end = start + windowSize;
+  console.log("filtered data:" + JSON.stringify(data))
+  console.log("length of ftered data is:" + data.length)
+  const testa = [1.21, 3, 5.16, 8.31, 10.21]
   if (stat === "frequency")
     return computeWindowStatistics(
       data.map((d) => d.value),
+      //testa,
       windowSize,
       stat
     );
@@ -101,6 +112,7 @@ export function computeWindowStatisticsForDataPoints(
     const window = data.filter((d) => d.age >= start && (d.age < end || (i === windows - 1 && d.age === end)));
     if (window.length === 0) {
       results.push({ windowStart: start, windowEnd: end, value: 0 });
+      //continue;
     } else {
       const firstWindowPoint = window[0]!;
       const lastWindowPoint = window[window.length - 1]!;
@@ -129,7 +141,9 @@ export function computeWindowStatisticsForDataPoints(
   return results;
 }
 
-export function findRangeOfWindowStats(windowStats: WindowStats[]): { min: number; max: number } {
+export function findRangeOfWindowStats(
+  windowStats: WindowStats[]
+): { min: number; max: number } {
   return windowStats.reduce(
     (acc, curr) => {
       if (curr.value < acc.min) acc.min = curr.value;
