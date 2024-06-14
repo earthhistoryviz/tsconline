@@ -12,3 +12,20 @@
 .tagbutton:hover {
   background-color: #9c9c9c62;
 }
+
+.notimplemented {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  margin: 20px;
+}
+
+.attribution {
+  justify-self: flex-end;
+  align-self: flex-end;
+  scale: 0.5;
+}
