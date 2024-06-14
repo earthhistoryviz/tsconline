@@ -101,3 +101,41 @@
   flex-wrap: wrap;
   max-width: 170px;
 }
+
+.dwc {
+  width: 100%;
+  display: flex;
+  border-radius: 20px;
+  border: 1px solid gray;
+  padding: 8px;
+  background-color: #f0f1f2;
+  box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+  margin: 8px;
+  align-items: center;
+}
+
+.dwi {
+  color: transparent;
+  stroke: black;
+  margin: 10px;
+}
+
+.number {
+  background-color: rgb(255, 111, 111);
+  color: white;
+  font-size: 10px;
+  min-width: 16px;
+  padding: 2px 7px;
+  text-align: center;
+  border-radius: 10px;
+  display: inline-block;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.3);
+  margin-left: 5px;
+  transform: scale(0.9);
+}
+
+.wtc {
+  position: flex;
+  align-items: center;
+  justify-content: center;
+}
