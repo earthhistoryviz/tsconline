@@ -181,7 +181,7 @@ export function assertChartSettingsInfoTSC(o: any): asserts o is ChartSettingsIn
   for (const item of o.topAge) {
     if (typeof item.source !== "string") throwError("topAge", "source", "string", item.source);
     if (typeof item.unit !== "string") throwError("topAge", "unit", "string", item.unit);
-    if (!item.stage && !item.text)
+    if (!("stage" in item) && !("text" in item))
       throw new Error("ChartSettingsInfoTSC topAge must have either stage or text or both");
     if ("stage" in item && typeof item.stage !== "string") throwError("topAge stage", "stage", "string", item.stage);
     if ("text" in item && typeof item.text !== "number") throwError("topAge", "text", "number", item.text);
@@ -190,8 +190,8 @@ export function assertChartSettingsInfoTSC(o: any): asserts o is ChartSettingsIn
   for (const item of o.baseAge) {
     if (typeof item.source !== "string") throwError("baseAge", "source", "string", item.source);
     if (typeof item.unit !== "string") throwError("baseAge", "unit", "string", item.unit);
-    if (!item.stage && !item.text)
-      throw new Error("ChartSettingsInfoTSC topAge must have either stage or text or both");
+    if (!("stage" in item) && !("text" in item))
+      throw new Error("ChartSettingsInfoTSC baseAge must have either stage or text or both");
     if ("stage" in item && typeof item.stage !== "string") throwError("topAge stage", "stage", "string", item.stage);
     if ("text" in item && typeof item.text !== "number") throwError("topAge", "text", "number", item.text);
   }
