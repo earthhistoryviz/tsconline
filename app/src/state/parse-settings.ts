@@ -62,7 +62,7 @@ function castValue(value: string | null) {
   return castValue;
 }
 
-function updateProperty<T, K extends keyof T>(obj: T, key: K, value: any) {
+function updateProperty<T, K extends keyof T>(obj: T, key: K, value: string | null) {
   obj[key] = castValue(value) as T[K];
 }
 /**
