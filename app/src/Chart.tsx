@@ -6,9 +6,10 @@ import "./Chart.css";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import { GradientDiv, TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
-
+import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
+import { IconButton } from "@mui/material";
 export const Chart = observer(function () {
-  const { state } = useContext(context);
+  const { state, actions } = useContext(context);
   const theme = useTheme();
 
   return (
@@ -23,11 +24,20 @@ export const Chart = observer(function () {
       {state.chartLoading ? (
         <LoadingChart />
       ) : state.madeChart ? (
-        <TransformWrapper minScale={0.01} maxScale={3} limitToBounds={false}>
-          <TransformComponent>
-            <TSCSvgComponent chartContent={state.chartContent} />
-          </TransformComponent>
-        </TransformWrapper>
+        <div className="chart-and-options-bar-container">
+          <div className="chart-options-bar">
+            <IconButton
+              title="Timeline On/Off"
+              onClick={() => actions.setChartTimelineEnabled(!state.chartTimelineEnabled)}>
+              <HorizontalRuleIcon className="timeline-button" />
+            </IconButton>
+          </div>
+          <TransformWrapper minScale={0.01} maxScale={3} limitToBounds={false}>
+            <TransformComponent>
+              <TSCSvgComponent chartContent={state.chartContent} />
+            </TransformComponent>
+          </TransformWrapper>
+        </div>
       ) : (
         <div
           className="loading-container"
