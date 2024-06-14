@@ -7,6 +7,8 @@ import LoadingChart from "./LoadingChart";
 import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
+import DownloadIcon from "@mui/icons-material/Download";
+import FileSaver from "file-saver";
 
 import { IconButton } from "@mui/material";
 export const Chart = observer(function () {
@@ -22,6 +24,10 @@ export const Chart = observer(function () {
     const element = document.getElementById("chart-wrapper");
     if (scale.current > 0.2) scale.current -= 0.1;
     element!.style.transform = `scale(${scale.current}, ${scale.current})`;
+  };
+  const downloadSvg = () => {
+    const blob = new Blob([state.chartContent]);
+    FileSaver.saveAs(blob, "test.svg");
   };
   return (
     <div
@@ -47,6 +53,9 @@ export const Chart = observer(function () {
               title="Timeline On/Off"
               onClick={() => actions.setChartTimelineEnabled(!state.chartTimelineEnabled)}>
               <HorizontalRuleIcon className="timeline-button" />
+            </IconButton>
+            <IconButton onClick={() => downloadSvg()}>
+              <DownloadIcon />
             </IconButton>
           </div>
           <div style={{ overflow: "scroll", border: "solid" }}>
