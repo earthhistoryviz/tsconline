@@ -5,7 +5,7 @@ import { useContext, useState } from "react";
 import { context } from "./state";
 import { devSafeUrl } from "./util";
 import { IconButton, Typography } from "@mui/material";
-import { CustomDivider, TagButton } from "./components";
+import { CustomDivider, NotImplemented, TagButton } from "./components";
 import { CustomTabs } from "./components/TSCCustomTabs";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Discussion } from "./components/TSCDiscussion";
@@ -83,7 +83,7 @@ const DatapackProfileContent: React.FC<DatapackProfileContentProps> = ({ index }
     case 0:
       return <About />;
     case 1:
-      return <div>View Data</div>;
+      return <NotImplemented />;
     case 2:
       return <Discussion />;
     case 3:

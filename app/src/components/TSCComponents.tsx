@@ -14,6 +14,8 @@ import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
 import styles from "./TSCComponents.module.css";
 import { HTMLAttributes } from "react";
+import SecurityResearch from "../assets/icons/security-research.json";
+import Lottie from "./TSCLottie";
 
 export const TypographyText = styled(Typography)(({ theme }) => ({
   color: theme.palette.primary.main
@@ -152,4 +154,30 @@ export const CustomFormControlLabel = styled(FormControlLabel)(
 );
 export const TagButton: React.FC<HTMLAttributes<HTMLButtonElement>> = ({ ...props }) => {
   return <button {...props} className={styles.tagbutton} />;
+};
+
+export const NotImplemented: React.FC = () => {
+  return (
+    <div className={styles.notimplemented}>
+      <Lottie animationData={SecurityResearch} width={500} height={500} autoplay loop />
+      <Typography variant="h5">Not Yet Implemented</Typography>
+      <Typography>Stay tuned for updates!</Typography>
+      <div className={styles.attribution}>
+        <a
+          href="https://iconscout.com/lottie-animations/security-research"
+          className="text-underline font-size-sm"
+          target="_blank">
+          Security Research
+        </a>{" "}
+        by{" "}
+        <a href="https://iconscout.com/contributors/nanoagency" className="text-underline font-size-sm">
+          nanoagency
+        </a>{" "}
+        on{" "}
+        <a href="https://iconscout.com" className="text-underline font-size-sm">
+          IconScout
+        </a>
+      </div>
+    </div>
+  );
 };
