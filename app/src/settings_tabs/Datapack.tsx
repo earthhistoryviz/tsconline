@@ -79,22 +79,25 @@ export const Datapacks = observer(function Datapacks() {
   return (
     <div style={{ background: theme.palette.settings.light }}>
       <div className={styles.dc}>
-        <Typography>Add a datapack by clicking the checkbox</Typography>
-        <ToggleButtonGroup
-          value={state.settingsTabs.datapackDisplayType}
-          onChange={() => {
-            actions.setDatapackDisplayType(state.settingsTabs.datapackDisplayType === "rows" ? "cards" : "rows");
-          }}
-          exclusive>
-          <ToggleButton disableRipple value="rows">
-            {" "}
-            <TableRowsIcon />{" "}
-          </ToggleButton>
-          <ToggleButton disableRipple value="cards">
-            {" "}
-            <DashboardIcon />{" "}
-          </ToggleButton>
-        </ToggleButtonGroup>
+        <div className={styles.hdc}>
+          <Typography className={styles.dh}>Add a datapack by clicking the checkbox</Typography>
+          <ToggleButtonGroup
+            className={styles.display}
+            value={state.settingsTabs.datapackDisplayType}
+            onChange={() => {
+              actions.setDatapackDisplayType(state.settingsTabs.datapackDisplayType === "rows" ? "cards" : "rows");
+            }}
+            exclusive>
+            <ToggleButton className={styles.tb} disableRipple value="rows">
+              {" "}
+              <TableRowsIcon className={styles.icon} />{" "}
+            </ToggleButton>
+            <ToggleButton className={styles.tb} disableRipple value="cards">
+              {" "}
+              <DashboardIcon  className={styles.icon}/>{" "}
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </div>
         <Box className={styles.container}>
           {Object.keys(state.datapackIndex).map((datapack) => {
             return state.settingsTabs.datapackDisplayType === "rows" ? (
