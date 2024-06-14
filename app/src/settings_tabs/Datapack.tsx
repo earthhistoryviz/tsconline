@@ -94,11 +94,12 @@ export const Datapacks = observer(function Datapacks() {
             </ToggleButton>
             <ToggleButton className={styles.tb} disableRipple value="cards">
               {" "}
-              <DashboardIcon  className={styles.icon}/>{" "}
+              <DashboardIcon className={styles.icon} />{" "}
             </ToggleButton>
           </ToggleButtonGroup>
         </div>
-        <Box className={styles.container}>
+        <Box
+          className={`${styles.container} ${state.settingsTabs.datapackDisplayType === "cards" ? styles.cards : ""}`}>
           {Object.keys(state.datapackIndex).map((datapack) => {
             return state.settingsTabs.datapackDisplayType === "rows" ? (
               <TSCDatapackRow key={datapack} name={datapack} datapack={state.datapackIndex[datapack]} />

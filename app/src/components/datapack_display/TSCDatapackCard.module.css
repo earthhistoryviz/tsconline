@@ -2,6 +2,14 @@
   width: 234px;
   height: 320px;
   border-radius: 10%;
+  cursor: pointer;
+  box-shadow: none;
+  outline: 1px solid lightgray;
+}
+.card:hover {
+  box-shadow:
+    rgba(60, 64, 67, 0.3) 0px 1px 3px 0px,
+    rgba(60, 64, 67, 0.15) 0px 4px 8px 3px;
 }
 .header {
   -webkit-line-clamp: 2;
@@ -38,6 +46,7 @@
   justify-content: space-between;
   display: flex;
   flex-direction: row;
+  cursor: default;
 }
 
 .vc {
