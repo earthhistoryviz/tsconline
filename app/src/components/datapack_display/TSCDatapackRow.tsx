@@ -17,9 +17,6 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack }
   const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
   const navigate = useNavigate();
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
-  const onClick = () => {
-    navigate(`/datapack/${name}`);
-  };
   return (
     <div className={styles.rc} onClick={() => navigate(`/datapack/${name}`)}>
       <div className={styles.cc} onClick={(e) => e.stopPropagation()}>

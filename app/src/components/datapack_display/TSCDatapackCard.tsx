@@ -5,6 +5,7 @@ import { useState } from "react";
 import styles from "./TSCDatapackCard.module.css";
 import { TSCCheckbox } from "../TSCCheckbox";
 import { CustomFormControlLabel } from "../TSCComponents";
+import { useNavigate } from "react-router";
 
 type TSCDatapackCardProps = {
   name: string;
@@ -12,14 +13,15 @@ type TSCDatapackCardProps = {
 };
 export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack }) => {
   const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
+  const navigate = useNavigate();
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
   return (
-    <Card className={styles.card}>
+    <Card className={styles.card} onClick={() => navigate(`/datapack/${name}`)}>
       <CardMedia component="img" height="140" image={imageUrl} onError={() => setImageUrl(defaultImageUrl)} />
       <CardContent className={styles.cc}>
         <div className={styles.hc}>
           <Typography className={styles.header}>{name}</Typography>
-          <IconButton className={styles.other}>
+          <IconButton className={styles.other} onClick={(e) => e.stopPropagation()}>
             <span className={styles.more} />
           </IconButton>
         </div>
@@ -33,7 +35,7 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack
         </Typography>
         <Typography className={styles.fd}>Dixon, Dougal, et al. (1980) · 10 MB</Typography>
       </CardContent>
-      <div className={styles.footer}>
+      <div className={styles.footer} onClick={(e) => e.stopPropagation()}>
         <CardActions className={styles.ca}>
           <CustomFormControlLabel
             label="Add to Chart"
