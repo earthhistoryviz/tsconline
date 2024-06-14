@@ -10,6 +10,7 @@ import { CustomTabs } from "./components/TSCCustomTabs";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Discussion } from "./components/TSCDiscussion";
 import CampaignIcon from "@mui/icons-material/Campaign";
+import { PageNotFound } from "./PageNotFound";
 
 const tags: string[] = ["Large", "Small", "Medium", "Huge", "Tiny", "Normal", "Abnormal"];
 export const DatapackProfile = observer(() => {
@@ -18,9 +19,9 @@ export const DatapackProfile = observer(() => {
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
   const navigate = useNavigate();
   const [tabIndex, setTabIndex] = useState(0);
-  if (!id) return;
+  if (!id) return <PageNotFound />;
   const datapack = state.datapackIndex[id];
-  if (!datapack) return;
+  if (!datapack) return <PageNotFound />;
   const tabs = [
     {
       id: "About",
