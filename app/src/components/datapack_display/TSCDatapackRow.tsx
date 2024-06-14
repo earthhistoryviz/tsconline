@@ -1,12 +1,13 @@
 import { DatapackParsingPack } from "@tsconline/shared";
 import styles from "./TSCDatapackRow.module.css";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { devSafeUrl } from "../../util";
 import { IconButton, Typography } from "@mui/material";
 import { TSCCheckbox } from "../TSCCheckbox";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { useNavigate } from "react-router";
-import { Link } from "react-router-dom";
+import { context } from "../../state";
+import { throttle } from "lodash";
 
 type TSCDatapackRowProps = {
   name: string;
@@ -14,6 +15,7 @@ type TSCDatapackRowProps = {
 };
 
 export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack }) => {
+  const { actions, state } = useContext(context);
   const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
   const navigate = useNavigate();
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
@@ -22,9 +24,17 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack }
       <div className={styles.cc} onClick={(e) => e.stopPropagation()}>
         <TSCCheckbox
           className={styles.checkbox}
-          onClick={(e) => {
+          onClick={throttle((e) => {
             e.stopPropagation();
-          }}
+            if (state.config.datapacks.includes(name)) {
+              actions.setDatapackConfig(
+                state.config.datapacks.filter((datapack) => datapack !== name),
+                ""
+              );
+            } else {
+              actions.setDatapackConfig([...state.config.datapacks, name], "");
+            }
+          }, 200)}
         />
       </div>
       <img className={styles.image} src={imageUrl} alt="datapack" onError={() => setImageUrl(defaultImageUrl)} />

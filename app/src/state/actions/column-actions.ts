@@ -113,11 +113,12 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
  * moves any rows in the column that's not in the settings file to the bottom (same as jar)
  */
 
-export const applyRowOrder = action("applyRowOrder", (column: ColumnInfo | undefined, settings: ColumnInfoTSC) => {
+export const applyRowOrder = action("applyRowOrder", async (column: ColumnInfo | undefined, settings: ColumnInfoTSC, counter =  {count: 0}) => {
   if (!column) return;
   //needed since number of children in column and settings file could be different
   let columnIndex = 0;
   for (const settingsChild of settings.children) {
+    await yieldControl(counter, 30);
     if (columnIndex === column.children.length) break;
 
     let childName = extractName(settingsChild._id);
@@ -143,15 +144,16 @@ export const applyRowOrder = action("applyRowOrder", (column: ColumnInfo | undef
         column.children[columnIndex]
       ];
     }
-    applyRowOrder(column.children[columnIndex], settingsChild);
+    applyRowOrder(column.children[columnIndex], settingsChild, counter);
     columnIndex++;
   }
 });
 
-export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
+export const initializeColumnHashMap = action(async (columnInfo: ColumnInfo, counter = { count: 0 }) => {
+  await yieldControl(counter, 30);
   state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
   for (const childColumn of columnInfo.children) {
-    initializeColumnHashMap(childColumn);
+    initializeColumnHashMap(childColumn, counter);
   }
 });
 
