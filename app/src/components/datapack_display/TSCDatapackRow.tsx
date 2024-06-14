@@ -8,13 +8,14 @@ import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { useNavigate } from "react-router";
 import { context } from "../../state";
 import { throttle } from "lodash";
+import { observer } from "mobx-react-lite";
 
 type TSCDatapackRowProps = {
   name: string;
   datapack: DatapackParsingPack;
 };
 
-export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack }) => {
+export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = observer(({ name, datapack }) => {
   const { actions, state } = useContext(context);
   const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
   const navigate = useNavigate();
@@ -58,4 +59,4 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack }
       </div>
     </div>
   );
-};
+});

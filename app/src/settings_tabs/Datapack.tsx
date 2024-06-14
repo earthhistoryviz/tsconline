@@ -8,12 +8,13 @@ import Typography from "@mui/material/Typography";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Menu, MenuItem } from "@szhsin/react-menu";
 import styles from "./Datapack.module.css";
-import { Dialog, ToggleButtonGroup, ToggleButton } from "@mui/material";
+import { Dialog, ToggleButtonGroup, ToggleButton, IconButton } from "@mui/material";
 import { ErrorCodes } from "../util/error-codes";
 import { TSCDatapackCard } from "../components/datapack_display/TSCDatapackCard";
 import TableRowsIcon from "@mui/icons-material/TableRows";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import { TSCDatapackRow } from "../components/datapack_display/TSCDatapackRow";
+import DeselectIcon from '@mui/icons-material/Deselect';
 
 export const Datapacks = observer(function Datapacks() {
   const theme = useTheme();
@@ -80,6 +81,9 @@ export const Datapacks = observer(function Datapacks() {
     <div style={{ background: theme.palette.settings.light }}>
       <div className={styles.dc}>
         <div className={styles.hdc}>
+          <IconButton className={styles.ib} onClick={() => actions.setDatapackConfig([], "")}>
+            <DeselectIcon />
+          </IconButton>
           <Typography className={styles.dh}>Add a datapack by clicking the checkbox</Typography>
           <ToggleButtonGroup
             className={styles.display}
