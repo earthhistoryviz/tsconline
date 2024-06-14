@@ -4,8 +4,36 @@
   align-items: center;
   width: 100%;
   min-height: 100vh;
-  justify-content: center;
 }
+.hdc {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  padding: 16px;
+  position: relative;
+}
+.dh {
+  flex-grow: 1;
+  text-align: center;
+}
+
+.tb {
+  width: 30px;
+  height: 30px;
+}
+.icon {
+  width: inherit;
+  height: inherit;
+  padding: 5px;
+}
+
+.display {
+  position: absolute;
+  top: 15%;
+  right: 20%;
+}
+
 
 .dd {
   max-width: 100vw;
