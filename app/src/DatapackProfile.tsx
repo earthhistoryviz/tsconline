@@ -9,6 +9,7 @@ import { CustomDivider, TagButton } from "./components";
 import { CustomTabs } from "./components/TSCCustomTabs";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Discussion } from "./components/TSCDiscussion";
+import CampaignIcon from "@mui/icons-material/Campaign";
 
 const tags: string[] = ["Large", "Small", "Medium", "Huge", "Tiny", "Normal", "Abnormal"];
 export const DatapackProfile = observer(() => {
@@ -20,6 +21,24 @@ export const DatapackProfile = observer(() => {
   if (!id) return;
   const datapack = state.datapackIndex[id];
   if (!datapack) return;
+  const tabs = [
+    {
+      id: "About",
+      tab: "About"
+    },
+    {
+      id: "View Data",
+      tab: "View Data"
+    },
+    {
+      id: "Discussion",
+      tab: "Discussion"
+    },
+    {
+      id: "Warnings",
+      tab: <WarningsTab count={200} />
+    }
+  ];
   return (
     <div className={styles.adjcontainer}>
       <div className={styles.container}>
@@ -35,7 +54,7 @@ export const DatapackProfile = observer(() => {
           centered
           value={tabIndex}
           onChange={(val) => setTabIndex(val)}
-          tabs={["About", "View Data", "Discussion (0)", "Warnings"]}
+          tabs={tabs}
         />
         <CustomDivider className={styles.divider} />
         <DatapackProfileContent index={tabIndex} />
@@ -43,6 +62,17 @@ export const DatapackProfile = observer(() => {
     </div>
   );
 });
+
+type WarningTabProps = {
+  count: number;
+};
+const WarningsTab: React.FC<WarningTabProps> = ({ count }) => {
+  return (
+    <div className={styles.wtc}>
+      Warnings{count > 0 && <span className={styles.number}>{`${count > 99 ? `99+` : count}`}</span>}
+    </div>
+  );
+};
 
 type DatapackProfileContentProps = {
   index: number;
@@ -56,7 +86,15 @@ const DatapackProfileContent: React.FC<DatapackProfileContentProps> = ({ index }
     case 2:
       return <Discussion />;
     case 3:
-      return <div>Warnings</div>;
+      return (
+        <>
+          <DatapackWarning text="hi" />
+          <DatapackWarning
+            text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur fermentum nisi vel pulvinar hendrerit. Curabitur non lacus nulla. Maecenas pellentesque imperdiet vestibulum. Aenean laoreet pretium lectus, pulvinar sollicitudin mauris accumsan quis. Nullam mollis iaculis egestas. Nam lobortis, neque sed malesuada dictum, eros nulla venenatis nunc, sed fringilla justo lorem at lorem. Aliquam egestas neque magna, quis posuere metus lobortis at. Suspendisse nec nibh eu justo vehicula semper. Nulla efficitur nunc sit amet dignissim posuere. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Proin imperdiet, purus a lacinia pharetra, lacus dui cursus metus, at rhoncus libero ligula sed dolor.
+      Nulla pulvinar nulla erat, et fringilla sem finibus sit amet. Cras cursus urna non risus lacinia, ultricies vestibulum ipsum bibendum. Maecenas quis magna ac risus consequat elementum. Donec pretium orci nec congue ultricies. Proin ullamcorper nec nibh sed auctor. Ut non vehicula velit, non scelerisque purus. Vestibulum quis ipsum mi. Cras ultrices finibus dolor id dapibus. Sed eleifend viverra risus, in dictum velit ultrices quis. Nullam pulvinar magna ut lectus placerat rhoncus. Aenean vitae ex sed tellus convallis ullamcorper. Suspendisse mattis consequat lectus, non malesuada urna convallis non. Sed rhoncus fringilla nisi, at congue leo venenatis id."
+          />
+        </>
+      );
     default:
       return <About />;
   }
@@ -115,6 +153,18 @@ const About: React.FC = () => {
           </div>
         </div>
       </div>
+    </div>
+  );
+};
+
+type DatapackWarningProps = {
+  text: string;
+};
+export const DatapackWarning: React.FC<DatapackWarningProps> = ({ text }) => {
+  return (
+    <div className={styles.dwc}>
+      <CampaignIcon className={styles.dwi} />
+      <Typography>{text}</Typography>
     </div>
   );
 };

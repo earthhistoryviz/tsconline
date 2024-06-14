@@ -17,6 +17,7 @@ export const Discussion = () => {
           className={styles.usercomment}
           multiline
           placeholder="Write your comment here"
+          size="small"
           inputProps={{ className: styles.userinput }}
           InputProps={{ classes: { notchedOutline: styles.notchedOutline }, className: styles.userInput }}
         />
