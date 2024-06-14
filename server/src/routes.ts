@@ -327,7 +327,9 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
         // Decrypting these datapacks:
         `-d "${filepath.replaceAll("\\", "/")}" ` +
         // Tell it where to send the datapacks
-        `-dest ${decryptDir.replaceAll("\\", "/")} `;
+        `-dest ${assetconfigs.decryptionDirectory} ` +
+        `-activeJar ${assetconfigs.activeJar} ` +
+        `-decryptJar ${assetconfigs.decryptionJar} `;
       console.log("Calling Java decrypt.jar: ", cmd);
       exec(cmd, function (error, stdout, stderror) {
         console.log("Java decrypt.jar finished, sending reply to browser");

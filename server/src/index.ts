@@ -72,7 +72,9 @@ try {
     // Decrypting these datapacks:
     `-d ${datapacks.join(" ")} ` +
     // Tell it where to send the datapacks
-    `-dest ${assetconfigs.decryptionDirectory} `;
+    `-dest ${assetconfigs.decryptionDirectory} ` +
+    `-activeJar ${assetconfigs.activeJar} ` +
+    `-decryptJar ${assetconfigs.decryptionJar} `;
   console.log("Calling Java decrypt.jar: ", cmd);
   execSync(cmd, { stdio: "inherit" });
   console.log("Finished decryption");
