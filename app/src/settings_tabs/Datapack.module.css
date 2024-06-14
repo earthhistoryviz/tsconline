@@ -22,6 +22,12 @@
   width: 30px;
   height: 30px;
 }
+.ib {
+  position: absolute;
+  top: 15%;
+  left: 15%;
+}
+
 .icon {
   width: inherit;
   height: inherit;
