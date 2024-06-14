@@ -18,6 +18,8 @@ import { defaultColors } from "../util/constant";
 import { settings } from "../constants";
 
 export type State = {
+  chartTimelineEnabled: boolean;
+  chartTimelineLocked: boolean;
   loadSaveFilename: string;
   isLoggedIn: boolean;
   user: SharedUser;
@@ -75,6 +77,8 @@ export type State = {
 };
 
 export const state = observable<State>({
+  chartTimelineEnabled: false,
+  chartTimelineLocked: false,
   loadSaveFilename: "settings", //name without extension (.tsc)
   isLoggedIn: false,
   user: {
