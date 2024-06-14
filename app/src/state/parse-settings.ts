@@ -41,13 +41,13 @@ import * as parseSettings from "./parse-settings";
  * @param value a string that we want to cast to a type
  * @returns the casted value
  */
-function castValue(value: any) {
+function castValue(value: string | null) {
   let castValue;
   const RGBregex = new RegExp(
     /^rgb\(\s*(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*,\s*(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*,\s*(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*\)$/
   );
   if (value === null) {
-    return null;
+    castValue = null;
   } else if (value === "") {
     castValue = "";
   } else if (value === "true") {
