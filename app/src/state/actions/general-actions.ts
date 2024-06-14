@@ -279,10 +279,10 @@ export const fetchTimescaleDataAction = action("fetchTimescaleData", async () =>
   }
 });
 
-export const applySettings = action("applySettings", (settings: ChartInfoTSC) => {
+export const applySettings = action("applySettings", async (settings: ChartInfoTSC) => {
   applyChartSettings(settings.settings);
   applyChartColumnSettings(settings["class datastore.RootColumn:Chart Root"]);
-  applyRowOrder(state.settingsTabs.columns, settings["class datastore.RootColumn:Chart Root"]);
+  await applyRowOrder(state.settingsTabs.columns, settings["class datastore.RootColumn:Chart Root"]);
 });
 
 const applyChartSettings = action("applyChartSettings", (settings: ChartSettingsInfoTSC) => {
@@ -416,6 +416,7 @@ export const setDatapackConfig = action(
       // add everything together
       // uses preparsed data on server start and appends items together
       for (const datapack of datapacks) {
+        await new Promise((resolve) => setTimeout(resolve, 0))
         if (!datapack || !state.datapackIndex[datapack])
           throw new Error(`File requested doesn't exist on server: ${datapack}`);
         const datapackParsingPack = state.datapackIndex[datapack]!;
@@ -447,6 +448,7 @@ export const setDatapackConfig = action(
       }
       // makes sure things are named correctly for users and for the hash map to not have collisions
       for (const [unit, column] of unitMap) {
+        await new Promise((resolve) => setTimeout(resolve, 0))
         if (unit !== "Ma" && column.name === "Chart Title") {
           column.name = column.name + " in " + unit;
           column.editName = unit;
@@ -477,10 +479,10 @@ export const setDatapackConfig = action(
     if (datapacks.length === 0) {
       state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
     }
-    initializeColumnHashMap(state.settingsTabs.columns);
+    await initializeColumnHashMap(state.settingsTabs.columns);
     if (chartSettings !== null) {
       assertChartInfoTSC(chartSettings);
-      applySettings(chartSettings);
+      await applySettings(chartSettings);
     }
     return true;
   }
