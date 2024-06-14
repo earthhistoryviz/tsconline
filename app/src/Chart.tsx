@@ -1,15 +1,28 @@
 import { observer } from "mobx-react-lite";
-import { useContext } from "react";
+import { useContext, useRef } from "react";
 import { context } from "./state";
 import "./Chart.css";
-import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
-import { TSCPopupManager, TSCSvgComponent } from "./components";
+import { GradientDiv, TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
 import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
-import { IconButton, Typography } from "@mui/material";
+import ZoomOutIcon from "@mui/icons-material/ZoomOut";
+import ZoomInIcon from "@mui/icons-material/ZoomIn";
+
+import { IconButton } from "@mui/material";
 export const Chart = observer(function () {
   const { state, actions } = useContext(context);
-
+  const theme = useTheme();
+  const scale = useRef(1);
+  const zoomIn = () => {
+    const element = document.getElementById("chart-wrapper");
+    if (scale.current < 2) scale.current += 0.1;
+    element!.style.transform = `scale(${scale.current}, ${scale.current})`;
+  };
+  const zoomOut = () => {
+    const element = document.getElementById("chart-wrapper");
+    if (scale.current > 0.2) scale.current -= 0.1;
+    element!.style.transform = `scale(${scale.current}, ${scale.current})`;
+  };
   return (
     <div
       style={{
@@ -22,19 +35,23 @@ export const Chart = observer(function () {
       {state.chartLoading ? (
         <LoadingChart />
       ) : state.madeChart ? (
-        <div className="chart-and-options-bar-container">
+        <div className="chart-and-options-bar-container" style={{ marginTop: "1vh", height: "100%", width: "auto" }}>
           <div className="chart-options-bar">
+            <IconButton onClick={() => zoomIn()}>
+              <ZoomInIcon />
+            </IconButton>
+            <IconButton onClick={() => zoomOut()}>
+              <ZoomOutIcon />
+            </IconButton>
             <IconButton
               title="Timeline On/Off"
               onClick={() => actions.setChartTimelineEnabled(!state.chartTimelineEnabled)}>
               <HorizontalRuleIcon className="timeline-button" />
             </IconButton>
           </div>
-          <TransformWrapper minScale={0.01} maxScale={3} limitToBounds={false}>
-            <TransformComponent>
-              <TSCSvgComponent chartContent={state.chartContent} />
-            </TransformComponent>
-          </TransformWrapper>
+          <div style={{ overflow: "scroll", border: "solid" }}>
+            <TSCSvgComponent chartContent={state.chartContent} />
+          </div>
         </div>
       ) : (
         <div className="loading-container">

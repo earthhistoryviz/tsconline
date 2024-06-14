@@ -184,5 +184,12 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ chart
     }
   }, [chartContent, state.chartTimelineEnabled, state.chartTimelineLocked, state.prevSettings.mouseOverPopupsEnabled]);
 
-  return <div ref={svgContainerRef} dangerouslySetInnerHTML={{ __html: chartContent }} />;
+  return (
+    <div
+      ref={svgContainerRef}
+      style={{ transformOrigin: "0 0" }}
+      id="chart-wrapper"
+      dangerouslySetInnerHTML={{ __html: chartContent }}
+    />
+  );
 });
