@@ -1,3 +1,4 @@
+import { vi, describe, beforeEach, it, expect, test } from "vitest";
 import * as utilModule from "../src/util";
 import * as sharedModule from "@tsconline/shared";
 vi.mock('../src/util', async (importOriginal) => {

@@ -20,6 +20,6 @@
     "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "types": ["vitest/globals"]
+    "skipLibCheck": false
   }
 }

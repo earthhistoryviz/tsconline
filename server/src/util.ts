@@ -1,12 +1,10 @@
 import fs, { createReadStream } from "fs";
 import path from "path";
-import fsPromises, { rm } from "fs/promises";
+import { rm, readFile, access, mkdir, readdir, copyFile } from "fs/promises";
 import { glob } from "glob";
 import { createInterface } from "readline/promises";
-import { access } from "fs/promises";
 import { constants } from "fs";
-import { readFile } from "fs/promises";
-import { assertAssetConfig, AssetConfig } from "./types";
+import { assertAssetConfig, AssetConfig } from "./types.js";
 
 /**
  * Recursively deletes directory INCLUDING directoryPath
@@ -44,9 +42,9 @@ export function deleteDirectory(directoryPath: string): string {
  */
 export async function copyDirectory(src: string, destination: string): Promise<void> {
   try {
-    await fsPromises.mkdir(destination, { recursive: true });
+    await mkdir(destination, { recursive: true });
 
-    const entries = await fsPromises.readdir(src, { withFileTypes: true });
+    const entries = await readdir(src, { withFileTypes: true });
 
     for (const entry of entries) {
       const srcPath = path.join(src, entry.name);
@@ -55,7 +53,7 @@ export async function copyDirectory(src: string, destination: string): Promise<v
       if (entry.isDirectory()) {
         await copyDirectory(srcPath, destPath);
       } else {
-        await fsPromises.copyFile(srcPath, destPath);
+        await copyFile(srcPath, destPath);
       }
     }
   } catch (error) {

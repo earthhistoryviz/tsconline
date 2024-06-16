@@ -13,10 +13,9 @@ import {
   assertMapPackIndex,
   assertTimescale
 } from "@tsconline/shared";
-import { deleteDirectory, resetUploadDirectory, checkHeader } from "./util.js";
+import { deleteDirectory, resetUploadDirectory, checkHeader, assetconfigs } from "./util.js";
 import { mkdirp } from "mkdirp";
 import md5 from "md5";
-import { assetconfigs } from "./index.js";
 import svgson from "svgson";
 import fs from "fs";
 import { parseExcelFile } from "./parse-excel-file.js";

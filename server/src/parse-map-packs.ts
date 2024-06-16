@@ -1,7 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import { formatColumnName, grabFilepaths, trimQuotes } from "./util.js";
-import { assetconfigs } from "./index.js";
+import { formatColumnName, grabFilepaths, trimQuotes, assetconfigs } from "./util.js";
 import pmap from "p-map";
 import { MapHierarchy, MapInfo, MapPack, assertTransects } from "@tsconline/shared";
 import {
