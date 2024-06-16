@@ -3,7 +3,7 @@ import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
 import { execSync } from "child_process";
-import { deleteDirectory, checkFileExists, assetconfigs } from "./util.js";
+import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs } from "./util.js";
 import * as routes from "./routes.js";
 import * as loginRoutes from "./login-routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
@@ -11,7 +11,6 @@ import fastifyCompress from "@fastify/compress";
 import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
 import { Email } from "./types.js";
-import { readFile } from "fs/promises";
 import fastifyMultipart from "@fastify/multipart";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import fastifySecureSession from "@fastify/secure-session";
@@ -39,7 +38,7 @@ const server = fastify({
 // Load up all the chart configs found in presets:
 const presets = await loadPresets();
 // Load the current asset config:
-
+await loadAssetConfigs();
 // Check if the required JAR files exist
 const activeJarPath = path.join(assetconfigs.activeJar);
 const decryptionJarPath = path.join(assetconfigs.decryptionJar);

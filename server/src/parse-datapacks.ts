@@ -56,7 +56,7 @@ import {
   SubEventType,
   isSubEventType
 } from "@tsconline/shared";
-import { grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter, formatColumnName } from "./util";
+import { grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter, formatColumnName } from "./util.js";
 import { createInterface } from "readline";
 import _ from "lodash";
 import chalk from "chalk";

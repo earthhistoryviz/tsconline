@@ -1,3 +1,4 @@
+import { vi, beforeAll, afterAll, describe, beforeEach, it, expect } from "vitest";
 import fastify, { FastifyInstance } from "fastify";
 import * as loginRoutes from "../src/login-routes";
 import * as verifyModule from "../src/verify";

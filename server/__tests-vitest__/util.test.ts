@@ -1,6 +1,7 @@
-jest.mock("glob", () => ({
+import { vi, describe, expect, test } from "vitest";
+vi.mock("glob", () => ({
   __esModule: true,
-  glob: jest.fn().mockImplementation((pattern) => {
+  glob: vi.fn().mockImplementation((pattern) => {
     const mockFiles = [
       "/top/directory/file1/bot/file.txt",
       "/top/directory/file2/bot/file.txt",
