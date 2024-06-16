@@ -3,14 +3,14 @@ import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
 import { execSync } from "child_process";
-import { deleteDirectory, checkFileExists } from "./util.js";
+import { deleteDirectory, checkFileExists, assetconfigs } from "./util.js";
 import * as routes from "./routes.js";
 import * as loginRoutes from "./login-routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
 import fastifyCompress from "@fastify/compress";
 import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
-import { AssetConfig, assertAssetConfig, Email } from "./types.js";
+import { Email } from "./types.js";
 import { readFile } from "fs/promises";
 import fastifyMultipart from "@fastify/multipart";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
@@ -39,15 +39,6 @@ const server = fastify({
 // Load up all the chart configs found in presets:
 const presets = await loadPresets();
 // Load the current asset config:
-export let assetconfigs: AssetConfig;
-try {
-  const contents = JSON.parse((await readFile("assets/config.json")).toString());
-  assertAssetConfig(contents);
-  assetconfigs = contents;
-} catch (e) {
-  console.log("ERROR: Failed to load asset configs from assets/config.json.  Error was: ", e);
-  process.exit(1);
-}
 
 // Check if the required JAR files exist
 const activeJarPath = path.join(assetconfigs.activeJar);
