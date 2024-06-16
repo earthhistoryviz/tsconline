@@ -5,6 +5,8 @@ import { glob } from "glob";
 import { createInterface } from "readline/promises";
 import { access } from "fs/promises";
 import { constants } from "fs";
+import { readFile } from "fs/promises";
+import { assertAssetConfig, AssetConfig } from "./types";
 
 /**
  * Recursively deletes directory INCLUDING directoryPath
@@ -205,5 +207,17 @@ export async function checkFileExists(filePath: string): Promise<boolean> {
     return true;
   } catch (error) {
     return false;
+  }
+}
+
+export let assetconfigs: AssetConfig;
+export async function loadAssetConfigs() {
+  try {
+    const contents = JSON.parse((await readFile("assets/config.json")).toString());
+    assertAssetConfig(contents);
+    assetconfigs = contents;
+  } catch (e) {
+    console.log("ERROR: Failed to load asset configs from assets/config.json.  Error was: ", e);
+    process.exit(1);
   }
 }

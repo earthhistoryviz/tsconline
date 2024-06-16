@@ -9,22 +9,22 @@ import {
   createVerification,
   deleteVerification,
   deleteUser
-} from "./database.js";
+} from "./database";
 import { compare, hash } from "bcrypt-ts";
 import { OAuth2Client } from "google-auth-library";
-import { Email, NewUser, NewVerification, UpdatedUser } from "./types.js";
-import { sendEmail } from "./send-email.js";
+import { Email, NewUser, NewVerification, UpdatedUser } from "./types";
+import { sendEmail } from "./send-email";
 import md5 from "md5";
 import { config } from "dotenv";
-import { assetconfigs } from "./index.js";
+import { assetconfigs } from "./util";
 import path from "path";
 import { mkdirp } from "mkdirp";
 import pump from "pump";
 import fs from "fs";
 import { SharedUser, assertSharedUser } from "@tsconline/shared";
-import { loadFileMetadata } from "./file-metadata-handler.js";
+import { loadFileMetadata } from "./file-metadata-handler";
 import { readdir, rm, writeFile } from "fs/promises";
-import { checkRecaptchaToken } from "./verify.js";
+import { checkRecaptchaToken } from "./verify";
 
 const emailTestRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const googleRecaptchaBotThreshold = 0.5;

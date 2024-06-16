@@ -1,36 +1,38 @@
 import fastify, { FastifyInstance } from "fastify";
 import * as loginRoutes from "../src/login-routes";
 import * as verifyModule from "../src/verify";
+import * as indexModule from "../src/index";
+import * as databaseModule from "../src/database";
 
-jest.mock("./verify.js", () => {
-  const originalModule = jest.requireActual("../src/verify");
+vi.mock("../src/verify", async(importOriginal) => {
+  const actual = await importOriginal<typeof verifyModule>();
   return {
-    ...originalModule,
-    checkRecaptchaToken: jest.fn().mockResolvedValue(1.0)
+    ...actual,
+    checkRecaptchaToken: vi.fn().mockResolvedValue(1.0)
   };
 });
-jest.mock("bcrypt-ts", () => ({
-  hash: jest.fn().mockResolvedValue("hashedPassword"),
-}));
-jest.mock("./send-email.js", () => ({
-  sendEmail: jest.fn().mockResolvedValue({}),
-}));
-jest.mock("./index.js", () => {});
-jest.mock("@tsconline/shared", () => {});
-jest.mock("./file-metadata-handler.js", () => {});
-jest.mock("better-sqlite3", () => {});
-jest.mock("md5", () => ({ default: jest.fn().mockReturnValue("uuid") }));
-jest.mock("./database.js", () => ({
-  db: {
-    selectFrom: jest.fn().mockReturnThis(),
-    selectAll: jest.fn().mockReturnThis(),
-    where: jest.fn().mockReturnThis(),
-    execute: jest.fn().mockResolvedValue([]),
-  },
-  createUser: jest.fn().mockResolvedValue({}),
-  findUser: jest.fn().mockResolvedValue([{ userId: "123", uuid: "uuid" }]),
-  createVerification: jest.fn().mockResolvedValue({}),
-}));
+vi.mock("../src/util", async(importOriginal) => {
+  const actual = await importOriginal<typeof indexModule>();
+  return {
+    ...actual,
+    assetconfigs: { decryptionDirectory: "decryptionDirectory", imagesDirectory: "imagesDirectory" },
+  };
+});
+vi.mock("../src/database", async(importOriginal) => {
+  const actual = await importOriginal<typeof databaseModule>();
+  return {
+    ...actual,
+    db: {
+      selectFrom: vi.fn().mockReturnThis(),
+      selectAll: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      execute: vi.fn().mockResolvedValue([]),
+    },
+    createUser: vi.fn().mockResolvedValue({}),
+    findUser: vi.fn().mockResolvedValue([{ userId: "123", uuid: "uuid" }]),
+    createVerification: vi.fn().mockResolvedValue({})
+  };
+});
 
 let app: FastifyInstance;
 
@@ -89,7 +91,7 @@ describe("Auth Controller", () => {
     });
 
     it("should return 422 if recaptcha fails", async () => {
-      const spy = jest.spyOn(verifyModule, "checkRecaptchaToken").mockResolvedValue(0.0);
+      const spy = vi.spyOn(verifyModule, "checkRecaptchaToken").mockResolvedValue(0.0);
 
       const response = await app.inject({
         method: 'POST',
