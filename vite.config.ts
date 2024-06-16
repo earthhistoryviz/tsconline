@@ -6,14 +6,14 @@ export default defineConfig({
     testTimeout: 60 * 60 * 1000,
     cache: false,
     environment: "jsdom",
-    // TODO: remove include prop after complete Vitest migration
-    include: ["server/__tests-vitest__/**"],
+    include: ["server/__tests__/**.test.ts"],
     coverage: {
       reporter: ["lcov", "text"],
+      include: ["server/src/**"]
     },
-    outputFile: "coverage/sonar-report.xml",
+    outputFile: "coverage/sonar-report.xml"
   },
   resolve: {
-    alias: [{ find: "@/", replacement: fileURLToPath(new URL("./", import.meta.url))}]
+    alias: [{ find: "@/", replacement: fileURLToPath(new URL("./", import.meta.url)) }]
   }
 });

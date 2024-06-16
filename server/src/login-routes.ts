@@ -1,14 +1,14 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { randomUUID, randomBytes } from "crypto";
 import {
-  db,
   findUser,
   createUser,
   updateUser,
   findVerification,
   createVerification,
   deleteVerification,
-  deleteUser
+  deleteUser,
+  checkForUsersWithUsernameOrEmail
 } from "./database.js";
 import { compare, hash } from "bcrypt-ts";
 import { OAuth2Client } from "google-auth-library";
@@ -629,14 +629,6 @@ export const verifyEmail = async function verifyEmail(
   }
 };
 
-export async function checkForUsersWithUsernameOrEmail(username: string, email: string) {
-  return await db
-    .selectFrom("users")
-    .selectAll()
-    .where((eb) => eb("username", "=", username).or("email", "=", email))
-    .execute();
-}
-
 export const signup = async function signup(
   request: FastifyRequest<{ Body: { username: string; password: string; email: string; recaptchaToken: string } }>,
   reply: FastifyReply
@@ -657,7 +649,6 @@ export const signup = async function signup(
       return;
     }
     const check = await checkForUsersWithUsernameOrEmail(username, email);
-    console.log(check)
     if (check.length > 0) {
       reply.status(409).send({ error: "User with this email or username already exists" });
       return;
@@ -729,7 +720,7 @@ export const login = async function login(
       return;
     }
     const { uuid, hashedPassword, emailVerified, invalidateSession } = userRow;
-    if (hashedPassword && (await compare(password, hashedPassword))) {
+    if (hashedPassword && (await compare(password, hashedPassword ?? ""))) {
       if (!emailVerified) {
         reply.status(403).send({ error: "Email not verified" });
         return;

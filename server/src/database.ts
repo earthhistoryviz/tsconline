@@ -166,3 +166,11 @@ export async function updateIp(ip: string, count: number) {
 export async function deleteIp(ip: string) {
   return await db.deleteFrom("ip").where("ip", "=", ip).execute();
 }
+
+export async function checkForUsersWithUsernameOrEmail(username: string, email: string) {
+  return await db
+    .selectFrom("users")
+    .selectAll()
+    .where((eb) => eb("username", "=", username).or("email", "=", email))
+    .execute();
+}
