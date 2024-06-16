@@ -13,30 +13,18 @@ import { observer } from "mobx-react-lite";
 type TSCDatapackRowProps = {
   name: string;
   datapack: DatapackParsingPack;
+  value: boolean;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>, name: string) => void;
 };
 
-export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = observer(({ name, datapack }) => {
-  const { actions, state } = useContext(context);
+export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, value, onChange }) => {
   const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
   const navigate = useNavigate();
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
   return (
     <div className={styles.rc} onClick={() => navigate(`/datapack/${name}`)}>
       <div className={styles.cc} onClick={(e) => e.stopPropagation()}>
-        <TSCCheckbox
-          className={styles.checkbox}
-          onClick={throttle((e) => {
-            e.stopPropagation();
-            if (state.config.datapacks.includes(name)) {
-              actions.setDatapackConfig(
-                state.config.datapacks.filter((datapack) => datapack !== name),
-                ""
-              );
-            } else {
-              actions.setDatapackConfig([...state.config.datapacks, name], "");
-            }
-          }, 200)}
-        />
+        <TSCCheckbox className={styles.checkbox} checked={value} onChange={(e) => onChange(e, name)} />
       </div>
       <img className={styles.image} src={imageUrl} alt="datapack" onError={() => setImageUrl(defaultImageUrl)} />
       <div className={styles.middle}>
@@ -59,4 +47,4 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = observer(({ name, d
       </div>
     </div>
   );
-});
+};
