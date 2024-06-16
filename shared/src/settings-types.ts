@@ -25,13 +25,13 @@ export type ChartSettingsInfoTSC = {
     source: string;
     unit: string;
     stage?: string;
-    text: number;
+    text?: number;
   }[];
   baseAge: {
     source: string;
     unit: string;
     stage?: string;
-    text: number;
+    text?: number;
   }[];
   unitsPerMY: {
     unit: string;
@@ -181,15 +181,19 @@ export function assertChartSettingsInfoTSC(o: any): asserts o is ChartSettingsIn
   for (const item of o.topAge) {
     if (typeof item.source !== "string") throwError("topAge", "source", "string", item.source);
     if (typeof item.unit !== "string") throwError("topAge", "unit", "string", item.unit);
+    if (!("stage" in item) && !("text" in item))
+      throw new Error("ChartSettingsInfoTSC topAge must have either stage or text or both");
     if ("stage" in item && typeof item.stage !== "string") throwError("topAge stage", "stage", "string", item.stage);
-    if (typeof item.text !== "number") throwError("topAge", "text", "number", item.text);
+    if ("text" in item && typeof item.text !== "number") throwError("topAge", "text", "number", item.text);
   }
   if (!Array.isArray(o.baseAge)) throw new Error("ChartSettingsTSC must have a baseAge array");
   for (const item of o.baseAge) {
     if (typeof item.source !== "string") throwError("baseAge", "source", "string", item.source);
     if (typeof item.unit !== "string") throwError("baseAge", "unit", "string", item.unit);
-    if ("stage" in item && typeof item.stage !== "string") throwError("baseAge stage", "stage", "string", item.stage);
-    if (typeof item.text !== "number") throwError("baseAge", "text", "number", item.text);
+    if (!("stage" in item) && !("text" in item))
+      throw new Error("ChartSettingsInfoTSC baseAge must have either stage or text or both");
+    if ("stage" in item && typeof item.stage !== "string") throwError("topAge stage", "stage", "string", item.stage);
+    if ("text" in item && typeof item.text !== "number") throwError("topAge", "text", "number", item.text);
   }
   if (!Array.isArray(o.unitsPerMY)) throw new Error("ChartSettingsTSC must have a unitsPerMY array");
   for (const item of o.unitsPerMY) {
