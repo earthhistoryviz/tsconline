@@ -16,7 +16,7 @@ import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import fastifySecureSession from "@fastify/secure-session";
 import fastifyRateLimit from "@fastify/rate-limit";
 import dotenv from "dotenv";
-import { db, findIp, createIp, updateIp } from "./database.js";
+import { db, findIp, createIp, updateIp, initializeDatabase } from "./database.js";
 import { sendEmail } from "./send-email.js";
 import cron from "node-cron";
 import path from "path";
@@ -312,6 +312,7 @@ server.setNotFoundHandler((request, reply) => {
 
 //Start the server...
 try {
+  await initializeDatabase();
   await server.listen({
     host: "0.0.0.0", // for this to work in Docker, you need 0.0.0.0
     port: +(process.env.port || 3000)
