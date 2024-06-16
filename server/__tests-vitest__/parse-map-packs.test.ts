@@ -1,22 +1,15 @@
 import { vi, describe, beforeEach, it, expect } from "vitest";
 import * as utilModule from "../src/util";
-import * as indexModule from "../src/index";
 import * as sharedModule from "@tsconline/shared";
 import { readFileSync } from "fs";
 vi.mock('../src/util', async (importOriginal) => {
   const actual = await importOriginal<typeof utilModule>();
   return {
     ...actual,
-    grabFilepaths: vi.fn().mockImplementation((_files, decrypt_filepath) => {
-      return Promise.resolve([`server/__tests__/__data__/${decrypt_filepath}`]);
+    grabFilepaths: vi.fn().mockImplementation((files: string[]) => {
+      return Promise.resolve(files.map((file) => `server/__tests__/__data__/${file}`));
     }),
-  };
-});
-vi.mock("../src/util", async(importOriginal) => {
-  const actual = await importOriginal<typeof indexModule>();
-  return {
-    ...actual,
-    assetconfigs: { decryptionDirectory: "decryptionDirectory", imagesDirectory: "imagesDirectory" },
+    assetconfigs: { decryptionDirectory: "decryptionDirectory", imagesDirectory: "imagesDirectory" }
   };
 });
 vi.mock("@tsconline/shared", async (importOriginal) => {
@@ -85,65 +78,67 @@ const headerInfoPointsInfo = ["INFOPT", "POINT NAME", "1", "2", "NOTE"];
 const headerTransectsHeaders = ["HEADER-TRANSECTS", "NAME", "STARTLOC", "ENDLOC", "NOTE"];
 const headerTransectsInfo = ["TRANSECT", "TRANSECT 1", "START", "END", "NOTE"];
 
-// describe("parseMapPacks tests", () => {
-//   it("should parse africa general map pack", async () => {
-//     const mapPacks = await parseMapPacks(["parse-map-packs-test-1.txt"], "");
-//     expect(mapPacks).toEqual(key["map-pack-key-1"]);
-//   });
+describe("parseMapPacks tests", () => {
+  it("should parse africa general map pack", async () => {
+    const mapPacks = await parseMapPacks(["parse-map-packs-test-1.txt"], "");
+    expect(mapPacks).toEqual(key["map-pack-key-1"]);
+  });
 
-//   /**
-//    * parses the belgium map pack with a parent map
-//    */
-//   it("should parse belgium map-pack", async () => {
-//     const mapPacks = await parseMapPacks(["parse-map-packs-test-2.txt"], "");
-//     expect(mapPacks).toEqual(key["map-pack-key-2"]);
-//   });
+  /**
+   * parses the belgium map pack with a parent map
+   */
+  it("should parse belgium map-pack", async () => {
+    const mapPacks = await parseMapPacks(["parse-map-packs-test-2.txt"], "");
+    expect(mapPacks).toEqual(key["map-pack-key-2"]);
+  });
 
-//   /**
-//    * parses transects, info points, map points, parent, coord, and header
-//    */
-//   it("should parse everything", async () => {
-//     const mapPacks = await parseMapPacks(["parse-map-packs-test-3.txt"], "");
-//     expect(mapPacks).toEqual(key["map-pack-key-3"]);
-//   });
+  /**
+   * parses transects, info points, map points, parent, coord, and header
+   */
+  it("should parse everything", async () => {
+    const mapPacks = await parseMapPacks(["parse-map-packs-test-3.txt"], "");
+    expect(mapPacks).toEqual(key["map-pack-key-3"]);
+  });
 
-//   /**
-//    * parses two packs with same parent "World map"
-//    */
-//   it("should parse two packs with same parent", async () => {
-//     const mapPacks = await parseMapPacks(["parse-map-packs-test-2.txt", "parse-map-packs-test-3.txt"], "");
-//     const expected = {
-//       mapInfo: { ...key["map-pack-key-2"]["mapInfo"], ...key["map-pack-key-3"]["mapInfo"] },
-//       mapHierarchy: { "World Map": ["Belgium", "MAP TITLE TEST"] }
-//     };
-//     expect(mapPacks).toEqual(expected);
-//   });
+  /**
+   * parses two packs with same parent "World map"
+   */
+  it("should parse two packs with same parent", async () => {
+    const mapPacks = await parseMapPacks(["parse-map-packs-test-2.txt", "parse-map-packs-test-3.txt"], "");
+    const expected = {
+      mapInfo: { ...key["map-pack-key-2"]["mapInfo"], ...key["map-pack-key-3"]["mapInfo"] },
+      mapHierarchy: { "World Map": ["Belgium", "MAP TITLE TEST"].sort() }
+    };
+    (mapPacks.mapHierarchy["World Map"] ?? []).sort();
+    expect(mapPacks).toEqual(expected);
+  });
 
-//   /**
-//    * parses three packs with same parent "World map" (not parse-map-packs-test-1)
-//    */
-//   it("should parse all packs", async () => {
-//     const mapPacks = await parseMapPacks(
-//       ["parse-map-packs-test-1.txt", "parse-map-packs-test-2.txt", "parse-map-packs-test-3.txt"],
-//       ""
-//     );
-//     const expected = {
-//       mapInfo: {
-//         ...key["map-pack-key-1"]["mapInfo"],
-//         ...key["map-pack-key-2"]["mapInfo"],
-//         ...key["map-pack-key-3"]["mapInfo"]
-//       },
-//       mapHierarchy: { "World Map": ["Belgium", "MAP TITLE TEST"] }
-//     };
-//     expect(mapPacks).toEqual(expected);
-//   });
+  /**
+   * parses three packs with same parent "World map" (not parse-map-packs-test-1)
+   */
+  it("should parse all packs", async () => {
+    const mapPacks = await parseMapPacks(
+      ["parse-map-packs-test-1.txt", "parse-map-packs-test-2.txt", "parse-map-packs-test-3.txt"],
+      ""
+    );
+    const expected = {
+      mapInfo: {
+        ...key["map-pack-key-1"]["mapInfo"],
+        ...key["map-pack-key-2"]["mapInfo"],
+        ...key["map-pack-key-3"]["mapInfo"]
+      },
+      mapHierarchy: { "World Map": ["Belgium", "MAP TITLE TEST"].sort() }
+    };
+    (mapPacks.mapHierarchy["World Map"] ?? []).sort();
+    expect(mapPacks).toEqual(expected);
+  });
 
-//   it("should return empty if bad data", async () => {
-//     await expect(parseMapPacks(["bad-data.txt"], "")).rejects.toThrow(
-//       new Error("Map info file: bad-data is not in the correct format/version")
-//     );
-//   });
-// });
+  it("should return empty if bad data", async () => {
+    await expect(parseMapPacks(["bad-data.txt"], "")).rejects.toThrow(
+      new Error("Map info file: bad-data is not in the correct format/version")
+    );
+  });
+});
 
 describe("grab from headers and info tests", () => {
   /**

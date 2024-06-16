@@ -15,7 +15,7 @@ import { OAuth2Client } from "google-auth-library";
 import { Email, NewUser, NewVerification, UpdatedUser } from "./types.js";
 import { sendEmail } from "./send-email.js";
 import md5 from "md5";
-import { config } from "dotenv";
+import "dotenv/config";
 import { assetconfigs } from "./util.js";
 import path from "path";
 import { mkdirp } from "mkdirp";
@@ -28,7 +28,6 @@ import { checkRecaptchaToken } from "./verify.js";
 
 const emailTestRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const googleRecaptchaBotThreshold = 0.5;
-config({path: "server/.env"});
 
 export const deleteProfile = async function deleteProfile(request: FastifyRequest, reply: FastifyReply) {
   const uuid = request.session.get("uuid");
@@ -630,6 +629,14 @@ export const verifyEmail = async function verifyEmail(
   }
 };
 
+export async function checkForUsersWithUsernameOrEmail(username: string, email: string) {
+  return await db
+    .selectFrom("users")
+    .selectAll()
+    .where((eb) => eb("username", "=", username).or("email", "=", email))
+    .execute();
+}
+
 export const signup = async function signup(
   request: FastifyRequest<{ Body: { username: string; password: string; email: string; recaptchaToken: string } }>,
   reply: FastifyReply
@@ -649,11 +656,8 @@ export const signup = async function signup(
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
     }
-    const check = await db
-      .selectFrom("users")
-      .selectAll()
-      .where((eb) => eb("username", "=", username).or("email", "=", email))
-      .execute();
+    const check = await checkForUsersWithUsernameOrEmail(username, email);
+    console.log(check)
     if (check.length > 0) {
       reply.status(409).send({ error: "User with this email or username already exists" });
       return;

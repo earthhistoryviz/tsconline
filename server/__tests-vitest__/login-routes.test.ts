@@ -4,14 +4,8 @@ import * as loginRoutes from "../src/login-routes";
 import * as verifyModule from "../src/verify";
 import * as indexModule from "../src/index";
 import * as databaseModule from "../src/database";
+import * as emailModule from "../src/send-email";
 
-vi.mock("../src/verify", async(importOriginal) => {
-  const actual = await importOriginal<typeof verifyModule>();
-  return {
-    ...actual,
-    checkRecaptchaToken: vi.fn().mockResolvedValue(1.0)
-  };
-});
 vi.mock("../src/util", async(importOriginal) => {
   const actual = await importOriginal<typeof indexModule>();
   return {
@@ -30,8 +24,31 @@ vi.mock("../src/database", async(importOriginal) => {
       execute: vi.fn().mockResolvedValue([]),
     },
     createUser: vi.fn().mockResolvedValue({}),
-    findUser: vi.fn().mockResolvedValue([{ userId: "123", uuid: "uuid" }]),
-    createVerification: vi.fn().mockResolvedValue({})
+    findUser: vi.fn().mockResolvedValue([{ userId: 123, uuid: "uuid" }]),
+    createVerification: vi.fn().mockResolvedValue({}),
+  };
+});
+vi.mock("../src/send-email", async(importOriginal) => {
+  const actual = await importOriginal<typeof emailModule>();
+  return {
+    ...actual,
+    sendEmail: vi.fn().mockResolvedValue({})
+  };
+});
+vi.mock("../src/login-routes", async(importOriginal) => {
+  const actual = await importOriginal<typeof loginRoutes>();
+  return {
+    ...actual,
+    checkForUsersWithUsernameOrEmail: vi.fn().mockResolvedValue([{
+      userId: 123,
+      uuid: "uuid",
+      email: "test@example.com",
+      emailVerified: 1,
+      invalidateSession: 0,
+      username: "testuser",
+      hashedPassword: "password123",
+      pictureUrl: null
+    }])
   };
 });
 
@@ -40,7 +57,7 @@ let app: FastifyInstance;
 beforeAll(async () => {
   app = fastify();
   app.post("/signup", loginRoutes.signup);
-  app.listen({ host: "", port: 25565 });
+  await app.listen({ host: "", port: 8000 });
 });
 
 afterAll(async () => {
@@ -106,12 +123,38 @@ describe("Auth Controller", () => {
       });
 
       spy.mockRestore();
-      
-      console.log(response.json());
+
       expect(response.statusCode).toBe(422);
       expect(response.json().error).toBe("Recaptcha failed");
     });
 
-    // Add more tests for the /signup route as needed
+    it("should return 409 if username is taken", async () => {
+      const spy = vi.spyOn(loginRoutes, "checkForUsersWithUsernameOrEmail").mockResolvedValue([{
+        userId: 123,
+        uuid: "uuid",
+        email: "test@example.com",
+        emailVerified: 1,
+        invalidateSession: 0,
+        username: "testuser",
+        hashedPassword: "password123",
+        pictureUrl: null
+      }]);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/signup',
+        payload: {
+          username: 'testuser',
+          password: 'password123',
+          email: 'test@example.com',
+          recaptchaToken: 'valid_token',
+        }
+      });
+
+      spy.mockRestore();
+
+      expect(response.statusCode).toBe(409);
+      expect(response.json().error).toBe("Username taken");
+    });
   });
 });
