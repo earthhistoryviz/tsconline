@@ -1,9 +1,6 @@
-import { config } from "dotenv";
-
-config({path: "server/.env"});
+import "dotenv/config";
 
 export const checkRecaptchaToken = async function checkRecaptchaToken(token: string): Promise<number> {
-    console.log("checkRecaptchaToken")
     try {
       if (process.env.NODE_ENV != "production" && !process.env.RECAPTCHA_SECRET_KEY) return 1.0;
       const response = await fetch(
