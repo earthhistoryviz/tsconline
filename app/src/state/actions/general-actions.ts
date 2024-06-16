@@ -308,7 +308,7 @@ const applyChartSettings = action("applyChartSettings", (settings: ChartSettings
         setTopStageKey(result.key, unit.unit);
         setTopStageAge(result.value, unit.unit);
       }
-    } else if (unit.source === "text" && unit.text) {
+    } else if (unit.source === "text" && unit.text !== undefined) {
       setTopStageAge(unit.text, unit.unit);
     } else {
       pushSnackbar(`${unit.unit} ${unit.source} not provided, using default`, "warning");
@@ -327,7 +327,7 @@ const applyChartSettings = action("applyChartSettings", (settings: ChartSettings
         setBaseStageKey(result.key, unit.unit);
         setBaseStageAge(result.value, unit.unit);
       }
-    } else if (unit.source === "text" && unit.text) {
+    } else if (unit.source === "text" && unit.text !== undefined) {
       setBaseStageAge(unit.text, unit.unit);
     } else {
       pushSnackbar(`${unit.unit} ${unit.source} not provided, using default`, "warning");
