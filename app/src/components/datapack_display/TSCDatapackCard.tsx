@@ -10,8 +10,10 @@ import { useNavigate } from "react-router";
 type TSCDatapackCardProps = {
   name: string;
   datapack: DatapackParsingPack;
+  value: boolean;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>, name: string) => void;
 };
-export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack }) => {
+export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack, value, onChange }) => {
   const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
   const navigate = useNavigate();
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
@@ -43,7 +45,7 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack
             fontSize="0.75rem"
             className={styles.cfcl}
             labelPlacement="end"
-            control={<TSCCheckbox />}
+            control={<TSCCheckbox checked={value} onChange={(e) => onChange(e, name)} />}
           />
         </CardActions>
         <div className={styles.vc}>

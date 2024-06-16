@@ -14,7 +14,8 @@ import { TSCDatapackCard } from "../components/datapack_display/TSCDatapackCard"
 import TableRowsIcon from "@mui/icons-material/TableRows";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import { TSCDatapackRow } from "../components/datapack_display/TSCDatapackRow";
-import DeselectIcon from '@mui/icons-material/Deselect';
+import DeselectIcon from "@mui/icons-material/Deselect";
+import { throttle } from "lodash";
 
 export const Datapacks = observer(function Datapacks() {
   const theme = useTheme();
@@ -77,6 +78,20 @@ export const Datapacks = observer(function Datapacks() {
     }
   };
 
+  const onChange = (event: React.ChangeEvent<HTMLInputElement>, name: string) => {
+    event.stopPropagation();
+    setTimeout(() => {
+      if (state.config.datapacks.includes(name)) {
+        actions.setDatapackConfig(
+          state.config.datapacks.filter((datapack) => datapack !== name),
+          ""
+        );
+      } else {
+        actions.setDatapackConfig([...state.config.datapacks, name], "");
+      }
+    }, 0);
+  };
+
   return (
     <div style={{ background: theme.palette.settings.light }}>
       <div className={styles.dc}>
@@ -106,9 +121,21 @@ export const Datapacks = observer(function Datapacks() {
           className={`${styles.container} ${state.settingsTabs.datapackDisplayType === "cards" ? styles.cards : ""}`}>
           {Object.keys(state.datapackIndex).map((datapack) => {
             return state.settingsTabs.datapackDisplayType === "rows" ? (
-              <TSCDatapackRow key={datapack} name={datapack} datapack={state.datapackIndex[datapack]} />
+              <TSCDatapackRow
+                key={datapack}
+                name={datapack}
+                datapack={state.datapackIndex[datapack]}
+                value={state.config.datapacks.includes(datapack)}
+                onChange={onChange}
+              />
             ) : (
-              <TSCDatapackCard key={datapack} name={datapack} datapack={state.datapackIndex[datapack]} />
+              <TSCDatapackCard
+                key={datapack}
+                name={datapack}
+                datapack={state.datapackIndex[datapack]}
+                value={state.config.datapacks.includes(datapack)}
+                onChange={onChange}
+              />
             );
           })}
         </Box>

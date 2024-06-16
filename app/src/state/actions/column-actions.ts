@@ -113,41 +113,44 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
  * moves any rows in the column that's not in the settings file to the bottom (same as jar)
  */
 
-export const applyRowOrder = action("applyRowOrder", async (column: ColumnInfo | undefined, settings: ColumnInfoTSC, counter =  {count: 0}) => {
-  if (!column) return;
-  //needed since number of children in column and settings file could be different
-  let columnIndex = 0;
-  for (const settingsChild of settings.children) {
-    await yieldControl(counter, 30);
-    if (columnIndex === column.children.length) break;
+export const applyRowOrder = action(
+  "applyRowOrder",
+  async (column: ColumnInfo | undefined, settings: ColumnInfoTSC, counter = { count: 0 }) => {
+    if (!column) return;
+    //needed since number of children in column and settings file could be different
+    let columnIndex = 0;
+    for (const settingsChild of settings.children) {
+      await yieldControl(counter, 30);
+      if (columnIndex === column.children.length) break;
 
-    let childName = extractName(settingsChild._id);
-    //for manually changed columns (facies, chron, etc.)
-    if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
-      childName = extractName(settings._id) + " " + childName;
+      let childName = extractName(settingsChild._id);
+      //for manually changed columns (facies, chron, etc.)
+      if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
+        childName = extractName(settings._id) + " " + childName;
+      }
+      //for chart titles with different units
+      else if (!column.parent) {
+        if (state.settingsTabs.columnHashMap.get(altUnitNamePrefix + childName))
+          childName = altUnitNamePrefix + childName;
+      }
+      let indexOfMatch = -1;
+      //column doesn't exist in the childrens of loaded column, so skip
+      if ((indexOfMatch = column.children.slice(columnIndex).findIndex((child) => child.name === childName)) === -1) {
+        continue;
+      }
+      indexOfMatch += columnIndex;
+      //place matched column into correct position
+      if (indexOfMatch != columnIndex) {
+        [column.children[columnIndex], column.children[indexOfMatch]] = [
+          column.children[indexOfMatch],
+          column.children[columnIndex]
+        ];
+      }
+      applyRowOrder(column.children[columnIndex], settingsChild, counter);
+      columnIndex++;
     }
-    //for chart titles with different units
-    else if (!column.parent) {
-      if (state.settingsTabs.columnHashMap.get(altUnitNamePrefix + childName))
-        childName = altUnitNamePrefix + childName;
-    }
-    let indexOfMatch = -1;
-    //column doesn't exist in the childrens of loaded column, so skip
-    if ((indexOfMatch = column.children.slice(columnIndex).findIndex((child) => child.name === childName)) === -1) {
-      continue;
-    }
-    indexOfMatch += columnIndex;
-    //place matched column into correct position
-    if (indexOfMatch != columnIndex) {
-      [column.children[columnIndex], column.children[indexOfMatch]] = [
-        column.children[indexOfMatch],
-        column.children[columnIndex]
-      ];
-    }
-    applyRowOrder(column.children[columnIndex], settingsChild, counter);
-    columnIndex++;
   }
-});
+);
 
 export const initializeColumnHashMap = action(async (columnInfo: ColumnInfo, counter = { count: 0 }) => {
   await yieldControl(counter, 30);
