@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { assertDataMiningStatisticApproach } from "../src/types";
 import { computeWindowStatistics, computeWindowStatisticsForDataPoints } from "../src/util/data-mining";
 describe("computeWindowStatistics tests", () => {
