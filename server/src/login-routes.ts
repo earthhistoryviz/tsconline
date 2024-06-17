@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { randomUUID, randomBytes } from "crypto";
+import { randomUUID, randomBytes } from "node:crypto";
 import {
   findUser,
   createUser,

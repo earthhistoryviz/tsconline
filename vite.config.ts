@@ -3,9 +3,8 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    testTimeout: 60 * 60 * 1000,
     cache: false,
-    environment: "jsdom",
+    environment: "node",
     include: ["server/__tests__/**.test.ts"],
     coverage: {
       reporter: ["lcov", "text"],

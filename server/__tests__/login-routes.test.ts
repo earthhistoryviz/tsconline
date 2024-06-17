@@ -3,6 +3,7 @@ import fastify, { FastifyInstance } from "fastify";
 import fastifySecureSession from "@fastify/secure-session";
 import { OAuth2Client } from "google-auth-library";
 import { compare } from "bcrypt-ts";
+import * as cryptoModule from "crypto";
 import * as loginRoutes from "../src/login-routes";
 import * as verifyModule from "../src/verify";
 import * as indexModule from "../src/index";
@@ -27,7 +28,7 @@ vi.mock("../src/database", async (importOriginal) => {
       execute: vi.fn().mockResolvedValue([])
     },
     createUser: vi.fn().mockResolvedValue({}),
-    findUser: vi.fn().mockResolvedValue([{ userId: 123, uuid: "uuid" }]),
+    findUser: vi.fn().mockResolvedValue([]),
     createVerification: vi.fn().mockResolvedValue({}),
     checkForUsersWithUsernameOrEmail: vi.fn().mockResolvedValue([])
   };
@@ -54,11 +55,18 @@ vi.mock("bcrypt-ts", () => {
     hash: vi.fn().mockResolvedValue("hashedPassword")
   };
 });
+vi.mock("node:crypto", async (importOriginal) => {
+  const actual = await importOriginal<typeof cryptoModule>();
+  return {
+    ...actual,
+    randomUUID: vi.fn(() => testUser.uuid)
+  };
+});
 
 let app: FastifyInstance;
 const testUser = {
   userId: 123,
-  uuid: "uuid",
+  uuid: "123e4567-e89b-12d3-a456-426614174000",
   email: "test@example.com",
   emailVerified: 1,
   invalidateSession: 0,
@@ -66,6 +74,11 @@ const testUser = {
   hashedPassword: "password123",
   pictureUrl: null
 };
+function checkSession(cookieHeader: string) {
+  const cookie = decodeURIComponent(cookieHeader).split(" ")[0];
+  const session = cookie?.split("loginSession=")[1];
+  expect(app.decodeSecureSession(session ?? "")?.get("uuid")).toBe(testUser.uuid);
+}
 
 beforeAll(async () => {
   app = fastify();
@@ -161,6 +174,8 @@ describe("login-routes tests", () => {
     });
 
     it("should return 200 if successful", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+
       const response = await app.inject({
         method: "POST",
         url: "/signup",
@@ -244,16 +259,20 @@ describe("login-routes tests", () => {
         payload: payload
       });
 
+      checkSession(response.headers["set-cookie"] as string);
       expect(response.statusCode).toBe(200);
+      expect(response.json().message).toBe("Login successful");
     });
 
     it("should return 200 if successful if no user exists", async () => {
+
       const response = await app.inject({
         method: "POST",
         url: "/oauth",
         payload: payload
       });
 
+      checkSession(response.headers["set-cookie"] as string);
       expect(response.statusCode).toBe(200);
       expect(response.json().message).toBe("Login successful");
     });
@@ -334,7 +353,7 @@ describe("login-routes tests", () => {
       expect(response.statusCode).toBe(403);
       expect(response.json().error).toBe("Email not verified");
     });
-    
+
     it("should return 423 if session is invalidated", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, invalidateSession: 1 }]);
 
@@ -357,6 +376,7 @@ describe("login-routes tests", () => {
         payload: payload
       });
 
+      checkSession(response.headers["set-cookie"] as string);
       expect(response.statusCode).toBe(200);
       expect(response.json().message).toBe("Login successful");
     });
