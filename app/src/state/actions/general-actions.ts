@@ -488,6 +488,57 @@ export const setDatapackConfig = action(
   }
 );
 
+export const addDatapackToConfig = action("addDatapackToConfig", async (datapack: string) => {
+  if (!state.datapackIndex[datapack] || !state.settingsTabs.columns) {
+    pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
+    return;
+  }
+  let existingUnitColumn = null;
+  const datapackParsingPack = state.datapackIndex[datapack]!;
+  for (const pack of state.config.datapacks) {
+    if (pack === datapack) {
+      return;
+    }
+    if (!state.datapackIndex[pack]) {
+      pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
+      return;
+    }
+    if (datapackParsingPack.ageUnits == state.datapackIndex[pack]!.ageUnits) {
+      existingUnitColumn = state.settingsTabs.columns?.children.find(
+        (child) => child.name === state.datapackIndex[pack]!.columnInfo.name
+      );
+      break;
+    }
+  }
+  // if we have a unit column already, add the new datapack to it
+  if (existingUnitColumn) {
+    // take out the ruler column since it already exists
+    const columnsToAdd = cloneDeep(datapackParsingPack.columnInfo.children.slice(1));
+    for (const child of columnsToAdd) {
+      child.parent = existingUnitColumn.name;
+      state.settingsTabs.columnHashMap.set(child.name, child);
+    }
+    existingUnitColumn.children = existingUnitColumn.children.concat(columnsToAdd);
+    // if we don't have a unit column, create a new one
+  } else {
+    const columnsToAdd = cloneDeep(datapackParsingPack.columnInfo);
+    columnsToAdd.parent = state.settingsTabs.columns.name;
+    state.settingsTabs.columnHashMap.set(columnsToAdd.name, columnsToAdd);
+    state.settingsTabs.columns.children = state.settingsTabs.columns.children.concat(columnsToAdd);
+  }
+  if (
+    ((datapackParsingPack.topAge || datapackParsingPack.topAge === 0) &&
+      (datapackParsingPack.baseAge || datapackParsingPack.baseAge === 0)) ||
+    datapackParsingPack.verticalScale
+  ) {
+    state.settings.datapackContainsSuggAge = true;
+  }
+  state.config.datapacks.push(datapack);
+  const mapPack = state.mapPackIndex[datapack]!;
+  Object.assign(state.mapState.mapInfo, mapPack.mapInfo);
+  Object.assign(state.mapState.mapHierarchy, mapPack.mapHierarchy);
+});
+
 const fetchSettingsXML = async (settingsPath: string): Promise<ChartInfoTSC | null> => {
   const res = await fetcher(`/settingsXml/${encodeURIComponent(settingsPath)}`, {
     method: "GET"

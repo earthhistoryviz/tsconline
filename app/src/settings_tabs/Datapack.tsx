@@ -33,16 +33,14 @@ export const Datapacks = observer(function Datapacks() {
 
   const onChange = (event: React.ChangeEvent<HTMLInputElement>, name: string) => {
     event.stopPropagation();
-    setTimeout(() => {
-      if (state.config.datapacks.includes(name)) {
-        actions.setDatapackConfig(
-          state.config.datapacks.filter((datapack) => datapack !== name),
-          ""
-        );
-      } else {
-        actions.setDatapackConfig([...state.config.datapacks, name], "");
-      }
-    }, 0);
+    if (state.config.datapacks.includes(name)) {
+      actions.setDatapackConfig(
+        state.config.datapacks.filter((datapack) => datapack !== name),
+        ""
+      );
+    } else {
+      actions.addDatapackToConfig(name);
+    }
   };
 
   return (
@@ -56,8 +54,9 @@ export const Datapacks = observer(function Datapacks() {
           <ToggleButtonGroup
             className={styles.display}
             value={state.settingsTabs.datapackDisplayType}
-            onChange={() => {
-              actions.setDatapackDisplayType(state.settingsTabs.datapackDisplayType === "rows" ? "cards" : "rows");
+            onChange={(_event, val) => {
+              if (val === state.settingsTabs.datapackDisplayType || !/^(rows|cards)$/.test(val)) return;
+              actions.setDatapackDisplayType(val);
             }}
             exclusive>
             <ToggleButton className={styles.tb} disableRipple value="rows">
