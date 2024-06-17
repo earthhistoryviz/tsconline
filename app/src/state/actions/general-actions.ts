@@ -761,8 +761,36 @@ export const requestDownload = action(async (filename: string, needEncryption: b
     displayServerError(response, errorCode, ErrorMessages[errorCode]);
     return;
   }
-  const file = response.blob();
-  return file;
+  const file = await response.blob();
+  let fileURL = "";
+  if (file) {
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      await new Promise((resolve, reject) => {
+        reader.onloadend = resolve;
+        reader.onerror = reject;
+      });
+      if (typeof reader.result !== "string") {
+        throw new Error("Invalid file");
+      }
+      fileURL = reader.result;
+      if (fileURL) {
+        const aTag = document.createElement("a");
+        aTag.href = fileURL;
+
+        aTag.setAttribute("download", filename);
+
+        document.body.appendChild(aTag);
+        aTag.click();
+        aTag.remove();
+      } else {
+        pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
+      }
+    } catch (error) {
+      pushError(ErrorCodes.INVALID_PATH);
+    }
+  }
 });
 
 export const logout = action("logout", async () => {

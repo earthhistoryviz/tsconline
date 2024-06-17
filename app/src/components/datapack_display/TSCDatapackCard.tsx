@@ -6,6 +6,7 @@ import styles from "./TSCDatapackCard.module.css";
 import { TSCCheckbox } from "../TSCCheckbox";
 import { CustomFormControlLabel } from "../TSCComponents";
 import { useNavigate } from "react-router";
+import { DatapackMenu } from "../../settings_tabs/Datapack";
 
 type TSCDatapackCardProps = {
   name: string;
@@ -23,9 +24,14 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack
       <CardContent className={styles.cc}>
         <div className={styles.hc}>
           <Typography className={styles.header}>{name}</Typography>
-          <IconButton className={styles.other} onClick={(e) => e.stopPropagation()}>
-            <span className={styles.more} />
-          </IconButton>
+          <DatapackMenu
+            name={name}
+            button={
+              <IconButton className={styles.other} onClick={(e) => e.stopPropagation()}>
+                <span className={styles.more} />
+              </IconButton>
+            }
+          />
         </div>
         <Typography className={styles.description}>
           Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's
