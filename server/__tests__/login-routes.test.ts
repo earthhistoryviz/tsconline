@@ -6,17 +6,9 @@ import { compare } from "bcrypt-ts";
 import * as cryptoModule from "crypto";
 import * as loginRoutes from "../src/login-routes";
 import * as verifyModule from "../src/verify";
-import * as indexModule from "../src/index";
 import * as databaseModule from "../src/database";
 import * as emailModule from "../src/send-email";
 
-vi.mock("../src/util", async (importOriginal) => {
-  const actual = await importOriginal<typeof indexModule>();
-  return {
-    ...actual,
-    assetconfigs: { decryptionDirectory: "decryptionDirectory", imagesDirectory: "imagesDirectory" }
-  };
-});
 vi.mock("../src/database", async (importOriginal) => {
   const actual = await importOriginal<typeof databaseModule>();
   return {
@@ -265,7 +257,6 @@ describe("login-routes tests", () => {
     });
 
     it("should return 200 if successful if no user exists", async () => {
-
       const response = await app.inject({
         method: "POST",
         url: "/oauth",

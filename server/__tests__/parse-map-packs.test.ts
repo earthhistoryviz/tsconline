@@ -1,6 +1,5 @@
 import { vi, describe, beforeEach, it, expect } from "vitest";
 import * as utilModule from "../src/util";
-import * as sharedModule from "@tsconline/shared";
 import { readFileSync } from "fs";
 vi.mock("../src/util", async (importOriginal) => {
   const actual = await importOriginal<typeof utilModule>();
@@ -10,20 +9,6 @@ vi.mock("../src/util", async (importOriginal) => {
       return Promise.resolve(files.map((file) => `server/__tests__/__data__/${file}`));
     }),
     assetconfigs: { decryptionDirectory: "decryptionDirectory", imagesDirectory: "imagesDirectory" }
-  };
-});
-vi.mock("@tsconline/shared", async (importOriginal) => {
-  const actual = await importOriginal<typeof sharedModule>();
-  return {
-    ...actual,
-    assertMapPoints: vi.fn().mockReturnValue(true),
-    assertMapInfo: vi.fn().mockReturnValue(true),
-    assertRectBounds: vi.fn().mockReturnValue(true),
-    assertParentMap: vi.fn().mockReturnValue(true),
-    assertInfoPoints: vi.fn().mockReturnValue(true),
-    assertMapHierarchy: vi.fn().mockReturnValue(true),
-    assertVertBounds: vi.fn().mockReturnValue(true),
-    assertTransects: vi.fn().mockReturnValue(true)
   };
 });
 
