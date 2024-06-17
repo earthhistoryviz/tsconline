@@ -14,21 +14,9 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
   const actual = await importOriginal<typeof sharedModule>();
   return {
     ...actual,
-    assertSubInfo: vi.fn().mockReturnValue(true),
-    assertSubEventInfo: vi.fn().mockReturnValue(true),
-    assertSubTransectInfo: vi.fn().mockReturnValue(true),
-    assertSubFreehandInfo: vi.fn().mockReturnValue(true),
-    assertSubChronInfo: vi.fn().mockReturnValue(true),
-    assertColumnHeaderProps: vi.fn().mockReturnValue(true),
-    assertSubPointInfo: vi.fn().mockReturnValue(true),
     assertSubSequenceInfo: vi.fn().mockReturnValue(true),
-    assertSubFaciesInfo: vi.fn().mockReturnValue(true),
-    assertSubBlockInfo: vi.fn().mockReturnValue(true),
-    assertSubRangeInfo: vi.fn().mockReturnValue(true),
     assertDatapackParsingPack: vi.fn().mockReturnValue(true),
-    assertSubFaciesInfoArray: vi.fn().mockReturnValue(true),
     assertColumnSpecificSettings: vi.fn().mockReturnValue(true),
-    assertPoint: vi.fn().mockReturnValue(true),
     calculateAutoScale: vi.fn().mockImplementation((min: number, max: number) => {
       return { lowerRange: min, upperRange: max, scaleStep: 0.18 };
     }),
