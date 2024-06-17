@@ -6,9 +6,7 @@ import { IconButton, Typography } from "@mui/material";
 import { TSCCheckbox } from "../TSCCheckbox";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { useNavigate } from "react-router";
-import { context } from "../../state";
-import { throttle } from "lodash";
-import { observer } from "mobx-react-lite";
+import { DatapackMenu } from "../../settings_tabs/Datapack";
 
 type TSCDatapackRowProps = {
   name: string;
@@ -41,9 +39,14 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
           <Typography className={styles.views}>100</Typography>
           <span className={styles.eye} />
         </div>
-        <IconButton className={styles.iconbutton}>
-          <MoreHorizIcon />
-        </IconButton>
+        <DatapackMenu
+          name={name}
+          button={
+            <IconButton className={styles.iconbutton}>
+              <MoreHorizIcon />
+            </IconButton>
+          }
+        />
       </div>
     </div>
   );
