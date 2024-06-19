@@ -13,6 +13,45 @@
   background-color: #9c9c9c62;
 }
 
+.check,
+.circle {
+  stroke-dasharray: 140;
+  stroke-dashoffset: 140;
+  transform-origin: center;
+  animation: draw 1.2s forwards;
+}
+@keyframes draw {
+  from {
+    stroke-dashoffset: 140;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(0.9);
+  }
+}
+
+.spinner {
+  animation: rotate 2s linear infinite;
+  width: 18px;
+  height: 18px;
+}
+.spinnerPath {
+  stroke: #5652bf;
+  stroke-linecap: round;
+}
+@keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
 .notimplemented {
   display: flex;
   justify-content: center;

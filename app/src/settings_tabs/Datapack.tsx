@@ -20,15 +20,14 @@ export const Datapacks = observer(function Datapacks() {
   const { actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
 
-  const onChange = (event: React.ChangeEvent<HTMLInputElement>, name: string) => {
-    event.stopPropagation();
+  const onChange = async (name: string) => {
     if (state.config.datapacks.includes(name)) {
-      actions.setDatapackConfig(
+      await actions.setDatapackConfig(
         state.config.datapacks.filter((datapack) => datapack !== name),
         ""
       );
     } else {
-      actions.setDatapackConfig([...state.config.datapacks, name], "");
+      await actions.setDatapackConfig([...state.config.datapacks, name], "");
     }
   };
 
@@ -41,7 +40,10 @@ export const Datapacks = observer(function Datapacks() {
               <DeselectIcon />
             </IconButton>
           </CustomTooltip>
-          <Typography className={styles.dh}>Add a datapack by clicking the checkbox</Typography>
+          <div>
+            <Typography className={styles.h}>Click a datapack to see more information!</Typography>
+            <Typography className={styles.dh}>Add a datapack by clicking the checkbox</Typography>
+          </div>
           <ToggleButtonGroup
             className={styles.display}
             value={state.settingsTabs.datapackDisplayType}

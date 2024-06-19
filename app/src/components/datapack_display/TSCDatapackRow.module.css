@@ -5,6 +5,7 @@
   flex-direction: row;
   overflow: hidden;
   border-bottom: 2px solid #e0e0e0;
+  border-bottom-left-radius: 10px;
   container-type: size;
 }
 
@@ -12,6 +13,21 @@
   display: flex;
   align-content: center;
   justify-content: center;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+  padding: 5px;
+  flex-wrap: wrap;
+  border-right: 1px solid lightgray;
+  border-left: 1px solid lightgray;
+  cursor: pointer;
+  min-width: 34px;
+}
+
+.checked {
+  background-color: #d0ace9c2;
+}
+.unchecked {
+  background-color: #d1d1d15e;
 }
 .image {
   align-self: center;

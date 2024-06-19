@@ -7,22 +7,33 @@ import { TSCCheckbox } from "../TSCCheckbox";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { useNavigate } from "react-router";
 import { DatapackMenu } from "../../settings_tabs/Datapack";
+import "./SharedDatapackDisplay.css";
+import { CheckIcon, Loader } from "../TSCComponents";
 
 type TSCDatapackRowProps = {
   name: string;
   datapack: DatapackParsingPack;
   value: boolean;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>, name: string) => void;
+  onChange: (name: string) => Promise<void>;
 };
 
 export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, value, onChange }) => {
   const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
   return (
     <div className={styles.rc} onClick={() => navigate(`/datapack/${name}`)}>
-      <div className={styles.cc} onClick={(e) => e.stopPropagation()}>
-        <TSCCheckbox className={styles.checkbox} checked={value} onChange={(e) => onChange(e, name)} />
+      <div
+        className={`${styles.cc} ${value ? styles.checked : styles.unchecked}`}
+        onClick={async (e) => {
+          e.stopPropagation();
+          setLoading(true);
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await onChange(name);
+          setLoading(false);
+        }}>
+        {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
       </div>
       <img className={styles.image} src={imageUrl} alt="datapack" onError={() => setImageUrl(defaultImageUrl)} />
       <div className={styles.middle}>

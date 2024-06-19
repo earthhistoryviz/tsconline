@@ -5,10 +5,15 @@
   width: 100%;
   min-height: 100vh;
 }
+.h {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
 .hdc {
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: center;
   width: 100%;
   padding: 16px;
   position: relative;

@@ -182,3 +182,42 @@ export const NotImplemented: React.FC = () => {
     </div>
   );
 };
+
+export const CheckIcon = () => {
+  return (
+    <svg width="20px" height="20px" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+      <circle className={styles.circle} cx="10" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="1.5" />
+      <path
+        className={styles.check}
+        d="M6 10 l2.5 3 l5 -5.5"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="square"
+        stroke-linejoin="round"
+      />
+    </svg>
+  );
+};
+
+export const Loader = () => {
+  return (
+    <svg className={styles.spinner} viewBox="0 0 22 22">
+      <defs>
+        <clipPath id="loaderClip">
+          <rect x="0" y="0" width="11" height="22" />
+          <rect x="11" y="0" width="11" height="11" />
+        </clipPath>
+      </defs>
+      <circle
+        className={styles.spinnerPath}
+        cx="11"
+        cy="11"
+        r="9"
+        fill="none"
+        strokeWidth={2}
+        clipPath="url(#loaderClip)"
+      />
+    </svg>
+  );
+};
