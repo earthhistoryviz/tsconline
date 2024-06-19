@@ -1,4 +1,4 @@
-import { DataMiningPointDataType } from "@tsconline/shared";
+import { ColumnInfo, DataMiningPointDataType, MapHierarchy, MapInfo } from "@tsconline/shared";
 
 export type WindowStats = {
   windowStart: number;
@@ -77,6 +77,15 @@ export type ChartSettings = {
   mouseOverPopupsEnabled: boolean;
   datapackContainsSuggAge: boolean;
   useDatapackSuggestedAge: boolean;
+};
+
+export type CachedConfig = {
+  mapHierarchy: MapHierarchy;
+  columnHashMap: Map<string, ColumnInfo>;
+  columns: ColumnInfo;
+  datapackContainsSuggAge: boolean;
+  mapInfo: MapInfo;
+  units: string[];
 };
 
 export function convertDataMiningPointDataTypeToDataMiningStatisticApproach(
