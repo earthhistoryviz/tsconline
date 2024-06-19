@@ -3,7 +3,6 @@ import { DatapackParsingPack } from "@tsconline/shared";
 import { devSafeUrl } from "../../util";
 import { useState } from "react";
 import styles from "./TSCDatapackCard.module.css";
-import { TSCCheckbox } from "../TSCCheckbox";
 import { CheckIcon, CustomFormControlLabel, Loader } from "../TSCComponents";
 import { useNavigate } from "react-router";
 import { DatapackMenu } from "../../settings_tabs/Datapack";
