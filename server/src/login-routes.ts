@@ -720,7 +720,7 @@ export const login = async function login(
       return;
     }
     const { uuid, hashedPassword, emailVerified, invalidateSession } = userRow;
-    if (hashedPassword && (await compare(password, hashedPassword ?? ""))) {
+    if (hashedPassword && (await compare(password, hashedPassword))) {
       if (!emailVerified) {
         reply.status(403).send({ error: "Email not verified" });
         return;
