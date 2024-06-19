@@ -215,7 +215,9 @@ export type SubInfo =
   | SubSequenceInfo
   | SubTransectInfo;
 
-export type ColumnSpecificSettings = EventSettings | PointSettings;
+export type ColumnSpecificSettings = EventSettings | PointSettings | ChronSettings;
+
+export type ChronSettings = DataMiningSettings;
 
 export type DataMiningPointDataType =
   | "Frequency"
@@ -1284,6 +1286,10 @@ export function assertSuccessfulServerResponse(o: any): asserts o is SuccessfulS
 export function assertSVGStatus(o: any): asserts o is SVGStatus {
   if (!o || typeof o !== "object") throw new Error(`SVGStatus must be a non-null object`);
   if (typeof o.ready !== "boolean") throw new Error(`SVGStatus must have a 'ready' boolean property`);
+}
+
+export function assertChronSettings(o: any): asserts o is ChronSettings {
+  assertDataMiningSettings(o);
 }
 
 /**
