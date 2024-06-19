@@ -1,4 +1,4 @@
-import { Avatar, Icon, IconButton, TextField, Typography } from "@mui/material";
+import { Avatar, IconButton, TextField, Typography } from "@mui/material";
 import styles from "./TSCDiscussion.module.css";
 import { CustomDivider } from "./TSCComponents";
 import PersonIcon from "@mui/icons-material/Person";

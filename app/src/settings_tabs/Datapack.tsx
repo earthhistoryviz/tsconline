@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useTheme } from "@mui/material/styles";
-import { TSCDatapackUploadForm, TSCButton } from "../components";
+import { TSCDatapackUploadForm, TSCButton, CustomTooltip } from "../components";
 import { context, state } from "../state";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -39,7 +39,7 @@ export const Datapacks = observer(function Datapacks() {
         ""
       );
     } else {
-      actions.addDatapackToConfig(name);
+      actions.setDatapackConfig([...state.config.datapacks, name], "");
     }
   };
 
@@ -47,9 +47,11 @@ export const Datapacks = observer(function Datapacks() {
     <div style={{ background: theme.palette.settings.light }}>
       <div className={styles.dc}>
         <div className={styles.hdc}>
-          <IconButton className={styles.ib} onClick={() => actions.setDatapackConfig([], "")}>
-            <DeselectIcon />
-          </IconButton>
+          <CustomTooltip title="Deselect All" placement="top">
+            <IconButton className={styles.ib} onClick={() => actions.setDatapackConfig([], "")}>
+              <DeselectIcon />
+            </IconButton>
+          </CustomTooltip>
           <Typography className={styles.dh}>Add a datapack by clicking the checkbox</Typography>
           <ToggleButtonGroup
             className={styles.display}

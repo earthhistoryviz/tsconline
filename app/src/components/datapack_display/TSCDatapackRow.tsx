@@ -1,6 +1,6 @@
 import { DatapackParsingPack } from "@tsconline/shared";
 import styles from "./TSCDatapackRow.module.css";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { devSafeUrl } from "../../util";
 import { IconButton, Typography } from "@mui/material";
 import { TSCCheckbox } from "../TSCCheckbox";

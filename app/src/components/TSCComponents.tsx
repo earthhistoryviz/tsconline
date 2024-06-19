@@ -166,7 +166,9 @@ export const NotImplemented: React.FC = () => {
         <a
           href="https://iconscout.com/lottie-animations/security-research"
           className="text-underline font-size-sm"
-          target="_blank">
+          target="_blank"
+          rel="noreferrer"
+          >
           Security Research
         </a>{" "}
         by{" "}
