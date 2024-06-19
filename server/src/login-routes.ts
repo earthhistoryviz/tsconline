@@ -787,6 +787,10 @@ export const googleLogin = async function googleLogin(
       invalidateSession: 0
     };
     await createUser(user);
+    const insertedUser = (await findUser({ email: payload.email }))[0];
+    if (!insertedUser) {
+      throw new Error("User not inserted");
+    }
     request.session.set("uuid", uuid);
     reply.send({ message: "Login successful" });
   } catch (error) {

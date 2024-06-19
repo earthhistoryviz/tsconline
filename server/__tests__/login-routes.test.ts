@@ -90,6 +90,7 @@ beforeAll(async () => {
   app.post("/signup", loginRoutes.signup);
   app.post("/oauth", loginRoutes.googleLogin);
   app.post("/login", loginRoutes.login);
+  //vi.spyOn(console, 'error').mockImplementation(() => undefined)
   await app.listen({ host: "", port: 8000 });
 });
 
@@ -145,7 +146,7 @@ describe("login-routes tests", () => {
     });
 
     it("should return 422 if recaptcha fails", async () => {
-      const spy = vi.spyOn(verifyModule, "checkRecaptchaToken").mockResolvedValue(0.0);
+      const spy = vi.spyOn(verifyModule, "checkRecaptchaToken").mockResolvedValueOnce(0.0);
 
       const response = await app.inject({
         method: "POST",
@@ -154,7 +155,6 @@ describe("login-routes tests", () => {
       });
 
       expect(spy).toHaveBeenCalledOnce();
-      spy.mockRestore();
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(422);
       expect(response.json().error).toBe("Recaptcha failed");
@@ -176,8 +176,20 @@ describe("login-routes tests", () => {
     });
 
     it("should return 500 if user creation fails", async () => {
-      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([]);
+      vi.mocked(databaseModule.createUser).mockRejectedValueOnce(new Error("Database Error"));
 
+      const response = await app.inject({
+        method: "POST",
+        url: "/signup",
+        payload: payload
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Unknown Error");
+    });
+
+    it("should return 500 if user find fails", async () => {
       const response = await app.inject({
         method: "POST",
         url: "/signup",
@@ -291,9 +303,21 @@ describe("login-routes tests", () => {
       expect(response.json().error).toBe("User already exists");
     });
 
-    it("should return 500 if user insertion fails", async () => {
+    it("should return 500 if user creation fails", async () => {
       vi.mocked(databaseModule.createUser).mockRejectedValueOnce(new Error("Database Error"));
 
+      const response = await app.inject({
+        method: "POST",
+        url: "/oauth",
+        payload: payload
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Unknown Error");
+    });
+
+    it("should return 500 if user find fails", async () => {
       const response = await app.inject({
         method: "POST",
         url: "/oauth",
@@ -323,6 +347,7 @@ describe("login-routes tests", () => {
     });
 
     it("should return 200 if successful for new google user", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([]).mockResolvedValueOnce([testUser]);
       const findUserSpy = vi.spyOn(databaseModule, "findUser");
       const createUserSpy = vi.spyOn(databaseModule, "createUser");
 
@@ -332,7 +357,6 @@ describe("login-routes tests", () => {
         payload: payload
       });
 
-      expect(findUserSpy).toHaveBeenCalledWith({ email: testUser.email });
       expect(createUserSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           email: testUser.email,
@@ -344,6 +368,7 @@ describe("login-routes tests", () => {
           invalidateSession: 0
         })
       );
+      expect(findUserSpy).toHaveBeenCalledWith({ email: testUser.email });
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(true);
       expect(response.statusCode).toBe(200);
       expect(response.json().message).toBe("Login successful");
