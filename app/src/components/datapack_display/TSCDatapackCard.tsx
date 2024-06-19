@@ -4,7 +4,7 @@ import { devSafeUrl } from "../../util";
 import { useState } from "react";
 import styles from "./TSCDatapackCard.module.css";
 import { TSCCheckbox } from "../TSCCheckbox";
-import { CustomFormControlLabel } from "../TSCComponents";
+import { CheckIcon, CustomFormControlLabel, Loader } from "../TSCComponents";
 import { useNavigate } from "react-router";
 import { DatapackMenu } from "../../settings_tabs/Datapack";
 
@@ -12,11 +12,12 @@ type TSCDatapackCardProps = {
   name: string;
   datapack: DatapackParsingPack;
   value: boolean;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>, name: string) => void;
+  onChange: (name: string) => Promise<void>;
 };
 export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack, value, onChange }) => {
   const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
   return (
     <Card className={styles.card} onClick={() => navigate(`/datapack/${name}`)}>
@@ -46,12 +47,24 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack
       <div className={styles.footer} onClick={(e) => e.stopPropagation()}>
         <CardActions className={styles.ca}>
           <CustomFormControlLabel
-            label="Add to Chart"
+            label={value ? "Remove from Chart" : "Add to Chart"}
             width={110}
-            fontSize="0.75rem"
+            fontSize="0.65rem"
             className={styles.cfcl}
             labelPlacement="end"
-            control={<TSCCheckbox checked={value} onChange={(e) => onChange(e, name)} />}
+            control={
+              <div
+                className={styles.checkContainer}
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  setLoading(true);
+                  await new Promise((resolve) => setTimeout(resolve, 1000));
+                  await onChange(name);
+                  setLoading(false);
+                }}>
+                {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
+              </div>
+            }
           />
         </CardActions>
         <div className={styles.vc}>
