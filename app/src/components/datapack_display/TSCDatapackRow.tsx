@@ -22,7 +22,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
   const navigate = useNavigate();
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
   return (
-    <div className={styles.rc} onClick={() => navigate(`/datapack/${name}`)}>
+    <div className={styles.rc} onClick={() => navigate(`/datapack/${encodeURIComponent(name)}`)}>
       <div
         className={`${styles.cc} ${loading ? styles.loading : ""} ${value ? styles.checked : ""}`}
         onClick={async (e) => {
