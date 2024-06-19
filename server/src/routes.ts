@@ -25,7 +25,9 @@ import { updateFileMetadata, writeFileMetadata } from "./file-metadata-handler.j
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
 import { DatapackDescriptionInfo } from "./types.js";
+//import { StringNullableChain } from "lodash";
 import { MultipartFile } from "@fastify/multipart";
+//import { stringify } from "querystring";
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
@@ -63,7 +65,7 @@ export const requestDownload = async function requestDownload(
   request: FastifyRequest<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>,
   reply: FastifyReply
 ) {
-  const uuid = request.session.get("uuid");
+  const uuid = "username"; //request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
@@ -237,193 +239,240 @@ export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
   // for test usage: const uuid = "username";
-  const uuid = request.session.get("uuid");
+  const uuid = "username"; //request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
+  console.log("fetchUserDatapacks called");
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
+  console.log("userDir: ", userDir);
+
   try {
     await access(userDir);
     await access(path.join(userDir, "DatapackIndex.json"));
   } catch (e) {
     reply.status(404).send({ error: "User has no uploaded datapacks" });
+    console.log("User dir not found", e);
     return;
   }
+
   const datapackIndex: DatapackIndex = JSON.parse(JSON.stringify(serverDatapackindex));
+  console.log("datapackIndex: ", datapackIndex);
   const mapPackIndex: MapPackIndex = JSON.parse(JSON.stringify(serverMapPackIndex));
+  console.log("mapPackIndex: ", mapPackIndex);
   try {
+    console.log("try block in fetchUserDatapacks");
     const dataPackData = await readFile(path.join(userDir, "DatapackIndex.json"), "utf8");
+    console.log("dataPackData: ", dataPackData);
     Object.assign(datapackIndex, JSON.parse(dataPackData));
     const mapPackData = await readFile(path.join(userDir, "MapPackIndex.json"), "utf8");
+    console.log("mapPackData: ", mapPackData);
     Object.assign(mapPackIndex, JSON.parse(mapPackData));
   } catch (e) {
     reply
       .status(500)
       .send({ error: "Failed to load indexes, corrupt json files present. Please contact customer service." });
+    console.log("Failed to load indexes", e);
     return;
   }
   const indexResponse = { datapackIndex, mapPackIndex };
+  console.log("indexResponse: ", indexResponse);
   assertIndexResponse(indexResponse);
   reply.status(200).send(indexResponse);
 };
 
 // If at some point a delete datapack function is needed, this function needs to be modified for race conditions
 export const uploadDatapack = async function uploadDatapack(request: FastifyRequest, reply: FastifyReply) {
-  const uuid = request.session.get("uuid");
-  if (!uuid) {
-    reply.status(401).send({ error: "User not logged in" });
-    return;
-  }
-  // for test usage: const uuid = "username";
-  const { file, name, description } = request.body as {
-    file: MultipartFile;
-    name: string;
-    description: string;
-  };
-  if (!file || !name || !description) {
-    reply.status(404).send({ error: "No file uploaded or missing fields" });
-    return;
-  }
-  // only accept a binary file (encoded) or an unecnrypted text file or a zip file
-  if (
-    file.mimetype !== "application/octet-stream" &&
-    file.mimetype !== "text/plain" &&
-    file.mimetype !== "application/zip"
-  ) {
-    reply.status(400).send({ error: `Invalid mimetype of uploaded file, received ${file.mimetype}` });
-    return;
-  }
-  const filename = file.filename;
-  const ext = path.extname(filename);
-  const filenameWithoutExtension = path.basename(filename, ext);
-  const userDir = path.join(assetconfigs.uploadDirectory, uuid);
-  const datapackDir = path.join(userDir, "datapacks");
-  const decryptDir = path.join(userDir, "decrypted");
-  const filepath = path.join(datapackDir, filename);
-  const decryptedFilepathDir = path.join(decryptDir, filenameWithoutExtension);
-  const mapPackIndexFilepath = path.join(userDir, "MapPackIndex.json");
-  const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json");
-  const datapackInfo: DatapackDescriptionInfo = {
-    file: filename,
-    description: description,
-    title: name,
-    size: file.file.bytesRead.toString()
-  };
-  async function errorHandler(message: string, errorStatus: number, e?: unknown) {
-    e && console.error(e);
-    await resetUploadDirectory(filepath, decryptedFilepathDir);
-    reply.status(errorStatus).send({ error: message });
-  }
-  if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(ext)) {
-    reply.status(415).send({ error: "Invalid file type" });
-    return;
-  }
-  await mkdir(datapackDir, { recursive: true });
-  const fileStream = file.file;
-  console.log("Uploading file: ", filename);
   try {
-    // must wait for the file to be written before decrypting
-    await new Promise<void>((resolve, reject) => {
-      pump(fileStream, fs.createWriteStream(filepath), (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
-  } catch (e) {
-    await errorHandler("Failed to save file with error: " + e, 500, e);
-    return;
-  }
-  if (file.file.truncated) {
-    await errorHandler("File too large", 413);
-    return;
-  }
-  try {
-    await new Promise<void>((resolve, reject) => {
-      const cmd =
-        `java -jar ${assetconfigs.decryptionJar} ` +
-        // Decrypting these datapacks:
-        `-d "${filepath.replaceAll("\\", "/")}" ` +
-        // Tell it where to send the datapacks
-        `-dest ${decryptDir.replaceAll("\\", "/")} `;
-      console.log("Calling Java decrypt.jar: ", cmd);
-      exec(cmd, function (error, stdout, stderror) {
-        console.log("Java decrypt.jar finished, sending reply to browser");
-        if (error) {
-          console.error("Java error param: " + error);
-          console.error("Java stderr: " + stderror.toString());
-          reject(error);
-        } else {
-          console.log("Java stdout: " + stdout.toString());
-          resolve();
-        }
-      });
-    });
-  } catch (e) {
-    await errorHandler("Failed to decrypt datapacks with error " + e, 500, e);
-    return;
-  }
-  try {
-    await access(decryptedFilepathDir);
-    await access(path.join(decryptedFilepathDir, "datapacks"));
-  } catch (e) {
-    await errorHandler("Failed to decrypt file", 500);
-    return;
-  }
+    console.log("uploadDatapack called");
+    const uuid = "username"; //request.session.get("uuid");
+    if (!uuid) {
+      reply.status(401).send({ error: "User not logged in" });
+      return;
+    }
+    // for test usage: const uuid = "username";
 
-  const datapackIndex: DatapackIndex = {};
-  const mapPackIndex: MapPackIndex = {};
-  // check for if this user has a datapack index already
-  try {
-    const data = await readFile(datapackIndexFilepath, "utf-8");
-    Object.assign(datapackIndex, JSON.parse(data));
-    assertDatapackIndex(datapackIndex);
-  } catch (e) {
-    if ((e as NodeJS.ErrnoException).code != "ENOENT") {
-      await errorHandler("Failed to parse DatapackIndex.json", 500, e);
+    const parts = request.parts();
+    const fields: Record<string, string> = {};
+    let uploadedFile: MultipartFile | undefined; //has to be undefined to be able to check if it is null
+    for await (const part of parts) {
+      console.log("part: ", part);
+      if (part.type === "file") {
+        uploadedFile = part as MultipartFile;
+        console.log("uploadedFile in for loop if block: ", uploadedFile);
+        await pump(uploadedFile.file, fs.createWriteStream(uploadedFile.filename)); //must happen or else if gets skipped
+        await part.toBuffer();
+      } else if (part.type === "field") {
+        const field = part as { fieldname: string; value: string };
+        fields[part.fieldname] = field.value;
+        console.log("fields: ", fields);
+      }
+    }
+    const name = fields.name;
+    const description = fields.description;
+
+    if (!uploadedFile) {
+      reply.status(404).send({ error: "No file uploaded" });
+      console.log("No file uploaded, console log");
       return;
     }
-  }
-  // check for if this user has a map index already
-  try {
-    const data = await readFile(mapPackIndexFilepath, "utf-8");
-    Object.assign(mapPackIndex, JSON.parse(data));
-    assertMapPackIndex(mapPackIndex);
-  } catch (e) {
-    if ((e as NodeJS.ErrnoException).code != "ENOENT") {
-      errorHandler("Failed to parse MapPackIndex.json", 500, e);
+    console.log("uploadedFile AFTER forloop: ", uploadedFile);
+    console.log("filestream: ", uploadedFile.file);
+
+    if (!name || !description) {
+      reply.status(404).send({ error: "No name or description uploaded" });
+      console.log("No name or description uploaded");
       return;
     }
-  }
-  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [datapackInfo], true);
-  if (!datapackIndex[filename]) {
-    await errorHandler("Failed to load decrypted datapack", 500);
-    return;
-  }
-  try {
-    await writeFile(datapackIndexFilepath, JSON.stringify(datapackIndex));
-    await writeFile(mapPackIndexFilepath, JSON.stringify(mapPackIndex));
+
+    // only accept a binary file (encoded) or an unecnrypted text file or a zip file
+    if (
+      uploadedFile.mimetype !== "application/octet-stream" &&
+      uploadedFile.mimetype !== "text/plain" &&
+      uploadedFile.mimetype !== "application/zip"
+    ) {
+      reply.status(400).send({ error: `Invalid mimetype of uploaded file, received ${uploadedFile.mimetype}` });
+      return;
+    }
+    const filename = uploadedFile.filename; //from MultipartFile, original name of file
+    const ext = path.extname(filename);
+    const filenameWithoutExtension = path.basename(filename, ext);
+    const userDir = path.join(assetconfigs.uploadDirectory, uuid);
+    const datapackDir = path.join(userDir, "datapacks");
+    const decryptDir = path.join(userDir, "decrypted");
+    const filepath = path.join(datapackDir, filename);
+    const decryptedFilepathDir = path.join(decryptDir, filenameWithoutExtension);
+    const mapPackIndexFilepath = path.join(userDir, "MapPackIndex.json");
+    const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json");
+    const datapackInfo: DatapackDescriptionInfo = {
+      file: filename,
+      description: description,
+      title: name,
+      size: uploadedFile.file.bytesRead.toString()
+    };
+    async function errorHandler(message: string, errorStatus: number, e?: unknown) {
+      e && console.error(e);
+      await resetUploadDirectory(filepath, decryptedFilepathDir);
+      reply.status(errorStatus).send({ error: message });
+    }
+    if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(ext)) {
+      reply.status(415).send({ error: "Invalid file type" });
+      return;
+    }
+    const fileStream = uploadedFile.file;
+    await mkdirp(datapackDir);
+    try {
+      // must wait for the file to be written before decrypting
+      await new Promise<void>((resolve, reject) => {
+        pump(fileStream, fs.createWriteStream(filepath), (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      });
+    } catch (e) {
+      await errorHandler("Failed to save file with error: " + e, 500, e);
+      return;
+    }
+    if (uploadedFile.file.truncated) {
+      await errorHandler("File too large", 413);
+      return;
+    }
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const cmd =
+          `java -jar ${assetconfigs.decryptionJar} ` +
+          // Decrypting these datapacks:
+          `-d "${filepath.replaceAll("\\", "/")}" ` +
+          // Tell it where to send the datapacks
+          `-dest ${decryptDir.replaceAll("\\", "/")} `;
+        console.log("Calling Java decrypt.jar: ", cmd);
+        exec(cmd, function (error, stdout, stderror) {
+          console.log("Java decrypt.jar finished, sending reply to browser");
+          if (error) {
+            console.error("Java error param: " + error);
+            console.error("Java stderr: " + stderror.toString());
+            reject(error);
+          } else {
+            console.log("Java stdout: " + stdout.toString());
+            resolve();
+          }
+        });
+      });
+    } catch (e) {
+      await errorHandler("Failed to decrypt datapacks with error " + e, 500, e);
+      return;
+    }
+    try {
+      await access(decryptedFilepathDir);
+      await access(path.join(decryptedFilepathDir, "datapacks"));
+    } catch (e) {
+      await errorHandler("Failed to decrypt file", 500);
+      return;
+    }
+
+    const datapackIndex: DatapackIndex = {};
+    const mapPackIndex: MapPackIndex = {};
+    // check for if this user has a datapack index already
+    try {
+      const data = await readFile(datapackIndexFilepath, "utf-8");
+      Object.assign(datapackIndex, JSON.parse(data));
+      assertDatapackIndex(datapackIndex);
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code != "ENOENT") {
+        await errorHandler("Failed to parse DatapackIndex.json", 500, e);
+        return;
+      }
+    }
+    // check for if this user has a map index already
+    try {
+      const data = await readFile(mapPackIndexFilepath, "utf-8");
+      Object.assign(mapPackIndex, JSON.parse(data));
+      assertMapPackIndex(mapPackIndex);
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code != "ENOENT") {
+        errorHandler("Failed to parse MapPackIndex.json", 500, e);
+        return;
+      }
+    }
+    await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [datapackInfo], true);
+    if (!datapackIndex[filename]) {
+      await errorHandler("Failed to load decrypted datapack", 500);
+      return;
+    }
+    try {
+      await writeFile(datapackIndexFilepath, JSON.stringify(datapackIndex));
+      console.log("Wrote datapack index to file", datapackIndexFilepath);
+      await writeFile(mapPackIndexFilepath, JSON.stringify(mapPackIndex));
+      console.log("Wrote map pack index to file");
+    } catch (e) {
+      await errorHandler("Failed to save indexes", 500, e);
+      return;
+    }
+    try {
+      await writeFileMetadata(
+        assetconfigs.fileMetadata,
+        filename,
+        filepath,
+        decryptedFilepathDir,
+        mapPackIndexFilepath,
+        datapackIndexFilepath
+      );
+      console.log("metadata to file");
+    } catch (e) {
+      await errorHandler("Failed to load and write metadata for file", 500, e);
+      return;
+    }
+    reply.status(200).send({ message: "File uploaded" });
+    console.log("File uploaded to server");
   } catch (e) {
-    await errorHandler("Failed to save indexes", 500, e);
-    return;
+    console.error(e);
+    reply.status(500).send({ error: "An error occurred in uploadDatapack" });
+    console.log("An error occurred in uploadDatapack-console");
   }
-  try {
-    await writeFileMetadata(
-      assetconfigs.fileMetadata,
-      filename,
-      filepath,
-      decryptedFilepathDir,
-      mapPackIndexFilepath,
-      datapackIndexFilepath
-    );
-  } catch (e) {
-    await errorHandler("Failed to load and write metadata for file", 500, e);
-    return;
-  }
-  reply.status(200).send({ message: "File uploaded" });
 };
 
 export const fetchImage = async function (

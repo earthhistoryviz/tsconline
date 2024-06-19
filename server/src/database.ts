@@ -72,7 +72,7 @@ export async function initializeDatabase() {
     .addColumn("expiresAt", "datetime", (col) => col.notNull())
     .addColumn("verifyOrReset", "text", (col) => col.notNull())
     .execute();
-
+  /*
   await new Promise<void>((resolve, reject) => {
     exec("cd db && yarn tsx migrate.ts up", (error, stdout, stderr) => {
       if (error) {
@@ -84,7 +84,7 @@ export async function initializeDatabase() {
       if (stderr) console.error(stderr);
       resolve();
     });
-  });
+  });*/
 }
 
 export { db };

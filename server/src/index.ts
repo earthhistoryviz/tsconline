@@ -120,9 +120,10 @@ await server.register(fastifyRateLimit, {
 });
 
 server.register(fastifyMultipart, {
+  //attachFieldsToBody: true,
   limits: {
-    fieldNameSize: 100,
-    fileSize: 1024 * 1024 * 60 // 60 mb
+    fieldNameSize: 100
+    //fileSize: 1024 * 1024 * 60 // 60 mb
   }
 });
 

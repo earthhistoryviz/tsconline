@@ -182,6 +182,7 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
       credentials: "include"
     });
     const data = await response.json();
+    console.log("response of /user-datapacks: ", data); //error check
     try {
       assertIndexResponse(data);
       const { mapPackIndex, datapackIndex } = data;
@@ -201,29 +202,37 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
     console.error(e);
   }
 });
-
+//description: string as a parameter
 export const uploadDatapack = action("uploadDatapack", async (file: File, name: string, description: string) => {
   if (state.datapackIndex[file.name]) {
     pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
     return;
   }
   const formData = new FormData();
-  //add the description and title to these forms and need to change how it is grabbed in routes
   formData.append("file", file);
   formData.append("name", name);
   formData.append("description", description);
+  console.log("formdata", formData);
+
+  console.log("formData appended, description: " + description + " name: " + name + " file: " + file.name);
   try {
     const response = await fetcher(`/upload`, {
       method: "POST",
       body: formData,
       credentials: "include"
     });
+
+    console.log("Response of /upload: ", response); //error check
     const data = await response.json();
+    console.log("Data, response.json(), of /upload: ", data); //error check !!!!!!
+
     if (response.ok) {
       console.log("Successfully uploaded datapack");
       fetchUserDatapacks();
+      console.log("File: " + file.name + " Name: " + name + " Description:");
       pushSnackbar("Successfully uploaded " + name + " datapack", "success");
     } else {
+      console.log("error uploading datapack line 228"); //was failing here
       displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
     }
   } catch (e) {
