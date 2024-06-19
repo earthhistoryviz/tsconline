@@ -20,17 +20,6 @@ export const Datapacks = observer(function Datapacks() {
   const { actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
 
-  const handleCheckboxChange = (name: string) => {
-    if (state.config.datapacks.includes(name)) {
-      actions.setDatapackConfig(
-        state.config.datapacks.filter((datapack) => datapack !== name),
-        ""
-      );
-    } else {
-      actions.setDatapackConfig([...state.config.datapacks, name], "");
-    }
-  };
-
   const onChange = (event: React.ChangeEvent<HTMLInputElement>, name: string) => {
     event.stopPropagation();
     if (state.config.datapacks.includes(name)) {
