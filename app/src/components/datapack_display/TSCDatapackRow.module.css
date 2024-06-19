@@ -21,14 +21,17 @@
   border-left: 1px solid lightgray;
   cursor: pointer;
   min-width: 34px;
+  background-color: #e0e0e069;
+  transition: background-color 0.3s;
+}
+.loading {
+  background-color: rgba(0, 0, 0, 0.068) !important;
 }
 
 .checked {
-  background-color: #d0ace9c2;
+  background-color: #6ee7b74d;
 }
-.unchecked {
-  background-color: #d1d1d15e;
-}
+
 .image {
   align-self: center;
   justify-content: center;

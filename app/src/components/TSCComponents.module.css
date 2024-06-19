@@ -18,7 +18,8 @@
   stroke-dasharray: 140;
   stroke-dashoffset: 140;
   transform-origin: center;
-  animation: draw 1.2s forwards;
+  animation: draw 1.5s forwards;
+  color: #285238;
 }
 @keyframes draw {
   from {
@@ -39,12 +40,12 @@
 }
 
 .spinner {
-  animation: rotate 2s linear infinite;
+  animation: rotate 0.8s linear infinite;
   width: 18px;
   height: 18px;
 }
 .spinnerPath {
-  stroke: #5652bf;
+  stroke: #ebebeb;
   stroke-linecap: round;
 }
 @keyframes rotate {

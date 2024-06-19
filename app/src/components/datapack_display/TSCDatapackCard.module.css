@@ -44,9 +44,11 @@
 
 .footer {
   justify-content: space-between;
+  align-items: center;
   display: flex;
   flex-direction: row;
   cursor: default;
+  padding: 0 10px;
 }
 
 .vc {
@@ -56,8 +58,6 @@
   justify-content: center;
   text-align: right;
   white-space: nowrap;
-  margin-bottom: 5px;
-  margin-right: 20px;
 }
 
 .hc {
@@ -70,10 +70,22 @@
 
 .cfcl {
   margin-left: 0px;
+  gap: 10px;
+  align-items: center;
+}
+
+.checkContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  min-height: 22px;
 }
 
 .ca {
-  padding: 0px 8px 8px 8px;
+  padding: 8px 8px 8px 8px;
+  white-space: nowrap;
 }
 
 .fd {
@@ -93,7 +105,7 @@
   margin-right: 3px;
   margin-top: 2px;
   font-size: 0.7rem;
-  width: 50px;
+  width: 30px;
   overflow: hidden;
   text-overflow: ellipsis;
   align-self: center;

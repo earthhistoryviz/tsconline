@@ -25,7 +25,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
   return (
     <div className={styles.rc} onClick={() => navigate(`/datapack/${name}`)}>
       <div
-        className={`${styles.cc} ${value ? styles.checked : styles.unchecked}`}
+        className={`${styles.cc} ${loading ? styles.loading : ""} ${value ? styles.checked : ""}`}
         onClick={async (e) => {
           e.stopPropagation();
           setLoading(true);
