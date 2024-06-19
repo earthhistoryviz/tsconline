@@ -10,6 +10,7 @@
     "@typescript-eslint/eslint-plugin": "^7.0.2",
     "@typescript-eslint/parser": "^7.0.2",
     "@vitest/coverage-v8": "^1.6.0",
+    "@vitest/ui": "^1.6.0",
     "@yarnpkg/sdks": "^3.0.0-rc.43",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
@@ -35,6 +36,7 @@
     "start": "yarn workspace @tsconline/server start",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:ui": "vitest --ui",
     "coverage": "vitest run --coverage",
     "clean": "yarn workspaces foreach -A --parallel run clean"
   },
