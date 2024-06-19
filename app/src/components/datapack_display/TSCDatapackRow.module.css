@@ -166,4 +166,7 @@
   .right {
     justify-content: flex-end;
   }
+  .middle {
+    padding-left: 5px;
+  }
 }

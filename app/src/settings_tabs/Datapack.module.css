@@ -7,6 +7,7 @@
 }
 .h {
   font-size: 1.2rem;
+  text-align: center;
   font-weight: bold;
 }
 .hdc {
@@ -65,4 +66,28 @@
   justify-content: flex-start;
   justify-self: center;
   align-self: center;
+}
+@media (max-width: 720px) {
+  .container.cards {
+    overflow-y: hidden;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+  .container.cards > * {
+    flex: 0 0 auto;
+  }
+  .hdc {
+    flex-direction: row;
+    gap: 10px;
+  }
+  .ib {
+    position: relative;
+    top: 0;
+    left: 0;
+  }
+  .display {
+    position: relative;
+    top: 0;
+    right: 0;
+  }
 }

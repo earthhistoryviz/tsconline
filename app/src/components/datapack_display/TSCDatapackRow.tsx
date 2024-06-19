@@ -3,7 +3,6 @@ import styles from "./TSCDatapackRow.module.css";
 import { useState } from "react";
 import { devSafeUrl } from "../../util";
 import { IconButton, Typography } from "@mui/material";
-import { TSCCheckbox } from "../TSCCheckbox";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { useNavigate } from "react-router";
 import { DatapackMenu } from "../../settings_tabs/Datapack";

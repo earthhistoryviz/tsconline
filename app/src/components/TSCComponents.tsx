@@ -193,16 +193,16 @@ export const CheckIcon = () => {
         r="9"
         fill="#6ee7b74d"
         stroke="currentColor"
-        stroke-width="1.5"
+        strokeWidth="1.5"
       />
       <path
         className={styles.check}
         d="M6 10 l2.5 3 l5 -5.5"
         fill="none"
         stroke="currentColor"
-        stroke-width="1.5"
-        stroke-linecap="square"
-        stroke-linejoin="round"
+        strokeWidth="1.5"
+        strokeLinecap="square"
+        strokeLinejoin="round"
       />
     </svg>
   );
