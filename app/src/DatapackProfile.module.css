@@ -139,3 +139,14 @@
   align-items: center;
   justify-content: center;
 }
+@media (max-width: 590px) {
+  .di {
+    width: 200px;
+    height: 100px;
+  }
+}
+@media (max-width: 500px) {
+  .di {
+    display: none;
+  }
+}
