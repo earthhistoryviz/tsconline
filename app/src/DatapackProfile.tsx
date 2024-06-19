@@ -20,7 +20,7 @@ export const DatapackProfile = observer(() => {
   const navigate = useNavigate();
   const [tabIndex, setTabIndex] = useState(0);
   if (!id) return <PageNotFound />;
-  const datapack = state.datapackIndex[id];
+  const datapack = state.datapackIndex[decodeURIComponent(id)];
   if (!datapack) return <PageNotFound />;
   const tabs = [
     {
