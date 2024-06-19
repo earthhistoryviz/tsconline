@@ -54,7 +54,8 @@ import {
   PointSettings,
   assertSubFaciesInfoArray,
   SubEventType,
-  isSubEventType
+  isSubEventType,
+  defaultDataMiningSettings
 } from "@tsconline/shared";
 import { grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter, formatColumnName } from "./util.js";
 import { createInterface } from "readline";
@@ -1338,6 +1339,7 @@ function addChronChildren(
     rgb,
     units,
     columnDisplayType: "Chron",
+    columnSpecificSettings: _.cloneDeep(defaultDataMiningSettings),
     show: true,
     expanded: false
   });
