@@ -893,11 +893,11 @@ export const setDefaultUserState = action(() => {
 });
 
 export const setChartTimelineEnabled = action("setChartTimelineEnabled", (enabled: boolean) => {
-  state.chartTimelineEnabled = enabled;
+  state.chartTab.chartTimelineEnabled = enabled;
 });
 
 export const setChartTimelineLocked = action("setChartTimelineLocked", (locked: boolean) => {
-  state.chartTimelineLocked = locked;
+  state.chartTab.chartTimelineLocked = locked;
 });
 
 export const setUser = action("setUser", (user: SharedUser) => {
@@ -1066,4 +1066,15 @@ export const setDatapackDisplayType = action(
 export const setCookies = action("setCookies", (newval: boolean) => {
   state.cookieConsent = newval;
   localStorage.setItem("cookieConsent", newval.toString());
+});
+
+export const setChartTabScale = action("setChartTabScale", (newval: number) => {
+  state.chartTab.scale = newval;
+});
+
+export const setChartTabZoomFitScale = action("setChartTabZoomFitScale", (newval: number) => {
+  state.chartTab.zoomFitScale = newval;
+});
+export const setChartTabMidX = action("setChartTabMidX", (newval: number) => {
+  state.chartTab.midX = newval;
 });
