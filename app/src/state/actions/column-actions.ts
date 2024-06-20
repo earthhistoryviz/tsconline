@@ -273,7 +273,6 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
 });
 
 export const addDataMiningColumn = action((column: ColumnInfo, type: EventFrequency | DataMiningPointDataType | DataMiningChronDataType) => {
-  const dataMiningColumnName = type + " for " + column.name;
   if (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point" && column.columnDisplayType !== "Chron") {
     console.log("WARNING: tried to add a data mining column to a column that is not an event, chron, or point column");
     return;
@@ -292,6 +291,8 @@ export const addDataMiningColumn = action((column: ColumnInfo, type: EventFreque
     console.log("WARNING: ", column.name, "not found in parent's children when attempting to add data mining column");
     return;
   }
+  const dataMiningColumnName = `${type} for ${column.columnDisplayType === "Chron" ? parent.name : column.name}`;
+  let fill: RGB = cloneDeep(defaultPointSettings.fill)
   let windowStats: WindowStats[] = [];
   switch (column.columnDisplayType) {
     case "Event":
@@ -311,6 +312,28 @@ export const addDataMiningColumn = action((column: ColumnInfo, type: EventFreque
         column.columnSpecificSettings.windowSize,
         "frequency"
       );
+      switch (type) {
+        case "FAD":
+          fill = {
+            r: 0,
+            g: 255,
+            b: 0
+          }
+          break;
+        case "LAD":
+          fill = {
+            r: 255,
+            g: 0,
+            b: 0
+          }
+          break;
+          case "Combined Events":
+          fill = {
+            r: 0,
+            g: 0,
+            b: 255
+          }
+      }
       break;
     case "Point":
       assertPointSettings(column.columnSpecificSettings);
@@ -326,6 +349,43 @@ export const addDataMiningColumn = action((column: ColumnInfo, type: EventFreque
         column.columnSpecificSettings.windowSize,
         convertDataMiningPointDataTypeToDataMiningStatisticApproach(type)
       );
+      switch (type) {
+        case "Frequency":
+          fill = {
+            r: 255,
+            g: 0,
+            b: 0
+          }
+          break;
+        case "Minimum Value":
+          fill = {
+            r: 0,
+            g: 255,
+            b: 0
+          }
+          break;
+        case "Maximum Value":
+          fill = {
+            r: 0,
+            g: 0,
+            b: 255
+          }
+          break;
+        case "Average Value":
+          fill = {
+            r: 0,
+            g: 200,
+            b: 255
+          }
+          break;
+        case "Rate of Change":
+          fill = {
+            r: 0,
+            g: 255,
+            b: 255
+          }
+          break;
+      }
       break;
     case "Chron":
       assertChronSettings(column.columnSpecificSettings)
@@ -333,6 +393,11 @@ export const addDataMiningColumn = action((column: ColumnInfo, type: EventFreque
       if (!isDataMiningChronDataType(type)) {
         console.log("WARNING: unknown data mining type associated with a chron column", type);
         return;
+      }
+      fill = {
+        r: 247,
+        g: 202,
+        b: 201
       }
       windowStats = computeWindowStatistics(
         column.subInfo
@@ -351,6 +416,7 @@ export const addDataMiningColumn = action((column: ColumnInfo, type: EventFreque
     ...cloneDeep(column),
     name: dataMiningColumnName,
     editName: dataMiningColumnName,
+    enableTitle: true,
     columnDisplayType: "Point",
     rgb: {
       r: 255,
@@ -361,6 +427,7 @@ export const addDataMiningColumn = action((column: ColumnInfo, type: EventFreque
       ...cloneDeep(defaultPointSettings),
       minX: min,
       maxX: max,
+      fill,
       // TODO change these to auto scale
       lowerRange,
       upperRange,
