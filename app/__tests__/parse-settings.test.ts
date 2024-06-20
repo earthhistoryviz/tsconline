@@ -1,5 +1,12 @@
 import { vi, describe, expect, test, it } from "vitest";
-import { ChartInfoTSC, ColumnInfo, FontsInfo } from "@tsconline/shared";
+import {
+  ChartInfoTSC,
+  ColumnInfo,
+  FontsInfo,
+  defaultChronSettings,
+  defaultEventSettings,
+  defaultPointSettings
+} from "@tsconline/shared";
 import * as parseSettings from "../src/state/parse-settings";
 import { ChartSettings } from "../src/types";
 import { readFileSync } from "fs";
@@ -58,64 +65,6 @@ describe("translate columnInfo to columnInfoTSC", () => {
       keys["translate-point-column-key"]
     );
   });
-  const defaultEventSettings = {
-    type: "events",
-    rangeSort: "first occurrence",
-    frequency: null,
-    stepSize: 1,
-    windowSize: 2,
-    isDataMiningColumn: false
-  };
-  const defaultPointSettings = {
-    drawLine: true,
-    lineColor: {
-      r: 0,
-      g: 0,
-      b: 0
-    },
-    smoothed: true,
-    drawFill: true,
-    fill: {
-      r: 64,
-      g: 233,
-      b: 191
-    },
-    lowerRange: 0,
-    upperRange: 0,
-    drawScale: true,
-    drawBackgroundGradient: false,
-    backgroundGradientStart: {
-      r: 0,
-      g: 0,
-      b: 0
-    },
-    backgroundGradientEnd: {
-      r: 255,
-      g: 255,
-      b: 255
-    },
-    drawCurveGradient: false,
-    curveGradientStart: {
-      r: 0,
-      g: 0,
-      b: 0
-    },
-    curveGradientEnd: {
-      r: 255,
-      g: 255,
-      b: 255
-    },
-    flipScale: false,
-    scaleStart: 0,
-    scaleStep: 0,
-    pointShape: "rect",
-    minX: Number.MAX_SAFE_INTEGER,
-    maxX: Number.MIN_SAFE_INTEGER,
-    windowSize: 2,
-    stepSize: 1,
-    dataMiningPointDataType: null,
-    isDataMiningColumn: false
-  };
   const basicColumn = tests["translate-basic-column-test"];
   test.each([
     [basicColumn.name, "Root", "class datastore.RootColumn:Chart Root", basicColumn],
@@ -147,7 +96,7 @@ describe("translate columnInfo to columnInfoTSC", () => {
       basicColumn.name,
       "Chron",
       "class datastore.ChronColumn:Chart Root",
-      { ...basicColumn, columnDisplayType: "Chron" }
+      { ...basicColumn, columnDisplayType: "Chron", columnSpecificSettings: { ...defaultChronSettings } }
     ],
     [
       basicColumn.name,

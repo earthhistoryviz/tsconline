@@ -772,7 +772,10 @@
                 "showUncertaintyLabels": false,
                 "columnSpecificSettings": {
                   "type": "events",
-                  "rangeSort": "first occurrence"
+                  "rangeSort": "first occurrence",
+                  "frequency": null,
+                  "stepSize": 1,
+                  "windowSize": 2
                 },
                 "fontOptions": [
                   "Column Header",
@@ -857,6 +860,11 @@
                   {
                     "name": "Chron Chron",
                     "editName": "Chron",
+                    "columnSpecificSettings": {
+                      "dataMiningChronDataType": null,
+                      "stepSize": 1,
+                      "windowSize": 2
+                    },
                     "on": true,
                     "show": true,
                     "expanded": false,
@@ -869,6 +877,25 @@
                     "fontsInfo": {
                       "font": "Arial"
                     },
+                    "subInfo": [
+                      {
+                        "polarity": "TOP",
+                        "age": 0,
+                        "popup": ""
+                      },
+                      {
+                        "polarity": "N",
+                        "age": 0.123,
+                        "label": "SubChronInfo 1 Label",
+                        "popup": "SubChronInfo 1 Popup"
+                      },
+                      {
+                        "polarity": "R",
+                        "age": 0.234,
+                        "label": "SubChronInfo 2 Label",
+                        "popup": "SubChronInfo 2 Popup"
+                      }
+                    ],
                     "popup": "",
                     "children": [],
                     "parent": "Chron",
@@ -1062,7 +1089,11 @@
                     "b": 0
                   },
                   "scaleStart": 0,
-                  "scaleStep": 0
+                  "scaleStep": 1,
+                  "dataMiningPointDataType": null,
+                  "windowSize": 2,
+                  "stepSize": 1,
+                  "isDataMiningColumn": false
                 }
               },
               {
@@ -1789,7 +1820,10 @@
             "parent": null,
             "columnSpecificSettings": {
                 "type": "events",
-                "rangeSort": "first occurrence"
+                "rangeSort": "first occurrence",
+                "frequency": null,
+                "stepSize": 1,
+                "windowSize": 2
             },
             "units": "Ma",
             "subInfo": [
@@ -1833,7 +1867,10 @@
             "columnDisplayType": "Event",
             "columnSpecificSettings": {
                 "type": "events",
-                "rangeSort": "first occurrence"
+                "rangeSort": "first occurrence",
+                "frequency": null,
+                "stepSize": 1,
+                "windowSize": 2
             },
             "fontOptions": [
                 "Column Header",
@@ -2103,7 +2140,11 @@
               "smoothed": true,
               "upperRange": 230,
               "scaleStart": 0,
-              "scaleStep": 0
+              "scaleStep": 1,
+              "stepSize": 1,
+              "windowSize": 2,
+              "isDataMiningColumn": false,
+              "dataMiningPointDataType": null
             },
             "minAge": 7,
             "maxAge": 8,
@@ -2189,7 +2230,11 @@
               "smoothed": true,
               "upperRange": 9.5,
               "scaleStart": 0,
-              "scaleStep": 0.18
+              "scaleStep": 0.18,
+              "stepSize": 1,
+              "windowSize": 2,
+              "isDataMiningColumn": false,
+              "dataMiningPointDataType": null
             },
             "minAge": 1,
             "maxAge": 1000,
