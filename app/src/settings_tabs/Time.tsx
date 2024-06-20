@@ -61,10 +61,14 @@ export const Time = observer(function Time() {
           </Select>
           <TextField
             className="UnitTextField"
-            label={`${units}: `}
+            label={`${units}`}
             type="number"
             name="vertical-scale-text-field"
-            value={state.settings.timeSettings[units].topStageAge}
+            value={
+              isNaN(state.settings.timeSettings[units].topStageAge)
+                ? ""
+                : state.settings.timeSettings[units].topStageAge
+            }
             onChange={(event) => {
               actions.setTopStageAge(parseFloat(event.target.value), units);
             }}
@@ -97,10 +101,14 @@ export const Time = observer(function Time() {
           </Select>
           <TextField
             className="UnitTextField"
-            label={`${units} :`}
+            label={`${units}`}
             type="number"
             name="vertical-scale-text-field"
-            value={state.settings.timeSettings[units].baseStageAge}
+            value={
+              isNaN(state.settings.timeSettings[units].baseStageAge)
+                ? ""
+                : state.settings.timeSettings[units].baseStageAge
+            }
             onChange={(event) => {
               actions.setBaseStageAge(parseFloat(event.target.value), units);
             }}

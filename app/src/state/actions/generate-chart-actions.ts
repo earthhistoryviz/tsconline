@@ -86,14 +86,17 @@ function areSettingsValidForGeneration() {
   }
   generalActions.removeError(ErrorCodes.NO_DATAPACKS_SELECTED);
   if (
-    Object.keys(state.settings.timeSettings).every(
-      (key) => state.settings.timeSettings[key].baseStageAge === state.settings.timeSettings[key].topStageAge
+    Object.keys(state.settings.timeSettings).some(
+      (key) =>
+        state.settings.timeSettings[key].baseStageAge <= state.settings.timeSettings[key].topStageAge ||
+        isNaN(state.settings.timeSettings[key].topStageAge) ||
+        isNaN(state.settings.timeSettings[key].baseStageAge)
     )
   ) {
-    generalActions.pushError(ErrorCodes.UNIT_RANGE_EMPTY);
+    generalActions.pushError(ErrorCodes.INVALID_UNIT_RANGE);
     return false;
   }
-  generalActions.removeError(ErrorCodes.UNIT_RANGE_EMPTY);
+  generalActions.removeError(ErrorCodes.INVALID_UNIT_RANGE);
   if (!state.settingsTabs.columns.children.some((column) => column.on)) {
     generalActions.pushError(ErrorCodes.NO_COLUMNS_SELECTED);
     return false;
