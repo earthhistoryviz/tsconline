@@ -16,7 +16,7 @@ import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 
 const Title = styled("h2")(({ theme }) => ({
   fontFamily: theme.typography.fontFamily,
-  color: theme.palette.background.default
+  color: theme.palette.primary.main
 }));
 
 const CardBackground = styled("div")(({ theme, color }) => ({

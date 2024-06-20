@@ -22,7 +22,6 @@ const HeaderContainer = styled("div")(({ theme }) => ({
 
 const HeaderTitle = styled(Typography)(({ theme }) => ({
   fontWeight: theme.typography.fontWeightBold,
-  color: theme.palette.dark.main,
   fontSize: theme.typography.h2.fontSize
 }));
 
@@ -41,10 +40,7 @@ export const Home = observer(function Home() {
   const navigate = useNavigate();
   return (
     <div
-      className="whole_page"
-      style={{
-        background: theme.gradients.main
-      }}>
+      className="whole_page">
       <TSCOnlineHeader />
       {Object.entries(state.presets).map(([type, configArray]) => {
         return <TSCPresetHighlights key={type} navigate={navigate} configArray={configArray} type={type} />;
@@ -84,7 +80,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
   };
   return (
     <>
-      <Accordion className="preset-highlight" onChange={handleAccordionChange} expanded={expanded}>
+      <Accordion className="preset-highlight" sx={{border: `1px solid ${theme.palette.divider}`}} onChange={handleAccordionChange} expanded={expanded}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel1a-content"

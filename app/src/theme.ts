@@ -2,6 +2,7 @@ import { createTheme } from "@mui/material/styles";
 import Color from "color";
 declare module "@mui/material/styles" {
   interface Palette {
+    backgroundColor: Palette["primary"];
     altbackground: Palette["primary"];
     dark: Palette["primary"];
     button: Palette["primary"];
@@ -25,6 +26,7 @@ declare module "@mui/material/styles" {
   }
 
   interface PaletteOptions {
+    backgroundColor?: PaletteOptions["primary"];
     altbackground?: PaletteOptions["primary"];
     dark?: PaletteOptions["primary"];
     button?: PaletteOptions["primary"];
@@ -58,16 +60,40 @@ declare module "@mui/material/styles" {
   }
 }
 
-let theme = createTheme({
+let baseTheme = createTheme({
   palette: {
+    tonalOffset: 0.2,
+    contrastThreshold: 3,
     primary: {
-      main: "#D3D3D3"
+      main: "#ffffff"
     },
     secondary: {
       main: "#DDDDDD"
     },
     background: {
-      default: "#FAF9F9"
+      default: "#f8f9fc"
+    },
+  },
+  typography: {
+    fontFamily: '"Titillium Web", sans-serif',
+    subtitle1: {
+      fontSize: "48px"
+    }
+  },
+});
+
+let darkTheme = createTheme(baseTheme, {
+  palette: {
+    mode: "dark",
+    backgroundColor: baseTheme.palette.augmentColor({
+      color: {
+        main: "#0f1214"
+      },
+      name: "background"
+    }),
+    divider: "#ffffff1f",
+    text: {
+      primary: "#f6f7f8"
     },
     altbackground: {
       light: "#8FB7E7",
@@ -132,12 +158,6 @@ let theme = createTheme({
       main: "#fffdc2"
     }
   },
-  typography: {
-    fontFamily: '"Titillium Web", sans-serif',
-    subtitle1: {
-      fontSize: "48px"
-    }
-  },
   components: {
     MuiButton: {
       styleOverrides: {
@@ -148,54 +168,54 @@ let theme = createTheme({
     }
   }
 });
-theme = createTheme(theme, {
+darkTheme = createTheme(darkTheme, {
   palette: {
     menuDropdown: {
-      light: `${Color(theme.palette.menuDropdown.main).lighten(0.3)}`,
-      main: theme.palette.menuDropdown.main
+      light: `${Color(darkTheme.palette.menuDropdown.main).lighten(0.3)}`,
+      main: darkTheme.palette.menuDropdown.main
     },
     cardBackground: {
-      light: `${Color(theme.palette.cardBackground.main).lighten(0.3)}`,
-      main: theme.palette.cardBackground.main
+      light: `${Color(darkTheme.palette.cardBackground.main).lighten(0.3)}`,
+      main: darkTheme.palette.cardBackground.main
     },
     navbar: {
-      light: `${Color(theme.palette.navbar.main).lighten(0.3)}`,
-      main: theme.palette.navbar.main,
-      dark: `${Color(theme.palette.navbar.main).darken(0.3)}`
+      light: `${Color(darkTheme.palette.navbar.main).lighten(0.3)}`,
+      main: darkTheme.palette.navbar.main,
+      dark: `${Color(darkTheme.palette.navbar.main).darken(0.3)}`
     },
     settings: {
-      light: `${Color(theme.palette.altbackground.light).lighten(0.3)}`,
-      main: `${Color(theme.palette.altbackground.main).lighten(0.3)}`
+      light: `${Color(darkTheme.palette.altbackground.light).lighten(0.3)}`,
+      main: `${Color(darkTheme.palette.altbackground.main).lighten(0.3)}`
     },
     button: {
-      light: `${Color(theme.palette.button.main).lighten(0.3)}`,
-      main: theme.palette.button.main,
-      dark: `${Color(theme.palette.button.main).darken(0.3)}`
+      light: `${Color(darkTheme.palette.button.main).lighten(0.3)}`,
+      main: darkTheme.palette.button.main,
+      dark: `${Color(darkTheme.palette.button.main).darken(0.3)}`
     },
     selection: {
-      dark: `${Color(theme.palette.selection.main).darken(0.3)}`
+      dark: `${Color(darkTheme.palette.selection.main).darken(0.3)}`
     },
     on: {
-      main: theme.palette.on.main,
-      dark: `${Color(theme.palette.on.main).darken(0.3)}`
+      main: darkTheme.palette.on.main,
+      dark: `${Color(darkTheme.palette.on.main).darken(0.3)}`
     }
   },
   gradients: {
     main: `linear-gradient(to top, 
-            ${Color(theme.palette.altbackground.main).lighten(0.3)}, 
-          ${Color(theme.palette.altbackground.light).rotate(24).lighten(0.3)})`
+            ${Color(darkTheme.palette.altbackground.main).lighten(0.3)}, 
+          ${Color(darkTheme.palette.altbackground.light).rotate(24).lighten(0.3)})`
   }
 });
-theme = createTheme(theme, {
+darkTheme = createTheme(darkTheme, {
   components: {
     MuiAccordion: {
       styleOverrides: {
         root: {
-          background: theme.palette.settings.light
+          background: darkTheme.palette.settings.light
         }
       }
     }
   }
 });
 
-export default theme;
+export default darkTheme;
