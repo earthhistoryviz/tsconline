@@ -217,7 +217,7 @@ export type SubInfo =
 
 export type ColumnSpecificSettings = EventSettings | PointSettings | ChronSettings;
 
-export type DataMiningChronDataType = "Frequency"
+export type DataMiningChronDataType = "Frequency";
 
 export type ChronSettings = {
   dataMiningChronDataType: DataMiningChronDataType | null;
@@ -661,7 +661,7 @@ export function assertChron(o: any): asserts o is Chron {
   assertSubChronInfoArray(o.subChronInfoArray);
 }
 export function assertSubChronInfoArray(o: any): asserts o is SubChronInfo[] {
-  if (!Array.isArray(o)) throw new Error("SubChronInfoArray must be an array")
+  if (!Array.isArray(o)) throw new Error("SubChronInfoArray must be an array");
   for (const subChron of o) {
     assertSubChronInfo(subChron);
   }
@@ -1300,7 +1300,8 @@ export function assertSVGStatus(o: any): asserts o is SVGStatus {
 }
 
 export function assertChronSettings(o: any): asserts o is ChronSettings {
-  if (o.dataMiningChronDataType != null && !isDataMiningChronDataType(o.dataMiningChronDataType)) throwError("ChronSettings", "dataMiningChronType", "DataMiningChronDataType", o.dataMiningChronDataType)
+  if (o.dataMiningChronDataType != null && !isDataMiningChronDataType(o.dataMiningChronDataType))
+    throwError("ChronSettings", "dataMiningChronType", "DataMiningChronDataType", o.dataMiningChronDataType);
   assertDataMiningSettings(o);
 }
 

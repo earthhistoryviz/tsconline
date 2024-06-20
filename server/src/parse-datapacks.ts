@@ -1093,7 +1093,7 @@ function recursive(
         break;
       case "Chron":
         currentColumnInfo.columnDisplayType = "BlockSeriesMetaColumn";
-        assertSubChronInfoArray(currentColumnInfo.subInfo)
+        assertSubChronInfoArray(currentColumnInfo.subInfo);
         addChronChildren(
           currentColumnInfo.children,
           currentColumnInfo.name,

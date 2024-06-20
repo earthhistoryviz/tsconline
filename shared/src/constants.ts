@@ -18,7 +18,7 @@ import {
 
 export const defaultDataMiningSettings: DataMiningSettings = {
   windowSize: 2,
-  stepSize: 1,
+  stepSize: 1
 };
 
 export const defaultEventSettings: EventSettings = {
@@ -30,7 +30,7 @@ export const defaultEventSettings: EventSettings = {
 export const defaultChronSettings: ChronSettings = {
   dataMiningChronDataType: null,
   ...defaultDataMiningSettings
-}
+};
 
 export const allFontOptions: ValidFontOptions[] = [
   "Column Header",

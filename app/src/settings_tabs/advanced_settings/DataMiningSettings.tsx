@@ -79,11 +79,12 @@ export const ChronDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
   const { actions } = useContext(context);
   if (column.columnDisplayType !== "Chron") return;
   const chronSettings = column.columnSpecificSettings;
-  assertChronSettings(chronSettings)
+  assertChronSettings(chronSettings);
   const handleFrequencyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!isDataMiningChronDataType(event.target.value)) return;
-    if (chronSettings.dataMiningChronDataType !== null) actions.removeDataMiningColumn(column, chronSettings.dataMiningChronDataType);
-    actions.setChronColumnSettings(chronSettings, {dataMiningChronDataType : event.target.value });
+    if (chronSettings.dataMiningChronDataType !== null)
+      actions.removeDataMiningColumn(column, chronSettings.dataMiningChronDataType);
+    actions.setChronColumnSettings(chronSettings, { dataMiningChronDataType: event.target.value });
     actions.addDataMiningColumn(column, event.target.value);
   };
   const clearDataMiningColumn = () => {
@@ -98,12 +99,10 @@ export const ChronDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
         onClear={clearDataMiningColumn}
         name="Chron Type"
         value={chronSettings.dataMiningChronDataType}
-        radioArray={[
-          { value: "Frequency", label: "Frequency" },
-        ]}
+        radioArray={[{ value: "Frequency", label: "Frequency" }]}
       />
     </Box>
-  )
+  );
 });
 export const EventDataMiningOptions: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
   const { actions } = useContext(context);
