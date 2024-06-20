@@ -1,6 +1,4 @@
 export enum ErrorCodes {
-  TOP_STAGE_AGE_INVALID = "TOP_STAGE_AGE_INVALID",
-  BASE_STAGE_AGE_INVALID = "BASE_STAGE_AGE_INVALID",
   SERVER_RESPONSE_ERROR = "SERVER_RESPONSE_ERROR",
   INVALID_DATAPACK_INFO = "INVALID_DATAPACK_INFO",
   INVALID_PRESET_INFO = "INVALID_PRESET_INFO",
@@ -53,8 +51,6 @@ export enum ErrorCodes {
 }
 
 export const ErrorMessages = {
-  [ErrorCodes.TOP_STAGE_AGE_INVALID]: "Invalid top age/stage name input. Please enter a valid stage name/age.",
-  [ErrorCodes.BASE_STAGE_AGE_INVALID]: "Invalid base age/stage name input. Please enter a valid stage name/age.",
   [ErrorCodes.SERVER_RESPONSE_ERROR]: "Server response error. Please try again later.",
   [ErrorCodes.INVALID_DATAPACK_INFO]: "Invalid datapack info received from server. Please try again later.",
   [ErrorCodes.INVALID_PRESET_INFO]: "Invalid preset info received from server. Please try again later.",

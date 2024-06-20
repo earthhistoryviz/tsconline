@@ -86,8 +86,11 @@ function areSettingsValidForGeneration() {
   }
   generalActions.removeError(ErrorCodes.NO_DATAPACKS_SELECTED);
   if (
-    !Object.keys(state.settings.timeSettings).every(
-      (key) => state.settings.timeSettings[key].baseStageAge === state.settings.timeSettings[key].topStageAge
+    Object.keys(state.settings.timeSettings).some(
+      (key) =>
+        state.settings.timeSettings[key].baseStageAge <= state.settings.timeSettings[key].topStageAge ||
+        isNaN(state.settings.timeSettings[key].topStageAge) ||
+        isNaN(state.settings.timeSettings[key].baseStageAge)
     )
   ) {
     generalActions.pushError(ErrorCodes.INVALID_UNIT_RANGE);
