@@ -184,7 +184,7 @@ export const Chart = observer(function () {
           </CustomTooltip>
         </div>
         <div className="options-bar-right">
-        <CustomTooltip title="Download SVG">
+          <CustomTooltip title="Download SVG">
             <IconButton onClick={() => downloadSvg()}>
               <DownloadIcon />
             </IconButton>
