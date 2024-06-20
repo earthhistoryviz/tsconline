@@ -7,9 +7,10 @@ export const TSCButton: React.FC<ButtonProps> = (props) => {
   return (
     <Button
       {...props}
+      disableRipple
       sx={{
         backgroundColor: theme.palette.button.main,
-        color: "#FFFFFF",
+        color: theme.palette.button.contrastText,
         ":hover": {
           backgroundColor: theme.palette.button.light
         },

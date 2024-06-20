@@ -3,7 +3,7 @@ import { observer } from "mobx-react-lite";
 import AppBar from "@mui/material/AppBar";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Toolbar from "@mui/material/Toolbar";
-import { useTheme } from "@mui/material/styles";
+import { styled, useTheme } from "@mui/material/styles";
 import HomeIcon from "@mui/icons-material/Home";
 import { IconButton, Tab, Tabs } from "@mui/material";
 import { context } from "./state";
@@ -15,6 +15,15 @@ import "./Profile.css";
 import "@szhsin/react-menu/dist/index.css";
 import "@szhsin/react-menu/dist/transitions/slide.css";
 import { SettingsMenuOptionLabels, assertSettingsTabs } from "./types";
+import Color from "color";
+
+const StyledAppBar = styled(AppBar)(({ theme }) => ({
+  backgroundColor: Color(theme.palette.backgroundColor.dark).alpha(0.9).string(),
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  backgroundImage: "none",
+  backdropFilter: "blur(8px)",
+  WebkitBackdropFilter: "blur(8px)"
+}));
 
 export const NavBar = observer(function Navbar() {
   const theme = useTheme();
@@ -26,7 +35,7 @@ export const NavBar = observer(function Navbar() {
 
   const location = useLocation();
   return (
-    <AppBar position="fixed" sx={{ background: theme.palette.navbar.main, display: "flex" }}>
+    <StyledAppBar position="fixed">
       <Toolbar>
         <Link to="/">
           <IconButton
@@ -43,7 +52,7 @@ export const NavBar = observer(function Navbar() {
               actions.setTab(0);
               actions.setUseCache(true);
             }}>
-            <HomeIcon />
+            <HomeIcon sx={{ color: theme.palette.button.main }} />
           </IconButton>
         </Link>
         {
@@ -118,6 +127,6 @@ export const NavBar = observer(function Navbar() {
           />
         )}
       </Toolbar>
-    </AppBar>
+    </StyledAppBar>
   );
 });
