@@ -90,7 +90,7 @@ beforeAll(async () => {
   app.post("/signup", loginRoutes.signup);
   app.post("/oauth", loginRoutes.googleLogin);
   app.post("/login", loginRoutes.login);
-  //vi.spyOn(console, 'error').mockImplementation(() => undefined)
+  vi.spyOn(console, "error").mockImplementation(() => undefined);
   await app.listen({ host: "", port: 8000 });
 });
 
