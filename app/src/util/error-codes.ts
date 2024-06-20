@@ -1,6 +1,4 @@
 export enum ErrorCodes {
-  TOP_STAGE_AGE_INVALID = "TOP_STAGE_AGE_INVALID",
-  BASE_STAGE_AGE_INVALID = "BASE_STAGE_AGE_INVALID",
   SERVER_RESPONSE_ERROR = "SERVER_RESPONSE_ERROR",
   INVALID_DATAPACK_INFO = "INVALID_DATAPACK_INFO",
   INVALID_PRESET_INFO = "INVALID_PRESET_INFO",
@@ -21,7 +19,7 @@ export enum ErrorCodes {
   DATAPACK_ALREADY_EXISTS = "DATAPACK_ALREADY_EXISTS",
   NO_DATAPACKS_SELECTED = "NO_DATAPACKS_SELECTED",
   NO_COLUMNS_SELECTED = "NO_COLUMNS_SELECTED",
-  UNIT_RANGE_EMPTY = "UNIT_RANGE_EMPTY",
+  INVALID_UNIT_RANGE = "INVALID_UNIT_RANGE",
   INVALID_MAPPACK_INFO = "INVALID_MAPPACK_INFO",
   UNABLE_TO_LOGIN_SERVER = "UNABLE_TO_LOGIN_SERVER",
   UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD = "UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD",
@@ -53,8 +51,6 @@ export enum ErrorCodes {
 }
 
 export const ErrorMessages = {
-  [ErrorCodes.TOP_STAGE_AGE_INVALID]: "Invalid top age/stage name input. Please enter a valid stage name/age.",
-  [ErrorCodes.BASE_STAGE_AGE_INVALID]: "Invalid base age/stage name input. Please enter a valid stage name/age.",
   [ErrorCodes.SERVER_RESPONSE_ERROR]: "Server response error. Please try again later.",
   [ErrorCodes.INVALID_DATAPACK_INFO]: "Invalid datapack info received from server. Please try again later.",
   [ErrorCodes.INVALID_PRESET_INFO]: "Invalid preset info received from server. Please try again later.",
@@ -77,7 +73,8 @@ export const ErrorMessages = {
   [ErrorCodes.DATAPACK_ALREADY_EXISTS]: "Datapack already exists. Please upload a new datapack file.",
   [ErrorCodes.NO_DATAPACKS_SELECTED]: "No datapacks selected. Please select at least one datapack to generate.",
   [ErrorCodes.NO_COLUMNS_SELECTED]: "No columns selected. Please select at least one column to generate.",
-  [ErrorCodes.UNIT_RANGE_EMPTY]: "Unit range is empty. Please enter a valid unit range.",
+  [ErrorCodes.INVALID_UNIT_RANGE]:
+    "Invalid unit range. Please ensure the base age is greater than the top age when generating a chart.",
   [ErrorCodes.INVALID_MAPPACK_INFO]: "Invalid mappack info received from server. Please try again later.",
   [ErrorCodes.UNABLE_TO_LOGIN_SERVER]: "Unable to login due to server error. Please try again later.",
   [ErrorCodes.UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL]: "Unable to login with Google credentials. Please try again.",
