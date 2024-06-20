@@ -305,7 +305,6 @@ const applyChartSettings = action("applyChartSettings", (settings: ChartSettings
         value.key.includes(unit.stage!.substring(0, unit.stage!.indexOf("(") - 1))
       );
       if (result) {
-        setTopStageKey(result.key, unit.unit);
         setTopStageAge(result.value, unit.unit);
       }
     } else if (unit.source === "text" && unit.text !== undefined) {
@@ -324,7 +323,6 @@ const applyChartSettings = action("applyChartSettings", (settings: ChartSettings
         value.key.includes(unit.stage!.substring(0, unit.stage!.indexOf("(") - 1))
       );
       if (result) {
-        setBaseStageKey(result.key, unit.unit);
         setBaseStageAge(result.value, unit.unit);
       }
     } else if (unit.source === "text" && unit.text !== undefined) {
@@ -928,21 +926,17 @@ export const setTopStageAge = action("setTopStageAge", (age: number, unit: strin
     return;
   }
   removeError(ErrorCodes.TOP_STAGE_AGE_INVALID);
-  const gap = state.settings.timeSettings[unit].baseStageAge - state.settings.timeSettings[unit].topStageAge;
   state.settings.timeSettings[unit].topStageAge = age;
   const correspondingKey = state.geologicalTopStageAges.find((item) => item.value === age);
   if (correspondingKey) {
     setTopStageKey(correspondingKey.key, unit);
   } else setTopStageKey("", unit);
-  if (state.settings.timeSettings[unit].baseStageAge <= state.settings.timeSettings[unit].topStageAge) {
-    setBaseStageAge(state.settings.timeSettings[unit].topStageAge + gap, unit);
-  }
 });
 export const setBaseStageAge = action("setBaseStageAge", (age: number, unit: string) => {
   if (!state.settings.timeSettings[unit]) {
     throw new Error(`Unit ${unit} not found in timeSettings`);
   }
-  if (isNaN(age) || age < state.settings.timeSettings[unit].topStageAge) {
+  if (isNaN(age)) {
     pushError(ErrorCodes.BASE_STAGE_AGE_INVALID);
     return;
   }
