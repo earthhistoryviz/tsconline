@@ -117,6 +117,10 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   generalActions.setChartLoading(true);
   generalActions.setChartHash("");
   generalActions.setChartContent("");
+
+  generalActions.setChartTabScale(1);
+  generalActions.setChartTabMidX(0);
+
   let body;
   try {
     normalizeColumnProperties(state.settingsTabs.columns!);

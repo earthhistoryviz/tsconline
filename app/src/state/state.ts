@@ -27,8 +27,13 @@ import { defaultColors } from "../util/constant";
 import { settings } from "../constants";
 
 export type State = {
-  chartTimelineEnabled: boolean;
-  chartTimelineLocked: boolean;
+  chartTab: {
+    chartTimelineEnabled: boolean;
+    chartTimelineLocked: boolean;
+    scale: number;
+    zoomFitScale: number;
+    midX: number;
+  };
   loadSaveFilename: string;
   cookieConsent: boolean | null;
   isLoggedIn: boolean;
@@ -89,8 +94,13 @@ export type State = {
 };
 
 export const state = observable<State>({
-  chartTimelineEnabled: false,
-  chartTimelineLocked: false,
+  chartTab: {
+    chartTimelineEnabled: false,
+    chartTimelineLocked: false,
+    scale: 1,
+    zoomFitScale: 1,
+    midX: 0
+  },
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,
   isLoggedIn: false,

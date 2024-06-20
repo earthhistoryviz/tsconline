@@ -79,7 +79,7 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ chart
   };
 
   const handleTimeline = (evt: MouseEvent, svg: SVGSVGElement) => {
-    if (!state.chartTimelineEnabled) return;
+    if (!state.chartTab.chartTimelineEnabled) return;
     const timeline = svg.getElementById("timeline");
     const timelineUp = svg.getElementById("timeline_up");
     const timelineDown = svg.getElementById("timeline_down");
@@ -110,7 +110,7 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ chart
     timeLabelDown.setAttribute("x", String(point.x - 21));
 
     //move timeline vertically if not locked
-    if (!state.chartTimelineLocked) {
+    if (!state.chartTab.chartTimelineLocked) {
       //for not going out of bounds
       let currY = minY;
       if (point.y > currY) currY = point.y;
@@ -161,10 +161,10 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ chart
     const svg = container.querySelector("svg");
     if (!svg) return;
     setupTimelineAndLabel(svg);
-    hideOrShowTimeline(svg, state.chartTimelineEnabled);
-    if (state.chartTimelineEnabled) {
+    hideOrShowTimeline(svg, state.chartTab.chartTimelineEnabled);
+    if (state.chartTab.chartTimelineEnabled) {
       const eventListenerWrapper = (evt: MouseEvent) => handleTimeline(evt, svg);
-      const lockTimeline = () => actions.setChartTimelineLocked(!state.chartTimelineLocked);
+      const lockTimeline = () => actions.setChartTimelineLocked(!state.chartTab.chartTimelineLocked);
       container.addEventListener("mousemove", eventListenerWrapper);
       container.addEventListener("click", lockTimeline);
       return () => {
@@ -182,14 +182,12 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ chart
         container.removeEventListener("click", eventListenerWrapper);
       };
     }
-  }, [chartContent, state.chartTimelineEnabled, state.chartTimelineLocked, state.prevSettings.mouseOverPopupsEnabled]);
+  }, [
+    chartContent,
+    state.chartTab.chartTimelineEnabled,
+    state.chartTab.chartTimelineLocked,
+    state.prevSettings.mouseOverPopupsEnabled
+  ]);
 
-  return (
-    <div
-      ref={svgContainerRef}
-      style={{ transformOrigin: "0 0" }}
-      id="chart-wrapper"
-      dangerouslySetInnerHTML={{ __html: chartContent }}
-    />
-  );
+  return <div ref={svgContainerRef} id="svg-display" dangerouslySetInnerHTML={{ __html: chartContent }} />;
 });
