@@ -39,8 +39,7 @@ export const Home = observer(function Home() {
   const theme = useTheme();
   const navigate = useNavigate();
   return (
-    <div
-      className="whole_page">
+    <div className="whole_page">
       <TSCOnlineHeader />
       {Object.entries(state.presets).map(([type, configArray]) => {
         return <TSCPresetHighlights key={type} navigate={navigate} configArray={configArray} type={type} />;
@@ -80,7 +79,11 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
   };
   return (
     <>
-      <Accordion className="preset-highlight" sx={{border: `1px solid ${theme.palette.divider}`}} onChange={handleAccordionChange} expanded={expanded}>
+      <Accordion
+        className="preset-highlight"
+        sx={{ border: `1px solid ${theme.palette.divider}` }}
+        onChange={handleAccordionChange}
+        expanded={expanded}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel1a-content"

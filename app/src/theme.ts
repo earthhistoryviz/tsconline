@@ -72,14 +72,14 @@ let baseTheme = createTheme({
     },
     background: {
       default: "#f8f9fc"
-    },
+    }
   },
   typography: {
     fontFamily: '"Titillium Web", sans-serif',
     subtitle1: {
       fontSize: "48px"
     }
-  },
+  }
 });
 
 let darkTheme = createTheme(baseTheme, {
@@ -100,9 +100,12 @@ let darkTheme = createTheme(baseTheme, {
       main: "#72A4E1",
       dark: "#1D4E89"
     },
-    button: {
-      main: "#6693C9"
-    },
+    button: baseTheme.palette.augmentColor({
+      color: {
+        main: "#e56e03"
+      },
+      name: "button"
+    }),
     dark: {
       light: "#6D8A96",
       main: "#001A23"
