@@ -433,13 +433,13 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       };
       break;
     case "Chron":
-      assertChronSettings(state.columnSpecificSettings)
+      assertChronSettings(state.columnSpecificSettings);
       column = {
         ...column,
         drawExtraColumn: state.columnSpecificSettings.dataMiningChronDataType,
         windowSize: state.columnSpecificSettings.windowSize,
         stepSize: state.columnSpecificSettings.stepSize
-      }
+      };
       break;
   }
   switch (state.columnDisplayType) {
