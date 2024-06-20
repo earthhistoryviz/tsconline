@@ -55,7 +55,7 @@ import {
   assertSubFaciesInfoArray,
   SubEventType,
   isSubEventType,
-  defaultDataMiningSettings
+  defaultChronSettings
 } from "@tsconline/shared";
 import { grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter, formatColumnName } from "./util.js";
 import { createInterface } from "readline";
@@ -1339,7 +1339,7 @@ function addChronChildren(
     rgb,
     units,
     columnDisplayType: "Chron",
-    columnSpecificSettings: _.cloneDeep(defaultDataMiningSettings),
+    columnSpecificSettings: _.cloneDeep(defaultChronSettings),
     show: true,
     expanded: false
   });

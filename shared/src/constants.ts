@@ -1,5 +1,6 @@
 import {
   ChartSettingsInfoTSC,
+  ChronSettings,
   ColumnBasicInfoTSC,
   DataMiningSettings,
   EventColumnInfoTSC,
@@ -27,6 +28,10 @@ export const defaultEventSettings: EventSettings = {
   frequency: null,
   ...defaultDataMiningSettings
 };
+export const defaultChronSettings: ChronSettings = {
+  dataMiningChronDataType: null,
+  ...defaultDataMiningSettings
+}
 
 export const allFontOptions: ValidFontOptions[] = [
   "Column Header",

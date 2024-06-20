@@ -217,7 +217,11 @@ export type SubInfo =
 
 export type ColumnSpecificSettings = EventSettings | PointSettings | ChronSettings;
 
-export type ChronSettings = DataMiningSettings;
+export type DataMiningChronDataType = "Frequency"
+
+export type ChronSettings = {
+  dataMiningChronDataType: DataMiningChronDataType | null;
+} & DataMiningSettings;
 
 export type DataMiningPointDataType =
   | "Frequency"
@@ -552,6 +556,9 @@ export function assertDataMiningSettings(o: any): asserts o is DataMiningSetting
 
 export function isDataMiningPointDataType(o: any): o is DataMiningPointDataType {
   return /^(Frequency|Maximum Value|Minimum Value|Average Value|Rate of Change|Overlay)$/.test(o);
+}
+export function isDataMiningChronDataType(o: any): o is DataMiningChronDataType {
+  return /^(Frequency)$/.test(o);
 }
 
 export function assertEventSettings(o: any): asserts o is EventSettings {
@@ -1065,6 +1072,9 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
     case "Point":
       assertPointSettings(o);
       break;
+    case "Chron":
+      assertChronSettings(o);
+      break;
     default:
       throw new Error(
         "ColumnSpecificSettings must be an object of a valid column type. Found value of " +
@@ -1289,6 +1299,7 @@ export function assertSVGStatus(o: any): asserts o is SVGStatus {
 }
 
 export function assertChronSettings(o: any): asserts o is ChronSettings {
+  if (o.dataMiningChronDataType != null && !isDataMiningChronDataType(o.dataMiningChronDataType)) throwError("ChronSettings", "dataMiningChronType", "DataMiningChronDataType", o.dataMiningChronDataType)
   assertDataMiningSettings(o);
 }
 
