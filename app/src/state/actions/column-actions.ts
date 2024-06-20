@@ -1,8 +1,10 @@
 import { action, observable } from "mobx";
 import { state } from "../state";
 import {
+  ChronSettings,
   ColumnInfo,
   ColumnInfoTSC,
+  DataMiningChronDataType,
   DataMiningPointDataType,
   DataMiningSettings,
   EventFrequency,
@@ -10,15 +12,18 @@ import {
   PointSettings,
   RGB,
   ValidFontOptions,
+  assertChronSettings,
   assertEventColumnInfoTSC,
   assertEventSettings,
   assertPointColumnInfoTSC,
   assertPointSettings,
+  assertSubChronInfoArray,
   assertSubEventInfoArray,
   assertSubPointInfoArray,
   calculateAutoScale,
   convertPointTypeToPointShape,
   defaultPointSettings,
+  isDataMiningChronDataType,
   isDataMiningPointDataType,
   isEventFrequency
 } from "@tsconline/shared";
@@ -181,6 +186,11 @@ export const setEventColumnSettings = action((eventSettings: EventSettings, newS
   Object.assign(eventSettings, newSettings);
 });
 
+export const setChronColumnSettings = action((chronSettings: ChronSettings, newSettings: Partial<ChronSettings>) => {
+  Object.assign(chronSettings, newSettings);
+});
+
+
 export const setDataMiningSettings = action(
   (dataMiningSettings: DataMiningSettings, newSettings: Partial<DataMiningSettings>) => {
     Object.assign(dataMiningSettings, newSettings);
@@ -262,10 +272,10 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
   }
 });
 
-export const addDataMiningColumn = action((column: ColumnInfo, type: EventFrequency | DataMiningPointDataType) => {
+export const addDataMiningColumn = action((column: ColumnInfo, type: EventFrequency | DataMiningPointDataType | DataMiningChronDataType) => {
   const dataMiningColumnName = type + " for " + column.name;
-  if (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") {
-    console.log("WARNING: tried to add a data mining column to a column that is not an event or point column");
+  if (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point" && column.columnDisplayType !== "Chron") {
+    console.log("WARNING: tried to add a data mining column to a column that is not an event, chron, or point column");
     return;
   }
   if (!column.parent) {
@@ -315,6 +325,20 @@ export const addDataMiningColumn = action((column: ColumnInfo, type: EventFreque
         }),
         column.columnSpecificSettings.windowSize,
         convertDataMiningPointDataTypeToDataMiningStatisticApproach(type)
+      );
+      break;
+    case "Chron":
+      assertChronSettings(column.columnSpecificSettings)
+      assertSubChronInfoArray(column.subInfo)
+      if (!isDataMiningChronDataType(type)) {
+        console.log("WARNING: unknown data mining type associated with a chron column", type);
+        return;
+      }
+      windowStats = computeWindowStatistics(
+        column.subInfo
+          .map((subChron) => subChron.age),
+        column.columnSpecificSettings.windowSize,
+        "frequency"
       );
       break;
     default:

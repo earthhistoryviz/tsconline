@@ -4,7 +4,9 @@ import {
   assertPointSettings,
   isEventFrequency,
   isDataMiningPointDataType,
-  assertDataMiningSettings
+  assertDataMiningSettings,
+  assertChronSettings,
+  isDataMiningChronDataType
 } from "@tsconline/shared";
 import { CustomDivider, GenericTextField, StyledScrollbar } from "../../components";
 import { Box, Button, Dialog, Typography } from "@mui/material";
@@ -67,10 +69,41 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({
           />
           <EventDataMiningOptions column={column} />
           <PointDataMiningOptions column={column} />
+          <ChronDataMiningOptions column={column} />
         </div>
       </Box>
     </StyledScrollbar>
   );
+});
+export const ChronDataMiningOptions: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
+  const { actions } = useContext(context);
+  if (column.columnDisplayType !== "Chron") return;
+  const chronSettings = column.columnSpecificSettings;
+  assertChronSettings(chronSettings)
+  const handleFrequencyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isDataMiningChronDataType(event.target.value)) return;
+    if (chronSettings.dataMiningChronDataType !== null) actions.removeDataMiningColumn(column, chronSettings.dataMiningChronDataType);
+    actions.setChronColumnSettings(chronSettings, {dataMiningChronDataType : event.target.value });
+    actions.addDataMiningColumn(column, event.target.value);
+  };
+  const clearDataMiningColumn = () => {
+    if (chronSettings.dataMiningChronDataType === null) return;
+    actions.removeDataMiningColumn(column, chronSettings.dataMiningChronDataType);
+    actions.setChronColumnSettings(chronSettings, { dataMiningChronDataType: null });
+  };
+  return (
+    <Box className="data-mining-type-container">
+      <TSCRadioGroup
+        onChange={handleFrequencyChange}
+        onClear={clearDataMiningColumn}
+        name="Chron Type"
+        value={chronSettings.dataMiningChronDataType}
+        radioArray={[
+          { value: "Frequency", label: "Frequency" },
+        ]}
+      />
+    </Box>
+  )
 });
 export const EventDataMiningOptions: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
   const { actions } = useContext(context);

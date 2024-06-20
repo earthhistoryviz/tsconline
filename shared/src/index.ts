@@ -660,8 +660,11 @@ export function assertSubSequenceInfo(o: any): asserts o is SubSequenceInfo {
 
 export function assertChron(o: any): asserts o is Chron {
   if (!o || typeof o !== "object") throw new Error("Chron must be a non-null object");
-  if (!Array.isArray(o.subChronInfo)) throwError("Chron", "subChronInfo", "array", o.subChronInfo);
-  for (const subChron of o.subChronInfo) {
+  assertSubChronInfoArray(o.subChronInfoArray);
+}
+export function assertSubChronInfoArray(o: any): asserts o is SubChronInfo[] {
+  if (!Array.isArray(o)) throw new Error("SubChronInfoArray must be an array")
+  for (const subChron of o) {
     assertSubChronInfo(subChron);
   }
 }

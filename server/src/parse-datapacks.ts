@@ -55,7 +55,8 @@ import {
   assertSubFaciesInfoArray,
   SubEventType,
   isSubEventType,
-  defaultChronSettings
+  defaultChronSettings,
+  assertSubChronInfoArray
 } from "@tsconline/shared";
 import { grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter, formatColumnName } from "./util.js";
 import { createInterface } from "readline";
@@ -1092,6 +1093,7 @@ function recursive(
         break;
       case "Chron":
         currentColumnInfo.columnDisplayType = "BlockSeriesMetaColumn";
+        assertSubChronInfoArray(currentColumnInfo.subInfo)
         addChronChildren(
           currentColumnInfo.children,
           currentColumnInfo.name,
@@ -1099,6 +1101,7 @@ function recursive(
           currentColumnInfo.maxAge,
           currentColumnInfo.rgb,
           currentColumnInfo.fontOptions,
+          currentColumnInfo.subInfo,
           units
         );
         delete currentColumnInfo.width;
@@ -1321,6 +1324,7 @@ function addChronChildren(
   maxAge: number,
   rgb: RGB,
   fontOptions: ValidFontOptions[],
+  subChronInfo: SubChronInfo[],
   units: string
 ) {
   children.push({
@@ -1341,7 +1345,8 @@ function addChronChildren(
     columnDisplayType: "Chron",
     columnSpecificSettings: _.cloneDeep(defaultChronSettings),
     show: true,
-    expanded: false
+    expanded: false,
+    subInfo: subChronInfo
   });
   children.push({
     name: `${name} Chron Label`,
