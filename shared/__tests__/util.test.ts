@@ -1,3 +1,4 @@
+import { describe, test, expect } from "vitest";
 import { roundToDecimalPlace, calculateAutoScale } from "../src/util";
 describe("roundToDecimalPlace tests", () => {
   test.each([

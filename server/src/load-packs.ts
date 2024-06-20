@@ -9,7 +9,6 @@ import {
 import pmap from "p-map";
 import fs from "fs/promises";
 import fsSync from "fs";
-import { assetconfigs } from "./index.js";
 import { parseDatapacks } from "./parse-datapacks.js";
 import { parseMapPacks } from "./parse-map-packs.js";
 import { getColorFromURL } from "color-thief-node";
@@ -18,7 +17,7 @@ import { readFile } from "fs/promises";
 import nearestColor from "nearest-color";
 import path from "path";
 import { assertColors } from "./types.js";
-import { grabFilepaths, rgbToHex } from "./util.js";
+import { grabFilepaths, rgbToHex, assetconfigs } from "./util.js";
 import chalk from "chalk";
 
 /**

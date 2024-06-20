@@ -41,7 +41,8 @@
     "@types/react-dom": "^18.0.10",
     "@vitejs/plugin-react": "^4.2.1",
     "typescript": "5.2.2",
-    "vite": "^5.2.2"
+    "vite": "^5.2.2",
+    "vitest": "^1.6.0"
   },
   "private": true,
   "scripts": {

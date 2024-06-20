@@ -1,141 +1,93 @@
+import { vi, describe, beforeEach, it, expect, test } from "vitest";
 import * as utilModule from "../src/util";
-jest.mock("./util.js", () => ({
-  ...utilModule,
-  grabFilepaths: jest.fn().mockImplementation((_files, decrypt_filepath) => {
-    return Promise.resolve([`server/__tests__/__data__/${decrypt_filepath}`]);
-  })
-}));
-jest.mock("lodash", () => ({
-  default: {
-    cloneDeep: jest.fn().mockImplementation((o) => JSON.parse(JSON.stringify(o)))
-  }
-}));
-
-jest.mock("chalk", () => ({
-  default: {
-    red: jest.fn().mockImplementation((s) => s),
-    green: jest.fn().mockImplementation((s) => s),
-    yellow: jest.fn().mockImplementation((s) => s),
-    dim: jest.fn().mockImplementation((s) => s)
-  }
-}));
-
-jest.mock("@tsconline/shared", () => ({
-  assertSubInfo: jest.fn().mockReturnValue(true),
-  assertSubEventInfo: jest.fn().mockReturnValue(true),
-  assertSubTransectInfo: jest.fn().mockReturnValue(true),
-  assertSubFreehandInfo: jest.fn().mockReturnValue(true),
-  assertSubChronInfo: jest.fn().mockReturnValue(true),
-  assertColumnHeaderProps: jest.fn().mockReturnValue(true),
-  assertSubPointInfo: jest.fn().mockReturnValue(true),
-  assertSubSequenceInfo: jest.fn().mockReturnValue(true),
-  assertSubFaciesInfo: jest.fn().mockReturnValue(true),
-  assertSubBlockInfo: jest.fn().mockReturnValue(true),
-  assertSubRangeInfo: jest.fn().mockReturnValue(true),
-  assertDatapackParsingPack: jest.fn().mockReturnValue(true),
-  isSubEventType: jest.fn().mockImplementation((o) => {
-    if (typeof o !== "string") return false;
-    return /^(FAD|LAD|EVENT|EVENTS)$/.test(o);
-  }),
-  isSubFreehandInfo: jest.fn().mockImplementation((o) => {
-    if (typeof o !== "object") return false;
-    if (typeof o.baseAge !== "number") return false;
-    if (typeof o.topAge !== "number") return false;
-    return true;
-  }),
-  assertSubFaciesInfoArray: jest.fn().mockReturnValue(true),
-  assertColumnSpecificSettings: jest.fn().mockReturnValue(true),
-  isFacies: jest.fn().mockImplementation((o) => {
-    if (typeof o !== "object") return false;
-    if (!Array.isArray(o.subFaciesInfo)) return false;
-    return true;
-  }),
-  isPointShape: jest.fn().mockImplementation((shape) => {
-    return /^(nopoints|rect|circle|cross)$/.test(shape);
-  }),
-  assertPoint: jest.fn().mockReturnValue(true),
-  assertRGB: jest.fn().mockImplementation((o) => {
-    if (!o || typeof o !== "object") throw new Error("RGB must be a non-null object");
-    if (typeof o.r !== "number") throw new Error("Invalid rgb");
-    if (o.r < 0 || o.r > 255) throw new Error("Invalid rgb");
-    if (typeof o.g !== "number") throw new Error("Invalid rgb");
-    if (o.g < 0 || o.g > 255) throw new Error("Invalid rgb");
-    if (typeof o.b !== "number") throw new Error("Invalid rgb");
-    if (o.b < 0 || o.b > 255) throw new Error("Invalid rgb");
-  }),
-  calculateAutoScale: jest.fn().mockImplementation((min: number, max: number) => {
-    return { lowerRange: min, upperRange: max, scaleStep: 0.18 };
-  }),
-  allFontOptions: ["Column Header", "Popup Body"],
-  defaultFontsInfo: { font: "Arial" },
-  defaultEventSettings: { type: "events", rangeSort: "first occurrence" },
-  assertFontsInfo: jest.fn().mockImplementation((fonts) => {
-    if (fonts.font !== "Arial") throw new Error("Invalid font");
-  }),
-  defaultPoint: {
-    subPointInfo: [],
-    lowerRange: 0,
-    upperRange: 0,
-    smoothed: true,
-    drawLine: false,
-    pointShape: "rect",
-    drawFill: true,
-    fill: {
-      r: 64,
-      g: 233,
-      b: 191
+import * as sharedModule from "@tsconline/shared";
+vi.mock("../src/util", async (importOriginal) => {
+  const actual = await importOriginal<typeof utilModule>();
+  return {
+    ...actual,
+    grabFilepaths: vi.fn().mockImplementation((_files, decrypt_filepath) => {
+      return Promise.resolve([`server/__tests__/__data__/${decrypt_filepath}`]);
+    })
+  };
+});
+vi.mock("@tsconline/shared", async (importOriginal) => {
+  const actual = await importOriginal<typeof sharedModule>();
+  return {
+    ...actual,
+    assertSubSequenceInfo: vi.fn().mockReturnValue(true),
+    assertDatapackParsingPack: vi.fn().mockReturnValue(true),
+    assertColumnSpecificSettings: vi.fn().mockReturnValue(true),
+    calculateAutoScale: vi.fn().mockImplementation((min: number, max: number) => {
+      return { lowerRange: min, upperRange: max, scaleStep: 0.18 };
+    }),
+    allFontOptions: ["Column Header", "Popup Body"],
+    defaultFontsInfo: { font: "Arial" },
+    defaultEventSettings: { type: "events", rangeSort: "first occurrence" },
+    defaultPoint: {
+      subPointInfo: [],
+      lowerRange: 0,
+      upperRange: 0,
+      smoothed: true,
+      drawLine: false,
+      pointShape: "rect",
+      drawFill: true,
+      fill: {
+        r: 64,
+        g: 233,
+        b: 191
+      },
+      minX: Number.MAX_SAFE_INTEGER,
+      maxX: Number.MIN_SAFE_INTEGER,
+      scaleStep: 0
     },
-    minX: Number.MAX_SAFE_INTEGER,
-    maxX: Number.MIN_SAFE_INTEGER,
-    scaleStep: 0
-  },
-  defaultPointSettings: {
-    drawLine: true,
-    lineColor: {
-      r: 0,
-      g: 0,
-      b: 0
-    },
-    smoothed: true,
-    drawFill: true,
-    fill: {
-      r: 64,
-      g: 233,
-      b: 191
-    },
-    lowerRange: 0,
-    upperRange: 0,
-    drawScale: true,
-    drawBackgroundGradient: false,
-    backgroundGradientStart: {
-      r: 0,
-      g: 0,
-      b: 0
-    },
-    backgroundGradientEnd: {
-      r: 255,
-      g: 255,
-      b: 255
-    },
-    drawCurveGradient: false,
-    curveGradientStart: {
-      r: 0,
-      g: 0,
-      b: 0
-    },
-    curveGradientEnd: {
-      r: 255,
-      g: 255,
-      b: 255
-    },
-    flipScale: false,
-    scaleStart: 0,
-    scaleStep: 0,
-    pointShape: "rect",
-    minX: Number.MAX_SAFE_INTEGER,
-    maxX: Number.MIN_SAFE_INTEGER
-  }
-}));
+    defaultPointSettings: {
+      drawLine: true,
+      lineColor: {
+        r: 0,
+        g: 0,
+        b: 0
+      },
+      smoothed: true,
+      drawFill: true,
+      fill: {
+        r: 64,
+        g: 233,
+        b: 191
+      },
+      lowerRange: 0,
+      upperRange: 0,
+      drawScale: true,
+      drawBackgroundGradient: false,
+      backgroundGradientStart: {
+        r: 0,
+        g: 0,
+        b: 0
+      },
+      backgroundGradientEnd: {
+        r: 255,
+        g: 255,
+        b: 255
+      },
+      drawCurveGradient: false,
+      curveGradientStart: {
+        r: 0,
+        g: 0,
+        b: 0
+      },
+      curveGradientEnd: {
+        r: 255,
+        g: 255,
+        b: 255
+      },
+      flipScale: false,
+      scaleStart: 0,
+      scaleStep: 0,
+      pointShape: "rect",
+      minX: Number.MAX_SAFE_INTEGER,
+      maxX: Number.MIN_SAFE_INTEGER
+    }
+  };
+});
 import {
   ParsedColumnEntry,
   getAllEntries,

@@ -3,21 +3,20 @@ import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
 import { execSync } from "child_process";
-import { deleteDirectory, checkFileExists } from "./util.js";
+import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs } from "./util.js";
 import * as routes from "./routes.js";
 import * as loginRoutes from "./login-routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
 import fastifyCompress from "@fastify/compress";
 import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
-import { AssetConfig, assertAssetConfig, Email } from "./types.js";
-import { readFile } from "fs/promises";
+import { Email } from "./types.js";
 import fastifyMultipart from "@fastify/multipart";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import fastifySecureSession from "@fastify/secure-session";
 import fastifyRateLimit from "@fastify/rate-limit";
 import dotenv from "dotenv";
-import { db, findIp, createIp, updateIp } from "./database.js";
+import { db, findIp, createIp, updateIp, initializeDatabase } from "./database.js";
 import { sendEmail } from "./send-email.js";
 import cron from "node-cron";
 import path from "path";
@@ -39,16 +38,7 @@ const server = fastify({
 // Load up all the chart configs found in presets:
 const presets = await loadPresets();
 // Load the current asset config:
-export let assetconfigs: AssetConfig;
-try {
-  const contents = JSON.parse((await readFile("assets/config.json")).toString());
-  assertAssetConfig(contents);
-  assetconfigs = contents;
-} catch (e) {
-  console.log("ERROR: Failed to load asset configs from assets/config.json.  Error was: ", e);
-  process.exit(1);
-}
-
+await loadAssetConfigs();
 // Check if the required JAR files exist
 const activeJarPath = path.join(assetconfigs.activeJar);
 const decryptionJarPath = path.join(assetconfigs.decryptionJar);
@@ -322,6 +312,7 @@ server.setNotFoundHandler((request, reply) => {
 
 //Start the server...
 try {
+  await initializeDatabase();
   await server.listen({
     host: "0.0.0.0", // for this to work in Docker, you need 0.0.0.0
     port: +(process.env.port || 3000)

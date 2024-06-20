@@ -148,7 +148,7 @@ jobs:
       - name: Run Tests
         run: |
           set -o pipefail
-          if ! yarn test-all > test_output.log 2>&1; then
+          if ! yarn test > test_output.log 2>&1; then
               echo "test_failed=true" >> $GITHUB_ENV
               fi
         continue-on-error: true
