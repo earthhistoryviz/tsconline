@@ -921,11 +921,6 @@ export const setTopStageAge = action("setTopStageAge", (age: number, unit: strin
   if (!state.settings.timeSettings[unit]) {
     throw new Error(`Unit ${unit} not found in timeSettings`);
   }
-  if (isNaN(age)) {
-    pushError(ErrorCodes.TOP_STAGE_AGE_INVALID);
-    return;
-  }
-  removeError(ErrorCodes.TOP_STAGE_AGE_INVALID);
   state.settings.timeSettings[unit].topStageAge = age;
   const correspondingKey = state.geologicalTopStageAges.find((item) => item.value === age);
   if (correspondingKey) {
@@ -936,11 +931,6 @@ export const setBaseStageAge = action("setBaseStageAge", (age: number, unit: str
   if (!state.settings.timeSettings[unit]) {
     throw new Error(`Unit ${unit} not found in timeSettings`);
   }
-  if (isNaN(age)) {
-    pushError(ErrorCodes.BASE_STAGE_AGE_INVALID);
-    return;
-  }
-  removeError(ErrorCodes.BASE_STAGE_AGE_INVALID);
   state.settings.timeSettings[unit].baseStageAge = age;
   const correspondingKey = state.geologicalBaseStageAges.find((item) => item.value === age);
   if (correspondingKey) {
