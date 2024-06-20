@@ -1,7 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import { formatColumnName, grabFilepaths, trimQuotes } from "./util.js";
-import { assetconfigs } from "./index.js";
+import { formatColumnName, grabFilepaths, trimQuotes, assetconfigs } from "./util.js";
 import pmap from "p-map";
 import { MapHierarchy, MapInfo, MapPack, assertTransects } from "@tsconline/shared";
 import {
@@ -50,7 +49,9 @@ export async function parseMapPacks(datapacks: string[], decryptionDirectory: st
       tabSeparated[0]![1] !== "1" ||
       tabSeparated[0]!.length < 2
     ) {
-      throw new Error(`Map info file: ${path.basename(map_info)} is not in the correct format/version`);
+      throw new Error(
+        `Map info file: ${path.basename(map_info, path.extname(map_info))} is not in the correct format/version`
+      );
     }
     tabSeparated.forEach((line, index) => {
       if (!line || !line[0]) return;

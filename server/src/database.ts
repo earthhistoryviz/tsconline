@@ -4,12 +4,6 @@ import { Kysely, SqliteDialect } from "kysely";
 import { exec } from "child_process";
 import path from "path";
 
-export const db = new Kysely<Database>({
-  dialect: new SqliteDialect({
-    database: new BetterSqlite3(path.join("db", "TSC.db"))
-  })
-});
-
 /*
 If updating the database schema please update the schema details below.
 Database Schema Details (Post-Migration):
@@ -48,39 +42,51 @@ Instead, we leverage a migration system through the 'migrate.ts' script, allowin
 Another point is that altering these schema commands could break the migration system, as it depends on the schema commands to be immutable.
 */
 
-await db.schema
-  .createTable("users")
-  .ifNotExists()
-  .addColumn("userId", "integer", (col) => col.primaryKey().autoIncrement())
-  .addColumn("username", "text", (col) => col.unique())
-  .addColumn("email", "text", (col) => col.unique())
-  .addColumn("hashedPassword", "text", (col) => col.unique())
-  .addColumn("uuid", "text", (col) => col.notNull().unique())
-  .addColumn("pictureUrl", "text", (col) => col.unique())
-  .addColumn("emailVerified", "integer", (col) => col.notNull().defaultTo(0))
-  .execute();
+let db: Kysely<Database>;
 
-await db.schema
-  .createTable("verification")
-  .ifNotExists()
-  .addColumn("userId", "integer", (col) => col.notNull().unique())
-  .addColumn("token", "text", (col) => col.notNull().unique())
-  .addColumn("expiresAt", "datetime", (col) => col.notNull())
-  .addColumn("verifyOrReset", "text", (col) => col.notNull())
-  .execute();
-
-await new Promise<void>((resolve, reject) => {
-  exec("cd db && yarn tsx migrate.ts up", (error, stdout, stderr) => {
-    if (error) {
-      console.error(`exec error: ${error}`);
-      reject(error);
-      throw new Error(`Migration failed: ${error}`);
-    }
-    if (stdout) console.log(stdout);
-    if (stderr) console.error(stderr);
-    resolve();
+export async function initializeDatabase() {
+  db = new Kysely<Database>({
+    dialect: new SqliteDialect({
+      database: new BetterSqlite3(path.join("db", "TSC.db"))
+    })
   });
-});
+
+  await db.schema
+    .createTable("users")
+    .ifNotExists()
+    .addColumn("userId", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("username", "text", (col) => col.unique())
+    .addColumn("email", "text", (col) => col.unique())
+    .addColumn("hashedPassword", "text", (col) => col.unique())
+    .addColumn("uuid", "text", (col) => col.notNull().unique())
+    .addColumn("pictureUrl", "text", (col) => col.unique())
+    .addColumn("emailVerified", "integer", (col) => col.notNull().defaultTo(0))
+    .execute();
+
+  await db.schema
+    .createTable("verification")
+    .ifNotExists()
+    .addColumn("userId", "integer", (col) => col.notNull().unique())
+    .addColumn("token", "text", (col) => col.notNull().unique())
+    .addColumn("expiresAt", "datetime", (col) => col.notNull())
+    .addColumn("verifyOrReset", "text", (col) => col.notNull())
+    .execute();
+
+  await new Promise<void>((resolve, reject) => {
+    exec("cd db && yarn tsx migrate.ts up", (error, stdout, stderr) => {
+      if (error) {
+        console.error(`exec error: ${error}`);
+        reject(error);
+        throw new Error(`Migration failed: ${error}`);
+      }
+      if (stdout) console.log(stdout);
+      if (stderr) console.error(stderr);
+      resolve();
+    });
+  });
+}
+
+export { db };
 
 export async function createUser(newUser: NewUser) {
   return await db.insertInto("users").values(newUser).execute();
@@ -159,4 +165,12 @@ export async function updateIp(ip: string, count: number) {
 
 export async function deleteIp(ip: string) {
   return await db.deleteFrom("ip").where("ip", "=", ip).execute();
+}
+
+export async function checkForUsersWithUsernameOrEmail(username: string, email: string) {
+  return await db
+    .selectFrom("users")
+    .selectAll()
+    .where((eb) => eb("username", "=", username).or("email", "=", email))
+    .execute();
 }

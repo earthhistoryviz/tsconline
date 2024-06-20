@@ -1,53 +1,16 @@
+import { vi, describe, beforeEach, it, expect } from "vitest";
 import * as utilModule from "../src/util";
 import { readFileSync } from "fs";
-jest.mock("./util.js", () => ({
-  ...utilModule,
-  grabFilepaths: jest.fn().mockImplementation((files: string[]) => {
-    return Promise.resolve(files.map((file) => `server/__tests__/__data__/${file}`));
-  })
-}));
-jest.mock("./index.js", () => ({
-  assetconfigs: { decryptionDirectory: "decryptionDirectory", imagesDirectory: "imagesDirectory" }
-}));
-jest.mock("p-map", () => ({
-  default: jest.fn().mockImplementation(async (array: string[], callback: (src: string) => Promise<void>) => {
-    for (const mapInfo of array) {
-      await callback(mapInfo);
-    }
-  })
-}));
-jest.mock("path", () => ({
-  _esModule: true,
-  default: {
-    basename: jest.fn().mockImplementation((path: string) => {
-      if (path.indexOf(".") !== -1) {
-        if (path.indexOf("/") !== -1) {
-          return path.slice(path.lastIndexOf("/") + 1, path.indexOf("."));
-        }
-        return path.slice(0, path.indexOf("."));
-      }
-      return path;
-    })
-  }
-}));
-jest.mock("fs/promises", () => ({
-  _esModule: true,
-  default: {
-    readFile: jest.fn().mockImplementation((path: string) => {
-      return Promise.resolve(readFileSync(path));
-    })
-  }
-}));
-jest.mock("@tsconline/shared", () => ({
-  assertMapPoints: jest.fn().mockReturnValue(true),
-  assertMapInfo: jest.fn().mockReturnValue(true),
-  assertRectBounds: jest.fn().mockReturnValue(true),
-  assertParentMap: jest.fn().mockReturnValue(true),
-  assertInfoPoints: jest.fn().mockReturnValue(true),
-  assertMapHierarchy: jest.fn().mockReturnValue(true),
-  assertVertBounds: jest.fn().mockReturnValue(true),
-  assertTransects: jest.fn().mockReturnValue(true)
-}));
+vi.mock("../src/util", async (importOriginal) => {
+  const actual = await importOriginal<typeof utilModule>();
+  return {
+    ...actual,
+    grabFilepaths: vi.fn().mockImplementation((files: string[]) => {
+      return Promise.resolve(files.map((file) => `server/__tests__/__data__/${file}`));
+    }),
+    assetconfigs: { decryptionDirectory: "decryptionDirectory", imagesDirectory: "imagesDirectory" }
+  };
+});
 
 import { grabParent, grabVertBounds, parseMapPacks, processLine } from "../src/parse-map-packs";
 import { MapHierarchy, MapInfo } from "@tsconline/shared";
@@ -129,8 +92,9 @@ describe("parseMapPacks tests", () => {
     const mapPacks = await parseMapPacks(["parse-map-packs-test-2.txt", "parse-map-packs-test-3.txt"], "");
     const expected = {
       mapInfo: { ...key["map-pack-key-2"]["mapInfo"], ...key["map-pack-key-3"]["mapInfo"] },
-      mapHierarchy: { "World Map": ["Belgium", "MAP TITLE TEST"] }
+      mapHierarchy: { "World Map": ["Belgium", "MAP TITLE TEST"].sort() }
     };
+    (mapPacks.mapHierarchy["World Map"] ?? []).sort();
     expect(mapPacks).toEqual(expected);
   });
 
@@ -148,8 +112,9 @@ describe("parseMapPacks tests", () => {
         ...key["map-pack-key-2"]["mapInfo"],
         ...key["map-pack-key-3"]["mapInfo"]
       },
-      mapHierarchy: { "World Map": ["Belgium", "MAP TITLE TEST"] }
+      mapHierarchy: { "World Map": ["Belgium", "MAP TITLE TEST"].sort() }
     };
+    (mapPacks.mapHierarchy["World Map"] ?? []).sort();
     expect(mapPacks).toEqual(expected);
   });
 
