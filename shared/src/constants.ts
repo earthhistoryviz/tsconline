@@ -19,7 +19,6 @@ import {
 export const defaultDataMiningSettings: DataMiningSettings = {
   windowSize: 2,
   stepSize: 1,
-  isDataMiningColumn: false
 };
 
 export const defaultEventSettings: EventSettings = {
@@ -373,6 +372,7 @@ export const defaultPointSettings: PointSettings = {
   minX: Number.MAX_SAFE_INTEGER,
   maxX: Number.MIN_SAFE_INTEGER,
   dataMiningPointDataType: null,
+  isDataMiningColumn: false,
   ...defaultDataMiningSettings
 };
 

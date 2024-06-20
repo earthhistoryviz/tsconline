@@ -253,12 +253,12 @@ export type PointSettings = {
   minX: number;
   maxX: number;
   dataMiningPointDataType: DataMiningPointDataType | null;
+  isDataMiningColumn: boolean;
 } & DataMiningSettings;
 
 export type DataMiningSettings = {
   windowSize: number;
   stepSize: number;
-  isDataMiningColumn: boolean;
 };
 
 export type ColumnInfo = {
@@ -550,8 +550,6 @@ export function assertDataMiningSettings(o: any): asserts o is DataMiningSetting
   if (!o || typeof o !== "object") throw new Error("DataMiningSettings must be a non-null object");
   if (typeof o.windowSize !== "number") throwError("DataMiningSettings", "windowSize", "number", o.windowSize);
   if (typeof o.stepSize !== "number") throwError("DataMiningSettings", "stepSize", "number", o.stepSize);
-  if (typeof o.isDataMiningColumn !== "boolean")
-    throwError("DataMiningSettings", "isDataMiningColumn", "boolean", o.isDataMiningColumn);
 }
 
 export function isDataMiningPointDataType(o: any): o is DataMiningPointDataType {
