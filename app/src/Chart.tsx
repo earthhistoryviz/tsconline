@@ -22,10 +22,10 @@ import {
   DialogTitle,
   FormControl,
   IconButton,
-  InputLabel,
   NativeSelect,
   Popover,
   TextField,
+  Tooltip,
   Typography
 } from "@mui/material";
 import React from "react";
@@ -158,7 +158,6 @@ export const Chart = observer(() => {
                 onChange={handleFilenameChange}
               />
               <FormControl sx={{ m: 1, minWidth: 120 }}>
-                <InputLabel variant="standard" htmlFor="uncontrolled-native"></InputLabel>
                 <NativeSelect
                   defaultValue={state.chartTab.downloadFiletype}
                   inputProps={{
@@ -206,17 +205,34 @@ export const Chart = observer(() => {
     };
 
     const open = Boolean(anchorEl);
-    const id = open ? "simple-popover" : undefined;
-
     return (
       <div>
-        <CustomTooltip title="Help">
+        <Tooltip
+          title={
+            <div>
+              ctrl/⊞/⌘ + Minus (-) - Zoom out
+              <br />
+              ctrl/⊞/⌘ + Plus (+) - Zoom in
+            </div>
+          }
+          arrow
+          slotProps={{
+            popper: {
+              modifiers: [
+                {
+                  name: "offset",
+                  options: {
+                    offset: [0, -10]
+                  }
+                }
+              ]
+            }
+          }}>
           <IconButton onClick={handleClick}>
             <HelpOutlineIcon />
           </IconButton>
-        </CustomTooltip>
+        </Tooltip>
         <Popover
-          id={id}
           open={open}
           anchorEl={anchorEl}
           onClose={handleClose}
