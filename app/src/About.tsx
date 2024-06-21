@@ -133,11 +133,7 @@ export const About = observer(function About() {
   const theme = useTheme();
 
   return (
-    <div
-      className="whole_page"
-      style={{
-        background: theme.gradients.primary
-      }}>
+    <div className="whole_page">
       <TSCOnlineHeader />
       <div
         style={{

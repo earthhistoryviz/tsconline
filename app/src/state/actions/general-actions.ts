@@ -744,10 +744,6 @@ export const removeSnackbar = action("removeSnackbar", (text: string) => {
   state.snackbars = state.snackbars.filter((info) => info.snackbarText !== text);
 });
 export const pushSnackbar = action("pushSnackbar", (text: string, severity: "success" | "info" | "warning") => {
-  if (text.length > snackbarTextLengthLimit) {
-    console.error("The length of snackbar text must be less than 70");
-    return;
-  }
   for (const snackbar of state.snackbars) {
     if (snackbar.snackbarText === text) {
       snackbar.snackbarCount += 1;
