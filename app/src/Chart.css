@@ -47,12 +47,8 @@
   justify-content: space-between;
   width: 100%;
 }
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
 
-.options-bar-left {
-  display: flex;
-  flex-direction: row;
-}
-.options-bar-right {
-  display: flex;
-  flex-direction: row;
-}

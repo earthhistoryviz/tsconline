@@ -13,27 +13,38 @@ import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import FileSaver from "file-saver";
 import { TransformWrapper, TransformComponent, ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
-import { IconButton, Popover, Typography } from "@mui/material";
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  FormControl,
+  IconButton,
+  InputLabel,
+  NativeSelect,
+  Popover,
+  TextField,
+  Typography
+} from "@mui/material";
 import React from "react";
+import isValidFilename from "valid-filename";
 
-export const Chart = observer(function () {
+export const Chart = observer(() => {
   const { state, actions } = useContext(context);
   const theme = useTheme();
   const transformContainerRef = useRef<ReactZoomPanPinchContentRef>(null);
   const step = 0.1;
   const minScale = 0.1;
   const maxScale = 8;
-  const downloadSvg = () => {
-    const blob = new Blob([state.chartContent]);
-    FileSaver.saveAs(blob, "chart.svg");
-  };
 
   const setChartAlignmentValues = () => {
     const container = transformContainerRef.current;
     if (!container) return;
     const content = document.getElementById("svg-display")?.getBoundingClientRect();
-    const wrapper = document.getElementsByClassName("react-transform-wrapper")[0].getBoundingClientRect();
-    if (!content) return;
+    const wrapper = document.getElementById("chart-transform-wrapper")?.getBoundingClientRect();
+    if (!content || !wrapper) return;
 
     const wrapperMid = (wrapper.right - wrapper.left) / 2;
     const chartOffset = (content.right - content.left) / 2;
@@ -81,6 +92,108 @@ export const Chart = observer(function () {
     };
   }, [state.chartContent]);
 
+  const [downloadOpen, setDownloadOpen] = React.useState(false);
+
+  const handleDownloadOpen = () => {
+    setDownloadOpen(true);
+  };
+
+  const handleDownloadClose = () => {
+    setDownloadOpen(false);
+  };
+
+  const handleFilenameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    actions.setChartTabDownloadFilename(e.target.value);
+    console.log(state.chartTab.downloadFilename);
+  };
+
+  const downloadSvg = (filename: string) => {
+    const blob = new Blob([state.chartContent]);
+    FileSaver.saveAs(blob, filename + ".svg");
+  };
+
+  const DownloadButton = () => {
+    return (
+      <div>
+        <CustomTooltip title="Download SVG">
+          <IconButton onClick={() => handleDownloadOpen()}>
+            <DownloadIcon />
+          </IconButton>
+        </CustomTooltip>
+        <Dialog
+          open={downloadOpen}
+          onClose={handleDownloadClose}
+          PaperProps={{
+            component: "form",
+            onSubmit: (e: React.FormEvent<HTMLFormElement>) => {
+              e.preventDefault(); // to stop website from reloading
+              if (!isValidFilename(state.chartTab.downloadFilename)) {
+                actions.pushSnackbar("Filename is not valid", "warning");
+                return;
+              }
+              switch (state.chartTab.downloadFiletype) {
+                case "svg":
+                  downloadSvg(state.chartTab.downloadFilename);
+                  break;
+                case "pdf":
+                  break;
+                case "png":
+              }
+              handleDownloadClose();
+            }
+          }}>
+          <DialogTitle>Download Chart</DialogTitle>
+          <DialogContent>
+            <DialogContentText>Please enter the filename and select filetype.</DialogContentText>
+            <div className="flex-row">
+              <TextField
+                defaultValue={state.chartTab.downloadFilename}
+                autoFocus
+                required
+                margin="normal"
+                type="text"
+                size="small"
+                fullWidth
+                variant="outlined"
+                onChange={handleFilenameChange}
+              />
+              <FormControl sx={{ m: 1, minWidth: 120 }}>
+                <InputLabel variant="standard" htmlFor="uncontrolled-native"></InputLabel>
+                <NativeSelect
+                  defaultValue={state.chartTab.downloadFiletype}
+                  inputProps={{
+                    name: "filetype",
+                    id: "uncontrolled-native"
+                  }}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                    const filetype = e.target.value;
+                    if (filetype !== "svg" && filetype !== "pdf" && filetype !== "png") {
+                      return;
+                    }
+                    actions.setChartTabDownloadFiletype(filetype);
+                  }}>
+                  <option value={"svg"}>.svg</option>
+                  {/* 
+                    TODO: implement these
+                    <option value={"pdf"}>.pdf</option>
+                    <option value={"png"}>.png</option> */}
+                </NativeSelect>
+              </FormControl>
+            </div>
+          </DialogContent>
+          <DialogActions>
+            <Button color="warning" onClick={handleDownloadClose}>
+              Cancel
+            </Button>
+            <Button color="success" type="submit">
+              Save
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </div>
+    );
+  };
+
   const HelpButton = () => {
     const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null);
 
@@ -123,7 +236,7 @@ export const Chart = observer(function () {
     if (!container) return;
     return (
       <div className="options-bar">
-        <div className="options-bar-left">
+        <div className="flex-row">
           <CustomTooltip title="Zoom In">
             <IconButton
               onClick={() => {
@@ -159,8 +272,8 @@ export const Chart = observer(function () {
             <IconButton
               onClick={() => {
                 const content = document.getElementById("svg-display")?.getBoundingClientRect();
-                const wrapper = document.getElementsByClassName("react-transform-wrapper")[0].getBoundingClientRect();
-                if (!content) return;
+                const wrapper = document.getElementById("chart-transform-wrapper")?.getBoundingClientRect();
+                if (!content || !wrapper) return;
                 const newScale = (wrapper.bottom - wrapper.top) / (content.bottom - content.top);
                 //scale is correct, only need to center
                 if (newScale === 1) {
@@ -183,12 +296,8 @@ export const Chart = observer(function () {
             </IconButton>
           </CustomTooltip>
         </div>
-        <div className="options-bar-right">
-          <CustomTooltip title="Download SVG">
-            <IconButton onClick={() => downloadSvg()}>
-              <DownloadIcon />
-            </IconButton>
-          </CustomTooltip>
+        <div className="flex-row">
+          <DownloadButton />
           <HelpButton />
         </div>
       </div>
@@ -208,17 +317,19 @@ export const Chart = observer(function () {
       ) : state.madeChart ? (
         <div id="wrapper" className="chart-and-options-bar">
           <OptionsBar />
-          <TransformWrapper
-            ref={transformContainerRef}
-            wheel={{ wheelDisabled: true }}
-            panning={{ wheelPanning: true }}
-            limitToBounds={false}
-            minScale={minScale}
-            maxScale={maxScale}>
-            <TransformComponent wrapperStyle={{ height: "84vh", width: "80vw", border: "solid" }}>
-              <TSCSvgComponent chartContent={state.chartContent} />
-            </TransformComponent>
-          </TransformWrapper>
+          <div id="chart-transform-wrapper">
+            <TransformWrapper
+              ref={transformContainerRef}
+              wheel={{ wheelDisabled: true }}
+              panning={{ wheelPanning: true }}
+              limitToBounds={false}
+              minScale={minScale}
+              maxScale={maxScale}>
+              <TransformComponent wrapperStyle={{ height: "84vh", width: "80vw", border: "solid" }}>
+                <TSCSvgComponent chartContent={state.chartContent} />
+              </TransformComponent>
+            </TransformWrapper>
+          </div>
         </div>
       ) : (
         <div className="loading-container">

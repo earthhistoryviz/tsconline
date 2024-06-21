@@ -1078,3 +1078,10 @@ export const setChartTabZoomFitScale = action("setChartTabZoomFitScale", (newval
 export const setChartTabMidX = action("setChartTabMidX", (newval: number) => {
   state.chartTab.midX = newval;
 });
+export const setChartTabDownloadFilename = action("setChartTabDownloadFilename", (newval: string) => {
+  state.chartTab.downloadFilename = newval;
+});
+
+export const setChartTabDownloadFiletype = action("setChartTabDownloadFiletype", (newval: "svg" | "pdf" | "png") => {
+  state.chartTab.downloadFiletype = newval;
+});
