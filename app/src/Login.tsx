@@ -151,7 +151,7 @@ export const Login: React.FC = observer(() => {
               name="username"
               autoComplete="username"
               autoFocus
-              disabled={state.cookieConsent === false}
+              disabled={!state.cookieConsent}
             />
             <TextField
               margin="normal"
@@ -162,7 +162,7 @@ export const Login: React.FC = observer(() => {
               type="password"
               id="password"
               autoComplete="current-password"
-              disabled={state.cookieConsent === false}
+              disabled={!state.cookieConsent}
             />
             <TSCButton
               type="submit"
@@ -170,7 +170,7 @@ export const Login: React.FC = observer(() => {
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
               endIcon={<LoginIcon />}
-              disabled={state.cookieConsent === false}>
+              disabled={!state.cookieConsent}>
               Sign In
             </TSCButton>
             <Grid container className="grid-container">
@@ -195,7 +195,7 @@ export const Login: React.FC = observer(() => {
               <Box className="divider-line"></Box>
             </Box>
             {/* GoogleLogin does not have a "disable" property */}
-            <div className={state.cookieConsent === false ? "disabled-google-login" : ""}>
+            <div className={!state.cookieConsent ? "disabled-google-login" : ""}>
               <GoogleLogin
                 onSuccess={async (credentialResponse) => {
                   const credential = credentialResponse.credential;

@@ -3,7 +3,7 @@ import { observer } from "mobx-react-lite";
 import { useTheme, Button, Typography, Box } from "@mui/material";
 import styled from "@mui/material/styles/styled";
 import Slide from "@mui/material/Slide";
-import { context, state } from "./state";
+import { context } from "./state";
 
 const CookieConsentContainer = styled(Box)(({ theme }) => ({
   position: "fixed",
@@ -24,11 +24,11 @@ interface CookieConsentProps {
 }
 
 const CookieConsent: React.FC<CookieConsentProps> = ({ persistent = false }) => {
-  const savedConsent = state.cookieConsent;
-  const shouldShowConsent = !savedConsent || (persistent && savedConsent !== true);
+  const { state, actions } = useContext(context);
+  const { cookieConsent } = state;
+  const shouldShowConsent = !cookieConsent || (persistent && cookieConsent !== true);
   const [isVisible, setIsVisible] = useState(shouldShowConsent);
   const theme = useTheme();
-  const { actions } = useContext(context);
 
   // uncomment the following line to see the cookie consent banner
   // localStorage.removeItem("cookieConsent");

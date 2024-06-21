@@ -860,7 +860,8 @@ export const logout = action("logout", async () => {
 });
 
 export const sessionCheck = action("sessionCheck", async () => {
-  state.cookieConsent = localStorage.getItem("cookieConsent") === "true";
+  const cookieConsentValue = localStorage.getItem("cookieConsent");
+  state.cookieConsent = cookieConsentValue !== null ? cookieConsentValue === "true" : null;
   try {
     const response = await fetcher("/auth/session-check", {
       method: "POST",
