@@ -19,23 +19,11 @@ const Title = styled("h2")(({ theme }) => ({
   color: theme.palette.primary.main
 }));
 
-const CardBackground = styled("div")(({ theme, color }) => ({
-  background: `linear-gradient(to top, ${color || theme.palette.selection.main}, ${Color(
-    color || theme.palette.selection.main
-  )
-    .rotate(24)
-    .lighten(0.12)})`
+const CardBackground = styled("div")(({ theme }) => ({
+  backgroundColor: theme.palette.backgroundColor.light
 }));
 const HiddenBack = styled("div")(({ theme }) => ({
-  backgroundColor: theme.palette.cardBackground.light
-}));
-
-const CardContent = styled("div")(({ color }) => ({
-  boxShadow: `
-    -10px 10px 15px -5px ${Color(color).fade(0.5)}, 
-      10px 10px 15px -5px ${Color(color).fade(0.5)}, 
-      0 10px 15px -5px ${Color(color).fade(0.5)}
-    `
+  backgroundColor: theme.palette.backgroundColor.light
 }));
 
 const Date = styled("div")(({ theme }) => ({
@@ -66,7 +54,7 @@ export const TSCCard = ({
       <Box className="front-card">
         <HiddenBack className="hidden-back" />
         <CardMedia className="card-media-cover" image={devSafeUrl(preset.background)} onClick={handleFlip} />
-        <CardContent className="card-content front-card-content" color={color}>
+        <div className="card-content front-card-content">
           <CardBackground className="card-background clip-path" color={color} />
           <Box position="relative" zIndex={1}>
             <Grid container alignItems="center" spacing={2} onClick={handleFlip}>
@@ -85,6 +73,7 @@ export const TSCCard = ({
               </Grid>
               <Grid item>
                 <TSCButton
+                  buttonType="gradient"
                   style={{
                     width: "auto",
                     height: "auto",
@@ -101,7 +90,7 @@ export const TSCCard = ({
               </Grid>
             </Grid>
           </Box>
-        </CardContent>
+        </div>
       </Box>
       {/* This is the back card */}
       <BackCard handleFlip={handleFlip} add={add} added={added} preset={preset} color={color} />
@@ -126,7 +115,7 @@ const BackCard = ({
     <Box className="back-card">
       <HiddenBack className="hidden-back" />
       <CardBackground className="card-background" color={color} />
-      <CardContent className="back-background card-content" color={color}>
+      <div className="back-background card-content">
         <StyledScrollbar className="info-container" autoHide={false}>
           <CardMedia className="info-media" component="img" image={devSafeUrl(preset.background)} />
           <Title className="info-title">{preset.title}</Title>
@@ -149,7 +138,7 @@ const BackCard = ({
             </Typography>
           </div>
         </StyledScrollbar>
-      </CardContent>
+      </div>
       <div className="overlay-buttons">
         <IconButton className="icon-button" onClick={handleFlip} size="large">
           <BorderedIcon className="add-icon" component={ArrowBackIcon} />

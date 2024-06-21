@@ -1,6 +1,7 @@
 import { HTMLAttributes, useState } from "react";
 import "./TSCCustomTabs.css";
 import { observer } from "mobx-react-lite";
+import { Box, Button, useTheme } from "@mui/material";
 type CustomTabsProps = {
   tabs: { id: string; tab: React.ReactNode }[];
   value?: number;
@@ -24,6 +25,7 @@ export const CustomTabs: React.FC<CustomTabsProps> = observer(
     ...props
   }) => {
     const [selectedTab, setSelectedTab] = useState<number>(value || 0);
+  const theme = useTheme();
     height = Math.min(height, 100);
     width = Math.min(width, 200);
     let tabIndicatorLengthDiff;
@@ -52,19 +54,22 @@ export const CustomTabs: React.FC<CustomTabsProps> = observer(
         <div
           className="tsc-tab-buttons"
           style={{ flexDirection: `${orientation === "horizontal" ? "row" : "column"}` }}>
-          <div
+          <Box
             className={`tsc-tab-indicator`}
             style={orientation === "horizontal" ? horizontalOrientation : verticalOrientation}
+            sx={{ bgcolor: "button.light" }}
           />
           {tabs.map((val, index) => (
-            <button
+            <Button
               key={val.id}
               tabIndex={0}
-              style={{
+              sx={{
+                textTransform: "none",
                 width: `${width}px`,
                 height: `${height}px`,
-                textAlign: `${centered ? "center" : "left"}`,
-                padding: `${centered ? "0" : orientation === "vertical-left" ? "10px 5px 10px 15px" : "10px 15px 10px 5px"}`
+                textAlign: `${centered ? "center" : orientation === "vertical-left" ? "right" : "left"}`,
+                padding: `${centered ? "0" : orientation === "vertical-left" ? "10px 5px 10px 15px" : "10px 15px 10px 5px"}`,
+                color: `${selectedTab === index ? "button.light" : "text.primary"}`
               }}
               className={`tsc-tab-panel ${(value ?? selectedTab) === index ? "tsc-tab-panel-selected" : ""}`}
               onClick={() => {
@@ -73,7 +78,7 @@ export const CustomTabs: React.FC<CustomTabsProps> = observer(
                 if (onChange) onChange(index);
               }}>
               {val.tab}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
