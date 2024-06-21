@@ -12,7 +12,6 @@ export const TSCButton: React.FC<TSCButtonProps> = ({ buttonType = "primary", ..
       : buttonType === "secondary"
         ? theme.palette.secondaryButton
         : theme.palette.mainGradient;
-  console.log(color["main"]);
   return (
     <Button
       {...props}

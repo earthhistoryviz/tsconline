@@ -116,8 +116,8 @@ function createGradient(color1: string, color2: string) {
 
   return {
     main: gradient,
-    light: `linear-gradient(90deg, ${colorObj1.lighten(0.2)} 0%, ${colorObj2.lighten(0.2)} 100%)`,
-    dark: `linear-gradient(90deg, ${colorObj1.darken(0.2)} 0%, ${colorObj2.darken(0.2)} 100%)`,
+    light: `linear-gradient(90deg, ${colorObj1.lighten(0.2).hex()} 0%, ${colorObj2.lighten(0.2).hex()} 100%)`,
+    dark: `linear-gradient(90deg, ${colorObj1.darken(0.2).hex()} 0%, ${colorObj2.darken(0.2).hex()} 100%)`,
     contrastText: getContrastText(color1)
   };
 }
@@ -154,7 +154,9 @@ let darkTheme = createTheme(baseTheme, {
       },
       name: "secondaryButton"
     }),
-    mainGradient: createGradient("#F17F19", "#F25B28"),
+    mainGradient: {
+      ...createGradient("#F17F19", "#F25B28")
+    },
     secondaryBackground: baseTheme.palette.augmentColor({
       color: {
         main: "#1A2029"
@@ -278,7 +280,14 @@ darkTheme = createTheme(darkTheme, {
           }
         }
       }
-    }
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          color: darkTheme.palette.icon.main
+        }
+      }
+    },
   }
 });
 darkTheme = createTheme(darkTheme, {
