@@ -1,23 +1,32 @@
 import { Button, ButtonProps } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 
-export const TSCButton: React.FC<ButtonProps> = (props) => {
+type TSCButtonProps = {
+  buttonType?: "primary" | "secondary" | "gradient";
+} & ButtonProps;
+export const TSCButton: React.FC<TSCButtonProps> = ({ buttonType = "primary", ...props }) => {
   const theme = useTheme();
-
+  const color =
+    buttonType === "primary"
+      ? theme.palette.button
+      : buttonType === "secondary"
+        ? theme.palette.secondaryButton
+        : theme.palette.mainGradient;
+  console.log(color["main"]);
   return (
     <Button
       {...props}
       disableRipple
       sx={{
-        backgroundColor: theme.palette.button.main,
-        color: theme.palette.button.contrastText,
+        ...props.sx,
+        background: color["main"],
+        color: color["contrastText"],
         ":hover": {
-          backgroundColor: theme.palette.button.light
+          background: color["light"]
         },
         ":active": {
-          backgroundColor: theme.palette.button.dark
-        },
-        ...props.sx
+          background: color["dark"]
+        }
       }}
       variant="contained">
       {props.children}

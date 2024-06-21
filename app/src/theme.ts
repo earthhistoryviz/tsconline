@@ -3,13 +3,15 @@ import Color from "color";
 declare module "@mui/material/styles" {
   interface Palette {
     backgroundColor: Palette["primary"];
-    altbackground: Palette["primary"];
-    dark: Palette["primary"];
+    secondaryButton: Palette["primary"];
     button: Palette["primary"];
+    altbackground: Palette["primary"];
+    complimentary: Palette["primary"];
+    dark: Palette["primary"];
     navbar: Palette["primary"];
     selection: Palette["primary"];
     settings: Palette["primary"];
-    gradient: Palette["primary"];
+    mainGradient: Palette["primary"];
     on: Palette["primary"];
     off: Palette["primary"];
     disabled: Palette["primary"];
@@ -28,12 +30,14 @@ declare module "@mui/material/styles" {
   interface PaletteOptions {
     backgroundColor?: PaletteOptions["primary"];
     altbackground?: PaletteOptions["primary"];
+    secondaryButton?: PaletteOptions["primary"];
+    complimentary?: PaletteOptions["primary"];
     dark?: PaletteOptions["primary"];
     button?: PaletteOptions["primary"];
     navbar?: PaletteOptions["primary"];
     selection?: PaletteOptions["primary"];
     settings?: PaletteOptions["primary"];
-    gradient?: PaletteOptions["primary"];
+    mainGradient?: PaletteOptions["primary"];
     on?: PaletteOptions["primary"];
     off?: PaletteOptions["primary"];
     disabled?: PaletteOptions["primary"];
@@ -48,15 +52,29 @@ declare module "@mui/material/styles" {
     snackbarAlert?: PaletteOptions["primary"];
     warningAlert?: PaletteOptions["primary"];
   }
-  interface Theme {
-    gradients: {
-      [key: string]: string;
-    };
-  }
-  interface ThemeOptions {
-    gradients?: {
-      [key: string]: string;
-    };
+  interface ButtonPropsColorOverrides {
+    backgroundColor: true;
+    altBackground: true;
+    mainGradient: true;
+    complimentary: true;
+    navbar: true;
+    selection: true;
+    settings: true;
+    on: true;
+    off: true;
+    disabled: true;
+    tooltip: true;
+    columnMenu: true;
+    scrollbar: true;
+    info: true;
+    cardBackground: true;
+    menuDropdown: true;
+    errorAlert: true;
+    errorText: true;
+    snackbarAlert: true;
+    warningAlert: true;
+    secondaryButton: true;
+    dark: true;
   }
 }
 
@@ -82,6 +100,26 @@ let baseTheme = createTheme({
   }
 });
 
+function createGradient(color1: string, color2: string) {
+  const colorObj1 = Color(color1);
+  const colorObj2 = Color(color2);
+
+  const gradient = `linear-gradient(90deg, ${color1} 0%, ${color2} 100%)`;
+
+  return {
+    main: gradient,
+    light: `linear-gradient(90deg, ${colorObj1.lighten(0.2)} 0%, ${colorObj2.lighten(0.2)} 100%)`,
+    dark: `linear-gradient(90deg, ${colorObj1.darken(0.2)} 0%, ${colorObj2.darken(0.2)} 100%)`,
+    contrastText: getContrastText(color1)
+  };
+}
+
+function getContrastText(color1: string) {
+  const color = Color(color1);
+  const luminance = color.luminosity();
+  return luminance > 0.5 ? "#000000" : "#ffffff";
+}
+
 let darkTheme = createTheme(baseTheme, {
   palette: {
     mode: "dark",
@@ -95,17 +133,30 @@ let darkTheme = createTheme(baseTheme, {
     text: {
       primary: "#f6f7f8"
     },
-    altbackground: {
-      light: "#8FB7E7",
-      main: "#72A4E1",
-      dark: "#1D4E89"
-    },
     button: baseTheme.palette.augmentColor({
       color: {
         main: "#e56e03"
       },
       name: "button"
     }),
+    secondaryButton: baseTheme.palette.augmentColor({
+      color: {
+        main: "#f64747"
+      },
+      name: "secondaryButton"
+    }),
+    mainGradient: createGradient("#F17F19", "#F25B28"),
+    complimentary: baseTheme.palette.augmentColor({
+      color: {
+        main: "#f2f3f9"
+      },
+      name: "complimentary"
+    }),
+    altbackground: {
+      light: "#8FB7E7",
+      main: "#72A4E1",
+      dark: "#1D4E89"
+    },
     dark: {
       light: "#6D8A96",
       main: "#001A23"
@@ -203,10 +254,16 @@ darkTheme = createTheme(darkTheme, {
       dark: `${Color(darkTheme.palette.on.main).darken(0.3)}`
     }
   },
-  gradients: {
-    main: `linear-gradient(to top, 
-            ${Color(darkTheme.palette.altbackground.main).lighten(0.3)}, 
-          ${Color(darkTheme.palette.altbackground.light).rotate(24).lighten(0.3)})`
+  components: {
+    MuiFormHelperText: {
+      styleOverrides: {
+        root: {
+          "&.Mui-disabled": {
+            color: darkTheme.palette.disabled.main
+          }
+        }
+      }
+    }
   }
 });
 darkTheme = createTheme(darkTheme, {

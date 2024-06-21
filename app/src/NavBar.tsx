@@ -18,7 +18,7 @@ import { SettingsMenuOptionLabels, assertSettingsTabs } from "./types";
 import Color from "color";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
-  backgroundColor: Color(theme.palette.backgroundColor.dark).alpha(0.9).string(),
+  backgroundColor: Color(theme.palette.backgroundColor.dark).alpha(0.8).string(),
   borderBottom: `1px solid ${theme.palette.divider}`,
   backgroundImage: "none",
   backdropFilter: "blur(8px)",
@@ -41,10 +41,8 @@ export const NavBar = observer(function Navbar() {
           <IconButton
             size="large"
             sx={{
-              color: theme.palette.selection.main,
               "&:hover": {
-                color: theme.palette.selection.light,
-                opacity: 1
+                opacity: 0.9
               }
             }}
             value={0}
@@ -52,7 +50,7 @@ export const NavBar = observer(function Navbar() {
               actions.setTab(0);
               actions.setUseCache(true);
             }}>
-            <HomeIcon sx={{ color: theme.palette.button.main }} />
+            <HomeIcon sx={{ color: "button.light" }} />
           </IconButton>
         </Link>
         {
@@ -66,19 +64,28 @@ export const NavBar = observer(function Navbar() {
               //override the TSCTabs since it has the dark navbar
               sx={{
                 "& .MuiTab-root": {
-                  color: theme.palette.primary.main,
-                  "&:hover": {
-                    color: theme.palette.selection.light
+                  color: "text.primary",
+                  "&:hover:not(.Mui-selected)": {
+                    color: "gray"
                   }
                 },
                 "& .Mui-selected": {
-                  color: theme.palette.selection.main
+                  color: "button.light"
                 }
-              }}>
-              <Tab value={1} label="Chart" to="/chart" component={Link} />
-              <Tab value={2} label="Settings" to="/settings" component={Link} ref={settingsRef} {...anchorProps} />
-              <Tab value={3} label="Help" to="/help" component={Link} />
-              <Tab value={4} label="About" to="/about" component={Link} />
+              }}
+              TabIndicatorProps={{ sx: { bgcolor: "button.light" } }}>
+              <Tab value={1} disableRipple label="Chart" to="/chart" component={Link} />
+              <Tab
+                value={2}
+                disableRipple
+                label="Settings"
+                to="/settings"
+                component={Link}
+                ref={settingsRef}
+                {...anchorProps}
+              />
+              <Tab value={3} disableRipple label="Help" to="/help" component={Link} />
+              <Tab value={4} disableRipple label="About" to="/about" component={Link} />
             </Tabs>
             <ControlledMenu
               {...hoverProps}
