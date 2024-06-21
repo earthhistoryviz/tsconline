@@ -4,7 +4,7 @@ import { context } from "./state";
 import { useTheme } from "@mui/material/styles";
 import "./Chart.css";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
-import { GradientDiv, TSCPopupManager, TSCSvgComponent } from "./components";
+import { TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
 import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import { IconButton } from "@mui/material";
@@ -13,7 +13,7 @@ export const Chart = observer(function () {
   const theme = useTheme();
 
   return (
-    <GradientDiv
+    <div
       style={{
         height: "92vh",
         width: "100%",
@@ -48,6 +48,6 @@ export const Chart = observer(function () {
         </div>
       )}
       <TSCPopupManager />
-    </GradientDiv>
+    </div>
   );
 });

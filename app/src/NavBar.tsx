@@ -112,7 +112,7 @@ export const NavBar = observer(function Navbar() {
           </>
         }
         <div style={{ flexGrow: 1 }} />
-        <TSCButton onClick={() => actions.initiateChartGeneration(navigate, location.pathname)}>
+        <TSCButton buttonType="gradient" onClick={() => actions.initiateChartGeneration(navigate, location.pathname)}>
           Generate Chart
         </TSCButton>
         {state.isLoggedIn ? (
