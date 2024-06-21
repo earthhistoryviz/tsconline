@@ -14,18 +14,9 @@ import checkIcon from "../assets/icons/check-icon.json";
 import FolderIcon from "@mui/icons-material/Folder";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 
-const Title = styled("h2")(({ theme }) => ({
-  fontFamily: theme.typography.fontFamily,
-  color: theme.palette.primary.main
-}));
-
 const CardBackground = styled("div")(({ theme }) => ({
-  backgroundColor: theme.palette.backgroundColor.light
+  backgroundColor: theme.palette.secondaryBackground.main
 }));
-const HiddenBack = styled("div")(({ theme }) => ({
-  backgroundColor: theme.palette.backgroundColor.light
-}));
-
 const Date = styled("div")(({ theme }) => ({
   fontFamily: theme.typography.fontFamily,
   backgroundColor: theme.palette.text.disabled
@@ -52,7 +43,6 @@ export const TSCCard = ({
     <ReactCardFlip isFlipped={isFlipped} flipDirection="horizontal">
       {/* This is the front card */}
       <Box className="front-card">
-        <HiddenBack className="hidden-back" />
         <CardMedia className="card-media-cover" image={devSafeUrl(preset.background)} onClick={handleFlip} />
         <div className="card-content front-card-content">
           <CardBackground className="card-background clip-path" color={color} />
@@ -62,13 +52,13 @@ export const TSCCard = ({
                 <Avatar className="avatar-logo avatar-box-shadow" src={devSafeUrl(preset.icon)} />
               </Grid>
               <Grid item xs>
-                <Title className="card-title">{preset.title}</Title>
+                <Typography className="card-title" color="textPrimary">{preset.title}</Typography>
               </Grid>
             </Grid>
             <Grid container mt={2} alignItems="center" justifyContent="center" spacing={2} wrap="nowrap">
               <Grid item>
-                <IconButton onClick={handleFlip} size="large">
-                  <InfoIcon />
+                <IconButton onClick={handleFlip} size="large" color="icon">
+                  <InfoIcon/>
                 </IconButton>
               </Grid>
               <Grid item>
@@ -113,12 +103,11 @@ const BackCard = ({
 }) => {
   return (
     <Box className="back-card">
-      <HiddenBack className="hidden-back" />
       <CardBackground className="card-background" color={color} />
       <div className="back-background card-content">
         <StyledScrollbar className="info-container" autoHide={false}>
           <CardMedia className="info-media" component="img" image={devSafeUrl(preset.background)} />
-          <Title className="info-title">{preset.title}</Title>
+          <Typography className="info-title">{preset.title}</Typography>
           <div className="info-text-container">
             <CustomHeader color="primary">Included Datapacks</CustomHeader>
             <List className="list">

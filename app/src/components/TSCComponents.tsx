@@ -30,7 +30,7 @@ export const ColoredDiv = styled("div")(({ theme }) => ({
 
 export const CustomHeader = styled(Typography)(({ theme }) => ({
   "&::before": {
-    backgroundColor: theme.palette.selection.main,
+    backgroundColor: theme.palette.icon.main,
     content: '""',
     left: "0",
     width: "2px",
@@ -68,9 +68,6 @@ export const TSCInputAdornment = styled("div")(
   color: ${theme.palette.primary.main};
 `
 );
-export const GradientDiv = styled("div")(({ theme }) => ({
-  backgroundColor: theme.gradients.main
-}));
 export const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
   alignItems: "center",

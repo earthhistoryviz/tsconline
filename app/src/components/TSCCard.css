@@ -14,6 +14,7 @@
   border-radius: 1rem;
   min-width: 350px;
   padding-top: 160px;
+  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
 }
 .back-card {
   position: relative;
@@ -27,22 +28,6 @@
   overflow-x: hidden;
 }
 
-.hidden-back {
-  transition: 0.2s;
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  content: "";
-  display: block;
-  border-radius: 1rem;
-  z-index: 0;
-  bottom: 0;
-}
-.front-card:hover .hidden-back,
-.back-card:hover .hidden-back {
-  height: 370px;
-  bottom: -6px;
-}
 .back-card:hover .info-title {
   transition: 0.5s;
   transform: scale(1.05);

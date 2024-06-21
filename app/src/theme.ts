@@ -6,7 +6,7 @@ declare module "@mui/material/styles" {
     secondaryButton: Palette["primary"];
     button: Palette["primary"];
     altbackground: Palette["primary"];
-    complimentary: Palette["primary"];
+    secondaryBackground: Palette["primary"];
     dark: Palette["primary"];
     navbar: Palette["primary"];
     selection: Palette["primary"];
@@ -25,13 +25,14 @@ declare module "@mui/material/styles" {
     errorText: Palette["primary"];
     snackbarAlert: Palette["primary"];
     warningAlert: Palette["primary"];
+    icon: Palette["primary"];
   }
 
   interface PaletteOptions {
     backgroundColor?: PaletteOptions["primary"];
     altbackground?: PaletteOptions["primary"];
     secondaryButton?: PaletteOptions["primary"];
-    complimentary?: PaletteOptions["primary"];
+    secondaryBackground?: PaletteOptions["primary"];
     dark?: PaletteOptions["primary"];
     button?: PaletteOptions["primary"];
     navbar?: PaletteOptions["primary"];
@@ -51,12 +52,13 @@ declare module "@mui/material/styles" {
     errorText?: PaletteOptions["primary"];
     snackbarAlert?: PaletteOptions["primary"];
     warningAlert?: PaletteOptions["primary"];
+    icon?: PaletteOptions["primary"];
   }
   interface ButtonPropsColorOverrides {
     backgroundColor: true;
     altBackground: true;
     mainGradient: true;
-    complimentary: true;
+    secondaryBackground: true;
     navbar: true;
     selection: true;
     settings: true;
@@ -75,6 +77,12 @@ declare module "@mui/material/styles" {
     warningAlert: true;
     secondaryButton: true;
     dark: true;
+    icon: true;
+  }
+}
+declare module "@mui/material/IconButton" {
+  interface IconButtonPropsColorOverrides {
+    icon: true;
   }
 }
 
@@ -125,13 +133,14 @@ let darkTheme = createTheme(baseTheme, {
     mode: "dark",
     backgroundColor: baseTheme.palette.augmentColor({
       color: {
-        main: "#0f1214"
+        main: "#151A22"
       },
       name: "background"
     }),
     divider: "#ffffff1f",
     text: {
-      primary: "#f6f7f8"
+      primary: "#f6f7f8",
+      secondary: "#c6c6c6"
     },
     button: baseTheme.palette.augmentColor({
       color: {
@@ -146,11 +155,17 @@ let darkTheme = createTheme(baseTheme, {
       name: "secondaryButton"
     }),
     mainGradient: createGradient("#F17F19", "#F25B28"),
-    complimentary: baseTheme.palette.augmentColor({
+    secondaryBackground: baseTheme.palette.augmentColor({
       color: {
-        main: "#f2f3f9"
+        main: "#1A2029"
       },
-      name: "complimentary"
+      name: "secondaryBackground"
+    }),
+    icon: baseTheme.palette.augmentColor({
+      color: {
+        main: "#c6c6c6"
+      },
+      name: "icon"
     }),
     altbackground: {
       light: "#8FB7E7",
