@@ -1085,3 +1085,6 @@ export const setChartTabDownloadFilename = action("setChartTabDownloadFilename",
 export const setChartTabDownloadFiletype = action("setChartTabDownloadFiletype", (newval: "svg" | "pdf" | "png") => {
   state.chartTab.downloadFiletype = newval;
 });
+export const setChartTabEnableScrollZoom = action("setChartTabEnableScrollZoom", (newval: boolean) => {
+  state.chartTab.enableScrollZoom = newval;
+});

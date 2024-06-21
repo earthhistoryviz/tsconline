@@ -35,6 +35,7 @@ export type State = {
     midX: number;
     downloadFilename: string;
     downloadFiletype: "svg" | "pdf" | "png";
+    enableScrollZoom: boolean;
   };
   loadSaveFilename: string;
   cookieConsent: boolean | null;
@@ -103,7 +104,8 @@ export const state = observable<State>({
     zoomFitScale: 1,
     midX: 0,
     downloadFilename: "chart",
-    downloadFiletype: "svg"
+    downloadFiletype: "svg",
+    enableScrollZoom: false
   },
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,

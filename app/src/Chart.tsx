@@ -11,9 +11,11 @@ import DownloadIcon from "@mui/icons-material/Download";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import SettingsIcon from "@mui/icons-material/Settings";
 import FileSaver from "file-saver";
 import { TransformWrapper, TransformComponent, ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
 import {
+  Box,
   Button,
   Dialog,
   DialogActions,
@@ -23,7 +25,7 @@ import {
   FormControl,
   IconButton,
   NativeSelect,
-  Popover,
+  Switch,
   TextField,
   Tooltip,
   Typography
@@ -67,7 +69,6 @@ export const Chart = observer(() => {
     const windowResizeListenerWrapper = () => {
       setChartAlignmentValues();
     };
-
     const eventListenerWrapper = (evt: KeyboardEvent) => {
       if ((evt.metaKey || evt.ctrlKey) && evt.code === "Equal") {
         evt.preventDefault();
@@ -104,12 +105,45 @@ export const Chart = observer(() => {
 
   const handleFilenameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     actions.setChartTabDownloadFilename(e.target.value);
-    console.log(state.chartTab.downloadFilename);
   };
 
   const downloadSvg = (filename: string) => {
     const blob = new Blob([state.chartContent]);
     FileSaver.saveAs(blob, filename + ".svg");
+  };
+
+  const OptionsButton = () => {
+    const [open, setOpen] = React.useState<boolean>(true);
+    const handleClick = () => {
+      setOpen(!open);
+    };
+    const handleSwitch = () => {
+      actions.setChartTabEnableScrollZoom(!state.chartTab.enableScrollZoom);
+    };
+    return (
+      <div>
+        <CustomTooltip title="Options">
+          <IconButton id="option-button" onClick={handleClick}>
+            <SettingsIcon />
+          </IconButton>
+        </CustomTooltip>
+        <Box
+          sx={{
+            borderRadius: 1,
+            bgcolor: theme.palette.background.default,
+            marginTop: "1px",
+            marginLeft: "1px"
+          }}
+          style={{ display: open ? "flex" : "none", position: "absolute", zIndex: "100" }}>
+          <div className="flex-row">
+            <Typography sx={{ p: 2 }}>Zoom on Scroll</Typography>
+            <div style={{ margin: "auto" }}>
+              <Switch checked={state.chartTab.enableScrollZoom} onChange={handleSwitch} color="info" />
+            </div>
+          </div>
+        </Box>
+      </div>
+    );
   };
 
   const DownloadButton = () => {
@@ -194,17 +228,6 @@ export const Chart = observer(() => {
   };
 
   const HelpButton = () => {
-    const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null);
-
-    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-      setAnchorEl(event.currentTarget);
-    };
-
-    const handleClose = () => {
-      setAnchorEl(null);
-    };
-
-    const open = Boolean(anchorEl);
     return (
       <div>
         <Tooltip
@@ -216,33 +239,20 @@ export const Chart = observer(() => {
             </div>
           }
           arrow
-          slotProps={{
-            popper: {
-              modifiers: [
-                {
-                  name: "offset",
-                  options: {
-                    offset: [0, -10]
-                  }
+          PopperProps={{
+            modifiers: [
+              {
+                name: "offset",
+                options: {
+                  offset: [0, -10]
                 }
-              ]
-            }
+              }
+            ]
           }}>
-          <IconButton onClick={handleClick}>
+          <IconButton onClick={() => {}}>
             <HelpOutlineIcon />
           </IconButton>
         </Tooltip>
-        <Popover
-          open={open}
-          anchorEl={anchorEl}
-          onClose={handleClose}
-          anchorOrigin={{
-            vertical: "bottom",
-            horizontal: "center"
-          }}>
-          <Typography sx={{ p: 1 }}>ctrl/⊞/⌘ + Minus (-) - Zoom out</Typography>
-          <Typography sx={{ p: 1 }}>ctrl/⊞/⌘ + Plus (+) - Zoom in</Typography>
-        </Popover>
       </div>
     );
   };
@@ -253,6 +263,7 @@ export const Chart = observer(() => {
     return (
       <div className="options-bar">
         <div className="flex-row">
+          <OptionsButton />
           <CustomTooltip title="Zoom In">
             <IconButton
               onClick={() => {
@@ -336,8 +347,8 @@ export const Chart = observer(() => {
           <div id="chart-transform-wrapper">
             <TransformWrapper
               ref={transformContainerRef}
-              wheel={{ wheelDisabled: true }}
-              panning={{ wheelPanning: true }}
+              wheel={{ wheelDisabled: !state.chartTab.enableScrollZoom }}
+              panning={{ wheelPanning: !state.chartTab.enableScrollZoom }}
               limitToBounds={false}
               minScale={minScale}
               maxScale={maxScale}>
