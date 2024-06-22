@@ -1,4 +1,4 @@
-import { action } from "mobx";
+import { action, runInAction } from "mobx";
 import {
   SharedUser,
   ChartInfoTSC,
@@ -242,7 +242,9 @@ export const setDatapackIndex = action("setDatapackIndex", async (datapackIndex:
   // This is to prevent the UI from lagging
   state.datapackIndex = {};
   for (const key in datapackIndex) {
-    state.datapackIndex[key] = datapackIndex[key];
+    runInAction(() => {
+      state.datapackIndex[key] = datapackIndex[key];
+    });
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
 });
@@ -277,10 +279,10 @@ export const fetchTimescaleDataAction = action("fetchTimescaleData", async () =>
   }
 });
 
-export const applySettings = action("applySettings", (settings: ChartInfoTSC) => {
+export const applySettings = action("applySettings", async (settings: ChartInfoTSC) => {
   applyChartSettings(settings.settings);
   applyChartColumnSettings(settings["class datastore.RootColumn:Chart Root"]);
-  applyRowOrder(state.settingsTabs.columns, settings["class datastore.RootColumn:Chart Root"]);
+  await applyRowOrder(state.settingsTabs.columns, settings["class datastore.RootColumn:Chart Root"]);
 });
 
 const applyChartSettings = action("applyChartSettings", (settings: ChartSettingsInfoTSC) => {
@@ -352,14 +354,43 @@ const applyChartSettings = action("applyChartSettings", (settings: ChartSettings
   setEnableHideBlockLabel(enHideBlockLable);
 });
 
+const setPreviousDatapackConfig = action("setPreviousDatapackConfig", (datapacks: string[]) => {
+  if (!state.datapackCachedConfiguration.has(state.config.datapacks.join(","))) {
+    return;
+  }
+  const cachedConfig = state.datapackCachedConfiguration.get(state.config.datapacks.join(","))!;
+  state.config.datapacks = datapacks;
+  state.settingsTabs.columns = cachedConfig.columns;
+  state.settingsTabs.columnHashMap = cachedConfig.columnHashMap;
+  state.mapState.mapInfo = cachedConfig.mapInfo;
+  state.mapState.mapHierarchy = cachedConfig.mapHierarchy;
+  state.settings.datapackContainsSuggAge = cachedConfig.datapackContainsSuggAge;
+  // add new units
+  for (const unit of cachedConfig.units) {
+    if (!state.settings.timeSettings[unit]) {
+      state.settings.timeSettings[unit] = JSON.parse(JSON.stringify(defaultTimeSettings));
+    }
+  }
+  // remove old units
+  for (const unit of Object.keys(state.settings.timeSettings)) {
+    if (!cachedConfig.units.includes(unit)) {
+      delete state.settings.timeSettings[unit];
+    }
+  }
+});
+
 /**
  * Rests the settings, sets the tabs to 0
  * sets chart to newval and requests info on the datapacks from the server
  * If attributed settings, load them.
  */
 export const setDatapackConfig = action(
-  "setChart",
+  "setDatapackConfig",
   async (datapacks: string[], settingsPath?: string): Promise<boolean> => {
+    if (state.datapackCachedConfiguration.has(datapacks.join(","))) {
+      setPreviousDatapackConfig(datapacks);
+      return true;
+    }
     const unitMap: Map<string, ColumnInfo> = new Map();
     let mapInfo: MapInfo = {};
     let mapHierarchy: MapHierarchy = {};
@@ -414,6 +445,7 @@ export const setDatapackConfig = action(
       // add everything together
       // uses preparsed data on server start and appends items together
       for (const datapack of datapacks) {
+        await new Promise((resolve) => setTimeout(resolve, 0));
         if (!datapack || !state.datapackIndex[datapack])
           throw new Error(`File requested doesn't exist on server: ${datapack}`);
         const datapackParsingPack = state.datapackIndex[datapack]!;
@@ -445,6 +477,7 @@ export const setDatapackConfig = action(
       }
       // makes sure things are named correctly for users and for the hash map to not have collisions
       for (const [unit, column] of unitMap) {
+        await new Promise((resolve) => setTimeout(resolve, 0));
         if (unit !== "Ma" && column.name === "Chart Title") {
           column.name = column.name + " in " + unit;
           column.editName = unit;
@@ -465,21 +498,39 @@ export const setDatapackConfig = action(
       return false;
     }
     resetSettings();
+    state.settingsTabs.columns = columnRoot;
     state.settings.datapackContainsSuggAge = foundDefaultAge;
     state.mapState.mapHierarchy = mapHierarchy;
-    state.settingsTabs.columns = columnRoot;
     state.mapState.mapInfo = mapInfo;
-    state.config.datapacks = datapacks;
     state.settingsTabs.columnHashMap = new Map();
+    // throws warning if this isn't in its own action. may have other fix but left as is
+    runInAction(() => {
+      state.config.datapacks = datapacks;
+    });
     // this is for app start up or when all datapacks are removed
     if (datapacks.length === 0) {
       state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
     }
-    initializeColumnHashMap(state.settingsTabs.columns);
+    await initializeColumnHashMap(state.settingsTabs.columns);
     if (chartSettings !== null) {
       assertChartInfoTSC(chartSettings);
-      applySettings(chartSettings);
+      await applySettings(chartSettings);
+    } else {
+      // set any new units in the time
+      for (const chart of columnRoot.children) {
+        if (!state.settings.timeSettings[chart.units]) {
+          state.settings.timeSettings[chart.units] = JSON.parse(JSON.stringify(defaultTimeSettings));
+        }
+      }
     }
+    state.datapackCachedConfiguration.set(datapacks.join(","), {
+      columns: columnRoot,
+      columnHashMap: state.settingsTabs.columnHashMap,
+      mapInfo,
+      mapHierarchy,
+      datapackContainsSuggAge: state.settings.datapackContainsSuggAge,
+      units: Object.keys(state.settings.timeSettings)
+    });
     return true;
   }
 );
@@ -757,8 +808,36 @@ export const requestDownload = action(async (filename: string, needEncryption: b
     displayServerError(response, errorCode, ErrorMessages[errorCode]);
     return;
   }
-  const file = response.blob();
-  return file;
+  const file = await response.blob();
+  let fileURL = "";
+  if (file) {
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      await new Promise((resolve, reject) => {
+        reader.onloadend = resolve;
+        reader.onerror = reject;
+      });
+      if (typeof reader.result !== "string") {
+        throw new Error("Invalid file");
+      }
+      fileURL = reader.result;
+      if (fileURL) {
+        const aTag = document.createElement("a");
+        aTag.href = fileURL;
+
+        aTag.setAttribute("download", filename);
+
+        document.body.appendChild(aTag);
+        aTag.click();
+        aTag.remove();
+      } else {
+        pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
+      }
+    } catch (error) {
+      pushError(ErrorCodes.INVALID_PATH);
+    }
+  }
 });
 
 export const logout = action("logout", async () => {
@@ -980,3 +1059,10 @@ export const setEnableHideBlockLabel = action("setEnableHideBlockLabel", (newval
 export const setLoadSaveFilename = action("setLoadSaveFilename", (newval: string) => {
   state.loadSaveFilename = newval;
 });
+
+export const setDatapackDisplayType = action(
+  "setDatapackDisplayType",
+  (newval: State["settingsTabs"]["datapackDisplayType"]) => {
+    state.settingsTabs.datapackDisplayType = newval;
+  }
+);

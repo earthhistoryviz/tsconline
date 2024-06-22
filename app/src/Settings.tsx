@@ -28,7 +28,7 @@ export const Settings = observer(function Settings() {
       </div>
     );
   };
-  const tabs = Object.values(SettingsMenuOptionLabels);
+  const tabs = Object.values(SettingsMenuOptionLabels).map((val) => ({ id: val, tab: val }));
   const tabKeys = Object.keys(SettingsMenuOptionLabels);
   const tabIndex = tabKeys.indexOf(state.settingsTabs.selected);
   return (

@@ -21,5 +21,6 @@
   "colors": "assets/colors.json",
   "timescaleFilepath": "assets/default_timescale.xlsx",
   "fileMetadata": "assets/file_metadata.json",
-  "uploadDirectory": "assets/uploads"
+  "uploadDirectory": "assets/uploads",
+  "datapackImagesDirectory": "assets/datapack_images"
 }
