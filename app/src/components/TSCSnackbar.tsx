@@ -41,7 +41,7 @@ export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, count, 
     success: <Lottie key={text} style={{ flexShrink: 0 }} animationData={ChartDoneIcon} speed={0.7} autoplay />,
     info: <Lottie key={text} style={{ flexShrink: 0 }} animationData={InfoIcon} speed={0.7} autoplay />,
     warning: <Lottie key={text} style={{ flexShrink: 0 }} animationData={WarningIcon} speed={0.7} autoplay />
-  }
+  };
   return (
     <Snackbar
       open={true}

@@ -19,7 +19,7 @@ import Color from "color";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: Color(theme.palette.backgroundColor.dark).alpha(0.8).string(),
-  borderBottom: `1px solid ${theme.palette.divider}`,
+  borderBottom: `0.5px solid ${theme.palette.divider}`,
   backgroundImage: "none",
   backdropFilter: "blur(8px)",
   WebkitBackdropFilter: "blur(8px)"
