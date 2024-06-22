@@ -288,6 +288,13 @@ darkTheme = createTheme(darkTheme, {
           color: darkTheme.palette.icon.main
         }
       }
+    },
+    MuiLink: {
+      styleOverrides: {
+        root: {
+          color: darkTheme.palette.text.primary
+        }
+      }
     }
   }
 });

@@ -6,12 +6,11 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 export const Help = observer(function Help() {
   const theme = useTheme();
-  const background = { background: "white" };
+  const background = { bgcolor: "secondaryBackground.main" };
 
   return (
     <div
       style={{
-        background: theme.palette.settings.light,
         minHeight: "100vh",
         paddingTop: "20px"
       }}>
@@ -26,9 +25,9 @@ export const Help = observer(function Help() {
           width: "50%",
           overflow: "auto"
         }}>
-        <Accordion style={background}>
+        <Accordion sx={background}>
           <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
+            expandIcon={<ExpandMoreIcon color="icon"/>}
             aria-controls="panel1a-content"
             id="panel1a-header"
             className="accordion">
@@ -38,40 +37,40 @@ export const Help = observer(function Help() {
             <Typography>Put QSG here</Typography>
           </AccordionDetails>
         </Accordion>
-        <Accordion style={background}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
+        <Accordion sx={background}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon color="icon"/>} aria-controls="panel2a-content" id="panel2a-header">
             <Typography>Tour</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Typography>put tour here</Typography>
           </AccordionDetails>
         </Accordion>
-        <Accordion style={background}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
+        <Accordion sx={background}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon color="icon"/>} aria-controls="panel2a-content" id="panel2a-header">
             <Typography>Contributors</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Typography>Paolo Gumasing, Jaehyuk Lee</Typography>
           </AccordionDetails>
         </Accordion>
-        <Accordion style={background}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
+        <Accordion sx={background}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon color="icon"/>} aria-controls="panel2a-content" id="panel2a-header">
             <Typography>Software License</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Typography>put software license here</Typography>
           </AccordionDetails>
         </Accordion>
-        <Accordion style={background}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
+        <Accordion sx={background}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon color="icon"/>} aria-controls="panel2a-content" id="panel2a-header">
             <Typography>File Format Info</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Typography>put file format info here</Typography>
           </AccordionDetails>
         </Accordion>
-        <Accordion style={background}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
+        <Accordion sx={background}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon color="icon"/>} aria-controls="panel2a-content" id="panel2a-header">
             <Typography>About</Typography>
           </AccordionSummary>
           <AccordionDetails>
