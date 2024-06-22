@@ -1,0 +1,93 @@
+.dc {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-height: 100vh;
+}
+.h {
+  font-size: 1.2rem;
+  text-align: center;
+  font-weight: bold;
+}
+.hdc {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 16px;
+  position: relative;
+}
+.dh {
+  flex-grow: 1;
+  text-align: center;
+}
+
+.tb {
+  width: 30px;
+  height: 30px;
+}
+.ib {
+  position: absolute;
+  top: 15%;
+  left: 15%;
+}
+
+.icon {
+  width: inherit;
+  height: inherit;
+  padding: 5px;
+}
+
+.display {
+  position: absolute;
+  top: 15%;
+  right: 20%;
+}
+
+.dd {
+  max-width: 100vw;
+  margin: 0px;
+}
+
+.container {
+  display: flex;
+  overflow-y: auto;
+  flex-wrap: wrap;
+  padding: 4px;
+  width: 70%;
+  justify-content: center;
+}
+.container.cards {
+  gap: 20px;
+  width: 90%;
+  margin: 0 20px 20px 20px;
+  justify-content: flex-start;
+  justify-self: center;
+  align-self: center;
+}
+@media (max-width: 720px) {
+  .container.cards {
+    overflow-y: hidden;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+  .container.cards > * {
+    flex: 0 0 auto;
+  }
+  .hdc {
+    flex-direction: row;
+    gap: 10px;
+  }
+  .ib {
+    position: relative;
+    top: 0;
+    left: 0;
+  }
+  .display {
+    position: relative;
+    top: 0;
+    right: 0;
+  }
+}

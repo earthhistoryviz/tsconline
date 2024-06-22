@@ -2,6 +2,7 @@
   --selection-color: #9792e3;
 }
 html,
-body {
+body,
+#root {
   background-color: #ebf2fb;
 }
