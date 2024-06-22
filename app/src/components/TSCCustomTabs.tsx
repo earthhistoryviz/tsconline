@@ -24,9 +24,6 @@ export const CustomTabs: React.FC<CustomTabsProps> = observer(
     ...props
   }) => {
     const [selectedTab, setSelectedTab] = useState<number>(value || 0);
-    const handleTabClick = (index: number) => {
-      setSelectedTab(index);
-    };
     height = Math.min(height, 100);
     width = Math.min(width, 200);
     let tabIndicatorLengthDiff;
@@ -71,7 +68,8 @@ export const CustomTabs: React.FC<CustomTabsProps> = observer(
               }}
               className={`tsc-tab-panel ${(value ?? selectedTab) === index ? "tsc-tab-panel-selected" : ""}`}
               onClick={() => {
-                handleTabClick(index);
+                if (selectedTab === index) return;
+                setSelectedTab(index);
                 if (onChange) onChange(index);
               }}>
               {val.tab}
