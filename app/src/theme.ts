@@ -85,6 +85,11 @@ declare module "@mui/material/IconButton" {
     icon: true;
   }
 }
+declare module "@mui/material/SvgIcon" {
+  interface SvgIconPropsColorOverrides {
+    icon: true;
+  }
+}
 
 let baseTheme = createTheme({
   palette: {
@@ -183,7 +188,7 @@ let darkTheme = createTheme(baseTheme, {
     },
     selection: {
       light: "#B1ADE2",
-      main: "#9792E3"
+      main: "#FF9900"
     },
     on: {
       main: "#2ecc71"
@@ -207,7 +212,7 @@ let darkTheme = createTheme(baseTheme, {
       main: "#78716c"
     },
     error: {
-      main: "#FF0000"
+      main: "#E44445"
     },
     cardBackground: {
       main: "#27476E"
