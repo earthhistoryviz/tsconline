@@ -79,7 +79,9 @@ export const ColumnMenu = observer(() => {
           width={90}
           tabs={tabs.map((val) => ({ id: val, tab: val }))}
         />
-        <div className="column-menu-content">{column && <ColumnContent tab={tabs[tabValue]} column={column} />}</div>
+        <Box border={1} borderColor="divider" className="column-menu-content">
+          {column && <ColumnContent tab={tabs[tabValue]} column={column} />}
+        </Box>
       </div>
     </div>
   );

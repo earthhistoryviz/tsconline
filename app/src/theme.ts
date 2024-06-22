@@ -112,6 +112,7 @@ let baseTheme = createTheme({
     }
   }
 });
+const disabled = "#282e2f";
 
 function createGradient(color1: string, color2: string) {
   const colorObj1 = Color(color1);
@@ -142,10 +143,11 @@ let darkTheme = createTheme(baseTheme, {
       },
       name: "background"
     }),
-    divider: "#ffffff1f",
+    divider: "#454545dd",
     text: {
       primary: "#f6f7f8",
-      secondary: "#c6c6c6"
+      secondary: "#c6c6c6",
+      disabled
     },
     button: baseTheme.palette.augmentColor({
       color: {
@@ -174,6 +176,10 @@ let darkTheme = createTheme(baseTheme, {
       },
       name: "icon"
     }),
+    action: {
+      disabled,
+      disabledBackground: disabled
+    },
     altbackground: {
       light: "#8FB7E7",
       main: "#72A4E1",
@@ -263,29 +269,12 @@ darkTheme = createTheme(darkTheme, {
       light: `${Color(darkTheme.palette.altbackground.light).lighten(0.3)}`,
       main: `${Color(darkTheme.palette.altbackground.main).lighten(0.3)}`
     },
-    button: {
-      light: `${Color(darkTheme.palette.button.main).lighten(0.3)}`,
-      main: darkTheme.palette.button.main,
-      dark: `${Color(darkTheme.palette.button.main).darken(0.3)}`
-    },
-    selection: {
-      dark: `${Color(darkTheme.palette.selection.main).darken(0.3)}`
-    },
     on: {
       main: darkTheme.palette.on.main,
       dark: `${Color(darkTheme.palette.on.main).darken(0.3)}`
     }
   },
   components: {
-    MuiFormHelperText: {
-      styleOverrides: {
-        root: {
-          "&.Mui-disabled": {
-            color: darkTheme.palette.disabled.main
-          }
-        }
-      }
-    },
     MuiIconButton: {
       styleOverrides: {
         root: {
@@ -293,6 +282,13 @@ darkTheme = createTheme(darkTheme, {
         }
       }
     },
+    MuiToggleButton: {
+      styleOverrides: {
+        root: {
+          color: darkTheme.palette.icon.main
+        }
+      }
+    }
   }
 });
 darkTheme = createTheme(darkTheme, {

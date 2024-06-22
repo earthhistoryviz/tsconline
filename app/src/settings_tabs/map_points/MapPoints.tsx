@@ -12,11 +12,11 @@ import "./MapPoints.css";
 
 const MapListItemButton = styled(ListItemButton)(({ theme }) => ({
   "&:hover": {
-    backgroundColor: theme.palette.primary.main,
+    backgroundColor: theme.palette.backgroundColor.light,
     cursor: "pointer"
   },
   "&.Mui-selected": {
-    backgroundColor: theme.palette.selection.light
+    backgroundColor: theme.palette.backgroundColor.light
   }
 }));
 
@@ -60,6 +60,7 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
           {Object.entries(mapInfo).map(([name, map]) => {
             return (
               <MapListItemButton
+                disableRipple
                 key={name}
                 selected={state.mapState.selectedMap === name}
                 onClick={() => handleRowClick(name)}>

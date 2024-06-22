@@ -31,9 +31,6 @@ export const TSCCheckbox: React.FC<TSCCheckboxProps> = ({
         color: outlineColor,
         "&.Mui-checked": {
           color: checkedColor
-        },
-        "&.Mui-disabled": {
-          color: theme.palette.text.disabled
         }
       }}
     />

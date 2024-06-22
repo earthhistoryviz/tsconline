@@ -24,12 +24,18 @@ const AccordionPositionControls: React.FC<AccordionPositionControlsProps> = ({ c
     <div className="accordion-position-controls">
       <Typography>Shift Row Positions</Typography>
       <div className="lightgray-square">
-        <IconButton className="custom-icon-button" onClick={incrementPosition}>
+        <IconButton
+          className="custom-icon-button"
+          onClick={incrementPosition}
+          sx={{ bgcolor: "backgroundColor.light" }}>
           <ArrowUpwardIcon />
         </IconButton>
       </div>
       <div className="lightgray-square">
-        <IconButton className="custom-icon-button" onClick={decrementPosition}>
+        <IconButton
+          className="custom-icon-button"
+          onClick={decrementPosition}
+          sx={{ bgcolor: "backgroundColor.light" }}>
           <ArrowDownwardIcon />
         </IconButton>
       </div>

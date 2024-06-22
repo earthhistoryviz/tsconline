@@ -52,13 +52,15 @@ export const TSCCard = ({
                 <Avatar className="avatar-logo avatar-box-shadow" src={devSafeUrl(preset.icon)} />
               </Grid>
               <Grid item xs>
-                <Typography className="card-title" color="textPrimary">{preset.title}</Typography>
+                <Typography className="card-title" color="textPrimary">
+                  {preset.title}
+                </Typography>
               </Grid>
             </Grid>
             <Grid container mt={2} alignItems="center" justifyContent="center" spacing={2} wrap="nowrap">
               <Grid item>
                 <IconButton onClick={handleFlip} size="large" color="icon">
-                  <InfoIcon/>
+                  <InfoIcon />
                 </IconButton>
               </Grid>
               <Grid item>
