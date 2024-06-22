@@ -16,6 +16,8 @@ export const AboutCard = ({ name, role, homeTown, timeWorked, proPic = defaultPr
     <Card
       sx={{
         minWidth: 330,
+        bgcolor: "secondaryBackground.main",
+        boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
         marginLeft: ".5vw",
         marginRight: ".5vw",
         marginTop: ".5vw",

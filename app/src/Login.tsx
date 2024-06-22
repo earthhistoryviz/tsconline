@@ -7,7 +7,7 @@ import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
-import { Lottie, TSCButton } from "./components";
+import { CustomDivider, Lottie, TSCButton } from "./components";
 import loader from "./assets/icons/loading.json";
 import { useTheme } from "@mui/material/styles";
 import LoginIcon from "@mui/icons-material/Login";
@@ -175,24 +175,24 @@ export const Login: React.FC = observer(() => {
             </TSCButton>
             <Grid container className="grid-container">
               <Grid item xs>
-                <Link href="/forgot-password" sx={{ color: "black" }}>
+                <Link href="/forgot-password">
                   Forgot password?
                 </Link>
               </Grid>
               <Grid item>
-                <Link href="/signup" sx={{ color: "black" }}>
+                <Link href="/signup">
                   Don&apos;t have an account? Sign Up
                 </Link>
               </Grid>
             </Grid>
             <Box className="divider-box">
-              <Box className="divider-line"></Box>
+              <CustomDivider className="divider-line"/>
               <Box sx={{ px: 2 }}>
-                <Typography variant="caption" sx={{ color: "black" }}>
+                <Typography variant="caption">
                   or
                 </Typography>
               </Box>
-              <Box className="divider-line"></Box>
+              <CustomDivider className="divider-line"/>
             </Box>
             {/* GoogleLogin does not have a "disable" property */}
             <div className={!state.cookieConsent ? "disabled-google-login" : ""}>

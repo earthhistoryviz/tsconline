@@ -29,7 +29,6 @@ const HeaderContainer = styled("div")(({ theme }) => ({
 
 const HeaderTitle = styled(Typography)(({ theme }) => ({
   fontWeight: theme.typography.fontWeightBold,
-  color: theme.palette.dark.main,
   fontSize: theme.typography.h2.fontSize
 }));
 
