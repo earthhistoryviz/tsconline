@@ -43,26 +43,7 @@ interface OptionsBarProps {
 export const OptionsBar: React.FC<OptionsBarProps> = observer(({ container, step, minScale, maxScale }) => {
   const { state, actions } = useContext(context);
   const theme = useTheme();
-
-  const [downloadOpen, setDownloadOpen] = React.useState(false);
-
-  const handleDownloadOpen = () => {
-    setDownloadOpen(true);
-  };
-
-  const handleDownloadClose = () => {
-    setDownloadOpen(false);
-  };
-
-  const handleFilenameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    actions.setChartTabDownloadFilename(e.target.value);
-  };
-
-  const downloadSvg = (filename: string) => {
-    const blob = new Blob([state.chartContent]);
-    FileSaver.saveAs(blob, filename + ".svg");
-  };
-
+  if (!container) return;
   const OptionsButton = () => {
     const [open, setOpen] = React.useState<boolean>(false);
     const handleClick = () => {
@@ -96,11 +77,104 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ container, step
       </div>
     );
   };
+  const ZoomInButton = () => {
+    return (<CustomTooltip title="Zoom In">
+    <IconButton
+      onClick={() => {
+        if (state.chartTab.scale < maxScale) {
+          container.zoomIn(step, 0);
+          actions.setChartTabScale(state.chartTab.scale + step);
+        }
+      }}>
+      <ZoomInIcon />
+    </IconButton>
+  </CustomTooltip>)
+  }
+  const ZoomOutButton = () => {
+    return (
+    <CustomTooltip title="Zoom Out">
+          <IconButton
+            onClick={() => {
+              if (state.chartTab.scale > minScale) {
+                container.zoomOut(step, 0);
+                actions.setChartTabScale(state.chartTab.scale - step);
+              }
+            }}>
+            <ZoomOutIcon />
+          </IconButton>
+        </CustomTooltip>
+    )
+  }
+  const ResetButton = () => {
+    return (
+      <CustomTooltip title="Reset Transformation">
+          <IconButton
+            onClick={() => {
+              container.setTransform(state.chartTab.midX, 0, 1);
+              actions.setChartTabScale(1);
+            }}>
+            <RestartAltIcon />
+          </IconButton>
+        </CustomTooltip>
+    )
+  }
+  const ZoomFitButton = () => {
+    return (
+    <CustomTooltip title="Zoom Fit">
+          <IconButton
+            onClick={() => {
+              const content = document.getElementById("svg-display")?.getBoundingClientRect();
+              const wrapper = document.getElementById("chart-transform-wrapper")?.getBoundingClientRect();
+              if (!content || !wrapper) return;
+              const newScale = (wrapper.bottom - wrapper.top) / (content.bottom - content.top);
+              //scale is correct, only need to center
+              if (newScale === 1) {
+                container.centerView();
+              }
+              //scale is incorrect
+              else {
+                const wrapperMid = (wrapper.right - wrapper.left) / 2;
+                const chartOffset = ((content.right - content.left) / 2) * newScale;
+                container.setTransform(wrapperMid - chartOffset, 0, state.chartTab.zoomFitScale);
+                actions.setChartTabScale(state.chartTab.zoomFitScale);
+              }
+            }}>
+            <ZoomOutMapIcon />
+          </IconButton>
+        </CustomTooltip>
+    )
+  }
 
+  const TimelineButton = () => {
+    return (
+    <CustomTooltip title="Timeline On/Off">
+          <IconButton onClick={() => actions.setChartTimelineEnabled(!state.chartTab.chartTimelineEnabled)}>
+            <HorizontalRuleIcon className="timeline-button" />
+          </IconButton>
+        </CustomTooltip>
+    )
+  }
   const DownloadButton = () => {
+    const [downloadOpen, setDownloadOpen] = React.useState(false);
+
+    const handleDownloadOpen = () => {
+      setDownloadOpen(true);
+    };
+  
+    const handleDownloadClose = () => {
+      setDownloadOpen(false);
+    };
+    const handleFilenameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      actions.setChartTabDownloadFilename(e.target.value);
+    };
+  
+    const downloadSvg = (filename: string) => {
+      const blob = new Blob([state.chartContent]);
+      FileSaver.saveAs(blob, filename + ".svg");
+    };
     return (
       <div>
-        <CustomTooltip title="Download SVG">
+        <CustomTooltip title="Download Chart">
           <IconButton onClick={() => handleDownloadOpen()}>
             <DownloadIcon />
           </IconButton>
@@ -207,69 +281,15 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ container, step
       </div>
     );
   };
-  if (!container) return;
   return (
     <div className="options-bar">
       <div className="flex-row">
         <OptionsButton />
-        <CustomTooltip title="Zoom In">
-          <IconButton
-            onClick={() => {
-              if (state.chartTab.scale < maxScale) {
-                container.zoomIn(step, 0);
-                actions.setChartTabScale(state.chartTab.scale + step);
-              }
-            }}>
-            <ZoomInIcon />
-          </IconButton>
-        </CustomTooltip>
-        <CustomTooltip title="Zoom Out">
-          <IconButton
-            onClick={() => {
-              if (state.chartTab.scale > minScale) {
-                container.zoomOut(step, 0);
-                actions.setChartTabScale(state.chartTab.scale - step);
-              }
-            }}>
-            <ZoomOutIcon />
-          </IconButton>
-        </CustomTooltip>
-        <CustomTooltip title="Reset Transformation">
-          <IconButton
-            onClick={() => {
-              container.setTransform(state.chartTab.midX, 0, 1);
-              actions.setChartTabScale(1);
-            }}>
-            <RestartAltIcon />
-          </IconButton>
-        </CustomTooltip>
-        <CustomTooltip title="Zoom Fit">
-          <IconButton
-            onClick={() => {
-              const content = document.getElementById("svg-display")?.getBoundingClientRect();
-              const wrapper = document.getElementById("chart-transform-wrapper")?.getBoundingClientRect();
-              if (!content || !wrapper) return;
-              const newScale = (wrapper.bottom - wrapper.top) / (content.bottom - content.top);
-              //scale is correct, only need to center
-              if (newScale === 1) {
-                container.centerView();
-              }
-              //scale is incorrect
-              else {
-                const wrapperMid = (wrapper.right - wrapper.left) / 2;
-                const chartOffset = ((content.right - content.left) / 2) * newScale;
-                container.setTransform(wrapperMid - chartOffset, 0, state.chartTab.zoomFitScale);
-                actions.setChartTabScale(state.chartTab.zoomFitScale);
-              }
-            }}>
-            <ZoomOutMapIcon />
-          </IconButton>
-        </CustomTooltip>
-        <CustomTooltip title="Timeline On/Off">
-          <IconButton onClick={() => actions.setChartTimelineEnabled(!state.chartTab.chartTimelineEnabled)}>
-            <HorizontalRuleIcon className="timeline-button" />
-          </IconButton>
-        </CustomTooltip>
+        <ZoomInButton />
+        <ZoomOutButton />
+        <ResetButton />
+        <ZoomFitButton />
+        <TimelineButton />
       </div>
       <div className="flex-row">
         <DownloadButton />
