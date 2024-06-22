@@ -146,7 +146,7 @@ export const applyRowOrder = action(
           column.children[columnIndex]
         ];
       }
-      applyRowOrder(column.children[columnIndex], settingsChild, counter);
+      await applyRowOrder(column.children[columnIndex], settingsChild, counter);
       columnIndex++;
     }
   }
@@ -156,7 +156,7 @@ export const initializeColumnHashMap = action(async (columnInfo: ColumnInfo, cou
   await yieldControl(counter, 30);
   state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
   for (const childColumn of columnInfo.children) {
-    initializeColumnHashMap(childColumn, counter);
+    await initializeColumnHashMap(childColumn, counter);
   }
 });
 
