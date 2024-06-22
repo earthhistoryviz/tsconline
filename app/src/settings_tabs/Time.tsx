@@ -34,7 +34,7 @@ export const Time = observer(function Time() {
           </ToggleButton>
         ))}
       </ToggleButtonGroup>
-      <Box className="TimeBox">
+      <Box className="TimeBox" bgcolor="secondaryBackground.main">
         <Typography className="IntervalLabel">Top of Interval</Typography>
         <CustomDivider className="time-form-divider" />
         <FormControl className="FormControlIntervals">

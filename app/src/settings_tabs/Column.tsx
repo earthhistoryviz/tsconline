@@ -31,6 +31,7 @@ export const Column = observer(function Column() {
           id="ResizableColumnAccordionWrapper"
           border={1}
           borderColor="divider"
+          bgcolor="secondaryBackground.main"
           className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}>
           <div className="column-filter-buttons">
             <CustomTooltip title="Expand All" placement="top">
