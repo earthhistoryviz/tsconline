@@ -206,7 +206,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ container, step
           <DialogTitle>Download Chart</DialogTitle>
           <DialogContent>
             <DialogContentText>Please enter the filename and select filetype.</DialogContentText>
-            <div className="flex-row">
+            <div className="flex-row chart-download-button">
               <TextField
                 defaultValue={state.chartTab.downloadFilename}
                 autoFocus
@@ -215,7 +215,8 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ container, step
                 type="text"
                 size="small"
                 fullWidth
-                variant="outlined"
+                label="filename"
+                variant="standard"
                 onChange={handleFilenameChange}
               />
               <FormControl sx={{ m: 1, minWidth: 120 }}>
