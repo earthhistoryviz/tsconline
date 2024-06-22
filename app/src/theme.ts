@@ -54,31 +54,6 @@ declare module "@mui/material/styles" {
     warningAlert?: PaletteOptions["primary"];
     icon?: PaletteOptions["primary"];
   }
-  interface ButtonPropsColorOverrides {
-    backgroundColor: true;
-    altBackground: true;
-    mainGradient: true;
-    secondaryBackground: true;
-    navbar: true;
-    selection: true;
-    settings: true;
-    on: true;
-    off: true;
-    disabled: true;
-    tooltip: true;
-    columnMenu: true;
-    scrollbar: true;
-    info: true;
-    cardBackground: true;
-    menuDropdown: true;
-    errorAlert: true;
-    errorText: true;
-    snackbarAlert: true;
-    warningAlert: true;
-    secondaryButton: true;
-    dark: true;
-    icon: true;
-  }
 }
 declare module "@mui/material/IconButton" {
   interface IconButtonPropsColorOverrides {
@@ -112,7 +87,7 @@ let baseTheme = createTheme({
     }
   }
 });
-const disabled = "#282e2f";
+const disabled = "#393f40";
 
 function createGradient(color1: string, color2: string) {
   const colorObj1 = Color(color1);
