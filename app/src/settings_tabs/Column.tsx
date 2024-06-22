@@ -29,6 +29,8 @@ export const Column = observer(function Column() {
       <div className="column-accordion-and-menu-container">
         <Box
           id="ResizableColumnAccordionWrapper"
+          border={1}
+          borderColor="divider"
           className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}>
           <div className="column-filter-buttons">
             <CustomTooltip title="Expand All" placement="top">
@@ -104,6 +106,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
           tabIndex={0}
           expandIcon={
             <ArrowForwardIosSharpIcon
+              color="icon"
               sx={{ fontSize: "0.9rem" }}
               onClick={(e) => {
                 e.stopPropagation();
