@@ -1,4 +1,6 @@
 import "dotenv/config";
+import md5 from "md5";
+import { randomBytes } from "node:crypto";
 
 export async function checkRecaptchaToken(token: string): Promise<number> {
   try {
@@ -16,4 +18,8 @@ export async function checkRecaptchaToken(token: string): Promise<number> {
     console.error("Recaptcha error:", error);
     throw new Error("Recaptcha failed");
   }
+}
+
+export function generateToken(uuid: string): string {
+  return randomBytes(16).toString("hex") + md5(uuid);
 }
