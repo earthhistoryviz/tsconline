@@ -138,17 +138,18 @@ export const requestDownload = async function requestDownload(
   try {
     await mkdir(encryptedFilepathDir, { recursive: true });
   } catch (e) {
+    console.log("e is: " + e);
     reply.status(500).send({ error: "Failed to create encrypted directory with error " + e });
-    console.log("real result :" + reply.statusCode);
+    console.log("real result should be 500 when mdkirp failed:" + reply.statusCode);
     return;
   }
 
   try {
-    runJavaEncrypt(assetconfigs.activeJar, filepath, encryptedFilepathDir);
+    await runJavaEncrypt(assetconfigs.activeJar, filepath, encryptedFilepathDir);
   } catch (e) {
     console.error(e);
     reply.status(500).send({ error: "Failed to encrypt datapacks with error " + e });
-    console.log("real result :" + reply.statusCode);
+    console.log("real result should be 500 when rje failed:" + reply.statusCode);
     return;
   }
 
@@ -166,7 +167,7 @@ export const requestDownload = async function requestDownload(
       reply.status(422).send({
         error: errormsg
       });
-      console.log("right flow:" + reply.statusCode);
+      console.log("real result should be 422 :" + reply.statusCode);
       return;
     }
   } catch (e) {
