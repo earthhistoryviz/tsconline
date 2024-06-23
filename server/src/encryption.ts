@@ -1,7 +1,7 @@
 import { exec } from "child_process";
 
 export async function runJavaEncrypt(activeJar: string, filepath: string, encryptedFilepathDir: string) {
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<void>((resolve) => {
         const cmd =
             `java -jar ${activeJar} ` +
             `-d "${filepath.replaceAll("\\", "/")}" ` +

@@ -60,9 +60,6 @@
     "typescript": "5.2.2",
     "vitest": "^1.6.0"
   },
-  "peerDependencies": {
-    "ts-node": "10.9.2"
-  },
   "keywords": [],
   "license": "ISC",
   "main": "dist/index.js",
@@ -71,8 +68,7 @@
     "dev": "tsc -b -w",
     "start": "nodemon --watch dist --watch ../shared/dist --watch ./package.json --watch ./public/presets dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "clean": "rm -rf ./dist",
-    "prepare": "ts-patch install -s"
+    "clean": "rm -rf ./dist"
   },
   "type": "module"
 }
