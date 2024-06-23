@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import Box from "@mui/material/Box";
 import Avatar from "@mui/material/Avatar";
 import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
+import MenuItem, { MenuItemProps } from "@mui/material/MenuItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
@@ -15,6 +15,7 @@ import { useNavigate } from "react-router";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import "../Profile.css";
+import { useTheme } from "@mui/material";
 
 export const TSCAccountMenu = observer(() => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -27,6 +28,7 @@ export const TSCAccountMenu = observer(() => {
   };
   const navigate = useNavigate();
   const { state, actions } = useContext(context);
+  const theme = useTheme();
   return (
     <>
       <Box sx={{ display: "flex", alignItems: "center", textAlign: "center" }}>
@@ -50,7 +52,7 @@ export const TSCAccountMenu = observer(() => {
       </Box>
       <Menu
         anchorEl={anchorEl}
-        id="account-menu"
+        className="account-menu"
         open={open}
         onClose={handleClose}
         onClick={handleClose}
@@ -60,24 +62,14 @@ export const TSCAccountMenu = observer(() => {
             sx: {
               overflow: "visible",
               filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.32))",
+              bgcolor: "backgroundColor.main",
+              border: `1px solid ${theme.palette.divider}`,
               mt: 1.5,
               "& .MuiAvatar-root": {
                 width: 32,
                 height: 32,
                 ml: -0.5,
                 mr: 1
-              },
-              "&::before": {
-                content: '""',
-                display: "block",
-                position: "absolute",
-                top: 0,
-                right: 18,
-                width: 10,
-                height: 10,
-                bgcolor: "background.paper",
-                transform: "translateY(-50%) rotate(45deg)",
-                zIndex: 0
               }
             }
           }
