@@ -77,7 +77,7 @@ export const ColumnMenu = observer(() => {
           onChange={(index) => setTabValue(index)}
           orientation="vertical-right"
           width={90}
-          tabs={tabs}
+          tabs={tabs.map((val) => ({ id: val, tab: val }))}
         />
         <div className="column-menu-content">{column && <ColumnContent tab={tabs[tabValue]} column={column} />}</div>
       </div>

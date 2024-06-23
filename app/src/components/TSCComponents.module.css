@@ -1,0 +1,71 @@
+.tagbutton {
+  background-color: transparent;
+  color: black;
+  border: 1px solid gray;
+  border-radius: 20px;
+  padding: 5px 15px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.tagbutton:hover {
+  background-color: #9c9c9c62;
+}
+
+.check,
+.circle {
+  stroke-dasharray: 140;
+  stroke-dashoffset: 140;
+  transform-origin: center;
+  animation: draw 1.5s forwards;
+  color: #285238;
+}
+@keyframes draw {
+  from {
+    stroke-dashoffset: 140;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(0.9);
+  }
+}
+
+.spinner {
+  animation: rotate 0.8s linear infinite;
+  width: 18px;
+  height: 18px;
+}
+.spinnerPath {
+  stroke: #ebebeb;
+  stroke-linecap: round;
+}
+@keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.notimplemented {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  margin: 20px;
+}
+
+.attribution {
+  justify-self: flex-end;
+  align-self: flex-end;
+  scale: 0.5;
+}

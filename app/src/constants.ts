@@ -25,7 +25,7 @@ export const defaultTimeSettings = {
   selectedStage: "",
   topStageAge: 0,
   topStageKey: "",
-  baseStageAge: 0,
+  baseStageAge: 10,
   baseStageKey: "",
   unitsPerMY: 2,
   skipEmptyColumns: true

@@ -67,6 +67,7 @@ export type AssetConfig = {
   colors: string;
   fileMetadata: string;
   uploadDirectory: string;
+  datapackImagesDirectory: string;
 };
 
 export type Colors = {
@@ -142,4 +143,5 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
     if (typeof ad !== "string") throw "AssetConfig activeDatapacks item " + index + " must be a string";
   }
   if (typeof o.timescaleFilepath !== "string") throw 'AssetConfig must have a "timescaleFilepath" string';
+  if (typeof o.datapackImagesDirectory !== "string") throw 'AssetConfig must have a "datapackImagesDirectory" string';
 }

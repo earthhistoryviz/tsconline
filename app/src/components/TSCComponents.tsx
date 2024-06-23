@@ -12,6 +12,10 @@ import { SubMenu, MenuItem } from "@szhsin/react-menu";
 import Color from "color";
 import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
+import styles from "./TSCComponents.module.css";
+import { HTMLAttributes } from "react";
+import SecurityResearch from "../assets/icons/security-research.json";
+import Lottie from "./TSCLottie";
 
 export const TypographyText = styled(Typography)(({ theme }) => ({
   color: theme.palette.primary.main
@@ -140,9 +144,88 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({ title, offset = [0
   );
 };
 
-export const CustomFormControlLabel = styled(FormControlLabel)(({ width }: { width?: number }) => ({
-  width: width || "105px",
-  "& .MuiTypography-root": {
-    fontSize: "0.8rem"
-  }
-}));
+export const CustomFormControlLabel = styled(FormControlLabel)(
+  ({ width, fontSize }: { width?: number; fontSize?: string }) => ({
+    width: width || "105px",
+    "& .MuiTypography-root": {
+      fontSize: fontSize || "0.8rem"
+    }
+  })
+);
+export const TagButton: React.FC<HTMLAttributes<HTMLButtonElement>> = ({ ...props }) => {
+  return <button {...props} className={styles.tagbutton} />;
+};
+
+export const NotImplemented: React.FC = () => {
+  return (
+    <div className={styles.notimplemented}>
+      <Lottie animationData={SecurityResearch} width={500} height={500} autoplay loop />
+      <Typography variant="h5">Not Yet Implemented</Typography>
+      <Typography>Stay tuned for updates!</Typography>
+      <div className={styles.attribution}>
+        <a
+          href="https://iconscout.com/lottie-animations/security-research"
+          className="text-underline font-size-sm"
+          target="_blank"
+          rel="noreferrer">
+          Security Research
+        </a>{" "}
+        by{" "}
+        <a href="https://iconscout.com/contributors/nanoagency" className="text-underline font-size-sm">
+          nanoagency
+        </a>{" "}
+        on{" "}
+        <a href="https://iconscout.com" className="text-underline font-size-sm">
+          IconScout
+        </a>
+      </div>
+    </div>
+  );
+};
+
+export const CheckIcon = () => {
+  return (
+    <svg width="20px" height="20px" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+      <circle
+        className={styles.circle}
+        cx="10"
+        cy="10"
+        r="9"
+        fill="#6ee7b74d"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <path
+        className={styles.check}
+        d="M6 10 l2.5 3 l5 -5.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="square"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+};
+
+export const Loader = () => {
+  return (
+    <svg className={styles.spinner} viewBox="0 0 22 22">
+      <defs>
+        <clipPath id="loaderClip">
+          <rect x="10" y="10" width="22" height="22" />
+        </clipPath>
+      </defs>
+      <circle stroke="darkgray" cx="11" cy="11" r="9" fill="none" strokeWidth={1.2} />
+      <circle
+        className={styles.spinnerPath}
+        cx="11"
+        cy="11"
+        r="9"
+        fill="none"
+        strokeWidth={1.2}
+        clipPath="url(#loaderClip)"
+      />
+    </svg>
+  );
+};

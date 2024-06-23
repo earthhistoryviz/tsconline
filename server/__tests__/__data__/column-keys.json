@@ -451,6 +451,7 @@
       "ageUnits": "Ma",
       "defaultChronostrat": "UNESCO",
       "formatVersion": 1.5,
+      "image": "",
       "isUserDatapack": false
     },
     "general-parse-datapacks-test-2-key": {
@@ -1297,6 +1298,7 @@
       "ageUnits": "Ma",
       "defaultChronostrat": "USGS",
       "formatVersion": 1,
+      "image": "",
       "verticalScale": 6,
       "date": "2015-03-15",
       "isUserDatapack": false
@@ -2572,6 +2574,7 @@
             "ageUnits": "Ma",
             "defaultChronostrat": "UNESCO",
             "formatVersion": 1.5,
+            "image": "",
             "isUserDatapack": false
     }
 }

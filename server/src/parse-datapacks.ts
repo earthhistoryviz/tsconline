@@ -260,7 +260,14 @@ export async function parseDatapacks(
   };
   setShowLabels(chartColumn);
 
-  const datapackParsingPack = { columnInfo: chartColumn, ageUnits, defaultChronostrat, formatVersion, isUserDatapack };
+  const datapackParsingPack = {
+    columnInfo: chartColumn,
+    ageUnits,
+    defaultChronostrat,
+    formatVersion,
+    isUserDatapack,
+    image: ""
+  };
 
   assertDatapackParsingPack(datapackParsingPack);
   if (date) datapackParsingPack.date = date;
