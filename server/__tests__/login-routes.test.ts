@@ -1,4 +1,4 @@
-import { vi, beforeAll, afterAll, describe, beforeEach, it, expect, test } from "vitest";
+import { vi, beforeAll, afterAll, describe, beforeEach, it, expect, test, MockInstance } from "vitest";
 import fastify, { FastifyInstance } from "fastify";
 import fastifySecureSession from "@fastify/secure-session";
 import { OAuth2Client } from "google-auth-library";
@@ -78,19 +78,13 @@ const testUser = {
   hashedPassword: "password123",
   pictureUrl: "https://example.com/picture.jpg"
 };
-const date = new Date();
-date.setHours(date.getHours() + 1);
+const mockDate = new Date("2022-01-01T00:00:00Z");
 const testToken: Verification = {
   userId: 123,
   token: "test",
-  expiresAt: date.toISOString(),
+  expiresAt: mockDate.toISOString(),
   reason: "verify"
 };
-function checkSession(cookieHeader: string): boolean {
-  const cookie = decodeURIComponent(cookieHeader).split(" ")[0];
-  const session = cookie?.split("loginSession=")[1];
-  return app.decodeSecureSession(session ?? "")?.get("uuid") == testUser.uuid;
-}
 
 beforeAll(async () => {
   app = fastify();
@@ -113,6 +107,7 @@ beforeAll(async () => {
   app.post("/resend", loginRoutes.resendVerificationEmail);
   app.post("/send-forgot-password-email", loginRoutes.sendForgotPasswordEmail);
   vi.spyOn(console, "error").mockImplementation(() => undefined);
+  vi.setSystemTime(mockDate);
   await app.listen({ host: "", port: 8000 });
 });
 
@@ -122,9 +117,24 @@ afterAll(async () => {
 
 describe("login-routes tests", () => {
   const originalEnv = { EMAIL_USER: "testuser", EMAIL_PASS: "testpass" };
+  let emailSpy: MockInstance;
+  let createVerificationSpy: MockInstance;
+  let deleteVerificationSpy: MockInstance;
+  let createUserSpy: MockInstance;
+  let findUserSpy: MockInstance;
+  function checkSession(cookieHeader: string): boolean {
+    const cookie = decodeURIComponent(cookieHeader).split(" ")[0];
+    const session = cookie?.split("loginSession=")[1];
+    return app.decodeSecureSession(session ?? "")?.get("uuid") == testUser.uuid;
+  }
 
   beforeEach(() => {
     process.env = { ...originalEnv };
+    emailSpy = vi.spyOn(emailModule, "sendEmail");
+    createVerificationSpy = vi.spyOn(databaseModule, "createVerification");
+    deleteVerificationSpy = vi.spyOn(databaseModule, "deleteVerification");
+    createUserSpy = vi.spyOn(databaseModule, "createUser");
+    findUserSpy = vi.spyOn(databaseModule, "findUser");
   });
 
   describe("/signup", () => {
@@ -224,10 +234,6 @@ describe("login-routes tests", () => {
 
     it("should return 200 if successful", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
-      const emailSpy = vi.spyOn(emailModule, "sendEmail");
-      const verificationSpy = vi.spyOn(databaseModule, "createVerification");
-      const createUserSpy = vi.spyOn(databaseModule, "createUser");
-      const findUserSpy = vi.spyOn(databaseModule, "findUser");
 
       const response = await app.inject({
         method: "POST",
@@ -235,12 +241,12 @@ describe("login-routes tests", () => {
         payload: payload
       });
 
-      expect(verificationSpy).toHaveBeenCalledWith(
+      const expiresAt = new Date(mockDate);
+      expiresAt.setHours(expiresAt.getHours() + 1);
+      expect(createVerificationSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          expiresAt: expect.any(String),
-          token: "test",
-          userId: testUser.userId,
-          reason: "verify"
+          ...testToken,
+          expiresAt: expiresAt.toISOString()
         })
       );
       expect(createUserSpy).toHaveBeenCalledWith(
@@ -359,7 +365,6 @@ describe("login-routes tests", () => {
 
     it("should return 200 if successful for already signed up google user", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, hashedPassword: null }]);
-      const findUserSpy = vi.spyOn(databaseModule, "findUser");
 
       const response = await app.inject({
         method: "POST",
@@ -376,8 +381,6 @@ describe("login-routes tests", () => {
 
     it("should return 200 if successful for new google user", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([]).mockResolvedValueOnce([testUser]);
-      const findUserSpy = vi.spyOn(databaseModule, "findUser");
-      const createUserSpy = vi.spyOn(databaseModule, "createUser");
 
       const response = await app.inject({
         method: "POST",
@@ -502,7 +505,6 @@ describe("login-routes tests", () => {
 
     it("should return 200 if successful", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
-      const findUserSpy = vi.spyOn(databaseModule, "findUser");
 
       const response = await app.inject({
         method: "POST",
@@ -552,6 +554,7 @@ describe("login-routes tests", () => {
 
     it("should return 400 if email is already verified", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+
       const response = await app.inject({
         method: "POST",
         url: "/verify",
@@ -683,6 +686,7 @@ describe("login-routes tests", () => {
         payload: payload
       });
 
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(500);
       expect(response.json().error).toBe("Email service not configured");
     });
@@ -765,7 +769,6 @@ describe("login-routes tests", () => {
 
     it("should return 200 if user is not found", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([]);
-      const emailSpy = vi.spyOn(emailModule, "sendEmail");
 
       const response = await app.inject({
         method: "POST",
@@ -781,7 +784,6 @@ describe("login-routes tests", () => {
 
     it("should return 200 if user is already verified", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
-      const emailSpy = vi.spyOn(emailModule, "sendEmail");
 
       const response = await app.inject({
         method: "POST",
@@ -804,9 +806,6 @@ describe("login-routes tests", () => {
 
     it("should return 200 if user is not verified", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, emailVerified: 0 }]);
-      const emailSpy = vi.spyOn(emailModule, "sendEmail");
-      const deleteVerificationSpy = vi.spyOn(databaseModule, "deleteVerification");
-      const createVerificationSpy = vi.spyOn(databaseModule, "createVerification");
 
       const response = await app.inject({
         method: "POST",
@@ -814,9 +813,11 @@ describe("login-routes tests", () => {
         payload: payload
       });
 
+      const expiresAt = new Date(mockDate);
+      expiresAt.setHours(expiresAt.getHours() + 1);
       expect(createVerificationSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          expiresAt: expect.any(String),
+          expiresAt: expiresAt.toISOString(),
           token: "test",
           userId: testUser.userId,
           reason: "verify"
@@ -841,6 +842,7 @@ describe("login-routes tests", () => {
       email: testUser.email,
       recaptchaToken: "test"
     };
+
     it("should return 500 if email service is not configured", async () => {
       process.env.EMAIL_USER = "";
       process.env.EMAIL_PASS = "";
@@ -851,6 +853,7 @@ describe("login-routes tests", () => {
         payload: payload
       });
 
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(500);
       expect(response.json().error).toBe("Email service not configured");
     });
@@ -933,9 +936,6 @@ describe("login-routes tests", () => {
 
     it("should return 200 if user is not found", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([]);
-      const emailSpy = vi.spyOn(emailModule, "sendEmail");
-      const createVerificationSpy = vi.spyOn(databaseModule, "createVerification");
-      const deleteVerificationSpy = vi.spyOn(databaseModule, "deleteVerification");
 
       const response = await app.inject({
         method: "POST",
@@ -953,9 +953,6 @@ describe("login-routes tests", () => {
 
     it("should return 200 if email is not verified", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, emailVerified: 0 }]);
-      const emailSpy = vi.spyOn(emailModule, "sendEmail");
-      const createVerificationSpy = vi.spyOn(databaseModule, "createVerification");
-      const deleteVerificationSpy = vi.spyOn(databaseModule, "deleteVerification");
 
       const response = await app.inject({
         method: "POST",
@@ -973,7 +970,6 @@ describe("login-routes tests", () => {
 
     it("should return 200 if google user", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, hashedPassword: null }]);
-      const emailSpy = vi.spyOn(emailModule, "sendEmail");
 
       const response = await app.inject({
         method: "POST",
@@ -995,9 +991,6 @@ describe("login-routes tests", () => {
 
     it("should return 200 if user/pass user", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
-      const deleteVerificationSpy = vi.spyOn(databaseModule, "deleteVerification");
-      const createVerificationSpy = vi.spyOn(databaseModule, "createVerification");
-      const emailSpy = vi.spyOn(emailModule, "sendEmail");
 
       const response = await app.inject({
         method: "POST",
@@ -1005,10 +998,12 @@ describe("login-routes tests", () => {
         payload: payload
       });
 
+      const expiresAt = new Date(mockDate);
+      expiresAt.setMinutes(expiresAt.getMinutes() + 15);
       expect(deleteVerificationSpy).toHaveBeenCalledWith({ userId: testUser.userId, reason: "password" });
       expect(createVerificationSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          expiresAt: expect.any(String),
+          expiresAt: expiresAt.toISOString(),
           token: "test",
           userId: testUser.userId,
           reason: "password"
