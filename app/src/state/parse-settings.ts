@@ -10,6 +10,7 @@ import {
   FontsInfo,
   assertChartInfoTSC,
   assertChartSettingsInfoTSC,
+  assertChronSettings,
   assertEventSettings,
   assertPointColumnInfoTSC,
   assertPointSettings,
@@ -376,7 +377,7 @@ export function generateSettingsXml(stateSettings: ChartSettings, indent: string
 }
 
 export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInfoTSC {
-  let column: ColumnInfoTSC = JSON.parse(JSON.stringify(defaultColumnBasicInfoTSC));
+  let column: ColumnInfoTSC = cloneDeep(defaultColumnBasicInfoTSC);
   switch (state.columnDisplayType) {
     case "Event":
       //can't set it equal to default because it becomes reference to object
@@ -387,8 +388,7 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
         rangeSort: state.columnSpecificSettings.rangeSort,
         drawExtraColumn: state.columnSpecificSettings.frequency,
         windowSize: state.columnSpecificSettings.windowSize,
-        stepSize: state.columnSpecificSettings.stepSize,
-        isDataMiningColumn: state.columnSpecificSettings.isDataMiningColumn
+        stepSize: state.columnSpecificSettings.stepSize
       };
       break;
     case "Zone":
@@ -431,6 +431,16 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
         stepSize: state.columnSpecificSettings.stepSize,
         isDataMiningColumn: state.columnSpecificSettings.isDataMiningColumn
       };
+      break;
+    case "Chron":
+      assertChronSettings(state.columnSpecificSettings);
+      column = {
+        ...column,
+        drawExtraColumn: state.columnSpecificSettings.dataMiningChronDataType,
+        windowSize: state.columnSpecificSettings.windowSize,
+        stepSize: state.columnSpecificSettings.stepSize
+      };
+      break;
   }
   switch (state.columnDisplayType) {
     case "RootColumn":
