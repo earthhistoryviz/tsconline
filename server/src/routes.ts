@@ -24,7 +24,6 @@ import { loadIndexes } from "./load-packs.js";
 import { updateFileMetadata, writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
-import { rm } from "fs/promises";
 import { runJavaEncrypt } from "./encryption.js";
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
@@ -139,8 +138,8 @@ export const requestDownload = async function requestDownload(
   try {
     await mkdir(encryptedFilepathDir, { recursive: true });
   } catch (e) {
-    console.error(e);
     reply.status(500).send({ error: "Failed to create encrypted directory with error " + e });
+    console.log("right flow:" + reply.statusCode);
     return;
   }
 
@@ -149,6 +148,7 @@ export const requestDownload = async function requestDownload(
   } catch (e) {
     console.error(e);
     reply.status(500).send({ error: "Failed to encrypt datapacks with error " + e });
+    console.log("right flow:" + reply.statusCode);
     return;
   }
 
@@ -166,6 +166,7 @@ export const requestDownload = async function requestDownload(
       reply.status(422).send({
         error: errormsg
       });
+      console.log("right flow:" + reply.statusCode);
       return;
     }
   } catch (e) {
