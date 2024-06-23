@@ -82,8 +82,9 @@ export const ChronDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
   assertChronSettings(chronSettings);
   const handleFrequencyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!isDataMiningChronDataType(event.target.value)) return;
-    if (chronSettings.dataMiningChronDataType !== null)
+    if (chronSettings.dataMiningChronDataType != = null) {
       actions.removeDataMiningColumn(column, chronSettings.dataMiningChronDataType);
+    }
     actions.setChronColumnSettings(chronSettings, { dataMiningChronDataType: event.target.value });
     actions.addDataMiningColumn(column, event.target.value);
   };
