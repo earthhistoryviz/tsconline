@@ -5,7 +5,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import Toolbar from "@mui/material/Toolbar";
 import { styled, useTheme } from "@mui/material/styles";
 import HomeIcon from "@mui/icons-material/Home";
-import { IconButton, Tab, Tabs } from "@mui/material";
+import { IconButton, Tab, Tabs, Typography } from "@mui/material";
 import { context } from "./state";
 import { TSCMenuItem, TSCButton, TSCAccountMenu } from "./components";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
@@ -93,7 +93,8 @@ export const NavBar = observer(function Navbar() {
               anchorRef={settingsRef}
               className="settings-sub-menu"
               align="center"
-              menuStyle={{ color: theme.palette.primary.main, backgroundColor: theme.palette.menuDropdown.main }}
+              menuStyle={{ color: theme.palette.text.primary, backgroundColor: theme.palette.backgroundColor.main, border: `1px solid ${theme.palette.divider}`}}
+              gap={-2}
               onClose={() => settingsMenuToggle(false)}>
               {Object.entries(SettingsMenuOptionLabels).map(([key, label]) => (
                 <TSCMenuItem
@@ -105,7 +106,7 @@ export const NavBar = observer(function Navbar() {
                     navigate("/settings");
                     settingsMenuToggle(false);
                   }}>
-                  {label}
+                    <Typography>{label}</Typography>
                 </TSCMenuItem>
               ))}
             </ControlledMenu>
@@ -115,7 +116,7 @@ export const NavBar = observer(function Navbar() {
         <TSCButton buttonType="gradient" onClick={() => actions.initiateChartGeneration(navigate, location.pathname)}>
           Generate Chart
         </TSCButton>
-        {state.isLoggedIn ? (
+        {!state.isLoggedIn ? (
           <TSCAccountMenu />
         ) : (
           <Tab

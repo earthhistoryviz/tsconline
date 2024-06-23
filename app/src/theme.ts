@@ -153,7 +153,8 @@ let darkTheme = createTheme(baseTheme, {
     }),
     action: {
       disabled,
-      disabledBackground: disabled
+      disabledBackground: disabled,
+      hover: "#ababab1a"
     },
     altbackground: {
       light: "#8FB7E7",
