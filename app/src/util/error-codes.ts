@@ -47,7 +47,8 @@ export enum ErrorCodes {
   UPLOAD_PROFILE_PICTURE_FAILED = "UPLOAD_PROFILE_PICTURE_FAILED",
   UNABLE_TO_CHANGE_USERNAME = "UNABLE_TO_CHANGE_USERNAME",
   UNABLE_TO_DELETE_PROFILE = "UNABLE_TO_DELETE_PROFILE",
-  INCORRECT_PASSWORD = "INCORRECT_PASSWORD"
+  INCORRECT_PASSWORD = "INCORRECT_PASSWORD",
+  UNABLE_TO_READ_FILE_OR_EMPTY_FILE = "UNABLE_TO_READ_FILE_OR_EMPTY_FILE"
 }
 
 export const ErrorMessages = {
@@ -108,5 +109,6 @@ export const ErrorMessages = {
   [ErrorCodes.UPLOAD_PROFILE_PICTURE_FAILED]: "Unable to upload profile picture. Please try again later.",
   [ErrorCodes.UNABLE_TO_CHANGE_USERNAME]: "Unable to change username. Please try again later.",
   [ErrorCodes.UNABLE_TO_DELETE_PROFILE]: "Unable to delete profile. Please try again later.",
-  [ErrorCodes.INCORRECT_PASSWORD]: "Incorrect password. Please try again."
+  [ErrorCodes.INCORRECT_PASSWORD]: "Incorrect password. Please try again.",
+  [ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE]: "Unable to read file or file is empty. Please try again."
 };

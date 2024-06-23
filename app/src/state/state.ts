@@ -1,6 +1,15 @@
 import { observable } from "mobx";
 
-import { SnackbarInfo, ChartSettings, ErrorAlert, FaciesOptions, MapHistory, Config, SettingsTabs } from "../types";
+import {
+  SnackbarInfo,
+  ChartSettings,
+  ErrorAlert,
+  FaciesOptions,
+  MapHistory,
+  Config,
+  SettingsTabs,
+  CachedConfig
+} from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
   MapHierarchy,
@@ -37,6 +46,7 @@ export type State = {
     columnSelected: string | null;
     columnHashMap: Map<string, ColumnInfo>;
     columnSearchTerm: string;
+    datapackDisplayType: "rows" | "cards";
   };
   mapState: {
     mapInfo: MapInfo;
@@ -74,6 +84,7 @@ export type State = {
   };
   snackbars: SnackbarInfo[];
   presetColors: string[];
+  datapackCachedConfiguration: Map<string, CachedConfig>;
 };
 
 export const state = observable<State>({
@@ -105,7 +116,8 @@ export const state = observable<State>({
     columns: undefined,
     columnSelected: null,
     columnHashMap: new Map<string, ColumnInfo>(),
-    columnSearchTerm: ""
+    columnSearchTerm: "",
+    datapackDisplayType: "rows"
   },
   mapState: {
     mapInfo: {},
@@ -155,5 +167,6 @@ export const state = observable<State>({
     errorAlerts: new Map<ErrorCodes, ErrorAlert>()
   },
   presetColors: JSON.parse(localStorage.getItem("savedColors") || JSON.stringify(defaultColors)),
-  snackbars: []
+  snackbars: [],
+  datapackCachedConfiguration: new Map<string, CachedConfig>()
 });
