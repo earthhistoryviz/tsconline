@@ -26,7 +26,7 @@ interface CookieConsentProps {
 const CookieConsent: React.FC<CookieConsentProps> = ({ persistent = false }) => {
   const { state, actions } = useContext(context);
   const { cookieConsent } = state;
-  const shouldShowConsent = !cookieConsent || (persistent && cookieConsent !== true);
+  const shouldShowConsent = cookieConsent === null || (persistent && cookieConsent !== true);
   const [isVisible, setIsVisible] = useState(shouldShowConsent);
   const theme = useTheme();
 
