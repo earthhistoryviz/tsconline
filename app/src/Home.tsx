@@ -9,7 +9,7 @@ import { Accordion, AccordionSummary, AccordionDetails, Grid, Typography } from 
 import { useTheme, styled } from "@mui/material/styles";
 import { TSCIcon, TSCButton, TSCCard, StyledScrollbar } from "./components";
 import TSCreatorLogo from "./assets/TSCreatorLogo.png";
-
+import CookieConsent from "./CookieConsent";
 import "./Home.css";
 
 const HeaderContainer = styled("div")(({ theme }) => ({
@@ -62,6 +62,7 @@ export const Home = observer(function Home() {
           Remove Cache
         </TSCButton>
       </div>
+      <CookieConsent />
     </div>
   );
 });
