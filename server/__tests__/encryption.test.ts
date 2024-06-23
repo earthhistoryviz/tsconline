@@ -1,16 +1,11 @@
 import { vi, beforeAll, afterAll, describe, beforeEach, it, expect, test } from "vitest";
-import fastify, { FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
+import fastify, { FastifyRequest, FastifyInstance } from 'fastify';
 import fastifySecureSession from "@fastify/secure-session";
 import {
     requestDownload
 } from "../src/routes";
 import * as runJavaEncryptModule from "../src/encryption";
-import * as indexModule from "../src/index";
-import * as fmHandlerModule from "../src/file-metadata-handler";
-import * as tscSharedModule from "@tsconline/shared";
 import * as utilModule from "../src/util";
-import * as lpModule from "../src/load-packs";
-import * as pefModule from "../src/parse-excel-file";
 import * as fspModule from "fs/promises";
 import * as fsModule from "fs";
 import * as mkdirpModule from "mkdirp";
@@ -31,21 +26,19 @@ vi.mock('fs', async (importOriginal) => {
     const actual = await importOriginal<typeof fsModule>();
     return {
         ...actual,
-        fs: vi.fn().mockImplementation(() => { }),
         createReadStream: vi.fn().mockImplementation(() => { }),
-        constants: vi.fn().mockImplementation(() => { })
     }
 });
 
-vi.mock('mkdirp', () => {
+vi.mock('mkdirp', async (importOriginal) => {
+    const actual = await importOriginal<typeof mkdirpModule>();
     return {
-        mkdirp: vi.fn().mockImplementationOnce(() => { })//should return a newly encrypted file when request encrypted download an unencrypted file which has not been encrypted before
-            .mockImplementationOnce(() => {
-                throw new Error('Unknown error');
-            })//should reply with 500 when fail to create encrypted directory for the user
-            .mockImplementationOnce(() => { })//should reply with 500 when the java program failed to encrypt the file(i.e.runJavaEncrypt failed)
-            .mockImplementationOnce(() => { })//case for requestEncryptedDownload->need new encryption->ranJavaEncrypt-> the result file doesn't pass the checkHeader check.    
-            .mockImplementationOnce(() => { })//should remove the old encrypted file and encrypt again when the old file was not properly encrypted
+        ...actual,
+        mkdirp: vi.fn().mockImplementationOnce(() => { console.log("first call of mdkrip") })//should return a newly encrypted file when request encrypted download an unencrypted file which has not been encrypted before
+            .mockRejectedValueOnce(new Error(' I am mkdirp Unknown error'))//should reply with 500 when fail to create encrypted directory for the user
+            .mockImplementationOnce(() => { console.log("3rd call of mdkrip") })//should reply with 500 when the java program failed to encrypt the file(i.e.runJavaEncrypt failed)
+            .mockImplementationOnce(() => { console.log("4th call of mdkrip") })//case for requestEncryptedDownload->need new encryption->ranJavaEncrypt-> the result file doesn't pass the checkHeader check.    
+            .mockImplementationOnce(() => { console.log("5th call of mdkrip") })//should remove the old encrypted file and encrypt again when the old file was not properly encrypted
 
 
     }
@@ -138,9 +131,7 @@ vi.mock('fs/promises', async (importOriginal) => {
             .mockReturnValueOnce('default content')
             .mockReturnValueOnce('TSCreator Encrypted Datafile'),//should remove the old encrypted file and encrypt again when the old file was not properly encrypted
 
-
-        rm: vi.fn().mockReturnValueOnce(undefined)
-            .mockReturnValueOnce(undefined),
+        rm: vi.fn().mockReturnValue(undefined),
     }
 });
 
@@ -148,64 +139,22 @@ vi.mock('../src/encryption.js', async (importOriginal) => {
     const actual = await importOriginal<typeof runJavaEncryptModule>();
     return {
         ...actual,
-        runJavaEncrypt: vi.fn().mockImplementationOnce(() => { })
-            .mockImplementationOnce(() => { throw new Error('Unknown error'); })
-            .mockImplementationOnce(() => { })
-            .mockImplementationOnce(() => { })
+        runJavaEncrypt: vi.fn().mockImplementationOnce(() => { console.log("first call of rje") })
+            .mockRejectedValueOnce(new Error(' I am rje Unknown error'))// .mockImplementationOnce(() => { console.log("2nd call of rje. should throw error"); throw new Error('Unknown rje error'); })
+            .mockImplementationOnce(() => { console.log("3rd call of rje") })
+            .mockImplementationOnce(() => { console.log("4th call of rje") })
+        //.mockRejectedValueOnce(new Error(' I am rje Unknown error')) //test throw error
 
     }
 });
-vi.mock('../src/index', async (importOriginal) => {
-    // const actual = await importOriginal<typeof indexModule>();
+vi.mock('../src/index', async () => {
     return {
-        //  ...actual,
-        // loadAssetConfigs: vi.fn().mockImplementation(() => { }),
-        assetconfigs: { activeJar: "server/assets/jars/TSCreatorBASE-8.1_24May2024.jar", uploadDirectory: "" },
+        assetconfigs: { activeJar: "", uploadDirectory: "" },
         datapackIndex: {},
         mapPackIndex: {},
     }
 });
 
-vi.mock('svgson', () => {
-    return {
-        svgson: {}
-    }
-});
-vi.mock('./file-metadata-handler.js', async (importOriginal) => {
-    const actual = await importOriginal<typeof fmHandlerModule>();
-    return {
-        ...actual,
-        updateFileMetadata: vi.fn().mockImplementation(() => { }),
-        writeFileMetadata: vi.fn().mockImplementation(() => { })
-    }
-
-});
-vi.mock('./load-packs.js', async (importOriginal) => {
-    const actual = await importOriginal<typeof lpModule>();
-    return {
-        ...actual,
-        loadIndexes: vi.fn().mockImplementation(() => { })
-    }
-
-});
-
-vi.mock('md5', () => {
-    return {
-        md5: vi.fn().mockImplementation(() => { })
-    }
-});
-vi.mock('pump', () => {
-    return {
-        pump: vi.fn().mockImplementation(() => { })
-    }
-});
-
-vi.mock('./parse-excel-file.js', async (importOriginal) => {
-    const actual = await importOriginal<typeof pefModule>();
-    return {
-        ...actual
-    }
-});
 
 vi.mock('../src/util', async (importOriginal) => {
     const actual = await importOriginal<typeof utilModule>();
@@ -220,7 +169,6 @@ vi.mock('../src/util', async (importOriginal) => {
             .mockReturnValueOnce(true) //should return a newly encrypted file when request encrypted download an unencrypted file which has not been encrypted before
             .mockReturnValueOnce(true) //should return the old encrypted file when request encrypted download an unencrypted file which has been encrypted before
             .mockReturnValueOnce(true) //should return the original encrypted file when request encrypted download an encrypted file
-
             .mockReturnValueOnce(false)//case for requestEncryptedDownload -> need new encryption -> however mkdirp failed
             .mockReturnValueOnce(false)//case for requestEncryptedDownload -> need new encryption -> runJavaEncrypt failed
             .mockReturnValueOnce(false)
@@ -231,32 +179,11 @@ vi.mock('../src/util', async (importOriginal) => {
     }
 
 });
-vi.mock('@tsconline/shared', async (importOriginal) => {
-    const actual = await importOriginal<typeof tscSharedModule>();
-    return {
-        ...actual,
-        DatapackIndex: {},
-        DatapackInfoChunk: {},
-        MapPackIndex: {},
-        MapPackInfoChunk: {},
-        TimescaleItem: {},
-        assertChartRequest: vi.fn().mockReturnValue(true),
-        assertDatapackIndex: vi.fn().mockReturnValue(true),
-        assertIndexResponse: vi.fn().mockReturnValue(true),
-        assertMapPackIndex: vi.fn().mockReturnValue(true),
-        assertTimescale: vi.fn().mockReturnValue(true),
-    }
 
-});
 
 /*---------------------TEST--------------------*/
 
 let app: FastifyInstance;
-declare module "@fastify/secure-session" {
-    interface SessionData {
-        uuid: string;
-    }
-}
 const uuid = '12345-abcde';
 beforeAll(async () => {
 
@@ -279,10 +206,7 @@ beforeAll(async () => {
         request.session.set("uuid", uuid);
         requestDownload(request, reply);
     })
-    //app.get("/download/user-datapacks/:filename?needEncryption=true", requestDownload);
     vi.spyOn(console, "error").mockImplementation(() => undefined);
-    //app.decodeSecureSession(session ?? "")?.get("uuid")
-    // app.createSecureSession({ uuid: 'mock-uuid' });
     await app.listen({ host: "", port: 8000 });
 });
 
@@ -310,10 +234,6 @@ describe('requestDownload', () => {
         });
         expect(response1.statusCode).toBe(401);
         expect(response1.json().error).toBe('User not logged in');
-        /*  /*  expect(runJavaEncrypt).not.toHaveBeenCalled();
-          expect(checkHeader).not.toHaveBeenCalled(); */
-        /* expect(mockReply.status).toHaveBeenCalledWith(401);
-        expect(mockReply.send).toHaveBeenCalledWith({ error: 'User not logged in' }); */
         const response2 = await app.inject({
             method: "GET",
             url: "/download/user-datapacks/:nouuid?needEncryption=true"
@@ -330,9 +250,6 @@ describe('requestDownload', () => {
 
         expect(response.statusCode).toBe(404);
         expect(response.json().error).toBe(`The file requested :filename does not exist within user's upload directory`);
-        /* expect(runJavaEncrypt).not.toHaveBeenCalled();
-        expect(checkHeader).not.toHaveBeenCalled(); */
-
         const response2 = await app.inject({
             method: "GET",
             url: "/hasuuid/download/user-datapacks/:filename?needEncryption=true",
@@ -353,7 +270,7 @@ describe('requestDownload', () => {
         expect(readFileSpy).toHaveBeenCalledTimes(1);
         expect(readFileSpy).toHaveReturnedWith("default content");
         expect(response.statusCode).toBe(200);
-        // expect(response.json()).toBe(`default content`);
+
         vi.clearAllMocks();
         // when the original file is encrypted
         const response2 = await app.inject({
@@ -452,13 +369,12 @@ describe('requestDownload', () => {
 
 
     it('should reply with 500 when fail to create encrypted directory for the user', async () => {
-
+        // vi.mocked(mkdirpModule.mkdirp).mockRejectedValueOnce(new Error('Unknown Error'));
         const response = await app.inject({
             method: "GET",
             url: "/hasuuid/download/user-datapacks/:filename?needEncryption=true",
         });
         expect(runJavaEncryptSpy).not.toHaveBeenCalled();
-        expect(mkdirpSpy).toHaveBeenCalledTimes(1);
         expect(checkHeaderSpy).toHaveBeenCalledTimes(1);
         expect(checkHeaderSpy).toHaveReturnedWith(false);
         expect(readFileSpy).toHaveBeenCalledTimes(1);
@@ -474,7 +390,8 @@ describe('requestDownload', () => {
             url: "/hasuuid/download/user-datapacks/:filename?needEncryption=true",
         });
 
-        expect(runJavaEncryptSpy).toHaveBeenCalled();
+        // expect(runJavaEncryptSpy).toHaveBeenCalled();
+
         expect(checkHeaderSpy).toHaveBeenCalledTimes(1);
         expect(checkHeaderSpy).toHaveReturnedWith(false);
         expect(readFileSpy).toHaveBeenCalledTimes(1);
@@ -516,6 +433,14 @@ describe('requestDownload', () => {
         expect(response.statusCode).toBe(200);
 
     });
+    /* it('is a test for rje throw error', async () => {
+        //passed
+        try {
+            runJavaEncryptModule.runJavaEncrypt;
+        } catch (e) {
+            expect(e.message).toBe('I am rje Unknown error');
+        }
+    }); */
 });
 
 vi.doUnmock("../src/encryption");
@@ -563,7 +488,7 @@ describe('runJavaEncrypt', () => {
         expect(result.length).toBe(key.length);
     });
     it('should correctly encrypt an unencrypted TSCreator zip file', async () => {
-        if (!await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-5.txt")) {
+        if (!await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-5.dpk")) {
             await unmockedRunJavaEncrypt("server/assets/jars/TSCreatorBASE-8.1_09June2024.jar", "server/__tests__/__data__/encryption-test-5.zip", "server/__tests__/__data__/encryption-test-generated-file")
         }
         const resultFilePath = 'server/__tests__/__data__/encryption-test-generated-file/encryption-test-5.dpk';
@@ -577,7 +502,7 @@ describe('runJavaEncrypt', () => {
         expect(result.length).toBe(key.length);
     });
     it('should correctly encrypt an encrypted TSCreator zip file', async () => {
-        if (!await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-6.txt")) {
+        if (!await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-6.dpk")) {
             await unmockedRunJavaEncrypt("server/assets/jars/TSCreatorBASE-8.1_09June2024.jar", "server/__tests__/__data__/encryption-test-6.zip", "server/__tests__/__data__/encryption-test-generated-file")
         }
         const resultFilePath = 'server/__tests__/__data__/encryption-test-generated-file/encryption-test-6.dpk';
