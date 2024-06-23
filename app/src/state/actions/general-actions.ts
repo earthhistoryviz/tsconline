@@ -860,6 +860,8 @@ export const logout = action("logout", async () => {
 });
 
 export const sessionCheck = action("sessionCheck", async () => {
+  const cookieConsentValue = localStorage.getItem("cookieConsent");
+  state.cookieConsent = cookieConsentValue !== null ? cookieConsentValue === "true" : null;
   try {
     const response = await fetcher("/auth/session-check", {
       method: "POST",
@@ -1066,3 +1068,7 @@ export const setDatapackDisplayType = action(
     state.settingsTabs.datapackDisplayType = newval;
   }
 );
+export const setCookies = action("setCookies", (newval: boolean) => {
+  state.cookieConsent = newval;
+  localStorage.setItem("cookieConsent", newval.toString());
+});

@@ -12,7 +12,7 @@
     "HumanCulture_ENCRYPTED_21Apr2020.txt",
     "Vertebrates w_Images GTS2020 23Jan2021.dpk"
   ],
-  "decryptionJar": "assets/jars/datapack-decrypter-1.0.jar",
+  "decryptionJar": "assets/jars/datapack-decrypter_21Jun2024.jar",
   "decryptionDirectory": "assets/decrypted",
   "datapacksDirectory": "assets/datapacks",
   "chartsDirectory": "public/charts",
