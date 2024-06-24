@@ -30,12 +30,19 @@ export const Chart = observer(() => {
     const zoomFitY = (containerRect.bottom - containerRect.top) / ogY;
     const zoomFitX = (containerRect.right - containerRect.left) / ogX;
 
-    if (zoomFitY < zoomFitX) actions.setChartTabZoomFitScale(zoomFitY);
-    else actions.setChartTabZoomFitScale(zoomFitX);
-
-    actions.setChartTabZoomFitMidX(
-      (containerRect.right - containerRect.left) / 2 - (ogX * state.chartTab.zoomFitScale) / 2
-    );
+    if (zoomFitX < zoomFitY) {
+      actions.setChartTabZoomFitScale(zoomFitX);
+      actions.setChartTabZoomFitMidCoord(
+        (containerRect.bottom - containerRect.top) / 2 - (ogY * state.chartTab.zoomFitScale) / 2
+      );
+      state.chartTab.zoomFitMidCoordIsX = false;
+    } else {
+      actions.setChartTabZoomFitScale(zoomFitY);
+      actions.setChartTabZoomFitMidCoord(
+        (containerRect.right - containerRect.left) / 2 - (ogX * state.chartTab.zoomFitScale) / 2
+      );
+      state.chartTab.zoomFitMidCoordIsX = true;
+    }
 
     actions.setChartTabResetMidX((containerRect.right - containerRect.left) / 2 - ogX / 2);
   };
