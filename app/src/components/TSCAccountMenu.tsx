@@ -82,7 +82,7 @@ export const TSCAccountMenu = observer(() => {
         <Divider />
         <MenuItem onClick={() => navigate("/signup")}>
           <ListItemIcon>
-            <PersonAdd fontSize="small" />
+            <PersonAdd fontSize="small" color="icon"/>
           </ListItemIcon>
           Add another account
         </MenuItem>
@@ -90,7 +90,7 @@ export const TSCAccountMenu = observer(() => {
         {state.user.isAdmin && (
           <MenuItem onClick={() => navigate("/")}>
             <ListItemIcon>
-              <AdminPanelSettingsIcon fontSize="small" />
+              <AdminPanelSettingsIcon fontSize="small" color="icon"/>
             </ListItemIcon>
             Admin Panel
           </MenuItem>
@@ -101,7 +101,7 @@ export const TSCAccountMenu = observer(() => {
             navigate("/login");
           }}>
           <ListItemIcon>
-            <Logout fontSize="small" />
+            <Logout fontSize="small" color="icon"/>
           </ListItemIcon>
           Logout
         </MenuItem>
