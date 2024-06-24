@@ -117,16 +117,14 @@ describe('requestDownload', () => {
     const mkdirpSpy = vi.spyOn(mkdirpModule, "mkdirp");
 
     it('should reply with 500 when fail to create encrypted directory for the user', async () => {
-        vi.mocked(utilModule).checkHeader.mockResolvedValueOnce(false);
-        // vi.spyOn(utilModule, "checkHeader").mockResolvedValueOnce(false); 
-        vi.mocked(fspModule).access.mockImplementationOnce(() => {
+        checkHeaderSpy.mockResolvedValueOnce(false);
+        accessSpy.mockImplementationOnce(() => {
             const error: NodeJS.ErrnoException = new Error('File not found');
             error.code = 'ENOENT';
             throw error;
-        });
-        vi.mocked(fspModule).access.mockResolvedValueOnce(undefined);
-        vi.mocked(fspModule).readFile.mockResolvedValueOnce('default content');
-        vi.mocked(mkdirpModule).mkdirp.mockRejectedValueOnce(new Error('Unknown Error'));
+        }).mockResolvedValueOnce(undefined);
+        readFileSpy.mockResolvedValueOnce('default content');
+        mkdirpSpy.mockRejectedValueOnce(new Error('Unknown Error'));
 
         const response = await app.inject({
             method: "GET",
@@ -143,8 +141,8 @@ describe('requestDownload', () => {
     });
 
     it('should reply 500 when an unknown error occured in readFile when retreive original', async () => {
-        vi.mocked(fspModule).access.mockResolvedValueOnce(undefined);
-        vi.mocked(fspModule).readFile.mockRejectedValueOnce(new Error('Unknown error'));
+        accessSpy.mockResolvedValueOnce(undefined);
+        readFileSpy.mockRejectedValueOnce(new Error('Unknown error'));
 
         const response = await app.inject({
             method: "GET",
@@ -157,8 +155,8 @@ describe('requestDownload', () => {
 
 
     it('should reply 500 when an unknown error occured in readFile when need encryption', async () => {
-        vi.mocked(fspModule).access.mockResolvedValueOnce(undefined);
-        vi.mocked(fspModule).readFile.mockRejectedValueOnce(new Error('Unknown error'));
+        accessSpy.mockResolvedValueOnce(undefined);
+        readFileSpy.mockRejectedValueOnce(new Error('Unknown error'));
 
         const response = await app.inject({
             method: "GET",
@@ -172,15 +170,15 @@ describe('requestDownload', () => {
     });
 
     it('should reply with 500 when the java program failed to encrypt the file (i.e. runJavaEncrypt failed)', async () => {
-        vi.mocked(runJavaEncryptModule).runJavaEncrypt.mockRejectedValueOnce(new Error('Unknown error'));
-        vi.mocked(utilModule).checkHeader.mockResolvedValueOnce(false);
-        vi.mocked(fspModule).access.mockImplementationOnce(() => {
+        runJavaEncryptSpy.mockRejectedValueOnce(new Error('Unknown error'));
+        checkHeaderSpy.mockResolvedValueOnce(false);
+        accessSpy.mockImplementationOnce(() => {
             const error: NodeJS.ErrnoException = new Error('File not found');
             error.code = 'ENOENT';
             throw error;
         }).mockResolvedValueOnce(undefined);
-        vi.mocked(fspModule).readFile.mockResolvedValueOnce('default content');
-        vi.mocked(mkdirpModule).mkdirp.mockResolvedValueOnce(undefined);
+        readFileSpy.mockResolvedValueOnce('default content');
+        mkdirpSpy.mockResolvedValueOnce(undefined);
         const response = await app.inject({
             method: "GET",
             url: "/hasuuid/download/user-datapacks/:filename?needEncryption=true",
@@ -197,17 +195,15 @@ describe('requestDownload', () => {
     });
 
     it('should remove the newly generated file and reply with 422 when runJavaEncrypt did not properly encrypt the file (i.e. the result file did not pass the header check)', async () => {
-        vi.mocked(runJavaEncryptModule).runJavaEncrypt.mockResolvedValue(undefined);
-        vi.mocked(fspModule).access.mockImplementationOnce(() => {
+        runJavaEncryptSpy.mockResolvedValue(undefined);
+        accessSpy.mockImplementationOnce(() => {
             const error: NodeJS.ErrnoException = new Error('File not found');
             error.code = 'ENOENT';
             throw error;
         }).mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined);
-        vi.mocked(utilModule).checkHeader.mockResolvedValueOnce(false);
-        vi.mocked(utilModule).checkHeader.mockResolvedValueOnce(false);
-        vi.mocked(fspModule).readFile.mockResolvedValueOnce('default content');
-        vi.mocked(fspModule).readFile.mockResolvedValueOnce('not properly encrypted');
-        vi.mocked(mkdirpModule).mkdirp.mockResolvedValueOnce(undefined);
+        checkHeaderSpy.mockResolvedValueOnce(false).mockResolvedValueOnce(false);
+        readFileSpy.mockResolvedValueOnce('default content').mockResolvedValueOnce('not properly encrypted');
+        mkdirpSpy.mockResolvedValueOnce(undefined);
         const response = await app.inject({
             method: "GET",
             url: "/hasuuid/download/user-datapacks/:filename?needEncryption=true",
@@ -241,7 +237,7 @@ describe('requestDownload', () => {
 
     it('should reply 404 if the file does not exist when request retrieve original', async () => {
         //retrieve original
-        vi.mocked(fspModule).access.mockImplementationOnce(() => {
+        accessSpy.mockImplementationOnce(() => {
             const error: NodeJS.ErrnoException = new Error('File not found');
             error.code = 'ENOENT';
             throw error;
@@ -258,12 +254,11 @@ describe('requestDownload', () => {
     it('should reply 404 if the file does not exist when request encrypted download', async () => {
 
         //need encryption
-        vi.mocked(fspModule).access.mockImplementationOnce(() => {
+        accessSpy.mockImplementationOnce(() => {
             const error: NodeJS.ErrnoException = new Error('File not found');
             error.code = 'ENOENT';
             throw error;
-        })
-        vi.mocked(fspModule).access.mockImplementationOnce(() => {
+        }).mockImplementationOnce(() => {
             const error: NodeJS.ErrnoException = new Error('File not found');
             error.code = 'ENOENT';
             throw error;
@@ -280,8 +275,8 @@ describe('requestDownload', () => {
     it('should return the original file when request retrieve original file when the original file is unencrypted', async () => {
         // when the original file is unencrypted
 
-        vi.mocked(fspModule).access.mockResolvedValueOnce(undefined);
-        vi.mocked(fspModule).readFile.mockResolvedValueOnce('default content');
+        accessSpy.mockResolvedValueOnce(undefined);
+        readFileSpy.mockResolvedValueOnce('default content');
 
         const response = await app.inject({
             method: "GET",
@@ -300,8 +295,8 @@ describe('requestDownload', () => {
     it('should return the original file when request retrieve original file when the original file is encrypted', async () => {
 
         // when the original file is encrypted
-        vi.mocked(fspModule).access.mockResolvedValueOnce(undefined);
-        vi.mocked(fspModule).readFile.mockResolvedValueOnce('TSCreator Encrypted Datafile');
+        accessSpy.mockResolvedValueOnce(undefined);
+        readFileSpy.mockResolvedValueOnce('TSCreator Encrypted Datafile');
 
         const response = await app.inject({
             method: "GET",
@@ -315,22 +310,18 @@ describe('requestDownload', () => {
     });
 
     it('should return a newly encrypted file when request encrypted download an unencrypted file which has not been encrypted before', async () => {
-        vi.mocked(fspModule).access.mockImplementationOnce(() => {
+        accessSpy.mockImplementationOnce(() => {
             const error: NodeJS.ErrnoException = new Error('File not found');
             error.code = 'ENOENT';
             throw error;
-        });
-        vi.mocked(fspModule).access.mockResolvedValueOnce(undefined);
-        vi.mocked(fspModule).access.mockResolvedValueOnce(undefined);
+        }).mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined);
 
-        vi.mocked(utilModule).checkHeader.mockResolvedValueOnce(false);
-        vi.mocked(utilModule).checkHeader.mockResolvedValueOnce(true);
+        checkHeaderSpy.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
 
-        vi.mocked(mkdirpModule).mkdirp.mockResolvedValueOnce(undefined);
+        mkdirpSpy.mockResolvedValueOnce(undefined);
 
-        vi.mocked(runJavaEncryptModule).runJavaEncrypt.mockResolvedValue(undefined);
-        vi.mocked(fspModule).readFile.mockResolvedValueOnce('default content');
-        vi.mocked(fspModule).readFile.mockResolvedValueOnce('TSCreator Encrypted Datafile');
+        runJavaEncryptSpy.mockResolvedValue(undefined);
+        readFileSpy.mockResolvedValueOnce('default content').mockResolvedValueOnce('TSCreator Encrypted Datafile');
         const response = await app.inject({
             method: "GET",
             url: "/hasuuid/download/user-datapacks/:filename?needEncryption=true",
@@ -347,9 +338,9 @@ describe('requestDownload', () => {
         expect(response.statusCode).toBe(200);
     });
     it('should return the old encrypted file when request encrypted download an unencrypted file which has been encrypted before', async () => {
-        vi.mocked(fspModule).access.mockResolvedValueOnce(undefined);
-        vi.mocked(utilModule).checkHeader.mockResolvedValueOnce(true);
-        vi.mocked(fspModule).readFile.mockResolvedValueOnce('TSCreator Encrypted Datafile');
+        accessSpy.mockResolvedValueOnce(undefined);
+        checkHeaderSpy.mockResolvedValueOnce(true);
+        readFileSpy.mockResolvedValueOnce('TSCreator Encrypted Datafile');
         const response = await app.inject({
             method: "GET",
             url: "/hasuuid/download/user-datapacks/:filename?needEncryption=true",
@@ -364,14 +355,13 @@ describe('requestDownload', () => {
     });
 
     it('should return the original encrypted file when request encrypted download an encrypted file', async () => {
-        vi.mocked(fspModule).access.mockImplementationOnce(() => {
+        accessSpy.mockImplementationOnce(() => {
             const error: NodeJS.ErrnoException = new Error('File not found');
             error.code = 'ENOENT';
             throw error;
-        });
-        vi.mocked(utilModule).checkHeader.mockResolvedValueOnce(true);
-        vi.mocked(fspModule).access.mockResolvedValueOnce(undefined);
-        vi.mocked(fspModule).readFile.mockResolvedValueOnce('TSCreator Encrypted Datafile');
+        }).mockResolvedValueOnce(undefined);
+        checkHeaderSpy.mockResolvedValueOnce(true);
+        readFileSpy.mockResolvedValueOnce('TSCreator Encrypted Datafile');
         const response = await app.inject({
             method: "GET",
             url: "/hasuuid/download/user-datapacks/:filename?needEncryption=true",
@@ -387,17 +377,11 @@ describe('requestDownload', () => {
 
     });
     it('should remove the old encrypted file and encrypt again when the old file was not properly encrypted', async () => {
-        vi.mocked(runJavaEncryptModule).runJavaEncrypt.mockResolvedValue(undefined);
-        vi.mocked(fspModule).access.mockResolvedValueOnce(undefined);
-        vi.mocked(fspModule).access.mockResolvedValueOnce(undefined);
-        vi.mocked(fspModule).access.mockResolvedValueOnce(undefined);
-        vi.mocked(utilModule).checkHeader.mockResolvedValueOnce(false);
-        vi.mocked(utilModule).checkHeader.mockResolvedValueOnce(false);
-        vi.mocked(utilModule).checkHeader.mockResolvedValueOnce(true);
-        vi.mocked(fspModule).readFile.mockResolvedValueOnce('not properly encrypted');
-        vi.mocked(fspModule).readFile.mockResolvedValueOnce('default content');
-        vi.mocked(fspModule).readFile.mockResolvedValueOnce('TSCreator Encrypted Datafile');
-        vi.mocked(mkdirpModule).mkdirp.mockResolvedValueOnce(undefined);
+        runJavaEncryptSpy.mockResolvedValue(undefined);
+        accessSpy.mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined);
+        checkHeaderSpy.mockResolvedValueOnce(false).mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+        readFileSpy.mockResolvedValueOnce('not properly encrypted').mockResolvedValueOnce('default content').mockResolvedValueOnce('TSCreator Encrypted Datafile');
+        mkdirpSpy.mockResolvedValueOnce(undefined);
         const response = await app.inject({
             method: "GET",
             url: "/hasuuid/download/user-datapacks/:filename?needEncryption=true",
@@ -418,7 +402,7 @@ describe('requestDownload', () => {
     });
 
     it('should reply 500 when an unknown error occured when try to access file when retreive original', async () => {
-        vi.mocked(fspModule).access.mockRejectedValueOnce(new Error('Unknown error'));
+        accessSpy.mockRejectedValueOnce(new Error('Unknown error'));
         const response = await app.inject({
             method: "GET",
             url: "/hasuuid/download/user-datapacks/:filename",
@@ -428,7 +412,7 @@ describe('requestDownload', () => {
 
     });
     it('should reply 500 when an unknown error occured when try to access file when need encryption', async () => {
-        vi.mocked(fspModule).access.mockRejectedValueOnce(new Error('Unknown error'));
+        accessSpy.mockRejectedValueOnce(new Error('Unknown error'));
 
         const response = await app.inject({
             method: "GET",
