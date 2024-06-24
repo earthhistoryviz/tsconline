@@ -59,8 +59,6 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   reply.status(200).send(datapackInfoChunk);
 };
 
-
-
 export const requestDownload = async function requestDownload(
   request: FastifyRequest<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>,
   reply: FastifyReply
