@@ -24,17 +24,22 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
   const theme = useTheme();
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
   return (
-    <Box className={styles.rc} 
-    borderBottom="2px solid"
-    borderColor="divider"
-    bgcolor="secondaryBackground.main"
-    onClick={() => navigate(`/datapack/${encodeURIComponent(name)}`)}>
+    <Box
+      className={styles.rc}
+      borderBottom="2px solid"
+      borderColor="divider"
+      bgcolor="secondaryBackground.main"
+      onClick={() => navigate(`/datapack/${encodeURIComponent(name)}`)}>
       <Box
         className={`${styles.cc} ${loading ? styles.loading : ""}`}
         borderRight="1px solid"
         borderLeft="1px solid"
         borderColor="divider"
-        bgcolor={value ? Color(theme.palette.button.light).alpha(0.2).string() : Color(theme.palette.secondaryBackground.light).alpha(0.5).string()}
+        bgcolor={
+          value
+            ? Color(theme.palette.button.light).alpha(0.2).string()
+            : Color(theme.palette.secondaryBackground.light).alpha(0.5).string()
+        }
         onClick={async (e) => {
           e.stopPropagation();
           setLoading(true);
@@ -46,9 +51,15 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
       </Box>
       <img className={styles.image} src={imageUrl} alt="datapack" onError={() => setImageUrl(defaultImageUrl)} />
       <div className={styles.middle}>
-        <Typography className={styles.header} color="textSecondary">{name}</Typography>
-        <Typography className={styles.fd} color="textSecondary">Dixon, Dougal, et al. · Created 10/10/2024</Typography>
-        <Typography className={styles.ci} color="textSecondary">50 Columns · 10 Mb · 350 images </Typography>
+        <Typography className={styles.header} color="textSecondary">
+          {name}
+        </Typography>
+        <Typography className={styles.fd} color="textSecondary">
+          Dixon, Dougal, et al. · Created 10/10/2024
+        </Typography>
+        <Typography className={styles.ci} color="textSecondary">
+          50 Columns · 10 Mb · 350 images{" "}
+        </Typography>
       </div>
       <div
         className={styles.right}

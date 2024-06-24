@@ -91,7 +91,6 @@ let baseTheme = createTheme({
 });
 const disabled = "#393f40";
 
-
 let darkTheme = createTheme(baseTheme, {
   palette: {
     mode: "dark",
@@ -289,7 +288,7 @@ darkTheme = createTheme(darkTheme, {
           backgroundColor: darkTheme.palette.secondaryBackground.main
         }
       }
-    },
+    }
   }
 });
 darkTheme = createTheme(darkTheme, {

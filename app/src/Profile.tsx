@@ -1,5 +1,20 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
-import { Switch, Typography, Grid, Container, Paper, Box, TextField, Avatar, FormControl, InputLabel, Select, MenuItem, Button, Badge } from "@mui/material";
+import {
+  Switch,
+  Typography,
+  Grid,
+  Container,
+  Paper,
+  Box,
+  TextField,
+  Avatar,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Button,
+  Badge
+} from "@mui/material";
 import { context } from "./state";
 import PersonIcon from "@mui/icons-material/Person";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
@@ -416,7 +431,7 @@ export const Profile = observer(() => {
               Settings
             </Typography>
             <CustomFormControlLabel
-            width={120}
+              width={120}
               control={
                 <Switch
                   checked={state.user.settings.darkMode}
@@ -426,7 +441,7 @@ export const Profile = observer(() => {
                 />
               }
               label="Dark Mode"
-              />
+            />
             <FormControl fullWidth variant="outlined" margin="normal">
               <InputLabel>Language</InputLabel>
               <Select

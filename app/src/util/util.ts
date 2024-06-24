@@ -130,16 +130,16 @@ export function normalizeZero(value: number): number {
 
 export function createGradient(color1: string, color2: string) {
   try {
-  const colorObj1 = Color(color1);
-  const colorObj2 = Color(color2);
-  const gradient = `linear-gradient(90deg, ${color1} 0%, ${color2} 100%)`;
+    const colorObj1 = Color(color1);
+    const colorObj2 = Color(color2);
+    const gradient = `linear-gradient(90deg, ${color1} 0%, ${color2} 100%)`;
 
-  return {
-    main: gradient,
-    light: `linear-gradient(90deg, ${colorObj1.lighten(0.2).hex()} 0%, ${colorObj2.lighten(0.2).hex()} 100%)`,
-    dark: `linear-gradient(90deg, ${colorObj1.darken(0.2).hex()} 0%, ${colorObj2.darken(0.2).hex()} 100%)`,
-    contrastText: getContrastText(color1)
-  };
+    return {
+      main: gradient,
+      light: `linear-gradient(90deg, ${colorObj1.lighten(0.2).hex()} 0%, ${colorObj2.lighten(0.2).hex()} 100%)`,
+      dark: `linear-gradient(90deg, ${colorObj1.darken(0.2).hex()} 0%, ${colorObj2.darken(0.2).hex()} 100%)`,
+      contrastText: getContrastText(color1)
+    };
   } catch (e) {
     console.error(e);
     return {
@@ -153,9 +153,9 @@ export function createGradient(color1: string, color2: string) {
 
 function getContrastText(color1: string) {
   try {
-  const color = Color(color1);
-  const luminance = color.luminosity();
-  return luminance > 0.5 ? "#000000" : "#ffffff";
+    const color = Color(color1);
+    const luminance = color.luminosity();
+    return luminance > 0.5 ? "#000000" : "#ffffff";
   } catch (e) {
     console.error(e);
     return "#000000";
