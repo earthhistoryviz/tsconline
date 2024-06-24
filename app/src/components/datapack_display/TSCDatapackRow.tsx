@@ -2,12 +2,13 @@ import { DatapackParsingPack } from "@tsconline/shared";
 import styles from "./TSCDatapackRow.module.css";
 import { useState } from "react";
 import { devSafeUrl } from "../../util";
-import { IconButton, Typography } from "@mui/material";
+import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { useNavigate } from "react-router";
 import { DatapackMenu } from "../../settings_tabs/Datapack";
 import "./SharedDatapackDisplay.css";
 import { CheckIcon, Loader } from "../TSCComponents";
+import Color from "color";
 
 type TSCDatapackRowProps = {
   name: string;
@@ -20,11 +21,19 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
   const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const theme = useTheme();
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
   return (
-    <div className={styles.rc} onClick={() => navigate(`/datapack/${encodeURIComponent(name)}`)}>
-      <div
+    <Box className={styles.rc} 
+    borderBottom="2px solid"
+    borderColor="divider"
+    onClick={() => navigate(`/datapack/${encodeURIComponent(name)}`)}>
+      <Box
         className={`${styles.cc} ${loading ? styles.loading : ""} ${value ? styles.checked : ""}`}
+        borderRight="1px solid"
+        borderLeft="1px solid"
+        borderColor="divider"
+        bgcolor={value ? Color(theme.palette.button.light).alpha(0.2).string() : "secondaryBackground.light"}
         onClick={async (e) => {
           e.stopPropagation();
           setLoading(true);
@@ -33,7 +42,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
           setLoading(false);
         }}>
         {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
-      </div>
+      </Box>
       <img className={styles.image} src={imageUrl} alt="datapack" onError={() => setImageUrl(defaultImageUrl)} />
       <div className={styles.middle}>
         <Typography className={styles.header}>{name}</Typography>
@@ -58,6 +67,6 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
           }
         />
       </div>
-    </div>
+    </Box>
   );
 };
