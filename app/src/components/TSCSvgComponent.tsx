@@ -1,4 +1,4 @@
-import React, { useEffect, useContext, useRef } from "react";
+import React, { useEffect, useContext } from "react";
 import { context } from "../state/index";
 import { observer } from "mobx-react-lite";
 
@@ -9,11 +9,11 @@ interface SVGWindow extends Window {
 
 type TSCSvgComponentProps = {
   chartContent: string;
+  svgContainerRef: React.RefObject<HTMLDivElement>;
 };
 
-export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ chartContent }) => {
+export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgContainerRef, chartContent }) => {
   const { state, actions } = useContext(context);
-  const svgContainerRef = useRef<HTMLDivElement>(null);
 
   const handleSvgEvent = (evt: MouseEvent, container: HTMLElement) => {
     const target = evt.target as HTMLElement;

@@ -34,16 +34,55 @@ import React from "react";
 import isValidFilename from "valid-filename";
 
 interface OptionsBarProps {
-  container: ReactZoomPanPinchContentRef | null;
+  transformRef: React.RefObject<ReactZoomPanPinchContentRef>;
+  svgRef: React.RefObject<HTMLDivElement>;
   step: number;
   minScale: number;
   maxScale: number;
 }
 
-export const OptionsBar: React.FC<OptionsBarProps> = observer(({ container, step, minScale, maxScale }) => {
+export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, svgRef, step, minScale, maxScale }) => {
   const { state, actions } = useContext(context);
   const theme = useTheme();
-  if (!container) return;
+
+  const container = transformRef.current;
+  const content = svgRef.current;
+  if (!container || !content) {
+    return;
+  }
+  //workaround for unexpected behavior
+  //conditions for behavior: limitToBounds = true, zoomToScroll = false
+  //after reset transformation or zoom fit, panning with touchpad jarringly misaligns chart from center
+  //this doesn't happen if chart is clicked and dragged, and this function simulates a small click and drag pan
+  //requirements for this workaround: animation time for reset or fit = 0
+  const smallPan = (element: HTMLDivElement) => {
+    const mouseDownEvent = new MouseEvent("mousedown", {
+      clientX: element.getBoundingClientRect().left,
+      clientY: element.getBoundingClientRect().top,
+      bubbles: true,
+      cancelable: true
+    });
+
+    const mouseMoveEvent = new MouseEvent("mousemove", {
+      clientX: element.getBoundingClientRect().left,
+      clientY: element.getBoundingClientRect().top + 0.5,
+      bubbles: true,
+      cancelable: true
+    });
+
+    const mouseUpEvent = new MouseEvent("mouseup", {
+      bubbles: true,
+      cancelable: true
+    });
+    // Dispatch the mousedown event to the element that has the listener
+    element.dispatchEvent(mouseDownEvent);
+
+    // For mousemove, the listener may be the parent or even the document
+    element.dispatchEvent(mouseMoveEvent);
+
+    // Dispatch mouseup to terminate the process
+    element.dispatchEvent(mouseUpEvent);
+  };
   const OptionsButton = () => {
     const [open, setOpen] = React.useState<boolean>(false);
     const handleClick = () => {
@@ -112,8 +151,9 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ container, step
       <CustomTooltip title="Reset Transformation">
         <IconButton
           onClick={() => {
-            container.setTransform(state.chartTab.midX, 0, 1);
+            container.setTransform(state.chartTab.resetMidX, 0, 1, 0);
             actions.setChartTabScale(1);
+            smallPan(content);
           }}>
           <RestartAltIcon />
         </IconButton>
@@ -125,21 +165,9 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ container, step
       <CustomTooltip title="Zoom Fit">
         <IconButton
           onClick={() => {
-            const content = document.getElementById("svg-display")?.getBoundingClientRect();
-            const wrapper = document.getElementById("chart-transform-wrapper")?.getBoundingClientRect();
-            if (!content || !wrapper) return;
-            const newScale = (wrapper.bottom - wrapper.top) / (content.bottom - content.top);
-            //scale is correct, only need to center
-            if (newScale === 1) {
-              container.centerView();
-            }
-            //scale is incorrect
-            else {
-              const wrapperMid = (wrapper.right - wrapper.left) / 2;
-              const chartOffset = ((content.right - content.left) / 2) * newScale;
-              container.setTransform(wrapperMid - chartOffset, 0, state.chartTab.zoomFitScale);
-              actions.setChartTabScale(state.chartTab.zoomFitScale);
-            }
+            container.setTransform(state.chartTab.zoomFitMidX, 0, state.chartTab.zoomFitScale, 0);
+            actions.setChartTabScale(state.chartTab.zoomFitScale);
+            smallPan(content);
           }}>
           <ZoomOutMapIcon />
         </IconButton>
@@ -277,7 +305,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ container, step
               }
             ]
           }}>
-          <IconButton onClick={() => {}}>
+          <IconButton>
             <HelpOutlineIcon />
           </IconButton>
         </Tooltip>
