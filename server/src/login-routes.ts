@@ -14,7 +14,6 @@ import { compare, hash } from "bcrypt-ts";
 import { OAuth2Client } from "google-auth-library";
 import { Email, NewUser, NewVerification, UpdatedUser } from "./types.js";
 import { sendEmail } from "./send-email.js";
-import md5 from "md5";
 import "dotenv/config";
 import { assetconfigs } from "./util.js";
 import path from "path";
@@ -24,7 +23,7 @@ import fs from "fs";
 import { SharedUser, assertSharedUser } from "@tsconline/shared";
 import { loadFileMetadata } from "./file-metadata-handler.js";
 import { readdir, rm, writeFile } from "fs/promises";
-import { checkRecaptchaToken } from "./verify.js";
+import { checkRecaptchaToken, generateToken } from "./verify.js";
 
 const emailTestRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const googleRecaptchaBotThreshold = 0.5;
@@ -247,7 +246,7 @@ export const accountRecovery = async function accountRecovery(
     if (!user) {
       throw new Error("User not found");
     }
-    const passwordToken = randomBytes(16).toString("hex") + md5(user.uuid);
+    const passwordToken = generateToken(user.uuid);
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 1);
     await deleteVerification({ userId, reason: "password" });
@@ -329,7 +328,7 @@ export const changeEmail = async function changeEmail(
     }
     if (!hashedPassword) {
       const randomPassword = randomBytes(16).toString("hex");
-      const token = randomBytes(16).toString("hex") + md5(uuid);
+      const token = generateToken(uuid);
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 1);
       const googleEmail: Email = {
@@ -362,7 +361,7 @@ export const changeEmail = async function changeEmail(
       await createVerification(newVerification);
     } else {
       await updateUser({ userId }, { email: newEmail, emailVerified: 0 });
-      const token = randomBytes(16).toString("hex") + md5(uuid);
+      const token = generateToken(uuid);
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 1);
       await deleteVerification({ userId: userId, reason: "verify" });
@@ -387,7 +386,7 @@ export const changeEmail = async function changeEmail(
       };
       await createVerification(verifyVerification);
     }
-    const token = randomBytes(16).toString("hex") + md5(uuid);
+    const token = generateToken(uuid);
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24);
     const invalidateEmail: Email = {
@@ -494,7 +493,7 @@ export const sendForgotPasswordEmail = async function sendForgotPasswordEmail(
       emailText =
         "It seems like you've attempted a password reset, but your account is set up to sign in using Google authentication. No password is associated with your account. Please sign in directly via Google. If you need further assistance, feel free to contact our support team.";
     } else {
-      token = randomBytes(16).toString("hex") + md5(uuid);
+      token = generateToken(uuid);
       emailText =
         "You have requested to reset your password. Please click on the button below within the next 15 minutes to complete the process. If you did not request a password reset, please ignore this email or contact support for more help.";
       const expiresAt = new Date();
@@ -560,7 +559,7 @@ export const resendVerificationEmail = async function resendVerificationEmail(
       emailText =
         "Welcome back to TSC Online! It looks like your email has already been verified. If you did not request this email or suspect any unusual activity, please contact our support team.";
     } else {
-      token = randomBytes(16).toString("hex") + md5(uuid);
+      token = generateToken(uuid);
       emailText = `Thank you for joining TSC Online! Please verify your email to start exploring our features by clicking the link below. This link will expire in 1 hour for your security.`;
       await deleteVerification({ userId, reason: "verify" });
       const expiresAt = new Date();
@@ -624,7 +623,7 @@ export const verifyEmail = async function verifyEmail(
     request.session.set("uuid", uuid);
     reply.send({ message: "Email verified" });
   } catch (error) {
-    console.error("Error during confirmation:", error);
+    console.error("Error during verifying email:", error);
     reply.status(500).send({ error: "Unknown Error" });
   }
 };
@@ -669,7 +668,7 @@ export const signup = async function signup(
       throw new Error("User not inserted");
     }
     const { userId, uuid } = insertedUser;
-    const token = randomBytes(16).toString("hex") + md5(uuid);
+    const token = generateToken(uuid);
     const authEmail: Email = {
       from: process.env.EMAIL_USER,
       to: email,
