@@ -102,7 +102,8 @@ export const Legend = observer(() => {
   ];
   const menuStyle = {
     color: theme.palette.primary.main,
-    backgroundColor: theme.palette.menuDropdown.main
+    backgroundColor: theme.palette.secondaryBackground.main,
+    border: `1px solid ${theme.palette.divider}`
   };
 
   return (

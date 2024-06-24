@@ -181,7 +181,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
             </>
           )}
         </TransformWrapper>
-        <Drawer className="drawer" variant="persistent" anchor="left" open={state.mapState.isLegendOpen} >
+        <Drawer className="drawer" variant="persistent" anchor="left" open={state.mapState.isLegendOpen}>
           <DrawerHeader style={{ height: LegendHeaderHeight }}>
             <ColoredIconButton
               onClick={() => {

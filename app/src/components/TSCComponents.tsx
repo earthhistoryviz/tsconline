@@ -115,7 +115,7 @@ export const BorderedIcon = ({
 };
 export const TSCSubMenu = styled(SubMenu)(({ theme }) => ({
   "&.szh-menu__submenu > .szh-menu__item--hover": {
-    backgroundColor: theme.palette.menuDropdown.light
+    backgroundColor: theme.palette.secondaryBackground.main
   },
   "&.szh-menu__submenu > .szh-menu__item--checked": {
     color: theme.palette.primary.main
@@ -123,7 +123,7 @@ export const TSCSubMenu = styled(SubMenu)(({ theme }) => ({
 }));
 export const TSCMenuItem = styled(MenuItem)(({ theme }) => ({
   "&.szh-menu__item--hover": {
-    backgroundColor: theme.palette.menuDropdown.light
+    backgroundColor: theme.palette.secondaryBackground.main
   },
   "&.szh-menu__item--checked": {
     color: theme.palette.primary.main
@@ -149,7 +149,7 @@ export const CustomFormControlLabel = styled(FormControlLabel)(
   })
 );
 export const TagButton: React.FC<ButtonProps> = ({ ...props }) => {
-  return <Button {...props} className={styles.tagbutton}/>;
+  return <Button {...props} className={styles.tagbutton} />;
 };
 
 export const NotImplemented: React.FC = () => {

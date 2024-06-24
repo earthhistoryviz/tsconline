@@ -5,9 +5,8 @@ import { observer } from "mobx-react-lite";
 import CloseIcon from "@mui/icons-material/Close";
 import { CustomDivider, StyledScrollbar } from "./TSCComponents";
 import "./TSCError.css";
-import Lottie from "./TSCLottie";
-import ErrorIcon from "../assets/icons/error-icon.json";
 import Color from "color";
+import ErrorIcon from "@mui/icons-material/Error";
 import { ErrorCodes } from "../util/error-codes";
 
 type TSCErrorProps = {
@@ -42,23 +41,23 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ errorContext, messa
       <div
         className="alert"
         style={{
-          backgroundColor: theme.palette.errorAlert.main,
-          border: `1px solid ${Color(theme.palette.errorText.main).lighten(0.4)}`
+          backgroundColor: Color(theme.palette.error.light).lighten(0.1).string(),
+          border: `1px solid ${Color(theme.palette.error.light).darken(0.4)}`
         }}>
         <div className="alert-header">
           <div className="alert-title">
-            <Lottie animationData={ErrorIcon} autoplay width={20} height={20} />
-            <Typography color={theme.palette.errorText.main} className="error-title" variant="h2">
+            <ErrorIcon className="error-icon-alert" sx={{ color: theme.palette.error.dark }} />
+            <Typography className="error-title" variant="h2" color="error.dark">
               Error {countDisplay}
             </Typography>
           </div>
           <IconButton className="alert-close" onClick={handleCloseError} size="large">
-            <CloseIcon className="alert-close-icon" style={{ color: theme.palette.errorText.main }} />
+            <CloseIcon className="alert-close-icon" style={{ color: theme.palette.error.dark }} />
           </IconButton>
         </div>
         <CustomDivider key={`${index} error`} />
         <StyledScrollbar className="alert-text">
-          <Typography className="alert-info-text" color={theme.palette.errorText.main}>
+          <Typography className="alert-info-text" color="error.dark">
             {message}
           </Typography>
         </StyledScrollbar>
