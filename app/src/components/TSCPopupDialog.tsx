@@ -1,5 +1,5 @@
 import React from "react";
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import { TSCButton } from "./TSCButton";
 import "./TSCPopupDialog.css";
 
@@ -24,11 +24,11 @@ export const TSCPopupDialog: React.FC<TSCPopupDialogProps> = ({ open, title, mes
         <DialogContentText className="yes-no-dialog-description">{message}</DialogContentText>
       </DialogContent>
       <DialogActions className="dialog-actions">
-        <TSCButton className="tsc-button" onClick={onYes}>
-          Yes
-        </TSCButton>
-        <TSCButton className="tsc-button" onClick={onNo}>
+        <Button variant="outlined" className="tsc-button" onClick={onNo}>
           No
+        </Button>
+        <TSCButton buttonType="gradient" className="tsc-button" onClick={onYes}>
+          Yes
         </TSCButton>
       </DialogActions>
     </Dialog>

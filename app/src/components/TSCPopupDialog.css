@@ -1,7 +1,3 @@
-.tsc-dialog .MuiDialog-paper {
-  border: 2px solid black;
-}
-
 .tsc-dialog .MuiDialog-paper .MuiDialogContent-root {
   padding-bottom: 8px;
 }
@@ -14,7 +10,6 @@
 .tsc-dialog .MuiDialogActions-root .tsc-button {
   min-width: 120px;
   margin: 0px 6px 8px 8px;
-  border: 2px solid black;
   max-height: 35px;
 }
 

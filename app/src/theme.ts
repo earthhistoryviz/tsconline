@@ -251,6 +251,11 @@ darkTheme = createTheme(darkTheme, {
     }
   },
   components: {
+    MuiButton: {
+      defaultProps: {
+        disableRipple: true
+      },
+    },
     MuiIconButton: {
       styleOverrides: {
         root: {
@@ -271,7 +276,21 @@ darkTheme = createTheme(darkTheme, {
           color: darkTheme.palette.text.primary
         }
       }
-    }
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: darkTheme.palette.backgroundColor.main
+        }
+      }
+    },
+    MuiSvgIcon: {
+      styleOverrides: {
+        root: {
+          color: darkTheme.palette.icon.main
+        }
+      }
+    },
   }
 });
 darkTheme = createTheme(darkTheme, {
