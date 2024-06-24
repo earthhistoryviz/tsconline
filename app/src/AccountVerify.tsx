@@ -168,11 +168,11 @@ export const AccountVerify: React.FC = () => {
   return (
     <Container component="main" maxWidth="xs">
       <Box className="login-box">
-        <Avatar sx={{ "& .MuiSvgIcon-root": { mr: 0 }, bgcolor: theme.palette.navbar.dark }}>
+        <Avatar sx={{ bgcolor: theme.palette.backgroundColor.main }}>
           <LockOutlinedIcon sx={{ color: theme.palette.selection.main }} />
         </Avatar>
         {loading && <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />}
-        <Typography component="h1" variant="h5" sx={{ mt: 6, textAlign: "center" }}>
+        <Typography component="h1" variant="h5" sx={{ textAlign: "center" }}>
           {message}
           {message.includes("Thank you!") && <br />}
           {message.includes("Thank you!") && "Redirecting..."}
