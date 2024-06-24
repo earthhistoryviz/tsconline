@@ -4,7 +4,6 @@
   border-radius: 10%;
   cursor: pointer;
   box-shadow: none;
-  outline: 1px solid lightgray;
 }
 .card:hover {
   box-shadow:
