@@ -6,7 +6,8 @@ import {
   Tooltip,
   TooltipProps,
   Typography,
-  styled
+  styled,
+  useTheme
 } from "@mui/material";
 import { SubMenu, MenuItem } from "@szhsin/react-menu";
 import Color from "color";
@@ -181,19 +182,22 @@ export const NotImplemented: React.FC = () => {
 };
 
 export const CheckIcon = () => {
+  const theme = useTheme();
   return (
     <svg width="20px" height="20px" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
       <circle
         className={styles.circle}
+        color={theme.palette.button.main}
         cx="10"
         cy="10"
         r="9"
-        fill="#6ee7b74d"
+        fill={Color(theme.palette.button.light).alpha(0.2).string()}
         stroke="currentColor"
         strokeWidth="1.5"
       />
       <path
         className={styles.check}
+        color={theme.palette.button.main}
         d="M6 10 l2.5 3 l5 -5.5"
         fill="none"
         stroke="currentColor"

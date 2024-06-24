@@ -19,7 +19,6 @@
   stroke-dashoffset: 140;
   transform-origin: center;
   animation: draw 1.5s forwards;
-  color: #285238;
 }
 @keyframes draw {
   from {
