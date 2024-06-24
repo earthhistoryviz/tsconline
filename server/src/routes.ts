@@ -132,9 +132,7 @@ export const requestDownload = async function requestDownload(
   try {
     await mkdirp(encryptedFilepathDir);
   } catch (e) {
-    console.log("e is: " + e);
     reply.status(500).send({ error: "Failed to create encrypted directory with error " + e });
-    console.log("real result should be 500 when mdkirp failed:" + reply.statusCode);
     return;
   }
 
@@ -143,7 +141,6 @@ export const requestDownload = async function requestDownload(
   } catch (e) {
     console.error(e);
     reply.status(500).send({ error: "Failed to encrypt datapacks with error " + e });
-    console.log("real result should be 500 when rje failed:" + reply.statusCode);
     return;
   }
 
@@ -161,7 +158,6 @@ export const requestDownload = async function requestDownload(
       reply.status(422).send({
         error: errormsg
       });
-      console.log("real result should be 422 :" + reply.statusCode);
       return;
     }
   } catch (e) {
