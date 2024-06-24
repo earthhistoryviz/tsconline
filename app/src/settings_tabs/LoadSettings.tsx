@@ -59,7 +59,6 @@ export default function LoadSettings() {
           <InputFileUpload
             text="Load"
             variant="text"
-            color="success"
             onChange={(e) => {
               handleClick(e);
             }}
@@ -85,7 +84,7 @@ export default function LoadSettings() {
           <DialogContentText>This will overwrite any changes you&apos;ve made!</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button color="warning" onClick={handleClose}>
+          <Button variant="outlined" onClick={handleClose}>
             Cancel
           </Button>
           <LoadButton />
