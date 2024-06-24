@@ -11,25 +11,33 @@ export const Chart = observer(() => {
   const { state, actions } = useContext(context);
   const theme = useTheme();
   const transformContainerRef = useRef<ReactZoomPanPinchContentRef>(null);
+  const svgContainerRef = useRef<HTMLDivElement>(null);
   const step = 0.1;
   const minScale = 0.1;
   const maxScale = 8;
 
   const setChartAlignmentValues = () => {
     const container = transformContainerRef.current;
-    if (!container) return;
-    const content = document.getElementById("svg-display")?.getBoundingClientRect();
-    const wrapper = document.getElementById("chart-transform-wrapper")?.getBoundingClientRect();
-    if (!content || !wrapper) return;
+    const content = svgContainerRef.current;
+    if (!container || !content) return;
 
-    const wrapperMid = (wrapper.right - wrapper.left) / 2;
-    const chartOffset = (content.right - content.left) / 2;
-    actions.setChartTabMidX(wrapperMid - chartOffset);
-    const zoomFitScaleVertical = (wrapper.bottom - wrapper.top) / (content.bottom - content.top);
-    const zoomFitScaleHorizontal = (wrapper.right - wrapper.left) / (content.right - content.left);
+    const containerRect = container.instance.wrapperComponent?.getBoundingClientRect();
+    const contentRect = content.getBoundingClientRect();
+    if (!containerRect || !contentRect) return;
 
-    if (zoomFitScaleHorizontal < zoomFitScaleVertical) actions.setChartTabZoomFitScale(zoomFitScaleHorizontal);
-    else actions.setChartTabZoomFitScale(zoomFitScaleVertical);
+    const ogY = (contentRect.bottom - contentRect.top) / container.instance.transformState.scale;
+    const ogX = (contentRect.right - contentRect.left) / container.instance.transformState.scale;
+    const zoomFitY = (containerRect.bottom - containerRect.top) / ogY;
+    const zoomFitX = (containerRect.right - containerRect.left) / ogX;
+
+    if (zoomFitY < zoomFitX) actions.setChartTabZoomFitScale(zoomFitY);
+    else actions.setChartTabZoomFitScale(zoomFitX);
+
+    actions.setChartTabZoomFitMidX(
+      (containerRect.right - containerRect.left) / 2 - (ogX * state.chartTab.zoomFitScale) / 2
+    );
+
+    actions.setChartTabResetMidX((containerRect.right - containerRect.left) / 2 - ogX / 2);
   };
 
   useEffect(() => {
@@ -38,7 +46,8 @@ export const Chart = observer(() => {
 
     setChartAlignmentValues();
 
-    container.setTransform(state.chartTab.midX, 0, state.chartTab.scale, 0);
+    actions.setChartTabScale(1);
+    container.setTransform(state.chartTab.resetMidX, 0, 1, 0);
 
     const windowResizeListenerWrapper = () => {
       setChartAlignmentValues();
@@ -80,17 +89,23 @@ export const Chart = observer(() => {
         <LoadingChart />
       ) : state.madeChart ? (
         <div id="wrapper" className="chart-and-options-bar">
-          <OptionsBar container={transformContainerRef.current} step={step} minScale={minScale} maxScale={maxScale} />
+          <OptionsBar
+            transformRef={transformContainerRef}
+            svgRef={svgContainerRef}
+            step={step}
+            minScale={minScale}
+            maxScale={maxScale}
+          />
           <div id="chart-transform-wrapper">
             <TransformWrapper
               ref={transformContainerRef}
               wheel={{ wheelDisabled: !state.chartTab.enableScrollZoom }}
               panning={{ wheelPanning: !state.chartTab.enableScrollZoom }}
-              limitToBounds={false}
+              limitToBounds={true}
               minScale={minScale}
               maxScale={maxScale}>
               <TransformComponent wrapperStyle={{ height: "84vh", width: "80vw", border: "solid" }}>
-                <TSCSvgComponent chartContent={state.chartContent} />
+                <TSCSvgComponent svgContainerRef={svgContainerRef} chartContent={state.chartContent} />
               </TransformComponent>
             </TransformWrapper>
           </div>

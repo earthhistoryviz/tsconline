@@ -32,7 +32,8 @@ export type State = {
     chartTimelineLocked: boolean;
     scale: number;
     zoomFitScale: number;
-    midX: number;
+    resetMidX: number;
+    zoomFitMidX: number;
     downloadFilename: string;
     downloadFiletype: "svg" | "pdf" | "png";
     enableScrollZoom: boolean;
@@ -102,7 +103,8 @@ export const state = observable<State>({
     chartTimelineLocked: false,
     scale: 1,
     zoomFitScale: 1,
-    midX: 0,
+    resetMidX: 0,
+    zoomFitMidX: 0,
     downloadFilename: "chart",
     downloadFiletype: "svg",
     enableScrollZoom: false

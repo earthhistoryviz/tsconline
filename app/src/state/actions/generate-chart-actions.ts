@@ -117,10 +117,10 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   generalActions.setChartLoading(true);
   generalActions.setChartHash("");
   generalActions.setChartContent("");
-
   generalActions.setChartTabScale(1);
-  generalActions.setChartTabMidX(0);
-
+  generalActions.setChartTabZoomFitScale(1);
+  generalActions.setChartTabResetMidX(0);
+  generalActions.setChartTabZoomFitMidX(0);
   let body;
   try {
     normalizeColumnProperties(state.settingsTabs.columns!);
