@@ -17,6 +17,7 @@ import { actions, context } from "./state";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { useNavigate } from "react-router";
 import { displayServerError } from "./state/actions/util-actions";
+import CookieConsent from "./CookieConsent";
 import "./Login.css";
 
 export const Login: React.FC = observer(() => {
@@ -46,6 +47,12 @@ export const Login: React.FC = observer(() => {
   const handleLogin = async (isGoogleLogin: boolean, body: Form | Credential) => {
     setLoading(true);
     try {
+      // Don't allow sign in if not accepting cookies
+      if (!state.cookieConsent) {
+        actions.pushError(ErrorCodes.COOKIE_REJECTED);
+        return;
+      }
+
       const recaptchaToken = await executeRecaptcha("login");
       if (!recaptchaToken) {
         actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
@@ -66,7 +73,7 @@ export const Login: React.FC = observer(() => {
           displayServerError(null, ErrorCodes.UNABLE_TO_LOGIN_SERVER, ErrorMessages[ErrorCodes.UNABLE_TO_LOGIN_SERVER]);
         } else {
           actions.removeAllErrors();
-          actions.pushSnackbar("Succesfully signed in", "success");
+          actions.pushSnackbar("Successfully signed in", "success");
           navigate("/");
         }
       } else {
@@ -144,6 +151,7 @@ export const Login: React.FC = observer(() => {
               name="username"
               autoComplete="username"
               autoFocus
+              disabled={!state.cookieConsent}
             />
             <TextField
               margin="normal"
@@ -154,8 +162,15 @@ export const Login: React.FC = observer(() => {
               type="password"
               id="password"
               autoComplete="current-password"
+              disabled={!state.cookieConsent}
             />
-            <TSCButton type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }} endIcon={<LoginIcon />}>
+            <TSCButton
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3, mb: 2 }}
+              endIcon={<LoginIcon />}
+              disabled={!state.cookieConsent}>
               Sign In
             </TSCButton>
             <Grid container className="grid-container">
@@ -179,17 +194,21 @@ export const Login: React.FC = observer(() => {
               </Box>
               <Box className="divider-line"></Box>
             </Box>
-            <GoogleLogin
-              onSuccess={async (credentialResponse) => {
-                const credential = credentialResponse.credential;
-                await handleLogin(true, { credential, recaptchaToken: null });
-              }}
-              onError={() => actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_SERVER)}
-              width="400px"
-            />
+            {/* GoogleLogin does not have a "disable" property */}
+            <div className={!state.cookieConsent ? "disabled-google-login" : ""}>
+              <GoogleLogin
+                onSuccess={async (credentialResponse) => {
+                  const credential = credentialResponse.credential;
+                  await handleLogin(true, { credential, recaptchaToken: null });
+                }}
+                onError={() => actions.pushError(ErrorCodes.UNABLE_TO_LOGIN_SERVER)}
+                width="400px"
+              />
+            </div>
           </Box>
         </>
       )}
+      <CookieConsent persistent={true} />
     </Box>
   );
 });

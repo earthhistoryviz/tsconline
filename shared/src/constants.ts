@@ -1,6 +1,8 @@
 import {
   ChartSettingsInfoTSC,
+  ChronSettings,
   ColumnBasicInfoTSC,
+  DataMiningSettings,
   EventColumnInfoTSC,
   EventSettings,
   FontsInfo,
@@ -14,13 +16,20 @@ import {
   ZoneColumnInfoTSC
 } from "./index";
 
+export const defaultDataMiningSettings: DataMiningSettings = {
+  windowSize: 2,
+  stepSize: 1
+};
+
 export const defaultEventSettings: EventSettings = {
   type: "events",
   rangeSort: "first occurrence",
   frequency: null,
-  stepSize: 1,
-  windowSize: 2,
-  isDataMiningColumn: false
+  ...defaultDataMiningSettings
+};
+export const defaultChronSettings: ChronSettings = {
+  dataMiningChronDataType: null,
+  ...defaultDataMiningSettings
 };
 
 export const allFontOptions: ValidFontOptions[] = [
@@ -362,10 +371,9 @@ export const defaultPointSettings: PointSettings = {
   pointShape: "rect",
   minX: Number.MAX_SAFE_INTEGER,
   maxX: Number.MIN_SAFE_INTEGER,
-  windowSize: 2,
-  stepSize: 1,
   dataMiningPointDataType: null,
-  isDataMiningColumn: false
+  isDataMiningColumn: false,
+  ...defaultDataMiningSettings
 };
 
 export const defaultPoint: Partial<Point> = {

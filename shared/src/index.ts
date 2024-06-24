@@ -43,6 +43,7 @@ export type DatapackParsingPack = {
   date?: string;
   verticalScale?: number;
   isUserDatapack: boolean;
+  image: string;
 };
 
 export type IndexResponse = {
@@ -215,7 +216,13 @@ export type SubInfo =
   | SubSequenceInfo
   | SubTransectInfo;
 
-export type ColumnSpecificSettings = EventSettings | PointSettings;
+export type ColumnSpecificSettings = EventSettings | PointSettings | ChronSettings;
+
+export type DataMiningChronDataType = "Frequency";
+
+export type ChronSettings = {
+  dataMiningChronDataType: DataMiningChronDataType | null;
+} & DataMiningSettings;
 
 export type DataMiningPointDataType =
   | "Frequency"
@@ -247,12 +254,12 @@ export type PointSettings = {
   minX: number;
   maxX: number;
   dataMiningPointDataType: DataMiningPointDataType | null;
+  isDataMiningColumn: boolean;
 } & DataMiningSettings;
 
 export type DataMiningSettings = {
   windowSize: number;
   stepSize: number;
-  isDataMiningColumn: boolean;
 };
 
 export type ColumnInfo = {
@@ -544,12 +551,13 @@ export function assertDataMiningSettings(o: any): asserts o is DataMiningSetting
   if (!o || typeof o !== "object") throw new Error("DataMiningSettings must be a non-null object");
   if (typeof o.windowSize !== "number") throwError("DataMiningSettings", "windowSize", "number", o.windowSize);
   if (typeof o.stepSize !== "number") throwError("DataMiningSettings", "stepSize", "number", o.stepSize);
-  if (typeof o.isDataMiningColumn !== "boolean")
-    throwError("DataMiningSettings", "isDataMiningColumn", "boolean", o.isDataMiningColumn);
 }
 
 export function isDataMiningPointDataType(o: any): o is DataMiningPointDataType {
   return /^(Frequency|Maximum Value|Minimum Value|Average Value|Rate of Change|Overlay)$/.test(o);
+}
+export function isDataMiningChronDataType(o: any): o is DataMiningChronDataType {
+  return /^(Frequency)$/.test(o);
 }
 
 export function assertEventSettings(o: any): asserts o is EventSettings {
@@ -651,8 +659,11 @@ export function assertSubSequenceInfo(o: any): asserts o is SubSequenceInfo {
 
 export function assertChron(o: any): asserts o is Chron {
   if (!o || typeof o !== "object") throw new Error("Chron must be a non-null object");
-  if (!Array.isArray(o.subChronInfo)) throwError("Chron", "subChronInfo", "array", o.subChronInfo);
-  for (const subChron of o.subChronInfo) {
+  assertSubChronInfoArray(o.subChronInfoArray);
+}
+export function assertSubChronInfoArray(o: any): asserts o is SubChronInfo[] {
+  if (!Array.isArray(o)) throw new Error("SubChronInfoArray must be an array");
+  for (const subChron of o) {
     assertSubChronInfo(subChron);
   }
 }
@@ -837,6 +848,7 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
     throwError("DatapackParsingPack", "baseAge", "number", o.baseAge);
   if (typeof o.isUserDatapack !== "boolean")
     throwError("DatapackParingPack", "isUserDatapack", "boolean", o.isUserDatapack);
+  if (typeof o.image !== "string") throwError("DatapackParsingPack", "image", "string", o.image);
   assertColumnInfo(o.columnInfo);
 }
 export function assertDatapackIndex(o: any): asserts o is DatapackIndex {
@@ -1063,6 +1075,9 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
     case "Point":
       assertPointSettings(o);
       break;
+    case "Chron":
+      assertChronSettings(o);
+      break;
     default:
       throw new Error(
         "ColumnSpecificSettings must be an object of a valid column type. Found value of " +
@@ -1284,6 +1299,12 @@ export function assertSuccessfulServerResponse(o: any): asserts o is SuccessfulS
 export function assertSVGStatus(o: any): asserts o is SVGStatus {
   if (!o || typeof o !== "object") throw new Error(`SVGStatus must be a non-null object`);
   if (typeof o.ready !== "boolean") throw new Error(`SVGStatus must have a 'ready' boolean property`);
+}
+
+export function assertChronSettings(o: any): asserts o is ChronSettings {
+  if (o.dataMiningChronDataType != null && !isDataMiningChronDataType(o.dataMiningChronDataType))
+    throwError("ChronSettings", "dataMiningChronType", "DataMiningChronDataType", o.dataMiningChronDataType);
+  assertDataMiningSettings(o);
 }
 
 /**

@@ -43,11 +43,13 @@ export enum ErrorCodes {
   INCORRECT_ENCRYPTION_HEADER = "INCORRET_ENCRYPTION_HEADER",
   TOO_MANY_REQUESTS = "TOO_MANY_REQUESTS",
   RECAPTCHA_FAILED = "RECAPTCHA_FAILED",
+  COOKIE_REJECTED = "COOKIE_REJECTED",
   UNRECOGNIZED_IMAGE_FILE = "UNRECOGNIZED_IMAGE_FILE",
   UPLOAD_PROFILE_PICTURE_FAILED = "UPLOAD_PROFILE_PICTURE_FAILED",
   UNABLE_TO_CHANGE_USERNAME = "UNABLE_TO_CHANGE_USERNAME",
   UNABLE_TO_DELETE_PROFILE = "UNABLE_TO_DELETE_PROFILE",
-  INCORRECT_PASSWORD = "INCORRECT_PASSWORD"
+  INCORRECT_PASSWORD = "INCORRECT_PASSWORD",
+  UNABLE_TO_READ_FILE_OR_EMPTY_FILE = "UNABLE_TO_READ_FILE_OR_EMPTY_FILE"
 }
 
 export const ErrorMessages = {
@@ -104,9 +106,11 @@ export const ErrorMessages = {
   [ErrorCodes.INCORRECT_ENCRYPTION_HEADER]: "Unable to encrypt the file, please try again later.",
   [ErrorCodes.TOO_MANY_REQUESTS]: "You have made too many requests. Please try again later.",
   [ErrorCodes.RECAPTCHA_FAILED]: "Recaptcha failed. Please try again.",
+  [ErrorCodes.COOKIE_REJECTED]: "You must accept cookies to sign in.",
   [ErrorCodes.UNRECOGNIZED_IMAGE_FILE]: "Unrecognized image extension. Please upload a valid image file.",
   [ErrorCodes.UPLOAD_PROFILE_PICTURE_FAILED]: "Unable to upload profile picture. Please try again later.",
   [ErrorCodes.UNABLE_TO_CHANGE_USERNAME]: "Unable to change username. Please try again later.",
   [ErrorCodes.UNABLE_TO_DELETE_PROFILE]: "Unable to delete profile. Please try again later.",
-  [ErrorCodes.INCORRECT_PASSWORD]: "Incorrect password. Please try again."
+  [ErrorCodes.INCORRECT_PASSWORD]: "Incorrect password. Please try again.",
+  [ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE]: "Unable to read file or file is empty. Please try again."
 };

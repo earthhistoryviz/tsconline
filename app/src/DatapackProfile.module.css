@@ -1,0 +1,152 @@
+.adjcontainer {
+  display: flex;
+  justify-content: center;
+}
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  width: 90%;
+}
+.header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
+  padding: 16px;
+  gap: 20px;
+}
+.tabs {
+  margin-left: 2vw;
+}
+.di {
+  width: 350px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 15%;
+  flex-shrink: 0;
+}
+.ht {
+  font-size: 2rem;
+  font-weight: 700;
+  -webkit-line-clamp: 3;
+  display: -webkit-box;
+  text-wrap: wrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+  word-break: break-all;
+  line-height: 1.2em;
+}
+
+.back {
+  flex-shrink: 0;
+  width: 35px;
+  height: 35px;
+}
+
+.icon {
+  width: inherit;
+  height: inherit;
+}
+.divider {
+  width: 100%;
+}
+.about {
+  padding: 16px;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.ah {
+  flex: 3 1 0;
+}
+
+.additional {
+  flex: 1 1 0;
+  flex-shrink: 0;
+  border-left: 1px solid #e0e0e0;
+  padding: 16px;
+}
+.ai {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 5px;
+}
+.aih {
+  font-size: 1.1rem;
+  font-weight: 600;
+  white-space: nowrap;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.dt {
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.description {
+  font-size: 1.1rem;
+}
+
+.tags {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  flex-wrap: wrap;
+  max-width: 170px;
+}
+
+.dwc {
+  width: 100%;
+  display: flex;
+  border-radius: 20px;
+  border: 1px solid gray;
+  padding: 8px;
+  background-color: #f0f1f2;
+  box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+  margin: 8px;
+  align-items: center;
+}
+
+.dwi {
+  color: transparent;
+  stroke: black;
+  margin: 10px;
+}
+
+.number {
+  background-color: rgb(255, 111, 111);
+  color: white;
+  font-size: 10px;
+  min-width: 16px;
+  padding: 2px 7px;
+  text-align: center;
+  border-radius: 10px;
+  display: inline-block;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.3);
+  margin-left: 5px;
+  transform: scale(0.9);
+}
+
+.wtc {
+  position: flex;
+  align-items: center;
+  justify-content: center;
+}
+@media (max-width: 590px) {
+  .di {
+    width: 200px;
+    height: 100px;
+  }
+}
+@media (max-width: 500px) {
+  .di {
+    display: none;
+  }
+}

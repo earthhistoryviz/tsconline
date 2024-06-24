@@ -1,14 +1,14 @@
 import { IconButton, TextField, Typography } from "@mui/material";
 import { useContext, useState } from "react";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { InputFileUpload } from "./TSCFileUpload";
-import { context } from "../state";
+import { InputFileUpload } from "../TSCFileUpload";
+import { context } from "../../state";
 import "./TSCDatapackUploadForm.css";
-import { TSCButton } from "./TSCButton";
-import { ErrorCodes } from "../util/error-codes";
+import { TSCButton } from "../TSCButton";
+import { ErrorCodes } from "../../util/error-codes";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import { CustomDivider } from "./TSCComponents";
+import { CustomDivider } from "../TSCComponents";
 
 type TSCDatapackUploadFormProps = {
   close: () => void;

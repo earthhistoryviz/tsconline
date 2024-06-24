@@ -1,8 +1,10 @@
 import { action, observable } from "mobx";
 import { state } from "../state";
 import {
+  ChronSettings,
   ColumnInfo,
   ColumnInfoTSC,
+  DataMiningChronDataType,
   DataMiningPointDataType,
   DataMiningSettings,
   EventFrequency,
@@ -10,15 +12,18 @@ import {
   PointSettings,
   RGB,
   ValidFontOptions,
+  assertChronSettings,
   assertEventColumnInfoTSC,
   assertEventSettings,
   assertPointColumnInfoTSC,
   assertPointSettings,
+  assertSubChronInfoArray,
   assertSubEventInfoArray,
   assertSubPointInfoArray,
   calculateAutoScale,
   convertPointTypeToPointShape,
   defaultPointSettings,
+  isDataMiningChronDataType,
   isDataMiningPointDataType,
   isEventFrequency
 } from "@tsconline/shared";
@@ -113,45 +118,50 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
  * moves any rows in the column that's not in the settings file to the bottom (same as jar)
  */
 
-export const applyRowOrder = action("applyRowOrder", (column: ColumnInfo | undefined, settings: ColumnInfoTSC) => {
-  if (!column) return;
-  //needed since number of children in column and settings file could be different
-  let columnIndex = 0;
-  for (const settingsChild of settings.children) {
-    if (columnIndex === column.children.length) break;
+export const applyRowOrder = action(
+  "applyRowOrder",
+  async (column: ColumnInfo | undefined, settings: ColumnInfoTSC, counter = { count: 0 }) => {
+    if (!column) return;
+    //needed since number of children in column and settings file could be different
+    let columnIndex = 0;
+    for (const settingsChild of settings.children) {
+      await yieldControl(counter, 30);
+      if (columnIndex === column.children.length) break;
 
-    let childName = extractName(settingsChild._id);
-    //for manually changed columns (facies, chron, etc.)
-    if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
-      childName = extractName(settings._id) + " " + childName;
+      let childName = extractName(settingsChild._id);
+      //for manually changed columns (facies, chron, etc.)
+      if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
+        childName = extractName(settings._id) + " " + childName;
+      }
+      //for chart titles with different units
+      else if (!column.parent) {
+        if (state.settingsTabs.columnHashMap.get(altUnitNamePrefix + childName))
+          childName = altUnitNamePrefix + childName;
+      }
+      let indexOfMatch = -1;
+      //column doesn't exist in the childrens of loaded column, so skip
+      if ((indexOfMatch = column.children.slice(columnIndex).findIndex((child) => child.name === childName)) === -1) {
+        continue;
+      }
+      indexOfMatch += columnIndex;
+      //place matched column into correct position
+      if (indexOfMatch != columnIndex) {
+        [column.children[columnIndex], column.children[indexOfMatch]] = [
+          column.children[indexOfMatch],
+          column.children[columnIndex]
+        ];
+      }
+      await applyRowOrder(column.children[columnIndex], settingsChild, counter);
+      columnIndex++;
     }
-    //for chart titles with different units
-    else if (!column.parent) {
-      if (state.settingsTabs.columnHashMap.get(altUnitNamePrefix + childName))
-        childName = altUnitNamePrefix + childName;
-    }
-    let indexOfMatch = -1;
-    //column doesn't exist in the childrens of loaded column, so skip
-    if ((indexOfMatch = column.children.slice(columnIndex).findIndex((child) => child.name === childName)) === -1) {
-      continue;
-    }
-    indexOfMatch += columnIndex;
-    //place matched column into correct position
-    if (indexOfMatch != columnIndex) {
-      [column.children[columnIndex], column.children[indexOfMatch]] = [
-        column.children[indexOfMatch],
-        column.children[columnIndex]
-      ];
-    }
-    applyRowOrder(column.children[columnIndex], settingsChild);
-    columnIndex++;
   }
-});
+);
 
-export const initializeColumnHashMap = action((columnInfo: ColumnInfo) => {
+export const initializeColumnHashMap = action(async (columnInfo: ColumnInfo, counter = { count: 0 }) => {
+  await yieldControl(counter, 30);
   state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
   for (const childColumn of columnInfo.children) {
-    initializeColumnHashMap(childColumn);
+    await initializeColumnHashMap(childColumn, counter);
   }
 });
 
@@ -179,6 +189,10 @@ export const toggleSettingsTabColumn = action((column: ColumnInfo) => {
 });
 export const setEventColumnSettings = action((eventSettings: EventSettings, newSettings: Partial<EventSettings>) => {
   Object.assign(eventSettings, newSettings);
+});
+
+export const setChronColumnSettings = action((chronSettings: ChronSettings, newSettings: Partial<ChronSettings>) => {
+  Object.assign(chronSettings, newSettings);
 });
 
 export const setDataMiningSettings = action(
@@ -262,92 +276,180 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
   }
 });
 
-export const addDataMiningColumn = action((column: ColumnInfo, type: EventFrequency | DataMiningPointDataType) => {
-  const dataMiningColumnName = type + " for " + column.name;
-  if (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") {
-    console.log("WARNING: tried to add a data mining column to a column that is not an event or point column");
-    return;
-  }
-  if (!column.parent) {
-    console.log("WARNING: tried to add a data mining column to a column with no parent");
-    return;
-  }
-  const parent = state.settingsTabs.columnHashMap.get(column.parent);
-  if (!parent) {
-    console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
-    return;
-  }
-  const index = parent.children.findIndex((child) => child.name === column.name);
-  if (index === -1) {
-    console.log("WARNING: ", column.name, "not found in parent's children when attempting to add data mining column");
-    return;
-  }
-  let windowStats: WindowStats[] = [];
-  switch (column.columnDisplayType) {
-    case "Event":
-      assertEventSettings(column.columnSpecificSettings);
-      assertSubEventInfoArray(column.subInfo);
-      if (!isEventFrequency(type)) {
-        console.log("WARNING: unknown event frequency associated with an event", type);
-        return;
-      }
-      windowStats = computeWindowStatistics(
-        column.subInfo
-          .filter((subEvent) => {
-            if (type === "Combined Events") return true;
-            else return subEvent.subEventType === type;
-          })
-          .map((subEvent) => subEvent.age),
-        column.columnSpecificSettings.windowSize,
-        "frequency"
+export const addDataMiningColumn = action(
+  (column: ColumnInfo, type: EventFrequency | DataMiningPointDataType | DataMiningChronDataType) => {
+    if (
+      column.columnDisplayType !== "Event" &&
+      column.columnDisplayType !== "Point" &&
+      column.columnDisplayType !== "Chron"
+    ) {
+      console.log(
+        "WARNING: tried to add a data mining column to a column that is not an event, chron, or point column"
       );
-      break;
-    case "Point":
-      assertPointSettings(column.columnSpecificSettings);
-      assertSubPointInfoArray(column.subInfo);
-      if (!isDataMiningPointDataType(type)) {
-        console.log("WARNING: unknown data mining type associated with a point", type);
-        return;
-      }
-      windowStats = computeWindowStatisticsForDataPoints(
-        column.subInfo.map((subPoint) => {
-          return { age: subPoint.age, value: subPoint.xVal };
-        }),
-        column.columnSpecificSettings.windowSize,
-        convertDataMiningPointDataTypeToDataMiningStatisticApproach(type)
-      );
-      break;
-    default:
-      console.log("WARNING: unknown column display type", column.columnDisplayType);
       return;
-  }
-  const { min, max } = findRangeOfWindowStats(windowStats);
-  const { lowerRange, upperRange, scaleStep, scaleStart } = calculateAutoScale(min, max);
-  const dataMiningColumn: ColumnInfo = observable({
-    ...cloneDeep(column),
-    name: dataMiningColumnName,
-    editName: dataMiningColumnName,
-    columnDisplayType: "Point",
-    rgb: {
-      r: 255,
-      g: 255,
-      b: 255
-    },
-    columnSpecificSettings: {
-      ...cloneDeep(defaultPointSettings),
-      minX: min,
-      maxX: max,
-      // TODO change these to auto scale
-      lowerRange,
-      upperRange,
-      scaleStep,
-      scaleStart,
-      isDataMiningColumn: true
     }
-  });
-  parent.children.splice(index + 1, 0, dataMiningColumn);
-  state.settingsTabs.columnHashMap.set(dataMiningColumnName, dataMiningColumn);
-});
+    if (!column.parent) {
+      console.log("WARNING: tried to add a data mining column to a column with no parent");
+      return;
+    }
+    const parent = state.settingsTabs.columnHashMap.get(column.parent);
+    if (!parent) {
+      console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
+      return;
+    }
+    const index = parent.children.findIndex((child) => child.name === column.name);
+    if (index === -1) {
+      console.log("WARNING: ", column.name, "not found in parent's children when attempting to add data mining column");
+      return;
+    }
+    const dataMiningColumnName = `${type} for ${column.columnDisplayType === "Chron" ? parent.name : column.name}`;
+    let fill: RGB = cloneDeep(defaultPointSettings.fill);
+    let windowStats: WindowStats[] = [];
+    switch (column.columnDisplayType) {
+      case "Event":
+        assertEventSettings(column.columnSpecificSettings);
+        assertSubEventInfoArray(column.subInfo);
+        if (!isEventFrequency(type)) {
+          console.log("WARNING: unknown event frequency associated with an event", type);
+          return;
+        }
+        windowStats = computeWindowStatistics(
+          column.subInfo
+            .filter((subEvent) => {
+              if (type === "Combined Events") return true;
+              else return subEvent.subEventType === type;
+            })
+            .map((subEvent) => subEvent.age),
+          column.columnSpecificSettings.windowSize,
+          "frequency"
+        );
+        switch (type) {
+          case "FAD":
+            fill = {
+              r: 0,
+              g: 255,
+              b: 0
+            };
+            break;
+          case "LAD":
+            fill = {
+              r: 255,
+              g: 0,
+              b: 0
+            };
+            break;
+          case "Combined Events":
+            fill = {
+              r: 0,
+              g: 0,
+              b: 255
+            };
+        }
+        break;
+      case "Point":
+        assertPointSettings(column.columnSpecificSettings);
+        assertSubPointInfoArray(column.subInfo);
+        if (!isDataMiningPointDataType(type)) {
+          console.log("WARNING: unknown data mining type associated with a point", type);
+          return;
+        }
+        windowStats = computeWindowStatisticsForDataPoints(
+          column.subInfo.map((subPoint) => {
+            return { age: subPoint.age, value: subPoint.xVal };
+          }),
+          column.columnSpecificSettings.windowSize,
+          convertDataMiningPointDataTypeToDataMiningStatisticApproach(type)
+        );
+        switch (type) {
+          case "Frequency":
+            fill = {
+              r: 255,
+              g: 0,
+              b: 0
+            };
+            break;
+          case "Minimum Value":
+            fill = {
+              r: 0,
+              g: 255,
+              b: 0
+            };
+            break;
+          case "Maximum Value":
+            fill = {
+              r: 0,
+              g: 0,
+              b: 255
+            };
+            break;
+          case "Average Value":
+            fill = {
+              r: 0,
+              g: 200,
+              b: 255
+            };
+            break;
+          case "Rate of Change":
+            fill = {
+              r: 0,
+              g: 255,
+              b: 255
+            };
+            break;
+        }
+        break;
+      case "Chron":
+        assertChronSettings(column.columnSpecificSettings);
+        assertSubChronInfoArray(column.subInfo);
+        if (!isDataMiningChronDataType(type)) {
+          console.log("WARNING: unknown data mining type associated with a chron column", type);
+          return;
+        }
+        fill = {
+          r: 247,
+          g: 202,
+          b: 201
+        };
+        windowStats = computeWindowStatistics(
+          column.subInfo.map((subChron) => subChron.age),
+          column.columnSpecificSettings.windowSize,
+          "frequency"
+        );
+        break;
+      default:
+        console.log("WARNING: unknown column display type", column.columnDisplayType);
+        return;
+    }
+    const { min, max } = findRangeOfWindowStats(windowStats);
+    const { lowerRange, upperRange, scaleStep, scaleStart } = calculateAutoScale(min, max);
+    const dataMiningColumn: ColumnInfo = observable({
+      ...cloneDeep(column),
+      name: dataMiningColumnName,
+      editName: dataMiningColumnName,
+      enableTitle: true,
+      columnDisplayType: "Point",
+      rgb: {
+        r: 255,
+        g: 255,
+        b: 255
+      },
+      columnSpecificSettings: {
+        ...cloneDeep(defaultPointSettings),
+        minX: min,
+        maxX: max,
+        fill,
+        // TODO change these to auto scale
+        lowerRange,
+        upperRange,
+        scaleStep,
+        scaleStart,
+        isDataMiningColumn: true
+      }
+    });
+    parent.children.splice(index + 1, 0, dataMiningColumn);
+    state.settingsTabs.columnHashMap.set(dataMiningColumnName, dataMiningColumn);
+  }
+);
 
 export const removeDataMiningColumn = action((column: ColumnInfo, type: string) => {
   const columnToRemove = type + " for " + column.name;
