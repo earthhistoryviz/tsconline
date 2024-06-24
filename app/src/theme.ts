@@ -284,13 +284,6 @@ darkTheme = createTheme(darkTheme, {
         }
       }
     },
-    MuiSvgIcon: {
-      styleOverrides: {
-        root: {
-          color: darkTheme.palette.icon.main
-        }
-      }
-    },
     MuiSelect: {
       styleOverrides: {
         icon: {
