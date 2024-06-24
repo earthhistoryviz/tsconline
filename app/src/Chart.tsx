@@ -39,8 +39,7 @@ export const Chart = observer(function () {
           </TransformWrapper>
         </div>
       ) : (
-        <div
-          className="loading-container">
+        <div className="loading-container">
           <Typography className="loading"> You have not made a chart yet </Typography>
         </div>
       )}

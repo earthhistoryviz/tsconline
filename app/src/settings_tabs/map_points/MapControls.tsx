@@ -1,14 +1,7 @@
 import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "../../state";
-import {
-  BorderedIcon,
-  CustomDivider,
-  Lottie,
-  TSCInputAdornment,
-  TSCTextField,
-  TypographyText
-} from "../../components";
+import { BorderedIcon, CustomDivider, Lottie, TSCInputAdornment, TSCTextField, TypographyText } from "../../components";
 import { Box, Button, IconButton, Slider, TextFieldProps } from "@mui/material";
 import mapPointsAnimationData from "../../assets/icons/map-points.json";
 import CategoryIcon from "@mui/icons-material/Category";
