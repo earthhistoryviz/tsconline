@@ -17,15 +17,14 @@
 
 .loading {
   font-size: 30px;
-  color: black;
   padding: 8px;
   border-radius: 4px;
   line-height: 1;
   grid-row: 3;
+  font-weight: 600;
 }
 .loading-sub {
   font-size: 14px;
-  color: black;
   padding: 8px;
   border-radius: 4px;
   line-height: 1;
