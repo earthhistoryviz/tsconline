@@ -121,7 +121,7 @@ export const Legend = observer(() => {
         autoHide={false}
         style={{
           height: `calc(100vh - ${LegendHeaderHeight})`,
-          backgroundColor: theme.palette.navbar.main
+          backgroundColor: theme.palette.secondaryBackground.main
         }}>
         <CustomHeader className="legend-header" color="primary">
           Map Points
