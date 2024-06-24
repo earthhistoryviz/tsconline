@@ -186,7 +186,6 @@ export async function checkHeader(filepath: string) {
   let isEncrypted;
 
   try {
-
     const fileStream = createReadStream(filepath);
 
     const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
