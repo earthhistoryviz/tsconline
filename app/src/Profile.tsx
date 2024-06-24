@@ -1,26 +1,13 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
-import Container from "@mui/material/Container";
-import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
-import Box from "@mui/material/Box";
-import Grid from "@mui/material/Grid";
-import TextField from "@mui/material/TextField";
-import Avatar from "@mui/material/Avatar";
+import { Switch, Typography, Grid, Container, Paper, Box, TextField, Avatar, FormControl, InputLabel, Select, MenuItem, Button, Badge } from "@mui/material";
 import { context } from "./state";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
 import PersonIcon from "@mui/icons-material/Person";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { fetcher, loadRecaptcha, removeRecaptcha, executeRecaptcha } from "./util";
 import { displayServerError } from "./state/actions/util-actions";
-import { Lottie, TSCButton, TSCPopupDialog, Switch } from "./components";
+import { Lottie, TSCButton, TSCPopupDialog, CustomFormControlLabel } from "./components";
 import loader from "./assets/icons/loading.json";
 import { useNavigate } from "react-router";
-import Button from "@mui/material/Button";
-import Badge from "@mui/material/Badge";
 import { observer } from "mobx-react-lite";
 import EditIcon from "@mui/icons-material/Edit";
 import "./Profile.css";
@@ -428,12 +415,18 @@ export const Profile = observer(() => {
             <Typography variant="h5" component="h2" gutterBottom>
               Settings
             </Typography>
-            <Switch
-              isOn={state.user.settings.darkMode}
-              size="medium"
-              handleToggle={() => actions.setDarkMode(!state.user.settings.darkMode)}
+            <CustomFormControlLabel
+            width={120}
+              control={
+                <Switch
+                  checked={state.user.settings.darkMode}
+                  size="medium"
+                  color="default"
+                  onChange={() => actions.setDarkMode(!state.user.settings.darkMode)}
+                />
+              }
               label="Dark Mode"
-            />
+              />
             <FormControl fullWidth variant="outlined" margin="normal">
               <InputLabel>Language</InputLabel>
               <Select

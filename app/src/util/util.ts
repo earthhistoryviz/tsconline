@@ -1,4 +1,5 @@
 import { RGB } from "@tsconline/shared";
+import Color from "color";
 
 /**
  * Returns if the datapoint range (minDataAge, maxDataAge) is inside the user selected range of (userTopAge, userBaseAge)
@@ -125,4 +126,38 @@ export function convertTSCColorToRGB(text: string): RGB {
  */
 export function normalizeZero(value: number): number {
   return value === 0 ? 0 : value;
+}
+
+export function createGradient(color1: string, color2: string) {
+  try {
+  const colorObj1 = Color(color1);
+  const colorObj2 = Color(color2);
+  const gradient = `linear-gradient(90deg, ${color1} 0%, ${color2} 100%)`;
+
+  return {
+    main: gradient,
+    light: `linear-gradient(90deg, ${colorObj1.lighten(0.2).hex()} 0%, ${colorObj2.lighten(0.2).hex()} 100%)`,
+    dark: `linear-gradient(90deg, ${colorObj1.darken(0.2).hex()} 0%, ${colorObj2.darken(0.2).hex()} 100%)`,
+    contrastText: getContrastText(color1)
+  };
+  } catch (e) {
+    console.error(e);
+    return {
+      main: color1,
+      light: color1,
+      dark: color1,
+      contrastText: getContrastText(color1)
+    };
+  }
+}
+
+function getContrastText(color1: string) {
+  try {
+  const color = Color(color1);
+  const luminance = color.luminosity();
+  return luminance > 0.5 ? "#000000" : "#ffffff";
+  } catch (e) {
+    console.error(e);
+    return "#000000";
+  }
 }

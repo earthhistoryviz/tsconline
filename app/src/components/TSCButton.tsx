@@ -1,17 +1,19 @@
 import { Button, ButtonProps } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import { createGradient } from "../util/util";
 
 type TSCButtonProps = {
   buttonType?: "primary" | "secondary" | "gradient";
 } & ButtonProps;
 export const TSCButton: React.FC<TSCButtonProps> = ({ buttonType = "primary", ...props }) => {
   const theme = useTheme();
+  const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
   const color =
     buttonType === "primary"
       ? theme.palette.button
       : buttonType === "secondary"
         ? theme.palette.secondaryButton
-        : theme.palette.mainGradient;
+        : gradient;
   return (
     <Button
       {...props}

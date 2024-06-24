@@ -11,7 +11,8 @@ declare module "@mui/material/styles" {
     navbar: Palette["primary"];
     selection: Palette["primary"];
     settings: Palette["primary"];
-    mainGradient: Palette["primary"];
+    mainGradientLeft: Palette["primary"];
+    mainGradientRight: Palette["primary"];
     on: Palette["primary"];
     off: Palette["primary"];
     disabled: Palette["primary"];
@@ -38,7 +39,8 @@ declare module "@mui/material/styles" {
     navbar?: PaletteOptions["primary"];
     selection?: PaletteOptions["primary"];
     settings?: PaletteOptions["primary"];
-    mainGradient?: PaletteOptions["primary"];
+    mainGradientLeft?: PaletteOptions["primary"];
+    mainGradientRight?: PaletteOptions["primary"];
     on?: PaletteOptions["primary"];
     off?: PaletteOptions["primary"];
     disabled?: PaletteOptions["primary"];
@@ -89,25 +91,6 @@ let baseTheme = createTheme({
 });
 const disabled = "#393f40";
 
-function createGradient(color1: string, color2: string) {
-  const colorObj1 = Color(color1);
-  const colorObj2 = Color(color2);
-
-  const gradient = `linear-gradient(90deg, ${color1} 0%, ${color2} 100%)`;
-
-  return {
-    main: gradient,
-    light: `linear-gradient(90deg, ${colorObj1.lighten(0.2).hex()} 0%, ${colorObj2.lighten(0.2).hex()} 100%)`,
-    dark: `linear-gradient(90deg, ${colorObj1.darken(0.2).hex()} 0%, ${colorObj2.darken(0.2).hex()} 100%)`,
-    contrastText: getContrastText(color1)
-  };
-}
-
-function getContrastText(color1: string) {
-  const color = Color(color1);
-  const luminance = color.luminosity();
-  return luminance > 0.5 ? "#000000" : "#ffffff";
-}
 
 let darkTheme = createTheme(baseTheme, {
   palette: {
@@ -136,9 +119,18 @@ let darkTheme = createTheme(baseTheme, {
       },
       name: "secondaryButton"
     }),
-    mainGradient: {
-      ...createGradient("#F17F19", "#F25B28")
-    },
+    mainGradientLeft: baseTheme.palette.augmentColor({
+      color: {
+        main: "#F17F19"
+      },
+      name: "mainGradientLeft"
+    }),
+    mainGradientRight: baseTheme.palette.augmentColor({
+      color: {
+        main: "#F25B28"
+      },
+      name: "mainGradientRight"
+    }),
     secondaryBackground: baseTheme.palette.augmentColor({
       color: {
         main: "#1A2029"
