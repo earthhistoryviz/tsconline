@@ -12,10 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0 
+          fetch-depth: 0
 
       - name: Fetch specific branch
-        run: git fetch origin main:main 
+        run: git fetch origin main:main
 
       - name: Check for disallowed files and directories
         run: |
@@ -28,7 +28,7 @@ jobs:
           if git diff --name-only main...HEAD | grep 'file_metadata.json'; then
             echo "file_metadata.json detected, please remove" >> disallowed_files.txt
           fi   
-          git diff --name-only main...HEAD | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store|db)$' | grep -v '^server/__tests__/__data__/.*\.txt$' >> disallowed_files.txt || true
+          git diff --name-only main...HEAD | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store|db)$' | grep -v '^server/__tests__/__data__/(encryption-test-keys/)?.*\.dpk$' | grep -v '^server/__tests__/__data__/.*\.txt$' >> disallowed_files.txt || true
           if git diff --name-only main...HEAD | grep -E 'app/dist/|server/dist/|shared/dist'; then
             echo "dist folder detected, please remove" >> disallowed_files.txt
           fi
@@ -110,7 +110,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Install Dependencies
         run: yarn install
@@ -152,7 +152,7 @@ jobs:
               echo "test_failed=true" >> $GITHUB_ENV
               fi
         continue-on-error: true
-      
+
       - name: Report Test Errors
         if: env.test_failed == 'true'
         uses: actions/github-script@v5
