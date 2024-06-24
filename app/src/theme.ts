@@ -57,6 +57,11 @@ declare module "@mui/material/styles" {
     icon?: PaletteOptions["primary"];
   }
 }
+declare module "@mui/material/Button" {
+  interface ButtonPropsColorOverrides {
+    button: true;
+  }
+}
 declare module "@mui/material/IconButton" {
   interface IconButtonPropsColorOverrides {
     icon: true;
