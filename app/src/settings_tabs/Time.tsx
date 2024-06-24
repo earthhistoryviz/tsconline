@@ -45,6 +45,7 @@ export const Time = observer(function Time() {
             className="SelectTop"
             inputProps={{ id: "top-age-selector" }}
             name="top-age-stage-name"
+            MenuProps={{ sx: { maxHeight: "400px"}}}
             label="Top Age/Stage Name"
             disabled={disabled}
             value={state.settings.timeSettings[units].topStageKey}
@@ -85,7 +86,9 @@ export const Time = observer(function Time() {
             inputProps={{ id: "base-age-selector" }}
             disabled={disabled}
             name="base-age-stage-name"
+            label="Base Age/Stage Name"
             value={state.settings.timeSettings[units].baseStageKey}
+            MenuProps={{ sx: { maxHeight: "400px"}}}
             onChange={(event) => {
               const age = state.geologicalBaseStageAges.find((item) => item.key === event.target.value);
               if (!age) return;

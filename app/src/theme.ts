@@ -290,7 +290,21 @@ darkTheme = createTheme(darkTheme, {
           color: darkTheme.palette.icon.main
         }
       }
-    }
+    },
+    MuiSelect: {
+      styleOverrides: {
+        icon: {
+          color: darkTheme.palette.icon.main
+        }
+      }
+    },
+    MuiMenu: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: darkTheme.palette.secondaryBackground.main
+        }
+      }
+    },
   }
 });
 darkTheme = createTheme(darkTheme, {
