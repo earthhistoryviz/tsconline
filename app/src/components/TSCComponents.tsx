@@ -27,10 +27,6 @@ export const ColoredIconButton = styled(IconButton)(({ theme }) => ({
   color: theme.palette.primary.main
 }));
 
-export const ColoredDiv = styled("div")(({ theme }) => ({
-  backgroundColor: theme.palette.navbar.main
-}));
-
 export const CustomHeader = styled(Typography)(({ theme }) => ({
   "&::before": {
     backgroundColor: theme.palette.icon.main,
@@ -75,7 +71,7 @@ export const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   padding: theme.spacing(0, 1),
-  backgroundColor: theme.palette.navbar.main
+  backgroundColor: theme.palette.backgroundColor.main
 }));
 export const StyledScrollbar = styled(SimpleBar)(({ theme, color }) => {
   const backgroundColor = color || theme.palette.scrollbar.main;

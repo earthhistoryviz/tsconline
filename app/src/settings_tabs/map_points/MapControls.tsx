@@ -3,14 +3,13 @@ import { useContext } from "react";
 import { context } from "../../state";
 import {
   BorderedIcon,
-  ColoredDiv,
   CustomDivider,
   Lottie,
   TSCInputAdornment,
   TSCTextField,
   TypographyText
 } from "../../components";
-import { Button, IconButton, Slider, TextFieldProps } from "@mui/material";
+import { Box, Button, IconButton, Slider, TextFieldProps } from "@mui/material";
 import mapPointsAnimationData from "../../assets/icons/map-points.json";
 import CategoryIcon from "@mui/icons-material/Category";
 import MapSharpIcon from "@mui/icons-material/MapSharp";
@@ -44,7 +43,7 @@ export const FaciesControls = observer(() => {
   const { state, actions } = useContext(context);
   const dotSizeRange = { min: 1, max: 20 };
   return (
-    <ColoredDiv className="facies-buttons">
+    <Box className="facies-buttons" bgcolor="backgroundColor.main">
       <div className="dot-controls">
         <TypographyText className="dot-controls-title"> Dot Size </TypographyText>
         <div className="slider-container">
@@ -103,7 +102,7 @@ export const FaciesControls = observer(() => {
           />
         </div>
       </div>
-    </ColoredDiv>
+    </Box>
   );
 });
 type HeaderBarProps = {
@@ -116,7 +115,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
     height: `${isFacies ? FaciesHeaderHeight : NormHeaderHeight}`
   };
   return (
-    <ColoredDiv className="header-bar" style={headerStyle}>
+    <Box className="header-bar" style={headerStyle} bgcolor="backgroundColor.main">
       <div className="header-title-container">
         <IconButton className="move-maps-button" onClick={actions.goBackInMapHistory} size="large">
           <BorderedIcon component={ArrowBackIcon} className="icon-button" />
@@ -155,6 +154,6 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
           <FaciesControls />
         </>
       )}
-    </ColoredDiv>
+    </Box>
   );
 };
