@@ -96,7 +96,13 @@ let baseTheme = createTheme({
 });
 const disabled = "#393f40";
 
-let darkTheme = createTheme(baseTheme, {
+export let lightTheme = createTheme(baseTheme, {
+  palette: {
+    mode: "light"
+  }
+})
+
+export let darkTheme = createTheme(baseTheme, {
   palette: {
     mode: "dark",
     backgroundColor: baseTheme.palette.augmentColor({
@@ -147,6 +153,12 @@ let darkTheme = createTheme(baseTheme, {
       },
       name: "icon"
     }),
+    selection: baseTheme.palette.augmentColor({
+      color: {
+        main: "#FF9900"
+      },
+      name: "selection"
+    }),
     action: {
       disabled,
       disabledBackground: disabled,
@@ -163,10 +175,6 @@ let darkTheme = createTheme(baseTheme, {
     },
     navbar: {
       main: "#16262E"
-    },
-    selection: {
-      light: "#B1ADE2",
-      main: "#FF9900"
     },
     on: {
       main: "#2ecc71"
@@ -307,5 +315,3 @@ darkTheme = createTheme(darkTheme, {
     }
   }
 });
-
-export default darkTheme;
