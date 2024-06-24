@@ -1,0 +1,34 @@
+.cookie-button-grouping {
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.cookie-consent-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+}
+
+@media screen and (max-width: 673px) {
+    .cookie-consent-container .MuiTypography-root {
+        font-size: 0.8rem; 
+    }
+} 
+@media screen and (max-width: 440px) {
+    .cookie-button-grouping {
+        flex-direction: column;
+    }
+    .accept-cookies-button {
+        order: 0;
+    }
+    .reject-cookies-button {
+        order: 1;
+    }
+}
