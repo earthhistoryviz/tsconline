@@ -16,3 +16,4 @@ export * from "./TSCComponents";
 export { default as Lottie } from "./TSCLottie";
 export { Accordion, ColumnContainer } from "./TSCColumns";
 export * from "./TSCGenericSettings";
+export { default as Switch } from "./TSCSwitch";

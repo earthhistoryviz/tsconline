@@ -175,24 +175,18 @@ export const Login: React.FC = observer(() => {
             </TSCButton>
             <Grid container className="grid-container">
               <Grid item xs>
-                <Link href="/forgot-password">
-                  Forgot password?
-                </Link>
+                <Link href="/forgot-password">Forgot password?</Link>
               </Grid>
               <Grid item>
-                <Link href="/signup">
-                  Don&apos;t have an account? Sign Up
-                </Link>
+                <Link href="/signup">Don&apos;t have an account? Sign Up</Link>
               </Grid>
             </Grid>
             <Box className="divider-box">
-              <CustomDivider className="divider-line"/>
+              <CustomDivider className="divider-line" />
               <Box sx={{ px: 2 }}>
-                <Typography variant="caption">
-                  or
-                </Typography>
+                <Typography variant="caption">or</Typography>
               </Box>
-              <CustomDivider className="divider-line"/>
+              <CustomDivider className="divider-line" />
             </Box>
             {/* GoogleLogin does not have a "disable" property */}
             <div className={!state.cookieConsent ? "disabled-google-login" : ""}>

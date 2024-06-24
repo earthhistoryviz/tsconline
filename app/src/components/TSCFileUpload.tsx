@@ -27,7 +27,12 @@ export const InputFileUpload: React.FC<InputFileUploadProps> = ({
   multiple = false
 }) => {
   return (
-    <TSCButton component="label" variant={variant} startIcon={startIcon} onClick={resetHandler} sx={{ bgcolor: "button.main"}}>
+    <TSCButton
+      component="label"
+      variant={variant}
+      startIcon={startIcon}
+      onClick={resetHandler}
+      sx={{ bgcolor: "button.main" }}>
       {text}
       <VisuallyHiddenInput type="file" multiple={multiple} onChange={onChange} />
     </TSCButton>

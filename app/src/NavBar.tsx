@@ -93,7 +93,11 @@ export const NavBar = observer(function Navbar() {
               anchorRef={settingsRef}
               className="settings-sub-menu"
               align="center"
-              menuStyle={{ color: theme.palette.text.primary, backgroundColor: theme.palette.backgroundColor.main, border: `1px solid ${theme.palette.divider}`}}
+              menuStyle={{
+                color: theme.palette.text.primary,
+                backgroundColor: theme.palette.backgroundColor.main,
+                border: `1px solid ${theme.palette.divider}`
+              }}
               gap={-2}
               onClose={() => settingsMenuToggle(false)}>
               {Object.entries(SettingsMenuOptionLabels).map(([key, label]) => (
@@ -106,7 +110,7 @@ export const NavBar = observer(function Navbar() {
                     navigate("/settings");
                     settingsMenuToggle(false);
                   }}>
-                    <Typography>{label}</Typography>
+                  <Typography>{label}</Typography>
                 </TSCMenuItem>
               ))}
             </ControlledMenu>
