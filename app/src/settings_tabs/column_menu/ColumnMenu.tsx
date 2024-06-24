@@ -52,7 +52,7 @@ export const ColumnMenu = observer(() => {
   // Set the tabs based on the column type
   useEffect(() => {
     setTabValue(0);
-    if (column && column.columnDisplayType === "Event") {
+    if (column && (column.columnDisplayType === "Event" || column.columnDisplayType === "Chron")) {
       setTabs(["General", "Font", "Data Mining"]);
     } else if (column && column.columnDisplayType === "Point") {
       setTabs(["General", "Font", "Curve Drawing", "Data Mining"]);
@@ -77,7 +77,7 @@ export const ColumnMenu = observer(() => {
           onChange={(index) => setTabValue(index)}
           orientation="vertical-right"
           width={90}
-          tabs={tabs}
+          tabs={tabs.map((val) => ({ id: val, tab: val }))}
         />
         <div className="column-menu-content">{column && <ColumnContent tab={tabs[tabValue]} column={column} />}</div>
       </div>

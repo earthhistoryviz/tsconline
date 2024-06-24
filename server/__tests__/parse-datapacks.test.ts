@@ -21,71 +21,7 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
       return { lowerRange: min, upperRange: max, scaleStep: 0.18 };
     }),
     allFontOptions: ["Column Header", "Popup Body"],
-    defaultFontsInfo: { font: "Arial" },
-    defaultEventSettings: { type: "events", rangeSort: "first occurrence" },
-    defaultPoint: {
-      subPointInfo: [],
-      lowerRange: 0,
-      upperRange: 0,
-      smoothed: true,
-      drawLine: false,
-      pointShape: "rect",
-      drawFill: true,
-      fill: {
-        r: 64,
-        g: 233,
-        b: 191
-      },
-      minX: Number.MAX_SAFE_INTEGER,
-      maxX: Number.MIN_SAFE_INTEGER,
-      scaleStep: 0
-    },
-    defaultPointSettings: {
-      drawLine: true,
-      lineColor: {
-        r: 0,
-        g: 0,
-        b: 0
-      },
-      smoothed: true,
-      drawFill: true,
-      fill: {
-        r: 64,
-        g: 233,
-        b: 191
-      },
-      lowerRange: 0,
-      upperRange: 0,
-      drawScale: true,
-      drawBackgroundGradient: false,
-      backgroundGradientStart: {
-        r: 0,
-        g: 0,
-        b: 0
-      },
-      backgroundGradientEnd: {
-        r: 255,
-        g: 255,
-        b: 255
-      },
-      drawCurveGradient: false,
-      curveGradientStart: {
-        r: 0,
-        g: 0,
-        b: 0
-      },
-      curveGradientEnd: {
-        r: 255,
-        g: 255,
-        b: 255
-      },
-      flipScale: false,
-      scaleStart: 0,
-      scaleStep: 0,
-      pointShape: "rect",
-      minX: Number.MAX_SAFE_INTEGER,
-      maxX: Number.MIN_SAFE_INTEGER
-    }
+    defaultFontsInfo: { font: "Arial" }
   };
 });
 import {
@@ -107,6 +43,8 @@ import { readFileSync } from "fs";
 import { ColumnInfo, Point } from "@tsconline/shared";
 const key = JSON.parse(readFileSync("server/__tests__/__data__/column-keys.json").toString());
 
+vi.spyOn(console, "log").mockImplementation(() => {});
+vi.spyOn(console, "error").mockImplementation(() => {});
 describe("general parse-datapacks tests", () => {
   /**
    * Parses the general Africa Bight map pack

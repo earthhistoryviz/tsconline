@@ -1,0 +1,76 @@
+.add-circle {
+  box-sizing: border-box;
+  position: relative;
+  display: block;
+  width: 22px;
+  height: 22px;
+  border: 2px solid;
+  color: rgb(153, 153, 153);
+  transform: scale(var(--ggs, 0.8));
+  border-radius: 22px;
+  transition: 0.3s scale;
+}
+
+.add-circle::after,
+.add-circle::before {
+  content: "";
+  display: block;
+  box-sizing: border-box;
+  position: absolute;
+  width: 10px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 5px;
+  top: 8px;
+  left: 4px;
+}
+
+.add-circle::after {
+  width: 2px;
+  height: 10px;
+  top: 4px;
+  left: 8px;
+}
+
+.add-circle:hover {
+  color: rgba(0, 0, 0, 0.733);
+  scale: 1.1;
+}
+
+.general-loader {
+  width: 22px;
+  aspect-ratio: 2;
+  --_g: no-repeat radial-gradient(circle closest-side, #4b4b4b 90%, #0000);
+  background:
+    var(--_g) 0% 50%,
+    var(--_g) 50% 50%,
+    var(--_g) 100% 50%;
+  background-size: calc(100% / 3) 50%;
+  animation: l3 1s infinite linear;
+}
+@keyframes l3 {
+  20% {
+    background-position:
+      0% 0%,
+      50% 50%,
+      100% 50%;
+  }
+  40% {
+    background-position:
+      0% 100%,
+      50% 0%,
+      100% 50%;
+  }
+  60% {
+    background-position:
+      0% 50%,
+      50% 100%,
+      100% 0%;
+  }
+  80% {
+    background-position:
+      0% 50%,
+      50% 50%,
+      100% 100%;
+  }
+}

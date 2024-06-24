@@ -17,6 +17,7 @@ import AaronPic from "./assets/aboutPictures/AaronAult.jpg";
 import TobyPic from "./assets/aboutPictures/TobyOnyekwere.png";
 import RebeccaPic from "./assets/aboutPictures/RebeccaRupp.png";
 import JenniferPic from "./assets/aboutPictures/JenniferYu.jpg";
+import KevinChang from "./assets/aboutPictures/KevinChang.jpg";
 
 const HeaderContainer = styled("div")(({ theme }) => ({
   display: "flex",
@@ -67,7 +68,7 @@ const members = [
     name: "Sejal Kumar",
     role: "Member",
     homeTown: "Canton, MI",
-    timeWorked: "2023 - Present",
+    timeWorked: "2023 - 2024",
     proPic: SejalPic
   },
   {
@@ -81,7 +82,7 @@ const members = [
     name: "Leyton Bostre",
     role: "Member",
     homeTown: "Long Beach, CA",
-    timeWorked: "2024 - Present",
+    timeWorked: "2024",
     proPic: LeytonPic
   },
   {
@@ -95,14 +96,14 @@ const members = [
     name: "Toby Onyekwere",
     role: "Member",
     homeTown: "Nigeria",
-    timeWorked: "2024 - Present",
+    timeWorked: "2024",
     proPic: TobyPic
   },
   {
     name: "Rohan Nachnani",
     role: "Member",
     homeTown: "Bangalore, India",
-    timeWorked: "2024 - Present",
+    timeWorked: "2024",
     proPic: RohanPic
   },
   {
@@ -116,8 +117,15 @@ const members = [
     name: "Jennifer Yu",
     role: "Member",
     homeTown: "West Lafayette, IN",
-    timeWorked: "2024 - Present",
+    timeWorked: "2024",
     proPic: JenniferPic
+  },
+  {
+    name: "Kevin Chang",
+    role: "Member",
+    homeTown: "West Lafayette, IN",
+    timeWorked: "2024 - Present",
+    proPic: KevinChang
   }
 ];
 
