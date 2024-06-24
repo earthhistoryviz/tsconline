@@ -254,7 +254,7 @@ darkTheme = createTheme(darkTheme, {
     MuiButton: {
       defaultProps: {
         disableRipple: true
-      },
+      }
     },
     MuiIconButton: {
       styleOverrides: {
@@ -290,7 +290,7 @@ darkTheme = createTheme(darkTheme, {
           color: darkTheme.palette.icon.main
         }
       }
-    },
+    }
   }
 });
 darkTheme = createTheme(darkTheme, {

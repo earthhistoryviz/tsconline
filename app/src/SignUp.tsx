@@ -147,9 +147,7 @@ export const SignUp: React.FC = observer(() => {
               </TSCButton>
               <Grid container justifyContent="flex-end">
                 <Grid item>
-                  <Link href="/login">
-                    Already have an account? Sign in
-                  </Link>
+                  <Link href="/login">Already have an account? Sign in</Link>
                 </Grid>
               </Grid>
             </Box>

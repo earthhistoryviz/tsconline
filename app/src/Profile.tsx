@@ -7,7 +7,6 @@ import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import Avatar from "@mui/material/Avatar";
 import { context } from "./state";
-import Switch from "@mui/material/Switch";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
@@ -17,7 +16,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { fetcher, loadRecaptcha, removeRecaptcha, executeRecaptcha } from "./util";
 import { displayServerError } from "./state/actions/util-actions";
-import { Lottie, TSCButton, TSCPopupDialog } from "./components";
+import { Lottie, TSCButton, TSCPopupDialog, Switch } from "./components";
 import loader from "./assets/icons/loading.json";
 import { useNavigate } from "react-router";
 import Button from "@mui/material/Button";
@@ -268,7 +267,7 @@ export const Profile = observer(() => {
       </Box>
       <Grid container spacing={2} direction="column">
         <Grid item xs={12} md={6}>
-          <Paper elevation={3} sx={{ padding: 2 }}>
+          <Paper elevation={3} sx={{ padding: 2, bgcolor: "secondaryBackground.main" }}>
             <Typography variant="h5" component="h2" gutterBottom>
               Profile Information
             </Typography>
@@ -425,19 +424,14 @@ export const Profile = observer(() => {
           </Paper>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Paper elevation={3} sx={{ padding: 2 }}>
+          <Paper elevation={3} sx={{ padding: 2, bgcolor: "secondaryBackground.main" }}>
             <Typography variant="h5" component="h2" gutterBottom>
               Settings
             </Typography>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={state.user.settings.darkMode}
-                  onChange={() => actions.setDarkMode(!state.user.settings.darkMode)}
-                  name="darkMode"
-                  color="primary"
-                />
-              }
+            <Switch
+              isOn={state.user.settings.darkMode}
+              size="medium"
+              handleToggle={() => actions.setDarkMode(!state.user.settings.darkMode)}
               label="Dark Mode"
             />
             <FormControl fullWidth variant="outlined" margin="normal">
