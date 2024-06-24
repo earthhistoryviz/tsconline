@@ -120,7 +120,8 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   generalActions.setChartTabScale(1);
   generalActions.setChartTabZoomFitScale(1);
   generalActions.setChartTabResetMidX(0);
-  generalActions.setChartTabZoomFitMidX(0);
+  generalActions.setChartTabZoomFitMidCoord(0);
+  generalActions.setChartTabZoomFitMidCoordIsX(true);
   let body;
   try {
     normalizeColumnProperties(state.settingsTabs.columns!);

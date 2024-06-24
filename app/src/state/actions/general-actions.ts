@@ -1078,8 +1078,11 @@ export const setChartTabZoomFitScale = action("setChartTabZoomFitScale", (newval
 export const setChartTabResetMidX = action("setChartTabResetMidX", (newval: number) => {
   state.chartTab.resetMidX = newval;
 });
-export const setChartTabZoomFitMidX = action("setChartTabZoomFitMidX", (newval: number) => {
-  state.chartTab.zoomFitMidX = newval;
+export const setChartTabZoomFitMidCoord = action("setChartTabZoomFitMidCoord", (newval: number) => {
+  state.chartTab.zoomFitMidCoord = newval;
+});
+export const setChartTabZoomFitMidCoordIsX = action("setChartTabZoomFitMidCoordIsX", (newval: boolean) => {
+  state.chartTab.zoomFitMidCoordIsX = newval;
 });
 export const setChartTabDownloadFilename = action("setChartTabDownloadFilename", (newval: string) => {
   state.chartTab.downloadFilename = newval;

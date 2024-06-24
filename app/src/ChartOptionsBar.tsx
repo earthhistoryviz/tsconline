@@ -53,35 +53,11 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
   //workaround for unexpected behavior
   //conditions for behavior: limitToBounds = true, zoomToScroll = false
   //after reset transformation or zoom fit, panning with touchpad jarringly misaligns chart from center
-  //this doesn't happen if chart is clicked and dragged, and this function simulates a small click and drag pan
+  //this doesn't happen if I do the function below, which changes the zoom scroll function of the transform wrapper
   //requirements for this workaround: animation time for reset or fit = 0
-  const smallPan = (element: HTMLDivElement) => {
-    const mouseDownEvent = new MouseEvent("mousedown", {
-      clientX: element.getBoundingClientRect().left,
-      clientY: element.getBoundingClientRect().top,
-      bubbles: true,
-      cancelable: true
-    });
-
-    const mouseMoveEvent = new MouseEvent("mousemove", {
-      clientX: element.getBoundingClientRect().left,
-      clientY: element.getBoundingClientRect().top + 0.5,
-      bubbles: true,
-      cancelable: true
-    });
-
-    const mouseUpEvent = new MouseEvent("mouseup", {
-      bubbles: true,
-      cancelable: true
-    });
-    // Dispatch the mousedown event to the element that has the listener
-    element.dispatchEvent(mouseDownEvent);
-
-    // For mousemove, the listener may be the parent or even the document
-    element.dispatchEvent(mouseMoveEvent);
-
-    // Dispatch mouseup to terminate the process
-    element.dispatchEvent(mouseUpEvent);
+  const smallUpdate = () => {
+    actions.setChartTabEnableScrollZoom(!state.chartTab.enableScrollZoom);
+    actions.setChartTabEnableScrollZoom(!state.chartTab.enableScrollZoom);
   };
   const OptionsButton = () => {
     const [open, setOpen] = React.useState<boolean>(false);
@@ -151,9 +127,10 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
       <CustomTooltip title="Reset Transformation">
         <IconButton
           onClick={() => {
+            console.log(state.chartTab.resetMidX);
             container.setTransform(state.chartTab.resetMidX, 0, 1, 0);
             actions.setChartTabScale(1);
-            smallPan(content);
+            smallUpdate();
           }}>
           <RestartAltIcon />
         </IconButton>
@@ -165,9 +142,13 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
       <CustomTooltip title="Zoom Fit">
         <IconButton
           onClick={() => {
-            container.setTransform(state.chartTab.zoomFitMidX, 0, state.chartTab.zoomFitScale, 0);
+            if (state.chartTab.zoomFitMidCoordIsX) {
+              container.setTransform(state.chartTab.zoomFitMidCoord, 0, state.chartTab.zoomFitScale, 0);
+            } else {
+              container.setTransform(0, state.chartTab.zoomFitMidCoord, state.chartTab.zoomFitScale, 0);
+            }
             actions.setChartTabScale(state.chartTab.zoomFitScale);
-            smallPan(content);
+            smallUpdate();
           }}>
           <ZoomOutMapIcon />
         </IconButton>
@@ -305,7 +286,10 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
               }
             ]
           }}>
-          <IconButton>
+          <IconButton
+            onClick={() => {
+              console.log(content.getBoundingClientRect());
+            }}>
             <HelpOutlineIcon />
           </IconButton>
         </Tooltip>
