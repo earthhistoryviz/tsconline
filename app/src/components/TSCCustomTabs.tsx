@@ -25,7 +25,6 @@ export const CustomTabs: React.FC<CustomTabsProps> = observer(
     ...props
   }) => {
     const [selectedTab, setSelectedTab] = useState<number>(value || 0);
-  const theme = useTheme();
     height = Math.min(height, 100);
     width = Math.min(width, 200);
     let tabIndicatorLengthDiff;
@@ -57,7 +56,7 @@ export const CustomTabs: React.FC<CustomTabsProps> = observer(
           <Box
             className={`tsc-tab-indicator`}
             style={orientation === "horizontal" ? horizontalOrientation : verticalOrientation}
-            sx={{ bgcolor: "button.light" }}
+            bgcolor="button.light"
           />
           {tabs.map((val, index) => (
             <Button
