@@ -561,6 +561,7 @@ describe("login-routes tests", () => {
         payload: payload
       });
 
+      expect(deleteVerificationSpy).not.toHaveBeenCalled();
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(409);
       expect(response.json().error).toBe("Email already verified");
@@ -791,6 +792,7 @@ describe("login-routes tests", () => {
         payload: payload
       });
 
+      expect(deleteVerificationSpy).not.toHaveBeenCalled();
       expect(emailSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           to: testUser.email,
