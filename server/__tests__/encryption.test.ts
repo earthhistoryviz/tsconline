@@ -1,6 +1,7 @@
 import { vi, beforeAll, afterAll, describe, beforeEach, it, expect, test } from "vitest";
 import fastify, { FastifyRequest, FastifyInstance } from "fastify";
 import fastifySecureSession from "@fastify/secure-session";
+import { exec } from "child_process";
 import { requestDownload } from "../src/routes";
 import * as runJavaEncryptModule from "../src/encryption";
 import * as utilModule from "../src/util";
@@ -98,6 +99,17 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await app.close();
+  const cmd = `rm -rf server/__tests__/__data__/encryption-test-generated-file/`;
+  exec(cmd, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`exec error: ${error}`);
+      return;
+    }
+    if (stderr) {
+      console.error(`stderr: ${stderr}`);
+    }
+    console.log(`stdout: ${stdout}`);
+  });
 });
 
 beforeEach(() => {
@@ -427,6 +439,7 @@ vi.doUnmock("../src/encryption");
 vi.doUnmock("fs/promises");
 const { runJavaEncrypt: unmockedRunJavaEncrypt } = await import("../src/encryption");
 const { readFile: unmockedReadFile, access: unmockedAccess } = await import("fs/promises");
+
 async function checkFileExists(filePath: string): Promise<boolean> {
   try {
     await unmockedAccess(filePath);
