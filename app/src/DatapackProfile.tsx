@@ -148,7 +148,7 @@ const About: React.FC = () => {
           <div className={styles.tags}>
             {tags.map((tag) => (
               <TagButton key={tag}>
-                <Typography>{tag}</Typography>
+                <Typography fontSize="0.9rem">{tag}</Typography>
               </TagButton>
             ))}
           </div>

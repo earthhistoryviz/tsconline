@@ -1,4 +1,6 @@
 import {
+  Button,
+  ButtonProps,
   Divider,
   FormControlLabel,
   IconButton,
@@ -150,8 +152,8 @@ export const CustomFormControlLabel = styled(FormControlLabel)(
     }
   })
 );
-export const TagButton: React.FC<HTMLAttributes<HTMLButtonElement>> = ({ ...props }) => {
-  return <button {...props} className={styles.tagbutton} />;
+export const TagButton: React.FC<ButtonProps> = ({ ...props }) => {
+  return <Button {...props} className={styles.tagbutton}/>;
 };
 
 export const NotImplemented: React.FC = () => {
