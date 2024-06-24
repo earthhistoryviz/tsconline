@@ -4,7 +4,7 @@ import styles from "./DatapackProfile.module.css";
 import { useContext, useState } from "react";
 import { context } from "./state";
 import { devSafeUrl } from "./util";
-import { IconButton, Typography } from "@mui/material";
+import { Box, IconButton, Typography } from "@mui/material";
 import { CustomDivider, NotImplemented, TagButton } from "./components";
 import { CustomTabs } from "./components/TSCCustomTabs";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -103,7 +103,7 @@ const DatapackProfileContent: React.FC<DatapackProfileContentProps> = ({ index }
 
 const About: React.FC = () => {
   return (
-    <div className={styles.about}>
+    <Box className={styles.about} bgcolor="secondaryBackground.main">
       <div className={styles.ah}>
         <Typography className={styles.dt}>Description</Typography>
         <Typography className={styles.description}>
@@ -154,7 +154,7 @@ const About: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </Box>
   );
 };
 
@@ -163,9 +163,9 @@ type DatapackWarningProps = {
 };
 export const DatapackWarning: React.FC<DatapackWarningProps> = ({ text }) => {
   return (
-    <div className={styles.dwc}>
+    <Box className={styles.dwc} bgcolor="secondaryBackground.light">
       <CampaignIcon className={styles.dwi} />
       <Typography>{text}</Typography>
-    </div>
+    </Box>
   );
 };
