@@ -1,4 +1,5 @@
 import { createTheme, Theme } from "@mui/material/styles";
+import Color from "color";
 declare module "@mui/material/styles" {
   interface Palette {
     backgroundColor: Palette["primary"];
@@ -18,6 +19,7 @@ declare module "@mui/material/styles" {
     warningAlert: Palette["primary"];
     icon: Palette["primary"];
     dark: Palette["primary"];
+    outline: Palette["primary"];
   }
 
   interface PaletteOptions {
@@ -38,6 +40,7 @@ declare module "@mui/material/styles" {
     warningAlert?: PaletteOptions["primary"];
     icon?: PaletteOptions["primary"];
     dark?: PaletteOptions["primary"];
+    outline?: PaletteOptions["primary"];
   }
 }
 declare module "@mui/material/Button" {
@@ -93,7 +96,7 @@ function createThemeOverrides(theme: Theme) {
         styleOverrides: {
           icon: {
             color: theme.palette.icon.main
-          }
+        }
         }
       },
       MuiMenu: {
@@ -199,7 +202,6 @@ export let lightTheme = createTheme(baseTheme, {
     text: {
       primary: "#262626",
       secondary: "#666666",
-      disabled
     },
     button: baseTheme.palette.augmentColor({
       color: {
@@ -238,11 +240,31 @@ export let lightTheme = createTheme(baseTheme, {
       name: "selection"
     }),
     action: {
-      disabled,
-      disabledBackground: disabled,
-      hover: "#ababab1a"
+    },
+    outline: {
+      main: "#676767"
     }
-  }
+  },
+  components: {
+      MuiInputLabel:{
+        styleOverrides: {
+          root: {
+            "&.Mui-focused": {
+              color: "#FF9900"
+            }
+          }
+        }
+      },
+      MuiOutlinedInput: {
+        styleOverrides: {
+          root: {
+            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#FF9900'
+            },
+          },
+        },
+      },
+    }
 });
 
 export let darkTheme = createTheme(baseTheme, {
@@ -306,6 +328,9 @@ export let darkTheme = createTheme(baseTheme, {
       disabled,
       disabledBackground: disabled,
       hover: "#ababab1a"
+    },
+    outline: {
+      main: "#adadad"
     }
   }
 });
