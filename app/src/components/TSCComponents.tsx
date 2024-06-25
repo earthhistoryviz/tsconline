@@ -5,6 +5,7 @@ import {
   FormControlLabel,
   IconButton,
   SvgIcon,
+  SvgIconProps,
   Tooltip,
   TooltipProps,
   Typography,
@@ -59,9 +60,7 @@ export const TSCInputAdornment = styled("div")(
   font-weight: 400;
   line-height: 1.5;
   grid-row: 1/3;
-  grid-column: 2;
-  color: ${theme.palette.primary.main};
-`
+  grid-column: 2;`
 );
 export const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
@@ -90,12 +89,13 @@ export const StyledScrollbar = styled(SimpleBar)(({ theme, color }) => {
 export const BorderedIcon = ({
   component,
   className,
-  strokeWidth
+  strokeWidth,
+  ...props
 }: {
   component: React.ElementType<object>;
   className?: string;
   strokeWidth?: number;
-}) => {
+} & SvgIconProps) => {
   return (
     <SvgIcon
       className={className}
@@ -106,6 +106,7 @@ export const BorderedIcon = ({
         stroke: "black",
         strokeWidth: strokeWidth || "0.5"
       }}
+      {...props}
     />
   );
 };
