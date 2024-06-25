@@ -230,6 +230,8 @@ export const Profile = observer(() => {
     }
   };
 
+  const borderStyle = { border: "2px solid", borderColor: "button.main" }
+
   return loading ? (
     <Box display="flex" justifyContent="center" alignItems="center">
       <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />
@@ -255,9 +257,9 @@ export const Profile = observer(() => {
           }
           onClick={handleBadgeClick}>
           {state.user.pictureUrl ? (
-            <Avatar src={state.user.pictureUrl} className="editable-profile-picture" />
+            <Avatar src={state.user.pictureUrl} className="editable-profile-picture" sx={borderStyle} />
           ) : (
-            <Avatar className="editable-profile-picture">
+            <Avatar className="editable-profile-picture" sx={borderStyle}>
               <PersonIcon />
             </Avatar>
           )}
