@@ -18,7 +18,7 @@ import { SettingsMenuOptionLabels, assertSettingsTabs } from "./types";
 import Color from "color";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
-  backgroundColor: Color(theme.palette.backgroundColor.dark).alpha(0.8).string(),
+  backgroundColor: Color(theme.palette.dark.main).alpha(0.9).string(),
   borderBottom: `0.5px solid ${theme.palette.divider}`,
   backgroundImage: "none",
   backdropFilter: "blur(8px)",
@@ -64,7 +64,7 @@ export const NavBar = observer(function Navbar() {
               //override the TSCTabs since it has the dark navbar
               sx={{
                 "& .MuiTab-root": {
-                  color: "text.primary",
+                  color: "dark.contrastText",
                   "&:hover:not(.Mui-selected)": {
                     color: "gray"
                   }
@@ -94,8 +94,8 @@ export const NavBar = observer(function Navbar() {
               className="settings-sub-menu"
               align="center"
               menuStyle={{
-                color: theme.palette.text.primary,
-                backgroundColor: theme.palette.backgroundColor.main,
+                color: theme.palette.dark.contrastText,
+                backgroundColor: theme.palette.dark.light,
                 border: `1px solid ${theme.palette.divider}`
               }}
               gap={-2}

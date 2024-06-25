@@ -45,6 +45,7 @@
 }
 .MuiTypography-root.map-viewer-header {
   font-size: 23px;
+  font-weight: 600;
 }
 .MuiButton-root.legend-button {
   height: 30px;
