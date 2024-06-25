@@ -53,8 +53,12 @@ export const Chart = observer(() => {
 
     setChartAlignmentValues();
 
-    actions.setChartTabScale(1);
-    container.setTransform(state.chartTab.resetMidX, 0, 1, 0);
+    if (state.chartTab.zoomFitMidCoordIsX) {
+      container.setTransform(state.chartTab.zoomFitMidCoord, 0, state.chartTab.zoomFitScale, 0);
+    } else {
+      container.setTransform(0, state.chartTab.zoomFitMidCoord, state.chartTab.zoomFitScale, 0);
+    }
+    actions.setChartTabScale(state.chartTab.zoomFitScale);
 
     const windowResizeListenerWrapper = () => {
       setChartAlignmentValues();
