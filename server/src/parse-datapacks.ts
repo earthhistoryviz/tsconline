@@ -788,7 +788,7 @@ export function processFreehand(line: string, lineCount: number, warnings: strin
     assertSubFreehandInfo(subFreehandInfo);
   } catch (e) {
     warnings.push(
-      `Line ${lineCount} resulted in error ${e} found while processing subFreehandInfo, this line will be skipped in processing`
+      `Line ${lineCount} resulted in ${e} found while processing subFreehandInfo, this line will be skipped in processing`
     );
     return null;
   }
@@ -812,7 +812,7 @@ export function processTransect(line: string, lineCount: number, warnings: strin
     assertSubTransectInfo(subTransectInfo);
   } catch (e) {
     warnings.push(
-      `Line ${lineCount} resulted in error ${e} found while processing subTransectInfo, this line will be skipped in processing`
+      `Line ${lineCount} resulted in ${e} found while processing subTransectInfo, this line will be skipped in processing`
     );
     return null;
   }
@@ -855,7 +855,7 @@ export function processSequence(line: string, lineCount: number, warnings: strin
     assertSubSequenceInfo(subSequenceInfo);
   } catch (e) {
     warnings.push(
-      `Line ${lineCount} resulted in error ${e} found while processing subSequenceInfo, this line will be skipped in processing`
+      `Line ${lineCount} resulted in ${e} found while processing subSequenceInfo, this line will be skipped in processing`
     );
     return null;
   }
@@ -902,7 +902,7 @@ export function processChron(line: string, lineCount: number, warnings: string[]
     assertSubChronInfo(subChronInfo);
   } catch (e) {
     warnings.push(
-      `Line ${lineCount} resulted in error ${e} found while processing subChronInfo, this line will be skipped in processing`
+      `Line ${lineCount} resulted in ${e} found while processing subChronInfo, this line will be skipped in processing`
     );
     return null;
   }
@@ -939,7 +939,7 @@ export function processRange(line: string, lineCount: number, warnings: string[]
   try {
     assertSubRangeInfo(subRangeInfo);
   } catch (e) {
-    warnings.push(`Line ${lineCount} resulted in error ${e}, this line will be skipped in processing`);
+    warnings.push(`Line ${lineCount} resulted in ${e}, this line will be skipped in processing`);
     return null;
   }
   return subRangeInfo;
@@ -981,7 +981,7 @@ export function processEvent(
   try {
     assertSubEventInfo(subEventInfo);
   } catch (e) {
-    warnings.push(`Line ${lineCount} resulted in error ${e}, this line will be skipped in processing`);
+    warnings.push(`Line ${lineCount} resulted in ${e}, this line will be skipped in processing`);
     return null;
   }
   return subEventInfo;
@@ -1010,7 +1010,7 @@ export function processPoint(line: string, lineCount: number, warnings: string[]
   try {
     assertSubPointInfo(subPointInfo);
   } catch (e) {
-    warnings.push(`Line ${lineCount} resulted in error ${e}, this line will be skipped in processing`);
+    warnings.push(`Line ${lineCount} resulted in ${e}, this line will be skipped in processing`);
     return null;
   }
   return subPointInfo;
@@ -1081,7 +1081,7 @@ export function processBlock(
   try {
     assertSubBlockInfo(currentSubBlockInfo);
   } catch (e) {
-    warnings.push(`Line ${lineCount} resulted in error ${e}, this line will be skipped in processing`);
+    warnings.push(`Line ${lineCount} resulted in ${e}, this line will be skipped in processing`);
     return null;
   }
   return currentSubBlockInfo;
@@ -1126,7 +1126,7 @@ export function processFacies(line: string, lineCount: number, warnings: string[
   try {
     assertSubFaciesInfo(subFaciesInfo);
   } catch (e) {
-    warnings.push(`Line ${lineCount} resulted in error ${e}, this line will be skipped in processing`);
+    warnings.push(`Line ${lineCount} resulted in ${e}, this line will be skipped in processing`);
     return null;
   }
   return subFaciesInfo;
