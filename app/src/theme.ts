@@ -111,6 +111,24 @@ function createThemeOverrides(theme: Theme) {
           }
         }
       },
+      MuiInputLabel: {
+        styleOverrides: {
+          root: {
+            "&.Mui-focused": {
+              color: "#FF9900"
+            }
+          }
+        }
+      },
+      MuiOutlinedInput: {
+        styleOverrides: {
+          root: {
+            "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+              borderColor: "#FF9900"
+            }
+          }
+        }
+      },
       MuiButton: {
         variants: [
           {
@@ -292,26 +310,6 @@ export let lightTheme = createTheme(baseTheme, {
     },
     accordionLine: {
       main: "#888888"
-    }
-  },
-  components: {
-    MuiInputLabel: {
-      styleOverrides: {
-        root: {
-          "&.Mui-focused": {
-            color: "#FF9900"
-          }
-        }
-      }
-    },
-    MuiOutlinedInput: {
-      styleOverrides: {
-        root: {
-          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-            borderColor: "#FF9900"
-          }
-        }
-      }
     }
   }
 });

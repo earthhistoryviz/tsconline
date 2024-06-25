@@ -12,7 +12,7 @@ import "./MapPoints.css";
 
 const MapListItemButton = styled(ListItemButton)(({ theme }) => ({
   "&:hover": {
-    backgroundColor: theme.palette.backgroundColor.light,
+    backgroundColor: theme.palette.action.hover,
     cursor: "pointer"
   },
   "&.Mui-selected": {
