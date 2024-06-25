@@ -122,18 +122,14 @@ export const Legend = observer(() => {
           height: `calc(100vh - ${LegendHeaderHeight})`,
           backgroundColor: theme.palette.secondaryBackground.main
         }}>
-        <CustomHeader className="legend-header">
-          Map Points
-        </CustomHeader>
+        <CustomHeader className="legend-header">Map Points</CustomHeader>
         <CustomDivider />
         <div className="legend-container">
           {legendItems.map((item, index) => (
             <DisplayLegendItem key={index} legendItem={item} />
           ))}
         </div>
-        <CustomHeader className="legend-header">
-          Facies Patterns
-        </CustomHeader>
+        <CustomHeader className="legend-header">Facies Patterns</CustomHeader>
         <div className="search-container">
           <FaciesSearchBar searchValue={searchValue} setSearchValue={setSearchValue} />
           <div className="filters">
@@ -192,7 +188,7 @@ const FilterMenu: React.FC<FilterMenuProps> = observer(
     return (
       <>
         <IconButton ref={menuRef} className="filter-button" {...anchorProps} size="large">
-          <FilterListIcon color="icon"/>
+          <FilterListIcon color="icon" />
         </IconButton>
         <ControlledMenu
           {...menuState}
@@ -246,7 +242,7 @@ const FaciesSearchBar: React.FC<FaciesSearchBarProps> = ({ searchValue, setSearc
           startAdornment: (
             <TSCInputAdornment>
               {" "}
-              <SearchIcon color="icon"/>
+              <SearchIcon color="icon" />
             </TSCInputAdornment>
           )
         }}
@@ -295,9 +291,7 @@ const FaciesPatterns: React.FC<FaciesPatternsProps> = ({ patterns }) => {
         return (
           <div className="facies-pattern-container" key={name}>
             <img className="legend-pattern" src={devSafeUrl(filePath)} />
-            <Typography className="facies-pattern">
-              {formattedName}
-            </Typography>
+            <Typography className="facies-pattern">{formattedName}</Typography>
           </div>
         );
       })}

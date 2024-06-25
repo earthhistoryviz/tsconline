@@ -120,7 +120,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
     <Box className="header-bar" style={headerStyle} bgcolor="secondaryBackground.main">
       <div className="header-title-container">
         <IconButton className="move-maps-button" onClick={actions.goBackInMapHistory} size="large">
-          <BorderedIcon component={ArrowBackIcon} className="icon-button" color="icon"/>
+          <BorderedIcon component={ArrowBackIcon} className="icon-button" color="icon" />
         </IconButton>
         <div className="header-title">
           <Lottie className="header-icon" animationData={mapPointsAnimationData} width={25} height={25} loop autoplay />
@@ -129,12 +129,12 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
           </Typography>
         </div>
         <IconButton className="move-maps-button" onClick={() => actions.closeMapViewer()} size="large">
-          <BorderedIcon component={CloseIcon} className="icon-button" color="icon"/>
+          <BorderedIcon component={CloseIcon} className="icon-button" color="icon" />
         </IconButton>
       </div>
       <div className="buttons">
         <Button
-          startIcon={<MapSharpIcon color="icon"/>}
+          startIcon={<MapSharpIcon color="icon" />}
           className="legend-button"
           sx={{ color: "secondaryBackground.contrastText" }}
           onClick={() => actions.setIsLegendOpen(!state.mapState.isLegendOpen)}>
@@ -142,7 +142,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
         </Button>
         {!isFacies && (
           <Button
-            startIcon={<CategoryIcon color="icon"/>}
+            startIcon={<CategoryIcon color="icon" />}
             className="legend-button"
             sx={{ color: "secondaryBackground.contrastText" }}
             onClick={() => {

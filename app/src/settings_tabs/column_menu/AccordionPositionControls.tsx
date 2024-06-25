@@ -12,7 +12,7 @@ interface AccordionPositionControlsProps {
 const AccordionPositionControls: React.FC<AccordionPositionControlsProps> = ({ column }) => {
   const { actions } = useContext(context); // Use the context to get actions
   const theme = useTheme();
-  console.log(theme.palette.backgroundColor.light)
+  console.log(theme.palette.backgroundColor.light);
 
   const incrementPosition = () => {
     actions.incrementColumnPosition(column);
@@ -30,7 +30,7 @@ const AccordionPositionControls: React.FC<AccordionPositionControlsProps> = ({ c
           className="custom-icon-button"
           onClick={incrementPosition}
           sx={{ bgcolor: "iconContrastBackground.main" }}>
-          <ArrowUpwardIcon sx={{ color: "iconContrastBackground.light" }}/>
+          <ArrowUpwardIcon sx={{ color: "iconContrastBackground.light" }} />
         </IconButton>
       </div>
       <div className="lightgray-square">
@@ -38,7 +38,7 @@ const AccordionPositionControls: React.FC<AccordionPositionControlsProps> = ({ c
           className="custom-icon-button"
           onClick={decrementPosition}
           sx={{ bgcolor: "iconContrastBackground.main" }}>
-          <ArrowDownwardIcon sx={{ color: "iconContrastBackground.light" }}/>
+          <ArrowDownwardIcon sx={{ color: "iconContrastBackground.light" }} />
         </IconButton>
       </div>
     </div>
