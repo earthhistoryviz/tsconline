@@ -1,7 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "./state";
-import { useTheme } from "@mui/material/styles";
 import "./Chart.css";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import { TSCPopupManager, TSCSvgComponent } from "./components";
@@ -10,7 +9,6 @@ import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import { IconButton, Typography } from "@mui/material";
 export const Chart = observer(function () {
   const { state, actions } = useContext(context);
-  const theme = useTheme();
 
   return (
     <div

@@ -1,11 +1,9 @@
 import { AccordionSummary, Typography, AccordionDetails } from "@mui/material";
 import Accordion from "@mui/material/Accordion";
 import { observer } from "mobx-react-lite";
-import { useTheme } from "@mui/material/styles";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 export const Help = observer(function Help() {
-  const theme = useTheme();
   const background = { bgcolor: "secondaryBackground.main" };
 
   return (

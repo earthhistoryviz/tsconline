@@ -38,7 +38,6 @@ import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { SettingsTabs, equalChartSettings, equalConfig } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
-import { snackbarTextLengthLimit } from "../../util/constant";
 import { cloneDeep } from "lodash";
 
 const increment = 1;

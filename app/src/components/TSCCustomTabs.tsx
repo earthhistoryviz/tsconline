@@ -1,7 +1,7 @@
 import { HTMLAttributes, useEffect, useState } from "react";
 import "./TSCCustomTabs.css";
 import { observer } from "mobx-react-lite";
-import { Box, Button, useTheme } from "@mui/material";
+import { Box, Button } from "@mui/material";
 type CustomTabsProps = {
   tabs: { id: string; tab: React.ReactNode }[];
   value?: number;

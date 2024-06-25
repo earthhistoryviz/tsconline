@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Color from "color";
 import { styled } from "@mui/material/styles";
 import { Grid, Box, Avatar, CardMedia, IconButton, Typography, List, ListItem, ListItemText } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";

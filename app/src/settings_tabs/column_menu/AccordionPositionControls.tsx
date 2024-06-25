@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { Typography, IconButton, useTheme } from "@mui/material";
+import { Typography, IconButton } from "@mui/material";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { ColumnInfo } from "@tsconline/shared";
@@ -11,7 +11,6 @@ interface AccordionPositionControlsProps {
 
 const AccordionPositionControls: React.FC<AccordionPositionControlsProps> = ({ column }) => {
   const { actions } = useContext(context); // Use the context to get actions
-  const theme = useTheme();
 
   const incrementPosition = () => {
     actions.incrementColumnPosition(column);

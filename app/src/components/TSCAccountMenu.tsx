@@ -41,9 +41,9 @@ export const TSCAccountMenu = observer(() => {
             aria-haspopup="true"
             aria-expanded={open ? "true" : undefined}>
             {state.user.pictureUrl ? (
-              <Avatar src={state.user.pictureUrl} sx={{ border: "2px solid", borderColor: "button.main"}} />
+              <Avatar src={state.user.pictureUrl} sx={{ border: "2px solid", borderColor: "button.main" }} />
             ) : (
-              <Avatar sx={{ border: "2px solid", borderColor: "button.main"}} >
+              <Avatar sx={{ border: "2px solid", borderColor: "button.main" }}>
                 <PersonIcon />
               </Avatar>
             )}
