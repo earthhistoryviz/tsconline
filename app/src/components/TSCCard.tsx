@@ -44,16 +44,14 @@ export const TSCCard = ({
       <Box className="front-card">
         <CardMedia className="card-media-cover" image={devSafeUrl(preset.background)} onClick={handleFlip} />
         <div className="card-content front-card-content">
-          <CardBackground className="card-background clip-path" color={color} />
+          <CardBackground className="card-background clip-path" />
           <Box position="relative" zIndex={1}>
             <Grid container alignItems="center" spacing={2} onClick={handleFlip}>
               <Grid item>
                 <Avatar className="avatar-logo avatar-box-shadow" src={devSafeUrl(preset.icon)} />
               </Grid>
               <Grid item xs>
-                <Typography className="card-title" color="textPrimary">
-                  {preset.title}
-                </Typography>
+                <Typography className="card-title">{preset.title}</Typography>
               </Grid>
             </Grid>
             <Grid container mt={2} alignItems="center" justifyContent="center" spacing={2} wrap="nowrap">
@@ -110,20 +108,17 @@ const BackCard = ({
           <CardMedia className="info-media" component="img" image={devSafeUrl(preset.background)} />
           <Typography className="info-title">{preset.title}</Typography>
           <div className="info-text-container">
-            <CustomHeader color="primary">Included Datapacks</CustomHeader>
+            <CustomHeader>Included Datapacks</CustomHeader>
             <List className="list">
               {preset.datapacks.map((datapack, index) => (
                 <ListItem className="list-item" key={index}>
-                  <FolderIcon color="primary" />
-                  <ListItemText
-                    className="list-item-text"
-                    primary={<Typography color="primary">{datapack.name}</Typography>}
-                  />
+                  <FolderIcon color="icon" />
+                  <ListItemText className="list-item-text" primary={<Typography>{datapack.name}</Typography>} />
                 </ListItem>
               ))}
             </List>
-            <CustomHeader color="primary">Additional Info</CustomHeader>
-            <Typography className="info-description" variant="body1" color="primary">
+            <CustomHeader>Additional Info</CustomHeader>
+            <Typography className="info-description" variant="body1">
               {preset.description}
             </Typography>
           </div>
