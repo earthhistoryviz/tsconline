@@ -190,6 +190,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
           </IconButton>
         </CustomTooltip>
         <Dialog
+          disableRestoreFocus
           open={downloadOpen}
           onClose={handleDownloadClose}
           PaperProps={{
