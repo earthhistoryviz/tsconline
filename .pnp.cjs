@@ -2524,6 +2524,7 @@ const RAW_RUNTIME_STATE =
           ["@types/better-sqlite3", "npm:7.6.10"],\
           ["@types/color-thief-node", "npm:1.0.4"],\
           ["@types/dompurify", "npm:3.0.5"],\
+          ["@types/js-levenshtein", "npm:1.1.3"],\
           ["@types/jsdom", "npm:21.1.6"],\
           ["@types/lodash", "npm:4.17.4"],\
           ["@types/md5", "npm:2.3.5"],\
@@ -2543,6 +2544,7 @@ const RAW_RUNTIME_STATE =
           ["fastify", "npm:4.27.0"],\
           ["glob", "npm:10.3.16"],\
           ["google-auth-library", "npm:9.10.0"],\
+          ["js-levenshtein", "npm:1.1.6"],\
           ["jsdom", "virtual:f400f1facecebc164f3b8826224462ee6165ba2a289af45d35511e5194135aec0e2b33199c69e89fd109ab94e6d817043a2c4cc1150135f9e3fe0bd583a0cf60#npm:24.0.0"],\
           ["kysely", "npm:0.27.3"],\
           ["lodash", "npm:4.17.21"],\
@@ -2738,6 +2740,15 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./.yarn/cache/@types-http-cache-semantics-npm-4.0.4-6d4f413ddd-a59566cff6.zip/node_modules/@types/http-cache-semantics/",\
         "packageDependencies": [\
           ["@types/http-cache-semantics", "npm:4.0.4"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["@types/js-levenshtein", [\
+      ["npm:1.1.3", {\
+        "packageLocation": "./.yarn/cache/@types-js-levenshtein-npm-1.1.3-417b5f0c21-eb338696da.zip/node_modules/@types/js-levenshtein/",\
+        "packageDependencies": [\
+          ["@types/js-levenshtein", "npm:1.1.3"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -7442,6 +7453,15 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./.yarn/cache/joycon-npm-3.1.1-3033e0e5f4-4b36e34791.zip/node_modules/joycon/",\
         "packageDependencies": [\
           ["joycon", "npm:3.1.1"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["js-levenshtein", [\
+      ["npm:1.1.6", {\
+        "packageLocation": "./.yarn/cache/js-levenshtein-npm-1.1.6-ab883e61a3-bb034043fd.zip/node_modules/js-levenshtein/",\
+        "packageDependencies": [\
+          ["js-levenshtein", "npm:1.1.6"]\
         ],\
         "linkType": "HARD"\
       }]\
