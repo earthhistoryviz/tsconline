@@ -38,7 +38,7 @@ export const Time = observer(function Time() {
         <Typography className="IntervalLabel">Top of Interval</Typography>
         <CustomDivider className="time-form-divider" />
         <FormControl className="FormControlIntervals">
-          <InputLabel htmlFor="top-age-selector">
+          <InputLabel>
             {disabled ? "Not Available for this Unit" : "Top Age/Stage Name"}
           </InputLabel>
           <Select
