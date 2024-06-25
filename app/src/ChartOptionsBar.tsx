@@ -52,8 +52,8 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
   //workaround for unexpected behavior
   //conditions for behavior: limitToBounds = true, zoomToScroll = false
   //after reset transformation or zoom fit, panning with touchpad jarringly misaligns chart from center
-  //this doesn't happen if I do the function below, which changes the zoom scroll function of the transform wrapper
-  //requirements for this workaround: animation time for reset or fit = 0
+  //this doesn't happen if I do the function below, which cycles the zoom scroll function of the transform wrapper
+  //soft requirement for this workaround: animation time for reset or fit = 0
   const smallUpdate = () => {
     actions.setChartTabEnableScrollZoom(!state.chartTab.enableScrollZoom);
     actions.setChartTabEnableScrollZoom(!state.chartTab.enableScrollZoom);
