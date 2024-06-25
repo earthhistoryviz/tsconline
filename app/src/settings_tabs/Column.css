@@ -99,7 +99,6 @@
   bottom: 0;
   width: 1px;
   opacity: 0;
-  background-color: rgba(181, 181, 181, 0.377);
   z-index: 1;
   transition: opacity 0.2s ease;
 }

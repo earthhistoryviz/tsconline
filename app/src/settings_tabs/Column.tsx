@@ -95,7 +95,9 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
     : {};
   return (
     <div className="column-accordion-container">
-      {details.expanded && <div className="accordion-line" style={containsSelectedChild} />}
+      {details.expanded && (
+        <Box className="accordion-line" style={containsSelectedChild} bgcolor="accordionLine.main" />
+      )}
       <Accordion
         //checks if column name is in expand list
         expanded={details.expanded}

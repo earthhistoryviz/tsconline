@@ -22,6 +22,7 @@ declare module "@mui/material/styles" {
     dark: Palette["primary"];
     outline: Palette["primary"];
     iconContrastBackground: Palette["primary"];
+    accordionLine: Palette["primary"];
   }
 
   interface PaletteOptions {
@@ -44,6 +45,7 @@ declare module "@mui/material/styles" {
     dark?: PaletteOptions["primary"];
     outline?: PaletteOptions["primary"];
     iconContrastBackground?: PaletteOptions["primary"];
+    accordionLine?: PaletteOptions["primary"];
   }
 }
 declare module "@mui/material/Button" {
@@ -287,6 +289,9 @@ export let lightTheme = createTheme(baseTheme, {
     iconContrastBackground: {
       light: "#f4f5f7",
       main: "#ccd0d5"
+    },
+    accordionLine: {
+      main: "#888888"
     }
   },
   components: {
@@ -379,6 +384,9 @@ export let darkTheme = createTheme(baseTheme, {
     iconContrastBackground: {
       light: "#f4f5f7",
       main: "#43474e"
+    },
+    accordionLine: {
+      main: "#b5b5b560"
     }
   }
 });
