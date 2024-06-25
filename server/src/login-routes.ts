@@ -342,7 +342,7 @@ export const changeEmail = async function changeEmail(
                   Please verify your new email address to complete the update process. The link will expire in 1 hour for security reasons. If your link has expired, you can request a new one by signing in. If you did not request this change, please contact our support team immediately.`,
         link: `${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`,
         buttonText: "Verify Email",
-        action: "Verify Email"
+        action: "Email Verification"
       };
       await sendEmail(googleEmail);
       const googleUser: UpdatedUser = {
@@ -369,9 +369,9 @@ export const changeEmail = async function changeEmail(
       const verifyEmail: Email = {
         from: process.env.EMAIL_USER,
         to: newEmail,
-        subject: "Verify Your New Email Address",
-        preHeader: "Just one more step to update your email",
-        title: "Please Verify Your New Email Address",
+        subject: "Your Email Has Been Updated",
+        preHeader: "Important: Verify Your New Email",
+        title: "Email Update Confirmation",
         message: `You're almost there! Please verify your new email address to complete the update process by clicking on the button below. If you did not request this change, please contact our support team immediately.`,
         link: `${process.env.APP_URL || "http://localhost:5173"}/verify?token=${token}`,
         buttonText: "Verify Email",
