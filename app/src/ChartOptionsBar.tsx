@@ -27,7 +27,6 @@ import {
   NativeSelect,
   Switch,
   TextField,
-  Tooltip,
   Typography
 } from "@mui/material";
 import React from "react";
@@ -267,32 +266,18 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
   const HelpButton = () => {
     return (
       <div>
-        <Tooltip
+        <CustomTooltip
           title={
             <div>
               ctrl/⊞/⌘ + Minus (-) - Zoom out
               <br />
               ctrl/⊞/⌘ + Plus (+) - Zoom in
             </div>
-          }
-          arrow
-          PopperProps={{
-            modifiers: [
-              {
-                name: "offset",
-                options: {
-                  offset: [0, -10]
-                }
-              }
-            ]
-          }}>
-          <IconButton
-            onClick={() => {
-              console.log(content.getBoundingClientRect());
-            }}>
+          }>
+          <IconButton>
             <HelpOutlineIcon />
           </IconButton>
-        </Tooltip>
+        </CustomTooltip>
       </div>
     );
   };
