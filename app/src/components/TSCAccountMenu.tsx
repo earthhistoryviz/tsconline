@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import Box from "@mui/material/Box";
 import Avatar from "@mui/material/Avatar";
 import Menu from "@mui/material/Menu";
-import MenuItem, { MenuItemProps } from "@mui/material/MenuItem";
+import MenuItem from "@mui/material/MenuItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
@@ -41,9 +41,9 @@ export const TSCAccountMenu = observer(() => {
             aria-haspopup="true"
             aria-expanded={open ? "true" : undefined}>
             {state.user.pictureUrl ? (
-              <Avatar src={state.user.pictureUrl} className="profile-picture" />
+              <Avatar src={state.user.pictureUrl} sx={{ border: "2px solid", borderColor: "button.main"}} />
             ) : (
-              <Avatar className="profile-picture">
+              <Avatar sx={{ border: "2px solid", borderColor: "button.main"}} >
                 <PersonIcon />
               </Avatar>
             )}
