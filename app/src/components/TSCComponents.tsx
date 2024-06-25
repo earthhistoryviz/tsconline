@@ -49,7 +49,7 @@ export const CustomDivider = styled(Divider)(() => ({
   backgroundColor: "rgba(197, 197, 197, 0.281)"
 }));
 export const TSCInputAdornment = styled("div")(
-  ({ theme }) => `
+  () => `
   margin-left: auto;
   margin-right: 5px;
   display: inline-flex;

@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { Typography } from "@mui/material";
-import { useTheme, styled } from "@mui/material/styles";
+import { styled } from "@mui/material/styles";
 import { TSCIcon } from "./components";
 import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import "./About.css";
@@ -129,8 +129,6 @@ const members = [
 ];
 
 export const About = observer(function About() {
-  const theme = useTheme();
-
   return (
     <div className="whole_page">
       <TSCOnlineHeader />

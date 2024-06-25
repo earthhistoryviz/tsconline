@@ -5,7 +5,7 @@ import { devSafeUrl } from "../../util";
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { context } from "../../state";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-import { DrawerHeader, ColoredIconButton, BorderedIcon } from "../../components";
+import { DrawerHeader, BorderedIcon } from "../../components";
 import CloseIcon from "@mui/icons-material/Close";
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";

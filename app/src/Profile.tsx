@@ -230,7 +230,7 @@ export const Profile = observer(() => {
     }
   };
 
-  const borderStyle = { border: "2px solid", borderColor: "button.main" }
+  const borderStyle = { border: "2px solid", borderColor: "button.main" };
 
   return loading ? (
     <Box display="flex" justifyContent="center" alignItems="center">
