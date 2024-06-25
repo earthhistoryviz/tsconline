@@ -511,6 +511,20 @@ describe("login-routes tests", () => {
       expect(response.json().error).toBe("Account locked");
     });
 
+    it("should return 500 if find user fails", async () => {
+      vi.mocked(databaseModule.findUser).mockRejectedValueOnce(new Error("Database Error"));
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/login",
+        payload: payload
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Unknown Error");
+    });
+
     it("should return 200 if successful", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
 
@@ -876,7 +890,7 @@ describe("login-routes tests", () => {
     ])("should return 400 if form is invalid", async (invalidPayload) => {
       const response = await app.inject({
         method: "POST",
-        url: "/signup",
+        url: "/send-forgot-password-email",
         payload: invalidPayload
       });
 
@@ -1044,7 +1058,7 @@ describe("login-routes tests", () => {
       async (invalidPayload) => {
         const response = await app.inject({
           method: "POST",
-          url: "/signup",
+          url: "/forgot-password",
           payload: invalidPayload
         });
 
@@ -1207,7 +1221,7 @@ describe("login-routes tests", () => {
     ])("should return 400 if form is invalid", async (invalidPayload) => {
       const response = await app.inject({
         method: "POST",
-        url: "/signup",
+        url: "/change-email",
         payload: invalidPayload,
         headers: { cookie: `loginSession=${cookieHeader}` }
       });
@@ -1453,13 +1467,13 @@ describe("login-routes tests", () => {
     ])("should return 400 if form is invalid", async (invalidPayload) => {
       const response = await app.inject({
         method: "POST",
-        url: "/signup",
+        url: "/account-recovery",
         payload: invalidPayload
       });
 
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(400);
-      expect(response.json().error).toBe("Invalid form");
+      expect(response.json().error).toBe("No token or email");
     });
 
     it("should return 404 if token is not found", async () => {
