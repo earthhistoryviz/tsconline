@@ -66,11 +66,11 @@ export const NavBar = observer(function Navbar() {
                 "& .MuiTab-root": {
                   color: "dark.contrastText",
                   "&:hover:not(.Mui-selected)": {
-                    color: "gray"
+                    color: "button.light"
                   }
                 },
                 "& .Mui-selected": {
-                  color: "button.light"
+                  color: "button.main"
                 }
               }}
               TabIndicatorProps={{ sx: { bgcolor: "button.light" } }}>
@@ -106,6 +106,7 @@ export const NavBar = observer(function Navbar() {
                   className="settings-sub-menu-item"
                   onClick={() => {
                     assertSettingsTabs(key);
+                    actions.setTab(2);
                     actions.setSettingsTabsSelected(key);
                     navigate("/settings");
                     settingsMenuToggle(false);
