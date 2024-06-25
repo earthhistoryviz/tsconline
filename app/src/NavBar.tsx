@@ -66,11 +66,11 @@ export const NavBar = observer(function Navbar() {
                 "& .MuiTab-root": {
                   color: "dark.contrastText",
                   "&:hover:not(.Mui-selected)": {
-                    color: "button.light"
+                    color: "button.main"
                   }
                 },
-                "& .Mui-selected": {
-                  color: "button.main"
+                "& .MuiTab-root.Mui-selected": {
+                  color: "button.light"
                 }
               }}
               TabIndicatorProps={{ sx: { bgcolor: "button.light" } }}>

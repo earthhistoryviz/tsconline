@@ -12,7 +12,6 @@ interface AccordionPositionControlsProps {
 const AccordionPositionControls: React.FC<AccordionPositionControlsProps> = ({ column }) => {
   const { actions } = useContext(context); // Use the context to get actions
   const theme = useTheme();
-  console.log(theme.palette.backgroundColor.light);
 
   const incrementPosition = () => {
     actions.incrementColumnPosition(column);

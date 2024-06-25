@@ -1,3 +1,4 @@
+import { ButtonProps } from "@mui/material";
 import { createTheme, Theme } from "@mui/material/styles";
 import Color from "color";
 declare module "@mui/material/styles" {
@@ -107,6 +108,44 @@ function createThemeOverrides(theme: Theme) {
             backgroundColor: theme.palette.secondaryBackground.main
           }
         }
+      },
+      MuiButton: {
+        variants: [
+          {
+            props: (props: ButtonProps) => props.variant === "contained" && props.color === undefined,
+            style: {
+              color: theme.palette.button.contrastText,
+              backgroundColor: theme.palette.button.main,
+              "&:hover": {
+                backgroundColor: theme.palette.button.light
+              },
+              "&:active": {
+                backgroundColor: theme.palette.button.dark
+              }
+            }
+          },
+          {
+            props: { variant: "outlined" },
+            style: {
+              color: theme.palette.backgroundColor.contrastText,
+              border: `1px solid ${theme.palette.backgroundColor.contrastText}`,
+              "&:hover": {
+                backgroundColor:
+                  theme.palette.mode === "light"
+                    ? Color(theme.palette.backgroundColor.main).darken(0.08).toString()
+                    : Color(theme.palette.backgroundColor.main).lighten(0.1).toString(),
+                border: `1px solid ${Color(theme.palette.backgroundColor.contrastText).darken(0.3).toString()}`
+              },
+              "&:active": {
+                backgroundColor:
+                  theme.palette.mode === "light"
+                    ? Color(theme.palette.backgroundColor.main).darken(0.15).toString()
+                    : Color(theme.palette.backgroundColor.main).lighten(0.2).toString(),
+                border: `1px solid ${Color(theme.palette.backgroundColor.contrastText).darken(0.3).toString()}`
+              }
+            }
+          }
+        ]
       }
     }
   });
