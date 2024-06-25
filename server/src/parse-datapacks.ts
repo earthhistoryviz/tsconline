@@ -196,7 +196,8 @@ export async function parseDatapacks(
             columnInfoArray,
             allEntries,
             loneColumns,
-            ageUnits
+            ageUnits,
+            warnings
           );
           returnValue.maxAge = Math.max(returnValue.maxAge, compare.maxAge);
           returnValue.minAge = Math.min(returnValue.minAge, compare.minAge);
@@ -284,7 +285,7 @@ export async function parseDatapacks(
   if (topAge || topAge === 0) datapackParsingPack.topAge = topAge;
   if (baseAge || baseAge === 0) datapackParsingPack.baseAge = baseAge;
   if (verticalScale) datapackParsingPack.verticalScale = verticalScale;
-  if (warnings && warnings.length > 0) datapackParsingPack.warnings = warnings;
+  if (warnings.length > 0) datapackParsingPack.warnings = warnings;
   return datapackParsingPack;
 }
 
@@ -554,7 +555,7 @@ export async function getColumnTypes(
       inFreehandBlock = true;
       continue;
     } else if (inFreehandBlock) {
-      const subFreehandInfo = processFreehand(line);
+      const subFreehandInfo = processFreehand(line, lineCount, warnings);
       if (subFreehandInfo) {
         freehand.subFreehandInfo.push(subFreehandInfo);
       }
@@ -569,7 +570,7 @@ export async function getColumnTypes(
         processColumn("Transect", transect, "subTransectInfo", units, loneColumns);
         continue;
       }
-      const subTransectInfo = processTransect(line);
+      const subTransectInfo = processTransect(line, lineCount, warnings);
       if (subTransectInfo) {
         transect.subTransectInfo.push(subTransectInfo);
       }
@@ -580,7 +581,7 @@ export async function getColumnTypes(
       inSequenceBlock = true;
       continue;
     } else if (inSequenceBlock) {
-      const subSequenceInfo = processSequence(line);
+      const subSequenceInfo = processSequence(line, lineCount, warnings);
       if (subSequenceInfo) {
         sequence.subSequenceInfo.push(subSequenceInfo);
       }
@@ -594,7 +595,7 @@ export async function getColumnTypes(
       if (tabSeparated[0] && isPointShape(tabSeparated[0])) {
         configureOptionalPointSettings(tabSeparated, point);
       }
-      const subPointInfo = processPoint(line);
+      const subPointInfo = processPoint(line, lineCount, warnings);
       if (subPointInfo) {
         point.subPointInfo.push(subPointInfo);
       }
@@ -605,7 +606,7 @@ export async function getColumnTypes(
       inRangeBlock = true;
       continue;
     } else if (inRangeBlock) {
-      const subRangeInfo = processRange(line);
+      const subRangeInfo = processRange(line, lineCount, warnings);
       if (subRangeInfo) {
         range.subRangeInfo.push(subRangeInfo);
       }
@@ -621,16 +622,14 @@ export async function getColumnTypes(
       if (isSubEventType(parsedSubEventType)) {
         subEventType = parsedSubEventType;
       } else if (!subEventType) {
-        console.log(
-          chalk.yellow.dim(
-            `Error found while processing event block: ${event.name}, no subEventType of FAD, LAD, EVENTS, or EVENT found, skipping`
-          )
+        warnings.push(
+          `Line: ${lineCount} with event ${event.name}: no subEventType of FAD, LAD, EVENTS, or EVENT found. This event will be skipped and not processed.`
         );
         inEventBlock = false;
         Object.assign(event, { ...createDefaultColumnHeaderProps(), width: 150, on: false, subEventInfo: [] });
         continue;
       }
-      const subEventInfo = processEvent(line, subEventType);
+      const subEventInfo = processEvent(line, subEventType, lineCount, warnings);
       if (subEventInfo) {
         event.subEventInfo.push(subEventInfo);
       }
@@ -642,7 +641,7 @@ export async function getColumnTypes(
       inFaciesBlock = true;
       continue;
     } else if (inFaciesBlock) {
-      const subFaciesInfo = processFacies(line);
+      const subFaciesInfo = processFacies(line, lineCount, warnings);
       if (subFaciesInfo) {
         facies.subFaciesInfo.push(subFaciesInfo);
       }
@@ -655,7 +654,7 @@ export async function getColumnTypes(
       inChronBlock = true;
       continue;
     } else if (inChronBlock) {
-      const subChronInfo = processChron(line);
+      const subChronInfo = processChron(line, lineCount, warnings);
       if (subChronInfo) {
         chron.subChronInfo.push(subChronInfo);
       }
@@ -671,11 +670,16 @@ export async function getColumnTypes(
       //get a single sub block
 
       //make sure we don't pass by reference
-      const subBlockInfo = processBlock(line, {
-        r: block.rgb.r,
-        g: block.rgb.g,
-        b: block.rgb.b
-      });
+      const subBlockInfo = processBlock(
+        line,
+        {
+          r: block.rgb.r,
+          g: block.rgb.g,
+          b: block.rgb.b
+        },
+        lineCount,
+        warnings
+      );
 
       if (subBlockInfo) {
         block.subBlockInfo.push(subBlockInfo);
@@ -766,7 +770,7 @@ function setColumnHeaders(column: ColumnHeaderProps, tabSeparated: string[]) {
  * @param line
  * @returns
  */
-export function processFreehand(line: string): SubFreehandInfo | null {
+export function processFreehand(line: string, lineCount: number, warnings: string[]): SubFreehandInfo | null {
   const subFreehandInfo = {
     topAge: 0,
     baseAge: 0
@@ -783,7 +787,9 @@ export function processFreehand(line: string): SubFreehandInfo | null {
   try {
     assertSubFreehandInfo(subFreehandInfo);
   } catch (e) {
-    console.log(chalk.dim.yellow(`Error ${e} found while processing subFreehandInfo, returning null`));
+    warnings.push(
+      `Line ${lineCount} resulted in error ${e} found while processing subFreehandInfo, this line will be skipped in processing`
+    );
     return null;
   }
   return subFreehandInfo;
@@ -793,7 +799,7 @@ export function processFreehand(line: string): SubFreehandInfo | null {
  * @param line
  * @returns
  */
-export function processTransect(line: string): SubTransectInfo | null {
+export function processTransect(line: string, lineCount: number, warnings: string[]): SubTransectInfo | null {
   const subTransectInfo = {
     age: 0
   };
@@ -805,7 +811,9 @@ export function processTransect(line: string): SubTransectInfo | null {
   try {
     assertSubTransectInfo(subTransectInfo);
   } catch (e) {
-    console.log(chalk.dim.yellow(`Error ${e} found while processing subTransectInfo, returning null`));
+    warnings.push(
+      `Line ${lineCount} resulted in error ${e} found while processing subTransectInfo, this line will be skipped in processing`
+    );
     return null;
   }
   return subTransectInfo;
@@ -816,7 +824,7 @@ export function processTransect(line: string): SubTransectInfo | null {
  * @param line
  * @returns
  */
-export function processSequence(line: string): SubSequenceInfo | null {
+export function processSequence(line: string, lineCount: number, warnings: string[]): SubSequenceInfo | null {
   let subSequenceInfo = {};
   const tabSeparated = line.split("\t");
   if (tabSeparated.length > 6 || tabSeparated.length < 5 || tabSeparated[0]) return null;
@@ -846,7 +854,9 @@ export function processSequence(line: string): SubSequenceInfo | null {
   try {
     assertSubSequenceInfo(subSequenceInfo);
   } catch (e) {
-    console.log(chalk.dim.yellow(`Error ${e} found while processing subSequenceInfo, returning null`));
+    warnings.push(
+      `Line ${lineCount} resulted in error ${e} found while processing subSequenceInfo, this line will be skipped in processing`
+    );
     return null;
   }
   return subSequenceInfo;
@@ -856,7 +866,7 @@ export function processSequence(line: string): SubSequenceInfo | null {
  * @param line
  * @returns
  */
-export function processChron(line: string): SubChronInfo | null {
+export function processChron(line: string, lineCount: number, warnings: string[]): SubChronInfo | null {
   let subChronInfo = {};
   const tabSeparated = line.split("\t");
   if (tabSeparated.length < 4 || tabSeparated.length > 5 || line.includes("Primary")) return null;
@@ -891,7 +901,9 @@ export function processChron(line: string): SubChronInfo | null {
   try {
     assertSubChronInfo(subChronInfo);
   } catch (e) {
-    console.log(chalk.dim.yellow(`Error ${e} found while processing subChronInfo, returning null`));
+    warnings.push(
+      `Line ${lineCount} resulted in error ${e} found while processing subChronInfo, this line will be skipped in processing`
+    );
     return null;
   }
   return subChronInfo;
@@ -901,7 +913,7 @@ export function processChron(line: string): SubChronInfo | null {
  * @param line
  * @returns
  */
-export function processRange(line: string): SubRangeInfo | null {
+export function processRange(line: string, lineCount: number, warnings: string[]): SubRangeInfo | null {
   const subRangeInfo = {
     label: "",
     age: 0,
@@ -927,7 +939,7 @@ export function processRange(line: string): SubRangeInfo | null {
   try {
     assertSubRangeInfo(subRangeInfo);
   } catch (e) {
-    console.log(chalk.dim.yellow(`Error ${e} found while processing subRangeInfo, returning null`));
+    warnings.push(`Line ${lineCount} resulted in error ${e}, this line will be skipped in processing`);
     return null;
   }
   return subRangeInfo;
@@ -937,7 +949,12 @@ export function processRange(line: string): SubRangeInfo | null {
  * @param line
  * @returns
  */
-export function processEvent(line: string, subEventType: SubEventType): SubEventInfo | null {
+export function processEvent(
+  line: string,
+  subEventType: SubEventType,
+  lineCount: number,
+  warnings: string[]
+): SubEventInfo | null {
   const subEventInfo = {
     label: "",
     age: 0,
@@ -964,12 +981,12 @@ export function processEvent(line: string, subEventType: SubEventType): SubEvent
   try {
     assertSubEventInfo(subEventInfo);
   } catch (e) {
-    console.log(chalk.dim.yellow(`Error ${e} found while processing subEventInfo, returning null`));
+    warnings.push(`Line ${lineCount} resulted in error ${e}, this line will be skipped in processing`);
     return null;
   }
   return subEventInfo;
 }
-export function processPoint(line: string): SubPointInfo | null {
+export function processPoint(line: string, lineCount: number, warnings: string[]): SubPointInfo | null {
   const subPointInfo = {
     age: 0,
     xVal: 0,
@@ -993,7 +1010,7 @@ export function processPoint(line: string): SubPointInfo | null {
   try {
     assertSubPointInfo(subPointInfo);
   } catch (e) {
-    console.log(chalk.dim.yellow(`Error ${e} found while processing subPointInfo, returning null`));
+    warnings.push(`Line ${lineCount} resulted in error ${e}, this line will be skipped in processing`);
     return null;
   }
   return subPointInfo;
@@ -1003,7 +1020,12 @@ export function processPoint(line: string): SubPointInfo | null {
  * @param line the line to be processed
  * @returns A subBlock object
  */
-export function processBlock(line: string, defaultColor: RGB): SubBlockInfo | null {
+export function processBlock(
+  line: string,
+  defaultColor: RGB,
+  lineCount: number,
+  warnings: string[]
+): SubBlockInfo | null {
   const currentSubBlockInfo = {
     label: "",
     age: 0,
@@ -1059,7 +1081,7 @@ export function processBlock(line: string, defaultColor: RGB): SubBlockInfo | nu
   try {
     assertSubBlockInfo(currentSubBlockInfo);
   } catch (e) {
-    console.log(chalk.dim.yellow(`Error ${e} found while processing subBlockInfo, returning null`));
+    warnings.push(`Line ${lineCount} resulted in error ${e}, this line will be skipped in processing`);
     return null;
   }
   return currentSubBlockInfo;
@@ -1070,7 +1092,7 @@ export function processBlock(line: string, defaultColor: RGB): SubBlockInfo | nu
  * @param line the line to be processed
  * @returns A FaciesTimeBlock object
  */
-export function processFacies(line: string): SubFaciesInfo | null {
+export function processFacies(line: string, lineCount: number, warnings: string[]): SubFaciesInfo | null {
   let subFaciesInfo = {};
   if (line.toLowerCase().includes("primary")) {
     return null;
@@ -1104,7 +1126,7 @@ export function processFacies(line: string): SubFaciesInfo | null {
   try {
     assertSubFaciesInfo(subFaciesInfo);
   } catch (e) {
-    console.log(chalk.dim.yellow(`Error ${e} found while processing facies, returning null`));
+    warnings.push(`Line ${lineCount} resulted in error ${e}, this line will be skipped in processing`);
     return null;
   }
   return subFaciesInfo;
@@ -1133,7 +1155,8 @@ function recursive(
   childrenArray: ColumnInfo[],
   allEntries: Map<string, ParsedColumnEntry>,
   loneColumns: Map<string, ColumnInfo>,
-  units: string
+  units: string,
+  warnings: string[]
 ): FaciesFoundAndAgeRange {
   const returnValue: FaciesFoundAndAgeRange = {
     faciesFound: false,
@@ -1142,7 +1165,7 @@ function recursive(
     fontOptions: ["Column Header"]
   };
   if (!loneColumns.has(currentColumn) && !allEntries.has(currentColumn)) {
-    console.log(chalk.dim.yellow(`WARNING: Column ${currentColumn} not found during datapack processing`));
+    warnings.push(`Column ${currentColumn} not found during datapack processing`);
     return returnValue;
   }
   // lone column is a leaf column
@@ -1230,7 +1253,8 @@ function recursive(
         currentColumnInfo.children, // the array to push all the new children into
         allEntries, // the mapping of all parents to children
         loneColumns,
-        units
+        units,
+        warnings
       );
       returnValue.minAge = Math.min(compareValue.minAge, returnValue.minAge);
       returnValue.maxAge = Math.max(compareValue.maxAge, returnValue.maxAge);
