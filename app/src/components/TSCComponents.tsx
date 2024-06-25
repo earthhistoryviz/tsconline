@@ -67,7 +67,7 @@ export const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   padding: theme.spacing(0, 1),
-  backgroundColor: theme.palette.backgroundColor.main
+  backgroundColor: theme.palette.secondaryBackground.main
 }));
 export const StyledScrollbar = styled(SimpleBar)(({ theme, color }) => {
   const backgroundColor = color || theme.palette.scrollbar.main;

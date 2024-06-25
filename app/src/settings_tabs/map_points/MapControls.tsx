@@ -36,7 +36,7 @@ export const FaciesControls = observer(() => {
   const { state, actions } = useContext(context);
   const dotSizeRange = { min: 1, max: 20 };
   return (
-    <Box className="facies-buttons" bgcolor="backgroundColor.main">
+    <Box className="facies-buttons" bgcolor="secondaryBackground.main">
       <div className="dot-controls">
         <Typography className="dot-controls-title"> Dot Size </Typography>
         <div className="slider-container">
@@ -108,7 +108,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
     height: `${isFacies ? FaciesHeaderHeight : NormHeaderHeight}`
   };
   return (
-    <Box className="header-bar" style={headerStyle} bgcolor="backgroundColor.main">
+    <Box className="header-bar" style={headerStyle} bgcolor="secondaryBackground.main">
       <div className="header-title-container">
         <IconButton className="move-maps-button" onClick={actions.goBackInMapHistory} size="large">
           <BorderedIcon component={ArrowBackIcon} className="icon-button" />
@@ -120,22 +120,22 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
           </Typography>
         </div>
         <IconButton className="move-maps-button" onClick={() => actions.closeMapViewer()} size="large">
-          <BorderedIcon component={CloseIcon} className="icon-button" />
+          <BorderedIcon component={CloseIcon} className="icon-button"/>
         </IconButton>
       </div>
       <div className="buttons">
         <Button
-          startIcon={<MapSharpIcon color="button"/>}
+          startIcon={<MapSharpIcon color="icon"/>}
           className="legend-button"
-          sx={{ color: "backgroundColor.contrastText" }}
+          sx={{ color: "secondaryBackground.contrastText" }}
           onClick={() => actions.setIsLegendOpen(!state.mapState.isLegendOpen)}>
           legend
         </Button>
         {!isFacies && (
           <Button
-            startIcon={<CategoryIcon color="button"/>}
+            startIcon={<CategoryIcon color="icon"/>}
             className="legend-button"
-            sx={{ color: "backgroundColor.contrastText" }}
+            sx={{ color: "secondaryBackground.contrastText" }}
             onClick={() => {
               actions.openNextMap(name, isFacies, name, true);
             }}>
