@@ -143,9 +143,6 @@
 .middle {
   cursor: pointer;
 }
-.rc:hover {
-  background-color: rgba(203, 203, 203, 0.15);
-}
 
 @container (max-width: 240px) {
   .image {

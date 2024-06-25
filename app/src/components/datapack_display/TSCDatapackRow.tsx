@@ -29,6 +29,14 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
       borderBottom="2px solid"
       borderColor="divider"
       bgcolor="secondaryBackground.main"
+      sx={{
+        "&:hover": {
+          bgcolor:
+            theme.palette.mode === "light"
+              ? Color(theme.palette.secondaryBackground.main).darken(0.04).string()
+              : Color(theme.palette.secondaryBackground.main).lighten(0.26).string()
+        }
+      }}
       onClick={() => navigate(`/datapack/${encodeURIComponent(name)}`)}>
       <Box
         className={`${styles.cc} ${loading ? styles.loading : ""}`}
