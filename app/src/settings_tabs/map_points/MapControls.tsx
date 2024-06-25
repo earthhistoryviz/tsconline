@@ -1,8 +1,8 @@
 import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "../../state";
-import { BorderedIcon, CustomDivider, Lottie, TSCInputAdornment, TSCTextField } from "../../components";
-import { Box, Button, IconButton, Slider, TextFieldProps, Typography } from "@mui/material";
+import { BorderedIcon, CustomDivider, Lottie, TSCInputAdornment } from "../../components";
+import { Box, Button, IconButton, Slider, TextField, Typography } from "@mui/material";
 import mapPointsAnimationData from "../../assets/icons/map-points.json";
 import CategoryIcon from "@mui/icons-material/Category";
 import MapSharpIcon from "@mui/icons-material/MapSharp";
@@ -11,26 +11,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import "./MapControls.css";
 import { NumericFormat } from "react-number-format";
 import { FaciesHeaderHeight, NormHeaderHeight } from "./MapPointConstants";
-
-const AgeTextField = ({ ...props }: TextFieldProps) => (
-  <TSCTextField
-    {...props}
-    height={"40px"}
-    className="age-text-field"
-    inputProps={{ className: "age-text-form-input" }}
-    InputProps={{
-      endAdornment: <TSCInputAdornment>MA</TSCInputAdornment>
-    }}
-  />
-);
-const DotSizeTextField = ({ ...props }: TextFieldProps) => (
-  <TSCTextField
-    height={"40px"}
-    {...props}
-    className="dot-input-form"
-    inputProps={{ className: "dot-text-form-input" }}
-  />
-);
 
 export const FaciesControls = observer(() => {
   const { state, actions } = useContext(context);
@@ -42,7 +22,9 @@ export const FaciesControls = observer(() => {
         <div className="slider-container">
           <NumericFormat
             value={state.mapState.currentFaciesOptions.dotSize}
-            customInput={DotSizeTextField}
+            customInput={TextField}
+            className="dot-input-form"
+            inputProps={{ className: "dot-text-form-input" }}
             onValueChange={(values) => {
               const floatValue = values.floatValue;
               if (!floatValue) {
@@ -56,6 +38,17 @@ export const FaciesControls = observer(() => {
           <Slider
             id="dot-size-slider"
             className="slider"
+            sx={{
+              "& .MuiSlider-track": {
+                bgcolor: "icon.main"
+              },
+              "& .MuiSlider-thumb": {
+                bgcolor: "icon.main"
+              },
+              "& .MuiSlider-rail": {
+                bgcolor: "icon.light"
+              }
+            }}
             value={state.mapState.currentFaciesOptions.dotSize}
             max={20}
             min={1}
@@ -72,7 +65,12 @@ export const FaciesControls = observer(() => {
         <div className="slider-container">
           <NumericFormat
             value={state.mapState.currentFaciesOptions.faciesAge}
-            customInput={AgeTextField}
+            customInput={TextField}
+            className="age-text-field"
+            inputProps={{ className: "age-text-form-input" }}
+            InputProps={{
+              endAdornment: <TSCInputAdornment>MA</TSCInputAdornment>
+            }}
             onValueChange={(values) => {
               if (!values.floatValue) {
                 return;
@@ -83,6 +81,17 @@ export const FaciesControls = observer(() => {
           <Slider
             id="number-input"
             className="slider"
+            sx={{
+              "& .MuiSlider-track": {
+                bgcolor: "icon.main"
+              },
+              "& .MuiSlider-thumb": {
+                bgcolor: "icon.main"
+              },
+              "& .MuiSlider-rail": {
+                bgcolor: "icon.light"
+              }
+            }}
             name="Facies-Age-Slider"
             max={state.mapState.selectedMapAgeRange.maxAge}
             min={state.mapState.selectedMapAgeRange.minAge}
@@ -111,7 +120,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
     <Box className="header-bar" style={headerStyle} bgcolor="secondaryBackground.main">
       <div className="header-title-container">
         <IconButton className="move-maps-button" onClick={actions.goBackInMapHistory} size="large">
-          <BorderedIcon component={ArrowBackIcon} className="icon-button" />
+          <BorderedIcon component={ArrowBackIcon} className="icon-button" color="icon"/>
         </IconButton>
         <div className="header-title">
           <Lottie className="header-icon" animationData={mapPointsAnimationData} width={25} height={25} loop autoplay />
@@ -120,7 +129,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
           </Typography>
         </div>
         <IconButton className="move-maps-button" onClick={() => actions.closeMapViewer()} size="large">
-          <BorderedIcon component={CloseIcon} className="icon-button"/>
+          <BorderedIcon component={CloseIcon} className="icon-button" color="icon"/>
         </IconButton>
       </div>
       <div className="buttons">

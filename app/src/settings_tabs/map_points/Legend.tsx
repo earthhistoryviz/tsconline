@@ -1,10 +1,9 @@
-import { Box, Button, IconButton, Typography, useTheme } from "@mui/material";
+import { Box, Button, IconButton, TextField, Typography, useTheme } from "@mui/material";
 import React, { useState, useContext, ChangeEvent, useRef, useEffect } from "react";
 import {
   StyledScrollbar,
   CustomHeader,
   CustomDivider,
-  TSCTextField,
   TSCInputAdornment,
   Lottie,
   TSCMenuItem,
@@ -237,7 +236,7 @@ type FaciesSearchBarProps = {
 const FaciesSearchBar: React.FC<FaciesSearchBarProps> = ({ searchValue, setSearchValue }) => {
   return (
     <div className="facies-search">
-      <TSCTextField
+      <TextField
         className="search-bar"
         value={searchValue}
         onChange={(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
