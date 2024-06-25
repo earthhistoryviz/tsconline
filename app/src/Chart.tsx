@@ -21,7 +21,7 @@ export const Chart = observer(function () {
         justifyContent: "center",
         alignContent: "center"
       }}>
-      {!state.chartLoading ? (
+      {state.chartLoading ? (
         <LoadingChart />
       ) : state.madeChart ? (
         <div className="chart-and-options-bar-container">

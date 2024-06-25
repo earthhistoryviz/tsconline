@@ -16,13 +16,9 @@ import Color from "color";
 import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
 import styles from "./TSCComponents.module.css";
-import { HTMLAttributes } from "react";
 import SecurityResearch from "../assets/icons/security-research.json";
 import Lottie from "./TSCLottie";
 
-export const TypographyText = styled(Typography)(({ theme }) => ({
-  color: theme.palette.primary.main
-}));
 export const ColoredIconButton = styled(IconButton)(({ theme }) => ({
   color: theme.palette.primary.main
 }));
@@ -118,12 +114,12 @@ export const TSCSubMenu = styled(SubMenu)(({ theme }) => ({
     backgroundColor: theme.palette.secondaryBackground.main
   },
   "&.szh-menu__submenu > .szh-menu__item--checked": {
-    color: theme.palette.primary.main
+    color: theme.palette.icon.main
   }
 }));
 export const TSCMenuItem = styled(MenuItem)(({ theme }) => ({
   "&.szh-menu__item--hover": {
-    backgroundColor: theme.palette.secondaryBackground.main
+    backgroundColor: Color(theme.palette.dark.light).lighten(0.5).string()
   },
   "&.szh-menu__item--checked": {
     color: theme.palette.primary.main

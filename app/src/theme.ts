@@ -17,6 +17,7 @@ declare module "@mui/material/styles" {
     snackbarAlert: Palette["primary"];
     warningAlert: Palette["primary"];
     icon: Palette["primary"];
+    dark: Palette["primary"];
   }
 
   interface PaletteOptions {
@@ -36,11 +37,13 @@ declare module "@mui/material/styles" {
     snackbarAlert?: PaletteOptions["primary"];
     warningAlert?: PaletteOptions["primary"];
     icon?: PaletteOptions["primary"];
+    dark?: PaletteOptions["primary"];
   }
 }
 declare module "@mui/material/Button" {
   interface ButtonPropsColorOverrides {
     button: true;
+    icon: true;
   }
 }
 declare module "@mui/material/IconButton" {
@@ -51,6 +54,7 @@ declare module "@mui/material/IconButton" {
 declare module "@mui/material/SvgIcon" {
   interface SvgIconPropsColorOverrides {
     icon: true;
+    button: true;
   }
 }
 
@@ -137,7 +141,7 @@ let baseTheme = createTheme({
     },
     scrollbar: {
       main: "#78716c"
-    }
+    },
   },
   typography: {
     fontFamily: '"Titillium Web", sans-serif',
@@ -165,6 +169,12 @@ baseTheme = createTheme(baseTheme, {
         main: "#f64747"
       },
       name: "error"
+    }),
+    dark: baseTheme.palette.augmentColor({
+      color: {
+        main: "#0e1217"
+      },
+      name: "dark"
     })
   }
 });
@@ -175,14 +185,20 @@ export let lightTheme = createTheme(baseTheme, {
     mode: "light",
     backgroundColor: baseTheme.palette.augmentColor({
       color: {
-        main: "#151A22"
+        main: "#f8f9f8"
       },
       name: "background"
     }),
+    secondaryBackground: baseTheme.palette.augmentColor({
+      color: {
+        main: "#f1f0f0"
+      },
+      name: "secondaryBackground"
+    }),
     divider: "#454545dd",
     text: {
-      primary: "#f6f7f8",
-      secondary: "#c6c6c6",
+      primary: "#262626",
+      secondary: "#666666",
       disabled
     },
     button: baseTheme.palette.augmentColor({
@@ -209,15 +225,9 @@ export let lightTheme = createTheme(baseTheme, {
       },
       name: "mainGradientRight"
     }),
-    secondaryBackground: baseTheme.palette.augmentColor({
-      color: {
-        main: "#1A2029"
-      },
-      name: "secondaryBackground"
-    }),
     icon: baseTheme.palette.augmentColor({
       color: {
-        main: "#c6c6c6"
+        main: "#a8a29e"
       },
       name: "icon"
     }),

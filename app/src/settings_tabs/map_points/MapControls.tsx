@@ -1,8 +1,8 @@
 import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "../../state";
-import { BorderedIcon, CustomDivider, Lottie, TSCInputAdornment, TSCTextField, TypographyText } from "../../components";
-import { Box, Button, IconButton, Slider, TextFieldProps } from "@mui/material";
+import { BorderedIcon, CustomDivider, Lottie, TSCInputAdornment, TSCTextField } from "../../components";
+import { Box, Button, IconButton, Slider, TextFieldProps, Typography } from "@mui/material";
 import mapPointsAnimationData from "../../assets/icons/map-points.json";
 import CategoryIcon from "@mui/icons-material/Category";
 import MapSharpIcon from "@mui/icons-material/MapSharp";
@@ -38,7 +38,7 @@ export const FaciesControls = observer(() => {
   return (
     <Box className="facies-buttons" bgcolor="backgroundColor.main">
       <div className="dot-controls">
-        <TypographyText className="dot-controls-title"> Dot Size </TypographyText>
+        <Typography className="dot-controls-title"> Dot Size </Typography>
         <div className="slider-container">
           <NumericFormat
             value={state.mapState.currentFaciesOptions.dotSize}
@@ -68,7 +68,7 @@ export const FaciesControls = observer(() => {
         </div>
       </div>
       <div className="age-controls">
-        <TypographyText> Age </TypographyText>
+        <Typography> Age </Typography>
         <div className="slider-container">
           <NumericFormat
             value={state.mapState.currentFaciesOptions.faciesAge}
@@ -115,9 +115,9 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
         </IconButton>
         <div className="header-title">
           <Lottie className="header-icon" animationData={mapPointsAnimationData} width={25} height={25} loop autoplay />
-          <TypographyText className="map-viewer-header" variant="h1">
+          <Typography className="map-viewer-header" variant="h1" component="h1">
             Map Viewer
-          </TypographyText>
+          </Typography>
         </div>
         <IconButton className="move-maps-button" onClick={() => actions.closeMapViewer()} size="large">
           <BorderedIcon component={CloseIcon} className="icon-button" />
@@ -125,15 +125,17 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
       </div>
       <div className="buttons">
         <Button
-          startIcon={<MapSharpIcon />}
+          startIcon={<MapSharpIcon color="button"/>}
           className="legend-button"
+          sx={{ color: "backgroundColor.contrastText" }}
           onClick={() => actions.setIsLegendOpen(!state.mapState.isLegendOpen)}>
           legend
         </Button>
         {!isFacies && (
           <Button
-            startIcon={<CategoryIcon />}
+            startIcon={<CategoryIcon color="button"/>}
             className="legend-button"
+            sx={{ color: "backgroundColor.contrastText" }}
             onClick={() => {
               actions.openNextMap(name, isFacies, name, true);
             }}>
