@@ -146,7 +146,7 @@ export const CustomFormControlLabel = styled(FormControlLabel)(
   })
 );
 export const TagButton: React.FC<ButtonProps> = ({ ...props }) => {
-  return <Button {...props} className={styles.tagbutton} />;
+  return <Button {...props} className={styles.tagbutton} sx={{ color: "backgroundColor.contrastText" }} />;
 };
 
 export const NotImplemented: React.FC = () => {

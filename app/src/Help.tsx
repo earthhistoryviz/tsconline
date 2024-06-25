@@ -26,11 +26,7 @@ export const Help = observer(function Help() {
           overflow: "auto"
         }}>
         <Accordion sx={background}>
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon color="icon" />}
-            aria-controls="panel1a-content"
-            id="panel1a-header"
-            className="accordion">
+          <AccordionSummary expandIcon={<ExpandMoreIcon color="icon" />} aria-controls="panel1a-content">
             <Typography>Quick Start Guide</Typography>
           </AccordionSummary>
           <AccordionDetails>
@@ -38,10 +34,7 @@ export const Help = observer(function Help() {
           </AccordionDetails>
         </Accordion>
         <Accordion sx={background}>
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon color="icon" />}
-            aria-controls="panel2a-content"
-            id="panel2a-header">
+          <AccordionSummary expandIcon={<ExpandMoreIcon color="icon" />} aria-controls="panel2a-content">
             <Typography>Tour</Typography>
           </AccordionSummary>
           <AccordionDetails>
@@ -49,10 +42,7 @@ export const Help = observer(function Help() {
           </AccordionDetails>
         </Accordion>
         <Accordion sx={background}>
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon color="icon" />}
-            aria-controls="panel2a-content"
-            id="panel2a-header">
+          <AccordionSummary expandIcon={<ExpandMoreIcon color="icon" />} aria-controls="panel2a-content">
             <Typography>Contributors</Typography>
           </AccordionSummary>
           <AccordionDetails>
@@ -60,10 +50,7 @@ export const Help = observer(function Help() {
           </AccordionDetails>
         </Accordion>
         <Accordion sx={background}>
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon color="icon" />}
-            aria-controls="panel2a-content"
-            id="panel2a-header">
+          <AccordionSummary expandIcon={<ExpandMoreIcon color="icon" />} aria-controls="panel2a-content">
             <Typography>Software License</Typography>
           </AccordionSummary>
           <AccordionDetails>
@@ -71,10 +58,7 @@ export const Help = observer(function Help() {
           </AccordionDetails>
         </Accordion>
         <Accordion sx={background}>
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon color="icon" />}
-            aria-controls="panel2a-content"
-            id="panel2a-header">
+          <AccordionSummary expandIcon={<ExpandMoreIcon color="icon" />} aria-controls="panel2a-content">
             <Typography>File Format Info</Typography>
           </AccordionSummary>
           <AccordionDetails>
@@ -82,10 +66,7 @@ export const Help = observer(function Help() {
           </AccordionDetails>
         </Accordion>
         <Accordion sx={background}>
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon color="icon" />}
-            aria-controls="panel2a-content"
-            id="panel2a-header">
+          <AccordionSummary expandIcon={<ExpandMoreIcon color="icon" />} aria-controls="panel2a-content">
             <Typography>About</Typography>
           </AccordionSummary>
           <AccordionDetails>
