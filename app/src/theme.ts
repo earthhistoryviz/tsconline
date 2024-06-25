@@ -98,7 +98,7 @@ function createThemeOverrides(theme: Theme) {
         styleOverrides: {
           icon: {
             color: theme.palette.icon.main
-        }
+          }
         }
       },
       MuiMenu: {
@@ -146,7 +146,7 @@ let baseTheme = createTheme({
     },
     scrollbar: {
       main: "#78716c"
-    },
+    }
   },
   typography: {
     fontFamily: '"Titillium Web", sans-serif',
@@ -203,7 +203,7 @@ export let lightTheme = createTheme(baseTheme, {
     divider: "#454545dd",
     text: {
       primary: "#262626",
-      secondary: "#666666",
+      secondary: "#666666"
     },
     button: baseTheme.palette.augmentColor({
       color: {
@@ -241,8 +241,7 @@ export let lightTheme = createTheme(baseTheme, {
       },
       name: "selection"
     }),
-    action: {
-    },
+    action: {},
     outline: {
       main: "#676767"
     },
@@ -252,25 +251,25 @@ export let lightTheme = createTheme(baseTheme, {
     }
   },
   components: {
-      MuiInputLabel:{
-        styleOverrides: {
-          root: {
-            "&.Mui-focused": {
-              color: "#FF9900"
-            }
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          "&.Mui-focused": {
+            color: "#FF9900"
           }
         }
-      },
-      MuiOutlinedInput: {
-        styleOverrides: {
-          root: {
-            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-              borderColor: '#FF9900'
-            },
-          },
-        },
-      },
+      }
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#FF9900"
+          }
+        }
+      }
     }
+  }
 });
 
 export let darkTheme = createTheme(baseTheme, {

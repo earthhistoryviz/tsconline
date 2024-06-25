@@ -18,7 +18,7 @@ export const TSCCheckbox: React.FC<TSCCheckboxProps> = ({
   ...props
 }) => {
   const theme = useTheme();
-  outlineColor = outlineColor || theme.palette.outline.main
+  outlineColor = outlineColor || theme.palette.outline.main;
   checkedColor = checkedColor || theme.palette.button.main;
   return (
     <Checkbox
