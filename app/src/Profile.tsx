@@ -347,7 +347,7 @@ export const Profile = observer(() => {
                   ) : (
                     <>
                       <Typography>{state.user.email}</Typography>
-                      <TSCButton onClick={() => handleEditToggle("username")}>Change</TSCButton>
+                      <TSCButton onClick={() => handleEditToggle("email")}>Change</TSCButton>
                     </>
                   )}
                 </Grid>
