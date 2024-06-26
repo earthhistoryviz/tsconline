@@ -287,7 +287,6 @@ describe("process chron line tests", () => {
     ["\tR\tlabel\t200\tpopup\t\t\t\t", { polarity: "R", label: "label", age: 200, popup: "popup" }],
     [" \tR\tlabel\t100\tpopup", { polarity: "R", label: "label", age: 100, popup: "popup" }],
     ["\tR\tlabel", null],
-    ["Primary", null],
     ["invalid\tR\tlabel\t200\tpopup", null],
     ["\tR\tlabel\tage\tpopup\t", null],
     ["\tR\tlabel\tbadNumber\tpopup", null],
@@ -306,6 +305,10 @@ describe("process chron line tests", () => {
       expect(processChron(line, 0, warnings)).toEqual(expected);
       expect(warnings).toEqual([]);
     }
+  });
+  it ("should skip primary", () => {
+    const line = "\tprimary\tlabel\t100\tpopup";
+    expect(processChron(line, 0, warnings)).toBeNull();
   });
 });
 
@@ -339,6 +342,16 @@ describe("process point line tests", () => {
       expect(warnings).toEqual([]);
     }
   });
+  test.each([
+    "nopoints\t10\t10\tpopup",
+      "nopoints",
+      "rect",
+      "cross",
+      "circle\t10\t10\tpopup",
+    ])("should process '%s'", (line) => {
+      expect(processPoint(line, 0, warnings)).toBeNull();
+      expect(warnings).toEqual([])
+    })
 });
 
 describe("process sequence line tests", () => {

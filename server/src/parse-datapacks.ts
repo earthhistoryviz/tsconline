@@ -620,6 +620,7 @@ export async function getColumnTypes(
       const parsedSubEventType = tabSeparated[0]?.toUpperCase();
       if (isSubEventType(parsedSubEventType)) {
         subEventType = parsedSubEventType;
+        continue;
       } else if (!subEventType) {
         warnings.push({
           lineNumber: lineCount,
@@ -909,7 +910,9 @@ export function processSequence(line: string, lineCount: number, warnings: Datap
 export function processChron(line: string, lineCount: number, warnings: DatapackWarning[]): SubChronInfo | null {
   let subChronInfo = {};
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length < 4 || line.toLowerCase().includes("primary") || tabSeparated[0]) {
+  // skip primary lines
+  if (line.toLowerCase().includes("primary")) return null;
+  if (tabSeparated.length < 4 || tabSeparated[0]?.trim()) {
     warnings.push({
       lineNumber: lineCount,
       warning: `Line in Chron column formatted incorrectly`,
@@ -1027,6 +1030,8 @@ export function processEvent(
     subEventType
   };
   const tabSeparated = line.split("\t");
+  // some events wrap to the next line
+  if (tabSeparated.length == 1) return null;
   if (tabSeparated.length < 3 || tabSeparated[0]?.trim()) {
     warnings.push({
       lineNumber: lineCount,
@@ -1074,6 +1079,9 @@ export function processPoint(line: string, lineCount: number, warnings: Datapack
     popup: ""
   };
   const tabSeparated = line.split("\t");
+  if (isPointShape(tabSeparated[0]?.trim())) {
+    return null;
+  }
   if (tabSeparated.length < 2 || tabSeparated[0]?.trim()) {
     warnings.push({
       lineNumber: lineCount,
@@ -1174,8 +1182,8 @@ export function processBlock(
       }
     }
   }
-  if (rgb) {
-    if (patternForColor.test(rgb)) {
+  if (rgb?.trim() && rgb?.trim() !== "0") {
+    if (patternForColor.test(rgb.trim())) {
       const rgbSeperated = rgb.split("/");
       currentSubBlockInfo.rgb = {
         r: Number(rgbSeperated[0]!),
@@ -1184,7 +1192,7 @@ export function processBlock(
       };
     } else {
       warnings.push({
-        warning: `Invalid rgb found in block color "${rgb}", setting rgb to default`,
+        warning: `Invalid rgb found in block color "${rgb}", setting rgb to ${defaultColor.r}/${defaultColor.g}/${defaultColor.b}`,
         lineNumber: lineCount
       });
       currentSubBlockInfo.rgb = defaultColor;
