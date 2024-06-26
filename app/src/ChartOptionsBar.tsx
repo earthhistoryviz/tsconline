@@ -115,6 +115,10 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
               container.zoomOut(step, 0);
               actions.setChartTabScale(state.chartTab.scale - step);
             }
+            while (state.chartTab.scale <= 0 && step > 0) {
+              container.zoomIn(step, 0);
+              actions.setChartTabScale(state.chartTab.scale + step);
+            }
           }}>
           <ZoomOutIcon />
         </IconButton>
@@ -273,6 +277,8 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
               ctrl/⊞/⌘ + Minus (-) - Zoom out
               <br />
               ctrl/⊞/⌘ + Plus (+) - Zoom in
+              <br />
+              Shift + Scroll - Horizontal Scroll
             </div>
           }>
           <IconButton>

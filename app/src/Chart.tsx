@@ -25,26 +25,26 @@ export const Chart = observer(() => {
     const contentRect = content.getBoundingClientRect();
     if (!containerRect || !contentRect) return;
 
-    const ogY = (contentRect.bottom - contentRect.top) / container.instance.transformState.scale;
-    const ogX = (contentRect.right - contentRect.left) / container.instance.transformState.scale;
-    const zoomFitY = (containerRect.bottom - containerRect.top) / ogY;
-    const zoomFitX = (containerRect.right - containerRect.left) / ogX;
+    const originalHeight = (contentRect.bottom - contentRect.top) / container.instance.transformState.scale;
+    const originalWidth = (contentRect.right - contentRect.left) / container.instance.transformState.scale;
+    const zoomFitY = (containerRect.bottom - containerRect.top) / originalHeight;
+    const zoomFitX = (containerRect.right - containerRect.left) / originalWidth;
 
     if (zoomFitX < zoomFitY) {
       actions.setChartTabZoomFitScale(zoomFitX);
       actions.setChartTabZoomFitMidCoord(
-        (containerRect.bottom - containerRect.top) / 2 - (ogY * state.chartTab.zoomFitScale) / 2
+        (containerRect.bottom - containerRect.top) / 2 - (originalHeight * state.chartTab.zoomFitScale) / 2
       );
       state.chartTab.zoomFitMidCoordIsX = false;
     } else {
       actions.setChartTabZoomFitScale(zoomFitY);
       actions.setChartTabZoomFitMidCoord(
-        (containerRect.right - containerRect.left) / 2 - (ogX * state.chartTab.zoomFitScale) / 2
+        (containerRect.right - containerRect.left) / 2 - (originalWidth * state.chartTab.zoomFitScale) / 2
       );
       state.chartTab.zoomFitMidCoordIsX = true;
     }
 
-    actions.setChartTabResetMidX((containerRect.right - containerRect.left) / 2 - ogX / 2);
+    actions.setChartTabResetMidX((containerRect.right - containerRect.left) / 2 - originalWidth / 2);
   };
 
   useEffect(() => {
@@ -63,6 +63,22 @@ export const Chart = observer(() => {
     const windowResizeListenerWrapper = () => {
       setChartAlignmentValues();
     };
+
+    const horizontalScrollWrapper = (event: WheelEvent) => {
+      // Check if the shift key is pressed
+      if (event.shiftKey) {
+        // Prevent the default scroll action
+        event.preventDefault();
+        const transformState = container.instance.transformState;
+        //add deltaY in y param to "undo" transform done by vertical scroll
+        container.setTransform(
+          transformState.positionX - event.deltaY,
+          transformState.positionY + event.deltaY,
+          transformState.scale,
+          0
+        );
+      }
+    };
     const eventListenerWrapper = (evt: KeyboardEvent) => {
       if ((evt.metaKey || evt.ctrlKey) && evt.code === "Equal") {
         evt.preventDefault();
@@ -77,13 +93,24 @@ export const Chart = observer(() => {
           container.zoomOut(step, 0);
           actions.setChartTabScale(state.chartTab.scale - step);
         }
+        while (state.chartTab.scale <= 0 && step > 0) {
+          container.zoomIn(step, 0);
+          actions.setChartTabScale(state.chartTab.scale + step);
+        }
       }
     };
+    //zoom in and zoom out using keyboard
     document.addEventListener("keydown", eventListenerWrapper);
+    //set alignment values
     window.addEventListener("resize", windowResizeListenerWrapper);
+    //horizontal scrolling
+    if (container.instance.wrapperComponent)
+      container.instance.wrapperComponent.addEventListener("wheel", horizontalScrollWrapper);
     return () => {
       document.removeEventListener("keydown", eventListenerWrapper);
       window.removeEventListener("resize", windowResizeListenerWrapper);
+      if (container.instance.wrapperComponent)
+        container.instance.wrapperComponent.removeEventListener("wheel", horizontalScrollWrapper);
     };
   }, [state.chartContent]);
 
@@ -114,7 +141,9 @@ export const Chart = observer(() => {
               panning={{ wheelPanning: !state.chartTab.enableScrollZoom }}
               limitToBounds={true}
               minScale={minScale}
-              maxScale={maxScale}>
+              maxScale={maxScale}
+              centerOnInit={true}
+              onWheelStop={() => {}}>
               <TransformComponent wrapperStyle={{ height: "84vh", width: "80vw", border: "solid" }}>
                 <TSCSvgComponent svgContainerRef={svgContainerRef} chartContent={state.chartContent} />
               </TransformComponent>
