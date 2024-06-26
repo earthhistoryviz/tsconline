@@ -13,7 +13,7 @@ vi.mock("fs", async (importOriginal) => {
   const actual = await importOriginal<typeof fsModule>();
   return {
     ...actual,
-    createReadStream: vi.fn().mockImplementation(() => {})
+    createReadStream: vi.fn().mockImplementation(() => { })
   };
 });
 
@@ -57,9 +57,9 @@ vi.mock("../src/util", async (importOriginal) => {
   return {
     ...actual,
     assetconfigs: { uploadDirectory: "" },
-    loadAssetConfigs: vi.fn().mockImplementation(() => {}),
-    deleteDirectory: vi.fn().mockImplementation(() => {}),
-    resetUploadDirectory: vi.fn().mockImplementation(() => {}),
+    loadAssetConfigs: vi.fn().mockImplementation(() => { }),
+    deleteDirectory: vi.fn().mockImplementation(() => { }),
+    resetUploadDirectory: vi.fn().mockImplementation(() => { }),
     checkHeader: vi.fn().mockReturnValue(true)
   };
 });
@@ -449,13 +449,21 @@ async function checkFileExists(filePath: string): Promise<boolean> {
   }
 }
 
+let jarFilePath = "server/assets/jars/TSCreatorBASE-8.1_09June2024.jar"
+let resultPath = "server/__tests__/__data__/encryption-test-generated-file"
+if (await checkFileExists("/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar")) {
+  jarFilePath = "/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar";
+  resultPath = "/home/runner/work/tsconline/tsconline/server/__tests__/__data__/encryption-test-generated-file";
+}
+
+
 describe("runJavaEncrypt", () => {
   it("should correctly encrypt an unencrypted TSCreator txt file", async () => {
     if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-1.txt"))) {
       await unmockedRunJavaEncrypt(
-        "server/assets/jars/TSCreatorBASE-8.1_09June2024.jar",
+        jarFilePath,
         "server/__tests__/__data__/encryption-test-1.txt",
-        "server/__tests__/__data__/encryption-test-generated-file"
+        resultPath
       );
     }
     const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-1.txt";
@@ -468,9 +476,9 @@ describe("runJavaEncrypt", () => {
   it("should correctly encrypt an encrypted TSCreator txt file, when the TSCreator Encrypted Datafile title is manually removed from the original encrypted file.", async () => {
     if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-2.txt"))) {
       await unmockedRunJavaEncrypt(
-        "server/assets/jars/TSCreatorBASE-8.1_09June2024.jar",
+        jarFilePath,
         "server/__tests__/__data__/encryption-test-2.txt",
-        "server/__tests__/__data__/encryption-test-generated-file"
+        resultPath
       );
     }
     const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-2.txt";
@@ -483,9 +491,9 @@ describe("runJavaEncrypt", () => {
   it("should correctly encrypt an unencrypted TSCreator zip file", async () => {
     if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-5.dpk"))) {
       await unmockedRunJavaEncrypt(
-        "server/assets/jars/TSCreatorBASE-8.1_09June2024.jar",
+        jarFilePath,
         "server/__tests__/__data__/encryption-test-5.zip",
-        "server/__tests__/__data__/encryption-test-generated-file"
+        resultPath
       );
     }
     const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-5.dpk";
@@ -498,9 +506,9 @@ describe("runJavaEncrypt", () => {
   it("should correctly encrypt an encrypted TSCreator zip file", async () => {
     if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-6.dpk"))) {
       await unmockedRunJavaEncrypt(
-        "server/assets/jars/TSCreatorBASE-8.1_09June2024.jar",
+        jarFilePath,
         "server/__tests__/__data__/encryption-test-6.zip",
-        "server/__tests__/__data__/encryption-test-generated-file"
+        resultPath
       );
     }
     const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-6.dpk";
@@ -512,17 +520,17 @@ describe("runJavaEncrypt", () => {
   });
   it("should not encrypt a bad txt file", async () => {
     await unmockedRunJavaEncrypt(
-      "server/assets/jars/TSCreatorBASE-8.1_09June2024.jar",
+      jarFilePath,
       "server/__tests__/__data__/encryption-test-3.txt",
-      "server/__tests__/__data__/encryption-test-generated-file"
+      resultPath
     );
     expect(!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-3.txt")));
   });
   it("should not encrypt an encrypted TSCreator txt file with the TSCreator Encrypted Datafile title", async () => {
     await unmockedRunJavaEncrypt(
-      "server/assets/jars/TSCreatorBASE-8.1_09June2024.jar",
+      jarFilePath,
       "server/__tests__/__data__/encryption-test-4.txt",
-      "server/__tests__/__data__/encryption-test-generated-file"
+      resultPath
     );
     expect(!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-4.txt")));
   });
