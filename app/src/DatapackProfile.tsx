@@ -11,7 +11,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Discussion } from "./components/TSCDiscussion";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import { PageNotFound } from "./PageNotFound";
-import { DatapackParsingPack } from "@tsconline/shared";
+import { DatapackParsingPack, DatapackWarning, assertDatapackWarning } from "@tsconline/shared";
 
 const tags: string[] = ["Large", "Small", "Medium", "Huge", "Tiny", "Normal", "Abnormal"];
 export const DatapackProfile = observer(() => {
@@ -90,12 +90,15 @@ const DatapackProfileContent: React.FC<DatapackProfileContentProps> = ({ index, 
       return <Discussion />;
     case 3:
       return (
-        datapack.warnings && 
-        datapack.warnings.length > 0 && 
-        datapack.warnings.map((warning) => (
-          <DatapackWarning key={warning} text={warning} />
+        datapack.warnings &&
+        datapack.warnings.length > 0 &&
+        datapack.warnings.map((warning, index) => (
+          <DatapackWarningAlert
+            key={warning.lineNumber + warning.warning + warning.message + index}
+            warning={warning}
+          />
         ))
-);
+      );
     default:
       return <About />;
   }
@@ -159,13 +162,19 @@ const About: React.FC = () => {
 };
 
 type DatapackWarningProps = {
-  text: string;
+  warning: DatapackWarning;
 };
-export const DatapackWarning: React.FC<DatapackWarningProps> = ({ text }) => {
+export const DatapackWarningAlert: React.FC<DatapackWarningProps> = ({ warning }) => {
   return (
     <Box className={styles.dwc} bgcolor="secondaryBackground.light">
       <CampaignIcon className={styles.dwi} />
-      <Typography>{text}</Typography>
+      <Box>
+        {warning.lineNumber !== undefined && (
+          <Typography fontWeight={600}>{`Warning found on line ${warning.lineNumber}`}</Typography>
+        )}
+        <Typography>{warning.warning}</Typography>
+        {warning.message && <Typography fontStyle="italic">{warning.message}</Typography>}
+      </Box>
     </Box>
   );
 };

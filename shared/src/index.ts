@@ -43,8 +43,14 @@ export type DatapackParsingPack = {
   date?: string;
   verticalScale?: number;
   isUserDatapack: boolean;
-  warnings?: string[];
+  warnings?: DatapackWarning[];
   image: string;
+};
+
+export type DatapackWarning = {
+  lineNumber?: number;
+  message?: string;
+  warning: string;
 };
 
 export type IndexResponse = {
@@ -871,11 +877,18 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
   if ("warnings" in o) {
     if (!Array.isArray(o.warnings)) throwError("DatapackParsingPack", "warnings", "array", o.warnings);
     for (const warning of o.warnings) {
-      if (typeof warning !== "string") throwError("DatapackParsingPack", "warning", "string", warning);
+      assertDatapackWarning(warning);
     }
   }
   if (typeof o.image !== "string") throwError("DatapackParsingPack", "image", "string", o.image);
   assertColumnInfo(o.columnInfo);
+}
+export function assertDatapackWarning(o: any): asserts o is DatapackWarning {
+  if (!o || typeof o !== "object") throw new Error("DatapackWarning must be a non-null object");
+  if ("message" in o && typeof o.message !== "string") throwError("DatapackWarning", "message", "string", o.message);
+  if (typeof o.warning !== "string") throwError("DatapackWarning", "warning", "string", o.warning);
+  if ("lineNumber" in o && typeof o.lineNumber !== "number")
+    throwError("DatapackWarning", "lineNumber", "number", o.lineNumber);
 }
 export function assertDatapackIndex(o: any): asserts o is DatapackIndex {
   if (!o || typeof o !== "object") throw new Error("DatapackIndex must be a non-null object");
