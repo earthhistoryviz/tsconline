@@ -10,6 +10,7 @@ import {
   PointColumnInfoTSC,
   PointSettings,
   RangeColumnInfoTSC,
+  RangeSettings,
   RulerColumnInfoTSC,
   SequenceColumnInfoTSC,
   ValidFontOptions,
@@ -392,4 +393,10 @@ export const defaultPoint: Partial<Point> = {
   minX: Number.MAX_SAFE_INTEGER,
   maxX: Number.MIN_SAFE_INTEGER,
   scaleStep: 1
+};
+
+export const defaultRangeSettings: RangeSettings = {
+  margin: 0.2,
+  rangeSort: "first occurrence",
+  agePad: 2
 };
