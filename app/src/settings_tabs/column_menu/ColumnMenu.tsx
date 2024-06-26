@@ -107,7 +107,7 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
                 helperOrientation="start"
                 inputs={[
                   {
-                    helperText: "Edit Width",
+                    helperText: "Width",
                     id: "width",
                     value: column.width,
                     onValueChange: (value: number) => {
