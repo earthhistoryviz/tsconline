@@ -1,5 +1,6 @@
 import {
   ChartSettingsInfoTSC,
+  ChronColumnInfoTSC,
   ChronSettings,
   ColumnBasicInfoTSC,
   DataMiningSettings,
@@ -243,6 +244,13 @@ export const defaultEventColumnInfoTSC: EventColumnInfoTSC = {
   drawExtraColumn: null,
   windowSize: 2,
   stepSize: 1
+};
+
+export const defaultChronColumnInfoTSC: ChronColumnInfoTSC = {
+  ...defaultColumnBasicInfoTSC,
+  windowSize: 2,
+  stepSize: 1,
+  drawExtraColumn: null
 };
 
 export const defaultZoneColumnInfoTSC: ZoneColumnInfoTSC = {

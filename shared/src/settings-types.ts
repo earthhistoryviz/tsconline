@@ -1,4 +1,5 @@
 import {
+  DataMiningChronDataType,
   DataMiningPointDataType,
   EventFrequency,
   EventType,
@@ -8,6 +9,7 @@ import {
   RangeSort,
   assertFontsInfo,
   assertRGB,
+  isDataMiningChronDataType,
   isDataMiningPointDataType,
   isEventFrequency,
   isEventType,
@@ -58,7 +60,14 @@ export type ColumnInfoTSC =
   | SequenceColumnInfoTSC
   | RangeColumnInfoTSC
   | PointColumnInfoTSC
-  | RulerColumnInfoTSC;
+  | RulerColumnInfoTSC
+  | ChronColumnInfoTSC;
+
+export type ChronColumnInfoTSC = {
+  drawExtraColumn: DataMiningChronDataType | null;
+  windowSize: number;
+  stepSize: number;
+} & ColumnBasicInfoTSC;
 
 export type ColumnBasicInfoTSC = {
   _id: string;
@@ -172,6 +181,17 @@ export function assertChartInfoTSC(o: any): asserts o is ChartInfoTSC {
   if (!o || typeof o !== "object") throw new Error("ChartInfoTSC must be a non-null object");
   if (!o["class datastore.RootColumn:Chart Root"]) throw new Error("ChartInfoTSC must have a Chart Root");
   assertColumnInfoTSC(o["class datastore.RootColumn:Chart Root"]);
+}
+
+export function assertChronColumnInfoTSC(o: any): asserts o is ChronColumnInfoTSC {
+  if (
+    o.drawExtraColumn != null &&
+    (typeof o.drawExtraColumn !== "string" || !isDataMiningChronDataType(o.drawExtraColumn))
+  )
+    throwError("ChronColumnInfoTSC", "drawExtraColumn", "string", o.drawExtraColumn);
+  if (typeof o.windowSize !== "number") throwError("ChronColumnInfoTSC", "windowSize", "number", o.windowSize);
+  if (typeof o.stepSize !== "number") throwError("ChronColumnInfoTSC", "stepSize", "number", o.step);
+  assertColumnBasicInfoTSC(o);
 }
 
 export function assertChartSettingsInfoTSC(o: any): asserts o is ChartSettingsInfoTSC {

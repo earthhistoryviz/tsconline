@@ -1324,7 +1324,7 @@ export function assertSVGStatus(o: any): asserts o is SVGStatus {
 }
 
 export function assertChronSettings(o: any): asserts o is ChronSettings {
-  if (o.dataMiningChronDataType != null && !isDataMiningChronDataType(o.dataMiningChronDataType))
+  if (o.dataMiningChronDataType !== null && !isDataMiningChronDataType(o.dataMiningChronDataType))
     throwError("ChronSettings", "dataMiningChronType", "DataMiningChronDataType", o.dataMiningChronDataType);
   assertDataMiningSettings(o);
 }

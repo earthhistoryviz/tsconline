@@ -20,6 +20,7 @@ import {
   assertZoneColumnInfoTSC,
   convertPointShapeToPointType,
   defaultChartSettingsInfoTSC,
+  defaultChronColumnInfoTSC,
   defaultColumnBasicInfoTSC,
   defaultEventColumnInfoTSC,
   defaultFontsInfo,
@@ -442,7 +443,7 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
     case "Chron":
       assertChronSettings(state.columnSpecificSettings);
       column = {
-        ...column,
+        ...cloneDeep(defaultChronColumnInfoTSC),
         drawExtraColumn: state.columnSpecificSettings.dataMiningChronDataType,
         windowSize: state.columnSpecificSettings.windowSize,
         stepSize: state.columnSpecificSettings.stepSize
