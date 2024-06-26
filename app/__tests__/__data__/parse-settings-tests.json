@@ -22,6 +22,34 @@
         "show": true,
         "expanded": true
       },
+      "translate-range-column-test": {
+        "name": "Range",
+        "editName": "Range Title",
+        "fontsInfo": {},
+        "fontOptions": ["Column Header"],
+        "popup": "",
+        "on": true,
+        "width": 100,
+        "enableTitle": true,
+        "rgb": {
+          "r": 224,
+          "g": 232,
+          "b": 239
+        },
+        "minAge": 1,
+        "maxAge": 5,
+        "children": [],
+        "parent": null,
+        "units": "Ma",
+        "columnDisplayType": "Range",
+        "columnSpecificSettings": {
+          "margin": 200,
+          "agePad": 22,
+          "rangeSort": "alphabetical"
+        },
+        "show": true,
+        "expanded": false
+      },
       "translate-event-column-test": {
         "name": "Events (Venusian)",
         "editName": "Events (Venusian)",
