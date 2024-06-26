@@ -66,6 +66,11 @@ describe("translate columnInfo to columnInfoTSC", () => {
       keys["translate-point-column-key"]
     );
   });
+  it("should translate range column", async () => {
+    expect(parseSettings.translateColumnInfoToColumnInfoTSC(tests["translate-range-column-test"])).toEqual(
+      keys["translate-range-column-key"]
+    );
+  });
   const basicColumn = tests["translate-basic-column-test"];
   test.each([
     [basicColumn.name, "Root", "class datastore.RootColumn:Chart Root", basicColumn],

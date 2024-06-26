@@ -92,7 +92,6 @@ export type EventColumnInfoTSC = ColumnBasicInfoTSC & {
   windowSize: number;
   stepSize: number;
   drawExtraColumn: EventFrequency | null;
-  isDataMiningColumn: boolean;
 };
 
 export type ZoneColumnInfoTSC = ColumnBasicInfoTSC & {
@@ -243,8 +242,6 @@ export function assertEventColumnInfoTSC(o: any): asserts o is EventColumnInfoTS
   if (typeof o.stepSize !== "number") throwError("EventColumnInfoTSC", "stepSize", "number", o.stepSize);
   if (o.drawExtraColumn != null && (typeof o.drawExtraColumn !== "string" || !isEventFrequency(o.drawExtraColumn)))
     throwError("EventColumnInfoTSC", "drawExtraColumn", "string", o.drawExtraColumn);
-  if (typeof o.isDataMiningColumn !== "boolean")
-    throwError("EventColumnInfoTSC", "isDataMiningColumn", "boolean", o.isDataMiningColumn);
   assertColumnBasicInfoTSC(o);
 }
 export function assertSequenceColumnInfoTSC(o: any): asserts o is SequenceColumnInfoTSC {
