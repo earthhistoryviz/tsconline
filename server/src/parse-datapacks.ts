@@ -56,7 +56,8 @@ import {
   SubEventType,
   isSubEventType,
   defaultChronSettings,
-  assertSubChronInfoArray
+  assertSubChronInfoArray,
+  defaultRangeSettings
 } from "@tsconline/shared";
 import { grabFilepaths, hasVisibleCharacters, capitalizeFirstLetter, formatColumnName } from "./util.js";
 import { createInterface } from "readline";
@@ -1441,13 +1442,16 @@ function createLoneColumn(
 function addColumnSettings(column: ColumnInfo, columnSpecificSettings?: ColumnSpecificSettings) {
   switch (column.columnDisplayType) {
     case "Event":
-      column.columnSpecificSettings = JSON.parse(JSON.stringify(defaultEventSettings));
+      column.columnSpecificSettings = _.cloneDeep(defaultEventSettings);
       break;
     case "Point":
       if (!columnSpecificSettings) {
         throw new Error("Error adding point column, no column specific settings found");
       }
       column.columnSpecificSettings = columnSpecificSettings;
+      break;
+    case "Range":
+      column.columnSpecificSettings = _.cloneDeep(defaultRangeSettings);
       break;
     default:
       break;
@@ -1508,6 +1512,7 @@ function processColumn<T extends ColumnInfoType>(
   switch (type) {
     case "Point":
       assertPoint(column);
+      // requires extra setup to handle point settings
       handlePointFields(column, loneColumns, units);
       break;
     default:
@@ -1518,6 +1523,7 @@ function processColumn<T extends ColumnInfoType>(
       break;
   }
   let partialColumn = {};
+  // reset the column to default values
   switch (type) {
     case "Event":
       partialColumn = {
