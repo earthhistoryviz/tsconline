@@ -28,6 +28,38 @@
         "children": [],
         "width": 100
       },
+      "translate-chron-column-key": {
+        "_id": "class datastore.ChronColumn:Chron",
+        "title": "Chron Title",
+        "useNamedColor": false,
+        "placeHolder": false,
+        "drawTitle": true,
+        "drawAgeLabel": false,
+        "drawUncertaintyLabel": false,
+        "isSelected": true,
+        "width": 1000,
+        "pad": 0.2,
+        "age pad": 2,
+        "backgroundColor": {
+          "text": {
+            "r": 1,
+            "g": 2,
+            "b": 3
+          }
+        },
+        "customColor": {
+          "text": {
+            "r": 1,
+            "g": 2,
+            "b": 3
+          }
+        },
+        "fonts": {},
+        "children": [],
+        "drawExtraColumn": "Frequency",
+        "windowSize": 9,
+        "stepSize": 5
+      },
       "translate-range-column-key": {
         "_id": "class datastore.RangeColumn:Range",
         "title": "Range Title",
