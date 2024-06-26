@@ -58,6 +58,7 @@ import {
   defaultChronSettings,
   assertSubChronInfoArray,
   allColumnTypes,
+  DatapackWarning,
   defaultRangeSettings
 } from "@tsconline/shared";
 import {
@@ -169,7 +170,7 @@ export async function parseDatapacks(
   let date: string | null = null;
   let verticalScale: number | null = null;
   let formatVersion = 1.5;
-  const warnings: string[] = [];
+  const warnings: DatapackWarning[] = [];
   try {
     for (const decryptPath of decryptPaths) {
       const { units, title, chronostrat, datapackDate, vertScale, version, top, base, filePropertyLines } =
@@ -435,7 +436,7 @@ export async function getColumnTypes(
   loneColumns: Map<string, ColumnInfo>,
   units: string,
   filePropertyLines: number,
-  warnings: string[]
+  warnings: DatapackWarning[]
 ) {
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
@@ -534,7 +535,7 @@ export async function getColumnTypes(
     }
     if (colType === "blank") {
       // has no subInfo so add straight
-      setColumnHeaders(blank, tabSeparated);
+      setColumnHeaders(blank, tabSeparated, lineCount, warnings);
       loneColumns.set(blank.name, {
         ...blank,
         editName: blank.name,
@@ -551,7 +552,7 @@ export async function getColumnTypes(
       continue;
     }
     if (!inFreehandBlock && colType === "freehand") {
-      setColumnHeaders(freehand, tabSeparated);
+      setColumnHeaders(freehand, tabSeparated, lineCount, warnings);
       inFreehandBlock = true;
       continue;
     } else if (inFreehandBlock) {
@@ -562,7 +563,7 @@ export async function getColumnTypes(
       continue;
     }
     if (!inTransectBlock && colType === "transect") {
-      setColumnHeaders(transect, tabSeparated);
+      setColumnHeaders(transect, tabSeparated, lineCount, warnings);
       inTransectBlock = true;
       continue;
     } else if (inTransectBlock) {
@@ -577,7 +578,7 @@ export async function getColumnTypes(
       continue;
     }
     if (!inSequenceBlock && (colType === "sequence" || colType === "trend")) {
-      setColumnHeaders(sequence, tabSeparated);
+      setColumnHeaders(sequence, tabSeparated, lineCount, warnings);
       inSequenceBlock = true;
       continue;
     } else if (inSequenceBlock) {
@@ -588,7 +589,7 @@ export async function getColumnTypes(
       continue;
     }
     if (!inPointBlock && colType === "point") {
-      setColumnHeaders(point, tabSeparated);
+      setColumnHeaders(point, tabSeparated, lineCount, warnings);
       inPointBlock = true;
       continue;
     } else if (inPointBlock) {
@@ -602,7 +603,7 @@ export async function getColumnTypes(
       continue;
     }
     if (!inRangeBlock && colType === "range") {
-      setColumnHeaders(range, tabSeparated);
+      setColumnHeaders(range, tabSeparated, lineCount, warnings);
       inRangeBlock = true;
       continue;
     } else if (inRangeBlock) {
@@ -614,7 +615,7 @@ export async function getColumnTypes(
     }
     // we found an event block
     if (!inEventBlock && colType === "event") {
-      setColumnHeaders(event, tabSeparated);
+      setColumnHeaders(event, tabSeparated, lineCount, warnings);
       inEventBlock = true;
       continue;
     } else if (inEventBlock) {
@@ -622,9 +623,10 @@ export async function getColumnTypes(
       if (isSubEventType(parsedSubEventType)) {
         subEventType = parsedSubEventType;
       } else if (!subEventType) {
-        warnings.push(
-          `Line: ${lineCount} with event ${event.name}: no subEventType of FAD, LAD, EVENTS, or EVENT found. This event will be skipped and not processed.`
-        );
+        warnings.push({
+          lineNumber: lineCount,
+          warning: `Line: ${lineCount} with event ${event.name}: no subEventType of FAD, LAD, EVENTS, or EVENT found. This event will be skipped and not processed.`
+        });
         inEventBlock = false;
         Object.assign(event, { ...createDefaultColumnHeaderProps(), width: 150, on: false, subEventInfo: [] });
         continue;
@@ -637,7 +639,7 @@ export async function getColumnTypes(
     }
     // we found a facies block
     if (!inFaciesBlock && colType === "facies") {
-      setColumnHeaders(facies, tabSeparated);
+      setColumnHeaders(facies, tabSeparated, lineCount, warnings);
       inFaciesBlock = true;
       continue;
     } else if (inFaciesBlock) {
@@ -650,7 +652,7 @@ export async function getColumnTypes(
 
     // TODO chron-only
     if (!inChronBlock && (colType === "chron" || colType === "chron-only")) {
-      setColumnHeaders(chron, tabSeparated);
+      setColumnHeaders(chron, tabSeparated, lineCount, warnings);
       inChronBlock = true;
       continue;
     } else if (inChronBlock) {
@@ -663,7 +665,7 @@ export async function getColumnTypes(
 
     // we found a block
     if (!inBlockBlock && colType === "block") {
-      setColumnHeaders(block, tabSeparated);
+      setColumnHeaders(block, tabSeparated, lineCount, warnings);
       inBlockBlock = true;
       continue;
     } else if (inBlockBlock) {
@@ -690,13 +692,15 @@ export async function getColumnTypes(
     if (!tabSeparated.includes(":") && tabSeparated[0] && tabSeparated[1]) {
       const closest = getClosestMatch(tabSeparated[1]!, allColumnTypes, 3);
       if (closest) {
-        warnings.push(
-          `Error found while processing column type: ${tabSeparated[1]!}, closest match to existing column types found: ${closest} on line ${lineCount}`
-        );
+        warnings.push({
+          lineNumber: lineCount,
+          warning: `Error found while processing column type: ${tabSeparated[1]!}, closest match to existing column types found: ${closest}`
+        });
       } else {
-        warnings.push(
-          `Error found while processing column type: ${tabSeparated[1]!} that doesn't match any existing column types (${allColumnTypes.join(", ")}) on line ${lineCount}`
-        );
+        warnings.push({
+          lineNumber: lineCount,
+          warning: `Error found while processing column type: ${tabSeparated[1]!} that doesn't match any existing column types (${allColumnTypes.join(", ")})`
+        });
       }
     }
   }
@@ -728,7 +732,12 @@ export async function getColumnTypes(
  * @param column
  * @param tabSeparated
  */
-function setColumnHeaders(column: ColumnHeaderProps, tabSeparated: string[]) {
+function setColumnHeaders(
+  column: ColumnHeaderProps,
+  tabSeparated: string[],
+  lineCount: number,
+  warnings: DatapackWarning[]
+) {
   //for formatted names in ColumnInfo object
   column.name = formatColumnName(tabSeparated[0]!);
   const width = Number(tabSeparated[2]!);
@@ -761,6 +770,11 @@ function setColumnHeaders(column: ColumnHeaderProps, tabSeparated: string[]) {
     assertColumnHeaderProps(column);
   } catch (e) {
     console.log(`Error ${e} found while processing column header, setting to default`);
+    warnings.push({
+      warning: String(e),
+      lineNumber: lineCount,
+      message: `Error found while processing column header of ${column.name}, setting column to default`
+    });
     Object.assign(column, { ...createDefaultColumnHeaderProps() });
   }
 }
@@ -770,7 +784,7 @@ function setColumnHeaders(column: ColumnHeaderProps, tabSeparated: string[]) {
  * @param line
  * @returns
  */
-export function processFreehand(line: string, lineCount: number, warnings: string[]): SubFreehandInfo | null {
+export function processFreehand(line: string, lineCount: number, warnings: DatapackWarning[]): SubFreehandInfo | null {
   const subFreehandInfo = {
     topAge: 0,
     baseAge: 0
@@ -787,9 +801,11 @@ export function processFreehand(line: string, lineCount: number, warnings: strin
   try {
     assertSubFreehandInfo(subFreehandInfo);
   } catch (e) {
-    warnings.push(
-      `Line ${lineCount} resulted in ${e} found while processing subFreehandInfo, this line will be skipped in processing`
-    );
+    warnings.push({
+      lineNumber: lineCount,
+      warning: String(e),
+      message: `Line in Freehand column formatted incorrectly, this line will be skipped in processing`
+    });
     return null;
   }
   return subFreehandInfo;
@@ -799,7 +815,7 @@ export function processFreehand(line: string, lineCount: number, warnings: strin
  * @param line
  * @returns
  */
-export function processTransect(line: string, lineCount: number, warnings: string[]): SubTransectInfo | null {
+export function processTransect(line: string, lineCount: number, warnings: DatapackWarning[]): SubTransectInfo | null {
   const subTransectInfo = {
     age: 0
   };
@@ -811,9 +827,11 @@ export function processTransect(line: string, lineCount: number, warnings: strin
   try {
     assertSubTransectInfo(subTransectInfo);
   } catch (e) {
-    warnings.push(
-      `Line ${lineCount} resulted in ${e} found while processing subTransectInfo, this line will be skipped in processing`
-    );
+    warnings.push({
+      lineNumber: lineCount,
+      warning: String(e),
+      message: `Line in Transect column formatted incorrectly, this line will be skipped in processing`
+    });
     return null;
   }
   return subTransectInfo;
@@ -824,7 +842,7 @@ export function processTransect(line: string, lineCount: number, warnings: strin
  * @param line
  * @returns
  */
-export function processSequence(line: string, lineCount: number, warnings: string[]): SubSequenceInfo | null {
+export function processSequence(line: string, lineCount: number, warnings: DatapackWarning[]): SubSequenceInfo | null {
   let subSequenceInfo = {};
   const tabSeparated = line.split("\t");
   if (tabSeparated.length > 6 || tabSeparated.length < 5 || tabSeparated[0]) return null;
@@ -854,9 +872,11 @@ export function processSequence(line: string, lineCount: number, warnings: strin
   try {
     assertSubSequenceInfo(subSequenceInfo);
   } catch (e) {
-    warnings.push(
-      `Line ${lineCount} resulted in ${e} found while processing subSequenceInfo, this line will be skipped in processing`
-    );
+    warnings.push({
+      lineNumber: lineCount,
+      warning: String(e),
+      message: `Line in Sequence column formatted incorrectly, this line will be skipped in processing`
+    });
     return null;
   }
   return subSequenceInfo;
@@ -866,7 +886,7 @@ export function processSequence(line: string, lineCount: number, warnings: strin
  * @param line
  * @returns
  */
-export function processChron(line: string, lineCount: number, warnings: string[]): SubChronInfo | null {
+export function processChron(line: string, lineCount: number, warnings: DatapackWarning[]): SubChronInfo | null {
   let subChronInfo = {};
   const tabSeparated = line.split("\t");
   if (tabSeparated.length < 4 || tabSeparated.length > 5 || line.includes("Primary")) return null;
@@ -901,9 +921,11 @@ export function processChron(line: string, lineCount: number, warnings: string[]
   try {
     assertSubChronInfo(subChronInfo);
   } catch (e) {
-    warnings.push(
-      `Line ${lineCount} resulted in ${e} found while processing subChronInfo, this line will be skipped in processing`
-    );
+    warnings.push({
+      lineNumber: lineCount,
+      warning: String(e),
+      message: `Line in Chron column formatted incorrectly, this line will be skipped in processing`
+    });
     return null;
   }
   return subChronInfo;
@@ -913,7 +935,7 @@ export function processChron(line: string, lineCount: number, warnings: string[]
  * @param line
  * @returns
  */
-export function processRange(line: string, lineCount: number, warnings: string[]): SubRangeInfo | null {
+export function processRange(line: string, lineCount: number, warnings: DatapackWarning[]): SubRangeInfo | null {
   const subRangeInfo = {
     label: "",
     age: 0,
@@ -939,7 +961,11 @@ export function processRange(line: string, lineCount: number, warnings: string[]
   try {
     assertSubRangeInfo(subRangeInfo);
   } catch (e) {
-    warnings.push(`Line ${lineCount} resulted in ${e}, this line will be skipped in processing`);
+    warnings.push({
+      lineNumber: lineCount,
+      warning: String(e),
+      message: `Line in Range column formatted incorrectly, this line will be skipped in processing`
+    });
     return null;
   }
   return subRangeInfo;
@@ -953,7 +979,7 @@ export function processEvent(
   line: string,
   subEventType: SubEventType,
   lineCount: number,
-  warnings: string[]
+  warnings: DatapackWarning[]
 ): SubEventInfo | null {
   const subEventInfo = {
     label: "",
@@ -981,12 +1007,16 @@ export function processEvent(
   try {
     assertSubEventInfo(subEventInfo);
   } catch (e) {
-    warnings.push(`Line ${lineCount} resulted in ${e}, this line will be skipped in processing`);
+    warnings.push({
+      lineNumber: lineCount,
+      warning: String(e),
+      message: `Line in Event column formatted incorrectly, this line will be skipped`
+    });
     return null;
   }
   return subEventInfo;
 }
-export function processPoint(line: string, lineCount: number, warnings: string[]): SubPointInfo | null {
+export function processPoint(line: string, lineCount: number, warnings: DatapackWarning[]): SubPointInfo | null {
   const subPointInfo = {
     age: 0,
     xVal: 0,
@@ -1010,7 +1040,11 @@ export function processPoint(line: string, lineCount: number, warnings: string[]
   try {
     assertSubPointInfo(subPointInfo);
   } catch (e) {
-    warnings.push(`Line ${lineCount} resulted in ${e}, this line will be skipped in processing`);
+    warnings.push({
+      lineNumber: lineCount,
+      warning: String(e),
+      message: `Line in Point column formatted incorrectly, this line will be skipped in processing`
+    });
     return null;
   }
   return subPointInfo;
@@ -1024,7 +1058,7 @@ export function processBlock(
   line: string,
   defaultColor: RGB,
   lineCount: number,
-  warnings: string[]
+  warnings: DatapackWarning[]
 ): SubBlockInfo | null {
   const currentSubBlockInfo = {
     label: "",
@@ -1081,7 +1115,11 @@ export function processBlock(
   try {
     assertSubBlockInfo(currentSubBlockInfo);
   } catch (e) {
-    warnings.push(`Line ${lineCount} resulted in ${e}, this line will be skipped in processing`);
+    warnings.push({
+      warning: String(e),
+      lineNumber: lineCount,
+      message: `Line in Block column formatted incorrectly, this line will be skipped in processing`
+    });
     return null;
   }
   return currentSubBlockInfo;
@@ -1092,7 +1130,7 @@ export function processBlock(
  * @param line the line to be processed
  * @returns A FaciesTimeBlock object
  */
-export function processFacies(line: string, lineCount: number, warnings: string[]): SubFaciesInfo | null {
+export function processFacies(line: string, lineCount: number, warnings: DatapackWarning[]): SubFaciesInfo | null {
   let subFaciesInfo = {};
   if (line.toLowerCase().includes("primary")) {
     return null;
@@ -1126,7 +1164,11 @@ export function processFacies(line: string, lineCount: number, warnings: string[
   try {
     assertSubFaciesInfo(subFaciesInfo);
   } catch (e) {
-    warnings.push(`Line ${lineCount} resulted in ${e}, this line will be skipped in processing`);
+    warnings.push({
+      lineNumber: lineCount,
+      warning: String(e),
+      message: `Line in Facies column formatted incorrectly, this line will be skipped in processing`
+    });
     return null;
   }
   return subFaciesInfo;
@@ -1156,7 +1198,7 @@ function recursive(
   allEntries: Map<string, ParsedColumnEntry>,
   loneColumns: Map<string, ColumnInfo>,
   units: string,
-  warnings: string[]
+  warnings: DatapackWarning[]
 ): FaciesFoundAndAgeRange {
   const returnValue: FaciesFoundAndAgeRange = {
     faciesFound: false,
@@ -1165,7 +1207,10 @@ function recursive(
     fontOptions: ["Column Header"]
   };
   if (!loneColumns.has(currentColumn) && !allEntries.has(currentColumn)) {
-    warnings.push(`Column ${currentColumn} not found during datapack processing`);
+    warnings.push({
+      warning: `Column ${currentColumn} not found during datapack processing`,
+      message: `In other words, this column was found as a child of a column, but information on it was not found in the file.`
+    });
     return returnValue;
   }
   // lone column is a leaf column
