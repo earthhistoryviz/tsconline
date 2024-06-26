@@ -1,12 +1,12 @@
 .tagbutton {
   background-color: transparent;
-  color: black;
   border: 1px solid gray;
   border-radius: 20px;
   padding: 5px 15px;
   font-size: 0.9rem;
   cursor: pointer;
   transition: background-color 0.3s;
+  text-transform: none;
 }
 
 .tagbutton:hover {
@@ -19,7 +19,6 @@
   stroke-dashoffset: 140;
   transform-origin: center;
   animation: draw 1.5s forwards;
-  color: #285238;
 }
 @keyframes draw {
   from {

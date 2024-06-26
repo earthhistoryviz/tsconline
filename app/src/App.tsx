@@ -7,8 +7,8 @@ import { Settings } from "./Settings";
 import { Chart } from "./Chart";
 import { Help } from "./Help";
 import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
-import theme from "./theme";
-import { useContext } from "react";
+import { darkTheme, lightTheme } from "./theme";
+import { useContext, useEffect } from "react";
 import { context } from "./state";
 import { About } from "./About";
 import { Login } from "./Login";
@@ -26,6 +26,12 @@ export default observer(function App() {
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
   const location = useLocation();
+  const theme = state.user.settings.darkMode ? darkTheme : lightTheme;
+  useEffect(() => {
+    const backgroundColor = theme.palette.backgroundColor.main;
+    document.documentElement.style.backgroundColor = backgroundColor;
+    document.body.style.backgroundColor = backgroundColor;
+  }, [theme]);
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={theme}>

@@ -29,6 +29,9 @@ export const Column = observer(function Column() {
       <div className="column-accordion-and-menu-container">
         <Box
           id="ResizableColumnAccordionWrapper"
+          border={1}
+          borderColor="divider"
+          bgcolor="secondaryBackground.main"
           className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}>
           <div className="column-filter-buttons">
             <CustomTooltip title="Expand All" placement="top">
@@ -92,7 +95,9 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
     : {};
   return (
     <div className="column-accordion-container">
-      {details.expanded && <div className="accordion-line" style={containsSelectedChild} />}
+      {details.expanded && (
+        <Box className="accordion-line" style={containsSelectedChild} bgcolor="accordionLine.main" />
+      )}
       <Accordion
         //checks if column name is in expand list
         expanded={details.expanded}
@@ -104,6 +109,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
           tabIndex={0}
           expandIcon={
             <ArrowForwardIosSharpIcon
+              color="icon"
               sx={{ fontSize: "0.9rem" }}
               onClick={(e) => {
                 e.stopPropagation();

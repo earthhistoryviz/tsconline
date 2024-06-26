@@ -1,7 +1,6 @@
 export { TSCCheckbox } from "./TSCCheckbox";
 export { TSCDatapackUploadForm } from "./datapack_display/TSCDatapackUploadForm";
 export { TSCButton } from "./TSCButton";
-export { TSCTextField } from "./TSCTextField";
 export { TSCCard } from "./TSCCard";
 export { TSCIcon } from "./TSCIcon";
 export * from "./TSCFileUpload";

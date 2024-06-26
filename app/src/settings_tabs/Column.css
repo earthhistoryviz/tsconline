@@ -44,7 +44,6 @@
   width: 30vw;
   max-width: 70vw;
   overflow: auto;
-  border: 1px solid lightgray;
   border-radius: 4px;
   z-index: 0;
   padding-left: 10px;
@@ -100,7 +99,6 @@
   bottom: 0;
   width: 1px;
   opacity: 0;
-  background-color: #ccc;
   z-index: 1;
   transition: opacity 0.2s ease;
 }
@@ -124,6 +122,7 @@
   width: 100%;
   padding: 0;
   margin: 0;
+  background-color: transparent;
 }
 
 .MuiIconButton-root.expand-collapse-column-buttons {
@@ -184,14 +183,14 @@
 .column-accordion-summary:hover,
 .column-leaf-row-container:hover {
   transition: background-color 0.05s;
-  background-color: #e0eaf9;
+  background-color: rgba(171, 171, 171, 0.1);
 }
 /* for tab focus */
 .Mui-focusVisible.column-accordion-summary,
 .column-accordion-summary:focus-visible,
 .column-leaf-row-container:focus-visible {
   outline: none;
-  background-color: #e0eaf9;
+  background-color: rgba(171, 171, 171, 0.1);
 }
 .search-filter-helper-text {
   height: 10px;
@@ -201,7 +200,7 @@
 }
 
 .selected-column {
-  background-color: #d1e1f6 !important;
+  background-color: rgba(171, 171, 171, 0.2) !important;
   position: relative;
 }
 /* highlight the selected column */
@@ -213,7 +212,7 @@
   z-index: 1;
   width: 1px;
   height: 100%;
-  background-color: #88afe6;
+  background-color: #9a9a9a;
 }
 
 /* highlight on focus */
@@ -224,7 +223,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  border: 1px solid #88afe685;
+  border: 1px solid #bcbcbc85;
   border-right: none;
   pointer-events: none;
   transition: border-color 0.2s;

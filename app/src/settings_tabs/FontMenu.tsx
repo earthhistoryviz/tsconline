@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite";
 import React, { useContext } from "react";
 import { context } from "../state";
-import { Box, Grid, TextField, TextFieldProps, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Box, TextField, TextFieldProps, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
@@ -103,10 +103,15 @@ const FontMenuRow: React.FC<{
         aria-label="text formatting"
         className="toggle-button-font-menu-group"
         disabled={!fontOpts.on}>
-        <ToggleButton value="bold" aria-label="bold" color="info" className="text-format-toggle-button">
+        <ToggleButton disableRipple value="bold" aria-label="bold" color="info" className="text-format-toggle-button">
           <FormatBoldIcon className="text-format-icon-svg" />
         </ToggleButton>
-        <ToggleButton value="italic" aria-label="italic" color="info" className="text-format-toggle-button">
+        <ToggleButton
+          disableRipple
+          value="italic"
+          aria-label="italic"
+          color="info"
+          className="text-format-toggle-button">
           <FormatItalicIcon className="text-format-icon-svg" />
         </ToggleButton>
       </ToggleButtonGroup>
@@ -124,7 +129,9 @@ const FontMenuRow: React.FC<{
           fontWeight: fontOpts.bold ? "bold" : "",
           fontStyle: fontOpts.italic ? "italic" : "",
           fontSize: fontOpts.size,
-          color: fontOpts.color
+          color: fontOpts.color,
+          bgcolor: "backgroundColor.light",
+          padding: "10px"
         }}
         id={fontOpts.fontFace}>
         Sample Text
@@ -154,26 +161,19 @@ export const FontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
 
 const MetaColumnFontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
   return (
-    <Grid container rowSpacing={2} columnSpacing={0}>
-      <Grid item xs={12}>
-        <Typography className="change-font-header">Change Font</Typography>
-        <FontMenuRow column={column} target="Column Header" />
-      </Grid>
-      <Grid item xs={12}>
-        <CustomDivider className="settings-header-divider" />
-      </Grid>
-      <Grid item xs={12} style={{ marginBottom: "-16px" }}>
-        <Typography className="change-font-header">Additional fonts for child columns</Typography>
-      </Grid>
+    <Box display="flex" flexDirection="column" gap="5px">
+      <Typography className="change-font-header">Change Font</Typography>
+      <FontMenuRow column={column} target="Column Header" />
+      <Typography className="change-font-header">Additional fonts for child columns</Typography>
       {Array.from(column.fontOptions).map((target) => {
         if (target === "Column Header") return null;
         return (
-          <Grid item xs={12} key={target}>
+          <Box key={target}>
             <FontMenuRow column={column} target={target} />
-          </Grid>
+          </Box>
         );
       })}
-    </Grid>
+    </Box>
   );
 });
 
@@ -182,15 +182,13 @@ type LeafColumnFontMenuProps = {
 } & FontMenuProps;
 export const LeafColumnFontMenu: React.FC<LeafColumnFontMenuProps> = observer(({ className, column }) => {
   return (
-    <Grid className={`leaf-column-font-menu ${className}`} container rowSpacing={2} columnSpacing={0}>
-      <Grid item xs={12}>
-        <Typography className="change-font-header">Change Font</Typography>
-      </Grid>
+    <Box className={`leaf-column-font-menu ${className}`}>
+      <Typography className="change-font-header">Change Font</Typography>
       {Array.from(column.fontOptions).map((target) => (
-        <Grid item xs={12} key={target}>
+        <Box key={target}>
           <FontMenuRow column={column} target={target} />
-        </Grid>
+        </Box>
       ))}
-    </Grid>
+    </Box>
   );
 });

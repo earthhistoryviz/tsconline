@@ -1,27 +1,28 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
-import Container from "@mui/material/Container";
-import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
-import Box from "@mui/material/Box";
-import Grid from "@mui/material/Grid";
-import TextField from "@mui/material/TextField";
-import Avatar from "@mui/material/Avatar";
+import {
+  Switch,
+  Typography,
+  Grid,
+  Container,
+  Paper,
+  Box,
+  TextField,
+  Avatar,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Button,
+  Badge
+} from "@mui/material";
 import { context } from "./state";
-import Switch from "@mui/material/Switch";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
 import PersonIcon from "@mui/icons-material/Person";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { fetcher, loadRecaptcha, removeRecaptcha, executeRecaptcha } from "./util";
 import { displayServerError } from "./state/actions/util-actions";
-import { Lottie, TSCButton, TSCPopupDialog } from "./components";
+import { Lottie, TSCButton, TSCPopupDialog, CustomFormControlLabel } from "./components";
 import loader from "./assets/icons/loading.json";
 import { useNavigate } from "react-router";
-import Button from "@mui/material/Button";
-import Badge from "@mui/material/Badge";
 import { observer } from "mobx-react-lite";
 import EditIcon from "@mui/icons-material/Edit";
 import "./Profile.css";
@@ -229,6 +230,8 @@ export const Profile = observer(() => {
     }
   };
 
+  const borderStyle = { border: "2px solid", borderColor: "button.main" };
+
   return loading ? (
     <Box display="flex" justifyContent="center" alignItems="center">
       <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />
@@ -254,9 +257,9 @@ export const Profile = observer(() => {
           }
           onClick={handleBadgeClick}>
           {state.user.pictureUrl ? (
-            <Avatar src={state.user.pictureUrl} className="editable-profile-picture" />
+            <Avatar src={state.user.pictureUrl} className="editable-profile-picture" sx={borderStyle} />
           ) : (
-            <Avatar className="editable-profile-picture">
+            <Avatar className="editable-profile-picture" sx={borderStyle}>
               <PersonIcon />
             </Avatar>
           )}
@@ -268,7 +271,7 @@ export const Profile = observer(() => {
       </Box>
       <Grid container spacing={2} direction="column">
         <Grid item xs={12} md={6}>
-          <Paper elevation={3} sx={{ padding: 2 }}>
+          <Paper elevation={3} sx={{ padding: 2, bgcolor: "secondaryBackground.main" }}>
             <Typography variant="h5" component="h2" gutterBottom>
               Profile Information
             </Typography>
@@ -425,17 +428,18 @@ export const Profile = observer(() => {
           </Paper>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Paper elevation={3} sx={{ padding: 2 }}>
+          <Paper elevation={3} sx={{ padding: 2, bgcolor: "secondaryBackground.main" }}>
             <Typography variant="h5" component="h2" gutterBottom>
               Settings
             </Typography>
-            <FormControlLabel
+            <CustomFormControlLabel
+              width={120}
               control={
                 <Switch
                   checked={state.user.settings.darkMode}
+                  size="medium"
+                  color="default"
                   onChange={() => actions.setDarkMode(!state.user.settings.darkMode)}
-                  name="darkMode"
-                  color="primary"
                 />
               }
               label="Dark Mode"

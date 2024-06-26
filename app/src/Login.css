@@ -22,8 +22,6 @@
 }
 .divider-line {
   flex: 1;
-  height: 1px;
-  background-color: black;
 }
 .account-form {
   width: 100%;

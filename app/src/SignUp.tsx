@@ -93,7 +93,7 @@ export const SignUp: React.FC = observer(() => {
   return (
     <Container component="main" maxWidth="xs">
       <Box className="login-box">
-        <Avatar sx={{ "& .MuiSvgIcon-root": { mr: 0 }, bgcolor: theme.palette.navbar.dark }}>
+        <Avatar sx={{ bgcolor: theme.palette.backgroundColor.main }}>
           <LockOutlinedIcon sx={{ color: theme.palette.selection.main }} />
         </Avatar>
         {loading ? (
@@ -147,9 +147,7 @@ export const SignUp: React.FC = observer(() => {
               </TSCButton>
               <Grid container justifyContent="flex-end">
                 <Grid item>
-                  <Link href="/login" sx={{ color: "black" }}>
-                    Already have an account? Sign in
-                  </Link>
+                  <Link href="/login">Already have an account? Sign in</Link>
                 </Grid>
               </Grid>
             </Box>

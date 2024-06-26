@@ -15,6 +15,7 @@ import { useNavigate } from "react-router";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import "../Profile.css";
+import { useTheme } from "@mui/material";
 
 export const TSCAccountMenu = observer(() => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -27,6 +28,7 @@ export const TSCAccountMenu = observer(() => {
   };
   const navigate = useNavigate();
   const { state, actions } = useContext(context);
+  const theme = useTheme();
   return (
     <>
       <Box sx={{ display: "flex", alignItems: "center", textAlign: "center" }}>
@@ -39,9 +41,9 @@ export const TSCAccountMenu = observer(() => {
             aria-haspopup="true"
             aria-expanded={open ? "true" : undefined}>
             {state.user.pictureUrl ? (
-              <Avatar src={state.user.pictureUrl} className="profile-picture" />
+              <Avatar src={state.user.pictureUrl} sx={{ border: "2px solid", borderColor: "button.main" }} />
             ) : (
-              <Avatar className="profile-picture">
+              <Avatar sx={{ border: "2px solid", borderColor: "button.main" }}>
                 <PersonIcon />
               </Avatar>
             )}
@@ -50,7 +52,7 @@ export const TSCAccountMenu = observer(() => {
       </Box>
       <Menu
         anchorEl={anchorEl}
-        id="account-menu"
+        className="account-menu"
         open={open}
         onClose={handleClose}
         onClick={handleClose}
@@ -60,24 +62,14 @@ export const TSCAccountMenu = observer(() => {
             sx: {
               overflow: "visible",
               filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.32))",
+              bgcolor: "backgroundColor.main",
+              border: `1px solid ${theme.palette.divider}`,
               mt: 1.5,
               "& .MuiAvatar-root": {
                 width: 32,
                 height: 32,
                 ml: -0.5,
                 mr: 1
-              },
-              "&::before": {
-                content: '""',
-                display: "block",
-                position: "absolute",
-                top: 0,
-                right: 18,
-                width: 10,
-                height: 10,
-                bgcolor: "background.paper",
-                transform: "translateY(-50%) rotate(45deg)",
-                zIndex: 0
               }
             }
           }
@@ -90,7 +82,7 @@ export const TSCAccountMenu = observer(() => {
         <Divider />
         <MenuItem onClick={() => navigate("/signup")}>
           <ListItemIcon>
-            <PersonAdd fontSize="small" />
+            <PersonAdd fontSize="small" color="icon" />
           </ListItemIcon>
           Add another account
         </MenuItem>
@@ -98,7 +90,7 @@ export const TSCAccountMenu = observer(() => {
         {state.user.isAdmin && (
           <MenuItem onClick={() => navigate("/")}>
             <ListItemIcon>
-              <AdminPanelSettingsIcon fontSize="small" />
+              <AdminPanelSettingsIcon fontSize="small" color="icon" />
             </ListItemIcon>
             Admin Panel
           </MenuItem>
@@ -109,7 +101,7 @@ export const TSCAccountMenu = observer(() => {
             navigate("/login");
           }}>
           <ListItemIcon>
-            <Logout fontSize="small" />
+            <Logout fontSize="small" color="icon" />
           </ListItemIcon>
           Logout
         </MenuItem>
