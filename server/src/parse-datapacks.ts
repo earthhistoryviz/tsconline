@@ -1100,7 +1100,14 @@ export function processBlock(
     rgb: defaultColor //if Block has color, set to that. If not, set to white
   };
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length < 3) return null;
+  if (tabSeparated.length < 3) {
+    warnings.push({
+      lineNumber: lineCount,
+      warning: `Line in Block column formatted incorrectly`,
+      message: `This line will be skipped in processing`
+    });
+    return null;
+  }
   const label = tabSeparated[1];
   const age = Number(tabSeparated[2]!);
   const popup = tabSeparated[4];
@@ -1135,21 +1142,22 @@ export function processBlock(
       }
     }
   }
-  if (rgb && patternForColor.test(rgb)) {
-    const rgbSeperated = rgb.split("/");
-    currentSubBlockInfo.rgb = {
-      r: Number(rgbSeperated[0]!),
-      g: Number(rgbSeperated[1]!),
-      b: Number(rgbSeperated[2]!)
-    };
-    try {
-      assertRGB(currentSubBlockInfo.rgb);
-    } catch (e) {
-      console.log(`Error ${e} found while processing block rgb, setting rgb to white`);
+  if (rgb) {
+    if (patternForColor.test(rgb)) {
+      const rgbSeperated = rgb.split("/");
+      currentSubBlockInfo.rgb = {
+        r: Number(rgbSeperated[0]!),
+        g: Number(rgbSeperated[1]!),
+        b: Number(rgbSeperated[2]!)
+      };
+    } else {
+      warnings.push({
+        warning: `Invalid rgb found in block color "${rgb}", setting rgb to default`,
+        lineNumber: lineCount
+      });
       currentSubBlockInfo.rgb = defaultColor;
     }
   }
-
   try {
     assertSubBlockInfo(currentSubBlockInfo);
   } catch (e) {
@@ -1174,7 +1182,14 @@ export function processFacies(line: string, lineCount: number, warnings: Datapac
     return null;
   }
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length < 4) return null;
+  if (tabSeparated.length < 4) {
+    warnings.push({
+      lineNumber: lineCount,
+      warning: `Line in Facies column formatted incorrectly`,
+      message: `This line will be skipped in processing`
+    });
+    return null;
+  }
   const age = Number(tabSeparated[3]!);
   if (isNaN(age) || !tabSeparated[3]) {
     warnings.push({

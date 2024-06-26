@@ -40,7 +40,7 @@ import {
   configureOptionalPointSettings
 } from "../src/parse-datapacks";
 import { readFileSync } from "fs";
-import { ColumnInfo, Point } from "@tsconline/shared";
+import { ColumnInfo, DatapackWarning, Point } from "@tsconline/shared";
 const key = JSON.parse(readFileSync("server/__tests__/__data__/column-keys.json").toString());
 
 vi.spyOn(console, "log").mockImplementation(() => {});
@@ -104,27 +104,43 @@ describe("splice column entry tests", () => {
 });
 
 describe("process facies line tests", () => {
+  let warnings: DatapackWarning[];
+  beforeEach(() => {
+    warnings = [];
+  });
   test.each([
     ["\ttop\t\t100", { rockType: "top", age: 100, info: "" }],
     ["\trockType\tlabel\t100\tinfo", { rockType: "rockType", label: "label", age: 100, info: "info" }],
     ["\tsome bad line\t", null],
     ["\tsome bad line\t\t\t\t", null],
+    ["\trockType\tlabel\tbadNumber\tinfo", null],
     ["", null]
   ])("should process '%s'", (line, expected) => {
     if (expected === null) {
-      expect(processFacies(line)).toBeNull();
+      expect(processFacies(line, 0, warnings)).toBeNull();
+      expect(warnings).toEqual([
+        {
+          lineNumber: 0,
+          warning: expect.stringContaining("Facies column formatted incorrectly"),
+          message: "This line will be skipped in processing"
+        }
+      ]);
     } else {
-      expect(processFacies(line)).toEqual(expected);
+      expect(processFacies(line, 0, warnings)).toEqual(expected);
+      expect(warnings).toEqual([]);
     }
   });
-
-  it("should throw error on bad number", () => {
-    const line = "\trockType\tlabel\tbadNumber\tinfo";
-    expect(() => processFacies(line)).toThrow("Error processing facies line, age: badNumber is NaN");
+  it("should skip primary", () => {
+    const line = "\tprimary\tlabel\t100\tinfo";
+    expect(processFacies(line, 0, warnings)).toBeNull();
   });
 });
 
 describe("process blocks line tests", () => {
+  let warnings: DatapackWarning[];
+  beforeEach(() => {
+    warnings = [];
+  });
   const defaultColor = { r: 255, g: 255, b: 255 };
   test.each([
     [" \tTOP\t100\t\t", { label: "TOP", age: 100, popup: "", lineStyle: "solid", rgb: defaultColor }],
@@ -133,23 +149,40 @@ describe("process blocks line tests", () => {
       { label: "label", age: 100, popup: "popup", lineStyle: "dotted", rgb: { r: 23, g: 45, b: 67 } }
     ],
     [
-      " \tlabel\t100\tdotted\tpopup\tbadcolor",
-      { label: "label", age: 100, popup: "popup", lineStyle: "dotted", rgb: defaultColor }
-    ],
-    [
       " \tlabel\t100\t10/10/10\tpopup\t23/45/67",
       { label: "label", age: 100, popup: "popup", lineStyle: "solid", rgb: { r: 23, g: 45, b: 67 } }
     ],
     [
       " \tlabel\t100\tbadlinestyle\tpopup\t23/45/67",
       { label: "label", age: 100, popup: "popup", lineStyle: "solid", rgb: { r: 23, g: 45, b: 67 } }
-    ]
+    ],
+    [" \tlabel\tbadNumber\tdotted\tpopup\t23/45/67", null],
+    [" \t\t\t\t\t\t\t", null],
+    ["", null]
   ])("should process '%s'", (line, expected) => {
-    expect(processBlock(line, defaultColor)).toEqual(expected);
+    if (expected === null) {
+      expect(processBlock(line, defaultColor, 0, warnings)).toBeNull();
+      expect(warnings).toEqual([
+        {
+          lineNumber: 0,
+          warning: expect.stringContaining("Block column formatted incorrectly"),
+          message: "This line will be skipped in processing"
+        }
+      ]);
+    } else {
+      expect(processBlock(line, defaultColor, 0, warnings)).toEqual(expected);
+      expect(warnings).toEqual([]);
+    }
   });
-  it("should process block and throw error on bad number", () => {
-    const line = " \tlabel\tbadNumber\tdotted\tpopup\t23/45/67";
-    expect(() => processBlock(line, defaultColor)).toThrow("Error processing block line, age: badNumber is NaN");
+  it("should reset to default on bad color", () => {
+    expect(processBlock(" \tlabel\t100\tdotted\tpopup\tbadcolor", defaultColor, 0, warnings)).toEqual({
+      label: "label",
+      age: 100,
+      popup: "popup",
+      lineStyle: "dotted",
+      rgb: defaultColor
+    });
+    expect(warnings).toEqual([{ lineNumber: 0, warning: expect.stringContaining("Invalid rgb") }]);
   });
 });
 
