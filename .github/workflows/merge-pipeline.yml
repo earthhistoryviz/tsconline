@@ -144,47 +144,100 @@ jobs:
       - name: Check for any build failures
         if: env.build_failed == 'true'
         run: exit 1
-
-      #- name: Checkout code from Bitbucket
-      # uses: actions/checkout@v2
+      # uses: webfactory/ssh-agent@v0.9.0
       # with:
-      #   repository: 'git@bitbucket.org:strat/tscreator.git'
-      #   token: ${{ secrets.JAVA_DEPLOY_KEY}}   //search for the correct way to set up ssh
-      #   path: 'TSCjar'
+      #   ssh-private-key: ${{ secrets.JAVA_DEPLOY_KEY }}
+      - name: Set up SSH key
+        run: |
+          eval $(ssh-agent)
+          mkdir -p ~/.ssh
+          echo "${{ secrets.JAVA_DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo -e "Host bitbucket.org\n\tAddKeysToAgent yes\n\tIdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
+          ssh-add ~/.ssh/id_rsa
 
-      # - name: Install Docker and Docker Compose
-      #   run: |？？？
-      #     sudo apt-get update
-      #     sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-      #     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-      #     sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-      #     sudo apt-get update
-      #     sudo apt-get install -y docker-ce docker-compose
+      - name: Add known hosts
+        run: |
+          ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
 
-      # - name: Build and start containers
+      - name: Checkout code from Bitbucket
+        # uses: actions/checkout@v4
+        run: |
+          git clone git@bitbucket.org:strat/tscreator.git
+
+      - name: Build and execute commands inside the docker
+        run: |
+          cd /home/runner/work/tsconline/tsconline/tscreator/
+          docker-compose build
+          docker-compose up -d
+          docker-compose exec -T tscreator_vnc bash -c "cd /tscreator/devel && make && make jar && find '/tscreator/jars/' -type f -name '*.jar' -exec cp {} '/tscreator/testUsageJar.jar' \; && exit"
+          docker cp tscreator_vnc:/tscreator/testUsageJar.jar /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar
+
+          if test -f /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar; then
+            echo "docker original file exist"
+          else
+            echo "docker original file not exist"
+            exit 1
+          fi
+      #&& find '/tscreator/jars/' -type f -name '*.jar' -exec cp {} '/tscreator/testUsageJar.jar' \; &&
+      #   CONTAINER_ID = $(docker-compose ps -q tscreator_vnc)
+      #   docker cp $CONTAINER_ID:/tscreator/testUsageJar.jar /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar
+      #  cg
+      - name: Move the jar to TSConline assets
+        run: |
+          if test -f /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar; then
+            echo "local original file exist"
+          else
+            echo "local original file not exist"
+            exit 1
+          fi
+          cp /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar /home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar
+          if test -f /home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar; then
+            echo "copied file exist"
+            ls -ld /home/runner/work/tsconline/tsconline/server/__tests__/__data__/
+          else
+            echo "copied file not exist"
+            ls -ld /home/runner/work/tsconline/tsconline/server/assets/jars/
+            ls -ld /home/runner/work/tsconline/tsconline/server/__tests__/__data__/
+            exit 1
+          fi
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "adopt"
+          java-version: "21"
+
+      - name: Install xvfb
+        run: sudo apt-get install xvfb
+
+      # - name: Start xvfb
       #   run: |
-      #     cd TSCjar
-      #     cp tscreator/docker/Dockerfile .
-      #     cp tscreator/docker/docker-compose.yml .
-      #     docker-compose up -d
+      #     Xvfb :1 -screen 0 1024x768x16 &
+      #     export DISPLAY=:1
 
-      # - name: Execute commands inside the Docker container
+      # - name: manually generate file
       #   run: |
-      #     docker-compose exec -T tscreator_vnc bash -c "cd /tscreator/devel && make clean && make && make jar"
-
-      # - name: Move the jar to TSConline assets
+      #     Xvfb :1 -screen 0 1024x768x16 &
+      #     export DISPLAY=:1
+      #     java -jar /home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar -d "/home/runner/work/tsconline/tsconline/server/__tests__/__data__/encryption-test-1.txt" -enc /home/runner/work/tsconline/tsconline/server/__tests__/__data__/encryption-test-generated-file -node
+      # - name: idk
       #   run: |
-      #   source_dir="/TSCjar/tscreator/jars/"
-      #   target_dir="/tsconline/server/assets/testJar"
-      #   find "$source_dir" -type f -name "*TSCreatorBASE*" -exec mv {} "$target_dir" \;
-      #
-
+      #     cd /home/runner/work/tsconline/tsconline/server/__tests__/__data__/encryption-test-generated-file/
+      #     ls
+      #     if test -f /home/runner/work/tsconline/tsconline/server/__tests__/__data__/encryption-test-generated-file/encryption-test-1.txt; then
+      #        echo "manually call works"
+      #     else
+      #        echo "manually not work as well"
+      #     fi
       - name: Run Tests
         run: |
+          Xvfb :1 -screen 0 1024x768x16 &
+          export DISPLAY=:1
           set -o pipefail
           if ! yarn test > test_output.log 2>&1; then
               echo "test_failed=true" >> $GITHUB_ENV
-              fi
+          fi
         continue-on-error: true
 
       - name: Report Test Errors
