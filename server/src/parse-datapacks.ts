@@ -70,7 +70,6 @@ import {
 } from "./util.js";
 import { createInterface } from "readline";
 import _ from "lodash";
-import chalk from "chalk";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;
 const patternForAbundance = /^(TOP|missing|rare|common|frequent|abundant|sample|flood)$/;
@@ -335,8 +334,10 @@ export async function getAllEntries(
   let defaultChronostrat = "UNESCO";
   let formatVersion = 1.5;
   let vertScale: number | null = null;
+  let lineCount = 0;
   let filePropertyLines = 0;
   for await (const line of readline) {
+    lineCount++;
     if (!line) continue;
     // grab any datapack properties
     const split = line.split("\t");
@@ -346,34 +347,34 @@ export async function getAllEntries(
         case "settop:":
           if (!isNaN(Number(value.trim()))) top = Number(value);
           filePropertyLines++;
-          break;
+          continue;
         case "setbase:":
           if (!isNaN(Number(value.trim()))) base = Number(value);
           filePropertyLines++;
-          break;
+          continue;
         case "chart title:":
           chartTitle = value.trim();
           filePropertyLines++;
-          break;
+          continue;
         case "age units:":
           ageUnits = value.trim();
           filePropertyLines++;
-          break;
+          continue;
         case "default chronostrat:":
           filePropertyLines++;
           if (!/^(USGS|UNESCO)$/.test(value.trim())) {
             console.error(
               "Default chronostrat value in datapack is neither USGS nor UNESCO, setting to default UNESCO"
             );
-            break;
+            continue;
           }
           defaultChronostrat = value.trim();
-          break;
+          continue;
         case "date:":
           if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) value = value.split("/").reverse().join("-");
           date = new Date(value).toISOString().split("T")[0] || null;
           filePropertyLines++;
-          break;
+          continue;
         case "format version:":
           formatVersion = Number(value.trim());
           if (isNaN(formatVersion)) {
@@ -381,7 +382,7 @@ export async function getAllEntries(
             formatVersion = 1.5;
           }
           filePropertyLines++;
-          break;
+          continue;
         case "setscale:":
           vertScale = Number(value);
           if (isNaN(vertScale)) {
@@ -389,7 +390,7 @@ export async function getAllEntries(
             vertScale = null;
           }
           filePropertyLines++;
-          break;
+          continue;
       }
     }
     if (!line.includes("\t:\t")) {
@@ -694,12 +695,14 @@ export async function getColumnTypes(
       if (closest) {
         warnings.push({
           lineNumber: lineCount,
-          warning: `Error found while processing column type: ${tabSeparated[1]!}, closest match to existing column types found: ${closest}`
+          warning: `Error found while processing column type: "${tabSeparated[1]!}" for column ${tabSeparated[0]!}, closest match to existing column types found: ${closest}`,
+          message: `Try using one of the following column types: ${allColumnTypes.join(", ")}`
         });
       } else {
         warnings.push({
           lineNumber: lineCount,
-          warning: `Error found while processing column type: ${tabSeparated[1]!} that doesn't match any existing column types (${allColumnTypes.join(", ")})`
+          warning: `Error found while processing column type: "${tabSeparated[1]!}" that doesn't match any existing column types (${allColumnTypes.join(", ")})`,
+          message: `Try using one of the following column types: ${allColumnTypes.join(", ")}`
         });
       }
     }
@@ -790,7 +793,7 @@ export function processFreehand(line: string, lineCount: number, warnings: Datap
     baseAge: 0
   };
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length < 4 || tabSeparated.length > 5 || line.includes("POLYGON")) return null;
+  if (tabSeparated.length < 4 || line.includes("POLYGON")) return null;
   if (tabSeparated[0] === "image") {
     subFreehandInfo.topAge = Number(tabSeparated[2]!);
     subFreehandInfo.baseAge = Number(tabSeparated[3]!);
@@ -822,7 +825,14 @@ export function processTransect(line: string, lineCount: number, warnings: Datap
   const tabSeparated = line.split("\t");
   if (tabSeparated.length < 2 || tabSeparated[0] || !tabSeparated[1]) return null;
   const age = Number(tabSeparated[1]!);
-  if (isNaN(age)) throw new Error("Error processing transect line, age: " + tabSeparated[1]! + " is NaN");
+  if (isNaN(age) || !tabSeparated[1]) {
+    warnings.push({
+      lineNumber: lineCount,
+      warning: `Line in Transect column formatted incorrectly, age: ${tabSeparated[1]!} is not a valid number`,
+      message: `This line will be skipped in processing`
+    });
+    return null;
+  }
   subTransectInfo.age = age;
   try {
     assertSubTransectInfo(subTransectInfo);
@@ -845,14 +855,20 @@ export function processTransect(line: string, lineCount: number, warnings: Datap
 export function processSequence(line: string, lineCount: number, warnings: DatapackWarning[]): SubSequenceInfo | null {
   let subSequenceInfo = {};
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length > 6 || tabSeparated.length < 5 || tabSeparated[0]) return null;
+  if (tabSeparated.length < 5 || tabSeparated[0]) return null;
   const label = tabSeparated[1];
   const direction = tabSeparated[2]!;
   const age = Number(tabSeparated[3]!);
   const severity = capitalizeFirstLetter(tabSeparated[4]!);
   const popup = tabSeparated[5];
-  if (isNaN(age) || !tabSeparated[3])
-    throw new Error("Error processing sequence line, age: " + tabSeparated[2]! + " is NaN");
+  if (isNaN(age) || !tabSeparated[3]) {
+    warnings.push({
+      lineNumber: lineCount,
+      warning: `Line in Sequence column formatted incorrectly, age: ${tabSeparated[3]!} is not a valid number`,
+      message: `This line will be skipped in processing`
+    });
+    return null;
+  }
   if (label) {
     subSequenceInfo = {
       label,
@@ -889,20 +905,18 @@ export function processSequence(line: string, lineCount: number, warnings: Datap
 export function processChron(line: string, lineCount: number, warnings: DatapackWarning[]): SubChronInfo | null {
   let subChronInfo = {};
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length < 4 || tabSeparated.length > 5 || line.includes("Primary")) return null;
+  if (tabSeparated.length < 4 || line.includes("Primary")) return null;
   const polarity = tabSeparated[1]!;
   const label = tabSeparated[2]!;
   const age = Number(tabSeparated[3]!);
-  if (isNaN(age) || !tabSeparated[3])
-    throw new Error(
-      "Error processing chron line with label: " +
-        label +
-        ", and polarity: " +
-        polarity +
-        ", age: " +
-        tabSeparated[3]! +
-        " is NaN"
-    );
+  if (isNaN(age) || !tabSeparated[3]) {
+    warnings.push({
+      lineNumber: lineCount,
+      warning: `Line in Chron column formatted incorrectly, age: ${tabSeparated[3]!} is not a valid number`,
+      message: `This line will be skipped in processing`
+    });
+    return null;
+  }
   const popup = tabSeparated[4] || "";
   if (label) {
     subChronInfo = {
@@ -943,11 +957,17 @@ export function processRange(line: string, lineCount: number, warnings: Datapack
     popup: ""
   };
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length < 3 || tabSeparated.length > 5) return null;
+  if (tabSeparated.length < 3) return null;
   const label = tabSeparated[1]!;
   const age = Number(tabSeparated[2]!);
-  if (isNaN(age) || !tabSeparated[2])
-    throw new Error("Error processing range line, age: " + tabSeparated[2]! + " is NaN");
+  if (isNaN(age) || !tabSeparated[2]) {
+    warnings.push({
+      lineNumber: lineCount,
+      warning: `Line in Range column formatted incorrectly, age: ${tabSeparated[2]!} is not a valid number`,
+      message: `This line will be skipped in processing`
+    });
+    return null;
+  }
   const abundance = tabSeparated[3];
   const popup = tabSeparated[4];
   subRangeInfo.label = label;
@@ -989,11 +1009,17 @@ export function processEvent(
     subEventType
   };
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length < 3 || tabSeparated.length > 5) return null;
+  if (tabSeparated.length < 3) return null;
   const label = tabSeparated[1]!;
   const age = Number(tabSeparated[2]!);
-  if (isNaN(age) || !tabSeparated[2])
-    throw new Error("Error processing event line, age: " + tabSeparated[2]! + " is NaN");
+  if (isNaN(age) || !tabSeparated[2]) {
+    warnings.push({
+      lineNumber: lineCount,
+      warning: `Line in Event column formatted incorrectly, age: ${tabSeparated[2]!} is not a valid number`,
+      message: `This line will be skipped in processing`
+    });
+    return null;
+  }
   const lineStyle = tabSeparated[3];
   const popup = tabSeparated[4];
   subEventInfo.label = label;
@@ -1027,8 +1053,14 @@ export function processPoint(line: string, lineCount: number, warnings: Datapack
   const age = parseFloat(tabSeparated[1]!);
   const xVal = parseFloat(tabSeparated[2]!);
   const popup = tabSeparated[3];
-  if (isNaN(age) || !tabSeparated[1])
-    throw new Error("Error processing point line, age: " + tabSeparated[1]! + " is NaN");
+  if (isNaN(age) || !tabSeparated[1]) {
+    warnings.push({
+      lineNumber: lineCount,
+      warning: `Line in Point column formatted incorrectly, age: ${tabSeparated[1]!} is not a valid number`,
+      message: `This line will be skipped in processing`
+    });
+    return null;
+  }
   subPointInfo.age = age;
   // sometimes they don't exist, contrary to file documentation
   if (!isNaN(xVal)) {
@@ -1072,8 +1104,14 @@ export function processBlock(
   const label = tabSeparated[1];
   const age = Number(tabSeparated[2]!);
   const popup = tabSeparated[4];
-  if (isNaN(age) || !tabSeparated[2])
-    throw new Error("Error processing block line, age: " + tabSeparated[2]! + " is NaN");
+  if (isNaN(age) || !tabSeparated[2]) {
+    warnings.push({
+      lineNumber: lineCount,
+      warning: `Line in Block column formatted incorrectly, age: ${tabSeparated[2]!} is not a valid number`,
+      message: `This line will be skipped in processing`
+    });
+    return null;
+  }
   const lineStyle = tabSeparated[3];
   const rgb = tabSeparated[5];
   if (label) {
@@ -1136,10 +1174,16 @@ export function processFacies(line: string, lineCount: number, warnings: Datapac
     return null;
   }
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length < 4 || tabSeparated.length > 5) return null;
+  if (tabSeparated.length < 4) return null;
   const age = Number(tabSeparated[3]!);
-  if (isNaN(age) || !tabSeparated[3])
-    throw new Error("Error processing facies line, age: " + tabSeparated[3]! + " is NaN");
+  if (isNaN(age) || !tabSeparated[3]) {
+    warnings.push({
+      lineNumber: lineCount,
+      warning: `Line in Facies column formatted incorrectly, age: ${tabSeparated[3]!} is not a valid number`,
+      message: `This line will be skipped in processing`
+    });
+    return null;
+  }
   // label doesn't exist for TOP or GAP
   if (!tabSeparated[2]) {
     subFaciesInfo = {
@@ -1674,7 +1718,7 @@ function processColumn<T extends ColumnInfoType>(
   return false;
 }
 export function configureOptionalPointSettings(tabSeparated: string[], point: Point) {
-  if (tabSeparated.length < 1 || tabSeparated.length > 6) {
+  if (tabSeparated.length < 1) {
     console.log(
       "Error adding optional point configuration, line is not formatted correctly: " +
         tabSeparated +

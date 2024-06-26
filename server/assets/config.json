@@ -10,7 +10,10 @@
     "BritishMappackPUBLIC_GTS2016_15July2016.mdpk",
     "TimeTree_of_Life_GTS2020_ENCRYPTED_23Jan2020.dpk",
     "HumanCulture_ENCRYPTED_21Apr2020.txt",
-    "Vertebrates w_Images GTS2020 23Jan2021.dpk"
+    "Vertebrates w_Images GTS2020 23Jan2021.dpk",
+    "Japan TSC-rock-column extract with 1 errors.txt",
+    "Japan TSC-rock-column extract with 2 errors.txt",
+    "Japan TSC-rock-column extract with 3 errors.txt"
   ],
   "decryptionJar": "assets/jars/datapack-decrypter_21Jun2024.jar",
   "decryptionDirectory": "assets/decrypted",
