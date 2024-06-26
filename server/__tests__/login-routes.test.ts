@@ -129,6 +129,7 @@ describe("login-routes tests", () => {
   let createUserSpy: MockInstance;
   let findUserSpy: MockInstance;
   let updateUserSpy: MockInstance;
+  let findVerificationSpy: MockInstance;
   function checkSession(cookieHeader: string): boolean {
     const cookie = decodeURIComponent(cookieHeader).split(" ")[0];
     const session = cookie?.split("loginSession=")[1];
@@ -143,6 +144,7 @@ describe("login-routes tests", () => {
     createUserSpy = vi.spyOn(databaseModule, "createUser");
     findUserSpy = vi.spyOn(databaseModule, "findUser");
     updateUserSpy = vi.spyOn(databaseModule, "updateUser");
+    findVerificationSpy = vi.spyOn(databaseModule, "findVerification");
   });
 
   describe("/signup", () => {
@@ -548,6 +550,20 @@ describe("login-routes tests", () => {
     };
     it("should return 404 if token is not found", async () => {
       vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/verify",
+        payload: payload
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(404);
+      expect(response.json().error).toBe("Verification token not found");
+    });
+
+    it("should return 404 if token reason is not verify", async () => {
+      vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([{ ...testToken, reason: "password" }]);
 
       const response = await app.inject({
         method: "POST",
@@ -1090,6 +1106,22 @@ describe("login-routes tests", () => {
         payload: payload
       });
 
+      expect(findVerificationSpy).toHaveBeenCalledWith({ token: payload.token });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(404);
+      expect(response.json().error).toBe("Password reset token not found");
+    });
+
+    it("should return 404 if token reason is not password", async () => {
+      vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([{ ...testToken, reason: "verify" }]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/forgot-password",
+        payload: payload
+      });
+
+      expect(findVerificationSpy).toHaveBeenCalledWith({ token: payload.token });
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(404);
       expect(response.json().error).toBe("Password reset token not found");
@@ -1166,6 +1198,12 @@ describe("login-routes tests", () => {
         payload: payload
       });
 
+      expect(findUserSpy).toHaveBeenCalledWith({ userId: testUser.userId });
+      expect(updateUserSpy).toHaveBeenCalledWith(
+        { userId: testUser.userId },
+        { hashedPassword: "hashedPassword", invalidateSession: 0 }
+      );
+      expect(deleteVerificationSpy).toHaveBeenCalledWith({ token: payload.token, reason: "password" });
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(500);
       expect(response.json().error).toBe("Unknown Error");
@@ -1181,6 +1219,7 @@ describe("login-routes tests", () => {
         payload: payload
       });
 
+      expect(findUserSpy).toHaveBeenCalledWith({ userId: testUser.userId });
       expect(updateUserSpy).toHaveBeenCalledWith(
         { userId: testUser.userId },
         { hashedPassword: "hashedPassword", invalidateSession: 0 }
@@ -1197,6 +1236,10 @@ describe("login-routes tests", () => {
       newEmail: "newtest@email.com",
       recaptchaToken: "test"
     };
+    let header: { cookie: string };
+    beforeEach(() => {
+      header = { cookie: `loginSession=${cookieHeader}` };
+    });
 
     it("should return 500 if email service is not configured", async () => {
       process.env.EMAIL_USER = "";
@@ -1223,7 +1266,7 @@ describe("login-routes tests", () => {
         method: "POST",
         url: "/change-email",
         payload: invalidPayload,
-        headers: { cookie: `loginSession=${cookieHeader}` }
+        headers: header
       });
 
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
@@ -1250,7 +1293,7 @@ describe("login-routes tests", () => {
         method: "POST",
         url: "/change-email",
         payload: payload,
-        headers: { cookie: `loginSession=${cookieHeader}` }
+        headers: header
       });
 
       expect(spy).toHaveBeenCalledOnce();
@@ -1259,16 +1302,17 @@ describe("login-routes tests", () => {
       expect(response.json().error).toBe("Recaptcha failed");
     });
 
-    it("should return 500 if user find fails", async () => {
+    it("should return 500 if user doesn't exist", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([]);
 
       const response = await app.inject({
         method: "POST",
         url: "/change-email",
         payload: payload,
-        headers: { cookie: `loginSession=${cookieHeader}` }
+        headers: header
       });
 
+      expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(500);
       expect(response.json().error).toBe("Unknown Error");
@@ -1282,9 +1326,13 @@ describe("login-routes tests", () => {
         method: "POST",
         url: "/change-email",
         payload: payload,
-        headers: { cookie: `loginSession=${cookieHeader}` }
+        headers: header
       });
 
+      expect(updateUserSpy).toHaveBeenCalledWith(
+        { userId: testUser.userId },
+        { email: payload.newEmail, emailVerified: 0 }
+      );
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(500);
       expect(response.json().error).toBe("Unknown Error");
@@ -1298,9 +1346,12 @@ describe("login-routes tests", () => {
         method: "POST",
         url: "/change-email",
         payload: payload,
-        headers: { cookie: `loginSession=${cookieHeader}` }
+        headers: header
       });
 
+      expect(createVerificationSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: testUser.userId, token: "test", reason: "verify" })
+      );
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(500);
       expect(response.json().error).toBe("Unknown Error");
@@ -1314,9 +1365,10 @@ describe("login-routes tests", () => {
         method: "POST",
         url: "/change-email",
         payload: payload,
-        headers: { cookie: `loginSession=${cookieHeader}` }
+        headers: header
       });
 
+      expect(deleteVerificationSpy).toHaveBeenCalledWith({ userId: testUser.userId, reason: "verify" });
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(500);
       expect(response.json().error).toBe("Unknown Error");
@@ -1331,7 +1383,7 @@ describe("login-routes tests", () => {
         method: "POST",
         url: "/change-email",
         payload: payload,
-        headers: { cookie: `loginSession=${cookieHeader}` }
+        headers: header
       });
 
       expect(emailSpy).toHaveBeenCalledWith(
@@ -1349,7 +1401,7 @@ describe("login-routes tests", () => {
         method: "POST",
         url: "/change-email",
         payload: payload,
-        headers: { cookie: `loginSession=${cookieHeader}` }
+        headers: header
       });
 
       expect(emailSpy).toHaveBeenCalledWith(
@@ -1396,7 +1448,7 @@ describe("login-routes tests", () => {
         method: "POST",
         url: "/change-email",
         payload: payload,
-        headers: { cookie: `loginSession=${cookieHeader}` }
+        headers: header
       });
 
       expect(updateUserSpy).toHaveBeenCalledWith(
@@ -1490,6 +1542,20 @@ describe("login-routes tests", () => {
       expect(response.json().error).toBe("Token not found");
     });
 
+    it("should return 404 if reason is not invalidate", async () => {
+      vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([{ ...testToken, reason: "password" }]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/account-recovery",
+        payload: payload
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(404);
+      expect(response.json().error).toBe("Token not found");
+    });
+
     it("should return 500 if find user fails", async () => {
       vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([{ ...testToken, reason: "invalidate" }]);
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([]);
@@ -1500,6 +1566,7 @@ describe("login-routes tests", () => {
         payload: payload
       });
 
+      expect(findUserSpy).toHaveBeenCalledWith({ userId: testUser.userId });
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(500);
       expect(response.json().error).toBe("Unknown Error");
@@ -1536,6 +1603,7 @@ describe("login-routes tests", () => {
         payload: payload
       });
 
+      expect(deleteVerificationSpy).toHaveBeenCalledWith({ userId: testUser.userId, reason: "password" });
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(500);
       expect(response.json().error).toBe("Unknown Error");
@@ -1552,6 +1620,10 @@ describe("login-routes tests", () => {
         payload: payload
       });
 
+      expect(updateUserSpy).toHaveBeenCalledWith(
+        { userId: testUser.userId },
+        { email: testUser.email, emailVerified: 1, hashedPassword: "hashedPassword", invalidateSession: 1 }
+      );
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(500);
       expect(response.json().error).toBe("Unknown Error");
@@ -1568,6 +1640,14 @@ describe("login-routes tests", () => {
         payload: payload
       });
 
+      expect(createVerificationSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: testUser.userId,
+          token: "test",
+          expiresAt: expect.any(String),
+          reason: "password"
+        })
+      );
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(500);
       expect(response.json().error).toBe("Unknown Error");

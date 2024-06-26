@@ -436,9 +436,9 @@ export const forgotPassword = async function forgotPassword(
       reply.status(404).send({ error: "Password reset token not found" });
       return;
     }
-    const { userId, expiresAt, reason } = verificationRow;
+    const { userId, expiresAt } = verificationRow;
     const expiresAtDate = new Date(expiresAt);
-    if (expiresAtDate < new Date() || reason !== "password") {
+    if (expiresAtDate < new Date()) {
       await deleteVerification({ token, reason: "password" });
       reply.status(401).send({ error: "Password reset token expired or invalid" });
       return;
@@ -598,11 +598,11 @@ export const verifyEmail = async function verifyEmail(
   const token = request.body.token;
   try {
     const verificationRow = (await findVerification({ token: token }))[0];
-    if (!verificationRow) {
+    if (!verificationRow || verificationRow.reason !== "verify") {
       reply.status(404).send({ error: "Verification token not found" });
       return;
     }
-    const { expiresAt, reason, userId } = verificationRow;
+    const { expiresAt, userId } = verificationRow;
     const userRow = (await findUser({ userId }))[0];
     if (!userRow) {
       reply.status(404).send({ error: "User not found" });
@@ -614,7 +614,7 @@ export const verifyEmail = async function verifyEmail(
       return;
     }
     const expiresAtDate = new Date(expiresAt);
-    if (expiresAtDate < new Date() || reason !== "verify") {
+    if (expiresAtDate < new Date()) {
       await deleteVerification({ token, reason: "verify" });
       reply.status(401).send({ error: "Verification token expired or invalid" });
       return;
