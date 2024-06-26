@@ -158,6 +158,10 @@ describe("process blocks line tests", () => {
       " \tlabel\t100\tbadlinestyle\tpopup\t23/45/67",
       { label: "label", age: 100, popup: "popup", lineStyle: "solid", rgb: { r: 23, g: 45, b: 67 } }
     ],
+    [
+      "\tlabel\t100\tdotted\tpopup\t0",
+      { label: "label", age: 100, popup: "popup", lineStyle: "dotted", rgb: defaultColor }
+    ],
     [" \tlabel\t100\t\t\t\t", { label: "label", age: 100, popup: "", lineStyle: "solid", rgb: defaultColor }],
     ["invalid\tlabel\t100\tdotted\tpopup\t23/45/67", null],
     [" \tlabel\tbadNumber\tdotted\tpopup\t23/45/67", null],
