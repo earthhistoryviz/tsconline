@@ -1097,6 +1097,9 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
     case "Chron":
       assertChronSettings(o);
       break;
+    case "Range":
+      assertRangeSettings(o);
+      break;
     default:
       throw new Error(
         "ColumnSpecificSettings must be an object of a valid column type. Found value of " +
