@@ -187,6 +187,10 @@ describe("process blocks line tests", () => {
 });
 
 describe("process event line tests", () => {
+  let warnings: DatapackWarning[];
+  beforeEach(() => {
+    warnings = [];
+  });
   test.each([
     ["\tlabel\t120", { label: "label", age: 120, lineStyle: "solid", popup: "", subEventType: "FAD" }],
     ["\tlabel\t120\t\tpopup", { label: "label", age: 120, lineStyle: "solid", popup: "popup", subEventType: "FAD" }],
@@ -202,19 +206,28 @@ describe("process event line tests", () => {
       "\tlabel\t180\tbadLineStyle\tpopup",
       { label: "label", age: 180, lineStyle: "solid", popup: "popup", subEventType: "FAD" }
     ],
+    [
+      "\tlabel\t200\tsolid\tpopup\t\t\t\t\t",
+      { label: "label", age: 200, lineStyle: "solid", popup: "popup", subEventType: "FAD" }
+    ],
     ["\tlabel", null],
     ["\tlabel\t\t\t\t", null],
+    ["\tlabel\tbadNumber", null],
     ["", null]
   ])("should process '%s'", (line, expected) => {
     if (expected === null) {
-      expect(processEvent(line, "FAD")).toBeNull();
+      expect(processEvent(line, "FAD", 0, warnings)).toBeNull();
+      expect(warnings).toEqual([
+        {
+          lineNumber: 0,
+          warning: expect.stringContaining("Event column formatted incorrectly"),
+          message: "This line will be skipped in processing"
+        }
+      ]);
     } else {
-      expect(processEvent(line, "FAD")).toEqual(expected);
+      expect(processEvent(line, "FAD", 0, warnings)).toEqual(expected);
+      expect(warnings).toEqual([]);
     }
-  });
-  it("should throw error on NaN age", () => {
-    const line = "\tlabel\tbadNumber";
-    expect(() => processEvent(line, "LAD")).toThrow();
   });
 });
 

@@ -1009,7 +1009,14 @@ export function processEvent(
     subEventType
   };
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length < 3) return null;
+  if (tabSeparated.length < 3) {
+    warnings.push({
+      lineNumber: lineCount,
+      warning: `Line in Event column formatted incorrectly`,
+      message: `This line will be skipped in processing`
+    });
+    return null;
+  }
   const label = tabSeparated[1]!;
   const age = Number(tabSeparated[2]!);
   if (isNaN(age) || !tabSeparated[2]) {
