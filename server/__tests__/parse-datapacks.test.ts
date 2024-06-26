@@ -583,7 +583,7 @@ describe("getColumnTypes tests", () => {
       },
       {
         lineNumber: 34,
-        warning: expect.stringContaining("Facies column formatted incorrectly"),
+        warning: expect.stringContaining("not a valid number"),
         message: "This line will be skipped in processing"
       },
       {
