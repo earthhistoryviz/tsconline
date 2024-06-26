@@ -28,7 +28,8 @@ export const allColumnTypes = [
   "Point",
   "Sequence",
   "Blank",
-  "Transect"
+  "Transect",
+  "Trend"
 ];
 
 export const defaultDataMiningSettings: DataMiningSettings = {
