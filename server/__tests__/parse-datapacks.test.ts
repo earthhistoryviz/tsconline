@@ -310,7 +310,7 @@ describe("process chron line tests", () => {
       expect(warnings).toEqual([]);
     }
   });
-  it ("should skip primary", () => {
+  it("should skip primary", () => {
     const line = "\tprimary\tlabel\t100\tpopup";
     expect(processChron(line, 0, warnings)).toBeNull();
   });
@@ -346,16 +346,13 @@ describe("process point line tests", () => {
       expect(warnings).toEqual([]);
     }
   });
-  test.each([
-    "nopoints\t10\t10\tpopup",
-      "nopoints",
-      "rect",
-      "cross",
-      "circle\t10\t10\tpopup",
-    ])("should process '%s'", (line) => {
+  test.each(["nopoints\t10\t10\tpopup", "nopoints", "rect", "cross", "circle\t10\t10\tpopup"])(
+    "should process '%s'",
+    (line) => {
       expect(processPoint(line, 0, warnings)).toBeNull();
-      expect(warnings).toEqual([])
-    })
+      expect(warnings).toEqual([]);
+    }
+  );
 });
 
 describe("process sequence line tests", () => {
@@ -486,84 +483,115 @@ describe("getAllEntries tests", () => {
 });
 
 describe("getColumnTypes tests", () => {
-  let loneColumns: Map<string, ColumnInfo>, expectedLoneColumns: Map<string, ColumnInfo>;
+  let loneColumns: Map<string, ColumnInfo>, expectedLoneColumns: Map<string, ColumnInfo>, warnings: DatapackWarning[];
   beforeEach(() => {
     loneColumns = new Map<string, ColumnInfo>();
     expectedLoneColumns = new Map<string, ColumnInfo>();
+    warnings = [];
   });
   it("should return correct block columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-block.txt";
-    await getColumnTypes(file, loneColumns, "Ma");
+    await getColumnTypes(file, loneColumns, "Ma", 0, warnings);
     for (const index in key["column-types-block-key"]) {
       expectedLoneColumns.set(index, key["column-types-block-key"][index]);
     }
     expect(loneColumns).toEqual(expectedLoneColumns);
+    expect(warnings).toEqual([]);
   });
 
   it("should return correct facies columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-facies.txt";
-    await getColumnTypes(file, loneColumns, "Ma");
+    await getColumnTypes(file, loneColumns, "Ma", 0, warnings);
     for (const index in key["column-types-facies-key"]) {
       expectedLoneColumns.set(index, key["column-types-facies-key"][index]);
     }
     expect(loneColumns).toEqual(expectedLoneColumns);
+    expect(warnings).toEqual([]);
   });
 
   it("should return correct event columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-event.txt";
-    await getColumnTypes(file, loneColumns, "Ma");
+    await getColumnTypes(file, loneColumns, "Ma", 0, warnings);
     for (const index in key["column-types-event-key"]) {
       expectedLoneColumns.set(index, key["column-types-event-key"][index]);
     }
     expect(loneColumns).toEqual(expectedLoneColumns);
+    expect(warnings).toEqual([]);
   });
   it("should return correct range columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-range.txt";
-    await getColumnTypes(file, loneColumns, "Ma");
+    await getColumnTypes(file, loneColumns, "Ma", 0, warnings);
     for (const index in key["column-types-range-key"]) {
       expectedLoneColumns.set(index, key["column-types-range-key"][index]);
     }
     expect(loneColumns).toEqual(expectedLoneColumns);
+    expect(warnings).toEqual([]);
   });
   it("should return correct chron columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-chron.txt";
-    await getColumnTypes(file, loneColumns, "Ma");
+    await getColumnTypes(file, loneColumns, "Ma", 0, warnings);
     for (const index in key["column-types-chron-key"]) {
       expectedLoneColumns.set(index, key["column-types-chron-key"][index]);
     }
     expect(loneColumns).toEqual(expectedLoneColumns);
+    expect(warnings).toEqual([]);
   });
   it("should return correct point columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-point.txt";
-    await getColumnTypes(file, loneColumns, "Ma");
+    await getColumnTypes(file, loneColumns, "Ma", 0, warnings);
     for (const index in key["column-types-point-key"]) {
       expectedLoneColumns.set(index, key["column-types-point-key"][index]);
     }
     expect(loneColumns).toEqual(expectedLoneColumns);
+    expect(warnings).toEqual([]);
   });
   it("should return correct sequence columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-sequence.txt";
-    await getColumnTypes(file, loneColumns, "Ma");
+    await getColumnTypes(file, loneColumns, "Ma", 0, warnings);
     for (const index in key["column-types-sequence-key"]) {
       expectedLoneColumns.set(index, key["column-types-sequence-key"][index]);
     }
     expect(loneColumns).toEqual(expectedLoneColumns);
+    expect(warnings).toEqual([]);
   });
   it("should return correct transect columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-transect.txt";
-    await getColumnTypes(file, loneColumns, "Ma");
+    await getColumnTypes(file, loneColumns, "Ma", 0, warnings);
     for (const index in key["column-types-transect-key"]) {
       expectedLoneColumns.set(index, key["column-types-transect-key"][index]);
     }
     expect(loneColumns).toEqual(expectedLoneColumns);
+    expect(warnings).toEqual([]);
   });
   it("should return correct freehand columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-freehand.txt";
-    await getColumnTypes(file, loneColumns, "Ma");
+    await getColumnTypes(file, loneColumns, "Ma", 0, warnings);
     for (const index in key["column-types-freehand-key"]) {
       expectedLoneColumns.set(index, key["column-types-freehand-key"][index]);
     }
     expect(loneColumns).toEqual(expectedLoneColumns);
+    expect(warnings).toEqual([]);
+  });
+  it("should instantiate warnings on bad formats", async () => {
+    const file = "server/__tests__/__data__/parse-datapacks-japan-test-warnings.txt";
+    await getColumnTypes(file, loneColumns, "Ma", 4, warnings);
+    expect(warnings).toEqual([
+      {
+        lineNumber: 8,
+        warning: expect.stringContaining("doesn't match any existing column types"),
+        message: expect.stringContaining("Try using one of the following column types")
+      },
+      {
+        lineNumber: 34,
+        warning: expect.stringContaining("Facies column formatted incorrectly"),
+        message: "This line will be skipped in processing"
+      },
+      {
+        lineNumber: 48,
+        warning: expect.stringContaining("closest match to existing column types found"),
+        message: expect.stringContaining("Try using one of the following column types")
+      }
+    ]);
   });
 });
 describe("configureOptionalPointSettings tests", () => {

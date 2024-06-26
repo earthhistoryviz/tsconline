@@ -567,6 +567,8 @@ export async function getColumnTypes(
     } else if (inTransectBlock) {
       if (tabSeparated[0] === "POLYGON" || tabSeparated[0] === "TEXT") {
         processColumn("Transect", transect, "subTransectInfo", units, loneColumns);
+        inSkipBlock = true;
+        inTransectBlock = false;
         continue;
       }
       const subTransectInfo = processTransect(line, lineCount, warnings);
@@ -1031,7 +1033,8 @@ export function processEvent(
   };
   const tabSeparated = line.split("\t");
   // some events wrap to the next line
-  if (tabSeparated.length == 1) return null;
+  // TODO maybe ask professor ogg what the expected behavior is for wrapped events
+  if (tabSeparated.length == 1 && tabSeparated[0]?.trim()) return null;
   if (tabSeparated.length < 3 || tabSeparated[0]?.trim()) {
     warnings.push({
       lineNumber: lineCount,
