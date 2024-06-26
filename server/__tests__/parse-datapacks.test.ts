@@ -232,12 +232,19 @@ describe("process event line tests", () => {
 });
 
 describe("process range line tests", () => {
+  let warnings: DatapackWarning[];
+  beforeEach(() => {
+    warnings = [];
+  });
   test.each([
     ["\tlabel\t100\tTOP\tpopup", { label: "label", age: 100, abundance: "TOP", popup: "popup" }],
     ["\tlabel\t100", { label: "label", age: 100, abundance: "TOP", popup: "" }],
     ["\tlabel", null],
     ["\tlabel\t\t\t\t", null],
     ["", null],
+    ["\tlabel\tbadNumber", null],
+    ["\tlabel\t100\tbadAbundance\tpopup", { label: "label", age: 100, abundance: "TOP", popup: "popup"}],
+    ["\tlabel\t100\t\t\t\t\t", { label: "label", age: 100, abundance: "TOP", popup: ""}],
     // Below are range lines with various abundances
     ["\tlabel\t100\tflood\tpopup", { label: "label", age: 100, abundance: "flood", popup: "popup" }],
     ["\tlabel\t100\tmissing\tpopup", { label: "label", age: 100, abundance: "missing", popup: "popup" }],
@@ -245,9 +252,11 @@ describe("process range line tests", () => {
     ["\tlabel\t100\tcommon\tpopup", { label: "label", age: 100, abundance: "common", popup: "popup" }]
   ])("should process '%s'", (line, expected) => {
     if (expected === null) {
-      expect(processRange(line)).toBeNull();
+      expect(processRange(line, 0, warnings)).toBeNull();
+      expect(warnings).toEqual([{ lineNumber: 0, warning: expect.stringContaining("Range column formatted incorrectly"), message: "This line will be skipped in processing"}]);
     } else {
-      expect(processRange(line)).toEqual(expected);
+      expect(processRange(line, 0, warnings)).toEqual(expected);
+      expect(warnings).toEqual([]);
     }
   });
 
