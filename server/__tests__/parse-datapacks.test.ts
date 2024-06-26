@@ -111,6 +111,8 @@ describe("process facies line tests", () => {
   test.each([
     ["\ttop\t\t100", { rockType: "top", age: 100, info: "" }],
     ["\trockType\tlabel\t100\tinfo", { rockType: "rockType", label: "label", age: 100, info: "info" }],
+    ["invalid\trockType\tlabel\t100\tinfo", null],
+    [" \trockType\tlabel\t100\tinfo", { rockType: "rockType", label: "label", age: 100, info: "info" }],
     ["\tsome bad line\t", null],
     ["\tsome bad line\t\t\t\t", null],
     ["\trockType\tlabel\tbadNumber\tinfo", null],
@@ -156,6 +158,8 @@ describe("process blocks line tests", () => {
       " \tlabel\t100\tbadlinestyle\tpopup\t23/45/67",
       { label: "label", age: 100, popup: "popup", lineStyle: "solid", rgb: { r: 23, g: 45, b: 67 } }
     ],
+    [" \tlabel\t100\t\t\t\t", { label: "label", age: 100, popup: "", lineStyle: "solid", rgb: defaultColor }],
+    ["invalid\tlabel\t100\tdotted\tpopup\t23/45/67", null],
     [" \tlabel\tbadNumber\tdotted\tpopup\t23/45/67", null],
     [" \t\t\t\t\t\t\t", null],
     ["", null]
@@ -210,6 +214,8 @@ describe("process event line tests", () => {
       "\tlabel\t200\tsolid\tpopup\t\t\t\t\t",
       { label: "label", age: 200, lineStyle: "solid", popup: "popup", subEventType: "FAD" }
     ],
+    [" \tlabel\t120\t\tpopup", { label: "label", age: 120, lineStyle: "solid", popup: "popup", subEventType: "FAD" }],
+    ["invalid\tlabel\t120", null],
     ["\tlabel", null],
     ["\tlabel\t\t\t\t", null],
     ["\tlabel\tbadNumber", null],
@@ -239,12 +245,14 @@ describe("process range line tests", () => {
   test.each([
     ["\tlabel\t100\tTOP\tpopup", { label: "label", age: 100, abundance: "TOP", popup: "popup" }],
     ["\tlabel\t100", { label: "label", age: 100, abundance: "TOP", popup: "" }],
+    [" \tlabel\t100", { label: "label", age: 100, abundance: "TOP", popup: "" }],
     ["\tlabel", null],
     ["\tlabel\t\t\t\t", null],
     ["", null],
+    ["invalid\tlabel\t100\tTOP\tpopup", null],
     ["\tlabel\tbadNumber", null],
-    ["\tlabel\t100\tbadAbundance\tpopup", { label: "label", age: 100, abundance: "TOP", popup: "popup"}],
-    ["\tlabel\t100\t\t\t\t\t", { label: "label", age: 100, abundance: "TOP", popup: ""}],
+    ["\tlabel\t100\tbadAbundance\tpopup", { label: "label", age: 100, abundance: "TOP", popup: "popup" }],
+    ["\tlabel\t100\t\t\t\t\t", { label: "label", age: 100, abundance: "TOP", popup: "" }],
     // Below are range lines with various abundances
     ["\tlabel\t100\tflood\tpopup", { label: "label", age: 100, abundance: "flood", popup: "popup" }],
     ["\tlabel\t100\tmissing\tpopup", { label: "label", age: 100, abundance: "missing", popup: "popup" }],
@@ -253,83 +261,120 @@ describe("process range line tests", () => {
   ])("should process '%s'", (line, expected) => {
     if (expected === null) {
       expect(processRange(line, 0, warnings)).toBeNull();
-      expect(warnings).toEqual([{ lineNumber: 0, warning: expect.stringContaining("Range column formatted incorrectly"), message: "This line will be skipped in processing"}]);
+      expect(warnings).toEqual([
+        {
+          lineNumber: 0,
+          warning: expect.stringContaining("Range column formatted incorrectly"),
+          message: "This line will be skipped in processing"
+        }
+      ]);
     } else {
       expect(processRange(line, 0, warnings)).toEqual(expected);
       expect(warnings).toEqual([]);
     }
   });
-
-  it("should throw error on NaN age", () => {
-    const line = "\tlabel\tbadNumber";
-    expect(() => processRange(line)).toThrow();
-  });
 });
 
 describe("process chron line tests", () => {
+  let warnings: DatapackWarning[];
+  beforeEach(() => {
+    warnings = [];
+  });
   test.each([
     ["\tTOP\t\t0", { polarity: "TOP", age: 0, popup: "" }],
     ["\tR\tlabel\t100\tpopup", { polarity: "R", label: "label", age: 100, popup: "popup" }],
     ["\tR\tlabel\t100", { polarity: "R", label: "label", age: 100, popup: "" }],
+    ["\tR\tlabel\t200\tpopup\t\t\t\t", { polarity: "R", label: "label", age: 200, popup: "popup" }],
+    [" \tR\tlabel\t100\tpopup", { polarity: "R", label: "label", age: 100, popup: "popup" }],
     ["\tR\tlabel", null],
+    ["Primary", null],
+    ["invalid\tR\tlabel\t200\tpopup", null],
     ["\tR\tlabel\tage\tpopup\t", null],
+    ["\tR\tlabel\tbadNumber\tpopup", null],
     ["", null]
   ])("should process '%s'", (line, expected) => {
     if (expected === null) {
-      expect(processChron(line)).toBeNull();
+      expect(processChron(line, 0, warnings)).toBeNull();
+      expect(warnings).toEqual([
+        {
+          lineNumber: 0,
+          warning: expect.stringContaining("Chron column formatted incorrectly"),
+          message: "This line will be skipped in processing"
+        }
+      ]);
     } else {
-      expect(processChron(line)).toEqual(expected);
+      expect(processChron(line, 0, warnings)).toEqual(expected);
+      expect(warnings).toEqual([]);
     }
-  });
-
-  it("should throw error on NaN age", () => {
-    const line = "\t\t\tbadNumber";
-    expect(() => processChron(line)).toThrow();
   });
 });
 
 describe("process point line tests", () => {
+  let warnings: DatapackWarning[];
+  beforeEach(() => {
+    warnings = [];
+  });
   test.each([
     ["\t10\t10\tpopup", { age: 10, xVal: 10, popup: "popup" }],
     ["\t10\t10\t", { age: 10, xVal: 10, popup: "" }],
     ["\t10\t10", { age: 10, xVal: 10, popup: "" }],
     ["\t10\tbadNumber\tpopup", { age: 10, xVal: 0, popup: "popup" }],
     ["\t10\tbadNumer", { age: 10, xVal: 0, popup: "" }],
+    [" \t10\t10\tpopup", { age: 10, xVal: 10, popup: "popup" }],
+    ["\tbadNumber", null],
+    ["invalid\t10\tpopup", null],
     ["", null]
   ])("should process '%s'", (line, expected) => {
     if (expected === null) {
-      expect(processPoint(line)).toBeNull();
+      expect(processPoint(line, 0, warnings)).toBeNull();
+      expect(warnings).toEqual([
+        {
+          lineNumber: 0,
+          warning: expect.stringContaining("Point column formatted incorrectly"),
+          message: "This line will be skipped in processing"
+        }
+      ]);
     } else {
-      expect(processPoint(line)).toEqual(expected);
+      expect(processPoint(line, 0, warnings)).toEqual(expected);
+      expect(warnings).toEqual([]);
     }
-  });
-
-  it("should throw error on NaN age", () => {
-    const line = "\tbadNumber";
-    expect(() => processPoint(line)).toThrow();
   });
 });
 
 describe("process sequence line tests", () => {
+  let warnings: DatapackWarning[];
+  beforeEach(() => {
+    warnings = [];
+  });
   test.each([
     [
       "\tlabel\tN\t60\tseverity\tpopup",
       { label: "label", direction: "N", age: 60, severity: "Severity", popup: "popup" }
     ],
     ["\tlabel\tN\t60\tseverity", { label: "label", direction: "N", age: 60, severity: "Severity", popup: "" }],
+    ["invalid\tlabel\tN\t60\tseverity\tpopup", null],
+    [
+      " \tlabel\tN\t60\tseverity\tpopup",
+      { label: "label", direction: "N", age: 60, severity: "Severity", popup: "popup" }
+    ],
     ["\tlabel\tN\t60", null],
     ["\tlabel\tN\tage\tseverity\tpopup\t", null],
+    ["\tlabel\tN\tbadNumber\tseverity\tpopup", null],
     ["", null]
   ])("should process '%s'", (line, expected) => {
     if (expected === null) {
-      expect(processSequence(line)).toBeNull();
+      expect(processSequence(line, 0, warnings)).toBeNull();
+      expect(warnings).toEqual([
+        {
+          lineNumber: 0,
+          warning: expect.stringContaining("Sequence column formatted incorrectly"),
+          message: "This line will be skipped in processing"
+        }
+      ]);
     } else {
-      expect(processSequence(line)).toEqual(expected);
+      expect(processSequence(line, 0, warnings)).toEqual(expected);
+      expect(warnings).toEqual([]);
     }
-  });
-  it("should throw error on NaN age", () => {
-    const line = "\tlabel\tN\tbadNumber\t";
-    expect(() => processSequence(line)).toThrow();
   });
 });
 

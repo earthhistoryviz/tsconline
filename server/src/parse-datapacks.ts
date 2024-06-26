@@ -7,7 +7,6 @@ import {
   Block,
   RGB,
   assertSubBlockInfo,
-  assertRGB,
   defaultFontsInfo,
   SubFaciesInfo,
   assertSubFaciesInfo,
@@ -334,10 +333,8 @@ export async function getAllEntries(
   let defaultChronostrat = "UNESCO";
   let formatVersion = 1.5;
   let vertScale: number | null = null;
-  let lineCount = 0;
   let filePropertyLines = 0;
   for await (const line of readline) {
-    lineCount++;
     if (!line) continue;
     // grab any datapack properties
     const split = line.split("\t");
@@ -855,7 +852,14 @@ export function processTransect(line: string, lineCount: number, warnings: Datap
 export function processSequence(line: string, lineCount: number, warnings: DatapackWarning[]): SubSequenceInfo | null {
   let subSequenceInfo = {};
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length < 5 || tabSeparated[0]) return null;
+  if (tabSeparated.length < 5 || tabSeparated[0]?.trim()) {
+    warnings.push({
+      lineNumber: lineCount,
+      warning: `Line in Sequence column formatted incorrectly`,
+      message: `This line will be skipped in processing`
+    });
+    return null;
+  }
   const label = tabSeparated[1];
   const direction = tabSeparated[2]!;
   const age = Number(tabSeparated[3]!);
@@ -905,7 +909,14 @@ export function processSequence(line: string, lineCount: number, warnings: Datap
 export function processChron(line: string, lineCount: number, warnings: DatapackWarning[]): SubChronInfo | null {
   let subChronInfo = {};
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length < 4 || line.includes("Primary")) return null;
+  if (tabSeparated.length < 4 || line.toLowerCase().includes("primary") || tabSeparated[0]) {
+    warnings.push({
+      lineNumber: lineCount,
+      warning: `Line in Chron column formatted incorrectly`,
+      message: `This line will be skipped in processing`
+    });
+    return null;
+  }
   const polarity = tabSeparated[1]!;
   const label = tabSeparated[2]!;
   const age = Number(tabSeparated[3]!);
@@ -957,14 +968,14 @@ export function processRange(line: string, lineCount: number, warnings: Datapack
     popup: ""
   };
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length < 3) {
+  if (tabSeparated.length < 3 || tabSeparated[0]?.trim()) {
     warnings.push({
       lineNumber: lineCount,
       warning: `Line in Range column formatted incorrectly`,
       message: `This line will be skipped in processing`
     });
     return null;
-  };
+  }
   const label = tabSeparated[1]!;
   const age = Number(tabSeparated[2]!);
   if (isNaN(age) || !tabSeparated[2]) {
@@ -1016,7 +1027,7 @@ export function processEvent(
     subEventType
   };
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length < 3) {
+  if (tabSeparated.length < 3 || tabSeparated[0]?.trim()) {
     warnings.push({
       lineNumber: lineCount,
       warning: `Line in Event column formatted incorrectly`,
@@ -1063,7 +1074,14 @@ export function processPoint(line: string, lineCount: number, warnings: Datapack
     popup: ""
   };
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length < 2 || tabSeparated.length > 4 || tabSeparated[0]) return null;
+  if (tabSeparated.length < 2 || tabSeparated[0]?.trim()) {
+    warnings.push({
+      lineNumber: lineCount,
+      warning: `Line in Point column formatted incorrectly`,
+      message: `This line will be skipped in processing`
+    });
+    return null;
+  }
   const age = parseFloat(tabSeparated[1]!);
   const xVal = parseFloat(tabSeparated[2]!);
   const popup = tabSeparated[3];
@@ -1114,7 +1132,7 @@ export function processBlock(
     rgb: defaultColor //if Block has color, set to that. If not, set to white
   };
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length < 3) {
+  if (tabSeparated.length < 3 || tabSeparated[0]?.trim()) {
     warnings.push({
       lineNumber: lineCount,
       warning: `Line in Block column formatted incorrectly`,
@@ -1196,7 +1214,7 @@ export function processFacies(line: string, lineCount: number, warnings: Datapac
     return null;
   }
   const tabSeparated = line.split("\t");
-  if (tabSeparated.length < 4) {
+  if (tabSeparated.length < 4 || tabSeparated[0]?.trim()) {
     warnings.push({
       lineNumber: lineCount,
       warning: `Line in Facies column formatted incorrectly`,
