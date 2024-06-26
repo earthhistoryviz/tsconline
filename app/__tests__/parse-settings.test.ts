@@ -5,7 +5,8 @@ import {
   FontsInfo,
   defaultChronSettings,
   defaultEventSettings,
-  defaultPointSettings
+  defaultPointSettings,
+  defaultRangeSettings
 } from "@tsconline/shared";
 import * as parseSettings from "../src/state/parse-settings";
 import { ChartSettings } from "../src/types";
@@ -90,7 +91,7 @@ describe("translate columnInfo to columnInfoTSC", () => {
       basicColumn.name,
       "Range",
       "class datastore.RangeColumn:Chart Root",
-      { ...basicColumn, columnDisplayType: "Range" }
+      { ...basicColumn, columnDisplayType: "Range", columnSpecificSettings: { ...defaultRangeSettings } }
     ],
     [
       basicColumn.name,

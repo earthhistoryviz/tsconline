@@ -831,6 +831,11 @@
                 ],
                 "units": "Ma",
                 "columnDisplayType": "Range",
+                "columnSpecificSettings": {
+                  "agePad": 2,
+                  "margin": 0.2,
+                  "rangeSort":"first occurrence"
+                },
                 "subInfo": [
                   {
                     "label": "SubRangeInfo 1",
@@ -1941,6 +1946,11 @@
                 "popup": "\"popup\""
               }
             ],
+            "columnSpecificSettings": {
+              "agePad": 2,
+              "margin": 0.2,
+              "rangeSort":"first occurrence"
+            },
             "enableTitle": true,
             "children": [],
             "width": 100,
@@ -1969,6 +1979,11 @@
               "Column Header",
               "Popup Body"
             ],
+            "columnSpecificSettings": {
+              "agePad": 2,
+              "margin": 0.2,
+              "rangeSort":"first occurrence"
+            },
             "units": "Ma",
             "subInfo": [
               {
