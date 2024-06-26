@@ -145,6 +145,40 @@ jobs:
         if: env.build_failed == 'true'
         run: exit 1
 
+      #- name: Checkout code from Bitbucket
+      # uses: actions/checkout@v2
+      # with:
+      #   repository: 'git@bitbucket.org:strat/tscreator.git'
+      #   token: ${{ secrets.JAVA_DEPLOY_KEY}}   //search for the correct way to set up ssh
+      #   path: 'TSCjar'
+
+      # - name: Install Docker and Docker Compose
+      #   run: |？？？
+      #     sudo apt-get update
+      #     sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+      #     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+      #     sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+      #     sudo apt-get update
+      #     sudo apt-get install -y docker-ce docker-compose
+
+      # - name: Build and start containers
+      #   run: |
+      #     cd TSCjar
+      #     cp tscreator/docker/Dockerfile .
+      #     cp tscreator/docker/docker-compose.yml .
+      #     docker-compose up -d
+
+      # - name: Execute commands inside the Docker container
+      #   run: |
+      #     docker-compose exec -T tscreator_vnc bash -c "cd /tscreator/devel && make clean && make && make jar"
+
+      # - name: Move the jar to TSConline assets
+      #   run: |
+      #   source_dir="/TSCjar/tscreator/jars/"
+      #   target_dir="/tsconline/server/assets/testJar"
+      #   find "$source_dir" -type f -name "*TSCreatorBASE*" -exec mv {} "$target_dir" \;
+      #
+
       - name: Run Tests
         run: |
           set -o pipefail
