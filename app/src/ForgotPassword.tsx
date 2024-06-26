@@ -160,7 +160,7 @@ export const ForgotPassword: React.FC = observer(() => {
   return (
     <Container component="main" maxWidth="xs">
       <Box className="login-box">
-        <Avatar sx={{ "& .MuiSvgIcon-root": { mr: 0 }, bgcolor: theme.palette.navbar.dark }}>
+        <Avatar sx={{ bgcolor: theme.palette.backgroundColor.main }}>
           <LockOutlinedIcon sx={{ color: theme.palette.selection.main }} />
         </Avatar>
         {loading && <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />}

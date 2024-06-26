@@ -7,6 +7,9 @@
   width: var(--snackbar-width);
   height: var(--snackbar-height);
   align-items: center;
+  display: flex;
+  gap: 10px;
+  flex-direction: row;
   padding: 0px 16px;
   border-radius: 10px;
   box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.2);
@@ -21,4 +24,12 @@
   display: flex;
   align-items: center;
   flex-grow: 1;
+}
+
+.snackbar-text {
+  -webkit-line-clamp: 2;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

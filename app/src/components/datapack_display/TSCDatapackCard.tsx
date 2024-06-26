@@ -19,7 +19,10 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack
   const [loading, setLoading] = useState(false);
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
   return (
-    <Card className={styles.card} onClick={() => navigate(`/datapack/${encodeURIComponent(name)}`)}>
+    <Card
+      className={styles.card}
+      sx={{ outline: "1px solid", outlineColor: "divider", bgcolor: "secondaryBackground.main" }}
+      onClick={() => navigate(`/datapack/${encodeURIComponent(name)}`)}>
       <CardMedia component="img" height="140" image={imageUrl} onError={() => setImageUrl(defaultImageUrl)} />
       <CardContent className={styles.cc}>
         <div className={styles.hc}>

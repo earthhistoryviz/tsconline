@@ -34,17 +34,16 @@ export const Time = observer(function Time() {
           </ToggleButton>
         ))}
       </ToggleButtonGroup>
-      <Box className="TimeBox">
+      <Box className="TimeBox" bgcolor="secondaryBackground.main">
         <Typography className="IntervalLabel">Top of Interval</Typography>
         <CustomDivider className="time-form-divider" />
         <FormControl className="FormControlIntervals">
-          <InputLabel htmlFor="top-age-selector">
-            {disabled ? "Not Available for this Unit" : "Top Age/Stage Name"}
-          </InputLabel>
+          <InputLabel>{disabled ? "Not Available for this Unit" : "Top Age/Stage Name"}</InputLabel>
           <Select
             className="SelectTop"
             inputProps={{ id: "top-age-selector" }}
             name="top-age-stage-name"
+            MenuProps={{ sx: { maxHeight: "400px" } }}
             label="Top Age/Stage Name"
             disabled={disabled}
             value={state.settings.timeSettings[units].topStageKey}
@@ -85,7 +84,9 @@ export const Time = observer(function Time() {
             inputProps={{ id: "base-age-selector" }}
             disabled={disabled}
             name="base-age-stage-name"
+            label="Base Age/Stage Name"
             value={state.settings.timeSettings[units].baseStageKey}
+            MenuProps={{ sx: { maxHeight: "400px" } }}
             onChange={(event) => {
               const age = state.geologicalBaseStageAges.find((item) => item.key === event.target.value);
               if (!age) return;

@@ -78,7 +78,7 @@
   width: 12px;
   height: 12px;
   margin-left: 2px;
-  border: 1px solid yellow;
+  border: 2px solid rgb(230, 230, 0);
   background-color: transparent;
 }
 .child-map-icon-container {

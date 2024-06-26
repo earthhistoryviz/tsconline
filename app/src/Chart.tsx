@@ -1,19 +1,17 @@
 import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "./state";
-import { useTheme } from "@mui/material/styles";
 import "./Chart.css";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
-import { GradientDiv, TSCPopupManager, TSCSvgComponent } from "./components";
+import { TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
 import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
-import { IconButton } from "@mui/material";
+import { IconButton, Typography } from "@mui/material";
 export const Chart = observer(function () {
   const { state, actions } = useContext(context);
-  const theme = useTheme();
 
   return (
-    <GradientDiv
+    <div
       style={{
         height: "92vh",
         width: "100%",
@@ -39,15 +37,11 @@ export const Chart = observer(function () {
           </TransformWrapper>
         </div>
       ) : (
-        <div
-          className="loading-container"
-          style={{
-            fontFamily: theme.typography.fontFamily
-          }}>
-          <div className="loading"> You have not made a chart yet </div>
+        <div className="loading-container">
+          <Typography className="loading"> You have not made a chart yet </Typography>
         </div>
       )}
       <TSCPopupManager />
-    </GradientDiv>
+    </div>
   );
 });

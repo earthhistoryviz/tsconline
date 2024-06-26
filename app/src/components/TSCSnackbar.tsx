@@ -1,4 +1,4 @@
-import { Alert, Slide, Typography, Snackbar, useTheme } from "@mui/material";
+import { Slide, Typography, Snackbar, useTheme } from "@mui/material";
 import { context } from "../state";
 import { useContext } from "react";
 import { observer } from "mobx-react-lite";
@@ -7,6 +7,7 @@ import ChartDoneIcon from "../assets/icons/chart-done.json";
 import InfoIcon from "../assets/icons/info-icon.json";
 import WarningIcon from "../assets/icons/warning-icon.json";
 import "./TSCSnackbar.css";
+import Color from "color";
 
 type TSCSnackbarProps = {
   text: string;
@@ -36,6 +37,11 @@ export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, count, 
 
     actions.removeSnackbar(text);
   }
+  const iconMapping = {
+    success: <Lottie key={text} style={{ flexShrink: 0 }} animationData={ChartDoneIcon} speed={0.7} autoplay />,
+    info: <Lottie key={text} style={{ flexShrink: 0 }} animationData={InfoIcon} speed={0.7} autoplay />,
+    warning: <Lottie key={text} style={{ flexShrink: 0 }} animationData={WarningIcon} speed={0.7} autoplay />
+  };
   return (
     <Snackbar
       open={true}
@@ -46,23 +52,17 @@ export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, count, 
       autoHideDuration={5000}
       onClose={handleCloseSnackbar}
       TransitionComponent={Slide}>
-      <Alert
+      <div
         style={{
-          backgroundColor: bgColor
+          backgroundColor: bgColor,
+          outline: `2px solid ${Color(bgColor).darken(0.2).hex()}`
         }}
-        severity={severity}
-        variant="outlined"
-        color={severity}
-        className="snackbar"
-        iconMapping={{
-          success: <Lottie key={text} animationData={ChartDoneIcon} speed={0.7} autoplay />,
-          info: <Lottie key={text} animationData={InfoIcon} speed={0.7} autoplay />,
-          warning: <Lottie key={text} animationData={WarningIcon} speed={0.7} autoplay />
-        }}>
-        <Typography style={{ fontSize: `${fontSize}rem` }}>
+        className="snackbar">
+        {iconMapping[severity]}
+        <Typography className="snackbar-text" color="black" style={{ fontSize: `${fontSize}rem` }}>
           {countDisplay} {text}
         </Typography>
-      </Alert>
+      </div>
     </Snackbar>
   );
 });
