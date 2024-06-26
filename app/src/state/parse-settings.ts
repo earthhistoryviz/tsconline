@@ -14,6 +14,7 @@ import {
   assertEventSettings,
   assertPointColumnInfoTSC,
   assertPointSettings,
+  assertRangeSettings,
   assertRulerColumnInfoTSC,
   assertSequenceColumnInfoTSC,
   assertZoneColumnInfoTSC,
@@ -32,7 +33,7 @@ import {
 } from "@tsconline/shared";
 import { ChartSettings } from "../types";
 import { convertRgbToString, convertTSCColorToRGB } from "../util/util";
-import { cloneDeep } from "lodash";
+import { cloneDeep, range } from "lodash";
 //for testing purposes
 //https://stackoverflow.com/questions/51269431/jest-mock-inner-function
 import * as parseSettings from "./parse-settings";
@@ -398,7 +399,13 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       column = cloneDeep(defaultSequenceColumnInfoTSC);
       break;
     case "Range":
-      column = cloneDeep(defaultRangeColumnInfoTSC);
+      assertRangeSettings(state.columnSpecificSettings);
+      column = {
+        ...cloneDeep(defaultRangeColumnInfoTSC),
+        pad: state.columnSpecificSettings.margin,
+        "age pad": state.columnSpecificSettings.agePad,
+        rangeSort: state.columnSpecificSettings.rangeSort
+      };
       break;
     case "Ruler":
       column = cloneDeep(defaultRulerColumnInfoTSC);
