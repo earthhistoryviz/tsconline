@@ -60,23 +60,22 @@ export const Chart = observer(() => {
     }
     actions.setChartTabScale(state.chartTab.zoomFitScale);
 
+    //small update
+    actions.setChartTabEnableScrollZoom(!state.chartTab.enableScrollZoom);
+    actions.setChartTabEnableScrollZoom(!state.chartTab.enableScrollZoom);
+
     const windowResizeListenerWrapper = () => {
       setChartAlignmentValues();
     };
 
     const horizontalScrollWrapper = (event: WheelEvent) => {
-      // Check if the shift key is pressed
       if (event.shiftKey) {
-        // Prevent the default scroll action
-        event.preventDefault();
-        const transformState = container.instance.transformState;
-        //add deltaY in y param to "undo" transform done by vertical scroll
-        container.setTransform(
-          transformState.positionX - event.deltaY,
-          transformState.positionY + event.deltaY,
-          transformState.scale,
-          0
-        );
+        //stop container from using default wheel event
+        container.instance.wrapperComponent?.removeEventListener("wheel", container.instance.onWheelPanning);
+        const e = new WheelEvent("wheel", { deltaX: -event.deltaY, deltaY: 0 });
+        container.instance.onWheelPanning(e);
+        //restore default wheel event
+        container.instance.wrapperComponent?.addEventListener("wheel", container.instance.onWheelPanning);
       }
     };
     const eventListenerWrapper = (evt: KeyboardEvent) => {
@@ -142,8 +141,7 @@ export const Chart = observer(() => {
               limitToBounds={true}
               minScale={minScale}
               maxScale={maxScale}
-              centerOnInit={true}
-              onWheelStop={() => {}}>
+              disablePadding={true}>
               <TransformComponent wrapperStyle={{ height: "84vh", width: "80vw", border: "solid" }}>
                 <TSCSvgComponent svgContainerRef={svgContainerRef} chartContent={state.chartContent} />
               </TransformComponent>
