@@ -225,6 +225,9 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
                 label="filename"
                 variant="standard"
                 onChange={handleFilenameChange}
+                sx={{
+                  "& .MuiInput-underline:after": { borderBottomColor: "orange" }
+                }}
               />
               <Box sx={{ minWidth: 120 }}>
                 <FormControl fullWidth margin="normal">
@@ -233,6 +236,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
                     size="small"
                     value={state.chartTab.downloadFiletype}
                     label="Age"
+                    sx={{ ":after": { borderBottomColor: "orange" } }}
                     onChange={(e) => {
                       actions.setChartTabDownloadFiletype(e.target.value as "svg");
                     }}>
