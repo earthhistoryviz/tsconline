@@ -25,7 +25,7 @@ import { loadFileMetadata } from "./file-metadata-handler.js";
 import { readdir, rm, writeFile } from "fs/promises";
 import { checkRecaptchaToken, generateToken } from "./verify.js";
 
-const emailTestRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const emailTestRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const googleRecaptchaBotThreshold = 0.5;
 
 export const deleteProfile = async function deleteProfile(request: FastifyRequest, reply: FastifyReply) {
