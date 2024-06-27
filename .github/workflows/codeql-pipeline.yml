@@ -1,9 +1,6 @@
 name: CodeQL Pipeline
 
 on:
-  push:
-    branches:
-      - pipeline-test
   pull_request:
     branches:
       - pipeline-test
@@ -17,6 +14,7 @@ jobs:
       security-events: write
       actions: read
       packages: read
+      issues: write
     strategy:
       fail-fast: false
       matrix:
@@ -24,7 +22,7 @@ jobs:
           - language: javascript-typescript
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
@@ -66,22 +64,35 @@ jobs:
             "- Located in \(.most_recent_instance.location.path) at line \(.most_recent_instance.location.start_line)\n" +
             "- URL: https://github.com/\($owner)/\($repo)/security/code-scanning/\(.number)"
           ')
+          echo $readable_alerts >> alerts.txt
 
           if [[ $alerts != "[]" ]]; then
             echo "CodeQL alerts found."
-            echo "$readable_alerts"
-            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Content-Type: application/json" \
-              -d "{\"body\": \"### CodeQL Alerts Found\n\n\`\`\`\n$readable_alerts\n\`\`\`\"}" \
-              "https://api.github.com/repos/$owner/$repo/issues/$pr_number/comments")
             echo "alerts_found=true" >> $GITHUB_ENV
           else
             echo "No CodeQL alerts found."
             echo "alerts_found=false" >> $GITHUB_ENV
           fi
 
-      - name: Fail if Alerts Found
+      - name: Comment if Alerts Found
         if: env.alerts_found == 'true'
-        run: |
-          echo "Failing due to CodeQL alerts."
-          exit 1
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const alerts = fs.readFileSync('alerts.txt', 'utf8');
+            const message = `🚨 The CodeQL analysis found some issues. Please address the following alerts:\n\n\`\`\`\n%{alerts}\n\`\`\``;
+            const prNumber = context.payload.pull_request.number;
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: message,
+            }).then(() => {
+              console.log('Commented on PR with CodeQL alerts.');
+            }).catch((error) => {
+              core.setFailed(`Error creating comment: ${error}`);
+            })
+            core.setFailed('CodeQL alerts found.');
+      
