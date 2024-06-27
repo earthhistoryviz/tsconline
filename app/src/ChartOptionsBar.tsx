@@ -3,7 +3,7 @@ import { useContext } from "react";
 import { context } from "./state";
 import { useTheme } from "@mui/material/styles";
 import "./Chart.css";
-import { CustomTooltip } from "./components";
+import { CustomTooltip, TSCButton } from "./components";
 import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
@@ -256,12 +256,12 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
             </div>
           </DialogContent>
           <DialogActions>
-            <Button color="warning" onClick={handleDownloadClose}>
+            <Button variant="outlined" onClick={handleDownloadClose}>
               Cancel
             </Button>
-            <Button color="success" type="submit">
-              Save
-            </Button>
+            <TSCButton component="label" variant="text" sx={{ bgcolor: "button.main" }} type="submit">
+              load
+            </TSCButton>
           </DialogActions>
         </Dialog>
       </div>
