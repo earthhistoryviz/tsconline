@@ -7,9 +7,11 @@ import LoadingChart from "./LoadingChart";
 import { TransformWrapper, TransformComponent, ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
 import { OptionsBar } from "./ChartOptionsBar";
 import { Typography } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 
 export const Chart = observer(() => {
   const { state, actions } = useContext(context);
+  const theme = useTheme();
   const transformContainerRef = useRef<ReactZoomPanPinchContentRef>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const step = 0.1;
@@ -138,7 +140,13 @@ export const Chart = observer(() => {
               minScale={minScale}
               maxScale={maxScale}
               disablePadding={true}>
-              <TransformComponent wrapperStyle={{ height: "84vh", width: "80vw", border: "solid" }}>
+              <TransformComponent
+                wrapperStyle={{
+                  height: "84vh",
+                  width: "80vw",
+                  border: "2px solid",
+                  borderColor: theme.palette.divider
+                }}>
                 <TSCSvgComponent svgContainerRef={svgContainerRef} chartContent={state.chartContent} />
               </TransformComponent>
             </TransformWrapper>
