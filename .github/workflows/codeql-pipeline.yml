@@ -1,0 +1,87 @@
+name: CodeQL Pipeline
+
+on:
+  push:
+    branches:
+      - pipeline-test
+  pull_request:
+    branches:
+      - pipeline-test
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+      packages: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: javascript-typescript
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20'
+      - name: Install jq
+        run: sudo apt-get install jq 
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+      - name: Query CodeQL Alerts
+        id: codeql-alerts
+        run: |
+          pr_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          owner=$(jq --raw-output .repository.owner.login "$GITHUB_EVENT_PATH")
+          repo=$(jq --raw-output .repository.name "$GITHUB_EVENT_PATH")
+
+          echo "PR Number: $pr_number"
+          echo "Owner: $owner"
+          echo "Repo: $repo"
+
+          alerts_url="https://api.github.com/repos/$owner/$repo/code-scanning/alerts?ref=refs/pull/$pr_number/merge"
+
+          alerts=$(curl -s -H "Accept: application/vnd.github.v3+json" \
+                       -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                       "$alerts_url")
+
+          readable_alerts=$(echo "$alerts" | jq -r --arg owner "$owner" --arg repo "$repo" '
+            .[] |
+            "\n\n\(.rule.id): \(.rule.description)\n" +
+            "- Severity: \(.rule.security_severity_level)\n" +
+            "- Message: \(.most_recent_instance.message.text)\n" +
+            "- Located in \(.most_recent_instance.location.path) at line \(.most_recent_instance.location.start_line)\n" +
+            "- URL: https://github.com/\($owner)/\($repo)/security/code-scanning/\(.number)"
+          ')
+
+          if [[ $alerts != "[]" ]]; then
+            echo "CodeQL alerts found."
+            echo "$readable_alerts"
+            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d "{\"body\": \"### CodeQL Alerts Found\n\n\`\`\`\n$readable_alerts\n\`\`\`\"}" \
+              "https://api.github.com/repos/$owner/$repo/issues/$pr_number/comments")
+            echo "alerts_found=true" >> $GITHUB_ENV
+          else
+            echo "No CodeQL alerts found."
+            echo "alerts_found=false" >> $GITHUB_ENV
+          fi
+
+      - name: Fail if Alerts Found
+        if: env.alerts_found == 'true'
+        run: |
+          echo "Failing due to CodeQL alerts."
+          exit 1
