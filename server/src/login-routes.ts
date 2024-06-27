@@ -24,8 +24,8 @@ import { SharedUser, assertSharedUser } from "@tsconline/shared";
 import { loadFileMetadata } from "./file-metadata-handler.js";
 import { readdir, rm, writeFile } from "fs/promises";
 import { checkRecaptchaToken, generateToken } from "./verify.js";
+import { isEmail } from "validator";
 
-const emailTestRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const googleRecaptchaBotThreshold = 0.5;
 
 export const deleteProfile = async function deleteProfile(request: FastifyRequest, reply: FastifyReply) {
@@ -226,7 +226,7 @@ export const accountRecovery = async function accountRecovery(
     reply.status(500).send({ error: "Email service not configured" });
     return;
   }
-  if (!token || !email || !emailTestRegex.test(email)) {
+  if (!token || !email || !isEmail(email)) {
     reply.status(400).send({ error: "No token or email" });
     return;
   }
@@ -297,7 +297,7 @@ export const changeEmail = async function changeEmail(
     return;
   }
   const { newEmail, recaptchaToken } = request.body;
-  if (!newEmail || !emailTestRegex.test(newEmail) || !recaptchaToken) {
+  if (!newEmail || !isEmail(newEmail) || !recaptchaToken) {
     reply.status(400).send({ error: "Invalid form" });
     return;
   }
@@ -467,7 +467,7 @@ export const sendForgotPasswordEmail = async function sendForgotPasswordEmail(
     return;
   }
   const { email, recaptchaToken } = request.body;
-  if (!email || !emailTestRegex.test(email) || !recaptchaToken) {
+  if (!email || !isEmail(email) || !recaptchaToken) {
     reply.status(400).send({ error: "Invalid form" });
     return;
   }
@@ -537,7 +537,7 @@ export const resendVerificationEmail = async function resendVerificationEmail(
     return;
   }
   const { email, recaptchaToken } = request.body;
-  if (!email || !emailTestRegex.test(email) || !recaptchaToken) {
+  if (!email || !isEmail(email) || !recaptchaToken) {
     reply.status(400).send({ error: "Invalid form" });
     return;
   }
@@ -637,7 +637,7 @@ export const signup = async function signup(
     return;
   }
   const { username, password, email, recaptchaToken } = request.body;
-  if (!username || !password || !email || !emailTestRegex.test(email) || !recaptchaToken) {
+  if (!username || !password || !email || !isEmail(email) || !recaptchaToken) {
     reply.status(400).send({ error: "Invalid form" });
     return;
   }

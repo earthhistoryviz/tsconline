@@ -1914,6 +1914,7 @@ __metadata:
     "@types/node-cron": "npm:^3"
     "@types/nodemailer": "npm:^6"
     "@types/pump": "npm:^1.1.3"
+    "@types/validator": "npm:^13"
     "@xmldom/xmldom": "npm:0.8.10"
     bcrypt-ts: "npm:^5.0.2"
     better-sqlite3: "npm:^9.4.4"
@@ -1943,6 +1944,7 @@ __metadata:
     tsc: "npm:^2.0.4"
     tsx: "npm:^4.9.3"
     typescript: "npm:5.2.2"
+    validator: "npm:^13.12.0"
     vitest: "npm:^1.6.0"
     xlsx: "npm:^0.18.5"
   languageName: unknown
@@ -2266,6 +2268,13 @@ __metadata:
   version: 2.0.7
   resolution: "@types/trusted-types@npm:2.0.7"
   checksum: 8e4202766a65877efcf5d5a41b7dd458480b36195e580a3b1085ad21e948bc417d55d6f8af1fd2a7ad008015d4117d5fdfe432731157da3c68678487174e4ba3
+  languageName: node
+  linkType: hard
+
+"@types/validator@npm:^13":
+  version: 13.12.0
+  resolution: "@types/validator@npm:13.12.0"
+  checksum: b3344ef630ff9a3ffab4ce10da268e7be98ca2df9cbd956fb5cac860bd661c7ff6e82e0cdc7b253f037a98cf3b233fff3d04d28330bcd3ca2cafb0c52253976e
   languageName: node
   linkType: hard
 
@@ -9786,6 +9795,13 @@ __metadata:
   version: 5.0.1
   resolution: "validate-npm-package-name@npm:5.0.1"
   checksum: 0d583a1af23aeffea7748742cf22b6802458736fb8b60323ba5949763824d46f796474b0e1b9206beb716f9d75269e19dbd7795d6b038b29d561be95dd827381
+  languageName: node
+  linkType: hard
+
+"validator@npm:^13.12.0":
+  version: 13.12.0
+  resolution: "validator@npm:13.12.0"
+  checksum: db6eb0725e2b67d60d30073ae8573982713b5903195d031dc3c7db7e82df8b74e8c13baef8e2106d146d979599fd61a06cde1fec5c148e4abd53d52817ff0fd9
   languageName: node
   linkType: hard
 
