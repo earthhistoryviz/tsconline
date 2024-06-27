@@ -24,7 +24,8 @@ import {
   DialogTitle,
   FormControl,
   IconButton,
-  NativeSelect,
+  MenuItem,
+  Select,
   Switch,
   TextField,
   Typography
@@ -75,10 +76,9 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         </CustomTooltip>
         <Box
           sx={{
-            borderRadius: 1,
-            bgcolor: theme.palette.background.default,
-            marginTop: "1px",
-            marginLeft: "1px"
+            border: "2px solid",
+            borderColor: theme.palette.divider,
+            bgcolor: theme.palette.backgroundColor.main
           }}
           style={{ display: open ? "flex" : "none", position: "absolute", zIndex: "100" }}>
           <div className="flex-row">
@@ -226,27 +226,23 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
                 variant="standard"
                 onChange={handleFilenameChange}
               />
-              <FormControl sx={{ m: 1, minWidth: 120 }}>
-                <NativeSelect
-                  defaultValue={state.chartTab.downloadFiletype}
-                  inputProps={{
-                    name: "filetype",
-                    id: "uncontrolled-native"
-                  }}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                    const filetype = e.target.value;
-                    if (filetype !== "svg" && filetype !== "pdf" && filetype !== "png") {
-                      return;
-                    }
-                    actions.setChartTabDownloadFiletype(filetype);
-                  }}>
-                  <option value={"svg"}>.svg</option>
-                  {/* 
-                    TODO: implement these
-                    <option value={"pdf"}>.pdf</option>
-                    <option value={"png"}>.png</option> */}
-                </NativeSelect>
-              </FormControl>
+              <Box sx={{ minWidth: 120 }}>
+                <FormControl fullWidth margin="normal">
+                  <Select
+                    variant="standard"
+                    size="small"
+                    value={state.chartTab.downloadFiletype}
+                    label="Age"
+                    onChange={(e) => {
+                      actions.setChartTabDownloadFiletype(e.target.value as "svg");
+                    }}>
+                    <MenuItem value={"svg"}>.svg</MenuItem>
+                    {/* implmement later 
+                    <MenuItem value={"pdf"}>.pdf</MenuItem>
+                    <MenuItem value={"png"}>.png</MenuItem> */}
+                  </Select>
+                </FormControl>
+              </Box>
             </div>
           </DialogContent>
           <DialogActions>
