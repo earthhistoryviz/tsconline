@@ -81,16 +81,29 @@ jobs:
             const repo = context.repo.repo;
             const prNumber = context.payload.pull_request.number;
             const alerts = JSON.parse(fs.readFileSync('alerts.json', 'utf8')).map(alert => {
+              let emoji;
+              if (alert.rule.security_severity_level === 'high') {
+                emoji = '🚨';
+              } else if (alert.rule.security_severity_level === 'medium') {
+                emoji = '⚠️';
+              } else if (alert.rule.security_severity_level === 'low') {
+                emoji = '⚪';
+              } else {
+                emoji = 'ℹ️';
+              }
+              const url = `https://github.com/${owner}/${repo}/security/code-scanning/${alert.number}`;
+              const commitUrl = `https://github.com/${owner}/${repo}/commit/${alert.most_recent_instance.commit_sha}`
               return `
-              
-              ${alert.rule.id}: ${alert.rule.description}
-              - Severity: ${alert.rule.security_severity_level}
-              - Message: ${alert.most_recent_instance.message.text}
-              - Located in ${alert.most_recent_instance.location.path} at line ${alert.most_recent_instance.location.start_line}
-              - URL: https://github.com/${owner}/${repo}/security/code-scanning/${alert.number}
+              \n
+              ## ${emoji} ${alert.rule.id}: ${alert.rule.description}
+              - Severity: **${alert.rule.security_severity_level}**
+              - Message: ${alert.most_recent_instance.message.text.replace(/\n/g, '\n           ')}
+              - Located in *${alert.most_recent_instance.location.path}* from line ${alert.most_recent_instance.location.start_line} to line ${alert.most_recent_instance.location.end_line}
+              - Commit: [${alert.most_recent_instance.commit_sha.substring(0, 7)}](${commitUrl})
+              - [Click here for more information on how to solve](${url})\n\n
               `;});
             const formattedAlerts = alerts.join('\n');
-            const message = `🚨 The CodeQL analysis found some issues. Please address the following alerts:\n\n\`\`\`\n${formattedAlerts}\n\`\`\``;
+            const message = `## 🔍 The CodeQL analysis found some issues. Please address the following alerts:\n\n${formattedAlerts}\n`;
             github.rest.issues.createComment({
               owner,
               repo,
