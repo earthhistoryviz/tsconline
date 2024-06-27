@@ -12,9 +12,8 @@ jobs:
     permissions:
       contents: read
       security-events: write
-      actions: read
-      packages: read
       issues: write
+      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
@@ -50,11 +49,10 @@ jobs:
           echo "Owner: $owner"
           echo "Repo: $repo"
 
-          alerts_url="https://api.github.com/repos/$owner/$repo/code-scanning/alerts?ref=refs/pull/$pr_number/merge"
-
           alerts=$(curl -s -H "Accept: application/vnd.github.v3+json" \
                        -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                       "$alerts_url")
+                       "https://api.github.com/repos/$owner/$repo/code-scanning/alerts?ref=refs/pull/$pr_number/merge")
+          echo $alerts > alerts.json
 
           readable_alerts=$(echo "$alerts" | jq -r --arg owner "$owner" --arg repo "$repo" '
             .[] |
@@ -64,8 +62,6 @@ jobs:
             "- Located in \(.most_recent_instance.location.path) at line \(.most_recent_instance.location.start_line)\n" +
             "- URL: https://github.com/\($owner)/\($repo)/security/code-scanning/\(.number)"
           ')
-          echo $readable_alerts >> alerts.txt
-
           if [[ $alerts != "[]" ]]; then
             echo "CodeQL alerts found."
             echo "alerts_found=true" >> $GITHUB_ENV
@@ -81,12 +77,23 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-            const alerts = fs.readFileSync('alerts.txt', 'utf8');
-            const message = `🚨 The CodeQL analysis found some issues. Please address the following alerts:\n\n\`\`\`\n%{alerts}\n\`\`\``;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
             const prNumber = context.payload.pull_request.number;
+            const alerts = JSON.parse(fs.readFileSync('alerts.json', 'utf8')).map(alert => {
+              return `
+              
+              ${alert.rule.id}: ${alert.rule.description}
+              - Severity: ${alert.rule.security_severity_level}
+              - Message: ${alert.most_recent_instance.message.text}
+              - Located in ${alert.most_recent_instance.location.path} at line ${alert.most_recent_instance.location.start_line}
+              - URL: https://github.com/${owner}/${repo}/security/code-scanning/${alert.number}
+              `;});
+            const formattedAlerts = alerts.join('\n');
+            const message = `🚨 The CodeQL analysis found some issues. Please address the following alerts:\n\n\`\`\`\n${formattedAlerts}\n\`\`\``;
             github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              owner,
+              repo,
               issue_number: prNumber,
               body: message,
             }).then(() => {
