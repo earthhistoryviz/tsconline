@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { exec } from "child_process";
+import { exec, execFileSync } from "child_process";
 import { writeFile, stat, readFile, access, rm } from "fs/promises";
 import {
   DatapackIndex,
@@ -146,17 +146,12 @@ export const requestDownload = async function requestDownload(
 
       // java -jar <jar file> -d <datapack> <datapack> -enc <destination directory> -node
       console.log("Calling Java encrypt.jar: ", cmd);
-      exec(cmd, function (error, stdout, stderror) {
-        console.log("Java encrypt.jar finished, sending reply to browser");
-        if (error) {
-          console.error("Java error param: " + error);
-          console.error("Java stderr: " + stderror.toString());
-          resolve();
-        } else {
-          console.log("Java stdout: " + stdout.toString());
-          resolve();
-        }
-      });
+      try {
+        const stdout = execFileSync("java", ["-jar", assetconfigs.activeJar, "-d", filepath.replaceAll("\\", "/"), "-enc", encryptedFilepathDir, "-node"]);
+        console.log("Java stdout: " + stdout.toString())
+      } catch (e) {
+        console.error("Java error param: " + e);
+      }
     });
   } catch (e) {
     console.error(e);
