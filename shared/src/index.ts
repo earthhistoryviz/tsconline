@@ -216,7 +216,13 @@ export type SubInfo =
   | SubSequenceInfo
   | SubTransectInfo;
 
-export type ColumnSpecificSettings = EventSettings | PointSettings | ChronSettings;
+export type ColumnSpecificSettings = EventSettings | PointSettings | ChronSettings | RangeSettings;
+
+export type RangeSettings = {
+  rangeSort: RangeSort;
+  margin: number;
+  agePad: number;
+};
 
 export type DataMiningChronDataType = "Frequency";
 
@@ -558,6 +564,19 @@ export function isDataMiningPointDataType(o: any): o is DataMiningPointDataType 
 }
 export function isDataMiningChronDataType(o: any): o is DataMiningChronDataType {
   return /^(Frequency)$/.test(o);
+}
+
+export function assertRangeSettings(o: any): asserts o is RangeSettings {
+  if (!o || typeof o !== "object") throw new Error("RangeSettings must be a non-null object");
+  if (typeof o.rangeSort !== "string" || !isRangeSort(o.rangeSort))
+    throwError(
+      "RangeSettings",
+      "rangeSort",
+      "string and first occurrence | last occurrence | alphabetical",
+      o.rangeSort
+    );
+  if (typeof o.margin !== "number") throwError("RangeSettings", "margin", "number", o.margin);
+  if (typeof o.agePad !== "number") throwError("RangeSettings", "agePad", "number", o.agePad);
 }
 
 export function assertEventSettings(o: any): asserts o is EventSettings {
@@ -1078,6 +1097,9 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
     case "Chron":
       assertChronSettings(o);
       break;
+    case "Range":
+      assertRangeSettings(o);
+      break;
     default:
       throw new Error(
         "ColumnSpecificSettings must be an object of a valid column type. Found value of " +
@@ -1302,7 +1324,7 @@ export function assertSVGStatus(o: any): asserts o is SVGStatus {
 }
 
 export function assertChronSettings(o: any): asserts o is ChronSettings {
-  if (o.dataMiningChronDataType != null && !isDataMiningChronDataType(o.dataMiningChronDataType))
+  if (o.dataMiningChronDataType !== null && !isDataMiningChronDataType(o.dataMiningChronDataType))
     throwError("ChronSettings", "dataMiningChronType", "DataMiningChronDataType", o.dataMiningChronDataType);
   assertDataMiningSettings(o);
 }

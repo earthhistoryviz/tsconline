@@ -28,6 +28,68 @@
         "children": [],
         "width": 100
       },
+      "translate-chron-column-key": {
+        "_id": "class datastore.ChronColumn:Chron",
+        "title": "Chron Title",
+        "useNamedColor": false,
+        "placeHolder": false,
+        "drawTitle": true,
+        "drawAgeLabel": false,
+        "drawUncertaintyLabel": false,
+        "isSelected": true,
+        "width": 1000,
+        "pad": 0.2,
+        "age pad": 2,
+        "backgroundColor": {
+          "text": {
+            "r": 1,
+            "g": 2,
+            "b": 3
+          }
+        },
+        "customColor": {
+          "text": {
+            "r": 1,
+            "g": 2,
+            "b": 3
+          }
+        },
+        "fonts": {},
+        "children": [],
+        "drawExtraColumn": "Frequency",
+        "windowSize": 9,
+        "stepSize": 5
+      },
+      "translate-range-column-key": {
+        "_id": "class datastore.RangeColumn:Range",
+        "title": "Range Title",
+        "useNamedColor": false,
+        "placeHolder": false,
+        "drawTitle": true,
+        "drawAgeLabel": false,
+        "drawUncertaintyLabel": false,
+        "isSelected": true,
+        "width": 100,
+        "pad": 200,
+        "age pad": 22,
+        "backgroundColor": {
+          "text": {
+            "r": 224,
+            "g": 232,
+            "b": 239
+          }
+        },
+        "customColor": {
+          "text": {
+            "r": 224,
+            "g": 232,
+            "b": 239
+          }
+        },
+        "fonts": {},
+        "children": [],
+        "rangeSort": "alphabetical"
+      },
       "translate-event-column-key": {
         "_id": "class datastore.EventColumn:Events (Venusian)",
         "title": "Events (Venusian)",
@@ -60,8 +122,7 @@
         "rangeSort": "first occurrence",
         "drawExtraColumn": null,
         "windowSize": 2,
-        "stepSize": 1,
-        "isDataMiningColumn": false
+        "stepSize": 1
       },
       "translate-point-column-key": {
         "_id": "class datastore.PointColumn:Long-Term Phanerozoic",
