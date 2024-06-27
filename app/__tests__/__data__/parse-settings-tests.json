@@ -22,6 +22,62 @@
         "show": true,
         "expanded": true
       },
+      "translate-chron-column-test": {
+        "name": "Chron",
+        "editName": "Chron Title",
+        "fontsInfo": {},
+        "fontOptions": ["Column Header"],
+        "popup": "",
+        "on": true,
+        "width": 1000,
+        "enableTitle": true,
+        "rgb": {
+          "r": 1,
+          "g": 2,
+          "b": 3
+        },
+        "minAge": 100,
+        "maxAge": 101,
+        "children": [],
+        "parent": null,
+        "units": "Ma",
+        "columnDisplayType": "Chron",
+        "columnSpecificSettings": {
+          "dataMiningChronDataType": "Frequency",
+          "windowSize": 9,
+          "stepSize": 5
+        },
+        "show": true,
+        "expanded": false
+      },
+      "translate-range-column-test": {
+        "name": "Range",
+        "editName": "Range Title",
+        "fontsInfo": {},
+        "fontOptions": ["Column Header"],
+        "popup": "",
+        "on": true,
+        "width": 100,
+        "enableTitle": true,
+        "rgb": {
+          "r": 224,
+          "g": 232,
+          "b": 239
+        },
+        "minAge": 1,
+        "maxAge": 5,
+        "children": [],
+        "parent": null,
+        "units": "Ma",
+        "columnDisplayType": "Range",
+        "columnSpecificSettings": {
+          "margin": 200,
+          "agePad": 22,
+          "rangeSort": "alphabetical"
+        },
+        "show": true,
+        "expanded": false
+      },
       "translate-event-column-test": {
         "name": "Events (Venusian)",
         "editName": "Events (Venusian)",
