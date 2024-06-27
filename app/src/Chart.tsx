@@ -72,7 +72,7 @@ export const Chart = observer(() => {
       if (event.shiftKey) {
         //stop container from using default wheel event
         container.instance.wrapperComponent?.removeEventListener("wheel", container.instance.onWheelPanning);
-        const e = new WheelEvent("wheel", { deltaX: -event.deltaY, deltaY: 0 });
+        const e = new WheelEvent("wheel", { deltaX: event.deltaX !== 0 ? event.deltaX : event.deltaY, deltaY: 0 });
         container.instance.onWheelPanning(e);
         //restore default wheel event
         container.instance.wrapperComponent?.addEventListener("wheel", container.instance.onWheelPanning);
