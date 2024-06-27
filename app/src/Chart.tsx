@@ -92,10 +92,6 @@ export const Chart = observer(() => {
           container.zoomOut(step, 0);
           actions.setChartTabScale(state.chartTab.scale - step);
         }
-        while (state.chartTab.scale <= 0 && step > 0) {
-          container.zoomIn(step, 0);
-          actions.setChartTabScale(state.chartTab.scale + step);
-        }
       }
     };
     //zoom in and zoom out using keyboard

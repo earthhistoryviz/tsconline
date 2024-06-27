@@ -84,7 +84,7 @@ const SaveSettings = observer(() => {
           <Button variant="outlined" onClick={handleClose}>
             Cancel
           </Button>
-          <TSCButton component="label" variant="text" sx={{ bgcolor: "button.main" }} type="submit">
+          <TSCButton component="label" variant="text" buttonType="primary" type="submit">
             load
           </TSCButton>
         </DialogActions>
