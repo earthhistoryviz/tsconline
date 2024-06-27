@@ -51,6 +51,7 @@ export type Config = {
 export const SettingsMenuOptionLabels = {
   time: "Time",
   column: "Column",
+  search: "Search",
   font: "Font",
   mappoints: "Map Points",
   datapacks: "Datapacks"
