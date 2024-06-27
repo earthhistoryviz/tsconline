@@ -98,7 +98,6 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
           onClick={() => {
             if (state.chartTab.scale < maxScale) {
               container.zoomIn(step, 0);
-              console.log(container.instance.transformState);
             }
           }}>
           <ZoomInIcon />
@@ -115,10 +114,6 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
               container.zoomOut(step, 0);
               actions.setChartTabScale(state.chartTab.scale - step);
             }
-            while (state.chartTab.scale <= 0 && step > 0) {
-              container.zoomIn(step, 0);
-              actions.setChartTabScale(state.chartTab.scale + step);
-            }
           }}>
           <ZoomOutIcon />
         </IconButton>
@@ -130,7 +125,6 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
       <CustomTooltip title="Reset Transformation">
         <IconButton
           onClick={() => {
-            console.log(state.chartTab.resetMidX);
             container.setTransform(state.chartTab.resetMidX, 0, 1, 0);
             actions.setChartTabScale(1);
             smallUpdate();
