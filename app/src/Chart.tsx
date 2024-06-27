@@ -2,14 +2,14 @@ import { observer } from "mobx-react-lite";
 import { useContext, useEffect, useRef } from "react";
 import { context } from "./state";
 import "./Chart.css";
-import { GradientDiv, TSCPopupManager, TSCSvgComponent } from "./components";
+import { TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
 import { TransformWrapper, TransformComponent, ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
 import { OptionsBar } from "./ChartOptionsBar";
+import { Typography } from "@mui/material";
 
 export const Chart = observer(() => {
   const { state, actions } = useContext(context);
-  const theme = useTheme();
   const transformContainerRef = useRef<ReactZoomPanPinchContentRef>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const step = 0.1;

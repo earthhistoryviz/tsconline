@@ -17,6 +17,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 import isValidFilename from "valid-filename";
 import "./SaveSettings.css";
 import { observer } from "mobx-react-lite";
+import { TSCButton } from "../components";
 const SaveSettings = observer(() => {
   const { state, actions } = React.useContext(context);
   function saveSettings(filename: string) {
@@ -80,12 +81,12 @@ const SaveSettings = observer(() => {
           />
         </DialogContent>
         <DialogActions>
-          <Button color="warning" onClick={handleClose}>
+          <Button variant="outlined" onClick={handleClose}>
             Cancel
           </Button>
-          <Button color="success" type="submit">
-            Save
-          </Button>
+          <TSCButton component="label" variant="text" sx={{ bgcolor: "button.main" }} type="submit">
+            load
+          </TSCButton>
         </DialogActions>
       </Dialog>
     </React.Fragment>
