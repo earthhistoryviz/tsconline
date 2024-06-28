@@ -477,11 +477,11 @@ export const fetchSVGStatus = async function (
 ) {
   const { hash } = request.params;
   let isSVGReady = false;
-  const directory = path.join(assetconfigs.chartsDirectory, hash);
-  let filepath = path.join(directory, "chart.svg");
+  let directory = path.join(assetconfigs.chartsDirectory, hash);
+  const filepath = path.join(directory, "chart.svg");
   // sanitize and check filepath
-  filepath = realpathSync(path.resolve(filepath));
-  if (!filepath.startsWith(directory)) {
+  directory = realpathSync(path.resolve(filepath));
+  if (!directory.startsWith(assetconfigs.chartsDirectory)) {
     reply.status(403).send({ error: "Invalid hash" });
     return;
   }
