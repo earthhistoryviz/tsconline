@@ -103,9 +103,14 @@ function createThemeOverrides(theme: Theme) {
             color: theme.palette.icon.main
           }
         },
-        style: {
-          ":after": { borderBottomColor: "#FF9900" }
-        }
+        variants: [
+          {
+            props: { variant: "standard" },
+            style: {
+              ":after": { borderBottomColor: "#FF9900" }
+            }
+          }
+        ]
       },
       MuiMenu: {
         styleOverrides: {
