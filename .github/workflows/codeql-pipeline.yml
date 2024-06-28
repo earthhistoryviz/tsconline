@@ -52,25 +52,20 @@ jobs:
           alerts=$(curl -s -H "Accept: application/vnd.github.v3+json" \
                   -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                   "https://api.github.com/repos/$owner/$repo/code-scanning/alerts?ref=refs/pull/$pr_number/merge&per_page=100")
-          echo $alerts > current_alerts.json
+          alerts=$(echo $alerts | jq "map(select(.state == \"open\"))")
+          echo [] > current_alerts.json
           echo "Starting to resolve alerts."
           echo "$alerts" | jq -c '.[]' | while read -r alert; do
-            echo "Checking alert: $alert"
-            if [ $(echo $alert | jq -r '.state') == "open" -a $(echo $alert | jq -r '.most_recent_instance.state') == 'fixed' ]; then
-              alert_id=$(echo $alert | jq -r '.number')
-              echo "Resolving alert $alert_id"
-              response=$(curl -s -X PATCH -H "Accept: application/vnd.github.v3+json" \
-                   -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                   -d "$(jq -n --arg state "fixed" '{state: $state}')" \
-                   "https://api.github.com/repos/$owner/$repo/code-scanning/alerts/$alert_id")
-              if [[ $(echo $response | jq -r '.state') == "fixed" ]]; then
-                echo "Alert $alert_id resolved."
-                $alerts=$(echo $alerts | jq "map(select(.number != $alert_id))")
-              else
-                echo "Failed to resolve alert $alert_id."
-              fi
+            alert_id=$(echo $alert | jq -r '.number')
+            if [[ $(echo $alert | jq -r '.most_recent_instance.state') == "fixed" ]]; then
+              echo "Alert $alert_id has been resolved and will be removed from the list."
+            else
+              echo "Alert id: $alert_id is not yet fixed."
+              # MUST WRITE TO FILE EACH TIME SINCE WHILE LOOP RUNS IN A SUBSHELL
+              echo $(jq ". + [${alert}]" current_alerts.json) > current_alerts.json
             fi
           done
+          alerts=$(cat current_alerts.json)
           if [[ $alerts != "[]" ]]; then
             echo "CodeQL alerts found."
             echo "alerts_found=true" >> $GITHUB_ENV
@@ -90,14 +85,14 @@ jobs:
             const prNumber = context.payload.pull_request.number;
             const alerts = JSON.parse(fs.readFileSync('current_alerts.json', 'utf8')).map(alert => {
               let emoji;
-              if (alert.rule.security_severity_level === 'high') {
+              if (alert.rule.security_severity_level === 'critical') {
+                emoji = '🚫';
+              } else if (alert.rule.security_severity_level === 'high') {
                 emoji = '🚨';
               } else if (alert.rule.security_severity_level === 'medium') {
                 emoji = '⚠️';
-              } else if (alert.rule.security_severity_level === 'low') {
-                emoji = '⚪';
               } else {
-                emoji = 'ℹ️';
+                emoji = '️ℹ️';
               }
               const url = `https://github.com/${owner}/${repo}/security/code-scanning/${alert.number}`;
               const commitUrl = `https://github.com/${owner}/${repo}/commit/${alert.most_recent_instance.commit_sha}`
