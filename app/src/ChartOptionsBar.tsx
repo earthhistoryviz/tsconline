@@ -103,6 +103,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
           onClick={() => {
             if (state.chartTab.scale < maxScale) {
               container.zoomIn(step, 0);
+              actions.setChartTabScale(state.chartTab.scale + step);
             }
           }}>
           <ZoomInIcon />
