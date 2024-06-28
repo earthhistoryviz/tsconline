@@ -5,7 +5,7 @@ on:
     branches:
       - pipeline-test
     paths-ignore:
-      - '**/.*\.test\.ts'
+      - '**/*.test.ts'
 
 jobs:
   analyze:
