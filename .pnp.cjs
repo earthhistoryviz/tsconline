@@ -2542,6 +2542,7 @@ const RAW_RUNTIME_STATE =
           ["dompurify", "npm:3.1.4"],\
           ["dotenv", "npm:16.4.5"],\
           ["fastify", "npm:4.27.0"],\
+          ["fastify-rate-limit", "npm:5.9.0"],\
           ["glob", "npm:10.3.16"],\
           ["google-auth-library", "npm:9.10.0"],\
           ["jsdom", "virtual:f400f1facecebc164f3b8826224462ee6165ba2a289af45d35511e5194135aec0e2b33199c69e89fd109ab94e6d817043a2c4cc1150135f9e3fe0bd583a0cf60#npm:24.0.0"],\
@@ -5990,10 +5991,41 @@ const RAW_RUNTIME_STATE =
       }]\
     ]],\
     ["fastify-plugin", [\
+      ["npm:3.0.1", {\
+        "packageLocation": "./.yarn/cache/fastify-plugin-npm-3.0.1-30a545741d-b01a6fa050.zip/node_modules/fastify-plugin/",\
+        "packageDependencies": [\
+          ["fastify-plugin", "npm:3.0.1"]\
+        ],\
+        "linkType": "HARD"\
+      }],\
       ["npm:4.5.1", {\
         "packageLocation": "./.yarn/cache/fastify-plugin-npm-4.5.1-902caad25f-7c6d777ada.zip/node_modules/fastify-plugin/",\
         "packageDependencies": [\
           ["fastify-plugin", "npm:4.5.1"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["fastify-rate-limit", [\
+      ["npm:5.8.0", {\
+        "packageLocation": "./.yarn/cache/fastify-rate-limit-npm-5.8.0-e6567d041b-8f486324b2.zip/node_modules/fastify-rate-limit/",\
+        "packageDependencies": [\
+          ["fastify-rate-limit", "npm:5.8.0"],\
+          ["fastify-plugin", "npm:3.0.1"],\
+          ["ms", "npm:2.1.3"],\
+          ["tiny-lru", "npm:8.0.2"]\
+        ],\
+        "linkType": "HARD"\
+      }],\
+      ["npm:5.9.0", {\
+        "packageLocation": "./.yarn/cache/fastify-rate-limit-npm-5.9.0-09085b8273-b675825ffb.zip/node_modules/fastify-rate-limit/",\
+        "packageDependencies": [\
+          ["fastify-rate-limit", "npm:5.9.0"],\
+          ["fastify-rate-limit-deprecated", [\
+            "fastify-rate-limit",\
+            "npm:5.8.0"\
+          ]],\
+          ["process-warning", "npm:1.0.0"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -9185,6 +9217,13 @@ const RAW_RUNTIME_STATE =
       }]\
     ]],\
     ["process-warning", [\
+      ["npm:1.0.0", {\
+        "packageLocation": "./.yarn/cache/process-warning-npm-1.0.0-8b886c4a9d-8736d11d8d.zip/node_modules/process-warning/",\
+        "packageDependencies": [\
+          ["process-warning", "npm:1.0.0"]\
+        ],\
+        "linkType": "HARD"\
+      }],\
       ["npm:3.0.0", {\
         "packageLocation": "./.yarn/cache/process-warning-npm-3.0.0-e1380c08e2-2d82fa641e.zip/node_modules/process-warning/",\
         "packageDependencies": [\
@@ -10922,6 +10961,15 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./.yarn/cache/tightrope-npm-0.2.0-206244b764-b57a6dec1a.zip/node_modules/tightrope/",\
         "packageDependencies": [\
           ["tightrope", "npm:0.2.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["tiny-lru", [\
+      ["npm:8.0.2", {\
+        "packageLocation": "./.yarn/cache/tiny-lru-npm-8.0.2-b190e31fd1-74b193d83b.zip/node_modules/tiny-lru/",\
+        "packageDependencies": [\
+          ["tiny-lru", "npm:8.0.2"]\
         ],\
         "linkType": "HARD"\
       }]\
