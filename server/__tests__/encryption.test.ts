@@ -94,6 +94,7 @@ beforeAll(async () => {
     }
   );
   vi.spyOn(console, "error").mockImplementation(() => undefined);
+  vi.spyOn(console, "log").mockImplementation(() => undefined);
   await app.listen({ host: "", port: 1234 });
 });
 
