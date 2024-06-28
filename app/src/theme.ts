@@ -102,7 +102,15 @@ function createThemeOverrides(theme: Theme) {
           icon: {
             color: theme.palette.icon.main
           }
-        }
+        },
+        variants: [
+          {
+            props: { variant: "standard" },
+            style: {
+              ":after": { borderBottomColor: "#FF9900" }
+            }
+          }
+        ]
       },
       MuiMenu: {
         styleOverrides: {
@@ -128,6 +136,18 @@ function createThemeOverrides(theme: Theme) {
             }
           }
         }
+      },
+      MuiTextField: {
+        variants: [
+          {
+            props: { variant: "standard" },
+            style: {
+              "& .MuiInputBase-root:after": {
+                borderBottom: "2px solid #FF9900"
+              }
+            }
+          }
+        ]
       },
       MuiButton: {
         variants: [
