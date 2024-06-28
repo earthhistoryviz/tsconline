@@ -98,6 +98,11 @@ server.register(fastifySecureSession, {
   }
 });
 
+server.register(fastifyRateLimit, {
+  max: 50,
+  timeWindow: "1 minute"
+})
+
 await server.register(fastifyRateLimit, {
   global: false,
   onExceeded: async (_request, key) => {
