@@ -157,9 +157,7 @@ jobs:
       - name: Check for any build failures
         if: steps.vite_build.outputs.build_failed == 'true'
         run: exit 1
-      # uses: webfactory/ssh-agent@v0.9.0
-      # with:
-      #   ssh-private-key: ${{ secrets.JAVA_DEPLOY_KEY }}
+
       - name: Set up SSH key
         run: |
           eval $(ssh-agent)
@@ -174,7 +172,6 @@ jobs:
           ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
 
       - name: Checkout code from Bitbucket
-        # uses: actions/checkout@v4
         run: |
           git clone git@bitbucket.org:strat/tscreator.git
 
@@ -186,34 +183,9 @@ jobs:
           docker-compose exec -T tscreator_vnc bash -c "cd /tscreator/devel && make && make jar && find '/tscreator/jars/' -type f -name '*.jar' -exec cp {} '/tscreator/testUsageJar.jar' \; && exit"
           docker cp tscreator_vnc:/tscreator/testUsageJar.jar /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar
 
-          if test -f /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar; then
-            echo "docker original file exist"
-          else
-            echo "docker original file not exist"
-            exit 1
-          fi
-      #&& find '/tscreator/jars/' -type f -name '*.jar' -exec cp {} '/tscreator/testUsageJar.jar' \; &&
-      #   CONTAINER_ID = $(docker-compose ps -q tscreator_vnc)
-      #   docker cp $CONTAINER_ID:/tscreator/testUsageJar.jar /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar
-      #  cg
       - name: Move the jar to TSConline assets
         run: |
-          if test -f /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar; then
-            echo "local original file exist"
-          else
-            echo "local original file not exist"
-            exit 1
-          fi
           cp /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar /home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar
-          if test -f /home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar; then
-            echo "copied file exist"
-            ls -ld /home/runner/work/tsconline/tsconline/server/__tests__/__data__/
-          else
-            echo "copied file not exist"
-            ls -ld /home/runner/work/tsconline/tsconline/server/assets/jars/
-            ls -ld /home/runner/work/tsconline/tsconline/server/__tests__/__data__/
-            exit 1
-          fi
 
       - name: Set up Java
         uses: actions/setup-java@v3
@@ -224,25 +196,6 @@ jobs:
       - name: Install xvfb
         run: sudo apt-get install xvfb
 
-      # - name: Start xvfb
-      #   run: |
-      #     Xvfb :1 -screen 0 1024x768x16 &
-      #     export DISPLAY=:1
-
-      # - name: manually generate file
-      #   run: |
-      #     Xvfb :1 -screen 0 1024x768x16 &
-      #     export DISPLAY=:1
-      #     java -jar /home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar -d "/home/runner/work/tsconline/tsconline/server/__tests__/__data__/encryption-test-1.txt" -enc /home/runner/work/tsconline/tsconline/server/__tests__/__data__/encryption-test-generated-file -node
-      # - name: idk
-      #   run: |
-      #     cd /home/runner/work/tsconline/tsconline/server/__tests__/__data__/encryption-test-generated-file/
-      #     ls
-      #     if test -f /home/runner/work/tsconline/tsconline/server/__tests__/__data__/encryption-test-generated-file/encryption-test-1.txt; then
-      #        echo "manually call works"
-      #     else
-      #        echo "manually not work as well"
-      #     fi
       - name: Run Tests
         id: run_tests
         run: |
