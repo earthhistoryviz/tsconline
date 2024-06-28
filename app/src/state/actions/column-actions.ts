@@ -588,6 +588,14 @@ export const setColumnSearchTerm = action((term: string) => {
   state.settingsTabs.columnSearchTerm = term;
 });
 
+export const setGeneralSearchTerm = action((term: string) => {
+  state.settingsTabs.generalSearchTerm = term;
+});
+
+export const setGeneralSearchIndex = action((index: number) => {
+  state.settingsTabs.generalSearchIndex = index;
+});
+
 export const incrementColumnPosition = action((column: ColumnInfo) => {
   const parent = state.settingsTabs.columnHashMap.get(column.parent!);
   if (!parent) return;
