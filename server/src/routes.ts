@@ -26,8 +26,8 @@ import { updateFileMetadata, writeFileMetadata } from "./file-metadata-handler.j
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
 import { DatapackDescriptionInfo } from "./types.js";
-//import { StringNullableChain } from "lodash";
 import { MultipartFile } from "@fastify/multipart";
+import * as os from "os";
 //import { stringify } from "querystring";
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
@@ -282,21 +282,20 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       return;
     }
     // for test usage: const uuid = "username";
-
     const parts = request.parts();
+    let tempFilePath: string;
     const fields: Record<string, string> = {};
     let uploadedFile: MultipartFile | undefined; //has to be undefined to be able to check if it is null
+
     for await (const part of parts) {
-      console.log("part: ", part);
       if (part.type === "file") {
-        uploadedFile = part as MultipartFile;
-        console.log("uploadedFile in for loop if block: ", uploadedFile);
-        await pump(uploadedFile.file, fs.createWriteStream(uploadedFile.filename)); //must happen or else if gets skipped
-        await part.toBuffer();
+        uploadedFile = part;
+        tempFilePath = path.join(os.tmpdir(), uploadedFile.filename);
+        const tempFileStream = fs.createWriteStream(tempFilePath);
+        await pump(uploadedFile.file, tempFileStream); //need to ensure the file is written
       } else if (part.type === "field") {
         const field = part as { fieldname: string; value: string };
         fields[part.fieldname] = field.value;
-        console.log("fields: ", fields);
       }
     }
     const name = fields.name;
@@ -307,15 +306,11 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       console.log("No file uploaded, console log");
       return;
     }
-    console.log("uploadedFile AFTER forloop: ", uploadedFile);
-    console.log("filestream: ", uploadedFile.file);
-
     if (!name || !description) {
       reply.status(404).send({ error: "No name or description uploaded" });
       console.log("No name or description uploaded");
       return;
     }
-
     // only accept a binary file (encoded) or an unecnrypted text file or a zip file
     if (
       uploadedFile.mimetype !== "application/octet-stream" &&
@@ -325,7 +320,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       reply.status(400).send({ error: `Invalid mimetype of uploaded file, received ${uploadedFile.mimetype}` });
       return;
     }
-    const filename = uploadedFile.filename; //from MultipartFile, original name of file
+    const filename = uploadedFile.filename;
     const ext = path.extname(filename);
     const filenameWithoutExtension = path.basename(filename, ext);
     const userDir = path.join(assetconfigs.uploadDirectory, uuid);
@@ -350,12 +345,11 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       reply.status(415).send({ error: "Invalid file type" });
       return;
     }
-    const fileStream = uploadedFile.file;
     await mkdirp(datapackDir);
     try {
       // must wait for the file to be written before decrypting
       await new Promise<void>((resolve, reject) => {
-        pump(fileStream, fs.createWriteStream(filepath), (err) => {
+        fs.rename(tempFilePath, filepath, (err) => {
           if (err) {
             reject(err);
           } else {
@@ -365,6 +359,14 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       });
     } catch (e) {
       await errorHandler("Failed to save file with error: " + e, 500, e);
+      return;
+    }
+    try {
+      const state = await fs.promises.stat(filepath);
+      console.log("File size: ", state.size);
+    } catch (e) {
+      console.error("Error getting file size: ", e);
+      console.log("File not found after save, error:", e);
       return;
     }
     if (uploadedFile.file.truncated) {
@@ -396,6 +398,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       await errorHandler("Failed to decrypt datapacks with error " + e, 500, e);
       return;
     }
+    //verify decrypted directory
     try {
       await access(decryptedFilepathDir);
       await access(path.join(decryptedFilepathDir, "datapacks"));
