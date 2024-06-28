@@ -84,7 +84,12 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
           <div className="flex-row">
             <Typography sx={{ p: 2 }}>Zoom on Scroll</Typography>
             <div style={{ margin: "auto" }}>
-              <Switch defaultChecked={state.chartTab.enableScrollZoom} onChange={handleSwitch} color="info" />
+              <Switch
+                inputProps={{ "aria-label": "controlled" }}
+                defaultChecked={state.chartTab.enableScrollZoom}
+                onChange={handleSwitch}
+                color="info"
+              />
             </div>
           </div>
         </Box>
@@ -225,9 +230,6 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
                 label="filename"
                 variant="standard"
                 onChange={handleFilenameChange}
-                sx={{
-                  "& .MuiInput-underline:after": { borderBottomColor: "orange" }
-                }}
               />
               <Box sx={{ minWidth: 120 }}>
                 <FormControl fullWidth margin="normal">
