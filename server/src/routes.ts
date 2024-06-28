@@ -17,7 +17,7 @@ import { deleteDirectory, resetUploadDirectory, checkHeader, assetconfigs } from
 import { mkdirp } from "mkdirp";
 import md5 from "md5";
 import svgson from "svgson";
-import fs, { realpathSync } from "fs";
+import fs, { realpath, realpathSync } from "fs";
 import { parseExcelFile } from "./parse-excel-file.js";
 import path from "path";
 import pump from "pump";
@@ -488,7 +488,8 @@ export const fetchSVGStatus = async function (
   let filepath = path.join(directory, "chart.svg");
   // sanitize and check filepath
   directory = realpathSync(path.resolve(directory));
-  if (!directory.startsWith(assetconfigs.chartsDirectory)) {
+  filepath = realpathSync(path.resolve(filepath));
+  if (!directory.startsWith(assetconfigs.chartsDirectory) || !filepath.startsWith(assetconfigs.chartsDirectory) || !filepath.endsWith("chart.svg")) {
     reply.status(403).send({ error: "Invalid hash" });
     return;
   }
