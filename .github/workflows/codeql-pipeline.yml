@@ -4,6 +4,8 @@ on:
   pull_request:
     branches:
       - pipeline-test
+    paths-ignore:
+      - '**/.*\.test\.ts'
 
 jobs:
   analyze:
