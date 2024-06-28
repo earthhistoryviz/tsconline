@@ -477,8 +477,14 @@ export const fetchSVGStatus = async function (
 ) {
   const { hash } = request.params;
   let isSVGReady = false;
-  const directory = `${assetconfigs.chartsDirectory}/${hash}`;
-  const filepath = `${directory}/chart.svg`;
+  const directory = path.join(assetconfigs.chartsDirectory, hash);
+  let filepath = path.join(directory, "chart.svg");
+  // sanitize and check filepath
+  filepath = realpathSync(path.resolve(filepath));
+  if (!filepath.startsWith(directory)) {
+    reply.status(403).send({ error: "Invalid hash" });
+    return;
+  }
   // if hash doesn't exist reply with error
   if (!fs.existsSync(directory)) {
     reply.send({ error: `No directory exists at hash: ${directory}` });
