@@ -23,6 +23,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
   const navigate = useNavigate();
   const theme = useTheme();
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
+
   return (
     <Box
       className={styles.rc}
@@ -60,13 +61,13 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
       <img className={styles.image} src={imageUrl} alt="datapack" onError={() => setImageUrl(defaultImageUrl)} />
       <div className={styles.middle}>
         <Typography className={styles.header} color="textSecondary">
-          {name}
+          {datapack.title}
         </Typography>
         <Typography className={styles.fd} color="textSecondary">
           Dixon, Dougal, et al. · Created 10/10/2024
         </Typography>
         <Typography className={styles.ci} color="textSecondary">
-          50 Columns · 10 Mb · 350 images{" "}
+          50 Columns · {datapack.size} · 350 images{" "}
         </Typography>
       </div>
       <div

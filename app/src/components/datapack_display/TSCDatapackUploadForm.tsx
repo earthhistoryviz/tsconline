@@ -9,64 +9,15 @@ import { ErrorCodes } from "../../util/error-codes";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { CustomDivider } from "../TSCComponents";
-import { uploadDatapack } from "../state/actions/general-actions";
 
 type TSCDatapackUploadFormProps = {
   close: () => void;
 };
-
 export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ close }) => {
   const { state, actions } = useContext(context);
   const [datapackName, setDatapackName] = useState("");
   const [datapackDescription, setDatapackDescription] = useState("");
   const [datapackFile, setDatapackFile] = useState<File | null>(null);
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files![0];
-    if (!file) {
-      return;
-    }
-    if (file.name.length > 50) {
-      actions.pushError(ErrorCodes.DATAPACK_FILE_NAME_TOO_LONG as ErrorCodes);
-      return;
-    }
-    const ext = file.name.split(".").pop();
-    if (file.type !== "text/plain" && file.type !== "") {
-      actions.pushError(ErrorCodes.UNRECOGNIZED_DATAPACK_FILE as ErrorCodes);
-      return;
-    }
-    if (!ext || !/^(dpk|mdpk|txt|map)$/.test(ext)) {
-      actions.pushError(ErrorCodes.UNRECOGNIZED_DATAPACK_EXTENSION);
-      return;
-    }
-    if (state.datapackIndex[file.name]) {
-      actions.pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
-      return;
-    }
-    actions.removeAllErrors();
-    setDatapackFile(file);
-  };
-
-  const handleUploadClick = async () => {
-    if (!datapackFile) {
-      actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
-      return;
-    }
-    if (!datapackName || !datapackDescription) {
-      actions.pushError(ErrorCodes.UNFINISHED_DATAPACK_UPLOAD_FORM);
-      return;
-    }
-    actions.removeError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
-    actions.removeError(ErrorCodes.UNFINISHED_DATAPACK_UPLOAD_FORM);
-    try {
-      await uploadDatapack(datapackFile, datapackName, datapackDescription);
-      actions.pushSnackbar("Datapack uploaded successfully", "success");
-      close();
-    } catch (error) {
-      actions.pushError(error as ErrorCodes);
-    }
-  };
-
   return (
     <>
       <div className="close-upload-form">
@@ -84,7 +35,32 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
             startIcon={<CloudUploadIcon />}
             text="Upload Datapack"
             variant="contained"
-            onChange={handleFileUpload}
+            onChange={(event) => {
+              const file = event.target.files![0];
+              if (!file) {
+                return;
+              }
+              if (file.name.length > 50) {
+                actions.pushError(ErrorCodes.DATAPACK_FILE_NAME_TOO_LONG);
+                return;
+              }
+              const ext = file.name.split(".").pop();
+              // either an unencoded file (text file) or an encoded file that we have no type for
+              if (file.type !== "text/plain" && file.type !== "") {
+                actions.pushError(ErrorCodes.UNRECOGNIZED_DATAPACK_FILE);
+                return;
+              }
+              if (!ext || !/^(dpk|mdpk|txt|map)$/.test(ext)) {
+                actions.pushError(ErrorCodes.UNRECOGNIZED_DATAPACK_EXTENSION);
+                return;
+              }
+              if (state.datapackIndex[file.name]) {
+                actions.pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
+                return;
+              }
+              actions.removeAllErrors();
+              setDatapackFile(file);
+            }}
           />
           <Typography className="file-upload-text" variant="body2">
             {datapackFile ? datapackFile.name : "No file selected"}
@@ -123,7 +99,25 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
             }}>
             Start Over
           </TSCButton>
-          <TSCButton onClick={handleUploadClick}>Finish & Upload</TSCButton>
+          <TSCButton
+            onClick={() => {
+              if (!datapackFile) {
+                actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
+                return;
+              }
+              if (!datapackName || !datapackDescription) {
+                actions.pushError(ErrorCodes.UNFINISHED_DATAPACK_UPLOAD_FORM);
+                return;
+              }
+              actions.removeError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
+              actions.removeError(ErrorCodes.UNFINISHED_DATAPACK_UPLOAD_FORM);
+              actions.uploadDatapack(datapackFile!, datapackName, datapackDescription);
+              setDatapackFile(null);
+              setDatapackName("");
+              setDatapackDescription("");
+            }}>
+            Finish & Upload
+          </TSCButton>
         </div>
       </div>
     </>
