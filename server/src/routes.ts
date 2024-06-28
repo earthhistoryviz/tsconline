@@ -17,7 +17,7 @@ import { deleteDirectory, resetUploadDirectory, checkHeader, assetconfigs } from
 import { mkdirp } from "mkdirp";
 import md5 from "md5";
 import svgson from "svgson";
-import fs from "fs";
+import fs, { realpathSync } from "fs";
 import { parseExcelFile } from "./parse-excel-file.js";
 import path from "path";
 import pump from "pump";
@@ -72,9 +72,16 @@ export const requestDownload = async function requestDownload(
   const { filename } = request.params;
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
   const datapackDir = path.join(userDir, "datapacks");
-  const filepath = path.join(datapackDir, filename);
+  let filepath = path.join(datapackDir, filename);
   const encryptedFilepathDir = path.join(userDir, "encrypted-datapacks");
-  const maybeEncryptedFilepath = path.join(encryptedFilepathDir, filename);
+  let maybeEncryptedFilepath = path.join(encryptedFilepathDir, filename);
+  // check and sanitize filepath
+  filepath = realpathSync(path.resolve(filepath));
+  maybeEncryptedFilepath = realpathSync(path.resolve(maybeEncryptedFilepath));
+  if (!filepath.startsWith(datapackDir) || !maybeEncryptedFilepath.startsWith(encryptedFilepathDir)) {
+    reply.status(403).send({ error: "Invalid file path" });
+    return;
+  }
   if (needEncryption === undefined) {
     try {
       await access(filepath);
