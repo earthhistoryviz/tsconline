@@ -4,8 +4,8 @@
   display: flex;
   flex-direction: row;
   overflow: hidden;
-  border-bottom: 2px solid #e0e0e0;
   border-bottom-left-radius: 10px;
+  border-top-left-radius: 10px;
   container-type: size;
 }
 
@@ -17,21 +17,13 @@
   border-bottom-left-radius: 10px;
   padding: 5px;
   flex-wrap: wrap;
-  border-right: 1px solid lightgray;
-  border-left: 1px solid lightgray;
   cursor: pointer;
   min-width: 34px;
-  background-color: #e0e0e069;
   transition: background-color 0.3s;
 }
 .loading {
   background-color: rgba(0, 0, 0, 0.068) !important;
 }
-
-.checked {
-  background-color: #6ee7b74d;
-}
-
 .image {
   align-self: center;
   justify-content: center;
@@ -57,7 +49,6 @@
   font-size: 1.1rem;
   font-weight: 600;
   margin-top: 10px;
-  color: rgba(0, 0, 0, 0.87);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -151,9 +142,6 @@
 .image,
 .middle {
   cursor: pointer;
-}
-.rc:hover {
-  background-color: rgba(203, 203, 203, 0.15);
 }
 
 @container (max-width: 240px) {

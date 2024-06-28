@@ -17,15 +17,14 @@
 
 .loading {
   font-size: 30px;
-  color: black;
   padding: 8px;
   border-radius: 4px;
   line-height: 1;
   grid-row: 3;
+  font-weight: 600;
 }
 .loading-sub {
   font-size: 14px;
-  color: black;
   padding: 8px;
   border-radius: 4px;
   line-height: 1;
@@ -35,13 +34,23 @@
 .timeline-button {
   color: red;
 }
-.chart-and-options-bar-container {
+.chart-and-options-bar {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: "auto";
 }
-.chart-options-bar {
+.options-bar {
   display: flex;
   flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+}
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+.chart-download-button {
+  align-items: flex-end;
 }

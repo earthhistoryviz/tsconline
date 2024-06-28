@@ -2,12 +2,13 @@ import { DatapackParsingPack } from "@tsconline/shared";
 import styles from "./TSCDatapackRow.module.css";
 import { useState } from "react";
 import { devSafeUrl } from "../../util";
-import { IconButton, Typography } from "@mui/material";
+import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { useNavigate } from "react-router";
 import { DatapackMenu } from "../../settings_tabs/Datapack";
 import "./SharedDatapackDisplay.css";
 import { CheckIcon, Loader } from "../TSCComponents";
+import Color from "color";
 
 type TSCDatapackRowProps = {
   name: string;
@@ -20,11 +21,33 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
   const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const theme = useTheme();
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
   return (
-    <div className={styles.rc} onClick={() => navigate(`/datapack/${encodeURIComponent(name)}`)}>
-      <div
-        className={`${styles.cc} ${loading ? styles.loading : ""} ${value ? styles.checked : ""}`}
+    <Box
+      className={styles.rc}
+      borderBottom="2px solid"
+      borderColor="divider"
+      bgcolor="secondaryBackground.main"
+      sx={{
+        "&:hover": {
+          bgcolor:
+            theme.palette.mode === "light"
+              ? Color(theme.palette.secondaryBackground.main).darken(0.04).string()
+              : Color(theme.palette.secondaryBackground.main).lighten(0.26).string()
+        }
+      }}
+      onClick={() => navigate(`/datapack/${encodeURIComponent(name)}`)}>
+      <Box
+        className={`${styles.cc} ${loading ? styles.loading : ""}`}
+        borderRight="1px solid"
+        borderLeft="1px solid"
+        borderColor="divider"
+        bgcolor={
+          value
+            ? Color(theme.palette.button.light).alpha(0.2).string()
+            : Color(theme.palette.secondaryBackground.light).alpha(0.5).string()
+        }
         onClick={async (e) => {
           e.stopPropagation();
           setLoading(true);
@@ -33,12 +56,18 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
           setLoading(false);
         }}>
         {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
-      </div>
+      </Box>
       <img className={styles.image} src={imageUrl} alt="datapack" onError={() => setImageUrl(defaultImageUrl)} />
       <div className={styles.middle}>
-        <Typography className={styles.header}>{name}</Typography>
-        <Typography className={styles.fd}>Dixon, Dougal, et al. · Created 10/10/2024</Typography>
-        <Typography className={styles.ci}>50 Columns · 10 Mb · 350 images </Typography>
+        <Typography className={styles.header} color="textSecondary">
+          {name}
+        </Typography>
+        <Typography className={styles.fd} color="textSecondary">
+          Dixon, Dougal, et al. · Created 10/10/2024
+        </Typography>
+        <Typography className={styles.ci} color="textSecondary">
+          50 Columns · 10 Mb · 350 images{" "}
+        </Typography>
       </div>
       <div
         className={styles.right}
@@ -58,6 +87,6 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
           }
         />
       </div>
-    </div>
+    </Box>
   );
 };

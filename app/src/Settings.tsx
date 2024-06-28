@@ -32,7 +32,7 @@ export const Settings = observer(function Settings() {
   const tabKeys = Object.keys(SettingsMenuOptionLabels);
   const tabIndex = tabKeys.indexOf(state.settingsTabs.selected);
   return (
-    <div className="settings-container" style={{ background: theme.palette.settings.light }}>
+    <div className="settings-container" style={{ background: theme.palette.backgroundColor.main }}>
       <SettingsHeader />
       <CustomTabs
         tabs={tabs}

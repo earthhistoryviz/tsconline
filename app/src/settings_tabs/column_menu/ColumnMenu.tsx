@@ -5,7 +5,7 @@ import { Box, Typography } from "@mui/material";
 import "./ColumnMenu.css";
 import { FontMenu } from "../FontMenu";
 import { ChangeBackgroundColor } from "./BackgroundColor";
-import { ColumnInfo } from "@tsconline/shared";
+import { ColumnInfo, assertRangeSettings } from "@tsconline/shared";
 import {
   CustomDivider,
   CustomFormControlLabel,
@@ -20,6 +20,7 @@ import { EditNameField } from "./EditNameField";
 import { DataMiningSettings } from "../advanced_settings/DataMiningSettings";
 import AccordionPositionControls from "./AccordionPositionControls";
 import { CustomTabs } from "../../components/TSCCustomTabs";
+import { RangeSpecificSettings } from "../advanced_settings/RangeSpecificSettings";
 
 export const ColumnMenu = observer(() => {
   const { state } = useContext(context);
@@ -79,7 +80,9 @@ export const ColumnMenu = observer(() => {
           width={90}
           tabs={tabs.map((val) => ({ id: val, tab: val }))}
         />
-        <div className="column-menu-content">{column && <ColumnContent tab={tabs[tabValue]} column={column} />}</div>
+        <Box border={1} borderColor="divider" className="column-menu-content" bgcolor="secondaryBackground.main">
+          {column && <ColumnContent tab={tabs[tabValue]} column={column} />}
+        </Box>
       </div>
     </div>
   );
@@ -104,13 +107,14 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
                 helperOrientation="start"
                 inputs={[
                   {
-                    helperText: "Edit Width",
+                    helperText: "Width",
                     id: "width",
                     value: column.width,
-                    onValueChange: (value) => {
+                    onValueChange: (value: number) => {
                       actions.setWidth(value, column);
                     }
-                  }
+                  },
+                  ...addRangeFields(column)
                 ]}
               />
             )}
@@ -119,6 +123,7 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
             </div>
             <ShowTitles column={column} />
             <EventSpecificSettings column={column} />
+            <RangeSpecificSettings column={column} />
             {!!column.popup && <InfoBox info={column.popup} />}
           </Box>
         </StyledScrollbar>
@@ -133,6 +138,39 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
       return null;
   }
 });
+
+/**
+ * For generic text field, add range fields if the column is a range column
+ * This is done so that the range fields can be displayed in the column menu
+ * next to the width field and for flex box to work properly
+ * @param column
+ * @returns
+ */
+function addRangeFields(column: ColumnInfo) {
+  const { actions } = useContext(context);
+  if (!column.columnSpecificSettings || column.columnDisplayType !== "Range") return [];
+  assertRangeSettings(column.columnSpecificSettings);
+  return [
+    {
+      helperText: "Margin",
+      id: "margin",
+      value: column.columnSpecificSettings.margin,
+      onValueChange: (value: number) => {
+        assertRangeSettings(column.columnSpecificSettings);
+        actions.setRangeColumnSettings(column.columnSpecificSettings, { margin: value });
+      }
+    },
+    {
+      helperText: "Age Pad",
+      id: "agePad",
+      value: column.columnSpecificSettings.agePad,
+      onValueChange: (value: number) => {
+        assertRangeSettings(column.columnSpecificSettings);
+        actions.setRangeColumnSettings(column.columnSpecificSettings, { agePad: value });
+      }
+    }
+  ];
+}
 
 const ShowTitles = observer(({ column }: { column: ColumnInfo }) => {
   const { actions } = useContext(context);

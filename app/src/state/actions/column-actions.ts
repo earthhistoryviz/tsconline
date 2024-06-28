@@ -11,6 +11,7 @@ import {
   EventSettings,
   PointSettings,
   RGB,
+  RangeSettings,
   ValidFontOptions,
   assertChronSettings,
   assertEventColumnInfoTSC,
@@ -203,6 +204,9 @@ export const setDataMiningSettings = action(
 
 export const setPointColumnSettings = action((pointSettings: PointSettings, newSettings: Partial<PointSettings>) => {
   Object.assign(pointSettings, newSettings);
+});
+export const setRangeColumnSettings = action((rangeSettings: RangeSettings, newSettings: Partial<RangeSettings>) => {
+  Object.assign(rangeSettings, newSettings);
 });
 export const setColumnOn = action((isOn: boolean, column: ColumnInfo) => {
   column.on = isOn;

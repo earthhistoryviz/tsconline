@@ -1,4 +1,5 @@
 import {
+  DataMiningChronDataType,
   DataMiningPointDataType,
   EventFrequency,
   EventType,
@@ -8,6 +9,7 @@ import {
   RangeSort,
   assertFontsInfo,
   assertRGB,
+  isDataMiningChronDataType,
   isDataMiningPointDataType,
   isEventFrequency,
   isEventType,
@@ -58,7 +60,14 @@ export type ColumnInfoTSC =
   | SequenceColumnInfoTSC
   | RangeColumnInfoTSC
   | PointColumnInfoTSC
-  | RulerColumnInfoTSC;
+  | RulerColumnInfoTSC
+  | ChronColumnInfoTSC;
+
+export type ChronColumnInfoTSC = {
+  drawExtraColumn: DataMiningChronDataType | null;
+  windowSize: number;
+  stepSize: number;
+} & ColumnBasicInfoTSC;
 
 export type ColumnBasicInfoTSC = {
   _id: string;
@@ -92,7 +101,6 @@ export type EventColumnInfoTSC = ColumnBasicInfoTSC & {
   windowSize: number;
   stepSize: number;
   drawExtraColumn: EventFrequency | null;
-  isDataMiningColumn: boolean;
 };
 
 export type ZoneColumnInfoTSC = ColumnBasicInfoTSC & {
@@ -175,6 +183,17 @@ export function assertChartInfoTSC(o: any): asserts o is ChartInfoTSC {
   assertColumnInfoTSC(o["class datastore.RootColumn:Chart Root"]);
 }
 
+export function assertChronColumnInfoTSC(o: any): asserts o is ChronColumnInfoTSC {
+  if (
+    o.drawExtraColumn != null &&
+    (typeof o.drawExtraColumn !== "string" || !isDataMiningChronDataType(o.drawExtraColumn))
+  )
+    throwError("ChronColumnInfoTSC", "drawExtraColumn", "string", o.drawExtraColumn);
+  if (typeof o.windowSize !== "number") throwError("ChronColumnInfoTSC", "windowSize", "number", o.windowSize);
+  if (typeof o.stepSize !== "number") throwError("ChronColumnInfoTSC", "stepSize", "number", o.step);
+  assertColumnBasicInfoTSC(o);
+}
+
 export function assertChartSettingsInfoTSC(o: any): asserts o is ChartSettingsInfoTSC {
   if (!o || typeof o !== "object") throw new Error("ChartSettingsInfoTSC must be a non-null object");
   if (!Array.isArray(o.topAge)) throw new Error("ChartSettingsTSC must have a topAge array");
@@ -243,8 +262,6 @@ export function assertEventColumnInfoTSC(o: any): asserts o is EventColumnInfoTS
   if (typeof o.stepSize !== "number") throwError("EventColumnInfoTSC", "stepSize", "number", o.stepSize);
   if (o.drawExtraColumn != null && (typeof o.drawExtraColumn !== "string" || !isEventFrequency(o.drawExtraColumn)))
     throwError("EventColumnInfoTSC", "drawExtraColumn", "string", o.drawExtraColumn);
-  if (typeof o.isDataMiningColumn !== "boolean")
-    throwError("EventColumnInfoTSC", "isDataMiningColumn", "boolean", o.isDataMiningColumn);
   assertColumnBasicInfoTSC(o);
 }
 export function assertSequenceColumnInfoTSC(o: any): asserts o is SequenceColumnInfoTSC {

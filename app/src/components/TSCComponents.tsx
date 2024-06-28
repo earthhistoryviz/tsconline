@@ -1,36 +1,32 @@
 import {
+  Button,
+  ButtonProps,
   Divider,
   FormControlLabel,
   IconButton,
   SvgIcon,
+  SvgIconProps,
   Tooltip,
   TooltipProps,
   Typography,
-  styled
+  styled,
+  useTheme
 } from "@mui/material";
 import { SubMenu, MenuItem } from "@szhsin/react-menu";
 import Color from "color";
 import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
 import styles from "./TSCComponents.module.css";
-import { HTMLAttributes } from "react";
 import SecurityResearch from "../assets/icons/security-research.json";
 import Lottie from "./TSCLottie";
 
-export const TypographyText = styled(Typography)(({ theme }) => ({
-  color: theme.palette.primary.main
-}));
 export const ColoredIconButton = styled(IconButton)(({ theme }) => ({
   color: theme.palette.primary.main
 }));
 
-export const ColoredDiv = styled("div")(({ theme }) => ({
-  backgroundColor: theme.palette.navbar.main
-}));
-
 export const CustomHeader = styled(Typography)(({ theme }) => ({
   "&::before": {
-    backgroundColor: theme.palette.selection.main,
+    backgroundColor: theme.palette.icon.main,
     content: '""',
     left: "0",
     width: "2px",
@@ -53,7 +49,7 @@ export const CustomDivider = styled(Divider)(() => ({
   backgroundColor: "rgba(197, 197, 197, 0.281)"
 }));
 export const TSCInputAdornment = styled("div")(
-  ({ theme }) => `
+  () => `
   margin-left: auto;
   margin-right: 5px;
   display: inline-flex;
@@ -64,18 +60,13 @@ export const TSCInputAdornment = styled("div")(
   font-weight: 400;
   line-height: 1.5;
   grid-row: 1/3;
-  grid-column: 2;
-  color: ${theme.palette.primary.main};
-`
+  grid-column: 2;`
 );
-export const GradientDiv = styled("div")(({ theme }) => ({
-  backgroundColor: theme.gradients.main
-}));
 export const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   padding: theme.spacing(0, 1),
-  backgroundColor: theme.palette.navbar.main
+  backgroundColor: theme.palette.secondaryBackground.main
 }));
 export const StyledScrollbar = styled(SimpleBar)(({ theme, color }) => {
   const backgroundColor = color || theme.palette.scrollbar.main;
@@ -98,12 +89,13 @@ export const StyledScrollbar = styled(SimpleBar)(({ theme, color }) => {
 export const BorderedIcon = ({
   component,
   className,
-  strokeWidth
+  strokeWidth,
+  ...props
 }: {
   component: React.ElementType<object>;
   className?: string;
   strokeWidth?: number;
-}) => {
+} & SvgIconProps) => {
   return (
     <SvgIcon
       className={className}
@@ -114,20 +106,21 @@ export const BorderedIcon = ({
         stroke: "black",
         strokeWidth: strokeWidth || "0.5"
       }}
+      {...props}
     />
   );
 };
 export const TSCSubMenu = styled(SubMenu)(({ theme }) => ({
   "&.szh-menu__submenu > .szh-menu__item--hover": {
-    backgroundColor: theme.palette.menuDropdown.light
+    backgroundColor: theme.palette.secondaryBackground.main
   },
   "&.szh-menu__submenu > .szh-menu__item--checked": {
-    color: theme.palette.primary.main
+    color: theme.palette.icon.main
   }
 }));
 export const TSCMenuItem = styled(MenuItem)(({ theme }) => ({
   "&.szh-menu__item--hover": {
-    backgroundColor: theme.palette.menuDropdown.light
+    backgroundColor: Color(theme.palette.dark.light).lighten(0.5).string()
   },
   "&.szh-menu__item--checked": {
     color: theme.palette.primary.main
@@ -135,13 +128,10 @@ export const TSCMenuItem = styled(MenuItem)(({ theme }) => ({
 }));
 
 type CustomTooltipProps = {
-  title: string;
   offset?: number[];
 } & TooltipProps;
-export const CustomTooltip: React.FC<CustomTooltipProps> = ({ title, offset = [0, -10], ...props }) => {
-  return (
-    <Tooltip title={title} arrow PopperProps={{ modifiers: [{ name: "offset", options: { offset } }] }} {...props} />
-  );
+export const CustomTooltip: React.FC<CustomTooltipProps> = ({ offset = [0, -10], ...props }) => {
+  return <Tooltip arrow PopperProps={{ modifiers: [{ name: "offset", options: { offset } }] }} {...props} />;
 };
 
 export const CustomFormControlLabel = styled(FormControlLabel)(
@@ -152,8 +142,8 @@ export const CustomFormControlLabel = styled(FormControlLabel)(
     }
   })
 );
-export const TagButton: React.FC<HTMLAttributes<HTMLButtonElement>> = ({ ...props }) => {
-  return <button {...props} className={styles.tagbutton} />;
+export const TagButton: React.FC<ButtonProps> = ({ ...props }) => {
+  return <Button {...props} className={styles.tagbutton} sx={{ color: "backgroundColor.contrastText" }} />;
 };
 
 export const NotImplemented: React.FC = () => {
@@ -184,19 +174,22 @@ export const NotImplemented: React.FC = () => {
 };
 
 export const CheckIcon = () => {
+  const theme = useTheme();
   return (
     <svg width="20px" height="20px" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
       <circle
         className={styles.circle}
+        color={theme.palette.button.main}
         cx="10"
         cy="10"
         r="9"
-        fill="#6ee7b74d"
+        fill={Color(theme.palette.button.light).alpha(0.2).string()}
         stroke="currentColor"
         strokeWidth="1.5"
       />
       <path
         className={styles.check}
+        color={theme.palette.button.main}
         d="M6 10 l2.5 3 l5 -5.5"
         fill="none"
         stroke="currentColor"

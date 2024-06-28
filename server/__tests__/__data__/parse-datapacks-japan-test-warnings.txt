@@ -1,0 +1,56 @@
+SetTop:	0																		
+SetBase:	35																		
+SetScale:	0.25																		
+chart title:	 Neogene-Quaternary Sedimentary Successions 																		
+																			
+																			
+																			
+Neogene-Quaternary	:     1. Okinawa	2. Miyazaki	3. Biwako	4. Osaka
+																			
+																			
+																			
+1. Okinawa	facies	200	234/201/201																
+	Primary																		
+	TOP		1.806	"<br>CALIBRATION=Base of Calabrian.<br>REFERENCE = M. Ito et al., 2016."															
+	Shallow-marine marl	Ryukyu Gr	2.193	"Ryukyu Gr:<br>LITHOLOGY = Coastal to shallow-marine deposits<br><br>CALIBRATION=50% up in Gelasian.<br>REFERENCE = M. Ito et al., 2016."															
+	Shallow-marine marl	Chinen Gr	2.3478	"Chinen Gr:<br>LITHOLOGY = Coastal to shallow-marine deposits<br><br>CALIBRATION=30% up in Gelasian.<br>REFERENCE = M. Ito et al., 2016."															
+	GAP		2.682	"<br>CALIBRATION=90% up in Piacenzian.<br>REFERENCE = M. Ito et al., 2016."															
+	Shallow-marine marl	Shimajiri Gr	3.498	"Shimajiri Gr:<br>LITHOLOGY = Coastal to shallow-marine deposits<br><br>CALIBRATION=10% up in Piacenzian.<br>REFERENCE = M. Ito et al., 2016."															
+	Siltstone	Shimajiri Gr	4.4675	"Shimajiri Gr:<br>LITHOLOGY = Deep-water deposits<br><br>CALIBRATION=50% up in Zanclean.<br>REFERENCE = M. Ito et al., 2016."															
+	GAP		7.25	"<br>CALIBRATION=Base of Messinian.<br>REFERENCE = M. Ito et al., 2016."															
+	Shallow-marine marl	Shimajiri Gr	11.625	"Shimajiri Gr:<br>LITHOLOGY = Coastal to shallow-marine deposits<br><br>CALIBRATION=Base of Tortonian.<br>REFERENCE = M. Ito et al., 2016."															
+	TOP		15.99	"<br>CALIBRATION=Base of Langhian.<br>REFERENCE = M. Ito et al., 2016."															
+	Siltstone	Yaeyama Gr	20.45	"Yaeyama Gr:<br>LITHOLOGY = Deep-water deposits<br><br>CALIBRATION=Base of Burdigalian.<br>REFERENCE = M. Ito et al., 2016."															
+	Shallow-marine marl	Yaeyama Gr	21.227	"Yaeyama Gr:<br>LITHOLOGY = Coastal to shallow-marine deposits<br><br>CALIBRATION=70% up in Aquitanian.<br>REFERENCE = M. Ito et al., 2016."															
+																			
+																			
+2. Miyazaki	facies	200	234/201/201																
+	Primary																		
+	TOP		0.773	"<br>CALIBRATION=Base of Chibanian.<br>REFERENCE = M. Ito et al., 2016."															
+	Shallow-marine marl	Hyuga-nada Gr	1.7027	"Hyuga-nada Gr:<br>LITHOLOGY = Coastal to shallow-marine deposits. Correlated this newly defined group with the lower Kazusa Group in the Boso-Miura area<br><br>CALIBRATION=10% up in Calabrian.<br>REFERENCE = M. Ito et al., 2016."															
+	GAP		2.3478	":<br>LITHOLOGY = This erosional hiatus is called the Hisamine Unconformity and is correlated with the Kurotaki Unconformity in the Boso Miura area (Oda et al. 2011).<br><br>CALIBRATION=30% up in Gelasian.<br>REFERENCE = M. Ito et al., 2016."															
+Miyazaki Gr	Primary																		
+	GAP	Takanabe Fm	2.682	"Takanabe Fm:<br>LITHOLOGY = is interpreted to indicate a distinct erosional hiatus formed at 2.3-2.2 Ma (Oda et al. 2011). <br><br>CALIBRATION=90% up in Piacenzian.<br>REFERENCE = M. Ito et al., 2016."															
+	Siltstone	Tsuma Facies Fm	"Tsuma Facies Fm:<br>LITHOLOGY = is represented by siltstones, sandy siltstones and silty sandstones of coastal, shelf and slope deposits, which are associated locally with interbedded turbiditic sandstones and hemipelagic siltstones, slumped deposits and coarse-grained submarine-canyon-fll deposits (Endo & Suzuki 1986; Majima et al., 2003).<br><br>CALIBRATION=Base of Piacenzian.<br>REFERENCE = M. Ito et al., 2016."															
+	Sandy_claystone	Miyazaki Facies Fm	5.6031	"Miyazaki Facies Fm:<br>LITHOLOGY = is also represented by interbedded turbiditic sandstones and hemipelagic siltstones formed mainly in shelf and slope environments with local associations of coarse grained fluvial, coastal and submarine-canyon-fll deposits (Takashimizu 2009).<br><br>CALIBRATION=Shown at c. 5.6 Ma, hence placed 86% up in Messinian.<br>REFERENCE = M. Ito et al., 2016."															
+	Sandy_claystone	Uchiumigawa Gr	10.53125	"Uchiumigawa Gr:<br>LITHOLOGY = is represented by interbedded turbiditic sandstones and hemipelagic siltstones except for the lower part, which is characterized by coastal and shallow-marine deposits (Nakamura et al., 1999a).The Aoshima facies has been more formally defined as the Uchiumigawa Group (e.g. Kino et al., 1984; Endo & Suzuki 1986; Suzuki 1987; Nakamura et al., 1999a; Oda et al. 2011)<br><br>CALIBRATION=Shown at c.10.5 Ma, hence placed 25% up in Tortonian.<br>REFERENCE = M. Ito et al., 2016."															
+	Primary																		
+	TOP		20.45	"<br>CALIBRATION=Base of Burdigalian.<br>REFERENCE = M. Ito et al., 2016."															
+	Basement	Nichinan Gr	33.90488	"Nichinan Gr:<br>LITHOLOGY = Accretionary prism<br><br>CALIBRATION=Base of Rupelian.<br>REFERENCE = M. Ito et al., 2016."															
+																			
+																			
+3. Biwako	facies	200	234/201/201																
+	Primary																		
+	TOP		0	"<br>CALIBRATION=Holocene.<br>REFERENCE = M. Ito et al., 2016."															
+	Claystone	Kobiwako Gr	4.5022	"Kobiwako Gr:<br>LITHOLOGY = consists mainly of thick lacustrine mudstones alternating with alluvial sandstones and conglomerates which are intercalated with more than 100 volcanic ash (tephra) beds and up to 1500 m in total thickness (Yokoyama 1969; Kawabe 1989).<br><br>CALIBRATION=Shown 4.5 Ma (Satoguchi & Nagahashi 2012), hence placed Base of 48% up in Zanclean.<br>REFERENCE = M. Ito et al., 2016."															
+																			
+																			
+4. Osaka	faces	200	234/201/201																
+	Primary																		
+	TOP		2.58	":<br>LITHOLOGY = The Osaka Group is unconformably overlain by uppermost Pleistocene- Holocene deposits (known as Chuseki-so in Japanese) which comprise, in ascending order, alluvial gravels, estuarine sands and muds, marine clays and deltaic and coastal sands<br><br>CALIBRATION=Base of Gelasian.<br>REFERENCE = M. Ito et al., 2016."															
+	Continental marl	Osaka Gr	3.201894	"Osaka Gr:<br>LITHOLOGY = The upper part is represented by alternations of marine bay muds and terrestrial fluvial sands and gravels (Itihara 1993; Kitada et al. 2008), which are considered to have been controlled by Quaternary glacioeustatic sea-level changes (Masuda & Ito 1999).<br><br>CALIBRATION=33% up in Fm.<br>REFERENCE = M. Ito et al., 2016."															
+	Aus conglomerate	Osaka Gr	3.5082	"Osaka Gr:<br>LITHOLOGY = The lower part of the group consists of alternating gravels, sands and muds of alluvial and lacustrine in origin, <br><br>CALIBRATION=Shown 3.2-3.5 Ma, hence placed 9% up in Piacenzian.<br>REFERENCE = M. Ito et al., 2016."															
+																			
+																			
+											
+																			

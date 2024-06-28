@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Color from "color";
 import { styled } from "@mui/material/styles";
 import { Grid, Box, Avatar, CardMedia, IconButton, Typography, List, ListItem, ListItemText } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
@@ -14,30 +13,9 @@ import checkIcon from "../assets/icons/check-icon.json";
 import FolderIcon from "@mui/icons-material/Folder";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 
-const Title = styled("h2")(({ theme }) => ({
-  fontFamily: theme.typography.fontFamily,
-  color: theme.palette.background.default
+const CardBackground = styled("div")(({ theme }) => ({
+  backgroundColor: theme.palette.secondaryBackground.main
 }));
-
-const CardBackground = styled("div")(({ theme, color }) => ({
-  background: `linear-gradient(to top, ${color || theme.palette.selection.main}, ${Color(
-    color || theme.palette.selection.main
-  )
-    .rotate(24)
-    .lighten(0.12)})`
-}));
-const HiddenBack = styled("div")(({ theme }) => ({
-  backgroundColor: theme.palette.cardBackground.light
-}));
-
-const CardContent = styled("div")(({ color }) => ({
-  boxShadow: `
-    -10px 10px 15px -5px ${Color(color).fade(0.5)}, 
-      10px 10px 15px -5px ${Color(color).fade(0.5)}, 
-      0 10px 15px -5px ${Color(color).fade(0.5)}
-    `
-}));
-
 const Date = styled("div")(({ theme }) => ({
   fontFamily: theme.typography.fontFamily,
   backgroundColor: theme.palette.text.disabled
@@ -64,27 +42,27 @@ export const TSCCard = ({
     <ReactCardFlip isFlipped={isFlipped} flipDirection="horizontal">
       {/* This is the front card */}
       <Box className="front-card">
-        <HiddenBack className="hidden-back" />
         <CardMedia className="card-media-cover" image={devSafeUrl(preset.background)} onClick={handleFlip} />
-        <CardContent className="card-content front-card-content" color={color}>
-          <CardBackground className="card-background clip-path" color={color} />
+        <div className="card-content front-card-content">
+          <CardBackground className="card-background clip-path" />
           <Box position="relative" zIndex={1}>
             <Grid container alignItems="center" spacing={2} onClick={handleFlip}>
               <Grid item>
                 <Avatar className="avatar-logo avatar-box-shadow" src={devSafeUrl(preset.icon)} />
               </Grid>
               <Grid item xs>
-                <Title className="card-title">{preset.title}</Title>
+                <Typography className="card-title">{preset.title}</Typography>
               </Grid>
             </Grid>
             <Grid container mt={2} alignItems="center" justifyContent="center" spacing={2} wrap="nowrap">
               <Grid item>
-                <IconButton onClick={handleFlip} size="large">
+                <IconButton onClick={handleFlip} size="large" color="icon">
                   <InfoIcon />
                 </IconButton>
               </Grid>
               <Grid item>
                 <TSCButton
+                  buttonType="gradient"
                   style={{
                     width: "auto",
                     height: "auto",
@@ -101,7 +79,7 @@ export const TSCCard = ({
               </Grid>
             </Grid>
           </Box>
-        </CardContent>
+        </div>
       </Box>
       {/* This is the back card */}
       <BackCard handleFlip={handleFlip} add={add} added={added} preset={preset} color={color} />
@@ -124,32 +102,28 @@ const BackCard = ({
 }) => {
   return (
     <Box className="back-card">
-      <HiddenBack className="hidden-back" />
       <CardBackground className="card-background" color={color} />
-      <CardContent className="back-background card-content" color={color}>
+      <div className="back-background card-content">
         <StyledScrollbar className="info-container" autoHide={false}>
           <CardMedia className="info-media" component="img" image={devSafeUrl(preset.background)} />
-          <Title className="info-title">{preset.title}</Title>
+          <Typography className="info-title">{preset.title}</Typography>
           <div className="info-text-container">
-            <CustomHeader color="primary">Included Datapacks</CustomHeader>
+            <CustomHeader>Included Datapacks</CustomHeader>
             <List className="list">
               {preset.datapacks.map((datapack, index) => (
                 <ListItem className="list-item" key={index}>
-                  <FolderIcon color="primary" />
-                  <ListItemText
-                    className="list-item-text"
-                    primary={<Typography color="primary">{datapack.name}</Typography>}
-                  />
+                  <FolderIcon color="icon" />
+                  <ListItemText className="list-item-text" primary={<Typography>{datapack.name}</Typography>} />
                 </ListItem>
               ))}
             </List>
-            <CustomHeader color="primary">Additional Info</CustomHeader>
-            <Typography className="info-description" variant="body1" color="primary">
+            <CustomHeader>Additional Info</CustomHeader>
+            <Typography className="info-description" variant="body1">
               {preset.description}
             </Typography>
           </div>
         </StyledScrollbar>
-      </CardContent>
+      </div>
       <div className="overlay-buttons">
         <IconButton className="icon-button" onClick={handleFlip} size="large">
           <BorderedIcon className="add-icon" component={ArrowBackIcon} />
