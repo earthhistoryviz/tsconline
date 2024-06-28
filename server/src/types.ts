@@ -176,13 +176,12 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
   for (const [index, ad] of o.activeDatapacks.entries()) {
     if (typeof ad !== "object")
       throw "AssetConfig activeDatapacks item " + index + " must be a valid DatapackDescriptionInfo object";
-    if (
-      typeof ad.description !== "string" ||
-      typeof ad.title !== "string" ||
-      typeof ad.file !== "string" ||
-      typeof ad.size !== "string"
-    )
-      throw "AssetConfig activeDatapacks description, title, file, or size item " + index + " must be a valid string";
+    if (typeof ad.description !== "string")
+      throw "AssetConfig activeDatapacks description item " + index + " must be a valid string";
+    if (typeof ad.title !== "string")
+      throw "AssetConfig activeDatapacks title item " + index + " must be a valid string";
+    if (typeof ad.file !== "string") throw "AssetConfig activeDatapacks file item " + index + " must be a valid string";
+    if (typeof ad.size !== "string") throw "AssetConfig activeDatapacks size item " + index + " must be a valid string";
   }
   if (typeof o.timescaleFilepath !== "string") throw 'AssetConfig must have a "timescaleFilepath" string';
   if (typeof o.datapackImagesDirectory !== "string") throw 'AssetConfig must have a "datapackImagesDirectory" string';

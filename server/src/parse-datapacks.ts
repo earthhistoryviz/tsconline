@@ -73,7 +73,6 @@ import {
 import { createInterface } from "readline";
 import _ from "lodash";
 import { DatapackDescriptionInfo } from "./types.js";
-import chalk from "chalk";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;
 const patternForAbundance = /^(TOP|missing|rare|common|frequent|abundant|sample|flood)$/;
@@ -276,21 +275,19 @@ export async function parseDatapacks(
   setShowLabels(chartColumn);
 
   const datapackParsingPack = {
-   
     columnInfo: chartColumn,
-   
+
     ageUnits,
-   
+
     defaultChronostrat,
-   
+
     formatVersion,
     description: datapackInfo.description,
     title: datapackInfo.title,
     file: datapackInfo.file,
     size: datapackInfo.size,
-   
-    isUserDatapack
- ,
+
+    isUserDatapack,
     image: ""
   };
   assertDatapackParsingPack(datapackParsingPack);

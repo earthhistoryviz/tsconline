@@ -18,6 +18,7 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
+
   return (
     <Card
       className={styles.card}
@@ -26,7 +27,7 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack
       <CardMedia component="img" height="140" image={imageUrl} onError={() => setImageUrl(defaultImageUrl)} />
       <CardContent className={styles.cc}>
         <div className={styles.hc}>
-          <Typography className={styles.header}>{name}</Typography>
+          <Typography className={styles.header}>{datapack.title}</Typography>
           <DatapackMenu
             name={name}
             button={
@@ -36,15 +37,8 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack
             }
           />
         </div>
-        <Typography className={styles.description}>
-          Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys
-          standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to
-          make a type specimen book. It has survived not only five centuries, but also the leap into electronic
-          typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset
-          sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus
-          PageMaker including versions of Lorem Ipsum
-        </Typography>
-        <Typography className={styles.fd}>Dixon, Dougal, et al. (1980) · 10 MB</Typography>
+        <Typography className={styles.description}>{datapack.description}</Typography>
+        <Typography className={styles.fd}>Dixon, Dougal, et al. (1980) · {datapack.size}</Typography>
       </CardContent>
       <div className={styles.footer} onClick={(e) => e.stopPropagation()}>
         <CardActions className={styles.ca}>

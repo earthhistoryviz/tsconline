@@ -9489,7 +9489,7 @@ __metadata:
     eslint-config-prettier: "npm:^9.1.0"
     eslint-plugin-check-file: "npm:^2.7.1"
     eslint-plugin-react: "npm:^7.33.2"
-    fastify: "npm:^4.17.0"
+    fastify: "npm:^4.27.0"
     form-auto-content: "npm:^3.2.1"
     prettier: "npm:^3.2.5"
     syncpack: "npm:^12.3.0"
