@@ -1326,6 +1326,7 @@ function recursive(
     switch (currentColumnInfo.columnDisplayType) {
       case "Facies":
         currentColumnInfo.columnDisplayType = "BlockSeriesMetaColumn";
+        assertSubFaciesInfoArray(currentColumnInfo.subInfo);
         addFaciesChildren(
           currentColumnInfo.children,
           currentColumnInfo.name,
@@ -1334,6 +1335,7 @@ function recursive(
           currentColumnInfo.maxAge,
           currentColumnInfo.rgb,
           currentColumnInfo.fontOptions,
+          currentColumnInfo.subInfo,
           units
         );
         delete currentColumnInfo.width;
@@ -1466,6 +1468,7 @@ function addFaciesChildren(
   maxAge: number,
   rgb: RGB,
   fontOptions: ValidFontOptions[],
+  subFaciesInfo: SubFaciesInfo[],
   units: string
 ) {
   children.push({
@@ -1485,7 +1488,8 @@ function addFaciesChildren(
     rgb,
     units,
     columnDisplayType: "Facies",
-    expanded: false
+    expanded: false,
+    subInfo: subFaciesInfo
   });
   children.push({
     name: `${name} Members`,
@@ -1523,7 +1527,8 @@ function addFaciesChildren(
     rgb,
     units,
     columnDisplayType: "Zone",
-    expanded: false
+    expanded: false,
+    subInfo: subFaciesInfo
   });
   children.push({
     name: `${name} Series Label`,
