@@ -124,13 +124,15 @@ export const Chart = observer(() => {
         <LoadingChart />
       ) : state.madeChart ? (
         <div id="wrapper" className="chart-and-options-bar">
-          <OptionsBar
-            transformRef={transformContainerRef}
-            svgRef={svgContainerRef}
-            step={step}
-            minScale={minScale}
-            maxScale={maxScale}
-          />
+          {transformContainerRef?.current && svgContainerRef?.current && (
+            <OptionsBar
+              transformRef={transformContainerRef}
+              svgRef={svgContainerRef}
+              step={step}
+              minScale={minScale}
+              maxScale={maxScale}
+            />
+          )}
           <div id="chart-transform-wrapper">
             <TransformWrapper
               ref={transformContainerRef}
