@@ -458,6 +458,13 @@ export const fetchSettingsXml = async function fetchSettingsJson(
 ) {
   try {
     const { file } = request.params;
+    // sanitize and check filepath
+    const dummy = "/var/www/html"
+    let testFile = realpathSync(path.resolve(dummy, file));
+    if (!testFile.startsWith(dummy)) {
+      reply.status(403).send({ error: "Invalid file path" });
+      return;
+    }
     //TODO: differentiate between preset and user uploaded datpack
     const settingsXml = (await readFile(`${decodeURIComponent(file)}`)).toString();
     reply.send(settingsXml);
@@ -478,9 +485,9 @@ export const fetchSVGStatus = async function (
   const { hash } = request.params;
   let isSVGReady = false;
   let directory = path.join(assetconfigs.chartsDirectory, hash);
-  const filepath = path.join(directory, "chart.svg");
+  let filepath = path.join(directory, "chart.svg");
   // sanitize and check filepath
-  directory = realpathSync(path.resolve(filepath));
+  directory = realpathSync(path.resolve(directory));
   if (!directory.startsWith(assetconfigs.chartsDirectory)) {
     reply.status(403).send({ error: "Invalid hash" });
     return;
