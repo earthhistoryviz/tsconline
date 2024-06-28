@@ -98,13 +98,10 @@ server.register(fastifySecureSession, {
   }
 });
 
-server.register(fastifyRateLimit, {
-  max: 50,
-  timeWindow: "1 minute"
-})
-
 await server.register(fastifyRateLimit, {
-  global: false,
+  global: true,
+  max: 100,
+  timeWindow: "1 minute",
   onExceeded: async (_request, key) => {
     const clientIp = key;
     const ip = (await findIp(clientIp))[0];

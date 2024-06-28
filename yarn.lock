@@ -1925,7 +1925,6 @@ __metadata:
     dompurify: "npm:^3.1.3"
     dotenv: "npm:^16.4.5"
     fastify: "npm:^4.17.0"
-    fastify-rate-limit: "npm:^5.9.0"
     glob: "npm:^10.3.10"
     google-auth-library: "npm:^9.8.0"
     js-levenshtein: "npm:^1.1.6"
@@ -4893,38 +4892,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fastify-plugin@npm:^3.0.1":
-  version: 3.0.1
-  resolution: "fastify-plugin@npm:3.0.1"
-  checksum: b01a6fa0500c43b8ee49c5e6a62145d7274f3ae6e59a938784b0918ef18f067993f818b15542f8afac678e9fb48b57a3fba9f869c6f8a13511494b10b6110c2b
-  languageName: node
-  linkType: hard
-
 "fastify-plugin@npm:^4.0.0, fastify-plugin@npm:^4.5.0":
   version: 4.5.1
   resolution: "fastify-plugin@npm:4.5.1"
   checksum: 7c6d777ada0f01c8a1166a2a669cccfd6074c7764121f07cce997745f198227a271c7a317aaf0da273b329f24307f0eba3f093d872d29b839b33deb525bbafe2
-  languageName: node
-  linkType: hard
-
-"fastify-rate-limit-deprecated@npm:fastify-rate-limit@5.8.0":
-  version: 5.8.0
-  resolution: "fastify-rate-limit@npm:5.8.0"
-  dependencies:
-    fastify-plugin: "npm:^3.0.1"
-    ms: "npm:^2.1.3"
-    tiny-lru: "npm:^8.0.1"
-  checksum: 8f486324b2bf17fd61521168f8b1d68a2b039637c6df4627e1cfb251cbbf3fd8683d490884106ddc7cc01c5fe8bd622d791ae15627a18b3194e244afb635fba1
-  languageName: node
-  linkType: hard
-
-"fastify-rate-limit@npm:^5.9.0":
-  version: 5.9.0
-  resolution: "fastify-rate-limit@npm:5.9.0"
-  dependencies:
-    fastify-rate-limit-deprecated: "npm:fastify-rate-limit@5.8.0"
-    process-warning: "npm:^1.0.0"
-  checksum: b675825ffb4e318d00b9584797e5feab5c80997c396cd807d747d22311f6e2ebcd4d2d69215106d5c77c202d3b57e9809fdfcce3bdc82f9f915ee8bba49b9845
   languageName: node
   linkType: hard
 
@@ -7013,7 +6984,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ms@npm:^2.0.0, ms@npm:^2.1.1, ms@npm:^2.1.3":
+"ms@npm:^2.0.0, ms@npm:^2.1.1":
   version: 2.1.3
   resolution: "ms@npm:2.1.3"
   checksum: aa92de608021b242401676e35cfa5aa42dd70cbdc082b916da7fb925c542173e36bce97ea3e804923fe92c0ad991434e4a38327e15a1b5b5f945d66df615ae6d
@@ -7800,13 +7771,6 @@ __metadata:
   version: 2.0.1
   resolution: "process-nextick-args@npm:2.0.1"
   checksum: 1d38588e520dab7cea67cbbe2efdd86a10cc7a074c09657635e34f035277b59fbb57d09d8638346bf7090f8e8ebc070c96fa5fd183b777fff4f5edff5e9466cf
-  languageName: node
-  linkType: hard
-
-"process-warning@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "process-warning@npm:1.0.0"
-  checksum: 8736d11d8d71c349d176e210305e84d74b13af06efb3c779377b056bfd608257d1e4e32b8fbbf90637c900f0313e40f7c9f583140884f667a21fc10a869b840c
   languageName: node
   linkType: hard
 
@@ -9316,13 +9280,6 @@ __metadata:
   version: 0.2.0
   resolution: "tightrope@npm:0.2.0"
   checksum: b57a6dec1a83d1d9b9395bca21f0b2dc4ff84d97a2302f43af240d312573bc04327e8e40394b4c2ac7172993b76ba31b34d0295b79f4f8abe9195a051782bff6
-  languageName: node
-  linkType: hard
-
-"tiny-lru@npm:^8.0.1":
-  version: 8.0.2
-  resolution: "tiny-lru@npm:8.0.2"
-  checksum: 74b193d83b9edbe690b4e97e3cfd66c8a66d593c33b2c7133f132adacbf0442afbef82c679848208010137175aac3db9e68f350bef68cc299c0f2eb589554ffb
   languageName: node
   linkType: hard
 
