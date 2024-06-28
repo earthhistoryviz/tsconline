@@ -1906,6 +1906,7 @@ __metadata:
     "@types/better-sqlite3": "npm:^7.6.9"
     "@types/color-thief-node": "npm:^1"
     "@types/dompurify": "npm:^3"
+    "@types/js-levenshtein": "npm:^1"
     "@types/jsdom": "npm:^21.1.6"
     "@types/lodash": "npm:^4"
     "@types/md5": "npm:^2.3.5"
@@ -1925,6 +1926,7 @@ __metadata:
     fastify: "npm:^4.17.0"
     glob: "npm:^10.3.10"
     google-auth-library: "npm:^9.8.0"
+    js-levenshtein: "npm:^1.1.6"
     jsdom: "npm:^24.0.0"
     kysely: "npm:^0.27.3"
     lodash: "npm:^4.17.21"
@@ -2096,6 +2098,13 @@ __metadata:
   version: 4.0.4
   resolution: "@types/http-cache-semantics@npm:4.0.4"
   checksum: a59566cff646025a5de396d6b3f44a39ab6a74f2ed8150692e0f31cc52f3661a68b04afe3166ebe0d566bd3259cb18522f46e949576d5204781cd6452b7fe0c5
+  languageName: node
+  linkType: hard
+
+"@types/js-levenshtein@npm:^1":
+  version: 1.1.3
+  resolution: "@types/js-levenshtein@npm:1.1.3"
+  checksum: eb338696da976925ea8448a42d775d7615a14323dceeb08909f187d0b3d3b4c1f67a1c36ef586b1c2318b70ab141bba8fc58311ba1c816711704605aec09db8b
   languageName: node
   linkType: hard
 
@@ -6197,6 +6206,13 @@ __metadata:
   version: 3.1.1
   resolution: "joycon@npm:3.1.1"
   checksum: 4b36e3479144ec196425f46b3618f8a96ce7e1b658f091a309cd4906215f5b7a402d7df331a3e0a09681381a658d0c5f039cb3cf6907e0a1e17ed847f5d37775
+  languageName: node
+  linkType: hard
+
+"js-levenshtein@npm:^1.1.6":
+  version: 1.1.6
+  resolution: "js-levenshtein@npm:1.1.6"
+  checksum: bb034043fdebab606122fe5b5c0316036f1bb0ea352038af8b0ba4cda4b016303b24f64efb59d9918f66e3680eea97ff421396ff3c153cb00a6f982908f61f8a
   languageName: node
   linkType: hard
 

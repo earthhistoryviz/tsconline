@@ -32,7 +32,6 @@
   flex-direction: column;
   padding: 15px 10px;
   gap: 10px;
-  border: 1px solid lightgray;
   max-width: calc(100% - 110px); /* 110px is the width of the tabs, needed for proper scrolling */
   flex-grow: 1;
   height: calc(100% - 33px); /* 33px is the height of the header, needed for the scrolling */
@@ -57,13 +56,11 @@
   justify-content: center;
   width: 35px;
   height: 35px;
-  background-color: lightgray;
   margin: 0 5px;
   border-radius: 5px;
 }
 
 .custom-icon-button {
-  background-color: transparent;
   border: none;
   margin: 0;
   width: 100%;

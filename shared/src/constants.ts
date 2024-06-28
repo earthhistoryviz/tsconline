@@ -1,5 +1,6 @@
 import {
   ChartSettingsInfoTSC,
+  ChronColumnInfoTSC,
   ChronSettings,
   ColumnBasicInfoTSC,
   DataMiningSettings,
@@ -10,11 +11,26 @@ import {
   PointColumnInfoTSC,
   PointSettings,
   RangeColumnInfoTSC,
+  RangeSettings,
   RulerColumnInfoTSC,
   SequenceColumnInfoTSC,
   ValidFontOptions,
   ZoneColumnInfoTSC
 } from "./index";
+
+export const allColumnTypes = [
+  "Block",
+  "Facies",
+  "Event",
+  "Range",
+  "Chron",
+  "Freehand",
+  "Point",
+  "Sequence",
+  "Blank",
+  "Transect",
+  "Trend"
+];
 
 export const defaultDataMiningSettings: DataMiningSettings = {
   windowSize: 2,
@@ -241,8 +257,14 @@ export const defaultEventColumnInfoTSC: EventColumnInfoTSC = {
   rangeSort: "first occurrence",
   drawExtraColumn: null,
   windowSize: 2,
+  stepSize: 1
+};
+
+export const defaultChronColumnInfoTSC: ChronColumnInfoTSC = {
+  ...defaultColumnBasicInfoTSC,
+  windowSize: 2,
   stepSize: 1,
-  isDataMiningColumn: false
+  drawExtraColumn: null
 };
 
 export const defaultZoneColumnInfoTSC: ZoneColumnInfoTSC = {
@@ -392,4 +414,10 @@ export const defaultPoint: Partial<Point> = {
   minX: Number.MAX_SAFE_INTEGER,
   maxX: Number.MIN_SAFE_INTEGER,
   scaleStep: 1
+};
+
+export const defaultRangeSettings: RangeSettings = {
+  margin: 0.2,
+  rangeSort: "first occurrence",
+  agePad: 2
 };

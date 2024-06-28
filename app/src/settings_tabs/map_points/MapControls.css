@@ -26,7 +26,6 @@
   padding-right: 35px;
 }
 .MuiSvgIcon-root.icon-button {
-  color: white;
   width: inherit;
   height: inherit;
 }
@@ -45,6 +44,7 @@
 }
 .MuiTypography-root.map-viewer-header {
   font-size: 23px;
+  font-weight: 600;
 }
 .MuiButton-root.legend-button {
   height: 30px;
@@ -92,8 +92,6 @@
 .slider .MuiSlider-thumb {
   height: 13px;
   width: 13px;
-  background-color: #fff;
-  border: 2px solid currentColor;
 }
 .MuiSlider-root.slider {
   width: 50%;
@@ -118,6 +116,18 @@
   height: 20px;
   background-color: black;
 }
+.age-text-form-input {
+  height: 40px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  width: auto;
+}
+.dot-text-form-input {
+  height: 40px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  width: auto;
+}
 
 .slider .MuiSlider-valueLabel::before {
   display: none;
@@ -130,19 +140,17 @@
     gap: 0px;
   }
   .MuiTextField-root.dot-input-form {
-    padding-right: 15px;
-    padding-left: 10px;
+    width: 34px;
+  }
+  .dot-text-form-input {
+    padding-right: 5px;
+    padding-left: 5px;
   }
   .MuiTextField-root.age-text-field > .MuiInputBase-root {
     padding-right: 0;
   }
-  .MuiInputBase-root > .MuiInputBase-input.age-text-form-input,
-  .MuiInputBase-root > .MuiInputBase-input.dot-text-form-input {
-    padding-left: 4px;
-    padding-right: 0px;
-  }
   .MuiTextField-root.age-text-field {
     padding-right: 20px;
-    width: 70px;
+    width: 110px;
   }
 }

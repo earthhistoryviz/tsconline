@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { Typography } from "@mui/material";
-import { useTheme, styled } from "@mui/material/styles";
+import { styled } from "@mui/material/styles";
 import { TSCIcon } from "./components";
 import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import "./About.css";
@@ -29,7 +29,6 @@ const HeaderContainer = styled("div")(({ theme }) => ({
 
 const HeaderTitle = styled(Typography)(({ theme }) => ({
   fontWeight: theme.typography.fontWeightBold,
-  color: theme.palette.dark.main,
   fontSize: theme.typography.h2.fontSize
 }));
 
@@ -130,14 +129,8 @@ const members = [
 ];
 
 export const About = observer(function About() {
-  const theme = useTheme();
-
   return (
-    <div
-      className="whole_page"
-      style={{
-        background: theme.gradients.primary
-      }}>
+    <div className="whole_page">
       <TSCOnlineHeader />
       <div
         style={{

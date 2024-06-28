@@ -1,16 +1,8 @@
 import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "../../state";
-import {
-  BorderedIcon,
-  ColoredDiv,
-  CustomDivider,
-  Lottie,
-  TSCInputAdornment,
-  TSCTextField,
-  TypographyText
-} from "../../components";
-import { Button, IconButton, Slider, TextFieldProps } from "@mui/material";
+import { BorderedIcon, CustomDivider, Lottie, TSCInputAdornment } from "../../components";
+import { Box, Button, IconButton, Slider, TextField, Typography } from "@mui/material";
 import mapPointsAnimationData from "../../assets/icons/map-points.json";
 import CategoryIcon from "@mui/icons-material/Category";
 import MapSharpIcon from "@mui/icons-material/MapSharp";
@@ -20,37 +12,19 @@ import "./MapControls.css";
 import { NumericFormat } from "react-number-format";
 import { FaciesHeaderHeight, NormHeaderHeight } from "./MapPointConstants";
 
-const AgeTextField = ({ ...props }: TextFieldProps) => (
-  <TSCTextField
-    {...props}
-    height={"40px"}
-    className="age-text-field"
-    inputProps={{ className: "age-text-form-input" }}
-    InputProps={{
-      endAdornment: <TSCInputAdornment>MA</TSCInputAdornment>
-    }}
-  />
-);
-const DotSizeTextField = ({ ...props }: TextFieldProps) => (
-  <TSCTextField
-    height={"40px"}
-    {...props}
-    className="dot-input-form"
-    inputProps={{ className: "dot-text-form-input" }}
-  />
-);
-
 export const FaciesControls = observer(() => {
   const { state, actions } = useContext(context);
   const dotSizeRange = { min: 1, max: 20 };
   return (
-    <ColoredDiv className="facies-buttons">
+    <Box className="facies-buttons" bgcolor="secondaryBackground.main">
       <div className="dot-controls">
-        <TypographyText className="dot-controls-title"> Dot Size </TypographyText>
+        <Typography className="dot-controls-title"> Dot Size </Typography>
         <div className="slider-container">
           <NumericFormat
             value={state.mapState.currentFaciesOptions.dotSize}
-            customInput={DotSizeTextField}
+            customInput={TextField}
+            className="dot-input-form"
+            inputProps={{ className: "dot-text-form-input" }}
             onValueChange={(values) => {
               const floatValue = values.floatValue;
               if (!floatValue) {
@@ -64,6 +38,17 @@ export const FaciesControls = observer(() => {
           <Slider
             id="dot-size-slider"
             className="slider"
+            sx={{
+              "& .MuiSlider-track": {
+                bgcolor: "icon.main"
+              },
+              "& .MuiSlider-thumb": {
+                bgcolor: "icon.main"
+              },
+              "& .MuiSlider-rail": {
+                bgcolor: "icon.light"
+              }
+            }}
             value={state.mapState.currentFaciesOptions.dotSize}
             max={20}
             min={1}
@@ -76,11 +61,16 @@ export const FaciesControls = observer(() => {
         </div>
       </div>
       <div className="age-controls">
-        <TypographyText> Age </TypographyText>
+        <Typography> Age </Typography>
         <div className="slider-container">
           <NumericFormat
             value={state.mapState.currentFaciesOptions.faciesAge}
-            customInput={AgeTextField}
+            customInput={TextField}
+            className="age-text-field"
+            inputProps={{ className: "age-text-form-input" }}
+            InputProps={{
+              endAdornment: <TSCInputAdornment>MA</TSCInputAdornment>
+            }}
             onValueChange={(values) => {
               if (!values.floatValue) {
                 return;
@@ -91,6 +81,17 @@ export const FaciesControls = observer(() => {
           <Slider
             id="number-input"
             className="slider"
+            sx={{
+              "& .MuiSlider-track": {
+                bgcolor: "icon.main"
+              },
+              "& .MuiSlider-thumb": {
+                bgcolor: "icon.main"
+              },
+              "& .MuiSlider-rail": {
+                bgcolor: "icon.light"
+              }
+            }}
             name="Facies-Age-Slider"
             max={state.mapState.selectedMapAgeRange.maxAge}
             min={state.mapState.selectedMapAgeRange.minAge}
@@ -103,7 +104,7 @@ export const FaciesControls = observer(() => {
           />
         </div>
       </div>
-    </ColoredDiv>
+    </Box>
   );
 });
 type HeaderBarProps = {
@@ -116,32 +117,34 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
     height: `${isFacies ? FaciesHeaderHeight : NormHeaderHeight}`
   };
   return (
-    <ColoredDiv className="header-bar" style={headerStyle}>
+    <Box className="header-bar" style={headerStyle} bgcolor="secondaryBackground.main">
       <div className="header-title-container">
         <IconButton className="move-maps-button" onClick={actions.goBackInMapHistory} size="large">
-          <BorderedIcon component={ArrowBackIcon} className="icon-button" />
+          <BorderedIcon component={ArrowBackIcon} className="icon-button" color="icon" />
         </IconButton>
         <div className="header-title">
           <Lottie className="header-icon" animationData={mapPointsAnimationData} width={25} height={25} loop autoplay />
-          <TypographyText className="map-viewer-header" variant="h1">
+          <Typography className="map-viewer-header" variant="h1" component="h1">
             Map Viewer
-          </TypographyText>
+          </Typography>
         </div>
         <IconButton className="move-maps-button" onClick={() => actions.closeMapViewer()} size="large">
-          <BorderedIcon component={CloseIcon} className="icon-button" />
+          <BorderedIcon component={CloseIcon} className="icon-button" color="icon" />
         </IconButton>
       </div>
       <div className="buttons">
         <Button
-          startIcon={<MapSharpIcon />}
+          startIcon={<MapSharpIcon color="icon" />}
           className="legend-button"
+          sx={{ color: "secondaryBackground.contrastText" }}
           onClick={() => actions.setIsLegendOpen(!state.mapState.isLegendOpen)}>
           legend
         </Button>
         {!isFacies && (
           <Button
-            startIcon={<CategoryIcon />}
+            startIcon={<CategoryIcon color="icon" />}
             className="legend-button"
+            sx={{ color: "secondaryBackground.contrastText" }}
             onClick={() => {
               actions.openNextMap(name, isFacies, name, true);
             }}>
@@ -155,6 +158,6 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ name, isFacies }) => {
           <FaciesControls />
         </>
       )}
-    </ColoredDiv>
+    </Box>
   );
 };

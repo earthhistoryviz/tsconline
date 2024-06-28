@@ -38,7 +38,6 @@ import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { SettingsTabs, equalChartSettings, equalConfig } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
-import { snackbarTextLengthLimit } from "../../util/constant";
 import { cloneDeep } from "lodash";
 
 const increment = 1;
@@ -744,10 +743,6 @@ export const removeSnackbar = action("removeSnackbar", (text: string) => {
   state.snackbars = state.snackbars.filter((info) => info.snackbarText !== text);
 });
 export const pushSnackbar = action("pushSnackbar", (text: string, severity: "success" | "info" | "warning") => {
-  if (text.length > snackbarTextLengthLimit) {
-    console.error("The length of snackbar text must be less than 70");
-    return;
-  }
   for (const snackbar of state.snackbars) {
     if (snackbar.snackbarText === text) {
       snackbar.snackbarCount += 1;
@@ -898,11 +893,11 @@ export const setDefaultUserState = action(() => {
 });
 
 export const setChartTimelineEnabled = action("setChartTimelineEnabled", (enabled: boolean) => {
-  state.chartTimelineEnabled = enabled;
+  state.chartTab.chartTimelineEnabled = enabled;
 });
 
 export const setChartTimelineLocked = action("setChartTimelineLocked", (locked: boolean) => {
-  state.chartTimelineLocked = locked;
+  state.chartTab.chartTimelineLocked = locked;
 });
 
 export const setUser = action("setUser", (user: SharedUser) => {
@@ -1071,4 +1066,31 @@ export const setDatapackDisplayType = action(
 export const setCookies = action("setCookies", (newval: boolean) => {
   state.cookieConsent = newval;
   localStorage.setItem("cookieConsent", newval.toString());
+});
+
+export const setChartTabScale = action("setChartTabScale", (newval: number) => {
+  state.chartTab.scale = newval;
+});
+
+export const setChartTabZoomFitScale = action("setChartTabZoomFitScale", (newval: number) => {
+  state.chartTab.zoomFitScale = newval;
+});
+export const setChartTabResetMidX = action("setChartTabResetMidX", (newval: number) => {
+  state.chartTab.resetMidX = newval;
+});
+export const setChartTabZoomFitMidCoord = action("setChartTabZoomFitMidCoord", (newval: number) => {
+  state.chartTab.zoomFitMidCoord = newval;
+});
+export const setChartTabZoomFitMidCoordIsX = action("setChartTabZoomFitMidCoordIsX", (newval: boolean) => {
+  state.chartTab.zoomFitMidCoordIsX = newval;
+});
+export const setChartTabDownloadFilename = action("setChartTabDownloadFilename", (newval: string) => {
+  state.chartTab.downloadFilename = newval;
+});
+
+export const setChartTabDownloadFiletype = action("setChartTabDownloadFiletype", (newval: "svg" | "pdf" | "png") => {
+  state.chartTab.downloadFiletype = newval;
+});
+export const setChartTabEnableScrollZoom = action("setChartTabEnableScrollZoom", (newval: boolean) => {
+  state.chartTab.enableScrollZoom = newval;
 });

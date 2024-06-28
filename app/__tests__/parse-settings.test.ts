@@ -5,7 +5,8 @@ import {
   FontsInfo,
   defaultChronSettings,
   defaultEventSettings,
-  defaultPointSettings
+  defaultPointSettings,
+  defaultRangeSettings
 } from "@tsconline/shared";
 import * as parseSettings from "../src/state/parse-settings";
 import { ChartSettings } from "../src/types";
@@ -65,6 +66,16 @@ describe("translate columnInfo to columnInfoTSC", () => {
       keys["translate-point-column-key"]
     );
   });
+  it("should translate range column", async () => {
+    expect(parseSettings.translateColumnInfoToColumnInfoTSC(tests["translate-range-column-test"])).toEqual(
+      keys["translate-range-column-key"]
+    );
+  });
+  it("should translate chron column", async () => {
+    expect(parseSettings.translateColumnInfoToColumnInfoTSC(tests["translate-chron-column-test"])).toEqual(
+      keys["translate-chron-column-key"]
+    );
+  });
   const basicColumn = tests["translate-basic-column-test"];
   test.each([
     [basicColumn.name, "Root", "class datastore.RootColumn:Chart Root", basicColumn],
@@ -90,7 +101,7 @@ describe("translate columnInfo to columnInfoTSC", () => {
       basicColumn.name,
       "Range",
       "class datastore.RangeColumn:Chart Root",
-      { ...basicColumn, columnDisplayType: "Range" }
+      { ...basicColumn, columnDisplayType: "Range", columnSpecificSettings: { ...defaultRangeSettings } }
     ],
     [
       basicColumn.name,

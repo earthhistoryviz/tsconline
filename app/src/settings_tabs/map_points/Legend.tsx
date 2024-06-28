@@ -1,11 +1,9 @@
-import { Box, Button, IconButton, Typography, useTheme } from "@mui/material";
+import { Box, Button, IconButton, TextField, Typography, useTheme } from "@mui/material";
 import React, { useState, useContext, ChangeEvent, useRef, useEffect } from "react";
 import {
   StyledScrollbar,
   CustomHeader,
   CustomDivider,
-  TypographyText,
-  TSCTextField,
   TSCInputAdornment,
   Lottie,
   TSCMenuItem,
@@ -101,8 +99,9 @@ export const Legend = observer(() => {
     { color: "transparent", label: "Child Map", icon: ChildMapIcon }
   ];
   const menuStyle = {
-    color: theme.palette.primary.main,
-    backgroundColor: theme.palette.menuDropdown.main
+    color: theme.palette.text.primary,
+    backgroundColor: theme.palette.secondaryBackground.main,
+    border: `1px solid ${theme.palette.divider}`
   };
 
   return (
@@ -121,20 +120,16 @@ export const Legend = observer(() => {
         autoHide={false}
         style={{
           height: `calc(100vh - ${LegendHeaderHeight})`,
-          backgroundColor: theme.palette.navbar.main
+          backgroundColor: theme.palette.secondaryBackground.main
         }}>
-        <CustomHeader className="legend-header" color="primary">
-          Map Points
-        </CustomHeader>
+        <CustomHeader className="legend-header">Map Points</CustomHeader>
         <CustomDivider />
         <div className="legend-container">
           {legendItems.map((item, index) => (
             <DisplayLegendItem key={index} legendItem={item} />
           ))}
         </div>
-        <CustomHeader className="legend-header" color="primary">
-          Facies Patterns
-        </CustomHeader>
+        <CustomHeader className="legend-header">Facies Patterns</CustomHeader>
         <div className="search-container">
           <FaciesSearchBar searchValue={searchValue} setSearchValue={setSearchValue} />
           <div className="filters">
@@ -149,8 +144,8 @@ export const Legend = observer(() => {
               setFilterByPresent={setFilterByPresent}
               toggleColor={toggleColor}
             />
-            <Button onClick={() => clearFilter()} className="filter-button">
-              <TypographyText>Clear Filter</TypographyText>
+            <Button color="icon" onClick={() => clearFilter()} className="filter-button">
+              <Typography>Clear Filter</Typography>
             </Button>
           </div>
         </div>
@@ -193,7 +188,7 @@ const FilterMenu: React.FC<FilterMenuProps> = observer(
     return (
       <>
         <IconButton ref={menuRef} className="filter-button" {...anchorProps} size="large">
-          <FilterListIcon color="primary" />
+          <FilterListIcon color="icon" />
         </IconButton>
         <ControlledMenu
           {...menuState}
@@ -210,10 +205,10 @@ const FilterMenu: React.FC<FilterMenuProps> = observer(
             checked={alphabeticalSort}
             onClick={() => setAlphabeticalSort(!alphabeticalSort)}
             type="checkbox">
-            <TypographyText>Sort A-Z</TypographyText>
+            <Typography>Sort A-Z</Typography>
           </TSCMenuItem>
           <TSCMenuItem checked={filterByPresent} onClick={() => setFilterByPresent(!filterByPresent)} type="checkbox">
-            <TypographyText>Present in map</TypographyText>
+            <Typography>Present in map</Typography>
           </TSCMenuItem>
           <MenuDivider />
           <ColorSubMenu
@@ -237,7 +232,7 @@ type FaciesSearchBarProps = {
 const FaciesSearchBar: React.FC<FaciesSearchBarProps> = ({ searchValue, setSearchValue }) => {
   return (
     <div className="facies-search">
-      <TSCTextField
+      <TextField
         className="search-bar"
         value={searchValue}
         onChange={(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -247,7 +242,7 @@ const FaciesSearchBar: React.FC<FaciesSearchBarProps> = ({ searchValue, setSearc
           startAdornment: (
             <TSCInputAdornment>
               {" "}
-              <SearchIcon />
+              <SearchIcon color="icon" />
             </TSCInputAdornment>
           )
         }}
@@ -275,9 +270,9 @@ const ColorSubMenu: React.FC<ColorSubMenuProps> = ({ colorHash, style, colors, c
           onClick={() => toggleColor(color)}
           type="checkbox">
           <>
-            <TypographyText key={color} className="color-text">
+            <Typography key={color} className="color-text">
               {color}
-            </TypographyText>
+            </Typography>
             <div className="colored-box" style={{ backgroundColor: colorHash.get(color)?.hex }} />
           </>
         </TSCMenuItem>
@@ -296,9 +291,7 @@ const FaciesPatterns: React.FC<FaciesPatternsProps> = ({ patterns }) => {
         return (
           <div className="facies-pattern-container" key={name}>
             <img className="legend-pattern" src={devSafeUrl(filePath)} />
-            <Typography className="facies-pattern" color="primary">
-              {formattedName}
-            </Typography>
+            <Typography className="facies-pattern">{formattedName}</Typography>
           </div>
         );
       })}
@@ -309,7 +302,7 @@ const FaciesPatterns: React.FC<FaciesPatternsProps> = ({ patterns }) => {
 const SubMenuIcon = () => (
   <>
     <ColorLensIcon className="color-lens-icon" />
-    <TypographyText>Color</TypographyText>
+    <Typography>Color</Typography>
   </>
 );
 
@@ -318,7 +311,7 @@ const DisplayLegendItem = ({ legendItem }: { legendItem: LegendItem }) => {
   return (
     <Box className="legend-item-container">
       <Icon width={20} height={20} style={{ color: color }} mr={1} />
-      <TypographyText className="legend-label">{label}</TypographyText>
+      <Typography className="legend-label">{label}</Typography>
     </Box>
   );
 };
