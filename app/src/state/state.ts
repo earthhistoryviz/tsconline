@@ -27,8 +27,18 @@ import { defaultColors } from "../util/constant";
 import { settings } from "../constants";
 
 export type State = {
-  chartTimelineEnabled: boolean;
-  chartTimelineLocked: boolean;
+  chartTab: {
+    chartTimelineEnabled: boolean;
+    chartTimelineLocked: boolean;
+    scale: number;
+    zoomFitScale: number;
+    resetMidX: number;
+    zoomFitMidCoord: number;
+    zoomFitMidCoordIsX: boolean;
+    downloadFilename: string;
+    downloadFiletype: "svg" | "pdf" | "png";
+    enableScrollZoom: boolean;
+  };
   loadSaveFilename: string;
   cookieConsent: boolean | null;
   isLoggedIn: boolean;
@@ -89,8 +99,18 @@ export type State = {
 };
 
 export const state = observable<State>({
-  chartTimelineEnabled: false,
-  chartTimelineLocked: false,
+  chartTab: {
+    chartTimelineEnabled: false,
+    chartTimelineLocked: false,
+    scale: 1,
+    zoomFitScale: 1,
+    resetMidX: 0,
+    zoomFitMidCoord: 0,
+    zoomFitMidCoordIsX: true,
+    downloadFilename: "chart",
+    downloadFiletype: "svg",
+    enableScrollZoom: false
+  },
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,
   isLoggedIn: false,

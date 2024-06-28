@@ -128,13 +128,10 @@ export const TSCMenuItem = styled(MenuItem)(({ theme }) => ({
 }));
 
 type CustomTooltipProps = {
-  title: string;
   offset?: number[];
 } & TooltipProps;
-export const CustomTooltip: React.FC<CustomTooltipProps> = ({ title, offset = [0, -10], ...props }) => {
-  return (
-    <Tooltip title={title} arrow PopperProps={{ modifiers: [{ name: "offset", options: { offset } }] }} {...props} />
-  );
+export const CustomTooltip: React.FC<CustomTooltipProps> = ({ offset = [0, -10], ...props }) => {
+  return <Tooltip arrow PopperProps={{ modifiers: [{ name: "offset", options: { offset } }] }} {...props} />;
 };
 
 export const CustomFormControlLabel = styled(FormControlLabel)(
