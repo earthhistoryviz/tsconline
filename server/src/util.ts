@@ -4,6 +4,7 @@ import { rm, readFile, access, mkdir, readdir, copyFile } from "fs/promises";
 import { glob } from "glob";
 import { createInterface } from "readline/promises";
 import { constants } from "fs";
+import levenshtein from "js-levenshtein";
 import { assertAssetConfig, AssetConfig } from "./types.js";
 
 /**
@@ -218,4 +219,28 @@ export async function loadAssetConfigs() {
     console.log("ERROR: Failed to load asset configs from assets/config.json.  Error was: ", e);
     process.exit(1);
   }
+}
+
+/**
+ * Finds the closest match to the input string from a list of options
+ * @param input the input string
+ * @param options the list of options
+ * @param threshold the maximum levenshtein distance allowed
+ * @returns
+ */
+export function getClosestMatch(input: string, options: string[], threshold?: number): string {
+  if (options.length === 0) return "";
+  let closestMatch = options[0]!;
+  input = input.toLowerCase();
+  options = options.map((option) => option.toLowerCase());
+  let minDistance = levenshtein(input, closestMatch);
+  for (const option of options) {
+    const distance = levenshtein(input, option);
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestMatch = option;
+    }
+  }
+  if (threshold !== undefined && minDistance > threshold) return "";
+  return closestMatch;
 }

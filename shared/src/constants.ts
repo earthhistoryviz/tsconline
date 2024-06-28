@@ -18,6 +18,20 @@ import {
   ZoneColumnInfoTSC
 } from "./index";
 
+export const allColumnTypes = [
+  "Block",
+  "Facies",
+  "Event",
+  "Range",
+  "Chron",
+  "Freehand",
+  "Point",
+  "Sequence",
+  "Blank",
+  "Transect",
+  "Trend"
+];
+
 export const defaultDataMiningSettings: DataMiningSettings = {
   windowSize: 2,
   stepSize: 1

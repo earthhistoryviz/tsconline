@@ -11,6 +11,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Discussion } from "./components/TSCDiscussion";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import { PageNotFound } from "./PageNotFound";
+import { DatapackParsingPack, DatapackWarning } from "@tsconline/shared";
 
 const tags: string[] = ["Large", "Small", "Medium", "Huge", "Tiny", "Normal", "Abnormal"];
 export const DatapackProfile = observer(() => {
@@ -37,7 +38,7 @@ export const DatapackProfile = observer(() => {
     },
     {
       id: "Warnings",
-      tab: <WarningsTab count={200} />
+      tab: <WarningsTab count={datapack.warnings ? datapack.warnings.length : 0} />
     }
   ];
   return (
@@ -58,7 +59,7 @@ export const DatapackProfile = observer(() => {
           tabs={tabs}
         />
         <CustomDivider className={styles.divider} />
-        <DatapackProfileContent index={tabIndex} />
+        <DatapackProfileContent index={tabIndex} datapack={datapack} />
       </div>
     </div>
   );
@@ -77,8 +78,9 @@ const WarningsTab: React.FC<WarningTabProps> = ({ count }) => {
 
 type DatapackProfileContentProps = {
   index: number;
+  datapack: DatapackParsingPack;
 };
-const DatapackProfileContent: React.FC<DatapackProfileContentProps> = ({ index }) => {
+const DatapackProfileContent: React.FC<DatapackProfileContentProps> = ({ index, datapack }) => {
   switch (index) {
     case 0:
       return <About />;
@@ -88,13 +90,14 @@ const DatapackProfileContent: React.FC<DatapackProfileContentProps> = ({ index }
       return <Discussion />;
     case 3:
       return (
-        <>
-          <DatapackWarning text="hi" />
-          <DatapackWarning
-            text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur fermentum nisi vel pulvinar hendrerit. Curabitur non lacus nulla. Maecenas pellentesque imperdiet vestibulum. Aenean laoreet pretium lectus, pulvinar sollicitudin mauris accumsan quis. Nullam mollis iaculis egestas. Nam lobortis, neque sed malesuada dictum, eros nulla venenatis nunc, sed fringilla justo lorem at lorem. Aliquam egestas neque magna, quis posuere metus lobortis at. Suspendisse nec nibh eu justo vehicula semper. Nulla efficitur nunc sit amet dignissim posuere. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Proin imperdiet, purus a lacinia pharetra, lacus dui cursus metus, at rhoncus libero ligula sed dolor.
-      Nulla pulvinar nulla erat, et fringilla sem finibus sit amet. Cras cursus urna non risus lacinia, ultricies vestibulum ipsum bibendum. Maecenas quis magna ac risus consequat elementum. Donec pretium orci nec congue ultricies. Proin ullamcorper nec nibh sed auctor. Ut non vehicula velit, non scelerisque purus. Vestibulum quis ipsum mi. Cras ultrices finibus dolor id dapibus. Sed eleifend viverra risus, in dictum velit ultrices quis. Nullam pulvinar magna ut lectus placerat rhoncus. Aenean vitae ex sed tellus convallis ullamcorper. Suspendisse mattis consequat lectus, non malesuada urna convallis non. Sed rhoncus fringilla nisi, at congue leo venenatis id."
+        datapack.warnings &&
+        datapack.warnings.length > 0 &&
+        datapack.warnings.map((warning, index) => (
+          <DatapackWarningAlert
+            key={warning.lineNumber + warning.warning + warning.message + index}
+            warning={warning}
           />
-        </>
+        ))
       );
     default:
       return <About />;
@@ -159,13 +162,19 @@ const About: React.FC = () => {
 };
 
 type DatapackWarningProps = {
-  text: string;
+  warning: DatapackWarning;
 };
-export const DatapackWarning: React.FC<DatapackWarningProps> = ({ text }) => {
+export const DatapackWarningAlert: React.FC<DatapackWarningProps> = ({ warning }) => {
   return (
     <Box className={styles.dwc} bgcolor="secondaryBackground.light">
       <CampaignIcon className={styles.dwi} />
-      <Typography>{text}</Typography>
+      <Box>
+        {warning.lineNumber !== undefined && (
+          <Typography fontWeight={600}>{`Warning found on line ${warning.lineNumber}`}</Typography>
+        )}
+        <Typography>{warning.warning}</Typography>
+        {warning.message && <Typography fontStyle="italic">{warning.message}</Typography>}
+      </Box>
     </Box>
   );
 };
