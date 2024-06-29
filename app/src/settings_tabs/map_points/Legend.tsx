@@ -114,7 +114,13 @@ export const Legend = observer(() => {
           scrollRef.current?.contentWrapperEl?.scrollTo({ top: 0, left: 0, behavior: "smooth" });
         }}
         size="large">
-        <Lottie key="legend-arrow-up" width="inherit" height="inherit" animationData={theme.palette.mode === "light" ? DarkArrowUpIcon : LightArrowUpIcon} playOnClick />
+        <Lottie
+          key="legend-arrow-up"
+          width="inherit"
+          height="inherit"
+          animationData={theme.palette.mode === "light" ? DarkArrowUpIcon : LightArrowUpIcon}
+          playOnClick
+        />
       </IconButton>
       <StyledScrollbar
         ref={scrollRef}
