@@ -62,7 +62,7 @@ export const TSCAccountMenu = observer(() => {
             sx: {
               overflow: "visible",
               filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.32))",
-              bgcolor: "backgroundColor.main",
+              bgcolor: "secondaryBackground.main",
               border: `1px solid ${theme.palette.divider}`,
               mt: 1.5,
               "& .MuiAvatar-root": {

@@ -12,21 +12,24 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import checkIcon from "../assets/icons/check-icon.json";
 import FolderIcon from "@mui/icons-material/Folder";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
+import Color from "color";
+
 
 const CardBackground = styled("div")(({ theme }) => ({
-  backgroundColor: theme.palette.secondaryBackground.main
+  background: theme.palette.cardBackground ? `linear-gradient(to top, ${theme.palette.cardBackground.main}, ${theme.palette.cardBackground.light})` : theme.palette.secondaryBackground.main
 }));
 const Date = styled("div")(({ theme }) => ({
   fontFamily: theme.typography.fontFamily,
   backgroundColor: theme.palette.text.disabled
 }));
+const ContrastTypography = styled(Typography)(({ theme }) => ({
+  color: theme.palette.cardBackground ? "#FFF" : theme.palette.text.primary
+}));
 
 export const TSCCard = ({
-  color,
   preset,
   generateChart
 }: {
-  color?: string;
   preset: ChartConfig;
   generateChart?: () => void;
 }) => {
@@ -51,7 +54,7 @@ export const TSCCard = ({
                 <Avatar className="avatar-logo avatar-box-shadow" src={devSafeUrl(preset.icon)} />
               </Grid>
               <Grid item xs>
-                <Typography className="card-title">{preset.title}</Typography>
+                <ContrastTypography className="card-title">{preset.title}</ContrastTypography>
               </Grid>
             </Grid>
             <Grid container mt={2} alignItems="center" justifyContent="center" spacing={2} wrap="nowrap">
@@ -82,14 +85,13 @@ export const TSCCard = ({
         </div>
       </Box>
       {/* This is the back card */}
-      <BackCard handleFlip={handleFlip} add={add} added={added} preset={preset} color={color} />
+      <BackCard handleFlip={handleFlip} add={add} added={added} preset={preset}/>
     </ReactCardFlip>
   );
 };
 
 const BackCard = ({
   preset,
-  color,
   handleFlip,
   add,
   added
@@ -98,29 +100,28 @@ const BackCard = ({
   handleFlip: () => void;
   add: () => void;
   added: boolean;
-  color?: string;
 }) => {
   return (
     <Box className="back-card">
-      <CardBackground className="card-background" color={color} />
+      <CardBackground className="card-background"/>
       <div className="back-background card-content">
         <StyledScrollbar className="info-container" autoHide={false}>
           <CardMedia className="info-media" component="img" image={devSafeUrl(preset.background)} />
-          <Typography className="info-title">{preset.title}</Typography>
+          <ContrastTypography className="info-title">{preset.title}</ContrastTypography>
           <div className="info-text-container">
             <CustomHeader>Included Datapacks</CustomHeader>
             <List className="list">
               {preset.datapacks.map((datapack, index) => (
                 <ListItem className="list-item" key={index}>
                   <FolderIcon color="icon" />
-                  <ListItemText className="list-item-text" primary={<Typography>{datapack.name}</Typography>} />
+                  <ListItemText className="list-item-text" primary={<ContrastTypography>{datapack.name}</ContrastTypography>} />
                 </ListItem>
               ))}
             </List>
             <CustomHeader>Additional Info</CustomHeader>
-            <Typography className="info-description" variant="body1">
+            <ContrastTypography className="info-description" variant="body1">
               {preset.description}
-            </Typography>
+            </ContrastTypography>
           </div>
         </StyledScrollbar>
       </div>
