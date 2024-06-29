@@ -22,7 +22,8 @@ import { ControlledMenu, MenuDivider, useClick, useMenuState } from "@szhsin/rea
 import { observer } from "mobx-react-lite";
 import ColorLensIcon from "@mui/icons-material/ColorLens";
 import SimpleBarCore from "simplebar-core";
-import ArrowUpIcon from "../../assets/icons/arrow-up.json";
+import LightArrowUpIcon from "../../assets/icons/light-arrow-up.json";
+import DarkArrowUpIcon from "../../assets/icons/dark-arrow-up.json";
 import { LegendHeaderHeight } from "./MapPointConstants";
 import { Color, Patterns } from "@tsconline/shared";
 
@@ -113,7 +114,7 @@ export const Legend = observer(() => {
           scrollRef.current?.contentWrapperEl?.scrollTo({ top: 0, left: 0, behavior: "smooth" });
         }}
         size="large">
-        <Lottie key="legend-arrow-up" width="inherit" height="inherit" animationData={ArrowUpIcon} playOnClick />
+        <Lottie key="legend-arrow-up" width="inherit" height="inherit" animationData={theme.palette.mode === "light" ? DarkArrowUpIcon : LightArrowUpIcon} playOnClick />
       </IconButton>
       <StyledScrollbar
         ref={scrollRef}
