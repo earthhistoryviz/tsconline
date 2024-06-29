@@ -41,7 +41,7 @@ export const TSCCard = ({
   return (
     <ReactCardFlip isFlipped={isFlipped} flipDirection="horizontal">
       {/* This is the front card */}
-      <Box className="front-card">
+      <Box className="front-card" >
         <CardMedia className="card-media-cover" image={devSafeUrl(preset.background)} onClick={handleFlip} />
         <div className="card-content front-card-content">
           <CardBackground className="card-background clip-path" />

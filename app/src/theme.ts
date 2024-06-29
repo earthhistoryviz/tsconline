@@ -419,15 +419,14 @@ export let originalTheme = createTheme(baseTheme, {
     }),
     secondaryBackground: baseTheme.palette.augmentColor({
       color: {
-        main: "#f2f6fc"
+        main: Color("#8FB7E7").lighten(0.28).toString()
       },
       name: "secondaryBackground"
     }),
     divider: "#454545dd",
     text: {
       primary: "#21294a",
-      secondary: "#20385a",
-      disabled
+      secondary: "#20385a"
     },
     button: baseTheme.palette.augmentColor({
       color: {
@@ -465,11 +464,7 @@ export let originalTheme = createTheme(baseTheme, {
       },
       name: "selection"
     }),
-    action: {
-      disabled,
-      disabledBackground: disabled,
-      hover: "#ababab1a"
-    },
+    action: {},
     outline: {
       main: "#adadad"
     },
@@ -499,7 +494,7 @@ export let originalDarkTheme = createTheme(baseTheme, {
     }),
     secondaryBackground: baseTheme.palette.augmentColor({
       color: {
-        main: "#334459"
+        main: "#1f2632"
       },
       name: "secondaryBackground"
     }),
