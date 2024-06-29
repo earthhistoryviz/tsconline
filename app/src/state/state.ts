@@ -8,7 +8,8 @@ import {
   MapHistory,
   Config,
   SettingsTabs,
-  CachedConfig
+  CachedConfig,
+  User
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -19,8 +20,7 @@ import type {
   Presets,
   DatapackIndex,
   MapPackIndex,
-  Patterns,
-  SharedUser
+  Patterns
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
@@ -42,7 +42,7 @@ export type State = {
   loadSaveFilename: string;
   cookieConsent: boolean | null;
   isLoggedIn: boolean;
-  user: SharedUser;
+  user: User;
   chartLoading: boolean;
   tab: number;
   madeChart: boolean;

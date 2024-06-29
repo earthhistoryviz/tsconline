@@ -902,7 +902,7 @@ export const setChartTimelineLocked = action("setChartTimelineLocked", (locked: 
 
 export const setUser = action("setUser", (user: SharedUser) => {
   assertSharedUser(user);
-  state.user = user;
+  state.user = { ...state.user, ...user };
 });
 export const setPictureUrl = action("setPictureUrl", (url: string) => {
   state.user.pictureUrl = url;

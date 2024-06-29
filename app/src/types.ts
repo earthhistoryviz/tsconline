@@ -1,4 +1,11 @@
-import { ColumnInfo, DataMiningPointDataType, MapHierarchy, MapInfo } from "@tsconline/shared";
+import { ColumnInfo, DataMiningPointDataType, MapHierarchy, MapInfo, SharedUser } from "@tsconline/shared";
+
+export type User = SharedUser & {
+  settings: {
+    darkMode: boolean;
+    language: string;
+  };
+};
 
 export type WindowStats = {
   windowStart: number;
