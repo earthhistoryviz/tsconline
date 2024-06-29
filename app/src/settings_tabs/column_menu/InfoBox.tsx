@@ -11,7 +11,11 @@ export const InfoBox: React.FC<{ info: string }> = observer(({ info }) => {
       <Typography variant="h6">Information and References</Typography>
       <Box className="column-popup-box">
         <StyledScrollbar className="scroll-bar">
-          <Box className="column-info-box" sx={{ "& a": { color: "button.main" }}} dangerouslySetInnerHTML={{ __html: trimQuotes(info).replaceAll('""', '"') }} />
+          <Box
+            className="column-info-box"
+            sx={{ "& a": { color: "button.main" } }}
+            dangerouslySetInnerHTML={{ __html: trimQuotes(info).replaceAll('""', '"') }}
+          />
         </StyledScrollbar>
       </Box>
     </div>

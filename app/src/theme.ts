@@ -78,6 +78,11 @@ function createThemeOverrides(theme: Theme, primary: string) {
           }
         }
       },
+      MuiCheckbox: {
+        defaultProps: {
+          disableRipple: true
+        }
+      },
       MuiToggleButton: {
         styleOverrides: {
           root: {
@@ -113,6 +118,11 @@ function createThemeOverrides(theme: Theme, primary: string) {
             }
           }
         ]
+      },
+      MuiMenuItem: {
+        defaultProps: {
+          disableRipple: true
+        }
       },
       MuiMenu: {
         styleOverrides: {
@@ -456,7 +466,7 @@ export let originalLightTheme = createTheme(baseTheme, {
     }),
     icon: baseTheme.palette.augmentColor({
       color: {
-        main: "#a8a29e"
+        main: "#9f9995"
       },
       name: "icon"
     }),
@@ -480,10 +490,13 @@ export let originalLightTheme = createTheme(baseTheme, {
     accordionLine: {
       main: "#88888890"
     },
-    cardBackground: {
-      light: "#2C307B",
-      main: "#27476E"
-    }
+    cardBackground: baseTheme.palette.augmentColor({
+      color: {
+        light: "#2C307B",
+        main: "#27476E"
+      },
+      name: "cardBackground"
+    })
   }
 });
 console.log(Color("#334459").darken(0.5).hex());

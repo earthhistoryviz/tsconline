@@ -12,11 +12,11 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import checkIcon from "../assets/icons/check-icon.json";
 import FolderIcon from "@mui/icons-material/Folder";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
-import Color from "color";
-
 
 const CardBackground = styled("div")(({ theme }) => ({
-  background: theme.palette.cardBackground ? `linear-gradient(to top, ${theme.palette.cardBackground.main}, ${theme.palette.cardBackground.light})` : theme.palette.secondaryBackground.main
+  background: theme.palette.cardBackground
+    ? `linear-gradient(to top, ${theme.palette.cardBackground.main}, ${theme.palette.cardBackground.light})`
+    : theme.palette.secondaryBackground.main
 }));
 const Date = styled("div")(({ theme }) => ({
   fontFamily: theme.typography.fontFamily,
@@ -26,13 +26,7 @@ const ContrastTypography = styled(Typography)(({ theme }) => ({
   color: theme.palette.cardBackground ? "#FFF" : theme.palette.text.primary
 }));
 
-export const TSCCard = ({
-  preset,
-  generateChart
-}: {
-  preset: ChartConfig;
-  generateChart?: () => void;
-}) => {
+export const TSCCard = ({ preset, generateChart }: { preset: ChartConfig; generateChart?: () => void }) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [added, setAdded] = useState(false);
   function handleFlip() {
@@ -44,7 +38,7 @@ export const TSCCard = ({
   return (
     <ReactCardFlip isFlipped={isFlipped} flipDirection="horizontal">
       {/* This is the front card */}
-      <Box className="front-card" >
+      <Box className="front-card">
         <CardMedia className="card-media-cover" image={devSafeUrl(preset.background)} onClick={handleFlip} />
         <div className="card-content front-card-content">
           <CardBackground className="card-background clip-path" />
@@ -85,7 +79,7 @@ export const TSCCard = ({
         </div>
       </Box>
       {/* This is the back card */}
-      <BackCard handleFlip={handleFlip} add={add} added={added} preset={preset}/>
+      <BackCard handleFlip={handleFlip} add={add} added={added} preset={preset} />
     </ReactCardFlip>
   );
 };
@@ -103,22 +97,25 @@ const BackCard = ({
 }) => {
   return (
     <Box className="back-card">
-      <CardBackground className="card-background"/>
+      <CardBackground className="card-background" />
       <div className="back-background card-content">
         <StyledScrollbar className="info-container" autoHide={false}>
           <CardMedia className="info-media" component="img" image={devSafeUrl(preset.background)} />
           <ContrastTypography className="info-title">{preset.title}</ContrastTypography>
           <div className="info-text-container">
-            <CustomHeader>Included Datapacks</CustomHeader>
+            <CustomHeader sx={{ color: "cardBackground.contrastText" }}>Included Datapacks</CustomHeader>
             <List className="list">
               {preset.datapacks.map((datapack, index) => (
                 <ListItem className="list-item" key={index}>
                   <FolderIcon color="icon" />
-                  <ListItemText className="list-item-text" primary={<ContrastTypography>{datapack.name}</ContrastTypography>} />
+                  <ListItemText
+                    className="list-item-text"
+                    primary={<ContrastTypography>{datapack.name}</ContrastTypography>}
+                  />
                 </ListItem>
               ))}
             </List>
-            <CustomHeader>Additional Info</CustomHeader>
+            <CustomHeader sx={{ color: "cardBackground.contrastText" }}>Additional Info</CustomHeader>
             <ContrastTypography className="info-description" variant="body1">
               {preset.description}
             </ContrastTypography>
