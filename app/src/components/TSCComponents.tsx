@@ -34,6 +34,7 @@ export const CustomHeader = styled(Typography)(({ theme }) => ({
     height: "20px",
     borderRadius: "2px"
   },
+  color: theme.palette.cardBackground ? "#FFF" : theme.palette.text.primary,
   position: "relative",
   display: "flex",
   alignItems: "center",

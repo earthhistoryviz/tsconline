@@ -23,6 +23,7 @@ declare module "@mui/material/styles" {
     outline: Palette["primary"];
     iconContrastBackground: Palette["primary"];
     accordionLine: Palette["primary"];
+    cardBackground: Palette["primary"];
   }
 
   interface PaletteOptions {
@@ -46,6 +47,7 @@ declare module "@mui/material/styles" {
     outline?: PaletteOptions["primary"];
     iconContrastBackground?: PaletteOptions["primary"];
     accordionLine?: PaletteOptions["primary"];
+    cardBackground?: PaletteOptions["primary"];
   }
 }
 declare module "@mui/material/Button" {
@@ -264,7 +266,7 @@ baseTheme = createTheme(baseTheme, {
 });
 
 const disabled = "#393f40";
-export let lightTheme = createTheme(baseTheme, {
+export let ddeLightTheme = createTheme(baseTheme, {
   palette: {
     mode: "light",
     backgroundColor: baseTheme.palette.augmentColor({
@@ -334,7 +336,7 @@ export let lightTheme = createTheme(baseTheme, {
   }
 });
 
-export let darkTheme = createTheme(baseTheme, {
+export let ddeDarkTheme = createTheme(baseTheme, {
   palette: {
     mode: "dark",
     backgroundColor: baseTheme.palette.augmentColor({
@@ -408,7 +410,7 @@ export let darkTheme = createTheme(baseTheme, {
     }
   }
 });
-export let originalTheme = createTheme(baseTheme, {
+export let originalLightTheme = createTheme(baseTheme, {
   palette: {
     mode: "light",
     backgroundColor: baseTheme.palette.augmentColor({
@@ -419,14 +421,14 @@ export let originalTheme = createTheme(baseTheme, {
     }),
     secondaryBackground: baseTheme.palette.augmentColor({
       color: {
-        main: "#E2ECF9"
+        main: "#e1ebf8"
       },
       name: "secondaryBackground"
     }),
     divider: "#454545dd",
     text: {
-      primary: "#21294a",
-      secondary: "#20385a"
+      primary: "#0B1215",
+      secondary: "#352f36"
     },
     button: baseTheme.palette.augmentColor({
       color: {
@@ -477,9 +479,14 @@ export let originalTheme = createTheme(baseTheme, {
     },
     accordionLine: {
       main: "#88888890"
+    },
+    cardBackground: {
+      light: "#2C307B",
+      main: "#27476E"
     }
   }
 });
+console.log(Color("#334459").darken(0.5).hex());
 export let originalDarkTheme = createTheme(baseTheme, {
   palette: {
     mode: "dark",
@@ -491,13 +498,13 @@ export let originalDarkTheme = createTheme(baseTheme, {
     },
     backgroundColor: baseTheme.palette.augmentColor({
       color: {
-        main: "#1b2836"
+        main: "#1A222D"
       },
       name: "background"
     }),
     secondaryBackground: baseTheme.palette.augmentColor({
       color: {
-        main: "#1f2632"
+        main: "#252E3C"
       },
       name: "secondaryBackground"
     }),
@@ -554,7 +561,7 @@ export let originalDarkTheme = createTheme(baseTheme, {
     }
   }
 });
-originalDarkTheme = createThemeOverrides(originalDarkTheme, originalTheme.palette.button.main);
-originalTheme = createThemeOverrides(originalTheme, originalTheme.palette.button.main);
-darkTheme = createThemeOverrides(darkTheme, darkTheme.palette.button.main);
-lightTheme = createThemeOverrides(lightTheme, lightTheme.palette.button.main);
+originalDarkTheme = createThemeOverrides(originalDarkTheme, originalDarkTheme.palette.button.main);
+originalLightTheme = createThemeOverrides(originalLightTheme, originalLightTheme.palette.button.main);
+ddeDarkTheme = createThemeOverrides(ddeDarkTheme, ddeDarkTheme.palette.button.main);
+ddeLightTheme = createThemeOverrides(ddeLightTheme, ddeLightTheme.palette.button.main);
