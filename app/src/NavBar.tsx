@@ -121,7 +121,7 @@ export const NavBar = observer(function Navbar() {
         <TSCButton buttonType="gradient" onClick={() => actions.initiateChartGeneration(navigate, location.pathname)}>
           Generate Chart
         </TSCButton>
-        {state.isLoggedIn ? (
+        {!state.isLoggedIn ? (
           <TSCAccountMenu />
         ) : (
           <Tab

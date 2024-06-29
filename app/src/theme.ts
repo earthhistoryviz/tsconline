@@ -66,7 +66,7 @@ declare module "@mui/material/SvgIcon" {
   }
 }
 
-function createThemeOverrides(theme: Theme) {
+function createThemeOverrides(theme: Theme, primary: string) {
   return createTheme(theme, {
     components: {
       MuiIconButton: {
@@ -107,7 +107,7 @@ function createThemeOverrides(theme: Theme) {
           {
             props: { variant: "standard" },
             style: {
-              ":after": { borderBottomColor: "#FF9900" }
+              ":after": { borderBottomColor: primary }
             }
           }
         ]
@@ -123,7 +123,7 @@ function createThemeOverrides(theme: Theme) {
         styleOverrides: {
           root: {
             "&.Mui-focused": {
-              color: "#FF9900"
+              color: primary
             }
           }
         }
@@ -132,7 +132,7 @@ function createThemeOverrides(theme: Theme) {
         styleOverrides: {
           root: {
             "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-              borderColor: "#FF9900"
+              borderColor: primary
             }
           }
         }
@@ -408,5 +408,155 @@ export let darkTheme = createTheme(baseTheme, {
     }
   }
 });
-darkTheme = createThemeOverrides(darkTheme);
-lightTheme = createThemeOverrides(lightTheme);
+export let originalTheme = createTheme(baseTheme, {
+  palette: {
+    mode: "light",
+    backgroundColor: baseTheme.palette.augmentColor({
+      color: {
+        main: Color("#8FB7E7").lighten(0.3).toString()
+      },
+      name: "background"
+    }),
+    secondaryBackground: baseTheme.palette.augmentColor({
+      color: {
+        main: "#f2f6fc"
+      },
+      name: "secondaryBackground"
+    }),
+    divider: "#454545dd",
+    text: {
+      primary: "#21294a",
+      secondary: "#20385a",
+      disabled
+    },
+    button: baseTheme.palette.augmentColor({
+      color: {
+        main: "#6693C9"
+      },
+      name: "button"
+    }),
+    secondaryButton: baseTheme.palette.augmentColor({
+      color: {
+        main: "#f64747"
+      },
+      name: "secondaryButton"
+    }),
+    mainGradientLeft: baseTheme.palette.augmentColor({
+      color: {
+        main: "#5e9ad3"
+      },
+      name: "mainGradientLeft"
+    }),
+    mainGradientRight: baseTheme.palette.augmentColor({
+      color: {
+        main: "#457ec4"
+      },
+      name: "mainGradientRight"
+    }),
+    icon: baseTheme.palette.augmentColor({
+      color: {
+        main: "#a8a29e"
+      },
+      name: "icon"
+    }),
+    selection: baseTheme.palette.augmentColor({
+      color: {
+        main: "#FF9900"
+      },
+      name: "selection"
+    }),
+    action: {
+      disabled,
+      disabledBackground: disabled,
+      hover: "#ababab1a"
+    },
+    outline: {
+      main: "#adadad"
+    },
+    iconContrastBackground: {
+      light: "#f4f5f7",
+      main: "#ccd0d5"
+    },
+    accordionLine: {
+      main: "#b5b5b560"
+    }
+  }
+});
+export let originalDarkTheme = createTheme(baseTheme, {
+  palette: {
+    mode: "dark",
+    divider: "#454545dd",
+    text: {
+      primary: "#f6f7f8",
+      secondary: "#c6c6c6",
+      disabled
+    },
+    backgroundColor: baseTheme.palette.augmentColor({
+      color: {
+        main: "#1b2836"
+      },
+      name: "background"
+    }),
+    secondaryBackground: baseTheme.palette.augmentColor({
+      color: {
+        main: "#334459"
+      },
+      name: "secondaryBackground"
+    }),
+    secondaryButton: baseTheme.palette.augmentColor({
+      color: {
+        main: "#f64747"
+      },
+      name: "secondaryButton"
+    }),
+    button: baseTheme.palette.augmentColor({
+      color: {
+        main: "#6693C9"
+      },
+      name: "button"
+    }),
+    mainGradientLeft: baseTheme.palette.augmentColor({
+      color: {
+        main: "#5e9ad3"
+      },
+      name: "mainGradientLeft"
+    }),
+    mainGradientRight: baseTheme.palette.augmentColor({
+      color: {
+        main: "#457ec4"
+      },
+      name: "mainGradientRight"
+    }),
+    icon: baseTheme.palette.augmentColor({
+      color: {
+        main: "#c6c6c6"
+      },
+      name: "icon"
+    }),
+    selection: baseTheme.palette.augmentColor({
+      color: {
+        main: "#FF9900"
+      },
+      name: "selection"
+    }),
+    action: {
+      disabled,
+      disabledBackground: disabled,
+      hover: "#ababab1a"
+    },
+    outline: {
+      main: "#adadad"
+    },
+    iconContrastBackground: {
+      light: "#f4f5f7",
+      main: "#43474e"
+    },
+    accordionLine: {
+      main: "#b5b5b560"
+    }
+  }
+});
+originalDarkTheme = createThemeOverrides(originalDarkTheme, originalTheme.palette.button.main);
+originalTheme = createThemeOverrides(originalTheme, originalTheme.palette.button.main);
+darkTheme = createThemeOverrides(darkTheme, darkTheme.palette.button.main);
+lightTheme = createThemeOverrides(lightTheme, lightTheme.palette.button.main);
