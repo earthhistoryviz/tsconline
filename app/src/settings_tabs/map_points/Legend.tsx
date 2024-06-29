@@ -144,7 +144,10 @@ export const Legend = observer(() => {
               setFilterByPresent={setFilterByPresent}
               toggleColor={toggleColor}
             />
-            <Button color="icon" onClick={() => clearFilter()} className="filter-button">
+            <Button
+              sx={{ color: "secondaryBackground.contrastText" }}
+              onClick={() => clearFilter()}
+              className="filter-button">
               <Typography>Clear Filter</Typography>
             </Button>
           </div>
