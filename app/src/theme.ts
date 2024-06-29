@@ -413,13 +413,13 @@ export let originalTheme = createTheme(baseTheme, {
     mode: "light",
     backgroundColor: baseTheme.palette.augmentColor({
       color: {
-        main: Color("#8FB7E7").lighten(0.3).toString()
+        main: "#EBF2FB"
       },
       name: "background"
     }),
     secondaryBackground: baseTheme.palette.augmentColor({
       color: {
-        main: Color("#8FB7E7").lighten(0.28).toString()
+        main: "#E2ECF9"
       },
       name: "secondaryBackground"
     }),
@@ -460,20 +460,23 @@ export let originalTheme = createTheme(baseTheme, {
     }),
     selection: baseTheme.palette.augmentColor({
       color: {
-        main: "#FF9900"
+        main: "#6693C9"
       },
       name: "selection"
     }),
-    action: {},
+    action: {
+      disabled: "#ccd5d5",
+      hover: "#ababab49"
+    },
     outline: {
-      main: "#adadad"
+      main: "#888888"
     },
     iconContrastBackground: {
       light: "#f4f5f7",
-      main: "#ccd0d5"
+      main: "#a5acb5"
     },
     accordionLine: {
-      main: "#b5b5b560"
+      main: "#88888890"
     }
   }
 });
@@ -530,7 +533,7 @@ export let originalDarkTheme = createTheme(baseTheme, {
     }),
     selection: baseTheme.palette.augmentColor({
       color: {
-        main: "#FF9900"
+        main: "#6693C9"
       },
       name: "selection"
     }),
