@@ -130,7 +130,7 @@ export const Profile = observer(() => {
             navigate("/login");
             break;
           case 409:
-            errorCode = ErrorCodes.INCORRECT_PASSWORD;
+            errorCode = field === "username" ? ErrorCodes.USERNAME_TAKEN : ErrorCodes.INCORRECT_PASSWORD;
             break;
           case 422:
             errorCode = ErrorCodes.RECAPTCHA_FAILED;
