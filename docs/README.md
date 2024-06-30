@@ -1,5 +1,5 @@
 # tsconline
-Documentation([https://earthhistoryviz.github.io/tsconline/docs/#/])
+[Documentation](https://earthhistoryviz.github.io/tsconline/docs/#/)
 ---
 
 ## What are we doing?
