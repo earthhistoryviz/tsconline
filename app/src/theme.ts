@@ -499,7 +499,6 @@ export let originalLightTheme = createTheme(baseTheme, {
     })
   }
 });
-console.log(Color("#334459").darken(0.5).hex());
 export let originalDarkTheme = createTheme(baseTheme, {
   palette: {
     mode: "dark",
