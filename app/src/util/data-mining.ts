@@ -14,29 +14,32 @@ import { normalizeZero } from "./util";
 export function computeWindowStatistics(
   data: number[],
   windowSize: number,
+  stepSize: number,
   stat: DataMiningStatisticApproach
 ): WindowStats[] {
   if (data.length === 0 || windowSize <= 0 || data.some((d) => isNaN(d))) {
     return [];
   }
   data = data.sort((a, b) => a - b);
-  console.log("sorted filted data:" + data);
+  //console.log("sorted filted data:" + data);
   const firstDataPoint = data[0]!;
   const lastDataPoint = data[data.length - 1]!;
-  const windows = Math.ceil((lastDataPoint - firstDataPoint + 1) / windowSize);
+  const windows = Math.floor((lastDataPoint - firstDataPoint + 1) / stepSize);
 
   console.log("windows:" + windows);
-  console.log("firstDatapoint:" + firstDataPoint);
-  console.log("lastDatapoint:" + lastDataPoint);
+  // console.log("firstDatapoint:" + firstDataPoint);
+  //console.log("lastDatapoint:" + lastDataPoint);
 
   const results: WindowStats[] = [];
   let start = data[0]!; // inclusive
-  let end = start + windowSize; // exclusive
+  let end = start + stepSize; // exclusive
 
   for (let i = 0; i < windows; i++) {
     // make sure to include the last value in the last window
-    console.log("i:" + i);
+    //console.log("i:" + i);
     const window = data.filter((d) => d >= start && (d < end || (i === windows - 1 && d === end)));
+    console.log("start: " + start + " ,end: " + end);
+    console.log(window);
     if (window.length === 0) {
       results.push({ windowStart: start, windowEnd: end, value: 0 });
     } else {
@@ -64,8 +67,13 @@ export function computeWindowStatistics(
       results.push({ windowStart: start, windowEnd: end, value: round(normalizeZero(value), 2) });
     }
     if (end > lastDataPoint) break;
-    start = end;
-    end = Math.min(end + windowSize, lastDataPoint);
+    //start = end;
+    end = Math.min(end + stepSize, lastDataPoint);
+    if (end - start > windowSize) {
+      start = end - windowSize
+    } else if (end == lastDataPoint) {
+      start += stepSize;
+    }
   }
   return results;
 }
@@ -86,6 +94,7 @@ type DataPoint = {
 export function computeWindowStatisticsForDataPoints(
   data: DataPoint[],
   windowSize: number,
+  stepSize: number,
   stat: DataMiningStatisticApproach
 ) {
   if (data.length === 0 || windowSize <= 0 || data.some((d) => isNaN(d.value) || isNaN(d.age))) {
@@ -97,15 +106,15 @@ export function computeWindowStatisticsForDataPoints(
   data = data.sort((a, b) => a.age - b.age);
   const results: WindowStats[] = [];
   let start = data[0]!.age;
-  let end = start + windowSize;
-  console.log("filtered data:" + JSON.stringify(data))
-  console.log("length of ftered data is:" + data.length)
-  const testa = [1.21, 3, 5.16, 8.31, 10.21]
+  let end = start + stepSize;
+  // console.log("filtered data:" + JSON.stringify(data))
+  //console.log("length of ftered data is:" + data.length)
+  //const testa = [1.21, 3, 5.16, 8.31, 10.21]
   if (stat === "frequency")
     return computeWindowStatistics(
-      data.map((d) => d.value),
-      //testa,
+      data.map((d) => d.age),
       windowSize,
+      stepSize,
       stat
     );
   for (let i = 0; i < windows; i++) {
@@ -135,19 +144,25 @@ export function computeWindowStatisticsForDataPoints(
       results.push({ windowStart: start, windowEnd: end, value: round(value, 2) });
     }
     if (end > lastDataPointAge) break;
-    start = end;
-    end = Math.min(end + windowSize, lastDataPointAge);
+    end = Math.min(end + stepSize, lastDataPointAge);
+    if (end - start > windowSize) {
+      start = end - windowSize;
+    } else if (end == lastDataPointAge) {
+      start += stepSize;
+    }
   }
   return results;
 }
 
 export function findRangeOfWindowStats(
-  windowStats: WindowStats[]
+  windowStats: WindowStats[],
+  topAge: number,
+  baseAge: number
 ): { min: number; max: number } {
   return windowStats.reduce(
     (acc, curr) => {
-      if (curr.value < acc.min) acc.min = curr.value;
-      if (curr.value > acc.max) acc.max = curr.value;
+      if (curr.value < acc.min && ((curr.windowStart + curr.windowEnd) / 2 >= topAge) && ((curr.windowStart + curr.windowEnd) / 2 <= baseAge)) acc.min = curr.value;
+      if (curr.value > acc.max && ((curr.windowStart + curr.windowEnd) / 2 >= topAge) && ((curr.windowStart + curr.windowEnd) / 2 <= baseAge)) acc.max = curr.value;
       return acc;
     },
     { min: Infinity, max: -Infinity }
