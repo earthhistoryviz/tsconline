@@ -27,7 +27,6 @@ export default observer(function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const theme = state.user.settings.darkMode ? originalDarkTheme : originalLightTheme;
-  // const theme = state.user.settings.darkMode ? darkTheme : lightTheme
   useEffect(() => {
     const backgroundColor = theme.palette.backgroundColor.main;
     document.documentElement.style.backgroundColor = backgroundColor;
