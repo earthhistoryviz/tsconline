@@ -269,10 +269,10 @@ export const defaultChronColumnInfoTSC: ChronColumnInfoTSC = {
 
 export const defaultZoneColumnInfoTSC: ZoneColumnInfoTSC = {
   ...defaultColumnBasicInfoTSC,
-  crunchOuterMargin: 0,
-  crunchInnerMargin: 0,
-  crunchAscendWidth: 0,
-  crunchOneSideSpaceUse: 0,
+  crunchOuterMargin: 5,
+  crunchInnerMargin: 1,
+  crunchAscendWidth: 4,
+  crunchOneSideSpaceUse: 10,
   autoFlip: false,
   orientation: "normal"
 };
@@ -280,8 +280,8 @@ export const defaultZoneColumnInfoTSC: ZoneColumnInfoTSC = {
 export const defaultSequenceColumnInfoTSC: SequenceColumnInfoTSC = {
   ...defaultColumnBasicInfoTSC,
   type: "sequence",
-  labelMarginLeft: 0,
-  labelMarginRight: 0,
+  labelMarginLeft: 5,
+  labelMarginRight: 5,
   graphStyle: "",
   drawNameLabel: false
 };
