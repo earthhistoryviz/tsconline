@@ -27,7 +27,7 @@ const AccordionPositionControls: React.FC<AccordionPositionControlsProps> = ({ c
         <IconButton
           className="custom-icon-button"
           onClick={incrementPosition}
-          sx={{ bgcolor: "iconContrastBackground.main" }}>
+          sx={{ bgcolor: "iconContrastBackground.main", "&:hover": { bgcolor: "rgba(0, 0, 0, 0.2)" } }}>
           <ArrowUpwardIcon sx={{ color: "iconContrastBackground.light" }} />
         </IconButton>
       </div>
@@ -35,7 +35,7 @@ const AccordionPositionControls: React.FC<AccordionPositionControlsProps> = ({ c
         <IconButton
           className="custom-icon-button"
           onClick={decrementPosition}
-          sx={{ bgcolor: "iconContrastBackground.main" }}>
+          sx={{ bgcolor: "iconContrastBackground.main", "&:hover": { bgcolor: "rgba(0, 0, 0, 0.2)" } }}>
           <ArrowDownwardIcon sx={{ color: "iconContrastBackground.light" }} />
         </IconButton>
       </div>
