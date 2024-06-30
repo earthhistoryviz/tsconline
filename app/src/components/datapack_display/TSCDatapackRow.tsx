@@ -45,7 +45,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
         borderColor="divider"
         bgcolor={
           value
-            ? Color(theme.palette.button.light).alpha(0.2).string()
+            ? Color(theme.palette.button.light).alpha(0.4).string()
             : Color(theme.palette.secondaryBackground.light).alpha(0.5).string()
         }
         onClick={async (e) => {

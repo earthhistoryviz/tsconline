@@ -121,7 +121,7 @@ export const state = observable<State>({
     isGoogleUser: false,
     isAdmin: false,
     settings: {
-      darkMode: true,
+      darkMode: false,
       language: "English"
     }
   },
