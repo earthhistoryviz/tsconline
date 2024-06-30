@@ -7,7 +7,7 @@ import { Settings } from "./Settings";
 import { Chart } from "./Chart";
 import { Help } from "./Help";
 import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
-import { darkTheme, lightTheme } from "./theme";
+import { originalDarkTheme, originalLightTheme } from "./theme";
 import { useContext, useEffect } from "react";
 import { context } from "./state";
 import { About } from "./About";
@@ -26,7 +26,7 @@ export default observer(function App() {
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
   const location = useLocation();
-  const theme = state.user.settings.darkMode ? darkTheme : lightTheme;
+  const theme = state.user.settings.darkMode ? originalDarkTheme : originalLightTheme;
   useEffect(() => {
     const backgroundColor = theme.palette.backgroundColor.main;
     document.documentElement.style.backgroundColor = backgroundColor;

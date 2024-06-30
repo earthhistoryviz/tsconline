@@ -33,7 +33,7 @@
 }
 
 .add-circle:hover {
-  color: rgba(239, 239, 239, 0.733);
+  color: rgba(0, 0, 0, 0.4);
   scale: 1.1;
 }
 

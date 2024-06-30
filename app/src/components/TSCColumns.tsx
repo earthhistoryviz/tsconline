@@ -16,14 +16,7 @@ export const Accordion = styled((props: AccordionProps) => (
 }));
 
 export const ColumnContainer = styled(Box)(({ theme }) => ({
-  // backgroundColor: theme.palette.background.default,
   display: "flex",
   alignItems: "center",
   padding: theme.spacing(0)
 }));
-// listItem: {
-//   '&:hover': {
-//     backgroundColor: theme.palette.selection.main,
-//     cursor: 'pointer'
-//   },
-// },
