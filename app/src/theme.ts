@@ -155,7 +155,7 @@ function createThemeOverrides(theme: Theme, primary: string) {
             props: { variant: "standard" },
             style: {
               "& .MuiInputBase-root:after": {
-                borderBottom: "2px solid #FF9900"
+                borderBottom: `2px solid ${primary}`
               }
             }
           }
