@@ -29,7 +29,7 @@ import {
   isEventFrequency
 } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
-import { WindowStats, convertDataMiningPointDataTypeToDataMiningStatisticApproach } from "../../types";
+import { DataMiningStatisticApproach, WindowStats, convertDataMiningPointDataTypeToDataMiningStatisticApproach } from "../../types";
 import {
   computeWindowStatistics,
   computeWindowStatisticsForDataPoints,

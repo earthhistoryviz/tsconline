@@ -120,11 +120,9 @@ export function computeWindowStatisticsForDataPoints(
   for (let i = 0; i < windows; i++) {
     const window = data.filter((d) => d.age >= start && (d.age < end || (i === windows - 1 && d.age === end)));
     if (window.length === 0) {
-      const val = (stat == "minimum" || stat == "maximum") ? (data.filter((d) => d.age >= start))[0].value : 0;
+      const val = (stat == "maximum" || stat == "minimum") ? (data.filter((d) => d.age >= start))[0].value : 0;
       results.push({ windowStart: start, windowEnd: end, value: val });
     } else {
-      const firstWindowPoint = window[0]!;
-      const lastWindowPoint = window[window.length - 1]!;
       let value = 0;
       switch (stat) {
         case "minimum":
@@ -137,8 +135,14 @@ export function computeWindowStatisticsForDataPoints(
           value = window.reduce((a, b) => a + b.value, 0) / window.length;
           break;
         case "rateOfChange":
-          if (!firstWindowPoint.value) value = 0;
-          else value = (lastWindowPoint.value - firstWindowPoint.value) / firstWindowPoint.value;
+          const sumAge = window.reduce((a, b) => a + b.age, 0);
+          const sumAgeSquare = window.reduce((a, b) => a + Math.pow(b.age, 2), 0);
+          const sumVal = window.reduce((a, b) => a + b.value, 0);
+          const sumAgeVal = window.reduce((a, b) => a + b.age * b.value, 0);
+          let slope = (window.length * sumAgeVal) - (sumAge * sumVal);
+          slope /= (window.length * sumAgeSquare) - (Math.pow(sumAge, 2));
+          value = isNaN(slope) ? 0 : slope;
+          value = -value; //fixes the assumption that we're looking in the positive MA year direction
           break;
       }
       results.push({ windowStart: start, windowEnd: end, value: round(value, 2) });
@@ -157,8 +161,17 @@ export function computeWindowStatisticsForDataPoints(
 export function findRangeOfWindowStats(
   windowStats: WindowStats[],
   topAge: number,
-  baseAge: number
+  baseAge: number,
+  stat: DataMiningStatisticApproach
 ): { min: number; max: number } {
+  if (stat == "average") {
+    return windowStats.reduce((acc, curr) => {
+      if (curr.value != 0 && curr.value < acc.min && ((curr.windowStart + curr.windowEnd) / 2 >= topAge) && ((curr.windowStart + curr.windowEnd) / 2 <= baseAge)) acc.min = curr.value;
+      if (curr.value != 0 && curr.value > acc.max && ((curr.windowStart + curr.windowEnd) / 2 >= topAge) && ((curr.windowStart + curr.windowEnd) / 2 <= baseAge)) acc.max = curr.value;
+      return acc;
+    },
+      { min: Infinity, max: -Infinity });
+  }
   return windowStats.reduce(
     (acc, curr) => {
       if (curr.value < acc.min && ((curr.windowStart + curr.windowEnd) / 2 >= topAge) && ((curr.windowStart + curr.windowEnd) / 2 <= baseAge)) acc.min = curr.value;
