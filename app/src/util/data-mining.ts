@@ -100,9 +100,9 @@ export function computeWindowStatisticsForDataPoints(
   if (data.length === 0 || windowSize <= 0 || data.some((d) => isNaN(d.value) || isNaN(d.age))) {
     return [];
   }
-  const firstDataPoint = data[0]!.age;
+  const firstDataPointAge = data[0]!.age;
   const lastDataPointAge = data[data.length - 1]!.age;
-  const windows = Math.ceil((lastDataPointAge - firstDataPoint + 1) / windowSize);
+  const windows = Math.floor((lastDataPointAge - firstDataPointAge + 1) / stepSize);
   data = data.sort((a, b) => a.age - b.age);
   const results: WindowStats[] = [];
   let start = data[0]!.age;
@@ -120,8 +120,8 @@ export function computeWindowStatisticsForDataPoints(
   for (let i = 0; i < windows; i++) {
     const window = data.filter((d) => d.age >= start && (d.age < end || (i === windows - 1 && d.age === end)));
     if (window.length === 0) {
-      results.push({ windowStart: start, windowEnd: end, value: 0 });
-      //continue;
+      const val = (stat == "minimum" || stat == "maximum") ? (data.filter((d) => d.age >= start))[0].value : 0;
+      results.push({ windowStart: start, windowEnd: end, value: val });
     } else {
       const firstWindowPoint = window[0]!;
       const lastWindowPoint = window[window.length - 1]!;
