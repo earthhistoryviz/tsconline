@@ -17,7 +17,6 @@ import * as fsPromisesModule from "fs/promises";
 import * as streamPromisesModule from "stream/promises";
 import * as fsModule from "fs";
 import * as metadataModule from "../src/file-metadata-handler";
-
 vi.mock("../src/database", async (importOriginal) => {
   const actual = await importOriginal<typeof databaseModule>();
   return {
@@ -146,6 +145,7 @@ const testToken: Verification = {
   reason: "verify"
 };
 let cookieHeader: Record<string, string>;
+let deleteSessionSpy: MockInstance;
 
 beforeAll(async () => {
   app = fastify();
@@ -162,6 +162,9 @@ beforeAll(async () => {
     }
   });
   await app.register(fastifyMultipart);
+  app.addHook("onRequest", async (request) => {
+    deleteSessionSpy = vi.spyOn(request.session, "delete");
+  });
   app.post("/signup", loginRoutes.signup);
   app.post("/oauth", loginRoutes.googleLogin);
   app.post("/login", loginRoutes.login);
@@ -2080,6 +2083,7 @@ describe("login-routes tests", () => {
         expect(findUserSpy).toHaveBeenCalledWith({ username: payload.newUsername });
         expect(updateUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid }, { username: payload.newUsername });
         expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+        expect(deleteSessionSpy).toHaveBeenCalled();
         expect(response.statusCode).toBe(200);
         expect(response.json().message).toBe("Username changed");
       });
@@ -2213,6 +2217,7 @@ describe("login-routes tests", () => {
 
         expect(updateUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid }, { hashedPassword: "hashedPassword" });
         expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+        expect(deleteSessionSpy).toHaveBeenCalled();
         expect(response.statusCode).toBe(200);
         expect(response.json().message).toBe("Password changed");
       });
@@ -2242,6 +2247,7 @@ describe("login-routes tests", () => {
 
         expect(deleteUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
         expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+        expect(deleteSessionSpy).toHaveBeenCalled();
         expect(response.statusCode).toBe(500);
         expect(response.json().error).toBe("Unknown Error");
       });
@@ -2249,6 +2255,8 @@ describe("login-routes tests", () => {
       it("should return 200 if rm fails", async () => {
         vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
         vi.mocked(fsPromisesModule.rm).mockRejectedValueOnce(new Error("Filesystem Error"));
+        const loadFileMetadataSpy = vi.spyOn(metadataModule, "loadFileMetadata");
+        const writeFileSpy = vi.spyOn(fsPromisesModule, "writeFile");
 
         const response = await app.inject({
           method: "POST",
@@ -2257,7 +2265,21 @@ describe("login-routes tests", () => {
         });
 
         expect(deleteUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
+        expect(loadFileMetadataSpy).toHaveBeenCalledWith("file-metadata.json");
+        expect(writeFileSpy).toHaveBeenCalledWith(
+          "file-metadata.json",
+          JSON.stringify({
+            "assets/uploads/0c981a54-18d9-4aad-ba14-6f644aa9eec6/datapacks/AfricaBight.map": {
+              fileName: "AfricaBight.map",
+              lastUpdated: "2024-05-27T14:11:46.280Z",
+              decryptedFilepath: "assets/uploads/0c981a54-18d9-4aad-ba14-6f644aa9eec6/decrypted/AfricaBight",
+              mapPackIndexFilepath: "assets/uploads/0c981a54-18d9-4aad-ba14-6f644aa9eec6/MapPackIndex.json",
+              datapackIndexFilepath: "assets/uploads/0c981a54-18d9-4aad-ba14-6f644aa9eec6/DatapackIndex.json"
+            }
+          })
+        );
         expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+        expect(deleteSessionSpy).toHaveBeenCalled();
         expect(response.statusCode).toBe(200);
         expect(response.json().message).toBe("Profile deleted");
       });
@@ -2290,6 +2312,7 @@ describe("login-routes tests", () => {
           })
         );
         expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+        expect(deleteSessionSpy).toHaveBeenCalled();
         expect(response.statusCode).toBe(200);
         expect(response.json().message).toBe("Profile deleted");
       });
@@ -2303,6 +2326,7 @@ describe("login-routes tests", () => {
           headers: cookieHeader
         });
 
+        expect(deleteSessionSpy).toHaveBeenCalled();
         expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
         expect(response.statusCode).toBe(200);
         expect(response.json().message).toBe("Logged out");
