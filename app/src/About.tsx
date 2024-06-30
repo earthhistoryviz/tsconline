@@ -5,7 +5,6 @@ import { TSCIcon } from "./components";
 import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import "./About.css";
 import { AboutCard } from "./components/AboutCard";
-
 import LeytonPic from "./assets/aboutPictures/LeytonBostre.jpg";
 import JacquiPic from "./assets/aboutPictures/JacquiLi.jpeg";
 import PaoloPic from "./assets/aboutPictures/PaoloGumasing.jpeg";
