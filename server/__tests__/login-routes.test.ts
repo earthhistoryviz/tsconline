@@ -85,10 +85,11 @@ const testToken: Verification = {
   expiresAt: mockDate.toISOString(),
   reason: "verify"
 };
+let cookieHeader: string;
 
 beforeAll(async () => {
   app = fastify();
-  app.register(fastifySecureSession, {
+  await app.register(fastifySecureSession, {
     cookieName: "loginSession",
     key: Buffer.from("d30a7eae1e37a08d6d5c65ac91dfbc75b54ce34dd29153439979364046cc06ae", "hex"),
     cookie: {
@@ -106,8 +107,13 @@ beforeAll(async () => {
   app.post("/verify", loginRoutes.verifyEmail);
   app.post("/resend", loginRoutes.resendVerificationEmail);
   app.post("/send-forgot-password-email", loginRoutes.sendForgotPasswordEmail);
+  app.post("/forgot-password", loginRoutes.forgotPassword);
+  app.post("/change-email", loginRoutes.changeEmail);
+  app.post("/account-recovery", loginRoutes.accountRecovery);
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   vi.setSystemTime(mockDate);
+  const session = app.createSecureSession({ uuid: testUser.uuid });
+  cookieHeader = encodeURIComponent(app.encodeSecureSession(session));
   await app.listen({ host: "", port: 8000 });
 });
 
@@ -122,6 +128,8 @@ describe("login-routes tests", () => {
   let deleteVerificationSpy: MockInstance;
   let createUserSpy: MockInstance;
   let findUserSpy: MockInstance;
+  let updateUserSpy: MockInstance;
+  let findVerificationSpy: MockInstance;
   function checkSession(cookieHeader: string): boolean {
     const cookie = decodeURIComponent(cookieHeader).split(" ")[0];
     const session = cookie?.split("loginSession=")[1];
@@ -135,6 +143,8 @@ describe("login-routes tests", () => {
     deleteVerificationSpy = vi.spyOn(databaseModule, "deleteVerification");
     createUserSpy = vi.spyOn(databaseModule, "createUser");
     findUserSpy = vi.spyOn(databaseModule, "findUser");
+    updateUserSpy = vi.spyOn(databaseModule, "updateUser");
+    findVerificationSpy = vi.spyOn(databaseModule, "findVerification");
   });
 
   describe("/signup", () => {
@@ -503,6 +513,20 @@ describe("login-routes tests", () => {
       expect(response.json().error).toBe("Account locked");
     });
 
+    it("should return 500 if find user fails", async () => {
+      vi.mocked(databaseModule.findUser).mockRejectedValueOnce(new Error("Database Error"));
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/login",
+        payload: payload
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Unknown Error");
+    });
+
     it("should return 200 if successful", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
 
@@ -526,6 +550,20 @@ describe("login-routes tests", () => {
     };
     it("should return 404 if token is not found", async () => {
       vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/verify",
+        payload: payload
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(404);
+      expect(response.json().error).toBe("Verification token not found");
+    });
+
+    it("should return 404 if token reason is not verify", async () => {
+      vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([{ ...testToken, reason: "password" }]);
 
       const response = await app.inject({
         method: "POST",
@@ -868,7 +906,7 @@ describe("login-routes tests", () => {
     ])("should return 400 if form is invalid", async (invalidPayload) => {
       const response = await app.inject({
         method: "POST",
-        url: "/signup",
+        url: "/send-forgot-password-email",
         payload: invalidPayload
       });
 
@@ -1018,6 +1056,633 @@ describe("login-routes tests", () => {
           message: expect.stringContaining("You have requested to reset your password")
         })
       );
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(200);
+      expect(response.json().message).toBe("Email sent");
+    });
+  });
+
+  describe("/forgot-password", () => {
+    const payload = {
+      token: "test",
+      password: "password123",
+      recaptchaToken: "test"
+    };
+
+    test.each([[{ ...payload, token: "" }], [{ ...payload, password: "" }], [{ ...payload, recaptchaToken: "" }]])(
+      "should return 400 if form is invalid",
+      async (invalidPayload) => {
+        const response = await app.inject({
+          method: "POST",
+          url: "/forgot-password",
+          payload: invalidPayload
+        });
+
+        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+        expect(response.statusCode).toBe(400);
+        expect(response.json().error).toBe("Invalid form");
+      }
+    );
+
+    it("should return 422 if recaptcha fails", async () => {
+      const spy = vi.spyOn(verifyModule, "checkRecaptchaToken").mockResolvedValueOnce(0.0);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/forgot-password",
+        payload: payload
+      });
+
+      expect(spy).toHaveBeenCalledOnce();
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(422);
+      expect(response.json().error).toBe("Recaptcha failed");
+    });
+
+    it("should return 404 if token is not found", async () => {
+      const response = await app.inject({
+        method: "POST",
+        url: "/forgot-password",
+        payload: payload
+      });
+
+      expect(findVerificationSpy).toHaveBeenCalledWith({ token: payload.token });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(404);
+      expect(response.json().error).toBe("Password reset token not found");
+    });
+
+    it("should return 404 if token reason is not password", async () => {
+      vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([{ ...testToken, reason: "verify" }]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/forgot-password",
+        payload: payload
+      });
+
+      expect(findVerificationSpy).toHaveBeenCalledWith({ token: payload.token });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(404);
+      expect(response.json().error).toBe("Password reset token not found");
+    });
+
+    it("should return 401 if token is expired", async () => {
+      const expiresAt = new Date(mockDate);
+      expiresAt.setMinutes(expiresAt.getMinutes() - 16);
+      vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([
+        { ...testToken, expiresAt: expiresAt.toISOString(), reason: "password" }
+      ]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/forgot-password",
+        payload: payload
+      });
+
+      expect(deleteVerificationSpy).toHaveBeenCalledWith({ token: payload.token, reason: "password" });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(401);
+      expect(response.json().error).toBe("Password reset token expired or invalid");
+    });
+
+    it("should return 500 if find verification fails", async () => {
+      vi.mocked(databaseModule.findVerification).mockRejectedValueOnce(new Error("Database Error"));
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/forgot-password",
+        payload: payload
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Unknown Error");
+    });
+
+    it("should return 500 if delete verification fails", async () => {
+      vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([{ ...testToken, reason: "password" }]);
+      vi.mocked(databaseModule.deleteVerification).mockRejectedValueOnce(new Error("Database Error"));
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/forgot-password",
+        payload: payload
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Unknown Error");
+    });
+
+    it("should return 500 if user update fails", async () => {
+      vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([{ ...testToken, reason: "password" }]);
+      vi.mocked(databaseModule.updateUser).mockRejectedValueOnce(new Error("Database Error"));
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/forgot-password",
+        payload: payload
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Unknown Error");
+    });
+
+    it("should return 500 if user find fails", async () => {
+      vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([{ ...testToken, reason: "password" }]);
+      const response = await app.inject({
+        method: "POST",
+        url: "/forgot-password",
+        payload: payload
+      });
+
+      expect(findUserSpy).toHaveBeenCalledWith({ userId: testUser.userId });
+      expect(updateUserSpy).toHaveBeenCalledWith(
+        { userId: testUser.userId },
+        { hashedPassword: "hashedPassword", invalidateSession: 0 }
+      );
+      expect(deleteVerificationSpy).toHaveBeenCalledWith({ token: payload.token, reason: "password" });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Unknown Error");
+    });
+
+    it("should return 200 if successful", async () => {
+      vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([{ ...testToken, reason: "password" }]);
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/forgot-password",
+        payload: payload
+      });
+
+      expect(findUserSpy).toHaveBeenCalledWith({ userId: testUser.userId });
+      expect(updateUserSpy).toHaveBeenCalledWith(
+        { userId: testUser.userId },
+        { hashedPassword: "hashedPassword", invalidateSession: 0 }
+      );
+      expect(deleteVerificationSpy).toHaveBeenCalledWith({ token: payload.token, reason: "password" });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(true);
+      expect(response.statusCode).toBe(200);
+      expect(response.json().message).toBe("Password reset");
+    });
+  });
+
+  describe("/change-email", () => {
+    const payload = {
+      newEmail: "newtest@email.com",
+      recaptchaToken: "test"
+    };
+    let header: { cookie: string };
+    beforeEach(() => {
+      header = { cookie: `loginSession=${cookieHeader}` };
+    });
+
+    it("should return 500 if email service is not configured", async () => {
+      process.env.EMAIL_USER = "";
+      process.env.EMAIL_PASS = "";
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-email",
+        payload: payload
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Email service not configured");
+    });
+
+    test.each([
+      [{ ...payload, newEmail: "" }],
+      [{ ...payload, newEmail: "test" }],
+      [{ ...payload, newEmail: "test@email" }],
+      [{ ...payload, recaptchaToken: "" }]
+    ])("should return 400 if form is invalid", async (invalidPayload) => {
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-email",
+        payload: invalidPayload,
+        headers: header
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(400);
+      expect(response.json().error).toBe("Invalid form");
+    });
+
+    it("should return 401 if user is not logged in", async () => {
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-email",
+        payload: payload
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(401);
+      expect(response.json().error).toBe("Not logged in");
+    });
+
+    it("should return 422 if recaptcha fails", async () => {
+      const spy = vi.spyOn(verifyModule, "checkRecaptchaToken").mockResolvedValueOnce(0.0);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-email",
+        payload: payload,
+        headers: header
+      });
+
+      expect(spy).toHaveBeenCalledOnce();
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(422);
+      expect(response.json().error).toBe("Recaptcha failed");
+    });
+
+    it("should return 500 if user doesn't exist", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-email",
+        payload: payload,
+        headers: header
+      });
+
+      expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Unknown Error");
+    });
+
+    it("should return 500 if user update fails", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+      vi.mocked(databaseModule.updateUser).mockRejectedValueOnce(new Error("Database Error"));
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-email",
+        payload: payload,
+        headers: header
+      });
+
+      expect(updateUserSpy).toHaveBeenCalledWith(
+        { userId: testUser.userId },
+        { email: payload.newEmail, emailVerified: 0 }
+      );
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Unknown Error");
+    });
+
+    it("should return 500 if create verification fails", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+      vi.mocked(databaseModule.createVerification).mockRejectedValueOnce(new Error("Database Error"));
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-email",
+        payload: payload,
+        headers: header
+      });
+
+      expect(createVerificationSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: testUser.userId, token: "test", reason: "verify" })
+      );
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Unknown Error");
+    });
+
+    it("should return 500 if delete verification fails", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+      vi.mocked(databaseModule.deleteVerification).mockRejectedValueOnce(new Error("Database Error"));
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-email",
+        payload: payload,
+        headers: header
+      });
+
+      expect(deleteVerificationSpy).toHaveBeenCalledWith({ userId: testUser.userId, reason: "verify" });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Unknown Error");
+    });
+
+    it("should return 200 if new email is the same as old email", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([
+        { ...testUser, email: "newtest@email.com", hashedPassword: null }
+      ]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-email",
+        payload: payload,
+        headers: header
+      });
+
+      expect(emailSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ to: payload.newEmail, title: "Email Change Alert" })
+      );
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(200);
+      expect(response.json().message).toBe("Email changed");
+    });
+
+    it("should return 200 if user is google user", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, hashedPassword: null }]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-email",
+        payload: payload,
+        headers: header
+      });
+
+      expect(emailSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ to: payload.newEmail, link: expect.stringContaining("/verify?token=test") })
+      );
+      expect(updateUserSpy).toHaveBeenCalledWith(
+        { userId: testUser.userId },
+        { username: payload.newEmail, email: payload.newEmail, hashedPassword: "hashedPassword", emailVerified: 0 }
+      );
+      const expiresAt = new Date(mockDate);
+      expiresAt.setHours(expiresAt.getHours() + 1);
+      expect(createVerificationSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: testUser.userId,
+          token: "test",
+          expiresAt: expiresAt.toISOString(),
+          reason: "verify"
+        })
+      );
+      expect(emailSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: testUser.email,
+          link: expect.stringContaining(`/account-recovery?token=test&email=${testUser.email}`)
+        })
+      );
+      expiresAt.setHours(expiresAt.getHours() + 23);
+      expect(createVerificationSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: testUser.userId,
+          token: "test",
+          expiresAt: expiresAt.toISOString(),
+          reason: "invalidate"
+        })
+      );
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(200);
+      expect(response.json().message).toBe("Email changed");
+    });
+
+    it("should return 200 if user is user/pass user", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-email",
+        payload: payload,
+        headers: header
+      });
+
+      expect(updateUserSpy).toHaveBeenCalledWith(
+        { userId: testUser.userId },
+        { email: payload.newEmail, emailVerified: 0 }
+      );
+      expect(deleteVerificationSpy).toHaveBeenCalledWith({ userId: testUser.userId, reason: "verify" });
+      expect(deleteVerificationSpy).toHaveBeenCalledWith({ userId: testUser.userId, reason: "password" });
+      expect(emailSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ to: payload.newEmail, link: expect.stringContaining("/verify?token=test") })
+      );
+      const expiresAt = new Date(mockDate);
+      expiresAt.setHours(expiresAt.getHours() + 1);
+      expect(createVerificationSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: testUser.userId,
+          token: "test",
+          expiresAt: expiresAt.toISOString(),
+          reason: "verify"
+        })
+      );
+      expect(emailSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: testUser.email,
+          link: expect.stringContaining(`/account-recovery?token=test&email=${testUser.email}`)
+        })
+      );
+      expiresAt.setHours(expiresAt.getHours() + 23);
+      expect(createVerificationSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: testUser.userId,
+          token: "test",
+          expiresAt: expiresAt.toISOString(),
+          reason: "invalidate"
+        })
+      );
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(200);
+      expect(response.json().message).toBe("Email changed");
+    });
+  });
+
+  describe("/account-recovery", () => {
+    const payload = {
+      token: "test",
+      email: testUser.email
+    };
+    it("should return 500 if email service is not configured", async () => {
+      process.env.EMAIL_USER = "";
+      process.env.EMAIL_PASS = "";
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/account-recovery",
+        payload: payload
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Email service not configured");
+    });
+
+    test.each([
+      [{ ...payload, token: "" }],
+      [{ ...payload, email: "" }],
+      [{ ...payload, email: "test" }],
+      [{ ...payload, email: "test@email" }]
+    ])("should return 400 if form is invalid", async (invalidPayload) => {
+      const response = await app.inject({
+        method: "POST",
+        url: "/account-recovery",
+        payload: invalidPayload
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(400);
+      expect(response.json().error).toBe("No token or email");
+    });
+
+    it("should return 404 if token is not found", async () => {
+      vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/account-recovery",
+        payload: payload
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(404);
+      expect(response.json().error).toBe("Token not found");
+    });
+
+    it("should return 404 if reason is not invalidate", async () => {
+      vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([{ ...testToken, reason: "password" }]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/account-recovery",
+        payload: payload
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(404);
+      expect(response.json().error).toBe("Token not found");
+    });
+
+    it("should return 500 if find user fails", async () => {
+      vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([{ ...testToken, reason: "invalidate" }]);
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/account-recovery",
+        payload: payload
+      });
+
+      expect(findUserSpy).toHaveBeenCalledWith({ userId: testUser.userId });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Unknown Error");
+    });
+
+    it("should return 401 if token is expired", async () => {
+      const expiresAt = new Date(mockDate);
+      expiresAt.setMinutes(expiresAt.getMinutes() - 16);
+      vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([
+        { ...testToken, expiresAt: expiresAt.toISOString(), reason: "invalidate" }
+      ]);
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/account-recovery",
+        payload: payload
+      });
+
+      expect(deleteVerificationSpy).toHaveBeenCalledWith({ token: payload.token, reason: "invalidate" });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(401);
+      expect(response.json().error).toBe("Token expired");
+    });
+
+    it("should return 500 if delete verification fails", async () => {
+      vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([{ ...testToken, reason: "invalidate" }]);
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+      vi.mocked(databaseModule.deleteVerification).mockRejectedValueOnce(new Error("Database Error"));
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/account-recovery",
+        payload: payload
+      });
+
+      expect(deleteVerificationSpy).toHaveBeenCalledWith({ userId: testUser.userId, reason: "password" });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Unknown Error");
+    });
+
+    it("should return 500 if user update fails", async () => {
+      vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([{ ...testToken, reason: "invalidate" }]);
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+      vi.mocked(databaseModule.updateUser).mockRejectedValueOnce(new Error("Database Error"));
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/account-recovery",
+        payload: payload
+      });
+
+      expect(updateUserSpy).toHaveBeenCalledWith(
+        { userId: testUser.userId },
+        { email: testUser.email, emailVerified: 1, hashedPassword: "hashedPassword", invalidateSession: 1 }
+      );
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Unknown Error");
+    });
+
+    it("should return 500 if create verification fails", async () => {
+      vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([{ ...testToken, reason: "invalidate" }]);
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+      vi.mocked(databaseModule.createVerification).mockRejectedValueOnce(new Error("Database Error"));
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/account-recovery",
+        payload: payload
+      });
+
+      expect(createVerificationSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: testUser.userId,
+          token: "test",
+          expiresAt: expect.any(String),
+          reason: "password"
+        })
+      );
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Unknown Error");
+    });
+
+    it("should return 200 if successful", async () => {
+      vi.mocked(databaseModule.findVerification).mockResolvedValueOnce([{ ...testToken, reason: "invalidate" }]);
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/account-recovery",
+        payload: payload
+      });
+
+      expect(deleteVerificationSpy).toHaveBeenCalledWith({ userId: testUser.userId, reason: "password" });
+      const expiresAt = new Date(mockDate);
+      expiresAt.setHours(expiresAt.getHours() + 1);
+      expect(createVerificationSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: testUser.userId,
+          token: "test",
+          expiresAt: expiresAt.toISOString(),
+          reason: "password"
+        })
+      );
+      expect(emailSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ to: testUser.email, link: expect.stringContaining("/reset-password?token=test") })
+      );
+      expect(updateUserSpy).toHaveBeenCalledWith(
+        { userId: testUser.userId },
+        { email: testUser.email, emailVerified: 1, hashedPassword: "hashedPassword", invalidateSession: 1 }
+      );
+      expect(deleteVerificationSpy).toHaveBeenCalledWith({ userId: testUser.userId, reason: "verify" });
+      expect(deleteVerificationSpy).toHaveBeenCalledWith({ userId: testUser.userId, reason: "invalidate" });
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(200);
       expect(response.json().message).toBe("Email sent");
