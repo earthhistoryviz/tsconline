@@ -1,4 +1,4 @@
-import { first, round } from "lodash";
+import { round } from "lodash";
 import { DataMiningStatisticApproach, WindowStats } from "../types";
 import { normalizeZero } from "./util";
 
@@ -21,14 +21,9 @@ export function computeWindowStatistics(
     return [];
   }
   data = data.sort((a, b) => a - b);
-  //console.log("sorted filted data:" + data);
   const firstDataPoint = data[0]!;
   const lastDataPoint = data[data.length - 1]!;
   const windows = Math.floor((lastDataPoint - firstDataPoint + 1) / stepSize);
-
-  console.log("windows:" + windows);
-  // console.log("firstDatapoint:" + firstDataPoint);
-  //console.log("lastDatapoint:" + lastDataPoint);
 
   const results: WindowStats[] = [];
   let start = data[0]!; // inclusive
@@ -36,12 +31,10 @@ export function computeWindowStatistics(
 
   for (let i = 0; i < windows; i++) {
     // make sure to include the last value in the last window
-    //console.log("i:" + i);
     const window = data.filter((d) => d >= start && (d < end || (i === windows - 1 && d === end)));
-    console.log("start: " + start + " ,end: " + end);
-    console.log(window);
     if (window.length === 0) {
-      results.push({ windowStart: start, windowEnd: end, value: 0 });
+      const val = stat == "maximum" || stat == "minimum" ? data.filter((d) => d >= start)[0]! : 0;
+      results.push({ windowStart: start, windowEnd: end, value: val });
     } else {
       const firstWindowPoint = window[0]!;
       const lastWindowPoint = window[window.length - 1]!;
@@ -50,16 +43,16 @@ export function computeWindowStatistics(
         case "frequency":
           value = window.length;
           break;
-        case "minimum":
+        case "minimum": // @jacqui: Lmk if there's anycase rateOfChange is calculated through this function. If not then I think we can just remove it.
           value = Math.min(...window);
           break;
-        case "maximum":
+        case "maximum": // @jacqui: Lmk if there's anycase rateOfChange is calculated through this function. If not then I think we can just remove it.
           value = Math.max(...window);
           break;
-        case "average":
+        case "average": // @jacqui: Lmk if there's anycase rateOfChange is calculated through this function. If not then I think we can just remove it.
           value = window.reduce((a, b) => a + b, 0) / window.length;
           break;
-        case "rateOfChange":
+        case "rateOfChange": // @jacqui: Lmk if there's anycase rateOfChange is calculated through this function. If not then I think we can just it. especially this one, bc the data only contains age, we are unable to apply the correct formula to calculate the correct rate of change.
           if (!firstWindowPoint) value = 0;
           else value = (lastWindowPoint - firstWindowPoint) / firstWindowPoint;
           break;
@@ -67,10 +60,9 @@ export function computeWindowStatistics(
       results.push({ windowStart: start, windowEnd: end, value: round(normalizeZero(value), 2) });
     }
     if (end > lastDataPoint) break;
-    //start = end;
     end = Math.min(end + stepSize, lastDataPoint);
     if (end - start > windowSize) {
-      start = end - windowSize
+      start = end - windowSize;
     } else if (end == lastDataPoint) {
       start += stepSize;
     }
@@ -107,9 +99,6 @@ export function computeWindowStatisticsForDataPoints(
   const results: WindowStats[] = [];
   let start = data[0]!.age;
   let end = start + stepSize;
-  // console.log("filtered data:" + JSON.stringify(data))
-  //console.log("length of ftered data is:" + data.length)
-  //const testa = [1.21, 3, 5.16, 8.31, 10.21]
   if (stat === "frequency")
     return computeWindowStatistics(
       data.map((d) => d.age),
@@ -120,7 +109,7 @@ export function computeWindowStatisticsForDataPoints(
   for (let i = 0; i < windows; i++) {
     const window = data.filter((d) => d.age >= start && (d.age < end || (i === windows - 1 && d.age === end)));
     if (window.length === 0) {
-      const val = (stat == "maximum" || stat == "minimum") ? (data.filter((d) => d.age >= start))[0].value : 0;
+      const val = stat == "maximum" || stat == "minimum" ? data.filter((d) => d.age >= start)[0]!.value : 0;
       results.push({ windowStart: start, windowEnd: end, value: val });
     } else {
       let value = 0;
@@ -134,16 +123,17 @@ export function computeWindowStatisticsForDataPoints(
         case "average":
           value = window.reduce((a, b) => a + b.value, 0) / window.length;
           break;
-        case "rateOfChange":
+        case "rateOfChange": {
           const sumAge = window.reduce((a, b) => a + b.age, 0);
           const sumAgeSquare = window.reduce((a, b) => a + Math.pow(b.age, 2), 0);
           const sumVal = window.reduce((a, b) => a + b.value, 0);
           const sumAgeVal = window.reduce((a, b) => a + b.age * b.value, 0);
-          let slope = (window.length * sumAgeVal) - (sumAge * sumVal);
-          slope /= (window.length * sumAgeSquare) - (Math.pow(sumAge, 2));
+          let slope = window.length * sumAgeVal - sumAge * sumVal;
+          slope /= window.length * sumAgeSquare - Math.pow(sumAge, 2);
           value = isNaN(slope) ? 0 : slope;
           value = -value; //fixes the assumption that we're looking in the positive MA year direction
           break;
+        }
       }
       results.push({ windowStart: start, windowEnd: end, value: round(value, 2) });
     }
@@ -165,17 +155,41 @@ export function findRangeOfWindowStats(
   stat: DataMiningStatisticApproach
 ): { min: number; max: number } {
   if (stat == "average") {
-    return windowStats.reduce((acc, curr) => {
-      if (curr.value != 0 && curr.value < acc.min && ((curr.windowStart + curr.windowEnd) / 2 >= topAge) && ((curr.windowStart + curr.windowEnd) / 2 <= baseAge)) acc.min = curr.value;
-      if (curr.value != 0 && curr.value > acc.max && ((curr.windowStart + curr.windowEnd) / 2 >= topAge) && ((curr.windowStart + curr.windowEnd) / 2 <= baseAge)) acc.max = curr.value;
-      return acc;
-    },
-      { min: Infinity, max: -Infinity });
+    return windowStats.reduce(
+      (acc, curr) => {
+        if (
+          curr.value != 0 &&
+          curr.value < acc.min &&
+          (curr.windowStart + curr.windowEnd) / 2 >= topAge &&
+          (curr.windowStart + curr.windowEnd) / 2 <= baseAge
+        )
+          acc.min = curr.value;
+        if (
+          curr.value != 0 &&
+          curr.value > acc.max &&
+          (curr.windowStart + curr.windowEnd) / 2 >= topAge &&
+          (curr.windowStart + curr.windowEnd) / 2 <= baseAge
+        )
+          acc.max = curr.value;
+        return acc;
+      },
+      { min: Infinity, max: -Infinity }
+    );
   }
   return windowStats.reduce(
     (acc, curr) => {
-      if (curr.value < acc.min && ((curr.windowStart + curr.windowEnd) / 2 >= topAge) && ((curr.windowStart + curr.windowEnd) / 2 <= baseAge)) acc.min = curr.value;
-      if (curr.value > acc.max && ((curr.windowStart + curr.windowEnd) / 2 >= topAge) && ((curr.windowStart + curr.windowEnd) / 2 <= baseAge)) acc.max = curr.value;
+      if (
+        curr.value < acc.min &&
+        (curr.windowStart + curr.windowEnd) / 2 >= topAge &&
+        (curr.windowStart + curr.windowEnd) / 2 <= baseAge
+      )
+        acc.min = curr.value;
+      if (
+        curr.value > acc.max &&
+        (curr.windowStart + curr.windowEnd) / 2 >= topAge &&
+        (curr.windowStart + curr.windowEnd) / 2 <= baseAge
+      )
+        acc.max = curr.value;
       return acc;
     },
     { min: Infinity, max: -Infinity }
