@@ -366,7 +366,6 @@ export const addDataMiningColumn = action(
         break;
       }
 
-
       case "Point": {
         assertPointSettings(column.columnSpecificSettings);
         assertSubPointInfoArray(column.subInfo);
@@ -426,7 +425,6 @@ export const addDataMiningColumn = action(
         break;
       }
 
-
       case "Chron": {
         assertChronSettings(column.columnSpecificSettings);
         assertSubChronInfoArray(column.subInfo);
@@ -445,6 +443,7 @@ export const addDataMiningColumn = action(
           column.columnSpecificSettings.stepSize,
           "frequency"
         );
+        stat = "frequency";
         break;
       }
 
@@ -452,10 +451,12 @@ export const addDataMiningColumn = action(
         console.log("WARNING: unknown column display type", column.columnDisplayType);
         return;
     }
-    const { min, max } = findRangeOfWindowStats(windowStats,
+    const { min, max } = findRangeOfWindowStats(
+      windowStats,
       state.settings.timeSettings[column.units].topStageAge,
       state.settings.timeSettings[column.units].baseStageAge,
-      stat);
+      stat
+    );
     const { lowerRange, upperRange, scaleStep, scaleStart } = calculateAutoScale(min, max);
     const dataMiningColumn: ColumnInfo = observable({
       ...cloneDeep(column),

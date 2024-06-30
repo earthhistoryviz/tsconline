@@ -19,7 +19,7 @@ describe("computeWindowStatistics tests", () => {
         { windowStart: 5, windowEnd: 8, value: 6 },
         { windowStart: 6, windowEnd: 9, value: 7 },
         { windowStart: 7, windowEnd: 10, value: 8 },
-        { windowStart: 8, windowEnd: 10, value: 9 },
+        { windowStart: 8, windowEnd: 10, value: 9 }
       ]
     ],
     [
@@ -37,7 +37,7 @@ describe("computeWindowStatistics tests", () => {
         { windowStart: 5, windowEnd: 8, value: 5 },
         { windowStart: 6, windowEnd: 9, value: 6 },
         { windowStart: 7, windowEnd: 10, value: 7 },
-        { windowStart: 8, windowEnd: 10, value: 8 },
+        { windowStart: 8, windowEnd: 10, value: 8 }
       ]
     ],
     [
@@ -55,7 +55,7 @@ describe("computeWindowStatistics tests", () => {
         { windowStart: 5, windowEnd: 8, value: 7 },
         { windowStart: 6, windowEnd: 9, value: 8 },
         { windowStart: 7, windowEnd: 10, value: 9 },
-        { windowStart: 8, windowEnd: 10, value: 10 },
+        { windowStart: 8, windowEnd: 10, value: 10 }
       ]
     ],
     [
@@ -73,7 +73,7 @@ describe("computeWindowStatistics tests", () => {
         { windowStart: 5, windowEnd: 8, value: 0.4 },
         { windowStart: 6, windowEnd: 9, value: 0.33 },
         { windowStart: 7, windowEnd: 10, value: 0.29 },
-        { windowStart: 8, windowEnd: 10, value: 0.25 },
+        { windowStart: 8, windowEnd: 10, value: 0.25 }
       ]
     ],
     [
@@ -91,10 +91,19 @@ describe("computeWindowStatistics tests", () => {
         { windowStart: 5, windowEnd: 8, value: 3 },
         { windowStart: 6, windowEnd: 9, value: 3 },
         { windowStart: 7, windowEnd: 10, value: 3 },
-        { windowStart: 8, windowEnd: 10, value: 3 },
+        { windowStart: 8, windowEnd: 10, value: 3 }
       ]
     ],
-    [[-1, 0, 0, 0, 0, 0, 0, 0, 0, 0], 3, 1, "rateOfChange", [{ windowStart: -1, windowEnd: 0, value: 0 }, { windowStart: 0, windowEnd: 0, value: 0 }]],
+    [
+      [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      3,
+      1,
+      "rateOfChange",
+      [
+        { windowStart: -1, windowEnd: 0, value: 0 },
+        { windowStart: 0, windowEnd: 0, value: 0 }
+      ]
+    ],
     [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 3, 1, "rateOfChange", [{ windowStart: 0, windowEnd: 1, value: 0 }]],
     [[], 3, 1, "rateOfChange", []],
     [
@@ -139,7 +148,7 @@ describe("computeWindowStatisticsForDataSet tests", () => {
         { windowStart: 5, windowEnd: 8, value: 3 },
         { windowStart: 6, windowEnd: 9, value: 3 },
         { windowStart: 7, windowEnd: 10, value: 3 },
-        { windowStart: 8, windowEnd: 10, value: 3 },
+        { windowStart: 8, windowEnd: 10, value: 3 }
       ]
     ],
     [
@@ -157,7 +166,7 @@ describe("computeWindowStatisticsForDataSet tests", () => {
         { windowStart: 5, windowEnd: 8, value: 4 },
         { windowStart: 6, windowEnd: 9, value: 3 },
         { windowStart: 7, windowEnd: 10, value: 2 },
-        { windowStart: 8, windowEnd: 10, value: 1 },
+        { windowStart: 8, windowEnd: 10, value: 1 }
       ]
     ],
     [
@@ -175,7 +184,7 @@ describe("computeWindowStatisticsForDataSet tests", () => {
         { windowStart: 5, windowEnd: 8, value: 6 },
         { windowStart: 6, windowEnd: 9, value: 5 },
         { windowStart: 7, windowEnd: 10, value: 4 },
-        { windowStart: 8, windowEnd: 10, value: 3 },
+        { windowStart: 8, windowEnd: 10, value: 3 }
       ]
     ],
     [
@@ -193,7 +202,7 @@ describe("computeWindowStatisticsForDataSet tests", () => {
         { windowStart: 5, windowEnd: 8, value: 5 },
         { windowStart: 6, windowEnd: 9, value: 4 },
         { windowStart: 7, windowEnd: 10, value: 3 },
-        { windowStart: 8, windowEnd: 10, value: 2 },
+        { windowStart: 8, windowEnd: 10, value: 2 }
       ]
     ],
     [
@@ -211,7 +220,7 @@ describe("computeWindowStatisticsForDataSet tests", () => {
         { windowStart: 5, windowEnd: 8, value: 1 },
         { windowStart: 6, windowEnd: 9, value: 1 },
         { windowStart: 7, windowEnd: 10, value: 1 },
-        { windowStart: 8, windowEnd: 10, value: 1 },
+        { windowStart: 8, windowEnd: 10, value: 1 }
       ]
     ],
     [
@@ -223,9 +232,10 @@ describe("computeWindowStatisticsForDataSet tests", () => {
       3,
       1,
       "rateOfChange",
-      [{ windowStart: 1, windowEnd: 2, value: -0 },
-      { windowStart: 2, windowEnd: 3, value: -0 },
-      { windowStart: 3, windowEnd: 3, value: -0 }
+      [
+        { windowStart: 1, windowEnd: 2, value: -0 },
+        { windowStart: 2, windowEnd: 3, value: -0 },
+        { windowStart: 3, windowEnd: 3, value: -0 }
       ]
     ],
     [
@@ -237,9 +247,11 @@ describe("computeWindowStatisticsForDataSet tests", () => {
       3,
       1,
       "rateOfChange",
-      [{ windowStart: 1, windowEnd: 2, value: -0 },
-      { windowStart: 2, windowEnd: 3, value: -0 },
-      { windowStart: 3, windowEnd: 3, value: -0 }]
+      [
+        { windowStart: 1, windowEnd: 2, value: -0 },
+        { windowStart: 2, windowEnd: 3, value: -0 },
+        { windowStart: 3, windowEnd: 3, value: -0 }
+      ]
     ]
   ])(`Computes %s %s %s correctly`, (data, windowSize, stepSize, stat, expected) => {
     assertDataMiningStatisticApproach(stat);

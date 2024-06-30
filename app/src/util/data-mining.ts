@@ -43,13 +43,13 @@ export function computeWindowStatistics(
         case "frequency":
           value = window.length;
           break;
-        case "minimum":// @jacqui: Lmk if there's anycase rateOfChange is calculated through this function. If not then I think we can just remove it.
+        case "minimum": // @jacqui: Lmk if there's anycase rateOfChange is calculated through this function. If not then I think we can just remove it.
           value = Math.min(...window);
           break;
-        case "maximum":// @jacqui: Lmk if there's anycase rateOfChange is calculated through this function. If not then I think we can just remove it.
+        case "maximum": // @jacqui: Lmk if there's anycase rateOfChange is calculated through this function. If not then I think we can just remove it.
           value = Math.max(...window);
           break;
-        case "average":// @jacqui: Lmk if there's anycase rateOfChange is calculated through this function. If not then I think we can just remove it.
+        case "average": // @jacqui: Lmk if there's anycase rateOfChange is calculated through this function. If not then I think we can just remove it.
           value = window.reduce((a, b) => a + b, 0) / window.length;
           break;
         case "rateOfChange": // @jacqui: Lmk if there's anycase rateOfChange is calculated through this function. If not then I think we can just it. especially this one, bc the data only contains age, we are unable to apply the correct formula to calculate the correct rate of change.
