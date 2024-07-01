@@ -226,13 +226,21 @@ const moderateRateLimit = {
     }
   }
 };
+const looseRateLimit = {
+  config: {
+    rateLimit: {
+      max: 30,
+      timeWindow: 1000 * 60
+    }
+  }
+};
 
 server.get("/user-datapacks", moderateRateLimit, routes.fetchUserDatapacks);
 // checks chart.pdf-status
-server.get<{ Params: { hash: string } }>("/svgstatus/:hash", moderateRateLimit, routes.fetchSVGStatus);
+server.get<{ Params: { hash: string } }>("/svgstatus/:hash", looseRateLimit, routes.fetchSVGStatus);
 
 //fetches json object of requested settings file
-server.get<{ Params: { file: string } }>("/settingsXml/:file", moderateRateLimit, routes.fetchSettingsXml);
+server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, routes.fetchSettingsXml);
 //download datapack
 server.get<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>(
   "/download/user-datapacks/:filename",
@@ -240,7 +248,7 @@ server.get<{ Params: { filename: string }; Querystring: { needEncryption?: boole
   routes.requestDownload
 );
 // uploads datapack
-server.post("/upload", { config: { rateLimit: { max: 20, timeWindow: 1000 * 60 } } }, routes.uploadDatapack);
+server.post("/upload", moderateRateLimit, routes.uploadDatapack);
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
 server.post("/auth/signup", strictRateLimit, loginRoutes.signup);
@@ -264,11 +272,12 @@ server.post("/upload-profile-picture", moderateRateLimit, loginRoutes.uploadProf
 // will return url chart path and hash that was generated for it
 server.post<{ Params: { usecache: string; useSuggestedAge: string; username: string } }>(
   "/charts/:usecache/:useSuggestedAge/:username",
+  looseRateLimit,
   routes.fetchChart
 );
 
 // Serve timescale data endpoint
-server.get("/timescale", routes.fetchTimescale);
+server.get("/timescale", looseRateLimit, routes.fetchTimescale);
 
 server.get<{ Params: { datapackName: string; imageName: string } }>(
   "/images/:datapackName/:imageName",
