@@ -208,7 +208,6 @@ server.get("/facies-patterns", (_request, reply) => {
   }
 });
 
-server.get("/user-datapacks", routes.fetchUserDatapacks);
 
 const strictRateLimit = {
   config: {
@@ -228,6 +227,7 @@ const moderateRateLimit = {
   }
 };
 
+server.get("/user-datapacks", moderateRateLimit, routes.fetchUserDatapacks);
 // checks chart.pdf-status
 server.get<{ Params: { hash: string } }>("/svgstatus/:hash", moderateRateLimit, routes.fetchSVGStatus);
 
@@ -240,7 +240,7 @@ server.get<{ Params: { filename: string }; Querystring: { needEncryption?: boole
   routes.requestDownload
 );
 // uploads datapack
-server.post("/upload", { config: { rateLimit: { max: 20, timeWindow: 1000 * 60 }}}, routes.uploadDatapack);
+server.post("/upload", { config: { rateLimit: { max: 20, timeWindow: 1000 * 60 } } }, routes.uploadDatapack);
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
 server.post("/auth/signup", strictRateLimit, loginRoutes.signup);
