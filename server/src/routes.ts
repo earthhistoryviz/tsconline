@@ -505,11 +505,7 @@ export const fetchSVGStatus = async function (
   // sanitize and check filepath
   directory = realpathSync(path.resolve(root, directory));
   filepath = realpathSync(path.resolve(root, filepath));
-  if (
-    !directory.startsWith(root) ||
-    !filepath.startsWith(root) ||
-    !filepath.endsWith("chart.svg")
-  ) {
+  if (!directory.startsWith(root) || !filepath.startsWith(root) || !filepath.endsWith("chart.svg")) {
     reply.status(403).send({ error: "Invalid hash" });
     return;
   }
