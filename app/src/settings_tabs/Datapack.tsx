@@ -86,7 +86,6 @@ export const Datapacks = observer(function Datapacks() {
         }}>
         Upload Datapack
       </TSCButton>
-
       <Dialog classes={{ paper: styles.dd }} open={formOpen} onClose={() => setFormOpen(false)}>
         <TSCDatapackUploadForm close={() => setFormOpen(false)} />
       </Dialog>
