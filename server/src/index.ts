@@ -214,7 +214,7 @@ const strictRateLimit = {
   config: {
     rateLimit: {
       max: 10,
-      timeWindow: "1 minute"
+      timeWindow: 1000 * 60
     }
   }
 };
@@ -223,7 +223,7 @@ const moderateRateLimit = {
   config: {
     rateLimit: {
       max: 20,
-      timeWindow: "1 minute"
+      timeWindow: 1000 * 60
     }
   }
 };
@@ -240,7 +240,7 @@ server.get<{ Params: { filename: string }; Querystring: { needEncryption?: boole
   routes.requestDownload
 );
 // uploads datapack
-server.post("/upload", strictRateLimit, routes.uploadDatapack);
+server.post("/upload", { config: { rateLimit: { max: 1, timeWindow: 1000 * 60 } }}, routes.uploadDatapack);
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
 server.post("/auth/signup", strictRateLimit, loginRoutes.signup);
