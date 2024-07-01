@@ -182,7 +182,6 @@ server.get("/presets", async (_request, reply) => {
   reply.send(presets);
 });
 
-
 server.get("/datapack-index", routes.fetchServerDatapackInfo);
 server.get("/map-pack-index", routes.fetchServerMapPackInfo);
 
@@ -207,7 +206,6 @@ server.get("/facies-patterns", (_request, reply) => {
     reply.status(200).send({ patterns });
   }
 });
-
 
 const strictRateLimit = {
   config: {

@@ -17,7 +17,7 @@ import { deleteDirectory, resetUploadDirectory, checkHeader, assetconfigs } from
 import { mkdirp } from "mkdirp";
 import md5 from "md5";
 import svgson from "svgson";
-import fs, { realpath, realpathSync } from "fs";
+import fs, { realpathSync } from "fs";
 import { parseExcelFile } from "./parse-excel-file.js";
 import path from "path";
 import pump from "pump";
@@ -154,11 +154,20 @@ export const requestDownload = async function requestDownload(
       // java -jar <jar file> -d <datapack> <datapack> -enc <destination directory> -node
       console.log("Calling Java encrypt.jar: ", cmd);
       try {
-        const stdout = execFileSync("java", ["-jar", assetconfigs.activeJar, "-d", filepath.replaceAll("\\", "/"), "-enc", encryptedFilepathDir, "-node"]);
-        console.log("Java stdout: " + stdout.toString())
+        const stdout = execFileSync("java", [
+          "-jar",
+          assetconfigs.activeJar,
+          "-d",
+          filepath.replaceAll("\\", "/"),
+          "-enc",
+          encryptedFilepathDir,
+          "-node"
+        ]);
+        console.log("Java stdout: " + stdout.toString());
       } catch (e) {
         console.error("Java error param: " + e);
       }
+      resolve();
     });
   } catch (e) {
     console.error(e);
@@ -495,7 +504,11 @@ export const fetchSVGStatus = async function (
   // sanitize and check filepath
   directory = realpathSync(path.resolve(directory));
   filepath = realpathSync(path.resolve(filepath));
-  if (!directory.startsWith(assetconfigs.chartsDirectory) || !filepath.startsWith(assetconfigs.chartsDirectory) || !filepath.endsWith("chart.svg")) {
+  if (
+    !directory.startsWith(assetconfigs.chartsDirectory) ||
+    !filepath.startsWith(assetconfigs.chartsDirectory) ||
+    !filepath.endsWith("chart.svg")
+  ) {
     reply.status(403).send({ error: "Invalid hash" });
     return;
   }
