@@ -2533,6 +2533,7 @@ const RAW_RUNTIME_STATE =
           ["@types/node-cron", "npm:3.0.11"],\
           ["@types/nodemailer", "npm:6.4.15"],\
           ["@types/pump", "npm:1.1.3"],\
+          ["@types/validator", "npm:13.12.0"],\
           ["@xmldom/xmldom", "npm:0.8.10"],\
           ["bcrypt-ts", "npm:5.0.2"],\
           ["better-sqlite3", "npm:9.6.0"],\
@@ -2563,6 +2564,7 @@ const RAW_RUNTIME_STATE =
           ["tsc", "npm:2.0.4"],\
           ["tsx", "npm:4.11.0"],\
           ["typescript", "patch:typescript@npm%3A5.2.2#optional!builtin<compat/typescript>::version=5.2.2&hash=f3b441"],\
+          ["validator", "npm:13.12.0"],\
           ["vitest", "virtual:f400f1facecebc164f3b8826224462ee6165ba2a289af45d35511e5194135aec0e2b33199c69e89fd109ab94e6d817043a2c4cc1150135f9e3fe0bd583a0cf60#npm:1.6.0"],\
           ["xlsx", "npm:0.18.5"]\
         ],\
@@ -2951,6 +2953,15 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./.yarn/cache/@types-trusted-types-npm-2.0.7-a07fc44f59-8e4202766a.zip/node_modules/@types/trusted-types/",\
         "packageDependencies": [\
           ["@types/trusted-types", "npm:2.0.7"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["@types/validator", [\
+      ["npm:13.12.0", {\
+        "packageLocation": "./.yarn/cache/@types-validator-npm-13.12.0-2a1ff2d50d-b3344ef630.zip/node_modules/@types/validator/",\
+        "packageDependencies": [\
+          ["@types/validator", "npm:13.12.0"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -11573,6 +11584,15 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./.yarn/cache/validate-npm-package-name-npm-5.0.1-5af9a082cd-0d583a1af2.zip/node_modules/validate-npm-package-name/",\
         "packageDependencies": [\
           ["validate-npm-package-name", "npm:5.0.1"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["validator", [\
+      ["npm:13.12.0", {\
+        "packageLocation": "./.yarn/cache/validator-npm-13.12.0-6c8a423cbf-db6eb0725e.zip/node_modules/validator/",\
+        "packageDependencies": [\
+          ["validator", "npm:13.12.0"]\
         ],\
         "linkType": "HARD"\
       }]\

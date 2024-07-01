@@ -18,6 +18,7 @@ jobs:
         run: git fetch origin main:main 
 
       - name: Check for disallowed files and directories
+        id: check_files
         run: |
           if git diff --name-only main...HEAD | grep -E 'node_modules/'; then
             echo "node_modules folder detected, please remove" > disallowed_files.txt
@@ -33,11 +34,11 @@ jobs:
             echo "dist folder detected, please remove" >> disallowed_files.txt
           fi
           if [ -s disallowed_files.txt ]; then
-            echo "disallowed_files_present=true" >> $GITHUB_ENV
+            echo "::set-output name=disallowed_files_present::true"
           fi
 
       - name: Comment PR on disallowed files Failure
-        if: env.disallowed_files_present == 'true'
+        if: steps.check_files.outputs.disallowed_files_present == 'true'
         uses: actions/github-script@v5
         with:
           script: |
@@ -53,7 +54,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for any failures
-        if: env.disallowed_files_present == 'true'
+        if: steps.check_files.outputs.disallowed_files_present == 'true'
         run: exit 1
 
   code-quality:
@@ -65,11 +66,12 @@ jobs:
         run: yarn install
 
       - name: Run ESLint
-        run: yarn lint-check > eslint-output.txt || echo "eslint_failed=true" >> $GITHUB_ENV
+        id: eslint
+        run: yarn lint-check > eslint-output.txt || echo "::set-output name=eslint_failed::true"
         continue-on-error: true
 
       - name: Comment PR on ESLint check failure
-        if: env.eslint_failed == 'true'
+        if: steps.eslint.outputs.eslint_failed == 'true'
         uses: actions/github-script@v5
         with:
           script: |
@@ -85,21 +87,22 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Prettify code
+        id: prettier
         run: |
           if ! yarn prettier-check; then
-            echo "prettify_failed=true" >> $GITHUB_ENV
+            echo "::set-output name=prettify_failed::true"
           fi
         continue-on-error: true
 
       - name: Comment PR on Prettier check failure
-        if: env.prettify_failed == 'true'
+        if: steps.prettier.outputs.prettify_failed == 'true'
         uses: thollander/actions-comment-pull-request@v2
         with:
           message: |
             🚨 The Prettier check has failed. Please run 'yarn prettier-format' locally and commit the changes.
 
       - name: Check for any failures
-        if: env.eslint_failed == 'true' || env.prettify_failed == 'true'
+        if: steps.eslint.outputs.eslint_failed == 'true' || steps.prettier.outputs.prettify_failed == 'true'
         run: exit 1
 
   build-and-test:
@@ -116,15 +119,17 @@ jobs:
         run: yarn install
 
       - name: Build with Vite
+        id: vite_build
         run: |
           set -o pipefail
           if ! yarn build 2>&1 | tee build.log; then
             echo "build_failed=true" >> $GITHUB_ENV
+            echo "::set-output name=build_failed::true"
           fi
         continue-on-error: true
 
       - name: Report Build Errors
-        if: env.build_failed == 'true'
+        if: steps.vite_build.outputs.build_failed == 'true'
         uses: actions/github-script@v5
         with:
           script: |
@@ -142,19 +147,19 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for any build failures
-        if: env.build_failed == 'true'
+        if: steps.vite_build.outputs.build_failed == 'true'
         run: exit 1
 
       - name: Run Tests
         run: |
           set -o pipefail
           if ! yarn test > test_output.log 2>&1; then
-              echo "test_failed=true" >> $GITHUB_ENV
+              echo "::set-output name=test_failed::true"
               fi
         continue-on-error: true
       
       - name: Report Test Errors
-        if: env.test_failed == 'true'
+        if: steps.vite_build.outputs.build_failed == 'true'
         uses: actions/github-script@v5
         with:
           script: |
@@ -172,5 +177,5 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for any test failures
-        if: env.test_failed == 'true'
+        if: steps.vite_build.outputs.build_failed == 'true'
         run: exit 1

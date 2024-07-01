@@ -1,0 +1,123 @@
+name: CodeQL Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      issues: write
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: javascript-typescript
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20'
+      - name: Install jq
+        run: sudo apt-get install jq 
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          config-file: ./.codeql-config.yml
+          languages: ${{ matrix.language }}
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+      - name: Query CodeQL Alerts
+        id: codeql-alerts
+        run: |
+          pr_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          owner=$(jq --raw-output .repository.owner.login "$GITHUB_EVENT_PATH")
+          repo=$(jq --raw-output .repository.name "$GITHUB_EVENT_PATH")
+
+          echo "PR Number: $pr_number"
+          echo "Owner: $owner"
+          echo "Repo: $repo"
+
+          alerts=$(curl -s -H "Accept: application/vnd.github.v3+json" \
+                  -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                  "https://api.github.com/repos/$owner/$repo/code-scanning/alerts?ref=refs/pull/$pr_number/merge&per_page=100")
+          alerts=$(echo $alerts | jq "map(select(.state == \"open\"))")
+          echo [] > current_alerts.json
+          echo "Starting to resolve alerts."
+          echo "$alerts" | jq -c '.[]' | while read -r alert; do
+            alert_id=$(echo $alert | jq -r '.number')
+            if [[ $(echo $alert | jq -r '.most_recent_instance.state') == "fixed" ]]; then
+              echo "Alert $alert_id has been resolved and will be removed from the list."
+            else
+              echo "Alert id: $alert_id is not yet fixed."
+              # MUST WRITE TO FILE EACH TIME SINCE WHILE LOOP RUNS IN A SUBSHELL
+              echo $(jq ". + [${alert}]" current_alerts.json) > current_alerts.json
+            fi
+          done
+          alerts=$(cat current_alerts.json)
+          if [[ $alerts != "[]" ]]; then
+            echo "CodeQL alerts found."
+            echo "::set-output name=alerts_found::true"
+          else
+            echo "No CodeQL alerts found."
+          fi
+      - name: Comment if Alerts Found
+        if: steps.codeql-alerts.outputs.alerts_found == 'true'
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const prNumber = context.payload.pull_request.number;
+            const alerts = JSON.parse(fs.readFileSync('current_alerts.json', 'utf8')).map(alert => {
+              let emoji;
+              if (alert.rule.security_severity_level === 'critical') {
+                emoji = '🚫';
+              } else if (alert.rule.security_severity_level === 'high') {
+                emoji = '🚨';
+              } else if (alert.rule.security_severity_level === 'medium') {
+                emoji = '⚠️';
+              } else {
+                emoji = '️ℹ️';
+              }
+              const url = `https://github.com/${owner}/${repo}/security/code-scanning/${alert.number}`;
+              const commitUrl = `https://github.com/${owner}/${repo}/commit/${alert.most_recent_instance.commit_sha}`
+              return `
+              \n
+              ## ${emoji} ${alert.number} ${alert.rule.id}: ${alert.rule.description}
+              - Severity: **${alert.rule.security_severity_level}**
+              - Message: ${alert.most_recent_instance.message.text.replace(/\n/g, '\n           ')}
+              - Located in *${alert.most_recent_instance.location.path}* from line ${alert.most_recent_instance.location.start_line} to line ${alert.most_recent_instance.location.end_line}
+              - Commit: [${alert.most_recent_instance.commit_sha.substring(0, 7)}](${commitUrl})
+              - [Click here for more information on how to solve](${url})\n\n
+              `;});
+            const formattedAlerts = alerts.join('\n');
+            const message = `## 🔍 The CodeQL analysis found some issues. Please address the following alerts:\n\n${formattedAlerts}\n`;
+            github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: prNumber,
+              body: message,
+            }).then(() => {
+              console.log('Commented on PR with CodeQL alerts.');
+            }).catch((error) => {
+              core.setFailed(`Error creating comment: ${error}`);
+            })
+            core.setFailed('CodeQL alerts found.');
