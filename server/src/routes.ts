@@ -410,9 +410,15 @@ export const fetchImage = async function (
   request: FastifyRequest<{ Params: { datapackName: string; imageName: string } }>,
   reply: FastifyReply
 ) {
-  const tryReadFile = async (path: string) => {
+  const tryReadFile = async (filepath: string) => {
+    const dummy = "/var/www/html";
+    const testPath = realpathSync(path.resolve(dummy, filepath));
+    if (!testPath.startsWith(dummy) || !testPath.endsWith(filepath)) {
+      reply.status(403).send({ error: "Invalid file path" });
+      return;
+    }
     try {
-      const file = await readFile(path);
+      const file = await readFile(filepath);
       return file;
     } catch (e) {
       if ((e as NodeJS.ErrnoException).code === "ENOENT") {
@@ -461,7 +467,7 @@ export const fetchSettingsXml = async function fetchSettingsJson(
     // sanitize and check filepath
     const dummy = "/var/www/html"
     let testFile = realpathSync(path.resolve(dummy, file));
-    if (!testFile.startsWith(dummy)) {
+    if (!testFile.startsWith(dummy) || !testFile.endsWith(file)) {
       reply.status(403).send({ error: "Invalid file path" });
       return;
     }
