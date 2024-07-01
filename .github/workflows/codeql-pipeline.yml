@@ -1,9 +1,12 @@
 name: CodeQL Pipeline
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
-      - pipeline-test
+      - main
 
 jobs:
   analyze:
@@ -69,13 +72,12 @@ jobs:
           alerts=$(cat current_alerts.json)
           if [[ $alerts != "[]" ]]; then
             echo "CodeQL alerts found."
-            echo "alerts_found=true" >> $GITHUB_ENV
+            echo "::set-output name=alerts_found::true"
           else
             echo "No CodeQL alerts found."
-            echo "alerts_found=false" >> $GITHUB_ENV
           fi
       - name: Comment if Alerts Found
-        if: env.alerts_found == 'true'
+        if: steps.codeql-alerts.outputs.alerts_found == 'true'
         uses: actions/github-script@v5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
