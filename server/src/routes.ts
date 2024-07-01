@@ -463,11 +463,11 @@ export const fetchSettingsXml = async function fetchSettingsJson(
   reply: FastifyReply
 ) {
   try {
-    const { file } = request.params;
+    let { file } = request.params;
     // sanitize and check filepath
-    const dummy = "/var/www/html"
-    let testFile = realpathSync(path.resolve(dummy, file));
-    if (!testFile.startsWith(dummy) || !testFile.endsWith(file)) {
+    const root = process.cwd();
+    file = realpathSync(path.resolve(root, file));
+    if (!file.startsWith(root)) {
       reply.status(403).send({ error: "Invalid file path" });
       return;
     }
