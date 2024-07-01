@@ -181,16 +181,7 @@ server.post("/removecache", async (request, reply) => {
 server.get("/presets", async (_request, reply) => {
   reply.send(presets);
 });
-// uploads datapack
-server.post("/upload", routes.uploadDatapack);
-//download datapack
-server.get<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>(
-  "/download/user-datapacks/:filename",
-  routes.requestDownload
-);
 
-//fetches json object of requested settings file
-server.get<{ Params: { file: string } }>("/settingsXml/:file", routes.fetchSettingsXml);
 
 server.get("/datapack-index", routes.fetchServerDatapackInfo);
 server.get("/map-pack-index", routes.fetchServerMapPackInfo);
@@ -208,9 +199,6 @@ server.get("/datapackinfoindex", (_request, reply) => {
     }
   }
 });
-
-// checks chart.pdf-status
-server.get<{ Params: { hash: string } }>("/svgstatus/:hash", routes.fetchSVGStatus);
 
 server.get("/facies-patterns", (_request, reply) => {
   if (!patterns || Object.keys(patterns).length === 0) {
@@ -240,6 +228,19 @@ const moderateRateLimit = {
   }
 };
 
+// checks chart.pdf-status
+server.get<{ Params: { hash: string } }>("/svgstatus/:hash", moderateRateLimit, routes.fetchSVGStatus);
+
+//fetches json object of requested settings file
+server.get<{ Params: { file: string } }>("/settingsXml/:file", moderateRateLimit, routes.fetchSettingsXml);
+//download datapack
+server.get<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>(
+  "/download/user-datapacks/:filename",
+  moderateRateLimit,
+  routes.requestDownload
+);
+// uploads datapack
+server.post("/upload", strictRateLimit, routes.uploadDatapack);
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
 server.post("/auth/signup", strictRateLimit, loginRoutes.signup);
