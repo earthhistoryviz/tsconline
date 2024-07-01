@@ -12,10 +12,6 @@ export type SharedUser = {
   pictureUrl: string | null;
   isGoogleUser: boolean;
   isAdmin: boolean;
-  settings: {
-    darkMode: boolean;
-    language: string;
-  };
 };
 
 export type SuccessfulServerResponse = {
@@ -505,9 +501,6 @@ export function assertSharedUser(o: any): asserts o is SharedUser {
   if (o.pictureUrl && typeof o.pictureUrl !== "string") throwError("User", "pictureUrl", "string", o.pictureUrl);
   if (typeof o.isGoogleUser !== "boolean") throwError("User", "isGoogleUser", "boolean", o.isGoogleUser);
   if (typeof o.isAdmin !== "boolean") throwError("User", "isAdmin", "boolean", o.isAdmin);
-  if (!o.settings || typeof o.settings !== "object") throwError("User", "settings", "object", o.settings);
-  if (typeof o.settings.darkMode !== "boolean") throwError("User", "settings.darkMode", "boolean", o.settings.darkMode);
-  if (typeof o.settings.language !== "string") throwError("User", "settings.language", "string", o.settings.language);
 }
 
 export function assertFreehand(o: any): asserts o is Freehand {

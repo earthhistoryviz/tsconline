@@ -17,16 +17,20 @@ import { sendEmail } from "./send-email.js";
 import "dotenv/config";
 import { assetconfigs } from "./util.js";
 import path from "path";
-import { mkdirp } from "mkdirp";
-import pump from "pump";
-import fs from "fs";
+import { pipeline } from "stream/promises";
+import { createWriteStream } from "fs";
 import { SharedUser, assertSharedUser } from "@tsconline/shared";
 import { loadFileMetadata } from "./file-metadata-handler.js";
-import { readdir, rm, writeFile } from "fs/promises";
+import { readdir, rm, writeFile, mkdir } from "fs/promises";
 import { checkRecaptchaToken, generateToken } from "./verify.js";
 
 const emailTestRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const googleRecaptchaBotThreshold = 0.5;
+
+export const logout = async function logout(request: FastifyRequest, reply: FastifyReply) {
+  request.session.delete();
+  reply.send({ message: "Logged out" });
+};
 
 export const deleteProfile = async function deleteProfile(request: FastifyRequest, reply: FastifyReply) {
   const uuid = request.session.get("uuid");
@@ -54,7 +58,7 @@ export const deleteProfile = async function deleteProfile(request: FastifyReques
   } catch (error) {
     console.error("Error during profile deletion:", error);
     request.session.delete();
-    reply.status(500).send({ error });
+    reply.status(500).send({ error: "Unknown Error" });
   }
 };
 
@@ -68,7 +72,7 @@ export const changePassword = async function changePassword(
     return;
   }
   const { currentPassword, newPassword, recaptchaToken } = request.body;
-  if (!currentPassword || !newPassword) {
+  if (!currentPassword || !newPassword || !recaptchaToken) {
     reply.status(400).send({ error: "Invalid form" });
     return;
   }
@@ -97,7 +101,7 @@ export const changePassword = async function changePassword(
     reply.send({ message: "Password changed" });
   } catch (error) {
     console.error("Error during password change:", error);
-    reply.status(500).send({ error });
+    reply.status(500).send({ error: "Unknown Error" });
   }
 };
 
@@ -111,7 +115,7 @@ export const changeUsername = async function changeUsername(
     return;
   }
   const { newUsername, recaptchaToken } = request.body;
-  if (!newUsername) {
+  if (!newUsername || !recaptchaToken) {
     reply.status(400).send({ error: "Invalid form" });
     return;
   }
@@ -124,6 +128,11 @@ export const changeUsername = async function changeUsername(
     const user = (await findUser({ uuid }))[0];
     if (!user) {
       throw new Error("User not found");
+    }
+    const usersWithSameUsername = await findUser({ username: newUsername });
+    if (usersWithSameUsername.length > 0) {
+      reply.status(409).send({ error: "Username already taken" });
+      return;
     }
     await updateUser({ uuid }, { username: newUsername });
     request.session.delete();
@@ -158,23 +167,15 @@ export const uploadProfilePicture = async function uploadProfilePicture(request:
     const pictureName = `profile-${uuid}.${ext}`;
     const userDirectory = path.join(assetconfigs.uploadDirectory, uuid, "profile");
     const filePath = path.join(userDirectory, pictureName);
-    await mkdirp(userDirectory);
-    const existingFiles = await readdir(userDirectory);
+    await mkdir(userDirectory, { recursive: true });
+    const existingFiles = await readdir(userDirectory, { withFileTypes: false });
     for (const existingFile of existingFiles) {
       if (existingFile.startsWith("profile-") && /\.(jpg|jpeg|png|gif)$/i.test(existingFile)) {
         await rm(path.join(userDirectory, existingFile));
       }
     }
     const fileStream = file.file;
-    await new Promise<void>((resolve, reject) => {
-      pump(fileStream, fs.createWriteStream(filePath), (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
+    await pipeline(fileStream, createWriteStream(filePath));
     if (file.file.truncated) {
       throw new Error("File too large");
     }
@@ -185,7 +186,7 @@ export const uploadProfilePicture = async function uploadProfilePicture(request:
     reply.send({ pictureUrl: pictureUrl });
   } catch (error) {
     console.error("Error during upload:", error);
-    reply.status(500).send({ error });
+    reply.status(500).send({ error: (error as Error).message });
   }
 };
 
@@ -195,26 +196,26 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
     reply.send({ authenticated: false });
     return;
   }
-  const user = (await findUser({ uuid }))[0];
-  if (!user || user.invalidateSession) {
-    reply.send({ authenticated: false });
-    return;
+  try {
+    const user = (await findUser({ uuid }))[0];
+    if (!user || user.invalidateSession) {
+      reply.send({ authenticated: false });
+      return;
+    }
+    const { email, username, pictureUrl, hashedPassword } = user;
+    const sharedUser: SharedUser = {
+      email,
+      username,
+      pictureUrl,
+      isGoogleUser: !hashedPassword,
+      isAdmin: false
+    };
+    assertSharedUser(sharedUser);
+    reply.send({ authenticated: true, user: sharedUser });
+  } catch (error) {
+    console.error("Error during session check:", error);
+    reply.status(500).send({ error: "Unknown Error" });
   }
-  const { email, username, pictureUrl, hashedPassword } = user;
-  if (!email || !username) {
-    reply.send({ authenticated: false });
-    return;
-  }
-  const sharedUser: SharedUser = {
-    email,
-    username,
-    pictureUrl,
-    isGoogleUser: !hashedPassword,
-    isAdmin: false,
-    settings: { darkMode: false, language: "English" }
-  };
-  assertSharedUser(sharedUser);
-  reply.send({ authenticated: true, user: sharedUser });
 };
 
 export const accountRecovery = async function accountRecovery(
