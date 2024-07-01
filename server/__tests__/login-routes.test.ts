@@ -108,7 +108,7 @@ beforeAll(async () => {
         timeWindow: "1 minute"
       }
     }
-  }
+  };
   app.post("/signup", loginRoutes.signup);
   app.post("/oauth", rateLimit, loginRoutes.googleLogin);
   app.post("/login", loginRoutes.login);
