@@ -411,9 +411,9 @@ export const fetchImage = async function (
   reply: FastifyReply
 ) {
   const tryReadFile = async (filepath: string) => {
-    const dummy = "/var/www/html";
-    const testPath = realpathSync(path.resolve(dummy, filepath));
-    if (!testPath.startsWith(dummy) || !testPath.endsWith(filepath)) {
+    const root = process.cwd();
+    const testPath = realpathSync(path.resolve(root, filepath));
+    if (!testPath.startsWith(root)) {
       reply.status(403).send({ error: "Invalid file path" });
       return;
     }
