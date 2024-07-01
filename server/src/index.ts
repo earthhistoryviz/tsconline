@@ -214,7 +214,7 @@ const strictRateLimit = {
   config: {
     rateLimit: {
       max: 10,
-      timeWindow: "1 minute"
+      timeWindow: 1000 * 60
     }
   }
 };
@@ -223,7 +223,7 @@ const moderateRateLimit = {
   config: {
     rateLimit: {
       max: 20,
-      timeWindow: "1 minute"
+      timeWindow: 1000 * 60
     }
   }
 };
