@@ -9,7 +9,6 @@ import { ErrorCodes } from "../../util/error-codes";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { CustomDivider } from "../TSCComponents";
-import { uploadDatapack } from "../state/actions/general-actions";
 
 type TSCDatapackUploadFormProps = {
   close: () => void;
@@ -59,8 +58,9 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
     actions.removeError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
     actions.removeError(ErrorCodes.UNFINISHED_DATAPACK_UPLOAD_FORM);
     try {
-      await uploadDatapack(datapackFile, datapackName, datapackDescription);
-      actions.pushSnackbar("Datapack uploaded successfully", "success");
+      await actions.uploadDatapack(datapackFile, datapackName, datapackDescription);
+      //commented out bc general-actions has a pushSnackbar so it doubles up but not sure if this is needed otherwise
+      //actions.pushSnackbar("Datapack uploaded successfully", "success");
       close();
     } catch (error) {
       actions.pushError(error as ErrorCodes);

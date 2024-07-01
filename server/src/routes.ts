@@ -229,45 +229,35 @@ export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
   // for test usage: const uuid = "username";
-  const uuid = "username"; //request.session.get("uuid");
+  const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
-  console.log("fetchUserDatapacks called");
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
-  console.log("userDir: ", userDir);
 
   try {
     await access(userDir);
     await access(path.join(userDir, "DatapackIndex.json"));
   } catch (e) {
     reply.status(404).send({ error: "User has no uploaded datapacks" });
-    console.log("User dir not found", e);
     return;
   }
 
   const datapackIndex: DatapackIndex = JSON.parse(JSON.stringify(serverDatapackindex));
-  console.log("datapackIndex: ", datapackIndex);
   const mapPackIndex: MapPackIndex = JSON.parse(JSON.stringify(serverMapPackIndex));
-  console.log("mapPackIndex: ", mapPackIndex);
   try {
-    console.log("try block in fetchUserDatapacks");
     const dataPackData = await readFile(path.join(userDir, "DatapackIndex.json"), "utf8");
-    console.log("dataPackData: ", dataPackData);
     Object.assign(datapackIndex, JSON.parse(dataPackData));
     const mapPackData = await readFile(path.join(userDir, "MapPackIndex.json"), "utf8");
-    console.log("mapPackData: ", mapPackData);
     Object.assign(mapPackIndex, JSON.parse(mapPackData));
   } catch (e) {
     reply
       .status(500)
       .send({ error: "Failed to load indexes, corrupt json files present. Please contact customer service." });
-    console.log("Failed to load indexes", e);
     return;
   }
   const indexResponse = { datapackIndex, mapPackIndex };
-  console.log("indexResponse: ", indexResponse);
   assertIndexResponse(indexResponse);
   reply.status(200).send(indexResponse);
 };
@@ -275,8 +265,7 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
 // If at some point a delete datapack function is needed, this function needs to be modified for race conditions
 export const uploadDatapack = async function uploadDatapack(request: FastifyRequest, reply: FastifyReply) {
   try {
-    console.log("uploadDatapack called");
-    const uuid = "username"; //request.session.get("uuid");
+    const uuid = request.session.get("uuid");
     if (!uuid) {
       reply.status(401).send({ error: "User not logged in" });
       return;
@@ -285,7 +274,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     const parts = request.parts();
     let tempFilePath: string;
     const fields: Record<string, string> = {};
-    let uploadedFile: MultipartFile | undefined; //has to be undefined to be able to check if it is null
+    let uploadedFile: MultipartFile | undefined;
 
     for await (const part of parts) {
       if (part.type === "file") {
