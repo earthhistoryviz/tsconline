@@ -101,16 +101,8 @@ beforeAll(async () => {
       maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
     }
   });
-  const rateLimit = {
-    config: {
-      rateLimit: {
-        max: 10,
-        timeWindow: "1 minute"
-      }
-    }
-  };
   app.post("/signup", loginRoutes.signup);
-  app.post("/oauth", rateLimit, loginRoutes.googleLogin);
+  app.post("/oauth", loginRoutes.googleLogin);
   app.post("/login", loginRoutes.login);
   app.post("/verify", loginRoutes.verifyEmail);
   app.post("/resend", loginRoutes.resendVerificationEmail);
