@@ -5,8 +5,10 @@
     "outDir": "dist",
     "allowJs": true
   },
-  "exclude": ["assets/uploads"],
-  "include": [ 
+  "exclude": [
+    "assets/uploads"
+  ],
+  "include": [
     "src",
   ]
 }

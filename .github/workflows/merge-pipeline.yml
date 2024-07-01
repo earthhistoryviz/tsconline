@@ -12,10 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0 
+          fetch-depth: 0
 
       - name: Fetch specific branch
-        run: git fetch origin main:main 
+        run: git fetch origin main:main
 
       - name: Check for disallowed files and directories
         run: |
@@ -28,7 +28,7 @@ jobs:
           if git diff --name-only main...HEAD | grep 'file_metadata.json'; then
             echo "file_metadata.json detected, please remove" >> disallowed_files.txt
           fi   
-          git diff --name-only main...HEAD | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store|db)$' | grep -v '^server/__tests__/__data__/.*\.txt$' >> disallowed_files.txt || true
+          git diff --name-only main...HEAD | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store|db)$' | grep -v '^server/__tests__/__data__/.*\.dpk$' | grep -v '^server/__tests__/__data__/encryption-test-keys/.*\.dpk$' | grep -v '^server/__tests__/__data__/.*\.txt$' >> disallowed_files.txt || true
           if git diff --name-only main...HEAD | grep -E 'app/dist/|server/dist/|shared/dist'; then
             echo "dist folder detected, please remove" >> disallowed_files.txt
           fi
@@ -110,7 +110,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Install Dependencies
         run: yarn install
@@ -145,14 +145,54 @@ jobs:
         if: env.build_failed == 'true'
         run: exit 1
 
+      - name: Set up SSH key
+        run: |
+          eval $(ssh-agent)
+          mkdir -p ~/.ssh
+          echo "${{ secrets.JAVA_DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo -e "Host bitbucket.org\n\tAddKeysToAgent yes\n\tIdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
+          ssh-add ~/.ssh/id_rsa
+
+      - name: Add known hosts
+        run: |
+          ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
+
+      - name: Checkout code from Bitbucket
+        run: |
+          git clone git@bitbucket.org:strat/tscreator.git
+
+      - name: Build and execute commands inside the docker
+        run: |
+          cd /home/runner/work/tsconline/tsconline/tscreator/
+          docker-compose build
+          docker-compose up -d
+          docker-compose exec -T tscreator_vnc bash -c "cd /tscreator/devel && make && make jar && find '/tscreator/jars/' -type f -name '*.jar' -exec cp {} '/tscreator/testUsageJar.jar' \; && exit"
+          docker cp tscreator_vnc:/tscreator/testUsageJar.jar /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar
+
+      - name: Move the jar to TSConline assets
+        run: |
+          cp /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar /home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "adopt"
+          java-version: "21"
+
+      - name: Install xvfb
+        run: sudo apt-get install xvfb
+
       - name: Run Tests
         run: |
+          Xvfb :1 -screen 0 1024x768x16 &
+          export DISPLAY=:1
           set -o pipefail
           if ! yarn test > test_output.log 2>&1; then
               echo "test_failed=true" >> $GITHUB_ENV
-              fi
+          fi
         continue-on-error: true
-      
+
       - name: Report Test Errors
         if: env.test_failed == 'true'
         uses: actions/github-script@v5

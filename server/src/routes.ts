@@ -25,6 +25,7 @@ import { loadIndexes } from "./load-packs.js";
 import { updateFileMetadata, writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
+import { runJavaEncrypt } from "./encryption.js";
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
@@ -129,35 +130,12 @@ export const requestDownload = async function requestDownload(
   try {
     await mkdirp(encryptedFilepathDir);
   } catch (e) {
-    console.error(e);
     reply.status(500).send({ error: "Failed to create encrypted directory with error " + e });
     return;
   }
 
   try {
-    await new Promise<void>((resolve) => {
-      const cmd =
-        `java -jar ${assetconfigs.activeJar} ` +
-        // datapacks:
-        `-d "${filepath.replaceAll("\\", "/")}" ` +
-        // Tell it where to send the datapacks
-        `-enc ${encryptedFilepathDir.replaceAll("\\", "/")} ` +
-        `-node`;
-
-      // java -jar <jar file> -d <datapack> <datapack> -enc <destination directory> -node
-      console.log("Calling Java encrypt.jar: ", cmd);
-      exec(cmd, function (error, stdout, stderror) {
-        console.log("Java encrypt.jar finished, sending reply to browser");
-        if (error) {
-          console.error("Java error param: " + error);
-          console.error("Java stderr: " + stderror.toString());
-          resolve();
-        } else {
-          console.log("Java stdout: " + stdout.toString());
-          resolve();
-        }
-      });
-    });
+    await runJavaEncrypt(assetconfigs.activeJar, filepath, encryptedFilepathDir);
   } catch (e) {
     console.error(e);
     reply.status(500).send({ error: "Failed to encrypt datapacks with error " + e });
