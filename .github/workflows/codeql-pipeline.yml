@@ -4,8 +4,6 @@ on:
   pull_request:
     branches:
       - pipeline-test
-    paths-ignore:
-      - '**/*.test.ts'
 
 jobs:
   analyze:
@@ -33,6 +31,7 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
+          config-file: ./codeql-config.yml
           languages: ${{ matrix.language }}
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3
