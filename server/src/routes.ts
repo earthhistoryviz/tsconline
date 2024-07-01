@@ -412,8 +412,8 @@ export const fetchImage = async function (
 ) {
   const tryReadFile = async (filepath: string) => {
     const root = process.cwd();
-    const testPath = realpathSync(path.resolve(root, filepath));
-    if (!testPath.startsWith(root)) {
+    filepath = realpathSync(path.resolve(root, filepath));
+    if (!filepath.startsWith(root)) {
       reply.status(403).send({ error: "Invalid file path" });
       return;
     }
