@@ -13,6 +13,22 @@ export type WindowStats = {
   value: number;
 };
 
+export type CritterSearchDisplayInfo = {
+  columnName: string;
+  columnPath: string[];
+  age: string;
+  qualifier: string;
+  notes: string;
+};
+
+export type SearchDisplayInfo = {
+  columnName: string;
+  columnPath: string[];
+  age: string;
+  qualifier: string;
+  notes: string;
+};
+
 export type DataMiningStatisticApproach = "average" | "minimum" | "maximum" | "rateOfChange" | "frequency";
 
 export type FaciesOptions = {
