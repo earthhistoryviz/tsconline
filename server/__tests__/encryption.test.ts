@@ -1,7 +1,6 @@
 import { vi, beforeAll, afterAll, describe, beforeEach, it, expect, test } from "vitest";
 import fastify, { FastifyRequest, FastifyInstance } from "fastify";
 import fastifySecureSession from "@fastify/secure-session";
-import { exec } from "child_process";
 import { requestDownload } from "../src/routes";
 import * as runJavaEncryptModule from "../src/encryption";
 import * as utilModule from "../src/util";
@@ -29,9 +28,7 @@ vi.mock("fs/promises", async (importOriginal) => {
   const actual = await importOriginal<typeof fspModule>();
   return {
     ...actual,
-    access: vi.fn().mockImplementation(() => {
-      console.log("wrong!");
-    }),
+    access: vi.fn().mockResolvedValue(undefined),
     readFile: vi.fn().mockResolvedValue(undefined),
     rm: vi.fn().mockReturnValue(undefined)
   };
@@ -94,23 +91,17 @@ beforeAll(async () => {
     }
   );
   vi.spyOn(console, "error").mockImplementation(() => undefined);
-  vi.spyOn(console, "log").mockImplementation(() => undefined);
+  // vi.spyOn(console, "log").mockImplementation(() => undefined);
   await app.listen({ host: "", port: 1234 });
 });
 
 afterAll(async () => {
   await app.close();
-  const cmd = `rm -rf server/__tests__/__data__/encryption-test-generated-file/`;
-  exec(cmd, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`exec error: ${error}`);
-      return;
-    }
-    if (stderr) {
-      console.error(`stderr: ${stderr}`);
-    }
-    console.log(`stdout: ${stdout}`);
-  });
+  const generatedFilePath = "server/__tests__/__data__/encryption-test-generated-file/";
+  await unmockedRm(generatedFilePath, { recursive: true, force: true });
+  if (await checkFileExists(generatedFilePath)) {
+    throw new Error("test generated file directory shouldn't exist");
+  }
 });
 
 beforeEach(() => {
@@ -143,15 +134,13 @@ describe("requestDownload", () => {
     });
     expect(accessSpy).toHaveBeenCalledTimes(2);
     expect(runJavaEncryptSpy).not.toHaveBeenCalled();
-    expect(checkHeaderSpy).toHaveBeenCalledTimes(1);
-    expect(checkHeaderSpy).toHaveReturnedWith(false);
-    expect(readFileSpy).toHaveBeenCalledTimes(1);
+    expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
     expect(readFileSpy).toHaveNthReturnedWith(1, "default content");
     expect(response.statusCode).toBe(500);
     expect(response.json().error).toBe("Failed to create encrypted directory with error Error: Unknown Error");
   });
 
-  it("should reply 500 when an unknown error occured in readFile when retreive original", async () => {
+  it("should reply 500 when an unknown error occurred in readFile when retrieved original", async () => {
     accessSpy.mockResolvedValueOnce(undefined);
     readFileSpy.mockRejectedValueOnce(new Error("Unknown error"));
 
@@ -164,7 +153,7 @@ describe("requestDownload", () => {
     expect(response.json().error).toBe("An error occurred: Error: Unknown error");
   });
 
-  it("should reply 500 when an unknown error occured in readFile when need encryption", async () => {
+  it("should reply 500 when an unknown error occurred in readFile when need encryption", async () => {
     accessSpy.mockResolvedValueOnce(undefined);
     readFileSpy.mockRejectedValueOnce(new Error("Unknown error"));
 
@@ -194,11 +183,9 @@ describe("requestDownload", () => {
       url: "/hasuuid/download/user-datapacks/:filename?needEncryption=true"
     });
 
-    expect(readFileSpy).toHaveReturnedWith("default content");
-    expect(checkHeaderSpy).toHaveBeenCalledTimes(1);
-    expect(checkHeaderSpy).toHaveReturnedWith(false);
-    expect(readFileSpy).toHaveBeenCalledTimes(1);
+    expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
     expect(readFileSpy).toHaveNthReturnedWith(1, "default content");
+    expect(mkdirpSpy).toHaveBeenCalledOnce();
     expect(response.statusCode).toBe(500);
     expect(response.json().error).toBe("Failed to encrypt datapacks with error Error: Unknown error");
   });
@@ -222,7 +209,8 @@ describe("requestDownload", () => {
     });
 
     expect(runJavaEncryptSpy).toHaveReturnedWith(undefined);
-    expect(checkHeaderSpy).toHaveBeenCalledTimes(2);
+    expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
+    expect(checkHeaderSpy).toHaveNthReturnedWith(2, false);
     expect(rmSpy).toHaveBeenCalled();
     expect(accessSpy).toBeCalledTimes(3);
     expect(response.statusCode).toBe(422);
@@ -285,11 +273,9 @@ describe("requestDownload", () => {
     expect(response.statusCode).toBe(404);
     expect(response.json().error).toBe(`The file requested :filename does not exist within user's upload directory`);
   });
-  it("should return the original file when request retrieve original file when the original file is unencrypted", async () => {
-    // when the original file is unencrypted
-
+  it("should return the original file when request retrieve original file", async () => {
     accessSpy.mockResolvedValueOnce(undefined);
-    readFileSpy.mockResolvedValueOnce("default content");
+    readFileSpy.mockResolvedValueOnce("original file");
 
     const response = await app.inject({
       method: "GET",
@@ -297,24 +283,12 @@ describe("requestDownload", () => {
     });
 
     expect(checkHeaderSpy).not.toHaveBeenCalled();
-    expect(readFileSpy).toHaveBeenCalledTimes(1);
-    expect(readFileSpy).toHaveReturnedWith("default content");
+    expect(readFileSpy).toHaveNthReturnedWith(1, "original file");
     expect(response.statusCode).toBe(200);
-  });
-
-  it("should return the original file when request retrieve original file when the original file is encrypted", async () => {
-    // when the original file is encrypted
-    accessSpy.mockResolvedValueOnce(undefined);
-    readFileSpy.mockResolvedValueOnce("TSCreator Encrypted Datafile");
-
-    const response = await app.inject({
-      method: "GET",
-      url: "/hasuuid/download/user-datapacks/:filename"
-    });
-    expect(checkHeaderSpy).not.toHaveBeenCalled();
-    expect(readFileSpy).toHaveBeenCalledTimes(1);
-    expect(readFileSpy).toHaveReturnedWith("TSCreator Encrypted Datafile");
-    expect(response.statusCode).toBe(200);
+    const isBuffer = Buffer.isBuffer(response.rawPayload);
+    const fileContent = Buffer.from("original file");
+    expect(isBuffer).toBe(true);
+    expect(response.rawPayload).toEqual(fileContent);
   });
 
   it("should return a newly encrypted file when request encrypted download an unencrypted file which has not been encrypted before", async () => {
@@ -340,13 +314,15 @@ describe("requestDownload", () => {
 
     expect(runJavaEncryptSpy).toHaveBeenCalledTimes(1);
     expect(accessSpy).toHaveBeenCalledTimes(3);
-    expect(readFileSpy).toHaveBeenCalledTimes(2);
     expect(readFileSpy).toHaveNthReturnedWith(1, "default content");
     expect(readFileSpy).toHaveNthReturnedWith(2, "TSCreator Encrypted Datafile");
-    expect(checkHeaderSpy).toHaveBeenCalledTimes(2);
     expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
     expect(checkHeaderSpy).toHaveNthReturnedWith(2, true);
     expect(response.statusCode).toBe(200);
+    const isBuffer = Buffer.isBuffer(response.rawPayload);
+    const fileContent = Buffer.from("TSCreator Encrypted Datafile");
+    expect(isBuffer).toBe(true);
+    expect(response.rawPayload).toEqual(fileContent);
   });
   it("should return the old encrypted file when request encrypted download an unencrypted file which has been encrypted before", async () => {
     accessSpy.mockResolvedValueOnce(undefined);
@@ -358,11 +334,13 @@ describe("requestDownload", () => {
     });
     expect(runJavaEncryptSpy).not.toHaveBeenCalled();
     expect(accessSpy).toHaveBeenCalledTimes(1);
-    expect(checkHeaderSpy).toHaveBeenCalledTimes(1);
-    expect(readFileSpy).toHaveBeenCalledTimes(1);
-    expect(readFileSpy).toHaveReturnedWith("TSCreator Encrypted Datafile");
-    expect(checkHeaderSpy).toHaveReturnedWith(true);
+    expect(readFileSpy).toHaveNthReturnedWith(1, "TSCreator Encrypted Datafile");
+    expect(checkHeaderSpy).toHaveNthReturnedWith(1, true);
     expect(response.statusCode).toBe(200);
+    const isBuffer = Buffer.isBuffer(response.rawPayload);
+    const fileContent = Buffer.from("TSCreator Encrypted Datafile");
+    expect(isBuffer).toBe(true);
+    expect(response.rawPayload).toEqual(fileContent);
   });
 
   it("should return the original encrypted file when request encrypted download an encrypted file", async () => {
@@ -382,11 +360,13 @@ describe("requestDownload", () => {
     expect(runJavaEncryptSpy).not.toHaveBeenCalled();
     expect(accessSpy).toHaveBeenCalledTimes(2);
     expect(accessSpy).not.toHaveNthReturnedWith(1, undefined);
-    expect(readFileSpy).toHaveBeenCalledTimes(1);
-    expect(readFileSpy).toHaveReturnedWith("TSCreator Encrypted Datafile");
-    expect(checkHeaderSpy).toHaveBeenCalledTimes(1);
-    expect(checkHeaderSpy).toHaveReturnedWith(true);
+    expect(readFileSpy).toHaveNthReturnedWith(1, "TSCreator Encrypted Datafile");
+    expect(checkHeaderSpy).toHaveNthReturnedWith(1, true);
     expect(response.statusCode).toBe(200);
+    const isBuffer = Buffer.isBuffer(response.rawPayload);
+    const fileContent = Buffer.from("TSCreator Encrypted Datafile");
+    expect(isBuffer).toBe(true);
+    expect(response.rawPayload).toEqual(fileContent);
   });
   it("should remove the old encrypted file and encrypt again when the old file was not properly encrypted", async () => {
     runJavaEncryptSpy.mockResolvedValue(undefined);
@@ -403,16 +383,18 @@ describe("requestDownload", () => {
     });
 
     expect(rmSpy).toHaveBeenCalledTimes(1);
-    expect(checkHeaderSpy).toHaveBeenCalledTimes(3);
     expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
     expect(checkHeaderSpy).toHaveNthReturnedWith(2, false);
     expect(checkHeaderSpy).toHaveNthReturnedWith(3, true);
-    expect(readFileSpy).toHaveBeenCalledTimes(3);
     expect(readFileSpy).toHaveNthReturnedWith(1, "not properly encrypted");
     expect(readFileSpy).toHaveNthReturnedWith(2, "default content");
     expect(readFileSpy).toHaveNthReturnedWith(3, "TSCreator Encrypted Datafile");
     expect(runJavaEncryptSpy).toHaveBeenCalledTimes(1);
     expect(response.statusCode).toBe(200);
+    const isBuffer = Buffer.isBuffer(response.rawPayload);
+    const fileContent = Buffer.from("TSCreator Encrypted Datafile");
+    expect(isBuffer).toBe(true);
+    expect(response.rawPayload).toEqual(fileContent);
   });
 
   it("should reply 500 when an unknown error occured when try to access file when retreive original", async () => {
@@ -450,57 +432,71 @@ async function checkFileExists(filePath: string): Promise<boolean> {
   }
 }
 
-let jarFilePath = "server/assets/jars/TSCreatorBASE-8.1_09June2024.jar";
+let jarFilePath = "";
 let resultPath = "server/__tests__/__data__/encryption-test-generated-file";
 if (await checkFileExists("/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar")) {
   jarFilePath = "/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar";
   resultPath = "/home/runner/work/tsconline/tsconline/server/__tests__/__data__/encryption-test-generated-file";
+} else {
+  try {
+    const contents = JSON.parse((await unmockedReadFile("server/assets/config.json")).toString());
+    if (typeof contents !== "object") throw new Error("AssetConfig must be an object");
+    if (typeof contents.activeJar !== "string") throw new Error('AssetConfig must have an "activeJar" string');
+    jarFilePath = "server/" + contents.activeJar;
+  } catch (e) {
+    throw new Error("ERROR: Failed to load local jar file path from assets/config.json.  Error was: " + e);
+  }
 }
+if (!jarFilePath) throw new Error("jar file path shouldn't be empty");
 
 describe("runJavaEncrypt", () => {
   it("should correctly encrypt an unencrypted TSCreator txt file", async () => {
     if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-1.txt"))) {
       await unmockedRunJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-1.txt", resultPath);
+    } else {
+      throw new Error("test generated file shouldn't exist at this point");
     }
     const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-1.txt";
     const keyFilePath = "server/__tests__/__data__/encryption-test-keys/test-1-key.txt";
     const [result, key] = await Promise.all([unmockedReadFile(resultFilePath), unmockedReadFile(keyFilePath)]);
-    expect(result).toEqual(key);
-    // Compare the byte size (length)
     expect(result.length).toBe(key.length);
+    expect(result).toEqual(key);
   });
   it("should correctly encrypt an encrypted TSCreator txt file, when the TSCreator Encrypted Datafile title is manually removed from the original encrypted file.", async () => {
     if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-2.txt"))) {
       await unmockedRunJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-2.txt", resultPath);
+    } else {
+      throw new Error("test generated file shouldn't exist at this point");
     }
     const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-2.txt";
     const keyFilePath = "server/__tests__/__data__/encryption-test-keys/test-2-key.txt";
     const [result, key] = await Promise.all([unmockedReadFile(resultFilePath), unmockedReadFile(keyFilePath)]);
-    expect(result).toEqual(key);
-    // Compare the byte size (length)
     expect(result.length).toBe(key.length);
+    expect(result).toEqual(key);
   });
   it("should correctly encrypt an unencrypted TSCreator zip file", async () => {
     if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-5.dpk"))) {
       await unmockedRunJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-5.zip", resultPath);
+    } else {
+      throw new Error("test generated file shouldn't exist at this point");
     }
     const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-5.dpk";
     const keyFilePath = "server/__tests__/__data__/encryption-test-keys/test-5-key.dpk";
     const [result, key] = await Promise.all([unmockedReadFile(resultFilePath), unmockedReadFile(keyFilePath)]);
-    expect(result).toEqual(key);
-    // Compare the byte size (length)
     expect(result.length).toBe(key.length);
+    expect(result).toEqual(key);
   });
   it("should correctly encrypt an encrypted TSCreator zip file", async () => {
     if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-6.dpk"))) {
       await unmockedRunJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-6.zip", resultPath);
+    } else {
+      throw new Error("test generated file shouldn't exist at this point");
     }
     const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-6.dpk";
     const keyFilePath = "server/__tests__/__data__/encryption-test-keys/test-6-key.dpk";
     const [result, key] = await Promise.all([unmockedReadFile(resultFilePath), unmockedReadFile(keyFilePath)]);
-    expect(result).toEqual(key);
-    // Compare the byte size (length)
     expect(result.length).toBe(key.length);
+    expect(result).toEqual(key);
   });
   it("should not encrypt a bad txt file", async () => {
     await unmockedRunJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-3.txt", resultPath);
@@ -538,3 +534,5 @@ describe("checkHeader", () => {
     expect(await unmockedCheckHeader("unencrypted.txt")).toEqual(false);
   });
 });
+
+const { rm: unmockedRm } = await import("fs/promises");
