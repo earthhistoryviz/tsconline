@@ -21,6 +21,7 @@ import { sendEmail } from "./send-email.js";
 import fastifyAuth from "@fastify/auth"
 import cron from "node-cron";
 import path from "path";
+import { adminRoutes } from "./admin-auth.js";
 
 const server = fastify({
   logger: false,
@@ -241,6 +242,7 @@ const moderateRateLimit = {
   }
 };
 
+await server.register(adminRoutes, { prefix: "/admin" });
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
 server.post("/auth/signup", strictRateLimit, loginRoutes.signup);

@@ -25,8 +25,8 @@ import { loadFileMetadata } from "./file-metadata-handler.js";
 import { readdir, rm, writeFile } from "fs/promises";
 import { checkRecaptchaToken, generateToken } from "./verify.js";
 
-const emailTestRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const googleRecaptchaBotThreshold = 0.5;
+export const emailTestRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const googleRecaptchaBotThreshold = 0.5;
 
 export const deleteProfile = async function deleteProfile(request: FastifyRequest, reply: FastifyReply) {
   const uuid = request.session.get("uuid");
