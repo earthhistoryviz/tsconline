@@ -5,7 +5,8 @@ import {
   adminDeleteUserDatapack,
   adminDeleteUser,
   getUsers,
-  adminUploadServerDatapack
+  adminUploadServerDatapack,
+  adminDeleteServerDatapack
 } from "./admin-routes.js";
 import { checkRecaptchaToken } from "./verify.js";
 import { googleRecaptchaBotThreshold } from "./login-routes.js";
@@ -95,4 +96,19 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     adminDeleteUserDatapack
   );
   fastify.post("/server/datapack", adminUploadServerDatapack);
+  fastify.delete(
+    "/server/datapack",
+    {
+      schema: {
+        body: {
+          type: "object",
+          properties: {
+            datapack: { type: "string" }
+          },
+          required: ["datapack"]
+        }
+      }
+    },
+    adminDeleteServerDatapack
+  );
 };

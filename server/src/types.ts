@@ -74,6 +74,7 @@ export type AssetConfig = {
 
 export type AdminConfig = {
   datapacks: string[];
+  removeDevDatapacks: string[]; // for ignoring any datapacks that dev wants to use to prevent merge conflicts
 };
 
 export type Colors = {
@@ -97,6 +98,11 @@ export function assertAdminConfig(o: any): asserts o is AdminConfig {
   if (!o.datapacks || !Array.isArray(o.datapacks)) throw 'AdminConfig must have a "datapacks" array';
   for (const [index, ad] of o.datapacks.entries()) {
     if (typeof ad !== "string") throw "AdminConfig datapacks item " + index + " must be a string";
+  }
+  if (!o.removeDevDatapacks || !Array.isArray(o.removeDevDatapacks))
+    throw 'AdminConfig must have a "removeDevDatapacks" array';
+  for (const [index, ad] of o.removeDevDatapacks.entries()) {
+    if (typeof ad !== "string") throw "AdminConfig removeDevDatapacks item " + index + " must be a string";
   }
 }
 export function assertEmail(o: any): asserts o is Email {
