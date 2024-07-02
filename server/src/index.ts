@@ -18,6 +18,7 @@ import fastifyRateLimit from "@fastify/rate-limit";
 import dotenv from "dotenv";
 import { db, findIp, createIp, updateIp, initializeDatabase } from "./database.js";
 import { sendEmail } from "./send-email.js";
+import fastifyAuth from "@fastify/auth"
 import cron from "node-cron";
 import path from "path";
 
@@ -110,6 +111,8 @@ await server.register(fastifyRateLimit, {
     }
   }
 });
+
+await server.register(fastifyAuth)
 
 server.register(fastifyMultipart, {
   limits: {

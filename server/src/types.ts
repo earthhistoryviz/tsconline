@@ -16,6 +16,7 @@ export interface UserTable {
   pictureUrl: string | null;
   emailVerified: number;
   invalidateSession: number;
+  isAdmin: number;
 }
 
 export interface VerificationTable {

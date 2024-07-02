@@ -660,7 +660,8 @@ export const signup = async function signup(
       uuid: randomUUID(),
       pictureUrl: null,
       emailVerified: 0,
-      invalidateSession: 0
+      invalidateSession: 0,
+      isAdmin: 0
     };
     await createUser(newUser);
     const insertedUser = (await findUser({ email }))[0];
@@ -783,7 +784,8 @@ export const googleLogin = async function googleLogin(
       uuid: uuid,
       pictureUrl: payload.picture,
       emailVerified: 1,
-      invalidateSession: 0
+      invalidateSession: 0,
+      isAdmin: 0
     };
     await createUser(user);
     const insertedUser = (await findUser({ email: payload.email }))[0];
