@@ -1,6 +1,6 @@
 import { TextField } from "@mui/material";
 import { observer } from "mobx-react-lite";
-import { useContext, useRef } from "react";
+import { useContext, useEffect, useRef } from "react";
 import "./Search.css";
 import {
   assertSubBlockInfo,
@@ -33,11 +33,9 @@ export const Search = observer(function Search() {
   }
   const count = useRef(0);
   function searchResultData() {
-    if (state.settingsTabs.eventSearchTerm === "") return [];
     count.current = 0;
-    //columnPath: list of editName path before chart root
-    //outer key: matched term, matches editName for columns
-    //inner key: column name
+    if (state.settingsTabs.eventSearchTerm === "") return [];
+    //key: column name/event name
     //info: info found in subinfo array
     const results = new Map<string, EventSearchInfo[]>();
     for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
@@ -50,7 +48,12 @@ export const Search = observer(function Search() {
         if (!results.has(id)) {
           results.set(id, []);
         }
-        results.get(id)!.push({ columnName: columnInfo.name, columnPath: columnPath(columnInfo.name) });
+        results.get(id)!.push({
+          id: count.current,
+          columnName: columnInfo.name,
+          columnPath: columnPath(columnInfo.name),
+          unit: columnInfo.units
+        });
         count.current++;
       }
       if (columnInfo.subInfo) {
@@ -65,8 +68,10 @@ export const Search = observer(function Search() {
             if (subInfo.label!.toLowerCase().includes(state.settingsTabs.eventSearchTerm)) {
               const resultType = columnInfo.columnDisplayType === "Zone" ? "Block" : columnInfo.columnDisplayType;
               const resinfo: EventSearchInfo = {
+                id: count.current,
                 columnName: columnInfo.name,
-                columnPath: columnPath(columnInfo.name)
+                columnPath: columnPath(columnInfo.name),
+                unit: columnInfo.units
               };
               //special case for facies and chron label since they are intervals and shows up as block but uses subfacies/subchron info
               if (columnInfo.columnDisplayType === "BlockSeriesMetaColumn") {
@@ -87,6 +92,7 @@ export const Search = observer(function Search() {
                   resinfo.columnName = columnInfo.name + " Facies Label";
                 }
                 temp.push(resinfo);
+                count.current++;
                 continue;
               }
 
@@ -148,12 +154,11 @@ export const Search = observer(function Search() {
       }
     }
 
-    const arr: GroupedEventSearchInfo[] = [];
+    const groupedEvents: GroupedEventSearchInfo[] = [];
     results.forEach((info: EventSearchInfo[], key: string) => {
-      arr.push({ key: key, info: [...info] });
+      groupedEvents.push({ key: key, info: [...info] });
     });
-    console.log(arr);
-    return arr;
+    return groupedEvents;
   }
   const InContext = observer(() => {
     return (
@@ -163,18 +168,22 @@ export const Search = observer(function Search() {
           onClick={() => {
             //in-context feature, adds 3myr to above and below the age
             actions.setEventInContext(!state.settingsTabs.eventInContext);
-            if (!state.settingsTabs.eventInContext) {
-              actions.setEventInContextTopList(null);
-              actions.setEventInContextBaseList(null);
-              //actions.setAgeBeforeContext(null)
+            if (state.settingsTabs.eventInContext) {
+              actions.createAgeBeforeContext();
             } else {
-              //actions.setAgeBeforeContext({topAge: state.settings.timeSettings["Ma"].topStageAge, baseAge: state.settings.timeSettings["Ma"].baseStageAge})
+              actions.resetEventInContextLists();
             }
           }}
         />
         Select 3ma around event for chart generation
       </div>
     );
+  });
+  //for cleanup
+  useEffect(() => {
+    return () => {
+      actions.resetEventInContextLists();
+    };
   });
   return (
     <div className="search-container">
@@ -191,7 +200,11 @@ export const Search = observer(function Search() {
       </div>
       <div>Found {count.current} Results</div>
       <InContext />
-      <Results key={state.settingsTabs.eventSearchTerm} arr={searchResultData()} />
+      <Results
+        key={state.settingsTabs.eventSearchTerm}
+        groupedEvents={searchResultData()}
+        resultCount={count.current}
+      />
     </div>
   );
 });

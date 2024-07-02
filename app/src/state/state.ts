@@ -9,6 +9,8 @@ import {
   Config,
   SettingsTabs,
   CachedConfig,
+  eventInContextList,
+  ageBeforeContext,
   User
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
@@ -62,10 +64,11 @@ export type State = {
     eventInContext: boolean;
     //sorted array of added events while in context is enabled
     //age is before the add/subtract of 3myr
-    eventInContextTopList: { key: string; age: number }[] | null;
-    eventInContextBaseList: { key: string; age: number }[] | null;
+    eventInContextTopList: eventInContextList | null;
+    eventInContextBaseList: eventInContextList | null;
     //null if eventInContext is false
-    ageBeforeContext: { topAge: number; baseAge: number } | null;
+    ageBeforeContext: ageBeforeContext | null;
+    addSearchResultToChart: boolean[];
   };
   mapState: {
     mapInfo: MapInfo;
@@ -152,7 +155,8 @@ export const state = observable<State>({
     eventInContext: false,
     eventInContextTopList: null,
     eventInContextBaseList: null,
-    ageBeforeContext: null
+    ageBeforeContext: null,
+    addSearchResultToChart: []
   },
   mapState: {
     mapInfo: {},

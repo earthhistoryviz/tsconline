@@ -9,7 +9,7 @@ import {
   Typography,
   Box
 } from "@mui/material";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect } from "react";
 import { Table } from "react-bootstrap";
 import { TableComponents, TableVirtuoso } from "react-virtuoso";
 import { CustomTooltip, TSCCheckbox } from "../components";
@@ -24,8 +24,9 @@ import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 
 const Checkbox = observer(({ info }: { info: EventSearchInfo }) => {
   const { state, actions } = useContext(context);
-  const [on, setOn] = useState<boolean>(false);
+  //for synchronous update of event in context lists
   const column = state.settingsTabs.columnHashMap.get(info.columnName);
+
   if (!column) {
     return (
       <SvgIcon>
@@ -33,13 +34,16 @@ const Checkbox = observer(({ info }: { info: EventSearchInfo }) => {
       </SvgIcon>
     );
   }
-  //piacenzian, zanclean, messinian
+  // console.log(index, info.columnName, state.settingsTabs.addSearchResultToChart[info.id])
   return (
     <TSCCheckbox
-      checked={on}
+      inputProps={{ "aria-label": "controlled" }}
+      checked={state.settingsTabs.addSearchResultToChart[info.id]}
       onClick={() => {
-        setOn(!on);
-        if (on) {
+        actions.setAddSearchResultToChart(!state.settingsTabs.addSearchResultToChart[info.id], info.id);
+        console.log(state.settingsTabs.addSearchResultToChart[info.id]);
+        if (state.settingsTabs.addSearchResultToChart[info.id]) {
+          //this is so the columns toggle properly since this checkbox isn't the column on value
           actions.setColumnOn(false, column);
           actions.toggleSettingsTabColumn(column);
         }
@@ -56,94 +60,22 @@ const Checkbox = observer(({ info }: { info: EventSearchInfo }) => {
               eventContextTop.age = Number(info.age!);
               eventContextBase.age = Number(info.age!);
             }
-            if (on) {
-              if (!state.settingsTabs.eventInContextTopList) {
-                actions.setEventInContextTopList([eventContextTop]);
+            if (state.settingsTabs.addSearchResultToChart[info.id]) {
+              actions.InsertEventInContextTopList(eventContextTop, info.unit);
+              actions.InsertEventInContextBaseList(eventContextBase, info.unit);
+              if (!state.settingsTabs.eventInContextTopList || !state.settingsTabs.eventInContextBaseList) {
+                return;
               }
-              //insert current event in sorted array
-              else {
-                const prevLength = state.settingsTabs.eventInContextTopList.length;
-                let index = 0;
-                for (index; index < state.settingsTabs.eventInContextTopList.length; index++) {
-                  const compareEvent = state.settingsTabs.eventInContextTopList[index];
-                  if (eventContextTop.age < compareEvent.age) {
-                    actions.setEventInContextTopList(
-                      state.settingsTabs.eventInContextTopList.splice(index, 0, eventContextTop)
-                    );
-                    break;
-                  }
-                  //event already in array
-                  else if (eventContextTop.age === compareEvent.age) {
-                    if (eventContextTop.key === compareEvent.key) {
-                      break;
-                    }
-                  }
-                }
-                //add event to end of list
-                if (index == prevLength - 1) {
-                  actions.setEventInContextTopList(
-                    state.settingsTabs.eventInContextTopList.splice(index + 1, 0, eventContextTop)
-                  );
-                }
-              }
-              actions.setTopStageAge(state.settingsTabs.eventInContextTopList![0].age - 3, "Ma");
-
-              if (!state.settingsTabs.eventInContextBaseList) {
-                actions.setEventInContextBaseList([eventContextBase]);
-              }
-              //insert current event in sorted array
-              else {
-                const prevLength = state.settingsTabs.eventInContextBaseList.length;
-                let index = 0;
-                for (index; index < state.settingsTabs.eventInContextBaseList.length; index++) {
-                  const compareEvent = state.settingsTabs.eventInContextBaseList[index];
-                  if (eventContextBase.age < compareEvent.age) {
-                    actions.setEventInContextBaseList(
-                      state.settingsTabs.eventInContextBaseList.splice(index, 0, eventContextBase)
-                    );
-                    break;
-                  }
-                  //event already in array
-                  else if (eventContextBase.age === compareEvent.age) {
-                    if (eventContextBase.key === compareEvent.key) {
-                      break;
-                    }
-                  }
-                }
-                //add event to end of list
-                if (index == prevLength - 1) {
-                  actions.setEventInContextBaseList(
-                    state.settingsTabs.eventInContextBaseList.splice(index + 1, 0, eventContextBase)
-                  );
-                }
-              }
-              actions.setBaseStageAge(state.settingsTabs.eventInContextBaseList![0].age + 3, "Ma");
+              actions.setTopStageAge(state.settingsTabs.eventInContextTopList[info.unit][0].age - 3, info.unit);
+              actions.setBaseStageAge(state.settingsTabs.eventInContextBaseList[info.unit][0].age + 3, info.unit);
             } else {
-              //if checkbox is toggled off, this should always exist but check it for typescript
-              if (state.settingsTabs.eventInContextTopList) {
-                let index = 0;
-                for (index; index < state.settingsTabs.eventInContextTopList.length; index++) {
-                  const compareEvent = state.settingsTabs.eventInContextTopList[index];
-                  if (compareEvent.key === eventContextTop.key && compareEvent.age === eventContextTop.age) {
-                    actions.setEventInContextTopList(state.settingsTabs.eventInContextTopList.splice(index, 1));
-                    if (index === 0) {
-                      actions.setTopStageAge(state.settingsTabs.eventInContextTopList[0].age - 3, "Ma");
-                    }
-                  }
-                }
+              actions.removeEventInContextTopList(eventContextTop, info.unit);
+              actions.removeEventInContextBaseList(eventContextBase, info.unit);
+              if (state.settingsTabs.eventInContextTopList && state.settingsTabs.eventInContextTopList[info.unit]) {
+                actions.setTopStageAge(state.settingsTabs.eventInContextTopList![info.unit][0].age - 3, info.unit);
               }
-
-              if (state.settingsTabs.eventInContextBaseList) {
-                let index = 0;
-                for (index; index < state.settingsTabs.eventInContextBaseList.length; index++) {
-                  const compareEvent = state.settingsTabs.eventInContextBaseList[index];
-                  if (compareEvent.key === eventContextBase.key && compareEvent.age === eventContextBase.age) {
-                    actions.setEventInContextBaseList(state.settingsTabs.eventInContextBaseList.splice(index, 1));
-                    if (index === 0) {
-                      actions.setBaseStageAge(state.settingsTabs.eventInContextBaseList[0].age + 3, "Ma");
-                    }
-                  }
-                }
+              if (state.settingsTabs.eventInContextBaseList && state.settingsTabs.eventInContextBaseList[info.unit]) {
+                actions.setBaseStageAge(state.settingsTabs.eventInContextBaseList![info.unit][0].age - 3, info.unit);
               }
             }
           }
@@ -153,8 +85,20 @@ const Checkbox = observer(({ info }: { info: EventSearchInfo }) => {
   );
 });
 
-export const Results = ({ arr }: { arr: GroupedEventSearchInfo[] }) => {
+export const Results = ({
+  groupedEvents,
+  resultCount
+}: {
+  groupedEvents: GroupedEventSearchInfo[];
+  resultCount: number;
+}) => {
   const theme = useTheme();
+  const { actions } = useContext(context);
+
+  useEffect(() => {
+    actions.resetAddSearchResultToChart();
+    actions.initAddSearchResultToChart(resultCount);
+  }, []);
 
   function Row(props: { row: GroupedEventSearchInfo; index: number }) {
     const { row, index } = props;
@@ -236,7 +180,7 @@ export const Results = ({ arr }: { arr: GroupedEventSearchInfo[] }) => {
     <Box sx={{ height: "70vh", width: "50vw", marginTop: "2vh" }}>
       <TableVirtuoso
         initialTopMostItemIndex={0}
-        data={arr}
+        data={groupedEvents}
         components={VirtuosoTableComponents}
         itemContent={(index, row) => Row({ row, index })}
       />

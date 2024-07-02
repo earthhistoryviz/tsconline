@@ -615,16 +615,123 @@ export const setEventInContext = action((inContext: boolean) => {
   state.settingsTabs.eventInContext = inContext;
 });
 
-export const setEventInContextTopList = action((term: { key: string; age: number }[] | null) => {
-  state.settingsTabs.eventInContextTopList = term;
+export const InsertEventInContextTopList = action((term: { key: string; age: number }, unit: string) => {
+  if (!state.settingsTabs.eventInContextTopList) {
+    state.settingsTabs.eventInContextTopList = { [unit]: [term] };
+  } else if (!state.settingsTabs.eventInContextTopList[unit]) {
+    state.settingsTabs.eventInContextTopList[unit] = [term];
+  } else {
+    const topList = state.settingsTabs.eventInContextTopList[unit];
+    const prevLength = topList.length;
+    let index = 0;
+    for (index; index < topList.length; index++) {
+      const compareEvent = topList[index];
+      if (term.age === compareEvent.age && term.key === compareEvent.key) {
+        return;
+      } else if (term.age <= compareEvent.age) {
+        topList.splice(index, 0, term);
+        break;
+      }
+    }
+    if (index === prevLength) {
+      topList.push(term);
+    }
+  }
 });
 
-export const setEventInContextBaseList = action((term: { key: string; age: number }[] | null) => {
-  state.settingsTabs.eventInContextBaseList = term;
+export const InsertEventInContextBaseList = action((term: { key: string; age: number }, unit: string) => {
+  if (!state.settingsTabs.eventInContextBaseList) {
+    state.settingsTabs.eventInContextBaseList = { [unit]: [term] };
+  } else if (!state.settingsTabs.eventInContextBaseList[unit]) {
+    state.settingsTabs.eventInContextBaseList[unit] = [term];
+  } else {
+    const baseList = state.settingsTabs.eventInContextBaseList[unit];
+    const prevLength = baseList.length;
+    let index = 0;
+    for (index; index < baseList.length; index++) {
+      const compareEvent = baseList[index];
+      if (term.age === compareEvent.age && term.key === compareEvent.key) {
+        return;
+      } else if (term.age >= compareEvent.age) {
+        baseList.splice(index, 0, term);
+        break;
+      }
+    }
+    if (index === prevLength) {
+      baseList.push(term);
+    }
+  }
 });
 
-export const setAgeBeforeContext = action((ages: { topAge: number; baseAge: number }) => {
-  state.settingsTabs.ageBeforeContext = ages;
+export const removeEventInContextTopList = action((term: { key: string; age: number }, unit: string) => {
+  if (!state.settingsTabs.eventInContextTopList || !state.settingsTabs.eventInContextTopList[unit]) {
+    return;
+  } else {
+    const topList = state.settingsTabs.eventInContextTopList[unit];
+    for (let i = 0; i < topList.length; i++) {
+      const compareEvent = topList[i];
+      if (term.key === compareEvent.key && term.age === compareEvent.age) {
+        topList.splice(i, 1);
+      }
+    }
+    if (topList.length === 0) {
+      delete state.settingsTabs.eventInContextTopList[unit];
+    }
+  }
+});
+
+export const removeEventInContextBaseList = action((term: { key: string; age: number }, unit: string) => {
+  if (!state.settingsTabs.eventInContextBaseList || !state.settingsTabs.eventInContextBaseList[unit]) {
+    return;
+  } else {
+    const baseList = state.settingsTabs.eventInContextBaseList[unit];
+    for (let i = 0; i < baseList.length; i++) {
+      const compareEvent = baseList[i];
+      if (term.key === compareEvent.key && term.age === compareEvent.age) {
+        baseList.splice(i, 1);
+      }
+    }
+    if (baseList.length === 0) {
+      delete state.settingsTabs.eventInContextBaseList[unit];
+    }
+  }
+});
+
+export const resetEventInContextLists = action(() => {
+  state.settingsTabs.eventInContextBaseList = null;
+  state.settingsTabs.eventInContextTopList = null;
+});
+
+export const createAgeBeforeContext = action(() => {
+  for (const unit in state.settings.timeSettings) {
+    const unitAges = state.settings.timeSettings[unit];
+    if (!state.settingsTabs.ageBeforeContext) {
+      state.settingsTabs.ageBeforeContext = {
+        [unit]: { topAge: unitAges.topStageAge, baseAge: unitAges.baseStageAge }
+      };
+    } else {
+      state.settingsTabs.ageBeforeContext[unit] = { topAge: unitAges.topStageAge, baseAge: unitAges.baseStageAge };
+    }
+  }
+});
+
+export const resetAgeBeforeContext = action(() => {
+  state.settingsTabs.ageBeforeContext = null;
+});
+
+export const initAddSearchResultToChart = action((count: number) => {
+  for (let i = 0; i < count; i++) {
+    state.settingsTabs.addSearchResultToChart.push(false);
+  }
+});
+
+export const setAddSearchResultToChart = action((term: boolean, index: number) => {
+  if (index < 0 || index >= state.settingsTabs.addSearchResultToChart.length) return;
+  state.settingsTabs.addSearchResultToChart[index] = term;
+});
+
+export const resetAddSearchResultToChart = action(() => {
+  state.settingsTabs.addSearchResultToChart = [];
 });
 
 export const incrementColumnPosition = action((column: ColumnInfo) => {
