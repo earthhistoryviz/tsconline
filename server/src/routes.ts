@@ -229,7 +229,7 @@ export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
   // for test usage: const uuid = "username";
-  const uuid = request.session.get("uuid");
+  const uuid = "username"; //request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
@@ -264,7 +264,7 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
 
 // If at some point a delete datapack function is needed, this function needs to be modified for race conditions
 export const uploadDatapack = async function uploadDatapack(request: FastifyRequest, reply: FastifyReply) {
-  const uuid = request.session.get("uuid");
+  const uuid = "username"; //request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
@@ -291,12 +291,10 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
 
   if (!uploadedFile) {
     reply.status(404).send({ error: "No file uploaded" });
-    console.log("No file uploaded, console log");
     return;
   }
   if (!name || !description) {
     reply.status(404).send({ error: "No name or description uploaded" });
-    console.log("No name or description uploaded");
     return;
   }
   // only accept a binary file (encoded) or an unecnrypted text file or a zip file
@@ -347,14 +345,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     });
   } catch (e) {
     await errorHandler("Failed to save file with error: " + e, 500, e);
-    return;
-  }
-  try {
-    const state = await fs.promises.stat(filepath);
-    console.log("File size: ", state.size);
-  } catch (e) {
-    console.error("Error getting file size: ", e);
-    console.log("File not found after save, error:", e);
     return;
   }
   if (uploadedFile.file.truncated) {
@@ -426,9 +416,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   }
   try {
     await writeFile(datapackIndexFilepath, JSON.stringify(datapackIndex));
-    console.log("Wrote datapack index to file", datapackIndexFilepath);
     await writeFile(mapPackIndexFilepath, JSON.stringify(mapPackIndex));
-    console.log("Wrote map pack index to file");
   } catch (e) {
     await errorHandler("Failed to save indexes", 500, e);
     return;
@@ -442,13 +430,11 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       mapPackIndexFilepath,
       datapackIndexFilepath
     );
-    console.log("metadata to file");
   } catch (e) {
     await errorHandler("Failed to load and write metadata for file", 500, e);
     return;
   }
   reply.status(200).send({ message: "File uploaded" });
-  console.log("File uploaded to server");
 };
 
 export const fetchImage = async function (

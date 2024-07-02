@@ -34,16 +34,15 @@ export async function loadIndexes(
   datapacks: DatapackDescriptionInfo[],
   userUploaded?: boolean
 ) {
-  console.log(`\nParsing datapacks: ${datapacks}\n`);
+  console.log(`\nParsing datapacks \n`);
   for (const datapack of datapacks) {
-    console.log(`\nParsing datapack file: ${datapack.file}\n`);
     await parseDatapacks(datapack, decryptionDirectory, userUploaded)
       .then((datapackParsingPack) => {
         if (!datapackParsingPack) {
           return;
         }
         assertDatapackParsingPack(datapackParsingPack);
-        datapackIndex[datapack.file] = datapackParsingPack; //now includes description properties
+        datapackIndex[datapack.file] = datapackParsingPack;
         console.log(chalk.green(`Successfully parsed ${datapack.file}`));
       })
       .catch((e) => {

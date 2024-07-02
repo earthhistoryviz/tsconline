@@ -181,7 +181,6 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
       credentials: "include"
     });
     const data = await response.json();
-    console.log("response of /user-datapacks: ", data); //error check
     try {
       assertIndexResponse(data);
       const { mapPackIndex, datapackIndex } = data;
@@ -220,7 +219,6 @@ export const uploadDatapack = action("uploadDatapack", async (file: File, name: 
     const data = await response.json();
 
     if (response.ok) {
-      console.log("Successfully uploaded datapack");
       fetchUserDatapacks();
       pushSnackbar("Successfully uploaded " + name + " datapack", "success");
     } else {
