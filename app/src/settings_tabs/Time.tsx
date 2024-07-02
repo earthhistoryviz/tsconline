@@ -51,6 +51,9 @@ export const Time = observer(function Time() {
               const age = state.geologicalTopStageAges.find((item) => item.key === event.target.value);
               if (!age) return;
               actions.setTopStageAge(age.value, units);
+              if (state.settingsTabs.eventInContext) {
+                actions.createAgeBeforeContext();
+              }
             }}>
             {state.geologicalTopStageAges.map((item) => (
               <MenuItem key={item.key} value={item.key}>
@@ -70,6 +73,9 @@ export const Time = observer(function Time() {
             }
             onChange={(event) => {
               actions.setTopStageAge(parseFloat(event.target.value), units);
+              if (state.settingsTabs.eventInContext) {
+                actions.createAgeBeforeContext();
+              }
             }}
           />
         </FormControl>
@@ -91,6 +97,9 @@ export const Time = observer(function Time() {
               const age = state.geologicalBaseStageAges.find((item) => item.key === event.target.value);
               if (!age) return;
               actions.setBaseStageAge(age.value, units);
+              if (state.settingsTabs.eventInContext) {
+                actions.createAgeBeforeContext();
+              }
             }}>
             {state.geologicalBaseStageAges
               .filter((item) => item.value >= state.settings.timeSettings[units].topStageAge)
@@ -112,6 +121,9 @@ export const Time = observer(function Time() {
             }
             onChange={(event) => {
               actions.setBaseStageAge(parseFloat(event.target.value), units);
+              if (state.settingsTabs.eventInContext) {
+                actions.createAgeBeforeContext();
+              }
             }}
           />
         </FormControl>

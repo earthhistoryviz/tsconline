@@ -14,12 +14,18 @@ export type WindowStats = {
 };
 
 export type EventSearchInfo = {
+  id: number;
   columnName: string;
   columnPath: string[];
+  unit: string;
   age?: string;
   qualifier?: string;
   notes?: string;
 };
+
+export type eventInContextList = { [units: string]: { key: string; age: number }[] };
+
+export type ageBeforeContext = { [units: string]: { topAge: number; baseAge: number } };
 
 export type GroupedEventSearchInfo = {
   key: string;
