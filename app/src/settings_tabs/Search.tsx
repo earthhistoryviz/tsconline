@@ -1,4 +1,4 @@
-import { TextField } from "@mui/material";
+import { Box, IconButton, Switch, TextField, Typography, useTheme } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { useContext, useRef } from "react";
 import "./Search.css";
@@ -13,11 +13,14 @@ import {
 } from "@tsconline/shared";
 import { context } from "../state";
 import { Results } from "./Results";
-import { SearchDisplayInfo } from "../types";
+import { EventSearchInfo, GroupedEventSearchInfo } from "../types";
+import React from "react";
+import { CustomTooltip } from "../components";
+import SettingsIcon from "@mui/icons-material/Settings";
 
 export const Search = observer(function Search() {
   const { state, actions } = useContext(context);
-
+  const theme = useTheme();
   function columnPath(name: string): string[] {
     const columnPath: string[] = [];
     let column = state.settingsTabs.columnHashMap.get(name);
@@ -38,7 +41,7 @@ export const Search = observer(function Search() {
     //outer key: matched term, matches editName for columns
     //inner key: column name
     //info: info found in subinfo array
-    const results = new Map<string, SearchDisplayInfo[]>();
+    const results = new Map<string, EventSearchInfo[]>();
     for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
       if (columnInfo.name === "Chart Root") {
         continue;
@@ -49,7 +52,7 @@ export const Search = observer(function Search() {
         if (!results.has(id)) {
           results.set(id, []);
         }
-        results.get(id)!.push({ columnName: columnInfo.name, columnPath: columnPath(columnInfo.name), age: "--", qualifier: "--", notes: "--" });
+        results.get(id)!.push({ columnName: columnInfo.name, columnPath: columnPath(columnInfo.name) });
         count.current++;
       }
       if (columnInfo.subInfo) {
@@ -63,12 +66,9 @@ export const Search = observer(function Search() {
           if ("label" in subInfo) {
             if (subInfo.label!.toLowerCase().includes(state.settingsTabs.generalSearchTerm)) {
               const resultType = columnInfo.columnDisplayType === "Zone" ? "Block" : columnInfo.columnDisplayType;
-              const resinfo: SearchDisplayInfo = {
+              const resinfo: EventSearchInfo = {
                 columnName: columnInfo.name,
-                columnPath: columnPath(columnInfo.name),
-                age: "--",
-                qualifier: "--",
-                notes: "--"
+                columnPath: columnPath(columnInfo.name)
               };
               //special case for facies and chron label since they are intervals and shows up as block but uses subfacies/subchron info
               if (columnInfo.columnDisplayType === "BlockSeriesMetaColumn") {
@@ -85,8 +85,7 @@ export const Search = observer(function Search() {
                 if ((resinfo.columnPath = columnPath(columnInfo.name + " Facies Label")).length === 0) {
                   resinfo.columnPath = columnPath(columnInfo.name + " Chron Label");
                   resinfo.columnName = columnInfo.name + " Chron Label";
-                }
-                else {
+                } else {
                   resinfo.columnName = columnInfo.name + " Facies Label";
                 }
                 temp.push(resinfo);
@@ -150,32 +149,69 @@ export const Search = observer(function Search() {
         }
       }
     }
-    type temp = {
-      key: string;
-      info: SearchDisplayInfo[];
-    };
-    const arr: temp[] = [];
-    results.forEach((info: SearchDisplayInfo[], key: string) => {
+
+    const arr: GroupedEventSearchInfo[] = [];
+    results.forEach((info: EventSearchInfo[], key: string) => {
       arr.push({ key: key, info: [...info] });
     });
     console.log(arr);
     return arr;
   }
+  const OptionsButton = () => {
+    const [open, setOpen] = React.useState<boolean>(false);
+    const handleClick = () => {
+      setOpen(!open);
+    };
+    const handleSwitch = () => {
+      actions.setChartTabEnableScrollZoom(!state.chartTab.enableScrollZoom);
+    };
+    return (
+      <div>
+        <CustomTooltip title="Options">
+          <IconButton id="option-button" onClick={handleClick}>
+            <SettingsIcon />
+          </IconButton>
+        </CustomTooltip>
+        <Box
+          sx={{
+            border: "2px solid",
+            borderColor: theme.palette.divider,
+            bgcolor: theme.palette.backgroundColor.main
+          }}
+          style={{ display: open ? "flex" : "none", position: "absolute", zIndex: "100" }}>
+          <div className="flex-row">
+            <Typography sx={{ p: 2 }}>Zoom on Scroll</Typography>
+            <div style={{ margin: "auto" }}>
+              <Switch
+                inputProps={{ "aria-label": "controlled" }}
+                defaultChecked={state.chartTab.enableScrollZoom}
+                onChange={handleSwitch}
+                color="info"
+              />
+            </div>
+          </div>
+        </Box>
+      </div>
+    );
+  };
   return (
     <div className="search-container">
-      <TextField
-        className="search-bar"
-        label="Search"
-        variant="outlined"
-        size="small"
-        fullWidth
-        onChange={(e) => actions.setGeneralSearchTerm(e.target.value)}
-        value={state.settingsTabs.generalSearchTerm}
-      />
+      <div className="search-and-options">
+        <SettingsIcon id="spacer" />
+        <TextField
+          className="search-bar"
+          label="Search"
+          variant="outlined"
+          size="small"
+          fullWidth
+          onChange={(e) => actions.setGeneralSearchTerm(e.target.value)}
+          value={state.settingsTabs.generalSearchTerm}
+        />
+        <OptionsButton />
+      </div>
+
       <div>Found {count.current} Results</div>
-      {state.settingsTabs.generalSearchTerm && (
-        <Results key={state.settingsTabs.generalSearchTerm} arr={searchResultData()} />
-      )}
+      <Results key={state.settingsTabs.generalSearchTerm} arr={searchResultData()} />
     </div>
   );
 });

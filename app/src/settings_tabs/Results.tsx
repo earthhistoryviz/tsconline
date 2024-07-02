@@ -1,5 +1,14 @@
-import { TableRow, TableCell, TableHead, TableBody, TableContainer, Paper, SvgIcon, Typography } from "@mui/material";
-import { ColumnInfo } from "@tsconline/shared";
+import {
+  TableRow,
+  TableCell,
+  TableHead,
+  TableBody,
+  TableContainer,
+  Paper,
+  SvgIcon,
+  Typography,
+  Box
+} from "@mui/material";
 import React, { useContext } from "react";
 import { Table } from "react-bootstrap";
 import { TableComponents, TableVirtuoso } from "react-virtuoso";
@@ -10,14 +19,12 @@ import { ErrorOutline } from "@mui/icons-material";
 import NotesIcon from "@mui/icons-material/Notes";
 import { useTheme } from "@mui/material/styles";
 import "./Results.css";
-import { SearchDisplayInfo } from "../types";
-type temp = {
-  key: string;
-  info: SearchDisplayInfo[];
-};
-const Checkbox = observer(({ column }: { column?: ColumnInfo }) => {
-  const { actions } = useContext(context);
+import { EventSearchInfo, GroupedEventSearchInfo } from "../types";
+import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 
+const Checkbox = observer(({ info }: { info: EventSearchInfo }) => {
+  const { state, actions } = useContext(context);
+  const column = state.settingsTabs.columnHashMap.get(info.columnName);
   if (!column) {
     return (
       <SvgIcon>
@@ -28,24 +35,22 @@ const Checkbox = observer(({ column }: { column?: ColumnInfo }) => {
   return (
     <TSCCheckbox
       checked={column.on}
-      onClick={(event) => {
-        // to stop selection of column when clicking on checkbox
-        event.stopPropagation();
+      onClick={() => {
         actions.toggleSettingsTabColumn(column);
+        //in-context feature, adds 3myr to above and below the age
       }}
     />
   );
 });
 
-export const Results = ({ arr }: { arr: temp[] }) => {
-  const { state } = useContext(context);
+export const Results = ({ arr }: { arr: GroupedEventSearchInfo[] }) => {
   const theme = useTheme();
 
-  function Row(props: { row: temp; index: number }) {
+  function Row(props: { row: GroupedEventSearchInfo; index: number }) {
     const { row, index } = props;
     console.log(row);
     return (
-      <Table cellPadding="none" style={{ width: "100%", paddingTop: "0", paddingBottom: "0" }}>
+      <Table cellPadding="none" style={{ width: "100%" }}>
         <TableHead>
           <TableRow>
             <TableCell
@@ -57,8 +62,8 @@ export const Results = ({ arr }: { arr: temp[] }) => {
             </TableCell>
           </TableRow>
           <TableRow>
-            <TableCell align="justify">Add to Chart</TableCell>
-            <TableCell align="justify">Column Path</TableCell>
+            <TableCell align="left">Add to Chart</TableCell>
+            <TableCell align="left">Column Path</TableCell>
             <TableCell align="center">Age</TableCell>
             <TableCell align="right">Qualifier</TableCell>
             <TableCell align="right">Additional Info</TableCell>
@@ -67,14 +72,10 @@ export const Results = ({ arr }: { arr: temp[] }) => {
         <TableBody>
           {row.info.map((info, innerIndex) => (
             <TableRow key={index + " " + innerIndex}>
-              <TableCell align="justify">
-                <Checkbox
-                  column={state.settingsTabs.columnHashMap.get(
-                   info.columnName
-                  )}
-                />
+              <TableCell align="left">
+                <Checkbox info={info} />
               </TableCell>
-              <TableCell>
+              <TableCell align="left">
                 <CustomTooltip
                   title={info.columnPath.map((value, pathIndex) => (
                     <div key={index + " " + innerIndex + " " + pathIndex}>{value}</div>
@@ -85,9 +86,14 @@ export const Results = ({ arr }: { arr: temp[] }) => {
                 </CustomTooltip>
               </TableCell>
               <TableCell align="center">{info.age}</TableCell>
+              {info.qualifier === "--"}
               <TableCell align="right">{info.qualifier}</TableCell>
               {info.notes === "--" ? (
-                <TableCell align="right">{info.notes}</TableCell>
+                <TableCell align="right">
+                  <SvgIcon>
+                    <HorizontalRuleIcon />
+                  </SvgIcon>
+                </TableCell>
               ) : (
                 <TableCell align="right">
                   <CustomTooltip title={info.notes}>
@@ -103,7 +109,7 @@ export const Results = ({ arr }: { arr: temp[] }) => {
       </Table>
     );
   }
-  const VirtuosoTableComponents: TableComponents<temp> = {
+  const VirtuosoTableComponents: TableComponents<GroupedEventSearchInfo> = {
     Scroller: React.forwardRef<HTMLDivElement>((props, ref) => (
       <TableContainer component={Paper} sx={{ backgroundColor: "white" }} {...props} ref={ref} />
     )),
@@ -111,18 +117,20 @@ export const Results = ({ arr }: { arr: temp[] }) => {
     TableRow: ({ ...props }) => <TableRow {...props} />,
     TableBody: React.forwardRef<HTMLTableSectionElement>((props, ref) => <TableBody {...props} ref={ref} />)
   };
+
   //add display names
   if (!VirtuosoTableComponents.Scroller || !VirtuosoTableComponents.TableBody) return;
   VirtuosoTableComponents.Scroller.displayName = "Scroller";
   VirtuosoTableComponents.TableBody.displayName = "TableBody";
+
   return (
-    <Paper sx={{ height: "70vh", width: "50vw", marginTop: "2vh" }}>
+    <Box sx={{ height: "70vh", width: "50vw", marginTop: "2vh" }}>
       <TableVirtuoso
         initialTopMostItemIndex={0}
         data={arr}
         components={VirtuosoTableComponents}
         itemContent={(index, row) => Row({ row, index })}
       />
-    </Paper>
+    </Box>
   );
 };
