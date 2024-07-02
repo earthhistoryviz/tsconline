@@ -607,12 +607,24 @@ export const setColumnSearchTerm = action((term: string) => {
   state.settingsTabs.columnSearchTerm = term;
 });
 
-export const setGeneralSearchTerm = action((term: string) => {
-  state.settingsTabs.generalSearchTerm = term;
+export const setEventSearchTerm = action((term: string) => {
+  state.settingsTabs.eventSearchTerm = term;
 });
 
 export const setEventInContext = action((inContext: boolean) => {
   state.settingsTabs.eventInContext = inContext;
+});
+
+export const setEventInContextTopList = action((term: { key: string; age: number }[] | null) => {
+  state.settingsTabs.eventInContextTopList = term;
+});
+
+export const setEventInContextBaseList = action((term: { key: string; age: number }[] | null) => {
+  state.settingsTabs.eventInContextBaseList = term;
+});
+
+export const setAgeBeforeContext = action((ages: { topAge: number; baseAge: number }) => {
+  state.settingsTabs.ageBeforeContext = ages;
 });
 
 export const incrementColumnPosition = action((column: ColumnInfo) => {
