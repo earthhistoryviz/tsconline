@@ -9,7 +9,7 @@ import {
   Typography,
   Box
 } from "@mui/material";
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { Table } from "react-bootstrap";
 import { TableComponents, TableVirtuoso } from "react-virtuoso";
 import { CustomTooltip, TSCCheckbox } from "../components";
@@ -24,6 +24,7 @@ import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 
 const Checkbox = observer(({ info }: { info: EventSearchInfo }) => {
   const { state, actions } = useContext(context);
+  const [on, setOn] = useState<boolean>(false);
   const column = state.settingsTabs.columnHashMap.get(info.columnName);
   if (!column) {
     return (
@@ -32,12 +33,121 @@ const Checkbox = observer(({ info }: { info: EventSearchInfo }) => {
       </SvgIcon>
     );
   }
+  //piacenzian, zanclean, messinian
   return (
     <TSCCheckbox
-      checked={column.on}
+      checked={on}
       onClick={() => {
-        actions.toggleSettingsTabColumn(column);
+        setOn(!on);
+        if (on) {
+          actions.setColumnOn(false, column);
+          actions.toggleSettingsTabColumn(column);
+        }
         //in-context feature, adds 3myr to above and below the age
+        if (state.settingsTabs.eventInContext) {
+          if ("age" in info) {
+            const eventContextTop = { key: column.name, age: 0 };
+            const eventContextBase = { key: column.name, age: 0 };
+            if (info.age!.includes("-")) {
+              const ages = info.age!.split(" - ");
+              eventContextTop.age = Number(ages[0]);
+              eventContextBase.age = Number(ages[1]);
+            } else {
+              eventContextTop.age = Number(info.age!);
+              eventContextBase.age = Number(info.age!);
+            }
+            if (on) {
+              if (!state.settingsTabs.eventInContextTopList) {
+                actions.setEventInContextTopList([eventContextTop]);
+              }
+              //insert current event in sorted array
+              else {
+                const prevLength = state.settingsTabs.eventInContextTopList.length;
+                let index = 0;
+                for (index; index < state.settingsTabs.eventInContextTopList.length; index++) {
+                  const compareEvent = state.settingsTabs.eventInContextTopList[index];
+                  if (eventContextTop.age < compareEvent.age) {
+                    actions.setEventInContextTopList(
+                      state.settingsTabs.eventInContextTopList.splice(index, 0, eventContextTop)
+                    );
+                    break;
+                  }
+                  //event already in array
+                  else if (eventContextTop.age === compareEvent.age) {
+                    if (eventContextTop.key === compareEvent.key) {
+                      break;
+                    }
+                  }
+                }
+                //add event to end of list
+                if (index == prevLength - 1) {
+                  actions.setEventInContextTopList(
+                    state.settingsTabs.eventInContextTopList.splice(index + 1, 0, eventContextTop)
+                  );
+                }
+              }
+              actions.setTopStageAge(state.settingsTabs.eventInContextTopList![0].age - 3, "Ma");
+
+              if (!state.settingsTabs.eventInContextBaseList) {
+                actions.setEventInContextBaseList([eventContextBase]);
+              }
+              //insert current event in sorted array
+              else {
+                const prevLength = state.settingsTabs.eventInContextBaseList.length;
+                let index = 0;
+                for (index; index < state.settingsTabs.eventInContextBaseList.length; index++) {
+                  const compareEvent = state.settingsTabs.eventInContextBaseList[index];
+                  if (eventContextBase.age < compareEvent.age) {
+                    actions.setEventInContextBaseList(
+                      state.settingsTabs.eventInContextBaseList.splice(index, 0, eventContextBase)
+                    );
+                    break;
+                  }
+                  //event already in array
+                  else if (eventContextBase.age === compareEvent.age) {
+                    if (eventContextBase.key === compareEvent.key) {
+                      break;
+                    }
+                  }
+                }
+                //add event to end of list
+                if (index == prevLength - 1) {
+                  actions.setEventInContextBaseList(
+                    state.settingsTabs.eventInContextBaseList.splice(index + 1, 0, eventContextBase)
+                  );
+                }
+              }
+              actions.setBaseStageAge(state.settingsTabs.eventInContextBaseList![0].age + 3, "Ma");
+            } else {
+              //if checkbox is toggled off, this should always exist but check it for typescript
+              if (state.settingsTabs.eventInContextTopList) {
+                let index = 0;
+                for (index; index < state.settingsTabs.eventInContextTopList.length; index++) {
+                  const compareEvent = state.settingsTabs.eventInContextTopList[index];
+                  if (compareEvent.key === eventContextTop.key && compareEvent.age === eventContextTop.age) {
+                    actions.setEventInContextTopList(state.settingsTabs.eventInContextTopList.splice(index, 1));
+                    if (index === 0) {
+                      actions.setTopStageAge(state.settingsTabs.eventInContextTopList[0].age - 3, "Ma");
+                    }
+                  }
+                }
+              }
+
+              if (state.settingsTabs.eventInContextBaseList) {
+                let index = 0;
+                for (index; index < state.settingsTabs.eventInContextBaseList.length; index++) {
+                  const compareEvent = state.settingsTabs.eventInContextBaseList[index];
+                  if (compareEvent.key === eventContextBase.key && compareEvent.age === eventContextBase.age) {
+                    actions.setEventInContextBaseList(state.settingsTabs.eventInContextBaseList.splice(index, 1));
+                    if (index === 0) {
+                      actions.setBaseStageAge(state.settingsTabs.eventInContextBaseList[0].age + 3, "Ma");
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }}
     />
   );
@@ -48,7 +158,6 @@ export const Results = ({ arr }: { arr: GroupedEventSearchInfo[] }) => {
 
   function Row(props: { row: GroupedEventSearchInfo; index: number }) {
     const { row, index } = props;
-    console.log(row);
     return (
       <Table cellPadding="none" style={{ width: "100%" }}>
         <TableHead>

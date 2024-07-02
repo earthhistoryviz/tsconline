@@ -58,8 +58,14 @@ export type State = {
     columnHashMap: Map<string, ColumnInfo>;
     columnSearchTerm: string;
     datapackDisplayType: "rows" | "cards";
-    generalSearchTerm: string;
+    eventSearchTerm: string;
     eventInContext: boolean;
+    //sorted array of added events while in context is enabled
+    //age is before the add/subtract of 3myr
+    eventInContextTopList: { key: string; age: number }[] | null;
+    eventInContextBaseList: { key: string; age: number }[] | null;
+    //null if eventInContext is false
+    ageBeforeContext: { topAge: number; baseAge: number } | null;
   };
   mapState: {
     mapInfo: MapInfo;
@@ -142,8 +148,11 @@ export const state = observable<State>({
     columnHashMap: new Map<string, ColumnInfo>(),
     columnSearchTerm: "",
     datapackDisplayType: "rows",
-    generalSearchTerm: "",
-    eventInContext: false
+    eventSearchTerm: "",
+    eventInContext: false,
+    eventInContextTopList: null,
+    eventInContextBaseList: null,
+    ageBeforeContext: null
   },
   mapState: {
     mapInfo: {},

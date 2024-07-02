@@ -1,4 +1,4 @@
-import { Box, IconButton, Switch, TextField, Typography, useTheme } from "@mui/material";
+import { TextField } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { useContext, useRef } from "react";
 import "./Search.css";
@@ -14,13 +14,10 @@ import {
 import { context } from "../state";
 import { Results } from "./Results";
 import { EventSearchInfo, GroupedEventSearchInfo } from "../types";
-import React from "react";
-import { CustomTooltip } from "../components";
-import SettingsIcon from "@mui/icons-material/Settings";
+import { TSCCheckbox } from "../components";
 
 export const Search = observer(function Search() {
   const { state, actions } = useContext(context);
-  const theme = useTheme();
   function columnPath(name: string): string[] {
     const columnPath: string[] = [];
     let column = state.settingsTabs.columnHashMap.get(name);
@@ -36,6 +33,7 @@ export const Search = observer(function Search() {
   }
   const count = useRef(0);
   function searchResultData() {
+    if (state.settingsTabs.eventSearchTerm === "") return [];
     count.current = 0;
     //columnPath: list of editName path before chart root
     //outer key: matched term, matches editName for columns
@@ -46,7 +44,7 @@ export const Search = observer(function Search() {
       if (columnInfo.name === "Chart Root") {
         continue;
       }
-      if (columnInfo.editName.toLowerCase().includes(state.settingsTabs.generalSearchTerm)) {
+      if (columnInfo.editName.toLowerCase().includes(state.settingsTabs.eventSearchTerm)) {
         //for column names
         const id = columnInfo.editName + " - " + "Column";
         if (!results.has(id)) {
@@ -64,7 +62,7 @@ export const Search = observer(function Search() {
           const subInfo = columnInfo.subInfo[i];
 
           if ("label" in subInfo) {
-            if (subInfo.label!.toLowerCase().includes(state.settingsTabs.generalSearchTerm)) {
+            if (subInfo.label!.toLowerCase().includes(state.settingsTabs.eventSearchTerm)) {
               const resultType = columnInfo.columnDisplayType === "Zone" ? "Block" : columnInfo.columnDisplayType;
               const resinfo: EventSearchInfo = {
                 columnName: columnInfo.name,
@@ -157,61 +155,43 @@ export const Search = observer(function Search() {
     console.log(arr);
     return arr;
   }
-  const OptionsButton = () => {
-    const [open, setOpen] = React.useState<boolean>(false);
-    const handleClick = () => {
-      setOpen(!open);
-    };
-    const handleSwitch = () => {
-      actions.setChartTabEnableScrollZoom(!state.chartTab.enableScrollZoom);
-    };
+  const InContext = observer(() => {
     return (
       <div>
-        <CustomTooltip title="Options">
-          <IconButton id="option-button" onClick={handleClick}>
-            <SettingsIcon />
-          </IconButton>
-        </CustomTooltip>
-        <Box
-          sx={{
-            border: "2px solid",
-            borderColor: theme.palette.divider,
-            bgcolor: theme.palette.backgroundColor.main
+        <TSCCheckbox
+          checked={state.settingsTabs.eventInContext}
+          onClick={() => {
+            //in-context feature, adds 3myr to above and below the age
+            actions.setEventInContext(!state.settingsTabs.eventInContext);
+            if (!state.settingsTabs.eventInContext) {
+              actions.setEventInContextTopList(null);
+              actions.setEventInContextBaseList(null);
+              //actions.setAgeBeforeContext(null)
+            } else {
+              //actions.setAgeBeforeContext({topAge: state.settings.timeSettings["Ma"].topStageAge, baseAge: state.settings.timeSettings["Ma"].baseStageAge})
+            }
           }}
-          style={{ display: open ? "flex" : "none", position: "absolute", zIndex: "100" }}>
-          <div className="flex-row">
-            <Typography sx={{ p: 2 }}>Zoom on Scroll</Typography>
-            <div style={{ margin: "auto" }}>
-              <Switch
-                inputProps={{ "aria-label": "controlled" }}
-                defaultChecked={state.chartTab.enableScrollZoom}
-                onChange={handleSwitch}
-                color="info"
-              />
-            </div>
-          </div>
-        </Box>
+        />
+        Select 3ma around event for chart generation
       </div>
     );
-  };
+  });
   return (
     <div className="search-container">
       <div className="search-and-options">
-        <SettingsIcon id="spacer" />
         <TextField
           className="search-bar"
           label="Search"
           variant="outlined"
           size="small"
           fullWidth
-          onChange={(e) => actions.setGeneralSearchTerm(e.target.value)}
-          value={state.settingsTabs.generalSearchTerm}
+          onChange={(e) => actions.setEventSearchTerm(e.target.value)}
+          value={state.settingsTabs.eventSearchTerm}
         />
-        <OptionsButton />
       </div>
-
       <div>Found {count.current} Results</div>
-      <Results key={state.settingsTabs.generalSearchTerm} arr={searchResultData()} />
+      <InContext />
+      <Results key={state.settingsTabs.eventSearchTerm} arr={searchResultData()} />
     </div>
   );
 });
