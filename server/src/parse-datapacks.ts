@@ -1522,8 +1522,7 @@ function addFaciesChildren(
     rgb,
     units,
     columnDisplayType: "Zone",
-    expanded: false,
-    subInfo: subFaciesInfo
+    expanded: false
   });
   children.push({
     name: `${name} Series Label`,

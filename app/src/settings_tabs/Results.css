@@ -1,0 +1,21 @@
+.MuiTableCell-body {
+  padding-top: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.MuiTableCell-head.row-identifier {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.MuiTableCell-head {
+  padding-top: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+  font-weight: bold;
+}
+
+.table-container {
+  height: "70vh";
+  width: "50vw";
+  margin-top: "2vh";
+}
