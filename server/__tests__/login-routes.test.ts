@@ -2002,6 +2002,7 @@ describe("login-routes tests", () => {
         });
 
         expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+        expect(deleteSessionSpy).not.toHaveBeenCalled();
         expect(response.statusCode).toBe(401);
         expect(response.json().error).toBe("Not logged in");
       });
@@ -2017,6 +2018,7 @@ describe("login-routes tests", () => {
           });
 
           expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+          expect(deleteSessionSpy).not.toHaveBeenCalled();
           expect(response.statusCode).toBe(400);
           expect(response.json().error).toBe("Invalid form");
         }
@@ -2034,6 +2036,7 @@ describe("login-routes tests", () => {
 
         expect(spy).toHaveBeenCalledOnce();
         expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+        expect(deleteSessionSpy).not.toHaveBeenCalled();
         expect(response.statusCode).toBe(422);
         expect(response.json().error).toBe("Recaptcha failed");
       });
@@ -2050,6 +2053,7 @@ describe("login-routes tests", () => {
 
         expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
         expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+        expect(deleteSessionSpy).not.toHaveBeenCalled();
         expect(response.statusCode).toBe(500);
         expect(response.json().error).toBe("Unknown Error");
       });
@@ -2066,6 +2070,7 @@ describe("login-routes tests", () => {
 
         expect(findUserSpy).toHaveBeenCalledWith({ username: payload.newUsername });
         expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+        expect(deleteSessionSpy).not.toHaveBeenCalled();
         expect(response.statusCode).toBe(409);
         expect(response.json().error).toBe("Username already taken");
       });
@@ -2104,6 +2109,7 @@ describe("login-routes tests", () => {
         });
 
         expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+        expect(deleteSessionSpy).not.toHaveBeenCalled();
         expect(response.statusCode).toBe(401);
         expect(response.json().error).toBe("Not logged in");
       });
@@ -2121,6 +2127,7 @@ describe("login-routes tests", () => {
         });
 
         expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+        expect(deleteSessionSpy).not.toHaveBeenCalled();
         expect(response.statusCode).toBe(400);
         expect(response.json().error).toBe("Invalid form");
       });
@@ -2137,6 +2144,7 @@ describe("login-routes tests", () => {
 
         expect(spy).toHaveBeenCalledOnce();
         expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+        expect(deleteSessionSpy).not.toHaveBeenCalled();
         expect(response.statusCode).toBe(422);
         expect(response.json().error).toBe("Recaptcha failed");
       });
@@ -2153,6 +2161,7 @@ describe("login-routes tests", () => {
 
         expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
         expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+        expect(deleteSessionSpy).not.toHaveBeenCalled();
         expect(response.statusCode).toBe(500);
         expect(response.json().error).toBe("Unknown Error");
       });
@@ -2168,6 +2177,7 @@ describe("login-routes tests", () => {
         });
 
         expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+        expect(deleteSessionSpy).not.toHaveBeenCalled();
         expect(response.statusCode).toBe(403);
         expect(response.json().error).toBe("Account authenticated via Google");
       });
@@ -2184,6 +2194,7 @@ describe("login-routes tests", () => {
         });
 
         expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+        expect(deleteSessionSpy).not.toHaveBeenCalled();
         expect(response.statusCode).toBe(409);
         expect(response.json().error).toBe("Incorrect password");
       });
@@ -2201,6 +2212,7 @@ describe("login-routes tests", () => {
 
         expect(updateUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid }, { hashedPassword: "hashedPassword" });
         expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+        expect(deleteSessionSpy).not.toHaveBeenCalled();
         expect(response.statusCode).toBe(500);
         expect(response.json().error).toBe("Unknown Error");
       });
