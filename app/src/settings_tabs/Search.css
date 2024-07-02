@@ -4,3 +4,11 @@
   justify-content: center;
   margin-top: 2vh;
 }
+.search-and-options {
+  display: flex;
+  flex-direction: row;
+}
+
+.spacer {
+  visibility: hidden;
+}

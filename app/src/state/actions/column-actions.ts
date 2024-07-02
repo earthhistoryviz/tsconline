@@ -611,6 +611,10 @@ export const setGeneralSearchTerm = action((term: string) => {
   state.settingsTabs.generalSearchTerm = term;
 });
 
+export const setEventInContext = action((inContext: boolean) => {
+  state.settingsTabs.eventInContext = inContext;
+});
+
 export const incrementColumnPosition = action((column: ColumnInfo) => {
   const parent = state.settingsTabs.columnHashMap.get(column.parent!);
   if (!parent) return;
