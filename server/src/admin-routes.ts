@@ -5,10 +5,15 @@ import { hash } from "bcrypt-ts";
 import { emailTestRegex } from "./login-routes.js";
 import { deleteUser } from "./database.js";
 import path from "path";
-import { assetconfigs } from "./util.js";
-import { realpathSync } from "fs";
+import { adminconfig, assetconfigs } from "./util.js";
+import { createWriteStream, realpathSync } from "fs";
 import { access, rm, writeFile } from "fs/promises";
 import { deleteDatapack, loadFileMetadata } from "./file-metadata-handler.js";
+import { MultipartFile } from "@fastify/multipart";
+import pump from "pump";
+import { execFileSync } from "child_process";
+import { datapackIndex, mapPackIndex } from "./index.js";
+import { loadIndexes } from "./load-packs.js";
 
 /**
  * Get all users for admin to configure on frontend
@@ -112,7 +117,7 @@ export const adminDeleteUser = async function adminDeleteUser(
   reply.send({ message: "User deleted" });
 };
 
-export const adminDeleteDatapack = async function adminDeleteDatapack(
+export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
   request: FastifyRequest<{ Body: { uuid: string; datapack: string } }>,
   reply: FastifyReply
 ) {
@@ -139,4 +144,116 @@ export const adminDeleteDatapack = async function adminDeleteDatapack(
     return;
   }
   reply.send({ message: "Datapack deleted" });
+};
+
+export const adminUploadServerDatapack = async function adminUploadServerDatapack(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const uuid = "123";
+  const parts = request.parts();
+  let title: string | undefined;
+  let description: string | undefined;
+  let file: MultipartFile | undefined;
+  for await (const part of parts) {
+    if (part.type === "file") {
+      file = part;
+    } else if (part.fieldname === "title" && typeof part.value === "string") {
+      title = part.value;
+    } else if (part.fieldname === "description" && typeof part.value === "string") {
+      description = part.value;
+    }
+  }
+  if (!title || !description || !file) {
+    reply.status(400).send({ message: "Missing required fields" });
+    return;
+  }
+  if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(path.extname(file.filename))) {
+    reply.status(400).send({ message: "Invalid file extension" });
+    return;
+  }
+  const filepath = path.resolve(assetconfigs.datapacksDirectory, file.filename);
+  const decryptedFilepath = path.resolve(assetconfigs.decryptionDirectory, file.filename.split(".")[0]!);
+  if (
+    !filepath.startsWith(path.resolve(assetconfigs.datapacksDirectory)) ||
+    !decryptedFilepath.startsWith(path.resolve(assetconfigs.decryptionDirectory))
+  ) {
+    reply.status(403).send({ message: "Directory traversal detected" });
+    return;
+  }
+  try {
+    await access(filepath);
+    reply.status(409).send({ message: "File already exists" });
+    return;
+  } catch (e) {
+    const error = e as NodeJS.ErrnoException;
+    if (error.code !== "ENOENT") {
+      reply.status(500).send({ message: "Unknown error" });
+      return;
+    }
+  }
+  try {
+    await new Promise<void>((resolve, reject) => {
+      pump(file!.file, createWriteStream(filepath), (error) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
+    });
+  } catch (error) {
+    await rm(filepath, { force: true });
+    reply.status(500).send({ message: "Error saving file" });
+    return;
+  }
+  if (file.file.truncated) {
+    await rm(filepath, { force: true });
+    reply.status(400).send({ message: "File too large" });
+    return;
+  }
+  const errorHandler = async (message: string) => {
+    await rm(filepath, { force: true });
+    await rm(decryptedFilepath, { force: true, recursive: true });
+    reply.status(500).send({ message });
+  };
+  try {
+    await new Promise<void>((resolve, reject) => {
+      try {
+        const stdout = execFileSync(
+          "java",
+          [
+            "-jar",
+            assetconfigs.decryptionJar,
+            "-d",
+            filepath.replaceAll("\\", "/"),
+            "-dest",
+            assetconfigs.decryptionDirectory.replaceAll("\\", "/")
+          ],
+          { stdio: "inherit" }
+        );
+        console.log("stdout: ", stdout);
+      } catch (e) {
+        console.error("Java decryption error: ", e);
+        reject();
+      }
+      resolve();
+    });
+  } catch (error) {
+    errorHandler("Error decrypting file");
+    return;
+  }
+  const successful = await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, [file.filename]);
+  if (!successful) {
+    errorHandler("Error parsing the datapack for chart generation");
+    return;
+  }
+  try {
+    adminconfig.datapacks.push(file.filename);
+    await writeFile(assetconfigs.adminConfigPath, JSON.stringify(adminconfig, null, 2));
+  } catch (e) {
+    errorHandler("Error updating admin config");
+    return;
+  }
+  reply.send({ message: "Datapack uploaded" });
 };
