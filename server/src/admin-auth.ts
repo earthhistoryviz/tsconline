@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest, RegisterOptions } from "fastify";
 import { findUser } from "./database.js";
-import { adminCreateUser, adminDeleteUser, getUsers } from "./admin-routes.js";
+import { adminCreateUser, adminDeleteDatapack, adminDeleteUser, getUsers } from "./admin-routes.js";
 import { checkRecaptchaToken } from "./verify.js";
 import { googleRecaptchaBotThreshold } from "./login-routes.js";
 
@@ -39,7 +39,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   fastify.addHook("preHandler", fastify.auth([verifyAdmin, verifyRecaptcha]));
   fastify.get("/users", getUsers);
   fastify.post(
-    "/create-user",
+    "/user",
     {
       schema: {
         body: {
@@ -57,8 +57,8 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     },
     adminCreateUser
   );
-  fastify.post(
-    "/delete-user",
+  fastify.delete(
+    "/user",
     {
       schema: {
         body: {
@@ -71,5 +71,21 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
       }
     },
     adminDeleteUser
+  );
+  fastify.delete(
+    "/user/datapack",
+    {
+      schema: {
+        body: {
+          type: "object",
+          properties: {
+            uuid: { type: "string" },
+            datapack: { type: "string" }
+          },
+          required: ["uuid", "datapack"]
+        }
+      }
+    },
+    adminDeleteDatapack
   );
 };
