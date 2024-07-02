@@ -150,7 +150,6 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const uuid = "123";
   const parts = request.parts();
   let title: string | undefined;
   let description: string | undefined;
