@@ -322,6 +322,7 @@ export const addDataMiningColumn = action(
           console.log("WARNING: unknown event frequency associated with an event", type);
           return;
         }
+        //in order to make the result the same as the jar, we need to have filtered data for events
         const eventData = column.subInfo
           .filter((subEvent) => {
             if (type === "Combined Events") return true;
@@ -373,6 +374,7 @@ export const addDataMiningColumn = action(
           console.log("WARNING: unknown data mining type associated with a point", type);
           return;
         }
+        //in order to make the result the same as the jar, we do not filter data for points, instead we remove the first and the last data point.
         const pointData = column.subInfo.map((subPoint) => {
           return { age: subPoint.age, value: subPoint.xVal };
         });
@@ -437,8 +439,19 @@ export const addDataMiningColumn = action(
           g: 202,
           b: 201
         };
+        //in order to make the result the same as the jar, we do not filter data for chrons, instead we remove the first and the last data point.
+        const chronData = column.subInfo
+          .map((subChron) => subChron.age)
+          .filter((age) => {
+            return (
+              age >= state.settings.timeSettings[column.units].topStageAge &&
+              age <= state.settings.timeSettings[column.units].baseStageAge
+            );
+          });
+        chronData.shift();
+        chronData.pop();
         windowStats = computeWindowStatistics(
-          column.subInfo.map((subChron) => subChron.age),
+          chronData,
           column.columnSpecificSettings.windowSize,
           column.columnSpecificSettings.stepSize,
           "frequency"
