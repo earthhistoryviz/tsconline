@@ -56,7 +56,7 @@ export type Email = {
 
 export type AssetConfig = {
   activeJar: string;
-  activeDatapacks: string[];
+  activeDatapacks: DatapackDescriptionInfo[];
   decryptionJar: string;
   decryptionDirectory: string;
   datapacksDirectory: string;
@@ -84,6 +84,13 @@ export type FileMetadata = {
   decryptedFilepath: string;
   mapPackIndexFilepath: string;
   datapackIndexFilepath: string;
+};
+
+export type DatapackDescriptionInfo = {
+  description: string;
+  title: string;
+  file: string;
+  size: string;
 };
 
 export function assertEmail(o: any): asserts o is Email {
@@ -126,6 +133,14 @@ export function assertColors(o: any): asserts o is Colors {
   }
 }
 
+export function assertDatapackDescriptionInfo(o: any): asserts o is DatapackDescriptionInfo {
+  if (!o || typeof o !== "object") throw new Error("DatapackDescriptionInfo must be a non-null object");
+  if (typeof o.description !== "string") throw new Error("DatapackDescriptionInfo description must be of type string");
+  if (typeof o.title !== "string") throw new Error("DatapackDescriptionInfo title must be of type string");
+  if (typeof o.file !== "string") throw new Error("DatapackDecriptionInfo file must be of type string");
+  if (typeof o.size !== "string") throw new Error("DatapackDescriptionInfo size must be of type string");
+}
+
 export function assertAssetConfig(o: any): asserts o is AssetConfig {
   if (typeof o !== "object" || !o) throw "AssetConfig must be an object";
   if (typeof o.activeJar !== "string") throw 'AssetConfig must have an "activeJar" string';
@@ -140,7 +155,14 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
   if (typeof o.uploadDirectory !== "string") throw 'AssetConfig must have a "uploadDirectory" string';
   if (!o.activeDatapacks || !Array.isArray(o.activeDatapacks)) throw 'AssetConfig must have an "activeJar" string';
   for (const [index, ad] of o.activeDatapacks.entries()) {
-    if (typeof ad !== "string") throw "AssetConfig activeDatapacks item " + index + " must be a string";
+    if (typeof ad !== "object")
+      throw "AssetConfig activeDatapacks item " + index + " must be a valid DatapackDescriptionInfo object";
+    if (typeof ad.description !== "string")
+      throw "AssetConfig activeDatapacks description item " + index + " must be a valid string";
+    if (typeof ad.title !== "string")
+      throw "AssetConfig activeDatapacks title item " + index + " must be a valid string";
+    if (typeof ad.file !== "string") throw "AssetConfig activeDatapacks file item " + index + " must be a valid string";
+    if (typeof ad.size !== "string") throw "AssetConfig activeDatapacks size item " + index + " must be a valid string";
   }
   if (typeof o.timescaleFilepath !== "string") throw 'AssetConfig must have a "timescaleFilepath" string';
   if (typeof o.datapackImagesDirectory !== "string") throw 'AssetConfig must have a "datapackImagesDirectory" string';

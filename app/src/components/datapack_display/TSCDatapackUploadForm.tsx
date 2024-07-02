@@ -111,7 +111,7 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
               }
               actions.removeError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
               actions.removeError(ErrorCodes.UNFINISHED_DATAPACK_UPLOAD_FORM);
-              actions.uploadDatapack(datapackFile!, datapackName);
+              actions.uploadDatapack(datapackFile!, datapackName, datapackDescription);
             }}>
             Finish & Upload
           </TSCButton>

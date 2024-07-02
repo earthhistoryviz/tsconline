@@ -10,8 +10,8 @@ import {
   assertChartRequest,
   assertDatapackIndex,
   assertIndexResponse,
-  assertMapPackIndex,
-  assertTimescale
+  assertTimescale,
+  assertMapPackIndex
 } from "@tsconline/shared";
 import { deleteDirectory, resetUploadDirectory, checkHeader, assetconfigs } from "./util.js";
 import { mkdirp } from "mkdirp";
@@ -25,6 +25,10 @@ import { loadIndexes } from "./load-packs.js";
 import { updateFileMetadata, writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
+import { DatapackDescriptionInfo } from "./types.js";
+import { MultipartFile } from "@fastify/multipart";
+import * as os from "os";
+//import { stringify } from "querystring";
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
@@ -62,7 +66,7 @@ export const requestDownload = async function requestDownload(
   request: FastifyRequest<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>,
   reply: FastifyReply
 ) {
-  const uuid = request.session.get("uuid");
+  const uuid = "username"; //request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
@@ -225,12 +229,13 @@ export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
 
 export const fetchUserDatapacks = async function fetchUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
   // for test usage: const uuid = "username";
-  const uuid = request.session.get("uuid");
+  const uuid = "username"; //request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
+
   try {
     await access(userDir);
     await access(path.join(userDir, "DatapackIndex.json"));
@@ -238,6 +243,7 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
     reply.status(404).send({ error: "User has no uploaded datapacks" });
     return;
   }
+
   const datapackIndex: DatapackIndex = JSON.parse(JSON.stringify(serverDatapackindex));
   const mapPackIndex: MapPackIndex = JSON.parse(JSON.stringify(serverMapPackIndex));
   try {
@@ -258,27 +264,49 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
 
 // If at some point a delete datapack function is needed, this function needs to be modified for race conditions
 export const uploadDatapack = async function uploadDatapack(request: FastifyRequest, reply: FastifyReply) {
-  const uuid = request.session.get("uuid");
+  const uuid = "username"; //request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
   // for test usage: const uuid = "username";
-  const file = await request.file();
-  if (!file) {
+  const parts = request.parts();
+  let tempFilePath: string;
+  const fields: Record<string, string> = {};
+  let uploadedFile: MultipartFile | undefined;
+
+  for await (const part of parts) {
+    if (part.type === "file") {
+      uploadedFile = part;
+      tempFilePath = path.join(os.tmpdir(), uploadedFile.filename);
+      const tempFileStream = fs.createWriteStream(tempFilePath);
+      await pump(uploadedFile.file, tempFileStream); //need to ensure the file is written
+    } else if (part.type === "field") {
+      const field = part as { fieldname: string; value: string };
+      fields[part.fieldname] = field.value;
+    }
+  }
+  const name = fields.name;
+  const description = fields.description;
+
+  if (!uploadedFile) {
     reply.status(404).send({ error: "No file uploaded" });
+    return;
+  }
+  if (!name || !description) {
+    reply.status(404).send({ error: "No name or description uploaded" });
     return;
   }
   // only accept a binary file (encoded) or an unecnrypted text file or a zip file
   if (
-    file.mimetype !== "application/octet-stream" &&
-    file.mimetype !== "text/plain" &&
-    file.mimetype !== "application/zip"
+    uploadedFile.mimetype !== "application/octet-stream" &&
+    uploadedFile.mimetype !== "text/plain" &&
+    uploadedFile.mimetype !== "application/zip"
   ) {
-    reply.status(400).send({ error: `Invalid mimetype of uploaded file, received ${file.mimetype}` });
+    reply.status(400).send({ error: `Invalid mimetype of uploaded file, received ${uploadedFile.mimetype}` });
     return;
   }
-  const filename = file.filename;
+  const filename = uploadedFile.filename;
   const ext = path.extname(filename);
   const filenameWithoutExtension = path.basename(filename, ext);
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
@@ -293,17 +321,21 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     await resetUploadDirectory(filepath, decryptedFilepathDir);
     reply.status(errorStatus).send({ error: message });
   }
+  const datapackInfo: DatapackDescriptionInfo = {
+    file: filename,
+    description: description,
+    title: name,
+    size: uploadedFile.file.bytesRead.toString()
+  };
   if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(ext)) {
     reply.status(415).send({ error: "Invalid file type" });
     return;
   }
   await mkdirp(datapackDir);
-  const fileStream = file.file;
-  console.log("Uploading file: ", filename);
   try {
     // must wait for the file to be written before decrypting
     await new Promise<void>((resolve, reject) => {
-      pump(fileStream, fs.createWriteStream(filepath), (err) => {
+      fs.rename(tempFilePath, filepath, (err) => {
         if (err) {
           reject(err);
         } else {
@@ -315,7 +347,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     await errorHandler("Failed to save file with error: " + e, 500, e);
     return;
   }
-  if (file.file.truncated) {
+  if (uploadedFile.file.truncated) {
     await errorHandler("File too large", 413);
     return;
   }
@@ -344,6 +376,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     await errorHandler("Failed to decrypt datapacks with error " + e, 500, e);
     return;
   }
+  //verify decrypted directory
   try {
     await access(decryptedFilepathDir);
     await access(path.join(decryptedFilepathDir, "datapacks"));
@@ -376,7 +409,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       return;
     }
   }
-  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [filename], true);
+  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [datapackInfo], true);
   if (!datapackIndex[filename]) {
     await errorHandler("Failed to load decrypted datapack", 500);
     return;
@@ -526,9 +559,10 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   const userDatapackNames = userDatapackFilepaths.map((datapack) => path.basename(datapack));
   const datapacks = [];
   const userDatapacks = [];
+  const serverDatapacks = assetconfigs.activeDatapacks.map((datapack) => datapack.file);
 
   for (const datapack of chartrequest.datapacks) {
-    if (assetconfigs.activeDatapacks.includes(datapack)) {
+    if (serverDatapacks.includes(datapack)) {
       datapacks.push(`"${assetconfigs.datapacksDirectory}/${datapack}"`);
     } else if (uuid && userDatapackNames.includes(datapack)) {
       userDatapacks.push(path.join(assetconfigs.uploadDirectory, uuid, "datapacks", datapack));
