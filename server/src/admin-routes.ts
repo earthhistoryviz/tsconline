@@ -5,7 +5,7 @@ import { hash } from "bcrypt-ts";
 import { emailTestRegex } from "./login-routes.js";
 import { deleteUser } from "./database.js";
 import path from "path";
-import { adminconfig, assetconfigs } from "./util.js";
+import { adminconfig, assetconfigs, checkFileExists } from "./util.js";
 import { createWriteStream, realpathSync } from "fs";
 import { access, rm, writeFile } from "fs/promises";
 import { deleteDatapack, loadFileMetadata } from "./file-metadata-handler.js";
@@ -180,16 +180,27 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     reply.status(403).send({ message: "Directory traversal detected" });
     return;
   }
-  try {
-    await access(filepath);
+  const errorHandler = async (message: string) => {
+    const filename = file!.filename;
+    await rm(filepath, { force: true });
+    await rm(decryptedFilepath, { force: true, recursive: true });
+    if (datapackIndex[filename]) {
+      delete datapackIndex[filename];
+    }
+    if (mapPackIndex[filename]) {
+      delete mapPackIndex[filename];
+    }
+    reply.status(500).send({ message });
+  };
+  if (
+    (await checkFileExists(filepath)) &&
+    (await checkFileExists(decryptedFilepath)) &&
+    (adminconfig.datapacks.includes(file.filename) || (assetconfigs.activeDatapacks.includes(file.filename) &&
+      adminconfig.removeDevDatapacks.includes(file.filename))) &&
+    datapackIndex[file.filename]
+  ) {
     reply.status(409).send({ message: "File already exists" });
     return;
-  } catch (e) {
-    const error = e as NodeJS.ErrnoException;
-    if (error.code !== "ENOENT") {
-      reply.status(500).send({ message: "Unknown error" });
-      return;
-    }
   }
   try {
     await new Promise<void>((resolve, reject) => {
@@ -211,11 +222,6 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     reply.status(400).send({ message: "File too large" });
     return;
   }
-  const errorHandler = async (message: string) => {
-    await rm(filepath, { force: true });
-    await rm(decryptedFilepath, { force: true, recursive: true });
-    reply.status(500).send({ message });
-  };
   try {
     await new Promise<void>((resolve, reject) => {
       try {
@@ -248,11 +254,84 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     return;
   }
   try {
-    adminconfig.datapacks.push(file.filename);
+    // this was a previous dev datapack that was removed
+    if (adminconfig.removeDevDatapacks.includes(file.filename)) {
+      adminconfig.removeDevDatapacks = adminconfig.removeDevDatapacks.filter((pack) => pack !== file!.filename);
+      assetconfigs.activeDatapacks.push(file.filename);
+    } else {
+      adminconfig.datapacks.push(file.filename);
+    }
     await writeFile(assetconfigs.adminConfigPath, JSON.stringify(adminconfig, null, 2));
   } catch (e) {
     errorHandler("Error updating admin config");
     return;
   }
   reply.send({ message: "Datapack uploaded" });
+};
+
+export const adminDeleteServerDatapack = async function adminDeleteServerDatapack(
+  request: FastifyRequest<{ Body: { datapack: string } }>,
+  reply: FastifyReply
+) {
+  const { datapack } = request.body;
+  if (!datapack) {
+    reply.status(400).send({ message: "Missing datapack id" });
+    return;
+  }
+  if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(path.extname(datapack))) {
+    reply.status(400).send({ message: "Invalid file extension" });
+    return;
+  }
+  let filepath;
+  let decryptedFilepath;
+  try {
+    filepath = realpathSync(path.resolve(assetconfigs.datapacksDirectory, datapack));
+    decryptedFilepath = realpathSync(path.resolve(assetconfigs.decryptionDirectory, datapack.split(".")[0]!));
+    if (
+      !filepath.startsWith(path.resolve(assetconfigs.datapacksDirectory)) ||
+      !decryptedFilepath.startsWith(path.resolve(assetconfigs.decryptionDirectory))
+    ) {
+      reply.status(403).send({ message: "Directory traversal detected" });
+      return;
+    }
+  } catch (e) {
+    reply.status(500).send({ message: "Datapack file does not exist" });
+    return;
+  }
+  if (!adminconfig.datapacks.includes(datapack) && !assetconfigs.activeDatapacks.includes(datapack)) {
+    reply.status(404).send({ message: "Datapack not found" });
+    return;
+  }
+  if (assetconfigs.activeDatapacks.includes(datapack)) {
+    // don't write to file to prevent merge issues on server
+    assetconfigs.activeDatapacks = assetconfigs.activeDatapacks.filter((pack) => pack !== datapack);
+    adminconfig.removeDevDatapacks.push(datapack);
+  }
+  if (adminconfig.datapacks.includes(datapack)) {
+    adminconfig.datapacks = adminconfig.datapacks.filter((pack) => pack !== datapack);
+  }
+  if (datapackIndex[datapack]) {
+    delete datapackIndex[datapack];
+  }
+  if (mapPackIndex[datapack]) {
+    delete mapPackIndex[datapack];
+  }
+  try {
+    await rm(filepath, { force: true });
+    await rm(decryptedFilepath, { force: true, recursive: true });
+  } catch (e) {
+    reply.status(500).send({ message: "Deleted from indexes, but was not able to delete files" });
+    return;
+  }
+  try {
+    await writeFile(assetconfigs.adminConfigPath, JSON.stringify(adminconfig, null, 2));
+  } catch (e) {
+    reply
+      .status(500)
+      .send({
+        message:
+          "Deleted and resolved configurations, but was not able to write to file. Check with server admin to make sure your configuration is still viable"
+      });
+  }
+  reply.status(200).send({ message: `Datapack ${datapack} deleted` });
 };
