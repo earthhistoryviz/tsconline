@@ -13,20 +13,17 @@ export type WindowStats = {
   value: number;
 };
 
-export type CritterSearchDisplayInfo = {
+export type EventSearchInfo = {
   columnName: string;
   columnPath: string[];
-  age: string;
-  qualifier: string;
-  notes: string;
+  age?: string;
+  qualifier?: string;
+  notes?: string;
 };
 
-export type SearchDisplayInfo = {
-  columnName: string;
-  columnPath: string[];
-  age: string;
-  qualifier: string;
-  notes: string;
+export type GroupedEventSearchInfo = {
+  key: string;
+  info: EventSearchInfo[];
 };
 
 export type DataMiningStatisticApproach = "average" | "minimum" | "maximum" | "rateOfChange" | "frequency";
