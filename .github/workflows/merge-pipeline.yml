@@ -177,7 +177,7 @@ jobs:
           cd /home/runner/work/tsconline/tsconline/tscreator/
           docker-compose build
           docker-compose up -d
-          docker-compose exec -T tscreator_vnc bash -c "cd /tscreator/devel && make && make jar && find '/tscreator/jars/' -type f -name '*.jar' -exec cp {} '/tscreator/testUsageJar.jar' \; && exit"
+          docker-compose exec -T tscreator_vnc bash -c "cd /tscreator/devel && make clean && make && make jar && find '/tscreator/jars/' -type f -name '*.jar' -exec cp {} '/tscreator/testUsageJar.jar' \; && exit"
           docker cp tscreator_vnc:/tscreator/testUsageJar.jar /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar
           cp /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar /home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar
 
