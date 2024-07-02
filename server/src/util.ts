@@ -5,7 +5,7 @@ import { glob } from "glob";
 import { createInterface } from "readline/promises";
 import { constants } from "fs";
 import levenshtein from "js-levenshtein";
-import { assertAssetConfig, AssetConfig } from "./types.js";
+import { AdminConfig, assertAdminConfig, assertAssetConfig, AssetConfig } from "./types.js";
 
 /**
  * Recursively deletes directory INCLUDING directoryPath
@@ -210,6 +210,7 @@ export async function checkFileExists(filePath: string): Promise<boolean> {
 }
 
 export let assetconfigs: AssetConfig;
+export let adminconfig: AdminConfig = { datapacks: [] };
 export async function loadAssetConfigs() {
   try {
     const contents = JSON.parse((await readFile("assets/config.json")).toString());
@@ -218,6 +219,16 @@ export async function loadAssetConfigs() {
   } catch (e) {
     console.log("ERROR: Failed to load asset configs from assets/config.json.  Error was: ", e);
     process.exit(1);
+  }
+  if (await checkFileExists(assetconfigs.adminConfigPath)) {
+    try {
+      const content = JSON.parse((await readFile(assetconfigs.adminConfigPath)).toString());
+      assertAdminConfig(content);
+      adminconfig = content;
+    } catch (e) {
+      console.log("ERROR: Failed to load admin configs from assets/admin-config.json.  Error was: ", e);
+      process.exit(1);
+    }
   }
 }
 

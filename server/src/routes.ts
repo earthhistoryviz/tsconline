@@ -13,7 +13,8 @@ import {
   assertMapPackIndex,
   assertTimescale
 } from "@tsconline/shared";
-import { deleteDirectory, resetUploadDirectory, checkHeader, assetconfigs } from "./util.js";
+import { deleteDirectory, resetUploadDirectory, checkHeader, assetconfigs, adminconfig } from "./util.js";
+import { mkdirp } from "mkdirp";
 import md5 from "md5";
 import svgson from "svgson";
 import fs, { realpathSync } from "fs";
@@ -563,6 +564,8 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       datapacks.push(`"${assetconfigs.datapacksDirectory}/${datapack}"`);
     } else if (uuid && userDatapackNames.includes(datapack)) {
       userDatapacks.push(path.join(assetconfigs.uploadDirectory, uuid, "datapacks", datapack));
+    } else if (adminconfig.datapacks.includes(datapack)) {
+      datapacks.push(`"${assetconfigs.datapacksDirectory}/${datapack}"`);
     } else {
       console.log("ERROR: datapack: ", datapack, " is not included in activeDatapacks");
       console.log("assetconfig.activeDatapacks:", assetconfigs.activeDatapacks);

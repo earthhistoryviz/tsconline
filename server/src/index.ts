@@ -3,7 +3,7 @@ import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
 import { execSync } from "child_process";
-import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs } from "./util.js";
+import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs, adminconfig } from "./util.js";
 import * as routes from "./routes.js";
 import * as loginRoutes from "./login-routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
@@ -76,7 +76,12 @@ try {
 export const datapackIndex: DatapackIndex = {};
 export const mapPackIndex: MapPackIndex = {};
 const patterns = await loadFaciesPatterns();
-await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, assetconfigs.activeDatapacks);
+await loadIndexes(
+  datapackIndex,
+  mapPackIndex,
+  assetconfigs.decryptionDirectory,
+  assetconfigs.activeDatapacks.concat(adminconfig.datapacks)
+);
 
 declare module "@fastify/secure-session" {
   interface SessionData {
