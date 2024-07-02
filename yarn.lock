@@ -851,6 +851,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fastify/auth@npm:^4.6.1":
+  version: 4.6.1
+  resolution: "@fastify/auth@npm:4.6.1"
+  dependencies:
+    fastify-plugin: "npm:^4.0.0"
+    reusify: "npm:^1.0.4"
+  checksum: abc26d45bc62f68c108301cc0525a47ae9915d523ca19c36a947635b99f3d28e4fdaae085f1a1be76bc2519401ce827bd4342e47c182d661d817a938ca219b45
+  languageName: node
+  linkType: hard
+
 "@fastify/busboy@npm:^2.1.0":
   version: 2.1.1
   resolution: "@fastify/busboy@npm:2.1.1"
@@ -1896,6 +1906,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@tsconline/server@workspace:server"
   dependencies:
+    "@fastify/auth": "npm:^4.6.1"
     "@fastify/compress": "npm:^7.0.0"
     "@fastify/cors": "npm:^9.0.1"
     "@fastify/multipart": "npm:^8.2.0"
