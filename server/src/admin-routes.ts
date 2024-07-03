@@ -2,7 +2,6 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { checkForUsersWithUsernameOrEmail, createUser, findUser } from "./database.js";
 import { randomUUID } from "crypto";
 import { hash } from "bcrypt-ts";
-import { emailTestRegex } from "./login-routes.js";
 import { deleteUser } from "./database.js";
 import path from "path";
 import { adminconfig, assetconfigs, checkFileExists } from "./util.js";
@@ -14,6 +13,7 @@ import pump from "pump";
 import { execFileSync } from "child_process";
 import { datapackIndex, mapPackIndex } from "./index.js";
 import { loadIndexes } from "./load-packs.js";
+import validator from "validator";
 
 /**
  * Get all users for admin to configure on frontend
@@ -39,7 +39,7 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
     pictureUrl: string;
     isAdmin: number;
   };
-  if (!username || !email || !password || !emailTestRegex.test(email)) {
+  if (!username || !email || !password || !validator.isEmail(email)) {
     reply.status(400).send({ message: "Missing/invalid required fields" });
     return;
   }

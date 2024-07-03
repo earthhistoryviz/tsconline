@@ -25,7 +25,7 @@ import { readdir, rm, writeFile, mkdir } from "fs/promises";
 import { checkRecaptchaToken, generateToken } from "./verify.js";
 import * as validator from "validator";
 
-const googleRecaptchaBotThreshold = 0.5;
+export const googleRecaptchaBotThreshold = 0.5;
 
 export const logout = async function logout(request: FastifyRequest, reply: FastifyReply) {
   request.session.delete();
