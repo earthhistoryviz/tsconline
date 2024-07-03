@@ -26,13 +26,39 @@ const Checkbox = observer(({ info }: { info: EventSearchInfo }) => {
     <TSCCheckbox
       //use global state because if state is in this component, the checkbox rerenders out of view so state is reset
       //and if state is in parent component, changing it rerenders the entire component which sets scroll position to the top
-      checked={state.settingsTabs.addSearchResultToChart[info.id]}
+      checked={state.settingsTabs.addSearchResultToChart[info.id].added}
       onClick={() => {
-        actions.setAddSearchResultToChart(!state.settingsTabs.addSearchResultToChart[info.id], info.id);
-        if (state.settingsTabs.addSearchResultToChart[info.id]) {
+        actions.setAddSearchResultToChart(
+          {
+            added: !state.settingsTabs.addSearchResultToChart[info.id].added,
+            addedUntil: state.settingsTabs.addSearchResultToChart[info.id].addedUntil
+          },
+          info.id
+        );
+        if (state.settingsTabs.addSearchResultToChart[info.id].added) {
           //this is so the columns toggle properly since this checkbox isn't the column on value
           actions.setColumnOn(false, column);
+
+          let pathColumn = column;
+          while (pathColumn.parent != null && !pathColumn.on) {
+            const parent = state.settingsTabs.columnHashMap.get(pathColumn.parent);
+            if (!parent) break;
+            pathColumn = parent;
+          }
+          actions.setAddSearchResultToChart(
+            { added: state.settingsTabs.addSearchResultToChart[info.id].added, addedUntil: pathColumn },
+            info.id
+          );
           actions.toggleSettingsTabColumn(column);
+        } else {
+          let pathColumn = column;
+          console.log(state.settingsTabs.addSearchResultToChart[info.id].addedUntil!.name);
+          while (pathColumn != state.settingsTabs.addSearchResultToChart[info.id].addedUntil && pathColumn.parent) {
+            actions.setColumnOn(false, pathColumn);
+            const parent = state.settingsTabs.columnHashMap.get(pathColumn.parent);
+            if (!parent) break;
+            pathColumn = parent;
+          }
         }
         //in-context feature, adds 3myr to above and below the age
         if (state.settingsTabs.eventInContext) {
