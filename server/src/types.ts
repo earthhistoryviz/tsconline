@@ -9,7 +9,7 @@ export interface Database {
 
 export interface UserTable {
   userId: Generated<number>;
-  username: string | null;
+  username: string;
   email: string;
   hashedPassword: string | null;
   uuid: string;

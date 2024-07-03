@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec, execFileSync } from "child_process";
-import { writeFile, stat, readFile, access, rm } from "fs/promises";
+import { writeFile, stat, readFile, access, rm, mkdir } from "fs/promises";
 import {
   DatapackIndex,
   DatapackInfoChunk,
@@ -14,7 +14,6 @@ import {
   assertTimescale
 } from "@tsconline/shared";
 import { deleteDirectory, resetUploadDirectory, checkHeader, assetconfigs } from "./util.js";
-import { mkdirp } from "mkdirp";
 import md5 from "md5";
 import svgson from "svgson";
 import fs, { realpathSync } from "fs";
@@ -134,7 +133,7 @@ export const requestDownload = async function requestDownload(
   }
 
   try {
-    await mkdirp(encryptedFilepathDir);
+    await mkdir(encryptedFilepathDir, { recursive: true });
   } catch (e) {
     console.error(e);
     reply.status(500).send({ error: "Failed to create encrypted directory with error " + e });
@@ -308,7 +307,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     reply.status(415).send({ error: "Invalid file type" });
     return;
   }
-  await mkdirp(datapackDir);
+  await mkdir(datapackDir, { recursive: true });
   const fileStream = file.file;
   console.log("Uploading file: ", filename);
   try {
@@ -591,7 +590,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
 
   // Create the directory and save the settings there for java:
   try {
-    await mkdirp(chartDirFilePath);
+    await mkdir(chartDirFilePath, { recursive: true });
     await writeFile(settingsFilePath, settingsXml);
     console.log("Successfully created and saved chart settings at", settingsFilePath);
   } catch (e) {
