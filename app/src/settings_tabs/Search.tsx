@@ -125,8 +125,6 @@ export const Search = observer(function Search() {
             actions.setEventInContext(!state.settingsTabs.eventInContext);
             if (state.settingsTabs.eventInContext) {
               actions.createAgeBeforeContext();
-            } else {
-              actions.resetEventInContextLists();
             }
           }}
         />
