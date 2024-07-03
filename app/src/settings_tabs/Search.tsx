@@ -2,15 +2,6 @@ import { TextField } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { useContext, useEffect, useRef } from "react";
 import "./Search.css";
-import {
-  assertSubBlockInfo,
-  assertSubChronInfo,
-  assertSubEventInfo,
-  assertSubFaciesInfo,
-  assertSubRangeInfo,
-  assertSubSequenceInfo,
-  assertSubTransectInfo
-} from "@tsconline/shared";
 import { context } from "../state";
 import { Results } from "./Results";
 import { EventSearchInfo, GroupedEventSearchInfo } from "../types";
@@ -35,9 +26,11 @@ export const Search = observer(function Search() {
   function searchResultData() {
     count.current = 0;
     if (state.settingsTabs.eventSearchTerm === "") return [];
+
     //key: column name/event name
     //info: info found in subinfo array
     const results = new Map<string, EventSearchInfo[]>();
+
     for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
       if (columnInfo.name === "Chart Root") {
         continue;
@@ -66,84 +59,48 @@ export const Search = observer(function Search() {
           if ("label" in subInfo) {
             if (subInfo.label!.toLowerCase().includes(state.settingsTabs.eventSearchTerm)) {
               const resultType = columnInfo.columnDisplayType === "Zone" ? "Block" : columnInfo.columnDisplayType;
-              const resinfo: EventSearchInfo = {
+              const resInfo: EventSearchInfo = {
                 id: count.current,
                 columnName: columnInfo.name,
                 columnPath: columnPath(columnInfo.name),
                 unit: columnInfo.units
               };
-              //special case for facies and chron label since they are intervals and shows up as block but uses subfacies/subchron info
+
+              //facies/chron label doesn't have subinfo because they are block type but its parent has facies/chron info, so access it through BlockSeriesMetaColumn
               if (columnInfo.columnDisplayType === "BlockSeriesMetaColumn") {
-                const id = subInfo.label + " - " + "Block";
-                if (!results.has(id)) {
-                  results.set(id, []);
+                if ((resInfo.columnPath = columnPath(columnInfo.name + " Facies Label")).length === 0) {
+                  resInfo.columnPath = columnPath(columnInfo.name + " Chron Label");
+                  resInfo.columnName = columnInfo.name + " Chron Label";
+                } else {
+                  resInfo.columnName = columnInfo.name + " Facies Label";
                 }
-                const eventGroup = results.get(id)!;
+              }
+
+              //facies and chron label show up as block, so find ranges for them
+              if (resultType === "Block" || columnInfo.columnDisplayType === "BlockSeriesMetaColumn") {
                 if (i > 0) {
                   const nextBlock = columnInfo.subInfo[i - 1];
-                  if ("age" in nextBlock) resinfo.age = String(nextBlock.age) + " - " + String(subInfo.age);
-                } else resinfo.age = String(subInfo.age);
-
-                if ((resinfo.columnPath = columnPath(columnInfo.name + " Facies Label")).length === 0) {
-                  resinfo.columnPath = columnPath(columnInfo.name + " Chron Label");
-                  resinfo.columnName = columnInfo.name + " Chron Label";
-                } else {
-                  resinfo.columnName = columnInfo.name + " Facies Label";
-                }
-                eventGroup.push(resinfo);
-                count.current++;
-                continue;
+                  if ("age" in nextBlock) resInfo.age = String(nextBlock.age) + " - " + String(subInfo.age);
+                } else resInfo.age = String(subInfo.age);
+              } else {
+                resInfo.age = String(subInfo.age);
               }
-
-              const id = subInfo.label + " - " + resultType;
-              if (!results.has(id)) {
-                results.set(id, []);
+              if ("subEventType" in subInfo) {
+                resInfo.qualifier = subInfo.subEventType;
               }
-              const eventGroup = results.get(id)!;
-
-              switch (resultType) {
-                case "Block":
-                  //has blocks above it
-                  if (i > 0) {
-                    assertSubBlockInfo(subInfo);
-                    const nextBlock = columnInfo.subInfo[i - 1];
-                    if ("age" in nextBlock) resinfo.age = String(nextBlock.age) + " - " + String(subInfo.age);
-                  } else resinfo.age = String(subInfo.age);
-                  break;
-                case "Facies":
-                  assertSubFaciesInfo(subInfo);
-                  resinfo.age = String(subInfo.age);
-                  break;
-                case "Event":
-                  assertSubEventInfo(subInfo);
-                  resinfo.qualifier = subInfo.subEventType;
-                  resinfo.age = String(subInfo.age);
-                  resinfo.notes = subInfo.popup;
-                  break;
-                case "Range":
-                  assertSubRangeInfo(subInfo);
-                  resinfo.age = String(subInfo.age);
-                  resinfo.notes = subInfo.popup;
-                  break;
-                case "Chron":
-                  assertSubChronInfo(subInfo);
-                  resinfo.age = String(subInfo.age);
-                  resinfo.notes = subInfo.popup;
-                  break;
-                case "Sequence":
-                  assertSubSequenceInfo(subInfo);
-                  resinfo.age = String(subInfo.age);
-                  resinfo.notes = subInfo.popup;
-                  break;
-                case "Transect":
-                  assertSubTransectInfo(subInfo);
-                  resinfo.age = String(subInfo.age);
-                  break;
-                // no subinfo labels and falls under column tag
-                // case "Freehand":
-                // case "Point":
+              if ("popup" in subInfo) {
+                resInfo.notes = subInfo.popup;
               }
-              eventGroup.push(resinfo);
+              //same special case as above
+              const key =
+                resultType === "BlockSeriesMetaColumn"
+                  ? subInfo.label + " - " + "Block"
+                  : subInfo.label + " - " + resultType;
+              if (!results.has(key)) {
+                results.set(key, []);
+              }
+              const eventGroup = results.get(key)!;
+              eventGroup.push(resInfo);
               count.current++;
             }
           }
@@ -157,6 +114,7 @@ export const Search = observer(function Search() {
     });
     return groupedEvents;
   }
+
   const InContext = observer(() => {
     return (
       <div>
@@ -169,7 +127,6 @@ export const Search = observer(function Search() {
               actions.createAgeBeforeContext();
             } else {
               actions.resetEventInContextLists();
-              //
             }
           }}
         />
@@ -177,12 +134,14 @@ export const Search = observer(function Search() {
       </div>
     );
   });
+
   //cleanup event history on tab change
   useEffect(() => {
     return () => {
       actions.resetEventInContextLists();
     };
   });
+
   return (
     <div className="search-container">
       <div className="search-and-options">
