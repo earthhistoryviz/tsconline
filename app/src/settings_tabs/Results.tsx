@@ -1,4 +1,4 @@
-import { TableCell, TableBody, TableContainer, Paper, SvgIcon, Typography, Box } from "@mui/material";
+import { TableCell, TableBody, TableContainer, Paper, SvgIcon, Typography, Box, IconButton } from "@mui/material";
 import React, { useContext, useEffect } from "react";
 import { Table } from "react-bootstrap";
 import { TableComponents, TableVirtuoso } from "react-virtuoso";
@@ -11,12 +11,10 @@ import { useTheme } from "@mui/material/styles";
 import "./Results.css";
 import { EventSearchInfo, GroupedEventSearchInfo } from "../types";
 import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
-
+import { trimQuotes } from "../util/util";
 const Checkbox = observer(({ info }: { info: EventSearchInfo }) => {
   const { state, actions } = useContext(context);
-  //for synchronous update of event in context lists
   const column = state.settingsTabs.columnHashMap.get(info.columnName);
-
   if (!column) {
     return (
       <SvgIcon>
@@ -89,7 +87,7 @@ export const Results = ({
     actions.initAddSearchResultToChart(resultCount);
   }, []);
 
-  //this is necessary to prevent table hierachy errors.
+  //this is necessary to prevent table hierachy errors
   //virtuoso assigns each array element to a table row, and a table row can't be a child
   //of a table row which would be necessary for display without stretching the array.
   const stretchedEvents: (string | EventSearchInfo)[] = [];
@@ -105,19 +103,19 @@ export const Results = ({
     if (info === "header") {
       return (
         <>
-          <TableCell className="header-text" align="left">
+          <TableCell className="search-group-header-text" align="left">
             Add to Chart
           </TableCell>
-          <TableCell className="header-text" align="left">
+          <TableCell className="search-group-header-text" align="left">
             Column Path
           </TableCell>
-          <TableCell className="header-text" align="center">
+          <TableCell className="search-group-header-text" align="center">
             Age
           </TableCell>
-          <TableCell className="header-text" align="right">
+          <TableCell className="search-group-header-text" align="right">
             Qualifier
           </TableCell>
-          <TableCell className="header-text" align="right">
+          <TableCell className="search-group-header-text" align="right">
             Additional Info
           </TableCell>
         </>
@@ -170,10 +168,11 @@ export const Results = ({
           )}
           {info.notes ? (
             <TableCell align="right">
-              <CustomTooltip title={info.notes}>
-                <SvgIcon>
-                  <NotesIcon />
-                </SvgIcon>
+              <CustomTooltip
+                title={<Box dangerouslySetInnerHTML={{ __html: trimQuotes(info.notes).replaceAll('""', '"') }} />}>
+                <IconButton>
+                  <NotesIcon sx={{ color: theme.palette.icon.dark }} />
+                </IconButton>
               </CustomTooltip>
             </TableCell>
           ) : (
@@ -197,7 +196,7 @@ export const Results = ({
         ref={ref}
       />
     )),
-    Table: (props) => <Table {...props} style={{ width: "100%" }} />,
+    Table: (props) => <Table {...props} style={{ width: "100%", borderSpacing: "0px" }} />,
     TableBody: React.forwardRef<HTMLTableSectionElement>((props, ref) => <TableBody {...props} ref={ref} />)
   };
 
