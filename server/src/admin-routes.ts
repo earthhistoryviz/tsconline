@@ -7,7 +7,7 @@ import { deleteUser } from "./database.js";
 import path from "path";
 import { adminconfig, assetconfigs, checkFileExists } from "./util.js";
 import { createWriteStream, realpathSync } from "fs";
-import { access, rm, writeFile } from "fs/promises";
+import { rm, writeFile } from "fs/promises";
 import { deleteDatapack, loadFileMetadata } from "./file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
 import pump from "pump";
@@ -154,34 +154,70 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   let title: string | undefined;
   let description: string | undefined;
   let file: MultipartFile | undefined;
+  let filename: string | undefined;
+  let filepath: string | undefined;
+  let decryptedFilepath: string | undefined;
   for await (const part of parts) {
     if (part.type === "file") {
+      // DOWNLOAD FILE HERE AND SAVE TO FILE
       file = part;
+      filename = file.filename;
+      filepath = path.resolve(assetconfigs.datapacksDirectory, filename);
+      decryptedFilepath = path.resolve(assetconfigs.decryptionDirectory, filename.split(".")[0]!);
+      if (
+        !filepath.startsWith(path.resolve(assetconfigs.datapacksDirectory)) ||
+        !decryptedFilepath.startsWith(path.resolve(assetconfigs.decryptionDirectory))
+      ) {
+        reply.status(403).send({ message: "Directory traversal detected" });
+        return;
+      }
+      if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(path.extname(file.filename))) {
+        reply.status(400).send({ message: "Invalid file extension" });
+        return;
+      }
+      if (
+        (await checkFileExists(filepath)) &&
+        (await checkFileExists(decryptedFilepath)) &&
+        (adminconfig.datapacks.includes(filename) ||
+          (assetconfigs.activeDatapacks.includes(filename) && !adminconfig.removeDevDatapacks.includes(filename))) &&
+        datapackIndex[filename]
+      ) {
+        reply.status(409).send({ message: "File already exists" });
+        return;
+      }
+      try {
+        await new Promise<void>((resolve, reject) => {
+          pump(file!.file, createWriteStream(filepath!), (error) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve();
+            }
+          });
+        });
+      } catch (error) {
+        await rm(filepath, { force: true });
+        reply.status(500).send({ message: "Error saving file" });
+        return;
+      }
+      if (file.file.truncated) {
+        await rm(filepath, { force: true });
+        reply.status(400).send({ message: "File too large" });
+        return;
+      }
     } else if (part.fieldname === "title" && typeof part.value === "string") {
       title = part.value;
     } else if (part.fieldname === "description" && typeof part.value === "string") {
       description = part.value;
     }
   }
-  if (!title || !description || !file) {
+  if (!title || !description || !file || !filepath || !filename || !decryptedFilepath) {
     reply.status(400).send({ message: "Missing required fields" });
     return;
   }
-  if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(path.extname(file.filename))) {
-    reply.status(400).send({ message: "Invalid file extension" });
-    return;
-  }
-  const filepath = path.resolve(assetconfigs.datapacksDirectory, file.filename);
-  const decryptedFilepath = path.resolve(assetconfigs.decryptionDirectory, file.filename.split(".")[0]!);
-  if (
-    !filepath.startsWith(path.resolve(assetconfigs.datapacksDirectory)) ||
-    !decryptedFilepath.startsWith(path.resolve(assetconfigs.decryptionDirectory))
-  ) {
-    reply.status(403).send({ message: "Directory traversal detected" });
-    return;
-  }
   const errorHandler = async (message: string) => {
-    const filename = file!.filename;
+    if (!filepath || !decryptedFilepath || !filename)
+      throw new Error("Missing required variables for file deletion and error handling");
     await rm(filepath, { force: true });
     await rm(decryptedFilepath, { force: true, recursive: true });
     if (datapackIndex[filename]) {
@@ -192,36 +228,6 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     }
     reply.status(500).send({ message });
   };
-  if (
-    (await checkFileExists(filepath)) &&
-    (await checkFileExists(decryptedFilepath)) &&
-    (adminconfig.datapacks.includes(file.filename) || (assetconfigs.activeDatapacks.includes(file.filename) &&
-      adminconfig.removeDevDatapacks.includes(file.filename))) &&
-    datapackIndex[file.filename]
-  ) {
-    reply.status(409).send({ message: "File already exists" });
-    return;
-  }
-  try {
-    await new Promise<void>((resolve, reject) => {
-      pump(file!.file, createWriteStream(filepath), (error) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve();
-        }
-      });
-    });
-  } catch (error) {
-    await rm(filepath, { force: true });
-    reply.status(500).send({ message: "Error saving file" });
-    return;
-  }
-  if (file.file.truncated) {
-    await rm(filepath, { force: true });
-    reply.status(400).send({ message: "File too large" });
-    return;
-  }
   try {
     await new Promise<void>((resolve, reject) => {
       try {
@@ -231,7 +237,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
             "-jar",
             assetconfigs.decryptionJar,
             "-d",
-            filepath.replaceAll("\\", "/"),
+            filepath!.replaceAll("\\", "/"),
             "-dest",
             assetconfigs.decryptionDirectory.replaceAll("\\", "/")
           ],
@@ -248,18 +254,19 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     errorHandler("Error decrypting file");
     return;
   }
-  const successful = await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, [file.filename]);
+  const successful = await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, [filename]);
   if (!successful) {
     errorHandler("Error parsing the datapack for chart generation");
     return;
   }
   try {
     // this was a previous dev datapack that was removed
-    if (adminconfig.removeDevDatapacks.includes(file.filename)) {
-      adminconfig.removeDevDatapacks = adminconfig.removeDevDatapacks.filter((pack) => pack !== file!.filename);
-      assetconfigs.activeDatapacks.push(file.filename);
+    if (adminconfig.removeDevDatapacks.includes(filename)) {
+      adminconfig.removeDevDatapacks = adminconfig.removeDevDatapacks.filter((pack) => pack !== filename);
+      // on load, we prune datapacks that are in removeDevDatapacks so add it back but DON'T WRITE TO FILE
+      assetconfigs.activeDatapacks.push(filename);
     } else {
-      adminconfig.datapacks.push(file.filename);
+      adminconfig.datapacks.push(filename);
     }
     await writeFile(assetconfigs.adminConfigPath, JSON.stringify(adminconfig, null, 2));
   } catch (e) {
@@ -326,12 +333,10 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
   try {
     await writeFile(assetconfigs.adminConfigPath, JSON.stringify(adminconfig, null, 2));
   } catch (e) {
-    reply
-      .status(500)
-      .send({
-        message:
-          "Deleted and resolved configurations, but was not able to write to file. Check with server admin to make sure your configuration is still viable"
-      });
+    reply.status(500).send({
+      message:
+        "Deleted and resolved configurations, but was not able to write to file. Check with server admin to make sure your configuration is still viable"
+    });
   }
   reply.status(200).send({ message: `Datapack ${datapack} deleted` });
 };
