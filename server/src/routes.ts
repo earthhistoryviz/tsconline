@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { exec } from "child_process";
+import { exec, execFileSync } from "child_process";
 import { writeFile, stat, readFile, access, rm, mkdir } from "fs/promises";
 import {
   DatapackIndex,
@@ -16,7 +16,7 @@ import {
 import { deleteDirectory, resetUploadDirectory, checkHeader, assetconfigs } from "./util.js";
 import md5 from "md5";
 import svgson from "svgson";
-import fs from "fs";
+import fs, { realpathSync } from "fs";
 import { parseExcelFile } from "./parse-excel-file.js";
 import path from "path";
 import pump from "pump";
@@ -71,9 +71,16 @@ export const requestDownload = async function requestDownload(
   const { filename } = request.params;
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
   const datapackDir = path.join(userDir, "datapacks");
-  const filepath = path.join(datapackDir, filename);
+  let filepath = path.join(datapackDir, filename);
   const encryptedFilepathDir = path.join(userDir, "encrypted-datapacks");
-  const maybeEncryptedFilepath = path.join(encryptedFilepathDir, filename);
+  let maybeEncryptedFilepath = path.join(encryptedFilepathDir, filename);
+  // check and sanitize filepath
+  filepath = realpathSync(path.resolve(filepath));
+  maybeEncryptedFilepath = realpathSync(path.resolve(maybeEncryptedFilepath));
+  if (!filepath.startsWith(datapackDir) || !maybeEncryptedFilepath.startsWith(encryptedFilepathDir)) {
+    reply.status(403).send({ error: "Invalid file path" });
+    return;
+  }
   if (needEncryption === undefined) {
     try {
       await access(filepath);
@@ -145,17 +152,21 @@ export const requestDownload = async function requestDownload(
 
       // java -jar <jar file> -d <datapack> <datapack> -enc <destination directory> -node
       console.log("Calling Java encrypt.jar: ", cmd);
-      exec(cmd, function (error, stdout, stderror) {
-        console.log("Java encrypt.jar finished, sending reply to browser");
-        if (error) {
-          console.error("Java error param: " + error);
-          console.error("Java stderr: " + stderror.toString());
-          resolve();
-        } else {
-          console.log("Java stdout: " + stdout.toString());
-          resolve();
-        }
-      });
+      try {
+        const stdout = execFileSync("java", [
+          "-jar",
+          assetconfigs.activeJar,
+          "-d",
+          filepath.replaceAll("\\", "/"),
+          "-enc",
+          encryptedFilepathDir,
+          "-node"
+        ]);
+        console.log("Java stdout: " + stdout.toString());
+      } catch (e) {
+        console.error("Java error param: " + e);
+      }
+      resolve();
     });
   } catch (e) {
     console.error(e);
@@ -407,9 +418,15 @@ export const fetchImage = async function (
   request: FastifyRequest<{ Params: { datapackName: string; imageName: string } }>,
   reply: FastifyReply
 ) {
-  const tryReadFile = async (path: string) => {
+  const tryReadFile = async (filepath: string) => {
+    const root = process.cwd();
+    filepath = realpathSync(path.resolve(root, filepath));
+    if (!filepath.startsWith(root)) {
+      reply.status(403).send({ error: "Invalid file path" });
+      return;
+    }
     try {
-      const file = await readFile(path);
+      const file = await readFile(filepath);
       return file;
     } catch (e) {
       if ((e as NodeJS.ErrnoException).code === "ENOENT") {
@@ -454,7 +471,14 @@ export const fetchSettingsXml = async function fetchSettingsJson(
   reply: FastifyReply
 ) {
   try {
-    const { file } = request.params;
+    let { file } = request.params;
+    // sanitize and check filepath
+    const root = process.cwd();
+    file = realpathSync(path.resolve(root, file));
+    if (!file.startsWith(root)) {
+      reply.status(403).send({ error: "Invalid file path" });
+      return;
+    }
     //TODO: differentiate between preset and user uploaded datpack
     const settingsXml = (await readFile(`${decodeURIComponent(file)}`)).toString();
     reply.send(settingsXml);
@@ -474,8 +498,16 @@ export const fetchSVGStatus = async function (
 ) {
   const { hash } = request.params;
   let isSVGReady = false;
-  const directory = `${assetconfigs.chartsDirectory}/${hash}`;
-  const filepath = `${directory}/chart.svg`;
+  const root = process.cwd();
+  let directory = path.join(assetconfigs.chartsDirectory, hash);
+  let filepath = path.join(directory, "chart.svg");
+  // sanitize and check filepath
+  directory = realpathSync(path.resolve(root, directory));
+  filepath = realpathSync(path.resolve(root, filepath));
+  if (!directory.startsWith(root) || !filepath.startsWith(root) || !filepath.endsWith("chart.svg")) {
+    reply.status(403).send({ error: "Invalid hash" });
+    return;
+  }
   // if hash doesn't exist reply with error
   if (!fs.existsSync(directory)) {
     reply.send({ error: `No directory exists at hash: ${directory}` });

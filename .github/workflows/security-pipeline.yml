@@ -1,0 +1,33 @@
+name: Security Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  security:
+    name: Security Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Truffle
+        run: curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: TruffleHog Secret Detection
+        id: trufflehog
+        continue-on-error: true 
+        run: |
+          trufflehog git file://$(pwd) --only-verified --fail --github-actions > trufflehog-reults.json 2>&1;
+
+      - name: Scan Results Status 
+        if: steps.trufflehog.outcome == 'failure' 
+        run: |
+            cat trufflehog-reults.json;
+            exit 1;
