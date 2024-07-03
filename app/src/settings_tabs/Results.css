@@ -12,14 +12,23 @@
   border-bottom: 1px solid;
 }
 
-.MuiTableCell-root.search-group-header-text {
+.MuiTableCell-root.event-group-header-text {
   padding-top: 2px;
   padding-bottom: 2px;
-  font-weight: bold;
+  font-weight: 600;
+}
+
+.event-group-identifier-text {
+  font-weight: 600;
 }
 
 .table-container {
-  height: "70vh";
-  width: "50vw";
-  margin-top: "2vh";
+  height: 65vh;
+  width: 50vw;
+  margin-top: 2vh;
+}
+
+.events-search-results-table {
+  height: 100%;
+  width: 100%;
 }
