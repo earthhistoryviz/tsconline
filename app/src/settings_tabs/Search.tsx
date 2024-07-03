@@ -113,28 +113,27 @@ export const Search = observer(function Search() {
                 case "Facies":
                   assertSubFaciesInfo(subInfo);
                   resinfo.age = String(subInfo.age);
-                  resinfo.notes = "rocktype: " + subInfo.rockType;
                   break;
                 case "Event":
                   assertSubEventInfo(subInfo);
                   resinfo.qualifier = subInfo.subEventType;
                   resinfo.age = String(subInfo.age);
-                  resinfo.notes = "line style: " + subInfo.lineStyle + subInfo.popup;
+                  resinfo.notes = subInfo.popup;
                   break;
                 case "Range":
                   assertSubRangeInfo(subInfo);
                   resinfo.age = String(subInfo.age);
-                  resinfo.notes = "abundance - " + subInfo.abundance;
+                  resinfo.notes = subInfo.popup;
                   break;
                 case "Chron":
                   assertSubChronInfo(subInfo);
                   resinfo.age = String(subInfo.age);
-                  resinfo.notes = "polarity: " + subInfo.polarity;
+                  resinfo.notes = subInfo.popup;
                   break;
                 case "Sequence":
                   assertSubSequenceInfo(subInfo);
                   resinfo.age = String(subInfo.age);
-                  resinfo.notes = "direction: " + subInfo.direction + "\n" + "severity: " + subInfo.severity;
+                  resinfo.notes = subInfo.popup;
                   break;
                 case "Transect":
                   assertSubTransectInfo(subInfo);
