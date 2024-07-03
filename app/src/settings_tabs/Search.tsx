@@ -63,7 +63,6 @@ export const Search = observer(function Search() {
         }
         for (let i = 0; i < columnInfo.subInfo.length; i++) {
           const subInfo = columnInfo.subInfo[i];
-
           if ("label" in subInfo) {
             if (subInfo.label!.toLowerCase().includes(state.settingsTabs.eventSearchTerm)) {
               const resultType = columnInfo.columnDisplayType === "Zone" ? "Block" : columnInfo.columnDisplayType;
@@ -79,7 +78,7 @@ export const Search = observer(function Search() {
                 if (!results.has(id)) {
                   results.set(id, []);
                 }
-                const temp = results.get(id)!;
+                const eventGroup = results.get(id)!;
                 if (i > 0) {
                   const nextBlock = columnInfo.subInfo[i - 1];
                   if ("age" in nextBlock) resinfo.age = String(nextBlock.age) + " - " + String(subInfo.age);
@@ -91,7 +90,7 @@ export const Search = observer(function Search() {
                 } else {
                   resinfo.columnName = columnInfo.name + " Facies Label";
                 }
-                temp.push(resinfo);
+                eventGroup.push(resinfo);
                 count.current++;
                 continue;
               }
@@ -100,7 +99,7 @@ export const Search = observer(function Search() {
               if (!results.has(id)) {
                 results.set(id, []);
               }
-              const temp = results.get(id)!;
+              const eventGroup = results.get(id)!;
 
               switch (resultType) {
                 case "Block":
@@ -132,10 +131,6 @@ export const Search = observer(function Search() {
                   resinfo.age = String(subInfo.age);
                   resinfo.notes = "polarity: " + subInfo.polarity;
                   break;
-                case "Freehand":
-                  break;
-                case "Point":
-                  break;
                 case "Sequence":
                   assertSubSequenceInfo(subInfo);
                   resinfo.age = String(subInfo.age);
@@ -145,8 +140,11 @@ export const Search = observer(function Search() {
                   assertSubTransectInfo(subInfo);
                   resinfo.age = String(subInfo.age);
                   break;
+                // no subinfo labels and falls under column tag
+                // case "Freehand":
+                // case "Point":
               }
-              temp.push(resinfo);
+              eventGroup.push(resinfo);
               count.current++;
             }
           }
@@ -172,6 +170,7 @@ export const Search = observer(function Search() {
               actions.createAgeBeforeContext();
             } else {
               actions.resetEventInContextLists();
+              //
             }
           }}
         />
@@ -179,7 +178,7 @@ export const Search = observer(function Search() {
       </div>
     );
   });
-  //for cleanup
+  //cleanup event history on tab change
   useEffect(() => {
     return () => {
       actions.resetEventInContextLists();

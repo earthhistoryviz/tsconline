@@ -2,16 +2,16 @@
   padding-top: 0;
   padding-bottom: 0;
   border-bottom: 0;
-  width: 20vw;
+  width: 100vw;
 }
-.MuiTableCell-head.row-identifier {
+.MuiTableCell-root.event-group-identifier {
   padding-top: 10px;
   padding-bottom: 10px;
 }
-.MuiTableCell-head {
-  padding-top: 0;
-  padding-bottom: 0;
-  border-bottom: 0;
+
+.MuiTableCell-root.header-text {
+  padding-top: 5px;
+  padding-bottom: 5px;
   font-weight: bold;
 }
 
