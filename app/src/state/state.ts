@@ -68,7 +68,7 @@ export type State = {
     eventInContextBaseList: eventInContextList | null;
     //null if eventInContext is false
     ageBeforeContext: ageBeforeContext | null;
-    addSearchResultToChart: boolean[];
+    addSearchResultToChart: { added: boolean; addedUntil: ColumnInfo | null }[];
   };
   mapState: {
     mapInfo: MapInfo;

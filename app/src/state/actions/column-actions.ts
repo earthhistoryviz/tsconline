@@ -708,14 +708,16 @@ export const resetAgeBeforeContext = action(() => {
 
 export const initAddSearchResultToChart = action((count: number) => {
   for (let i = 0; i < count; i++) {
-    state.settingsTabs.addSearchResultToChart.push(false);
+    state.settingsTabs.addSearchResultToChart.push({ added: false, addedUntil: null });
   }
 });
 
-export const setAddSearchResultToChart = action((term: boolean, index: number) => {
-  if (index < 0 || index >= state.settingsTabs.addSearchResultToChart.length) return;
-  state.settingsTabs.addSearchResultToChart[index] = term;
-});
+export const setAddSearchResultToChart = action(
+  (term: { added: boolean; addedUntil: ColumnInfo | null }, index: number) => {
+    if (index < 0 || index >= state.settingsTabs.addSearchResultToChart.length) return;
+    state.settingsTabs.addSearchResultToChart[index] = term;
+  }
+);
 
 export const resetAddSearchResultToChart = action(() => {
   state.settingsTabs.addSearchResultToChart = [];
