@@ -68,7 +68,9 @@ export type State = {
     eventInContextBaseList: eventInContextList | null;
     //null if eventInContext is false
     ageBeforeContext: ageBeforeContext | null;
-    addSearchResultToChart: { added: boolean; addedUntil: ColumnInfo | null }[];
+    //each row indexed by search result id
+    //column represents the "on" state of path of parents from search result
+    addSearchResultToChart: boolean[][];
   };
   mapState: {
     mapInfo: MapInfo;
