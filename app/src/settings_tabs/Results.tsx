@@ -58,7 +58,7 @@ const Checkbox = observer(({ info }: { info: EventSearchInfo }) => {
             } else {
               actions.removeEventInContextTopList(eventContextTop, info.unit);
               actions.removeEventInContextBaseList(eventContextBase, info.unit);
-              //removed all events
+              //removed all events, restore age
               if (!state.settingsTabs.eventInContextTopList && state.settingsTabs.ageBeforeContext) {
                 actions.setTopStageAge(state.settingsTabs.ageBeforeContext[info.unit].topAge, info.unit);
               }
