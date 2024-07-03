@@ -31,7 +31,7 @@ import {
   isDataMiningPointDataType,
   isEventFrequency
 } from "@tsconline/shared";
-import { cloneDeep } from "lodash";
+import _, { cloneDeep } from "lodash";
 import {
   DataMiningStatisticApproach,
   WindowStats,
@@ -676,6 +676,9 @@ export const removeEventInContextTopList = action((term: { key: string; age: num
     }
     if (topList.length === 0) {
       delete state.settingsTabs.eventInContextTopList[unit];
+      if (_.isEmpty(state.settingsTabs.eventInContextTopList)) {
+        state.settingsTabs.eventInContextTopList = null;
+      }
     }
   }
 });
@@ -693,6 +696,9 @@ export const removeEventInContextBaseList = action((term: { key: string; age: nu
     }
     if (baseList.length === 0) {
       delete state.settingsTabs.eventInContextBaseList[unit];
+      if (_.isEmpty(state.settingsTabs.eventInContextBaseList)) {
+        state.settingsTabs.eventInContextBaseList = null;
+      }
     }
   }
 });

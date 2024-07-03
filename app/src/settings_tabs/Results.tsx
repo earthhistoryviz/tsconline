@@ -1,4 +1,4 @@
-import { TableCell, TableBody, TableContainer, Paper, SvgIcon, Typography, Box, IconButton } from "@mui/material";
+import { TableCell, TableBody, TableContainer, Paper, SvgIcon, Typography, Box } from "@mui/material";
 import React, { useContext, useEffect } from "react";
 import { Table } from "react-bootstrap";
 import { TableComponents, TableVirtuoso } from "react-virtuoso";
@@ -58,6 +58,14 @@ const Checkbox = observer(({ info }: { info: EventSearchInfo }) => {
             } else {
               actions.removeEventInContextTopList(eventContextTop, info.unit);
               actions.removeEventInContextBaseList(eventContextBase, info.unit);
+              //removed all events
+              if (!state.settingsTabs.eventInContextTopList && state.settingsTabs.ageBeforeContext) {
+                actions.setTopStageAge(state.settingsTabs.ageBeforeContext[info.unit].topAge, info.unit);
+              }
+              if (!state.settingsTabs.eventInContextBaseList && state.settingsTabs.ageBeforeContext) {
+                actions.setBaseStageAge(state.settingsTabs.ageBeforeContext[info.unit].baseAge, info.unit);
+              }
+              //go back to last selected highest/lowest ages
               if (state.settingsTabs.eventInContextTopList && state.settingsTabs.eventInContextTopList[info.unit]) {
                 actions.setTopStageAge(state.settingsTabs.eventInContextTopList![info.unit][0].age - 3, info.unit);
               }
@@ -103,19 +111,19 @@ export const Results = ({
     if (info === "header") {
       return (
         <>
-          <TableCell className="search-group-header-text" align="left">
+          <TableCell className="event-group-header-text" align="left">
             Add to Chart
           </TableCell>
-          <TableCell className="search-group-header-text" align="left">
+          <TableCell className="event-group-header-text" align="left">
             Column Path
           </TableCell>
-          <TableCell className="search-group-header-text" align="center">
+          <TableCell className="event-group-header-text" align="center">
             Age
           </TableCell>
-          <TableCell className="search-group-header-text" align="right">
+          <TableCell className="event-group-header-text" align="right">
             Qualifier
           </TableCell>
-          <TableCell className="search-group-header-text" align="right">
+          <TableCell className="event-group-header-text" align="right">
             Additional Info
           </TableCell>
         </>
@@ -128,7 +136,7 @@ export const Results = ({
           sx={{ backgroundColor: theme.palette.secondaryBackground.main }}
           colSpan={5}>
           <Typography variant="h6">
-            <Box sx={{ fontWeight: "bold" }}>{info}</Box>
+            <Box className="event-group-identifier-text">{info}</Box>
           </Typography>
         </TableCell>
       );
@@ -140,10 +148,11 @@ export const Results = ({
           </TableCell>
           <TableCell align="left">
             <CustomTooltip
+              placement="right"
               title={info.columnPath.map((value, pathIndex) => (
                 <div key={index + " " + pathIndex}>{value}</div>
               ))}>
-              <Typography noWrap sx={{ width: "8vw" }} variant="subtitle2">
+              <Typography noWrap sx={{ maxWidth: "8vw" }} variant="subtitle2">
                 {info.columnPath[0]}
               </Typography>
             </CustomTooltip>
@@ -169,10 +178,11 @@ export const Results = ({
           {info.notes ? (
             <TableCell align="right">
               <CustomTooltip
+                sx={{ padding: "0" }}
                 title={<Box dangerouslySetInnerHTML={{ __html: trimQuotes(info.notes).replaceAll('""', '"') }} />}>
-                <IconButton>
-                  <NotesIcon sx={{ color: theme.palette.icon.dark }} />
-                </IconButton>
+                <SvgIcon>
+                  <NotesIcon />
+                </SvgIcon>
               </CustomTooltip>
             </TableCell>
           ) : (
@@ -200,17 +210,19 @@ export const Results = ({
     TableBody: React.forwardRef<HTMLTableSectionElement>((props, ref) => <TableBody {...props} ref={ref} />)
   };
 
-  //add display names
+  //add display names for linter
   if (!VirtuosoTableComponents.Scroller || !VirtuosoTableComponents.TableBody) return;
   VirtuosoTableComponents.Scroller.displayName = "Scroller";
   VirtuosoTableComponents.TableBody.displayName = "TableBody";
 
   return (
-    <TableVirtuoso
-      style={{ height: "65vh", width: "40vw", marginTop: "2vh" }}
-      data={stretchedEvents}
-      components={VirtuosoTableComponents}
-      itemContent={EventGroup}
-    />
+    <Box className="table-container">
+      <TableVirtuoso
+        className="events-search-results-table"
+        data={stretchedEvents}
+        components={VirtuosoTableComponents}
+        itemContent={EventGroup}
+      />
+    </Box>
   );
 };
