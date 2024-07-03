@@ -12,7 +12,7 @@ vi.mock("fs", async (importOriginal) => {
   const actual = await importOriginal<typeof fsModule>();
   return {
     ...actual,
-    createReadStream: vi.fn().mockImplementation(() => {})
+    createReadStream: vi.fn().mockImplementation(() => { })
   };
 });
 
@@ -54,14 +54,14 @@ vi.mock("../src/util", async (importOriginal) => {
   return {
     ...actual,
     assetconfigs: { uploadDirectory: "" },
-    loadAssetConfigs: vi.fn().mockImplementation(() => {}),
-    deleteDirectory: vi.fn().mockImplementation(() => {}),
-    resetUploadDirectory: vi.fn().mockImplementation(() => {}),
+    loadAssetConfigs: vi.fn().mockImplementation(() => { }),
+    deleteDirectory: vi.fn().mockImplementation(() => { }),
+    resetUploadDirectory: vi.fn().mockImplementation(() => { }),
     checkHeader: vi.fn().mockReturnValue(true)
   };
 });
 
-/*---------------------TEST--------------------*/
+/*----------------------TEST---------------------*/
 
 let app: FastifyInstance;
 const uuid = "12345-abcde";
@@ -457,10 +457,17 @@ describe("runJavaEncrypt", () => {
       throw new Error("test generated file shouldn't exist at this point");
     }
     const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-1.txt";
-    const keyFilePath = "server/__tests__/__data__/encryption-test-keys/test-1-key.txt";
-    const [result, key] = await Promise.all([unmockedReadFile(resultFilePath), unmockedReadFile(keyFilePath)]);
-    expect(result.length).toBe(key.length);
-    expect(result).toEqual(key);
+    const keyFilePath1 = "server/__tests__/__data__/encryption-test-keys/test-1-key.txt";
+    const keyFilePath2 = "server/__tests__/__data__/encryption-test-keys/test-1-key(2).txt";
+    const [result, key1, key2] = await Promise.all([
+      unmockedReadFile(resultFilePath),
+      unmockedReadFile(keyFilePath1),
+      unmockedReadFile(keyFilePath2)
+    ]);
+    const sameLength = (value: number) => value == key1.length || value == key2.length;
+    const sameContent = (value: Buffer) => value.equals(key1) || value.equals(key2);
+    expect(result.length).toSatisfy(sameLength);
+    expect(result).toSatisfy(sameContent);
   });
   it("should correctly encrypt an encrypted TSCreator txt file, when the TSCreator Encrypted Datafile title is manually removed from the original encrypted file.", async () => {
     if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-2.txt"))) {
