@@ -251,10 +251,7 @@ server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
 server.post("/auth/signup", strictRateLimit, loginRoutes.signup);
 server.post("/auth/session-check", moderateRateLimit, loginRoutes.sessionCheck);
-server.post("/auth/logout", moderateRateLimit, async (request, reply) => {
-  request.session.delete();
-  reply.send({ message: "Logged out" });
-});
+server.post("/auth/logout", moderateRateLimit, loginRoutes.logout);
 server.post("/auth/verify", strictRateLimit, loginRoutes.verifyEmail);
 server.post("/auth/resend", moderateRateLimit, loginRoutes.resendVerificationEmail);
 server.post("/auth/send-forgot-password-email", strictRateLimit, loginRoutes.sendForgotPasswordEmail);
