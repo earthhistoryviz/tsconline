@@ -13,3 +13,6 @@
 .scroll-bar {
   max-height: 200px;
 }
+.column-info-box a:visited {
+  color: blueviolet;
+}

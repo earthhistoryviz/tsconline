@@ -112,18 +112,15 @@ export const BorderedIcon = ({
 };
 export const TSCSubMenu = styled(SubMenu)(({ theme }) => ({
   "&.szh-menu__submenu > .szh-menu__item--hover": {
-    backgroundColor: theme.palette.secondaryBackground.main
+    backgroundColor: theme.palette.action.hover
   },
-  "&.szh-menu__submenu > .szh-menu__item--checked": {
-    color: theme.palette.icon.main
+  "&.szh-menu__item--hover": {
+    backgroundColor: theme.palette.secondaryBackground.main
   }
 }));
 export const TSCMenuItem = styled(MenuItem)(({ theme }) => ({
   "&.szh-menu__item--hover": {
-    backgroundColor: Color(theme.palette.dark.light).lighten(0.5).string()
-  },
-  "&.szh-menu__item--checked": {
-    color: theme.palette.primary.main
+    backgroundColor: theme.palette.action.hover
   }
 }));
 

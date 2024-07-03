@@ -99,7 +99,9 @@ server.register(fastifySecureSession, {
 });
 
 await server.register(fastifyRateLimit, {
-  global: false,
+  global: true,
+  max: 100,
+  timeWindow: "1 minute",
   onExceeded: async (_request, key) => {
     const clientIp = key;
     const ip = (await findIp(clientIp))[0];
@@ -179,16 +181,6 @@ server.post("/removecache", async (request, reply) => {
 server.get("/presets", async (_request, reply) => {
   reply.send(presets);
 });
-// uploads datapack
-server.post("/upload", routes.uploadDatapack);
-//download datapack
-server.get<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>(
-  "/download/user-datapacks/:filename",
-  routes.requestDownload
-);
-
-//fetches json object of requested settings file
-server.get<{ Params: { file: string } }>("/settingsXml/:file", routes.fetchSettingsXml);
 
 server.get("/datapack-index", routes.fetchServerDatapackInfo);
 server.get("/map-pack-index", routes.fetchServerMapPackInfo);
@@ -207,9 +199,6 @@ server.get("/datapackinfoindex", (_request, reply) => {
   }
 });
 
-// checks chart.pdf-status
-server.get<{ Params: { hash: string } }>("/svgstatus/:hash", routes.fetchSVGStatus);
-
 server.get("/facies-patterns", (_request, reply) => {
   if (!patterns || Object.keys(patterns).length === 0) {
     reply.status(500).send({ error: "Server isn't able to load facies patterns" });
@@ -218,13 +207,11 @@ server.get("/facies-patterns", (_request, reply) => {
   }
 });
 
-server.get("/user-datapacks", routes.fetchUserDatapacks);
-
 const strictRateLimit = {
   config: {
     rateLimit: {
       max: 10,
-      timeWindow: "1 minute"
+      timeWindow: 1000 * 60
     }
   }
 };
@@ -233,11 +220,33 @@ const moderateRateLimit = {
   config: {
     rateLimit: {
       max: 20,
-      timeWindow: "1 minute"
+      timeWindow: 1000 * 60
+    }
+  }
+};
+const looseRateLimit = {
+  config: {
+    rateLimit: {
+      max: 30,
+      timeWindow: 1000 * 60
     }
   }
 };
 
+server.get("/user-datapacks", moderateRateLimit, routes.fetchUserDatapacks);
+// checks chart.pdf-status
+server.get<{ Params: { hash: string } }>("/svgstatus/:hash", looseRateLimit, routes.fetchSVGStatus);
+
+//fetches json object of requested settings file
+server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, routes.fetchSettingsXml);
+//download datapack
+server.get<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>(
+  "/download/user-datapacks/:filename",
+  moderateRateLimit,
+  routes.requestDownload
+);
+// uploads datapack
+server.post("/upload", moderateRateLimit, routes.uploadDatapack);
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
 server.post("/auth/signup", strictRateLimit, loginRoutes.signup);
@@ -258,11 +267,12 @@ server.post("/upload-profile-picture", moderateRateLimit, loginRoutes.uploadProf
 // will return url chart path and hash that was generated for it
 server.post<{ Params: { usecache: string; useSuggestedAge: string; username: string } }>(
   "/charts/:usecache/:useSuggestedAge/:username",
+  looseRateLimit,
   routes.fetchChart
 );
 
 // Serve timescale data endpoint
-server.get("/timescale", routes.fetchTimescale);
+server.get("/timescale", looseRateLimit, routes.fetchTimescale);
 
 server.get<{ Params: { datapackName: string; imageName: string } }>(
   "/images/:datapackName/:imageName",

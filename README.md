@@ -6,7 +6,7 @@
 
 ---
 
-https://earthhistoryviz.github.io/tsconline/
+https://earthhistoryviz.github.io/tsconline/docs/#/
 
 ## Structure
 
