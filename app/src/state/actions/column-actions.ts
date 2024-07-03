@@ -440,14 +440,7 @@ export const addDataMiningColumn = action(
           b: 201
         };
         //in order to make the result the same as the jar, we do not filter data for chrons, instead we remove the first and the last data point.
-        const chronData = column.subInfo
-          .map((subChron) => subChron.age)
-          .filter((age) => {
-            return (
-              age >= state.settings.timeSettings[column.units].topStageAge &&
-              age <= state.settings.timeSettings[column.units].baseStageAge
-            );
-          });
+        const chronData = column.subInfo.map((subChron) => subChron.age);
         chronData.shift();
         chronData.pop();
         windowStats = computeWindowStatistics(
