@@ -26,39 +26,34 @@ const Checkbox = observer(({ info }: { info: EventSearchInfo }) => {
     <TSCCheckbox
       //use global state because if state is in this component, the checkbox rerenders out of view so state is reset
       //and if state is in parent component, changing it rerenders the entire component which sets scroll position to the top
-      checked={state.settingsTabs.addSearchResultToChart[info.id].added}
+      checked={state.settingsTabs.addSearchResultToChart[info.id][0]}
       onClick={() => {
-        actions.setAddSearchResultToChart(
-          {
-            added: !state.settingsTabs.addSearchResultToChart[info.id].added,
-            addedUntil: state.settingsTabs.addSearchResultToChart[info.id].addedUntil
-          },
-          info.id
-        );
-        if (state.settingsTabs.addSearchResultToChart[info.id].added) {
-          //this is so the columns toggle properly since this checkbox isn't the column on value
-          actions.setColumnOn(false, column);
-
+        if (!state.settingsTabs.addSearchResultToChart[info.id][0]) {
           let pathColumn = column;
-          while (pathColumn.parent != null && !pathColumn.on) {
+          const pathAdded: boolean[] = [];
+          while (pathColumn.parent != null) {
+            pathAdded.push(pathColumn.on);
             const parent = state.settingsTabs.columnHashMap.get(pathColumn.parent);
             if (!parent) break;
             pathColumn = parent;
           }
-          actions.setAddSearchResultToChart(
-            { added: state.settingsTabs.addSearchResultToChart[info.id].added, addedUntil: pathColumn },
-            info.id
-          );
+          actions.setAddSearchResultToChart([true, ...pathAdded.slice(1)], info.id);
+
+          //this is so the columns toggle properly since this checkbox isn't the column on value
+          actions.setColumnOn(false, column);
           actions.toggleSettingsTabColumn(column);
         } else {
           let pathColumn = column;
-          console.log(state.settingsTabs.addSearchResultToChart[info.id].addedUntil!.name);
-          while (pathColumn != state.settingsTabs.addSearchResultToChart[info.id].addedUntil && pathColumn.parent) {
-            actions.setColumnOn(false, pathColumn);
+          const pathAdded = state.settingsTabs.addSearchResultToChart[info.id];
+          for (const on of pathAdded) {
+            actions.setColumnOn(on, pathColumn);
+            if (!pathColumn.parent) break;
             const parent = state.settingsTabs.columnHashMap.get(pathColumn.parent);
             if (!parent) break;
             pathColumn = parent;
           }
+          actions.setAddSearchResultToChart([false, ...pathAdded.slice(1)], info.id);
+          actions.setColumnOn(false, column);
         }
         //in-context feature, adds 3myr to above and below the age
         if (state.settingsTabs.eventInContext) {
