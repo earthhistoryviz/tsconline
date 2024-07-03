@@ -1,6 +1,5 @@
 import "dotenv/config";
-import md5 from "md5";
-import { randomBytes } from "node:crypto";
+import { createCipheriv, randomBytes } from "node:crypto";
 
 export async function checkRecaptchaToken(token: string): Promise<number> {
   try {
@@ -21,5 +20,6 @@ export async function checkRecaptchaToken(token: string): Promise<number> {
 }
 
 export function generateToken(uuid: string): string {
-  return randomBytes(16).toString("hex") + md5(uuid);
+  const aesCipher = createCipheriv("aes-256-cbc", process.env.TOKEN_SECRET_KEY || "", process.env.TOKEN_IV || "");
+  return randomBytes(16).toString("hex") + aesCipher.update(uuid, "utf8", "hex");
 }
