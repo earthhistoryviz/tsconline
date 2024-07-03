@@ -1,14 +1,4 @@
-import {
-  TableRow,
-  TableCell,
-  TableHead,
-  TableBody,
-  TableContainer,
-  Paper,
-  SvgIcon,
-  Typography,
-  Box
-} from "@mui/material";
+import { TableCell, TableBody, TableContainer, Paper, SvgIcon, Typography, Box } from "@mui/material";
 import React, { useContext, useEffect } from "react";
 import { Table } from "react-bootstrap";
 import { TableComponents, TableVirtuoso } from "react-virtuoso";
@@ -34,14 +24,13 @@ const Checkbox = observer(({ info }: { info: EventSearchInfo }) => {
       </SvgIcon>
     );
   }
-  // console.log(index, info.columnName, state.settingsTabs.addSearchResultToChart[info.id])
   return (
     <TSCCheckbox
-      inputProps={{ "aria-label": "controlled" }}
+      //use global state because if state is in this component, the checkbox rerenders out of view so state is reset
+      //and if state is in parent component, changing it rerenders the entire component which sets scroll position to the top
       checked={state.settingsTabs.addSearchResultToChart[info.id]}
       onClick={() => {
         actions.setAddSearchResultToChart(!state.settingsTabs.addSearchResultToChart[info.id], info.id);
-        console.log(state.settingsTabs.addSearchResultToChart[info.id]);
         if (state.settingsTabs.addSearchResultToChart[info.id]) {
           //this is so the columns toggle properly since this checkbox isn't the column on value
           actions.setColumnOn(false, column);
@@ -75,7 +64,7 @@ const Checkbox = observer(({ info }: { info: EventSearchInfo }) => {
                 actions.setTopStageAge(state.settingsTabs.eventInContextTopList![info.unit][0].age - 3, info.unit);
               }
               if (state.settingsTabs.eventInContextBaseList && state.settingsTabs.eventInContextBaseList[info.unit]) {
-                actions.setBaseStageAge(state.settingsTabs.eventInContextBaseList![info.unit][0].age - 3, info.unit);
+                actions.setBaseStageAge(state.settingsTabs.eventInContextBaseList![info.unit][0].age + 3, info.unit);
               }
             }
           }
@@ -100,74 +89,115 @@ export const Results = ({
     actions.initAddSearchResultToChart(resultCount);
   }, []);
 
-  function Row(props: { row: GroupedEventSearchInfo; index: number }) {
-    const { row, index } = props;
-    return (
-      <Table cellPadding="none" style={{ width: "100%" }}>
-        <TableHead>
-          <TableRow>
-            <TableCell
-              align="center"
-              colSpan={5}
-              sx={{ backgroundColor: theme.palette.secondaryBackground.main }}
-              className="row-identifier">
-              <Typography variant="h6">{row.key}</Typography>
+  //this is necessary to prevent table hierachy errors.
+  //virtuoso assigns each array element to a table row, and a table row can't be a child
+  //of a table row which would be necessary for display without stretching the array.
+  const stretchedEvents: (string | EventSearchInfo)[] = [];
+  groupedEvents.map((value) => {
+    stretchedEvents.push(value.key);
+    stretchedEvents.push("header");
+    for (const event of value.info) {
+      stretchedEvents.push(event);
+    }
+  });
+
+  function EventGroup(index: number, info: string | EventSearchInfo) {
+    if (info === "header") {
+      return (
+        <>
+          <TableCell className="header-text" align="left">
+            Add to Chart
+          </TableCell>
+          <TableCell className="header-text" align="left">
+            Column Path
+          </TableCell>
+          <TableCell className="header-text" align="center">
+            Age
+          </TableCell>
+          <TableCell className="header-text" align="right">
+            Qualifier
+          </TableCell>
+          <TableCell className="header-text" align="right">
+            Additional Info
+          </TableCell>
+        </>
+      );
+    } else if (typeof info === "string") {
+      return (
+        <TableCell
+          className="event-group-identifier"
+          align="center"
+          sx={{ backgroundColor: theme.palette.secondaryBackground.main }}
+          colSpan={5}>
+          <Typography variant="h6">
+            <Box sx={{ fontWeight: "bold" }}>{info}</Box>
+          </Typography>
+        </TableCell>
+      );
+    } else {
+      return (
+        <>
+          <TableCell align="left">
+            <Checkbox info={info} />
+          </TableCell>
+          <TableCell align="left">
+            <CustomTooltip
+              title={info.columnPath.map((value, pathIndex) => (
+                <div key={index + " " + pathIndex}>{value}</div>
+              ))}>
+              <Typography noWrap sx={{ width: "8vw" }} variant="subtitle2">
+                {info.columnPath[0]}
+              </Typography>
+            </CustomTooltip>
+          </TableCell>
+          {info.age ? (
+            <TableCell align="center">{info.age}</TableCell>
+          ) : (
+            <TableCell align="center">
+              <SvgIcon>
+                <HorizontalRuleIcon />
+              </SvgIcon>
             </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell align="left">Add to Chart</TableCell>
-            <TableCell align="left">Column Path</TableCell>
-            <TableCell align="center">Age</TableCell>
-            <TableCell align="right">Qualifier</TableCell>
-            <TableCell align="right">Additional Info</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {row.info.map((info, innerIndex) => (
-            <TableRow key={index + " " + innerIndex}>
-              <TableCell align="left">
-                <Checkbox info={info} />
-              </TableCell>
-              <TableCell align="left">
-                <CustomTooltip
-                  title={info.columnPath.map((value, pathIndex) => (
-                    <div key={index + " " + innerIndex + " " + pathIndex}>{value}</div>
-                  ))}>
-                  <Typography noWrap sx={{ width: "10vw" }} variant="subtitle2">
-                    {info.columnPath[0]}
-                  </Typography>
-                </CustomTooltip>
-              </TableCell>
-              <TableCell align="center">{info.age}</TableCell>
-              {info.qualifier === "--"}
-              <TableCell align="right">{info.qualifier}</TableCell>
-              {info.notes === "--" ? (
-                <TableCell align="right">
-                  <SvgIcon>
-                    <HorizontalRuleIcon />
-                  </SvgIcon>
-                </TableCell>
-              ) : (
-                <TableCell align="right">
-                  <CustomTooltip title={info.notes}>
-                    <SvgIcon>
-                      <NotesIcon />
-                    </SvgIcon>
-                  </CustomTooltip>
-                </TableCell>
-              )}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    );
+          )}
+          {info.qualifier ? (
+            <TableCell align="right">{info.qualifier}</TableCell>
+          ) : (
+            <TableCell align="right">
+              <SvgIcon>
+                <HorizontalRuleIcon />
+              </SvgIcon>
+            </TableCell>
+          )}
+          {info.notes ? (
+            <TableCell align="right">
+              <CustomTooltip title={info.notes}>
+                <SvgIcon>
+                  <NotesIcon />
+                </SvgIcon>
+              </CustomTooltip>
+            </TableCell>
+          ) : (
+            <TableCell align="right">
+              <SvgIcon>
+                <HorizontalRuleIcon />
+              </SvgIcon>
+            </TableCell>
+          )}
+        </>
+      );
+    }
   }
-  const VirtuosoTableComponents: TableComponents<GroupedEventSearchInfo> = {
+
+  const VirtuosoTableComponents: TableComponents<string | EventSearchInfo> = {
     Scroller: React.forwardRef<HTMLDivElement>((props, ref) => (
-      <TableContainer component={Paper} sx={{ backgroundColor: "white" }} {...props} ref={ref} />
+      <TableContainer
+        component={Paper}
+        sx={{ backgroundColor: theme.palette.backgroundColor.main }}
+        {...props}
+        ref={ref}
+      />
     )),
     Table: (props) => <Table {...props} style={{ width: "100%" }} />,
-    TableRow: ({ ...props }) => <TableRow {...props} />,
     TableBody: React.forwardRef<HTMLTableSectionElement>((props, ref) => <TableBody {...props} ref={ref} />)
   };
 
@@ -177,13 +207,11 @@ export const Results = ({
   VirtuosoTableComponents.TableBody.displayName = "TableBody";
 
   return (
-    <Box sx={{ height: "70vh", width: "50vw", marginTop: "2vh" }}>
-      <TableVirtuoso
-        initialTopMostItemIndex={0}
-        data={groupedEvents}
-        components={VirtuosoTableComponents}
-        itemContent={(index, row) => Row({ row, index })}
-      />
-    </Box>
+    <TableVirtuoso
+      style={{ height: "65vh", width: "40vw", marginTop: "2vh" }}
+      data={stretchedEvents}
+      components={VirtuosoTableComponents}
+      itemContent={EventGroup}
+    />
   );
 };
