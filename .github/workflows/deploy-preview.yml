@@ -19,25 +19,13 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }}
 
-      - name: Create Deployment
-        id: create_deployment
-        run: |
-          DEPLOYMENT_ID=$(curl -X POST \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/deployments \
-            -d '{
-              "ref": "${{ github.sha }}",
-              "task": "deploy",
-              "auto_merge": false,
-              "required_contexts": [],
-              "environment": "preview",
-              "description": "Deployment preview for PR #${{ github.event.pull_request.number }}",
-              "transient_environment": true,
-              "production_environment": false,
-              "environment_url": "https://pr-${{ github.event.pull_request.number }}.geolex.org"
-            }' | jq -r '.id')
-          echo "deployment_id=$DEPLOYMENT_ID" >> $GITHUB_ENV
+      - uses: altinukshini/deployment-action@releases/v1
+        name: Create GitHub deployment
+        id: deployment
+        with:
+          token: "${{ github.token }}"
+          target_url: https://pr-${{ github.event.pull_request.number }}.geolex.org
+          environment: production
 
       - name: Set up SSH key
         uses: webfactory/ssh-agent@v0.5.3
@@ -103,26 +91,23 @@ jobs:
           echo "Server is up"
           EOF
 
-      - name: Update Deployment Status to Success
+      - name: Update deployment status (success)
         if: success()
-        run: |
-          curl -X POST \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/deployments/${{ env.deployment_id }}/statuses \
-            -d '{"state":"success"}'
+        uses: altinukshini/deployment-status@releases/v1
+        with:
+          token: "${{ github.token }}"
+          target_url: https://pr-${{ github.event.pull_request.number }}.geolex.org
+          state: "success"
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
 
-      - name: Update Deployment Status to Success
-        if: success()
-        run: |
-          curl -X POST \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/deployments/${{ env.deployment_id }}/statuses \
-            -d '{
-              "state": "success",
-              "environment_url": "https://pr-${{ github.event.pull_request.number }}.geolex.org"
-            }'
+      - name: Update deployment status (failure)
+        if: failure()
+        uses: altinukshini/deployment-status@releases/v1
+        with:
+          token: "${{ github.token }}"
+          target_url: https://pr-${{ github.event.pull_request.number }}.geolex.org
+          state: "failure"
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
 
       - name: Comment on PR
         uses: thollander/actions-comment-pull-request@v2
