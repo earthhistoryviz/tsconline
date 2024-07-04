@@ -22,7 +22,16 @@ import validator from "validator";
  */
 export const getUsers = async function getUsers(_request: FastifyRequest, reply: FastifyReply) {
   const users = await findUser({});
-  reply.send(users);
+  const displayedUser = users.map((user) => {
+    return {
+      username: user.username,
+      email: user.email,
+      pictureUrl: user.pictureUrl,
+      isAdmin: user.isAdmin,
+      uuid: user.uuid
+    };
+  });
+  reply.send(displayedUser);
 };
 
 /**
