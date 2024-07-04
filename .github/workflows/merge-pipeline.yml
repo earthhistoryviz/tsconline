@@ -236,7 +236,8 @@ jobs:
           cp ../server/assets/jars/* ./server/assets/jars/
           mkdir -p ./server/assets/datapacks
           cp ../server/assets/datapacks/* ./server/assets/datapacks/
-          docker-compose -f docker-compose-preview.yml up -d pr-preview
+          docker-compose -f docker-compose-preview.yml down || true
+          docker-compose -f docker-compose-preview.yml up -d
           MAX_WAIT=180
           INTERVAL=5
           ELAPSED=0
