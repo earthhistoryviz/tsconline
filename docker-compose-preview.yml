@@ -10,6 +10,9 @@ services:
         - 3000
       volumes:
         - .:/code
+      labels:
+        - "traefik.http.routers.pr-preview.rule=HostRegexp(`pr-{id:[0-9]+}.geolex.org`)"
+        - "traefik.http.routers.pr-preview.entrypoints=web"
       networks:
         - shared_network
       command: bash -c "source /root/.nvm/nvm.sh && nvm use node && yarn && yarn build && yarn start"
