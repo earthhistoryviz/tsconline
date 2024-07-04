@@ -43,7 +43,8 @@ async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply) {
 }
 
 export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOptions) => {
-  fastify.addHook("preHandler", fastify.auth([verifyAdmin, verifyRecaptcha]));
+  fastify.addHook("preHandler", verifyAdmin);
+  fastify.addHook("preHandler", verifyRecaptcha);
   fastify.get("/users", getUsers);
   fastify.post(
     "/user",

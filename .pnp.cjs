@@ -1123,17 +1123,6 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
-    ["@fastify/auth", [\
-      ["npm:4.6.1", {\
-        "packageLocation": "./.yarn/cache/@fastify-auth-npm-4.6.1-4e2b3003b7-abc26d45bc.zip/node_modules/@fastify/auth/",\
-        "packageDependencies": [\
-          ["@fastify/auth", "npm:4.6.1"],\
-          ["fastify-plugin", "npm:4.5.1"],\
-          ["reusify", "npm:1.0.4"]\
-        ],\
-        "linkType": "HARD"\
-      }]\
-    ]],\
     ["@fastify/busboy", [\
       ["npm:2.1.1", {\
         "packageLocation": "./.yarn/cache/@fastify-busboy-npm-2.1.1-455d8b6bf5-2bb8a7eca8.zip/node_modules/@fastify/busboy/",\
@@ -2526,7 +2515,6 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./server/",\
         "packageDependencies": [\
           ["@tsconline/server", "workspace:server"],\
-          ["@fastify/auth", "npm:4.6.1"],\
           ["@fastify/compress", "npm:7.0.3"],\
           ["@fastify/cors", "npm:9.0.1"],\
           ["@fastify/multipart", "npm:8.2.0"],\
