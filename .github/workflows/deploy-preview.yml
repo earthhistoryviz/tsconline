@@ -40,11 +40,13 @@ jobs:
           mkdir -p pr-preview-${{ github.event.number }}
           cd pr-preview-${{ github.event.number }}
           echo "PR_ID=${{ github.event.number }}" > .env
-          ./preview.sh ${{ github.event.number }}
+          cp ../server/assets/jars/* ./server/assets/jars/
+          cp ../server/assets/datapacks/* ./server/assets/datapacks/
+          docker-compose -f docker-compose-preview.yml up -d pr-preview
           EOF
 
       - name: Comment on PR
         uses: thollander/actions-comment-pull-request@v2
         with:
           message: |
-            🚀 Deployed preview to https://pr-preview_${{ github.event.number }}.geolex.org
+            🚀 Deployed preview to https://pr-${{ github.event.number }}.geolex.org
