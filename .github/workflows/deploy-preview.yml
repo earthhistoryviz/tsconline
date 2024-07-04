@@ -28,6 +28,10 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -H dev.geolex.org >> ~/.ssh/known_hosts
+
+      - name: Transfer files
+        run: |
+          rsync -avz --exclude '.git' ./ deployuser@dev.geolex.org:/home/aaron/tsconline/pr-preview-${{ github.event.number }}/
       
       - name: Create deployment preview
         run: |
