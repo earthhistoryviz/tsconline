@@ -57,12 +57,12 @@ jobs:
               proxy_pass \$proxy;
             }
           }"
-          echo "$SERVER_BLOCK" > proxy/user_conf.d/pr_${PR_ID}.conf
+          echo "$SERVER_BLOCK" > proxy/user_conf.d/{PR_ID}.conf
           docker-compose restart proxy
           cd /home/aaron/tsconline
-          mkdir -p pr-preview-${PR_ID}
-          cd pr-preview-${PR_ID}
-          echo "PR_ID=${PR_ID}" > .env
+          mkdir -p pr-preview-${{ github.event.number }}
+          cd pr-preview-${{ github.event.number }}
+          echo "PR_ID=${{ github.event.number }}" > .env
           cp ../server/assets/jars/* ./server/assets/jars/
           mkdir -p ./server/assets/datapacks
           cp ../server/assets/datapacks/* ./server/assets/datapacks/
@@ -72,13 +72,13 @@ jobs:
           ELAPSED=0
 
           while ! docker-compose -f docker-compose-preview.yml logs | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
-            if [ \$ELAPSED -ge \$MAX_WAIT ]; then
+            if [ $ELAPSED -ge $MAX_WAIT ]; then
               echo "Max wait time exceeded. Exiting..."
               exit 1
             fi
-            echo "Waiting for server to start... (elapsed: \${ELAPSED}s)"
-            sleep \$INTERVAL
-            ELAPSED=\$((ELAPSED + INTERVAL))
+            echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
           done
           echo "Server is up"
           EOF
