@@ -27,7 +27,7 @@ const Checkbox = observer(({ info }: { info: EventSearchInfo }) => {
       //use global state because if state is in this component, the checkbox rerenders out of view so state is reset
       //and if state is in parent component, changing it rerenders the entire component which sets scroll position to the top
       checked={state.settingsTabs.addSearchResultToChart[info.id][0]}
-      onClick={() => {
+      onChange={() => {
         if (!state.settingsTabs.addSearchResultToChart[info.id][0]) {
           let pathColumn = column;
           const pathAdded: boolean[] = [];
@@ -58,19 +58,24 @@ const Checkbox = observer(({ info }: { info: EventSearchInfo }) => {
         //in-context feature, adds 3myr to above and below the age
         if (state.settingsTabs.eventInContext) {
           if ("age" in info) {
+            //checks if age is in `float - float` format
+            const regex = /^[+-]?(\d*\.\d+|\d+)(\s-\s)[+-]?(\d*\.\d+|\d+)$/;
             const eventContextTop = { key: column.name, age: 0 };
             const eventContextBase = { key: column.name, age: 0 };
-            if (info.age!.includes("-")) {
+            if (regex.test(info.age!)) {
               const ages = info.age!.split(" - ");
               eventContextTop.age = Number(ages[0]);
               eventContextBase.age = Number(ages[1]);
-            } else {
+            } else if (!isNaN(Number(info.age))) {
               eventContextTop.age = Number(info.age!);
               eventContextBase.age = Number(info.age!);
+            } else {
+              actions.pushSnackbar("Invalid age found while adding an event", "warning");
+              return;
             }
             if (state.settingsTabs.addSearchResultToChart[info.id]) {
-              actions.InsertEventInContextTopList(eventContextTop, info.unit);
-              actions.InsertEventInContextBaseList(eventContextBase, info.unit);
+              actions.insertEventInContextTopList(eventContextTop, info.unit);
+              actions.insertEventInContextBaseList(eventContextBase, info.unit);
               if (!state.settingsTabs.eventInContextTopList || !state.settingsTabs.eventInContextBaseList) {
                 return;
               }

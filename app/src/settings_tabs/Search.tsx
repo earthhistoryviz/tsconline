@@ -9,7 +9,7 @@ import { TSCCheckbox } from "../components";
 
 export const Search = observer(function Search() {
   const { state, actions } = useContext(context);
-  function columnPath(name: string): string[] {
+  function makeColumnPath(name: string): string[] {
     const columnPath: string[] = [];
     let column = state.settingsTabs.columnHashMap.get(name);
     if (!column) {
@@ -35,7 +35,7 @@ export const Search = observer(function Search() {
       if (columnInfo.name === "Chart Root") {
         continue;
       }
-      if (columnInfo.editName.toLowerCase().includes(state.settingsTabs.eventSearchTerm)) {
+      if (columnInfo.editName.toLowerCase().includes(state.settingsTabs.eventSearchTerm.toLowerCase())) {
         //for column names
         const id = columnInfo.editName + " - " + "Column";
         if (!results.has(id)) {
@@ -44,7 +44,7 @@ export const Search = observer(function Search() {
         results.get(id)!.push({
           id: count.current,
           columnName: columnInfo.name,
-          columnPath: columnPath(columnInfo.name),
+          columnPath: makeColumnPath(columnInfo.name),
           unit: columnInfo.units
         });
         count.current++;
@@ -57,19 +57,19 @@ export const Search = observer(function Search() {
         for (let i = 0; i < columnInfo.subInfo.length; i++) {
           const subInfo = columnInfo.subInfo[i];
           if ("label" in subInfo) {
-            if (subInfo.label!.toLowerCase().includes(state.settingsTabs.eventSearchTerm)) {
+            if (subInfo.label!.toLowerCase().includes(state.settingsTabs.eventSearchTerm.toLowerCase())) {
               const resultType = columnInfo.columnDisplayType === "Zone" ? "Block" : columnInfo.columnDisplayType;
               const resInfo: EventSearchInfo = {
                 id: count.current,
                 columnName: columnInfo.name,
-                columnPath: columnPath(columnInfo.name),
+                columnPath: makeColumnPath(columnInfo.name),
                 unit: columnInfo.units
               };
 
               //facies/chron label doesn't have subinfo because they are block type but its parent has facies/chron info, so access it through BlockSeriesMetaColumn
               if (columnInfo.columnDisplayType === "BlockSeriesMetaColumn") {
-                if ((resInfo.columnPath = columnPath(columnInfo.name + " Facies Label")).length === 0) {
-                  resInfo.columnPath = columnPath(columnInfo.name + " Chron Label");
+                if ((resInfo.columnPath = makeColumnPath(columnInfo.name + " Facies Label")).length === 0) {
+                  resInfo.columnPath = makeColumnPath(columnInfo.name + " Chron Label");
                   resInfo.columnName = columnInfo.name + " Chron Label";
                 } else {
                   resInfo.columnName = columnInfo.name + " Facies Label";
@@ -120,7 +120,7 @@ export const Search = observer(function Search() {
       <div>
         <TSCCheckbox
           checked={state.settingsTabs.eventInContext}
-          onClick={() => {
+          onChange={() => {
             //in-context feature, adds 3myr to above and below the age
             actions.setEventInContext(!state.settingsTabs.eventInContext);
             if (state.settingsTabs.eventInContext) {
