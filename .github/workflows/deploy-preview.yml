@@ -44,6 +44,11 @@ jobs:
           mkdir -p ./server/assets/datapacks
           cp ../server/assets/datapacks/* ./server/assets/datapacks/
           docker-compose -f docker-compose-preview.yml up -d pr-preview
+          while ! docker-compose -f docker-compose-preview.yml logs | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
+            echo "Waiting for server to start..."
+            sleep 5
+          done
+          echo "Server is up"
           EOF
 
       - name: Comment on PR
