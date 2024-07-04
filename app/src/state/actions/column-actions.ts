@@ -29,7 +29,11 @@ import {
   isEventFrequency
 } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
-import { WindowStats, convertDataMiningPointDataTypeToDataMiningStatisticApproach } from "../../types";
+import {
+  DataMiningStatisticApproach,
+  WindowStats,
+  convertDataMiningPointDataTypeToDataMiningStatisticApproach
+} from "../../types";
 import {
   computeWindowStatistics,
   computeWindowStatisticsForDataPoints,
@@ -309,24 +313,35 @@ export const addDataMiningColumn = action(
     const dataMiningColumnName = `${type} for ${column.columnDisplayType === "Chron" ? parent.name : column.name}`;
     let fill: RGB = cloneDeep(defaultPointSettings.fill);
     let windowStats: WindowStats[] = [];
+    let stat: DataMiningStatisticApproach;
     switch (column.columnDisplayType) {
-      case "Event":
+      case "Event": {
         assertEventSettings(column.columnSpecificSettings);
         assertSubEventInfoArray(column.subInfo);
         if (!isEventFrequency(type)) {
           console.log("WARNING: unknown event frequency associated with an event", type);
           return;
         }
+        //in order to make the result the same as the jar, we need to have filtered data for events
+        const eventData = column.subInfo
+          .filter((subEvent) => {
+            if (type === "Combined Events") return true;
+            else return subEvent.subEventType === type;
+          })
+          .map((subEvent) => subEvent.age)
+          .filter((age) => {
+            return (
+              age >= state.settings.timeSettings[column.units].topStageAge &&
+              age <= state.settings.timeSettings[column.units].baseStageAge
+            );
+          });
         windowStats = computeWindowStatistics(
-          column.subInfo
-            .filter((subEvent) => {
-              if (type === "Combined Events") return true;
-              else return subEvent.subEventType === type;
-            })
-            .map((subEvent) => subEvent.age),
+          eventData,
           column.columnSpecificSettings.windowSize,
+          column.columnSpecificSettings.stepSize,
           "frequency"
         );
+        stat = "frequency";
         switch (type) {
           case "FAD":
             fill = {
@@ -350,20 +365,28 @@ export const addDataMiningColumn = action(
             };
         }
         break;
-      case "Point":
+      }
+
+      case "Point": {
         assertPointSettings(column.columnSpecificSettings);
         assertSubPointInfoArray(column.subInfo);
         if (!isDataMiningPointDataType(type)) {
           console.log("WARNING: unknown data mining type associated with a point", type);
           return;
         }
+        //in order to make the result the same as the jar, we do not filter data for points, instead we remove the first and the last data point.
+        const pointData = column.subInfo.map((subPoint) => {
+          return { age: subPoint.age, value: subPoint.xVal };
+        });
+        pointData.shift();
+        pointData.pop();
         windowStats = computeWindowStatisticsForDataPoints(
-          column.subInfo.map((subPoint) => {
-            return { age: subPoint.age, value: subPoint.xVal };
-          }),
+          pointData,
           column.columnSpecificSettings.windowSize,
+          column.columnSpecificSettings.stepSize,
           convertDataMiningPointDataTypeToDataMiningStatisticApproach(type)
         );
+        stat = convertDataMiningPointDataTypeToDataMiningStatisticApproach(type);
         switch (type) {
           case "Frequency":
             fill = {
@@ -402,7 +425,9 @@ export const addDataMiningColumn = action(
             break;
         }
         break;
-      case "Chron":
+      }
+
+      case "Chron": {
         assertChronSettings(column.columnSpecificSettings);
         assertSubChronInfoArray(column.subInfo);
         if (!isDataMiningChronDataType(type)) {
@@ -414,17 +439,30 @@ export const addDataMiningColumn = action(
           g: 202,
           b: 201
         };
+        //in order to make the result the same as the jar, we do not filter data for chrons, instead we remove the first and the last data point.
+        const chronData = column.subInfo.map((subChron) => subChron.age);
+        chronData.shift();
+        chronData.pop();
         windowStats = computeWindowStatistics(
-          column.subInfo.map((subChron) => subChron.age),
+          chronData,
           column.columnSpecificSettings.windowSize,
+          column.columnSpecificSettings.stepSize,
           "frequency"
         );
+        stat = "frequency";
         break;
+      }
+
       default:
         console.log("WARNING: unknown column display type", column.columnDisplayType);
         return;
     }
-    const { min, max } = findRangeOfWindowStats(windowStats);
+    const { min, max } = findRangeOfWindowStats(
+      windowStats,
+      state.settings.timeSettings[column.units].topStageAge,
+      state.settings.timeSettings[column.units].baseStageAge,
+      stat
+    );
     const { lowerRange, upperRange, scaleStep, scaleStart } = calculateAutoScale(min, max);
     const dataMiningColumn: ColumnInfo = observable({
       ...cloneDeep(column),
