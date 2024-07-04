@@ -57,7 +57,7 @@ jobs:
               proxy_pass \$proxy;
             }
           }"
-          echo "$SERVER_BLOCK" > proxy/user_conf.d/{PR_ID}.conf
+          echo "$SERVER_BLOCK" > proxy/user_conf.d/${PR_ID}.conf
           docker-compose restart proxy
           cd /home/aaron/tsconline
           mkdir -p pr-preview-${{ github.event.number }}
