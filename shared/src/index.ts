@@ -1116,8 +1116,8 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
     default:
       throw new Error(
         "ColumnSpecificSettings must be an object of a valid column type. Found value of " +
-        type +
-        " which is not a valid column type"
+          type +
+          " which is not a valid column type"
       );
   }
 }
