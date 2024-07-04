@@ -87,17 +87,18 @@ export const adminDeleteUser = async function adminDeleteUser(
     reply.status(400).send({ message: "Missing uuid" });
     return;
   }
+  const userDirectory = realpathSync(path.resolve(assetconfigs.uploadDirectory, uuid));
+  if (!userDirectory.startsWith(assetconfigs.uploadDirectory)) {
+    reply.status(403).send({ message: "Directory traversal detected" });
+    return;
+  }
   try {
     const user = await findUser({ uuid });
-    if (!user) {
+    if (!user || user.length < 1 || !user[0]) {
       reply.status(404).send({ message: "User not found" });
       return;
     }
     await deleteUser({ uuid });
-    const userDirectory = realpathSync(path.resolve(assetconfigs.uploadDirectory, uuid));
-    if (!userDirectory.startsWith(assetconfigs.uploadDirectory)) {
-      throw new Error("Directory traversal detected");
-    }
     try {
       await rm(userDirectory, { recursive: true, force: true });
     } catch (error) {
