@@ -88,7 +88,7 @@ export const adminDeleteUser = async function adminDeleteUser(
     return;
   }
   const userDirectory = realpathSync(path.resolve(assetconfigs.uploadDirectory, uuid));
-  if (!userDirectory.startsWith(assetconfigs.uploadDirectory)) {
+  if (!userDirectory.startsWith(path.resolve(assetconfigs.uploadDirectory))) {
     reply.status(403).send({ message: "Directory traversal detected" });
     return;
   }

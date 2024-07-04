@@ -12,7 +12,7 @@ vi.mock("../src/util", async () => {
     return {
         loadAssetConfigs: vi.fn().mockResolvedValue({}),
         assetconfigs: {
-            uploadDirectory: "assets/uploadDirectory"
+            uploadDirectory: "testdir/uploadDirectory"
         },
         adminconfig: {}
     }
@@ -294,7 +294,7 @@ describe("adminCreateUser tests", () => {
     });
 
     it("should return 409 if user already exists", async () => {
-        vi.mocked(database.checkForUsersWithUsernameOrEmail).mockResolvedValueOnce([testAdminUser])
+        checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser])
         const response = await app.inject({
             method: "POST",
             url: "/admin/user",
@@ -309,7 +309,7 @@ describe("adminCreateUser tests", () => {
     });
 
     it("should return 500 if checkForUsersWithUsernameOrEmail throws error", async () => {
-        vi.mocked(database.checkForUsersWithUsernameOrEmail).mockRejectedValueOnce(new Error())
+        checkForUsersWithUsernameOrEmail.mockRejectedValueOnce(new Error())
         const response = await app.inject({
             method: "POST",
             url: "/admin/user",
@@ -324,7 +324,7 @@ describe("adminCreateUser tests", () => {
     });
 
     it("should return 500 if createUser throws error", async () => {
-        vi.mocked(database.createUser).mockRejectedValueOnce(new Error())
+        createUser.mockRejectedValueOnce(new Error())
         const response = await app.inject({
             method: "POST",
             url: "/admin/user",
@@ -340,7 +340,7 @@ describe("adminCreateUser tests", () => {
     });
     it("should return 500 if findUser throws error", async () => {
         // twice for prehandler
-        vi.mocked(database.findUser).mockResolvedValueOnce([testAdminUser]).mockRejectedValueOnce(new Error())
+        findUser.mockResolvedValueOnce([testAdminUser]).mockRejectedValueOnce(new Error())
         const response = await app.inject({
             method: "POST",
             url: "/admin/user",
@@ -358,7 +358,7 @@ describe("adminCreateUser tests", () => {
         expect(response.statusCode).toBe(500)
     });
     it("should return 500 if findUser doesn't return exactly 1 user", async () => {
-        vi.mocked(database.findUser).mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([])
+        findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([])
         const response = await app.inject({
             method: "POST",
             url: "/admin/user",
@@ -398,8 +398,10 @@ describe("adminCreateUser tests", () => {
 describe("adminDeleteUser tests", () => {
     const findUser = vi.spyOn(database, "findUser")
     const deleteUser = vi.spyOn(database, "deleteUser")
+    const realpathSync = vi.spyOn(fs, "realpathSync")
     const body = { uuid: "test" }
     beforeEach(() => {
+        realpathSync.mockClear();
         findUser.mockClear();
         deleteUser.mockClear();
     })
@@ -424,7 +426,7 @@ describe("adminDeleteUser tests", () => {
         expect(response.statusCode).toBe(400)
     });
     it("should return 404 if user not found", async () => {
-        vi.mocked(database.findUser).mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([])
+        findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([])
         const response = await app.inject({
             method: "DELETE",
             url: "/admin/user",
@@ -439,7 +441,7 @@ describe("adminDeleteUser tests", () => {
         expect(response.statusCode).toBe(404)
     });
     it("should return 500 if findUser throws error", async () => {
-        vi.mocked(database.findUser).mockResolvedValueOnce([testAdminUser]).mockRejectedValueOnce(new Error())
+        findUser.mockResolvedValueOnce([testAdminUser]).mockRejectedValueOnce(new Error())
         const response = await app.inject({
             method: "DELETE",
             url: "/admin/user",
@@ -454,7 +456,7 @@ describe("adminDeleteUser tests", () => {
         expect(response.statusCode).toBe(500)
     });
     it("should return 500 if uuid attempts a directory traversal", async () => {
-        vi.mocked(fs.realpathSync).mockReturnValueOnce("rootfolder")
+        realpathSync.mockReturnValueOnce("root")
         const response = await app.inject({
             method: "DELETE",
             url: "/admin/user",
