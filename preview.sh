@@ -1,3 +1,3 @@
 #!/bin/bash
+cp ../server/assets/jars/* ./server/assets/jars/
 docker-compose -f docker-compose-preview.yml up -d pr-preview
-docker-compose -f docker-compose-preview.yml exec -T pr-preview bash -c "source /root/.nvm/nvm.sh && nvm use node && yarn && yarn build"
