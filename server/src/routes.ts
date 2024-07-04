@@ -14,7 +14,6 @@ import {
   assertTimescale
 } from "@tsconline/shared";
 import { deleteDirectory, resetUploadDirectory, checkHeader, assetconfigs, adminconfig } from "./util.js";
-import { mkdirp } from "mkdirp";
 import md5 from "md5";
 import svgson from "svgson";
 import fs, { realpathSync } from "fs";
