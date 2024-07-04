@@ -19,6 +19,7 @@ import RebeccaPic from "./assets/aboutPictures/RebeccaRupp.png";
 import JenniferPic from "./assets/aboutPictures/JenniferYu.jpg";
 import KevinChang from "./assets/aboutPictures/KevinChang.jpg";
 
+
 const HeaderContainer = styled("div")(({ theme }) => ({
   display: "flex",
   alignItems: "center",
