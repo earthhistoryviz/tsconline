@@ -17,7 +17,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 import isValidFilename from "valid-filename";
 import "./SaveSettings.css";
 import { observer } from "mobx-react-lite";
-import { TSCButton } from "../components";
+import { CustomTooltip, TSCButton } from "../components";
 const SaveSettings = observer(() => {
   const { state, actions } = React.useContext(context);
   function saveSettings(filename: string) {
@@ -47,9 +47,11 @@ const SaveSettings = observer(() => {
 
   return (
     <React.Fragment>
-      <IconButton className="icon-save-settings-button" onClick={handleClickOpen}>
-        <DownloadIcon className="save-settings-button" />
-      </IconButton>
+      <CustomTooltip title="Save Settings">
+        <IconButton className="icon-save-settings-button" onClick={handleClickOpen}>
+          <DownloadIcon className="save-settings-button" />
+        </IconButton>
+      </CustomTooltip>
       <Dialog
         open={open}
         onClose={handleClose}
