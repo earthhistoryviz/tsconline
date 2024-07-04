@@ -30,7 +30,7 @@ jobs:
         rm -f proxy/user_conf.d/pr-${PR_ID}.conf
         docker-compose restart proxy
         cd /home/aaron/tsconline/pr-preview-${PR_ID}
-        docker-compose -f docker-compose-preview.yml exec -T bash -c "source /root/.nvm/nvm.sh && nvm use node && yarn cache clean"
+        docker-compose -f docker-compose-preview.yml exec -T pr-preview bash -c "source /root/.nvm/nvm.sh && nvm use node && yarn cache clean"
         docker-compose -f docker-compose-preview.yml down
         cd ..
         rm -rf pr-preview-${PR_ID}
