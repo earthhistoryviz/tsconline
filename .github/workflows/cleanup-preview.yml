@@ -1,0 +1,26 @@
+name: Clean Up Deployment Preview
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  clean-up-deployment:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Clean Up Deployment
+      run: |
+        ssh deployuser@dev.geolex.org << 'EOF'
+        PR_ID=${{ github.event.pull_request.number }}
+        cd /home/aaron/live
+        rm -f proxy/user_conf.d/pr-${PR_ID}.conf
+        docker-compose restart proxy
+        cd /home/aaron/tsconline/pr-preview-${PR_ID}
+        docker-compose -f docker-compose-preview.yml down
+        cd ..
+        rm -rf pr-preview-${PR_ID}
+        EOF

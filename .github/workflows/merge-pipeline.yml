@@ -179,3 +179,83 @@ jobs:
       - name: Check for any test failures
         if: steps.vite_build.outputs.build_failed == 'true'
         run: exit 1
+
+  deploy-preview:
+    needs: [check-files, code-quality, build-and-test]
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Add known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H dev.geolex.org >> ~/.ssh/known_hosts
+
+      - name: Transfer files
+        run: |
+          rsync -avz --exclude '.git' ./ deployuser@dev.geolex.org:/home/aaron/tsconline/pr-preview-${{ github.event.number }}/
+      
+      - name: Create deployment preview
+        run: |
+          ssh deployuser@dev.geolex.org << 'EOF'
+          cd /home/aaron/live
+          PR_ID=${{ github.event.pull_request.number }}
+          SERVER_BLOCK="server {
+            listen 443 ssl;
+            listen [::]:443 ssl;
+            ssl_certificate /etc/letsencrypt/live/geolex.org/fullchain.pem;
+            ssl_certificate_key /etc/letsencrypt/live/geolex.org/privkey.pem;
+            ssl_trusted_certificate /etc/letsencrypt/live/geolex.org/chain.pem;
+            ssl_dhparam /etc/letsencrypt/dhparams/dhparam.pem;
+            keepalive_timeout 300;
+            proxy_read_timeout 300s;
+            client_max_body_size 75M;
+
+            server_name pr-${PR_ID}.geolex.org;
+
+            location / {
+              resolver 127.0.0.11;
+              set \$proxy http://pr-preview_${PR_ID}:3000;
+              proxy_pass \$proxy;
+            }
+          }"
+          echo "$SERVER_BLOCK" > proxy/user_conf.d/pr-${PR_ID}.conf
+          docker-compose restart proxy
+          cd /home/aaron/tsconline
+          mkdir -p pr-preview-${{ github.event.number }}
+          cd pr-preview-${{ github.event.number }}
+          echo "PR_ID=${{ github.event.number }}" > .env
+          cp ../server/assets/jars/* ./server/assets/jars/
+          mkdir -p ./server/assets/datapacks
+          cp ../server/assets/datapacks/* ./server/assets/datapacks/
+          docker-compose -f docker-compose-preview.yml up -d pr-preview
+          MAX_WAIT=180
+          INTERVAL=5
+          ELAPSED=0
+
+          while ! docker-compose -f docker-compose-preview.yml logs | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
+            if [ $ELAPSED -ge $MAX_WAIT ]; then
+              echo "Max wait time exceeded. Exiting..."
+              exit 1
+            fi
+            echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+          done
+          echo "Server is up"
+          EOF
+
+      - name: Comment on PR
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            🚀 Deployed preview to https://pr-${{ github.event.number }}.geolex.org
