@@ -254,7 +254,6 @@ jobs:
           EOF
 
       - name: Comment on PR
-        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         uses: thollander/actions-comment-pull-request@v2
         with:
           message: |
