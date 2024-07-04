@@ -1,24 +1,31 @@
-import { exec } from "child_process";
+import { execFileSync } from "child_process";
 
 export async function runJavaEncrypt(activeJar: string, filepath: string, encryptedFilepathDir: string) {
   return new Promise<void>((resolve) => {
     const cmd =
       `java -jar ${activeJar} ` +
+      // datapacks:
       `-d "${filepath.replaceAll("\\", "/")}" ` +
+      // Tell it where to send the datapacks
       `-enc ${encryptedFilepathDir.replaceAll("\\", "/")} ` +
       `-node`;
 
+    // java -jar <jar file> -d <datapack> <datapack> -enc <destination directory> -node
     console.log("Calling Java encrypt.jar: ", cmd);
-    exec(cmd, function (error, stdout, stderror) {
-      console.log("Java encrypt.jar finished, sending reply to browser");
-      if (error) {
-        console.error("Java error param: " + error);
-        console.error("Java stderr: " + stderror.toString());
-        resolve();
-      } else {
-        console.log("Java stdout: " + stdout.toString());
-        resolve();
-      }
-    });
+    try {
+      const stdout = execFileSync("java", [
+        "-jar",
+        activeJar,
+        "-d",
+        filepath.replaceAll("\\", "/"),
+        "-enc",
+        encryptedFilepathDir,
+        "-node"
+      ]);
+      console.log("Java stdout: " + stdout.toString());
+    } catch (e) {
+      console.error("Java error param: " + e);
+    }
+    resolve();
   });
 }

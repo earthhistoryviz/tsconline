@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { exec, execFileSync } from "child_process";
+import { exec } from "child_process";
 import { writeFile, stat, readFile, access, rm, mkdir } from "fs/promises";
 import {
   DatapackIndex,
