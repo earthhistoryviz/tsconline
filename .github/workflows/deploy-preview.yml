@@ -6,7 +6,7 @@ on:
 
 jobs:
   deploy-preview:
-    if: ${{ github.event.issue.pull_request }} && ${{ github.event.comment.body == 'deploy' }}
+    if: ${{ github.event.issue.pull_request }} && contains(github.event.comment.body, '/deploy-preview')
     runs-on: ubuntu-20.04
     steps:
     - name: Checkout
