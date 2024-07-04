@@ -2,10 +2,9 @@ import fastify, { FastifyInstance, HTTPMethods, InjectOptions } from "fastify"
 import * as adminAuth from "../src/admin-auth"
 import * as adminRoutes from "../src/admin-routes"
 import * as database from "../src/database"
-import { afterAll, beforeAll, describe, test, it, vi, expect } from "vitest";
+import * as verify from "../src/verify"
+import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach } from "vitest";
 import fastifySecureSession from "@fastify/secure-session";
-import fastifyAuth from "@fastify/auth";
-import { before } from "lodash";
 
 vi.mock("../src/util", async () => {
     return {
@@ -14,6 +13,12 @@ vi.mock("../src/util", async () => {
         adminconfig: {}
     }
 })
+
+vi.mock("../src/verify", async () => {
+    return {
+        checkRecaptchaToken: vi.fn().mockResolvedValue(1)
+    }
+});
 
 vi.mock("../src/index", async () => {
     return {
@@ -53,49 +58,145 @@ vi.mock("../src/file-metadata-handler", async () => {
 
 
 let app: FastifyInstance;
-let routes: { method: HTTPMethods, url: string}[] = [];
 beforeAll(async () => {
     app = fastify();
-    app.addHook("onRoute", (routeOptions) => {
-        if (Array.isArray(routeOptions.method)) {
-            for (const method of routeOptions.method) {
-              routes.push({ method, url: routeOptions.url });
-            }
-          } else {
-            routes.push({ method: routeOptions.method, url: routeOptions.url });
-          }
-    });
     await app.register(fastifySecureSession, {
         cookieName: "adminSession",
         key: Buffer.from("c30a7eae1e37a08d6d5c65ac91dfbc75b54ce34dd29153439979364046cc06ae", "hex"),
         cookie: {
-        path: "/",
-        httpOnly: true,
-        domain: "localhostadmin",
-        secure: false,
-        sameSite: "strict",
-        maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
+            path: "/",
+            httpOnly: true,
+            domain: "localhostadmin",
+            secure: false,
+            sameSite: "strict",
+            maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
         }
     });
-    await app.register(fastifyAuth)
+    app.addHook('onRequest', async (request, reply) => {
+        request.session = {
+            ...request.session,
+            get: (key: string) => {
+                if (key === 'uuid') {
+                    return request.headers['mock-uuid'];
+                }
+                return null;
+            },
+        };
+    });
     await app.register(adminAuth.adminRoutes, { prefix: "/admin" })
     await app.listen({ host: "localhost", port: 1239 })
 })
 
-afterAll( async () => {
+afterAll(async () => {
     await app.close();
 })
 
+const testAdminUser = {
+    userId: 123,
+    uuid: "123e4567-e89b-12d3-a456-426614174000",
+    email: "test@example.com",
+    emailVerified: 1,
+    invalidateSession: 0,
+    username: "testuser",
+    hashedPassword: "password123",
+    pictureUrl: "https://example.com/picture.jpg",
+    isAdmin: 1
+};
+const testNonAdminUser = {
+    ...testAdminUser,
+    isAdmin: 0
+}
+
+const routes: { method: HTTPMethods, url: string, body?: object }[] = [
+    { method: "GET", url: "/admin/users" },
+    { method: "POST", url: "/admin/user", body: { username: "test", email: "test", password: "test", pictureUrl: "test", isAdmin: 1 } },
+    { method: "DELETE", url: "/admin/user", body: { uuid: "test" } },
+    { method: "DELETE", url: "/admin/user/datapack", body: { uuid: "test", datapack: "test" } },
+    { method: "DELETE", url: "/admin/server/datapack", body: { datapack: "test" } },
+    { method: "POST", url: "/admin/server/datapack", body: { datapack: "test" } }
+];
+const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" }
 describe("verifyAdmin tests", () => {
-    it("should return 401 if not signed in for each admin route", async () => {
-        const promises = routes.map(async ({ method, url }) => {
+    describe.each(routes)("should return 401 for route $url with method $method", ({ method, url, body }) => {
+        const findUser = vi.spyOn(database, "findUser")
+        beforeEach(() => {
+            findUser.mockClear();
+        });
+        test("should return 401 if not logged in", async () => {
             const response = await app.inject({
                 method: method as InjectOptions["method"],
-                url
-            });
+                url: url,
+                payload: body
+            })
+            expect(findUser).not.toHaveBeenCalled();
+            expect(await response.json()).toEqual({ message: "Unauthorized access" })
             expect(response.statusCode).toBe(401)
-            expect(await response.json()).toEqual({ message: "Unauthorized access" });
+        });
+        test("should return 401 if not found in database", async () => {
+            findUser.mockResolvedValueOnce([])
+            const response = await app.inject({
+                method: method as InjectOptions["method"],
+                url: url,
+                payload: body,
+                headers
+            })
+            expect(findUser).toHaveBeenCalledWith({ uuid: headers["mock-uuid"] })
+            expect(findUser).toHaveBeenCalledTimes(1)
+            expect(await response.json()).toEqual({ message: "Unauthorized access" })
+            expect(response.statusCode).toBe(401)
+        });
+        test("should return 401 if not admin", async () => {
+            findUser.mockResolvedValueOnce([testNonAdminUser])
+            const response = await app.inject({
+                method: method as InjectOptions["method"],
+                url: url,
+                payload: body,
+                headers
+            })
+            expect(findUser).toHaveBeenCalledWith({ uuid: headers["mock-uuid"] })
+            expect(findUser).toHaveBeenCalledTimes(1)
+            expect(await response.json()).toEqual({ message: "Unauthorized access" })
+            expect(response.statusCode).toBe(401)
         })
-        await Promise.all(promises);
-    })
+    });
 })
+
+describe("verifyRecaptcha tests", () => {
+    beforeAll(() => {
+        vi.mocked(database.findUser).mockResolvedValue([testAdminUser])
+    });
+    afterAll(() => {
+        vi.mocked(database.findUser).mockReset();
+    });
+    describe.each(routes)("should return 400 or 422 for route $url with method $method", ({ method, url, body }) => {
+        const checkRecaptchaToken = vi.spyOn(verify, "checkRecaptchaToken")
+        beforeEach(() => {
+            checkRecaptchaToken.mockClear();
+        });
+        it("should return 400 if missing recaptcha token", async () => {
+            const response = await app.inject({
+                method: method as InjectOptions["method"],
+                url: url,
+                payload: body,
+                headers: { ...headers, "recaptcha-token": "" }
+            })
+            expect(checkRecaptchaToken).not.toHaveBeenCalled();
+            expect(await response.json()).toEqual({ message: "Missing recaptcha token" })
+            expect(response.statusCode).toBe(400)
+        });
+        it("should return 422 if recaptcha failed", async () => {
+            checkRecaptchaToken.mockResolvedValueOnce(0)
+            const response = await app.inject({
+                method: method as InjectOptions["method"],
+                url: url,
+                payload: body,
+                headers: headers
+            })
+            expect(checkRecaptchaToken).toHaveBeenCalledWith(headers["recaptcha-token"])
+            expect(checkRecaptchaToken).toHaveBeenCalledTimes(1)
+            expect(await response.json()).toEqual({ message: "Recaptcha failed" })
+            expect(response.statusCode).toBe(422)
+        });
+    }
+    )
+});
