@@ -33,8 +33,9 @@ jobs:
         run: |
           ssh deployuser@dev.geolex.org << 'EOF'
           cd /home/aaron/tsconline
-          mkdir -p pr-preview${{ github.event.number }}
-          cp -r * /home/aaron/tsconline/pr-preview${{ github.event.number }}
+          mkdir -p pr-preview-${{ github.event.number }}
+          cd pr-preview-${{ github.event.number }}
+          echo "PR_ID=${{ github.event.number }}" > .env
           ./preview.sh ${{ github.event.number }}
           EOF
 
