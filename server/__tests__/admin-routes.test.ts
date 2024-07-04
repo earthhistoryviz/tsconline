@@ -3,17 +3,28 @@ import * as adminAuth from "../src/admin-auth"
 import * as adminRoutes from "../src/admin-routes"
 import * as database from "../src/database"
 import * as verify from "../src/verify"
+import * as fs from "fs"
+
 import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach } from "vitest";
 import fastifySecureSession from "@fastify/secure-session";
-import { find } from "lodash"
 
 vi.mock("../src/util", async () => {
     return {
         loadAssetConfigs: vi.fn().mockResolvedValue({}),
-        assetconfigs: {},
+        assetconfigs: {
+            uploadDirectory: "assets/uploadDirectory"
+        },
         adminconfig: {}
     }
 })
+
+vi.mock("fs", async (importOriginal) => {
+    const actual = await importOriginal<typeof fs>();
+    return {
+        ...actual,
+        realpathSync: vi.fn().mockImplementation((path) => path)
+    }
+});
 
 vi.mock("bcrypt-ts", async () => {
     return {
@@ -46,7 +57,8 @@ vi.mock("../src/database", async (importOriginal) => {
         ...actual,
         findUser: vi.fn(() => Promise.resolve([testAdminUser])), // just so we can verify the user is an admin for prehandlers
         checkForUsersWithUsernameOrEmail: vi.fn().mockResolvedValue([]),
-        createUser: vi.fn().mockResolvedValue({})
+        createUser: vi.fn().mockResolvedValue({}),
+        deleteUser: vi.fn().mockResolvedValue({})
     }
 })
 
@@ -384,6 +396,13 @@ describe("adminCreateUser tests", () => {
 });
 
 describe("adminDeleteUser tests", () => {
+    const findUser = vi.spyOn(database, "findUser")
+    const deleteUser = vi.spyOn(database, "deleteUser")
+    const body = { uuid: "test" }
+    beforeEach(() => {
+        findUser.mockClear();
+        deleteUser.mockClear();
+    })
     it("should return 400 if missing uuid", async () => {
         const response = await app.inject({
             method: "DELETE",
@@ -403,5 +422,47 @@ describe("adminDeleteUser tests", () => {
         })
         expect(await response.json()).toEqual({ message: "Missing uuid" })
         expect(response.statusCode).toBe(400)
+    });
+    it("should return 404 if user not found", async () => {
+        vi.mocked(database.findUser).mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([])
+        const response = await app.inject({
+            method: "DELETE",
+            url: "/admin/user",
+            payload: body,
+            headers
+        })
+        expect(findUser).toHaveBeenNthCalledWith(1, { uuid: headers["mock-uuid"] })
+        expect(findUser).toHaveBeenNthCalledWith(2, { uuid: body.uuid })
+        expect(findUser).toHaveBeenCalledTimes(2)
+        expect(deleteUser).not.toHaveBeenCalled();
+        expect(await response.json()).toEqual({ message: "User not found" })
+        expect(response.statusCode).toBe(404)
+    });
+    it("should return 500 if findUser throws error", async () => {
+        vi.mocked(database.findUser).mockResolvedValueOnce([testAdminUser]).mockRejectedValueOnce(new Error())
+        const response = await app.inject({
+            method: "DELETE",
+            url: "/admin/user",
+            payload: body,
+            headers
+        })
+        expect(findUser).toHaveBeenNthCalledWith(1, { uuid: headers["mock-uuid"] })
+        expect(findUser).toHaveBeenNthCalledWith(2, { uuid: body.uuid })
+        expect(findUser).toHaveBeenCalledTimes(2)
+        expect(deleteUser).not.toHaveBeenCalled();
+        expect(await response.json()).toEqual({ message: "Unknown error" })
+        expect(response.statusCode).toBe(500)
+    });
+    it("should return 500 if uuid attempts a directory traversal", async () => {
+        vi.mocked(fs.realpathSync).mockReturnValueOnce("rootfolder")
+        const response = await app.inject({
+            method: "DELETE",
+            url: "/admin/user",
+            payload: { uuid: "../" },
+            headers
+        })
+        expect(deleteUser).not.toHaveBeenCalled();
+        expect(await response.json()).toEqual({ message: "Directory traversal detected" })
+        expect(response.statusCode).toBe(403)
     });
 });
