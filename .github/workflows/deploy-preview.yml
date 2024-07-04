@@ -1,12 +1,10 @@
 name: Deploy PR previews
 
 on:
-  pull_request:
+  workflow_run:
+    workflows: ["Merge Pipeline"]
     types:
-      - opened
-      - reopened
-      - synchronize
-      - closed
+      - completed
 
 concurrency: preview-${{ github.ref }}
 
@@ -16,25 +14,30 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          ref: ${{ github.event.pull_request.head.ref }}
 
-      - name: Install and Build
-        if: github.event.action != 'closed'
-        run: |
-          yarn install
-          yarn build
-
-      - name: Gather build outputs
-        if: github.event.action != 'closed'
-        run: |
-          mkdir -p deployment
-          cp -r app/dist/* deployment/
-
-      - name: Deploy preview
-        uses: rossjrw/pr-preview-action@v1
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.5.3
         with:
-          source-dir: ./deployment/
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Add known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H dev.geolex.org >> ~/.ssh/known_hosts
+      
+      - name: Create deployment preview
+        run: |
+          ssh deployuser@dev.geolex.org << 'EOF'
+          cd /home/aaron/tsconline
+          mkdir -p pr-preview${{ github.event.number }}
+          cp -r * /home/aaron/tsconline/pr-preview${{ github.event.number }}
+          ./preview.sh ${{ github.event.number }}
+          EOF
+
+      - name: Comment on PR
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            🚀 Deployed preview to https://pr-preview_${{ github.event.number }}.geolex.org
