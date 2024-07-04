@@ -12,3 +12,4 @@ services:
         - .:/code
       networks:
         - shared_network
+      command: bash -c "source /root/.nvm/nvm.sh && nvm use node && yarn && yarn build && yarn start"
