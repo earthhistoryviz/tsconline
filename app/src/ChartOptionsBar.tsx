@@ -255,8 +255,8 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
             <Button variant="outlined" onClick={handleDownloadClose}>
               Cancel
             </Button>
-            <TSCButton component="label" variant="text" sx={{ bgcolor: "button.main" }} type="submit">
-              load
+            <TSCButton variant="text" type="submit">
+              Save
             </TSCButton>
           </DialogActions>
         </Dialog>
