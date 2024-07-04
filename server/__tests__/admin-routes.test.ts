@@ -382,3 +382,26 @@ describe("adminCreateUser tests", () => {
         expect(response.statusCode).toBe(200)
     });
 });
+
+describe("adminDeleteUser tests", () => {
+    it("should return 400 if missing uuid", async () => {
+        const response = await app.inject({
+            method: "DELETE",
+            url: "/admin/user",
+            payload: {},
+            headers
+        })
+        expect(await response.json()).toEqual({ code: "FST_ERR_VALIDATION", error: "Bad Request", message: "body must have required property 'uuid'", statusCode: 400 })
+        expect(response.statusCode).toBe(400)
+    });
+    it("should return 400 if uuid is blank", async () => {
+        const response = await app.inject({
+            method: "DELETE",
+            url: "/admin/user",
+            payload: { uuid: "" },
+            headers
+        })
+        expect(await response.json()).toEqual({ message: "Missing uuid" })
+        expect(response.statusCode).toBe(400)
+    });
+});
