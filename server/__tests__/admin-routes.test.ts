@@ -219,6 +219,19 @@ describe("verifyRecaptcha tests", () => {
             expect(await response.json()).toEqual({ message: "Recaptcha failed" })
             expect(response.statusCode).toBe(422)
         });
+        it("should return 500 if checkRecaptchaToken throws error", async () => {
+            checkRecaptchaToken.mockRejectedValueOnce(new Error())
+            const response = await app.inject({
+                method: method as InjectOptions["method"],
+                url: url,
+                payload: body,
+                headers: headers
+            })
+            expect(checkRecaptchaToken).toHaveBeenCalledWith(headers["recaptcha-token"])
+            expect(checkRecaptchaToken).toHaveBeenCalledTimes(1)
+            expect(await response.json()).toEqual({ message: "Recaptcha error" })
+            expect(response.statusCode).toBe(500)
+        });
     }
     )
 });
