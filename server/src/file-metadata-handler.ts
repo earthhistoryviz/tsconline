@@ -58,7 +58,7 @@ export async function checkFileMetadata(fileMetadataFilepath: string) {
     for (const file in metadata) {
       if (new Date(metadata[file]!.lastUpdated).getTime() < twoWeeksAgo) {
         console.log("Deleting file: ", file, " for being older than 2 weeks");
-        deleteDatapack(metadata, file);
+        await deleteDatapack(metadata, file);
       }
     }
     await writeFile(fileMetadataFilepath, JSON.stringify(metadata));
