@@ -4,15 +4,19 @@ import * as adminRoutes from "../src/admin-routes"
 import * as database from "../src/database"
 import * as verify from "../src/verify"
 import * as fs from "fs"
+import * as fsPromises from "fs/promises"
+import * as fileMetadataHandler from "../src/file-metadata-handler"
 
 import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach } from "vitest";
 import fastifySecureSession from "@fastify/secure-session";
+import { resolve } from "path"
 
 vi.mock("../src/util", async () => {
     return {
         loadAssetConfigs: vi.fn().mockResolvedValue({}),
         assetconfigs: {
-            uploadDirectory: "testdir/uploadDirectory"
+            uploadDirectory: "testdir/uploadDirectory",
+            fileMetadata: "testdir/fileMetadata.json"
         },
         adminconfig: {}
     }
@@ -23,6 +27,15 @@ vi.mock("fs", async (importOriginal) => {
     return {
         ...actual,
         realpathSync: vi.fn().mockImplementation((path) => path)
+    }
+});
+
+vi.mock("fs/promises", async (importOriginal) => {
+    const actual = await importOriginal<typeof fsPromises>();
+    return {
+        ...actual,
+        rm: vi.fn().mockResolvedValue({}),
+        writeFile: vi.fn().mockResolvedValue({})
     }
 });
 
@@ -270,9 +283,7 @@ describe("adminCreateUser tests", () => {
     const createUser = vi.spyOn(database, "createUser")
     const findUser = vi.spyOn(database, "findUser")
     beforeEach(() => {
-        createUser.mockClear();
-        checkForUsersWithUsernameOrEmail.mockClear();
-        findUser.mockClear();
+        vi.clearAllMocks();
     })
     test.each([
         { ...body, email: "" },
@@ -399,11 +410,12 @@ describe("adminDeleteUser tests", () => {
     const findUser = vi.spyOn(database, "findUser")
     const deleteUser = vi.spyOn(database, "deleteUser")
     const realpathSync = vi.spyOn(fs, "realpathSync")
+    const loadFileMetadata = vi.spyOn(fileMetadataHandler, "loadFileMetadata")
+    const writeFile = vi.spyOn(fsPromises, "writeFile")
+    const rm = vi.spyOn(fsPromises, "rm")
     const body = { uuid: "test" }
     beforeEach(() => {
-        realpathSync.mockClear();
-        findUser.mockClear();
-        deleteUser.mockClear();
+        vi.clearAllMocks();
     })
     it("should return 400 if missing uuid", async () => {
         const response = await app.inject({
@@ -424,6 +436,19 @@ describe("adminDeleteUser tests", () => {
         })
         expect(await response.json()).toEqual({ message: "Missing uuid" })
         expect(response.statusCode).toBe(400)
+    });
+    it("should return 403 if uuid attempts a directory traversal", async () => {
+        realpathSync.mockReturnValueOnce("root")
+        const response = await app.inject({
+            method: "DELETE",
+            url: "/admin/user",
+            payload: { uuid: "../" },
+            headers
+        })
+        expect(findUser).toHaveBeenCalledTimes(1)
+        expect(deleteUser).not.toHaveBeenCalled();
+        expect(await response.json()).toEqual({ message: "Directory traversal detected" })
+        expect(response.statusCode).toBe(403)
     });
     it("should return 404 if user not found", async () => {
         findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([])
@@ -455,16 +480,78 @@ describe("adminDeleteUser tests", () => {
         expect(await response.json()).toEqual({ message: "Unknown error" })
         expect(response.statusCode).toBe(500)
     });
-    it("should return 500 if uuid attempts a directory traversal", async () => {
-        realpathSync.mockReturnValueOnce("root")
+    it("should return 500 if deleteUser throws error", async () => {
+        deleteUser.mockRejectedValueOnce(new Error())
         const response = await app.inject({
             method: "DELETE",
             url: "/admin/user",
-            payload: { uuid: "../" },
+            payload: body,
             headers
         })
-        expect(deleteUser).not.toHaveBeenCalled();
-        expect(await response.json()).toEqual({ message: "Directory traversal detected" })
-        expect(response.statusCode).toBe(403)
+        expect(deleteUser).toHaveBeenCalledTimes(1);
+        expect(await response.json()).toEqual({ message: "Unknown error" })
+        expect(response.statusCode).toBe(500)
+    });
+    it("should return 500 if loadFileMetadata throws error", async () => {
+        loadFileMetadata.mockRejectedValueOnce(new Error())
+        const response = await app.inject({
+            method: "DELETE",
+            url: "/admin/user",
+            payload: body,
+            headers
+        })
+        expect(findUser).toHaveBeenCalledTimes(2)
+        expect(deleteUser).toHaveBeenCalledTimes(1);
+        expect(loadFileMetadata).toHaveBeenCalledTimes(1)
+        expect(await response.json()).toEqual({ message: "Unknown error" })
+        expect(response.statusCode).toBe(500)
+    });
+    it("should return 200 if successful", async () => {
+        const response = await app.inject({
+            method: "DELETE",
+            url: "/admin/user",
+            payload: body,
+            headers
+        })
+        expect(findUser).toHaveBeenNthCalledWith(2, { uuid: body.uuid })
+        expect(deleteUser).toHaveBeenCalledTimes(1);
+        expect(deleteUser).toHaveBeenCalledWith({ uuid: body.uuid })
+        expect(loadFileMetadata).toHaveBeenCalledTimes(1)
+        expect(writeFile).toHaveBeenNthCalledWith(1, "testdir/fileMetadata.json", JSON.stringify({}))
+        expect(rm).toHaveBeenCalledTimes(1)
+        expect(rm).toHaveBeenCalledWith(resolve("testdir/uploadDirectory", body.uuid), { recursive: true, force: true })
+        expect(await response.json()).toEqual({ message: "User deleted" })
+        expect(response.statusCode).toBe(200)
+    });
+    it("should remove file metadata on success", async () => {
+        const filepath = resolve("testdir/uploadDirectory", body.uuid)
+        const metadata = {
+            "metadata": {
+                fileName: "test",
+                lastUpdated: new Date().toISOString(),
+                decryptedFilepath: "test",
+                mapPackIndexFilepath: "test",
+                datapackIndexFilepath: "test"
+            }
+        }
+        loadFileMetadata.mockResolvedValueOnce({
+            [filepath]: {
+                fileName: "test",
+                lastUpdated: new Date().toISOString(),
+                decryptedFilepath: "test",
+                mapPackIndexFilepath: "test",
+                datapackIndexFilepath: "test"
+            },
+            ...metadata
+        })
+        const response = await app.inject({
+            method: "DELETE",
+            url: "/admin/user",
+            payload: body,
+            headers
+        })
+        expect(writeFile).toHaveBeenNthCalledWith(1, "testdir/fileMetadata.json", JSON.stringify(metadata))
+        expect(await response.json()).toEqual({ message: "User deleted" })
+        expect(response.statusCode).toBe(200)
     });
 });
