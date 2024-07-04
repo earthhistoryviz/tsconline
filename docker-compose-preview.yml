@@ -11,7 +11,7 @@ services:
       volumes:
         - .:/code
       labels:
-        - "traefik.http.routers.pr-preview.rule=HostRegexp(`pr-{id:[0-9]+}.geolex.org`)"
+        - "traefik.http.routers.pr-preview.rule=HostRegexp(`{id:[0-9]+}.pr-preview.geolex.org`)"
         - "traefik.http.routers.pr-preview.entrypoints=web"
       networks:
         - shared_network
