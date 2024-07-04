@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { checkForUsersWithUsernameOrEmail, createUser, findUser } from "./database.js";
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { deleteUser } from "./database.js";
 import path from "path";
@@ -52,7 +52,7 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
     const customUser = {
       username,
       email,
-      password: await hash(password, 10),
+      hashedPassword: await hash(password, 10),
       uuid: randomUUID(),
       pictureUrl: pictureUrl ? pictureUrl : null,
       isAdmin: isAdmin ? 1 : 0,
