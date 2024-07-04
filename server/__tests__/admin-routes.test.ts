@@ -5,6 +5,7 @@ import * as database from "../src/database"
 import * as verify from "../src/verify"
 import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach } from "vitest";
 import fastifySecureSession from "@fastify/secure-session";
+import { find } from "lodash"
 
 vi.mock("../src/util", async () => {
     return {
@@ -13,6 +14,18 @@ vi.mock("../src/util", async () => {
         adminconfig: {}
     }
 })
+
+vi.mock("bcrypt-ts", async () => {
+    return {
+        hash: vi.fn().mockResolvedValue("hashedPassword"),
+    }
+});
+
+vi.mock("node:crypto", async () => {
+    return {
+        randomUUID: vi.fn(() => "random-uuid")
+    }
+});
 
 vi.mock("../src/verify", async () => {
     return {
@@ -31,7 +44,9 @@ vi.mock("../src/database", async (importOriginal) => {
     const actual = await importOriginal<typeof database>();
     return {
         ...actual,
-        findUser: vi.fn().mockResolvedValue({})
+        findUser: vi.fn(() => Promise.resolve([testAdminUser])), // just so we can verify the user is an admin for prehandlers
+        checkForUsersWithUsernameOrEmail: vi.fn().mockResolvedValue([]),
+        createUser: vi.fn().mockResolvedValue({})
     }
 })
 
@@ -158,16 +173,23 @@ describe("verifyAdmin tests", () => {
             expect(await response.json()).toEqual({ message: "Unauthorized access" })
             expect(response.statusCode).toBe(401)
         })
+        test("should return 500 if findUser throws error", async () => {
+            findUser.mockRejectedValueOnce(new Error())
+            const response = await app.inject({
+                method: method as InjectOptions["method"],
+                url: url,
+                payload: body,
+                headers
+            })
+            expect(findUser).toHaveBeenCalledWith({ uuid: headers["mock-uuid"] })
+            expect(findUser).toHaveBeenCalledTimes(1)
+            expect(await response.json()).toEqual({ message: "Database error" })
+            expect(response.statusCode).toBe(500)
+        });
     });
 })
 
 describe("verifyRecaptcha tests", () => {
-    beforeAll(() => {
-        vi.mocked(database.findUser).mockResolvedValue([testAdminUser])
-    });
-    afterAll(() => {
-        vi.mocked(database.findUser).mockReset();
-    });
     describe.each(routes)("should return 400 or 422 for route $url with method $method", ({ method, url, body }) => {
         const checkRecaptchaToken = vi.spyOn(verify, "checkRecaptchaToken")
         beforeEach(() => {
@@ -199,4 +221,151 @@ describe("verifyRecaptcha tests", () => {
         });
     }
     )
+});
+
+describe("adminCreateUser tests", () => {
+    const body = {
+        username: "username",
+        email: "email@email.com",
+        password: "password",
+        pictureUrl: "pictureUrl",
+        isAdmin: 1
+    }
+    const customUser = {
+        username: body.username,
+        email: body.email,
+        pictureUrl: body.pictureUrl,
+        isAdmin: body.isAdmin,
+        hashedPassword: "hashedPassword",
+        uuid: "random-uuid",
+        emailVerified: 1,
+        invalidateSession: 0
+    }
+    const checkForUsersWithUsernameOrEmail = vi.spyOn(database, "checkForUsersWithUsernameOrEmail")
+    const createUser = vi.spyOn(database, "createUser")
+    const findUser = vi.spyOn(database, "findUser")
+    beforeEach(() => {
+        createUser.mockClear();
+        checkForUsersWithUsernameOrEmail.mockClear();
+        findUser.mockClear();
+    })
+    test.each([
+        { ...body, email: "" },
+        { ...body, username: "" },
+        { ...body, password: "" },
+        { ...body, email: "hi@gmailcom" },
+        { ...body, email: "higmail.com" }
+    ])("should return 400 for body %p", async (body) => {
+        const response = await app.inject({
+            method: "POST",
+            url: "/admin/user",
+            payload: body,
+            headers
+        })
+        expect(checkForUsersWithUsernameOrEmail).not.toHaveBeenCalled();
+        expect(createUser).not.toHaveBeenCalled();
+        expect(await response.json()).toEqual({ message: "Missing/invalid required fields" })
+        expect(response.statusCode).toBe(400)
+    });
+
+    it("should return 409 if user already exists", async () => {
+        vi.mocked(database.checkForUsersWithUsernameOrEmail).mockResolvedValueOnce([testAdminUser])
+        const response = await app.inject({
+            method: "POST",
+            url: "/admin/user",
+            payload: body,
+            headers
+        })
+        expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email)
+        expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1)
+        expect(createUser).not.toHaveBeenCalled();
+        expect(await response.json()).toEqual({ message: "User already exists" })
+        expect(response.statusCode).toBe(409)
+    });
+
+    it("should return 500 if checkForUsersWithUsernameOrEmail throws error", async () => {
+        vi.mocked(database.checkForUsersWithUsernameOrEmail).mockRejectedValueOnce(new Error())
+        const response = await app.inject({
+            method: "POST",
+            url: "/admin/user",
+            payload: body,
+            headers
+        })
+        expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email)
+        expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1)
+        expect(createUser).not.toHaveBeenCalled();
+        expect(await response.json()).toEqual({ message: "Database error" })
+        expect(response.statusCode).toBe(500)
+    });
+
+    it("should return 500 if createUser throws error", async () => {
+        vi.mocked(database.createUser).mockRejectedValueOnce(new Error())
+        const response = await app.inject({
+            method: "POST",
+            url: "/admin/user",
+            payload: body,
+            headers
+        })
+        expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email)
+        expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1)
+        expect(createUser).toHaveBeenCalledWith(customUser)
+        expect(createUser).toHaveBeenCalledTimes(1)
+        expect(await response.json()).toEqual({ message: "Database error" })
+        expect(response.statusCode).toBe(500)
+    });
+    it("should return 500 if findUser throws error", async () => {
+        // twice for prehandler
+        vi.mocked(database.findUser).mockResolvedValueOnce([testAdminUser]).mockRejectedValueOnce(new Error())
+        const response = await app.inject({
+            method: "POST",
+            url: "/admin/user",
+            payload: body,
+            headers
+        })
+        expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email)
+        expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1)
+        expect(createUser).toHaveBeenCalledWith(customUser)
+        expect(createUser).toHaveBeenCalledTimes(1)
+        expect(findUser).toHaveBeenNthCalledWith(1, { uuid: headers["mock-uuid"] })
+        expect(findUser).toHaveBeenNthCalledWith(2, { username: body.username })
+        expect(findUser).toHaveBeenCalledTimes(2)
+        expect(await response.json()).toEqual({ message: "Database error" })
+        expect(response.statusCode).toBe(500)
+    });
+    it("should return 500 if findUser doesn't return exactly 1 user", async () => {
+        vi.mocked(database.findUser).mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([])
+        const response = await app.inject({
+            method: "POST",
+            url: "/admin/user",
+            payload: body,
+            headers
+        })
+        expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email)
+        expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1)
+        expect(createUser).toHaveBeenCalledWith(customUser)
+        expect(createUser).toHaveBeenCalledTimes(1)
+        expect(findUser).toHaveBeenNthCalledWith(1, { uuid: headers["mock-uuid"] })
+        expect(findUser).toHaveBeenNthCalledWith(2, { username: body.username })
+        expect(findUser).toHaveBeenCalledTimes(2)
+        expect(await response.json()).toEqual({ message: "Database error" })
+        expect(response.statusCode).toBe(500)
+    })
+
+    it("should return 200 if successful", async () => {
+        const response = await app.inject({
+            method: "POST",
+            url: "/admin/user",
+            payload: body,
+            headers
+        })
+        expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email)
+        expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1)
+        expect(createUser).toHaveBeenCalledWith(customUser)
+        expect(createUser).toHaveBeenCalledTimes(1)
+        expect(findUser).toHaveBeenNthCalledWith(1, { uuid: headers["mock-uuid"] })
+        expect(findUser).toHaveBeenNthCalledWith(2, { username: body.username })
+        expect(findUser).toHaveBeenCalledTimes(2)
+        expect(await response.json()).toEqual({ message: "User created" })
+        expect(response.statusCode).toBe(200)
+    });
 });
