@@ -17,6 +17,7 @@ import * as fsPromisesModule from "fs/promises";
 import * as streamPromisesModule from "stream/promises";
 import * as fsModule from "fs";
 import * as metadataModule from "../src/file-metadata-handler";
+import { normalize } from "path";
 vi.mock("../src/database", async (importOriginal) => {
   const actual = await importOriginal<typeof databaseModule>();
   return {
@@ -86,7 +87,8 @@ vi.mock("fs/promises", async (importOriginal) => {
     ...actual,
     mkdir: vi.fn().mockResolvedValue([]),
     readdir: vi.fn().mockResolvedValue([]),
-    rm: vi.fn().mockResolvedValue([])
+    rm: vi.fn().mockResolvedValue([]),
+    writeFile: vi.fn().mockResolvedValue({})
   };
 });
 vi.mock("stream/promises", async (importOriginal) => {
@@ -1972,8 +1974,8 @@ describe("login-routes tests", () => {
           ...formWithCookieHeader
         });
 
-        const profilePath = `uploads/${testUser.uuid}/profile`;
-        const profileImagePath = `${profilePath}/profile-${testUser.uuid}.png`;
+        const profilePath = normalize(`uploads/${testUser.uuid}/profile`);
+        const profileImagePath = normalize(`${profilePath}/profile-${testUser.uuid}.png`);
         const profileImageUrl = `http://localhost:3000/profile-images/${testUser.uuid}/profile/profile-${testUser.uuid}.png`;
         expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
         expect(mkdirSpy).toHaveBeenCalledWith(profilePath, { recursive: true });
@@ -2309,7 +2311,7 @@ describe("login-routes tests", () => {
         });
 
         expect(deleteUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
-        expect(rmSpy).toHaveBeenCalledWith(`uploads/${testUser.uuid}`, { recursive: true, force: true });
+        expect(rmSpy).toHaveBeenCalledWith(normalize(`uploads/${testUser.uuid}`), { recursive: true, force: true });
         expect(loadFileMetadataSpy).toHaveBeenCalledWith("file-metadata.json");
         expect(writeFileSpy).toHaveBeenCalledWith(
           "file-metadata.json",
