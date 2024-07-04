@@ -21,13 +21,3 @@ services:
       - .:/code
     networks:
       - shared_network
-
-  pr-preview:
-    build: .
-    container_name: pr-preview_${PR_ID}
-    expose:
-      - 3000
-    volumes:
-      - .:/code
-    networks:
-      - shared_network
