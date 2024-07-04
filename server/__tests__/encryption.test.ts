@@ -6,28 +6,22 @@ import * as runJavaEncryptModule from "../src/encryption";
 import * as utilModule from "../src/util";
 import * as fspModule from "fs/promises";
 import * as fsModule from "fs";
-import * as mkdirpModule from "mkdirp";
 
 vi.mock("fs", async (importOriginal) => {
   const actual = await importOriginal<typeof fsModule>();
   return {
     ...actual,
+    realpathSync: vi.fn().mockImplementation(() => { }),
     createReadStream: vi.fn().mockImplementation(() => { })
   };
 });
 
-vi.mock("mkdirp", async (importOriginal) => {
-  const actual = await importOriginal<typeof mkdirpModule>();
-  return {
-    ...actual,
-    mkdirp: vi.fn().mockResolvedValue(undefined)
-  };
-});
 
 vi.mock("fs/promises", async (importOriginal) => {
   const actual = await importOriginal<typeof fspModule>();
   return {
     ...actual,
+    mkdir: vi.fn().mockResolvedValue(undefined),
     access: vi.fn().mockResolvedValue(undefined),
     readFile: vi.fn().mockResolvedValue(undefined),
     rm: vi.fn().mockReturnValue(undefined)
@@ -67,7 +61,8 @@ let app: FastifyInstance;
 const uuid = "12345-abcde";
 beforeAll(async () => {
   app = fastify();
-  app.register(fastifySecureSession, {
+  app = fastify();
+  await app.register(fastifySecureSession, {
     cookieName: "loginSession",
     key: Buffer.from("d30a7eae1e37a08d6d5c65ac91dfbc75b54ce34dd29153439979364046cc06ae", "hex"),
     cookie: {
@@ -91,6 +86,8 @@ beforeAll(async () => {
     }
   );
   vi.spyOn(console, "error").mockImplementation(() => undefined);
+  const startsWithMock = vi.fn().mockReturnValue(true);
+  String.prototype.startsWith = startsWithMock;
   // vi.spyOn(console, "log").mockImplementation(() => undefined);
   await app.listen({ host: "", port: 1234 });
 });
@@ -114,7 +111,7 @@ describe("requestDownload", () => {
   const accessSpy = vi.spyOn(fspModule, "access");
   const runJavaEncryptSpy = vi.spyOn(runJavaEncryptModule, "runJavaEncrypt");
   const rmSpy = vi.spyOn(fspModule, "rm");
-  const mkdirpSpy = vi.spyOn(mkdirpModule, "mkdirp");
+  const mkdirSpy = vi.spyOn(fspModule, "mkdir");
 
   it("should reply with 500 when fail to create encrypted directory for the user", async () => {
     checkHeaderSpy.mockResolvedValueOnce(false);
@@ -126,7 +123,7 @@ describe("requestDownload", () => {
       })
       .mockResolvedValueOnce(undefined);
     readFileSpy.mockResolvedValueOnce("default content");
-    mkdirpSpy.mockRejectedValueOnce(new Error("Unknown Error"));
+    mkdirSpy.mockRejectedValueOnce(new Error("Unknown Error"));
 
     const response = await app.inject({
       method: "GET",
@@ -177,7 +174,7 @@ describe("requestDownload", () => {
       })
       .mockResolvedValueOnce(undefined);
     readFileSpy.mockResolvedValueOnce("default content");
-    mkdirpSpy.mockResolvedValueOnce(undefined);
+    mkdirSpy.mockResolvedValueOnce(undefined);
     const response = await app.inject({
       method: "GET",
       url: "/hasuuid/download/user-datapacks/:filename?needEncryption=true"
@@ -185,7 +182,7 @@ describe("requestDownload", () => {
 
     expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
     expect(readFileSpy).toHaveNthReturnedWith(1, "default content");
-    expect(mkdirpSpy).toHaveBeenCalledOnce();
+    expect(mkdirSpy).toHaveBeenCalledOnce();
     expect(response.statusCode).toBe(500);
     expect(response.json().error).toBe("Failed to encrypt datapacks with error Error: Unknown error");
   });
@@ -202,7 +199,7 @@ describe("requestDownload", () => {
       .mockResolvedValueOnce(undefined);
     checkHeaderSpy.mockResolvedValueOnce(false).mockResolvedValueOnce(false);
     readFileSpy.mockResolvedValueOnce("default content").mockResolvedValueOnce("not properly encrypted");
-    mkdirpSpy.mockResolvedValueOnce(undefined);
+    mkdirSpy.mockResolvedValueOnce(undefined);
     const response = await app.inject({
       method: "GET",
       url: "/hasuuid/download/user-datapacks/:filename?needEncryption=true"
@@ -303,7 +300,7 @@ describe("requestDownload", () => {
 
     checkHeaderSpy.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
 
-    mkdirpSpy.mockResolvedValueOnce(undefined);
+    mkdirSpy.mockResolvedValueOnce(undefined);
 
     runJavaEncryptSpy.mockResolvedValue(undefined);
     readFileSpy.mockResolvedValueOnce("default content").mockResolvedValueOnce("TSCreator Encrypted Datafile");
@@ -376,7 +373,7 @@ describe("requestDownload", () => {
       .mockResolvedValueOnce("not properly encrypted")
       .mockResolvedValueOnce("default content")
       .mockResolvedValueOnce("TSCreator Encrypted Datafile");
-    mkdirpSpy.mockResolvedValueOnce(undefined);
+    mkdirSpy.mockResolvedValueOnce(undefined);
     const response = await app.inject({
       method: "GET",
       url: "/hasuuid/download/user-datapacks/:filename?needEncryption=true"

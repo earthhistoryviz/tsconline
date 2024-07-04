@@ -172,20 +172,31 @@ jobs:
         run: |
           git clone git@bitbucket.org:strat/tscreator.git
 
+      - name: Install java jdk
+        run: |
+          sudo apt-get install openjdk-8-jdk
+
       - name: Build and compile TSCreator Jar for tests
         run: |
-          cd /home/runner/work/tsconline/tsconline/tscreator/
-          docker-compose build
-          docker-compose up -d
-          docker-compose exec -T tscreator_vnc bash -c "cd /tscreator/devel && make && make jar && find '/tscreator/jars/' -type f -name '*.jar' -exec cp {} '/tscreator/testUsageJar.jar' \; && exit"
-          docker cp tscreator_vnc:/tscreator/testUsageJar.jar /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar
-          cp /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar /home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar
+          cd /home/runner/work/tsconline/tsconline/tscreator/devel
+          make
+          make jar
+          find '/home/runner/work/tsconline/tsconline/tscreator/jars/' -type f -name '*.jar' -exec cp {} '/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar'
 
-      - name: Set up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: "adopt"
-          java-version: "21"
+      # - name: Build and compile TSCreator Jar for tests
+      #   run: |
+      #     cd /home/runner/work/tsconline/tsconline/tscreator/
+      #     docker-compose build
+      #     docker-compose up -d
+      #     docker-compose exec -T tscreator_vnc bash -c "cd /tscreator/devel && make && make jar && find '/tscreator/jars/' -type f -name '*.jar' -exec cp {} '/tscreator/testUsageJar.jar' \; && exit"
+      #     docker cp tscreator_vnc:/tscreator/testUsageJar.jar /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar
+      #     cp /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar /home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar
+
+      # - name: Set up Java
+      #   uses: actions/setup-java@v3
+      #   with:
+      #     distribution: "adopt"
+      #     java-version: "21"
 
       - name: Install xvfb
         run: sudo apt-get install xvfb

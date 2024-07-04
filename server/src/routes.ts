@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { exec, execFileSync } from "child_process";
-import { writeFile, stat, readFile, access, rm, mkdir, realpath } from "fs/promises";
+import { exec } from "child_process";
+import { writeFile, stat, readFile, access, rm, mkdir } from "fs/promises";
 import {
   DatapackIndex,
   DatapackInfoChunk,
@@ -26,6 +26,7 @@ import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackInde
 import { glob } from "glob";
 import { DatapackDescriptionInfo } from "./types.js";
 import { MultipartFile } from "@fastify/multipart";
+import { runJavaEncrypt } from "./encryption.js";
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
