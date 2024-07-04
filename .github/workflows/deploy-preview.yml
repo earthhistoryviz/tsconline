@@ -1,10 +1,12 @@
 name: Deploy PR previews
 
 on:
-  workflow_run:
-    workflows: ["Merge Pipeline"]
-    types:
-      - completed
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+  # workflow_run:
+  #   workflows: ["Merge Pipeline"]
+  #   types:
+  #     - completed
 
 concurrency: preview-${{ github.ref }}
 
