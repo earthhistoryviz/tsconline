@@ -18,6 +18,8 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.head.ref }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Deployment
         id: create_deployment
@@ -104,7 +106,6 @@ jobs:
         uses: octokit/request-action@v2.x
         with:
           route: POST /repos/${{ github.repository }}/deployments/${{ steps.create_deployment.outputs.id }}/statuses
-          state: failure
 
       - name: Comment on PR
         uses: thollander/actions-comment-pull-request@v2
