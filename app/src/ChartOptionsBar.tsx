@@ -216,7 +216,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
               handleDownloadClose();
             }
           }}>
-          <DialogTitle>Download Chart</DialogTitle>
+          <DialogTitle>Save Chart</DialogTitle>
           <DialogContent>
             <DialogContentText>Please enter the filename and select filetype.</DialogContentText>
             <div className="flex-row chart-download-button">
