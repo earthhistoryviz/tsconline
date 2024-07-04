@@ -615,70 +615,63 @@ export const setEventInContext = action((inContext: boolean) => {
   state.settingsTabs.eventInContext = inContext;
 });
 
-export const InsertEventInContextTopList = action((term: { key: string; age: number }, unit: string) => {
+export const insertEventInContextTopList = action((term: { key: string; age: number }, unit: string) => {
   if (!state.settingsTabs.eventInContextTopList) {
     state.settingsTabs.eventInContextTopList = { [unit]: [term] };
   } else if (!state.settingsTabs.eventInContextTopList[unit]) {
     state.settingsTabs.eventInContextTopList[unit] = [term];
   } else {
     const topList = state.settingsTabs.eventInContextTopList[unit];
-    const prevLength = topList.length;
-    let index = 0;
-    for (index; index < topList.length; index++) {
+    for (let index = 0; index < topList.length; index++) {
       const compareEvent = topList[index];
       if (term.age === compareEvent.age && term.key === compareEvent.key) {
         return;
       } else if (term.age <= compareEvent.age) {
         topList.splice(index, 0, term);
-        break;
+        return;
       }
     }
-    if (index === prevLength) {
-      topList.push(term);
-    }
+    topList.push(term);
   }
 });
 
-export const InsertEventInContextBaseList = action((term: { key: string; age: number }, unit: string) => {
+export const insertEventInContextBaseList = action((term: { key: string; age: number }, unit: string) => {
   if (!state.settingsTabs.eventInContextBaseList) {
     state.settingsTabs.eventInContextBaseList = { [unit]: [term] };
   } else if (!state.settingsTabs.eventInContextBaseList[unit]) {
     state.settingsTabs.eventInContextBaseList[unit] = [term];
   } else {
     const baseList = state.settingsTabs.eventInContextBaseList[unit];
-    const prevLength = baseList.length;
-    let index = 0;
-    for (index; index < baseList.length; index++) {
+    for (let index = 0; index < baseList.length; index++) {
       const compareEvent = baseList[index];
       if (term.age === compareEvent.age && term.key === compareEvent.key) {
         return;
       } else if (term.age >= compareEvent.age) {
         baseList.splice(index, 0, term);
-        break;
+        return;
       }
     }
-    if (index === prevLength) {
-      baseList.push(term);
-    }
+
+    baseList.push(term);
   }
 });
 
 export const removeEventInContextTopList = action((term: { key: string; age: number }, unit: string) => {
   if (!state.settingsTabs.eventInContextTopList || !state.settingsTabs.eventInContextTopList[unit]) {
     return;
-  } else {
-    const topList = state.settingsTabs.eventInContextTopList[unit];
-    for (let i = 0; i < topList.length; i++) {
-      const compareEvent = topList[i];
-      if (term.key === compareEvent.key && term.age === compareEvent.age) {
-        topList.splice(i, 1);
-      }
+  }
+  const topList = state.settingsTabs.eventInContextTopList[unit];
+  for (let i = 0; i < topList.length; i++) {
+    const compareEvent = topList[i];
+    if (term.key === compareEvent.key && term.age === compareEvent.age) {
+      topList.splice(i, 1);
+      break;
     }
-    if (topList.length === 0) {
-      delete state.settingsTabs.eventInContextTopList[unit];
-      if (_.isEmpty(state.settingsTabs.eventInContextTopList)) {
-        state.settingsTabs.eventInContextTopList = null;
-      }
+  }
+  if (topList.length === 0) {
+    delete state.settingsTabs.eventInContextTopList[unit];
+    if (_.isEmpty(state.settingsTabs.eventInContextTopList)) {
+      state.settingsTabs.eventInContextTopList = null;
     }
   }
 });
@@ -686,19 +679,19 @@ export const removeEventInContextTopList = action((term: { key: string; age: num
 export const removeEventInContextBaseList = action((term: { key: string; age: number }, unit: string) => {
   if (!state.settingsTabs.eventInContextBaseList || !state.settingsTabs.eventInContextBaseList[unit]) {
     return;
-  } else {
-    const baseList = state.settingsTabs.eventInContextBaseList[unit];
-    for (let i = 0; i < baseList.length; i++) {
-      const compareEvent = baseList[i];
-      if (term.key === compareEvent.key && term.age === compareEvent.age) {
-        baseList.splice(i, 1);
-      }
+  }
+  const baseList = state.settingsTabs.eventInContextBaseList[unit];
+  for (let i = 0; i < baseList.length; i++) {
+    const compareEvent = baseList[i];
+    if (term.key === compareEvent.key && term.age === compareEvent.age) {
+      baseList.splice(i, 1);
+      break;
     }
-    if (baseList.length === 0) {
-      delete state.settingsTabs.eventInContextBaseList[unit];
-      if (_.isEmpty(state.settingsTabs.eventInContextBaseList)) {
-        state.settingsTabs.eventInContextBaseList = null;
-      }
+  }
+  if (baseList.length === 0) {
+    delete state.settingsTabs.eventInContextBaseList[unit];
+    if (_.isEmpty(state.settingsTabs.eventInContextBaseList)) {
+      state.settingsTabs.eventInContextBaseList = null;
     }
   }
 });

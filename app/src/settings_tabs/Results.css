@@ -23,9 +23,13 @@
 }
 
 .table-container {
+  min-height: 65vh;
+  min-width: 40vw;
   height: 65vh;
-  width: 50vw;
+  width: 40vw;
   margin-top: 2vh;
+  resize: both;
+  overflow: auto;
 }
 
 .events-search-results-table {
