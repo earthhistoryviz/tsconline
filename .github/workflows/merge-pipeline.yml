@@ -123,7 +123,6 @@ jobs:
         run: |
           set -o pipefail
           if ! yarn build 2>&1 | tee build.log; then
-            echo "build_failed=true" >> $GITHUB_ENV
             echo "::set-output name=build_failed::true"
           fi
         continue-on-error: true
@@ -160,7 +159,7 @@ jobs:
         continue-on-error: true
       
       - name: Report Test Errors
-        if: steps.run_tests.outputs.test_failed == 'true'
+        if: steps.vite_build.outputs.test_failed == 'true'
         uses: actions/github-script@v5
         with:
           script: |
@@ -178,5 +177,40 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for any test failures
-        if: steps.run_tests.outputs.test_failed == 'true'
+        if: steps.vite_build.outputs.test_failed == 'true'
         run: exit 1
+
+  setup-preview:
+    needs: [check-files, code-quality, build-and-test]
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.pull_request.head.ref }}
+
+    - name: Set up SSH key
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_KEY }}
+
+    - name: Add known hosts
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan -H dev.geolex.org >> ~/.ssh/known_hosts
+
+    - name: Transfer files
+      run: |
+        rsync -avz --exclude '.git' ./ deployuser@dev.geolex.org:/home/aaron/tsconline/pr-preview-${{ github.event.number }}/
+    
+    - name: Setup files for deployment preview
+      run: |
+        ssh deployuser@dev.geolex.org << 'EOF'
+        PR_ID=${{ github.event.number }}
+        cd /home/aaron/tsconline/pr-preview-${{ github.event.number }}
+        echo "PR_ID=${{ github.event.number }}" > .env
+        cp ../server/assets/jars/* ./server/assets/jars/
+        mkdir -p ./server/assets/datapacks
+        cp ../server/assets/datapacks/* ./server/assets/datapacks/
+        docker-compose -f docker-compose-preview.yml up -d pr-preview-build
+        EOF

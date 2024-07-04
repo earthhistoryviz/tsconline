@@ -1,0 +1,20 @@
+version: "3"
+networks:
+  shared_network:
+    external: true
+services:
+  pr-preview-build:
+    build: .
+    volumes:
+      - .:/code
+    networks:
+      - shared_network
+    command: bash -c "source /root/.nvm/nvm.sh && nvm use node && yarn && yarn build"
+
+  pr-preview-run:
+    build: .
+    volumes:
+      - .:/code
+    networks:
+      - shared_network
+    command: bash -c "source /root/.nvm/nvm.sh && nvm use node && yarn start"
