@@ -54,9 +54,17 @@ async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply) {
 }
 
 export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOptions) => {
+  const looseRateLimit = {
+    max: 70,
+    timeWindow: "1 minute"
+  };
+  const moderateRateLimit = {
+    max: 30,
+    timeWindow: "1 minute"
+  };
   fastify.addHook("preHandler", verifyAdmin);
   fastify.addHook("preHandler", verifyRecaptcha);
-  fastify.get("/users", getUsers);
+  fastify.get("/users", { config: { rateLimit: looseRateLimit } }, getUsers);
   fastify.post(
     "/user",
     {
@@ -72,6 +80,9 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
           },
           required: ["username", "email", "password"]
         }
+      },
+      config: {
+        rateLimit: moderateRateLimit
       }
     },
     adminCreateUser
@@ -87,6 +98,9 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
           },
           required: ["uuid"]
         }
+      },
+      config: {
+        rateLimit: moderateRateLimit
       }
     },
     adminDeleteUser
@@ -103,6 +117,9 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
           },
           required: ["uuid", "datapack"]
         }
+      },
+      config: {
+        rateLimit: moderateRateLimit
       }
     },
     adminDeleteUserDatapack
@@ -119,6 +136,9 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
           },
           required: ["datapack"]
         }
+      },
+      config: {
+        rateLimit: moderateRateLimit
       }
     },
     adminDeleteServerDatapack
