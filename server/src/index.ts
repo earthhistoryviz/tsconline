@@ -1,4 +1,4 @@
-import fastify from "fastify";
+import fastify, {  } from "fastify";
 import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
@@ -107,7 +107,7 @@ server.register(fastifySecureSession, {
 
 await server.register(fastifyRateLimit, {
   global: true,
-  max: 100,
+  max: 500,
   timeWindow: "1 minute",
   onExceeded: async (_request, key) => {
     const clientIp = key;
@@ -256,7 +256,7 @@ server.get<{ Params: { filename: string }; Querystring: { needEncryption?: boole
 );
 // uploads datapack
 server.post("/upload", moderateRateLimit, routes.uploadDatapack);
-await server.register(adminRoutes, { prefix: "/admin" });
+server.register(adminRoutes, { prefix: "/admin" });
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
 server.post("/auth/signup", strictRateLimit, loginRoutes.signup);
