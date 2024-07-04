@@ -36,10 +36,33 @@ jobs:
       - name: Create deployment preview
         run: |
           ssh deployuser@dev.geolex.org << 'EOF'
+          cd /home/aaron/live
+          PR_ID=${{ github.event.pull_request.number }}
+          SERVER_BLOCK="server {
+            listen 443 ssl;
+            listen [::]:443 ssl;
+            ssl_certificate /etc/letsencrypt/live/geolex.org/fullchain.pem;
+            ssl_certificate_key /etc/letsencrypt/live/geolex.org/privkey.pem;
+            ssl_trusted_certificate /etc/letsencrypt/live/geolex.org/chain.pem;
+            ssl_dhparam /etc/letsencrypt/dhparams/dhparam.pem;
+            keepalive_timeout 300;
+            proxy_read_timeout 300s;
+            client_max_body_size 75M;
+
+            server_name pr-${PR_ID}.geolex.org;
+
+            location / {
+              resolver 127.0.0.11;
+              set \$proxy http://pr-preview_${PR_ID}:3000;
+              proxy_pass \$proxy;
+            }
+          }"
+          echo "$SERVER_BLOCK" > proxy/user_conf.d/pr_${PR_ID}.conf
+          docker-compose restart proxy
           cd /home/aaron/tsconline
-          mkdir -p pr-preview-${{ github.event.number }}
-          cd pr-preview-${{ github.event.number }}
-          echo "PR_ID=${{ github.event.number }}" > .env
+          mkdir -p pr-preview-${PR_ID}
+          cd pr-preview-${PR_ID}
+          echo "PR_ID=${PR_ID}" > .env
           cp ../server/assets/jars/* ./server/assets/jars/
           mkdir -p ./server/assets/datapacks
           cp ../server/assets/datapacks/* ./server/assets/datapacks/
@@ -49,13 +72,13 @@ jobs:
           ELAPSED=0
 
           while ! docker-compose -f docker-compose-preview.yml logs | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
-            if [ $ELAPSED -ge $MAX_WAIT ]; then
+            if [ \$ELAPSED -ge \$MAX_WAIT ]; then
               echo "Max wait time exceeded. Exiting..."
               exit 1
             fi
-            echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
-            sleep $INTERVAL
-            ELAPSED=$((ELAPSED + INTERVAL))
+            echo "Waiting for server to start... (elapsed: \${ELAPSED}s)"
+            sleep \$INTERVAL
+            ELAPSED=\$((ELAPSED + INTERVAL))
           done
           echo "Server is up"
           EOF
