@@ -1,40 +1,93 @@
-name: Deploy PR previews
+name: Deploy Preview
 
 on:
-  pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
-      - closed
-
-concurrency: preview-${{ github.ref }}
+  issue_comment:
+    types: [created]
 
 jobs:
   deploy-preview:
     runs-on: ubuntu-20.04
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.issue.pull_request.head.ref }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
+    - name: Set up SSH key
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      - name: Install and Build
-        if: github.event.action != 'closed'
-        run: |
-          yarn install
-          yarn build
+    - name: Add known hosts
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan -H dev.geolex.org >> ~/.ssh/known_hosts
 
-      - name: Gather build outputs
-        if: github.event.action != 'closed'
-        run: |
-          mkdir -p deployment
-          cp -r app/dist/* deployment/
+    - name: Transfer files
+      run: |
+        rsync -avz --exclude '.git' ./ deployuser@dev.geolex.org:/home/aaron/tsconline/pr-preview-${{ github.event.issue.number }}/
+    
+    - name: Create deployment preview
+      run: |
+        ssh deployuser@dev.geolex.org << 'EOF'
+        cd /home/aaron/live
+        PR_ID=${{ github.event.issue.number }}
+        SERVER_BLOCK="server {
+            listen 443 ssl;
+            listen [::]:443 ssl;
+            ssl_certificate /etc/letsencrypt/live/geolex.org/fullchain.pem;
+            ssl_certificate_key /etc/letsencrypt/live/geolex.org/privkey.pem;
+            ssl_trusted_certificate /etc/letsencrypt/live/geolex.org/chain.pem;
+            ssl_dhparam /etc/letsencrypt/dhparams/dhparam.pem;
+            keepalive_timeout 300;
+            proxy_read_timeout 300s;
+            client_max_body_size 75M;
 
-      - name: Deploy preview
-        uses: rossjrw/pr-preview-action@v1
-        with:
-          source-dir: ./deployment/
+            server_name pr-${PR_ID}.geolex.org;
+
+            location / {
+            resolver 127.0.0.11;
+            set \$proxy http://pr-preview_${PR_ID}:3000;
+            proxy_pass \$proxy;
+            }
+        }"
+        echo "$SERVER_BLOCK" > proxy/user_conf.d/pr-${PR_ID}.conf
+        docker-compose restart proxy
+        cd /home/aaron/tsconline
+        mkdir -p pr-preview-${{ github.event.issue.number }}
+        cd pr-preview-${{ github.event.issue.number }}
+        echo "PR_ID=${{ github.event.issue.number }}" > .env
+        cp ../server/assets/jars/* ./server/assets/jars/
+        mkdir -p ./server/assets/datapacks
+        cp ../server/assets/datapacks/* ./server/assets/datapacks/
+        docker-compose -f docker-compose-preview.yml down || true
+        docker-compose -f docker-compose-preview.yml up -d
+        MAX_WAIT=180
+        INTERVAL=5
+        ELAPSED=0
+
+        while ! docker-compose -f docker-compose-preview.yml logs | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
+            if [ $ELAPSED -ge $MAX_WAIT ]; then
+            echo "Max wait time exceeded. Exiting..."
+            exit 1
+            fi
+            echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+        done
+        echo "Server is up"
+        EOF
+
+    - name: Check existing comments
+      uses: peter-evans/find-comment@v3
+      id: fc
+      with:
+        issue-number: ${{ github.event.issue.number }}
+        body-includes: '🚀 Deployed preview to https://pr-${{ github.event.issue.number }}.geolex.org'
+
+    - name: Comment on PR
+      if: steps.fc.outputs.comment-id == 0
+      uses: thollander/actions-comment-pull-request@v2
+      with:
+        message: |
+            🚀 Deployed preview to https://pr-${{ github.event.issue.number }}.geolex.org

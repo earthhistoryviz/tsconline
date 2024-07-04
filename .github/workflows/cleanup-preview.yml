@@ -1,0 +1,37 @@
+name: Clean Up Deployment Preview
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  clean-up-deployment:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up SSH key
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_KEY }}
+
+    - name: Add known hosts
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan -H dev.geolex.org >> ~/.ssh/known_hosts
+
+    - name: Clean Up Deployment
+      run: |
+        ssh deployuser@dev.geolex.org << 'EOF'
+        PR_ID=${{ github.event.pull_request.number }}
+        cd /home/aaron/live
+        rm -f proxy/user_conf.d/pr-${PR_ID}.conf
+        docker-compose restart proxy
+        cd /home/aaron/tsconline/pr-preview-${PR_ID}
+        docker-compose -f docker-compose-preview.yml exec -T pr-preview bash -c "source /root/.nvm/nvm.sh && nvm use node && yarn cache clean"
+        docker-compose -f docker-compose-preview.yml down
+        cd ..
+        rm -rf pr-preview-${PR_ID}
+        EOF

@@ -1,0 +1,15 @@
+version: "3"
+networks:
+  shared_network:
+    external: true
+services:
+  pr-preview:
+      build: .
+      container_name: pr-preview_${PR_ID}
+      expose:
+        - 3000
+      volumes:
+        - .:/code
+      networks:
+        - shared_network
+      command: bash -c "source /root/.nvm/nvm.sh && nvm use node && yarn && yarn build && yarn start"
