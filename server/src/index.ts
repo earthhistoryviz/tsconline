@@ -1,4 +1,4 @@
-import fastify, {  } from "fastify";
+import fastify from "fastify";
 import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
