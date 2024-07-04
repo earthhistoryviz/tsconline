@@ -1,10 +1,9 @@
 name: Deploy PR previews
 
 on:
-  # pull_request:
-  #   types: [opened, synchronize, reopened, closed]
   workflow_run:
     workflows: ["Merge Pipeline"]
+    branches: [TSC-431-pr-puts-up-a-server]
     types:
       - completed
 
@@ -12,6 +11,7 @@ concurrency: preview-${{ github.ref }}
 
 jobs:
   deploy-preview:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
@@ -84,6 +84,7 @@ jobs:
           EOF
 
       - name: Comment on PR
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         uses: thollander/actions-comment-pull-request@v2
         with:
           message: |
