@@ -154,7 +154,7 @@ export const state = observable<State>({
     columnSearchTerm: "",
     datapackDisplayType: "rows",
     eventSearchTerm: "",
-    eventInContext: false,
+    eventInContext: true,
     eventInContextTopList: null,
     eventInContextBaseList: null,
     ageBeforeContext: null,

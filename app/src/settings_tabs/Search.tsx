@@ -128,7 +128,7 @@ export const Search = observer(function Search() {
             }
           }}
         />
-        Select 3ma around event for chart generation
+        Select 3myr around event for chart generation
       </div>
     );
   });
