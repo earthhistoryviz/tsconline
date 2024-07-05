@@ -1,7 +1,6 @@
 import { DatapackParsingPack } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
-import { useContext, useState } from "react";
-import { context } from "../../state";
+import { useState } from "react";
 import { Box, Typography } from "@mui/material";
 import styles from "./TSCCompactDatapackRow.module.css";
 import Color from "color";
