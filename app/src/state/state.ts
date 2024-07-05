@@ -57,7 +57,7 @@ export type State = {
     columnSelected: string | null;
     columnHashMap: Map<string, ColumnInfo>;
     columnSearchTerm: string;
-    datapackDisplayType: "rows" | "cards";
+    datapackDisplayType: "rows" | "cards" | "compact";
   };
   mapState: {
     mapInfo: MapInfo;
