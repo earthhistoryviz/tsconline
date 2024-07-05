@@ -7,7 +7,6 @@ import { CustomTooltip, TSCButton } from "./components";
 import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
-import DownloadIcon from "@mui/icons-material/Download";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
@@ -189,7 +188,9 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
     return (
       <div>
         <CustomTooltip title="Download Chart">
-          <TSCButton buttonType="gradient" onClick={() => handleDownloadOpen()}>Save Chart</TSCButton>
+          <TSCButton buttonType="gradient" onClick={() => handleDownloadOpen()}>
+            Save Chart
+          </TSCButton>
         </CustomTooltip>
         <Dialog
           disableRestoreFocus
