@@ -189,9 +189,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
     return (
       <div>
         <CustomTooltip title="Download Chart">
-          <IconButton onClick={() => handleDownloadOpen()}>
-            <DownloadIcon />
-          </IconButton>
+          <TSCButton buttonType="gradient" onClick={() => handleDownloadOpen()}>Save Chart</TSCButton>
         </CustomTooltip>
         <Dialog
           disableRestoreFocus
@@ -293,9 +291,9 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         <ResetButton />
         <ZoomFitButton />
         <TimelineButton />
+        <DownloadButton />
       </div>
       <div className="flex-row">
-        <DownloadButton />
         <HelpButton />
       </div>
     </div>
