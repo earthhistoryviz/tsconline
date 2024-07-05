@@ -1,8 +1,8 @@
-import { TableCell, TableBody, TableContainer, Paper, SvgIcon, Typography, Box } from "@mui/material";
+import { TableCell, TableBody, TableContainer, Paper, SvgIcon, Typography, Box, IconButton } from "@mui/material";
 import React, { useContext, useEffect } from "react";
 import { Table } from "react-bootstrap";
 import { TableComponents, TableVirtuoso } from "react-virtuoso";
-import { CustomTooltip, TSCCheckbox } from "../components";
+import { CustomTooltip } from "../components";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import { ErrorOutline } from "@mui/icons-material";
@@ -12,7 +12,29 @@ import "./Results.css";
 import { EventSearchInfo, GroupedEventSearchInfo } from "../types";
 import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import { trimQuotes } from "../util/util";
-const Checkbox = observer(({ info }: { info: EventSearchInfo }) => {
+import CheckIcon from "@mui/icons-material/Check";
+
+const ToggleColumn = observer(({ columnName }: { columnName: string }) => {
+  const { state, actions } = useContext(context);
+  const column = state.settingsTabs.columnHashMap.get(columnName);
+  if (!column) {
+    return (
+      <SvgIcon>
+        <ErrorOutline />
+      </SvgIcon>
+    );
+  }
+  return (
+    <IconButton
+      onClick={() => {
+        actions.toggleSettingsTabColumn(column);
+      }}>
+      <CheckIcon />
+    </IconButton>
+  );
+});
+
+const CenterEvent = observer(({ info }: { info: EventSearchInfo }) => {
   const { state, actions } = useContext(context);
   const column = state.settingsTabs.columnHashMap.get(info.columnName);
   if (!column) {
@@ -22,88 +44,40 @@ const Checkbox = observer(({ info }: { info: EventSearchInfo }) => {
       </SvgIcon>
     );
   }
-  return (
-    <TSCCheckbox
-      //use global state because if state is in this component, the checkbox rerenders out of view so state is reset
-      //and if state is in parent component, changing it rerenders the entire component which sets scroll position to the top
-      checked={state.settingsTabs.addSearchResultToChart[info.id][0]}
-      onChange={() => {
-        if (!state.settingsTabs.addSearchResultToChart[info.id][0]) {
-          let pathColumn = column;
-          const pathAdded: boolean[] = [];
-          while (pathColumn.parent != null) {
-            pathAdded.push(pathColumn.on);
-            const parent = state.settingsTabs.columnHashMap.get(pathColumn.parent);
-            if (!parent) break;
-            pathColumn = parent;
-          }
-          actions.setAddSearchResultToChart([true, ...pathAdded.slice(1)], info.id);
 
-          //this is so the columns toggle properly since this checkbox isn't the column on value
-          actions.setColumnOn(false, column);
-          actions.toggleSettingsTabColumn(column);
-        } else {
-          let pathColumn = column;
-          const pathAdded = state.settingsTabs.addSearchResultToChart[info.id];
-          for (const on of pathAdded) {
-            actions.setColumnOn(on, pathColumn);
-            if (!pathColumn.parent) break;
-            const parent = state.settingsTabs.columnHashMap.get(pathColumn.parent);
-            if (!parent) break;
-            pathColumn = parent;
-          }
-          actions.setAddSearchResultToChart([false, ...pathAdded.slice(1)], info.id);
-          actions.setColumnOn(false, column);
-        }
-        //in-context feature, adds 3myr to above and below the age
-        if (state.settingsTabs.eventInContext) {
-          if ("age" in info) {
-            //checks if age is in `float - float` format
-            const regex = /^[+-]?(\d*\.\d+|\d+)(\s-\s)[+-]?(\d*\.\d+|\d+)$/;
-            const eventContextTop = { key: column.name, age: 0 };
-            const eventContextBase = { key: column.name, age: 0 };
-            if (regex.test(info.age!)) {
-              const ages = info.age!.split(" - ");
-              eventContextTop.age = Number(ages[0]);
-              eventContextBase.age = Number(ages[1]);
-            } else if (!isNaN(Number(info.age))) {
-              eventContextTop.age = Number(info.age!);
-              eventContextBase.age = Number(info.age!);
-            } else {
-              actions.pushSnackbar("Invalid age found while adding an event", "warning");
-              return;
-            }
-            if (state.settingsTabs.addSearchResultToChart[info.id]) {
-              actions.insertEventInContextTopList(eventContextTop, info.unit);
-              actions.insertEventInContextBaseList(eventContextBase, info.unit);
-              if (!state.settingsTabs.eventInContextTopList || !state.settingsTabs.eventInContextBaseList) {
-                return;
-              }
-              actions.setTopStageAge(state.settingsTabs.eventInContextTopList[info.unit][0].age - 3, info.unit);
-              actions.setBaseStageAge(state.settingsTabs.eventInContextBaseList[info.unit][0].age + 3, info.unit);
-            } else {
-              actions.removeEventInContextTopList(eventContextTop, info.unit);
-              actions.removeEventInContextBaseList(eventContextBase, info.unit);
-              //removed all events, restore age
-              if (!state.settingsTabs.eventInContextTopList && state.settingsTabs.ageBeforeContext) {
-                actions.setTopStageAge(state.settingsTabs.ageBeforeContext[info.unit].topAge, info.unit);
-              }
-              if (!state.settingsTabs.eventInContextBaseList && state.settingsTabs.ageBeforeContext) {
-                actions.setBaseStageAge(state.settingsTabs.ageBeforeContext[info.unit].baseAge, info.unit);
-              }
-              //go back to last selected highest/lowest ages
-              if (state.settingsTabs.eventInContextTopList && state.settingsTabs.eventInContextTopList[info.unit]) {
-                actions.setTopStageAge(state.settingsTabs.eventInContextTopList![info.unit][0].age - 3, info.unit);
-              }
-              if (state.settingsTabs.eventInContextBaseList && state.settingsTabs.eventInContextBaseList[info.unit]) {
-                actions.setBaseStageAge(state.settingsTabs.eventInContextBaseList![info.unit][0].age + 3, info.unit);
-              }
-            }
-          }
-        }
-      }}
-    />
-  );
+  const centerTimeOnEvent = () => {
+    //checks if age is in `float - float` format
+    const regex = /^[+-]?(\d*\.\d+|\d+)(\s-\s)[+-]?(\d*\.\d+|\d+)$/;
+    let topAge = 0;
+    let baseAge = 0;
+    if (regex.test(info.age!)) {
+      const ages = info.age!.split(" - ");
+      topAge = Number(ages[0]) - 3;
+      baseAge = Number(ages[1]) + 3;
+    } else if (!isNaN(Number(info.age))) {
+      topAge = Number(info.age) - 3;
+      baseAge = Number(info.age) + 3;
+    } else {
+      actions.pushSnackbar("Invalid age found while adding an event", "warning");
+      return;
+    }
+    actions.setTopStageAge(topAge, info.unit);
+    actions.setBaseStageAge(baseAge, info.unit);
+  };
+
+  if ("age" in info) {
+    return (
+      <IconButton onClick={() => centerTimeOnEvent()}>
+        <CheckIcon />
+      </IconButton>
+    );
+  } else {
+    return (
+      <SvgIcon>
+        <HorizontalRuleIcon />
+      </SvgIcon>
+    );
+  }
 });
 
 export const Results = ({
@@ -138,7 +112,10 @@ export const Results = ({
       return (
         <>
           <TableCell className="event-group-header-text" align="left">
-            Add to Chart
+            Toggle Column On
+          </TableCell>
+          <TableCell className="event-group-header-text" align="left">
+            Center Time Interval
           </TableCell>
           <TableCell className="event-group-header-text" align="left">
             Column Path
@@ -160,7 +137,7 @@ export const Results = ({
           className="event-group-identifier"
           align="center"
           sx={{ backgroundColor: theme.palette.secondaryBackground.main }}
-          colSpan={5}>
+          colSpan={6}>
           <Typography variant="h6">
             <Box className="event-group-identifier-text">{info}</Box>
           </Typography>
@@ -170,7 +147,10 @@ export const Results = ({
       return (
         <>
           <TableCell align="left">
-            <Checkbox info={info} />
+            <ToggleColumn columnName={info.columnName} />
+          </TableCell>
+          <TableCell align="left">
+            <CenterEvent info={info} />
           </TableCell>
           <TableCell align="left">
             <CustomTooltip
