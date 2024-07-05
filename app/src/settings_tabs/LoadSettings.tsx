@@ -10,7 +10,7 @@ import { context } from "../state";
 import { xmlToJson } from "../state/parse-settings";
 import { CircularProgress, IconButton } from "@mui/material";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
-import { InputFileUpload } from "../components";
+import { CustomTooltip, InputFileUpload } from "../components";
 import "./LoadSettings.css";
 export default function LoadSettings() {
   const { actions } = useContext(context);
@@ -70,9 +70,11 @@ export default function LoadSettings() {
   };
   return (
     <>
-      <IconButton className="icon-load-settings-button" onClick={handleClickOpen}>
-        <FileUploadIcon className="load-settings-button" />
-      </IconButton>
+      <CustomTooltip title="Load Settings">
+        <IconButton className="icon-load-settings-button" onClick={handleClickOpen}>
+          <FileUploadIcon className="load-settings-button" />
+        </IconButton>
+      </CustomTooltip>
 
       <Dialog
         open={open}

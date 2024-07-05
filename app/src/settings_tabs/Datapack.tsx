@@ -13,6 +13,8 @@ import TableRowsIcon from "@mui/icons-material/TableRows";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import { TSCDatapackRow } from "../components/datapack_display/TSCDatapackRow";
 import DeselectIcon from "@mui/icons-material/Deselect";
+import ViewCompactIcon from "@mui/icons-material/ViewCompact";
+import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompactDatapackRow";
 
 export const Datapacks = observer(function Datapacks() {
   const { actions } = useContext(context);
@@ -45,13 +47,17 @@ export const Datapacks = observer(function Datapacks() {
           className={styles.display}
           value={state.settingsTabs.datapackDisplayType}
           onChange={(_event, val) => {
-            if (val === state.settingsTabs.datapackDisplayType || !/^(rows|cards)$/.test(val)) return;
+            if (val === state.settingsTabs.datapackDisplayType || !/^(rows|cards|compact)$/.test(val)) return;
             actions.setDatapackDisplayType(val);
           }}
           exclusive>
           <ToggleButton className={styles.tb} disableRipple value="rows">
             {" "}
             <TableRowsIcon className={styles.icon} />{" "}
+          </ToggleButton>
+          <ToggleButton className={styles.tb} disableRipple value="compact">
+            {" "}
+            <ViewCompactIcon className={styles.icon} />{" "}
           </ToggleButton>
           <ToggleButton className={styles.tb} disableRipple value="cards">
             {" "}
@@ -63,6 +69,14 @@ export const Datapacks = observer(function Datapacks() {
         {Object.keys(state.datapackIndex).map((datapack) => {
           return state.settingsTabs.datapackDisplayType === "rows" ? (
             <TSCDatapackRow
+              key={datapack}
+              name={datapack}
+              datapack={state.datapackIndex[datapack]}
+              value={state.config.datapacks.includes(datapack)}
+              onChange={onChange}
+            />
+          ) : state.settingsTabs.datapackDisplayType === "compact" ? (
+            <TSCCompactDatapackRow
               key={datapack}
               name={datapack}
               datapack={state.datapackIndex[datapack]}
