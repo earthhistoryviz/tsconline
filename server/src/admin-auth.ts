@@ -63,37 +63,37 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     timeWindow: "1 minute"
   };
   const adminCreateUserBody = {
-      type: "object",
-      properties: {
-        username: { type: "string" },
-        email: { type: "string" },
-        password: { type: "string" },
-        pictureUrl: { type: "string" },
-        isAdmin: { type: "number" }
-      },
-      required: ["username", "email", "password"]
+    type: "object",
+    properties: {
+      username: { type: "string" },
+      email: { type: "string" },
+      password: { type: "string" },
+      pictureUrl: { type: "string" },
+      isAdmin: { type: "number" }
+    },
+    required: ["username", "email", "password"]
   };
   const adminDeleteUserBody = {
-      type: "object",
-      properties: {
-        uuid: { type: "string" }
-      },
-      required: ["uuid"]
+    type: "object",
+    properties: {
+      uuid: { type: "string" }
+    },
+    required: ["uuid"]
   };
   const adminDeleteUserDatapackBody = {
-      type: "object",
-      properties: {
-        uuid: { type: "string" },
-        datapack: { type: "string" }
-      },
-      required: ["uuid", "datapack"]
+    type: "object",
+    properties: {
+      uuid: { type: "string" },
+      datapack: { type: "string" }
+    },
+    required: ["uuid", "datapack"]
   };
   const adminDeleteServerDatapackBody = {
-      type: "object",
-      properties: {
-        datapack: { type: "string" }
-      },
-      required: ["datapack"]
+    type: "object",
+    properties: {
+      datapack: { type: "string" }
+    },
+    required: ["datapack"]
   };
   fastify.addHook("preHandler", verifyAdmin);
   fastify.addHook("preHandler", verifyRecaptcha);

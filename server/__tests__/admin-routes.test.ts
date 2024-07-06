@@ -1,9 +1,7 @@
 import fastify, { FastifyInstance, HTTPMethods, InjectOptions } from "fastify";
 import * as adminAuth from "../src/admin-auth";
-import * as adminRoutes from "../src/admin-routes";
 import * as database from "../src/database";
 import * as verify from "../src/verify";
-import * as fs from "fs";
 import * as fsPromises from "fs/promises";
 import * as fileMetadataHandler from "../src/file-metadata-handler";
 
@@ -28,7 +26,7 @@ vi.mock("fs/promises", async (importOriginal) => {
     ...actual,
     rm: vi.fn().mockResolvedValue({}),
     writeFile: vi.fn().mockResolvedValue({}),
-    realpath: vi.fn().mockImplementation(async (path) => path),
+    realpath: vi.fn().mockImplementation(async (path) => path)
   };
 });
 
@@ -430,7 +428,7 @@ describe("adminDeleteUser tests", () => {
     expect(response.statusCode).toBe(400);
   });
   it("should return 403 if uuid attempts a directory traversal", async () => {
-    realpath.mockResolvedValueOnce("root")
+    realpath.mockResolvedValueOnce("root");
     const response = await app.inject({
       method: "DELETE",
       url: "/admin/user",
