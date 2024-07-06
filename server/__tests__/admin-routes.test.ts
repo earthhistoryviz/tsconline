@@ -171,7 +171,7 @@ describe("verifyAdmin tests", () => {
         payload: body
       });
       expect(findUser).not.toHaveBeenCalled();
-      expect(await response.json()).toEqual({ message: "Unauthorized access" });
+      expect(await response.json()).toEqual({ error: "Unauthorized access" });
       expect(response.statusCode).toBe(401);
     });
     test("should return 401 if not found in database", async () => {
@@ -184,7 +184,7 @@ describe("verifyAdmin tests", () => {
       });
       expect(findUser).toHaveBeenCalledWith({ uuid: headers["mock-uuid"] });
       expect(findUser).toHaveBeenCalledTimes(1);
-      expect(await response.json()).toEqual({ message: "Unauthorized access" });
+      expect(await response.json()).toEqual({ error: "Unauthorized access" });
       expect(response.statusCode).toBe(401);
     });
     test("should return 401 if not admin", async () => {
@@ -197,7 +197,7 @@ describe("verifyAdmin tests", () => {
       });
       expect(findUser).toHaveBeenCalledWith({ uuid: headers["mock-uuid"] });
       expect(findUser).toHaveBeenCalledTimes(1);
-      expect(await response.json()).toEqual({ message: "Unauthorized access" });
+      expect(await response.json()).toEqual({ error: "Unauthorized access" });
       expect(response.statusCode).toBe(401);
     });
     test("should return 500 if findUser throws error", async () => {
@@ -210,7 +210,7 @@ describe("verifyAdmin tests", () => {
       });
       expect(findUser).toHaveBeenCalledWith({ uuid: headers["mock-uuid"] });
       expect(findUser).toHaveBeenCalledTimes(1);
-      expect(await response.json()).toEqual({ message: "Database error" });
+      expect(await response.json()).toEqual({ error: "Database error" });
       expect(response.statusCode).toBe(500);
     });
   });
@@ -230,7 +230,7 @@ describe("verifyRecaptcha tests", () => {
         headers: { ...headers, "recaptcha-token": "" }
       });
       expect(checkRecaptchaToken).not.toHaveBeenCalled();
-      expect(await response.json()).toEqual({ message: "Missing recaptcha token" });
+      expect(await response.json()).toEqual({ error: "Missing recaptcha token" });
       expect(response.statusCode).toBe(400);
     });
     it("should return 422 if recaptcha failed", async () => {
@@ -243,7 +243,7 @@ describe("verifyRecaptcha tests", () => {
       });
       expect(checkRecaptchaToken).toHaveBeenCalledWith(headers["recaptcha-token"]);
       expect(checkRecaptchaToken).toHaveBeenCalledTimes(1);
-      expect(await response.json()).toEqual({ message: "Recaptcha failed" });
+      expect(await response.json()).toEqual({ error: "Recaptcha failed" });
       expect(response.statusCode).toBe(422);
     });
     it("should return 500 if checkRecaptchaToken throws error", async () => {
@@ -256,7 +256,7 @@ describe("verifyRecaptcha tests", () => {
       });
       expect(checkRecaptchaToken).toHaveBeenCalledWith(headers["recaptcha-token"]);
       expect(checkRecaptchaToken).toHaveBeenCalledTimes(1);
-      expect(await response.json()).toEqual({ message: "Recaptcha error" });
+      expect(await response.json()).toEqual({ error: "Recaptcha error" });
       expect(response.statusCode).toBe(500);
     });
   });
@@ -301,7 +301,7 @@ describe("adminCreateUser tests", () => {
     });
     expect(checkForUsersWithUsernameOrEmail).not.toHaveBeenCalled();
     expect(createUser).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ message: "Missing/invalid required fields" });
+    expect(await response.json()).toEqual({ error: "Missing/invalid required fields" });
     expect(response.statusCode).toBe(400);
   });
 
@@ -316,7 +316,7 @@ describe("adminCreateUser tests", () => {
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
     expect(createUser).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ message: "User already exists" });
+    expect(await response.json()).toEqual({ error: "User already exists" });
     expect(response.statusCode).toBe(409);
   });
 
@@ -331,7 +331,7 @@ describe("adminCreateUser tests", () => {
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
     expect(createUser).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ message: "Database error" });
+    expect(await response.json()).toEqual({ error: "Database error" });
     expect(response.statusCode).toBe(500);
   });
 
@@ -347,7 +347,7 @@ describe("adminCreateUser tests", () => {
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
     expect(createUser).toHaveBeenCalledWith(customUser);
     expect(createUser).toHaveBeenCalledTimes(1);
-    expect(await response.json()).toEqual({ message: "Database error" });
+    expect(await response.json()).toEqual({ error: "Database error" });
     expect(response.statusCode).toBe(500);
   });
   it("should return 500 if findUser throws error", async () => {
@@ -366,7 +366,7 @@ describe("adminCreateUser tests", () => {
     expect(findUser).toHaveBeenNthCalledWith(1, { uuid: headers["mock-uuid"] });
     expect(findUser).toHaveBeenNthCalledWith(2, { username: body.username });
     expect(findUser).toHaveBeenCalledTimes(2);
-    expect(await response.json()).toEqual({ message: "Database error" });
+    expect(await response.json()).toEqual({ error: "Database error" });
     expect(response.statusCode).toBe(500);
   });
   it("should return 500 if findUser doesn't return exactly 1 user", async () => {
@@ -384,7 +384,7 @@ describe("adminCreateUser tests", () => {
     expect(findUser).toHaveBeenNthCalledWith(1, { uuid: headers["mock-uuid"] });
     expect(findUser).toHaveBeenNthCalledWith(2, { username: body.username });
     expect(findUser).toHaveBeenCalledTimes(2);
-    expect(await response.json()).toEqual({ message: "Database error" });
+    expect(await response.json()).toEqual({ error: "Database error" });
     expect(response.statusCode).toBe(500);
   });
 
@@ -440,7 +440,7 @@ describe("adminDeleteUser tests", () => {
       payload: { uuid: "" },
       headers
     });
-    expect(await response.json()).toEqual({ message: "Missing uuid" });
+    expect(await response.json()).toEqual({ error: "Missing uuid" });
     expect(response.statusCode).toBe(400);
   });
   it("should return 403 if uuid attempts a directory traversal", async () => {
@@ -453,7 +453,7 @@ describe("adminDeleteUser tests", () => {
     });
     expect(findUser).toHaveBeenCalledTimes(1);
     expect(deleteUser).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ message: "Directory traversal detected" });
+    expect(await response.json()).toEqual({ error: "Directory traversal detected" });
     expect(response.statusCode).toBe(403);
   });
   it("should return 404 if user not found", async () => {
@@ -468,7 +468,7 @@ describe("adminDeleteUser tests", () => {
     expect(findUser).toHaveBeenNthCalledWith(2, { uuid: body.uuid });
     expect(findUser).toHaveBeenCalledTimes(2);
     expect(deleteUser).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ message: "User not found" });
+    expect(await response.json()).toEqual({ error: "User not found" });
     expect(response.statusCode).toBe(404);
   });
   it("should return 500 if findUser throws error", async () => {
@@ -483,7 +483,7 @@ describe("adminDeleteUser tests", () => {
     expect(findUser).toHaveBeenNthCalledWith(2, { uuid: body.uuid });
     expect(findUser).toHaveBeenCalledTimes(2);
     expect(deleteUser).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ message: "Unknown error" });
+    expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toBe(500);
   });
   it("should return 500 if deleteUser throws error", async () => {
@@ -495,7 +495,7 @@ describe("adminDeleteUser tests", () => {
       headers
     });
     expect(deleteUser).toHaveBeenCalledTimes(1);
-    expect(await response.json()).toEqual({ message: "Unknown error" });
+    expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toBe(500);
   });
   it("should return 500 if loadFileMetadata throws error", async () => {
@@ -509,7 +509,7 @@ describe("adminDeleteUser tests", () => {
     expect(findUser).toHaveBeenCalledTimes(2);
     expect(deleteUser).toHaveBeenCalledTimes(1);
     expect(loadFileMetadata).toHaveBeenCalledTimes(1);
-    expect(await response.json()).toEqual({ message: "Unknown error" });
+    expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toBe(500);
   });
   it("should return 200 if successful", async () => {
