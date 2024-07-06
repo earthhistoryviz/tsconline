@@ -26,7 +26,6 @@ vi.mock("fs", async (importOriginal) => {
   const actual = await importOriginal<typeof fs>();
   return {
     ...actual,
-    realpathSync: vi.fn().mockImplementation((path) => path)
   };
 });
 
@@ -35,7 +34,8 @@ vi.mock("fs/promises", async (importOriginal) => {
   return {
     ...actual,
     rm: vi.fn().mockResolvedValue({}),
-    writeFile: vi.fn().mockResolvedValue({})
+    writeFile: vi.fn().mockResolvedValue({}),
+    realpath: vi.fn().mockImplementation(async (path) => path),
   };
 });
 
@@ -410,7 +410,7 @@ describe("adminCreateUser tests", () => {
 describe("adminDeleteUser tests", () => {
   const findUser = vi.spyOn(database, "findUser");
   const deleteUser = vi.spyOn(database, "deleteUser");
-  const realpathSync = vi.spyOn(fs, "realpathSync");
+  const realpath = vi.spyOn(fsPromises, "realpath");
   const loadFileMetadata = vi.spyOn(fileMetadataHandler, "loadFileMetadata");
   const writeFile = vi.spyOn(fsPromises, "writeFile");
   const rm = vi.spyOn(fsPromises, "rm");
@@ -444,15 +444,20 @@ describe("adminDeleteUser tests", () => {
     expect(response.statusCode).toBe(400);
   });
   it("should return 403 if uuid attempts a directory traversal", async () => {
-    realpathSync.mockReturnValueOnce("root");
+    realpath.mockResolvedValueOnce("root")
     const response = await app.inject({
       method: "DELETE",
       url: "/admin/user",
       payload: { uuid: "../" },
       headers
     });
-    expect(findUser).toHaveBeenCalledTimes(1);
-    expect(deleteUser).not.toHaveBeenCalled();
+    expect(findUser).toHaveBeenCalledTimes(2);
+    expect(findUser).toHaveBeenNthCalledWith(1, { uuid: headers["mock-uuid"] });
+    expect(findUser).toHaveBeenNthCalledWith(2, { uuid: "../" });
+    expect(deleteUser).toHaveBeenCalledOnce();
+    expect(deleteUser).toHaveBeenCalledWith({ uuid: "../" });
+    expect(realpath).toHaveBeenCalledTimes(1);
+    expect(realpath).toHaveBeenCalledWith(resolve("testdir/uploadDirectory", "../"));
     expect(await response.json()).toEqual({ error: "Directory traversal detected" });
     expect(response.statusCode).toBe(403);
   });
@@ -522,6 +527,48 @@ describe("adminDeleteUser tests", () => {
     expect(findUser).toHaveBeenNthCalledWith(2, { uuid: body.uuid });
     expect(deleteUser).toHaveBeenCalledTimes(1);
     expect(deleteUser).toHaveBeenCalledWith({ uuid: body.uuid });
+    expect(realpath).toHaveBeenCalledTimes(1);
+    expect(realpath).toHaveBeenCalledWith(resolve("testdir/uploadDirectory", body.uuid));
+    expect(loadFileMetadata).toHaveBeenCalledTimes(1);
+    expect(writeFile).toHaveBeenNthCalledWith(1, "testdir/fileMetadata.json", JSON.stringify({}));
+    expect(rm).toHaveBeenCalledTimes(1);
+    expect(rm).toHaveBeenCalledWith(resolve("testdir/uploadDirectory", body.uuid), { recursive: true, force: true });
+    expect(await response.json()).toEqual({ message: "User deleted" });
+    expect(response.statusCode).toBe(200);
+  });
+  it("should return 200 even if no upload directory is found", async () => {
+    realpath.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/user",
+      payload: body,
+      headers
+    });
+    expect(findUser).toHaveBeenNthCalledWith(2, { uuid: body.uuid });
+    expect(deleteUser).toHaveBeenCalledTimes(1);
+    expect(deleteUser).toHaveBeenCalledWith({ uuid: body.uuid });
+    expect(realpath).toHaveBeenCalledTimes(1);
+    expect(realpath).toHaveBeenCalledWith(resolve("testdir/uploadDirectory", body.uuid));
+    expect(loadFileMetadata).toHaveBeenCalledTimes(1);
+    expect(loadFileMetadata).toHaveBeenCalledWith("testdir/fileMetadata.json");
+    expect(writeFile).toHaveBeenNthCalledWith(1, "testdir/fileMetadata.json", JSON.stringify({}));
+    expect(rm).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ message: "User deleted" });
+    expect(response.statusCode).toBe(200);
+  });
+  it("should return 200 if removing user directory throws error", async () => {
+    rm.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/user",
+      payload: body,
+      headers
+    });
+    expect(findUser).toHaveBeenNthCalledWith(2, { uuid: body.uuid });
+    expect(deleteUser).toHaveBeenCalledTimes(1);
+    expect(deleteUser).toHaveBeenCalledWith({ uuid: body.uuid });
+    expect(realpath).toHaveBeenCalledTimes(1);
+    expect(realpath).toHaveBeenCalledWith(resolve("testdir/uploadDirectory", body.uuid));
     expect(loadFileMetadata).toHaveBeenCalledTimes(1);
     expect(writeFile).toHaveBeenNthCalledWith(1, "testdir/fileMetadata.json", JSON.stringify({}));
     expect(rm).toHaveBeenCalledTimes(1);
