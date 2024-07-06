@@ -49,13 +49,13 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
     isAdmin: number;
   };
   if (!username || !email || !password || !validator.isEmail(email)) {
-    reply.status(400).send({ message: "Missing/invalid required fields" });
+    reply.status(400).send({ error: "Missing/invalid required fields" });
     return;
   }
   try {
     const user = await checkForUsersWithUsernameOrEmail(username, email);
     if (user.length > 0) {
-      reply.status(409).send({ message: "User already exists" });
+      reply.status(409).send({ error: "User already exists" });
       return;
     }
     const customUser = {
@@ -63,7 +63,7 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
       email,
       hashedPassword: await hash(password, 10),
       uuid: randomUUID(),
-      pictureUrl: pictureUrl ? pictureUrl : null,
+      pictureUrl: pictureUrl ?? null,
       isAdmin: isAdmin ? 1 : 0,
       emailVerified: 1,
       invalidateSession: 0
@@ -74,7 +74,7 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
       throw new Error("User not created");
     }
   } catch (error) {
-    reply.status(500).send({ message: "Database error" });
+    reply.status(500).send({ error: "Database error" });
     return;
   }
   reply.send({ message: "User created" });
@@ -93,18 +93,18 @@ export const adminDeleteUser = async function adminDeleteUser(
 ) {
   const { uuid } = request.body;
   if (!uuid) {
-    reply.status(400).send({ message: "Missing uuid" });
+    reply.status(400).send({ error: "Missing uuid" });
     return;
   }
   const userDirectory = realpathSync(path.resolve(assetconfigs.uploadDirectory, uuid));
   if (!userDirectory.startsWith(path.resolve(assetconfigs.uploadDirectory))) {
-    reply.status(403).send({ message: "Directory traversal detected" });
+    reply.status(403).send({ error: "Directory traversal detected" });
     return;
   }
   try {
     const user = await findUser({ uuid });
     if (!user || user.length < 1 || !user[0]) {
-      reply.status(404).send({ message: "User not found" });
+      reply.status(404).send({ error: "User not found" });
       return;
     }
     await deleteUser({ uuid });
@@ -121,7 +121,7 @@ export const adminDeleteUser = async function adminDeleteUser(
     }
     await writeFile(assetconfigs.fileMetadata, JSON.stringify(metadata));
   } catch (error) {
-    reply.status(500).send({ message: "Unknown error" });
+    reply.status(500).send({ error: "Unknown error" });
     return;
   }
   reply.send({ message: "User deleted" });
@@ -133,7 +133,7 @@ export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
 ) {
   const { uuid, datapack } = request.body;
   if (!uuid || !datapack) {
-    reply.status(400).send({ message: "Missing uuid or datapack id" });
+    reply.status(400).send({ error: "Missing uuid or datapack id" });
     return;
   }
   try {
@@ -144,13 +144,13 @@ export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
     }
     const metadata = await loadFileMetadata(assetconfigs.fileMetadata);
     if (!Object.keys(metadata).some((filePath) => filePath === datapackDirectory)) {
-      reply.status(404).send({ message: "Datapack not found" });
+      reply.status(404).send({ error: "Datapack not found" });
       return;
     }
     await deleteDatapack(metadata, datapackDirectory);
     await writeFile(assetconfigs.fileMetadata, JSON.stringify(metadata));
   } catch (error) {
-    reply.status(500).send({ message: "Unknown error" });
+    reply.status(500).send({ error: "Unknown error" });
     return;
   }
   reply.send({ message: "Datapack deleted" });
@@ -178,11 +178,11 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
         !filepath.startsWith(path.resolve(assetconfigs.datapacksDirectory)) ||
         !decryptedFilepath.startsWith(path.resolve(assetconfigs.decryptionDirectory))
       ) {
-        reply.status(403).send({ message: "Directory traversal detected" });
+        reply.status(403).send({ error: "Directory traversal detected" });
         return;
       }
       if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(path.extname(file.filename))) {
-        reply.status(400).send({ message: "Invalid file extension" });
+        reply.status(400).send({ error: "Invalid file extension" });
         return;
       }
       if (
@@ -192,7 +192,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
           (assetconfigs.activeDatapacks.includes(filename) && !adminconfig.removeDevDatapacks.includes(filename))) &&
         datapackIndex[filename]
       ) {
-        reply.status(409).send({ message: "File already exists" });
+        reply.status(409).send({ error: "File already exists" });
         return;
       }
       try {
@@ -207,12 +207,12 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
         });
       } catch (error) {
         await rm(filepath, { force: true });
-        reply.status(500).send({ message: "Error saving file" });
+        reply.status(500).send({ error: "Error saving file" });
         return;
       }
       if (file.file.truncated) {
         await rm(filepath, { force: true });
-        reply.status(400).send({ message: "File too large" });
+        reply.status(400).send({ error: "File too large" });
         return;
       }
     } else if (part.fieldname === "title" && typeof part.value === "string") {
@@ -222,10 +222,10 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     }
   }
   if (!title || !description || !file || !filepath || !filename || !decryptedFilepath) {
-    reply.status(400).send({ message: "Missing required fields" });
+    reply.status(400).send({ error: "Missing required fields" });
     return;
   }
-  const errorHandler = async (message: string) => {
+  const errorHandler = async (error: string) => {
     if (!filepath || !decryptedFilepath || !filename)
       throw new Error("Missing required variables for file deletion and error handling");
     await rm(filepath, { force: true });
@@ -236,7 +236,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     if (mapPackIndex[filename]) {
       delete mapPackIndex[filename];
     }
-    reply.status(500).send({ message });
+    reply.status(500).send({ error });
   };
   try {
     await new Promise<void>((resolve, reject) => {
@@ -292,11 +292,11 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
 ) {
   const { datapack } = request.body;
   if (!datapack) {
-    reply.status(400).send({ message: "Missing datapack id" });
+    reply.status(400).send({ error: "Missing datapack id" });
     return;
   }
   if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(path.extname(datapack))) {
-    reply.status(400).send({ message: "Invalid file extension" });
+    reply.status(400).send({ error: "Invalid file extension" });
     return;
   }
   let filepath;
@@ -308,15 +308,15 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
       !filepath.startsWith(path.resolve(assetconfigs.datapacksDirectory)) ||
       !decryptedFilepath.startsWith(path.resolve(assetconfigs.decryptionDirectory))
     ) {
-      reply.status(403).send({ message: "Directory traversal detected" });
+      reply.status(403).send({ error: "Directory traversal detected" });
       return;
     }
   } catch (e) {
-    reply.status(500).send({ message: "Datapack file does not exist" });
+    reply.status(500).send({ error: "Datapack file does not exist" });
     return;
   }
   if (!adminconfig.datapacks.includes(datapack) && !assetconfigs.activeDatapacks.includes(datapack)) {
-    reply.status(404).send({ message: "Datapack not found" });
+    reply.status(404).send({ error: "Datapack not found" });
     return;
   }
   if (assetconfigs.activeDatapacks.includes(datapack)) {
@@ -337,14 +337,14 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     await rm(filepath, { force: true });
     await rm(decryptedFilepath, { force: true, recursive: true });
   } catch (e) {
-    reply.status(500).send({ message: "Deleted from indexes, but was not able to delete files" });
+    reply.status(500).send({ error: "Deleted from indexes, but was not able to delete files" });
     return;
   }
   try {
     await writeFile(assetconfigs.adminConfigPath, JSON.stringify(adminconfig, null, 2));
   } catch (e) {
     reply.status(500).send({
-      message:
+      error:
         "Deleted and resolved configurations, but was not able to write to file. Check with server admin to make sure your configuration is still viable"
     });
   }
