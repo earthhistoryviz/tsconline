@@ -112,8 +112,12 @@ export const adminDeleteUser = async function adminDeleteUser(
       }
       try {
         await rm(userDirectory, { recursive: true, force: true });
-      } catch {}
-    } catch {}
+      } catch {
+        // eslint-disable-next-line no-empty
+      }
+    } catch {
+      // eslint-disable-next-line no-empty
+    }
     const metadata = await loadFileMetadata(assetconfigs.fileMetadata);
     for (const file in metadata) {
       if (file.includes(uuid)) {
@@ -197,7 +201,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
         return;
       }
       try {
-        await pipeline(file.file, createWriteStream(filepath))
+        await pipeline(file.file, createWriteStream(filepath));
       } catch (error) {
         await rm(filepath, { force: true });
         reply.status(500).send({ error: "Error saving file" });
@@ -232,18 +236,15 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     reply.status(500).send({ error });
   };
   try {
-    const { stdout, stderr} = await promisify(execFile)(
-      "java",
-      [
-        "-jar",
-        assetconfigs.decryptionJar,
-        "-d",
-        filepath!.replaceAll("\\", "/"),
-        "-dest",
-        assetconfigs.decryptionDirectory.replaceAll("\\", "/")
-      ]
-    );
-    console.log(stdout)
+    const { stdout, stderr } = await promisify(execFile)("java", [
+      "-jar",
+      assetconfigs.decryptionJar,
+      "-d",
+      filepath!.replaceAll("\\", "/"),
+      "-dest",
+      assetconfigs.decryptionDirectory.replaceAll("\\", "/")
+    ]);
+    console.log(stdout);
     if (stderr) {
       throw new Error(stderr);
     }
@@ -253,7 +254,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   }
   try {
     await realpath(decryptedFilepath);
-  } catch(e) {
+  } catch (e) {
     await errorHandler("File was not decrypted properly");
     return;
   }
