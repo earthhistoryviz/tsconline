@@ -105,11 +105,12 @@ export const adminDeleteUser = async function adminDeleteUser(
     }
     await deleteUser({ uuid });
     try {
-      const userDirectory = await realpath(path.resolve(assetconfigs.uploadDirectory, uuid));
+      let userDirectory = path.resolve(assetconfigs.uploadDirectory, uuid);
       if (!userDirectory.startsWith(path.resolve(assetconfigs.uploadDirectory))) {
         reply.status(403).send({ error: "Directory traversal detected" });
         return;
       }
+      userDirectory = await realpath(userDirectory);
       try {
         await rm(userDirectory, { recursive: true, force: true });
       } catch {
@@ -142,11 +143,13 @@ export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
     return;
   }
   try {
-    const userDirectory = await realpath(path.resolve(assetconfigs.uploadDirectory, uuid));
-    const datapackDirectory = await realpath(path.resolve(userDirectory, "datapack", datapack));
+    const userDirectory = path.resolve(assetconfigs.uploadDirectory, uuid);
+    const datapackDirectory = path.resolve(userDirectory, "datapack", datapack);
     if (!userDirectory.startsWith(assetconfigs.uploadDirectory) || !datapackDirectory.startsWith(userDirectory)) {
       throw new Error("Directory traversal detected");
     }
+    await realpath(datapackDirectory);
+    await realpath(userDirectory);
     const metadata = await loadFileMetadata(assetconfigs.fileMetadata);
     if (!Object.keys(metadata).some((filePath) => filePath === datapackDirectory)) {
       reply.status(404).send({ error: "Datapack not found" });
@@ -296,8 +299,8 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
   let filepath;
   let decryptedFilepath;
   try {
-    filepath = await realpath(path.resolve(assetconfigs.datapacksDirectory, datapack));
-    decryptedFilepath = await realpath(path.resolve(assetconfigs.decryptionDirectory, datapack.split(".")[0]!));
+    filepath = path.resolve(assetconfigs.datapacksDirectory, datapack);
+    decryptedFilepath = path.resolve(assetconfigs.decryptionDirectory, datapack.split(".")[0]!);
     if (
       !filepath.startsWith(path.resolve(assetconfigs.datapacksDirectory)) ||
       !decryptedFilepath.startsWith(path.resolve(assetconfigs.decryptionDirectory))
@@ -305,6 +308,8 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
       reply.status(403).send({ error: "Directory traversal detected" });
       return;
     }
+    await realpath(filepath);
+    await realpath(decryptedFilepath);
   } catch (e) {
     reply.status(500).send({ error: "Datapack file does not exist" });
     return;
