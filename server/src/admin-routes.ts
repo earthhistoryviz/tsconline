@@ -145,7 +145,10 @@ export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
   try {
     const userDirectory = path.resolve(assetconfigs.uploadDirectory, uuid);
     const datapackDirectory = path.resolve(userDirectory, "datapack", datapack);
-    if (!userDirectory.startsWith(path.resolve(assetconfigs.uploadDirectory)) || !datapackDirectory.startsWith(path.resolve(userDirectory))) {
+    if (
+      !userDirectory.startsWith(path.resolve(assetconfigs.uploadDirectory)) ||
+      !datapackDirectory.startsWith(path.resolve(userDirectory))
+    ) {
       reply.status(403).send({ error: "Directory traversal detected" });
       return;
     }
