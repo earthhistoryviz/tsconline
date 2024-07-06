@@ -6,14 +6,15 @@ import { deleteUser } from "./database.js";
 import path from "path";
 import { adminconfig, assetconfigs, checkFileExists } from "./util.js";
 import { createWriteStream, realpathSync } from "fs";
-import { rm, writeFile } from "fs/promises";
+import { realpath, rm, writeFile } from "fs/promises";
 import { deleteDatapack, loadFileMetadata } from "./file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
-import pump from "pump";
-import { execFileSync } from "child_process";
 import { datapackIndex, mapPackIndex } from "./index.js";
 import { loadIndexes } from "./load-packs.js";
 import validator from "validator";
+import { pipeline } from "stream/promises";
+import { execFile } from "node:child_process";
+import { promisify } from "util";
 
 /**
  * Get all users for admin to configure on frontend
@@ -96,11 +97,6 @@ export const adminDeleteUser = async function adminDeleteUser(
     reply.status(400).send({ error: "Missing uuid" });
     return;
   }
-  const userDirectory = realpathSync(path.resolve(assetconfigs.uploadDirectory, uuid));
-  if (!userDirectory.startsWith(path.resolve(assetconfigs.uploadDirectory))) {
-    reply.status(403).send({ error: "Directory traversal detected" });
-    return;
-  }
   try {
     const user = await findUser({ uuid });
     if (!user || user.length < 1 || !user[0]) {
@@ -109,10 +105,15 @@ export const adminDeleteUser = async function adminDeleteUser(
     }
     await deleteUser({ uuid });
     try {
-      await rm(userDirectory, { recursive: true, force: true });
-    } catch (error) {
-      console.error(error);
-    }
+      const userDirectory = await realpath(path.resolve(assetconfigs.uploadDirectory, uuid));
+      if (!userDirectory.startsWith(path.resolve(assetconfigs.uploadDirectory))) {
+        reply.status(403).send({ error: "Directory traversal detected" });
+        return;
+      }
+      try {
+        await rm(userDirectory, { recursive: true, force: true });
+      } catch {}
+    } catch {}
     const metadata = await loadFileMetadata(assetconfigs.fileMetadata);
     for (const file in metadata) {
       if (file.includes(uuid)) {
@@ -196,15 +197,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
         return;
       }
       try {
-        await new Promise<void>((resolve, reject) => {
-          pump(file!.file, createWriteStream(filepath!), (error) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve();
-            }
-          });
-        });
+        await pipeline(file.file, createWriteStream(filepath))
       } catch (error) {
         await rm(filepath, { force: true });
         reply.status(500).send({ error: "Error saving file" });
@@ -239,34 +232,34 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     reply.status(500).send({ error });
   };
   try {
-    await new Promise<void>((resolve, reject) => {
-      try {
-        const stdout = execFileSync(
-          "java",
-          [
-            "-jar",
-            assetconfigs.decryptionJar,
-            "-d",
-            filepath!.replaceAll("\\", "/"),
-            "-dest",
-            assetconfigs.decryptionDirectory.replaceAll("\\", "/")
-          ],
-          { stdio: "inherit" }
-        );
-        console.log("stdout: ", stdout);
-      } catch (e) {
-        console.error("Java decryption error: ", e);
-        reject();
-      }
-      resolve();
-    });
+    const { stdout, stderr} = await promisify(execFile)(
+      "java",
+      [
+        "-jar",
+        assetconfigs.decryptionJar,
+        "-d",
+        filepath!.replaceAll("\\", "/"),
+        "-dest",
+        assetconfigs.decryptionDirectory.replaceAll("\\", "/")
+      ]
+    );
+    console.log(stdout)
+    if (stderr) {
+      throw new Error(stderr);
+    }
   } catch (error) {
-    errorHandler("Error decrypting file");
+    await errorHandler("Error decrypting file");
+    return;
+  }
+  try {
+    await realpath(decryptedFilepath);
+  } catch(e) {
+    await errorHandler("File was not decrypted properly");
     return;
   }
   const successful = await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, [filename]);
   if (!successful) {
-    errorHandler("Error parsing the datapack for chart generation");
+    await errorHandler("Error parsing the datapack for chart generation");
     return;
   }
   try {
@@ -280,7 +273,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     }
     await writeFile(assetconfigs.adminConfigPath, JSON.stringify(adminconfig, null, 2));
   } catch (e) {
-    errorHandler("Error updating admin config");
+    await errorHandler("Error updating admin config");
     return;
   }
   reply.send({ message: "Datapack uploaded" });
@@ -302,8 +295,8 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
   let filepath;
   let decryptedFilepath;
   try {
-    filepath = realpathSync(path.resolve(assetconfigs.datapacksDirectory, datapack));
-    decryptedFilepath = realpathSync(path.resolve(assetconfigs.decryptionDirectory, datapack.split(".")[0]!));
+    filepath = await realpath(path.resolve(assetconfigs.datapacksDirectory, datapack));
+    decryptedFilepath = await realpath(path.resolve(assetconfigs.decryptionDirectory, datapack.split(".")[0]!));
     if (
       !filepath.startsWith(path.resolve(assetconfigs.datapacksDirectory)) ||
       !decryptedFilepath.startsWith(path.resolve(assetconfigs.decryptionDirectory))
