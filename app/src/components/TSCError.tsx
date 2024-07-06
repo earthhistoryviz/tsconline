@@ -1,6 +1,6 @@
-import { Fade, IconButton, Snackbar, Typography, useTheme } from "@mui/material";
+import { AlertTitle, Fade, IconButton, Popover, Snackbar, Typography, useTheme } from "@mui/material";
 import { context } from "../state";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import CloseIcon from "@mui/icons-material/Close";
 import { CustomDivider, StyledScrollbar } from "./TSCComponents";
@@ -8,7 +8,8 @@ import "./TSCError.css";
 import Color from "color";
 import ErrorIcon from "@mui/icons-material/Error";
 import { ErrorCodes } from "../util/error-codes";
-
+import Alert from '@mui/material/Alert';
+import { getElementDocument } from "simplebar-core/dist/helpers";
 type TSCErrorProps = {
   errorContext: ErrorCodes;
   message: string;
@@ -18,6 +19,7 @@ type TSCErrorProps = {
 export const TSCError: React.FC<TSCErrorProps> = observer(({ errorContext, message, index, count }) => {
   const { actions } = useContext(context);
   const theme = useTheme();
+  //const [snackbarPosition, setSnackbarPosition] = useState({ top: 0, left: 0 });
   const margin = index < 5 ? index * 10 : 40;
   let countDisplay = "";
   if (count > 1 && count < 1000) {
@@ -28,6 +30,55 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ errorContext, messa
   function handleCloseError(_event: React.SyntheticEvent | Event, reason?: string) {
     if (reason === "clickaway") return;
     actions.removeError(errorContext);
+  }
+  if (errorContext == "INVALID_UNIT_RANGE") {
+    const baseAgeElement = document.getElementById("base-age-selector");
+    return (
+      <Popover
+        open={true}
+        anchorEl={baseAgeElement}
+        sx={{
+          '& .MuiPaper-root': {
+            borderRadius: '10px',
+          },
+        }}
+        style={{
+          marginBottom: `${margin}px`,
+          position: 'fixed',
+          top: -140,
+          left: 0,
+
+        }}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}
+      >
+        <div
+          className="alert"
+          style={{
+            backgroundColor: Color(theme.palette.error.light).lighten(0.1).string(),
+            border: `1px solid ${Color(theme.palette.error.light).darken(0.4)}`
+          }}>
+          <div className="alert-header">
+            <div className="alert-title">
+              <ErrorIcon className="error-icon-alert" sx={{ color: theme.palette.error.dark }} />
+              <Typography className="error-title" variant="h2" color="error.dark">
+                Error {countDisplay}
+              </Typography>
+            </div>
+            <IconButton className="alert-close" onClick={handleCloseError} size="large">
+              <CloseIcon className="alert-close-icon" style={{ color: theme.palette.error.dark }} />
+            </IconButton>
+          </div>
+          <CustomDivider key={`${index} error`} />
+          <StyledScrollbar className="alert-text">
+            <Typography className="alert-info-text" color="error.dark">
+              {message}
+            </Typography>
+          </StyledScrollbar>
+        </div>
+      </Popover>)
   }
   return (
     <Snackbar
