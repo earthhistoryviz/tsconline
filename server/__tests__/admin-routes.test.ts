@@ -590,3 +590,68 @@ describe("adminDeleteUser tests", () => {
     expect(response.statusCode).toBe(200);
   });
 });
+
+describe("adminDeleteUserDatapack", () => {
+  const body = {
+    uuid: "test-uuid",
+    datapack: "test-datapack"
+  }
+  const loadFileMetadata = vi.spyOn(fileMetadataHandler, "loadFileMetadata");
+  const realpathSync = vi.spyOn(fs, "realpathSync");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  })
+  it("should return 400 if incorrect body", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/user/datapack",
+      payload: {},
+      headers
+    });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body must have required property 'uuid'",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  test.each([
+    { ...body, uuid: ""},
+    { ...body, datapack: ""},
+    { datapack: "", uuid: ""}
+  ])("should return 400 if fields are empty", async ( body ) => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/user/datapack",
+      payload: body,
+      headers
+    });
+    expect(await response.json()).toEqual({ message: "Missing uuid or datapack id" })
+    expect(response.statusCode).toEqual(400)
+  });
+  it("should return 403 if uuid attempts a traversal of directories", async () => {
+    realpathSync.mockReturnValueOnce("root").mockResolvedValueOnce("root")
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/user/datapack",
+      payload: body,
+      headers
+    });
+    expect(realpathSync).toBeCalledTimes(2)
+    expect(await response.json()).toEqual({ message: "Directory traversal detected" })
+    expect(response.statusCode).toEqual(403)
+  })
+  it("should return 404 if datapack is not found", async () => {
+    loadFileMetadata.mockReturnValueOnce({})
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/user/datapack",
+      payload: body,
+      headers
+    });
+    expect
+    expect(await response.json()).toEqual({ message: "Directory traversal detected" })
+    expect(response.statusCode).toEqual(403)
+  })
+});
