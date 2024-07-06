@@ -71,7 +71,6 @@ export type State = {
     //each row indexed by search result id
     //column represents the "on" state of path of parents from search result
     addSearchResultToChart: boolean[][];
-    datapackDisplayType: "rows" | "cards" | "compact";
   };
   mapState: {
     mapInfo: MapInfo;
