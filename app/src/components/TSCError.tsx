@@ -1,6 +1,6 @@
-import { AlertTitle, Fade, IconButton, Popover, Snackbar, Typography, useTheme } from "@mui/material";
+import { Fade, IconButton, Popover, Snackbar, Typography, useTheme } from "@mui/material";
 import { context } from "../state";
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import CloseIcon from "@mui/icons-material/Close";
 import { CustomDivider, StyledScrollbar } from "./TSCComponents";
@@ -8,8 +8,6 @@ import "./TSCError.css";
 import Color from "color";
 import ErrorIcon from "@mui/icons-material/Error";
 import { ErrorCodes } from "../util/error-codes";
-import Alert from '@mui/material/Alert';
-import { getElementDocument } from "simplebar-core/dist/helpers";
 type TSCErrorProps = {
   errorContext: ErrorCodes;
   message: string;
@@ -38,22 +36,20 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ errorContext, messa
         open={true}
         anchorEl={baseAgeElement}
         sx={{
-          '& .MuiPaper-root': {
-            borderRadius: '10px',
-          },
+          "& .MuiPaper-root": {
+            borderRadius: "10px"
+          }
         }}
         style={{
           marginBottom: `${margin}px`,
-          position: 'fixed',
+          position: "fixed",
           top: -140,
-          left: 0,
-
+          left: 0
         }}
         anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
-        }}
-      >
+          vertical: "top",
+          horizontal: "left"
+        }}>
         <div
           className="alert"
           style={{
@@ -78,7 +74,8 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ errorContext, messa
             </Typography>
           </StyledScrollbar>
         </div>
-      </Popover>)
+      </Popover>
+    );
   }
   return (
     <Snackbar
