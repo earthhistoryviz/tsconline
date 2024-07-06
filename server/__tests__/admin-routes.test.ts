@@ -22,13 +22,6 @@ vi.mock("../src/util", async () => {
   };
 });
 
-vi.mock("fs", async (importOriginal) => {
-  const actual = await importOriginal<typeof fs>();
-  return {
-    ...actual,
-  };
-});
-
 vi.mock("fs/promises", async (importOriginal) => {
   const actual = await importOriginal<typeof fsPromises>();
   return {
@@ -72,13 +65,6 @@ vi.mock("../src/database", async (importOriginal) => {
     checkForUsersWithUsernameOrEmail: vi.fn().mockResolvedValue([]),
     createUser: vi.fn().mockResolvedValue({}),
     deleteUser: vi.fn().mockResolvedValue({})
-  };
-});
-
-vi.mock("../src/admin-routes", async (importOriginal) => {
-  const actual = await importOriginal<typeof adminRoutes>();
-  return {
-    ...actual
   };
 });
 

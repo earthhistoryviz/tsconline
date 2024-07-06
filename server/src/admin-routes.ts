@@ -5,7 +5,7 @@ import { hash } from "bcrypt-ts";
 import { deleteUser } from "./database.js";
 import path from "path";
 import { adminconfig, assetconfigs, checkFileExists } from "./util.js";
-import { createWriteStream, realpathSync } from "fs";
+import { createWriteStream } from "fs";
 import { realpath, rm, writeFile } from "fs/promises";
 import { deleteDatapack, loadFileMetadata } from "./file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
@@ -138,8 +138,8 @@ export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
     return;
   }
   try {
-    const userDirectory = realpathSync(path.resolve(assetconfigs.uploadDirectory, uuid));
-    const datapackDirectory = realpathSync(path.resolve(userDirectory, "datapack", datapack));
+    const userDirectory = await realpath(path.resolve(assetconfigs.uploadDirectory, uuid));
+    const datapackDirectory = await realpath(path.resolve(userDirectory, "datapack", datapack));
     if (!userDirectory.startsWith(assetconfigs.uploadDirectory) || !datapackDirectory.startsWith(userDirectory)) {
       throw new Error("Directory traversal detected");
     }
