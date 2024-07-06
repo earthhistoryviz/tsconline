@@ -597,7 +597,19 @@ describe("adminDeleteUserDatapack", () => {
     datapack: "test-datapack"
   }
   const loadFileMetadata = vi.spyOn(fileMetadataHandler, "loadFileMetadata");
-  const realpathSync = vi.spyOn(fs, "realpathSync");
+  const realpath = vi.spyOn(fsPromises, "realpath");
+  const writeFile = vi.spyOn(fsPromises, "writeFile");
+  const deleteDatapack = vi.spyOn(fileMetadataHandler, "deleteDatapack");
+  const datapackDirectory = resolve("testdir/uploadDirectory", body.uuid, "datapack", body.datapack)
+  const testMetadata = {
+    [datapackDirectory]: {
+      fileName: "test",
+      lastUpdated: new Date().toISOString(),
+      decryptedFilepath: "test",
+      mapPackIndexFilepath: "test",
+      datapackIndexFilepath: "test"
+    }
+  }
   beforeEach(() => {
     vi.clearAllMocks();
   })
@@ -627,31 +639,91 @@ describe("adminDeleteUserDatapack", () => {
       payload: body,
       headers
     });
-    expect(await response.json()).toEqual({ message: "Missing uuid or datapack id" })
+    expect(await response.json()).toEqual({ error: "Missing uuid or datapack id" })
     expect(response.statusCode).toEqual(400)
   });
   it("should return 403 if uuid attempts a traversal of directories", async () => {
-    realpathSync.mockReturnValueOnce("root").mockResolvedValueOnce("root")
     const response = await app.inject({
       method: "DELETE",
       url: "/admin/user/datapack",
-      payload: body,
+      payload: {...body, uuid: "../"},
       headers
     });
-    expect(realpathSync).toBeCalledTimes(2)
-    expect(await response.json()).toEqual({ message: "Directory traversal detected" })
+    expect(await response.json()).toEqual({ error: "Directory traversal detected" })
     expect(response.statusCode).toEqual(403)
   })
   it("should return 404 if datapack is not found", async () => {
-    loadFileMetadata.mockReturnValueOnce({})
     const response = await app.inject({
       method: "DELETE",
       url: "/admin/user/datapack",
       payload: body,
       headers
     });
-    expect
-    expect(await response.json()).toEqual({ message: "Directory traversal detected" })
-    expect(response.statusCode).toEqual(403)
+    expect(loadFileMetadata).toBeCalledTimes(1)
+    expect(loadFileMetadata).toBeCalledWith("testdir/fileMetadata.json")
+    expect(await response.json()).toEqual({ error: "Datapack not found"})
+    expect(response.statusCode).toEqual(404)
   })
+  it("should return 500 if directory doesn't exist", async () => {
+    realpath.mockRejectedValueOnce(new Error())
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/user/datapack",
+      payload: body,
+      headers
+    });
+    expect(loadFileMetadata).not.toHaveBeenCalled();
+    expect(realpath).toBeCalledTimes(1)
+    expect(realpath).toBeCalledWith(datapackDirectory)
+    expect(await response.json()).toEqual({ error: "Unknown error"})
+    expect(response.statusCode).toEqual(500)
+  })
+  it("should return 500 if delete datapack throws error", async () => {
+    deleteDatapack.mockRejectedValueOnce(new Error())
+    loadFileMetadata.mockResolvedValueOnce(testMetadata)
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/user/datapack",
+      payload: body,
+      headers
+    });
+    expect(loadFileMetadata).toBeCalledTimes(1)
+    expect(deleteDatapack).toBeCalledTimes(1)
+    expect(deleteDatapack).toBeCalledWith(testMetadata, datapackDirectory)
+    expect(await response.json()).toEqual({ error: "Unknown error"})
+    expect(response.statusCode).toEqual(500)
+  })
+  it("should return 500 if write file throws error", async () => {
+    writeFile.mockRejectedValueOnce(new Error())
+    loadFileMetadata.mockResolvedValueOnce(testMetadata)
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/user/datapack",
+      payload: body,
+      headers
+    });
+    expect(loadFileMetadata).toBeCalledTimes(1)
+    expect(deleteDatapack).toBeCalledTimes(1)
+    expect(deleteDatapack).toBeCalledWith(testMetadata, datapackDirectory)
+    expect(writeFile).toBeCalledTimes(1)
+    expect(writeFile).toBeCalledWith("testdir/fileMetadata.json", JSON.stringify(testMetadata))
+    expect(await response.json()).toEqual({ error: "Unknown error"})
+    expect(response.statusCode).toEqual(500)
+  });
+  it("should return 200 if successful", async () => {
+    loadFileMetadata.mockResolvedValueOnce(testMetadata)
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/user/datapack",
+      payload: body,
+      headers
+    });
+    expect(loadFileMetadata).toBeCalledTimes(1)
+    expect(deleteDatapack).toBeCalledTimes(1)
+    expect(deleteDatapack).toBeCalledWith(testMetadata, datapackDirectory)
+    expect(writeFile).toBeCalledTimes(1)
+    expect(writeFile).toBeCalledWith("testdir/fileMetadata.json", JSON.stringify(testMetadata))
+    expect(await response.json()).toEqual({ message: "Datapack deleted"})
+    expect(response.statusCode).toEqual(200)
+  });
 });
