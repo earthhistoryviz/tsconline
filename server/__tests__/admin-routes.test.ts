@@ -428,7 +428,6 @@ describe("adminDeleteUser tests", () => {
     expect(response.statusCode).toBe(400);
   });
   it("should return 403 if uuid attempts a directory traversal", async () => {
-    realpath.mockResolvedValueOnce("root");
     const response = await app.inject({
       method: "DELETE",
       url: "/admin/user",
