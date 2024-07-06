@@ -440,8 +440,7 @@ describe("adminDeleteUser tests", () => {
     expect(findUser).toHaveBeenNthCalledWith(2, { uuid: "../" });
     expect(deleteUser).toHaveBeenCalledOnce();
     expect(deleteUser).toHaveBeenCalledWith({ uuid: "../" });
-    expect(realpath).toHaveBeenCalledTimes(1);
-    expect(realpath).toHaveBeenCalledWith(resolve("testdir/uploadDirectory", "../"));
+    expect(realpath).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ error: "Directory traversal detected" });
     expect(response.statusCode).toBe(403);
   });
