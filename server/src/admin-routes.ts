@@ -185,7 +185,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       file = part;
       filename = file.filename;
       filepath = path.resolve(assetconfigs.datapacksDirectory, filename);
-      decryptedFilepath = path.resolve(assetconfigs.decryptionDirectory, filename.split(".")[0]!);
+      decryptedFilepath = path.resolve(assetconfigs.decryptionDirectory, path.basename(filename));
       if (
         !filepath.startsWith(path.resolve(assetconfigs.datapacksDirectory)) ||
         !decryptedFilepath.startsWith(path.resolve(assetconfigs.decryptionDirectory))
@@ -210,8 +210,8 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       try {
         await pipeline(file.file, createWriteStream(filepath));
       } catch (error) {
+        console.error(error)
         await rm(filepath, { force: true });
-        console.log(error);
         reply.status(500).send({ error: "Error saving file" });
         return;
       }
@@ -227,6 +227,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     }
   }
   if (!title || !description || !file || !filepath || !filename || !decryptedFilepath) {
+    console.log(title, description, filename)
     reply.status(400).send({ error: "Missing required fields" });
     return;
   }
