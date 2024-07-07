@@ -34,6 +34,7 @@ export async function loadIndexes(
   datapacks: string[],
   userUploaded?: boolean
 ) {
+  let successful = true;
   console.log(`\nParsing datapacks: ${datapacks}\n`);
   for (const datapack of datapacks) {
     await parseDatapacks(datapack, decryptionDirectory, userUploaded)
@@ -46,6 +47,7 @@ export async function loadIndexes(
         console.log(chalk.green(`Successfully parsed ${datapack}`));
       })
       .catch((e) => {
+        successful = false;
         console.log(chalk.red(`Cannot create a datapackParsingPack with datapack ${datapack} and error: ${e}`));
       });
     await parseMapPacks([datapack], decryptionDirectory)
@@ -54,10 +56,12 @@ export async function loadIndexes(
         mapPackIndex[datapack] = mapPack;
       })
       .catch((e) => {
+        successful = false;
         console.log(chalk.red(`Cannot create a mapPack with datapack ${datapack} and error: ${e}`));
       });
   }
-  await grabMapImages(datapacks, decryptionDirectory);
+  successful = (await grabMapImages(datapacks, decryptionDirectory)).successful && successful;
+  return successful;
 }
 /**
  * Loads all the facies patterns from the patterns directory
@@ -116,9 +120,10 @@ export async function loadFaciesPatterns() {
 export async function grabMapImages(
   datapacks: string[] = assetconfigs.activeDatapacks,
   decryptionDirectory: string = assetconfigs.decryptionDirectory
-) {
+): Promise<{ images: string[]; successful: boolean }> {
   const imagePaths = await grabFilepaths(datapacks, decryptionDirectory, "MapImages");
   const compiledImages: string[] = [];
+  let successful = true;
   try {
     // recursive: true ensures if it already exists, we continue with no error
     await fs.mkdir(assetconfigs.imagesDirectory, { recursive: true });
@@ -141,6 +146,7 @@ export async function grabMapImages(
     ); // Adjust concurrency as needed
   } catch (e) {
     console.log("Error processing image paths for datapacks: ", datapacks, " \n", "With error: ", e);
+    successful = false;
   }
-  return compiledImages;
+  return { images: compiledImages, successful };
 }

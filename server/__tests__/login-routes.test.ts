@@ -137,7 +137,8 @@ const testUser = {
   invalidateSession: 0,
   username: "testuser",
   hashedPassword: "password123",
-  pictureUrl: "https://example.com/picture.jpg"
+  pictureUrl: "https://example.com/picture.jpg",
+  isAdmin: 0
 };
 const mockDate = new Date("2022-01-01T00:00:00Z");
 const testToken: Verification = {

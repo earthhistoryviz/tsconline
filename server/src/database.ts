@@ -17,6 +17,7 @@ Database Schema Details (Post-Migration):
   - pictureUrl (text): Must be unique, URL to the user's profile picture.
   - emailVerified (integer): Non-nullable, default is 0, indicates if the user's email has been verified.
   - invalidateSession (integer): Non-nullable, default is 0, flag for invalidating user sessions.
+  - isAdmin (integer): Non-nullable, default is 0, indicates if the user is an admin.
 
 - verification Table:
   - id (integer): Primary key, auto-increment.
