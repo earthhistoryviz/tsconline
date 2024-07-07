@@ -31,6 +31,8 @@ const ToggleColumn = observer(({ columnName }: { columnName: string }) => {
     <div className="events-search-results-buttons">
       <IconButton
         onClick={() => {
+          //so toggle dooesn't turn off the column
+          actions.setColumnOn(false, column);
           actions.toggleSettingsTabColumn(column);
         }}>
         <CheckIcon />
