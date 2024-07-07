@@ -196,15 +196,17 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
               title={info.columnPath.map((value, pathIndex) => (
                 <div key={index + " " + pathIndex}>{value}</div>
               ))}>
-              <Typography noWrap sx={{ width: "inherit" }} variant="subtitle2">
+              <Typography noWrap sx={{ width: "5vw" }} variant="subtitle2">
                 {info.columnPath[0]}
               </Typography>
             </CustomTooltip>
           </TableCell>
           {info.age ? (
-            <TableCell align="center">{info.age}</TableCell>
+            <TableCell align="center">
+              <div className="search-result-age-container">{info.age}</div>
+            </TableCell>
           ) : (
-            <TableCell align="center" style={{ width: "5em" }}>
+            <TableCell align="center">
               <SvgIcon>
                 <HorizontalRuleIcon />
               </SvgIcon>
@@ -222,7 +224,6 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
           {info.notes ? (
             <TableCell align="right">
               <CustomTooltip
-                sx={{ padding: "0", maxWidth: 500 }}
                 title={
                   <Box className="search-result-info-container">
                     <StyledScrollbar className="scroll-bar">

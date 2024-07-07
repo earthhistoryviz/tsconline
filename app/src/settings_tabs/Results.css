@@ -26,6 +26,10 @@
   width: 5em;
 }
 
+.search-result-age-container {
+  width: 5vw;
+}
+
 .table-container {
   min-height: 65vh;
   min-width: 40vw;
