@@ -61,6 +61,7 @@ export type State = {
     columnSearchTerm: string;
     datapackDisplayType: "rows" | "cards" | "compact";
     eventSearchTerm: string;
+    extendTimeInterval: boolean;
     eventInContext: boolean;
     //sorted array of added events while in context is enabled
     //age is before the add/subtract of 3myr
@@ -154,6 +155,7 @@ export const state = observable<State>({
     columnSearchTerm: "",
     datapackDisplayType: "rows",
     eventSearchTerm: "",
+    extendTimeInterval: false,
     eventInContext: true,
     eventInContextTopList: null,
     eventInContextBaseList: null,

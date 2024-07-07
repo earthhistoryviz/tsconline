@@ -615,6 +615,10 @@ export const setEventInContext = action((inContext: boolean) => {
   state.settingsTabs.eventInContext = inContext;
 });
 
+export const setExtendTimeInterval = action((term: boolean) => {
+  state.settingsTabs.extendTimeInterval = term;
+});
+
 export const insertEventInContextTopList = action((term: { key: string; age: number }, unit: string) => {
   if (!state.settingsTabs.eventInContextTopList) {
     state.settingsTabs.eventInContextTopList = { [unit]: [term] };

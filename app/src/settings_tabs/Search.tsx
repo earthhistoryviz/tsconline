@@ -5,7 +5,6 @@ import "./Search.css";
 import { context } from "../state";
 import { Results } from "./Results";
 import { EventSearchInfo, GroupedEventSearchInfo } from "../types";
-import { TSCCheckbox } from "../components";
 
 export const Search = observer(function Search() {
   const { state, actions } = useContext(context);
@@ -115,24 +114,6 @@ export const Search = observer(function Search() {
     return groupedEvents;
   }
 
-  const InContext = observer(() => {
-    return (
-      <div>
-        <TSCCheckbox
-          checked={state.settingsTabs.eventInContext}
-          onChange={() => {
-            //in-context feature, adds 3myr to above and below the age
-            actions.setEventInContext(!state.settingsTabs.eventInContext);
-            if (state.settingsTabs.eventInContext) {
-              actions.createAgeBeforeContext();
-            }
-          }}
-        />
-        Select 3myr around event for chart generation
-      </div>
-    );
-  });
-
   //cleanup event history on tab change
   useEffect(() => {
     return () => {
@@ -153,8 +134,8 @@ export const Search = observer(function Search() {
           value={state.settingsTabs.eventSearchTerm}
         />
       </div>
+
       <div>Found {count.current} Results</div>
-      <InContext />
       <Results
         key={state.settingsTabs.eventSearchTerm}
         groupedEvents={searchResultData()}
