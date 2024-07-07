@@ -36,3 +36,8 @@
   height: 100%;
   width: 100%;
 }
+
+.events-search-results-buttons {
+  display: flex;
+  flex-direction: row;
+}
