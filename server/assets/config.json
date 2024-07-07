@@ -22,5 +22,6 @@
   "timescaleFilepath": "assets/default_timescale.xlsx",
   "fileMetadata": "assets/file_metadata.json",
   "uploadDirectory": "assets/uploads",
-  "datapackImagesDirectory": "assets/datapack_images"
+  "datapackImagesDirectory": "assets/datapack_images",
+  "adminConfigPath": "assets/admin-config.json"
 }
