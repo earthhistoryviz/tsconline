@@ -114,13 +114,6 @@ export const Search = observer(function Search() {
     return groupedEvents;
   }
 
-  //cleanup event history on tab change
-  useEffect(() => {
-    return () => {
-      actions.resetEventInContextLists();
-    };
-  });
-
   return (
     <div className="search-container">
       <div className="search-and-options">
