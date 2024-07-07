@@ -1,6 +1,6 @@
-import { Box, ClickAwayListener, Fade, IconButton, Popover, Popper, Snackbar, Tooltip, TooltipProps, Typography, alpha, styled, tooltipClasses, useTheme } from "@mui/material";
+import { ClickAwayListener, Fade, IconButton, Snackbar, Tooltip, Typography, useTheme } from "@mui/material";
 import { context } from "../state";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import CloseIcon from "@mui/icons-material/Close";
 import { CustomDivider, StyledScrollbar } from "./TSCComponents";
@@ -8,7 +8,7 @@ import "./TSCError.css";
 import Color from "color";
 import ErrorIcon from "@mui/icons-material/Error";
 import { ErrorCodes } from "../util/error-codes";
-import { ArrowBack } from "@mui/icons-material";
+
 type TSCErrorProps = {
   errorContext: ErrorCodes;
   message: string;
@@ -30,40 +30,41 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ errorContext, messa
     actions.removeError(errorContext);
   }
   if (errorContext == "INVALID_UNIT_RANGE") {
-
-    const baseAgeElement = document.getElementById('base-age-selector-title');
+    const baseAgeElement = document.getElementById("base-age-selector-title");
 
     return (
       <ClickAwayListener onClickAway={handleCloseError}>
         <Tooltip
           open={true}
           onClose={handleCloseError}
-          title={<Typography className="alert-info-text" color="error.dark" style={{
-            backgroundColor: Color(theme.palette.error.light).lighten(0.1).string()
-          }}>
-            <ErrorIcon className="error-icon-alert" sx={{ color: theme.palette.error.dark, position: "relative", top: 3.5, right: 3 }} />
-            {message}
-          </Typography>}
+          title={
+            <Typography
+              className="alert-info-text"
+              color="error.dark"
+              style={{
+                backgroundColor: Color(theme.palette.error.light).lighten(0.1).string()
+              }}>
+              <ErrorIcon
+                className="error-icon-alert"
+                sx={{ color: theme.palette.error.dark, position: "relative", top: 3.5, right: 3 }}
+              />
+              {message}
+            </Typography>
+          }
           placement="top"
           PopperProps={{
             anchorEl: baseAgeElement,
             sx: {
-              '.MuiTooltip-tooltip': { bgcolor: Color(theme.palette.error.light).lighten(0.1).string(), maxWidth: 800 },
-              '& .MuiTooltip-arrow::before': {
-                bgcolor: Color(theme.palette.error.light).lighten(0.1).string(),
-              },
-            },
-
+              ".MuiTooltip-tooltip": { bgcolor: Color(theme.palette.error.light).lighten(0.1).string(), maxWidth: 800 },
+              "& .MuiTooltip-arrow::before": {
+                bgcolor: Color(theme.palette.error.light).lighten(0.1).string()
+              }
+            }
           }}
-          arrow
-        >
-
+          arrow>
           <div></div>
-
         </Tooltip>
       </ClickAwayListener>
-
-
     );
   }
   return (
