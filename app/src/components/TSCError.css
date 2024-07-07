@@ -4,11 +4,6 @@
   --side-margin: 20px;
 }
 
-.range-error {
-  display: inline-flex;
-  align-items: center;
-}
-
 .alert {
   width: var(--alert-width);
   height: var(--alert-height);
