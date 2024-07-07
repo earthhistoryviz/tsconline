@@ -1,6 +1,6 @@
 import { TextField } from "@mui/material";
 import { observer } from "mobx-react-lite";
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useRef } from "react";
 import "./Search.css";
 import { context } from "../state";
 import { Results } from "./Results";
@@ -129,11 +129,7 @@ export const Search = observer(function Search() {
       </div>
 
       <div>Found {count.current} Results</div>
-      <Results
-        key={state.settingsTabs.eventSearchTerm}
-        groupedEvents={searchResultData()}
-        resultCount={count.current}
-      />
+      <Results key={state.settingsTabs.eventSearchTerm} groupedEvents={searchResultData()} />
     </div>
   );
 });

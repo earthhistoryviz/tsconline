@@ -1,8 +1,8 @@
 import { TableCell, TableBody, TableContainer, Paper, SvgIcon, Typography, Box, IconButton } from "@mui/material";
-import React, { useContext, useEffect } from "react";
+import React, { useContext } from "react";
 import { Table } from "react-bootstrap";
 import { TableComponents, TableVirtuoso } from "react-virtuoso";
-import { CustomTooltip } from "../components";
+import { CustomTooltip, StyledScrollbar } from "../components";
 import { context, state } from "../state";
 import { observer } from "mobx-react-lite";
 import { ErrorOutline } from "@mui/icons-material";
@@ -45,7 +45,7 @@ const ToggleColumn = observer(({ columnName }: { columnName: string }) => {
   );
 });
 
-const CenterEvent = observer(({ info }: { info: EventSearchInfo }) => {
+const ModifyTimeInterval = observer(({ info }: { info: EventSearchInfo }) => {
   const { state, actions } = useContext(context);
   const column = state.settingsTabs.columnHashMap.get(info.columnName);
   if (!column) {
@@ -120,13 +120,7 @@ const CenterEvent = observer(({ info }: { info: EventSearchInfo }) => {
   );
 });
 
-export const Results = ({
-  groupedEvents,
-  resultCount
-}: {
-  groupedEvents: GroupedEventSearchInfo[];
-  resultCount: number;
-}) => {
+export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchInfo[] }) => {
   const theme = useTheme();
 
   //this is necessary to prevent table hierachy errors
@@ -187,10 +181,14 @@ export const Results = ({
       return (
         <>
           <TableCell align="left">
-            <ToggleColumn columnName={info.columnName} />
+            <div>
+              <ToggleColumn columnName={info.columnName} />
+            </div>
           </TableCell>
           <TableCell align="left">
-            <CenterEvent info={info} />
+            <div className="modify-time-interval-container">
+              <ModifyTimeInterval info={info} />
+            </div>
           </TableCell>
           <TableCell align="left">
             <CustomTooltip
@@ -198,7 +196,7 @@ export const Results = ({
               title={info.columnPath.map((value, pathIndex) => (
                 <div key={index + " " + pathIndex}>{value}</div>
               ))}>
-              <Typography noWrap sx={{ width: "8vw" }} variant="subtitle2">
+              <Typography noWrap sx={{ width: "inherit" }} variant="subtitle2">
                 {info.columnPath[0]}
               </Typography>
             </CustomTooltip>
@@ -206,7 +204,7 @@ export const Results = ({
           {info.age ? (
             <TableCell align="center">{info.age}</TableCell>
           ) : (
-            <TableCell align="center">
+            <TableCell align="center" style={{ width: "5em" }}>
               <SvgIcon>
                 <HorizontalRuleIcon />
               </SvgIcon>
@@ -224,8 +222,18 @@ export const Results = ({
           {info.notes ? (
             <TableCell align="right">
               <CustomTooltip
-                sx={{ padding: "0" }}
-                title={<Box dangerouslySetInnerHTML={{ __html: trimQuotes(info.notes).replaceAll('""', '"') }} />}>
+                sx={{ padding: "0", maxWidth: 500 }}
+                title={
+                  <Box className="search-result-info-container">
+                    <StyledScrollbar className="scroll-bar">
+                      <Box
+                        className="search-result-info"
+                        sx={{ "& a": { color: "button.main" } }}
+                        dangerouslySetInnerHTML={{ __html: trimQuotes(info.notes).replaceAll('""', '"') }}
+                      />
+                    </StyledScrollbar>
+                  </Box>
+                }>
                 <SvgIcon>
                   <NotesIcon />
                 </SvgIcon>

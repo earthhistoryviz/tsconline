@@ -22,6 +22,10 @@
   font-weight: 600;
 }
 
+.modify-time-interval-container {
+  width: 5em;
+}
+
 .table-container {
   min-height: 65vh;
   min-width: 40vw;
@@ -40,4 +44,21 @@
 .events-search-results-buttons {
   display: flex;
   flex-direction: row;
+}
+
+.search-result-info-container {
+  min-width: 15vw;
+  font-size: 15px;
+  border: 1px solid black;
+  border-radius: 5px;
+  margin-top: 5px;
+  padding: 4px;
+  max-height: 210px;
+}
+
+.scroll-bar {
+  max-height: 200px;
+}
+.search-result-info a:visited {
+  color: blueviolet;
 }

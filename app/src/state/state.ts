@@ -9,8 +9,6 @@ import {
   Config,
   SettingsTabs,
   CachedConfig,
-  eventInContextList,
-  ageBeforeContext,
   User
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
@@ -145,7 +143,7 @@ export const state = observable<State>({
     columnSearchTerm: "",
     datapackDisplayType: "rows",
     eventSearchTerm: "",
-    extendTimeInterval: false,
+    extendTimeInterval: false
   },
   mapState: {
     mapInfo: {},
