@@ -211,6 +211,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
         await pipeline(file.file, createWriteStream(filepath));
       } catch (error) {
         await rm(filepath, { force: true });
+        console.log(error);
         reply.status(500).send({ error: "Error saving file" });
         return;
       }
