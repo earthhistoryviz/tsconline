@@ -4,12 +4,10 @@ import * as database from "../src/database";
 import * as verify from "../src/verify";
 import * as fsPromises from "fs/promises";
 import * as fileMetadataHandler from "../src/file-metadata-handler";
-import * as streamPromises from "stream/promises";
 import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach } from "vitest";
 import fastifySecureSession from "@fastify/secure-session";
 import { resolve } from "path";
 import fastifyMultipart from "@fastify/multipart";
-import FormData from "form-data";
 import formAutoContent from "form-auto-content";
 
 vi.mock("../src/util", async () => {
@@ -30,13 +28,20 @@ vi.mock("../src/util", async () => {
   };
 });
 
-vi.mock("steam/promises", async (importOriginal) => {
-  const actual = await importOriginal<typeof streamPromises>();
+vi.mock("stream/promises", async () => {
   return {
-    ...actual,
-    pipeline: vi.fn().mockResolvedValue({})
-  };
-});
+    pipeline: vi.fn().mockImplementation(async (readable, writable) => {
+      return new Promise<void>((resolve, reject) => {
+        readable.on('data', () => {});
+        readable.on('end', () => {
+          resolve();
+        });
+        readable.on('error', () => {
+          reject();
+        });
+    });
+    })
+}});
 
 vi.mock("fs", async () => {
   return {
@@ -760,39 +765,71 @@ describe("adminDeleteUserDatapack", () => {
 
 describe("adminUploadServerDatapack", () => {
   let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
-  const createForm = (json: Record<string, unknown>) => {
-    if (json.file === undefined) {
+  const createForm = (json: Record<string, unknown> = {}) => {
+    if (!("file" in json)) {
       json.file = {
         value: Buffer.from("test"),
-        filename: "test.dpk",
-        contentType: "application/zip"
+        options: {
+          filename: "test.dpk",
+          contentType: "text/plain"
+        }
       };
     }
-    if (json.uuid === undefined) {
-      json.uuid = "test-uuid";
+    if (!("title" in json)) {
+      json.title = "test-title"
     }
-    if (json.datapack === undefined) {
-      json.datapack = "test-datapack";
+    if (!("description" in json)) {
+      json.description = "test-description"
     }
-    formData = formAutoContent({ ...json });
-    formHeaders = { ...headers, ...(formData.headers as Record<string, string>) };
+    formData = formAutoContent({ ...json }, { payload: "body", forceMultiPart: true});
+    formHeaders = { ...headers, ...formData.headers as Record<string, string> }
   };
   beforeEach(() => {
-    createForm({});
+    createForm();
   });
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  test.each([{ uuid: "" }, { datpack: "" }, { file: "" }])("should return 400 if missing %p", async (json) => {
+  test.each([{title: ""}, { description: "" }])("should return 400 if missing %p", async (json) => {
     createForm({ ...json });
     const response = await app.inject({
       method: "POST",
       url: "/admin/server/datapack",
-      body: formData,
+      payload: formData.body,
       headers: formHeaders
     });
     expect(await response.json()).toEqual({ error: "Missing required fields" });
     expect(response.statusCode).toBe(400);
   });
+  it("should return 400 if no fields exist", async () => {
+    const emptyForm = formAutoContent({});
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/server/datapack",
+      payload: emptyForm.payload,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Missing required fields" });
+    expect(response.statusCode).toBe(400);
+  })
+  it("should return 403 if file attempts directory traversal", async () => {
+    createForm({
+      file: {
+        value: Buffer.from("test"),
+        options: {
+          filename: "../file.dpk",
+          contentType: "application/zip"
+        }
+      }
+    })
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/server/datapack",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Directory traversal detected" });
+    expect(response.statusCode).toBe(403);
+  })
 });
