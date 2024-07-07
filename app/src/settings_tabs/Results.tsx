@@ -128,12 +128,6 @@ export const Results = ({
   resultCount: number;
 }) => {
   const theme = useTheme();
-  const { actions } = useContext(context);
-
-  useEffect(() => {
-    actions.resetAddSearchResultToChart();
-    actions.initAddSearchResultToChart(resultCount);
-  }, []);
 
   //this is necessary to prevent table hierachy errors
   //virtuoso assigns each array element to a table row, and a table row can't be a child

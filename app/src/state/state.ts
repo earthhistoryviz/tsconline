@@ -62,16 +62,6 @@ export type State = {
     datapackDisplayType: "rows" | "cards" | "compact";
     eventSearchTerm: string;
     extendTimeInterval: boolean;
-    eventInContext: boolean;
-    //sorted array of added events while in context is enabled
-    //age is before the add/subtract of 3myr
-    eventInContextTopList: eventInContextList | null;
-    eventInContextBaseList: eventInContextList | null;
-    //null if eventInContext is false
-    ageBeforeContext: ageBeforeContext | null;
-    //each row indexed by search result id
-    //column represents the "on" state of path of parents from search result
-    addSearchResultToChart: boolean[][];
   };
   mapState: {
     mapInfo: MapInfo;
@@ -156,11 +146,6 @@ export const state = observable<State>({
     datapackDisplayType: "rows",
     eventSearchTerm: "",
     extendTimeInterval: false,
-    eventInContext: true,
-    eventInContextTopList: null,
-    eventInContextBaseList: null,
-    ageBeforeContext: null,
-    addSearchResultToChart: []
   },
   mapState: {
     mapInfo: {},
