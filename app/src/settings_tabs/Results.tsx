@@ -35,13 +35,13 @@ const ToggleColumn = observer(({ columnName }: { columnName: string }) => {
           actions.setColumnOn(false, column);
           actions.toggleSettingsTabColumn(column);
         }}>
-        <CheckIcon />
+        <CheckIcon color="success" />
       </IconButton>
       <IconButton
         onClick={() => {
           actions.setColumnOn(false, column);
         }}>
-        <ClearIcon />
+        <ClearIcon color="error" />
       </IconButton>
     </div>
   );
@@ -110,12 +110,12 @@ const ModifyTimeInterval = observer(({ info }: { info: EventSearchInfo }) => {
     <div className="events-search-results-buttons">
       <CustomTooltip title="center time interval on event">
         <IconButton onClick={() => centerTimeOnEvent()}>
-          <VerticalAlignCenterIcon />
+          <VerticalAlignCenterIcon color="info" />
         </IconButton>
       </CustomTooltip>
       <CustomTooltip title="extend time interval to include event">
         <IconButton onClick={() => extendTimeToIncludeEvent()}>
-          <FormatLineSpacingIcon />
+          <FormatLineSpacingIcon color="info" />
         </IconButton>
       </CustomTooltip>
     </div>
