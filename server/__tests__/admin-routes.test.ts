@@ -8,13 +8,18 @@ import * as fileMetadataHandler from "../src/file-metadata-handler";
 import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach } from "vitest";
 import fastifySecureSession from "@fastify/secure-session";
 import { resolve } from "path";
+import { createReadStream } from "fs";
+import fastifyMultipart from "@fastify/multipart";
+import FormData from "form-data";
 
 vi.mock("../src/util", async () => {
   return {
     loadAssetConfigs: vi.fn().mockResolvedValue({}),
     assetconfigs: {
       uploadDirectory: "testdir/uploadDirectory",
-      fileMetadata: "testdir/fileMetadata.json"
+      fileMetadata: "testdir/fileMetadata.json",
+      datapacksDirectory: "testdir/datapacksDirectory",
+      decryptionDirectory: "testdir/decryptionDirectory",
     },
     adminconfig: {}
   };
@@ -94,6 +99,12 @@ beforeAll(async () => {
       maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
     }
   });
+  app.register(fastifyMultipart, {
+    limits: {
+      fieldNameSize: 100,
+      fieldSize: 1024 * 1024 * 60
+    }
+  })
   app.addHook("onRequest", async (request, _reply) => {
     request.session = {
       ...request.session,
@@ -725,5 +736,30 @@ describe("adminDeleteUserDatapack", () => {
     expect(writeFile).toBeCalledWith("testdir/fileMetadata.json", JSON.stringify(testMetadata))
     expect(await response.json()).toEqual({ message: "Datapack deleted"})
     expect(response.statusCode).toEqual(200)
+  });
+});
+
+describe("adminUploadServerDatapack", () => {
+  let formData, formHeaders;
+  beforeEach(() => {
+    formData = new FormData();
+    formData.append("file", Buffer.from("test"), { filename: "test.datapack", contentType: "text/plain" });
+    formData.append("datapack", "test-datapack");
+    formData.append("uuid", "test-uuid");
+    formHeaders = { ...headers, ...formData.getHeaders() };
+  })
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return 400 if missing uuid or datapack", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/server/datapack",
+      body: formData,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Missing required fields" });
+    expect(response.statusCode).toBe(400);
   });
 });
