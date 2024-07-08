@@ -210,7 +210,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       try {
         await pipeline(file.file, createWriteStream(filepath));
       } catch (error) {
-        console.error(error)
+        console.error(error);
         await rm(filepath, { force: true });
         reply.status(500).send({ error: "Error saving file" });
         return;
@@ -276,8 +276,10 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     if (adminconfig.removeDevDatapacks.includes(filename)) {
       adminconfig.removeDevDatapacks = adminconfig.removeDevDatapacks.filter((pack) => pack !== filename);
       // on load, we prune datapacks that are in removeDevDatapacks so add it back but DON'T WRITE TO FILE
-      assetconfigs.activeDatapacks.push(filename);
-    } else if (!assetconfigs.activeDatapacks.includes(filename)) {
+      if (!assetconfigs.activeDatapacks.includes(filename)) {
+        assetconfigs.activeDatapacks.push(filename);
+      }
+    } else if (!assetconfigs.activeDatapacks.includes(filename) && !adminconfig.datapacks.includes(filename)) {
       adminconfig.datapacks.push(filename);
     }
     await writeFile(assetconfigs.adminConfigPath, JSON.stringify(adminconfig, null, 2));
