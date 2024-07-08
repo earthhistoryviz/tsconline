@@ -5,7 +5,12 @@ import * as verify from "../src/verify";
 import * as fsPromises from "fs/promises";
 import * as fileMetadataHandler from "../src/file-metadata-handler";
 import * as path from "path";
-import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach } from "vitest";
+import * as childProcess from "node:child_process";
+import * as loadPacks from "../src/load-packs";
+import * as util from "../src/util";
+import * as streamPromises from "stream/promises";
+import * as index from "../src/index";
+import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach, inject } from "vitest";
 import fastifySecureSession from "@fastify/secure-session";
 import { resolve } from "path";
 import fastifyMultipart from "@fastify/multipart";
@@ -30,6 +35,7 @@ vi.mock("../src/util", async () => {
       datapacksDirectory: "testdir/datapacksDirectory",
       decryptionDirectory: "testdir/decryptionDirectory",
       decryptionJar: "testdir/decryptionJar.jar",
+      adminConfigPath: "testdir/adminConfig.json",
       activeDatapacks: ["active-datapack.dpk", "remove-datapack.dpk"]
     },
     adminconfig: {
@@ -117,7 +123,7 @@ vi.mock("../src/database", async (importOriginal) => {
 
 vi.mock("../src/load-packs", async () => {
   return {
-    loadIndexes: vi.fn().mockResolvedValue({})
+    loadIndexes: vi.fn().mockResolvedValue(true)
   };
 });
 
@@ -146,7 +152,7 @@ beforeAll(async () => {
   app.register(fastifyMultipart, {
     limits: {
       fieldNameSize: 100,
-      fieldSize: 1024 * 1024 * 60
+      fileSize: 1024 * 1024 * 60
     }
   });
   app.addHook("onRequest", async (request, _reply) => {
@@ -162,6 +168,7 @@ beforeAll(async () => {
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
+  vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 afterAll(async () => {
@@ -785,6 +792,17 @@ describe("adminDeleteUserDatapack", () => {
 
 describe("adminUploadServerDatapack", () => {
   let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
+  const execFile = vi.spyOn(childProcess, "execFile");
+  const rm = vi.spyOn(fsPromises, "rm");
+  const realpath = vi.spyOn(fsPromises, "realpath");
+  const loadIndexes = vi.spyOn(loadPacks, "loadIndexes");
+  const writeFile = vi.spyOn(fsPromises, "writeFile");
+  const pipeline = vi.spyOn(streamPromises, "pipeline");
+  const checkErrorHandler = (statusCode: number) => {
+    expect(rm).toHaveBeenNthCalledWith(1, expect.stringContaining("testdir/datapacksDirectory"), { force: true });
+    expect(rm).toHaveBeenNthCalledWith(2, expect.stringContaining("testdir/decryptionDirectory"), { recursive: true, force: true });
+    expect(statusCode).toBe(500);
+  }
   const createForm = (json: Record<string, unknown> = {}) => {
     if (!("file" in json)) {
       json.file = {
@@ -850,6 +868,7 @@ describe("adminUploadServerDatapack", () => {
       payload: formData.body,
       headers: formHeaders
     });
+    expect(execFile).not.toHaveBeenCalled()
     expect(await response.json()).toEqual({ error: "Directory traversal detected" });
     expect(response.statusCode).toBe(403);
   })
@@ -877,15 +896,16 @@ describe("adminUploadServerDatapack", () => {
       payload: formData.body,
       headers: formHeaders
     });
+    expect(execFile).not.toHaveBeenCalled()
     expect(await response.json()).toEqual({ error: "Invalid file type" });
     expect(response.statusCode).toBe(400);
   });
-  it("should return 409 if file already exists and assetconfig states it exists (adminconfig removeDevConfigs states it is not removed)", async () => {
+  it("should return 409 if file already exists and assetconfig states it exists (adminconfig removeDevDatapacks states it is not removed)", async () => {
     createForm({
       file: {
         value: Buffer.from("test"),
         options: {
-          filename: "active-datapack.dpk", // only in assetconfigs import
+          filename: "active-datapack.dpk", // only in assetconfigs import (not in adminconfigs removeDevDatapacks)
           contentType: "application/zip"
         }
       }
@@ -896,6 +916,7 @@ describe("adminUploadServerDatapack", () => {
       payload: formData.body,
       headers: formHeaders
     });
+    expect(execFile).not.toHaveBeenCalled()
     expect(await response.json()).toEqual({ error: "File already exists" });
     expect(response.statusCode).toBe(409);
   });
@@ -915,6 +936,7 @@ describe("adminUploadServerDatapack", () => {
       payload: formData.body,
       headers: formHeaders
     });
+    expect(execFile).not.toHaveBeenCalled()
     expect(await response.json()).toEqual({ error: "File already exists" });
     expect(response.statusCode).toBe(409);
     })
@@ -923,7 +945,7 @@ describe("adminUploadServerDatapack", () => {
         file: {
           value: Buffer.from("test"),
           options: {
-            filename: "remove-datapack.dpk", // only in adminconfigs import
+            filename: "remove-datapack.dpk", // in both assetconfigs and adminconfigs (in removeDevDatapacks)
             contentType: "application/zip"
           }
         }
@@ -934,6 +956,155 @@ describe("adminUploadServerDatapack", () => {
         payload: formData.body,
         headers: formHeaders
       });
+      expect(execFile).toHaveBeenCalledTimes(1);
+      expect(loadIndexes).toHaveBeenCalledTimes(1);
+      expect(await response.json()).toEqual({ message: "Datapack uploaded" });
+      expect(response.statusCode).toBe(200);
+    });
+    it("should return 500 if pipeline throws error", async () => {
+      pipeline.mockRejectedValueOnce(new Error());
+      createForm();
+      const response = await app.inject({
+        method: "POST",
+        url: "/admin/server/datapack",
+        payload: formData.body,
+        headers: formHeaders
+      });
+      expect(pipeline).toHaveBeenCalledTimes(1);
+      expect(execFile).not.toHaveBeenCalled();
+      expect(rm).toHaveBeenCalledTimes(1);
+      expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/test.dpk`), { force: true });
+      expect(await response.json()).toEqual({ error: "Error saving file" });
+      expect(response.statusCode).toBe(500);
+    });
+    it("should return 500 if execFile throws error", async () => {
+      execFile.mockRejectedValueOnce(new Error());
+      const response = await app.inject({
+        method: "POST",
+        url: "/admin/server/datapack",
+        payload: formData.body,
+        headers: formHeaders
+      });
+      expect(execFile).toHaveBeenCalledTimes(1);
+      expect(realpath).not.toHaveBeenCalled();
+      checkErrorHandler(response.statusCode);
+      expect(await response.json()).toEqual({ error: "Error decrypting file" });
+    });
+    it("should return 400 if file is too big", async () => {
+      createForm({
+        file: {
+          value: Buffer.from("t".repeat(60 * 1024 * 1024 + 1)), // 60MB + 1 byte
+          options: {
+            filename: "test.dpk",
+            contentType: "application/zip"
+          }
+        }
+      });
+      const response = await app.inject({
+        method: "POST",
+        url: "/admin/server/datapack",
+        payload: formData.body,
+        headers: formHeaders
+      });
+      expect(execFile).not.toHaveBeenCalled();
+      expect(pipeline).toHaveBeenCalledTimes(1);
+      expect(rm).toHaveBeenCalledTimes(1);
+      expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/test.dpk`), { force: true });
+      expect(await response.json()).toEqual({ error: "File too large" });
+      expect(response.statusCode).toBe(400);
+    });
+    it("should return 500 if realpath doesn't find a real path for the decrypted file", async () => {
+      realpath.mockRejectedValueOnce(new Error());
+      const response = await app.inject({
+        method: "POST",
+        url: "/admin/server/datapack",
+        payload: formData.body,
+        headers: formHeaders
+      });
+      expect(execFile).toHaveBeenCalledTimes(1);
+      expect(realpath).toHaveBeenCalledTimes(1);
+      checkErrorHandler(response.statusCode);
+      expect(await response.json()).toEqual({ error: "File was not decrypted properly" });
+    });
+    it("should return 500 if loadIndexes fails", async () => {
+      loadIndexes.mockResolvedValueOnce(false);
+      const response = await app.inject({
+        method: "POST",
+        url: "/admin/server/datapack",
+        payload: formData.body,
+        headers: formHeaders
+      });
+      expect(execFile).toHaveBeenCalledTimes(1);
+      expect(realpath).toHaveBeenCalledTimes(1);
+      expect(loadIndexes).toHaveBeenCalledTimes(1);
+      checkErrorHandler(response.statusCode);
+      expect(await response.json()).toEqual({ error: "Error parsing the datapack for chart generation" });
+    })
+    it("should return 500 if writeFile fails", async () => {
+      writeFile.mockRejectedValueOnce(new Error());
+      const response = await app.inject({
+        method: "POST",
+        url: "/admin/server/datapack",
+        payload: formData.body,
+        headers: formHeaders
+      });
+      expect(execFile).toHaveBeenCalledTimes(1);
+      expect(realpath).toHaveBeenCalledTimes(1);
+      expect(loadIndexes).toHaveBeenCalledTimes(1);
+      expect(writeFile).toHaveBeenCalledTimes(1);
+      checkErrorHandler(response.statusCode);
+      expect(await response.json()).toEqual({ error: "Error updating admin config" });
+    });
+    it("should return 200 if successful and add to adminconfig", async () => {
+      vi.spyOn(util, "adminconfig", "get").mockReturnValue({ datapacks: [], removeDevDatapacks: [] })
+      const response = await app.inject({
+        method: "POST",
+        url: "/admin/server/datapack",
+        payload: formData.body,
+        headers: formHeaders
+      });
+      expect(execFile).toHaveBeenCalledTimes(1);
+      expect(execFile).toHaveBeenCalledWith("java", ["-jar", "testdir/decryptionJar.jar", "-d", resolve("testdir/datapacksDirectory/test.dpk"), "-dest", "testdir/decryptionDirectory"]);
+      expect(realpath).toHaveBeenCalledTimes(1);
+      expect(loadIndexes).toHaveBeenCalledTimes(1);
+      expect(writeFile).toHaveBeenCalledTimes(1);
+      expect(writeFile).toHaveBeenCalledWith("testdir/adminConfig.json", JSON.stringify({ datapacks: ["test.dpk"], removeDevDatapacks: []}, null, 2))
+      expect(await response.json()).toEqual({ message: "Datapack uploaded" });
+      expect(response.statusCode).toBe(200);
+    });
+    it("should return 200 if successful where datapack is already a part of assetconfigs but isn't in datapackIndex", async () => {
+      const originalUtil = await import("../src/util");
+      const newUtil = { ...originalUtil.assetconfigs, activeDatapacks: ["test.dpk"]  }
+      vi.spyOn(index, "datapackIndex", "get").mockReturnValue({})
+      vi.spyOn(util, "assetconfigs", "get").mockReturnValue(newUtil);
+      vi.spyOn(util, "adminconfig", "get").mockReturnValue({ datapacks: [], removeDevDatapacks: [] })
+      const response = await app.inject({
+        method: "POST",
+        url: "/admin/server/datapack",
+        payload: formData.body,
+        headers: formHeaders
+      });
+      expect(pipeline).toHaveBeenCalledTimes(1);
+      expect(execFile).toHaveBeenCalledTimes(1);
+      expect(execFile).toHaveBeenCalledWith("java", ["-jar", "testdir/decryptionJar.jar", "-d", resolve("testdir/datapacksDirectory/test.dpk"), "-dest", "testdir/decryptionDirectory"]);
+      expect(realpath).toHaveBeenCalledTimes(1);
+      expect(loadIndexes).toHaveBeenCalledTimes(1);
+      expect(writeFile).toHaveBeenCalledTimes(1);
+      expect(writeFile).toHaveBeenCalledWith("testdir/adminConfig.json", JSON.stringify({ datapacks: [], removeDevDatapacks: []}, null, 2))
+      expect(util.assetconfigs).toEqual(expect.objectContaining({ activeDatapacks: ["test.dpk"] }))
+      expect(util.adminconfig).toEqual({ datapacks: [], removeDevDatapacks: [] })
+      expect(await response.json()).toEqual({ message: "Datapack uploaded" });
+      expect(response.statusCode).toBe(200);
+    });
+    it("should return 200 if successful and remove from removeDevDatapacks", async () => {
+      vi.spyOn(util, "adminconfig", "get").mockReturnValue({ datapacks: [], removeDevDatapacks: ["test.dpk"] })
+      const response = await app.inject({
+        method: "POST",
+        url: "/admin/server/datapack",
+        payload: formData.body,
+        headers: formHeaders
+      });
+      expect(util.adminconfig).toEqual({ datapacks: [], removeDevDatapacks: [] })
       expect(await response.json()).toEqual({ message: "Datapack uploaded" });
       expect(response.statusCode).toBe(200);
     });
