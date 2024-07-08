@@ -252,7 +252,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       "-dest",
       assetconfigs.decryptionDirectory.replaceAll("\\", "/")
     ]);
-    console.log(stdout);
+    if (stdout) console.log(stdout);
     if (stderr) {
       throw new Error(stderr);
     }
@@ -277,7 +277,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       adminconfig.removeDevDatapacks = adminconfig.removeDevDatapacks.filter((pack) => pack !== filename);
       // on load, we prune datapacks that are in removeDevDatapacks so add it back but DON'T WRITE TO FILE
       assetconfigs.activeDatapacks.push(filename);
-    } else {
+    } else if (!assetconfigs.activeDatapacks.includes(filename)) {
       adminconfig.datapacks.push(filename);
     }
     await writeFile(assetconfigs.adminConfigPath, JSON.stringify(adminconfig, null, 2));
