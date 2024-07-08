@@ -289,9 +289,9 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
 
 /**
  * Delete admin server datapack from server or remove any dev datapacks in config
- * @param request 
- * @param reply 
- * @returns 
+ * @param request
+ * @param reply
+ * @returns
  */
 export const adminDeleteServerDatapack = async function adminDeleteServerDatapack(
   request: FastifyRequest<{ Body: { datapack: string } }>,
