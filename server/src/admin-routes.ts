@@ -3,7 +3,7 @@ import { checkForUsersWithUsernameOrEmail, createUser, findUser } from "./databa
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { deleteUser } from "./database.js";
-import path from "path";
+import { resolve, basename, extname } from "path";
 import { adminconfig, assetconfigs, checkFileExists } from "./util.js";
 import { createWriteStream } from "fs";
 import { realpath, rm, writeFile } from "fs/promises";
@@ -105,8 +105,8 @@ export const adminDeleteUser = async function adminDeleteUser(
     }
     await deleteUser({ uuid });
     try {
-      let userDirectory = path.resolve(assetconfigs.uploadDirectory, uuid);
-      if (!userDirectory.startsWith(path.resolve(assetconfigs.uploadDirectory))) {
+      let userDirectory = resolve(assetconfigs.uploadDirectory, uuid);
+      if (!userDirectory.startsWith(resolve(assetconfigs.uploadDirectory))) {
         reply.status(403).send({ error: "Directory traversal detected" });
         return;
       }
@@ -143,11 +143,11 @@ export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
     return;
   }
   try {
-    const userDirectory = path.resolve(assetconfigs.uploadDirectory, uuid);
-    const datapackDirectory = path.resolve(userDirectory, "datapack", datapack);
+    const userDirectory = resolve(assetconfigs.uploadDirectory, uuid);
+    const datapackDirectory = resolve(userDirectory, "datapack", datapack);
     if (
-      !userDirectory.startsWith(path.resolve(assetconfigs.uploadDirectory)) ||
-      !datapackDirectory.startsWith(path.resolve(userDirectory))
+      !userDirectory.startsWith(resolve(assetconfigs.uploadDirectory)) ||
+      !datapackDirectory.startsWith(resolve(userDirectory))
     ) {
       reply.status(403).send({ error: "Directory traversal detected" });
       return;
@@ -184,17 +184,17 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       // DOWNLOAD FILE HERE AND SAVE TO FILE
       file = part;
       filename = file.filename;
-      filepath = path.resolve(assetconfigs.datapacksDirectory, filename);
-      decryptedFilepath = path.resolve(assetconfigs.decryptionDirectory, path.basename(filename));
+      filepath = resolve(assetconfigs.datapacksDirectory, filename);
+      decryptedFilepath = resolve(assetconfigs.decryptionDirectory, basename(filename));
       if (
-        !filepath.startsWith(path.resolve(assetconfigs.datapacksDirectory)) ||
-        !decryptedFilepath.startsWith(path.resolve(assetconfigs.decryptionDirectory))
+        !filepath.startsWith(resolve(assetconfigs.datapacksDirectory)) ||
+        !decryptedFilepath.startsWith(resolve(assetconfigs.decryptionDirectory))
       ) {
         reply.status(403).send({ error: "Directory traversal detected" });
         return;
       }
-      if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(path.extname(file.filename))) {
-        reply.status(400).send({ error: "Invalid file extension" });
+      if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(extname(file.filename))) {
+        reply.status(400).send({ error: "Invalid file type" });
         return;
       }
       if (
@@ -227,7 +227,6 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     }
   }
   if (!title || !description || !file || !filepath || !filename || !decryptedFilepath) {
-    console.log(title, description, filename)
     reply.status(400).send({ error: "Missing required fields" });
     return;
   }
@@ -304,18 +303,18 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     reply.status(400).send({ error: "Missing datapack id" });
     return;
   }
-  if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(path.extname(datapack))) {
+  if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(extname(datapack))) {
     reply.status(400).send({ error: "Invalid file extension" });
     return;
   }
   let filepath;
   let decryptedFilepath;
   try {
-    filepath = path.resolve(assetconfigs.datapacksDirectory, datapack);
-    decryptedFilepath = path.resolve(assetconfigs.decryptionDirectory, datapack.split(".")[0]!);
+    filepath = resolve(assetconfigs.datapacksDirectory, datapack);
+    decryptedFilepath = resolve(assetconfigs.decryptionDirectory, datapack.split(".")[0]!);
     if (
-      !filepath.startsWith(path.resolve(assetconfigs.datapacksDirectory)) ||
-      !decryptedFilepath.startsWith(path.resolve(assetconfigs.decryptionDirectory))
+      !filepath.startsWith(resolve(assetconfigs.datapacksDirectory)) ||
+      !decryptedFilepath.startsWith(resolve(assetconfigs.decryptionDirectory))
     ) {
       reply.status(403).send({ error: "Directory traversal detected" });
       return;
