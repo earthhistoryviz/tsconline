@@ -4,12 +4,23 @@ import * as database from "../src/database";
 import * as verify from "../src/verify";
 import * as fsPromises from "fs/promises";
 import * as fileMetadataHandler from "../src/file-metadata-handler";
+import * as path from "path";
 import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach } from "vitest";
 import fastifySecureSession from "@fastify/secure-session";
 import { resolve } from "path";
 import fastifyMultipart from "@fastify/multipart";
 import formAutoContent from "form-auto-content";
 
+vi.mock("node:child_process", async () => {
+  return {
+    execFile: vi.fn().mockReturnValue({})
+  };
+})
+vi.mock("util", async () => {
+  return {
+    promisify: (fn: Function) => fn
+  };
+});
 vi.mock("../src/util", async () => {
   return {
     loadAssetConfigs: vi.fn().mockResolvedValue({}),
@@ -18,15 +29,24 @@ vi.mock("../src/util", async () => {
       fileMetadata: "testdir/fileMetadata.json",
       datapacksDirectory: "testdir/datapacksDirectory",
       decryptionDirectory: "testdir/decryptionDirectory",
-      activeDatapacks: []
+      decryptionJar: "testdir/decryptionJar.jar",
+      activeDatapacks: ["active-datapack.dpk", "remove-datapack.dpk"]
     },
     adminconfig: {
-      datapacks: [],
-      removeDevDatapacks: []
+      datapacks: ["admin-datapack.dpk"],
+      removeDevDatapacks: ["remove-datapack.dpk"]
     },
     checkFileExists: vi.fn().mockResolvedValue(true)
   };
 });
+
+vi.mock("path", async (importOriginal) => {
+  const actual = await importOriginal<typeof path>();
+  return {
+      ...actual,
+      resolve: vi.fn().mockImplementation(actual.resolve)
+  };
+})
 
 vi.mock("stream/promises", async () => {
   return {
@@ -79,8 +99,8 @@ vi.mock("../src/verify", async () => {
 
 vi.mock("../src/index", async () => {
   return {
-    datapackIndex: vi.fn().mockResolvedValue({}),
-    mapPackIndex: vi.fn().mockResolvedValue({})
+    datapackIndex: {"admin-datapack.dpk": {}, "active-datapack.dpk": {}, "remove-datapack.dpk": {}},
+    mapPackIndex: {}
   };
 });
 
@@ -791,7 +811,7 @@ describe("adminUploadServerDatapack", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  test.each([{title: ""}, { description: "" }])("should return 400 if missing %p", async (json) => {
+  test.each([{title: ""}, { description: "" }, {file: ""}])("should return 400 if missing %p", async (json) => {
     createForm({ ...json });
     const response = await app.inject({
       method: "POST",
@@ -814,11 +834,12 @@ describe("adminUploadServerDatapack", () => {
     expect(response.statusCode).toBe(400);
   })
   it("should return 403 if file attempts directory traversal", async () => {
+    vi.mocked(path.resolve).mockImplementationOnce((...args) => resolve(...args)).mockReturnValueOnce("root")
     createForm({
       file: {
         value: Buffer.from("test"),
         options: {
-          filename: "../file.dpk",
+          filename: "./../../../etc.dpk", // multipart form data doesn't allow ../ so this goes to etc.dpk
           contentType: "application/zip"
         }
       }
@@ -832,4 +853,88 @@ describe("adminUploadServerDatapack", () => {
     expect(await response.json()).toEqual({ error: "Directory traversal detected" });
     expect(response.statusCode).toBe(403);
   })
+  test.each([
+    "text.png",
+    "text.jpg",
+    "text.gif",
+    "text.bmp",
+    "text",
+    "text.tx",
+    "text.zip"
+  ])(`should return 400 if file is not in a correct format: %s`, async (filename) => {
+    createForm({
+      file: {
+        value: Buffer.from("test"),
+        options: {
+          filename: filename,
+          contentType: "plain/text"
+        }
+      }
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/server/datapack",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Invalid file type" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 409 if file already exists and assetconfig states it exists (adminconfig removeDevConfigs states it is not removed)", async () => {
+    createForm({
+      file: {
+        value: Buffer.from("test"),
+        options: {
+          filename: "active-datapack.dpk", // only in assetconfigs import
+          contentType: "application/zip"
+        }
+      }
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/server/datapack",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "File already exists" });
+    expect(response.statusCode).toBe(409);
+  });
+  it("should return 409 if file already exists and admin config states it exists", async () => {
+    createForm({
+      file: {
+        value: Buffer.from("test"),
+        options: {
+          filename: "admin-datapack.dpk", // only in adminconfigs import
+          contentType: "application/zip"
+        }
+      }
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/server/datapack",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "File already exists" });
+    expect(response.statusCode).toBe(409);
+    })
+    it("should return 200 if assetconfig has the file, but remove config also has the file", async () => {
+      createForm({
+        file: {
+          value: Buffer.from("test"),
+          options: {
+            filename: "remove-datapack.dpk", // only in adminconfigs import
+            contentType: "application/zip"
+          }
+        }
+      });
+      const response = await app.inject({
+        method: "POST",
+        url: "/admin/server/datapack",
+        payload: formData.body,
+        headers: formHeaders
+      });
+      expect(await response.json()).toEqual({ message: "Datapack uploaded" });
+      expect(response.statusCode).toBe(200);
+    });
 });
