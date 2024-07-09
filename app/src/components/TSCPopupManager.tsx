@@ -82,7 +82,10 @@ export const TSCPopupManager = () => {
   }
 
   const handleClose = () => setPopupContent((prev) => ({ ...prev, open: false }));
-
+  const addTargetBlank = (html: string) => {
+    return html.replace(/<a\s+href=/g, '<a target="_blank" href=');
+  };
+  const processedPopupContent = addTargetBlank(popupContent.message);
   return (
     <Dialog open={popupContent.open} onClose={handleClose} sx={{ minWidth: "260px" }}>
       <DialogTitle className="popup-title">Details</DialogTitle>
@@ -90,7 +93,7 @@ export const TSCPopupManager = () => {
         <CloseSharpIcon />
       </IconButton>
       <DialogContent className="popup-dialog">
-        <div dangerouslySetInnerHTML={{ __html: popupContent.message }} />
+        <div dangerouslySetInnerHTML={{ __html: processedPopupContent }} />
       </DialogContent>
     </Dialog>
   );
