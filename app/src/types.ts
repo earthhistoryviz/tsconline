@@ -30,10 +30,6 @@ export type EventSearchInfo = {
   notes?: string;
 };
 
-export type eventInContextList = { [units: string]: { key: string; age: number }[] };
-
-export type ageBeforeContext = { [units: string]: { topAge: number; baseAge: number } };
-
 export type GroupedEventSearchInfo = {
   key: string;
   info: EventSearchInfo[];
