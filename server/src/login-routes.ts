@@ -25,7 +25,7 @@ import { readdir, rm, writeFile, mkdir } from "fs/promises";
 import { checkRecaptchaToken, generateToken } from "./verify.js";
 import * as validator from "validator";
 
-const googleRecaptchaBotThreshold = 0.5;
+export const googleRecaptchaBotThreshold = 0.5;
 
 export const logout = async function logout(request: FastifyRequest, reply: FastifyReply) {
   request.session.delete();
@@ -661,7 +661,8 @@ export const signup = async function signup(
       uuid: randomUUID(),
       pictureUrl: null,
       emailVerified: 0,
-      invalidateSession: 0
+      invalidateSession: 0,
+      isAdmin: 0
     };
     await createUser(newUser);
     const insertedUser = (await findUser({ email }))[0];
@@ -784,7 +785,8 @@ export const googleLogin = async function googleLogin(
       uuid: uuid,
       pictureUrl: payload.picture,
       emailVerified: 1,
-      invalidateSession: 0
+      invalidateSession: 0,
+      isAdmin: 0
     };
     await createUser(user);
     const insertedUser = (await findUser({ email: payload.email }))[0];

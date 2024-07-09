@@ -1,5 +1,5 @@
 {
-  "activeJar": "assets/jars/TSCreatorBASE-8.1_20June2024.jar",
+  "activeJar": "assets/jars/TSCreatorBASE-8.1_07July2024.jar",
   "activeDatapacks": [
     "TSC2020_InternalDatapack_encrypted_13Feb2021.txt",
     "Hominids_wImages_GTS2020_Encrypted.dpk",
@@ -7,7 +7,7 @@
     "Belgium_GTS2020.mdpk",
     "SouthAmericaEncrypted_29Apr2019.mdpk",
     "AfricaBight.map",
-    "BritishMappackPUBLIC_GTS2016_15July2016.mdpk",
+    "British_Suite_wWiderColumns_GTS2020_5July2024.mdpk",
     "TimeTree_of_Life_GTS2020_ENCRYPTED_23Jan2020.dpk",
     "HumanCulture_ENCRYPTED_21Apr2020.txt",
     "Vertebrates w_Images GTS2020 23Jan2021.dpk"
@@ -22,5 +22,6 @@
   "timescaleFilepath": "assets/default_timescale.xlsx",
   "fileMetadata": "assets/file_metadata.json",
   "uploadDirectory": "assets/uploads",
-  "datapackImagesDirectory": "assets/datapack_images"
+  "datapackImagesDirectory": "assets/datapack_images",
+  "adminConfigPath": "assets/admin-config.json"
 }
