@@ -22,17 +22,16 @@ import { promisify } from "util";
  * @param reply
  */
 export const getUsers = async function getUsers(_request: FastifyRequest, reply: FastifyReply) {
-  const users = await findUser({});
-  const displayedUser = users.map((user) => {
-    return {
-      username: user.username,
-      email: user.email,
-      pictureUrl: user.pictureUrl,
-      isAdmin: user.isAdmin,
-      uuid: user.uuid
-    };
-  });
-  reply.send(displayedUser);
+  try {
+    const users = await findUser({});
+    const displayedUsers = users.map((user) => {
+      const { hashedPassword, ...displayedUser } = user;
+      return displayedUser
+    });
+    reply.send({ users: displayedUsers });
+  } catch (e) {
+    reply.status(404).send({ error: "Unknown error" })
+  }
 };
 
 /**
