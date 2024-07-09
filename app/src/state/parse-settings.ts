@@ -319,6 +319,7 @@ export function xmlToJson(xml: string): ChartInfoTSC {
     }
   }
   assertChartInfoTSC(settingsTSC);
+  console.log(settingsTSC);
   return settingsTSC;
 }
 
