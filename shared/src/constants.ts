@@ -429,4 +429,4 @@ export const defaultSequenceSettings: SequenceSettings = {
   graphStyle: "",
   drawNameLabel: false,
   type: "sequence"
-}
+};

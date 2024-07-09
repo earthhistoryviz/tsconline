@@ -95,9 +95,8 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
         });
       }
       break;
-      case "SequenceColumn":
+    case "SequenceColumn":
       assertSequenceColumnInfoTSC(settings);
-      
       break;
   }
 }

@@ -226,9 +226,10 @@ export type SequenceSettings = {
   labelMarginRight: number;
   graphStyle: string;
   drawNameLabel: boolean;
-  type: string;
-}
+  type: SequenceType;
+};
 
+export type SequenceType = "sequence" | "trend";
 
 export type RangeSettings = {
   rangeSort: RangeSort;
@@ -342,6 +343,7 @@ export type Point = ColumnHeaderProps & {
 };
 
 export type Sequence = ColumnHeaderProps & {
+  type: SequenceType;
   subSequenceInfo: SubSequenceInfo[];
 };
 
@@ -604,6 +606,22 @@ export function assertEventSettings(o: any): asserts o is EventSettings {
   assertDataMiningSettings(o);
 }
 
+export function assertSequenceSettings(o: any): asserts o is SequenceSettings {
+  if (!o || typeof o !== "object") throw new Error("SequenceSettings must be a non-null object");
+  if (typeof o.type !== "string" || !isSequenceType(o.type))
+    throwError("SequenceSettings", "type", "string and sequence | trend", o.type);
+  if (typeof o.labelMarginLeft !== "number")
+    throwError("SequenceSettings", "labelMarginLeft", "number", o.labelMarginLeft);
+  if (typeof o.labelMarginRight !== "number")
+    throwError("SequenceSettings", "labelMarginRight", "number", o.labelMarginRight);
+  if (typeof o.graphStyle !== "string") throwError("SequenceSettings", "graphStyle", "string", o.graphStyle);
+  if (typeof o.drawNameLabel !== "boolean") throwError("SequenceSettings", "drawNameLabel", "boolean", o.drawNameLabel);
+}
+
+export function isSequenceType(o: any): o is SequenceType {
+  return /^(sequence|trend)$/.test(o);
+}
+
 export function isEventFrequency(o: any): o is EventFrequency {
   return /^(FAD|LAD|Combined Events)$/.test(o);
 }
@@ -667,6 +685,8 @@ export function assertSubPointInfo(o: any): asserts o is SubPointInfo {
 }
 export function assertSequence(o: any): asserts o is Sequence {
   if (!o || typeof o !== "object") throw new Error("Sequence must be a non-null object");
+  if (typeof o.type !== "string" || !isSequenceType(o.type))
+    throwError("SequenceSettings", "type", "string and sequence | trend", o.type);
   if (!Array.isArray(o.subSequenceInfo)) throwError("Sequence", "subSequenceInfo", "array", o.subSequenceInfo);
   for (const subSequence of o.subSequenceInfo) {
     assertSubSequenceInfo(subSequence);
@@ -1121,6 +1141,9 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
       break;
     case "Range":
       assertRangeSettings(o);
+      break;
+    case "Sequence":
+      assertSequenceSettings(o);
       break;
     default:
       throw new Error(

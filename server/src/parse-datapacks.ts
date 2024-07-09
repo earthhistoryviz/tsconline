@@ -58,7 +58,10 @@ import {
   assertSubChronInfoArray,
   allColumnTypes,
   DatapackWarning,
-  defaultRangeSettings
+  defaultRangeSettings,
+  defaultSequenceSettings,
+  assertSequenceSettings,
+  assertSequence
 } from "@tsconline/shared";
 import {
   grabFilepaths,
@@ -448,6 +451,7 @@ export async function getColumnTypes(
   };
   const sequence: Sequence = {
     ...createDefaultColumnHeaderProps(),
+    type: "sequence",
     subSequenceInfo: []
   };
   const point = {
@@ -579,6 +583,7 @@ export async function getColumnTypes(
     }
     if (!inSequenceBlock && (colType === "sequence" || colType === "trend")) {
       setColumnHeaders(sequence, tabSeparated, lineCount, warnings);
+      sequence.type = colType;
       inSequenceBlock = true;
       continue;
     } else if (inSequenceBlock) {
@@ -1690,6 +1695,9 @@ function addColumnSettings(column: ColumnInfo, columnSpecificSettings?: ColumnSp
     case "Range":
       column.columnSpecificSettings = _.cloneDeep(defaultRangeSettings);
       break;
+    case "Sequence":
+      column.columnSpecificSettings = _.cloneDeep(defaultSequenceSettings);
+      break;
     default:
       break;
   }
@@ -1732,6 +1740,10 @@ function processColumn<T extends ColumnInfoType>(
   loneColumns: Map<string, ColumnInfo>
 ): boolean {
   const { [subInfoKey]: subInfo, ...columnHeaderProps } = column;
+  //for sequence column to keep it inside specific settings
+  if ("type" in columnHeaderProps) {
+    delete columnHeaderProps.type;
+  }
   assertColumnHeaderProps(columnHeaderProps);
   assertSubInfo(subInfo, type);
   for (const sub of subInfo) {
@@ -1758,6 +1770,13 @@ function processColumn<T extends ColumnInfoType>(
         createLoneColumn(columnHeaderProps, getValidFontOptions(type), units, subInfo, type)
       );
       break;
+  }
+  //add type for sequence
+  if (type === "Sequence" && loneColumns.get(column.name)) {
+    const sequenceSettings = loneColumns.get(column.name)!.columnSpecificSettings;
+    assertSequenceSettings(sequenceSettings);
+    assertSequence(column);
+    sequenceSettings.type = column.type;
   }
   let partialColumn = {};
   // reset the column to default values
