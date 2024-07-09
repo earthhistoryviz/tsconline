@@ -219,7 +219,16 @@ export type SubInfo =
   | SubSequenceInfo
   | SubTransectInfo;
 
-export type ColumnSpecificSettings = EventSettings | PointSettings | ChronSettings | RangeSettings;
+export type ColumnSpecificSettings = EventSettings | PointSettings | ChronSettings | RangeSettings | SequenceSettings;
+
+export type SequenceSettings = {
+  labelMarginLeft: number;
+  labelMarginRight: number;
+  graphStyle: string;
+  drawNameLabel: boolean;
+  type: string;
+}
+
 
 export type RangeSettings = {
   rangeSort: RangeSort;

@@ -18,6 +18,7 @@ import {
   assertEventSettings,
   assertPointColumnInfoTSC,
   assertPointSettings,
+  assertSequenceColumnInfoTSC,
   assertSubChronInfoArray,
   assertSubEventInfoArray,
   assertSubPointInfoArray,
@@ -93,6 +94,10 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
           upperRange: settings.maxWindow
         });
       }
+      break;
+      case "SequenceColumn":
+      assertSequenceColumnInfoTSC(settings);
+      
       break;
   }
 }
