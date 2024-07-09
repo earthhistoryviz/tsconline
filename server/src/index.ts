@@ -3,7 +3,7 @@ import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
 import { execSync } from "child_process";
-import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs } from "./util.js";
+import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs, adminconfig } from "./util.js";
 import * as routes from "./routes.js";
 import * as loginRoutes from "./login-routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
@@ -20,6 +20,7 @@ import { db, findIp, createIp, updateIp, initializeDatabase } from "./database.j
 import { sendEmail } from "./send-email.js";
 import cron from "node-cron";
 import path from "path";
+import { adminRoutes } from "./admin-auth.js";
 
 const server = fastify({
   logger: false,
@@ -74,7 +75,12 @@ try {
 export const datapackIndex: DatapackIndex = {};
 export const mapPackIndex: MapPackIndex = {};
 const patterns = await loadFaciesPatterns();
-await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, assetconfigs.activeDatapacks);
+await loadIndexes(
+  datapackIndex,
+  mapPackIndex,
+  assetconfigs.decryptionDirectory,
+  assetconfigs.activeDatapacks.concat(adminconfig.datapacks)
+);
 
 declare module "@fastify/secure-session" {
   interface SessionData {
@@ -100,7 +106,7 @@ server.register(fastifySecureSession, {
 
 await server.register(fastifyRateLimit, {
   global: true,
-  max: 100,
+  max: 500,
   timeWindow: "1 minute",
   onExceeded: async (_request, key) => {
     const clientIp = key;
@@ -247,6 +253,7 @@ server.get<{ Params: { filename: string }; Querystring: { needEncryption?: boole
 );
 // uploads datapack
 server.post("/upload", moderateRateLimit, routes.uploadDatapack);
+server.register(adminRoutes, { prefix: "/admin" });
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
 server.post("/auth/signup", strictRateLimit, loginRoutes.signup);

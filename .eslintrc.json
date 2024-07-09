@@ -6,7 +6,7 @@
     },
     "settings": {
         "react": {
-          "version": "detect"
+            "version": "detect"
         }
     },
     "extends": [
@@ -30,29 +30,47 @@
         "react/prop-types": "off",
         "@typescript-eslint/naming-convention": [
             "error",
-            { "selector": "variable", "format": ["camelCase", "PascalCase"] }
+            {
+                "selector": "variable",
+                "format": [
+                    "camelCase",
+                    "PascalCase"
+                ]
+            }
+        ],
+        "@typescript-eslint/no-unused-vars": [
+            "error",
+            {
+                "argsIgnorePattern": "^_"
+            }
         ],
         "check-file/filename-naming-convention": [
             "error",
             {
-              "**/*.tsx": "PASCAL_CASE",
-              "**/*.ts": "KEBAB_CASE"
+                "**/*.tsx": "PASCAL_CASE",
+                "**/*.ts": "KEBAB_CASE"
             },
             {
                 "ignoreMiddleExtensions": true
             }
         ]
     },
-    "overrides": [     
+    "overrides": [
         {
-          "files": ["shared/**/*", "app/src/types.ts", 
-          "server/src/types.ts", "server/src/parse-map-packs.ts"],
-          "rules": {
-            "@typescript-eslint/no-explicit-any": "off"
-          }
+            "files": [
+                "shared/**/*",
+                "app/src/types.ts",
+                "server/src/types.ts",
+                "server/src/parse-map-packs.ts"
+            ],
+            "rules": {
+                "@typescript-eslint/no-explicit-any": "off"
+            }
         },
         {
-            "files": ["server/src/parse-map-packs.ts"],
+            "files": [
+                "server/src/parse-map-packs.ts"
+            ],
             "rules": {
                 "no-case-declarations": "off"
             }
@@ -66,5 +84,5 @@
                 "check-file/filename-naming-convention": "off"
             }
         }
-      ]
+    ]
 }

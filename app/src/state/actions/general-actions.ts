@@ -275,6 +275,7 @@ export const fetchTimescaleDataAction = action("fetchTimescaleData", async () =>
     }
   } catch (error) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(error);
   }
 });
 

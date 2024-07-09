@@ -16,6 +16,7 @@ export interface UserTable {
   pictureUrl: string | null;
   emailVerified: number;
   invalidateSession: number;
+  isAdmin: number;
 }
 
 export interface VerificationTable {
@@ -68,6 +69,12 @@ export type AssetConfig = {
   fileMetadata: string;
   uploadDirectory: string;
   datapackImagesDirectory: string;
+  adminConfigPath: string;
+};
+
+export type AdminConfig = {
+  datapacks: string[];
+  removeDevDatapacks: string[]; // for ignoring any datapacks that dev wants to use to prevent merge conflicts
 };
 
 export type Colors = {
@@ -86,6 +93,18 @@ export type FileMetadata = {
   datapackIndexFilepath: string;
 };
 
+export function assertAdminConfig(o: any): asserts o is AdminConfig {
+  if (typeof o !== "object" || !o) throw "AdminConfig must be an object";
+  if (!o.datapacks || !Array.isArray(o.datapacks)) throw 'AdminConfig must have a "datapacks" array';
+  for (const [index, ad] of o.datapacks.entries()) {
+    if (typeof ad !== "string") throw "AdminConfig datapacks item " + index + " must be a string";
+  }
+  if (!o.removeDevDatapacks || !Array.isArray(o.removeDevDatapacks))
+    throw 'AdminConfig must have a "removeDevDatapacks" array';
+  for (const [index, ad] of o.removeDevDatapacks.entries()) {
+    if (typeof ad !== "string") throw "AdminConfig removeDevDatapacks item " + index + " must be a string";
+  }
+}
 export function assertEmail(o: any): asserts o is Email {
   if (typeof o !== "object" || !o) throw "Email must be an object";
   if (typeof o.from !== "string") throwError("Email", "from", "string", o.from);
@@ -144,4 +163,5 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
   }
   if (typeof o.timescaleFilepath !== "string") throw 'AssetConfig must have a "timescaleFilepath" string';
   if (typeof o.datapackImagesDirectory !== "string") throw 'AssetConfig must have a "datapackImagesDirectory" string';
+  if (typeof o.adminConfigPath !== "string") throw 'AssetConfig must have a "adminConfigPath" string';
 }
