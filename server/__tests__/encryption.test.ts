@@ -11,11 +11,10 @@ vi.mock("fs", async (importOriginal) => {
   const actual = await importOriginal<typeof fsModule>();
   return {
     ...actual,
-    realpathSync: vi.fn().mockImplementation(() => { }),
-    createReadStream: vi.fn().mockImplementation(() => { })
+    realpathSync: vi.fn().mockImplementation(() => {}),
+    createReadStream: vi.fn().mockImplementation(() => {})
   };
 });
-
 
 vi.mock("fs/promises", async (importOriginal) => {
   const actual = await importOriginal<typeof fspModule>();
@@ -48,9 +47,9 @@ vi.mock("../src/util", async (importOriginal) => {
   return {
     ...actual,
     assetconfigs: { uploadDirectory: "" },
-    loadAssetConfigs: vi.fn().mockImplementation(() => { }),
-    deleteDirectory: vi.fn().mockImplementation(() => { }),
-    resetUploadDirectory: vi.fn().mockImplementation(() => { }),
+    loadAssetConfigs: vi.fn().mockImplementation(() => {}),
+    deleteDirectory: vi.fn().mockImplementation(() => {}),
+    resetUploadDirectory: vi.fn().mockImplementation(() => {}),
     checkHeader: vi.fn().mockReturnValue(true)
   };
 });
@@ -86,9 +85,7 @@ beforeAll(async () => {
     }
   );
   vi.spyOn(console, "error").mockImplementation(() => undefined);
-  const startsWithMock = vi.fn().mockReturnValue(true);
-  String.prototype.startsWith = startsWithMock;
-  // vi.spyOn(console, "log").mockImplementation(() => undefined);
+  vi.spyOn(console, "log").mockImplementation(() => undefined);
   await app.listen({ host: "", port: 1234 });
 });
 
@@ -112,8 +109,38 @@ describe("requestDownload", () => {
   const runJavaEncryptSpy = vi.spyOn(runJavaEncryptModule, "runJavaEncrypt");
   const rmSpy = vi.spyOn(fspModule, "rm");
   const mkdirSpy = vi.spyOn(fspModule, "mkdir");
+  const realpathSyncSpy = vi.spyOn(fsModule, "realpathSync");
+
+  it("should reply 403 when file path is invalid when request encryption download", async () => {
+    realpathSyncSpy.mockReturnValueOnce("12345-abcde/bad/file/path").mockReturnValueOnce("12345-abcde//bad/file/path");
+    const response = await app.inject({
+      method: "GET",
+      url: "/hasuuid/download/user-datapacks/:filename?needEncryption=true"
+    });
+    expect(accessSpy).not.toHaveBeenCalled();
+    expect(runJavaEncryptSpy).not.toHaveBeenCalled();
+    expect(checkHeaderSpy).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(403);
+    expect(response.json().error).toBe("Invalid file path");
+  });
+
+  it("should reply 403 when file path is invalid when request retrieve original", async () => {
+    realpathSyncSpy.mockReturnValueOnce("12345-abcde/bad/file/path").mockReturnValueOnce("12345-abcde//bad/file/path");
+    const response = await app.inject({
+      method: "GET",
+      url: "/hasuuid/download/user-datapacks/:filename"
+    });
+    expect(accessSpy).not.toHaveBeenCalled();
+    expect(runJavaEncryptSpy).not.toHaveBeenCalled();
+    expect(checkHeaderSpy).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(403);
+    expect(response.json().error).toBe("Invalid file path");
+  });
 
   it("should reply with 500 when fail to create encrypted directory for the user", async () => {
+    realpathSyncSpy
+      .mockReturnValueOnce("12345-abcde/datapacks/")
+      .mockReturnValueOnce("12345-abcde/encrypted-datapacks/");
     checkHeaderSpy.mockResolvedValueOnce(false);
     accessSpy
       .mockImplementationOnce(() => {
@@ -138,6 +165,9 @@ describe("requestDownload", () => {
   });
 
   it("should reply 500 when an unknown error occurred in readFile when retrieved original", async () => {
+    realpathSyncSpy
+      .mockReturnValueOnce("12345-abcde/datapacks/")
+      .mockReturnValueOnce("12345-abcde/encrypted-datapacks/");
     accessSpy.mockResolvedValueOnce(undefined);
     readFileSpy.mockRejectedValueOnce(new Error("Unknown error"));
 
@@ -151,6 +181,9 @@ describe("requestDownload", () => {
   });
 
   it("should reply 500 when an unknown error occurred in readFile when need encryption", async () => {
+    realpathSyncSpy
+      .mockReturnValueOnce("12345-abcde/datapacks/")
+      .mockReturnValueOnce("12345-abcde/encrypted-datapacks/");
     accessSpy.mockResolvedValueOnce(undefined);
     readFileSpy.mockRejectedValueOnce(new Error("Unknown error"));
 
@@ -164,6 +197,9 @@ describe("requestDownload", () => {
   });
 
   it("should reply with 500 when the java program failed to encrypt the file (i.e. runJavaEncrypt failed)", async () => {
+    realpathSyncSpy
+      .mockReturnValueOnce("12345-abcde/datapacks/")
+      .mockReturnValueOnce("12345-abcde/encrypted-datapacks/");
     runJavaEncryptSpy.mockRejectedValueOnce(new Error("Unknown error"));
     checkHeaderSpy.mockResolvedValueOnce(false);
     accessSpy
@@ -188,6 +224,9 @@ describe("requestDownload", () => {
   });
 
   it("should remove the newly generated file and reply with 422 when runJavaEncrypt did not properly encrypt the file (i.e. the result file did not pass the header check)", async () => {
+    realpathSyncSpy
+      .mockReturnValueOnce("12345-abcde/datapacks/")
+      .mockReturnValueOnce("12345-abcde/encrypted-datapacks/");
     runJavaEncryptSpy.mockResolvedValue(undefined);
     accessSpy
       .mockImplementationOnce(() => {
@@ -236,6 +275,9 @@ describe("requestDownload", () => {
 
   it("should reply 404 if the file does not exist when request retrieve original", async () => {
     //retrieve original
+    realpathSyncSpy
+      .mockReturnValueOnce("12345-abcde/datapacks/")
+      .mockReturnValueOnce("12345-abcde/encrypted-datapacks/");
     accessSpy.mockImplementationOnce(() => {
       const error: NodeJS.ErrnoException = new Error("File not found");
       error.code = "ENOENT";
@@ -251,6 +293,9 @@ describe("requestDownload", () => {
   });
   it("should reply 404 if the file does not exist when request encrypted download", async () => {
     //need encryption
+    realpathSyncSpy
+      .mockReturnValueOnce("12345-abcde/datapacks/")
+      .mockReturnValueOnce("12345-abcde/encrypted-datapacks/");
     accessSpy
       .mockImplementationOnce(() => {
         const error: NodeJS.ErrnoException = new Error("File not found");
@@ -271,6 +316,9 @@ describe("requestDownload", () => {
     expect(response.json().error).toBe(`The file requested :filename does not exist within user's upload directory`);
   });
   it("should return the original file when request retrieve original file", async () => {
+    realpathSyncSpy
+      .mockReturnValueOnce("12345-abcde/datapacks/")
+      .mockReturnValueOnce("12345-abcde/encrypted-datapacks/");
     accessSpy.mockResolvedValueOnce(undefined);
     readFileSpy.mockResolvedValueOnce("original file");
 
@@ -289,6 +337,9 @@ describe("requestDownload", () => {
   });
 
   it("should return a newly encrypted file when request encrypted download an unencrypted file which has not been encrypted before", async () => {
+    realpathSyncSpy
+      .mockReturnValueOnce("12345-abcde/datapacks/")
+      .mockReturnValueOnce("12345-abcde/encrypted-datapacks/");
     accessSpy
       .mockImplementationOnce(() => {
         const error: NodeJS.ErrnoException = new Error("File not found");
@@ -322,6 +373,9 @@ describe("requestDownload", () => {
     expect(response.rawPayload).toEqual(fileContent);
   });
   it("should return the old encrypted file when request encrypted download an unencrypted file which has been encrypted before", async () => {
+    realpathSyncSpy
+      .mockReturnValueOnce("12345-abcde/datapacks/")
+      .mockReturnValueOnce("12345-abcde/encrypted-datapacks/");
     accessSpy.mockResolvedValueOnce(undefined);
     checkHeaderSpy.mockResolvedValueOnce(true);
     readFileSpy.mockResolvedValueOnce("TSCreator Encrypted Datafile");
@@ -341,6 +395,9 @@ describe("requestDownload", () => {
   });
 
   it("should return the original encrypted file when request encrypted download an encrypted file", async () => {
+    realpathSyncSpy
+      .mockReturnValueOnce("12345-abcde/datapacks/")
+      .mockReturnValueOnce("12345-abcde/encrypted-datapacks/");
     accessSpy
       .mockImplementationOnce(() => {
         const error: NodeJS.ErrnoException = new Error("File not found");
@@ -366,6 +423,9 @@ describe("requestDownload", () => {
     expect(response.rawPayload).toEqual(fileContent);
   });
   it("should remove the old encrypted file and encrypt again when the old file was not properly encrypted", async () => {
+    realpathSyncSpy
+      .mockReturnValueOnce("12345-abcde/datapacks/")
+      .mockReturnValueOnce("12345-abcde/encrypted-datapacks/");
     runJavaEncryptSpy.mockResolvedValue(undefined);
     accessSpy.mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined);
     checkHeaderSpy.mockResolvedValueOnce(false).mockResolvedValueOnce(false).mockResolvedValueOnce(true);
@@ -395,6 +455,9 @@ describe("requestDownload", () => {
   });
 
   it("should reply 500 when an unknown error occured when try to access file when retreive original", async () => {
+    realpathSyncSpy
+      .mockReturnValueOnce("12345-abcde/datapacks/")
+      .mockReturnValueOnce("12345-abcde/encrypted-datapacks/");
     accessSpy.mockRejectedValueOnce(new Error("Unknown error"));
     const response = await app.inject({
       method: "GET",
@@ -404,6 +467,9 @@ describe("requestDownload", () => {
     expect(response.json().error).toBe("An error occurred: Error: Unknown error");
   });
   it("should reply 500 when an unknown error occured when try to access file when need encryption", async () => {
+    realpathSyncSpy
+      .mockReturnValueOnce("12345-abcde/datapacks/")
+      .mockReturnValueOnce("12345-abcde/encrypted-datapacks/");
     accessSpy.mockRejectedValueOnce(new Error("Unknown error"));
 
     const response = await app.inject({
