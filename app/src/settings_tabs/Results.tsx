@@ -2,7 +2,7 @@ import { TableCell, TableBody, TableContainer, Paper, SvgIcon, Typography, Box, 
 import React, { useContext } from "react";
 import { Table } from "react-bootstrap";
 import { TableComponents, TableVirtuoso } from "react-virtuoso";
-import { CustomTooltip, StyledScrollbar } from "../components";
+import { CustomTooltip, StyledScrollbar, TSCCheckbox } from "../components";
 import { context, state } from "../state";
 import { observer } from "mobx-react-lite";
 import { ErrorOutline } from "@mui/icons-material";
@@ -12,8 +12,6 @@ import "./Results.css";
 import { EventSearchInfo, GroupedEventSearchInfo } from "../types";
 import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import { trimQuotes } from "../util/util";
-import CheckIcon from "@mui/icons-material/Check";
-import ClearIcon from "@mui/icons-material/Clear";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import FormatLineSpacingIcon from "@mui/icons-material/FormatLineSpacing";
 
@@ -28,22 +26,12 @@ const ToggleColumn = observer(({ columnName }: { columnName: string }) => {
     );
   }
   return (
-    <div className="events-search-results-buttons">
-      <IconButton
-        onClick={() => {
-          //so toggle dooesn't turn off the column
-          actions.setColumnOn(false, column);
-          actions.toggleSettingsTabColumn(column);
-        }}>
-        <CheckIcon color="success" />
-      </IconButton>
-      <IconButton
-        onClick={() => {
-          actions.setColumnOn(false, column);
-        }}>
-        <ClearIcon color="error" />
-      </IconButton>
-    </div>
+    <TSCCheckbox
+      checked={column.on}
+      onClick={() => {
+        actions.toggleSettingsTabColumn(column);
+      }}
+    />
   );
 });
 
