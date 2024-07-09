@@ -172,31 +172,50 @@ jobs:
         run: |
           git clone git@bitbucket.org:strat/tscreator.git
 
-      - name: Install java jdk
-        run: |
-          sudo apt-get install openjdk-8-jdk
-
-      - name: Build and compile TSCreator Jar for tests
-        run: |
-          cd /home/runner/work/tsconline/tsconline/tscreator/devel
-          make
-          make jar
-          find '/home/runner/work/tsconline/tsconline/tscreator/jars/' -type f -name '*.jar' -exec cp {} '/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar'
+      # - name: Install java jdk
+      #   run: |
+      #     sudo apt-get install openjdk-8-jdk
 
       # - name: Build and compile TSCreator Jar for tests
+      #   env:
+      #     LC_ALL: C.UTF-8
+      #     LANG: C.UTF-8
       #   run: |
-      #     cd /home/runner/work/tsconline/tsconline/tscreator/
-      #     docker-compose build
-      #     docker-compose up -d
-      #     docker-compose exec -T tscreator_vnc bash -c "cd /tscreator/devel && make && make jar && find '/tscreator/jars/' -type f -name '*.jar' -exec cp {} '/tscreator/testUsageJar.jar' \; && exit"
-      #     docker cp tscreator_vnc:/tscreator/testUsageJar.jar /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar
-      #     cp /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar /home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar
+      #     cd /home/runner/work/tsconline/tsconline/tscreator/devel
+      #     pwd
+      #     make
+      #     make jar
+      #     find '/home/runner/work/tsconline/tsconline/tscreator/jars/' -type f -name '*.jar' -exec cp {} '/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar'
 
-      # - name: Set up Java
-      #   uses: actions/setup-java@v3
-      #   with:
-      #     distribution: "adopt"
-      #     java-version: "21"
+      - name: Build and compile TSCreator Jar for tests (step1)
+        run: cd /home/runner/work/tsconline/tsconline/tscreator/
+      - name: Build and compile TSCreator Jar for tests (step2)
+        run: |
+          pwd
+          cd /home/runner/work/tsconline/tsconline/tscreator/
+          docker-compose build
+      - name: Build and compile TSCreator Jar for tests (step3)
+        run: |
+          pwd
+          cd /home/runner/work/tsconline/tsconline/tscreator/
+          docker-compose up -d
+      - name: Build and compile TSCreator Jar for tests (step4)
+        run: |
+          pwd
+          cd /home/runner/work/tsconline/tsconline/tscreator/
+          docker-compose exec -T tscreator_vnc bash -c "cd /tscreator/devel && make && make jar && find '/tscreator/jars/' -type f -name '*.jar' -exec cp {} '/tscreator/testUsageJar.jar' \; && exit"
+      - name: Build and compile TSCreator Jar for tests (step5)
+        run: |
+          pwd
+          cd /home/runner/work/tsconline/tsconline/tscreator/
+          docker cp tscreator_vnc:/tscreator/testUsageJar.jar /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar
+          cp /home/runner/work/tsconline/tsconline/tscreator/testUsageJar.jar /home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "adopt"
+          java-version: "21"
 
       - name: Install xvfb
         run: sudo apt-get install xvfb
