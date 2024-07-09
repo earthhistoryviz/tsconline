@@ -1134,3 +1134,26 @@ describe("adminUploadServerDatapack", () => {
     expect(response.statusCode).toBe(200);
   });
 });
+describe("getUsers", () => {
+  const findUser = vi.spyOn(database, "findUser")
+  it("should return any users without passwords", async () => {
+    findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser, testNonAdminUser])
+    const response = await app.inject({
+      method: "GET",
+      url: "/admin/users",
+      headers
+    });
+    expect(await response.json()).toEqual({ users: [ {...testAdminUser, hashedPassword: undefined }, {...testNonAdminUser, hashedPassword: undefined}] });
+    expect(response.statusCode).toBe(200);
+  })
+  it("should return 404 if unknown error occurs", async () => {
+    findUser.mockResolvedValueOnce([testAdminUser]).mockRejectedValueOnce(new Error())
+    const response = await app.inject({
+      method: "GET",
+      url: "/admin/users",
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "Unknown error" });
+    expect(response.statusCode).toBe(404);
+  })
+});
