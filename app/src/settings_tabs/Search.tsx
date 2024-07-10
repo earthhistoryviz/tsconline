@@ -69,12 +69,16 @@ export const Search = observer(function Search() {
               if (columnInfo.columnDisplayType === "BlockSeriesMetaColumn") {
                 if (state.settingsTabs.columnHashMap.get(columnInfo.name + " Facies Label")) {
                   resInfo.columnPath = makeColumnPath(columnInfo.name + " Facies Label");
-                  resInfo.columnName = columnInfo.name + " Chron Label";
-                } else if (state.settingsTabs.columnHashMap.get(columnInfo.name + " Chron Label")) {
-                  resInfo.columnPath = makeColumnPath(columnInfo.name + " Facies Label");
                   resInfo.columnName = columnInfo.name + " Facies Label";
+                } else if (state.settingsTabs.columnHashMap.get(columnInfo.name + " Chron Label")) {
+                  resInfo.columnPath = makeColumnPath(columnInfo.name + " Chron Label");
+                  resInfo.columnName = columnInfo.name + " Chron Label";
                 } else {
-                  console.log("While searching, could not find Facies or Chron label for " + columnInfo.name);
+                  console.error(
+                    "While searching, could not find Facies or Chron label for " +
+                      columnInfo.name +
+                      " but should have found it"
+                  );
                   continue;
                 }
               }
