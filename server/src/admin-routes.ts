@@ -25,12 +25,13 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
   try {
     const users = await findUser({});
     const displayedUsers = users.map((user) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { hashedPassword, ...displayedUser } = user;
-      return displayedUser
+      return displayedUser;
     });
     reply.send({ users: displayedUsers });
   } catch (e) {
-    reply.status(404).send({ error: "Unknown error" })
+    reply.status(404).send({ error: "Unknown error" });
   }
 };
 
