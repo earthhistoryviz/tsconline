@@ -57,7 +57,7 @@ export const Home = observer(function Home() {
           Remove Cache
         </TSCButton>
       </div>
-      <CookieConsent />
+      {/* <CookieConsent /> */}
     </div>
   );
 });
