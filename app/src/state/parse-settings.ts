@@ -578,7 +578,12 @@ export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): strin
           column.backgroundColor.text.g == 255 &&
           column.backgroundColor.text.b == 255
         ) {
-          xml += `${indent}<setting name="backgroundColor"/>\n`;
+          //java throws error if background color isn't specified for sequence column
+          if (extractColumnType(column._id) === "SequenceColumn") {
+            xml += `${indent}<setting name="backgroundColor" useNamed="false">rgb(255, 255, 255)</setting>\n`;
+          } else {
+            xml += `${indent}<setting name="backgroundColor"/>\n`;
+          }
         } else {
           xml += `${indent}<setting name="backgroundColor" useNamed="false">rgb(${column.backgroundColor.text.r},${column.backgroundColor.text.g},${column.backgroundColor.text.b})</setting>\n`;
         }
