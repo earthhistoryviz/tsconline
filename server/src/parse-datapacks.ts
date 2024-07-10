@@ -58,7 +58,10 @@ import {
   assertSubChronInfoArray,
   allColumnTypes,
   DatapackWarning,
-  defaultRangeSettings
+  defaultRangeSettings,
+  defaultSequenceSettings,
+  assertSequence,
+  SequenceSettings
 } from "@tsconline/shared";
 import {
   grabFilepaths,
@@ -448,6 +451,7 @@ export async function getColumnTypes(
   };
   const sequence: Sequence = {
     ...createDefaultColumnHeaderProps(),
+    sequenceType: "sequence",
     subSequenceInfo: []
   };
   const point = {
@@ -579,6 +583,7 @@ export async function getColumnTypes(
     }
     if (!inSequenceBlock && (colType === "sequence" || colType === "trend")) {
       setColumnHeaders(sequence, tabSeparated, lineCount, warnings);
+      sequence.sequenceType = colType;
       inSequenceBlock = true;
       continue;
     } else if (inSequenceBlock) {
@@ -1690,6 +1695,12 @@ function addColumnSettings(column: ColumnInfo, columnSpecificSettings?: ColumnSp
     case "Range":
       column.columnSpecificSettings = _.cloneDeep(defaultRangeSettings);
       break;
+    case "Sequence":
+      if (!columnSpecificSettings) {
+        throw new Error("Error adding sequence column, no column specific settings found");
+      }
+      column.columnSpecificSettings = columnSpecificSettings;
+      break;
     default:
       break;
   }
@@ -1752,6 +1763,10 @@ function processColumn<T extends ColumnInfoType>(
       // requires extra setup to handle point settings
       handlePointFields(column, loneColumns, units);
       break;
+    case "Sequence":
+      assertSequence(column);
+      handleSequenceFields(column, loneColumns, units);
+      break;
     default:
       loneColumns.set(
         column.name,
@@ -1807,6 +1822,40 @@ export function configureOptionalPointSettings(tabSeparated: string[], point: Po
   if (tabSeparated[5]) point.smoothed = tabSeparated[5] === "smoothed";
   assertPoint(point);
 }
+
+function handleSequenceFields(sequence: Sequence, loneColumns: Map<string, ColumnInfo>, units: string) {
+  const sequenceStyle = "stroke-width: 0; fill: rgb(64, 191, 233);";
+  const trendStyle = "stroke-width: 1; stroke: black; fill: rgb(64, 191, 233);";
+  const sequenceColor = { r: 255, g: 255, b: 255 };
+  const trendColor = { r: 245, g: 204, b: 131 };
+  const { subSequenceInfo, sequenceType, ...headerInfo } = sequence;
+  const columnSpecificSettings: SequenceSettings = {
+    ..._.cloneDeep(defaultSequenceSettings)
+  };
+  if (sequenceType === "sequence") {
+    columnSpecificSettings.type = sequenceType;
+    columnSpecificSettings.graphStyle = sequenceStyle;
+    headerInfo.rgb = sequenceColor;
+  } else {
+    columnSpecificSettings.type = sequenceType;
+    columnSpecificSettings.graphStyle = trendStyle;
+    headerInfo.rgb = trendColor;
+  }
+  assertColumnSpecificSettings(columnSpecificSettings, "Sequence");
+  assertColumnHeaderProps(headerInfo);
+  loneColumns.set(
+    sequence.name,
+    createLoneColumn(
+      headerInfo,
+      getValidFontOptions("Sequence"),
+      units,
+      subSequenceInfo,
+      "Sequence",
+      columnSpecificSettings
+    )
+  );
+}
+
 function handlePointFields(point: Point, loneColumns: Map<string, ColumnInfo>, units: string) {
   for (const subPoint of point.subPointInfo) {
     point.minX = Math.min(subPoint.xVal, point.minX);
