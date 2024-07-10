@@ -34,10 +34,11 @@ export const Time = observer(function Time() {
           </ToggleButton>
         ))}
       </ToggleButtonGroup>
-      <Box className="TimeBox" bgcolor="secondaryBackground.main">
+      <Box className="time-settings-container" bgcolor="secondaryBackground.main">
+      <Box className="time-settings-age-container">
         <Typography className="IntervalLabel">Top of Interval</Typography>
         <CustomDivider className="time-form-divider" />
-        <FormControl className="FormControlIntervals">
+        <FormControl className="FormControlIntervals" size="small">
           <InputLabel>{disabled ? "Not Available for this Unit" : "Top Age/Stage Name"}</InputLabel>
           <Select
             className="SelectTop"
@@ -59,6 +60,7 @@ export const Time = observer(function Time() {
             ))}
           </Select>
           <TextField
+            size="small"
             className="UnitTextField"
             label={`${units}`}
             type="number"
@@ -75,7 +77,7 @@ export const Time = observer(function Time() {
         </FormControl>
         <Typography className="IntervalLabel">Base of Interval</Typography>
         <CustomDivider className="time-form-divider" />
-        <FormControl className="FormControlIntervals">
+        <FormControl className="FormControlIntervals" size="small">
           <InputLabel htmlFor="base-age-selector">
             {disabled ? "Not Available for this Unit" : "Base Age/Stage Name"}
           </InputLabel>
@@ -101,6 +103,7 @@ export const Time = observer(function Time() {
               ))}
           </Select>
           <TextField
+            size="small"
             className="UnitTextField"
             label={`${units}`}
             type="number"
@@ -119,17 +122,19 @@ export const Time = observer(function Time() {
           className="VerticalScale"
           label={`Vertical Scale (cm per 1 ${units}):`}
           type="number"
+          size="small"
           name="vertical-scale-text-field"
           value={state.settings.timeSettings[units].unitsPerMY}
           onChange={(event) => actions.setUnitsPerMY(parseFloat(event.target.value), units)}
         />
       </Box>
-      <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
+      <div className="time-settings-checkbox-container">
         <FormGroup>
           <FormControlLabel
             name="skip-empty-columns"
             control={
               <TSCCheckbox
+                className="time-settings-checkbox"
                 onChange={(e) => actions.setSkipEmptyColumns(e.target.checked, units)}
                 checked={state.settings.timeSettings[units].skipEmptyColumns}
               />
@@ -140,6 +145,7 @@ export const Time = observer(function Time() {
             name="mouse-over-info-checkbox"
             control={
               <TSCCheckbox
+                className="time-settings-checkbox"
                 onChange={(e) => actions.setMouseOverPopupsEnabled(e.target.checked)}
                 checked={state.settings.mouseOverPopupsEnabled}
               />
@@ -150,6 +156,7 @@ export const Time = observer(function Time() {
             name="global-priority-checkbox"
             control={
               <TSCCheckbox
+                className="time-settings-checkbox"
                 onChange={(e) => actions.setEnablePriority(e.target.checked)}
                 checked={state.settings.enablePriority}
               />
@@ -160,6 +167,7 @@ export const Time = observer(function Time() {
             name="stage-background-checkbox"
             control={
               <TSCCheckbox
+                className="time-settings-checkbox"
                 onChange={(e) => actions.setEnableColumnBackground(e.target.checked)}
                 checked={state.settings.enableColumnBackground}
               />
@@ -170,6 +178,7 @@ export const Time = observer(function Time() {
             name="enable-legend-checkbox"
             control={
               <TSCCheckbox
+                className="time-settings-checkbox"
                 onChange={(e) => actions.setEnableChartLegend(e.target.checked)}
                 checked={state.settings.enableChartLegend}
               />
@@ -179,6 +188,7 @@ export const Time = observer(function Time() {
           <FormControlLabel
             control={
               <TSCCheckbox
+                className="time-settings-checkbox"
                 onChange={(e) => actions.setNoIndentPattern(e.target.checked)}
                 checked={state.settings.noIndentPattern}
               />
@@ -188,13 +198,16 @@ export const Time = observer(function Time() {
           />
           <FormControlLabel
             name="conserve-chart-checkbox"
-            control={<TSCCheckbox />}
+            control={<TSCCheckbox 
+                className="time-settings-checkbox"
+            />}
             label="Conserve Chart Space in Family Tree Plotting (Not implemented)"
           />
           <FormControlLabel
             name="hide-block-labels-checkbox"
             control={
               <TSCCheckbox
+                className="time-settings-checkbox"
                 onChange={(e) => actions.setEnableHideBlockLabel(e.target.checked)}
                 checked={state.settings.enableHideBlockLabel}
               />
@@ -205,6 +218,7 @@ export const Time = observer(function Time() {
             name="use-suggested-age-spans"
             control={
               <TSCCheckbox
+                className="time-settings-checkbox"
                 onChange={(e) => actions.setuseDatapackSuggestedAge(!e.target.checked)}
                 checked={!state.settings.useDatapackSuggestedAge}
               />
@@ -213,6 +227,7 @@ export const Time = observer(function Time() {
           />
         </FormGroup>
       </div>
+      </Box>
     </div>
   );
 });
