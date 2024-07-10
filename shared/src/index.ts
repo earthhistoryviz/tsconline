@@ -685,7 +685,7 @@ export function assertSubPointInfo(o: any): asserts o is SubPointInfo {
 }
 export function assertSequence(o: any): asserts o is Sequence {
   if (!o || typeof o !== "object") throw new Error("Sequence must be a non-null object");
-  if (typeof o.sequenceType !== "string" || !isSequenceType(o.type))
+  if (typeof o.sequenceType !== "string" || !isSequenceType(o.sequenceType))
     throwError("SequenceSettings", "sequenceType", "string and sequence | trend", o.type);
   if (!Array.isArray(o.subSequenceInfo)) throwError("Sequence", "subSequenceInfo", "array", o.subSequenceInfo);
   for (const subSequence of o.subSequenceInfo) {
