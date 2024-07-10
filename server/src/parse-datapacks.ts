@@ -451,7 +451,7 @@ export async function getColumnTypes(
   };
   const sequence: Sequence = {
     ...createDefaultColumnHeaderProps(),
-    type: "sequence",
+    sequenceType: "sequence",
     subSequenceInfo: []
   };
   const point = {
@@ -583,7 +583,7 @@ export async function getColumnTypes(
     }
     if (!inSequenceBlock && (colType === "sequence" || colType === "trend")) {
       setColumnHeaders(sequence, tabSeparated, lineCount, warnings);
-      sequence.type = colType;
+      sequence.sequenceType = colType;
       inSequenceBlock = true;
       continue;
     } else if (inSequenceBlock) {
@@ -1741,8 +1741,8 @@ function processColumn<T extends ColumnInfoType>(
 ): boolean {
   const { [subInfoKey]: subInfo, ...columnHeaderProps } = column;
   //for sequence column to keep it inside specific settings
-  if ("type" in columnHeaderProps) {
-    delete columnHeaderProps.type;
+  if ("sequenceType" in columnHeaderProps) {
+    delete columnHeaderProps.sequenceType;
   }
   assertColumnHeaderProps(columnHeaderProps);
   assertSubInfo(subInfo, type);
@@ -1776,7 +1776,7 @@ function processColumn<T extends ColumnInfoType>(
     const sequenceSettings = loneColumns.get(column.name)!.columnSpecificSettings;
     assertSequenceSettings(sequenceSettings);
     assertSequence(column);
-    sequenceSettings.type = column.type;
+    sequenceSettings.type = column.sequenceType;
   }
   let partialColumn = {};
   // reset the column to default values

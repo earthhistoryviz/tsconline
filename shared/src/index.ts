@@ -343,7 +343,7 @@ export type Point = ColumnHeaderProps & {
 };
 
 export type Sequence = ColumnHeaderProps & {
-  type: SequenceType;
+  sequenceType: SequenceType;
   subSequenceInfo: SubSequenceInfo[];
 };
 
@@ -685,8 +685,8 @@ export function assertSubPointInfo(o: any): asserts o is SubPointInfo {
 }
 export function assertSequence(o: any): asserts o is Sequence {
   if (!o || typeof o !== "object") throw new Error("Sequence must be a non-null object");
-  if (typeof o.type !== "string" || !isSequenceType(o.type))
-    throwError("SequenceSettings", "type", "string and sequence | trend", o.type);
+  if (typeof o.sequenceType !== "string" || !isSequenceType(o.type))
+    throwError("SequenceSettings", "sequenceType", "string and sequence | trend", o.type);
   if (!Array.isArray(o.subSequenceInfo)) throwError("Sequence", "subSequenceInfo", "array", o.subSequenceInfo);
   for (const subSequence of o.subSequenceInfo) {
     assertSubSequenceInfo(subSequence);
