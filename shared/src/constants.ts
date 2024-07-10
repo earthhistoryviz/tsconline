@@ -14,6 +14,7 @@ import {
   RangeSettings,
   RulerColumnInfoTSC,
   SequenceColumnInfoTSC,
+  SequenceSettings,
   ValidFontOptions,
   ZoneColumnInfoTSC
 } from "./index";
@@ -420,4 +421,12 @@ export const defaultRangeSettings: RangeSettings = {
   margin: 0.2,
   rangeSort: "first occurrence",
   agePad: 2
+};
+
+export const defaultSequenceSettings: SequenceSettings = {
+  labelMarginLeft: 5,
+  labelMarginRight: 5,
+  graphStyle: "",
+  drawNameLabel: true,
+  type: "sequence"
 };

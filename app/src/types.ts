@@ -13,6 +13,28 @@ export type WindowStats = {
   value: number;
 };
 
+//id: unique id among search results
+//columnName: name of column that event/column is under
+//columnPath: path of edit names up until chart root for display
+//unit: unit of time (ex. Ma) for "in context" feature
+//age: age or range of ages of event/block
+//qualifier: qualifier for events
+//notes: popup included with event and any other info
+export type EventSearchInfo = {
+  id: number;
+  columnName: string;
+  columnPath: string[];
+  unit: string;
+  age?: string;
+  qualifier?: string;
+  notes?: string;
+};
+
+export type GroupedEventSearchInfo = {
+  key: string;
+  info: EventSearchInfo[];
+};
+
 export type DataMiningStatisticApproach = "average" | "minimum" | "maximum" | "rateOfChange" | "frequency";
 
 export type FaciesOptions = {
@@ -51,6 +73,7 @@ export type Config = {
 export const SettingsMenuOptionLabels = {
   time: "Time",
   column: "Column",
+  search: "Search",
   font: "Font",
   mappoints: "Map Points",
   datapacks: "Datapacks"
