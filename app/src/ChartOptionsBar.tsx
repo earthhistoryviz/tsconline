@@ -205,21 +205,35 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         image.width = svgWidth;
         image.height = svgHeight;
         image.src = url;
+
         image.onload = function () {
-          const canvas = document.createElement("canvas")!;
-          canvas.width = image.width;
-          canvas.height = image.height;
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return;
 
-          const ctx = canvas.getContext("2d")!;
+          //determines resolution of image
+          const pixelRatio = 3;
+          
+          canvas.width = svgWidth * pixelRatio;
+          canvas.height = svgHeight * pixelRatio;
+          
+          ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
           ctx.drawImage(image, 0, 0);
-          DOMURL.revokeObjectURL(url);
 
-          const imgURI = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+          DOMURL.revokeObjectURL(url);
+          const imgURI = canvas.toDataURL();
+
           if (state.chartTab.downloadFiletype === "pdf") {
-            const doc = new jsPDF("landscape", "px", [svgHeight, svgWidth]);
+            const orientation = svgHeight > svgWidth ? "portrait" : "landscape";
+            const doc = new jsPDF({
+              orientation: orientation,
+              unit: "px",
+              format: [svgHeight, svgWidth],
+              compress: true
+            });
             doc.addImage(imgURI, "png", 0, 0, svgWidth, svgHeight);
             doc.save(state.chartTab.downloadFilename + ".pdf");
-          } else {
+          } else if (state.chartTab.downloadFiletype === "png") {
             const a = document.createElement("a");
             a.download = state.chartTab.downloadFilename + ".png"; // filename
             a.target = "_blank";
