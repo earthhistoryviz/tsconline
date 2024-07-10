@@ -231,11 +231,9 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
     };
     return (
       <div>
-        <CustomTooltip title="Download Chart">
-          <TSCButton buttonType="gradient" onClick={() => handleDownloadOpen()}>
-            Save Chart
-          </TSCButton>
-        </CustomTooltip>
+        <TSCButton buttonType="gradient" onClick={() => handleDownloadOpen()}>
+          Save Chart
+        </TSCButton>
         <Dialog
           disableRestoreFocus
           open={downloadOpen}
@@ -279,7 +277,6 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
                       actions.setChartTabDownloadFiletype(e.target.value as "svg" | "png" | "pdf");
                     }}>
                     <MenuItem value={"svg"}>.svg</MenuItem>
-
                     <MenuItem value={"pdf"}>.pdf</MenuItem>
                     <MenuItem value={"png"}>.png</MenuItem>
                   </Select>
