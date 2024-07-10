@@ -31,6 +31,7 @@ import {
 } from "@mui/material";
 import React from "react";
 import isValidFilename from "valid-filename";
+import jsPDF from "jspdf";
 
 interface OptionsBarProps {
   transformRef: React.RefObject<ReactZoomPanPinchContentRef>;
@@ -181,48 +182,51 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
       actions.setChartTabDownloadFilename(e.target.value);
     };
 
-    const downloadSvg = (filename: string) => {
-      const blob = new Blob([state.chartContent]);
-      FileSaver.saveAs(blob, filename + ".svg");
-    };
+    const downloadChart = () => {
+      if (state.chartTab.downloadFiletype === "svg") {
+        const blob = new Blob([state.chartContent]);
+        FileSaver.saveAs(blob, state.chartTab.downloadFilename + ".svg");
+      } else {
+        const svgNode = svgRef.current?.children[0];
+        if (!svgNode) return;
+        if (!svgNode.getAttribute("height") || !svgNode.getAttribute("width")) return;
+        //height and width in cm, so convert to pixels
+        const svgHeight = Number(svgNode.getAttribute("height")!.slice(0, -2)) * 37.795;
+        const svgWidth = Number(svgNode.getAttribute("width")!.slice(0, -2)) * 37.795;
+        const svgString = state.chartContent;
+        const svgBlob = new Blob([svgString], {
+          type: "image/svg+xml;charset=utf-8"
+        });
 
-    const downloadPng = (filename: string) => {
-      const svgNode = svgRef.current?.children[0];
-      if (!svgNode) return;
-      if (!svgNode.getAttribute("height") || !svgNode.getAttribute("width")) return;
-      //height and width in cm, so convert to pixels
-      const svgHeight = Number(svgNode.getAttribute("height")!.slice(0, -2)) * 37.795;
-      const svgWidth = Number(svgNode.getAttribute("width")!.slice(0, -2)) * 37.795;
-      const svgString = state.chartContent;
-      const svgBlob = new Blob([svgString], {
-        type: "image/svg+xml;charset=utf-8"
-      });
+        const DOMURL = window.URL || window.webkitURL || window;
+        const url = DOMURL.createObjectURL(svgBlob);
 
-      const DOMURL = window.URL || window.webkitURL || window;
-      const url = DOMURL.createObjectURL(svgBlob);
+        const image = new Image();
+        image.width = svgWidth;
+        image.height = svgHeight;
+        image.src = url;
+        image.onload = function () {
+          const canvas = document.createElement("canvas")!;
+          canvas.width = image.width;
+          canvas.height = image.height;
 
-      const image = new Image();
-      image.width = svgWidth;
-      image.height = svgHeight;
-      image.src = url;
-      image.onload = function () {
-        const canvas = document.createElement("canvas")!;
-        canvas.width = image.width;
-        canvas.height = image.height;
+          const ctx = canvas.getContext("2d")!;
+          ctx.drawImage(image, 0, 0);
+          DOMURL.revokeObjectURL(url);
 
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(image, 0, 0);
-        DOMURL.revokeObjectURL(url);
-
-        const imgURI = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
-        triggerDownload(imgURI);
-      };
-      function triggerDownload(imgURI: string) {
-        const a = document.createElement("a");
-        a.download = filename + ".png"; // filename
-        a.target = "_blank";
-        a.href = imgURI;
-        a.click();
+          const imgURI = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+          if (state.chartTab.downloadFiletype === "pdf") {
+            const doc = new jsPDF("landscape", "px", [svgHeight, svgWidth]);
+            doc.addImage(imgURI, "png", 0, 0, svgWidth, svgHeight);
+            doc.save(state.chartTab.downloadFilename + ".pdf");
+          } else {
+            const a = document.createElement("a");
+            a.download = state.chartTab.downloadFilename + ".png"; // filename
+            a.target = "_blank";
+            a.href = imgURI;
+            a.click();
+          }
+        };
       }
     };
     return (
@@ -244,15 +248,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
                 actions.pushSnackbar("Filename is not valid", "warning");
                 return;
               }
-              switch (state.chartTab.downloadFiletype) {
-                case "svg":
-                  downloadSvg(state.chartTab.downloadFilename);
-                  break;
-                case "pdf":
-                  break;
-                case "png":
-                  downloadPng(state.chartTab.downloadFilename);
-              }
+              downloadChart();
               handleDownloadClose();
             }
           }}>
