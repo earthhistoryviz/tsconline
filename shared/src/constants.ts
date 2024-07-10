@@ -427,9 +427,6 @@ export const defaultSequenceSettings: SequenceSettings = {
   labelMarginLeft: 5,
   labelMarginRight: 5,
   graphStyle: "",
-  drawNameLabel: false,
+  drawNameLabel: true,
   type: "sequence"
 };
-
-export const sequenceStyle = "stroke-width: 0; fill: rgb(64, 191, 233);";
-export const trendStyle = "stroke-width: 1; stroke: black; fill: rgb(64, 191, 233);";
