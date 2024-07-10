@@ -96,7 +96,7 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
               <div className="draw-buttons-and-point-shape-container">
                 <CustomFormControlLabel
                   name="drawScale"
-                  label="Draw Scale"
+                  label="Show Scale"
                   control={
                     <TSCCheckbox
                       checked={pointSettings.drawScale}
