@@ -611,10 +611,6 @@ export const setEventSearchTerm = action((term: string) => {
   state.settingsTabs.eventSearchTerm = term;
 });
 
-export const setExtendTimeInterval = action((term: boolean) => {
-  state.settingsTabs.extendTimeInterval = term;
-});
-
 export const incrementColumnPosition = action((column: ColumnInfo) => {
   const parent = state.settingsTabs.columnHashMap.get(column.parent!);
   if (!parent) return;

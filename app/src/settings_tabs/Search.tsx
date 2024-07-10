@@ -67,22 +67,27 @@ export const Search = observer(function Search() {
 
               //facies/chron label doesn't have subinfo because they are block type but its parent has facies/chron info, so access it through BlockSeriesMetaColumn
               if (columnInfo.columnDisplayType === "BlockSeriesMetaColumn") {
-                if ((resInfo.columnPath = makeColumnPath(columnInfo.name + " Facies Label")).length === 0) {
-                  resInfo.columnPath = makeColumnPath(columnInfo.name + " Chron Label");
+                if (state.settingsTabs.columnHashMap.get(columnInfo.name + " Facies Label")) {
+                  resInfo.columnPath = makeColumnPath(columnInfo.name + " Facies Label");
                   resInfo.columnName = columnInfo.name + " Chron Label";
-                } else {
+                } else if (state.settingsTabs.columnHashMap.get(columnInfo.name + " Chron Label")) {
+                  resInfo.columnPath = makeColumnPath(columnInfo.name + " Facies Label");
                   resInfo.columnName = columnInfo.name + " Facies Label";
+                } else {
+                  console.log("While searching, could not find Facies or Chron label for " + columnInfo.name);
+                  continue;
                 }
               }
-
-              //facies and chron label show up as block, so find ranges for them
-              if (resultType === "Block" || columnInfo.columnDisplayType === "BlockSeriesMetaColumn") {
-                if (i > 0) {
-                  const nextBlock = columnInfo.subInfo[i - 1];
-                  if ("age" in nextBlock) resInfo.age = String(nextBlock.age) + " - " + String(subInfo.age);
-                } else resInfo.age = String(subInfo.age);
-              } else {
-                resInfo.age = String(subInfo.age);
+              if ("age" in subInfo) {
+                //facies and chron label show up as block, so find ranges for them too
+                if (resultType === "Block" || columnInfo.columnDisplayType === "BlockSeriesMetaColumn") {
+                  if (i > 0) {
+                    const nextBlock = columnInfo.subInfo[i - 1];
+                    if ("age" in nextBlock) resInfo.age = String(nextBlock.age) + " - " + String(subInfo.age);
+                  } else resInfo.age = String(subInfo.age);
+                } else {
+                  resInfo.age = String(subInfo.age);
+                }
               }
               if ("subEventType" in subInfo) {
                 resInfo.qualifier = subInfo.subEventType;
@@ -129,7 +134,7 @@ export const Search = observer(function Search() {
       </div>
 
       <div>Found {count.current} Results</div>
-      <Results key={state.settingsTabs.eventSearchTerm} groupedEvents={searchResultData()} />
+      <Results groupedEvents={searchResultData()} />
     </div>
   );
 });
