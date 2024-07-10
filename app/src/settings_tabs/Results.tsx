@@ -3,7 +3,7 @@ import React, { useContext } from "react";
 import { Table } from "react-bootstrap";
 import { TableComponents, TableVirtuoso } from "react-virtuoso";
 import { CustomTooltip, StyledScrollbar, TSCCheckbox } from "../components";
-import { context, state } from "../state";
+import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import { ErrorOutline } from "@mui/icons-material";
 import NotesIcon from "@mui/icons-material/Notes";
@@ -28,7 +28,7 @@ const ToggleColumn = observer(({ columnName }: { columnName: string }) => {
   return (
     <TSCCheckbox
       checked={column.on}
-      onClick={() => {
+      onChange={() => {
         actions.toggleSettingsTabColumn(column);
       }}
     />
@@ -52,7 +52,7 @@ const ModifyTimeInterval = observer(({ info }: { info: EventSearchInfo }) => {
       </SvgIcon>
     );
   }
-  const verifyAges = () => {
+  const verifyAgesAndAddAgeMargin = () => {
     //checks if age is in `float - float` format
     const regex = /^[+-]?(\d*\.\d+|\d+)(\s-\s)[+-]?(\d*\.\d+|\d+)$/;
     let topAge = 0;
@@ -78,14 +78,14 @@ const ModifyTimeInterval = observer(({ info }: { info: EventSearchInfo }) => {
   };
 
   const centerTimeOnEvent = () => {
-    const ages = verifyAges();
+    const ages = verifyAgesAndAddAgeMargin();
     if (!ages) return;
     actions.setTopStageAge(ages.topAge, info.unit);
     actions.setBaseStageAge(ages.baseAge, info.unit);
   };
 
   const extendTimeToIncludeEvent = () => {
-    const ages = verifyAges();
+    const ages = verifyAgesAndAddAgeMargin();
     if (!ages) return;
     if (state.settings.timeSettings[info.unit].topStageAge > ages.topAge) {
       actions.setTopStageAge(ages.topAge, info.unit);
@@ -119,28 +119,24 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
   const stretchedEvents: (string | EventSearchInfo)[] = [];
   groupedEvents.map((value) => {
     stretchedEvents.push(value.key);
-    stretchedEvents.push("header");
+    stretchedEvents.push("subheader");
     for (const event of value.info) {
       stretchedEvents.push(event);
     }
   });
 
   function EventGroup(index: number, info: string | EventSearchInfo) {
-    if (info === "header") {
+    if (info === "subheader") {
       return (
         <>
           <TableCell className="event-group-header-text" align="left">
             Toggle Column
           </TableCell>
-          {state.settingsTabs.extendTimeInterval ? (
-            <TableCell className="event-group-header-text" align="left">
-              extend Time Interval
-            </TableCell>
-          ) : (
-            <TableCell className="event-group-header-text" align="left">
-              Modify Time Interval
-            </TableCell>
-          )}
+          <TableCell className="event-group-header-text" align="left">
+            <CustomTooltip title={"Adds 3myr around event"} placement="right">
+              <div>Modify Time Interval</div>
+            </CustomTooltip>
+          </TableCell>
           <TableCell className="event-group-header-text" align="left">
             Column Path
           </TableCell>
