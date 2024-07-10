@@ -1882,6 +1882,7 @@ __metadata:
     react-number-format: "npm:^5.3.1"
     react-router: "npm:^6.8.1"
     react-router-dom: "npm:^6.8.1"
+    react-virtuoso: "npm:^4.7.11"
     react-zoom-pan-pinch: "npm:^3.3.0"
     simplebar-core: "npm:^1.2.4"
     simplebar-react: "npm:^3.2.4"
@@ -8075,6 +8076,16 @@ __metadata:
     react: ">=16.8.0"
     react-dom: ">=16.8.0"
   checksum: 992f6a44070c74bdcbeae4f6a2a5dd2429ab031e74a942822f9f2bd40b938e0efcdfbc0736f3f1a1003399191de9e5659397e99b4e901600cd03cc639579da54
+  languageName: node
+  linkType: hard
+
+"react-virtuoso@npm:^4.7.11":
+  version: 4.7.11
+  resolution: "react-virtuoso@npm:4.7.11"
+  peerDependencies:
+    react: ">=16 || >=17 || >= 18"
+    react-dom: ">=16 || >=17 || >= 18"
+  checksum: 5f6188063a280f3f60d2586d69ade83ed45ac2afc929964c11574257c4f6a8732a4812657f976e1b5a7298ea3faf37edffd50e10b933f8891e955b2dd168643c
   languageName: node
   linkType: hard
 
