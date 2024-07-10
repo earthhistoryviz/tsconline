@@ -642,12 +642,15 @@ export const setSettingsTabsSelected = action((newtab: number | SettingsTabs) =>
       state.settingsTabs.selected = "column";
       break;
     case 2:
-      state.settingsTabs.selected = "font";
+      state.settingsTabs.selected = "search";
       break;
     case 3:
-      state.settingsTabs.selected = "mappoints";
+      state.settingsTabs.selected = "font";
       break;
     case 4:
+      state.settingsTabs.selected = "mappoints";
+      break;
+    case 5:
       state.settingsTabs.selected = "datapacks";
       break;
     default:
