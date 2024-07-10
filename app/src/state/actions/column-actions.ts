@@ -12,6 +12,7 @@ import {
   PointSettings,
   RGB,
   RangeSettings,
+  SequenceSettings,
   ValidFontOptions,
   assertChronSettings,
   assertEventColumnInfoTSC,
@@ -19,6 +20,7 @@ import {
   assertPointColumnInfoTSC,
   assertPointSettings,
   assertSequenceColumnInfoTSC,
+  assertSequenceSettings,
   assertSubChronInfoArray,
   assertSubEventInfoArray,
   assertSubPointInfoArray,
@@ -42,6 +44,7 @@ import {
 } from "../../util/data-mining";
 import { yieldControl } from "../../util";
 import { altUnitNamePrefix } from "../../util/constant";
+import { sequenceStyle, trendStyle } from "../../constants";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -97,6 +100,14 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
       break;
     case "SequenceColumn":
       assertSequenceColumnInfoTSC(settings);
+      assertSequenceSettings(column.columnSpecificSettings);
+      setSequenceColumnSettings(column.columnSpecificSettings, {
+        labelMarginLeft: settings.labelMarginLeft,
+        labelMarginRight: settings.labelMarginRight,
+        graphStyle: settings.type === "sequence" ? sequenceStyle : trendStyle,
+        drawNameLabel: settings.drawNameLabel,
+        type: settings.type
+      });
       break;
   }
 }
@@ -196,6 +207,11 @@ export const toggleSettingsTabColumn = action((column: ColumnInfo) => {
     } else column = state.settingsTabs.columnHashMap.get(column.parent!)!;
   }
 });
+export const setSequenceColumnSettings = action(
+  (sequenceSettings: SequenceSettings, newSettings: Partial<SequenceSettings>) => {
+    Object.assign(sequenceSettings, newSettings);
+  }
+);
 export const setEventColumnSettings = action((eventSettings: EventSettings, newSettings: Partial<EventSettings>) => {
   Object.assign(eventSettings, newSettings);
 });
