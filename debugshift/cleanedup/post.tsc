@@ -1,0 +1,14 @@
+    <column id="class datastore.RootColumn:Chart Root">
+        <column id="class datastore.RootColumn:Chart Title">
+            <column id="class datastore.RulerColumn:Ma">
+            <column id="class datastore.MetaColumn:Central Africa Cenozoic">
+                <column id="class datastore.BlockSeriesMetaColumn:Nigeria Coast">
+                    <column id="class datastore.FaciesColumn:Facies">
+                    <column id="class datastore.ZoneColumn:Members">
+                    <column id="class datastore.ZoneColumn:Series Label">
+                    <column id="class datastore.ZoneColumn:Facies Label">
+                <column id="class datastore.BlockSeriesMetaColumn:South Atlantic">
+                    <column id="class datastore.FaciesColumn:Facies">
+                    <column id="class datastore.ZoneColumn:Members">
+                    <column id="class datastore.ZoneColumn:Facies Label">
+                    <column id="class datastore.ZoneColumn:Series Label">
