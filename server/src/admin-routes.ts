@@ -312,7 +312,7 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
   let decryptedFilepath;
   try {
     filepath = resolve(assetconfigs.datapacksDirectory, datapack);
-    decryptedFilepath = resolve(assetconfigs.decryptionDirectory, datapack.split(".")[0]!);
+    decryptedFilepath = resolve(assetconfigs.decryptionDirectory, basename(datapack));
     if (
       !filepath.startsWith(resolve(assetconfigs.datapacksDirectory)) ||
       !decryptedFilepath.startsWith(resolve(assetconfigs.decryptionDirectory))
