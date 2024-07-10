@@ -430,3 +430,6 @@ export const defaultSequenceSettings: SequenceSettings = {
   drawNameLabel: false,
   type: "sequence"
 };
+
+export const sequenceStyle = "stroke-width: 0; fill: rgb(64, 191, 233);";
+export const trendStyle = "stroke-width: 1; stroke: black; fill: rgb(64, 191, 233);";

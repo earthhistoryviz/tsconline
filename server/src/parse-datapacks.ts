@@ -61,7 +61,9 @@ import {
   defaultRangeSettings,
   defaultSequenceSettings,
   assertSequenceSettings,
-  assertSequence
+  assertSequence,
+  sequenceStyle,
+  trendStyle
 } from "@tsconline/shared";
 import {
   grabFilepaths,
@@ -1740,8 +1742,8 @@ function processColumn<T extends ColumnInfoType>(
   loneColumns: Map<string, ColumnInfo>
 ): boolean {
   const { [subInfoKey]: subInfo, ...columnHeaderProps } = column;
-  //for sequence column to keep it inside specific settings
-  if ("sequenceType" in columnHeaderProps) {
+  //sequenceType is part of column header object but shouldn't be, so remove
+  if (type === "Sequence" && "sequenceType" in columnHeaderProps) {
     delete columnHeaderProps.sequenceType;
   }
   assertColumnHeaderProps(columnHeaderProps);
@@ -1777,6 +1779,7 @@ function processColumn<T extends ColumnInfoType>(
     assertSequenceSettings(sequenceSettings);
     assertSequence(column);
     sequenceSettings.type = column.sequenceType;
+    sequenceSettings.graphStyle = column.sequenceType === "sequence" ? sequenceStyle : trendStyle;
   }
   let partialColumn = {};
   // reset the column to default values

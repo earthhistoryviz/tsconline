@@ -44,7 +44,6 @@ import {
 } from "../../util/data-mining";
 import { yieldControl } from "../../util";
 import { altUnitNamePrefix } from "../../util/constant";
-import { sequenceStyle, trendStyle } from "../../constants";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -104,7 +103,7 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
       setSequenceColumnSettings(column.columnSpecificSettings, {
         labelMarginLeft: settings.labelMarginLeft,
         labelMarginRight: settings.labelMarginRight,
-        graphStyle: settings.type === "sequence" ? sequenceStyle : trendStyle,
+        graphStyle: settings.graphStyle,
         drawNameLabel: settings.drawNameLabel,
         type: settings.type
       });

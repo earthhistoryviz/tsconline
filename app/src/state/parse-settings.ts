@@ -17,6 +17,7 @@ import {
   assertRangeSettings,
   assertRulerColumnInfoTSC,
   assertSequenceColumnInfoTSC,
+  assertSequenceSettings,
   assertZoneColumnInfoTSC,
   convertPointShapeToPointType,
   defaultChartSettingsInfoTSC,
@@ -398,7 +399,16 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       column = cloneDeep(defaultZoneColumnInfoTSC);
       break;
     case "Sequence":
-      column = cloneDeep(defaultSequenceColumnInfoTSC);
+      assertSequenceSettings(state.columnSpecificSettings);
+      column = {
+        ...cloneDeep(defaultSequenceColumnInfoTSC),
+        labelMarginLeft: state.columnSpecificSettings.labelMarginLeft,
+        labelMarginRight: state.columnSpecificSettings.labelMarginRight,
+        graphStyle: state.columnSpecificSettings.graphStyle,
+        drawNameLabel: state.columnSpecificSettings.drawNameLabel,
+        type: state.columnSpecificSettings.type
+      };
+
       break;
     case "Range":
       assertRangeSettings(state.columnSpecificSettings);
