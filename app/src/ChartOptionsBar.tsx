@@ -167,7 +167,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
       </CustomTooltip>
     );
   };
-  const DownloadButton = () => {
+  const DownloadButton = observer(() => {
     const [downloadOpen, setDownloadOpen] = React.useState(false);
 
     const handleDownloadOpen = () => {
@@ -184,6 +184,46 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
     const downloadSvg = (filename: string) => {
       const blob = new Blob([state.chartContent]);
       FileSaver.saveAs(blob, filename + ".svg");
+    };
+
+    const downloadPng = (filename: string) => {
+      const svgNode = svgRef.current?.children[0];
+      if (!svgNode) return;
+      if (!svgNode.getAttribute("height") || !svgNode.getAttribute("width")) return;
+      //height and width in cm, so convert to pixels
+      const svgHeight = Number(svgNode.getAttribute("height")!.slice(0, -2)) * 37.795;
+      const svgWidth = Number(svgNode.getAttribute("width")!.slice(0, -2)) * 37.795;
+      const svgString = state.chartContent;
+      const svgBlob = new Blob([svgString], {
+        type: "image/svg+xml;charset=utf-8"
+      });
+
+      const DOMURL = window.URL || window.webkitURL || window;
+      const url = DOMURL.createObjectURL(svgBlob);
+
+      const image = new Image();
+      image.width = svgWidth;
+      image.height = svgHeight;
+      image.src = url;
+      image.onload = function () {
+        const canvas = document.createElement("canvas")!;
+        canvas.width = image.width;
+        canvas.height = image.height;
+
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(image, 0, 0);
+        DOMURL.revokeObjectURL(url);
+
+        const imgURI = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+        triggerDownload(imgURI);
+      };
+      function triggerDownload(imgURI: string) {
+        const a = document.createElement("a");
+        a.download = filename + ".png"; // filename
+        a.target = "_blank";
+        a.href = imgURI;
+        a.click();
+      }
     };
     return (
       <div>
@@ -211,6 +251,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
                 case "pdf":
                   break;
                 case "png":
+                  downloadPng(state.chartTab.downloadFilename);
               }
               handleDownloadClose();
             }
@@ -239,12 +280,12 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
                     value={state.chartTab.downloadFiletype}
                     label="Age"
                     onChange={(e) => {
-                      actions.setChartTabDownloadFiletype(e.target.value as "svg");
+                      actions.setChartTabDownloadFiletype(e.target.value as "svg" | "png" | "pdf");
                     }}>
                     <MenuItem value={"svg"}>.svg</MenuItem>
-                    {/* implmement later 
+
                     <MenuItem value={"pdf"}>.pdf</MenuItem>
-                    <MenuItem value={"png"}>.png</MenuItem> */}
+                    <MenuItem value={"png"}>.png</MenuItem>
                   </Select>
                 </FormControl>
               </Box>
@@ -261,7 +302,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         </Dialog>
       </div>
     );
-  };
+  });
 
   const HelpButton = () => {
     return (
