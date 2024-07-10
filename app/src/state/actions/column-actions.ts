@@ -12,12 +12,15 @@ import {
   PointSettings,
   RGB,
   RangeSettings,
+  SequenceSettings,
   ValidFontOptions,
   assertChronSettings,
   assertEventColumnInfoTSC,
   assertEventSettings,
   assertPointColumnInfoTSC,
   assertPointSettings,
+  assertSequenceColumnInfoTSC,
+  assertSequenceSettings,
   assertSubChronInfoArray,
   assertSubEventInfoArray,
   assertSubPointInfoArray,
@@ -93,6 +96,17 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
           upperRange: settings.maxWindow
         });
       }
+      break;
+    case "SequenceColumn":
+      assertSequenceColumnInfoTSC(settings);
+      assertSequenceSettings(column.columnSpecificSettings);
+      setSequenceColumnSettings(column.columnSpecificSettings, {
+        labelMarginLeft: settings.labelMarginLeft,
+        labelMarginRight: settings.labelMarginRight,
+        graphStyle: settings.graphStyle,
+        drawNameLabel: settings.drawNameLabel,
+        type: settings.type
+      });
       break;
   }
 }
@@ -192,6 +206,11 @@ export const toggleSettingsTabColumn = action((column: ColumnInfo) => {
     } else column = state.settingsTabs.columnHashMap.get(column.parent!)!;
   }
 });
+export const setSequenceColumnSettings = action(
+  (sequenceSettings: SequenceSettings, newSettings: Partial<SequenceSettings>) => {
+    Object.assign(sequenceSettings, newSettings);
+  }
+);
 export const setEventColumnSettings = action((eventSettings: EventSettings, newSettings: Partial<EventSettings>) => {
   Object.assign(eventSettings, newSettings);
 });
