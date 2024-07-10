@@ -21,7 +21,7 @@ const AccordionPositionControls: React.FC<AccordionPositionControlsProps> = ({ c
   };
   // Future Notes:
   // IF YOU ARE LOOKING FOR SHIFT ROW / SHIFTROW / SHIFT_ROW / SHIFT COL / SHIFTCOL / SHIFT_COL settings,
-  // This if the file, along with column-actions.ts
+  // This the file, along with column-actions.ts
   // I am not sure why it is refered to as shift row in the original Java program this is based off of,
   // since everywhere else refers to it as a column, as does the final product.
 
