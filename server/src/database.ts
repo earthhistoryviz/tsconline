@@ -3,6 +3,8 @@ import BetterSqlite3 from "better-sqlite3";
 import { Kysely, SqliteDialect } from "kysely";
 import { exec } from "child_process";
 import path from "path";
+import { randomUUID } from "crypto";
+import { hash } from "bcrypt-ts";
 
 /*
 If updating the database schema please update the schema details below.
@@ -85,6 +87,21 @@ export async function initializeDatabase() {
       resolve();
     });
   });
+  const admin = await findUser({ username: process.env.ADMIN_USER || "admin", email: process.env.ADMIN_EMAIL || "test@gmail.com" }) 
+  if(!admin || admin.length == 0) {
+    createUser(
+      {
+        username: process.env.ADMIN_USER || "admin",
+        hashedPassword: await hash(process.env.ADMIN_PASS || "admin-password", 10),
+        email: process.env.ADMIN_EMAIL || "test@gmail.com",
+        uuid: randomUUID(),
+        pictureUrl: null,
+        emailVerified: 1,
+        invalidateSession: 0,
+        isAdmin: 1,
+      }
+    )
+  }
 }
 
 export { db };
@@ -99,6 +116,11 @@ export async function findUser(criteria: Partial<User>) {
   if (criteria.username) query = query.where("username", "=", criteria.username);
   if (criteria.email) query = query.where("email", "=", criteria.email);
   if (criteria.uuid) query = query.where("uuid", "=", criteria.uuid);
+  if (criteria.pictureUrl) query = query.where("pictureUrl", "=", criteria.pictureUrl);
+  if (criteria.isAdmin) query = query.where("isAdmin", "=", criteria.isAdmin);
+  if (criteria.emailVerified) query = query.where("emailVerified", "=", criteria.emailVerified);
+  if (criteria.invalidateSession) query = query.where("invalidateSession", "=", criteria.invalidateSession);
+  if (criteria.hashedPassword) query = query.where("hashedPassword", "=", criteria.hashedPassword);
   return await query.selectAll().execute();
 }
 
@@ -108,6 +130,11 @@ export async function updateUser(criteria: Partial<User>, updatedUser: UpdatedUs
   if (criteria.username) query = query.where("username", "=", criteria.username);
   if (criteria.email) query = query.where("email", "=", criteria.email);
   if (criteria.uuid) query = query.where("uuid", "=", criteria.uuid);
+  if (criteria.pictureUrl) query = query.where("pictureUrl", "=", criteria.pictureUrl);
+  if (criteria.isAdmin) query = query.where("isAdmin", "=", criteria.isAdmin);
+  if (criteria.emailVerified) query = query.where("emailVerified", "=", criteria.emailVerified);
+  if (criteria.invalidateSession) query = query.where("invalidateSession", "=", criteria.invalidateSession);
+  if (criteria.hashedPassword) query = query.where("hashedPassword", "=", criteria.hashedPassword);
   return await query.execute();
 }
 
@@ -117,6 +144,11 @@ export async function deleteUser(criteria: Partial<User>) {
   if (criteria.username) query = query.where("username", "=", criteria.username);
   if (criteria.email) query = query.where("email", "=", criteria.email);
   if (criteria.uuid) query = query.where("uuid", "=", criteria.uuid);
+  if (criteria.pictureUrl) query = query.where("pictureUrl", "=", criteria.pictureUrl);
+  if (criteria.isAdmin) query = query.where("isAdmin", "=", criteria.isAdmin);
+  if (criteria.emailVerified) query = query.where("emailVerified", "=", criteria.emailVerified);
+  if (criteria.invalidateSession) query = query.where("invalidateSession", "=", criteria.invalidateSession);
+  if (criteria.hashedPassword) query = query.where("hashedPassword", "=", criteria.hashedPassword);
   return await query.execute();
 }
 
