@@ -182,6 +182,7 @@
         "show": true,
         "expanded": true
       },
+      
       "generate-basic-column-xml-test": {
         "_id": "class datastore.RootColumn:Chart Root",
         "title": "Chart Root",
