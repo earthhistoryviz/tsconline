@@ -177,5 +177,5 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for any test failures
-        if: steps.vite_build.outputs.build_failed == 'true'
+        if: steps.vite_build.outputs.test_failed == 'true'
         run: exit 1
