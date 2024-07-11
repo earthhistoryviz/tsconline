@@ -611,12 +611,19 @@ export const setEventSearchTerm = action((term: string) => {
   state.settingsTabs.eventSearchTerm = term;
 });
 
+// The following settings should wrap around if it overflows. Ex: last element that gets decremeneted should go to the top
 export const incrementColumnPosition = action((column: ColumnInfo) => {
   const parent = state.settingsTabs.columnHashMap.get(column.parent!);
   if (!parent) return;
   const index = parent.children.indexOf(column);
   if (index > 0) {
+    // If it's not the first element, swap with the previous one
     [parent.children[index], parent.children[index - 1]] = [parent.children[index - 1], parent.children[index]];
+  } else if (index === 0) {
+    const firstElement = parent.children.shift();
+    if (firstElement) {
+      parent.children.push(firstElement);
+    }
   }
 });
 
@@ -624,7 +631,13 @@ export const decrementColumnPosition = action((column: ColumnInfo) => {
   const parent = state.settingsTabs.columnHashMap.get(column.parent!);
   if (!parent) return;
   const index = parent.children.indexOf(column);
-  if (index < parent.children.length - 1 && index > -1) {
+  if (index < parent.children.length - 1 && index !== -1) {
+    // If it's not the last element, swap with the next one
     [parent.children[index], parent.children[index + 1]] = [parent.children[index + 1], parent.children[index]];
+  } else if (index === parent.children.length - 1) {
+    const lastElement = parent.children.pop();
+    if (lastElement) {
+      parent.children.unshift(lastElement);
+    }
   }
 });
