@@ -12,12 +12,15 @@ import {
   PointSettings,
   RGB,
   RangeSettings,
+  SequenceSettings,
   ValidFontOptions,
   assertChronSettings,
   assertEventColumnInfoTSC,
   assertEventSettings,
   assertPointColumnInfoTSC,
   assertPointSettings,
+  assertSequenceColumnInfoTSC,
+  assertSequenceSettings,
   assertSubChronInfoArray,
   assertSubEventInfoArray,
   assertSubPointInfoArray,
@@ -93,6 +96,17 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
           upperRange: settings.maxWindow
         });
       }
+      break;
+    case "SequenceColumn":
+      assertSequenceColumnInfoTSC(settings);
+      assertSequenceSettings(column.columnSpecificSettings);
+      setSequenceColumnSettings(column.columnSpecificSettings, {
+        labelMarginLeft: settings.labelMarginLeft,
+        labelMarginRight: settings.labelMarginRight,
+        graphStyle: settings.graphStyle,
+        drawNameLabel: settings.drawNameLabel,
+        type: settings.type
+      });
       break;
   }
 }
@@ -192,6 +206,11 @@ export const toggleSettingsTabColumn = action((column: ColumnInfo) => {
     } else column = state.settingsTabs.columnHashMap.get(column.parent!)!;
   }
 });
+export const setSequenceColumnSettings = action(
+  (sequenceSettings: SequenceSettings, newSettings: Partial<SequenceSettings>) => {
+    Object.assign(sequenceSettings, newSettings);
+  }
+);
 export const setEventColumnSettings = action((eventSettings: EventSettings, newSettings: Partial<EventSettings>) => {
   Object.assign(eventSettings, newSettings);
 });
@@ -588,12 +607,23 @@ export const setColumnSearchTerm = action((term: string) => {
   state.settingsTabs.columnSearchTerm = term;
 });
 
+export const setEventSearchTerm = action((term: string) => {
+  state.settingsTabs.eventSearchTerm = term;
+});
+
+// The following settings should wrap around if it overflows. Ex: last element that gets decremeneted should go to the top
 export const incrementColumnPosition = action((column: ColumnInfo) => {
   const parent = state.settingsTabs.columnHashMap.get(column.parent!);
   if (!parent) return;
   const index = parent.children.indexOf(column);
   if (index > 0) {
+    // If it's not the first element, swap with the previous one
     [parent.children[index], parent.children[index - 1]] = [parent.children[index - 1], parent.children[index]];
+  } else if (index === 0) {
+    const firstElement = parent.children.shift();
+    if (firstElement) {
+      parent.children.push(firstElement);
+    }
   }
 });
 
@@ -601,7 +631,13 @@ export const decrementColumnPosition = action((column: ColumnInfo) => {
   const parent = state.settingsTabs.columnHashMap.get(column.parent!);
   if (!parent) return;
   const index = parent.children.indexOf(column);
-  if (index < parent.children.length - 1 && index > -1) {
+  if (index < parent.children.length - 1 && index !== -1) {
+    // If it's not the last element, swap with the next one
     [parent.children[index], parent.children[index + 1]] = [parent.children[index + 1], parent.children[index]];
+  } else if (index === parent.children.length - 1) {
+    const lastElement = parent.children.pop();
+    if (lastElement) {
+      parent.children.unshift(lastElement);
+    }
   }
 });
