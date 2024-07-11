@@ -6,7 +6,8 @@ import {
   defaultChronSettings,
   defaultEventSettings,
   defaultPointSettings,
-  defaultRangeSettings
+  defaultRangeSettings,
+  defaultSequenceSettings
 } from "@tsconline/shared";
 import * as parseSettings from "../src/state/parse-settings";
 import { ChartSettings } from "../src/types";
@@ -125,7 +126,7 @@ describe("translate columnInfo to columnInfoTSC", () => {
       basicColumn.name,
       "Sequence",
       "class datastore.SequenceColumn:Chart Root",
-      { ...basicColumn, columnDisplayType: "Sequence" }
+      { ...basicColumn, columnDisplayType: "Sequence", columnSpecificSettings: {...defaultSequenceSettings} }
     ],
     [
       basicColumn.name,
