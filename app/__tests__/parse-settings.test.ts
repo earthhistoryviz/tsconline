@@ -77,6 +77,11 @@ describe("translate columnInfo to columnInfoTSC", () => {
       keys["translate-chron-column-key"]
     );
   });
+  it("should translate sequence column", async () => {
+    expect(parseSettings.translateColumnInfoToColumnInfoTSC(tests["translate-sequence-column-test"])).toEqual(
+      keys["translate-sequence-column-key"]
+    );
+  });
   const basicColumn = tests["translate-basic-column-test"];
   test.each([
     [basicColumn.name, "Root", "class datastore.RootColumn:Chart Root", basicColumn],
@@ -126,7 +131,7 @@ describe("translate columnInfo to columnInfoTSC", () => {
       basicColumn.name,
       "Sequence",
       "class datastore.SequenceColumn:Chart Root",
-      { ...basicColumn, columnDisplayType: "Sequence", columnSpecificSettings: {...defaultSequenceSettings} }
+      { ...basicColumn, columnDisplayType: "Sequence", columnSpecificSettings: { ...defaultSequenceSettings } }
     ],
     [
       basicColumn.name,
