@@ -17,6 +17,7 @@ import {
   assertRangeSettings,
   assertRulerColumnInfoTSC,
   assertSequenceColumnInfoTSC,
+  assertSequenceSettings,
   assertZoneColumnInfoTSC,
   convertPointShapeToPointType,
   defaultChartSettingsInfoTSC,
@@ -397,7 +398,16 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       column = cloneDeep(defaultZoneColumnInfoTSC);
       break;
     case "Sequence":
-      column = cloneDeep(defaultSequenceColumnInfoTSC);
+      assertSequenceSettings(state.columnSpecificSettings);
+      column = {
+        ...cloneDeep(defaultSequenceColumnInfoTSC),
+        labelMarginLeft: state.columnSpecificSettings.labelMarginLeft,
+        labelMarginRight: state.columnSpecificSettings.labelMarginRight,
+        graphStyle: state.columnSpecificSettings.graphStyle,
+        drawNameLabel: state.columnSpecificSettings.drawNameLabel,
+        type: state.columnSpecificSettings.type
+      };
+
       break;
     case "Range":
       assertRangeSettings(state.columnSpecificSettings);
@@ -567,7 +577,12 @@ export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): strin
           column.backgroundColor.text.g == 255 &&
           column.backgroundColor.text.b == 255
         ) {
-          xml += `${indent}<setting name="backgroundColor"/>\n`;
+          //TODO: fix java not accepting empty background color for sequence
+          if (extractColumnType(column._id) === "SequenceColumn") {
+            xml += `${indent}<setting name="backgroundColor" useNamed="false">rgb(255, 255, 255)</setting>\n`;
+          } else {
+            xml += `${indent}<setting name="backgroundColor"/>\n`;
+          }
         } else {
           xml += `${indent}<setting name="backgroundColor" useNamed="false">rgb(${column.backgroundColor.text.r},${column.backgroundColor.text.g},${column.backgroundColor.text.b})</setting>\n`;
         }

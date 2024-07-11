@@ -13,6 +13,7 @@ import LoadSettings from "./settings_tabs/LoadSettings";
 import "./Settings.css";
 import { CustomTabs } from "./components/TSCCustomTabs";
 import { SettingsMenuOptionLabels, SettingsTabs } from "./types";
+import { Search } from "./settings_tabs/Search";
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
@@ -53,6 +54,8 @@ const SettingsTab = observer(function SettingsTab({ tab }: { tab: SettingsTabs }
       return <Time />;
     case "column":
       return <Column />;
+    case "search":
+      return <Search />;
     case "font":
       return <Font />;
     case "mappoints":

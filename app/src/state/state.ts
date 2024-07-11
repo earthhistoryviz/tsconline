@@ -58,6 +58,7 @@ export type State = {
     columnHashMap: Map<string, ColumnInfo>;
     columnSearchTerm: string;
     datapackDisplayType: "rows" | "cards" | "compact";
+    eventSearchTerm: string;
   };
   mapState: {
     mapInfo: MapInfo;
@@ -139,7 +140,8 @@ export const state = observable<State>({
     columnSelected: null,
     columnHashMap: new Map<string, ColumnInfo>(),
     columnSearchTerm: "",
-    datapackDisplayType: "rows"
+    datapackDisplayType: "rows",
+    eventSearchTerm: ""
   },
   mapState: {
     mapInfo: {},

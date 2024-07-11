@@ -1,0 +1,68 @@
+.MuiTableCell-body {
+  padding-top: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+  border: 0;
+  width: 10vw;
+}
+.MuiTableCell-root.event-group-identifier {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-top: 1px solid;
+  border-bottom: 1px solid;
+}
+
+.MuiTableCell-root.event-group-header-text {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  font-weight: 600;
+}
+
+.event-group-identifier-text {
+  font-weight: 600;
+}
+
+.modify-time-interval-container {
+  width: 5em;
+}
+
+.search-result-age-container {
+  width: 5vw;
+}
+
+.table-container {
+  min-height: 65vh;
+  min-width: 40vw;
+  height: 65vh;
+  width: 40vw;
+  margin-top: 2vh;
+  resize: both;
+  overflow: auto;
+}
+
+.events-search-results-table {
+  height: 100%;
+  width: 100%;
+}
+
+.events-search-results-buttons {
+  display: flex;
+  flex-direction: row;
+}
+
+.search-result-info-container {
+  min-width: 15vw;
+  font-size: 15px;
+  border: 1px solid black;
+  border-radius: 5px;
+  margin-top: 5px;
+  padding: 4px;
+  max-height: 210px;
+}
+
+.scroll-bar {
+  max-height: 200px;
+}
+.search-result-info a:visited {
+  color: blueviolet;
+}
