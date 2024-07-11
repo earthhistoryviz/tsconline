@@ -14,6 +14,14 @@ export type SharedUser = {
   isAdmin: boolean;
 };
 
+export type AdminSharedUser = {
+  userId: number;
+  uuid: string;
+  emailVerified: number;
+  invalidateSession: number;
+  isAdmin: number;
+} & SharedUser;
+
 export type SuccessfulServerResponse = {
   message: string;
 };
@@ -509,6 +517,15 @@ export type TimescaleItem = {
   value: number;
 };
 
+export function assertAdminSharedUser(o: any): asserts o is AdminSharedUser {
+  if (!o || typeof o !== "object") throw new Error("AdminSharedUser must be a non-null object");
+  if (typeof o.userId !== "number") throwError("AdminSharedUser", "userId", "number", o.userId);
+  if (typeof o.uuid !== "string") throwError("AdminSharedUser", "uuid", "string", o.uuid);
+  if (typeof o.emailVerified !== "number") throwError("AdminSharedUser", "emailVerified", "number", o.emailVerified);
+  if (typeof o.invalidateSession !== "number") throwError("AdminSharedUser", "invalidateSession", "number", o.invalidateSession);
+  if (typeof o.isAdmin !== "number") throwError("AdminSharedUser", "isAdmin", "number", o.isAdmin);
+  assertSharedUser(o);
+}
 export function assertSharedUser(o: any): asserts o is SharedUser {
   if (!o || typeof o !== "object") throw new Error("User must be a non-null object");
   if (typeof o.username !== "string") throwError("User", "username", "string", o.username);
@@ -1157,8 +1174,8 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
     default:
       throw new Error(
         "ColumnSpecificSettings must be an object of a valid column type. Found value of " +
-          type +
-          " which is not a valid column type"
+        type +
+        " which is not a valid column type"
       );
   }
 }
