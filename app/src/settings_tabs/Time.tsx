@@ -95,7 +95,7 @@ export const Time = observer(function Time() {
           </FormControl>
           <Typography className="IntervalLabel">Base of Interval</Typography>
           <CustomDivider className="time-form-divider" />
-          <FormControl className="FormControlIntervals" size="small">
+          <FormControl className="FormControlIntervals" size="small" id="base-age-selector-title">
             <InputLabel htmlFor="base-age-selector">
               {disabled ? "Not Available for this Unit" : "Base Age/Stage Name"}
             </InputLabel>
