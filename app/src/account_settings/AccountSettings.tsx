@@ -16,7 +16,7 @@ export const AccountSettings = observer(() => {
             tabs={tabs.map(tab => ({ id: tab, tab}))}
             tabIndex={tabValue}
             onChange={(index) => setTabValue(index)}
-            orientation="vertical-left"
+            orientation="vertical-right"
             tabIndicatorLength={20}
             />
             <Profile/>
