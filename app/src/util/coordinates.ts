@@ -8,11 +8,11 @@ const RADIUS = 6371; // radius of Earth in kilometers
 export const calculateRectBoundsPosition = (lat: number, lon: number, bounds: RectBounds) => {
   const { upperLeftLat, upperLeftLon, lowerRightLat, lowerRightLon } = bounds;
 
-  const latRange = Math.abs(upperLeftLat - lowerRightLat);
-  const lonRange = Math.abs(upperLeftLon - lowerRightLon);
+  const latRange = upperLeftLat - lowerRightLat;
+  const lonRange = lowerRightLon - upperLeftLon;
 
-  const normalizedLat = (lat - Math.min(upperLeftLat, lowerRightLat)) / latRange;
-  const normalizedLon = (lon - Math.min(upperLeftLon, lowerRightLon)) / lonRange;
+  const normalizedLat = (lat - lowerRightLat) / latRange;
+  const normalizedLon = (lon - upperLeftLon) / lonRange;
 
   const x = normalizedLon * 100;
   let y = normalizedLat * 100;
