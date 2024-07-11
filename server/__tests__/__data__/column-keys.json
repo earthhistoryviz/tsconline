@@ -105,7 +105,26 @@
                       "b": 255
                     },
                     "units": "Ma",
-                    "columnDisplayType": "Facies"
+                    "columnDisplayType": "Facies", 
+                    "subInfo": [
+                      {
+                        "age": 0,
+                        "info": "",
+                        "rockType": "TOP"
+                      },
+                      {
+                        "age": 5,
+                        "info": "",
+                        "label": "Delta",
+                        "rockType": "Sandstone"
+                      },
+                      {
+                        "age": 10,
+                        "info": "",
+                        "label": "ProDelta",
+                        "rockType": "Claystone"
+                      }
+                    ]
                   },
                   {
                     "name": "Nigeria Coast Members",
@@ -275,7 +294,26 @@
                       "b": 255
                     },
                     "units": "Ma",
-                    "columnDisplayType": "Facies"
+                    "columnDisplayType": "Facies",
+                    "subInfo": [
+                      {
+                        "age": 0,
+                        "info": "",
+                        "rockType": "TOP"
+                      },
+                      {
+                        "age": 5,
+                        "info": "",
+                        "label": "Deep marine",
+                        "rockType": "Shallow-marine marl"
+                      },
+                      {
+                        "age": 10,
+                        "info": "",
+                        "label": "Ocean crust",
+                        "rockType": "Lava"
+                      }
+                    ]
                   },
                   {
                     "name": "South Atlantic Members",
@@ -619,7 +657,26 @@
                       "b": 255
                     },
                     "units": "Ma",
-                    "columnDisplayType": "Facies"
+                    "columnDisplayType": "Facies",
+                    "subInfo": [
+                      {
+                        "age": 0,
+                        "info": "",
+                        "rockType": "TOP"
+                      },
+                      {
+                      "age": 5,
+                      "info": "",
+                      "label": "Facies SubFaciesInfo 1 Label",
+                        "rockType": "Facies SubFaciesInfo 1"
+                      },
+                      {
+                        "age": 10,
+                        "info": "",
+                        "label": "Facies SubFaciesInfo 2 Label",
+                        "rockType": "Facies SubFaciesInfo 2"
+                      }
+                    ]
                   },
                   {
                     "name": "Facies Members",
@@ -1145,7 +1202,14 @@
                     "severity": "Medium",
                     "popup": "Label 1 Popup"
                   }
-                ]
+                ],
+                "columnSpecificSettings": {
+                                 "drawNameLabel": true,
+                                 "graphStyle": "stroke-width: 0; fill: rgb(64, 191, 233);",
+                                 "labelMarginLeft": 5,
+                                 "labelMarginRight": 5,
+                                 "type": "sequence"
+                               }
               },
               {
                 "name": "Freehand",
@@ -2303,9 +2367,9 @@
             "width": 100,
             "popup": "Trend Popup",
             "rgb": {
-                "r": 255,
-                "g": 255,
-                "b": 255
+                "r": 245,
+                "g": 204,
+                "b": 131
             },
             "subInfo": [
                 {
@@ -2321,7 +2385,14 @@
                     "severity": "Medium",
                     "popup": "No Label Popup"
                 }
-            ]
+            ],
+            "columnSpecificSettings": {
+                     "drawNameLabel": true,
+                     "graphStyle": "stroke-width: 1; stroke: black; fill: rgb(64, 191, 233);",
+                     "labelMarginLeft": 5,
+                     "labelMarginRight": 5,
+                     "type": "trend"
+                   }
         },
         "Sequence 1": {
             "name": "Sequence 1",
@@ -2347,9 +2418,9 @@
             "width": 100,
             "popup": "Sequence Popup",
             "rgb": {
-                "r": 20,
-                "g": 20,
-                "b": 20
+                "r": 255,
+                "g": 255,
+                "b": 255
             },
             "subInfo": [
                 {
@@ -2365,7 +2436,14 @@
                     "severity": "Minor",
                     "popup": "No Label Popup"
                 }
-            ]
+            ],
+            "columnSpecificSettings": {
+              "drawNameLabel": true,
+              "graphStyle": "stroke-width: 0; fill: rgb(64, 191, 233);",
+              "labelMarginLeft": 5,
+              "labelMarginRight": 5,
+              "type": "sequence"
+          }
         }
     },
     "column-types-transect-key": {
