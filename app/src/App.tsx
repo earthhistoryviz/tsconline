@@ -18,7 +18,7 @@ import { AccountVerify } from "./AccountVerify";
 import { AccountRecovery } from "./AccountRecovery";
 import { TSCPopupDialog, TSCError, TSCSnackbar } from "./components";
 import { CssBaseline } from "@mui/material";
-import { Profile } from "./Profile";
+import { Profile } from "./account_settings/Profile";
 import "./App.css";
 import { DatapackProfile } from "./DatapackProfile";
 
