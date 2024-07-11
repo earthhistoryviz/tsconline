@@ -51,7 +51,6 @@ describe("general parse-datapacks tests", () => {
    */
   it("should parse africa general datapack", async () => {
     const datapacks = await parseDatapacks("", "parse-datapacks-test-1.txt");
-    // console.log(JSON.stringify(datapacks, null, 2))
     expect(datapacks).toEqual(key["general-parse-datapacks-test-1-key"]);
   });
 
