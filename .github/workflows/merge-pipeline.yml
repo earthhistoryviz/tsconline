@@ -151,6 +151,7 @@ jobs:
         run: exit 1
 
       - name: Run Tests
+        id: run_tests
         run: |
           set -o pipefail
           if ! yarn test > test_output.log 2>&1; then
@@ -159,7 +160,7 @@ jobs:
         continue-on-error: true
       
       - name: Report Test Errors
-        if: steps.vite_build.outputs.test_failed == 'true'
+        if: steps.run_tests.outputs.test_failed == 'true'
         uses: actions/github-script@v5
         with:
           script: |
@@ -177,5 +178,5 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for any test failures
-        if: steps.vite_build.outputs.test_failed == 'true'
+        if: steps.run_tests.outputs.test_failed == 'true'
         run: exit 1
