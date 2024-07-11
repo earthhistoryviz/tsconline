@@ -87,20 +87,21 @@ export async function initializeDatabase() {
       resolve();
     });
   });
-  const admin = await findUser({ username: process.env.ADMIN_USER || "admin", email: process.env.ADMIN_EMAIL || "test@gmail.com" }) 
-  if(!admin || admin.length == 0) {
-    createUser(
-      {
-        username: process.env.ADMIN_USER || "admin",
-        hashedPassword: await hash(process.env.ADMIN_PASS || "admin-password", 10),
-        email: process.env.ADMIN_EMAIL || "test@gmail.com",
-        uuid: randomUUID(),
-        pictureUrl: null,
-        emailVerified: 1,
-        invalidateSession: 0,
-        isAdmin: 1,
-      }
-    )
+  const admin = await findUser({
+    username: process.env.ADMIN_USER || "admin",
+    email: process.env.ADMIN_EMAIL || "test@gmail.com"
+  });
+  if (!admin || admin.length == 0) {
+    createUser({
+      username: process.env.ADMIN_USER || "admin",
+      hashedPassword: await hash(process.env.ADMIN_PASS || "admin-password", 10),
+      email: process.env.ADMIN_EMAIL || "test@gmail.com",
+      uuid: randomUUID(),
+      pictureUrl: null,
+      emailVerified: 1,
+      invalidateSession: 0,
+      isAdmin: 1
+    });
   }
 }
 
