@@ -1836,12 +1836,11 @@ function handleSequenceFields(sequence: Sequence, loneColumns: Map<string, Colum
   const columnSpecificSettings: SequenceSettings = {
     ..._.cloneDeep(defaultSequenceSettings)
   };
+  columnSpecificSettings.type = sequenceType;
   if (sequenceType === "sequence") {
-    columnSpecificSettings.type = sequenceType;
     columnSpecificSettings.graphStyle = sequenceStyle;
     headerInfo.rgb = sequenceColor;
   } else {
-    columnSpecificSettings.type = sequenceType;
     columnSpecificSettings.graphStyle = trendStyle;
     headerInfo.rgb = trendColor;
   }

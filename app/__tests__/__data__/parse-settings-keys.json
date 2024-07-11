@@ -27,178 +27,212 @@
         "fonts": {},
         "children": [],
         "width": 100
+    },
+    "translate-chron-column-key": {
+      "_id": "class datastore.ChronColumn:Chron",
+      "title": "Chron Title",
+      "useNamedColor": false,
+      "placeHolder": false,
+      "drawTitle": true,
+      "drawAgeLabel": false,
+      "drawUncertaintyLabel": false,
+      "isSelected": true,
+      "width": 1000,
+      "pad": 0.2,
+      "age pad": 2,
+      "backgroundColor": {
+        "text": {
+          "r": 1,
+          "g": 2,
+          "b": 3
+        }
       },
-      "translate-chron-column-key": {
-        "_id": "class datastore.ChronColumn:Chron",
-        "title": "Chron Title",
-        "useNamedColor": false,
-        "placeHolder": false,
-        "drawTitle": true,
-        "drawAgeLabel": false,
-        "drawUncertaintyLabel": false,
-        "isSelected": true,
-        "width": 1000,
-        "pad": 0.2,
-        "age pad": 2,
-        "backgroundColor": {
-          "text": {
-            "r": 1,
-            "g": 2,
-            "b": 3
-          }
-        },
-        "customColor": {
-          "text": {
-            "r": 1,
-            "g": 2,
-            "b": 3
-          }
-        },
-        "fonts": {},
-        "children": [],
-        "drawExtraColumn": "Frequency",
-        "windowSize": 9,
-        "stepSize": 5
+      "customColor": {
+        "text": {
+          "r": 1,
+          "g": 2,
+          "b": 3
+        }
       },
-      "translate-range-column-key": {
-        "_id": "class datastore.RangeColumn:Range",
-        "title": "Range Title",
-        "useNamedColor": false,
-        "placeHolder": false,
-        "drawTitle": true,
-        "drawAgeLabel": false,
-        "drawUncertaintyLabel": false,
-        "isSelected": true,
-        "width": 100,
-        "pad": 200,
-        "age pad": 22,
-        "backgroundColor": {
-          "text": {
-            "r": 224,
-            "g": 232,
-            "b": 239
-          }
-        },
-        "customColor": {
-          "text": {
-            "r": 224,
-            "g": 232,
-            "b": 239
-          }
-        },
-        "fonts": {},
-        "children": [],
-        "rangeSort": "alphabetical"
+      "fonts": {},
+      "children": [],
+      "drawExtraColumn": "Frequency",
+      "windowSize": 9,
+      "stepSize": 5
+    },
+    "translate-range-column-key": {
+      "_id": "class datastore.RangeColumn:Range",
+      "title": "Range Title",
+      "useNamedColor": false,
+      "placeHolder": false,
+      "drawTitle": true,
+      "drawAgeLabel": false,
+      "drawUncertaintyLabel": false,
+      "isSelected": true,
+      "width": 100,
+      "pad": 200,
+      "age pad": 22,
+      "backgroundColor": {
+        "text": {
+          "r": 224,
+          "g": 232,
+          "b": 239
+        }
       },
-      "translate-event-column-key": {
-        "_id": "class datastore.EventColumn:Events (Venusian)",
-        "title": "Events (Venusian)",
-        "useNamedColor": false,
-        "placeHolder": false,
-        "drawTitle": true,
-        "drawAgeLabel": false,
-        "drawUncertaintyLabel": false,
-        "isSelected": true,
-        "width": 100,
-        "pad": 0.2,
-        "age pad": 2,
-        "backgroundColor": {
-          "text": {
-            "r": 224,
-            "g": 232,
-            "b": 239
-          }
-        },
-        "customColor": {
-          "text": {
-            "r": 224,
-            "g": 232,
-            "b": 239
-          }
-        },
-        "fonts": {},
-        "children": [],
-        "type": "events",
-        "rangeSort": "first occurrence",
-        "drawExtraColumn": null,
-        "windowSize": 2,
-        "stepSize": 1
+      "customColor": {
+        "text": {
+          "r": 224,
+          "g": 232,
+          "b": 239
+        }
       },
-      "translate-point-column-key": {
-        "_id": "class datastore.PointColumn:Long-Term Phanerozoic",
-        "title": "Long-Term Phanerozoic",
-        "useNamedColor": false,
-        "placeHolder": false,
-        "drawTitle": true,
-        "drawAgeLabel": false,
-        "drawUncertaintyLabel": false,
-        "isSelected": true,
-        "width": 100,
-        "pad": 0.2,
-        "age pad": 2,
-        "backgroundColor": {
-          "text": {
-            "r": 255,
-            "g": 255,
-            "b": 255
-          }
-        },
-        "customColor": {
-          "text": {
-            "r": 255,
-            "g": 255,
-            "b": 255
-          }
-        },
-        "fonts": {},
-        "children": [],
-        "isDataMiningColumn": false,
-        "drawPoints": false,
-        "drawLine": true,
-        "lineColor": {
-          "r": 0,
-          "g": 0,
-          "b": 0
-        },
-        "drawSmooth": true,
-        "drawFill": true,
-        "fillColor": {
-          "r": 64,
-          "g": 233,
-          "b": 191
-        },
-        "doNotSetWindowAuto": false,
-        "minWindow": -150,
-        "maxWindow": 280,
-        "drawScale": true,
-        "drawBgrndGradient": false,
-        "backGradStart": {
-          "r": 0,
-          "g": 0,
-          "b": 0
-        },
-        "backGradEnd": {
+      "fonts": {},
+      "children": [],
+      "rangeSort": "alphabetical"
+    },
+    "translate-event-column-key": {
+      "_id": "class datastore.EventColumn:Events (Venusian)",
+      "title": "Events (Venusian)",
+      "useNamedColor": false,
+      "placeHolder": false,
+      "drawTitle": true,
+      "drawAgeLabel": false,
+      "drawUncertaintyLabel": false,
+      "isSelected": true,
+      "width": 100,
+      "pad": 0.2,
+      "age pad": 2,
+      "backgroundColor": {
+        "text": {
+          "r": 224,
+          "g": 232,
+          "b": 239
+        }
+      },
+      "customColor": {
+        "text": {
+          "r": 224,
+          "g": 232,
+          "b": 239
+        }
+      },
+      "fonts": {},
+      "children": [],
+      "type": "events",
+      "rangeSort": "first occurrence",
+      "drawExtraColumn": null,
+      "windowSize": 2,
+      "stepSize": 1
+    },
+    "translate-point-column-key": {
+      "_id": "class datastore.PointColumn:Long-Term Phanerozoic",
+      "title": "Long-Term Phanerozoic",
+      "useNamedColor": false,
+      "placeHolder": false,
+      "drawTitle": true,
+      "drawAgeLabel": false,
+      "drawUncertaintyLabel": false,
+      "isSelected": true,
+      "width": 100,
+      "pad": 0.2,
+      "age pad": 2,
+      "backgroundColor": {
+        "text": {
           "r": 255,
           "g": 255,
           "b": 255
-        },
-        "drawCurveGradient": false,
-        "curveGradStart": {
-          "r": 0,
-          "g": 0,
-          "b": 0
-        },
-        "curveGradEnd": {
+        }
+      },
+      "customColor": {
+        "text": {
           "r": 255,
           "g": 255,
           "b": 255
-        },
-        "flipScale": false,
-        "scaleStart": 0,
-        "scaleStep": 1,
-        "pointType": "rect",
-        "drawExtraColumn": null,
-        "windowSize": 2,
-        "stepSize": 1
-      }
+        }
+      },
+      "fonts": {},
+      "children": [],
+      "isDataMiningColumn": false,
+      "drawPoints": false,
+      "drawLine": true,
+      "lineColor": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "drawSmooth": true,
+      "drawFill": true,
+      "fillColor": {
+        "r": 64,
+        "g": 233,
+        "b": 191
+      },
+      "doNotSetWindowAuto": false,
+      "minWindow": -150,
+      "maxWindow": 280,
+      "drawScale": true,
+      "drawBgrndGradient": false,
+      "backGradStart": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "backGradEnd": {
+        "r": 255,
+        "g": 255,
+        "b": 255
+      },
+      "drawCurveGradient": false,
+      "curveGradStart": {
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
+      "curveGradEnd": {
+        "r": 255,
+        "g": 255,
+        "b": 255
+      },
+      "flipScale": false,
+      "scaleStart": 0,
+      "scaleStep": 1,
+      "pointType": "rect",
+      "drawExtraColumn": null,
+      "windowSize": 2,
+      "stepSize": 1
+    },
+    "translate-sequence-column-key": {
+      "_id": "class datastore.SequenceColumn:Sequence",
+      "title": "Sequence Title",
+      "useNamedColor": false,
+      "placeHolder": false,
+      "drawTitle": true,
+      "drawAgeLabel": false,
+      "drawUncertaintyLabel": false,
+      "isSelected": true,
+      "pad": 0.2,
+      "age pad": 2,
+      "backgroundColor": {
+        "text": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        }
+      },
+      "customColor": {
+        "text": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        }
+      },
+      "fonts": {},
+      "children": [],
+      "width": 1000,
+      "labelMarginLeft": 5,
+      "labelMarginRight": 5,
+      "graphStyle": "stroke-width: 0; fill: rgb(64, 191, 233);",
+      "drawNameLabel": true,
+      "type": "sequence"
+    }
 }

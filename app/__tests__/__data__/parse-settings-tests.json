@@ -182,6 +182,36 @@
         "show": true,
         "expanded": true
       },
+      "translate-sequence-column-test": {
+        "name": "Sequence",
+        "editName": "Sequence Title",
+        "fontsInfo": {},
+        "fontOptions": ["Column Header"],
+        "popup": "",
+        "on": true,
+        "width": 1000,
+        "enableTitle": true,
+        "rgb": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "minAge": 100,
+        "maxAge": 101,
+        "children": [],
+        "parent": null,
+        "units": "Ma",
+        "columnDisplayType": "Sequence",
+        "columnSpecificSettings": {
+          "labelMarginLeft": 5,
+          "labelMarginRight": 5,
+          "graphStyle": "stroke-width: 0; fill: rgb(64, 191, 233);",
+          "drawNameLabel": true,
+          "type": "sequence"
+        },
+        "show": true,
+        "expanded": false
+      },
       "generate-basic-column-xml-test": {
         "_id": "class datastore.RootColumn:Chart Root",
         "title": "Chart Root",
