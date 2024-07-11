@@ -14,7 +14,6 @@ import PersonIcon from "@mui/icons-material/Person";
 import { useNavigate } from "react-router";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
-import "../Profile.css";
 import { useTheme } from "@mui/material";
 
 export const TSCAccountMenu = observer(() => {
