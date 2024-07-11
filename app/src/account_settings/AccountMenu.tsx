@@ -16,7 +16,7 @@ import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import { useTheme } from "@mui/material";
 
-export const TSCAccountMenu = observer(() => {
+export const AccountMenu = observer(() => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -87,11 +87,11 @@ export const TSCAccountMenu = observer(() => {
         </MenuItem>
         {/* TODO: Implement Admin Controls */}
         {state.user.isAdmin && (
-          <MenuItem onClick={() => navigate("/")}>
+          <MenuItem onClick={() => navigate("/admin")}>
             <ListItemIcon>
               <AdminPanelSettingsIcon fontSize="small" color="icon" />
             </ListItemIcon>
-            Admin Panel
+            Admin
           </MenuItem>
         )}
         <MenuItem
