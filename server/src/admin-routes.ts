@@ -15,6 +15,7 @@ import validator from "validator";
 import { pipeline } from "stream/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "util";
+import { assertAdminSharedUser } from "@tsconline/shared";
 import { DatapackDescriptionInfo } from "./types.js";
 
 /**
@@ -29,6 +30,9 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { hashedPassword, ...displayedUser } = user;
       return displayedUser;
+    });
+    displayedUsers.forEach((user) => {
+      assertAdminSharedUser(user);
     });
     reply.send({ users: displayedUsers });
   } catch (e) {
