@@ -64,6 +64,7 @@ export type LegendItem = {
 export type ErrorAlert = {
   errorText: string;
   errorCount: number;
+  errorAnchorEl?: string;
 };
 export type Config = {
   datapacks: string[];

@@ -732,14 +732,15 @@ export const removeAllErrors = action("removeAllErrors", () => {
 export const removeError = action("removeError", (context: ErrorCodes) => {
   state.errors.errorAlerts.delete(context);
 });
-export const pushError = action("pushError", (context: ErrorCodes) => {
+export const pushError = action("pushError", (context: ErrorCodes, anchorElementID?: string) => {
   if (state.errors.errorAlerts.has(context)) {
     state.errors.errorAlerts.get(context)!.errorCount += 1;
     return;
   }
   const error = {
     errorText: ErrorMessages[context],
-    errorCount: 1
+    errorCount: 1,
+    errorAnchorEl: anchorElementID
   };
   state.errors.errorAlerts.set(context, error);
 });
