@@ -202,13 +202,13 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
       reply.send({ authenticated: false });
       return;
     }
-    const { email, username, pictureUrl, hashedPassword } = user;
+    const { email, username, pictureUrl, hashedPassword, isAdmin } = user;
     const sharedUser: SharedUser = {
       email,
       username,
       pictureUrl,
       isGoogleUser: !hashedPassword,
-      isAdmin: false
+      isAdmin: Boolean(isAdmin)
     };
     assertSharedUser(sharedUser);
     reply.send({ authenticated: true, user: sharedUser });
