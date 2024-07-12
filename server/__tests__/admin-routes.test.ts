@@ -31,9 +31,9 @@ vi.mock("util", async () => {
 vi.mock("@tsconline/shared", async (importOriginal) => {
   const actual = await importOriginal<typeof shared>();
   return {
-    assertAdminSharedUser: vi.fn().mockImplementation(actual.assertAdminSharedUser),
-  }
-})
+    assertAdminSharedUser: vi.fn().mockImplementation(actual.assertAdminSharedUser)
+  };
+});
 vi.mock("../src/util", async () => {
   return {
     getBytes: vi.fn().mockReturnValue("30MB"),
@@ -87,7 +87,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => { });
+        readable.on("data", () => {});
         readable.on("end", () => {
           resolve();
         });
@@ -198,7 +198,7 @@ beforeAll(async () => {
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => { });
+  vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 afterAll(async () => {
@@ -1204,8 +1204,22 @@ describe("getUsers", () => {
     });
     expect(await response.json()).toEqual({
       users: [
-        { ...testAdminUser, hashedPassword: undefined, isAdmin: true, isGoogleUser: false, invalidateSession: false, emailVerified: true },
-        { ...testNonAdminUser, hashedPassword: undefined, isAdmin: false, isGoogleUser: false, invalidateSession: false, emailVerified: true }
+        {
+          ...testAdminUser,
+          hashedPassword: undefined,
+          isAdmin: true,
+          isGoogleUser: false,
+          invalidateSession: false,
+          emailVerified: true
+        },
+        {
+          ...testNonAdminUser,
+          hashedPassword: undefined,
+          isAdmin: false,
+          isGoogleUser: false,
+          invalidateSession: false,
+          emailVerified: true
+        }
       ]
     });
     expect(response.statusCode).toBe(200);
@@ -1221,17 +1235,26 @@ describe("getUsers", () => {
     expect(response.statusCode).toBe(404);
   });
   it("should return 404 if displayed users are not correctly processed", async () => {
-    const assertAdminSharedUser = vi.spyOn(shared, "assertAdminSharedUser").mockImplementationOnce(() => { throw new Error() });
+    const assertAdminSharedUser = vi.spyOn(shared, "assertAdminSharedUser").mockImplementationOnce(() => {
+      throw new Error();
+    });
     const response = await app.inject({
       method: "GET",
       url: "/admin/users",
       headers
     });
     expect(assertAdminSharedUser).toHaveBeenCalledTimes(1);
-    expect(assertAdminSharedUser).toHaveBeenCalledWith({ ...testAdminUser, hashedPassword: undefined, isAdmin: true, isGoogleUser: false, invalidateSession: false, emailVerified: true });
+    expect(assertAdminSharedUser).toHaveBeenCalledWith({
+      ...testAdminUser,
+      hashedPassword: undefined,
+      isAdmin: true,
+      isGoogleUser: false,
+      invalidateSession: false,
+      emailVerified: true
+    });
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toBe(404);
-  })
+  });
 });
 
 describe("adminDeleteServerDatapack", () => {

@@ -521,7 +521,8 @@ export function assertAdminSharedUser(o: any): asserts o is AdminSharedUser {
   if (typeof o.userId !== "number") throwError("AdminSharedUser", "userId", "number", o.userId);
   if (typeof o.uuid !== "string") throwError("AdminSharedUser", "uuid", "string", o.uuid);
   if (typeof o.emailVerified !== "boolean") throwError("AdminSharedUser", "emailVerified", "boolean", o.emailVerified);
-  if (typeof o.invalidateSession !== "boolean") throwError("AdminSharedUser", "invalidateSession", "boolean", o.invalidateSession);
+  if (typeof o.invalidateSession !== "boolean")
+    throwError("AdminSharedUser", "invalidateSession", "boolean", o.invalidateSession);
   assertSharedUser(o);
 }
 export function assertSharedUser(o: any): asserts o is SharedUser {
@@ -1172,8 +1173,8 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
     default:
       throw new Error(
         "ColumnSpecificSettings must be an object of a valid column type. Found value of " +
-        type +
-        " which is not a valid column type"
+          type +
+          " which is not a valid column type"
       );
   }
 }

@@ -29,7 +29,13 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
     const displayedUsers = users.map((user) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { hashedPassword, ...displayedUser } = user;
-      return { ...displayedUser, isGoogleUser: hashedPassword === null, isAdmin: user.isAdmin === 1, emailVerified: user.emailVerified === 1, invalidateSession: user.invalidateSession === 1 };
+      return {
+        ...displayedUser,
+        isGoogleUser: hashedPassword === null,
+        isAdmin: user.isAdmin === 1,
+        emailVerified: user.emailVerified === 1,
+        invalidateSession: user.invalidateSession === 1
+      };
     });
     displayedUsers.forEach((user) => {
       assertAdminSharedUser(user);
