@@ -26,10 +26,8 @@ self.onmessage = async (e: MessageEvent<DownloadPdfMessage>) => {
   async function runWithTimeout() {
     try {
       const result = await Promise.race([addImage, timeoutPromise]);
-      console.log(result);
       message.value = doc.output("blob");
     } catch (error) {
-      console.log(error);
       message.status = "failure";
     }
   }
