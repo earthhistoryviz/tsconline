@@ -20,9 +20,9 @@ export const Time = observer(function Time() {
   }
   const disabled = units !== "Ma";
   function checkAgeRange(top: number, base: number, elementRef: RefObject<HTMLElement>) {
-    if (top > base) {
+    if (top > base || isNaN(top) || isNaN(base)) {
       actions.pushError(ErrorCodes.INVALID_UNIT_RANGE, elementRef);
-    } else if (!(isNaN(top) || isNaN(base))) {
+    } else {
       actions.removeError(ErrorCodes.INVALID_UNIT_RANGE);
     }
   }

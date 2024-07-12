@@ -744,7 +744,7 @@ export const pushError = action("pushError", (context: ErrorCodes, anchorElement
     errorCount: 1,
     errorAnchorEl: anchorElementRef
   };
-
+  //console.log(anchorElementRef?.current);
   state.errors.errorAlerts.set(context, error);
 });
 export const removeSnackbar = action("removeSnackbar", (text: string) => {
