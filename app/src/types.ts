@@ -20,6 +20,11 @@ export type DownloadPdfMessage = {
   width: number;
 };
 
+export type DownloadPdfCompleteMessage = {
+  status: "success" | "failure";
+  value: Blob | undefined;
+};
+
 //id: unique id among search results
 //columnName: name of column that event/column is under
 //columnPath: path of edit names up until chart root for display

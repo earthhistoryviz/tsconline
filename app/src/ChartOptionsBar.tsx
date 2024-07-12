@@ -31,7 +31,7 @@ import {
 } from "@mui/material";
 import React from "react";
 import isValidFilename from "valid-filename";
-import { DownloadPdfMessage } from "./types";
+import { DownloadPdfCompleteMessage, DownloadPdfMessage } from "./types";
 import { TSCLoadingButton } from "./components/TSCLoadingButton";
 interface OptionsBarProps {
   transformRef: React.RefObject<ReactZoomPanPinchContentRef>;
@@ -231,11 +231,16 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
             });
             const message: DownloadPdfMessage = { imgURI: imgURI, height: svgHeight, width: svgWidth };
             downloadWorker.postMessage(message);
-            downloadWorker.onmessage = function (e: MessageEvent<Blob>) {
-              FileSaver.saveAs(e.data, state.chartTab.downloadFilename + ".pdf");
-              actions.pushSnackbar("Saved Chart as PDF!", "success");
-              downloadWorker.terminate();
+            downloadWorker.onmessage = function (e: MessageEvent<DownloadPdfCompleteMessage>) {
+              const { status, value } = e.data;
+              if (status === "success" && value) {
+                FileSaver.saveAs(value, state.chartTab.downloadFilename + ".pdf");
+                actions.pushSnackbar("Saved Chart as PDF!", "success");
+              } else {
+                actions.pushSnackbar("Saving Chart Timed Out", "info");
+              }
               actions.setChartTabIsSavingChart(false);
+              downloadWorker.terminate();
             };
           } else if (state.chartTab.downloadFiletype === "png") {
             const a = document.createElement("a");
