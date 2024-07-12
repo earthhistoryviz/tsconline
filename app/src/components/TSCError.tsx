@@ -1,6 +1,6 @@
 import { Fade, IconButton, Snackbar, Typography, useTheme } from "@mui/material";
 import { context } from "../state";
-import { useContext } from "react";
+import { useContext, RefObject } from "react";
 import { observer } from "mobx-react-lite";
 import CloseIcon from "@mui/icons-material/Close";
 import { CustomDivider, StyledScrollbar } from "./TSCComponents";
@@ -15,10 +15,10 @@ type TSCErrorProps = {
   message: string;
   index: number;
   count: number;
-  anchorElementID?: string;
+  anchorElementRef?: RefObject<HTMLElement>;
 };
 export const TSCError: React.FC<TSCErrorProps> = observer(
-  ({ errorContext, message, index, count, anchorElementID }) => {
+  ({ errorContext, message, index, count, anchorElementRef }) => {
     const { actions } = useContext(context);
     const theme = useTheme();
     const margin = index < 5 ? index * 10 : 40;
@@ -32,14 +32,15 @@ export const TSCError: React.FC<TSCErrorProps> = observer(
       if (reason === "clickaway") return;
       actions.removeError(errorContext);
     }
-    if (anchorElementID) {
+    if (anchorElementRef?.current) {
       return (
         <CustomErrorPopoverTextField
           errorContext={errorContext}
           message={message}
-          anchorElementID={anchorElementID}></CustomErrorPopoverTextField>
+          anchorElement={anchorElementRef?.current}></CustomErrorPopoverTextField>
       );
     }
+
     return (
       <Snackbar
         open={true}

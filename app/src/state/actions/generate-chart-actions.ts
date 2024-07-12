@@ -93,8 +93,10 @@ function areSettingsValidForGeneration() {
         isNaN(state.settings.timeSettings[key].baseStageAge)
     )
   ) {
+    generalActions.pushError(ErrorCodes.IS_BAD_RANGE);
     return false;
   }
+  generalActions.removeError(ErrorCodes.IS_BAD_RANGE);
   if (!state.settingsTabs.columns.children.some((column) => column.on)) {
     generalActions.pushError(ErrorCodes.NO_COLUMNS_SELECTED);
     return false;
