@@ -516,6 +516,13 @@ export type TimescaleItem = {
   value: number;
 };
 
+export function assertAdminSharedUserArray(o: any): asserts o is AdminSharedUser[] {
+  if (!Array.isArray(o)) throw new Error("AdminSharedUser must be an array");
+  for (const user of o) {
+    assertAdminSharedUser(user);
+  }
+}
+
 export function assertAdminSharedUser(o: any): asserts o is AdminSharedUser {
   if (!o || typeof o !== "object") throw new Error("AdminSharedUser must be a non-null object");
   if (typeof o.userId !== "number") throwError("AdminSharedUser", "userId", "number", o.userId);
