@@ -59,6 +59,7 @@ export default observer(function App() {
             message={error.errorText}
             index={index}
             count={error.errorCount}
+            anchorElementRef={error.errorAnchorEl}
           />
         ))}
         <TSCPopupDialog
