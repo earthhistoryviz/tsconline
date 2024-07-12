@@ -3,6 +3,7 @@ import { useContext } from "react";
 import { context } from "./state";
 import { useTheme } from "@mui/material/styles";
 import "./Chart.css";
+import { CircularProgress } from "@mui/material";
 import { CustomTooltip, TSCButton } from "./components";
 import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
@@ -31,8 +32,7 @@ import {
 } from "@mui/material";
 import React from "react";
 import isValidFilename from "valid-filename";
-import jsPDF from "jspdf";
-
+import { DownloadPdfMessage } from "./types";
 interface OptionsBarProps {
   transformRef: React.RefObject<ReactZoomPanPinchContentRef>;
   svgRef: React.RefObject<HTMLDivElement>;
@@ -170,7 +170,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
   };
   const DownloadButton = observer(() => {
     const [downloadOpen, setDownloadOpen] = React.useState(false);
-
+    const [isDownloading, setIsDownloading] = React.useState(false);
     const handleDownloadOpen = () => {
       setDownloadOpen(true);
     };
@@ -182,10 +182,11 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
       actions.setChartTabDownloadFilename(e.target.value);
     };
 
-    const downloadChart = () => {
+    async function downloadChart() {
       if (state.chartTab.downloadFiletype === "svg") {
         const blob = new Blob([state.chartContent]);
         FileSaver.saveAs(blob, state.chartTab.downloadFilename + ".svg");
+        actions.pushSnackbar("Saved Chart as SVG!", "success");
       } else {
         const svgNode = svgRef.current?.children[0];
         if (!svgNode) return;
@@ -213,10 +214,10 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
 
           //determines resolution of image
           const pixelRatio = 3;
-          
+
           canvas.width = svgWidth * pixelRatio;
           canvas.height = svgHeight * pixelRatio;
-          
+
           ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
           ctx.drawImage(image, 0, 0);
 
@@ -224,24 +225,32 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
           const imgURI = canvas.toDataURL();
 
           if (state.chartTab.downloadFiletype === "pdf") {
-            const orientation = svgHeight > svgWidth ? "portrait" : "landscape";
-            const doc = new jsPDF({
-              orientation: orientation,
-              unit: "px",
-              format: [svgHeight, svgWidth],
-              compress: true
+            const downloadWorker: Worker = new Worker(new URL("./util/workers/download-pdf.ts", import.meta.url), {
+              type: "module"
             });
-            doc.addImage(imgURI, "png", 0, 0, svgWidth, svgHeight);
-            doc.save(state.chartTab.downloadFilename + ".pdf");
+            const message: DownloadPdfMessage = { imgURI: imgURI, height: svgHeight, width: svgWidth };
+            downloadWorker.postMessage(message);
+            downloadWorker.onmessage = function (e: MessageEvent<Blob>) {
+              FileSaver.saveAs(e.data, state.chartTab.downloadFilename + ".pdf");
+              actions.pushSnackbar("Saved Chart as PDF!", "success");
+              downloadWorker.terminate();
+            };
           } else if (state.chartTab.downloadFiletype === "png") {
             const a = document.createElement("a");
             a.download = state.chartTab.downloadFilename + ".png"; // filename
             a.target = "_blank";
             a.href = imgURI;
             a.click();
+            actions.pushSnackbar("Saved Chart as PNG!", "success");
           }
+          canvas.remove();
         };
       }
+    }
+    const handleClick = async () => {
+      setIsDownloading(true);
+      downloadChart();
+      setIsDownloading(false);
     };
     return (
       <div>
@@ -260,8 +269,9 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
                 actions.pushSnackbar("Filename is not valid", "warning");
                 return;
               }
-              downloadChart();
-              handleDownloadClose();
+              handleClick();
+              //downloadChart();
+              //handleDownloadClose();
             }
           }}>
           <DialogTitle>Save Chart</DialogTitle>
@@ -302,9 +312,12 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
             <Button variant="outlined" onClick={handleDownloadClose}>
               Cancel
             </Button>
-            <TSCButton variant="text" type="submit">
-              Save
-            </TSCButton>
+            {isDownloading === true && <CircularProgress />}
+            {isDownloading === false && (
+              <TSCButton variant="text" type="submit" disabled={isDownloading}>
+                Save
+              </TSCButton>
+            )}
           </DialogActions>
         </Dialog>
       </div>

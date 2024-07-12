@@ -2515,7 +2515,8 @@ const RAW_RUNTIME_STATE =
           ["typescript", "patch:typescript@npm%3A5.2.2#optional!builtin<compat/typescript>::version=5.2.2&hash=f3b441"],\
           ["valid-filename", "npm:4.0.0"],\
           ["vite", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:5.2.11"],\
-          ["vitest", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:1.6.0"]\
+          ["vitest", "virtual:8b3f5ea1e24b4f8c2c134b0549a9beb03395fa42c8f98efae8a764a43a94bc8ea254baae272c313374761823bdf09895a2fd5c4131e5615f3c5c85481d0c3dc6#npm:1.6.0"],\
+          ["web-worker", "npm:1.3.0"]\
         ],\
         "linkType": "SOFT"\
       }]\
@@ -12220,6 +12221,15 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./.yarn/cache/web-streams-polyfill-npm-3.3.3-f24b9f8c34-8e7e13501b.zip/node_modules/web-streams-polyfill/",\
         "packageDependencies": [\
           ["web-streams-polyfill", "npm:3.3.3"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["web-worker", [\
+      ["npm:1.3.0", {\
+        "packageLocation": "./.yarn/cache/web-worker-npm-1.3.0-871f7e24cd-9dd8976399.zip/node_modules/web-worker/",\
+        "packageDependencies": [\
+          ["web-worker", "npm:1.3.0"]\
         ],\
         "linkType": "HARD"\
       }]\
