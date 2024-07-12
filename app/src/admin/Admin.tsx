@@ -3,26 +3,27 @@ import { useContext, useEffect, useState } from "react";
 import { context } from "../state";
 import { UnauthorizedAccess } from "./UnauthorizedAccess";
 import { AgGridReact } from "ag-grid-react";
-import { fetcher } from "../util";
+import { executeRecaptcha, fetcher, loadRecaptcha, removeRecaptcha } from "../util";
 import { User } from "../types";
+import { ErrorCodes } from "../util/error-codes";
+import { Typography } from "@mui/material";
 
-const fetchUsers = async () => {
-  const response = await fetcher("/admin/users", {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json"
-    }
-  });
-  return response;
-};
 export const Admin = observer(function Admin() {
-  const { state } = useContext(context);
-  const [users, setUsers] = useState<User[]>([]);
+  const { state, actions } = useContext(context);
   useEffect(() => {
-    fetchUsers().then((response) => {
-      console.log(response);
+    loadRecaptcha().then(() => {
+      actions.fetchUsers();
     });
+    return () => {
+      removeRecaptcha();
+    };
   }, []);
   if (!state.user.isAdmin) return <UnauthorizedAccess />;
-  return <div>Admin</div>;
+  return (
+    <div>
+      {state.admin.displayedUsers.map((user) => (
+        <Typography key={user.uuid}>{user.username}</Typography>
+      ))}
+    </div>
+  );
 });
