@@ -4,17 +4,28 @@ import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import { CustomDivider, TSCCheckbox } from "../components";
 import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import { useContext, useState } from "react";
+import { useContext, useState, useRef, RefObject } from "react";
 import { context } from "../state/index";
 import "./Time.css";
+import { ErrorCodes } from "../util/error-codes";
 
 export const Time = observer(function Time() {
   const { state, actions } = useContext(context);
   const [units, setUnits] = useState<string>(Object.keys(state.settings.timeSettings)[0]);
+  const topAgeRef = useRef<HTMLDivElement>(null);
+  const baseAgeRef = useRef<HTMLDivElement>(null);
+
   if (units === null || units === undefined) {
     throw new Error("There must be a unit used in the config");
   }
   const disabled = units !== "Ma";
+  function checkAgeRange(top: number, base: number, elementRef: RefObject<HTMLElement>) {
+    if (top > base || isNaN(top) || isNaN(base)) {
+      actions.pushError(ErrorCodes.INVALID_UNIT_RANGE, elementRef);
+    } else {
+      actions.removeError(ErrorCodes.INVALID_UNIT_RANGE);
+    }
+  }
   return (
     <div>
       <ToggleButtonGroup
@@ -38,7 +49,7 @@ export const Time = observer(function Time() {
         <Box className="time-settings-age-container">
           <Typography className="IntervalLabel">Top of Interval</Typography>
           <CustomDivider className="time-form-divider" />
-          <FormControl className="FormControlIntervals" size="small">
+          <FormControl className="FormControlIntervals" size="small" ref={topAgeRef}>
             <InputLabel>{disabled ? "Not Available for this Unit" : "Top Age/Stage Name"}</InputLabel>
             <Select
               className="SelectTop"
@@ -52,6 +63,12 @@ export const Time = observer(function Time() {
                 const age = state.geologicalTopStageAges.find((item) => item.key === event.target.value);
                 if (!age) return;
                 actions.setTopStageAge(age.value, units);
+
+                checkAgeRange(
+                  state.settings.timeSettings[units].topStageAge,
+                  state.settings.timeSettings[units].baseStageAge,
+                  topAgeRef
+                );
               }}>
               {state.geologicalTopStageAges.map((item) => (
                 <MenuItem key={item.key} value={item.key}>
@@ -72,12 +89,18 @@ export const Time = observer(function Time() {
               }
               onChange={(event) => {
                 actions.setTopStageAge(parseFloat(event.target.value), units);
+
+                checkAgeRange(
+                  state.settings.timeSettings[units].topStageAge,
+                  state.settings.timeSettings[units].baseStageAge,
+                  topAgeRef
+                );
               }}
             />
           </FormControl>
           <Typography className="IntervalLabel">Base of Interval</Typography>
           <CustomDivider className="time-form-divider" />
-          <FormControl className="FormControlIntervals" size="small">
+          <FormControl className="FormControlIntervals" size="small" ref={baseAgeRef}>
             <InputLabel htmlFor="base-age-selector">
               {disabled ? "Not Available for this Unit" : "Base Age/Stage Name"}
             </InputLabel>
@@ -93,6 +116,12 @@ export const Time = observer(function Time() {
                 const age = state.geologicalBaseStageAges.find((item) => item.key === event.target.value);
                 if (!age) return;
                 actions.setBaseStageAge(age.value, units);
+
+                checkAgeRange(
+                  state.settings.timeSettings[units].topStageAge,
+                  state.settings.timeSettings[units].baseStageAge,
+                  baseAgeRef
+                );
               }}>
               {state.geologicalBaseStageAges
                 .filter((item) => item.value >= state.settings.timeSettings[units].topStageAge)
@@ -115,6 +144,12 @@ export const Time = observer(function Time() {
               }
               onChange={(event) => {
                 actions.setBaseStageAge(parseFloat(event.target.value), units);
+
+                checkAgeRange(
+                  state.settings.timeSettings[units].topStageAge,
+                  state.settings.timeSettings[units].baseStageAge,
+                  baseAgeRef
+                );
               }}
             />
           </FormControl>

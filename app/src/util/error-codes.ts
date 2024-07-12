@@ -21,6 +21,7 @@ export enum ErrorCodes {
   NO_COLUMNS_SELECTED = "NO_COLUMNS_SELECTED",
   INVALID_UNIT_RANGE = "INVALID_UNIT_RANGE",
   INVALID_MAPPACK_INFO = "INVALID_MAPPACK_INFO",
+  IS_BAD_RANGE = "IS_BAD_RANGE",
   UNABLE_TO_LOGIN_SERVER = "UNABLE_TO_LOGIN_SERVER",
   UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD = "UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD",
   UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL = "UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL",
@@ -78,6 +79,7 @@ export const ErrorMessages = {
   [ErrorCodes.NO_COLUMNS_SELECTED]: "No columns selected. Please select at least one column to generate.",
   [ErrorCodes.INVALID_UNIT_RANGE]:
     "Invalid unit range. Please ensure the base age is greater than the top age when generating a chart.",
+  [ErrorCodes.IS_BAD_RANGE]: "Bad unit range. Please ensure you have a valid unit range.",
   [ErrorCodes.INVALID_MAPPACK_INFO]: "Invalid mappack info received from server. Please try again later.",
   [ErrorCodes.UNABLE_TO_LOGIN_SERVER]: "Unable to login due to server error. Please try again later.",
   [ErrorCodes.UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL]: "Unable to login with Google credentials. Please try again.",
