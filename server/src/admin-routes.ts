@@ -31,9 +31,14 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
       const { hashedPassword, ...displayedUser } = user;
       return displayedUser;
     });
-    displayedUsers.forEach((user) => {
-      assertAdminSharedUser(user);
-    });
+    try {
+      displayedUsers.forEach((user) => {
+        assertAdminSharedUser(user);
+      });
+    } catch (e) {
+      reply.status(500).send({ error: "Users found do not match what is expected. Please try again later." });
+      return;
+    }
     reply.send({ users: displayedUsers });
   } catch (e) {
     reply.status(404).send({ error: "Unknown error" });

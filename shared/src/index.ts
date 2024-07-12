@@ -19,7 +19,6 @@ export type AdminSharedUser = {
   uuid: string;
   emailVerified: number;
   invalidateSession: number;
-  isAdmin: number;
 } & SharedUser;
 
 export type SuccessfulServerResponse = {
@@ -523,7 +522,6 @@ export function assertAdminSharedUser(o: any): asserts o is AdminSharedUser {
   if (typeof o.uuid !== "string") throwError("AdminSharedUser", "uuid", "string", o.uuid);
   if (typeof o.emailVerified !== "number") throwError("AdminSharedUser", "emailVerified", "number", o.emailVerified);
   if (typeof o.invalidateSession !== "number") throwError("AdminSharedUser", "invalidateSession", "number", o.invalidateSession);
-  if (typeof o.isAdmin !== "number") throwError("AdminSharedUser", "isAdmin", "number", o.isAdmin);
   assertSharedUser(o);
 }
 export function assertSharedUser(o: any): asserts o is SharedUser {
