@@ -156,7 +156,7 @@ export function assertDatapackDescriptionInfo(o: any): asserts o is DatapackDesc
   if (!o || typeof o !== "object") throw new Error("DatapackDescriptionInfo must be a non-null object");
   if (typeof o.description !== "string") throw new Error("DatapackDescriptionInfo description must be of type string");
   if (typeof o.title !== "string") throw new Error("DatapackDescriptionInfo title must be of type string");
-  if (typeof o.file !== "string") throw new Error("DatapackDecriptionInfo file must be of type string");
+  if (typeof o.file !== "string") throw new Error("DatapackDescriptionInfo file must be of type string");
   if (typeof o.size !== "string") throw new Error("DatapackDescriptionInfo size must be of type string");
 }
 

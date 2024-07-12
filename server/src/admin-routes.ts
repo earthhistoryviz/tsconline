@@ -15,6 +15,7 @@ import validator from "validator";
 import { pipeline } from "stream/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "util";
+import { DatapackDescriptionInfo } from "./types.js";
 
 /**
  * Get all users for admin to configure on frontend
@@ -201,7 +202,8 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
         (await checkFileExists(filepath)) &&
         (await checkFileExists(decryptedFilepath)) &&
         (adminconfig.datapacks.includes(filename) ||
-          (assetconfigs.activeDatapacks.includes(filename) && !adminconfig.removeDevDatapacks.includes(filename))) &&
+          (assetconfigs.activeDatapacks.some((datapack) => datapack.file === filename) &&
+            !adminconfig.removeDevDatapacks.includes(filename))) &&
         datapackIndex[filename]
       ) {
         reply.status(409).send({ error: "File already exists" });
@@ -266,7 +268,26 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     await errorHandler("File was not decrypted properly");
     return;
   }
-  const successful = await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, [filename]);
+
+  let formattedSize;
+  const bytes = file.file.bytesRead;
+  if (bytes === 0) {
+    reply.status(400).send({ error: `Empty file cannot be uploaded` });
+    return;
+  } else {
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    formattedSize = parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  }
+  const datapackInfo: DatapackDescriptionInfo = {
+    file: filename,
+    description: description,
+    title: title,
+    size: formattedSize
+  };
+
+  const successful = await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, [datapackInfo]);
   if (!successful) {
     await errorHandler("Error parsing the datapack for chart generation");
     return;
@@ -277,7 +298,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       adminconfig.removeDevDatapacks = adminconfig.removeDevDatapacks.filter((pack) => pack !== filename);
       // on load, we prune datapacks that are in removeDevDatapacks so add it back but DON'T WRITE TO FILE
       if (!assetconfigs.activeDatapacks.includes(filename)) {
-        assetconfigs.activeDatapacks.push(filename);
+        assetconfigs.activeDatapacks.push(datapackInfo);
       }
     } else if (!assetconfigs.activeDatapacks.includes(filename) && !adminconfig.datapacks.includes(filename)) {
       adminconfig.datapacks.push(filename);
@@ -327,13 +348,13 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     reply.status(500).send({ error: "Datapack file does not exist" });
     return;
   }
-  if (!adminconfig.datapacks.includes(datapack) && !assetconfigs.activeDatapacks.includes(datapack)) {
+  if (!adminconfig.datapacks.includes(datapack) && !assetconfigs.activeDatapacks.some((dp) => dp.file === datapack)) {
     reply.status(404).send({ error: "Datapack not found" });
     return;
   }
-  if (assetconfigs.activeDatapacks.includes(datapack)) {
+  if (assetconfigs.activeDatapacks.some((dp) => dp.file === datapack)) {
     // don't write to file to prevent merge issues on server
-    assetconfigs.activeDatapacks = assetconfigs.activeDatapacks.filter((pack) => pack !== datapack);
+    assetconfigs.activeDatapacks = assetconfigs.activeDatapacks.filter((pack) => pack.file !== datapack);
     adminconfig.removeDevDatapacks.push(datapack);
   }
   if (adminconfig.datapacks.includes(datapack)) {
