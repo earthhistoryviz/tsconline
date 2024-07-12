@@ -311,9 +311,8 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
           </DialogContent>
           <DialogActions>
             <Button variant="outlined" onClick={handleDownloadClose}>
-              Cancel
+              Exit
             </Button>
-
             <TSCLoadingButton loading={state.chartTab.isSavingChart} type="submit">
               Save
             </TSCLoadingButton>
