@@ -17,8 +17,8 @@ export type SharedUser = {
 export type AdminSharedUser = {
   userId: number;
   uuid: string;
-  emailVerified: number;
-  invalidateSession: number;
+  emailVerified: boolean;
+  invalidateSession: boolean;
 } & SharedUser;
 
 export type SuccessfulServerResponse = {
@@ -520,8 +520,8 @@ export function assertAdminSharedUser(o: any): asserts o is AdminSharedUser {
   if (!o || typeof o !== "object") throw new Error("AdminSharedUser must be a non-null object");
   if (typeof o.userId !== "number") throwError("AdminSharedUser", "userId", "number", o.userId);
   if (typeof o.uuid !== "string") throwError("AdminSharedUser", "uuid", "string", o.uuid);
-  if (typeof o.emailVerified !== "number") throwError("AdminSharedUser", "emailVerified", "number", o.emailVerified);
-  if (typeof o.invalidateSession !== "number") throwError("AdminSharedUser", "invalidateSession", "number", o.invalidateSession);
+  if (typeof o.emailVerified !== "boolean") throwError("AdminSharedUser", "emailVerified", "boolean", o.emailVerified);
+  if (typeof o.invalidateSession !== "boolean") throwError("AdminSharedUser", "invalidateSession", "boolean", o.invalidateSession);
   assertSharedUser(o);
 }
 export function assertSharedUser(o: any): asserts o is SharedUser {

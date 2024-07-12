@@ -29,16 +29,11 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
     const displayedUsers = users.map((user) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { hashedPassword, ...displayedUser } = user;
-      return displayedUser;
+      return { ...displayedUser, isGoogleUser: hashedPassword === null, isAdmin: user.isAdmin === 1, emailVerified: user.emailVerified === 1, invalidateSession: user.invalidateSession === 1 };
     });
-    try {
-      displayedUsers.forEach((user) => {
-        assertAdminSharedUser(user);
-      });
-    } catch (e) {
-      reply.status(500).send({ error: "Users found do not match what is expected. Please try again later." });
-      return;
-    }
+    displayedUsers.forEach((user) => {
+      assertAdminSharedUser(user);
+    });
     reply.send({ users: displayedUsers });
   } catch (e) {
     reply.status(404).send({ error: "Unknown error" });
