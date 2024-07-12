@@ -1104,3 +1104,7 @@ export const setChartTabDownloadFiletype = action("setChartTabDownloadFiletype",
 export const setChartTabEnableScrollZoom = action("setChartTabEnableScrollZoom", (newval: boolean) => {
   state.chartTab.enableScrollZoom = newval;
 });
+
+export const setChartTabIsSavingChart = action((term: boolean) => {
+  state.chartTab.isSavingChart = term;
+});
