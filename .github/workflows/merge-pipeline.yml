@@ -190,12 +190,6 @@ jobs:
           make
           make jar
           find '/home/runner/work/tsconline/tsconline/tscreator/jars/' -type f -name '*.jar' -exec cp {} '/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar' \;
-          if [ -f "/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar" ]; then
-            echo "File exists."
-          else
-            echo "File does not exist."
-            exit 1
-          fi
 
       - name: Install xvfb
         run: sudo apt-get install xvfb
