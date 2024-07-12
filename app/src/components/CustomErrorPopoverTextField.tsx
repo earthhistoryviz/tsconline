@@ -17,8 +17,7 @@ export const CustomErrorPopoverTextField: React.FC<CustomErrorPopoverTextFieldPr
   ({ errorContext, message, anchorElement }) => {
     const { actions } = useContext(context);
     const theme = useTheme();
-    function handleCloseError(_event: React.SyntheticEvent | Event, reason?: string) {
-      if (reason === "clickaway") return;
+    function handleCloseError(_event: React.SyntheticEvent | Event) {
       actions.removeError(errorContext);
     }
 
