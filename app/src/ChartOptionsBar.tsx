@@ -3,7 +3,6 @@ import { useContext } from "react";
 import { context } from "./state";
 import { useTheme } from "@mui/material/styles";
 import "./Chart.css";
-import { CircularProgress } from "@mui/material";
 import { CustomTooltip, TSCButton } from "./components";
 import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
@@ -33,6 +32,7 @@ import {
 import React from "react";
 import isValidFilename from "valid-filename";
 import { DownloadPdfMessage } from "./types";
+import { TSCLoadingButton } from "./components/TSCLoadingButton";
 interface OptionsBarProps {
   transformRef: React.RefObject<ReactZoomPanPinchContentRef>;
   svgRef: React.RefObject<HTMLDivElement>;
@@ -170,7 +170,6 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
   };
   const DownloadButton = observer(() => {
     const [downloadOpen, setDownloadOpen] = React.useState(false);
-    const [isDownloading, setIsDownloading] = React.useState(false);
     const handleDownloadOpen = () => {
       setDownloadOpen(true);
     };
@@ -183,10 +182,12 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
     };
 
     async function downloadChart() {
+      actions.setChartTabIsSavingChart(true);
       if (state.chartTab.downloadFiletype === "svg") {
         const blob = new Blob([state.chartContent]);
         FileSaver.saveAs(blob, state.chartTab.downloadFilename + ".svg");
         actions.pushSnackbar("Saved Chart as SVG!", "success");
+        actions.setChartTabIsSavingChart(false);
       } else {
         const svgNode = svgRef.current?.children[0];
         if (!svgNode) return;
@@ -234,6 +235,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
               FileSaver.saveAs(e.data, state.chartTab.downloadFilename + ".pdf");
               actions.pushSnackbar("Saved Chart as PDF!", "success");
               downloadWorker.terminate();
+              actions.setChartTabIsSavingChart(false);
             };
           } else if (state.chartTab.downloadFiletype === "png") {
             const a = document.createElement("a");
@@ -242,16 +244,12 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
             a.href = imgURI;
             a.click();
             actions.pushSnackbar("Saved Chart as PNG!", "success");
+            actions.setChartTabIsSavingChart(false);
           }
           canvas.remove();
         };
       }
     }
-    const handleClick = async () => {
-      setIsDownloading(true);
-      downloadChart();
-      setIsDownloading(false);
-    };
     return (
       <div>
         <TSCButton buttonType="gradient" onClick={() => handleDownloadOpen()}>
@@ -269,9 +267,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
                 actions.pushSnackbar("Filename is not valid", "warning");
                 return;
               }
-              handleClick();
-              //downloadChart();
-              //handleDownloadClose();
+              downloadChart();
             }
           }}>
           <DialogTitle>Save Chart</DialogTitle>
@@ -312,12 +308,10 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
             <Button variant="outlined" onClick={handleDownloadClose}>
               Cancel
             </Button>
-            {isDownloading === true && <CircularProgress />}
-            {isDownloading === false && (
-              <TSCButton variant="text" type="submit" disabled={isDownloading}>
-                Save
-              </TSCButton>
-            )}
+
+            <TSCLoadingButton loading={state.chartTab.isSavingChart} type="submit">
+              Save
+            </TSCLoadingButton>
           </DialogActions>
         </Dialog>
       </div>
