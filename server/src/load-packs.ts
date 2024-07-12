@@ -60,10 +60,13 @@ export async function loadIndexes(
         console.log(chalk.red(`Cannot create a mapPack with datapack ${datapack.file} and error: ${e}`));
       });
   }
-  successful = (await grabMapImages(
-    datapacks.map((datapack) => datapack.file),
-    decryptionDirectory
-  )).successful && successful;
+  successful =
+    (
+      await grabMapImages(
+        datapacks.map((datapack) => datapack.file),
+        decryptionDirectory
+      )
+    ).successful && successful;
   return successful;
 }
 /**

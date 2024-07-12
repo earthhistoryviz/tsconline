@@ -226,7 +226,7 @@ export async function loadAssetConfigs() {
       assertAdminConfig(content);
       adminconfig = content;
       assetconfigs.activeDatapacks = assetconfigs.activeDatapacks.filter(
-        (datapack) => !adminconfig.removeDevDatapacks.includes(datapack)
+        (datapack) => !adminconfig.removeDevDatapacks.includes(datapack.file)
       );
     } catch (e) {
       console.log("ERROR: Failed to load admin configs from assets/admin-config.json.  Error was: ", e);

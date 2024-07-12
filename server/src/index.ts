@@ -10,7 +10,7 @@ import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/sha
 import fastifyCompress from "@fastify/compress";
 import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
-import { Email } from "./types.js";
+import { DatapackDescriptionInfo, Email } from "./types.js";
 import fastifyMultipart from "@fastify/multipart";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import fastifySecureSession from "@fastify/secure-session";
@@ -75,11 +75,17 @@ try {
 export const datapackIndex: DatapackIndex = {};
 export const mapPackIndex: MapPackIndex = {};
 const patterns = await loadFaciesPatterns();
+const datapackInfo: DatapackDescriptionInfo[] = adminconfig.datapacks.map((filename) => ({
+  file: filename,
+  description: "Admin Datapack",
+  title: "Admin Datapack",
+  size: ""
+}));
 await loadIndexes(
   datapackIndex,
   mapPackIndex,
   assetconfigs.decryptionDirectory,
-  assetconfigs.activeDatapacks.concat(adminconfig.datapacks)
+  assetconfigs.activeDatapacks.concat(datapackInfo)
 );
 
 declare module "@fastify/secure-session" {
