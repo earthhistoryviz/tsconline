@@ -1935,6 +1935,7 @@ __metadata:
     "@types/react": "npm:^18.0.27"
     "@types/react-dom": "npm:^18.0.10"
     "@vitejs/plugin-react": "npm:^4.2.1"
+    ag-grid-community: "npm:^32.0.1"
     ag-grid-react: "npm:^32.0.1"
     clsx: "npm:^2.1.0"
     color: "npm:^4.2.3"
@@ -2804,7 +2805,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ag-grid-community@npm:32.0.1":
+"ag-grid-community@npm:32.0.1, ag-grid-community@npm:^32.0.1":
   version: 32.0.1
   resolution: "ag-grid-community@npm:32.0.1"
   dependencies:
