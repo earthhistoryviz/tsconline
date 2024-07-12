@@ -14,6 +14,12 @@ export type WindowStats = {
   value: number;
 };
 
+export type DownloadPdfMessage = {
+  imgURI: string;
+  height: number;
+  width: number;
+};
+
 //id: unique id among search results
 //columnName: name of column that event/column is under
 //columnPath: path of edit names up until chart root for display
