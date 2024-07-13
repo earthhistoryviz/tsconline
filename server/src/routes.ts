@@ -13,7 +13,7 @@ import {
   assertTimescale,
   assertMapPackIndex
 } from "@tsconline/shared";
-import { deleteDirectory, resetUploadDirectory, checkHeader, assetconfigs, adminconfig } from "./util.js";
+import { deleteDirectory, resetUploadDirectory, checkHeader, assetconfigs, adminconfig, getBytes } from "./util.js";
 import md5 from "md5";
 import svgson from "svgson";
 import fs, { realpathSync } from "fs";
@@ -351,22 +351,16 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   const decryptedFilepathDir = path.join(decryptDir, filenameWithoutExtension);
   const mapPackIndexFilepath = path.join(userDir, "MapPackIndex.json");
   const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json");
-  let formattedSize;
   const bytes = uploadedFile.file.bytesRead;
   if (bytes === 0) {
     reply.status(400).send({ error: `Empty file cannot be uploaded` });
     return;
-  } else {
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    formattedSize = parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   }
   const datapackInfo: DatapackDescriptionInfo = {
     file: filename,
     description: description,
     title: name,
-    size: formattedSize
+    size: getBytes(bytes)
   };
 
   if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(ext)) {

@@ -12,7 +12,7 @@ import * as streamPromises from "stream/promises";
 import * as index from "../src/index";
 import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach } from "vitest";
 import fastifySecureSession from "@fastify/secure-session";
-import { resolve } from "path";
+import { normalize, resolve } from "path";
 import fastifyMultipart from "@fastify/multipart";
 import formAutoContent from "form-auto-content";
 import { DatapackParsingPack, MapPack } from "@tsconline/shared";
@@ -38,10 +38,29 @@ vi.mock("../src/util", async () => {
       decryptionDirectory: "testdir/decryptionDirectory",
       decryptionJar: "testdir/decryptionJar.jar",
       adminConfigPath: "testdir/adminConfig.json",
-      activeDatapacks: ["active-datapack.dpk", "remove-datapack.dpk"]
+      activeDatapacks: [{
+        description: "test",
+        title: "test",
+        file: "active-datapack.dpk",
+        size: "30MB"
+      },
+      {
+        description: "test",
+        title: "test",
+        file: "remove-datapack.dpk",
+        size: "30MB"
+      }
+      ]
     },
     adminconfig: {
-      datapacks: ["admin-datapack.dpk"],
+      datapacks: [
+        {
+          description: "test",
+          title: "test",
+          file: "admin-datapack.dpk",
+          size: "30MB"
+        }
+      ],
       removeDevDatapacks: ["remove-datapack.dpk"]
     },
     checkFileExists: vi.fn().mockResolvedValue(true)
@@ -802,14 +821,14 @@ describe("adminUploadServerDatapack", () => {
   const writeFile = vi.spyOn(fsPromises, "writeFile");
   const pipeline = vi.spyOn(streamPromises, "pipeline");
   const testDatapackDescription = {
-    title: "test-title",
-    description: "test-description",
     file: "test.dpk",
+    description: "test-description",
+    title: "test-title",
     size: "30MB"
   };
   const checkErrorHandler = (statusCode: number) => {
-    expect(rm).toHaveBeenNthCalledWith(1, expect.stringContaining("testdir/datapacksDirectory"), { force: true });
-    expect(rm).toHaveBeenNthCalledWith(2, expect.stringContaining("testdir/decryptionDirectory"), {
+    expect(rm).toHaveBeenNthCalledWith(1, expect.stringContaining(normalize("testdir/datapacksDirectory")), { force: true });
+    expect(rm).toHaveBeenNthCalledWith(2, expect.stringContaining(normalize("testdir/decryptionDirectory")), {
       recursive: true,
       force: true
     });
@@ -1077,7 +1096,7 @@ describe("adminUploadServerDatapack", () => {
       "-jar",
       "testdir/decryptionJar.jar",
       "-d",
-      resolve("testdir/datapacksDirectory/test.dpk"),
+      resolve("testdir/datapacksDirectory/test.dpk").replace(/\\/g, "/"),
       "-dest",
       "testdir/decryptionDirectory"
     ]);
@@ -1086,7 +1105,7 @@ describe("adminUploadServerDatapack", () => {
     expect(writeFile).toHaveBeenCalledTimes(1);
     expect(writeFile).toHaveBeenCalledWith(
       "testdir/adminConfig.json",
-      JSON.stringify({ datapacks: ["test.dpk"], removeDevDatapacks: [] }, null, 2)
+      JSON.stringify({ datapacks: [testDatapackDescription], removeDevDatapacks: [] }, null, 2)
     );
     expect(await response.json()).toEqual({ message: "Datapack uploaded" });
     expect(response.statusCode).toBe(200);
@@ -1109,7 +1128,7 @@ describe("adminUploadServerDatapack", () => {
       "-jar",
       "testdir/decryptionJar.jar",
       "-d",
-      resolve("testdir/datapacksDirectory/test.dpk"),
+      resolve("testdir/datapacksDirectory/test.dpk").replace(/\\/g, "/"),
       "-dest",
       "testdir/decryptionDirectory"
     ]);
