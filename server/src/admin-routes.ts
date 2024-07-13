@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { deleteUser } from "./database.js";
 import { resolve, basename, extname } from "path";
-import { adminconfig, assetconfigs, checkFileExists } from "./util.js";
+import { adminconfig, assetconfigs, checkFileExists, getBytes } from "./util.js";
 import { createWriteStream } from "fs";
 import { realpath, rm, writeFile } from "fs/promises";
 import { deleteDatapack, loadFileMetadata } from "./file-metadata-handler.js";
@@ -201,7 +201,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       if (
         (await checkFileExists(filepath)) &&
         (await checkFileExists(decryptedFilepath)) &&
-        (adminconfig.datapacks.includes(filename) ||
+        (adminconfig.datapacks.some((datapack) => datapack.file === filename) ||
           (assetconfigs.activeDatapacks.some((datapack) => datapack.file === filename) &&
             !adminconfig.removeDevDatapacks.includes(filename))) &&
         datapackIndex[filename]
@@ -269,22 +269,16 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     return;
   }
 
-  let formattedSize;
   const bytes = file.file.bytesRead;
   if (bytes === 0) {
     reply.status(400).send({ error: `Empty file cannot be uploaded` });
     return;
-  } else {
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    formattedSize = parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   }
   const datapackInfo: DatapackDescriptionInfo = {
     file: filename,
     description: description,
     title: title,
-    size: formattedSize
+    size: getBytes(bytes)
   };
 
   const successful = await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, [datapackInfo]);
@@ -302,9 +296,9 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       }
     } else if (
       !assetconfigs.activeDatapacks.some((datapack) => datapack.file === filename) &&
-      !adminconfig.datapacks.includes(filename)
+      !adminconfig.datapacks.some((datapack) => datapack.file === filename)
     ) {
-      adminconfig.datapacks.push(filename);
+      adminconfig.datapacks.push(datapackInfo);
     }
     await writeFile(assetconfigs.adminConfigPath, JSON.stringify(adminconfig, null, 2));
   } catch (e) {
@@ -351,7 +345,7 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     reply.status(500).send({ error: "Datapack file does not exist" });
     return;
   }
-  if (!adminconfig.datapacks.includes(datapack) && !assetconfigs.activeDatapacks.some((dp) => dp.file === datapack)) {
+  if (!adminconfig.datapacks.some((dp) => dp.file === datapack) && !assetconfigs.activeDatapacks.some((dp) => dp.file === datapack)) {
     reply.status(404).send({ error: "Datapack not found" });
     return;
   }
@@ -360,8 +354,8 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     assetconfigs.activeDatapacks = assetconfigs.activeDatapacks.filter((pack) => pack.file !== datapack);
     adminconfig.removeDevDatapacks.push(datapack);
   }
-  if (adminconfig.datapacks.includes(datapack)) {
-    adminconfig.datapacks = adminconfig.datapacks.filter((pack) => pack !== datapack);
+  if (adminconfig.datapacks.some((dp) => dp.file === datapack)) {
+    adminconfig.datapacks = adminconfig.datapacks.filter((pack) => pack.file !== datapack);
   }
   if (datapackIndex[datapack]) {
     delete datapackIndex[datapack];

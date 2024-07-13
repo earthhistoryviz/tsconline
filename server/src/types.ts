@@ -73,7 +73,7 @@ export type AssetConfig = {
 };
 
 export type AdminConfig = {
-  datapacks: string[];
+  datapacks: DatapackDescriptionInfo[];
   removeDevDatapacks: string[]; // for ignoring any datapacks that dev wants to use to prevent merge conflicts
 };
 
@@ -103,13 +103,13 @@ export type DatapackDescriptionInfo = {
 export function assertAdminConfig(o: any): asserts o is AdminConfig {
   if (typeof o !== "object" || !o) throw "AdminConfig must be an object";
   if (!o.datapacks || !Array.isArray(o.datapacks)) throw 'AdminConfig must have a "datapacks" array';
-  for (const [index, ad] of o.datapacks.entries()) {
-    if (typeof ad !== "string") throw "AdminConfig datapacks item " + index + " must be a string";
+  for (const datapack of o.datapacks) {
+    assertDatapackDescriptionInfo(datapack);
   }
   if (!o.removeDevDatapacks || !Array.isArray(o.removeDevDatapacks))
     throw 'AdminConfig must have a "removeDevDatapacks" array';
-  for (const [index, ad] of o.removeDevDatapacks.entries()) {
-    if (typeof ad !== "string") throw "AdminConfig removeDevDatapacks item " + index + " must be a string";
+  for (const datapack of o.removeDevDatapacks) {
+    if (typeof datapack !== "string") throw "AdminConfig removeDevDatapacks must be an array of strings";
   }
 }
 export function assertEmail(o: any): asserts o is Email {
