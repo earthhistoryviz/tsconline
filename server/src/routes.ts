@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { exec, execFileSync } from "child_process";
+import { exec, execFile, execFileSync } from "child_process";
 import { writeFile, stat, readFile, access, rm, mkdir } from "fs/promises";
 import {
   DatapackIndex,
@@ -26,6 +26,7 @@ import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackInde
 import { glob } from "glob";
 import { DatapackDescriptionInfo } from "./types.js";
 import { MultipartFile } from "@fastify/multipart";
+import { promisify } from "util";
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
@@ -641,42 +642,28 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     reply.send({ error: "ERROR: failed to save settings" });
     return;
   }
-  // Call the Java monster...
-  //const jarArgs: string[] = ['xvfb-run', '-jar', './jar/TSC.jar', '-node', '-s', `../files/${title}settings.tsc`, '-ss', `../files/${title}settings.tsc`, '-d', `../files/${title}datapack.txt`, '-o', `../files/${title}save.pdf`];
-  //const jarArgs: string[] = ['-jar', './jar/TSC.jar', '-d', `./files/${title}datapack.txt`, '-s', `./files/${title}settings.tsc`];
-  // extractedNames.forEach(path => {
-  //   // Since we've filtered out null values, 'path' is guaranteed to be a string here
-  //   const fullPath = `../assets/decrypted/${name}/datapacks`;
-  //   const datapackInfo = parseDefaultAges(fullPath);
-  //   console.log(datapackInfo);
-  // });
-
-  const cmd =
-    `java -jar ${assetconfigs.activeJar} ` +
-    // Turns off GUI (e.g Suggested Age pop-up (defaults to yes if -a flag is not passed))
-    `-node ` +
-    // Add settings:
-    `-s ${settingsFilePath} ` +
-    // Save settings to file:
-    `-ss ${settingsFilePath} ` +
-    // Add datapacks:
-    `-d ${datapacks.join(" ")} ` +
-    // Tell it where to save chart
-    `-o ${chartFilePath} ` +
-    // Don't use datapacks suggested age (if useSuggestedAge is true then ignore datapack ages)
-    `-a`;
-
   // Exec Java command and send final reply to browser
-  await new Promise<void>((resolve) => {
-    console.log("Calling Java: ", cmd);
-    exec(cmd, function (error, stdout, stderror) {
-      console.log("Java finished, sending reply to browser");
-      console.log("Java error param: " + error);
-      console.log("Java stdout: " + stdout.toString());
-      console.log("Java stderr: " + stderror.toString());
-      resolve();
-    });
-  });
+  try {
+    const { stdout, stderr } = await promisify(execFile)("java", [
+      "-jar",
+      assetconfigs.activeJar,
+      "-node",
+      "-s",
+      settingsFilePath,
+      "-ss",
+      settingsFilePath,
+      "-d",
+      ...datapacks,
+      "-o",
+      chartFilePath,
+      "-a"
+    ]);
+    console.log("Java stdout: " + stdout.toString());
+    console.log("Java stderr: " + stderr.toString());
+  } catch (e) {
+    console.error("Error calling Java: ", e);
+    reply.status(500).send({ error: "Internal Server Error" });
+  }
   console.log("Sending reply to browser: ", {
     chartpath: chartUrlPath,
     hash: hash
