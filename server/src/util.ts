@@ -1,6 +1,6 @@
 import fs, { createReadStream } from "fs";
 import path from "path";
-import { rm, readFile, access, mkdir, readdir, copyFile } from "fs/promises";
+import { rm, readFile, access, mkdir, readdir, copyFile, writeFile } from "fs/promises";
 import { glob } from "glob";
 import { createInterface } from "readline/promises";
 import { constants } from "fs";
@@ -226,11 +226,19 @@ export async function loadAssetConfigs() {
       assertAdminConfig(content);
       adminconfig = content;
       assetconfigs.activeDatapacks = assetconfigs.activeDatapacks.filter(
-        (datapack) => !adminconfig.removeDevDatapacks.includes(datapack)
+        (datapack) => !adminconfig.removeDevDatapacks.includes(datapack.file)
       );
     } catch (e) {
       console.log("ERROR: Failed to load admin configs from assets/admin-config.json.  Error was: ", e);
-      process.exit(1);
+      console.error("Removing admin-config.json and writing a new config file");
+      adminconfig = { datapacks: [], removeDevDatapacks: [] };
+      try {
+        await rm(assetconfigs.adminConfigPath);
+        await writeFile(assetconfigs.adminConfigPath, JSON.stringify(adminconfig, null, 2));
+      } catch (e) {
+        console.log("ERROR: Failed to write admin configs to assets/admin-config.json.  Error was: ", e);
+        process.exit(1);
+      }
     }
   }
 }
@@ -257,4 +265,12 @@ export function getClosestMatch(input: string, options: string[], threshold?: nu
   }
   if (threshold !== undefined && minDistance > threshold) return "";
   return closestMatch;
+}
+
+export function getBytes(bytes: number) {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }

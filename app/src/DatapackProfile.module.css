@@ -59,6 +59,7 @@
   display: flex;
   flex-direction: row;
   gap: 10px;
+  width: 100%;
 }
 
 .ah {
@@ -92,6 +93,7 @@
 
 .description {
   font-size: 1.1rem;
+  width: 100%;
 }
 
 .tags {

@@ -1,16 +1,60 @@
 {
   "activeJar": "assets/jars/TSCreatorBASE-8.1_11July2024.jar",
   "activeDatapacks": [
-    "TSC2020_InternalDatapack_encrypted_13Feb2021.txt",
-    "Hominids_wImages_GTS2020_Encrypted.dpk",
-    "Australia Mappack GTS2016 ENCRYPTED PUBLIC.mdpk",
-    "Belgium_GTS2020.mdpk",
-    "SouthAmericaEncrypted_29Apr2019.mdpk",
-    "AfricaBight.map",
-    "British_Suite_wWiderColumns_GTS2020_5July2024.mdpk",
-    "TimeTree_of_Life_GTS2020_ENCRYPTED_23Jan2020.dpk",
-    "HumanCulture_ENCRYPTED_21Apr2020.txt",
-    "Vertebrates w_Images GTS2020 23Jan2021.dpk"
+    {
+      "title": "TimeScale Creator Internal Datapack",
+      "description": "TSC Internal Datapack 2020 version",
+      "file": "TSC2020_InternalDatapack_encrypted_13Feb2021.txt",
+      "size": "5.01 MB"
+    },
+    {
+      "title": "Human Evolution",
+      "description":"Tool intervals, main Homo and Australopithecus ranges (ca. 5 Ma, includes images) and major events in Primate evolution (ca. 50 Ma). Pop-ups have detailed informtion and links. [Images courtesy of American Museum of History and Smithsonian, Jan. 2021.] [NOTE: Suggest beginning with 0.05 to 2 Ma with vertical scale of 8. (encoded zip file, 0.5Mb, 5 columns, includes 20 images).]",
+      "file": "Hominids_wImages_GTS2020_Encrypted.dpk",
+      "size": "0.5 MB"
+    },
+    {
+      "title": "Australia",
+      "description": "Australian biostratigraphy and basin lithostratigraphy with map interface and reconstructions.(encrypted zippack, 15 Mb, ca. 500 columns, includes 125 reconstructions and facies maps). Detailed Table of contents and references at AustraliaMappack_Contents_12July2016.pdf. Geoscience Australia has compiled the following: (1) Regional biostratigraphy (70 columns) with complete references, and (2) Detailed lithostratigraphy for all hydrocarbon-rich basins (including oil-gas levels with reference wells) (ca. 300 columns), and we added (3) Precambrian and other Phanerozoic basins (150 columns). Each lithology formation has pop-ups that include URL-links to the GA lexicon, the header for each Phanerozoic basin has links to location maps, and all oil-gas levels are linked to the GA well database. [NOTE: Contact Andrew Kelman <Andrew.Kelman@ga.gov.au> for a special Public 'GA-TS_Creator' JAVA version (ca. 25 Mb) that has this Australian dataset and their extensive reconstruction images pre-installed with the full global suite.]",
+      "file": "Australia Mappack GTS2016 ENCRYPTED PUBLIC.mdpk",
+      "size": "15.05 MB"
+    },
+    {
+      "title": "Belgium",
+      "description": "Belgium regional formations with map interface. (encrypted mappack, 2Mb, 20 columns). Detailed Table of contents and references at Belgium_LithostratContents.pdf. Compiled by Jane Block in coordination with Belgium Stratigraphic Commission (Noel Vandenberghe, Hance Luc, et al.)",
+      "file": "Belgium_GTS2020.mdpk",
+      "size": "2.19 MB"
+    },
+    {
+      "title": "South American Basins",
+      "description": "South American Basins with map interfaces -- currently 33 selected basins (with main coverage concentrating on Brazil, Colombia and Venezuela) with lithostratigraphy, transects, and selected biostratigraphy (including ca. 500 images, with large format images in popups). Standardized to GTS2012 age model. Main compilers: BRAZIL = Marcos dos Santos Filho and Shalli Teixeira (Univ. Vale do Rio dos Sinos, UNISINOS); visiting scholars to Purdue Univ., Autumn 2014); COLOMBIA-VENEZUELA = Estefania Salgado Jauregui (Universidad Nacional de Colombia-Sede Bogotá; visiting scholar to Purdue Univ., Autumn 2015); COORDINATION and ASSEMBLY: Rebecca Bobick (2015-early 2016 as part of her Masters degree at Purdue University).",
+      "file": "SouthAmericaEncrypted_29Apr2019.mdpk",
+      "size": "50 MB"
+    },
+    {
+      "title": "Africa Bight",
+      "description": "Africa Bight Map",
+      "file": "AfricaBight.map",
+      "size": "0.2 MB"
+    },
+    {
+      "title": "British Isles",
+      "description": "British Isles regional formations with map interface. (encrypted zippack, 3Mb, ca. 25 columns). Detailed Table of contents and references at UK_lithostrat_contents_30Nov12.pdf. Approximately two dozen sub-regions, with each formation linked to the BGS lexicon; compiled in coordination with British Geological Survey, BGS.",
+      "file": "BritishMappackPUBLIC_GTS2016_15July2016.mdpk",
+      "size": "3 MB"
+    },
+    {
+      "title": "Evolution of Modern Life",
+      "description": "From Archea microbes to primates, spanning 4 billion years. View as super-tree, individual microbe/plant/animal trees, or as trees for specific types of life (ca. 50 groups). Based on molecular clocks and the fossil record (but only for extant life) from TimeTree of Life (Hedges, S.B., and Kumar, S., eds, Oxford Univ. Press, 2009). [NOTE: Evolution branching is best visualized using intervals greater than 60 myr and with a vertical scale of 0.5 or less.] (encoded zip file, 15Mb, 3 main suites, 1200 organisms each); ",
+      "file": "TimeTree_of_Life_GTS2020_ENCRYPTED_23Jan2020.dpk",
+      "size": "15 MB"
+    },
+    {
+      "title": "Vertebrate Evolution",
+      "description": "From earliest fish to primates (with an extended section on dinosaurs) acccompanied by schematic images and external links. In addition to branching evolution, one can turn on a more extensive suite of ranges of selected ancient groups. [NOTE: Evolution branching is best visualized using intervals greater than 60 myr and with a vertical scale of 0.5 or less.]",
+      "file": "Vertebrates w_Images GTS2020 23Jan2021.dpk",
+      "size": "5 MB"
+    }
   ],
   "decryptionJar": "assets/jars/datapack-decrypter_21Jun2024.jar",
   "decryptionDirectory": "assets/decrypted",

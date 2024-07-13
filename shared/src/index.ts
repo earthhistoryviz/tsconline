@@ -39,6 +39,10 @@ export type DatapackParsingPack = {
   date?: string;
   verticalScale?: number;
   isUserDatapack: boolean;
+  description: string;
+  title: string;
+  file: string;
+  size: string;
   warnings?: DatapackWarning[];
   image: string;
 };
@@ -896,6 +900,10 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
     throwError("DatapackParsingPack", "baseAge", "number", o.baseAge);
   if (typeof o.isUserDatapack !== "boolean")
     throwError("DatapackParingPack", "isUserDatapack", "boolean", o.isUserDatapack);
+  if (typeof o.description !== "string") throwError("DatapackParsingPack", "description", "string", o.description);
+  if (typeof o.title !== "string") throwError("DatapackParsingPack", "title", "string", o.title);
+  if (typeof o.file !== "string") throwError("DatapackParsingPack", "file", "string", o.file);
+  if (typeof o.size !== "string") throwError("DatapackParsingPack", "size", "string", o.size);
   if ("warnings" in o) {
     if (!Array.isArray(o.warnings)) throwError("DatapackParsingPack", "warnings", "array", o.warnings);
     for (const warning of o.warnings) {
@@ -905,6 +913,7 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
   if (typeof o.image !== "string") throwError("DatapackParsingPack", "image", "string", o.image);
   assertColumnInfo(o.columnInfo);
 }
+
 export function assertDatapackWarning(o: any): asserts o is DatapackWarning {
   if (!o || typeof o !== "object") throw new Error("DatapackWarning must be a non-null object");
   if ("message" in o && typeof o.message !== "string") throwError("DatapackWarning", "message", "string", o.message);
