@@ -34,7 +34,7 @@ jobs:
             echo "dist folder detected, please remove" >> disallowed_files.txt
           fi
           if [ -s disallowed_files.txt ]; then
-            echo "::set-output name=disallowed_files_present::true"
+            echo "disallowed_files_present=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Comment PR on disallowed files Failure
@@ -67,7 +67,7 @@ jobs:
 
       - name: Run ESLint
         id: eslint
-        run: yarn lint-check > eslint-output.txt || echo "::set-output name=eslint_failed::true"
+        run: yarn lint-check > eslint-output.txt || echo "eslint_failed=true" >> $GITHUB_OUTPUT
         continue-on-error: true
 
       - name: Comment PR on ESLint check failure
@@ -90,7 +90,7 @@ jobs:
         id: prettier
         run: |
           if ! yarn prettier-check; then
-            echo "::set-output name=prettify_failed::true"
+            echo "prettify_failed=true" >> $GITHUB_OUTPUT
           fi
         continue-on-error: true
 
@@ -123,7 +123,7 @@ jobs:
         run: |
           set -o pipefail
           if ! yarn build 2>&1 | tee build.log; then
-            echo "::set-output name=build_failed::true"
+            echo "build_failed=true" >> $GITHUB_OUTPUT
           fi
         continue-on-error: true
 
@@ -154,12 +154,12 @@ jobs:
         run: |
           set -o pipefail
           if ! yarn test > test_output.log 2>&1; then
-              echo "::set-output name=test_failed::true"
+              echo "test_failed=true" >> $GITHUB_OUTPUT
               fi
         continue-on-error: true
       
       - name: Report Test Errors
-        if: steps.vite_build.outputs.test_failed == 'true'
+        if: steps.run_tests.outputs.test_failed == 'true'
         uses: actions/github-script@v5
         with:
           script: |
@@ -216,7 +216,6 @@ jobs:
           if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
             echo "Container for PR ${PR_NUMBER} is already running. Rebuilding..."
             docker-compose -f docker-compose-preview.yml exec -T pr-preview-run bash -c "source /root/.nvm/nvm.sh && nvm use node && yarn && yarn build"
-            docker-compose -f docker-compose-preview.yml restart pr-preview-run
             MAX_WAIT=180
             INTERVAL=5
             ELAPSED=0
