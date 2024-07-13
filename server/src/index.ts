@@ -75,17 +75,11 @@ try {
 export const datapackIndex: DatapackIndex = {};
 export const mapPackIndex: MapPackIndex = {};
 const patterns = await loadFaciesPatterns();
-const datapackInfo: DatapackDescriptionInfo[] = adminconfig.datapacks.map((filename) => ({
-  file: filename,
-  description: "Admin Datapack",
-  title: "Admin Datapack",
-  size: ""
-}));
 await loadIndexes(
   datapackIndex,
   mapPackIndex,
   assetconfigs.decryptionDirectory,
-  assetconfigs.activeDatapacks.concat(datapackInfo)
+  assetconfigs.activeDatapacks.concat(adminconfig.datapacks)
 );
 
 declare module "@fastify/secure-session" {

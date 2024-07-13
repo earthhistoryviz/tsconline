@@ -610,7 +610,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       datapacks.push(`"${assetconfigs.datapacksDirectory}/${datapack}"`);
     } else if (uuid && userDatapackNames.includes(datapack)) {
       userDatapacks.push(path.join(assetconfigs.uploadDirectory, uuid, "datapacks", datapack));
-    } else if (adminconfig.datapacks.includes(datapack)) {
+    } else if (adminconfig.datapacks.some((datapackInfo) => datapackInfo.file === datapack)) {
       datapacks.push(`"${assetconfigs.datapacksDirectory}/${datapack}"`);
     } else {
       console.log("ERROR: datapack: ", datapack, " is not included in activeDatapacks");
