@@ -345,7 +345,10 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     reply.status(500).send({ error: "Datapack file does not exist" });
     return;
   }
-  if (!adminconfig.datapacks.some((dp) => dp.file === datapack) && !assetconfigs.activeDatapacks.some((dp) => dp.file === datapack)) {
+  if (
+    !adminconfig.datapacks.some((dp) => dp.file === datapack) &&
+    !assetconfigs.activeDatapacks.some((dp) => dp.file === datapack)
+  ) {
     reply.status(404).send({ error: "Datapack not found" });
     return;
   }
