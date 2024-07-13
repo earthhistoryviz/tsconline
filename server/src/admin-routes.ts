@@ -31,6 +31,7 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
       const { hashedPassword, ...displayedUser } = user;
       return {
         ...displayedUser,
+        username: displayedUser.username || "",
         isGoogleUser: hashedPassword === null,
         isAdmin: user.isAdmin === 1,
         emailVerified: user.emailVerified === 1,
@@ -42,6 +43,7 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
     });
     reply.send({ users: displayedUsers });
   } catch (e) {
+    console.error(e)
     reply.status(404).send({ error: "Unknown error" });
   }
 };
@@ -60,7 +62,7 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
     pictureUrl: string;
     isAdmin: number;
   };
-  if (!username || !email || !password || !validator.isEmail(email)) {
+  if (!email || !password || !validator.isEmail(email)) {
     reply.status(400).send({ error: "Missing/invalid required fields" });
     return;
   }

@@ -364,7 +364,6 @@ describe("adminCreateUser tests", () => {
   });
   test.each([
     { ...body, email: "" },
-    { ...body, username: "" },
     { ...body, password: "" },
     { ...body, email: "hi@gmailcom" },
     { ...body, email: "higmail.com" }

@@ -12,8 +12,8 @@ import { TSCButton } from "../components";
 import { AdminAddUserForm } from "./AdminAddUserForm";
 
 const colDefs: ColDef[] = [
-  { headerName: "Username", field: "username", sortable: true, filter: true, rowDrag: false },
-  { headerName: "Email", field: "email", sortable: true, filter: true, rowDrag: false },
+  { headerName: "Username", field: "username", sortable: true, filter: true, rowDrag: true },
+  { headerName: "Email", field: "email", sortable: true, filter: true },
   { headerName: "UUID", field: "uuid" },
   { headerName: "User ID", field: "userId", width: 80 },
   { headerName: "Google User", field: "isGoogleUser", width: 120 },
@@ -49,8 +49,7 @@ export const Admin = observer(function Admin() {
         <AgGridReact
           columnDefs={colDefs}
           rowData={state.admin.displayedUsers}
-          pagination={true}
-          paginationPageSize={20}
+          rowDragManaged={true}
         />
       </Box>
     </Box>
