@@ -67,10 +67,18 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
     return;
   }
   try {
-    const user = await checkForUsersWithUsernameOrEmail(username, email);
-    if (user.length > 0) {
-      reply.status(409).send({ error: "User already exists" });
-      return;
+    if (username !== undefined && username !== "") {
+      const user = await checkForUsersWithUsernameOrEmail(username, email);
+      if (user.length > 0) {
+        reply.status(409).send({ error: "User already exists" });
+        return;
+      }
+    } else {
+      const user = await findUser({ email })
+      if (user.length > 0) {
+        reply.status(409).send({ error: "User already exists" });
+        return;
+      }
     }
     const customUser = {
       username,
