@@ -9,13 +9,16 @@ jobs:
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/deploy' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Extract comment ID
         id: extract_comment
-        run: echo "::set-output name=comment_id::$(jq -r '.comment.id' < $GITHUB_EVENT_PATH)"
+        run: echo "comment_id=$(jq -r '.comment.id' < $GITHUB_EVENT_PATH)" >> $GITHUB_OUTPUT
 
       - name: Extract commenter username
         id: extract_commenter
-        run: echo "::set-output name=commenter::${{ github.event.comment.user.login }}"
+        run: echo "commenter=${{ github.event.comment.user.login }}" >> $GITHUB_OUTPUT
 
       - name: Check if commenter is a code owner
         id: code_owner_check
@@ -26,7 +29,7 @@ jobs:
           echo "Commenter: $COMMENTER"
           if echo "$CODEOWNERS" | grep -q "$COMMENTER"; then
             echo "Commenter is a code owner"
-            echo "::set-output name=is_code_owner::true"
+            echo "is_code_owner=true" >> $GITHUB_OUTPUT
           else
             echo "Commenter is not a code owner"
             exit 1
@@ -48,57 +51,74 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H dev.geolex.org >> ~/.ssh/known_hosts
 
-      - name: Deploy to server
-        id: deploy_to_server
-        run: |
-          ssh deployuser@dev.geolex.org << 'EOF
-          if docker ps -filter "name=pr-preview; then
-            echo "::set-output name=container_running::true"
-            exit 0
-          fi
-          echo "::set-output name=container_running::false"
-          cd /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }}
-          docker-compose -f docker-compose-preview.yml up -d pr-preview-run
-          MAX_WAIT=180
-          INTERVAL=5
-          ELAPSED=0
-          while ! docker-compose -f docker-compose-preview.yml logs | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
-            if [ $ELAPSED -ge $MAX_WAIT ]; then
-              echo "Max wait time exceeded. Exiting..."
-              exit 1
+      - name: Start up preview container
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: dev.geolex.org
+          username: deployuser
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            if docker ps --filter "name=pr-preview-${{ github.event.issue.number }}" | grep -q pr-preview; then
+              echo "false" > /tmp/container_status.txt
+              exit 0
             fi
-            echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
-            sleep $INTERVAL
-            ELAPSED=$((ELAPSED + INTERVAL))
-          done
-          EOF
+            if docker ps --filter "name=pr-preview" | grep -q pr-preview; then
+              echo "true" > /tmp/container_status.txt
+              exit 0
+            fi
+            echo "false" > /tmp/container_status.txt
+            cd /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }}
+            docker-compose -f docker-compose-preview.yml up -d --remove-orphans pr-preview-run
+            MAX_WAIT=180
+            INTERVAL=5
+            ELAPSED=0
+            while ! docker-compose -f docker-compose-preview.yml logs | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
+              if [ $ELAPSED -ge $MAX_WAIT ]; then
+                echo "Max wait time exceeded. Exiting..."
+                exit 1
+              fi
+              echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
+              sleep $INTERVAL
+              ELAPSED=$((ELAPSED + INTERVAL))
+            done
+
+      - name: Fetch deployment status
+        id: fetch_deployment_status
+        run: |
+          scp deployuser@dev.geolex.org:/tmp/container_status.txt ./container_status.txt
+          status=$(cat ./container_status.txt)
+          echo "container_running=$status" >> $GITHUB_OUTPUT
+          ssh deployuser@dev.geolex.org "rm -f /tmp/container_status.txt"
 
       - name: Comment if container is already running
-        if: ${{ steps.deploy_to_server.outputs.container_running == 'true' }}
+        if: ${{ steps.fetch_deployment_status.outputs.container_running == 'true' }}
         uses: thollander/actions-comment-pull-request@v2
         with:
           message: |
-            🚨 A preview is already up for this PR. Please comment '/confirm-deploy' to bring down the current preview and deploy a new one.
+            🚨 A preview is already up for another PR. Please comment '/confirm-deploy' to bring down the current preview and deploy a new one.
 
-      - name: Comment if container is not running
-        if: ${{ steps.deploy_to_server.outputs.container_running == 'false' }}
+      - name: Comment if container is not running or is for the same PR
+        if: ${{ steps.fetch_deployment_status.outputs.container_running == 'false' }}
         uses: thollander/actions-comment-pull-request@v2
         with:
           message: |
             🚀 Preview deployed! You can access it [here](https://pr-preview.geolex.org).
-            To bring down the preview, comment '/remove-deploy' or close the PR.
+            To bring down the preview close the PR.
 
   confirm-deploy:
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/confirm-deploy' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Extract comment ID
         id: extract_comment
-        run: echo "::set-output name=comment_id::$(jq -r '.comment.id' < $GITHUB_EVENT_PATH)"
+        run: echo "comment_id=$(jq -r '.comment.id' < $GITHUB_EVENT_PATH)" >> $GITHUB_OUTPUT
 
       - name: Extract commenter username
         id: extract_commenter
-        run: echo "::set-output name=commenter::${{ github.event.comment.user.login }}"
+        run: echo "commenter=${{ github.event.comment.user.login }}" >> $GITHUB_OUTPUT
 
       - name: Check if commenter is a code owner
         id: code_owner_check
@@ -109,11 +129,12 @@ jobs:
           echo "Commenter: $COMMENTER"
           if echo "$CODEOWNERS" | grep -q "$COMMENTER"; then
             echo "Commenter is a code owner"
+            echo "is_code_owner=true" >> $GITHUB_OUTPUT
           else
             echo "Commenter is not a code owner"
             exit 1
           fi
-
+        
       - name: React to comment
         uses: dkershner6/reaction-action@v2
         with:
@@ -130,30 +151,56 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H dev.geolex.org >> ~/.ssh/known_hosts
 
-      - name: Deploy to server
-        run: |
-          ssh deployuser@dev.geolex.org << 'EOF'
-          cd /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }}
-          docker-compose -f docker-compose-preview.yml stop pr-preview-run
-          docker-compose -f docker-compose-preview.yml up -d pr-preview-run
-          MAX_WAIT=180
-          INTERVAL=5
-          ELAPSED=0
-          while ! docker-compose -f docker-compose-preview.yml logs | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
-            if [ $ELAPSED -ge $MAX_WAIT ]; then
-              echo "Max wait time exceeded. Exiting..."
-              exit 1
-            fi
-            echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
-            sleep $INTERVAL
-            ELAPSED=$((ELAPSED + INTERVAL))
-          done
-          EOF
+      - name: Deploy preview
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: dev.geolex.org
+          username: deployuser
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }}
+            docker ps --filter "name=pr-preview" --format "{{.Names}}" | grep -oP "pr-preview-\K[0-9]+" > /tmp/running_pr.txt
+            RUNNING_CONTAINER=$(docker ps --filter "name=pr-preview" --format "{{.ID}}")
+            echo "Stopping and removing container $RUNNING_CONTAINER"
+            docker stop $RUNNING_CONTAINER
+            docker rm $RUNNING_CONTAINER
+            docker-compose -f docker-compose-preview.yml up -d --remove-orphans pr-preview-run
+            MAX_WAIT=180
+            INTERVAL=5
+            ELAPSED=0
+            while ! docker-compose -f docker-compose-preview.yml logs | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
+              if [ $ELAPSED -ge $MAX_WAIT ]; then
+                echo "Max wait time exceeded. Exiting..."
+                exit 1
+              fi
+              echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
+              sleep $INTERVAL
+              ELAPSED=$((ELAPSED + INTERVAL))
+            done
 
-      - name: Comment if container is not running
+      - name: Fetch previous PR number
+        id: fetch_previous_pr
+        run: |
+          scp deployuser@dev.geolex.org:/tmp/running_pr.txt ./running_pr.txt
+          PR_NUMBER=$(cat ./running_pr.txt)
+          echo "previous_pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Comment on previous PR
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const previousPRNumber = "${{ steps.fetch_previous_pr.outputs.previous_pr_number }}";
+            const comment = `The preview for this PR has been brought down by PR #${{ github.event.issue.number }}.`;
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: previousPRNumber,
+              body: comment
+            });
+
+      - name: Comment preview link
         uses: thollander/actions-comment-pull-request@v2
         with:
           message: |
             🚀 Preview deployed! You can access it [here](https://pr-preview.geolex.org).
-            To bring down the preview, comment '/remove-deploy' or close the PR.
-            
+            To bring down the preview close the PR.
