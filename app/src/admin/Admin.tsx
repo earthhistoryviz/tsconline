@@ -7,11 +7,13 @@ import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import { ColDef } from "ag-grid-community";
-import { useTheme } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
+import { TSCButton } from "../components";
+import { AdminAddUserForm } from "./AdminAddUserForm";
 
 const colDefs: ColDef[] = [
-  { headerName: "Username", field: "username", sortable: true, filter: true },
-  { headerName: "Email", field: "email", sortable: true, filter: true },
+  { headerName: "Username", field: "username", sortable: true, filter: true, rowDrag: false },
+  { headerName: "Email", field: "email", sortable: true, filter: true, rowDrag: false },
   { headerName: "UUID", field: "uuid" },
   { headerName: "User ID", field: "userId", width: 80 },
   { headerName: "Google User", field: "isGoogleUser", width: 120 },
@@ -41,13 +43,16 @@ export const Admin = observer(function Admin() {
   }, []);
   if (!state.user.isAdmin) return <UnauthorizedAccess />;
   return (
-    <div className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} style={{ height: 500 }}>
-      <AgGridReact
-        columnDefs={colDefs}
-        rowData={state.admin.displayedUsers}
-        pagination={true}
-        paginationPageSize={20}
-      />
-    </div>
+    <Box>
+      <AdminAddUserForm />
+      <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
+        <AgGridReact
+          columnDefs={colDefs}
+          rowData={state.admin.displayedUsers}
+          pagination={true}
+          paginationPageSize={20}
+        />
+      </Box>
+    </Box>
   );
 });
