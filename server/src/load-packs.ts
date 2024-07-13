@@ -16,7 +16,7 @@ import { glob } from "glob";
 import { readFile } from "fs/promises";
 import nearestColor from "nearest-color";
 import path from "path";
-import { assertColors } from "./types.js";
+import { DatapackDescriptionInfo, assertColors } from "./types.js";
 import { grabFilepaths, rgbToHex, assetconfigs } from "./util.js";
 import chalk from "chalk";
 
@@ -31,11 +31,11 @@ export async function loadIndexes(
   datapackIndex: DatapackIndex,
   mapPackIndex: MapPackIndex,
   decryptionDirectory: string,
-  datapacks: string[],
+  datapacks: DatapackDescriptionInfo[],
   userUploaded?: boolean
 ) {
   let successful = true;
-  console.log(`\nParsing datapacks: ${datapacks}\n`);
+  console.log(`\nParsing datapacks \n`);
   for (const datapack of datapacks) {
     await parseDatapacks(datapack, decryptionDirectory, userUploaded)
       .then((datapackParsingPack) => {
@@ -43,24 +43,30 @@ export async function loadIndexes(
           return;
         }
         assertDatapackParsingPack(datapackParsingPack);
-        datapackIndex[datapack] = datapackParsingPack;
-        console.log(chalk.green(`Successfully parsed ${datapack}`));
+        datapackIndex[datapack.file] = datapackParsingPack;
+        console.log(chalk.green(`Successfully parsed ${datapack.file}`));
       })
       .catch((e) => {
         successful = false;
-        console.log(chalk.red(`Cannot create a datapackParsingPack with datapack ${datapack} and error: ${e}`));
+        console.log(chalk.red(`Cannot create a datapackParsingPack with datapack ${datapack.file} and error: ${e}`));
       });
-    await parseMapPacks([datapack], decryptionDirectory)
+    await parseMapPacks([datapack.file], decryptionDirectory)
       .then((mapPack) => {
         assertMapPack(mapPack);
-        mapPackIndex[datapack] = mapPack;
+        mapPackIndex[datapack.file] = mapPack;
       })
       .catch((e) => {
         successful = false;
-        console.log(chalk.red(`Cannot create a mapPack with datapack ${datapack} and error: ${e}`));
+        console.log(chalk.red(`Cannot create a mapPack with datapack ${datapack.file} and error: ${e}`));
       });
   }
-  successful = (await grabMapImages(datapacks, decryptionDirectory)).successful && successful;
+  successful =
+    (
+      await grabMapImages(
+        datapacks.map((datapack) => datapack.file),
+        decryptionDirectory
+      )
+    ).successful && successful;
   return successful;
 }
 /**
@@ -118,7 +124,7 @@ export async function loadFaciesPatterns() {
  * For access from fastify server servicing
  */
 export async function grabMapImages(
-  datapacks: string[] = assetconfigs.activeDatapacks,
+  datapacks: string[] = assetconfigs.activeDatapacks.map((datapack) => datapack.file),
   decryptionDirectory: string = assetconfigs.decryptionDirectory
 ): Promise<{ images: string[]; successful: boolean }> {
   const imagePaths = await grabFilepaths(datapacks, decryptionDirectory, "MapImages");

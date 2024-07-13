@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { exec, execFileSync } from "child_process";
+import { exec, execFile, execFileSync } from "child_process";
 import { writeFile, stat, readFile, access, rm, mkdir } from "fs/promises";
 import {
   DatapackIndex,
@@ -10,10 +10,10 @@ import {
   assertChartRequest,
   assertDatapackIndex,
   assertIndexResponse,
-  assertMapPackIndex,
-  assertTimescale
+  assertTimescale,
+  assertMapPackIndex
 } from "@tsconline/shared";
-import { deleteDirectory, resetUploadDirectory, checkHeader, assetconfigs, adminconfig } from "./util.js";
+import { deleteDirectory, resetUploadDirectory, checkHeader, assetconfigs, adminconfig, getBytes } from "./util.js";
 import md5 from "md5";
 import svgson from "svgson";
 import fs, { realpathSync } from "fs";
@@ -24,6 +24,9 @@ import { loadIndexes } from "./load-packs.js";
 import { updateFileMetadata, writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
+import { DatapackDescriptionInfo } from "./types.js";
+import { MultipartFile } from "@fastify/multipart";
+import { promisify } from "util";
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
@@ -241,6 +244,7 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
     return;
   }
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
+
   try {
     await access(userDir);
     await access(path.join(userDir, "DatapackIndex.json"));
@@ -248,6 +252,7 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
     reply.status(404).send({ error: "User has no uploaded datapacks" });
     return;
   }
+
   const datapackIndex: DatapackIndex = JSON.parse(JSON.stringify(serverDatapackindex));
   const mapPackIndex: MapPackIndex = JSON.parse(JSON.stringify(serverMapPackIndex));
   try {
@@ -274,61 +279,96 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     return;
   }
   // for test usage: const uuid = "username";
-  const file = await request.file();
-  if (!file) {
-    reply.status(404).send({ error: "No file uploaded" });
-    return;
-  }
-  // only accept a binary file (encoded) or an unecnrypted text file or a zip file
-  if (
-    file.mimetype !== "application/octet-stream" &&
-    file.mimetype !== "text/plain" &&
-    file.mimetype !== "application/zip"
-  ) {
-    reply.status(400).send({ error: `Invalid mimetype of uploaded file, received ${file.mimetype}` });
-    return;
-  }
-  const filename = file.filename;
-  const ext = path.extname(filename);
-  const filenameWithoutExtension = path.basename(filename, ext);
-  const userDir = path.join(assetconfigs.uploadDirectory, uuid);
-  const datapackDir = path.join(userDir, "datapacks");
-  const decryptDir = path.join(userDir, "decrypted");
-  const filepath = path.join(datapackDir, filename);
-  const decryptedFilepathDir = path.join(decryptDir, filenameWithoutExtension);
-  const mapPackIndexFilepath = path.join(userDir, "MapPackIndex.json");
-  const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json");
+
   async function errorHandler(message: string, errorStatus: number, e?: unknown) {
     e && console.error(e);
     await resetUploadDirectory(filepath, decryptedFilepathDir);
     reply.status(errorStatus).send({ error: message });
   }
+
+  const parts = request.parts();
+  const fields: Record<string, string> = {};
+  let uploadedFile: MultipartFile | undefined;
+  let userDir: string;
+  let datapackDir: string;
+  let filepath: string = "";
+  try {
+    userDir = path.join(assetconfigs.uploadDirectory, uuid);
+    datapackDir = path.join(userDir, "datapacks");
+    await mkdir(datapackDir, { recursive: true });
+  } catch (e) {
+    reply.status(500).send({ error: "Failed to create user directory with error " + e });
+    return;
+  }
+  try {
+    for await (const part of parts) {
+      if (part.type === "file") {
+        uploadedFile = part;
+        filepath = path.join(datapackDir, uploadedFile.filename);
+        const fileStream = fs.createWriteStream(filepath);
+        try {
+          await pump(uploadedFile.file, fileStream);
+        } catch (e) {
+          await errorHandler("Failed to upload file with error " + e, 500, e);
+          return;
+        }
+        if (uploadedFile.file.truncated) {
+          await errorHandler("File too large", 413);
+          return;
+        }
+      } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
+        const field = part as { fieldname: string; value: string };
+        fields[part.fieldname] = field.value;
+      }
+    }
+  } catch (e) {
+    await errorHandler("Failed to upload file with error " + e, 500, e);
+    return;
+  }
+  const name = fields.name;
+  const description = fields.description;
+
+  if (!uploadedFile) {
+    await errorHandler("No file uploaded", 400);
+    return;
+  }
+  if (!name || !description) {
+    await errorHandler("Name or description not provided", 400);
+    return;
+  }
+  // only accept a binary file (encoded) or an unecnrypted text file or a zip file
+  if (
+    uploadedFile.mimetype !== "application/octet-stream" &&
+    uploadedFile.mimetype !== "text/plain" &&
+    uploadedFile.mimetype !== "application/zip"
+  ) {
+    await errorHandler(`Invalid mimetype of uploaded file, received ${uploadedFile.mimetype}`, 400);
+    return;
+  }
+  const filename = uploadedFile.filename;
+  const ext = path.extname(filename);
+  const filenameWithoutExtension = path.basename(filename, ext);
+  const decryptDir = path.join(userDir, "decrypted");
+  const decryptedFilepathDir = path.join(decryptDir, filenameWithoutExtension);
+  const mapPackIndexFilepath = path.join(userDir, "MapPackIndex.json");
+  const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json");
+  const bytes = uploadedFile.file.bytesRead;
+  if (bytes === 0) {
+    reply.status(400).send({ error: `Empty file cannot be uploaded` });
+    return;
+  }
+  const datapackInfo: DatapackDescriptionInfo = {
+    file: filename,
+    description: description,
+    title: name,
+    size: getBytes(bytes)
+  };
+
   if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(ext)) {
     reply.status(415).send({ error: "Invalid file type" });
     return;
   }
-  await mkdir(datapackDir, { recursive: true });
-  const fileStream = file.file;
-  console.log("Uploading file: ", filename);
-  try {
-    // must wait for the file to be written before decrypting
-    await new Promise<void>((resolve, reject) => {
-      pump(fileStream, fs.createWriteStream(filepath), (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
-  } catch (e) {
-    await errorHandler("Failed to save file with error: " + e, 500, e);
-    return;
-  }
-  if (file.file.truncated) {
-    await errorHandler("File too large", 413);
-    return;
-  }
+
   try {
     await new Promise<void>((resolve, reject) => {
       const cmd =
@@ -354,6 +394,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     await errorHandler("Failed to decrypt datapacks with error " + e, 500, e);
     return;
   }
+  //verify decrypted directory
   try {
     await access(decryptedFilepathDir);
     await access(path.join(decryptedFilepathDir, "datapacks"));
@@ -386,7 +427,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       return;
     }
   }
-  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [filename], true);
+  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [datapackInfo], true);
   if (!datapackIndex[filename]) {
     await errorHandler("Failed to load decrypted datapack", 500);
     return;
@@ -557,13 +598,14 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   const userDatapackNames = userDatapackFilepaths.map((datapack) => path.basename(datapack));
   const datapacks = [];
   const userDatapacks = [];
+  const serverDatapacks = assetconfigs.activeDatapacks.map((datapack) => datapack.file);
 
   for (const datapack of chartrequest.datapacks) {
-    if (assetconfigs.activeDatapacks.includes(datapack)) {
+    if (serverDatapacks.includes(datapack)) {
       datapacks.push(`"${assetconfigs.datapacksDirectory}/${datapack}"`);
     } else if (uuid && userDatapackNames.includes(datapack)) {
       userDatapacks.push(path.join(assetconfigs.uploadDirectory, uuid, "datapacks", datapack));
-    } else if (adminconfig.datapacks.includes(datapack)) {
+    } else if (adminconfig.datapacks.some((datapackInfo) => datapackInfo.file === datapack)) {
       datapacks.push(`"${assetconfigs.datapacksDirectory}/${datapack}"`);
     } else {
       console.log("ERROR: datapack: ", datapack, " is not included in activeDatapacks");
@@ -600,42 +642,28 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     reply.send({ error: "ERROR: failed to save settings" });
     return;
   }
-  // Call the Java monster...
-  //const jarArgs: string[] = ['xvfb-run', '-jar', './jar/TSC.jar', '-node', '-s', `../files/${title}settings.tsc`, '-ss', `../files/${title}settings.tsc`, '-d', `../files/${title}datapack.txt`, '-o', `../files/${title}save.pdf`];
-  //const jarArgs: string[] = ['-jar', './jar/TSC.jar', '-d', `./files/${title}datapack.txt`, '-s', `./files/${title}settings.tsc`];
-  // extractedNames.forEach(path => {
-  //   // Since we've filtered out null values, 'path' is guaranteed to be a string here
-  //   const fullPath = `../assets/decrypted/${name}/datapacks`;
-  //   const datapackInfo = parseDefaultAges(fullPath);
-  //   console.log(datapackInfo);
-  // });
-
-  const cmd =
-    `java -jar ${assetconfigs.activeJar} ` +
-    // Turns off GUI (e.g Suggested Age pop-up (defaults to yes if -a flag is not passed))
-    `-node ` +
-    // Add settings:
-    `-s ${settingsFilePath} ` +
-    // Save settings to file:
-    `-ss ${settingsFilePath} ` +
-    // Add datapacks:
-    `-d ${datapacks.join(" ")} ` +
-    // Tell it where to save chart
-    `-o ${chartFilePath} ` +
-    // Don't use datapacks suggested age (if useSuggestedAge is true then ignore datapack ages)
-    `-a`;
-
   // Exec Java command and send final reply to browser
-  await new Promise<void>((resolve) => {
-    console.log("Calling Java: ", cmd);
-    exec(cmd, function (error, stdout, stderror) {
-      console.log("Java finished, sending reply to browser");
-      console.log("Java error param: " + error);
-      console.log("Java stdout: " + stdout.toString());
-      console.log("Java stderr: " + stderror.toString());
-      resolve();
-    });
-  });
+  try {
+    const { stdout, stderr } = await promisify(execFile)("java", [
+      "-jar",
+      assetconfigs.activeJar,
+      "-node",
+      "-s",
+      settingsFilePath,
+      "-ss",
+      settingsFilePath,
+      "-d",
+      ...datapacks,
+      "-o",
+      chartFilePath,
+      "-a"
+    ]);
+    console.log("Java stdout: " + stdout.toString());
+    console.log("Java stderr: " + stderr.toString());
+  } catch (e) {
+    console.error("Error calling Java: ", e);
+    reply.status(500).send({ error: "Internal Server Error" });
+  }
   console.log("Sending reply to browser: ", {
     chartpath: chartUrlPath,
     hash: hash

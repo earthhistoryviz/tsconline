@@ -55,13 +55,13 @@ if (!(await checkFileExists(decryptionJarPath))) {
 
 // this try will run the decryption jar to decrypt all files in the datapack folder
 try {
-  const datapacks = assetconfigs.activeDatapacks.map(
-    (datapack) => '"' + assetconfigs.datapacksDirectory + "/" + datapack + '"'
+  const datapackPaths = assetconfigs.activeDatapacks.map(
+    (datapack) => '"' + assetconfigs.datapacksDirectory + "/" + datapack.file + '"'
   );
   const cmd =
     `java -jar ${assetconfigs.decryptionJar} ` +
     // Decrypting these datapacks:
-    `-d ${datapacks.join(" ")} ` +
+    `-d ${datapackPaths.join(" ")} ` +
     // Tell it where to send the datapacks
     `-dest ${assetconfigs.decryptionDirectory} `;
   console.log("Calling Java decrypt.jar: ", cmd);

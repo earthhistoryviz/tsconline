@@ -72,6 +72,7 @@ import {
 } from "./util.js";
 import { createInterface } from "readline";
 import _ from "lodash";
+import { DatapackDescriptionInfo } from "./types.js";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;
 const patternForAbundance = /^(TOP|missing|rare|common|frequent|abundant|sample|flood)$/;
@@ -146,13 +147,13 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
  * @returns
  */
 export async function parseDatapacks(
-  file: string,
+  datapackInfo: DatapackDescriptionInfo,
   decryptFilePath: string,
   isUserDatapack: boolean = false
 ): Promise<DatapackParsingPack | null> {
-  const decryptPaths = await grabFilepaths([file], decryptFilePath, "datapacks");
+  const decryptPaths = await grabFilepaths([datapackInfo.file], decryptFilePath, "datapacks");
   if (decryptPaths.length == 0)
-    throw new Error(`Did not find any datapacks for ${file} in decryptFilePath ${decryptFilePath}`);
+    throw new Error(`Did not find any datapacks for ${datapackInfo.file} in decryptFilePath ${decryptFilePath}`);
   const columnInfoArray: ColumnInfo[] = [];
   const isChild: Set<string> = new Set();
   const allEntries: Map<string, ParsedColumnEntry> = new Map();
@@ -275,13 +276,20 @@ export async function parseDatapacks(
 
   const datapackParsingPack = {
     columnInfo: chartColumn,
+
     ageUnits,
+
     defaultChronostrat,
+
     formatVersion,
+    description: datapackInfo.description,
+    title: datapackInfo.title,
+    file: datapackInfo.file,
+    size: datapackInfo.size,
+
     isUserDatapack,
     image: ""
   };
-
   assertDatapackParsingPack(datapackParsingPack);
   if (date) datapackParsingPack.date = date;
   if (topAge || topAge === 0) datapackParsingPack.topAge = topAge;
