@@ -660,9 +660,8 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     ]);
     console.log("Java stdout: " + stdout.toString());
     console.log("Java stderr: " + stderr.toString());
-  } catch (e) {
-    console.error("Error calling Java: ", e);
-    reply.status(500).send({ error: "Internal Server Error" });
+  } catch {
+    // eslint-disable-next-line no-empty
   }
   console.log("Sending reply to browser: ", {
     chartpath: chartUrlPath,
