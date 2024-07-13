@@ -38,18 +38,19 @@ vi.mock("../src/util", async () => {
       decryptionDirectory: "testdir/decryptionDirectory",
       decryptionJar: "testdir/decryptionJar.jar",
       adminConfigPath: "testdir/adminConfig.json",
-      activeDatapacks: [{
-        description: "test",
-        title: "test",
-        file: "active-datapack.dpk",
-        size: "30MB"
-      },
-      {
-        description: "test",
-        title: "test",
-        file: "remove-datapack.dpk",
-        size: "30MB"
-      }
+      activeDatapacks: [
+        {
+          description: "test",
+          title: "test",
+          file: "active-datapack.dpk",
+          size: "30MB"
+        },
+        {
+          description: "test",
+          title: "test",
+          file: "remove-datapack.dpk",
+          size: "30MB"
+        }
       ]
     },
     adminconfig: {
@@ -79,7 +80,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => { });
+        readable.on("data", () => {});
         readable.on("end", () => {
           resolve();
         });
@@ -190,7 +191,7 @@ beforeAll(async () => {
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => { });
+  vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 afterAll(async () => {
@@ -827,7 +828,9 @@ describe("adminUploadServerDatapack", () => {
     size: "30MB"
   };
   const checkErrorHandler = (statusCode: number) => {
-    expect(rm).toHaveBeenNthCalledWith(1, expect.stringContaining(normalize("testdir/datapacksDirectory")), { force: true });
+    expect(rm).toHaveBeenNthCalledWith(1, expect.stringContaining(normalize("testdir/datapacksDirectory")), {
+      force: true
+    });
     expect(rm).toHaveBeenNthCalledWith(2, expect.stringContaining(normalize("testdir/decryptionDirectory")), {
       recursive: true,
       force: true
@@ -1147,7 +1150,10 @@ describe("adminUploadServerDatapack", () => {
   it("should return 200 if successful and remove from removeDevDatapacks", async () => {
     const originalUtil = await import("../src/util");
     const newUtil = { ...originalUtil.assetconfigs, activeDatapacks: [testDatapackDescription] };
-    vi.spyOn(util, "adminconfig", "get").mockReturnValue({ datapacks: [], removeDevDatapacks: [testDatapackDescription.file] });
+    vi.spyOn(util, "adminconfig", "get").mockReturnValue({
+      datapacks: [],
+      removeDevDatapacks: [testDatapackDescription.file]
+    });
     vi.spyOn(util, "assetconfigs", "get").mockReturnValue(newUtil);
     const response = await app.inject({
       method: "POST",
@@ -1163,7 +1169,10 @@ describe("adminUploadServerDatapack", () => {
   it("should return 200 if successful and should push to assetconfigs if it doesn't exist when admin previously removed it", async () => {
     const originalUtil = await import("../src/util");
     const newUtil = { ...originalUtil.assetconfigs, activeDatapacks: [] };
-    vi.spyOn(util, "adminconfig", "get").mockReturnValue({ datapacks: [], removeDevDatapacks: [testDatapackDescription.file] });
+    vi.spyOn(util, "adminconfig", "get").mockReturnValue({
+      datapacks: [],
+      removeDevDatapacks: [testDatapackDescription.file]
+    });
     vi.spyOn(util, "assetconfigs", "get").mockReturnValue(newUtil);
     const response = await app.inject({
       method: "POST",
@@ -1214,7 +1223,7 @@ describe("adminDeleteServerDatapack", () => {
     description: "test-description",
     file: "active-datapack.dpk",
     size: "30MB"
-  }
+  };
   const body = {
     datapack: "active-datapack.dpk"
   };
@@ -1374,7 +1383,10 @@ describe("adminDeleteServerDatapack", () => {
   it(`should return 200 on success when admin datapacks contains ${body.datapack}`, async () => {
     const originalUtil = await import("../src/util");
     const assetconfigs = { ...originalUtil.assetconfigs, activeDatapacks: [] };
-    vi.spyOn(util, "adminconfig", "get").mockReturnValue({ datapacks: [testDatapackDescription], removeDevDatapacks: [] });
+    vi.spyOn(util, "adminconfig", "get").mockReturnValue({
+      datapacks: [testDatapackDescription],
+      removeDevDatapacks: []
+    });
     vi.spyOn(util, "assetconfigs", "get").mockReturnValue(assetconfigs);
     writeFile.mockRejectedValueOnce(new Error());
     const response = await app.inject({

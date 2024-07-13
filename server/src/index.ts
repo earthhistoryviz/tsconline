@@ -10,7 +10,7 @@ import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/sha
 import fastifyCompress from "@fastify/compress";
 import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
-import { DatapackDescriptionInfo, Email } from "./types.js";
+import { Email } from "./types.js";
 import fastifyMultipart from "@fastify/multipart";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import fastifySecureSession from "@fastify/secure-session";

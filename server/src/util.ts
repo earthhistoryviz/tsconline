@@ -1,4 +1,4 @@
-import fs, { createReadStream, write } from "fs";
+import fs, { createReadStream } from "fs";
 import path from "path";
 import { rm, readFile, access, mkdir, readdir, copyFile, writeFile } from "fs/promises";
 import { glob } from "glob";
@@ -230,7 +230,7 @@ export async function loadAssetConfigs() {
       );
     } catch (e) {
       console.log("ERROR: Failed to load admin configs from assets/admin-config.json.  Error was: ", e);
-      console.error("Removing admin-config.json and writing a new config file")
+      console.error("Removing admin-config.json and writing a new config file");
       adminconfig = { datapacks: [], removeDevDatapacks: [] };
       try {
         await rm(assetconfigs.adminConfigPath);
