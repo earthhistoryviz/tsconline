@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { exec, execFile, execFileSync } from "child_process";
-import { writeFile, stat, readFile, access, rm, mkdir } from "fs/promises";
+import { exec, execFileSync } from "child_process";
+import { writeFile, stat, readFile, access, rm, mkdir, realpath } from "fs/promises";
 import {
   DatapackIndex,
   DatapackInfoChunk,
@@ -26,7 +26,6 @@ import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackInde
 import { glob } from "glob";
 import { DatapackDescriptionInfo } from "./types.js";
 import { MultipartFile } from "@fastify/multipart";
-import { promisify } from "util";
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
@@ -78,8 +77,13 @@ export const requestDownload = async function requestDownload(
   const encryptedFilepathDir = path.join(userDir, "encrypted-datapacks");
   let maybeEncryptedFilepath = path.join(encryptedFilepathDir, filename);
   // check and sanitize filepath
-  filepath = realpathSync(path.resolve(filepath));
-  maybeEncryptedFilepath = realpathSync(path.resolve(maybeEncryptedFilepath));
+  try {
+    filepath = await realpath(path.resolve(filepath));
+  } catch (e) {
+    reply.status(403).send({ error: "Invalid file path" });
+    return;
+  }
+  maybeEncryptedFilepath = path.resolve(maybeEncryptedFilepath);
   if (!filepath.startsWith(datapackDir) || !maybeEncryptedFilepath.startsWith(encryptedFilepathDir)) {
     reply.status(403).send({ error: "Invalid file path" });
     return;
@@ -543,8 +547,14 @@ export const fetchSVGStatus = async function (
   let directory = path.join(assetconfigs.chartsDirectory, hash);
   let filepath = path.join(directory, "chart.svg");
   // sanitize and check filepath
-  directory = realpathSync(path.resolve(root, directory));
-  filepath = realpathSync(path.resolve(root, filepath));
+  try {
+    directory = await realpath(path.resolve(root, directory));
+    filepath = await realpath(path.resolve(root, filepath));
+  } catch (e) {
+    console.log("reply: ", { ready: false });
+    reply.send({ ready: false });
+    return;
+  }
   if (!directory.startsWith(root) || !filepath.startsWith(root) || !filepath.endsWith("chart.svg")) {
     reply.status(403).send({ error: "Invalid hash" });
     return;
@@ -596,7 +606,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
 
   const userDatapackFilepaths = await glob(`${assetconfigs.uploadDirectory}/${uuid}/datapacks/*`);
   const userDatapackNames = userDatapackFilepaths.map((datapack) => path.basename(datapack));
-  const datapacks = [];
+  const datapacks: string[] = [];
   const userDatapacks = [];
   const serverDatapacks = assetconfigs.activeDatapacks.map((datapack) => datapack.file);
 
@@ -643,26 +653,32 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     return;
   }
   // Exec Java command and send final reply to browser
-  try {
-    const { stdout, stderr } = await promisify(execFile)("java", [
-      "-jar",
-      assetconfigs.activeJar,
-      "-node",
-      "-s",
-      settingsFilePath,
-      "-ss",
-      settingsFilePath,
-      "-d",
-      ...datapacks,
-      "-o",
-      chartFilePath,
-      "-a"
-    ]);
-    console.log("Java stdout: " + stdout.toString());
-    console.log("Java stderr: " + stderr.toString());
-  } catch {
-    // eslint-disable-next-line no-empty
-  }
+  const cmd =
+    `java -jar ${assetconfigs.activeJar} ` +
+    // Turns off GUI (e.g Suggested Age pop-up (defaults to yes if -a flag is not passed))
+    `-node ` +
+    // Add settings:
+    `-s ${settingsFilePath} ` +
+    // Save settings to file:
+    `-ss ${settingsFilePath} ` +
+    // Add datapacks:
+    `-d ${datapacks.join(" ")} ` +
+    // Tell it where to save chart
+    `-o ${chartFilePath} ` +
+    // Don't use datapacks suggested age (if useSuggestedAge is true then ignore datapack ages)
+    `-a`;
+
+  // Exec Java command and send final reply to browser
+  await new Promise<void>((resolve) => {
+    console.log("Calling Java: ", cmd);
+    exec(cmd, function (error, stdout, stderror) {
+      console.log("Java finished, sending reply to browser");
+      console.log("Java error param: " + error);
+      console.log("Java stdout: " + stdout);
+      console.log("Java stderr: " + stderror);
+      resolve();
+    });
+  });
   console.log("Sending reply to browser: ", {
     chartpath: chartUrlPath,
     hash: hash
