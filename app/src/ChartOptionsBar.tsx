@@ -268,13 +268,13 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
       <div>
         <CustomTooltip
           title={
-            <div>
+            <>
               ctrl/⊞/⌘ + Minus (-) - Zoom out
               <br />
               ctrl/⊞/⌘ + Plus (+) - Zoom in
               <br />
               Shift + Scroll - Horizontal Scroll
-            </div>
+            </>
           }>
           <IconButton>
             <HelpOutlineIcon />
