@@ -548,7 +548,7 @@ export const fetchSVGStatus = async function (
   let filepath = path.join(directory, "chart.svg");
   // sanitize and check filepath
   try {
-    directory = await realpath(path.resolve(root, directory));
+    directory = realpathSync(path.resolve(root, directory));
     filepath = await realpath(path.resolve(root, filepath));
   } catch (e) {
     console.log("reply: ", { ready: false });
