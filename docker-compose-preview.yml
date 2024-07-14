@@ -19,4 +19,3 @@ services:
       - "3000"
     networks:
       - shared_network
-    command: bash -c "source /root/.nvm/nvm.sh && nvm use node && yarn start"
