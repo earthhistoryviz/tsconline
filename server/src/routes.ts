@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec, execFile, execFileSync } from "child_process";
-import { writeFile, stat, readFile, access, rm, mkdir } from "fs/promises";
+import { writeFile, stat, readFile, access, rm, mkdir, realpath } from "fs/promises";
 import {
   DatapackIndex,
   DatapackInfoChunk,
@@ -543,8 +543,13 @@ export const fetchSVGStatus = async function (
   let directory = path.join(assetconfigs.chartsDirectory, hash);
   let filepath = path.join(directory, "chart.svg");
   // sanitize and check filepath
-  directory = realpathSync(path.resolve(root, directory));
-  filepath = realpathSync(path.resolve(root, filepath));
+  try {
+    directory = await realpath(path.resolve(root, directory));
+    filepath = await realpath(path.resolve(root, filepath));
+  } catch (e) {
+    reply.status(403).send({ error: "Invalid hash" });
+    return;
+  }
   if (!directory.startsWith(root) || !filepath.startsWith(root) || !filepath.endsWith("chart.svg")) {
     reply.status(403).send({ error: "Invalid hash" });
     return;
