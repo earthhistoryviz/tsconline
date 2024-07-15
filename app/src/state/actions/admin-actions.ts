@@ -4,10 +4,7 @@ import { executeRecaptcha, fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   AdminSharedUser,
-  assertAdminSharedUser,
-  assertAdminSharedUserArray,
-  assertSharedUser
-} from "@tsconline/shared";
+  assertAdminSharedUserArray} from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
 
 export const fetchUsers = action(async () => {
@@ -55,7 +52,7 @@ export const setUsers = action((users: AdminSharedUser[]) => {
   state.admin.displayedUsers = users;
 });
 
-export const adminAddUser = action( async (email: string, password: string, isAdmin: boolean, username?: string) => {
+export const adminAddUser = action(async (email: string, password: string, isAdmin: boolean, username?: string) => {
   let recaptchaToken: string;
   try {
     recaptchaToken = await executeRecaptcha("displayUsers");
@@ -72,12 +69,12 @@ export const adminAddUser = action( async (email: string, password: string, isAd
     password,
     isAdmin,
     username
-  })
+  });
   const response = await fetcher("/admin/user", {
     method: "POST",
     headers: {
       "recaptcha-token": recaptchaToken
     },
     body
-  })
-})
+  });
+});
