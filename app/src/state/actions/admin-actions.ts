@@ -1,22 +1,23 @@
 import { action } from "mobx";
-import { actions, state } from "..";
+import { state } from "..";
 import { executeRecaptcha, fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   AdminSharedUser,
   assertAdminSharedUserArray} from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
+import { pushError, pushSnackbar } from "./general-actions";
 
 export const fetchUsers = action(async () => {
   let recaptchaToken: string;
   try {
     recaptchaToken = await executeRecaptcha("displayUsers");
     if (!recaptchaToken) {
-      actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
+      pushError(ErrorCodes.RECAPTCHA_FAILED);
       return;
     }
   } catch (error) {
-    actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
+    pushError(ErrorCodes.RECAPTCHA_FAILED);
     return;
   }
   try {
@@ -30,7 +31,7 @@ export const fetchUsers = action(async () => {
     if (response.ok) {
       const json = await response.json();
       if (!json.users) {
-        actions.pushError(ErrorCodes.FETCH_USERS_FAILED);
+        pushError(ErrorCodes.FETCH_USERS_FAILED);
         return;
       }
       assertAdminSharedUserArray(json.users);
@@ -43,7 +44,7 @@ export const fetchUsers = action(async () => {
       );
     }
   } catch (error) {
-    actions.pushError(ErrorCodes.FETCH_USERS_FAILED);
+    pushError(ErrorCodes.FETCH_USERS_FAILED);
     return;
   }
 });
@@ -57,24 +58,40 @@ export const adminAddUser = action(async (email: string, password: string, isAdm
   try {
     recaptchaToken = await executeRecaptcha("displayUsers");
     if (!recaptchaToken) {
-      actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
+      pushError(ErrorCodes.RECAPTCHA_FAILED);
       return;
     }
   } catch (error) {
-    actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
+    pushError(ErrorCodes.RECAPTCHA_FAILED);
     return;
   }
   const body = JSON.stringify({
     email,
     password,
-    isAdmin,
-    username
+    isAdmin: isAdmin ? 1 : 0,
+    username: username || undefined
   });
-  const response = await fetcher("/admin/user", {
-    method: "POST",
-    headers: {
-      "recaptcha-token": recaptchaToken
-    },
-    body
-  });
+  try {
+    const response = await fetcher("/admin/user", {
+      method: "POST",
+      headers: {
+        "recaptcha-token": recaptchaToken
+      },
+      body,
+      credentials: "include"
+    });
+    if (response.ok) {
+      fetchUsers();
+      pushSnackbar("User added successfully", "success");
+    } else {
+      displayServerError(
+        await response.json(),
+        ErrorCodes.ADMIN_ADD_USER_FAILED,
+        ErrorMessages[ErrorCodes.ADMIN_ADD_USER_FAILED]
+      );
+    }
+  } catch (e) {
+    console.error(e)
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
 });

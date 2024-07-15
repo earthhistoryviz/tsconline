@@ -40,7 +40,7 @@ export const Admin = observer(function Admin() {
     return () => {
       removeRecaptcha();
     };
-  }, []);
+  }, [state.user.isAdmin]);
   if (!state.user.isAdmin) return <UnauthorizedAccess />;
   return (
     <Box>

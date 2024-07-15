@@ -37,18 +37,14 @@ export const AdminAddUserForm = observer(function AdminAddUserForm() {
       return;
     }
     setPasswordError("");
-    console.log("Adding user");
-    console.log("Email: ", form.email.value);
-    console.log("Username: ", form.username.value);
-    console.log("Password: ", form.password.value);
-    console.log("isAdmin: ", form.isAdmin.checked);
+    actions.adminAddUser(form.email.value, form.password.value, form.isAdmin.checked, form.username.value);
   };
 
   return (
     <Box>
       <TSCButton onClick={() => setFormOpen(!formOpen)}>Add user</TSCButton>
       <Dialog open={formOpen} onClose={() => setFormOpen(false)} PaperProps={{ sx: { maxWidth: "30vw" } }}>
-        <Box width="30vw" height="50vh" textAlign="center" padding="10px">
+        <Box width="30vw"textAlign="center" padding="10px">
           <Typography variant="h5" mb="5px">
             Add User
           </Typography>
@@ -74,8 +70,6 @@ export const AdminAddUserForm = observer(function AdminAddUserForm() {
               label="Password"
               name="password"
               type="password"
-              helperText={passwordError}
-              error={!!passwordError}
             />
             <FormTextField
               label="Confirm Password"
