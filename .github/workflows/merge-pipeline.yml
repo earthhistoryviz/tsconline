@@ -184,6 +184,26 @@ jobs:
     needs: [check-files, code-quality, build-and-test]
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout CODEOWNERS file from main branch
+      uses: Bhacaz/checkout-files@v2
+      with:
+        files: .github/CODEOWNERS
+        branch: main
+    
+    - name: Check if PR author is a code owner
+      id: check_codeowner
+      run: |
+        PR_AUTHOR=${{ github.event.pull_request.user.login }}
+        CODEOWNERS=$(cat .github/CODEOWNERS)
+        echo "PR Author: $PR_AUTHOR"
+        echo "Code Owners: $CODEOWNERS"
+        if echo "$CODEOWNERS" | grep -q "$PR_AUTHOR"; then
+          echo "PR author is a code owner"
+          exit 0
+        else
+          echo "PR author is not a code owner"
+        fi
+      
     - name: Checkout
       uses: actions/checkout@v3
       with:

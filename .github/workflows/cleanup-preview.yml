@@ -26,13 +26,18 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         script: |
           PR_ID=${{ github.event.pull_request.number }}
-          cd /home/aaron/tsconline/pr-preview-${PR_ID}
-          CONTAINER_NAME="pr-preview-${PR_ID}_pr-preview-run_1"
-          if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
-            echo "Container is running. Stopping and removing..."
-            docker-compose -f docker-compose-preview.yml down --remove-orphans --volumes
+          PREVIEW_DIR="/home/aaron/tsconline/pr-preview-${PR_ID}"
+          if [ -d "$PREVIEW_DIR" ]; then
+            cd $PREVIEW_DIR
+            CONTAINER_NAME="pr-preview-${PR_ID}_pr-preview-run_1"
+            if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
+              echo "Container is running. Stopping and removing..."
+              docker-compose -f docker-compose-preview.yml down --remove-orphans --volumes
+            else
+              echo "Container is not running. Proceeding with cleanup..."
+            fi
+            cd ..
+            sudo rm -rf $PREVIEW_DIR
           else
-            echo "Container is not running. Proceeding with cleanup..."
+            echo "Directory $PREVIEW_DIR does not exist. Skipping cleanup."
           fi
-          cd ..
-          sudo rm -rf /home/aaron/tsconline/pr-preview-${PR_ID}

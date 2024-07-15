@@ -9,8 +9,11 @@ jobs:
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/deploy' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout CODEOWNERS file from main branch
+        uses: Bhacaz/checkout-files@v2
+        with:
+          files: .github/CODEOWNERS
+          branch: main
 
       - name: Extract comment ID
         id: extract_comment
@@ -109,8 +112,11 @@ jobs:
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/confirm-deploy' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout CODEOWNERS file from main branch
+        uses: Bhacaz/checkout-files@v2
+        with:
+          files: .github/CODEOWNERS
+          branch: main
 
       - name: Extract comment ID
         id: extract_comment
