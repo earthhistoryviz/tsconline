@@ -71,7 +71,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
       pictureUrl: { type: "string" },
       isAdmin: { type: "number" }
     },
-    required: ["username", "email", "password"]
+    required: ["email", "password"]
   };
   const adminDeleteUserBody = {
     type: "object",
