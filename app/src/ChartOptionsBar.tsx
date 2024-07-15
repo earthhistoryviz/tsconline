@@ -181,6 +181,41 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
       actions.setChartTabDownloadFilename(e.target.value);
     };
 
+    async function svgToImageURI(svgString: string, width: number, height: number): Promise<string> {
+      return new Promise((resolve, reject) => {
+        const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+        const url = URL.createObjectURL(svgBlob);
+
+        const image = new Image();
+        image.width = width;
+        image.height = height;
+        image.src = url;
+
+        image.onload = () => {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject("Canvas context not found");
+            return;
+          }
+
+          const pixelRatio = 3;
+          canvas.width = width * pixelRatio;
+          canvas.height = height * pixelRatio;
+          ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+          ctx.drawImage(image, 0, 0);
+
+          URL.revokeObjectURL(url);
+          const imgURI = canvas.toDataURL();
+          canvas.remove();
+          resolve(imgURI);
+        };
+        image.onerror = () => {
+          reject("Failed to load image");
+        };
+      });
+    }
+
     async function downloadChart() {
       actions.setChartTabIsSavingChart(true);
       if (state.chartTab.downloadFiletype === "svg") {
@@ -202,57 +237,42 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
 
         const DOMURL = window.URL || window.webkitURL || window;
         const url = DOMURL.createObjectURL(svgBlob);
+        let imgURI = "";
+        try {
+          imgURI = await svgToImageURI(url, svgWidth, svgHeight);
+        } catch (e) {
+          console.error("Promise rejected with:", e);
+          actions.pushSnackbar("Error downloading chart, please try again.", "warning");
+          return;
+        }
 
-        const image = new Image();
-        image.width = svgWidth;
-        image.height = svgHeight;
-        image.src = url;
-
-        image.onload = function () {
-          const canvas = document.createElement("canvas");
-          const ctx = canvas.getContext("2d");
-          if (!ctx) return;
-
-          //determines resolution of image
-          const pixelRatio = 3;
-
-          canvas.width = svgWidth * pixelRatio;
-          canvas.height = svgHeight * pixelRatio;
-
-          ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-          ctx.drawImage(image, 0, 0);
-
-          DOMURL.revokeObjectURL(url);
-          const imgURI = canvas.toDataURL();
-
-          if (state.chartTab.downloadFiletype === "pdf") {
-            const downloadWorker: Worker = new Worker(new URL("./util/workers/download-pdf.ts", import.meta.url), {
-              type: "module"
-            });
-            const message: DownloadPdfMessage = { imgURI: imgURI, height: svgHeight, width: svgWidth };
-            downloadWorker.postMessage(message);
-            downloadWorker.onmessage = function (e: MessageEvent<DownloadPdfCompleteMessage>) {
-              const { status, value } = e.data;
-              if (status === "success" && value) {
-                FileSaver.saveAs(value, state.chartTab.downloadFilename + ".pdf");
-                actions.pushSnackbar("Saved Chart as PDF!", "success");
-              } else {
-                actions.pushSnackbar("Saving Chart Timed Out", "info");
-              }
-              actions.setChartTabIsSavingChart(false);
-              downloadWorker.terminate();
-            };
-          } else if (state.chartTab.downloadFiletype === "png") {
-            const a = document.createElement("a");
-            a.download = state.chartTab.downloadFilename + ".png"; // filename
-            a.target = "_blank";
-            a.href = imgURI;
-            a.click();
-            actions.pushSnackbar("Saved Chart as PNG!", "success");
+        if (state.chartTab.downloadFiletype === "pdf") {
+          const downloadWorker: Worker = new Worker(new URL("./util/workers/download-pdf.ts", import.meta.url), {
+            type: "module"
+          });
+          const message: DownloadPdfMessage = { imgURI: imgURI, height: svgHeight, width: svgWidth };
+          downloadWorker.postMessage(message);
+          downloadWorker.onmessage = function (e: MessageEvent<DownloadPdfCompleteMessage>) {
+            const { status, value } = e.data;
+            if (status === "success" && value) {
+              FileSaver.saveAs(value, state.chartTab.downloadFilename + ".pdf");
+              actions.pushSnackbar("Saved Chart as PDF!", "success");
+            } else {
+              actions.pushSnackbar("Saving Chart Timed Out", "info");
+            }
             actions.setChartTabIsSavingChart(false);
-          }
-          canvas.remove();
-        };
+            downloadWorker.terminate();
+          };
+        } else if (state.chartTab.downloadFiletype === "png") {
+          const a = document.createElement("a");
+          a.download = state.chartTab.downloadFilename + ".png"; // filename
+          a.target = "_blank";
+          a.href = imgURI;
+          a.click();
+          actions.pushSnackbar("Saved Chart as PNG!", "success");
+          actions.setChartTabIsSavingChart(false);
+          a.remove();
+        }
       }
     }
     return (
