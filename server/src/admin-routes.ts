@@ -31,7 +31,7 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
       const { hashedPassword, ...displayedUser } = user;
       return {
         ...displayedUser,
-        username: displayedUser.username || "",
+        username: displayedUser.username,
         isGoogleUser: hashedPassword === null,
         isAdmin: user.isAdmin === 1,
         emailVerified: user.emailVerified === 1,
@@ -43,7 +43,7 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
     });
     reply.send({ users: displayedUsers });
   } catch (e) {
-    console.error(e)
+    console.error(e);
     reply.status(404).send({ error: "Unknown error" });
   }
 };
@@ -67,18 +67,10 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
     return;
   }
   try {
-    if (username !== undefined && username !== "") {
-      const user = await checkForUsersWithUsernameOrEmail(username, email);
-      if (user.length > 0) {
-        reply.status(409).send({ error: "User already exists" });
-        return;
-      }
-    } else {
-      const user = await findUser({ email })
-      if (user.length > 0) {
-        reply.status(409).send({ error: "User already exists" });
-        return;
-      }
+    const user = await checkForUsersWithUsernameOrEmail(username || email, email);
+    if (user.length > 0) {
+      reply.status(409).send({ error: "User already exists" });
+      return;
     }
     const customUser = {
       username,
