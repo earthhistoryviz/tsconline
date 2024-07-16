@@ -37,6 +37,7 @@ export type State = {
     zoomFitMidCoordIsX: boolean;
     downloadFilename: string;
     downloadFiletype: "svg" | "pdf" | "png";
+    isSavingChart: boolean;
     enableScrollZoom: boolean;
   };
   loadSaveFilename: string;
@@ -110,6 +111,7 @@ export const state = observable<State>({
     zoomFitMidCoordIsX: true,
     downloadFilename: "chart",
     downloadFiletype: "svg",
+    isSavingChart: false,
     enableScrollZoom: false
   },
   loadSaveFilename: "settings", //name without extension (.tsc)

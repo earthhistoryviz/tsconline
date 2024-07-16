@@ -123,6 +123,24 @@ export const Search = observer(function Search() {
     return groupedEvents;
   }
 
+  const TimeDisplay = observer(() => {
+    return (
+      <div>
+        <div>Time Settings</div>
+        {Object.entries(state.settings.timeSettings).map(([unit, timeSettings]) => {
+          return (
+            <div key={unit}>
+              {unit}
+              <div>
+                Top Age: {timeSettings.topStageAge} Base Age:{timeSettings.baseStageAge}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  });
+
   return (
     <div className="search-container">
       <div className="search-and-options">
@@ -136,8 +154,8 @@ export const Search = observer(function Search() {
           value={state.settingsTabs.eventSearchTerm}
         />
       </div>
-
       <div>Found {count.current} Results</div>
+      <TimeDisplay />
       <Results groupedEvents={searchResultData()} />
     </div>
   );

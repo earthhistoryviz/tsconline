@@ -31,7 +31,8 @@ import {
 } from "@mui/material";
 import React from "react";
 import isValidFilename from "valid-filename";
-
+import { DownloadPdfCompleteMessage, DownloadPdfMessage } from "./types";
+import { TSCLoadingButton } from "./components/TSCLoadingButton";
 interface OptionsBarProps {
   transformRef: React.RefObject<ReactZoomPanPinchContentRef>;
   svgRef: React.RefObject<HTMLDivElement>;
@@ -167,9 +168,8 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
       </CustomTooltip>
     );
   };
-  const DownloadButton = () => {
+  const DownloadButton = observer(() => {
     const [downloadOpen, setDownloadOpen] = React.useState(false);
-
     const handleDownloadOpen = () => {
       setDownloadOpen(true);
     };
@@ -181,17 +181,102 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
       actions.setChartTabDownloadFilename(e.target.value);
     };
 
-    const downloadSvg = (filename: string) => {
-      const blob = new Blob([state.chartContent]);
-      FileSaver.saveAs(blob, filename + ".svg");
+    const svgToImageURI = (url: string, width: number, height: number): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+
+        image.onload = () => {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject("Canvas context not found");
+            return;
+          }
+          const pixelRatio = 3;
+          canvas.width = width * pixelRatio;
+          canvas.height = height * pixelRatio;
+          ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+          ctx.drawImage(image, 0, 0);
+
+          URL.revokeObjectURL(url);
+          const imgURI = canvas.toDataURL();
+          canvas.remove();
+          resolve(imgURI);
+        };
+        image.onerror = () => {
+          reject("Failed to load svg onto image");
+        };
+        image.width = width;
+        image.height = height;
+        image.src = url;
+      });
     };
+
+    async function downloadChart() {
+      actions.setChartTabIsSavingChart(true);
+      if (state.chartTab.downloadFiletype === "svg") {
+        const blob = new Blob([state.chartContent]);
+        FileSaver.saveAs(blob, state.chartTab.downloadFilename + ".svg");
+        actions.pushSnackbar("Saved Chart as SVG!", "success");
+        actions.setChartTabIsSavingChart(false);
+      } else {
+        const svgNode = svgRef.current?.children[0];
+        if (!svgNode) return;
+        if (!svgNode.getAttribute("height") || !svgNode.getAttribute("width")) return;
+        //height and width in cm, so convert to pixels
+        const svgHeight = Number(svgNode.getAttribute("height")!.slice(0, -2)) * 37.795;
+        const svgWidth = Number(svgNode.getAttribute("width")!.slice(0, -2)) * 37.795;
+        const svgString = state.chartContent;
+        const svgBlob = new Blob([svgString], {
+          type: "image/svg+xml;charset=utf-8"
+        });
+
+        const DOMURL = window.URL || window.webkitURL || window;
+        const url = DOMURL.createObjectURL(svgBlob);
+
+        let imgURI = "";
+        try {
+          imgURI = await svgToImageURI(url, svgWidth, svgHeight);
+        } catch (e) {
+          console.error(e);
+          actions.pushSnackbar("Failed to download chart, please try again.", "warning");
+          actions.setChartTabIsSavingChart(false);
+        }
+        if (state.chartTab.downloadFiletype === "pdf") {
+          actions.pushSnackbar("Generating a pdf will take a few seconds, feel free to close out of the popup", "info");
+          const downloadWorker: Worker = new Worker(new URL("./util/workers/download-pdf.ts", import.meta.url), {
+            type: "module"
+          });
+          const message: DownloadPdfMessage = { imgURI: imgURI, height: svgHeight, width: svgWidth };
+          downloadWorker.postMessage(message);
+          downloadWorker.onmessage = function (e: MessageEvent<DownloadPdfCompleteMessage>) {
+            const { status, value } = e.data;
+            if (status === "success" && value) {
+              FileSaver.saveAs(value, state.chartTab.downloadFilename + ".pdf");
+              actions.pushSnackbar("Saved Chart as PDF!", "success");
+            } else {
+              actions.pushSnackbar("Saving Chart Timed Out", "info");
+            }
+            actions.setChartTabIsSavingChart(false);
+            downloadWorker.terminate();
+          };
+        } else if (state.chartTab.downloadFiletype === "png") {
+          const a = document.createElement("a");
+          a.download = state.chartTab.downloadFilename + ".png"; // filename
+          a.target = "_blank";
+          a.href = imgURI;
+          a.click();
+          actions.pushSnackbar("Saved Chart as PNG!", "success");
+          actions.setChartTabIsSavingChart(false);
+          a.remove();
+        }
+      }
+    }
     return (
       <div>
-        <CustomTooltip title="Download Chart">
-          <TSCButton buttonType="gradient" onClick={() => handleDownloadOpen()}>
-            Save Chart
-          </TSCButton>
-        </CustomTooltip>
+        <TSCButton buttonType="gradient" onClick={() => handleDownloadOpen()}>
+          Save Chart
+        </TSCButton>
         <Dialog
           disableRestoreFocus
           open={downloadOpen}
@@ -204,15 +289,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
                 actions.pushSnackbar("Filename is not valid", "warning");
                 return;
               }
-              switch (state.chartTab.downloadFiletype) {
-                case "svg":
-                  downloadSvg(state.chartTab.downloadFilename);
-                  break;
-                case "pdf":
-                  break;
-                case "png":
-              }
-              handleDownloadClose();
+              downloadChart();
             }
           }}>
           <DialogTitle>Save Chart</DialogTitle>
@@ -239,12 +316,11 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
                     value={state.chartTab.downloadFiletype}
                     label="Age"
                     onChange={(e) => {
-                      actions.setChartTabDownloadFiletype(e.target.value as "svg");
+                      actions.setChartTabDownloadFiletype(e.target.value as "svg" | "png" | "pdf");
                     }}>
                     <MenuItem value={"svg"}>.svg</MenuItem>
-                    {/* implmement later 
                     <MenuItem value={"pdf"}>.pdf</MenuItem>
-                    <MenuItem value={"png"}>.png</MenuItem> */}
+                    <MenuItem value={"png"}>.png</MenuItem>
                   </Select>
                 </FormControl>
               </Box>
@@ -252,16 +328,16 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
           </DialogContent>
           <DialogActions>
             <Button variant="outlined" onClick={handleDownloadClose}>
-              Cancel
+              Exit
             </Button>
-            <TSCButton variant="text" type="submit">
+            <TSCLoadingButton loading={state.chartTab.isSavingChart} type="submit">
               Save
-            </TSCButton>
+            </TSCLoadingButton>
           </DialogActions>
         </Dialog>
       </div>
     );
-  };
+  });
 
   const HelpButton = () => {
     return (
