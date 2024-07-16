@@ -242,8 +242,8 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
           actions.pushSnackbar("Failed to download chart, please try again.", "warning");
           actions.setChartTabIsSavingChart(false);
         }
-
         if (state.chartTab.downloadFiletype === "pdf") {
+          actions.pushSnackbar("Generating a pdf will take a few seconds, feel free to close out of the popup", "info");
           const downloadWorker: Worker = new Worker(new URL("./util/workers/download-pdf.ts", import.meta.url), {
             type: "module"
           });
