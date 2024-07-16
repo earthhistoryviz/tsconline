@@ -1,0 +1,39 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "runDevelopment",
+      "dependsOrder": "parallel",
+      "dependsOn": [
+        "build-shared",
+        "start-server",
+        "dev-server",
+        "app-dev"
+      ]
+    },
+    {
+      "label": "start-server",
+      "type": "shell",
+      "command": "cd server && yarn start",
+      "presentation": {
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "dev-server",
+      "type": "shell",
+      "command": "cd server && yarn dev",
+      "presentation": {
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "app-dev",
+      "type": "shell",
+      "command": "cd app && yarn dev",
+      "presentation": {
+        "panel": "dedicated"
+      }
+    }
+  ]
+}
