@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { exec } from "child_process";
-import { writeFile, stat, readFile, access, rm, mkdir } from "fs/promises";
+import { writeFile, stat, readFile, access, rm, mkdir, realpath } from "fs/promises";
 import {
   DatapackIndex,
   DatapackInfoChunk,
@@ -135,6 +135,7 @@ export const requestDownload = async function requestDownload(
       const errormsg = "The file requested " + filename + " does not exist within user's upload directory";
       reply.status(404).send({ error: errormsg });
     } else {
+      //add test
       reply.status(500).send({ error: "An error occurred: " + e });
     }
     return;
@@ -172,9 +173,10 @@ export const requestDownload = async function requestDownload(
       return;
     }
   } catch (e) {
+    //add test
     const error = e as NodeJS.ErrnoException;
     if (error.code === "ENOENT") {
-      const errormsg = "The file requested " + filename + " does not exist within user's upload directory";
+      const errormsg = "Java file did not successfully process the file " + filename;
       reply.status(404).send({ error: errormsg });
     } else {
       reply.status(500).send({ error: "An error occurred: " + e });
