@@ -42,7 +42,8 @@ export const fetchUsers = action(async () => {
       );
     }
   } catch (error) {
-    pushError(ErrorCodes.FETCH_USERS_FAILED);
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
     return;
   }
 });
@@ -88,6 +89,47 @@ export const adminAddUser = action(async (email: string, password: string, isAdm
         await response.json(),
         ErrorCodes.ADMIN_ADD_USER_FAILED,
         ErrorMessages[ErrorCodes.ADMIN_ADD_USER_FAILED]
+      );
+    }
+  } catch (e) {
+    console.error(e);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
+
+export const adminDeleteUsers = action(async (user: AdminSharedUser) => {
+  let recaptchaToken: string;
+  try {
+    recaptchaToken = await executeRecaptcha("displayUsers");
+    if (!recaptchaToken) {
+      pushError(ErrorCodes.RECAPTCHA_FAILED);
+      return;
+    }
+  } catch (error) {
+    pushError(ErrorCodes.RECAPTCHA_FAILED);
+    return;
+  }
+  const body = JSON.stringify({
+    uuid: user.uuid
+  });
+  try {
+    const response = await fetcher("/admin/user", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "recaptcha-token": recaptchaToken
+      },
+      body,
+      credentials: "include"
+    });
+    if (response.ok) {
+      fetchUsers();
+      pushSnackbar(`User ${user.username} deleted successfully`, "success");
+    } else {
+      displayServerError(
+        await response.json(),
+        ErrorCodes.ADMIN_DELETE_USER_FAILED,
+        ErrorMessages[ErrorCodes.ADMIN_DELETE_USER_FAILED]
       );
     }
   } catch (e) {
