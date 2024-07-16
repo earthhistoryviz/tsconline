@@ -14,7 +14,6 @@ type TSCErrorProps = {
   message: string;
   index: number;
   count: number;
-  anchorElementRef?: RefObject<HTMLElement>;
 };
 export const TSCError: React.FC<TSCErrorProps> = observer(({ errorContext, message, index, count }) => {
   const { actions } = useContext(context);
