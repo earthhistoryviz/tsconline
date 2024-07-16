@@ -14,10 +14,14 @@ import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import { trimQuotes } from "../util/util";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import FormatLineSpacingIcon from "@mui/icons-material/FormatLineSpacing";
+import { ColumnInfo } from "@tsconline/shared";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 
-const ToggleColumn = observer(({ columnName }: { columnName: string }) => {
+const Column = observer(({ columnName, columnPath }: { columnName: string; columnPath: string[] }) => {
   const { state, actions } = useContext(context);
   const column = state.settingsTabs.columnHashMap.get(columnName);
+
   if (!column) {
     return (
       <SvgIcon>
@@ -25,13 +29,38 @@ const ToggleColumn = observer(({ columnName }: { columnName: string }) => {
       </SvgIcon>
     );
   }
+  const ColumnPathToRootOn = () => {
+    let currColumn = column!;
+    while (currColumn.parent) {
+      if (currColumn.on === false) {
+        return false;
+      }
+      const parent = state.settingsTabs.columnHashMap.get(currColumn.parent);
+      if (!parent) {
+        console.error("parent of " + currColumn.name + "not found");
+        return false;
+      }
+      currColumn = parent;
+    }
+    return true;
+  };
   return (
-    <TSCCheckbox
-      checked={column.on}
-      onChange={() => {
-        actions.toggleSettingsTabColumn(column);
-      }}
-    />
+    <div>
+      <div style={{width: "inherit"}}>
+      <CustomTooltip
+        placement="right"
+        title={columnPath.map((value, pathIndex) => (
+          <div key={pathIndex}>{value}</div>
+        ))}>
+          
+        <Typography noWrap variant="subtitle2">
+          {columnPath[0]}
+        </Typography>
+      </CustomTooltip>
+      </div>
+      
+      {ColumnPathToRootOn() ? <CheckIcon /> : <CloseIcon />}
+    </div>
   );
 });
 
@@ -112,7 +141,7 @@ const ModifyTimeInterval = observer(({ info }: { info: EventSearchInfo }) => {
 
 export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchInfo[] }) => {
   const theme = useTheme();
-
+  const { state, actions } = useContext(context);
   //this is necessary to prevent table hierachy errors
   //virtuoso assigns each array element to a table row, and a table row can't be a child
   //of a table row which would be necessary for display without stretching the array.
@@ -130,15 +159,7 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
       return (
         <>
           <TableCell className="event-group-header-text" align="left">
-            Toggle Column
-          </TableCell>
-          <TableCell className="event-group-header-text" align="left">
-            <CustomTooltip title={"Adds 3myr around event"} placement="right">
-              <div>Modify Time Interval</div>
-            </CustomTooltip>
-          </TableCell>
-          <TableCell className="event-group-header-text" align="left">
-            Column Path
+            Column
           </TableCell>
           <TableCell className="event-group-header-text" align="center">
             Age
@@ -168,45 +189,31 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
         <>
           <TableCell align="left">
             <div>
-              <ToggleColumn columnName={info.columnName} />
+              <Column columnName={info.columnName} columnPath={info.columnPath} />
             </div>
           </TableCell>
-          <TableCell align="left">
-            <div className="modify-time-interval-container">
-              <ModifyTimeInterval info={info} />
+          <TableCell align="center">
+            <div className="search-result-age-container">
+              {info.age ? (
+                <div>
+                  {info.age} <ModifyTimeInterval info={info} />
+                </div>
+              ) : (
+                <SvgIcon>
+                  <HorizontalRuleIcon />
+                </SvgIcon>
+              )}
             </div>
           </TableCell>
-          <TableCell align="left">
-            <CustomTooltip
-              placement="right"
-              title={info.columnPath.map((value, pathIndex) => (
-                <div key={index + " " + pathIndex}>{value}</div>
-              ))}>
-              <Typography noWrap sx={{ width: "5vw" }} variant="subtitle2">
-                {info.columnPath[0]}
-              </Typography>
-            </CustomTooltip>
-          </TableCell>
-          {info.age ? (
-            <TableCell align="center">
-              <div className="search-result-age-container">{info.age}</div>
-            </TableCell>
-          ) : (
-            <TableCell align="center">
-              <SvgIcon>
-                <HorizontalRuleIcon />
-              </SvgIcon>
-            </TableCell>
-          )}
-          {info.qualifier ? (
-            <TableCell align="right">{info.qualifier}</TableCell>
-          ) : (
-            <TableCell align="right">
-              <SvgIcon>
-                <HorizontalRuleIcon />
-              </SvgIcon>
-            </TableCell>
-          )}
+            {info.qualifier ? (
+              <TableCell align="right">{info.qualifier}</TableCell>
+            ) : (
+              <TableCell align="right">
+                <SvgIcon>
+                  <HorizontalRuleIcon />
+                </SvgIcon>
+              </TableCell>
+            )}
           {info.notes ? (
             <TableCell align="right">
               <CustomTooltip
