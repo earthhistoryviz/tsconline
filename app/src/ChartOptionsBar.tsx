@@ -181,15 +181,9 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
       actions.setChartTabDownloadFilename(e.target.value);
     };
 
-    async function svgToImageURI(svgString: string, width: number, height: number): Promise<string> {
+    const svgToImageURI = (url: string, width: number, height: number): Promise<string> => {
       return new Promise((resolve, reject) => {
-        const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-        const url = URL.createObjectURL(svgBlob);
-
         const image = new Image();
-        image.width = width;
-        image.height = height;
-        image.src = url;
 
         image.onload = () => {
           const canvas = document.createElement("canvas");
@@ -198,7 +192,6 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
             reject("Canvas context not found");
             return;
           }
-
           const pixelRatio = 3;
           canvas.width = width * pixelRatio;
           canvas.height = height * pixelRatio;
@@ -211,10 +204,13 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
           resolve(imgURI);
         };
         image.onerror = () => {
-          reject("Failed to load image");
+          reject("Failed to load svg onto image");
         };
+        image.width = width;
+        image.height = height;
+        image.src = url;
       });
-    }
+    };
 
     async function downloadChart() {
       actions.setChartTabIsSavingChart(true);
@@ -237,13 +233,14 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
 
         const DOMURL = window.URL || window.webkitURL || window;
         const url = DOMURL.createObjectURL(svgBlob);
+
         let imgURI = "";
         try {
           imgURI = await svgToImageURI(url, svgWidth, svgHeight);
         } catch (e) {
-          console.error("Promise rejected with:", e);
-          actions.pushSnackbar("Error downloading chart, please try again.", "warning");
-          return;
+          console.error(e);
+          actions.pushSnackbar("Failed to download chart, please try again.", "warning");
+          actions.setChartTabIsSavingChart(false);
         }
 
         if (state.chartTab.downloadFiletype === "pdf") {
