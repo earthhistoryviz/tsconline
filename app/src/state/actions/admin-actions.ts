@@ -97,7 +97,7 @@ export const adminAddUser = action(async (email: string, password: string, isAdm
   }
 });
 
-export const adminDeleteUsers = action(async (user: AdminSharedUser) => {
+export const adminDeleteUsers = action(async (users: AdminSharedUser[]) => {
   let recaptchaToken: string;
   try {
     recaptchaToken = await executeRecaptcha("displayUsers");
@@ -109,31 +109,41 @@ export const adminDeleteUsers = action(async (user: AdminSharedUser) => {
     pushError(ErrorCodes.RECAPTCHA_FAILED);
     return;
   }
-  const body = JSON.stringify({
-    uuid: user.uuid
-  });
-  try {
-    const response = await fetcher("/admin/user", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        "recaptcha-token": recaptchaToken
-      },
-      body,
-      credentials: "include"
+  let deletedAllUsers = true;
+  for (const user of users) {
+    const body = JSON.stringify({
+      uuid: user.uuid
     });
-    if (response.ok) {
-      fetchUsers();
-      pushSnackbar(`User ${user.username} deleted successfully`, "success");
-    } else {
-      displayServerError(
-        await response.json(),
-        ErrorCodes.ADMIN_DELETE_USER_FAILED,
-        ErrorMessages[ErrorCodes.ADMIN_DELETE_USER_FAILED]
-      );
+    try {
+      const response = await fetcher("/admin/user", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "recaptcha-token": recaptchaToken
+        },
+        body,
+        credentials: "include"
+      });
+      if (response.ok) {
+        fetchUsers();
+      } else {
+        deletedAllUsers = false;
+        displayServerError(
+          await response.json(),
+          ErrorCodes.ADMIN_DELETE_USER_FAILED,
+          `${ErrorMessages[ErrorCodes.ADMIN_DELETE_USER_FAILED]}: ${user.username}`
+        );
+        continue;
+      }
+    } catch (e) {
+      console.error(e);
+      pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+      return;
     }
-  } catch (e) {
-    console.error(e);
-    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+  if (deletedAllUsers) {
+    pushSnackbar("Users deleted successfully", "success");
+  } else {
+    pushSnackbar("Some users were not deleted", "warning");
   }
 });
