@@ -22,12 +22,10 @@
   font-weight: 600;
 }
 
-.modify-time-interval-container {
-  width: 5em;
-}
-
 .search-result-age-container {
-  width: 5vw;
+  justify-content: center;
+  align-items: center;
+  display: flex;
 }
 
 .table-container {
