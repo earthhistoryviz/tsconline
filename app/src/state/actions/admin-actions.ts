@@ -4,7 +4,8 @@ import { executeRecaptcha, fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   AdminSharedUser,
-  assertAdminSharedUserArray} from "@tsconline/shared";
+  assertAdminSharedUserArray
+} from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
 import { pushError, pushSnackbar } from "./general-actions";
 
@@ -69,12 +70,14 @@ export const adminAddUser = action(async (email: string, password: string, isAdm
     email,
     password,
     isAdmin: isAdmin ? 1 : 0,
-    username: username || undefined
+    ...(username && { username })
   });
+  console.log(body)
   try {
     const response = await fetcher("/admin/user", {
       method: "POST",
       headers: {
+        "Content-Type": "application/json",
         "recaptcha-token": recaptchaToken
       },
       body,

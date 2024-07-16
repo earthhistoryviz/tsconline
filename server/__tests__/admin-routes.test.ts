@@ -87,7 +87,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => {});
+        readable.on("data", () => { });
         readable.on("end", () => {
           resolve();
         });
@@ -198,7 +198,7 @@ beforeAll(async () => {
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "error").mockImplementation(() => { });
 });
 
 afterAll(async () => {
@@ -359,6 +359,7 @@ describe("adminCreateUser tests", () => {
   const checkForUsersWithUsernameOrEmail = vi.spyOn(database, "checkForUsersWithUsernameOrEmail");
   const createUser = vi.spyOn(database, "createUser");
   const findUser = vi.spyOn(database, "findUser");
+  const deleteUser = vi.spyOn(database, "deleteUser");
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -422,6 +423,8 @@ describe("adminCreateUser tests", () => {
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
     expect(createUser).toHaveBeenCalledWith(customUser);
     expect(createUser).toHaveBeenCalledTimes(1);
+    expect(deleteUser).toHaveBeenCalledOnce();
+    expect(deleteUser).toHaveBeenCalledWith({ email: customUser.email });
     expect(await response.json()).toEqual({ error: "Database error" });
     expect(response.statusCode).toBe(500);
   });
@@ -441,6 +444,8 @@ describe("adminCreateUser tests", () => {
     expect(findUser).toHaveBeenNthCalledWith(1, { uuid: headers["mock-uuid"] });
     expect(findUser).toHaveBeenNthCalledWith(2, { username: body.username });
     expect(findUser).toHaveBeenCalledTimes(2);
+    expect(deleteUser).toHaveBeenCalledOnce();
+    expect(deleteUser).toHaveBeenCalledWith({ email: customUser.email });
     expect(await response.json()).toEqual({ error: "Database error" });
     expect(response.statusCode).toBe(500);
   });

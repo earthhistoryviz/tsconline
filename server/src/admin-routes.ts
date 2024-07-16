@@ -73,21 +73,28 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
       return;
     }
     const customUser = {
-      username,
+      username: username ?? email,
       email,
       hashedPassword: await hash(password, 10),
       uuid: randomUUID(),
       pictureUrl: pictureUrl ?? null,
-      isAdmin: isAdmin ? 1 : 0,
+      isAdmin: isAdmin,
       emailVerified: 1,
-      invalidateSession: 0
+      invalidateSession: 0,
     };
+    console.log(customUser)
     await createUser(customUser);
     const newUser = await findUser({ username });
     if (newUser.length !== 1) {
       throw new Error("User not created");
     }
   } catch (error) {
+    // this is needed because even when it fails, it will create the user in some cases
+    try {
+      await deleteUser({ email });
+    } catch (e) {
+      // eslint-disable-next-line no-empty
+    }
     reply.status(500).send({ error: "Database error" });
     return;
   }
