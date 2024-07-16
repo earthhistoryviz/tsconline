@@ -10,7 +10,7 @@ import { ColDef } from "ag-grid-community";
 import { Box, useTheme } from "@mui/material";
 import { AdminAddUserForm } from "./AdminAddUserForm";
 import { AdminSharedUser, assertAdminSharedUser } from "@tsconline/shared";
-import { TSCButton } from "../components";
+import { TSCButton, TSCCheckbox } from "../components";
 
 const colDefs: ColDef[] = [
   {
@@ -25,18 +25,28 @@ const colDefs: ColDef[] = [
   { headerName: "Email", field: "email", sortable: true, filter: true },
   { headerName: "UUID", field: "uuid" },
   { headerName: "User ID", field: "userId", width: 80 },
-  { headerName: "Google User", field: "isGoogleUser", width: 120 },
+  { headerName: "Google User", field: "isGoogleUser", width: 120, flex: 0},
   {
     headerName: "Invalidated Session?",
     field: "invalidateSession",
     width: 110,
     autoHeaderHeight: true,
-    wrapHeaderText: true
+    wrapHeaderText: true,
+    flex: 0
   },
-  { headerName: "Email Verified", field: "emailVerified", width: 90, autoHeaderHeight: true, wrapHeaderText: true },
-  { headerName: "Picture URL", field: "pictureUrl", width: 80, autoHeaderHeight: true, wrapHeaderText: true },
-  { headerName: "Is Admin", field: "isAdmin", width: 90, autoHeaderHeight: true, wrapHeaderText: true }
+  { headerName: "Email Verified", field: "emailVerified", width: 90, autoHeaderHeight: true, wrapHeaderText: true, flex: 0 },
+  { headerName: "Picture URL", field: "pictureUrl", width: 80, autoHeaderHeight: true, wrapHeaderText: true, flex: 0 },
+  { headerName: "Is Admin", field: "isAdmin", width: 90, autoHeaderHeight: true, wrapHeaderText: true, flex: 0 }
 ];
+const defaultCol = {
+  flex: 1
+}
+
+const icons = {
+  checkboxChecked: "<TSCCheckbox checked={true}/>",
+  checkboxUnchecked: "<TSCCheckbox checked={false}/>",
+  group: "tick",
+}
 
 export const Admin = observer(function Admin() {
   const { state, actions } = useContext(context);
@@ -76,6 +86,8 @@ export const Admin = observer(function Admin() {
       </Box>
       <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
         <AgGridReact
+          icons={icons}
+          defaultColDef={defaultCol}
           ref={gridRef}
           isRowSelectable={(node) => node.data.email !== state.user.email}
           rowMultiSelectWithClick
