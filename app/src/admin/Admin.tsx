@@ -9,7 +9,7 @@ import "ag-grid-community/styles/ag-theme-quartz.css";
 import { ColDef } from "ag-grid-community";
 import { Box, useTheme } from "@mui/material";
 import { AdminAddUserForm } from "./AdminAddUserForm";
-import { AdminSharedUser } from "@tsconline/shared";
+import { AdminSharedUser, assertAdminSharedUser } from "@tsconline/shared";
 import { TSCButton } from "../components";
 
 const colDefs: ColDef[] = [
@@ -51,20 +51,26 @@ export const Admin = observer(function Admin() {
       removeRecaptcha();
     };
   }, [state.user.isAdmin]);
+  const deleteUsers = async () => {
+    const selectedNodes = gridRef.current?.api.getSelectedNodes();
+    if (!selectedNodes || !selectedNodes.length) return;
+    try {
+      const users = selectedNodes.map((node) => {
+        assertAdminSharedUser(node.data);
+        return node.data;
+      });
+      actions.adminDeleteUsers(users);
+    } catch (e) {
+      console.error(e);
+    }
+  };
   if (!state.user.isAdmin) return <UnauthorizedAccess />;
   return (
     <Box display="flex" flexDirection="column">
       <Box display="flex" flexDirection="row" gap="10px" margin="auto" mt="10px" mb="10px">
         <AdminAddUserForm />
         <TSCButton
-          onClick={() => {
-            const selectedNodes = gridRef.current?.api.getSelectedNodes();
-            if (!selectedNodes || !selectedNodes.length) return;
-            selectedNodes.forEach((node) => {
-              if (!node.data) return;
-              actions.adminDeleteUsers(node.data);
-            });
-          }}>
+          onClick={deleteUsers}>
           Delete Selected Users
         </TSCButton>
       </Box>
