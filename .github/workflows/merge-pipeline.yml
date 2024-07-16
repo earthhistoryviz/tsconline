@@ -24,7 +24,7 @@ jobs:
             echo "node_modules folder detected, please remove" > disallowed_files.txt
           fi
           if git diff --name-only main...HEAD | grep -E 'uploads/'; then
-            echo "uploads folder detected, please remove" > disallowed_files.txt
+            echo "uploads folder detected, please remove" >> disallowed_files.txt
           fi
           if git diff --name-only main...HEAD | grep 'file_metadata.json'; then
             echo "file_metadata.json detected, please remove" >> disallowed_files.txt
@@ -32,6 +32,12 @@ jobs:
           git diff --name-only main...HEAD | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store|db)$' | grep -v '^server/__tests__/__data__/.*\.txt$' >> disallowed_files.txt || true
           if git diff --name-only main...HEAD | grep -E 'app/dist/|server/dist/|shared/dist'; then
             echo "dist folder detected, please remove" >> disallowed_files.txt
+          fi
+          if git diff --name-only main...HEAD | grep -E '\.yarn/cache/'; then
+            echo ".yarn/cache folder detected, please remove" >> disallowed_files.txt
+          fi
+          if git diff --name-only main...HEAD | grep -E '\.pnp\..*'; then
+            echo ".pnp.* files detected, please remove" >> disallowed_files.txt
           fi
           if [ -s disallowed_files.txt ]; then
             echo "disallowed_files_present=true" >> $GITHUB_OUTPUT
