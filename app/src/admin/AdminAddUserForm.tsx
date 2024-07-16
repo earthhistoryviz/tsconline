@@ -44,7 +44,7 @@ export const AdminAddUserForm = observer(function AdminAddUserForm() {
     <Box>
       <TSCButton onClick={() => setFormOpen(!formOpen)}>Add user</TSCButton>
       <Dialog open={formOpen} onClose={() => setFormOpen(false)} PaperProps={{ sx: { maxWidth: "30vw" } }}>
-        <Box width="30vw"textAlign="center" padding="10px">
+        <Box width="30vw" textAlign="center" padding="10px">
           <Typography variant="h5" mb="5px">
             Add User
           </Typography>
@@ -66,11 +66,7 @@ export const AdminAddUserForm = observer(function AdminAddUserForm() {
               helperText={usernameError}
               error={!!usernameError}
             />
-            <FormTextField
-              label="Password"
-              name="password"
-              type="password"
-            />
+            <FormTextField label="Password" name="password" type="password" />
             <FormTextField
               label="Confirm Password"
               name="confirmPassword"
