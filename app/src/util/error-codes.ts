@@ -52,7 +52,7 @@ export enum ErrorCodes {
   USERNAME_TAKEN = "USERNAME_TAKEN",
   UNABLE_TO_READ_FILE_OR_EMPTY_FILE = "UNABLE_TO_READ_FILE_OR_EMPTY_FILE",
   FETCH_USERS_FAILED = "FETCH_USERS_FAILED",
-  ADMIN_ADD_USER_FAILED = "ADMIN_ADD_USER_FAILED",
+  ADMIN_ADD_USER_FAILED = "ADMIN_ADD_USER_FAILED"
 }
 
 export const ErrorMessages = {
@@ -117,5 +117,5 @@ export const ErrorMessages = {
   [ErrorCodes.USERNAME_TAKEN]: "Username is already taken. Please try a different username.",
   [ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE]: "Unable to read file or file is empty. Please try again.",
   [ErrorCodes.FETCH_USERS_FAILED]: "Unable to fetch users for admin display. Please try again later.",
-  [ErrorCodes.ADMIN_ADD_USER_FAILED]: "Unable to add user. Please try again later.",
+  [ErrorCodes.ADMIN_ADD_USER_FAILED]: "Unable to add user. Please try again later."
 };

@@ -92,7 +92,7 @@ export async function initializeDatabase() {
     email: process.env.ADMIN_EMAIL || "test@gmail.com"
   });
   if (!admin || admin.length == 0) {
-    createUser({
+    await createUser({
       username: process.env.ADMIN_USER || "admin",
       hashedPassword: await hash(process.env.ADMIN_PASS || "admin-password", 10),
       email: process.env.ADMIN_EMAIL || "test@gmail.com",

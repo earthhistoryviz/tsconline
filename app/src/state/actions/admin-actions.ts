@@ -2,10 +2,7 @@ import { action } from "mobx";
 import { state } from "..";
 import { executeRecaptcha, fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import {
-  AdminSharedUser,
-  assertAdminSharedUserArray
-} from "@tsconline/shared";
+import { AdminSharedUser, assertAdminSharedUserArray } from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
 import { pushError, pushSnackbar } from "./general-actions";
 
@@ -72,7 +69,7 @@ export const adminAddUser = action(async (email: string, password: string, isAdm
     isAdmin: isAdmin ? 1 : 0,
     ...(username && { username })
   });
-  console.log(body)
+  console.log(body);
   try {
     const response = await fetcher("/admin/user", {
       method: "POST",
@@ -94,7 +91,7 @@ export const adminAddUser = action(async (email: string, password: string, isAdm
       );
     }
   } catch (e) {
-    console.error(e)
+    console.error(e);
     pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
   }
 });

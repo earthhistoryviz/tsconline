@@ -16,7 +16,7 @@ import { pipeline } from "stream/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "util";
 import { assertAdminSharedUser } from "@tsconline/shared";
-import { DatapackDescriptionInfo } from "./types.js";
+import { DatapackDescriptionInfo, NewUser } from "./types.js";
 
 /**
  * Get all users for admin to configure on frontend
@@ -72,7 +72,7 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
       reply.status(409).send({ error: "User already exists" });
       return;
     }
-    const customUser = {
+    const customUser: NewUser = {
       username: username ?? email,
       email,
       hashedPassword: await hash(password, 10),
@@ -80,11 +80,10 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
       pictureUrl: pictureUrl ?? null,
       isAdmin: isAdmin,
       emailVerified: 1,
-      invalidateSession: 0,
+      invalidateSession: 0
     };
-    console.log(customUser)
     await createUser(customUser);
-    const newUser = await findUser({ username });
+    const newUser = await findUser({ email });
     if (newUser.length !== 1) {
       throw new Error("User not created");
     }
