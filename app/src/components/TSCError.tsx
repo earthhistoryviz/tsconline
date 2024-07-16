@@ -1,6 +1,6 @@
 import { Fade, IconButton, Snackbar, Typography, useTheme } from "@mui/material";
 import { context } from "../state";
-import { useContext, RefObject } from "react";
+import { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import CloseIcon from "@mui/icons-material/Close";
 import { CustomDivider, StyledScrollbar } from "./TSCComponents";
