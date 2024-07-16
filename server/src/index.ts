@@ -163,11 +163,11 @@ server.register(fastifyStatic, {
 // Helpful for testing locally:
 server.register(cors, {
   origin: process.env.APP_ORIGIN || "http://localhost:5173",
-  methods: ["GET", "POST"],
+  methods: ["GET", "POST", "DELETE"],
   credentials: true
 });
 
-server.register(fastifyCompress, { global: true });
+server.register(fastifyCompress, { global: true, threshold: 2048 });
 
 // removes the cached public/cts directory
 server.post("/removecache", async (request, reply) => {

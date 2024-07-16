@@ -37,7 +37,7 @@ export const AdminAddUserForm = observer(function AdminAddUserForm() {
       return;
     }
     setPasswordError("");
-    actions.adminAddUser(form.email.value, form.password.value, form.isAdmin.checked, form.username.value);
+    await actions.adminAddUser(form.email.value, form.password.value, form.isAdmin.checked, form.username.value);
   };
 
   return (

@@ -41,7 +41,7 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
     displayedUsers.forEach((user) => {
       assertAdminSharedUser(user);
     });
-    reply.send({ users: displayedUsers });
+    reply.status(200).send({ users: displayedUsers });
   } catch (e) {
     console.error(e);
     reply.status(404).send({ error: "Unknown error" });
