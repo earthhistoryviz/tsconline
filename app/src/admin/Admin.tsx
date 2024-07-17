@@ -1,10 +1,13 @@
 import { Box, Divider, Tab, Tabs, Typography, styled } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { AdminUserConfig } from "./AdminUserConfig";
+import { useContext } from "react";
+import { context } from "../state";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import DataObjectIcon from "@mui/icons-material/DataObject";
 import { useState } from "react";
 import Color from "color";
+import { UnauthorizedAccess } from "./UnauthorizedAccess";
 import { AdminDatapackConfig } from "./AdminDatapackConfig";
 
 const AdminTab = styled(Tab)(({ theme }) => ({
@@ -31,9 +34,11 @@ const AdminTabs = styled(Tabs)(() => ({
 
 export const Admin = observer(function Admin() {
   const [tabIndex, setTabIndex] = useState(0);
+  const { state } = useContext(context);
   const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabIndex(newValue);
   };
+  if (!state.user.isAdmin) return <UnauthorizedAccess />;
   const tabs = [
     {
       tabName: "User Config",
