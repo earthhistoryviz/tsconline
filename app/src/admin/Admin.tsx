@@ -12,6 +12,14 @@ import { AdminAddUserForm } from "./AdminAddUserForm";
 import { AdminSharedUser, assertAdminSharedUser } from "@tsconline/shared";
 import { TSCButton, TSCCheckbox } from "../components";
 
+const checkboxRenderer = (params: { value: boolean }) => {
+  if (params.value === true) {
+    return <span className="ag-icon-tick" />;
+  } else {
+    return <span className="ag-icon-cross" />;
+  }
+};
+
 const colDefs: ColDef[] = [
   {
     headerName: "Username",
@@ -20,33 +28,46 @@ const colDefs: ColDef[] = [
     filter: true,
     rowDrag: true,
     checkboxSelection: true,
-    headerCheckboxSelection: true
+    headerCheckboxSelection: true,
+    minWidth: 120
   },
   { headerName: "Email", field: "email", sortable: true, filter: true },
   { headerName: "UUID", field: "uuid" },
-  { headerName: "User ID", field: "userId", width: 80 },
-  { headerName: "Google User", field: "isGoogleUser", width: 120, flex: 0},
+  { headerName: "User ID", field: "userId", flex: 1 },
+  { headerName: "Google User", field: "isGoogleUser", width: 120, flex: 1, cellRenderer: checkboxRenderer },
   {
     headerName: "Invalidated Session?",
     field: "invalidateSession",
     width: 110,
     autoHeaderHeight: true,
     wrapHeaderText: true,
-    flex: 0
+    flex: 1,
+    cellRenderer: checkboxRenderer
   },
-  { headerName: "Email Verified", field: "emailVerified", width: 90, autoHeaderHeight: true, wrapHeaderText: true, flex: 0 },
-  { headerName: "Picture URL", field: "pictureUrl", width: 80, autoHeaderHeight: true, wrapHeaderText: true, flex: 0 },
-  { headerName: "Is Admin", field: "isAdmin", width: 90, autoHeaderHeight: true, wrapHeaderText: true, flex: 0 }
+  {
+    headerName: "Email Verified",
+    field: "emailVerified",
+    width: 90,
+    flex: 1,
+    autoHeaderHeight: true,
+    wrapHeaderText: true,
+    cellRenderer: checkboxRenderer
+  },
+  { headerName: "Picture URL", field: "pictureUrl", width: 80, autoHeaderHeight: true, wrapHeaderText: true, flex: 1 },
+  {
+    headerName: "Is Admin",
+    field: "isAdmin",
+    width: 90,
+    autoHeaderHeight: true,
+    wrapHeaderText: true,
+    flex: 1,
+    cellRenderer: checkboxRenderer
+  }
 ];
 const defaultCol = {
-  flex: 1
-}
-
-const icons = {
-  checkboxChecked: "<TSCCheckbox checked={true}/>",
-  checkboxUnchecked: "<TSCCheckbox checked={false}/>",
-  group: "tick",
-}
+  flex: 2,
+  minWidth: 80
+};
 
 export const Admin = observer(function Admin() {
   const { state, actions } = useContext(context);
@@ -79,14 +100,10 @@ export const Admin = observer(function Admin() {
     <Box display="flex" flexDirection="column">
       <Box display="flex" flexDirection="row" gap="10px" margin="auto" mt="10px" mb="10px">
         <AdminAddUserForm />
-        <TSCButton
-          onClick={deleteUsers}>
-          Delete Selected Users
-        </TSCButton>
+        <TSCButton onClick={deleteUsers}>Delete Selected Users</TSCButton>
       </Box>
       <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
         <AgGridReact
-          icons={icons}
           defaultColDef={defaultCol}
           ref={gridRef}
           isRowSelectable={(node) => node.data.email !== state.user.email}
