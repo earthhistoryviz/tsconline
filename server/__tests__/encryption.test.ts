@@ -12,7 +12,7 @@ vi.mock("fs", async (importOriginal) => {
   const actual = await importOriginal<typeof fsModule>();
   return {
     ...actual,
-    createReadStream: vi.fn().mockImplementation(() => { })
+    createReadStream: vi.fn().mockImplementation(() => {})
   };
 });
 
@@ -48,21 +48,23 @@ vi.mock("../src/util", async (importOriginal) => {
   return {
     ...actual,
     assetconfigs: { uploadDirectory: "" },
-    loadAssetConfigs: vi.fn().mockImplementation(() => { }),
-    deleteDirectory: vi.fn().mockImplementation(() => { }),
-    resetUploadDirectory: vi.fn().mockImplementation(() => { }),
+    loadAssetConfigs: vi.fn().mockImplementation(() => {}),
+    deleteDirectory: vi.fn().mockImplementation(() => {}),
+    resetUploadDirectory: vi.fn().mockImplementation(() => {}),
     checkHeader: vi.fn().mockReturnValue(true)
   };
 });
 
 vi.mock("path", async () => {
-
   return {
     default: {
-      join: (...args: any[]) => { return args.join('/') },
-      resolve: (...args: any[]) => { return args.join('/') }
+      join: (...args: string[]) => {
+        return args.join("/");
+      },
+      resolve: (...args: string[]) => {
+        return args.join("/");
+      }
     }
-
   };
 });
 
@@ -124,7 +126,6 @@ beforeEach(() => {
 });
 
 describe("requestDownload", () => {
-
   it("should reply 403 when realpath throw an error", async () => {
     realpathSpy.mockRejectedValueOnce(new Error("Unknown Error"));
     const response = await app.inject({
@@ -151,9 +152,7 @@ describe("requestDownload", () => {
     expect(response.json().error).toBe("Invalid file path");
   });
 
-
   it("should reply with 500 when fail to create encrypted directory for the user", async () => {
-
     checkHeaderSpy.mockResolvedValueOnce(false);
     accessSpy
       .mockImplementationOnce(() => {
@@ -179,7 +178,6 @@ describe("requestDownload", () => {
   });
 
   it("should reply 500 when an unknown error occurred in readFile when retrieved original", async () => {
-
     accessSpy.mockResolvedValueOnce(undefined);
     readFileSpy.mockRejectedValueOnce(new Error("Unknown error"));
 
@@ -193,7 +191,6 @@ describe("requestDownload", () => {
   });
 
   it("should reply 500 when an unknown error occurred in readFile when need encryption", async () => {
-
     accessSpy.mockResolvedValueOnce(undefined);
     readFileSpy.mockRejectedValueOnce(new Error("Unknown error"));
 
@@ -207,7 +204,6 @@ describe("requestDownload", () => {
   });
 
   it("should reply with 500 when the java program failed to encrypt the file (i.e. runJavaEncrypt failed)", async () => {
-
     runJavaEncryptSpy.mockRejectedValueOnce(new Error("Unknown error"));
     checkHeaderSpy.mockResolvedValueOnce(false);
     accessSpy
@@ -232,7 +228,6 @@ describe("requestDownload", () => {
   });
 
   it("should remove the newly generated file and reply with 422 when runJavaEncrypt did not properly encrypt the file (i.e. the result file did not pass the header check)", async () => {
-
     runJavaEncryptSpy.mockResolvedValue(undefined);
     accessSpy
       .mockImplementationOnce(() => {
@@ -253,7 +248,7 @@ describe("requestDownload", () => {
     expect(runJavaEncryptSpy).toHaveReturnedWith(undefined);
     expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
     expect(checkHeaderSpy).toHaveNthReturnedWith(2, false);
-    expect(rmSpy).toHaveBeenCalledWith("/12345-abcde/encrypted-datapacks/:filename", { "force": true });
+    expect(rmSpy).toHaveBeenCalledWith("/12345-abcde/encrypted-datapacks/:filename", { force: true });
     expect(accessSpy).toBeCalledTimes(3);
     expect(response.statusCode).toBe(422);
     expect(response.json().error).toBe(
@@ -318,7 +313,6 @@ describe("requestDownload", () => {
     expect(response.json().error).toBe(`The file requested :filename does not exist within user's upload directory`);
   });
   it("should return the original file when request retrieve original file", async () => {
-
     accessSpy.mockResolvedValueOnce(undefined);
     readFileSpy.mockResolvedValueOnce("original file");
 
@@ -337,7 +331,6 @@ describe("requestDownload", () => {
   });
 
   it("should return a newly encrypted file when request encrypted download an unencrypted file which has not been encrypted before", async () => {
-
     accessSpy
       .mockImplementationOnce(() => {
         const error: NodeJS.ErrnoException = new Error("File not found");
@@ -371,7 +364,6 @@ describe("requestDownload", () => {
     expect(response.rawPayload).toEqual(fileContent);
   });
   it("should return the old encrypted file when request encrypted download an unencrypted file which has been encrypted before", async () => {
-
     accessSpy.mockResolvedValueOnce(undefined);
     checkHeaderSpy.mockResolvedValueOnce(true);
     readFileSpy.mockResolvedValueOnce("TSCreator Encrypted Datafile");
@@ -391,7 +383,6 @@ describe("requestDownload", () => {
   });
 
   it("should return the original encrypted file when request encrypted download an encrypted file", async () => {
-
     accessSpy
       .mockImplementationOnce(() => {
         const error: NodeJS.ErrnoException = new Error("File not found");
@@ -417,7 +408,6 @@ describe("requestDownload", () => {
     expect(response.rawPayload).toEqual(fileContent);
   });
   it("should remove the old encrypted file and encrypt again when the old file was not properly encrypted", async () => {
-
     runJavaEncryptSpy.mockResolvedValueOnce(undefined);
     accessSpy.mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined);
     checkHeaderSpy.mockResolvedValueOnce(false).mockResolvedValueOnce(false).mockResolvedValueOnce(true);
@@ -447,7 +437,6 @@ describe("requestDownload", () => {
   });
 
   it("should reply 500 when an unknown error occured when try to access file when retreive original", async () => {
-
     accessSpy.mockRejectedValueOnce(new Error("Unknown error"));
     const response = await app.inject({
       method: "GET",
@@ -459,7 +448,6 @@ describe("requestDownload", () => {
     expect(response.json().error).toBe("An error occurred: Error: Unknown error");
   });
   it("should reply 500 when an unknown error occured when try to access file when need encryption", async () => {
-
     accessSpy.mockRejectedValueOnce(new Error("Unknown error"));
 
     const response = await app.inject({
@@ -473,12 +461,13 @@ describe("requestDownload", () => {
   });
 
   it("should reply 500 when an unknown error occured when try to access the original file when need encryption (regular datapack file check)", async () => {
-
-    accessSpy.mockImplementationOnce(() => {
-      const error: NodeJS.ErrnoException = new Error("File not found");
-      error.code = "ENOENT";
-      throw error;
-    }).mockRejectedValueOnce(new Error("Unknown error"));
+    accessSpy
+      .mockImplementationOnce(() => {
+        const error: NodeJS.ErrnoException = new Error("File not found");
+        error.code = "ENOENT";
+        throw error;
+      })
+      .mockRejectedValueOnce(new Error("Unknown error"));
 
     const response = await app.inject({
       method: "GET",
@@ -500,14 +489,14 @@ describe("requestDownload", () => {
         error.code = "ENOENT";
         throw error;
       })
-      .mockResolvedValueOnce(undefined).mockImplementationOnce(() => {
+      .mockResolvedValueOnce(undefined)
+      .mockImplementationOnce(() => {
         const error: NodeJS.ErrnoException = new Error("File not found");
         error.code = "ENOENT";
         throw error;
       });
     checkHeaderSpy.mockResolvedValueOnce(false);
     readFileSpy.mockResolvedValueOnce("default content");
-
 
     const response = await app.inject({
       method: "GET",
@@ -532,10 +521,10 @@ describe("requestDownload", () => {
         error.code = "ENOENT";
         throw error;
       })
-      .mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error("Unknown Error"));
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error("Unknown Error"));
     checkHeaderSpy.mockResolvedValueOnce(false);
     readFileSpy.mockResolvedValueOnce("default content");
-
 
     const response = await app.inject({
       method: "GET",
@@ -550,9 +539,7 @@ describe("requestDownload", () => {
     expect(rmSpy).not.toHaveBeenCalled();
     expect(response.json().error).toBe("An error occurred: Error: Unknown Error");
   });
-
 });
-
 
 vi.doUnmock("../src/encryption");
 vi.doUnmock("fs/promises");
@@ -585,61 +572,77 @@ if (await checkFileExists("/home/runner/work/tsconline/tsconline/server/assets/j
 if (!jarFilePath) throw new Error("jar file path shouldn't be empty");
 
 describe("runJavaEncrypt", async () => {
-  it("should correctly encrypt an unencrypted TSCreator txt file", async () => {
-    if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-1.txt"))) {
-      await unmockedRunJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-1.txt", resultPath);
-    } else {
-      throw new Error("test generated file shouldn't exist at this point");
-    }
-    const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-1.txt";
-    const keyFilePath1 = "server/__tests__/__data__/encryption-test-keys/test-1-key.txt";
-    const keyFilePath2 = "server/__tests__/__data__/encryption-test-keys/test-1-key(2).txt";
-    const [result, key1, key2] = await Promise.all([
-      unmockedReadFile(resultFilePath),
-      unmockedReadFile(keyFilePath1),
-      unmockedReadFile(keyFilePath2)
-    ]);
-    const sameLength = (value: number) => value == key1.length || value == key2.length;
-    const sameContent = (value: Buffer) => value.equals(key1) || value.equals(key2);
-    expect(result.length).toSatisfy(sameLength);
-    expect(result).toSatisfy(sameContent);
-  }, { timeout: 20000 });
-  it("should correctly encrypt an encrypted TSCreator txt file, when the TSCreator Encrypted Datafile title is manually removed from the original encrypted file.", async () => {
-    if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-2.txt"))) {
-      await unmockedRunJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-2.txt", resultPath);
-    } else {
-      throw new Error("test generated file shouldn't exist at this point");
-    }
-    const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-2.txt";
-    const keyFilePath = "server/__tests__/__data__/encryption-test-keys/test-2-key.txt";
-    const [result, key] = await Promise.all([unmockedReadFile(resultFilePath), unmockedReadFile(keyFilePath)]);
-    expect(result.length).toBe(key.length);
-    expect(result).toEqual(key);
-  }, { timeout: 20000 });
-  it("should correctly encrypt an unencrypted TSCreator zip file", async () => {
-    if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-5.dpk"))) {
-      await unmockedRunJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-5.zip", resultPath);
-    } else {
-      throw new Error("test generated file shouldn't exist at this point");
-    }
-    const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-5.dpk";
-    const keyFilePath = "server/__tests__/__data__/encryption-test-keys/test-5-key.dpk";
-    const [result, key] = await Promise.all([unmockedReadFile(resultFilePath), unmockedReadFile(keyFilePath)]);
-    expect(result.length).toBe(key.length);
-    expect(result).toEqual(key);
-  }, { timeout: 20000 });
-  it("should correctly encrypt an encrypted TSCreator zip file", async () => {
-    if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-6.dpk"))) {
-      await unmockedRunJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-6.zip", resultPath);
-    } else {
-      throw new Error("test generated file shouldn't exist at this point");
-    }
-    const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-6.dpk";
-    const keyFilePath = "server/__tests__/__data__/encryption-test-keys/test-6-key.dpk";
-    const [result, key] = await Promise.all([unmockedReadFile(resultFilePath), unmockedReadFile(keyFilePath)]);
-    expect(result.length).toBe(key.length);
-    expect(result).toEqual(key);
-  }, { timeout: 20000 });
+  it(
+    "should correctly encrypt an unencrypted TSCreator txt file",
+    async () => {
+      if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-1.txt"))) {
+        await unmockedRunJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-1.txt", resultPath);
+      } else {
+        throw new Error("test generated file shouldn't exist at this point");
+      }
+      const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-1.txt";
+      const keyFilePath1 = "server/__tests__/__data__/encryption-test-keys/test-1-key.txt";
+      const keyFilePath2 = "server/__tests__/__data__/encryption-test-keys/test-1-key(2).txt";
+      const [result, key1, key2] = await Promise.all([
+        unmockedReadFile(resultFilePath),
+        unmockedReadFile(keyFilePath1),
+        unmockedReadFile(keyFilePath2)
+      ]);
+      const sameLength = (value: number) => value == key1.length || value == key2.length;
+      const sameContent = (value: Buffer) => value.equals(key1) || value.equals(key2);
+      expect(result.length).toSatisfy(sameLength);
+      expect(result).toSatisfy(sameContent);
+    },
+    { timeout: 20000 }
+  );
+  it(
+    "should correctly encrypt an encrypted TSCreator txt file, when the TSCreator Encrypted Datafile title is manually removed from the original encrypted file.",
+    async () => {
+      if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-2.txt"))) {
+        await unmockedRunJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-2.txt", resultPath);
+      } else {
+        throw new Error("test generated file shouldn't exist at this point");
+      }
+      const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-2.txt";
+      const keyFilePath = "server/__tests__/__data__/encryption-test-keys/test-2-key.txt";
+      const [result, key] = await Promise.all([unmockedReadFile(resultFilePath), unmockedReadFile(keyFilePath)]);
+      expect(result.length).toBe(key.length);
+      expect(result).toEqual(key);
+    },
+    { timeout: 20000 }
+  );
+  it(
+    "should correctly encrypt an unencrypted TSCreator zip file",
+    async () => {
+      if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-5.dpk"))) {
+        await unmockedRunJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-5.zip", resultPath);
+      } else {
+        throw new Error("test generated file shouldn't exist at this point");
+      }
+      const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-5.dpk";
+      const keyFilePath = "server/__tests__/__data__/encryption-test-keys/test-5-key.dpk";
+      const [result, key] = await Promise.all([unmockedReadFile(resultFilePath), unmockedReadFile(keyFilePath)]);
+      expect(result.length).toBe(key.length);
+      expect(result).toEqual(key);
+    },
+    { timeout: 20000 }
+  );
+  it(
+    "should correctly encrypt an encrypted TSCreator zip file",
+    async () => {
+      if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-6.dpk"))) {
+        await unmockedRunJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-6.zip", resultPath);
+      } else {
+        throw new Error("test generated file shouldn't exist at this point");
+      }
+      const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-6.dpk";
+      const keyFilePath = "server/__tests__/__data__/encryption-test-keys/test-6-key.dpk";
+      const [result, key] = await Promise.all([unmockedReadFile(resultFilePath), unmockedReadFile(keyFilePath)]);
+      expect(result.length).toBe(key.length);
+      expect(result).toEqual(key);
+    },
+    { timeout: 20000 }
+  );
   it("should not encrypt a bad txt file", async () => {
     await unmockedRunJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-3.txt", resultPath);
     expect(!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-3.txt")));
@@ -676,4 +679,3 @@ describe("checkHeader", () => {
     expect(await unmockedCheckHeader("unencrypted.txt")).toEqual(false);
   });
 });
-
