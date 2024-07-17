@@ -12,10 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0 
+          fetch-depth: 0
 
       - name: Fetch specific branch
-        run: git fetch origin main:main 
+        run: git fetch origin main:main
 
       - name: Check for disallowed files and directories
         id: check_files
@@ -29,7 +29,7 @@ jobs:
           if git diff --name-only main...HEAD | grep 'file_metadata.json'; then
             echo "file_metadata.json detected, please remove" >> disallowed_files.txt
           fi   
-          git diff --name-only main...HEAD | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store|db)$' | grep -v '^server/__tests__/__data__/.*\.txt$' >> disallowed_files.txt || true
+          git diff --name-only main...HEAD | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store|db)$' |grep -v -E '^server/__tests__/__data__/(encryption-test-keys/.*|.*)\.(dpk|txt)$' >> disallowed_files.txt || true
           if git diff --name-only main...HEAD | grep -E 'app/dist/|server/dist/|shared/dist'; then
             echo "dist folder detected, please remove" >> disallowed_files.txt
           fi
@@ -122,7 +122,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Install Dependencies
         run: yarn install
@@ -158,15 +158,59 @@ jobs:
         if: steps.vite_build.outputs.build_failed == 'true'
         run: exit 1
 
+      - name: Set up SSH key
+        run: |
+          eval $(ssh-agent)
+          mkdir -p ~/.ssh
+          echo "${{ secrets.JAVA_DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo -e "Host bitbucket.org\n\tAddKeysToAgent yes\n\tIdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
+          ssh-add ~/.ssh/id_rsa
+          ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
+
+      - name: Checkout code from Bitbucket
+        run: |
+          git clone git@bitbucket.org:strat/tscreator.git
+
+      - name: set up jdk
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "8"
+          java-package: "jdk"
+
+      - name: set up make & zip
+        run: |
+          sudo apt install make
+          sudo apt install zip
+
+      - name: Build and compile TSCreator Jar for tests
+        run: |
+          cd /home/runner/work/tsconline/tsconline/tscreator/devel
+          make
+          make jar
+          find '/home/runner/work/tsconline/tsconline/tscreator/jars/' -type f -name '*.jar' -exec cp {} '/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar' \;
+          if [ -f "/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar" ]; then
+            echo "Successfully made jar."
+          else
+            echo "Failed to make jar."
+            exit 1
+          fi
+
+      - name: Install xvfb
+        run: sudo apt-get install xvfb
+
       - name: Run Tests
         id: run_tests
         run: |
+          Xvfb :1 -screen 0 1024x768x16 &
+          export DISPLAY=:1
           set -o pipefail
           if ! yarn test > test_output.log 2>&1; then
               echo "test_failed=true" >> $GITHUB_OUTPUT
               fi
         continue-on-error: true
-      
+
       - name: Report Test Errors
         if: steps.run_tests.outputs.test_failed == 'true'
         uses: actions/github-script@v5
@@ -203,74 +247,74 @@ jobs:
     needs: wait-for-checks
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout CODEOWNERS file from main branch
-      uses: Bhacaz/checkout-files@v2
-      with:
-        files: .github/CODEOWNERS
-        branch: main
-    
-    - name: Check if PR author is a code owner
-      id: check_codeowner
-      run: |
-        PR_AUTHOR=${{ github.event.pull_request.user.login }}
-        CODEOWNERS=$(cat .github/CODEOWNERS)
-        echo "PR Author: $PR_AUTHOR"
-        echo "Code Owners: $CODEOWNERS"
-        if echo "$CODEOWNERS" | grep -q "$PR_AUTHOR"; then
-          echo "PR author is a code owner"
-          exit 0
-        else
-          echo "PR author is not a code owner"
-        fi
-      
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        ref: ${{ github.event.pull_request.head.ref }}
+      - name: Checkout CODEOWNERS file from main branch
+        uses: Bhacaz/checkout-files@v2
+        with:
+          files: .github/CODEOWNERS
+          branch: main
 
-    - name: Set up SSH key
-      uses: webfactory/ssh-agent@v0.5.3
-      with:
-        ssh-private-key: ${{ secrets.SSH_KEY }}
-
-    - name: Add known hosts
-      run: |
-        mkdir -p ~/.ssh
-        ssh-keyscan -H dev.geolex.org >> ~/.ssh/known_hosts
-
-    - name: Transfer files
-      run: |
-        rsync -avz --exclude '.git' ./ deployuser@dev.geolex.org:/home/aaron/tsconline/pr-preview-${{ github.event.number }}/
-    
-    - name: Setup files for deployment preview
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: dev.geolex.org
-        username: deployuser
-        key: ${{ secrets.SSH_KEY }}
-        script: |
-          PR_NUMBER=${{ github.event.number }}
-          CONTAINER_NAME="pr-preview-${PR_NUMBER}_pr-preview-run_1"
-          cd /home/aaron/tsconline/pr-preview-${PR_NUMBER}
-          if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
-            echo "Container for PR ${PR_NUMBER} is already running. Rebuilding..."
-            docker-compose -f docker-compose-preview.yml exec -T pr-preview-run bash -c "source /root/.nvm/nvm.sh && nvm use node && yarn && yarn build"
-            MAX_WAIT=180
-            INTERVAL=5
-            ELAPSED=0
-            while ! docker-compose -f docker-compose-preview.yml logs | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
-              if [ $ELAPSED -ge $MAX_WAIT ]; then
-                echo "Max wait time exceeded. Exiting..."
-                exit 1
-              fi
-              echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
-              sleep $INTERVAL
-              ELAPSED=$((ELAPSED + INTERVAL))
-            done
+      - name: Check if PR author is a code owner
+        id: check_codeowner
+        run: |
+          PR_AUTHOR=${{ github.event.pull_request.user.login }}
+          CODEOWNERS=$(cat .github/CODEOWNERS)
+          echo "PR Author: $PR_AUTHOR"
+          echo "Code Owners: $CODEOWNERS"
+          if echo "$CODEOWNERS" | grep -q "$PR_AUTHOR"; then
+            echo "PR author is a code owner"
+            exit 0
           else
-            echo "Setting up files for PR #${PR_NUMBER}"
-            cp ../server/assets/jars/* ./server/assets/jars/
-            mkdir -p ./server/assets/datapacks
-            cp ../server/assets/datapacks/* ./server/assets/datapacks/
-            docker-compose -f docker-compose-preview.yml up pr-preview-build
+            echo "PR author is not a code owner"
           fi
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Add known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H dev.geolex.org >> ~/.ssh/known_hosts
+
+      - name: Transfer files
+        run: |
+          rsync -avz --exclude '.git' ./ deployuser@dev.geolex.org:/home/aaron/tsconline/pr-preview-${{ github.event.number }}/
+
+      - name: Setup files for deployment preview
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: dev.geolex.org
+          username: deployuser
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            PR_NUMBER=${{ github.event.number }}
+            CONTAINER_NAME="pr-preview-${PR_NUMBER}_pr-preview-run_1"
+            cd /home/aaron/tsconline/pr-preview-${PR_NUMBER}
+            if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
+              echo "Container for PR ${PR_NUMBER} is already running. Rebuilding..."
+              docker-compose -f docker-compose-preview.yml exec -T pr-preview-run bash -c "source /root/.nvm/nvm.sh && nvm use node && yarn && yarn build"
+              MAX_WAIT=180
+              INTERVAL=5
+              ELAPSED=0
+              while ! docker-compose -f docker-compose-preview.yml logs | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
+                if [ $ELAPSED -ge $MAX_WAIT ]; then
+                  echo "Max wait time exceeded. Exiting..."
+                  exit 1
+                fi
+                echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
+                sleep $INTERVAL
+                ELAPSED=$((ELAPSED + INTERVAL))
+              done
+            else
+              echo "Setting up files for PR #${PR_NUMBER}"
+              cp ../server/assets/jars/* ./server/assets/jars/
+              mkdir -p ./server/assets/datapacks
+              cp ../server/assets/datapacks/* ./server/assets/datapacks/
+              docker-compose -f docker-compose-preview.yml up pr-preview-build
+            fi
