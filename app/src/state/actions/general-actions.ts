@@ -39,7 +39,6 @@ import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { SettingsTabs, equalChartSettings, equalConfig } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
 import { cloneDeep } from "lodash";
-import { RefObject } from "react";
 
 const increment = 1;
 
@@ -735,7 +734,7 @@ export const removeAllErrors = action("removeAllErrors", () => {
 export const removeError = action("removeError", (context: ErrorCodes) => {
   state.errors.errorAlerts.delete(context);
 });
-export const pushError = action("pushError", (context: ErrorCodes, anchorElementRef?: RefObject<HTMLElement>) => {
+export const pushError = action("pushError", (context: ErrorCodes) => {
   if (state.errors.errorAlerts.has(context)) {
     state.errors.errorAlerts.get(context)!.errorCount += 1;
     return;
@@ -743,10 +742,8 @@ export const pushError = action("pushError", (context: ErrorCodes, anchorElement
 
   const error = {
     errorText: ErrorMessages[context],
-    errorCount: 1,
-    errorAnchorEl: anchorElementRef
+    errorCount: 1
   };
-  //console.log(anchorElementRef?.current);
   state.errors.errorAlerts.set(context, error);
 });
 export const removeSnackbar = action("removeSnackbar", (text: string) => {

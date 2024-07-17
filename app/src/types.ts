@@ -1,5 +1,4 @@
 import { ColumnInfo, DataMiningPointDataType, MapHierarchy, MapInfo, SharedUser } from "@tsconline/shared";
-import { RefObject } from "react";
 
 export type User = SharedUser & {
   settings: {
@@ -76,7 +75,6 @@ export type LegendItem = {
 export type ErrorAlert = {
   errorText: string;
   errorCount: number;
-  errorAnchorEl?: RefObject<HTMLElement>;
 };
 export type Config = {
   datapacks: string[];
