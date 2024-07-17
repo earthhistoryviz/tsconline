@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { exec, execFileSync } from "child_process";
+import { exec } from "child_process";
 import { writeFile, stat, readFile, access, rm, mkdir, realpath } from "fs/promises";
 import {
   DatapackIndex,
@@ -26,6 +26,7 @@ import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackInde
 import { glob } from "glob";
 import { DatapackDescriptionInfo } from "./types.js";
 import { MultipartFile } from "@fastify/multipart";
+import { runJavaEncrypt } from "./encryption.js";
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
@@ -134,6 +135,7 @@ export const requestDownload = async function requestDownload(
       const errormsg = "The file requested " + filename + " does not exist within user's upload directory";
       reply.status(404).send({ error: errormsg });
     } else {
+      //add test
       reply.status(500).send({ error: "An error occurred: " + e });
     }
     return;
@@ -142,39 +144,12 @@ export const requestDownload = async function requestDownload(
   try {
     await mkdir(encryptedFilepathDir, { recursive: true });
   } catch (e) {
-    console.error(e);
     reply.status(500).send({ error: "Failed to create encrypted directory with error " + e });
     return;
   }
 
   try {
-    await new Promise<void>((resolve) => {
-      const cmd =
-        `java -jar ${assetconfigs.activeJar} ` +
-        // datapacks:
-        `-d "${filepath.replaceAll("\\", "/")}" ` +
-        // Tell it where to send the datapacks
-        `-enc ${encryptedFilepathDir.replaceAll("\\", "/")} ` +
-        `-node`;
-
-      // java -jar <jar file> -d <datapack> <datapack> -enc <destination directory> -node
-      console.log("Calling Java encrypt.jar: ", cmd);
-      try {
-        const stdout = execFileSync("java", [
-          "-jar",
-          assetconfigs.activeJar,
-          "-d",
-          filepath.replaceAll("\\", "/"),
-          "-enc",
-          encryptedFilepathDir,
-          "-node"
-        ]);
-        console.log("Java stdout: " + stdout.toString());
-      } catch (e) {
-        console.error("Java error param: " + e);
-      }
-      resolve();
-    });
+    await runJavaEncrypt(assetconfigs.activeJar, filepath, encryptedFilepathDir);
   } catch (e) {
     console.error(e);
     reply.status(500).send({ error: "Failed to encrypt datapacks with error " + e });
@@ -198,9 +173,10 @@ export const requestDownload = async function requestDownload(
       return;
     }
   } catch (e) {
+    //add test
     const error = e as NodeJS.ErrnoException;
     if (error.code === "ENOENT") {
-      const errormsg = "The file requested " + filename + " does not exist within user's upload directory";
+      const errormsg = "Java file did not successfully process the file " + filename;
       reply.status(404).send({ error: errormsg });
     } else {
       reply.status(500).send({ error: "An error occurred: " + e });
