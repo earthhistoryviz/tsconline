@@ -135,7 +135,6 @@ export const requestDownload = async function requestDownload(
       const errormsg = "The file requested " + filename + " does not exist within user's upload directory";
       reply.status(404).send({ error: errormsg });
     } else {
-      //add test
       reply.status(500).send({ error: "An error occurred: " + e });
     }
     return;
@@ -173,7 +172,6 @@ export const requestDownload = async function requestDownload(
       return;
     }
   } catch (e) {
-    //add test
     const error = e as NodeJS.ErrnoException;
     if (error.code === "ENOENT") {
       const errormsg = "Java file did not successfully process the file " + filename;
