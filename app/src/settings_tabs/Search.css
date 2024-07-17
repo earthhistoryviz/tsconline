@@ -19,3 +19,20 @@
   flex-direction: column;
   align-items: center;
 }
+
+.search-time-display-ages-container {
+  margin-top: 20px;
+}
+.search-time-display-ages {
+  padding: 8px;
+  margin: 8px;
+  border: 1px solid;
+}
+
+@media (max-width: 520px) {
+  .search-time-display-ages-container {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+}

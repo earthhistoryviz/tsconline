@@ -150,32 +150,27 @@ export const Search = observer(function Search() {
             </ToggleButton>
           ))}
         </ToggleButtonGroup>
-        <div style={{ display: "flex", flexDirection: "row" }}>
+        <Box className="search-time-display-ages-container">
           <Box
+            className="search-time-display-ages"
             sx={(theme) => ({
               display: "inline",
-              padding: 1,
-              margin: 1,
-              border: "1px solid",
               borderRadius: 2,
               bgcolor: theme.palette.secondaryBackground.light
             })}>
-            Top Age: {state.settings.timeSettings[units].topStageAge}{" "}
+            Top Age: {state.settings.timeSettings[units].topStageAge}
           </Box>
           <Box
+            className="search-time-display-ages"
             sx={(theme) => ({
               display: "inline",
-              padding: 1,
-              margin: 1,
-              border: "1px solid",
               borderRadius: 2,
               bgcolor: theme.palette.secondaryBackground.light
             })}>
-            {" "}
             Base Age:
-            {state.settings.timeSettings[units].baseStageAge}{" "}
+            {state.settings.timeSettings[units].baseStageAge}
           </Box>
-        </div>
+        </Box>
       </Paper>
     );
   });

@@ -35,7 +35,7 @@ const isAgeWithinTimeInterval = (info: EventSearchInfo) => {
 
 const Column = observer(({ info }: { info: EventSearchInfo }) => {
   const { state, actions } = useContext(context);
-  const { columnName, columnPath} = info;
+  const { columnName, columnPath } = info;
   const column = state.settingsTabs.columnHashMap.get(columnName);
 
   if (!column) {
@@ -71,7 +71,7 @@ const Column = observer(({ info }: { info: EventSearchInfo }) => {
         }}>
         <div style={{ marginRight: "1vw" }}>
           {ColumnPathToRootOn() ? (
-            <CustomTooltip title="Column Toggled ON, Age not within time interval">
+            <CustomTooltip title="Column Toggled ON">
               <CheckIcon color="success" />
             </CustomTooltip>
           ) : (
