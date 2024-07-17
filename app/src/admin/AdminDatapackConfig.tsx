@@ -1,10 +1,11 @@
-import { Box, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 import { observer } from "mobx-react-lite";
+import { NotImplemented } from "../components";
 
 export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
   return (
     <Box>
-      <Typography variant="body1">Coming soon!</Typography>
+        <NotImplemented/>
     </Box>
   );
 });
