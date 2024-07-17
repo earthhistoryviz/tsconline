@@ -10,6 +10,7 @@ type CustomTabsProps = {
   height?: number;
   tabIndicatorLength?: number;
   centered?: boolean;
+  verticalCenter?: boolean;
   orientation?: "horizontal" | "vertical-left" | "vertical-right";
 } & Omit<HTMLAttributes<HTMLDivElement>, "onChange">;
 export const CustomTabs: React.FC<CustomTabsProps> = observer(
@@ -21,6 +22,7 @@ export const CustomTabs: React.FC<CustomTabsProps> = observer(
     height = 40,
     tabIndicatorLength,
     centered = false,
+    verticalCenter = false,
     onChange,
     ...props
   }) => {
@@ -72,7 +74,8 @@ export const CustomTabs: React.FC<CustomTabsProps> = observer(
                 height: `${height}px`,
                 textAlign: `${centered ? "center" : orientation === "vertical-left" ? "right" : "left"}`,
                 padding: `${centered ? "0" : orientation === "vertical-left" ? "10px 5px 10px 15px" : "10px 15px 10px 5px"}`,
-                color: `${(value ?? selectedTab) === index ? "button.light" : "text.primary"}`
+                color: `${(value ?? selectedTab) === index ? "button.light" : "text.primary"}`,
+                ...(verticalCenter && { lineHeight: `${height - 20}px` })
               }}
               className={`tsc-tab-panel ${(value ?? selectedTab) === index ? "tsc-tab-panel-selected" : ""}`}
               onClick={() => {
