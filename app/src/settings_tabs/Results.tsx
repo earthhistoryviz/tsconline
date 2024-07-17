@@ -17,8 +17,25 @@ import FormatLineSpacingIcon from "@mui/icons-material/FormatLineSpacing";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 
-const Column = observer(({ columnName, columnPath }: { columnName: string; columnPath: string[] }) => {
+const isAgeWithinTimeInterval = (info: EventSearchInfo) => {
+  const { state } = useContext(context);
+  if (!(info.unit in state.settings.timeSettings)) {
+    console.error(info.unit + "not in time settings");
+    return false;
+  }
+  const chartTopAge = state.settings.timeSettings[info.unit].topStageAge;
+  const chartBaseAge = state.settings.timeSettings[info.unit].baseStageAge;
+  const ages = info.age;
+  if (!ages) return false;
+  if (ages.topAge + 3 >= chartTopAge && ages.baseAge - 3 <= chartBaseAge) {
+    return true;
+  }
+  return false;
+};
+
+const Column = observer(({ info }: { info: EventSearchInfo }) => {
   const { state, actions } = useContext(context);
+  const { columnName, columnPath} = info;
   const column = state.settingsTabs.columnHashMap.get(columnName);
 
   if (!column) {
@@ -28,6 +45,7 @@ const Column = observer(({ columnName, columnPath }: { columnName: string; colum
       </SvgIcon>
     );
   }
+
   const ColumnPathToRootOn = () => {
     let currColumn = column!;
     while (currColumn.parent) {
@@ -43,6 +61,7 @@ const Column = observer(({ columnName, columnPath }: { columnName: string; colum
     }
     return true;
   };
+
   return (
     <div>
       <div
@@ -51,7 +70,15 @@ const Column = observer(({ columnName, columnPath }: { columnName: string; colum
           actions.toggleSettingsTabColumn(column);
         }}>
         <div style={{ marginRight: "1vw" }}>
-          {ColumnPathToRootOn() ? <CheckIcon color="success" /> : <CloseIcon color="error" />}
+          {ColumnPathToRootOn() ? (
+            <CustomTooltip title="Column Toggled ON, Age not within time interval">
+              <CheckIcon color="success" />
+            </CustomTooltip>
+          ) : (
+            <CustomTooltip title="Column Toggled OFF">
+              <CloseIcon color="error" />
+            </CustomTooltip>
+          )}
         </div>
         <CustomTooltip
           placement="right"
@@ -67,7 +94,7 @@ const Column = observer(({ columnName, columnPath }: { columnName: string; colum
   );
 });
 
-const ModifyTimeInterval = observer(({ info }: { info: EventSearchInfo }) => {
+const Age = observer(({ info }: { info: EventSearchInfo }) => {
   const { state, actions } = useContext(context);
   const column = state.settingsTabs.columnHashMap.get(info.columnName);
   if (!column) {
@@ -85,25 +112,12 @@ const ModifyTimeInterval = observer(({ info }: { info: EventSearchInfo }) => {
     );
   }
   const verifyAgesAndAddAgeMargin = () => {
-    //checks if age is in `float - float` format
-    const regex = /^[+-]?(\d*\.\d+|\d+)(\s-\s)[+-]?(\d*\.\d+|\d+)$/;
-    let topAge = 0;
-    let baseAge = 0;
-    if (regex.test(info.age!)) {
-      const ages = info.age!.split(" - ");
-      topAge = Number(ages[0]) - 3;
-      baseAge = Number(ages[1]) + 3;
-    } else if (!isNaN(Number(info.age))) {
-      topAge = Number(info.age) - 3;
-      baseAge = Number(info.age) + 3;
-    } else {
-      actions.pushSnackbar("Invalid age found while searching", "warning");
-      return null;
-    }
-    if (topAge < 0) {
+    if (!info.age) return null;
+    let { topAge, baseAge } = info.age;
+    if ((topAge -= 3) < 0) {
       topAge = 0;
     }
-    if (baseAge < 0) {
+    if ((baseAge += 3) < 0) {
       baseAge = 0;
     }
     return { topAge: topAge, baseAge: baseAge };
@@ -127,26 +141,38 @@ const ModifyTimeInterval = observer(({ info }: { info: EventSearchInfo }) => {
     }
   };
 
-  const isAgeWithinTimeInterval = () => {
-    if (!(info.unit in state.settings.timeSettings)) {
-      console.error(info.unit + "not in time settings");
-      return false;
+  const AgeDisplay = () => {
+    if (!info.age)
+      return (
+        <SvgIcon>
+          <ErrorOutline />
+        </SvgIcon>
+      );
+    if (info.age.topAge === info.age.baseAge) {
+      return <div>{info.age.topAge}</div>;
     }
-    const chartTopAge = state.settings.timeSettings[info.unit].topStageAge;
-    const chartBaseAge = state.settings.timeSettings[info.unit].baseStageAge;
-    const ages = verifyAgesAndAddAgeMargin();
-    if (!ages) return false;
-    if (ages.topAge + 3 >= chartTopAge && ages.baseAge - 3 <= chartBaseAge) {
-      return true;
-    }
-    return false;
+    return (
+      <div>
+        {info.age.topAge} - {info.age!.baseAge}
+      </div>
+    );
   };
   return (
     <div className="search-result-age-container">
       <div className="search-result-age-icon">
-        {isAgeWithinTimeInterval() ? <CheckIcon color="success" /> : <CloseIcon color="error" />}
+        {isAgeWithinTimeInterval(info) ? (
+          <CustomTooltip title="Age within time interval">
+            <CheckIcon color="success" />
+          </CustomTooltip>
+        ) : (
+          <CustomTooltip title="Age not within time interval">
+            <CloseIcon color="error" />
+          </CustomTooltip>
+        )}
       </div>
-      <div className="search-result-age-text">{info.age}</div>
+      <div className="search-result-age-text">
+        <AgeDisplay />
+      </div>
       <div className="search-result-age-buttons">
         <CustomTooltip title="center time interval on event">
           <IconButton
@@ -221,11 +247,11 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
       return (
         <>
           <TableCell align="left">
-            <Column columnName={info.columnName} columnPath={info.columnPath} />
+            <Column info={info} />
           </TableCell>
           <TableCell align="center">
             {info.age ? (
-              <ModifyTimeInterval info={info} />
+              <Age info={info} />
             ) : (
               <SvgIcon>
                 <HorizontalRuleIcon />
