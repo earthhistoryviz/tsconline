@@ -156,7 +156,7 @@ export const Search = observer(function Search() {
             sx={(theme) => ({
               display: "inline",
               borderRadius: 2,
-              bgcolor: theme.palette.secondaryBackground.light
+              bgcolor: theme.palette.secondaryBackground.main
             })}>
             Top Age: {state.settings.timeSettings[units].topStageAge}
           </Box>
@@ -165,7 +165,7 @@ export const Search = observer(function Search() {
             sx={(theme) => ({
               display: "inline",
               borderRadius: 2,
-              bgcolor: theme.palette.secondaryBackground.light
+              bgcolor: theme.palette.secondaryBackground.main
             })}>
             Base Age:
             {state.settings.timeSettings[units].baseStageAge}
