@@ -148,12 +148,10 @@ export const Search = observer(function Search() {
           ))}
         </ToggleButtonGroup>
         <div style={{width:"15vw", textAlign:"center"}}>
-          <div>
-          Top Age: {state.settings.timeSettings[units].topStageAge}
-          </div>
-          <div>
+          
+          Top Age: {state.settings.timeSettings[units].topStageAge} |
           Base Age: {state.settings.timeSettings[units].baseStageAge}
-          </div>
+          
             
          
         </div>

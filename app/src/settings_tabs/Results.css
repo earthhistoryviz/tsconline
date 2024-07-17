@@ -3,7 +3,7 @@
   padding-bottom: 0;
   border-bottom: 0;
   border: 0;
-  width: 10vw;
+
 }
 .MuiTableCell-root.event-group-identifier {
   padding-top: 10px;
@@ -32,7 +32,7 @@
   min-height: 65vh;
   min-width: 40vw;
   height: 65vh;
-  width: 40vw;
+  max-width:60vw;
   margin-top: 2vh;
   resize: both;
   overflow: auto;
@@ -54,7 +54,6 @@
   border: 1px solid black;
   border-radius: 5px;
   margin-top: 5px;
-  padding: 4px;
   max-height: 210px;
 }
 

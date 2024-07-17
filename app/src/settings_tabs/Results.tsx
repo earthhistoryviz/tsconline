@@ -14,7 +14,6 @@ import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import { trimQuotes } from "../util/util";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import FormatLineSpacingIcon from "@mui/icons-material/FormatLineSpacing";
-import { ColumnInfo } from "@tsconline/shared";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 
@@ -46,12 +45,16 @@ const Column = observer(({ columnName, columnPath }: { columnName: string; colum
   };
   return (
     <div>
-      <div style={{ width: "8vw" }}>
+      <div style={{ width: "8vw", display: "flex",flexDirection:"row" }} onClick={() => {
+        actions.toggleSettingsTabColumn(column);
+      }}>
+      {ColumnPathToRootOn() ? <CheckIcon/> : <CloseIcon/>}
         <CustomTooltip
           placement="right"
           title={columnPath.map((value, pathIndex) => (
             <div key={pathIndex}>{value}</div>
           ))}>
+            
           <Typography noWrap variant="subtitle2">
             {columnPath[0]}
           </Typography>
@@ -120,8 +123,35 @@ const ModifyTimeInterval = observer(({ info }: { info: EventSearchInfo }) => {
       actions.setBaseStageAge(ages.baseAge, info.unit);
     }
   };
+
+  const isAgeWithinTimeInterval = () => {
+    if (!(info.unit in state.settings.timeSettings)) {
+      console.error(info.unit + "not in time settings")
+      return false;
+    }
+    let chartTopAge = state.settings.timeSettings[info.unit].topStageAge;
+    let chartBaseAge = state.settings.timeSettings[info.unit].baseStageAge;
+    const ages = verifyAgesAndAddAgeMargin();
+    if (!ages) return false;
+    if (ages.topAge + 3 >= chartTopAge && ages.baseAge - 3 <= chartBaseAge) {
+      return true;
+    }
+    return false;
+  }
   return (
     <div className="events-search-results-buttons">
+      <div style={{ display: "flex", flexDirection: "row", alignItems:"center" }}>
+        <div>
+        {isAgeWithinTimeInterval() ? <CheckIcon/> : <CloseIcon/>}
+        </div>
+        <div>
+        {info.age} 
+        </div>
+        <div>
+
+        </div>
+      </div>
+      
       <CustomTooltip title="center time interval on event">
         <IconButton
           onClick={() => {
@@ -166,9 +196,6 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
       return (
         <>
           <TableCell className="event-group-header-text" align="left">
-            Add to Chart
-          </TableCell>
-          <TableCell className="event-group-header-text" align="left">
             Column
           </TableCell>
           <TableCell className="event-group-header-text" align="center">
@@ -198,17 +225,16 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
       return (
         <>
           <TableCell align="left">
-            <ModifyTimeInterval info={info} />
-          </TableCell>
-          <TableCell align="left">
             <div>
               <Column columnName={info.columnName} columnPath={info.columnPath} />
             </div>
           </TableCell>
-          <TableCell align="center">
+          <TableCell align="justify">
             <div className="search-result-age-container">
               {info.age ? (
-                <div style={{ display: "flex", flexDirection: "row" }}>{info.age}</div>
+                
+                 <ModifyTimeInterval info={info} />
+                  
               ) : (
                 <SvgIcon>
                   <HorizontalRuleIcon />
