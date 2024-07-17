@@ -11,3 +11,11 @@
   align-items: center;
   margin-right: 2vw;
 }
+
+.search-time-display-container {
+  min-width: 18vw;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
