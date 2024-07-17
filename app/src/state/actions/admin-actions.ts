@@ -70,7 +70,6 @@ export const adminAddUser = action(async (email: string, password: string, isAdm
     isAdmin: isAdmin ? 1 : 0,
     ...(username && { username })
   });
-  console.log(body);
   try {
     const response = await fetcher("/admin/user", {
       method: "POST",
