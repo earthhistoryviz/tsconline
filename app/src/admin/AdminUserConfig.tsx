@@ -7,7 +7,7 @@ import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import { ColDef } from "ag-grid-community";
-import { Box, useTheme } from "@mui/material";
+import { Box, Divider, Typography, useTheme } from "@mui/material";
 import { AdminAddUserForm } from "./AdminAddUserForm";
 import { AdminSharedUser, assertAdminSharedUser } from "@tsconline/shared";
 import { TSCButton, TSCCheckbox } from "../components";
@@ -53,7 +53,6 @@ const colDefs: ColDef[] = [
     wrapHeaderText: true,
     cellRenderer: checkboxRenderer
   },
-  { headerName: "Picture URL", field: "pictureUrl", width: 80, autoHeaderHeight: true, wrapHeaderText: true, flex: 1 },
   {
     headerName: "Is Admin",
     field: "isAdmin",
@@ -62,7 +61,8 @@ const colDefs: ColDef[] = [
     wrapHeaderText: true,
     flex: 1,
     cellRenderer: checkboxRenderer
-  }
+  },
+  { headerName: "Picture URL", field: "pictureUrl", width: 80, autoHeaderHeight: true, wrapHeaderText: true, flex: 1 }
 ];
 const defaultCol = {
   flex: 2,
@@ -97,22 +97,20 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
   };
   if (!state.user.isAdmin) return <UnauthorizedAccess />;
   return (
-    <Box display="flex" flexDirection="column" width="90vw">
+    <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
+      <AgGridReact
+        defaultColDef={defaultCol}
+        ref={gridRef}
+        isRowSelectable={(node) => node.data.email !== state.user.email}
+        rowMultiSelectWithClick
+        rowSelection="multiple"
+        columnDefs={colDefs}
+        rowData={state.admin.displayedUsers}
+        rowDragManaged={true}
+      />
       <Box display="flex" flexDirection="row" gap="10px" margin="auto" mt="10px" mb="10px">
         <AdminAddUserForm />
         <TSCButton onClick={deleteUsers}>Delete Selected Users</TSCButton>
-      </Box>
-      <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
-        <AgGridReact
-          defaultColDef={defaultCol}
-          ref={gridRef}
-          isRowSelectable={(node) => node.data.email !== state.user.email}
-          rowMultiSelectWithClick
-          rowSelection="multiple"
-          columnDefs={colDefs}
-          rowData={state.admin.displayedUsers}
-          rowDragManaged={true}
-        />
       </Box>
     </Box>
   );
