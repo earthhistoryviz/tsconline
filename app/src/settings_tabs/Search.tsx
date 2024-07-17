@@ -87,10 +87,10 @@ export const Search = observer(function Search() {
                 if (resultType === "Block" || columnInfo.columnDisplayType === "BlockSeriesMetaColumn") {
                   if (i > 0) {
                     const nextBlock = columnInfo.subInfo[i - 1];
-                    if ("age" in nextBlock) resInfo.age = String(nextBlock.age) + " - " + String(subInfo.age);
-                  } else resInfo.age = String(subInfo.age);
+                    if ("age" in nextBlock) resInfo.age = { topAge: nextBlock.age, baseAge: subInfo.age };
+                  } else resInfo.age = { topAge: subInfo.age, baseAge: subInfo.age };
                 } else {
-                  resInfo.age = String(subInfo.age);
+                  resInfo.age = { topAge: subInfo.age, baseAge: subInfo.age };
                 }
               }
               if ("subEventType" in subInfo) {
@@ -130,7 +130,7 @@ export const Search = observer(function Search() {
         variant="outlined"
         className="search-time-display-container"
         sx={(theme) => ({
-          backgroundColor: theme.palette.backgroundColor.main,
+          backgroundColor: theme.palette.backgroundColor.main
         })}>
         <ToggleButtonGroup
           value={units}
@@ -155,7 +155,7 @@ export const Search = observer(function Search() {
             sx={(theme) => ({
               display: "inline",
               padding: 1,
-              margin:1,
+              margin: 1,
               border: "1px solid",
               borderRadius: 2,
               bgcolor: theme.palette.secondaryBackground.light
@@ -165,8 +165,8 @@ export const Search = observer(function Search() {
           <Box
             sx={(theme) => ({
               display: "inline",
-              padding:1,
-              margin:1,
+              padding: 1,
+              margin: 1,
               border: "1px solid",
               borderRadius: 2,
               bgcolor: theme.palette.secondaryBackground.light
