@@ -18,8 +18,31 @@ import {
   trimQuotes,
   grabFilepaths,
   setCommonProperties,
-  capitalizeFirstLetter
+  capitalizeFirstLetter,
+  checkHeader
 } from "../src/util";
+import * as fsModule from "fs";
+vi.mock("fs", async (importOriginal) => {
+  const actual = await importOriginal<typeof fsModule>();
+  return {
+    ...actual,
+    createReadStream: vi.fn().mockImplementation(() => {})
+  };
+});
+vi.mock("readline/promises", async () => {
+  return {
+    createInterface: vi
+      .fn()
+      .mockImplementationOnce(() => {
+        const lines: string[] = ["TSCreator Encrypted Datafile"];
+        return lines;
+      })
+      .mockImplementationOnce(() => {
+        const lines: string[] = ["default content"];
+        return lines;
+      })
+  };
+});
 
 describe("grabFilepaths", () => {
   test('grabFilepaths(["file1.txt", "file2.txt"], "/top/directory", "bot") returns ["/top/directory/file1/bot/file.txt", "/top/directory/file2/bot/file.txt"]', async () => {
@@ -101,5 +124,13 @@ describe("capitalizeFirstLetter tests", () => {
     ["", ""]
   ])("capitalizeFirstLetter(%j) returns %j", (input, expected) => {
     expect(capitalizeFirstLetter(input)).toBe(expected);
+  });
+});
+describe("checkHeader", () => {
+  test('checkHeader("encrypted.txt") returns true', async () => {
+    expect(await checkHeader("encrypted.txt")).toEqual(true);
+  });
+  test('checkHeader("unencrypted.txt") returns false', async () => {
+    expect(await checkHeader("unencrypted.txt")).toEqual(false);
   });
 });
