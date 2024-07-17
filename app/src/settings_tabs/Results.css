@@ -3,7 +3,6 @@
   padding-bottom: 0;
   border-bottom: 0;
   border: 0;
-
 }
 .MuiTableCell-root.event-group-identifier {
   padding-top: 10px;
@@ -30,9 +29,8 @@
 
 .table-container {
   min-height: 65vh;
-  min-width: 40vw;
+  min-width: 45vw;
   height: 65vh;
-  max-width:60vw;
   margin-top: 2vh;
   resize: both;
   overflow: auto;
@@ -43,9 +41,37 @@
   width: 100%;
 }
 
-.events-search-results-buttons {
+.search-result-age-container {
   display: flex;
   flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.search-result-age-icon {
+  width: 30%;
+  display: flex;
+  justify-content: right;
+  margin-right: 10px;
+}
+.search-result-age-text {
+  width: 40%;
+}
+.search-result-age-buttons {
+  width: 30%;
+  display: flex;
+  justify-content: left;
+  margin-left: 10px;
+}
+
+.search-result-column-container {
+  width: 8vw;
+  display: flex;
+  flex-direction: row;
+}
+
+.search-result-column-container:hover {
+  cursor: pointer;
 }
 
 .search-result-info-container {

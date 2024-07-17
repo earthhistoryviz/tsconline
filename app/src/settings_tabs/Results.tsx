@@ -2,7 +2,7 @@ import { TableCell, TableBody, TableContainer, Paper, SvgIcon, Typography, Box, 
 import React, { useContext } from "react";
 import { Table } from "react-bootstrap";
 import { TableComponents, TableVirtuoso } from "react-virtuoso";
-import { CustomTooltip, StyledScrollbar, TSCCheckbox } from "../components";
+import { CustomTooltip, StyledScrollbar } from "../components";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import { ErrorOutline } from "@mui/icons-material";
@@ -45,16 +45,17 @@ const Column = observer(({ columnName, columnPath }: { columnName: string; colum
   };
   return (
     <div>
-      <div style={{ width: "8vw", display: "flex",flexDirection:"row" }} onClick={() => {
-        actions.toggleSettingsTabColumn(column);
-      }}>
-      {ColumnPathToRootOn() ? <CheckIcon/> : <CloseIcon/>}
+      <div
+        className="search-result-column-container"
+        onClick={() => {
+          actions.toggleSettingsTabColumn(column);
+        }}>
+        <div style={{ marginRight: "1vw" }}>{ColumnPathToRootOn() ? <CheckIcon color="success" /> : <CloseIcon color="error" />}</div>
         <CustomTooltip
           placement="right"
           title={columnPath.map((value, pathIndex) => (
             <div key={pathIndex}>{value}</div>
           ))}>
-            
           <Typography noWrap variant="subtitle2">
             {columnPath[0]}
           </Typography>
@@ -126,59 +127,50 @@ const ModifyTimeInterval = observer(({ info }: { info: EventSearchInfo }) => {
 
   const isAgeWithinTimeInterval = () => {
     if (!(info.unit in state.settings.timeSettings)) {
-      console.error(info.unit + "not in time settings")
+      console.error(info.unit + "not in time settings");
       return false;
     }
-    let chartTopAge = state.settings.timeSettings[info.unit].topStageAge;
-    let chartBaseAge = state.settings.timeSettings[info.unit].baseStageAge;
+    const chartTopAge = state.settings.timeSettings[info.unit].topStageAge;
+    const chartBaseAge = state.settings.timeSettings[info.unit].baseStageAge;
     const ages = verifyAgesAndAddAgeMargin();
     if (!ages) return false;
     if (ages.topAge + 3 >= chartTopAge && ages.baseAge - 3 <= chartBaseAge) {
       return true;
     }
     return false;
-  }
+  };
   return (
-    <div className="events-search-results-buttons">
-      <div style={{ display: "flex", flexDirection: "row", alignItems:"center" }}>
-        <div>
-        {isAgeWithinTimeInterval() ? <CheckIcon/> : <CloseIcon/>}
-        </div>
-        <div>
-        {info.age} 
-        </div>
-        <div>
-
-        </div>
+    <div className="search-result-age-container">
+      <div className="search-result-age-icon">{isAgeWithinTimeInterval() ? <CheckIcon color="success" /> : <CloseIcon color="error" />}</div>
+      <div className="search-result-age-text">{info.age}</div>
+      <div className="search-result-age-buttons">
+        <CustomTooltip title="center time interval on event">
+          <IconButton
+            onClick={() => {
+              centerTimeOnEvent();
+              actions.setColumnOn(false, column);
+              actions.toggleSettingsTabColumn(column);
+            }}>
+            <VerticalAlignCenterIcon color="info" />
+          </IconButton>
+        </CustomTooltip>
+        <CustomTooltip title="extend time interval to include event">
+          <IconButton
+            onClick={() => {
+              extendTimeToIncludeEvent();
+              actions.setColumnOn(false, column);
+              actions.toggleSettingsTabColumn(column);
+            }}>
+            <FormatLineSpacingIcon color="info" />
+          </IconButton>
+        </CustomTooltip>
       </div>
-      
-      <CustomTooltip title="center time interval on event">
-        <IconButton
-          onClick={() => {
-            centerTimeOnEvent();
-            actions.setColumnOn(false, column);
-            actions.toggleSettingsTabColumn(column);
-          }}>
-          <VerticalAlignCenterIcon color="info" />
-        </IconButton>
-      </CustomTooltip>
-      <CustomTooltip title="extend time interval to include event">
-        <IconButton
-          onClick={() => {
-            extendTimeToIncludeEvent();
-            actions.setColumnOn(false, column);
-            actions.toggleSettingsTabColumn(column);
-          }}>
-          <FormatLineSpacingIcon color="info" />
-        </IconButton>
-      </CustomTooltip>
     </div>
   );
 });
 
 export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchInfo[] }) => {
   const theme = useTheme();
-  const { state, actions } = useContext(context);
   //this is necessary to prevent table hierachy errors
   //virtuoso assigns each array element to a table row, and a table row can't be a child
   //of a table row which would be necessary for display without stretching the array.
@@ -201,7 +193,7 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
           <TableCell className="event-group-header-text" align="center">
             Age
           </TableCell>
-          <TableCell className="event-group-header-text" align="right">
+          <TableCell className="event-group-header-text" align="center">
             Qualifier
           </TableCell>
           <TableCell className="event-group-header-text" align="right">
@@ -225,34 +217,28 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
       return (
         <>
           <TableCell align="left">
-            <div>
-              <Column columnName={info.columnName} columnPath={info.columnPath} />
-            </div>
+            <Column columnName={info.columnName} columnPath={info.columnPath} />
           </TableCell>
-          <TableCell align="justify">
-            <div className="search-result-age-container">
-              {info.age ? (
-                
-                 <ModifyTimeInterval info={info} />
-                  
-              ) : (
-                <SvgIcon>
-                  <HorizontalRuleIcon />
-                </SvgIcon>
-              )}
-            </div>
-          </TableCell>
-          {info.qualifier ? (
-            <TableCell align="right">{info.qualifier}</TableCell>
-          ) : (
-            <TableCell align="right">
+          <TableCell align="center">
+            {info.age ? (
+              <ModifyTimeInterval info={info} />
+            ) : (
               <SvgIcon>
                 <HorizontalRuleIcon />
               </SvgIcon>
-            </TableCell>
-          )}
-          {info.notes ? (
-            <TableCell align="right">
+            )}
+          </TableCell>
+          <TableCell align="center">
+            {info.qualifier ? (
+              <div>{info.qualifier}</div>
+            ) : (
+              <SvgIcon>
+                <HorizontalRuleIcon />
+              </SvgIcon>
+            )}
+          </TableCell>
+          <TableCell align="right">
+            {info.notes ? (
               <CustomTooltip
                 title={
                   <Box className="search-result-info-container">
@@ -269,14 +255,12 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
                   <NotesIcon />
                 </SvgIcon>
               </CustomTooltip>
-            </TableCell>
-          ) : (
-            <TableCell align="right">
+            ) : (
               <SvgIcon>
                 <HorizontalRuleIcon />
               </SvgIcon>
-            </TableCell>
-          )}
+            )}
+          </TableCell>
         </>
       );
     }
