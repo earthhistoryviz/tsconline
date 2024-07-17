@@ -5,7 +5,7 @@ import { NotImplemented } from "../components";
 export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
   return (
     <Box>
-        <NotImplemented/>
+      <NotImplemented />
     </Box>
   );
 });

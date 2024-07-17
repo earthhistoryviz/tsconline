@@ -1,16 +1,15 @@
 import { observer } from "mobx-react-lite";
 import { useContext, useEffect, useRef } from "react";
 import { context } from "../state";
-import { UnauthorizedAccess } from "./UnauthorizedAccess";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import { ColDef } from "ag-grid-community";
-import { Box, Divider, Typography, useTheme } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
 import { AdminAddUserForm } from "./AdminAddUserForm";
 import { AdminSharedUser, assertAdminSharedUser } from "@tsconline/shared";
-import { TSCButton, TSCCheckbox } from "../components";
+import { TSCButton } from "../components";
 
 const checkboxRenderer = (params: { value: boolean }) => {
   if (params.value === true) {
@@ -95,7 +94,6 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
       console.error(e);
     }
   };
-  if (!state.user.isAdmin) return <UnauthorizedAccess />;
   return (
     <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
       <AgGridReact
