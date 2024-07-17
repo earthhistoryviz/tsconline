@@ -46,19 +46,17 @@ const Column = observer(({ columnName, columnPath }: { columnName: string; colum
   };
   return (
     <div>
-      <div style={{width: "8vw"}}>
-      <CustomTooltip
-        placement="right"
-        title={columnPath.map((value, pathIndex) => (
-          <div key={pathIndex}>{value}</div>
-        ))}>
-          
-        <Typography noWrap variant="subtitle2">
-          {columnPath[0]}
-        </Typography>
-      </CustomTooltip>
+      <div style={{ width: "8vw" }}>
+        <CustomTooltip
+          placement="right"
+          title={columnPath.map((value, pathIndex) => (
+            <div key={pathIndex}>{value}</div>
+          ))}>
+          <Typography noWrap variant="subtitle2">
+            {columnPath[0]}
+          </Typography>
+        </CustomTooltip>
       </div>
-      
     </div>
   );
 });
@@ -125,20 +123,22 @@ const ModifyTimeInterval = observer(({ info }: { info: EventSearchInfo }) => {
   return (
     <div className="events-search-results-buttons">
       <CustomTooltip title="center time interval on event">
-        <IconButton onClick={() => {
-          centerTimeOnEvent();
-          actions.setColumnOn(false, column);
-          actions.toggleSettingsTabColumn(column);
-        }}>
+        <IconButton
+          onClick={() => {
+            centerTimeOnEvent();
+            actions.setColumnOn(false, column);
+            actions.toggleSettingsTabColumn(column);
+          }}>
           <VerticalAlignCenterIcon color="info" />
         </IconButton>
       </CustomTooltip>
       <CustomTooltip title="extend time interval to include event">
-        <IconButton onClick={() => {
-          extendTimeToIncludeEvent();
-          actions.setColumnOn(false, column);
-          actions.toggleSettingsTabColumn(column);
-        }}>
+        <IconButton
+          onClick={() => {
+            extendTimeToIncludeEvent();
+            actions.setColumnOn(false, column);
+            actions.toggleSettingsTabColumn(column);
+          }}>
           <FormatLineSpacingIcon color="info" />
         </IconButton>
       </CustomTooltip>
@@ -165,7 +165,7 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
     if (info === "subheader") {
       return (
         <>
-        <TableCell className="event-group-header-text" align="left">
+          <TableCell className="event-group-header-text" align="left">
             Add to Chart
           </TableCell>
           <TableCell className="event-group-header-text" align="left">
@@ -197,8 +197,8 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
     } else {
       return (
         <>
-        <TableCell align="left">
-          <ModifyTimeInterval info={info} />
+          <TableCell align="left">
+            <ModifyTimeInterval info={info} />
           </TableCell>
           <TableCell align="left">
             <div>
@@ -208,9 +208,7 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
           <TableCell align="center">
             <div className="search-result-age-container">
               {info.age ? (
-                <div style={{display:"flex", flexDirection:"row"}}>
-                    {info.age}
-                </div>
+                <div style={{ display: "flex", flexDirection: "row" }}>{info.age}</div>
               ) : (
                 <SvgIcon>
                   <HorizontalRuleIcon />
@@ -218,15 +216,15 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
               )}
             </div>
           </TableCell>
-            {info.qualifier ? (
-              <TableCell align="right">{info.qualifier}</TableCell>
-            ) : (
-              <TableCell align="right">
-                <SvgIcon>
-                  <HorizontalRuleIcon />
-                </SvgIcon>
-              </TableCell>
-            )}
+          {info.qualifier ? (
+            <TableCell align="right">{info.qualifier}</TableCell>
+          ) : (
+            <TableCell align="right">
+              <SvgIcon>
+                <HorizontalRuleIcon />
+              </SvgIcon>
+            </TableCell>
+          )}
           {info.notes ? (
             <TableCell align="right">
               <CustomTooltip
