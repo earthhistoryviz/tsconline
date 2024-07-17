@@ -1,10 +1,11 @@
-import { TextField } from "@mui/material";
+import { TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { observer } from "mobx-react-lite";
-import { useContext, useRef } from "react";
+import { useContext, useRef, useState } from "react";
 import "./Search.css";
 import { context } from "../state";
 import { Results } from "./Results";
 import { EventSearchInfo, GroupedEventSearchInfo } from "../types";
+import CheckIcon from "@mui/icons-material/Check";
 
 export const Search = observer(function Search() {
   const { state, actions } = useContext(context);
@@ -124,38 +125,59 @@ export const Search = observer(function Search() {
   }
 
   const TimeDisplay = observer(() => {
+    const [units, setUnits] = useState<string>(Object.keys(state.settings.timeSettings)[0]);
     return (
-      <div>
-        <div>Time Settings</div>
-        {Object.entries(state.settings.timeSettings).map(([unit, timeSettings]) => {
-          return (
-            <div key={unit}>
+      <div style={{display:"flex", justifyContent: "center",alignItems:"center", flexDirection:"column"}}>
+        <ToggleButtonGroup
+          sx={{marginTop:"0"}}
+          value={units}
+          exclusive
+          size="small"
+          onChange={(_event: React.MouseEvent<HTMLElement>, value: string) => {
+            if (value === null) {
+              return;
+            }
+            setUnits(value);
+          }}
+          className="ToggleButtonGroup"
+          aria-label="Units">
+          {Object.keys(state.settings.timeSettings).map((unit) => (
+            <ToggleButton key={unit} value={unit} disableRipple>
               {unit}
-              <div>
-                Top Age: {timeSettings.topStageAge} Base Age:{timeSettings.baseStageAge}
-              </div>
-            </div>
-          );
-        })}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+        <div style={{width:"15vw", textAlign:"center"}}>
+          <div>
+          Top Age: {state.settings.timeSettings[units].topStageAge}
+          </div>
+          <div>
+          Base Age: {state.settings.timeSettings[units].baseStageAge}
+          </div>
+            
+         
+        </div>
       </div>
     );
   });
 
   return (
     <div className="search-container">
-      <div className="search-and-options">
-        <TextField
-          className="search-bar"
-          label="Search"
-          variant="outlined"
-          size="small"
-          fullWidth
-          onChange={(e) => actions.setEventSearchTerm(e.target.value)}
-          value={state.settingsTabs.eventSearchTerm}
-        />
+      <div style={{ display: "flex", flexDirection: "row" }}>
+        <div className="search-and-options">
+          <TextField
+            className="search-bar"
+            label="Search"
+            variant="outlined"
+            size="small"
+            fullWidth
+            onChange={(e) => actions.setEventSearchTerm(e.target.value)}
+            value={state.settingsTabs.eventSearchTerm}
+          />
+          <div>Found {count.current} Results</div>
+        </div>
+        <TimeDisplay />
       </div>
-      <div>Found {count.current} Results</div>
-      <TimeDisplay />
       <Results groupedEvents={searchResultData()} />
     </div>
   );
