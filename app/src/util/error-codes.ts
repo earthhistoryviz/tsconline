@@ -19,7 +19,6 @@ export enum ErrorCodes {
   DATAPACK_ALREADY_EXISTS = "DATAPACK_ALREADY_EXISTS",
   NO_DATAPACKS_SELECTED = "NO_DATAPACKS_SELECTED",
   NO_COLUMNS_SELECTED = "NO_COLUMNS_SELECTED",
-  INVALID_UNIT_RANGE = "INVALID_UNIT_RANGE",
   INVALID_MAPPACK_INFO = "INVALID_MAPPACK_INFO",
   IS_BAD_RANGE = "IS_BAD_RANGE",
   UNABLE_TO_LOGIN_SERVER = "UNABLE_TO_LOGIN_SERVER",
@@ -77,9 +76,7 @@ export const ErrorMessages = {
   [ErrorCodes.DATAPACK_ALREADY_EXISTS]: "Datapack already exists. Please upload a new datapack file.",
   [ErrorCodes.NO_DATAPACKS_SELECTED]: "No datapacks selected. Please select at least one datapack to generate.",
   [ErrorCodes.NO_COLUMNS_SELECTED]: "No columns selected. Please select at least one column to generate.",
-  [ErrorCodes.INVALID_UNIT_RANGE]:
-    "Invalid unit range. Please ensure the base age is greater than the top age when generating a chart.",
-  [ErrorCodes.IS_BAD_RANGE]: "Bad unit range. Please ensure you have a valid unit range.",
+  [ErrorCodes.IS_BAD_RANGE]: "Base age must be greater than the top age.",
   [ErrorCodes.INVALID_MAPPACK_INFO]: "Invalid mappack info received from server. Please try again later.",
   [ErrorCodes.UNABLE_TO_LOGIN_SERVER]: "Unable to login due to server error. Please try again later.",
   [ErrorCodes.UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL]: "Unable to login with Google credentials. Please try again.",
