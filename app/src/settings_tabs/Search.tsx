@@ -1,4 +1,4 @@
-import { TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { Box, Paper, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { useContext, useRef, useState } from "react";
 import "./Search.css";
@@ -126,9 +126,13 @@ export const Search = observer(function Search() {
   const TimeDisplay = observer(() => {
     const [units, setUnits] = useState<string>(Object.keys(state.settings.timeSettings)[0]);
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
+      <Paper
+        variant="outlined"
+        className="search-time-display-container"
+        sx={(theme) => ({
+          backgroundColor: theme.palette.backgroundColor.main,
+        })}>
         <ToggleButtonGroup
-          sx={{ marginTop: "0" }}
           value={units}
           exclusive
           size="small"
@@ -146,11 +150,33 @@ export const Search = observer(function Search() {
             </ToggleButton>
           ))}
         </ToggleButtonGroup>
-        <div style={{ width: "15vw", textAlign: "center" }}>
-          Top Age: {state.settings.timeSettings[units].topStageAge} | Base Age:{" "}
-          {state.settings.timeSettings[units].baseStageAge}
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          <Box
+            sx={(theme) => ({
+              display: "inline",
+              padding: 1,
+              margin:1,
+              border: "1px solid",
+              borderRadius: 2,
+              bgcolor: theme.palette.secondaryBackground.light
+            })}>
+            Top Age: {state.settings.timeSettings[units].topStageAge}{" "}
+          </Box>
+          <Box
+            sx={(theme) => ({
+              display: "inline",
+              padding:1,
+              margin:1,
+              border: "1px solid",
+              borderRadius: 2,
+              bgcolor: theme.palette.secondaryBackground.light
+            })}>
+            {" "}
+            Base Age:
+            {state.settings.timeSettings[units].baseStageAge}{" "}
+          </Box>
         </div>
-      </div>
+      </Paper>
     );
   });
 

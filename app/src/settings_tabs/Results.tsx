@@ -50,7 +50,9 @@ const Column = observer(({ columnName, columnPath }: { columnName: string; colum
         onClick={() => {
           actions.toggleSettingsTabColumn(column);
         }}>
-        <div style={{ marginRight: "1vw" }}>{ColumnPathToRootOn() ? <CheckIcon color="success" /> : <CloseIcon color="error" />}</div>
+        <div style={{ marginRight: "1vw" }}>
+          {ColumnPathToRootOn() ? <CheckIcon color="success" /> : <CloseIcon color="error" />}
+        </div>
         <CustomTooltip
           placement="right"
           title={columnPath.map((value, pathIndex) => (
@@ -141,7 +143,9 @@ const ModifyTimeInterval = observer(({ info }: { info: EventSearchInfo }) => {
   };
   return (
     <div className="search-result-age-container">
-      <div className="search-result-age-icon">{isAgeWithinTimeInterval() ? <CheckIcon color="success" /> : <CloseIcon color="error" />}</div>
+      <div className="search-result-age-icon">
+        {isAgeWithinTimeInterval() ? <CheckIcon color="success" /> : <CloseIcon color="error" />}
+      </div>
       <div className="search-result-age-text">{info.age}</div>
       <div className="search-result-age-buttons">
         <CustomTooltip title="center time interval on event">
