@@ -1,5 +1,5 @@
 import { TableCell, TableBody, TableContainer, Paper, SvgIcon, Typography, Box, IconButton } from "@mui/material";
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { Table } from "react-bootstrap";
 import { TableComponents, TableVirtuoso } from "react-virtuoso";
 import { CustomTooltip, StyledScrollbar } from "../components";
@@ -27,7 +27,7 @@ const isAgeWithinTimeInterval = (info: EventSearchInfo) => {
   const chartBaseAge = state.settings.timeSettings[info.unit].baseStageAge;
   const ages = info.age;
   if (!ages) return false;
-  if (ages.topAge + 3 >= chartTopAge && ages.baseAge - 3 <= chartBaseAge) {
+  if (ages.topAge >= chartTopAge && ages.baseAge <= chartBaseAge) {
     return true;
   }
   return false;
@@ -62,8 +62,29 @@ const Column = observer(({ info }: { info: EventSearchInfo }) => {
     return true;
   };
 
+  useEffect(() => {
+    const table = document.getElementById("event-search-results-table");
+    if (!table) return;
+    //dynamically change column path width on resize of table
+    const resize = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const width = (entry.contentRect.right - entry.contentRect.left) / 3.5;
+        const columns = document.getElementsByClassName("search-result-column-container");
+        for (const column of columns) {
+          const columnCell = column.parentElement;
+          if (!columnCell) return;
+          columnCell.style.width = width + "px";
+        }
+      }
+    });
+    resize.observe(table!);
+    return () => {
+      resize.disconnect();
+    };
+  }, []);
+
   return (
-    <div>
+    <>
       <div
         className="search-result-column-container"
         onClick={() => {
@@ -71,16 +92,17 @@ const Column = observer(({ info }: { info: EventSearchInfo }) => {
         }}>
         <div style={{ marginRight: "1vw" }}>
           {ColumnPathToRootOn() ? (
-            <CustomTooltip title="Column Toggled ON">
+            <CustomTooltip enterDelay={1000} title="Column Toggled ON">
               <CheckIcon color="success" />
             </CustomTooltip>
           ) : (
-            <CustomTooltip title="Column Toggled OFF">
+            <CustomTooltip enterDelay={1000} title="Column Toggled OFF">
               <CloseIcon color="error" />
             </CustomTooltip>
           )}
         </div>
         <CustomTooltip
+          enterDelay={1000}
           placement="right"
           title={columnPath.map((value, pathIndex) => (
             <div key={pathIndex}>{value}</div>
@@ -90,12 +112,20 @@ const Column = observer(({ info }: { info: EventSearchInfo }) => {
           </Typography>
         </CustomTooltip>
       </div>
-    </div>
+    </>
   );
 });
 
 const Age = observer(({ info }: { info: EventSearchInfo }) => {
   const { state, actions } = useContext(context);
+  if (!info.age) {
+    return (
+      <SvgIcon>
+        <HorizontalRuleIcon />
+      </SvgIcon>
+    );
+  }
+
   const column = state.settingsTabs.columnHashMap.get(info.columnName);
   if (!column) {
     return (
@@ -104,13 +134,7 @@ const Age = observer(({ info }: { info: EventSearchInfo }) => {
       </SvgIcon>
     );
   }
-  if (!("age" in info)) {
-    return (
-      <SvgIcon>
-        <HorizontalRuleIcon />
-      </SvgIcon>
-    );
-  }
+
   const verifyAgesAndAddAgeMargin = () => {
     if (!info.age) return null;
     let { topAge, baseAge } = info.age;
@@ -153,7 +177,7 @@ const Age = observer(({ info }: { info: EventSearchInfo }) => {
     }
     return (
       <div>
-        {info.age.topAge} - {info.age!.baseAge}
+        {info.age.topAge} - {info.age.baseAge}
       </div>
     );
   };
@@ -161,11 +185,11 @@ const Age = observer(({ info }: { info: EventSearchInfo }) => {
     <div className="search-result-age-container">
       <div className="search-result-age-icon">
         {isAgeWithinTimeInterval(info) ? (
-          <CustomTooltip title="Age within time interval">
+          <CustomTooltip enterDelay={1000} title="Age within time interval">
             <CheckIcon color="success" />
           </CustomTooltip>
         ) : (
-          <CustomTooltip title="Age not within time interval">
+          <CustomTooltip enterDelay={1000} title="Age not within time interval">
             <CloseIcon color="error" />
           </CustomTooltip>
         )}
@@ -196,6 +220,45 @@ const Age = observer(({ info }: { info: EventSearchInfo }) => {
         </CustomTooltip>
       </div>
     </div>
+  );
+});
+
+const Qualifier = observer(({ info }: { info: EventSearchInfo }) => {
+  if (!info.qualifier) {
+    return (
+      <SvgIcon>
+        <HorizontalRuleIcon />
+      </SvgIcon>
+    );
+  }
+  return <div>{info.qualifier}</div>;
+});
+
+const Notes = observer(({ info }: { info: EventSearchInfo }) => {
+  if (!info.notes) {
+    return (
+      <SvgIcon>
+        <HorizontalRuleIcon />
+      </SvgIcon>
+    );
+  }
+  return (
+    <CustomTooltip
+      title={
+        <Box className="search-result-info-container">
+          <StyledScrollbar className="scroll-bar">
+            <Box
+              className="search-result-info"
+              sx={{ "& a": { color: "button.main" } }}
+              dangerouslySetInnerHTML={{ __html: trimQuotes(info.notes).replaceAll('""', '"') }}
+            />
+          </StyledScrollbar>
+        </Box>
+      }>
+      <SvgIcon>
+        <NotesIcon />
+      </SvgIcon>
+    </CustomTooltip>
   );
 });
 
@@ -250,46 +313,13 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
             <Column info={info} />
           </TableCell>
           <TableCell align="center">
-            {info.age ? (
-              <Age info={info} />
-            ) : (
-              <SvgIcon>
-                <HorizontalRuleIcon />
-              </SvgIcon>
-            )}
+            <Age info={info} />
           </TableCell>
           <TableCell align="center">
-            {info.qualifier ? (
-              <div>{info.qualifier}</div>
-            ) : (
-              <SvgIcon>
-                <HorizontalRuleIcon />
-              </SvgIcon>
-            )}
+            <Qualifier info={info} />
           </TableCell>
           <TableCell align="right">
-            {info.notes ? (
-              <CustomTooltip
-                title={
-                  <Box className="search-result-info-container">
-                    <StyledScrollbar className="scroll-bar">
-                      <Box
-                        className="search-result-info"
-                        sx={{ "& a": { color: "button.main" } }}
-                        dangerouslySetInnerHTML={{ __html: trimQuotes(info.notes).replaceAll('""', '"') }}
-                      />
-                    </StyledScrollbar>
-                  </Box>
-                }>
-                <SvgIcon>
-                  <NotesIcon />
-                </SvgIcon>
-              </CustomTooltip>
-            ) : (
-              <SvgIcon>
-                <HorizontalRuleIcon />
-              </SvgIcon>
-            )}
+            <Notes info={info} />
           </TableCell>
         </>
       );
@@ -315,7 +345,7 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
   VirtuosoTableComponents.TableBody.displayName = "TableBody";
 
   return (
-    <Box className="table-container">
+    <Box className="table-container" id="event-search-results-table">
       <TableVirtuoso
         className="events-search-results-table"
         data={stretchedEvents}
