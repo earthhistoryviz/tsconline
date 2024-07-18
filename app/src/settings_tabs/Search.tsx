@@ -153,20 +153,20 @@ export const Search = observer(function Search() {
         <Box className="search-time-display-ages-container">
           <Box
             className="search-time-display-ages"
-            sx={(theme) => ({
+            bgcolor="secondaryBackground.main"
+            sx={{
               display: "inline",
-              borderRadius: 2,
-              bgcolor: theme.palette.secondaryBackground.main
-            })}>
+              borderRadius: 2
+            }}>
             Top Age: {state.settings.timeSettings[units].topStageAge}
           </Box>
           <Box
             className="search-time-display-ages"
-            sx={(theme) => ({
+            bgcolor="secondaryBackground.main"
+            sx={{
               display: "inline",
-              borderRadius: 2,
-              bgcolor: theme.palette.secondaryBackground.main
-            })}>
+              borderRadius: 2
+            }}>
             Base Age:
             {state.settings.timeSettings[units].baseStageAge}
           </Box>
