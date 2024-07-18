@@ -106,7 +106,7 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
         rowData={state.admin.displayedUsers}
         rowDragManaged={true}
       />
-      <Box display="flex" flexDirection="row" gap="10px" margin="auto" mt="10px" mb="10px">
+      <Box className="admin-user-config-buttons">
         <AdminAddUserForm />
         <TSCButton onClick={deleteUsers}>Delete Selected Users</TSCButton>
       </Box>

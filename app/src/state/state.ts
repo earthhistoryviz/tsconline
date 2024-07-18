@@ -149,7 +149,7 @@ export const state = observable<State>({
     columnSelected: null,
     columnHashMap: new Map<string, ColumnInfo>(),
     columnSearchTerm: "",
-    datapackDisplayType: "rows",
+    datapackDisplayType: "compact",
     eventSearchTerm: ""
   },
   mapState: {
