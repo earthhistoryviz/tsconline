@@ -7,6 +7,7 @@ import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import DataObjectIcon from "@mui/icons-material/DataObject";
 import { useState } from "react";
 import Color from "color";
+import "./Admin.css";
 import { UnauthorizedAccess } from "./UnauthorizedAccess";
 import { AdminDatapackConfig } from "./AdminDatapackConfig";
 
@@ -50,7 +51,7 @@ export const Admin = observer(function Admin() {
     }
   ];
   return (
-    <Box ml="50px" mt="50px" display="flex" flexDirection="column">
+    <Box className="admin-container">
       <Typography variant="h4" mb="20px">
         Admin Settings
       </Typography>
