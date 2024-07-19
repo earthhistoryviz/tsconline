@@ -414,9 +414,9 @@ export const getAllUserDatapacks = async function getAllUserDatapacks(
       const datapackIndexFilepath = join(path, "DatapackIndex.json");
       try {
         await realpath(datapackIndexFilepath);
-        const datapackIndex = JSON.parse(await readFile(datapackIndexFilepath));
+        const datapackIndex = JSON.parse(await readFile(datapackIndexFilepath, "utf-8"));
         assertDatapackIndex(datapackIndex);
-      } catch(e) {
+      } catch (e) {
         continue;
       }
       adminDisplayDatapacks[uuid] = {};
