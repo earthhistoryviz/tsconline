@@ -19,12 +19,12 @@ import fastifyMultipart from "@fastify/multipart";
 import formAutoContent from "form-auto-content";
 import { DatapackParsingPack, MapPack } from "@tsconline/shared";
 
-// vi.mock("glob", async (importOriginal) => {
-//   const actual = await importOriginal<typeof glob>();
-//   return {
-//     glob: vi.fn().mockImplementation(actual.glob)
-//   };
-// });
+vi.mock("glob", async (importOriginal) => {
+  const actual = await importOriginal<typeof glob>();
+  return {
+    glob: vi.fn().mockImplementation(actual.glob)
+  };
+});
 
 vi.mock("node:child_process", async () => {
   return {
@@ -39,7 +39,8 @@ vi.mock("util", async () => {
 vi.mock("@tsconline/shared", async (importOriginal) => {
   const actual = await importOriginal<typeof shared>();
   return {
-    assertAdminSharedUser: vi.fn().mockImplementation(actual.assertAdminSharedUser)
+    assertAdminSharedUser: vi.fn().mockImplementation(actual.assertAdminSharedUser),
+    assertDatapackIndex: vi.fn().mockReturnValue(true)
   };
 });
 vi.mock("../src/util", async () => {
@@ -1470,33 +1471,32 @@ describe("adminDeleteServerDatapack", () => {
 });
 
 describe("getAllUserDatapacks", () => {
-  // const globSpy = vi.spyOn(glob, "glob");
+  const globSpy = vi.spyOn(glob, "glob");
   const readFile = vi.spyOn(fsPromises, "readFile");
+  const assertDatapackIndex = vi.spyOn(shared, "assertDatapackIndex");
   const testParsingPack = {
     "test-datapack.dpk": {
-      ageUnits: "Ma",
-      defaultChronostrat: "USGS",
-      formatVersion: 1,
-      columnInfo: {},
-      title: "test-datapack",
-      file: "test-datapack.dpk",
-      description: "test-description",
-      size: "30MB",
-      image: "test-image.png"
+      mock: "test-datapack"
+    }
+  }
+  const test = {
+    "test-uuid": {
+      ...testParsingPack
     }
   }
   beforeEach(() => {
     vi.clearAllMocks();
   });
   it("should return 200 and all datapacks for a user", async () => {
-    // globSpy.mockResolvedValueOnce(["testdir/uploadDir/test-uuid"])
+    globSpy.mockResolvedValueOnce(["testdir/uploadDir/test-uuid"])
     readFile.mockResolvedValueOnce(Buffer.from(JSON.stringify(testParsingPack)));
     const response = await app.inject({
-      method: "GET",
+      method: "POST",
       url: "/admin/user/datapacks",
       headers
     });
-    expect(await response.json()).toEqual(testParsingPack);
+    expect(assertDatapackIndex).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ datapacks: test });
     expect(response.statusCode).toBe(200);
   });
 })
