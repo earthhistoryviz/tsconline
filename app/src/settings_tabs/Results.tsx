@@ -8,15 +8,18 @@ import { observer } from "mobx-react-lite";
 import { ErrorOutline } from "@mui/icons-material";
 import NotesIcon from "@mui/icons-material/Notes";
 import { useTheme } from "@mui/material/styles";
-import "./Results.css";
 import { EventSearchInfo, GroupedEventSearchInfo } from "../types";
-import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import { trimQuotes } from "../util/util";
+import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import FormatLineSpacingIcon from "@mui/icons-material/FormatLineSpacing";
-import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
+import MobiledataOffIcon from "@mui/icons-material/MobiledataOff";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import BrowserNotSupportedIcon from "@mui/icons-material/BrowserNotSupported";
+
+import "./Results.css";
 
 const tooltipDelayTime = 700;
 
@@ -100,9 +103,17 @@ const Status = observer(({ info }: { info: EventSearchInfo }) => {
             enterNextDelay={tooltipDelayTime}
             disableInteractive
             title="Column Toggled ON, age not within time interval">
-            <CheckIcon sx={{ color: "orange" }} />
+            <MobiledataOffIcon sx={{ color: "orange" }} />
           </CustomTooltip>
         )
+      ) : isAgeWithinTimeInterval() ? (
+        <CustomTooltip
+          enterDelay={tooltipDelayTime}
+          enterNextDelay={tooltipDelayTime}
+          disableInteractive
+          title="Column Toggled OFF, age within time interval">
+          <BrowserNotSupportedIcon sx={{ color: "orange" }} />
+        </CustomTooltip>
       ) : (
         <CustomTooltip
           enterDelay={tooltipDelayTime}
@@ -169,6 +180,14 @@ const truncToSecondDecimal = (num: number) => {
 
 const Center = observer(({ info }: { info: EventSearchInfo }) => {
   const { state, actions } = useContext(context);
+  if (!info.age) {
+    return (
+      <SvgIcon>
+        <HorizontalRuleIcon />
+      </SvgIcon>
+    );
+  }
+
   const column = state.settingsTabs.columnHashMap.get(info.columnName);
   if (!column) {
     return (
@@ -204,6 +223,14 @@ const Center = observer(({ info }: { info: EventSearchInfo }) => {
 const Extend = observer(({ info }: { info: EventSearchInfo }) => {
   const { state, actions } = useContext(context);
   const column = state.settingsTabs.columnHashMap.get(info.columnName);
+  if (!info.age) {
+    return (
+      <SvgIcon>
+        <HorizontalRuleIcon />
+      </SvgIcon>
+    );
+  }
+
   if (!column) {
     return (
       <SvgIcon>
@@ -342,10 +369,10 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
           <TableCell className="event-group-header-text search-result-column-column" align="left">
             Column
           </TableCell>
-          <TableCell className="event-group-header-text search-result-center-column" align="left">
+          <TableCell className="event-group-header-text search-result-center-column" align="center">
             Center
           </TableCell>
-          <TableCell className="event-group-header-text search-result-extend-column" align="left">
+          <TableCell className="event-group-header-text search-result-extend-column" align="center">
             Extend
           </TableCell>
           <TableCell className="event-group-header-text search-result-age-column" align="center">
@@ -380,10 +407,10 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
           <TableCell className="search-result-column-column" align="left">
             <Column info={info} />
           </TableCell>
-          <TableCell className="search-result-center-column" align="left">
+          <TableCell className="search-result-center-column" align="center">
             <Center info={info} />
           </TableCell>
-          <TableCell className="search-result-extend-column" align="left">
+          <TableCell className="search-result-extend-column" align="center">
             <Extend info={info} />
           </TableCell>
           <TableCell className="search-result-age-column" align="center">
@@ -420,6 +447,17 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
 
   return (
     <Box className="table-container" id="event-search-results-table">
+      <CustomTooltip
+        title={
+          <>
+            Center: sets the time interval to the selected age surrounded with 3myr
+            <br />
+            Extend: takes the smallest top age and greatest base age between the current time interval and the selected
+            age surrounded with 3myr
+          </>
+        }>
+        <HelpOutlineIcon />
+      </CustomTooltip>
       <TableVirtuoso
         className="events-search-results-table"
         data={stretchedEvents}
