@@ -6,7 +6,8 @@ import {
   adminDeleteUser,
   getUsers,
   adminUploadServerDatapack,
-  adminDeleteServerDatapack
+  adminDeleteServerDatapack,
+  getAllUserDatapacks
 } from "./admin-routes.js";
 import { checkRecaptchaToken } from "./verify.js";
 import { googleRecaptchaBotThreshold } from "./login-routes.js";
@@ -147,4 +148,5 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     },
     adminDeleteServerDatapack
   );
+  fastify.get("/user/datapacks", { config: { rateLimit: looseRateLimit } }, getAllUserDatapacks);
 };

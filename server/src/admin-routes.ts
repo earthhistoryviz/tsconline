@@ -3,10 +3,10 @@ import { checkForUsersWithUsernameOrEmail, createUser, findUser } from "./databa
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { deleteUser } from "./database.js";
-import { resolve, basename, extname } from "path";
+import { resolve, basename, extname, join } from "path";
 import { adminconfig, assetconfigs, checkFileExists, getBytes } from "./util.js";
 import { createWriteStream } from "fs";
-import { realpath, rm, writeFile } from "fs/promises";
+import { readFile, realpath, rm, writeFile } from "fs/promises";
 import { deleteDatapack, loadFileMetadata } from "./file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
 import { datapackIndex, mapPackIndex } from "./index.js";
@@ -15,8 +15,9 @@ import validator from "validator";
 import { pipeline } from "stream/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "util";
-import { assertAdminSharedUser } from "@tsconline/shared";
+import { AdminDisplayDatapacks, assertAdminSharedUser, assertDatapackIndex } from "@tsconline/shared";
 import { DatapackDescriptionInfo, NewUser } from "./types.js";
+import { glob } from "glob";
 
 /**
  * Get all users for admin to configure on frontend
@@ -400,3 +401,33 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
   }
   reply.status(200).send({ message: `Datapack ${datapack} deleted` });
 };
+
+export const getAllUserDatapacks = async function getAllUserDatapacks(
+  _request: FastifyRequest,
+  reply: FastifyReply
+) {
+  try {
+    let paths = await glob(`${assetconfigs.uploadDirectory}/*`);
+    const adminDisplayDatapacks: AdminDisplayDatapacks = {}
+    for (const path of paths) {
+      const uuid = basename(path);
+      const datapackIndexFilepath = join(path, "DatapackIndex.json");
+      try {
+        await realpath(datapackIndexFilepath);
+        const datapackIndex = JSON.parse((await readFile(datapackIndexFilepath)).toString());
+        assertDatapackIndex(datapackIndex);
+      } catch {
+        continue;
+      }
+      adminDisplayDatapacks[uuid] = {};
+      for (const datapack in datapackIndex) {
+        const datapackInfo = datapackIndex[datapack];
+        if (!datapackInfo) return;
+        adminDisplayDatapacks[uuid]![datapack] = datapackInfo
+      }
+    }
+    reply.send({ datapacks: adminDisplayDatapacks });
+  } catch (error) {
+    reply.status(500).send({ error: "Unknown error" });
+  }
+}
