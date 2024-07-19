@@ -29,7 +29,7 @@
 }
 
 .table-container {
-  min-width: 45vw;
+  min-width: 50vw;
   height: 65vh;
   margin-top: 2vh;
   resize: auto;
@@ -74,14 +74,6 @@
   min-width: 50px;
   max-width: 50px;
 }
-
-/* .search-result-column-container {
-  width: inherit;
-  display: flex;
-  flex-direction: row;
-  overflow: hidden;
-  text-overflow: ellipsis;
-} */
 
 .search-result-column-container:hover {
   cursor: pointer;
