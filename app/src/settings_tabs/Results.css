@@ -29,49 +29,59 @@
 }
 
 .table-container {
-  min-height: 65vh;
   min-width: 45vw;
   height: 65vh;
   margin-top: 2vh;
-  resize: both;
-  overflow: auto;
+  resize: auto;
+  overflow: hidden;
 }
 
 .events-search-results-table {
   height: 100%;
   width: 100%;
 }
-
-.search-result-age-container {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
+.search-result-status-column {
+  min-width: 50px;
+  max-width: 50px;
 }
 
-.search-result-age-icon {
-  width: 30%;
-  display: flex;
-  justify-content: right;
-  margin-right: 10px;
-}
-.search-result-age-text {
-  width: 40%;
-}
-.search-result-age-buttons {
-  width: 30%;
-  display: flex;
-  justify-content: left;
-  margin-left: 10px;
+.search-result-column-column {
+  min-width: 200px;
+  max-width: 200px;
 }
 
-.search-result-column-container {
+.search-result-center-column {
+  min-width: 50px;
+  max-width: 50px;
+}
+
+.search-result-extend-column {
+  min-width: 50px;
+  max-width: 50px;
+}
+
+.search-result-age-column {
+  min-width: 120px;
+  max-width: 120px;
+}
+
+.search-result-qualifier-column {
+  min-width: 70px;
+  max-width: 70px;
+}
+
+.search-result-notes-column {
+  min-width: 50px;
+  max-width: 50px;
+}
+
+/* .search-result-column-container {
   width: inherit;
   display: flex;
   flex-direction: row;
   overflow: hidden;
   text-overflow: ellipsis;
-}
+} */
 
 .search-result-column-container:hover {
   cursor: pointer;
