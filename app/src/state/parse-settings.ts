@@ -577,8 +577,8 @@ export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): strin
           column.backgroundColor.text.g == 255 &&
           column.backgroundColor.text.b == 255
         ) {
-          //TODO: fix java not accepting empty background color for sequence
-          if (extractColumnType(column._id) === "SequenceColumn") {
+          // java doesn't accept empty background color for sequence & event.
+          if (extractColumnType(column._id) === "SequenceColumn" || extractColumnType(column._id) === "EventColumn") {
             xml += `${indent}<setting name="backgroundColor" useNamed="false">rgb(255, 255, 255)</setting>\n`;
           } else {
             xml += `${indent}<setting name="backgroundColor"/>\n`;
