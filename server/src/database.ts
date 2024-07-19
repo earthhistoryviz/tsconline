@@ -87,7 +87,6 @@ export async function initializeDatabase() {
       resolve();
     });
   });
-  await deleteUser({ email: process.env.ADMIN_EMAIL || "test@gmail.com" });
   const admin = await checkForUsersWithUsernameOrEmail(
     process.env.ADMIN_USER || "admin",
     process.env.ADMIN_EMAIL || "test@gmail.com"
