@@ -20,7 +20,7 @@ export const fetchUsers = action(async () => {
   }
   try {
     const response = await fetcher("/admin/users", {
-      method: "GET",
+      method: "POST",
       headers: {
         "recaptcha-token": recaptchaToken
       },

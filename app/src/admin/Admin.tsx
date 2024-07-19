@@ -3,8 +3,7 @@ import { observer } from "mobx-react-lite";
 import { AdminUserConfig } from "./AdminUserConfig";
 import { useContext } from "react";
 import { context } from "../state";
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
-import DataObjectIcon from "@mui/icons-material/DataObject";
+import { PersonOutline, DataObject } from "@mui/icons-material";
 import { useState } from "react";
 import Color from "color";
 import "./Admin.css";
@@ -57,8 +56,8 @@ export const Admin = observer(function Admin() {
       </Typography>
       <Box display="flex" flexDirection="row">
         <AdminTabs onChange={handleChange} value={tabIndex} orientation="vertical">
-          <AdminTab icon={<PersonOutlineIcon />} iconPosition="start" label={tabs[0].tabName} />
-          <AdminTab icon={<DataObjectIcon />} iconPosition="start" label={tabs[1].tabName} />
+          <AdminTab icon={<PersonOutline />} iconPosition="start" label={tabs[0].tabName} />
+          <AdminTab icon={<DataObject />} iconPosition="start" label={tabs[1].tabName} />
         </AdminTabs>
         <Box display="flex" flexDirection="column" flexGrow={1} m="10px">
           <Typography variant="h5">{tabs[tabIndex].tabName}</Typography>
