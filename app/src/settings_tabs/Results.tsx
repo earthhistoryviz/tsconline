@@ -207,7 +207,7 @@ const Center = observer(({ info }: { info: EventSearchInfo }) => {
       enterDelay={tooltipDelayTime}
       enterNextDelay={tooltipDelayTime}
       disableInteractive
-      title="center time interval on event">
+      title="center time interval within 3myr boundary">
       <IconButton
         onClick={() => {
           centerTimeOnEvent();
@@ -253,7 +253,7 @@ const Extend = observer(({ info }: { info: EventSearchInfo }) => {
       enterDelay={tooltipDelayTime}
       enterNextDelay={tooltipDelayTime}
       disableInteractive
-      title="extend time interval to include event">
+      title="extend time interval within 3myr boundary">
       <IconButton
         onClick={() => {
           extendTimeToIncludeEvent();
