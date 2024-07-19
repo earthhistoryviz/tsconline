@@ -11,12 +11,20 @@ import * as util from "../src/util";
 import * as streamPromises from "stream/promises";
 import * as index from "../src/index";
 import * as shared from "@tsconline/shared";
+import * as glob from "glob"
 import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach } from "vitest";
 import fastifySecureSession from "@fastify/secure-session";
 import { normalize, resolve } from "path";
 import fastifyMultipart from "@fastify/multipart";
 import formAutoContent from "form-auto-content";
 import { DatapackParsingPack, MapPack } from "@tsconline/shared";
+
+// vi.mock("glob", async (importOriginal) => {
+//   const actual = await importOriginal<typeof glob>();
+//   return {
+//     glob: vi.fn().mockImplementation(actual.glob)
+//   };
+// });
 
 vi.mock("node:child_process", async () => {
   return {
@@ -87,7 +95,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => {});
+        readable.on("data", () => { });
         readable.on("end", () => {
           resolve();
         });
@@ -198,7 +206,7 @@ beforeAll(async () => {
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "error").mockImplementation(() => { });
 });
 
 afterAll(async () => {
@@ -231,7 +239,8 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   { method: "DELETE", url: "/admin/user", body: { uuid: "test" } },
   { method: "DELETE", url: "/admin/user/datapack", body: { uuid: "test", datapack: "test" } },
   { method: "DELETE", url: "/admin/server/datapack", body: { datapack: "test" } },
-  { method: "POST", url: "/admin/server/datapack", body: { datapack: "test" } }
+  { method: "POST", url: "/admin/server/datapack", body: { datapack: "test" } },
+  { method: "POST", url: "/admin/user/datapacks" }
 ];
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
 describe("verifyAdmin tests", () => {
@@ -1459,3 +1468,35 @@ describe("adminDeleteServerDatapack", () => {
     expect(response.statusCode).toBe(500);
   });
 });
+
+describe("getAllUserDatapacks", () => {
+  // const globSpy = vi.spyOn(glob, "glob");
+  const readFile = vi.spyOn(fsPromises, "readFile");
+  const testParsingPack = {
+    "test-datapack.dpk": {
+      ageUnits: "Ma",
+      defaultChronostrat: "USGS",
+      formatVersion: 1,
+      columnInfo: {},
+      title: "test-datapack",
+      file: "test-datapack.dpk",
+      description: "test-description",
+      size: "30MB",
+      image: "test-image.png"
+    }
+  }
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return 200 and all datapacks for a user", async () => {
+    // globSpy.mockResolvedValueOnce(["testdir/uploadDir/test-uuid"])
+    readFile.mockResolvedValueOnce(Buffer.from(JSON.stringify(testParsingPack)));
+    const response = await app.inject({
+      method: "GET",
+      url: "/admin/user/datapacks",
+      headers
+    });
+    expect(await response.json()).toEqual(testParsingPack);
+    expect(response.statusCode).toBe(200);
+  });
+})
