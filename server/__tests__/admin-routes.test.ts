@@ -222,7 +222,7 @@ const testNonAdminUser = {
 };
 
 const routes: { method: HTTPMethods; url: string; body?: object }[] = [
-  { method: "GET", url: "/admin/users" },
+  { method: "POST", url: "/admin/users" },
   {
     method: "POST",
     url: "/admin/user",
@@ -1202,7 +1202,7 @@ describe("getUsers", () => {
   it("should return any users without passwords", async () => {
     findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser, testNonAdminUser]);
     const response = await app.inject({
-      method: "GET",
+      method: "POST",
       url: "/admin/users",
       headers
     });
@@ -1231,7 +1231,7 @@ describe("getUsers", () => {
   it("should return 404 if unknown error occurs", async () => {
     findUser.mockResolvedValueOnce([testAdminUser]).mockRejectedValueOnce(new Error());
     const response = await app.inject({
-      method: "GET",
+      method: "POST",
       url: "/admin/users",
       headers
     });
@@ -1243,7 +1243,7 @@ describe("getUsers", () => {
       throw new Error();
     });
     const response = await app.inject({
-      method: "GET",
+      method: "POST",
       url: "/admin/users",
       headers
     });
