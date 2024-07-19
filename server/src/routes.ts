@@ -27,6 +27,8 @@ import { glob } from "glob";
 import { DatapackDescriptionInfo } from "./types.js";
 import { MultipartFile } from "@fastify/multipart";
 import { runJavaEncrypt } from "./encryption.js";
+import { queue, maxQueueSize } from "./index.js";
+import { promisify } from "util";
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
@@ -626,33 +628,50 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     reply.send({ error: "ERROR: failed to save settings" });
     return;
   }
-  // Exec Java command and send final reply to browser
-  const cmd =
-    `java -jar ${assetconfigs.activeJar} ` +
-    // Turns off GUI (e.g Suggested Age pop-up (defaults to yes if -a flag is not passed))
-    `-node ` +
-    // Add settings:
-    `-s ${settingsFilePath} ` +
-    // Save settings to file:
-    `-ss ${settingsFilePath} ` +
-    // Add datapacks:
-    `-d ${datapacks.join(" ")} ` +
-    // Tell it where to save chart
-    `-o ${chartFilePath} ` +
-    // Don't use datapacks suggested age (if useSuggestedAge is true then ignore datapack ages)
-    `-a`;
+
+  const execPromise = promisify(exec);
 
   // Exec Java command and send final reply to browser
-  await new Promise<void>((resolve) => {
+  const executeJavaCommand = async () => {
+    const cmd =
+      `java -jar ${assetconfigs.activeJar} ` +
+      // Turns off GUI (e.g Suggested Age pop-up (defaults to yes if -a flag is not passed))
+      `-node ` +
+      // Add settings:
+      `-s ${settingsFilePath} ` +
+      // Save settings to file:
+      `-ss ${settingsFilePath} ` +
+      // Add datapacks:
+      `-d ${datapacks.join(" ")} ` +
+      // Tell it where to save chart
+      `-o ${chartFilePath} ` +
+      // Don't use datapacks suggested age (if useSuggestedAge is true then ignore datapack ages)
+      `-a`;
     console.log("Calling Java: ", cmd);
-    exec(cmd, function (error, stdout, stderror) {
+    try {
+      const { stdout, stderr } = await execPromise(cmd);
       console.log("Java finished, sending reply to browser");
-      console.log("Java error param: " + error);
       console.log("Java stdout: " + stdout);
-      console.log("Java stderr: " + stderror);
-      resolve();
-    });
-  });
+      console.log("Java stderr: " + stderr);
+    } catch (error) {
+      console.log("Java error param: " + error);
+    }
+  };
+
+  // Add the execution task to the queue
+  if (queue.size >= maxQueueSize) {
+    console.log("Queue is full");
+    reply.status(503).send({ error: "Service is too busy. Please try again later." });
+  }
+  try {
+    await queue.add(async () => await executeJavaCommand());
+    console.log("Java command has been queued for execution.");
+  } catch (error) {
+    console.error("Failed to add Java command to queue: ", error);
+    reply.status(500).send({ error: "Internal Server Error" });
+    return;
+  }
+
   console.log("Sending reply to browser: ", {
     chartpath: chartUrlPath,
     hash: hash

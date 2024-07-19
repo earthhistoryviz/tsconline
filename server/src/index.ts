@@ -21,6 +21,9 @@ import { sendEmail } from "./send-email.js";
 import cron from "node-cron";
 import path from "path";
 import { adminRoutes } from "./admin-auth.js";
+import PQueue from "p-queue";
+
+export const maxQueueSize = 1;
 
 const server = fastify({
   logger: false,
@@ -329,6 +332,8 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.NODE_ENV ===
 server.setNotFoundHandler((request, reply) => {
   void reply.sendFile("index.html");
 });
+
+export const queue = new PQueue({ concurrency: maxQueueSize, timeout: 1000 * 60 * 5, throwOnTimeout: true });
 
 //Start the server...
 try {
