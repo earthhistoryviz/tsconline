@@ -29,10 +29,17 @@ export async function fetcher(...args: Parameters<typeof fetch>): ReturnType<typ
   return fetch(...args);
 }
 
-export function loadRecaptcha() {
-  const script = document.createElement("script");
-  script.src = "https://www.google.com/recaptcha/api.js?render=6LegnOApAAAAACIFXyvL_6_ejS2CHnt3rRzkDGL2";
-  document.body.appendChild(script);
+export async function loadRecaptcha() {
+  return new Promise<void>((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://www.google.com/recaptcha/api.js?render=6LegnOApAAAAACIFXyvL_6_ejS2CHnt3rRzkDGL2";
+    script.async = true;
+    script.onload = () => {
+      window.grecaptcha.ready(() => resolve());
+    };
+    script.onerror = (error) => reject(error);
+    document.body.appendChild(script);
+  });
 }
 
 export function removeRecaptcha() {

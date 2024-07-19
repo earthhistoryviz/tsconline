@@ -51,13 +51,13 @@ export const Datapacks = observer(function Datapacks() {
             actions.setDatapackDisplayType(val);
           }}
           exclusive>
-          <ToggleButton className={styles.tb} disableRipple value="rows">
-            {" "}
-            <TableRowsIcon className={styles.icon} />{" "}
-          </ToggleButton>
           <ToggleButton className={styles.tb} disableRipple value="compact">
             {" "}
             <ViewCompactIcon className={styles.icon} />{" "}
+          </ToggleButton>
+          <ToggleButton className={styles.tb} disableRipple value="rows">
+            {" "}
+            <TableRowsIcon className={styles.icon} />{" "}
           </ToggleButton>
           <ToggleButton className={styles.tb} disableRipple value="cards">
             {" "}

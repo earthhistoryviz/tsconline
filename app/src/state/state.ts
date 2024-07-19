@@ -20,7 +20,8 @@ import type {
   Presets,
   DatapackIndex,
   MapPackIndex,
-  Patterns
+  Patterns,
+  AdminSharedUser
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
@@ -60,6 +61,9 @@ export type State = {
     columnSearchTerm: string;
     datapackDisplayType: "rows" | "cards" | "compact";
     eventSearchTerm: string;
+  };
+  admin: {
+    displayedUsers: AdminSharedUser[];
   };
   mapState: {
     mapInfo: MapInfo;
@@ -128,6 +132,9 @@ export const state = observable<State>({
       language: "English"
     }
   },
+  admin: {
+    displayedUsers: []
+  },
   chartLoading: false,
   madeChart: false,
   tab: 0,
@@ -142,7 +149,7 @@ export const state = observable<State>({
     columnSelected: null,
     columnHashMap: new Map<string, ColumnInfo>(),
     columnSearchTerm: "",
-    datapackDisplayType: "rows",
+    datapackDisplayType: "compact",
     eventSearchTerm: ""
   },
   mapState: {

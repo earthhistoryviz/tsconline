@@ -14,6 +14,13 @@ export type SharedUser = {
   isAdmin: boolean;
 };
 
+export type AdminSharedUser = {
+  userId: number;
+  uuid: string;
+  emailVerified: boolean;
+  invalidateSession: boolean;
+} & SharedUser;
+
 export type SuccessfulServerResponse = {
   message: string;
 };
@@ -509,6 +516,22 @@ export type TimescaleItem = {
   value: number;
 };
 
+export function assertAdminSharedUserArray(o: any): asserts o is AdminSharedUser[] {
+  if (!Array.isArray(o)) throw new Error("AdminSharedUser must be an array");
+  for (const user of o) {
+    assertAdminSharedUser(user);
+  }
+}
+
+export function assertAdminSharedUser(o: any): asserts o is AdminSharedUser {
+  if (!o || typeof o !== "object") throw new Error("AdminSharedUser must be a non-null object");
+  if (typeof o.userId !== "number") throwError("AdminSharedUser", "userId", "number", o.userId);
+  if (typeof o.uuid !== "string") throwError("AdminSharedUser", "uuid", "string", o.uuid);
+  if (typeof o.emailVerified !== "boolean") throwError("AdminSharedUser", "emailVerified", "boolean", o.emailVerified);
+  if (typeof o.invalidateSession !== "boolean")
+    throwError("AdminSharedUser", "invalidateSession", "boolean", o.invalidateSession);
+  assertSharedUser(o);
+}
 export function assertSharedUser(o: any): asserts o is SharedUser {
   if (!o || typeof o !== "object") throw new Error("User must be a non-null object");
   if (typeof o.username !== "string") throwError("User", "username", "string", o.username);

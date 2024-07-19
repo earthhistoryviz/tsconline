@@ -75,6 +75,7 @@ export const ColumnMenu = observer(() => {
           className="column-menu-custom-tabs"
           tabIndicatorLength={25}
           value={tabValue}
+          verticalCenter
           onChange={(index) => setTabValue(index)}
           orientation="vertical-right"
           width={90}
