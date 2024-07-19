@@ -58,7 +58,7 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
       <img className={styles.image} src={imageUrl} alt="datapack" onError={() => setImageUrl(defaultImageUrl)} />
       <div className={styles.right}>
         <Typography className={styles.header} color="textSecondary">
-          {name}
+          {datapack.title}
         </Typography>
       </div>
     </Box>
