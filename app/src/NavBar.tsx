@@ -7,15 +7,15 @@ import { styled, useTheme } from "@mui/material/styles";
 import HomeIcon from "@mui/icons-material/Home";
 import { IconButton, Tab, Tabs, Typography } from "@mui/material";
 import { context } from "./state";
-import { TSCMenuItem, TSCButton, TSCAccountMenu } from "./components";
+import { TSCMenuItem, TSCButton } from "./components";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { ControlledMenu, useHover, useMenuState } from "@szhsin/react-menu";
 import "./NavBar.css";
-import "./Profile.css";
 import "@szhsin/react-menu/dist/index.css";
 import "@szhsin/react-menu/dist/transitions/slide.css";
 import { SettingsMenuOptionLabels, assertSettingsTabs } from "./types";
 import Color from "color";
+import { AccountMenu } from "./account_settings/AccountMenu";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: Color(theme.palette.dark.main).alpha(0.9).string(),
@@ -122,7 +122,7 @@ export const NavBar = observer(function Navbar() {
           Generate Chart
         </TSCButton>
         {state.isLoggedIn ? (
-          <TSCAccountMenu />
+          <AccountMenu />
         ) : (
           <Tab
             className="login-tab"

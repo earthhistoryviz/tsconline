@@ -15,7 +15,8 @@ import validator from "validator";
 import { pipeline } from "stream/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "util";
-import { DatapackDescriptionInfo } from "./types.js";
+import { assertAdminSharedUser } from "@tsconline/shared";
+import { DatapackDescriptionInfo, NewUser } from "./types.js";
 
 /**
  * Get all users for admin to configure on frontend
@@ -26,12 +27,22 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
   try {
     const users = await findUser({});
     const displayedUsers = users.map((user) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { hashedPassword, ...displayedUser } = user;
-      return displayedUser;
+      return {
+        ...displayedUser,
+        username: displayedUser.username,
+        isGoogleUser: hashedPassword === null,
+        isAdmin: user.isAdmin === 1,
+        emailVerified: user.emailVerified === 1,
+        invalidateSession: user.invalidateSession === 1
+      };
     });
-    reply.send({ users: displayedUsers });
+    displayedUsers.forEach((user) => {
+      assertAdminSharedUser(user);
+    });
+    reply.status(200).send({ users: displayedUsers });
   } catch (e) {
+    console.error(e);
     reply.status(404).send({ error: "Unknown error" });
   }
 };
@@ -50,32 +61,38 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
     pictureUrl: string;
     isAdmin: number;
   };
-  if (!username || !email || !password || !validator.isEmail(email)) {
+  if (!email || !password || !validator.isEmail(email)) {
     reply.status(400).send({ error: "Missing/invalid required fields" });
     return;
   }
   try {
-    const user = await checkForUsersWithUsernameOrEmail(username, email);
+    const user = await checkForUsersWithUsernameOrEmail(username || email, email);
     if (user.length > 0) {
       reply.status(409).send({ error: "User already exists" });
       return;
     }
-    const customUser = {
-      username,
+    const customUser: NewUser = {
+      username: username ?? email,
       email,
       hashedPassword: await hash(password, 10),
       uuid: randomUUID(),
       pictureUrl: pictureUrl ?? null,
-      isAdmin: isAdmin ? 1 : 0,
+      isAdmin: isAdmin,
       emailVerified: 1,
       invalidateSession: 0
     };
     await createUser(customUser);
-    const newUser = await findUser({ username });
+    const newUser = await findUser({ email });
     if (newUser.length !== 1) {
       throw new Error("User not created");
     }
   } catch (error) {
+    // this is needed because even when it fails, it will create the user in some cases
+    try {
+      await deleteUser({ email });
+    } catch (e) {
+      // eslint-disable-next-line no-empty
+    }
     reply.status(500).send({ error: "Database error" });
     return;
   }
