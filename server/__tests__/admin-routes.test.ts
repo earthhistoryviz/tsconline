@@ -10,6 +10,7 @@ import * as loadPacks from "../src/load-packs";
 import * as util from "../src/util";
 import * as streamPromises from "stream/promises";
 import * as index from "../src/index";
+import * as shared from "@tsconline/shared";
 import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach } from "vitest";
 import fastifySecureSession from "@fastify/secure-session";
 import { normalize, resolve } from "path";
@@ -25,6 +26,12 @@ vi.mock("node:child_process", async () => {
 vi.mock("util", async () => {
   return {
     promisify: vi.fn((fn) => fn)
+  };
+});
+vi.mock("@tsconline/shared", async (importOriginal) => {
+  const actual = await importOriginal<typeof shared>();
+  return {
+    assertAdminSharedUser: vi.fn().mockImplementation(actual.assertAdminSharedUser)
   };
 });
 vi.mock("../src/util", async () => {
@@ -215,7 +222,7 @@ const testNonAdminUser = {
 };
 
 const routes: { method: HTTPMethods; url: string; body?: object }[] = [
-  { method: "GET", url: "/admin/users" },
+  { method: "POST", url: "/admin/users" },
   {
     method: "POST",
     url: "/admin/user",
@@ -352,12 +359,12 @@ describe("adminCreateUser tests", () => {
   const checkForUsersWithUsernameOrEmail = vi.spyOn(database, "checkForUsersWithUsernameOrEmail");
   const createUser = vi.spyOn(database, "createUser");
   const findUser = vi.spyOn(database, "findUser");
+  const deleteUser = vi.spyOn(database, "deleteUser");
   beforeEach(() => {
     vi.clearAllMocks();
   });
   test.each([
     { ...body, email: "" },
-    { ...body, username: "" },
     { ...body, password: "" },
     { ...body, email: "hi@gmailcom" },
     { ...body, email: "higmail.com" }
@@ -416,6 +423,8 @@ describe("adminCreateUser tests", () => {
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
     expect(createUser).toHaveBeenCalledWith(customUser);
     expect(createUser).toHaveBeenCalledTimes(1);
+    expect(deleteUser).toHaveBeenCalledOnce();
+    expect(deleteUser).toHaveBeenCalledWith({ email: customUser.email });
     expect(await response.json()).toEqual({ error: "Database error" });
     expect(response.statusCode).toBe(500);
   });
@@ -433,8 +442,10 @@ describe("adminCreateUser tests", () => {
     expect(createUser).toHaveBeenCalledWith(customUser);
     expect(createUser).toHaveBeenCalledTimes(1);
     expect(findUser).toHaveBeenNthCalledWith(1, { uuid: headers["mock-uuid"] });
-    expect(findUser).toHaveBeenNthCalledWith(2, { username: body.username });
+    expect(findUser).toHaveBeenNthCalledWith(2, { email: body.email });
     expect(findUser).toHaveBeenCalledTimes(2);
+    expect(deleteUser).toHaveBeenCalledOnce();
+    expect(deleteUser).toHaveBeenCalledWith({ email: customUser.email });
     expect(await response.json()).toEqual({ error: "Database error" });
     expect(response.statusCode).toBe(500);
   });
@@ -451,7 +462,7 @@ describe("adminCreateUser tests", () => {
     expect(createUser).toHaveBeenCalledWith(customUser);
     expect(createUser).toHaveBeenCalledTimes(1);
     expect(findUser).toHaveBeenNthCalledWith(1, { uuid: headers["mock-uuid"] });
-    expect(findUser).toHaveBeenNthCalledWith(2, { username: body.username });
+    expect(findUser).toHaveBeenNthCalledWith(2, { email: body.email });
     expect(findUser).toHaveBeenCalledTimes(2);
     expect(await response.json()).toEqual({ error: "Database error" });
     expect(response.statusCode).toBe(500);
@@ -469,7 +480,7 @@ describe("adminCreateUser tests", () => {
     expect(createUser).toHaveBeenCalledWith(customUser);
     expect(createUser).toHaveBeenCalledTimes(1);
     expect(findUser).toHaveBeenNthCalledWith(1, { uuid: headers["mock-uuid"] });
-    expect(findUser).toHaveBeenNthCalledWith(2, { username: body.username });
+    expect(findUser).toHaveBeenNthCalledWith(2, { email: body.email });
     expect(findUser).toHaveBeenCalledTimes(2);
     expect(await response.json()).toEqual({ message: "User created" });
     expect(response.statusCode).toBe(200);
@@ -1191,14 +1202,28 @@ describe("getUsers", () => {
   it("should return any users without passwords", async () => {
     findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser, testNonAdminUser]);
     const response = await app.inject({
-      method: "GET",
+      method: "POST",
       url: "/admin/users",
       headers
     });
     expect(await response.json()).toEqual({
       users: [
-        { ...testAdminUser, hashedPassword: undefined },
-        { ...testNonAdminUser, hashedPassword: undefined }
+        {
+          ...testAdminUser,
+          hashedPassword: undefined,
+          isAdmin: true,
+          isGoogleUser: false,
+          invalidateSession: false,
+          emailVerified: true
+        },
+        {
+          ...testNonAdminUser,
+          hashedPassword: undefined,
+          isAdmin: false,
+          isGoogleUser: false,
+          invalidateSession: false,
+          emailVerified: true
+        }
       ]
     });
     expect(response.statusCode).toBe(200);
@@ -1206,9 +1231,30 @@ describe("getUsers", () => {
   it("should return 404 if unknown error occurs", async () => {
     findUser.mockResolvedValueOnce([testAdminUser]).mockRejectedValueOnce(new Error());
     const response = await app.inject({
-      method: "GET",
+      method: "POST",
       url: "/admin/users",
       headers
+    });
+    expect(await response.json()).toEqual({ error: "Unknown error" });
+    expect(response.statusCode).toBe(404);
+  });
+  it("should return 404 if displayed users are not correctly processed", async () => {
+    const assertAdminSharedUser = vi.spyOn(shared, "assertAdminSharedUser").mockImplementationOnce(() => {
+      throw new Error();
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/users",
+      headers
+    });
+    expect(assertAdminSharedUser).toHaveBeenCalledTimes(1);
+    expect(assertAdminSharedUser).toHaveBeenCalledWith({
+      ...testAdminUser,
+      hashedPassword: undefined,
+      isAdmin: true,
+      isGoogleUser: false,
+      invalidateSession: false,
+      emailVerified: true
     });
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toBe(404);

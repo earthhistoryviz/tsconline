@@ -161,6 +161,24 @@ function createThemeOverrides(theme: Theme, primary: string) {
           }
         ]
       },
+      MuiTab: {
+        styleOverrides: {
+          root: {
+            "&.Mui-selected": {
+              color: primary
+            }
+          }
+        }
+      },
+      MuiTabs: {
+        styleOverrides: {
+          root: {
+            "& .MuiTabs-indicator": {
+              backgroundColor: primary
+            }
+          }
+        }
+      },
       MuiButton: {
         variants: [
           {
@@ -254,6 +272,11 @@ let baseTheme = createTheme({
         root: {
           minWidth: "0px"
         }
+      }
+    },
+    MuiTab: {
+      defaultProps: {
+        disableRipple: true
       }
     }
   }

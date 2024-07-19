@@ -1,0 +1,15 @@
+.admin-container {
+  margin-left: 50px;
+  margin-right: 50px;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-user-config-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin: auto;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}

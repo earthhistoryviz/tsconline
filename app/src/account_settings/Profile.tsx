@@ -15,13 +15,13 @@ import {
   Button,
   Badge
 } from "@mui/material";
-import { context } from "./state";
+import { context } from "../state";
 import PersonIcon from "@mui/icons-material/Person";
-import { ErrorCodes, ErrorMessages } from "./util/error-codes";
-import { fetcher, loadRecaptcha, removeRecaptcha, executeRecaptcha } from "./util";
-import { displayServerError } from "./state/actions/util-actions";
-import { Lottie, TSCButton, TSCPopupDialog, CustomFormControlLabel } from "./components";
-import loader from "./assets/icons/loading.json";
+import { ErrorCodes, ErrorMessages } from "../util/error-codes";
+import { fetcher, loadRecaptcha, removeRecaptcha, executeRecaptcha } from "../util";
+import { displayServerError } from "../state/actions/util-actions";
+import { Lottie, TSCButton, TSCPopupDialog, CustomFormControlLabel } from "../components";
+import loader from "../assets/icons/loading.json";
 import { useNavigate } from "react-router";
 import { observer } from "mobx-react-lite";
 import EditIcon from "@mui/icons-material/Edit";

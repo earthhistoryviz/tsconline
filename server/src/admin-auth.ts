@@ -71,7 +71,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
       pictureUrl: { type: "string" },
       isAdmin: { type: "number" }
     },
-    required: ["username", "email", "password"]
+    required: ["email", "password"]
   };
   const adminDeleteUserBody = {
     type: "object",
@@ -97,7 +97,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   };
   fastify.addHook("preHandler", verifyAdmin);
   fastify.addHook("preHandler", verifyRecaptcha);
-  fastify.get("/users", { config: { rateLimit: looseRateLimit } }, getUsers);
+  fastify.post("/users", { config: { rateLimit: looseRateLimit } }, getUsers);
   fastify.post(
     "/user",
     {
