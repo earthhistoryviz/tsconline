@@ -16,6 +16,9 @@ import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import FormatLineSpacingIcon from "@mui/icons-material/FormatLineSpacing";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
+import DoneAllIcon from "@mui/icons-material/DoneAll";
+
+const tooltipDelayTime = 700;
 
 const Status = observer(({ info }: { info: EventSearchInfo }) => {
   const { state } = useContext(context);
@@ -51,26 +54,61 @@ const Status = observer(({ info }: { info: EventSearchInfo }) => {
     const chartTopAge = state.settings.timeSettings[info.unit].topStageAge;
     const chartBaseAge = state.settings.timeSettings[info.unit].baseStageAge;
     const ages = info.age;
-    if (!ages) return false;
+    if (!ages) return true;
     if (ages.topAge >= chartTopAge && ages.baseAge <= chartBaseAge) {
       return true;
     }
     return false;
   };
+  if (!info.age) {
+    return (
+      <div>
+        {ColumnPathToRootOn() ? (
+          <CustomTooltip
+            enterDelay={tooltipDelayTime}
+            enterNextDelay={tooltipDelayTime}
+            disableInteractive
+            title="Column Toggled ON">
+            <DoneAllIcon color="success" />
+          </CustomTooltip>
+        ) : (
+          <CustomTooltip
+            enterDelay={tooltipDelayTime}
+            enterNextDelay={tooltipDelayTime}
+            disableInteractive
+            title="Column Toggled OFF">
+            <CloseIcon color="error" />
+          </CustomTooltip>
+        )}
+      </div>
+    );
+  }
   return (
     <div>
       {ColumnPathToRootOn() ? (
         isAgeWithinTimeInterval() ? (
-          <CustomTooltip enterDelay={1000} title="Column Toggled ON">
-            <CheckIcon color="success" />
+          <CustomTooltip
+            enterDelay={tooltipDelayTime}
+            enterNextDelay={tooltipDelayTime}
+            disableInteractive
+            title="Column Toggled ON, age within time interval">
+            <DoneAllIcon color="success" />
           </CustomTooltip>
         ) : (
-          <CustomTooltip enterDelay={1000} title="Column Toggled ON">
-            <CheckIcon color="success" />
+          <CustomTooltip
+            enterDelay={tooltipDelayTime}
+            enterNextDelay={tooltipDelayTime}
+            disableInteractive
+            title="Column Toggled ON, age not within time interval">
+            <CheckIcon sx={{ color: "orange" }} />
           </CustomTooltip>
         )
       ) : (
-        <CustomTooltip enterDelay={1000} title="Column Toggled OFF">
+        <CustomTooltip
+          enterDelay={tooltipDelayTime}
+          enterNextDelay={tooltipDelayTime}
+          disableInteractive
+          title="Column Toggled OFF, age not within time interval">
           <CloseIcon color="error" />
         </CustomTooltip>
       )}
@@ -90,16 +128,17 @@ const Column = observer(({ info }: { info: EventSearchInfo }) => {
       </SvgIcon>
     );
   }
-
   return (
     <>
       <div
+        className="search-result-column-container"
         onClick={() => {
           actions.toggleSettingsTabColumn(column);
         }}>
         <CustomTooltip
-          enterDelay={1000}
-          placement="right"
+          enterDelay={tooltipDelayTime}
+          enterNextDelay={tooltipDelayTime}
+          placement="bottom"
           title={columnPath.map((value, pathIndex) => (
             <div key={pathIndex}>{value}</div>
           ))}>
@@ -145,7 +184,11 @@ const Center = observer(({ info }: { info: EventSearchInfo }) => {
     actions.setBaseStageAge(truncToSecondDecimal(ages.baseAge), info.unit);
   };
   return (
-    <CustomTooltip title="center time interval on event">
+    <CustomTooltip
+      enterDelay={tooltipDelayTime}
+      enterNextDelay={tooltipDelayTime}
+      disableInteractive
+      title="center time interval on event">
       <IconButton
         onClick={() => {
           centerTimeOnEvent();
@@ -179,7 +222,11 @@ const Extend = observer(({ info }: { info: EventSearchInfo }) => {
     }
   };
   return (
-    <CustomTooltip title="extend time interval to include event">
+    <CustomTooltip
+      enterDelay={tooltipDelayTime}
+      enterNextDelay={tooltipDelayTime}
+      disableInteractive
+      title="extend time interval to include event">
       <IconButton
         onClick={() => {
           extendTimeToIncludeEvent();
@@ -251,6 +298,8 @@ const Notes = observer(({ info }: { info: EventSearchInfo }) => {
   }
   return (
     <CustomTooltip
+      enterDelay={tooltipDelayTime}
+      enterNextDelay={tooltipDelayTime}
       title={
         <Box className="search-result-info-container">
           <StyledScrollbar className="scroll-bar">
