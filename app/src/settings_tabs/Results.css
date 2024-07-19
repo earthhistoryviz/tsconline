@@ -18,20 +18,10 @@
   font-weight: 600;
 }
 
-.event-group-identifier-text {
-  font-weight: 600;
-}
-
-.search-result-age-container {
-  justify-content: center;
-  align-items: center;
-  display: flex;
-}
-
 .table-container {
   min-width: 50vw;
+  min-height: 65vh;
   height: 65vh;
-  margin-top: 2vh;
   resize: auto;
   overflow: hidden;
 }
@@ -40,6 +30,11 @@
   height: 100%;
   width: 100%;
 }
+
+.event-group-identifier-text {
+  font-weight: 600;
+}
+
 .search-result-status-column {
   min-width: 50px;
   max-width: 50px;
@@ -79,6 +74,12 @@
   cursor: pointer;
 }
 
+.search-result-age-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .search-result-info-container {
   min-width: 15vw;
   font-size: 15px;
@@ -91,6 +92,7 @@
 .scroll-bar {
   max-height: 200px;
 }
+
 .search-result-info a:visited {
   color: blueviolet;
 }

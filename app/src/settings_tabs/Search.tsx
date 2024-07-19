@@ -5,7 +5,6 @@ import "./Search.css";
 import { context } from "../state";
 import { Results } from "./Results";
 import { EventSearchInfo, GroupedEventSearchInfo } from "../types";
-
 export const Search = observer(function Search() {
   const { state, actions } = useContext(context);
   function makeColumnPath(name: string): string[] {
@@ -192,6 +191,7 @@ export const Search = observer(function Search() {
         </div>
         <TimeDisplay />
       </div>
+
       <Results groupedEvents={searchResultData()} />
     </div>
   );
