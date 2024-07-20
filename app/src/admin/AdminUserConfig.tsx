@@ -5,10 +5,10 @@ import { loadRecaptcha, removeRecaptcha } from "../util";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
-import { ColDef } from "ag-grid-community";
+import { ColDef, IDetailCellRendererParams } from "ag-grid-community";
 import { Box, useTheme } from "@mui/material";
 import { AdminAddUserForm } from "./AdminAddUserForm";
-import { AdminSharedUser, assertAdminSharedUser } from "@tsconline/shared";
+import { AdminSharedUser, DatapackIndex, assertAdminSharedUser } from "@tsconline/shared";
 import { TSCButton } from "../components";
 
 const checkboxRenderer = (params: { value: boolean }) => {
@@ -19,7 +19,7 @@ const checkboxRenderer = (params: { value: boolean }) => {
   }
 };
 
-const colDefs: ColDef[] = [
+const userColDefs: ColDef[] = [
   {
     headerName: "Username",
     field: "username",
@@ -63,7 +63,7 @@ const colDefs: ColDef[] = [
   },
   { headerName: "Picture URL", field: "pictureUrl", width: 80, autoHeaderHeight: true, wrapHeaderText: true, flex: 1 }
 ];
-const defaultCol = {
+const userDefaultColDefs = {
   flex: 2,
   minWidth: 80
 };
@@ -97,14 +97,14 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
   return (
     <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
       <AgGridReact
-        defaultColDef={defaultCol}
+        defaultColDef={userDefaultColDefs}
         ref={gridRef}
         isRowSelectable={(node) => node.data.email !== state.user.email}
         rowMultiSelectWithClick
         rowSelection="multiple"
-        columnDefs={colDefs}
+        rowDragManaged
+        columnDefs={userColDefs}
         rowData={state.admin.displayedUsers}
-        rowDragManaged={true}
       />
       <Box className="admin-user-config-buttons">
         <AdminAddUserForm />
@@ -112,4 +112,25 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
       </Box>
     </Box>
   );
+});
+
+const datapackColDefs: ColDef[] = [
+  { headerName: "Datapack Title", field: "title", sortable: true, filter: true, rowDrag: true, flex: 1 },
+  { headerName: "Age Units", field: "ageUnits", flex: 1 },
+  { headerName: "Description", field: "description", flex: 1 },
+  { headerName: "File Name", field: "file", flex: 1 },
+  { headerName: "Size", field: "size", flex: 1 },
+  { headerName: "Format Version", field: "formatVersion", flex: 1 },
+];
+type AdminDatapackDetailsProps = {
+  datapackIndex: DatapackIndex;
+}
+const AdminDatapackDetails: React.FC<AdminDatapackDetailsProps> = observer(({ datapackIndex }) => {
+  const theme = useTheme();
+  return <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
+    <AgGridReact
+      columnDefs={datapackColDefs}
+      rowData={Object.values(datapackIndex)}
+    />
+  </Box>;
 });
