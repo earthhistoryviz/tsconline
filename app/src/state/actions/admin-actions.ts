@@ -2,7 +2,7 @@ import { action } from "mobx";
 import { state } from "..";
 import { executeRecaptcha, fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import { AdminSharedUser, assertAdminSharedUserArray, assertDatapackIndex } from "@tsconline/shared";
+import { AdminSharedUser, assertAdminSharedUserArray, assertDatapackIndex, isServerResponseError } from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
 import { pushError, pushSnackbar } from "./general-actions";
 
@@ -153,6 +153,11 @@ export const adminDeleteUsers = action(async (users: AdminSharedUser[]) => {
   }
   let deletedAllUsers = true;
   for (const user of users) {
+    if (user.email === state.user.email) {
+      deletedAllUsers = false;
+      pushSnackbar("Proceed to account settings to delete your own account", "warning");
+      continue;
+    }
     const body = JSON.stringify({
       uuid: user.uuid
     });
@@ -170,11 +175,14 @@ export const adminDeleteUsers = action(async (users: AdminSharedUser[]) => {
         fetchUsers();
       } else {
         deletedAllUsers = false;
-        displayServerError(
-          await response.json(),
-          ErrorCodes.ADMIN_DELETE_USER_FAILED,
-          `${ErrorMessages[ErrorCodes.ADMIN_DELETE_USER_FAILED]}: ${user.username}`
-        );
+        const serverResponse = await response.json();
+        if (isServerResponseError(serverResponse)) {
+          if (response.status === 403 && serverResponse.error.includes("root")) {
+            pushError(ErrorCodes.CANNOT_DELETE_ROOT_USER);
+            continue;
+          }
+          console.error(`${ErrorMessages[ErrorCodes.ADMIN_DELETE_USER_FAILED]}\nUser: "${user.username}"\n with server response: ${serverResponse.error}`);
+        }
         continue;
       }
     } catch (e) {
@@ -185,7 +193,7 @@ export const adminDeleteUsers = action(async (users: AdminSharedUser[]) => {
   }
   if (deletedAllUsers) {
     pushSnackbar("Users deleted successfully", "success");
-  } else {
+  } else if (users.length > 1) {
     pushSnackbar("Some users were not deleted", "warning");
   }
 });
