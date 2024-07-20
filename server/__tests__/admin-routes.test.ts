@@ -572,6 +572,43 @@ describe("adminDeleteUser tests", () => {
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toBe(500);
   });
+  it("should return 403 if user is root user", async () => {
+    findUser
+      .mockResolvedValueOnce([testAdminUser])
+      .mockResolvedValueOnce([{ ...testAdminUser, email: "test@gmail.com" }]);
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/user",
+      payload: body,
+      headers
+    });
+    expect(findUser).toHaveBeenNthCalledWith(1, { uuid: headers["mock-uuid"] });
+    expect(findUser).toHaveBeenNthCalledWith(2, { uuid: body.uuid });
+    expect(findUser).toHaveBeenCalledTimes(2);
+    expect(deleteUser).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Cannot delete root user" });
+    expect(response.statusCode).toBe(403);
+  });
+  it("should return 403 if user is root user (process.env.ADMIN_EMAIL)", async () => {
+    const originalEnv = { ...process.env };
+    process.env.ADMIN_EMAIL = "test@admin.com";
+    findUser
+      .mockResolvedValueOnce([testAdminUser])
+      .mockResolvedValueOnce([{ ...testAdminUser, email: process.env.ADMIN_EMAIL }]);
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/user",
+      payload: body,
+      headers
+    });
+    expect(findUser).toHaveBeenNthCalledWith(1, { uuid: headers["mock-uuid"] });
+    expect(findUser).toHaveBeenNthCalledWith(2, { uuid: body.uuid });
+    expect(findUser).toHaveBeenCalledTimes(2);
+    expect(deleteUser).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Cannot delete root user" });
+    expect(response.statusCode).toBe(403);
+    process.env = originalEnv;
+  });
   it("should return 500 if deleteUser throws error", async () => {
     deleteUser.mockRejectedValueOnce(new Error());
     const response = await app.inject({

@@ -97,10 +97,13 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
   };
   return (
     <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
+      <Box className="admin-user-config-buttons">
+        <AdminAddUserForm />
+        <TSCButton onClick={deleteUsers}>Delete Selected Users</TSCButton>
+      </Box>
       <AgGridReact
         defaultColDef={userDefaultColDefs}
         ref={gridRef}
-        isRowSelectable={(node) => node.data.email !== state.user.email}
         rowMultiSelectWithClick
         rowSelection="multiple"
         rowDragManaged
@@ -117,10 +120,6 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
           }
         }}
       />
-      <Box className="admin-user-config-buttons">
-        <AdminAddUserForm />
-        <TSCButton onClick={deleteUsers}>Delete Selected Users</TSCButton>
-      </Box>
       <AdminDatapackDetails
         datapackIndex={Object.values(userDatapackIndex).reduce((acc, val) => ({ ...acc, ...val }), {})}
       />
