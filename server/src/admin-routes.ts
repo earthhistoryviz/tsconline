@@ -412,18 +412,18 @@ export const getAllUserDatapacks = async function getAllUserDatapacks(
     for (const path of paths) {
       const uuid = basename(path);
       const datapackIndexFilepath = join(path, "DatapackIndex.json");
+      let userDatapackIndex;
       try {
         await realpath(datapackIndexFilepath);
-        const datapackIndex = JSON.parse(await readFile(datapackIndexFilepath, "utf-8"));
+        userDatapackIndex = JSON.parse(await readFile(datapackIndexFilepath, "utf-8"));
         assertDatapackIndex(datapackIndex);
       } catch (e) {
         continue;
       }
       adminDisplayDatapacks[uuid] = {};
-      console.log(datapackIndex)
-      for (const datapack in datapackIndex) {
-        const datapackInfo = datapackIndex[datapack];
-        if (!datapackInfo) return;
+      for (const datapack in userDatapackIndex) {
+        const datapackInfo = userDatapackIndex[datapack];
+        if (!datapackInfo) continue;
         adminDisplayDatapacks[uuid]![datapack] = datapackInfo
       }
     }
