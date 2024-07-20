@@ -169,7 +169,7 @@ server.register(cors, {
   credentials: true
 });
 
-server.register(fastifyCompress, { global: true, threshold: 2048 });
+server.register(fastifyCompress, { global: true, threshold: 1024 * 20 });
 
 // removes the cached public/cts directory
 server.post("/removecache", async (request, reply) => {

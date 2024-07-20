@@ -73,7 +73,11 @@ export const adminFetchUserDatapacks = action("adminFetchUserDatapacks", async (
     if (response.ok) {
       const index = await response.json();
       assertDatapackIndex(index);
+      return index;
     } else {
+      if (response.status === 404) {
+        return null;
+      }
       displayServerError(
         await response.json(),
         ErrorCodes.UNABLE_TO_FETCH_USER_DATAPACKS,
@@ -84,8 +88,8 @@ export const adminFetchUserDatapacks = action("adminFetchUserDatapacks", async (
     console.error(error);
     pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
   }
-}
-);
+  return null;
+});
 
 export const setUsers = action((users: AdminSharedUser[]) => {
   state.admin.displayedUsers = users;

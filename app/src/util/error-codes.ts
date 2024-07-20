@@ -56,7 +56,7 @@ export enum ErrorCodes {
   ADMIN_DELETE_USER_FAILED = "ADMIN_DELETE_USER_FAILED",
   SERVER_TIMEOUT = "SERVER_TIMEOUT",
   SERVER_BUSY = "SERVER_BUSY",
-  UNABLE_TO_FETCH_USER_DATAPACKS = "UNABLE_TO_FETCH_USER_DATAPACKS",
+  UNABLE_TO_FETCH_USER_DATAPACKS = "UNABLE_TO_FETCH_USER_DATAPACKS"
 }
 
 export const ErrorMessages = {
@@ -125,5 +125,5 @@ export const ErrorMessages = {
   [ErrorCodes.SERVER_TIMEOUT]: "Server timed out. Please try again later.",
   [ErrorCodes.SERVER_BUSY]: "Server is too busy. Please try again later."
   [ErrorCodes.ADMIN_DELETE_USER_FAILED]: "Unable to delete user. Please try again later.",
-  [ErrorCodes.UNABLE_TO_FETCH_USER_DATAPACKS]: "Unable to fetch user datapacks. Please try again later.",
+  [ErrorCodes.UNABLE_TO_FETCH_USER_DATAPACKS]: "Unable to fetch user datapacks. Please try again later."
 };

@@ -277,10 +277,13 @@ export function getBytes(bytes: number) {
 
 export async function verifyFilepath(filepath: string) {
   const root = process.cwd();
-  filepath = await realpath(path.resolve(filepath));
-  if (!filepath.startsWith(root)) {
+  try {
+    filepath = await realpath(path.resolve(filepath));
+    if (!filepath.startsWith(root)) {
+      return false;
+    }
+  } catch {
     return false;
   }
   return true;
 }
-
