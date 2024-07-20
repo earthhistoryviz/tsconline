@@ -148,5 +148,9 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     },
     adminDeleteServerDatapack
   );
-  fastify.post("/user/datapacks", { schema: { body: adminUUIDbody }, config: { rateLimit: looseRateLimit } }, getAllUserDatapacks);
+  fastify.post(
+    "/user/datapacks",
+    { schema: { body: adminUUIDbody }, config: { rateLimit: looseRateLimit } },
+    getAllUserDatapacks
+  );
 };

@@ -17,7 +17,6 @@ import { execFile } from "node:child_process";
 import { promisify } from "util";
 import { assertAdminSharedUser, assertDatapackIndex } from "@tsconline/shared";
 import { DatapackDescriptionInfo, NewUser } from "./types.js";
-import { glob } from "glob";
 
 /**
  * Get all users for admin to configure on frontend
@@ -402,18 +401,15 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
   reply.status(200).send({ message: `Datapack ${datapack} deleted` });
 };
 
-export const getAllUserDatapacks = async function getAllUserDatapacks(
-  request: FastifyRequest,
-  reply: FastifyReply
-) {
+export const getAllUserDatapacks = async function getAllUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
   const { uuid } = request.body as { uuid: string };
   if (!uuid) {
     reply.status(400).send({ error: "Missing uuid in body" });
     return;
   }
-  const datapackIndexFilepath = join(assetconfigs.uploadDirectory, uuid, "datapack-index.json");
+  const datapackIndexFilepath = join(assetconfigs.uploadDirectory, uuid, "DatapackIndex.json");
   if (!(await verifyFilepath(datapackIndexFilepath))) {
-    reply.status(403).send({ error: "Directory traversal detected" });
+    reply.send({});
     return;
   }
   let userDatapackIndex;
@@ -424,4 +420,4 @@ export const getAllUserDatapacks = async function getAllUserDatapacks(
     reply.status(500).send({ error: "Error reading user datapack index, possible corruption of file" });
   }
   reply.send(userDatapackIndex);
-}
+};

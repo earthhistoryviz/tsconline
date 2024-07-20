@@ -73,7 +73,7 @@ vi.mock("../src/util", async () => {
       removeDevDatapacks: ["remove-datapack.dpk"]
     },
     checkFileExists: vi.fn().mockResolvedValue(true),
-    verifyFilepath: vi.fn().mockReturnValue(true),
+    verifyFilepath: vi.fn().mockReturnValue(true)
   };
 });
 
@@ -89,7 +89,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => { });
+        readable.on("data", () => {});
         readable.on("end", () => {
           resolve();
         });
@@ -200,7 +200,7 @@ beforeAll(async () => {
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => { });
+  vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 afterAll(async () => {
@@ -1469,12 +1469,12 @@ describe("getAllUserDatapacks", () => {
   const verifyFilepath = vi.spyOn(util, "verifyFilepath");
   const payload = {
     uuid: "test-uuid"
-  }
+  };
   const testParsingPack = {
     "test-datapack.dpk": {
       mock: "test-datapack"
     }
-  }
+  };
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -1529,7 +1529,7 @@ describe("getAllUserDatapacks", () => {
     expect(await response.json()).toEqual({ error: "Error reading user datapack index, possible corruption of file" });
     expect(response.statusCode).toBe(500);
   });
-  it("should return 403 if the filepath is bad", async () => {
+  it("should return 200 if the filepath is bad/doesn't exist", async () => {
     verifyFilepath.mockResolvedValueOnce(false);
     const response = await app.inject({
       method: "POST",
@@ -1539,7 +1539,7 @@ describe("getAllUserDatapacks", () => {
     });
     expect(readFile).toHaveBeenCalledTimes(0);
     expect(assertDatapackIndex).toHaveBeenCalledTimes(0);
-    expect(await response.json()).toEqual({ error: "Directory traversal detected" });
-    expect(response.statusCode).toBe(403);
+    expect(await response.json()).toEqual({});
+    expect(response.statusCode).toBe(200);
   });
-})
+});

@@ -1,11 +1,11 @@
 import { observer } from "mobx-react-lite";
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { context } from "../state";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
-import { ColDef, IDetailCellRendererParams } from "ag-grid-community";
+import { ColDef } from "ag-grid-community";
 import { Box, useTheme } from "@mui/material";
 import { AdminAddUserForm } from "./AdminAddUserForm";
 import { AdminSharedUser, DatapackIndex, assertAdminSharedUser } from "@tsconline/shared";
@@ -70,6 +70,7 @@ const userDefaultColDefs = {
 
 export const AdminUserConfig = observer(function AdminUserConfig() {
   const { state, actions } = useContext(context);
+  const [userDatapackIndex, setUserDatapackIndex] = useState<{ [uuid: string]: DatapackIndex }>({});
   const theme = useTheme();
   const gridRef = useRef<AgGridReact<AdminSharedUser>>(null);
   useEffect(() => {
@@ -105,11 +106,24 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
         rowDragManaged
         columnDefs={userColDefs}
         rowData={state.admin.displayedUsers}
+        onRowSelected={async (event) => {
+          if (event.node.isSelected()) {
+            if (!event.data.uuid || typeof event.data.uuid !== "string") return;
+            const datapackIndex = await actions.adminFetchUserDatapacks(event.data.uuid);
+            if (!datapackIndex) return;
+            setUserDatapackIndex({ ...userDatapackIndex, [event.data.uuid]: datapackIndex });
+          } else {
+            setUserDatapackIndex({ ...userDatapackIndex, [event.data.uuid]: {} });
+          }
+        }}
       />
       <Box className="admin-user-config-buttons">
         <AdminAddUserForm />
         <TSCButton onClick={deleteUsers}>Delete Selected Users</TSCButton>
       </Box>
+      <AdminDatapackDetails
+        datapackIndex={Object.values(userDatapackIndex).reduce((acc, val) => ({ ...acc, ...val }), {})}
+      />
     </Box>
   );
 });
@@ -120,17 +134,16 @@ const datapackColDefs: ColDef[] = [
   { headerName: "Description", field: "description", flex: 1 },
   { headerName: "File Name", field: "file", flex: 1 },
   { headerName: "Size", field: "size", flex: 1 },
-  { headerName: "Format Version", field: "formatVersion", flex: 1 },
+  { headerName: "Format Version", field: "formatVersion", flex: 1 }
 ];
 type AdminDatapackDetailsProps = {
   datapackIndex: DatapackIndex;
-}
+};
 const AdminDatapackDetails: React.FC<AdminDatapackDetailsProps> = observer(({ datapackIndex }) => {
   const theme = useTheme();
-  return <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
-    <AgGridReact
-      columnDefs={datapackColDefs}
-      rowData={Object.values(datapackIndex)}
-    />
-  </Box>;
+  return (
+    <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
+      <AgGridReact columnDefs={datapackColDefs} rowData={Object.values(datapackIndex)} />
+    </Box>
+  );
 });
