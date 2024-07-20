@@ -1473,6 +1473,7 @@ describe("adminDeleteServerDatapack", () => {
 describe("getAllUserDatapacks", () => {
   const globSpy = vi.spyOn(glob, "glob");
   const readFile = vi.spyOn(fsPromises, "readFile");
+  const realpath = vi.spyOn(fsPromises, "realpath");
   const assertDatapackIndex = vi.spyOn(shared, "assertDatapackIndex");
   const testParsingPack = {
     "test-datapack.dpk": {
@@ -1486,10 +1487,10 @@ describe("getAllUserDatapacks", () => {
   }
   beforeEach(() => {
     vi.clearAllMocks();
+    globSpy.mockResolvedValueOnce(["testdir/uploadDir/test-uuid"])
   });
   it("should return 200 and all datapacks for a user", async () => {
-    globSpy.mockResolvedValueOnce(["testdir/uploadDir/test-uuid"])
-    readFile.mockResolvedValueOnce(Buffer.from(JSON.stringify(testParsingPack)));
+    readFile.mockResolvedValueOnce(JSON.stringify(testParsingPack));
     const response = await app.inject({
       method: "POST",
       url: "/admin/user/datapacks",
@@ -1499,4 +1500,53 @@ describe("getAllUserDatapacks", () => {
     expect(await response.json()).toEqual({ datapacks: test });
     expect(response.statusCode).toBe(200);
   });
+  it("should return 200 and no datapacks when readFile fails", async () => {
+    readFile.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/user/datapacks",
+      headers
+    });
+    expect(assertDatapackIndex).toHaveBeenCalledTimes(0);
+    expect(await response.json()).toEqual({ datapacks: {} });
+    expect(response.statusCode).toBe(200);
+  });
+  it("should return 200 and no datapacks when file path is bad", async () => {
+    realpath.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/user/datapacks",
+      headers
+    });
+    expect(readFile).toHaveBeenCalledTimes(0);
+    expect(assertDatapackIndex).toHaveBeenCalledTimes(0);
+    expect(await response.json()).toEqual({ datapacks: {} });
+    expect(response.statusCode).toBe(200);
+  });
+  it("should return 200 if glob finds no datapacks", async () => {
+    globSpy.mockReset();
+    globSpy.mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/user/datapacks",
+      headers
+    });
+    expect(readFile).toHaveBeenCalledTimes(0);
+    expect(assertDatapackIndex).toHaveBeenCalledTimes(0);
+    expect(await response.json()).toEqual({ datapacks: {} });
+    expect(response.statusCode).toBe(200);
+  });
+  it("should return 500 if glob fails", async () => {
+    globSpy.mockReset();
+    globSpy.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/user/datapacks",
+      headers
+    });
+    expect(readFile).toHaveBeenCalledTimes(0);
+    expect(assertDatapackIndex).toHaveBeenCalledTimes(0);
+    expect(await response.json()).toEqual({ error: "Unknown error" });
+    expect(response.statusCode).toBe(500);
+  })
 })
