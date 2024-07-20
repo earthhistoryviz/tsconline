@@ -1,6 +1,6 @@
 import fs, { createReadStream } from "fs";
 import path from "path";
-import { rm, readFile, access, mkdir, readdir, copyFile, writeFile } from "fs/promises";
+import { rm, readFile, access, mkdir, readdir, copyFile, writeFile, realpath } from "fs/promises";
 import { glob } from "glob";
 import { createInterface } from "readline/promises";
 import { constants } from "fs";
@@ -274,3 +274,13 @@ export function getBytes(bytes: number) {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
+
+export async function verifyFilepath(filepath: string) {
+  const root = process.cwd();
+  filepath = await realpath(path.resolve(filepath));
+  if (!filepath.startsWith(root)) {
+    return false;
+  }
+  return true;
+}
+
