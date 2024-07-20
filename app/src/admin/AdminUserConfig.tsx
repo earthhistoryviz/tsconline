@@ -109,6 +109,9 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
         rowDragManaged
         columnDefs={userColDefs}
         rowData={state.admin.displayedUsers}
+        onGridReady={() => {
+          setUserDatapackIndex({});
+        }}
         onRowSelected={async (event) => {
           if (event.node.isSelected()) {
             if (!event.data.uuid || typeof event.data.uuid !== "string") return;
