@@ -1,11 +1,11 @@
 import { observer } from "mobx-react-lite";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { context } from "../state";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
-import { ColDef } from "ag-grid-community";
+import { ColDef, GridReadyEvent } from "ag-grid-community";
 import { Box, useTheme } from "@mui/material";
 import { AdminAddUserForm } from "./AdminAddUserForm";
 import { AdminSharedUser, DatapackIndex, assertAdminSharedUser } from "@tsconline/shared";
@@ -109,9 +109,7 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
         rowDragManaged
         columnDefs={userColDefs}
         rowData={state.admin.displayedUsers}
-        onGridReady={() => {
-          setUserDatapackIndex({});
-        }}
+        onModelUpdated={() => setUserDatapackIndex({})}
         onRowSelected={async (event) => {
           if (event.node.isSelected()) {
             if (!event.data.uuid || typeof event.data.uuid !== "string") return;
@@ -132,9 +130,9 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
 
 const datapackColDefs: ColDef[] = [
   { headerName: "Datapack Title", field: "title", sortable: true, filter: true, rowDrag: true, flex: 1 },
+  { headerName: "File Name", field: "file", flex: 1, sortable: true, filter: true},
   { headerName: "Age Units", field: "ageUnits", flex: 1 },
   { headerName: "Description", field: "description", flex: 1 },
-  { headerName: "File Name", field: "file", flex: 1 },
   { headerName: "Size", field: "size", flex: 1 },
   { headerName: "Format Version", field: "formatVersion", flex: 1 }
 ];
@@ -145,7 +143,7 @@ const AdminDatapackDetails: React.FC<AdminDatapackDetailsProps> = observer(({ da
   const theme = useTheme();
   return (
     <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
-      <AgGridReact columnDefs={datapackColDefs} rowData={Object.values(datapackIndex)} />
+      <AgGridReact rowDragManaged columnDefs={datapackColDefs} rowData={Object.values(datapackIndex)} />
     </Box>
   );
 });
