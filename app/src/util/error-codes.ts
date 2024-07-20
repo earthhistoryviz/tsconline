@@ -57,7 +57,8 @@ export enum ErrorCodes {
   SERVER_TIMEOUT = "SERVER_TIMEOUT",
   SERVER_BUSY = "SERVER_BUSY",
   UNABLE_TO_FETCH_USER_DATAPACKS = "UNABLE_TO_FETCH_USER_DATAPACKS",
-  CANNOT_DELETE_ROOT_USER = "CANNOT_DELETE_ROOT_USER"
+  CANNOT_DELETE_ROOT_USER = "CANNOT_DELETE_ROOT_USER",
+  ADMIN_DELETE_USER_DATAPACK_FAILED = "ADMIN_DELETE_USER_DATAPACK_FAILED"
 }
 
 export const ErrorMessages = {
@@ -127,5 +128,6 @@ export const ErrorMessages = {
   [ErrorCodes.SERVER_BUSY]: "Server is too busy. Please try again later."
   [ErrorCodes.ADMIN_DELETE_USER_FAILED]: "Unable to delete user. Please try again later.",
   [ErrorCodes.UNABLE_TO_FETCH_USER_DATAPACKS]: "Unable to fetch user datapacks. Please try again later.",
-  [ErrorCodes.CANNOT_DELETE_ROOT_USER]: "Cannot delete root user."
+  [ErrorCodes.CANNOT_DELETE_ROOT_USER]: "Cannot delete root user.",
+  [ErrorCodes.ADMIN_DELETE_USER_DATAPACK_FAILED]: "Unable to delete user datapack. Please try again later."
 };

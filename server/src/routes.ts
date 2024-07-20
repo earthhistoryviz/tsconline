@@ -406,7 +406,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       return;
     }
   }
-  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [datapackInfo], true);
+  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [datapackInfo], uuid);
   if (!datapackIndex[filename]) {
     await errorHandler("Failed to load decrypted datapack", 500);
     return;
