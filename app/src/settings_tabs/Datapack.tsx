@@ -113,7 +113,7 @@ type DatapackMenuProps = {
 export const DatapackMenu: React.FC<DatapackMenuProps> = ({ name, button }) => {
   const { actions } = useContext(context);
   return (
-    state.datapackIndex[name].isUserDatapack && (
+    state.datapackIndex[name].uuid && (
       <Menu
         direction="bottom"
         align="start"

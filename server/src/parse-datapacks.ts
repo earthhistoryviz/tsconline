@@ -149,7 +149,7 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
 export async function parseDatapacks(
   datapackInfo: DatapackDescriptionInfo,
   decryptFilePath: string,
-  isUserDatapack: boolean = false
+  uuid?: string
 ): Promise<DatapackParsingPack | null> {
   const decryptPaths = await grabFilepaths([datapackInfo.file], decryptFilePath, "datapacks");
   if (decryptPaths.length == 0)
@@ -287,8 +287,8 @@ export async function parseDatapacks(
     file: datapackInfo.file,
     size: datapackInfo.size,
 
-    isUserDatapack,
-    image: ""
+    image: "",
+    ...(uuid ? { uuid } : {})
   };
   assertDatapackParsingPack(datapackParsingPack);
   if (date) datapackParsingPack.date = date;

@@ -1,14 +1,14 @@
 import { observer } from "mobx-react-lite";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { context } from "../state";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
-import { ColDef, GridReadyEvent } from "ag-grid-community";
+import { ColDef } from "ag-grid-community";
 import { Box, Divider, Typography, useTheme } from "@mui/material";
 import { AdminAddUserForm } from "./AdminAddUserForm";
-import { AdminSharedUser, DatapackIndex, assertAdminSharedUser } from "@tsconline/shared";
+import { AdminSharedUser, DatapackIndex, DatapackParsingPack, assertAdminSharedUser } from "@tsconline/shared";
 import { TSCButton } from "../components";
 
 const checkboxRenderer = (params: { value: boolean }) => {
@@ -65,7 +65,7 @@ const userColDefs: ColDef[] = [
 ];
 const userDefaultColDefs = {
   flex: 2,
-  minWidth: 80,
+  minWidth: 80
 };
 
 export const AdminUserConfig = observer(function AdminUserConfig() {
@@ -76,7 +76,7 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
   useEffect(() => {
     if (!state.user.isAdmin) return;
     loadRecaptcha().then(async () => {
-      await actions.fetchUsers();
+      await actions.adminFetchUsers();
     });
     return () => {
       removeRecaptcha();
@@ -90,7 +90,7 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
         assertAdminSharedUser(node.data);
         return node.data;
       });
-      actions.adminDeleteUsers(users);
+      await actions.adminDeleteUsers(users);
     } catch (e) {
       console.error(e);
     }
@@ -122,7 +122,7 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
         }}
       />
       <Box mt="20px">
-        <Typography variant="h5">Selected Users' Datapcks</Typography>
+        <Typography variant="h5">Selected Users&apos; Datapacks</Typography>
         <Box m="20px">
           <Divider />
         </Box>
@@ -135,8 +135,16 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
 });
 
 const datapackColDefs: ColDef[] = [
-  { headerName: "Datapack Title", field: "title", sortable: true, filter: true, rowDrag: true, flex: 1 },
-  { headerName: "File Name", field: "file", flex: 1, sortable: true, filter: true},
+  {
+    headerName: "Datapack Title",
+    field: "title",
+    sortable: true,
+    filter: true,
+    rowDrag: true,
+    flex: 1,
+    checkboxSelection: true
+  },
+  { headerName: "File Name", field: "file", flex: 1, sortable: true, filter: true },
   { headerName: "Age Units", field: "ageUnits", flex: 1 },
   { headerName: "Description", field: "description", flex: 1 },
   { headerName: "Size", field: "size", flex: 1 },
@@ -147,9 +155,31 @@ type AdminDatapackDetailsProps = {
 };
 const AdminDatapackDetails: React.FC<AdminDatapackDetailsProps> = observer(({ datapackIndex }) => {
   const theme = useTheme();
+  const { actions } = useContext(context);
+  const gridRef = useRef<AgGridReact<DatapackParsingPack>>(null);
+  const deleteDatapacks = async () => {
+    const selectedNodes = gridRef.current?.api.getSelectedNodes();
+    if (!selectedNodes || !selectedNodes.length) return;
+    try {
+      const datapacks = selectedNodes.map((node) => {
+        if (!node.data?.file || !node.data?.uuid) throw new Error("Invalid datapack");
+        return { uuid: node.data.uuid, datapack: node.data.file };
+      });
+      await actions.adminDeleteUserDatapacks(datapacks);
+    } catch (e) {
+      console.error(e);
+    }
+  };
   return (
     <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
-      <AgGridReact rowDragManaged columnDefs={datapackColDefs} rowData={Object.values(datapackIndex)} />
+      <AgGridReact
+        ref={gridRef}
+        rowSelection="multiple"
+        rowDragManaged
+        columnDefs={datapackColDefs}
+        rowData={Object.values(datapackIndex)}
+      />
+      <TSCButton onClick={deleteDatapacks}>Delete Selected Datapacks</TSCButton>
     </Box>
   );
 });
