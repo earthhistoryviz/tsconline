@@ -10,6 +10,7 @@ import NotesIcon from "@mui/icons-material/Notes";
 import { useTheme } from "@mui/material/styles";
 import { EventSearchInfo, GroupedEventSearchInfo } from "../types";
 import { trimQuotes } from "../util/util";
+import bigDecimal from "js-big-decimal";
 import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import FormatLineSpacingIcon from "@mui/icons-material/FormatLineSpacing";
@@ -169,14 +170,16 @@ const Column = observer(({ info }: { info: EventSearchInfo }) => {
 
 const verifyAgesAndAddAgeMargin = (age: { topAge: number; baseAge: number } | undefined) => {
   if (!age) return null;
-  let { topAge, baseAge } = age;
-  if ((topAge -= 3) < 0) {
-    topAge = 0;
+  let min = age.topAge;
+  let max = age.baseAge;
+  //for floating point inaccuracies
+  if (Number(bigDecimal.add(String(min), "-3")) < 0) {
+    min = 0;
   }
-  if ((baseAge += 3) < 0) {
-    baseAge = 0;
+  if (Number(bigDecimal.add(String(min), "3")) < 0) {
+    max = 0;
   }
-  return { topAge: topAge, baseAge: baseAge };
+  return { topAge: min, baseAge: max };
 };
 
 const Center = observer(({ info }: { info: EventSearchInfo }) => {
@@ -326,6 +329,12 @@ const Notes = observer(({ info }: { info: EventSearchInfo }) => {
       </SvgIcon>
     );
   }
+  const addTargetBlank = (html: string) => {
+    return html.replace(/<a\s+href=/g, '<a target="_blank" href=');
+  };
+
+  const content = trimQuotes(info.notes).replaceAll('""', '"');
+  const processedContent = addTargetBlank(content);
   return (
     <CustomTooltip
       enterDelay={tooltipDelayTime}
@@ -337,7 +346,7 @@ const Notes = observer(({ info }: { info: EventSearchInfo }) => {
             <Box
               className="search-result-info"
               sx={{ "& a": { color: "button.main" } }}
-              dangerouslySetInnerHTML={{ __html: trimQuotes(info.notes).replaceAll('""', '"') }}
+              dangerouslySetInnerHTML={{ __html: processedContent }}
             />
           </StyledScrollbar>
         </Box>
