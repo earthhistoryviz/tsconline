@@ -2,7 +2,7 @@ import { action } from "mobx";
 import { state } from "..";
 import { executeRecaptcha, fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import { AdminSharedUser, assertAdminSharedUserArray } from "@tsconline/shared";
+import { AdminSharedUser, assertAdminSharedUserArray, assertDatapackIndex } from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
 import { pushError, pushSnackbar } from "./general-actions";
 
@@ -47,6 +47,45 @@ export const fetchUsers = action(async () => {
     return;
   }
 });
+
+export const adminFetchUserDatapacks = action("adminFetchUserDatapacks", async (uuid: string) => {
+  let recaptchaToken: string;
+  try {
+    recaptchaToken = await executeRecaptcha("displayUsers");
+    if (!recaptchaToken) {
+      pushError(ErrorCodes.RECAPTCHA_FAILED);
+      return;
+    }
+  } catch (error) {
+    pushError(ErrorCodes.RECAPTCHA_FAILED);
+    return;
+  }
+  try {
+    const response = await fetcher("/admin/user/datapacks", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "recaptcha-token": recaptchaToken
+      },
+      body: JSON.stringify({ uuid }),
+      credentials: "include"
+    });
+    if (response.ok) {
+      const index = await response.json();
+      assertDatapackIndex(index);
+    } else {
+      displayServerError(
+        await response.json(),
+        ErrorCodes.UNABLE_TO_FETCH_USER_DATAPACKS,
+        ErrorMessages[ErrorCodes.UNABLE_TO_FETCH_USER_DATAPACKS]
+      );
+    }
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+}
+);
 
 export const setUsers = action((users: AdminSharedUser[]) => {
   state.admin.displayedUsers = users;
