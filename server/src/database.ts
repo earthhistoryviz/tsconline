@@ -87,10 +87,10 @@ export async function initializeDatabase() {
       resolve();
     });
   });
-  const admin = await findUser({
-    username: process.env.ADMIN_USER || "admin",
-    email: process.env.ADMIN_EMAIL || "test@gmail.com"
-  });
+  const admin = await checkForUsersWithUsernameOrEmail(
+    process.env.ADMIN_USER || "admin",
+    process.env.ADMIN_EMAIL || "test@gmail.com"
+  );
   if (!admin || admin.length == 0) {
     await createUser({
       username: process.env.ADMIN_USER || "admin",
