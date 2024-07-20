@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { deleteUser } from "./database.js";
 import { resolve, basename, extname, join } from "path";
-import { adminconfig, assetconfigs, checkFileExists, getBytes } from "./util.js";
+import { adminconfig, assetconfigs, checkFileExists, getBytes, verifyFilepath } from "./util.js";
 import { createWriteStream } from "fs";
 import { readFile, realpath, rm, writeFile } from "fs/promises";
 import { deleteDatapack, loadFileMetadata } from "./file-metadata-handler.js";
@@ -15,7 +15,7 @@ import validator from "validator";
 import { pipeline } from "stream/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "util";
-import { AdminDisplayDatapacks, assertAdminSharedUser, assertDatapackIndex } from "@tsconline/shared";
+import { assertAdminSharedUser, assertDatapackIndex } from "@tsconline/shared";
 import { DatapackDescriptionInfo, NewUser } from "./types.js";
 import { glob } from "glob";
 
@@ -403,32 +403,25 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
 };
 
 export const getAllUserDatapacks = async function getAllUserDatapacks(
-  _request: FastifyRequest,
+  request: FastifyRequest,
   reply: FastifyReply
 ) {
-  try {
-    let paths = await glob(`${assetconfigs.uploadDirectory}/*`);
-    const adminDisplayDatapacks: AdminDisplayDatapacks = {}
-    for (const path of paths) {
-      const uuid = basename(path);
-      const datapackIndexFilepath = join(path, "DatapackIndex.json");
-      let userDatapackIndex;
-      try {
-        await realpath(datapackIndexFilepath);
-        userDatapackIndex = JSON.parse(await readFile(datapackIndexFilepath, "utf-8"));
-        assertDatapackIndex(datapackIndex);
-      } catch (e) {
-        continue;
-      }
-      adminDisplayDatapacks[uuid] = {};
-      for (const datapack in userDatapackIndex) {
-        const datapackInfo = userDatapackIndex[datapack];
-        if (!datapackInfo) continue;
-        adminDisplayDatapacks[uuid]![datapack] = datapackInfo
-      }
-    }
-    reply.send({ datapacks: adminDisplayDatapacks });
-  } catch (error) {
-    reply.status(500).send({ error: "Unknown error" });
+  const { uuid } = request.body as { uuid: string };
+  if (!uuid) {
+    reply.status(400).send({ error: "Missing uuid in body" });
+    return;
   }
+  const datapackIndexFilepath = join(assetconfigs.uploadDirectory, uuid, "datapack-index.json");
+  if (!(await verifyFilepath(datapackIndexFilepath))) {
+    reply.status(403).send({ error: "Directory traversal detected" });
+    return;
+  }
+  let userDatapackIndex;
+  try {
+    userDatapackIndex = JSON.parse(await readFile(datapackIndexFilepath, "utf-8"));
+    assertDatapackIndex(datapackIndex);
+  } catch (e) {
+    reply.status(500).send({ error: "Error reading user datapack index, possible corruption of file" });
+  }
+  reply.send(userDatapackIndex);
 }

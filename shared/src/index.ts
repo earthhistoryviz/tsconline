@@ -34,12 +34,6 @@ export type MapPackInfoChunk = {
   totalChunks: number;
 };
 
-export type AdminDisplayDatapacks = {
-  [uuid: string]: {
-    [datapack: string]: DatapackParsingPack;
-  }
-}
-
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 
 export type DatapackParsingPack = {
@@ -1107,14 +1101,6 @@ export function assertDisplayedColumnTypes(o: any): asserts o is DisplayedColumn
     )
   )
     throw new Error("DisplayedColumnTypes must be a string of a valid column type. Found value + " + o);
-}
-
-export function assertAdminDisplayDatapacks(o: any): asserts o is AdminDisplayDatapacks {
-  if (!o || typeof o !== "object") throw new Error("AdminDisplayDatapacks must be an object");
-  for (const key in o) {
-    const datapack = o[key];
-    assertDatapackParsingPack(datapack);
-  }
 }
 
 export function assertColumnInfo(o: any): asserts o is ColumnInfo {

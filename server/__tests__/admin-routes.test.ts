@@ -11,20 +11,12 @@ import * as util from "../src/util";
 import * as streamPromises from "stream/promises";
 import * as index from "../src/index";
 import * as shared from "@tsconline/shared";
-import * as glob from "glob"
 import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach } from "vitest";
 import fastifySecureSession from "@fastify/secure-session";
 import { normalize, resolve } from "path";
 import fastifyMultipart from "@fastify/multipart";
 import formAutoContent from "form-auto-content";
 import { DatapackParsingPack, MapPack } from "@tsconline/shared";
-
-vi.mock("glob", async (importOriginal) => {
-  const actual = await importOriginal<typeof glob>();
-  return {
-    glob: vi.fn().mockImplementation(actual.glob)
-  };
-});
 
 vi.mock("node:child_process", async () => {
   return {
@@ -80,7 +72,8 @@ vi.mock("../src/util", async () => {
       ],
       removeDevDatapacks: ["remove-datapack.dpk"]
     },
-    checkFileExists: vi.fn().mockResolvedValue(true)
+    checkFileExists: vi.fn().mockResolvedValue(true),
+    verifyFilepath: vi.fn().mockReturnValue(true),
   };
 });
 
@@ -241,7 +234,7 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   { method: "DELETE", url: "/admin/user/datapack", body: { uuid: "test", datapack: "test" } },
   { method: "DELETE", url: "/admin/server/datapack", body: { datapack: "test" } },
   { method: "POST", url: "/admin/server/datapack", body: { datapack: "test" } },
-  { method: "POST", url: "/admin/user/datapacks" }
+  { method: "POST", url: "/admin/user/datapacks", body: { uuid: "test" } }
 ];
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
 describe("verifyAdmin tests", () => {
@@ -1471,82 +1464,82 @@ describe("adminDeleteServerDatapack", () => {
 });
 
 describe("getAllUserDatapacks", () => {
-  const globSpy = vi.spyOn(glob, "glob");
   const readFile = vi.spyOn(fsPromises, "readFile");
-  const realpath = vi.spyOn(fsPromises, "realpath");
   const assertDatapackIndex = vi.spyOn(shared, "assertDatapackIndex");
+  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
+  const payload = {
+    uuid: "test-uuid"
+  }
   const testParsingPack = {
     "test-datapack.dpk": {
       mock: "test-datapack"
     }
   }
-  const test = {
-    "test-uuid": {
-      ...testParsingPack
-    }
-  }
   beforeEach(() => {
     vi.clearAllMocks();
-    globSpy.mockResolvedValueOnce(["testdir/uploadDir/test-uuid"])
   });
   it("should return 200 and all datapacks for a user", async () => {
     readFile.mockResolvedValueOnce(JSON.stringify(testParsingPack));
     const response = await app.inject({
       method: "POST",
       url: "/admin/user/datapacks",
+      payload,
       headers
     });
     expect(assertDatapackIndex).toHaveBeenCalledTimes(1);
-    expect(await response.json()).toEqual({ datapacks: test });
+    expect(await response.json()).toEqual(testParsingPack);
     expect(response.statusCode).toBe(200);
   });
-  it("should return 200 and no datapacks when readFile fails", async () => {
+  it("should return 400 if incorrect body", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/user/datapacks",
+      payload: {},
+      headers
+    });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body must have required property 'uuid'",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if uuid is empty", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/user/datapacks",
+      payload: { uuid: "" },
+      headers
+    });
+    expect(readFile).toHaveBeenCalledTimes(0);
+    expect(assertDatapackIndex).toHaveBeenCalledTimes(0);
+    expect(await response.json()).toEqual({ error: "Missing uuid in body" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 500 when readFile fails", async () => {
     readFile.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "POST",
       url: "/admin/user/datapacks",
+      payload,
       headers
     });
     expect(assertDatapackIndex).toHaveBeenCalledTimes(0);
-    expect(await response.json()).toEqual({ datapacks: {} });
-    expect(response.statusCode).toBe(200);
-  });
-  it("should return 200 and no datapacks when file path is bad", async () => {
-    realpath.mockRejectedValueOnce(new Error());
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/user/datapacks",
-      headers
-    });
-    expect(readFile).toHaveBeenCalledTimes(0);
-    expect(assertDatapackIndex).toHaveBeenCalledTimes(0);
-    expect(await response.json()).toEqual({ datapacks: {} });
-    expect(response.statusCode).toBe(200);
-  });
-  it("should return 200 if glob finds no datapacks", async () => {
-    globSpy.mockReset();
-    globSpy.mockResolvedValueOnce([]);
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/user/datapacks",
-      headers
-    });
-    expect(readFile).toHaveBeenCalledTimes(0);
-    expect(assertDatapackIndex).toHaveBeenCalledTimes(0);
-    expect(await response.json()).toEqual({ datapacks: {} });
-    expect(response.statusCode).toBe(200);
-  });
-  it("should return 500 if glob fails", async () => {
-    globSpy.mockReset();
-    globSpy.mockRejectedValueOnce(new Error());
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/user/datapacks",
-      headers
-    });
-    expect(readFile).toHaveBeenCalledTimes(0);
-    expect(assertDatapackIndex).toHaveBeenCalledTimes(0);
-    expect(await response.json()).toEqual({ error: "Unknown error" });
+    expect(await response.json()).toEqual({ error: "Error reading user datapack index, possible corruption of file" });
     expect(response.statusCode).toBe(500);
-  })
+  });
+  it("should return 403 if the filepath is bad", async () => {
+    verifyFilepath.mockResolvedValueOnce(false);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/user/datapacks",
+      payload,
+      headers
+    });
+    expect(readFile).toHaveBeenCalledTimes(0);
+    expect(assertDatapackIndex).toHaveBeenCalledTimes(0);
+    expect(await response.json()).toEqual({ error: "Directory traversal detected" });
+    expect(response.statusCode).toBe(403);
+  });
 })
