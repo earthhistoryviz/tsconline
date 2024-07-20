@@ -121,6 +121,11 @@ export const adminDeleteUser = async function adminDeleteUser(
       reply.status(404).send({ error: "User not found" });
       return;
     }
+    // add more root logic later (maybe a new table for root users or an extra column)
+    if (user[0].email === (process.env.ADMIN_EMAIL || "test@gmail.com")) {
+      reply.status(403).send({ error: "Cannot delete root user" });
+      return;
+    }
     await deleteUser({ uuid });
     try {
       let userDirectory = resolve(assetconfigs.uploadDirectory, uuid);
