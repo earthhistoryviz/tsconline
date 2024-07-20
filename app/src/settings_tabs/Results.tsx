@@ -14,10 +14,9 @@ import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import FormatLineSpacingIcon from "@mui/icons-material/FormatLineSpacing";
 import CloseIcon from "@mui/icons-material/Close";
-import DoneAllIcon from "@mui/icons-material/DoneAll";
-import MobiledataOffIcon from "@mui/icons-material/MobiledataOff";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import BrowserNotSupportedIcon from "@mui/icons-material/BrowserNotSupported";
+import CheckIcon from "@mui/icons-material/Check";
+import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
 
 import "./Results.css";
 
@@ -71,14 +70,16 @@ const Status = observer(({ info }: { info: EventSearchInfo }) => {
             enterDelay={tooltipDelayTime}
             enterNextDelay={tooltipDelayTime}
             disableInteractive
+            placement="top"
             title="Column Toggled ON">
-            <DoneAllIcon color="success" />
+            <CheckIcon color="success" />
           </CustomTooltip>
         ) : (
           <CustomTooltip
             enterDelay={tooltipDelayTime}
             enterNextDelay={tooltipDelayTime}
             disableInteractive
+            placement="top"
             title="Column Toggled OFF">
             <CloseIcon color="error" />
           </CustomTooltip>
@@ -94,16 +95,18 @@ const Status = observer(({ info }: { info: EventSearchInfo }) => {
             enterDelay={tooltipDelayTime}
             enterNextDelay={tooltipDelayTime}
             disableInteractive
+            placement="top"
             title="Column Toggled ON, age within time interval">
-            <DoneAllIcon color="success" />
+            <CheckIcon color="success" />
           </CustomTooltip>
         ) : (
           <CustomTooltip
             enterDelay={tooltipDelayTime}
             enterNextDelay={tooltipDelayTime}
             disableInteractive
+            placement="top"
             title="Column Toggled ON, age not within time interval">
-            <MobiledataOffIcon sx={{ color: "orange" }} />
+            <PriorityHighIcon sx={{ color: "orange" }} />
           </CustomTooltip>
         )
       ) : isAgeWithinTimeInterval() ? (
@@ -111,14 +114,16 @@ const Status = observer(({ info }: { info: EventSearchInfo }) => {
           enterDelay={tooltipDelayTime}
           enterNextDelay={tooltipDelayTime}
           disableInteractive
+          placement="top"
           title="Column Toggled OFF, age within time interval">
-          <BrowserNotSupportedIcon sx={{ color: "orange" }} />
+          <PriorityHighIcon sx={{ color: "orange" }} />
         </CustomTooltip>
       ) : (
         <CustomTooltip
           enterDelay={tooltipDelayTime}
           enterNextDelay={tooltipDelayTime}
           disableInteractive
+          placement="top"
           title="Column Toggled OFF, age not within time interval">
           <CloseIcon color="error" />
         </CustomTooltip>
@@ -149,7 +154,7 @@ const Column = observer(({ info }: { info: EventSearchInfo }) => {
         <CustomTooltip
           enterDelay={tooltipDelayTime}
           enterNextDelay={tooltipDelayTime}
-          placement="bottom"
+          placement="top"
           title={columnPath.map((value, pathIndex) => (
             <div key={pathIndex}>{value}</div>
           ))}>
@@ -174,10 +179,6 @@ const verifyAgesAndAddAgeMargin = (age: { topAge: number; baseAge: number } | un
   return { topAge: topAge, baseAge: baseAge };
 };
 
-const truncToSecondDecimal = (num: number) => {
-  return Math.trunc(num * 100) / 100;
-};
-
 const Center = observer(({ info }: { info: EventSearchInfo }) => {
   const { state, actions } = useContext(context);
   if (!info.age) {
@@ -199,14 +200,15 @@ const Center = observer(({ info }: { info: EventSearchInfo }) => {
   const centerTimeOnEvent = () => {
     const ages = verifyAgesAndAddAgeMargin(info.age);
     if (!ages) return;
-    actions.setTopStageAge(truncToSecondDecimal(ages.topAge), info.unit);
-    actions.setBaseStageAge(truncToSecondDecimal(ages.baseAge), info.unit);
+    actions.setTopStageAge(ages.topAge, info.unit);
+    actions.setBaseStageAge(ages.baseAge, info.unit);
   };
   return (
     <CustomTooltip
       enterDelay={tooltipDelayTime}
       enterNextDelay={tooltipDelayTime}
       disableInteractive
+      placement="top"
       title="center time interval within 3myr boundary">
       <IconButton
         onClick={() => {
@@ -242,10 +244,10 @@ const Extend = observer(({ info }: { info: EventSearchInfo }) => {
     const ages = verifyAgesAndAddAgeMargin(info.age);
     if (!ages) return;
     if (state.settings.timeSettings[info.unit].topStageAge > ages.topAge) {
-      actions.setTopStageAge(truncToSecondDecimal(ages.topAge), info.unit);
+      actions.setTopStageAge(ages.topAge, info.unit);
     }
     if (state.settings.timeSettings[info.unit].baseStageAge < ages.baseAge) {
-      actions.setBaseStageAge(truncToSecondDecimal(ages.baseAge), info.unit);
+      actions.setBaseStageAge(ages.baseAge, info.unit);
     }
   };
   return (
@@ -253,6 +255,7 @@ const Extend = observer(({ info }: { info: EventSearchInfo }) => {
       enterDelay={tooltipDelayTime}
       enterNextDelay={tooltipDelayTime}
       disableInteractive
+      placement="top"
       title="extend time interval within 3myr boundary">
       <IconButton
         onClick={() => {
@@ -293,12 +296,12 @@ const Age = observer(({ info }: { info: EventSearchInfo }) => {
         </SvgIcon>
       );
     if (info.age.topAge === info.age.baseAge) {
-      return <div>{info.age.topAge}</div>;
+      return <Typography variant="subtitle2">{info.age.topAge}</Typography>;
     }
     return (
-      <div>
+      <Typography variant="subtitle2">
         {info.age.topAge} - {info.age.baseAge}
-      </div>
+      </Typography>
     );
   };
   return <AgeDisplay />;
@@ -312,7 +315,7 @@ const Qualifier = observer(({ info }: { info: EventSearchInfo }) => {
       </SvgIcon>
     );
   }
-  return <div>{info.qualifier}</div>;
+  return <Typography variant="subtitle2">{info.qualifier}</Typography>;
 });
 
 const Notes = observer(({ info }: { info: EventSearchInfo }) => {
@@ -327,6 +330,7 @@ const Notes = observer(({ info }: { info: EventSearchInfo }) => {
     <CustomTooltip
       enterDelay={tooltipDelayTime}
       enterNextDelay={tooltipDelayTime}
+      placement="top"
       title={
         <Box className="search-result-info-container">
           <StyledScrollbar className="scroll-bar">
@@ -448,12 +452,17 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
   return (
     <Box className="table-container" id="event-search-results-table">
       <CustomTooltip
+        enterDelay={tooltipDelayTime}
         title={
           <>
             Center: sets the time interval to the selected age surrounded with 3myr
             <br />
             Extend: takes the smallest top age and greatest base age between the current time interval and the selected
             age surrounded with 3myr
+            <br />
+            Status: Events with ages will have a yellow/exclamation point status that indicates that either the column
+            is turned on or its age is within the time interval, but not both. Hover over the icon to see what you have
+            to change.
           </>
         }>
         <HelpOutlineIcon />
