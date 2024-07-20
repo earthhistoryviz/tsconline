@@ -6,7 +6,7 @@ import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import { ColDef, GridReadyEvent } from "ag-grid-community";
-import { Box, useTheme } from "@mui/material";
+import { Box, Divider, Typography, useTheme } from "@mui/material";
 import { AdminAddUserForm } from "./AdminAddUserForm";
 import { AdminSharedUser, DatapackIndex, assertAdminSharedUser } from "@tsconline/shared";
 import { TSCButton } from "../components";
@@ -65,7 +65,7 @@ const userColDefs: ColDef[] = [
 ];
 const userDefaultColDefs = {
   flex: 2,
-  minWidth: 80
+  minWidth: 80,
 };
 
 export const AdminUserConfig = observer(function AdminUserConfig() {
@@ -121,6 +121,12 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
           }
         }}
       />
+      <Box mt="20px">
+        <Typography variant="h5">Selected Users' Datapcks</Typography>
+        <Box m="20px">
+          <Divider />
+        </Box>
+      </Box>
       <AdminDatapackDetails
         datapackIndex={Object.values(userDatapackIndex).reduce((acc, val) => ({ ...acc, ...val }), {})}
       />
