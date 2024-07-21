@@ -16,6 +16,7 @@ import {
   assertPointSettings,
   assertRangeSettings,
   assertRulerColumnInfoTSC,
+  assertRulerSettings,
   assertSequenceColumnInfoTSC,
   assertSequenceSettings,
   assertZoneColumnInfoTSC,
@@ -419,8 +420,15 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       };
       break;
     case "Ruler":
-      column = cloneDeep(defaultRulerColumnInfoTSC);
+      if (state.name != "Ma" && state.name != "Chart Root") {
+        assertRulerSettings(state.columnSpecificSettings);
+        column = { ...cloneDeep(defaultRulerColumnInfoTSC), justification: state.columnSpecificSettings.justification };
+      } else {
+        column = cloneDeep(defaultRulerColumnInfoTSC);
+      }
+
       break;
+
     case "Point":
       assertPointSettings(state.columnSpecificSettings);
       column = {
@@ -466,6 +474,19 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
     case "BlockSeriesMetaColumn":
       column._id = `class datastore.${state.columnDisplayType}:` + state.name;
       break;
+    case "Data": {
+      if (/^Blank \d+ for .+$/.test(state.name)) {
+        column._id = "class datastore.RulerColumn:Blank " + state.name.charAt(6);
+        break;
+      }
+    }
+    case "Ruler": {
+      if (/^Age \d+ for .+$/.test(state.name)) {
+        column._id = "class datastore.RulerColumn:Age";
+        break;
+      }
+    }
+
     default:
       column._id = `class datastore.${state.columnDisplayType}Column:` + state.name;
   }
@@ -546,7 +567,14 @@ export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): strin
       continue;
     }
     if (key === "title") {
-      xml += `${indent}<setting name="title">${column[key]}</setting>\n`;
+      let title = column[key];
+      if (/^Age \d+ for .+$/.test(column[key])) {
+        title = "Age";
+      } else if (/^Blank \d+ for .+$/.test(column[key])) {
+        title = "Blank " + column[key].charAt(6);
+      }
+
+      xml += `${indent}<setting name="title">${title}</setting>\n`;
     } else if (key === "backgroundColor") {
       // add if useNamed and standardized properties are implemented
       // if ("standardized" in column[key] && "useNamed" in column[key]) {

@@ -5,20 +5,24 @@
   flex-grow: 1;
   min-width: 0;
 }
+
 .settings-header-divider {
   margin-top: 10px;
   margin-bottom: 10px;
   width: 90%;
 }
+
 .column-menu-label {
   display: flex;
   justify-content: center;
   align-items: center;
 }
+
 .column-menu-header {
   display: flex;
   flex-direction: row;
 }
+
 .column-menu-content-container {
   display: flex;
   flex-direction: row;
@@ -27,15 +31,19 @@
   height: 100%;
   width: 100%;
 }
+
 .column-menu-content {
   display: flex;
   flex-direction: column;
   padding: 15px 10px;
   gap: 10px;
-  max-width: calc(100% - 110px); /* 110px is the width of the tabs, needed for proper scrolling */
+  max-width: calc(100% - 110px);
+  /* 110px is the width of the tabs, needed for proper scrolling */
   flex-grow: 1;
-  height: calc(100% - 33px); /* 33px is the height of the header, needed for the scrolling */
+  height: calc(100% - 33px);
+  /* 33px is the height of the header, needed for the scrolling */
 }
+
 .show-titles-container {
   flex-direction: row;
   margin-top: 10px;
@@ -80,6 +88,7 @@
   padding: 10px;
   width: 100px;
 }
+
 .column-menu-tab {
   min-width: 0px;
   white-space: wrap;
@@ -96,22 +105,27 @@
     white-space: wrap;
     text-align: center;
   }
+
   .column-menu-content {
     max-width: calc(100% - 70px);
   }
+
   .column-menu-content-container {
     min-height: 40vh;
     height: 40vh;
   }
+
   .column-menu-custom-tabs > .tsc-tab-buttons {
     width: 50px;
   }
+
   .column-menu-custom-tabs > .tsc-tab-buttons > .tsc-tab-panel {
     width: 50px !important;
     overflow: hidden;
     text-overflow: ellipsis;
     padding: 10px 0px 10px 0px !important;
   }
+
   .column-menu-custom-tabs > .tsc-tab-buttons > .tsc-tab-indicator {
     left: 55px !important;
   }
@@ -120,12 +134,24 @@
 .column-menu-tabs-small > .tsc-tab-buttons {
   width: 50px;
 }
+
 .column-menu-tabs-small > .tsc-tab-buttons > .tsc-tab-panel {
   width: 50px !important;
   overflow: hidden;
   text-overflow: ellipsis;
   padding: 10px 0px 10px 0px !important;
 }
+
 .column-menu-tabs-small > .tsc-tab-buttons > .tsc-tab-indicator {
   left: 55px !important;
+}
+
+.add-blank-or-age-button-container {
+  display: flex;
+  margin: 10px 0px 0px 0px;
+}
+
+.add-blank-or-age-button {
+  margin: 0px 10px 0px 0px;
+  padding: 0px 10px;
 }
