@@ -18,6 +18,7 @@
     "color": "^4.2.3",
     "dompurify": "^3.0.11",
     "file-saver": "^2.0.5",
+    "js-big-decimal": "^2.0.7",
     "jspdf": "^2.5.1",
     "lodash": "^4.17.21",
     "lottie-web": "^5.12.2",
