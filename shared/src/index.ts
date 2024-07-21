@@ -195,6 +195,7 @@ export type ColumnInfoType = keyof ColumnInfoTypeMap;
 
 export type DisplayedColumnTypes =
   | ColumnInfoType
+  | "Data"
   | "Zone"
   | "Ruler"
   | "AgeAge"
@@ -230,8 +231,17 @@ export type SubInfo =
   | SubSequenceInfo
   | SubTransectInfo;
 
-export type ColumnSpecificSettings = EventSettings | PointSettings | ChronSettings | RangeSettings | SequenceSettings;
+export type ColumnSpecificSettings =
+  | EventSettings
+  | PointSettings
+  | ChronSettings
+  | RangeSettings
+  | SequenceSettings
+  | RulerSettings;
 
+export type RulerSettings = {
+  justification: RulerJustification;
+};
 export type SequenceSettings = {
   labelMarginLeft: number;
   labelMarginRight: number;
@@ -239,6 +249,8 @@ export type SequenceSettings = {
   drawNameLabel: boolean;
   type: SequenceType;
 };
+
+export type RulerJustification = "left" | "right";
 
 export type SequenceType = "sequence" | "trend";
 
@@ -616,7 +628,11 @@ export function assertRangeSettings(o: any): asserts o is RangeSettings {
   if (typeof o.margin !== "number") throwError("RangeSettings", "margin", "number", o.margin);
   if (typeof o.agePad !== "number") throwError("RangeSettings", "agePad", "number", o.agePad);
 }
-
+export function assertRulerSettings(o: any): asserts o is RulerSettings {
+  if (!o || typeof o !== "object") throw new Error("RulerSettings must be a non-null object");
+  if (typeof o.justification !== "string" && isRulerJustification(o.justification))
+    throwError("RulerSettings", "justification", "string and left | right", o.justification);
+}
 export function assertEventSettings(o: any): asserts o is EventSettings {
   if (!o || typeof o !== "object") throw new Error("EventSettings must be a non-null object");
   if (typeof o.type !== "string" || !isEventType(o.type))
@@ -643,6 +659,9 @@ export function assertSequenceSettings(o: any): asserts o is SequenceSettings {
     throwError("SequenceSettings", "labelMarginRight", "number", o.labelMarginRight);
   if (typeof o.graphStyle !== "string") throwError("SequenceSettings", "graphStyle", "string", o.graphStyle);
   if (typeof o.drawNameLabel !== "boolean") throwError("SequenceSettings", "drawNameLabel", "boolean", o.drawNameLabel);
+}
+export function isRulerJustification(o: any): o is RulerJustification {
+  return /^(left|right)$/.test(o);
 }
 
 export function isSequenceType(o: any): o is SequenceType {
@@ -1096,7 +1115,7 @@ export function assertSubInfo(o: any, type: DisplayedColumnTypes): asserts o is 
 export function assertDisplayedColumnTypes(o: any): asserts o is DisplayedColumnTypes {
   if (!o || typeof o !== "string") throwError("DisplayedColumnTypes", "DisplayedColumnTypes", "string", o);
   if (
-    !/^(Block|Facies|Event|Range|Chron|Point|Sequence|Transect|Freehand|Zone|Ruler|AgeAge|MetaColumn|BlockSeriesMetaColumn|RootColumn|Blank)$/.test(
+    !/^(Block|Facies|Event|Range|Chron|Point|Sequence|Transect|Freehand|Zone|Ruler|AgeAge|MetaColumn|BlockSeriesMetaColumn|RootColumn|Blank|Data)$/.test(
       o
     )
   )
@@ -1176,6 +1195,9 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
       break;
     case "Sequence":
       assertSequenceSettings(o);
+      break;
+    case "Ruler":
+      assertRulerSettings(o);
       break;
     default:
       throw new Error(
