@@ -1941,6 +1941,7 @@ __metadata:
     color: "npm:^4.2.3"
     dompurify: "npm:^3.0.11"
     file-saver: "npm:^2.0.5"
+    js-big-decimal: "npm:^2.0.7"
     jspdf: "npm:^2.5.1"
     lodash: "npm:^4.17.21"
     lottie-web: "npm:^5.12.2"
@@ -6416,6 +6417,13 @@ __metadata:
   version: 3.1.1
   resolution: "joycon@npm:3.1.1"
   checksum: 4b36e3479144ec196425f46b3618f8a96ce7e1b658f091a309cd4906215f5b7a402d7df331a3e0a09681381a658d0c5f039cb3cf6907e0a1e17ed847f5d37775
+  languageName: node
+  linkType: hard
+
+"js-big-decimal@npm:^2.0.7":
+  version: 2.0.7
+  resolution: "js-big-decimal@npm:2.0.7"
+  checksum: 93cd669f2dfdc0962e9071418ee04e8b8ae6a4c5a6e15ef060785dfae90d585bbe0e6be7a7c141f7a5939e9f5894bdaf5684e718324166397db42710e7aa9dc8
   languageName: node
   linkType: hard
 

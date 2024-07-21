@@ -6,5 +6,33 @@
 }
 .search-and-options {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-right: 2vw;
+}
+
+.search-time-display-container {
+  min-width: 18vw;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+
+.search-time-display-ages-container {
+  margin-top: 20px;
+}
+.search-time-display-ages {
+  padding: 8px;
+  margin: 8px;
+  border: 1px solid;
+}
+
+@media (max-width: 520px) {
+  .search-time-display-ages-container {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+  }
 }

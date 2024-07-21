@@ -3,8 +3,8 @@
   padding-bottom: 0;
   border-bottom: 0;
   border: 0;
-  width: 10vw;
 }
+
 .MuiTableCell-root.event-group-identifier {
   padding-top: 10px;
   padding-bottom: 10px;
@@ -18,26 +18,12 @@
   font-weight: 600;
 }
 
-.event-group-identifier-text {
-  font-weight: 600;
-}
-
-.modify-time-interval-container {
-  width: 5em;
-}
-
-.search-result-age-container {
-  width: 5vw;
-}
-
 .table-container {
+  min-width: 50vw;
   min-height: 65vh;
-  min-width: 40vw;
   height: 65vh;
-  width: 40vw;
-  margin-top: 2vh;
-  resize: both;
-  overflow: auto;
+  resize: auto;
+  overflow: hidden;
 }
 
 .events-search-results-table {
@@ -45,9 +31,53 @@
   width: 100%;
 }
 
-.events-search-results-buttons {
+.event-group-identifier-text {
+  font-weight: 600;
+}
+
+.search-result-status-column {
+  min-width: 50px;
+  max-width: 50px;
+}
+
+.search-result-column-column {
+  min-width: 200px;
+  max-width: 200px;
+}
+
+.search-result-center-column {
+  min-width: 50px;
+  max-width: 50px;
+}
+
+.search-result-extend-column {
+  min-width: 50px;
+  max-width: 50px;
+}
+
+.search-result-age-column {
+  min-width: 120px;
+  max-width: 120px;
+}
+
+.search-result-qualifier-column {
+  min-width: 70px;
+  max-width: 70px;
+}
+
+.search-result-notes-column {
+  min-width: 50px;
+  max-width: 50px;
+}
+
+.search-result-column-container:hover {
+  cursor: pointer;
+}
+
+.search-result-age-container {
   display: flex;
-  flex-direction: row;
+  justify-content: center;
+  align-items: center;
 }
 
 .search-result-info-container {
@@ -56,13 +86,13 @@
   border: 1px solid black;
   border-radius: 5px;
   margin-top: 5px;
-  padding: 4px;
   max-height: 210px;
 }
 
 .scroll-bar {
   max-height: 200px;
 }
+
 .search-result-info a:visited {
   color: blueviolet;
 }

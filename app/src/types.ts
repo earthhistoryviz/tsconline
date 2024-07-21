@@ -28,7 +28,7 @@ export type DownloadPdfCompleteMessage = {
 //columnName: name of column that event/column is under
 //columnPath: path of edit names up until chart root for display
 //unit: unit of time (ex. Ma) for "in context" feature
-//age: age or range of ages of event/block
+//age: undefined = no age, topAge and baseAge can be the same
 //qualifier: qualifier for events
 //notes: popup included with event and any other info
 export type EventSearchInfo = {
@@ -36,7 +36,7 @@ export type EventSearchInfo = {
   columnName: string;
   columnPath: string[];
   unit: string;
-  age?: string;
+  age?: { topAge: number; baseAge: number };
   qualifier?: string;
   notes?: string;
 };

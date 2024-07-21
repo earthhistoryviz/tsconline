@@ -1,11 +1,10 @@
-import { TextField } from "@mui/material";
+import { Box, Paper, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { observer } from "mobx-react-lite";
-import { useContext, useRef } from "react";
+import { useContext, useRef, useState } from "react";
 import "./Search.css";
 import { context } from "../state";
 import { Results } from "./Results";
 import { EventSearchInfo, GroupedEventSearchInfo } from "../types";
-
 export const Search = observer(function Search() {
   const { state, actions } = useContext(context);
   function makeColumnPath(name: string): string[] {
@@ -87,10 +86,10 @@ export const Search = observer(function Search() {
                 if (resultType === "Block" || columnInfo.columnDisplayType === "BlockSeriesMetaColumn") {
                   if (i > 0) {
                     const nextBlock = columnInfo.subInfo[i - 1];
-                    if ("age" in nextBlock) resInfo.age = String(nextBlock.age) + " - " + String(subInfo.age);
-                  } else resInfo.age = String(subInfo.age);
+                    if ("age" in nextBlock) resInfo.age = { topAge: nextBlock.age, baseAge: subInfo.age };
+                  } else resInfo.age = { topAge: subInfo.age, baseAge: subInfo.age };
                 } else {
-                  resInfo.age = String(subInfo.age);
+                  resInfo.age = { topAge: subInfo.age, baseAge: subInfo.age };
                 }
               }
               if ("subEventType" in subInfo) {
@@ -124,38 +123,75 @@ export const Search = observer(function Search() {
   }
 
   const TimeDisplay = observer(() => {
+    const [units, setUnits] = useState<string>(Object.keys(state.settings.timeSettings)[0]);
     return (
-      <div>
-        <div>Time Settings</div>
-        {Object.entries(state.settings.timeSettings).map(([unit, timeSettings]) => {
-          return (
-            <div key={unit}>
+      <Paper
+        variant="outlined"
+        className="search-time-display-container"
+        sx={(theme) => ({
+          backgroundColor: theme.palette.backgroundColor.main
+        })}>
+        <ToggleButtonGroup
+          value={units}
+          exclusive
+          size="small"
+          onChange={(_event: React.MouseEvent<HTMLElement>, value: string) => {
+            if (value === null) {
+              return;
+            }
+            setUnits(value);
+          }}
+          className="ToggleButtonGroup"
+          aria-label="Units">
+          {Object.keys(state.settings.timeSettings).map((unit) => (
+            <ToggleButton key={unit} value={unit} disableRipple>
               {unit}
-              <div>
-                Top Age: {timeSettings.topStageAge} Base Age:{timeSettings.baseStageAge}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+        <Box className="search-time-display-ages-container">
+          <Box
+            className="search-time-display-ages"
+            bgcolor="secondaryBackground.main"
+            sx={{
+              display: "inline",
+              borderRadius: 2
+            }}>
+            Top Age: {state.settings.timeSettings[units].topStageAge}
+          </Box>
+          <Box
+            className="search-time-display-ages"
+            bgcolor="secondaryBackground.main"
+            sx={{
+              display: "inline",
+              borderRadius: 2
+            }}>
+            Base Age:
+            {state.settings.timeSettings[units].baseStageAge}
+          </Box>
+        </Box>
+      </Paper>
     );
   });
 
   return (
     <div className="search-container">
-      <div className="search-and-options">
-        <TextField
-          className="search-bar"
-          label="Search"
-          variant="outlined"
-          size="small"
-          fullWidth
-          onChange={(e) => actions.setEventSearchTerm(e.target.value)}
-          value={state.settingsTabs.eventSearchTerm}
-        />
+      <div style={{ display: "flex", flexDirection: "row" }}>
+        <div className="search-and-options">
+          <TextField
+            className="search-bar"
+            label="Search"
+            variant="outlined"
+            size="small"
+            fullWidth
+            onChange={(e) => actions.setEventSearchTerm(e.target.value)}
+            value={state.settingsTabs.eventSearchTerm}
+          />
+          <div>Found {count.current} Results</div>
+        </div>
+        <TimeDisplay />
       </div>
-      <div>Found {count.current} Results</div>
-      <TimeDisplay />
+
       <Results groupedEvents={searchResultData()} />
     </div>
   );
