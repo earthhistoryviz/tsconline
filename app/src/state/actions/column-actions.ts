@@ -547,6 +547,7 @@ export const addBlankColumn = action((column: ColumnInfo) => {
     ...cloneDeep(column),
     on: true,
     children: [],
+    parent: column.name,
     popup: "",
     name: blankColumnName,
     editName: "Blank " + `${serialNumber}`,
@@ -576,16 +577,18 @@ export const addAgeColumn = action((column: ColumnInfo) => {
     serialNumber = Number(column.children[biggestExistedSerialNum].name.charAt(4)) + 1;
   }
   const ageColumnName = "Age " + `${serialNumber}` + " for " + column.name;
-
+  const maWidth = state.settingsTabs.columnHashMap.get("Ma")?.width;
   const ageColumn: ColumnInfo = observable({
     ...cloneDeep(column),
     on: true,
     children: [],
+    parent: column.name,
     popup: "",
     name: ageColumnName,
     editName: "Age",
     enableTitle: true,
     columnDisplayType: "Ruler",
+    width: maWidth,
     rgb: {
       r: 255,
       g: 255,
@@ -598,6 +601,7 @@ export const addAgeColumn = action((column: ColumnInfo) => {
   column.children.splice(column.children.length, 0, ageColumn);
   state.settingsTabs.columnHashMap.set(ageColumnName, ageColumn);
 });
+
 export const changeAgeColumnJustification = action((column: ColumnInfo, newJustification: "left" | "right") => {
   //add assertRulerSettings to make sure the column is of ruler&Age type
   if (column.columnDisplayType !== "Ruler" || !column.name.includes("Age")) {
