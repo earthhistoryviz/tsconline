@@ -476,13 +476,13 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       break;
     case "Data": {
       if (/^Blank \d+ for .+$/.test(state.name)) {
-        column._id = "class datastore.RulerColumn:Blank " + state.name.charAt(6);
+        column._id = "class datastore.DataColumn:Blank " + state.name.charAt(6);
         break;
       }
     }
     case "Ruler": {
       if (/^Age \d+ for .+$/.test(state.name)) {
-        column._id = "class datastore.RulerColumn:Age";
+        column._id = "class datastore.RulerColumn:Age " + state.name.charAt(4);
         break;
       }
     }
