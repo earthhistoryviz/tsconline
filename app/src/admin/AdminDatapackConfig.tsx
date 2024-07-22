@@ -1,11 +1,10 @@
-import { Box, useTheme } from "@mui/material";
+import { Box, Dialog, useTheme } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { AgGridReact } from "ag-grid-react";
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useRef, useState } from "react";
 import { context } from "../state";
-import { loadRecaptcha, removeRecaptcha } from "../util";
 import { ColDef } from "ag-grid-community";
-import { TSCButton } from "../components";
+import { TSCButton, TSCDatapackUploadForm } from "../components";
 import { DatapackParsingPack, assertDatapackParsingPack } from "@tsconline/shared";
 
 const datapackColDefs: ColDef[] = [
@@ -28,14 +27,8 @@ const datapackColDefs: ColDef[] = [
 export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
   const theme = useTheme();
   const { state, actions } = useContext(context);
+  const [formOpen, setFormOpen] = useState(false);
   const gridRef = useRef<AgGridReact<DatapackParsingPack>>(null);
-  useEffect(() => {
-    if (!state.user.isAdmin) return;
-    loadRecaptcha();
-    return () => {
-      removeRecaptcha();
-    };
-  }, [state.user.isAdmin]);
   const deleteDatapacks = async () => {
     const selectedNodes = gridRef.current?.api.getSelectedNodes();
     if (!selectedNodes || !selectedNodes.length) return;
@@ -44,17 +37,24 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
         assertDatapackParsingPack(node.data);
         return node.data.file;
       });
-      const success = await actions.adminDeleteServerDatapacks(datapacks);
-      if (!success) return;
-      actions.fetchDatapackIndex();
+      await actions.adminDeleteServerDatapacks(datapacks);
     } catch (e) {
       console.error(e);
     }
-  }
+  };
   return (
     <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
-      <Box m="10px">
+      <Box m="10px" gap="10px">
         <TSCButton onClick={deleteDatapacks}>Delete Selected Datapacks</TSCButton>
+        <TSCButton
+          onClick={() => {
+            setFormOpen(!formOpen);
+          }}>
+          Upload Datapack
+        </TSCButton>
+        <Dialog open={formOpen} onClose={() => setFormOpen(false)}>
+          <TSCDatapackUploadForm close={() => setFormOpen(false)} upload={actions.adminUploadServerDatapack} />
+        </Dialog>
       </Box>
       <AgGridReact
         ref={gridRef}

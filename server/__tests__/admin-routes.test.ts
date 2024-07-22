@@ -13,7 +13,7 @@ import * as index from "../src/index";
 import * as shared from "@tsconline/shared";
 import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach } from "vitest";
 import fastifySecureSession from "@fastify/secure-session";
-import { join, normalize, resolve } from "path";
+import { join, normalize, parse, resolve } from "path";
 import fastifyMultipart from "@fastify/multipart";
 import formAutoContent from "form-auto-content";
 import { DatapackParsingPack, MapPack } from "@tsconline/shared";
@@ -89,7 +89,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => { });
+        readable.on("data", () => {});
         readable.on("end", () => {
           resolve();
         });
@@ -200,7 +200,7 @@ beforeAll(async () => {
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => { });
+  vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 afterAll(async () => {
@@ -448,7 +448,7 @@ describe("adminCreateUser tests", () => {
     expect(deleteUser).toHaveBeenCalledWith({ email: customUser.email });
     expect(await response.json()).toEqual({ error: "Database error" });
     expect(response.statusCode).toBe(500);
-  })
+  });
   it("should return 500 if findUser throws error", async () => {
     // twice for prehandler
     findUser.mockResolvedValueOnce([testAdminUser]).mockRejectedValueOnce(new Error());
@@ -1117,7 +1117,7 @@ describe("adminUploadServerDatapack", () => {
           contentType: "application/zip"
         }
       }
-    })
+    });
     const response = await app.inject({
       method: "POST",
       url: "/admin/server/datapack",
@@ -1128,7 +1128,7 @@ describe("adminUploadServerDatapack", () => {
     expect(realpath).toHaveBeenCalledTimes(1);
     expect(loadIndexes).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ error: "Empty file cannot be uploaded" });
-  })
+  });
   it("should return 500 if loadIndexes fails", async () => {
     loadIndexes.mockResolvedValueOnce(false);
     const response = await app.inject({
@@ -1295,7 +1295,7 @@ describe("adminDeleteServerDatapack", () => {
   };
   const realpath = vi.spyOn(fsPromises, "realpath");
   const filepath = resolve(`testdir/datapacksDirectory/${body.datapack}`);
-  const decryptedFilepath = resolve(`testdir/decryptionDirectory/${body.datapack}`);
+  const decryptedFilepath = resolve(`testdir/decryptionDirectory/${parse(body.datapack).name}`);
   beforeEach(async () => {
     vi.clearAllMocks();
     const originalUtil = await import("../src/util");

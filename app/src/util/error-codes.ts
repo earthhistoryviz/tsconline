@@ -61,6 +61,7 @@ export enum ErrorCodes {
   ADMIN_DELETE_USER_DATAPACK_FAILED = "ADMIN_DELETE_USER_DATAPACK_FAILED",
   ADMIN_DELETE_SERVER_DATAPACK_FAILED = "ADMIN_DELETE_SERVER_DATAPACK_FAILED",
   ADMIN_CANNOT_DELETE_ROOT_DATAPACK = "ADMIN_CANNOT_DELETE_ROOT_DATAPACK",
+  INVALID_SERVER_DATAPACK_REQUEST = "INVALID_SERVER_DATAPACK_REQUEST"
 }
 
 export const ErrorMessages = {
@@ -134,4 +135,5 @@ export const ErrorMessages = {
   [ErrorCodes.ADMIN_DELETE_USER_DATAPACK_FAILED]: "Unable to delete user datapack. Please try again later.",
   [ErrorCodes.ADMIN_DELETE_SERVER_DATAPACK_FAILED]: "Unable to delete server datapack. Please try again later.",
   [ErrorCodes.ADMIN_CANNOT_DELETE_ROOT_DATAPACK]: "Cannot delete root datapack. Ask server admin for assistance.",
+  [ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]: "Invalid server datapack request. Please try again later."
 };
