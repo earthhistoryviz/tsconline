@@ -29,6 +29,23 @@ import { MultipartFile } from "@fastify/multipart";
 import { runJavaEncrypt } from "./encryption.js";
 import { queue, maxQueueSize } from "./index.js";
 
+export const fetchServerDatapack = async function fetchServerDatapack(
+  request: FastifyRequest<{ Params: { name: string } }>,
+  reply: FastifyReply
+) {
+  const { name } = request.params;
+  if (!name) {
+    reply.status(400).send({ error: "Invalid datapack" });
+    return;
+  }
+  const datapack = serverDatapackindex[decodeURIComponent(name)];
+  if (!datapack) {
+    reply.status(404).send({ error: "Datapack not found" });
+    return;
+  }
+  reply.send(datapack);
+};
+
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
   reply: FastifyReply

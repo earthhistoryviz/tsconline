@@ -190,6 +190,8 @@ server.get("/presets", async (_request, reply) => {
   reply.send(presets);
 });
 
+server.get("/server/datapack/:name", routes.fetchServerDatapack);
+
 server.get("/datapack-index", routes.fetchServerDatapackInfo);
 server.get("/map-pack-index", routes.fetchServerMapPackInfo);
 

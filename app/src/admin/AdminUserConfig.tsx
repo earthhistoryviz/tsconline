@@ -1,7 +1,6 @@
 import { observer } from "mobx-react-lite";
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useRef } from "react";
 import { context } from "../state";
-import { loadRecaptcha, removeRecaptcha } from "../util";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
@@ -71,19 +70,6 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
   const { state, actions } = useContext(context);
   const theme = useTheme();
   const gridRef = useRef<AgGridReact<AdminSharedUser>>(null);
-
-  /**
-   * Make sure the user is an admin before loading the recaptcha and fetching users
-   */
-  useEffect(() => {
-    if (!state.user.isAdmin) return;
-    loadRecaptcha().then(async () => {
-      await actions.adminFetchUsers();
-    });
-    return () => {
-      removeRecaptcha();
-    };
-  }, [state.user.isAdmin]);
 
   /**
    * delete selected users

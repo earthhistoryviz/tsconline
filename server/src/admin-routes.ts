@@ -3,7 +3,7 @@ import { checkForUsersWithUsernameOrEmail, createUser, findUser } from "./databa
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { deleteUser } from "./database.js";
-import { resolve, basename, extname, join, relative } from "path";
+import { resolve, extname, join, relative, parse } from "path";
 import { adminconfig, assetconfigs, checkFileExists, getBytes, verifyFilepath } from "./util.js";
 import { createWriteStream } from "fs";
 import { readFile, realpath, rm, writeFile } from "fs/promises";
@@ -205,7 +205,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       file = part;
       filename = file.filename;
       filepath = resolve(assetconfigs.datapacksDirectory, filename);
-      decryptedFilepath = resolve(assetconfigs.decryptionDirectory, basename(filename));
+      decryptedFilepath = resolve(assetconfigs.decryptionDirectory, parse(filename).name);
       if (
         !filepath.startsWith(resolve(assetconfigs.datapacksDirectory)) ||
         !decryptedFilepath.startsWith(resolve(assetconfigs.decryptionDirectory))
@@ -349,7 +349,7 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
   let decryptedFilepath;
   try {
     filepath = resolve(assetconfigs.datapacksDirectory, datapack);
-    decryptedFilepath = resolve(assetconfigs.decryptionDirectory, basename(datapack));
+    decryptedFilepath = resolve(assetconfigs.decryptionDirectory, parse(datapack).name);
     if (
       !filepath.startsWith(resolve(assetconfigs.datapacksDirectory)) ||
       !decryptedFilepath.startsWith(resolve(assetconfigs.decryptionDirectory))

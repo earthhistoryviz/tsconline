@@ -12,8 +12,9 @@ import { CustomDivider } from "../TSCComponents";
 
 type TSCDatapackUploadFormProps = {
   close: () => void;
+  upload: (file: File, name: string, description: string) => Promise<void>;
 };
-export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ close }) => {
+export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ close, upload }) => {
   const { state, actions } = useContext(context);
   const [datapackName, setDatapackName] = useState("");
   const [datapackDescription, setDatapackDescription] = useState("");
@@ -111,10 +112,10 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
               }
               actions.removeError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
               actions.removeError(ErrorCodes.UNFINISHED_DATAPACK_UPLOAD_FORM);
-              actions.uploadDatapack(datapackFile!, datapackName, datapackDescription);
-              setDatapackFile(null);
-              setDatapackName("");
-              setDatapackDescription("");
+              upload(datapackFile, datapackName, datapackDescription);
+              // setDatapackFile(null);
+              // setDatapackName("");
+              // setDatapackDescription("");
             }}>
             Finish & Upload
           </TSCButton>

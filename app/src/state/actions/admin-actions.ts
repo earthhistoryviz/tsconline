@@ -9,7 +9,7 @@ import {
   isServerResponseError
 } from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
-import { pushError, pushSnackbar } from "./general-actions";
+import { addDatapackToIndex, fetchServerDatapack, pushError, pushSnackbar } from "./general-actions";
 import { State } from "../state";
 
 export const adminFetchUsers = action(async () => {
@@ -232,7 +232,7 @@ export const adminDeleteServerDatapacks = action(async (datapacks: string[]) => 
             serverResponse,
             ErrorCodes.ADMIN_CANNOT_DELETE_ROOT_DATAPACK,
             ErrorMessages[ErrorCodes.ADMIN_CANNOT_DELETE_ROOT_DATAPACK]
-          )
+          );
         } else {
           displayServerError(
             serverResponse,
@@ -242,6 +242,9 @@ export const adminDeleteServerDatapacks = action(async (datapacks: string[]) => 
         }
       } else {
         deletedNoDatapacks = false;
+        runInAction(() => {
+          delete state.datapackIndex[datapack];
+        });
       }
     } catch (error) {
       console.error(error);
@@ -257,6 +260,44 @@ export const adminDeleteServerDatapacks = action(async (datapacks: string[]) => 
   }
   // this will return if any datapacks were deleted
   return !deletedNoDatapacks;
+});
+
+export const adminUploadServerDatapack = action(async (file: File, title: string, description: string) => {
+  const recaptchaToken = await getRecaptchaToken("adminUploadServerDatapack");
+  if (!recaptchaToken) return;
+  if (state.datapackIndex[file.name]) {
+    pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
+    return;
+  }
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("title", title);
+  formData.append("description", description);
+  try {
+    const response = await fetcher(`/admin/server/datapack`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptchaToken
+      }
+    });
+    const data = await response.json();
+
+    if (response.ok) {
+      const pack = await fetchServerDatapack(file.name);
+      if (!pack) {
+        return;
+      }
+      addDatapackToIndex(file.name, pack);
+      pushSnackbar("Successfully uploaded " + title + " datapack", "success");
+    } else {
+      displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+    }
+  } catch (e) {
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
+  }
 });
 
 async function getRecaptchaToken(token: string) {
