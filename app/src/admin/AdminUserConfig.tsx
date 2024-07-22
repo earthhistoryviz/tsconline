@@ -27,7 +27,6 @@ const userColDefs: ColDef[] = [
     filter: true,
     rowDrag: true,
     checkboxSelection: true,
-    headerCheckboxSelection: true,
     minWidth: 120
   },
   { headerName: "Email", field: "email", sortable: true, filter: true },
@@ -188,6 +187,9 @@ const AdminDatapackDetails: React.FC<AdminDatapackDetailsProps> = observer(({ da
   };
   return (
     <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
+      <Box m="10px">
+        <TSCButton onClick={deleteDatapacks}>Delete Selected Datapacks</TSCButton>
+      </Box>
       <AgGridReact
         ref={gridRef}
         rowSelection="multiple"
@@ -195,7 +197,6 @@ const AdminDatapackDetails: React.FC<AdminDatapackDetailsProps> = observer(({ da
         columnDefs={datapackColDefs}
         rowData={Object.values(datapackIndex)}
       />
-      <TSCButton onClick={deleteDatapacks}>Delete Selected Datapacks</TSCButton>
     </Box>
   );
 });
