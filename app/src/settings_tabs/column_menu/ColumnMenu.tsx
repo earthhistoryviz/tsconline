@@ -11,6 +11,7 @@ import {
   CustomFormControlLabel,
   GenericTextField,
   StyledScrollbar,
+  TSCButton,
   TSCCheckbox
 } from "../../components";
 import { InfoBox } from "./InfoBox";
@@ -21,7 +22,6 @@ import { DataMiningSettings } from "../advanced_settings/DataMiningSettings";
 import AccordionPositionControls from "./AccordionPositionControls";
 import { CustomTabs } from "../../components/TSCCustomTabs";
 import { RangeSpecificSettings } from "../advanced_settings/RangeSpecificSettings";
-import { Button } from "react-bootstrap";
 import { TSCRadioGroup } from "../../components/TSCRadioGroup";
 
 export const ColumnMenu = observer(() => {
@@ -108,7 +108,7 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
     actions.changeAgeColumnJustification(column, newJustification);
   }
   const isRulerAgeColumn = () => {
-    if (!(column.columnDisplayType === "Ruler" && column.name.includes("Age"))) return "";
+    if (column.columnDisplayType !== "Ruler" || !column.name.includes("Age")) return "";
     try {
       assertRulerSettings(column.columnSpecificSettings);
       return column.columnSpecificSettings.justification;
@@ -147,17 +147,17 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
             <ShowTitles column={column} />
             <EventSpecificSettings column={column} />
             <RangeSpecificSettings column={column} />
-            {!!column.popup && <InfoBox info={column.popup} />}
             {column.children.length != 0 && (
               <Box className="add-blank-or-age-button-container">
-                <Button className="add-blank-or-age-button" onClick={addBlankColumn}>
+                <TSCButton className="add-blank-or-age-button" onClick={addBlankColumn}>
                   <Typography>Add Blank Column</Typography>
-                </Button>
-                <Button className="add-blank-or-age-button" onClick={addAgeColumn}>
+                </TSCButton>
+                <TSCButton className="add-blank-or-age-button" onClick={addAgeColumn}>
                   <Typography>Add Age Column</Typography>
-                </Button>
+                </TSCButton>
               </Box>
             )}
+            {!!column.popup && <InfoBox info={column.popup} />}
 
             {!!isRulerAgeColumn() && (
               <TSCRadioGroup

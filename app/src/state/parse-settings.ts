@@ -35,7 +35,7 @@ import {
   isRGB
 } from "@tsconline/shared";
 import { ChartSettings } from "../types";
-import { convertRgbToString, convertTSCColorToRGB } from "../util/util";
+import { convertRgbToString, convertTSCColorToRGB, findSerialNum } from "../util/util";
 import { cloneDeep, range } from "lodash";
 //for testing purposes
 //https://stackoverflow.com/questions/51269431/jest-mock-inner-function
@@ -476,13 +476,13 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       break;
     case "Data": {
       if (/^Blank \d+ for .+$/.test(state.name)) {
-        column._id = "class datastore.DataColumn:Blank " + state.name.charAt(6);
+        column._id = "class datastore.DataColumn:Blank " + findSerialNum(state.name);
         break;
       }
     }
     case "Ruler": {
       if (/^Age \d+ for .+$/.test(state.name)) {
-        column._id = "class datastore.RulerColumn:Age " + state.name.charAt(4);
+        column._id = "class datastore.RulerColumn:Age " + findSerialNum(state.name);
         break;
       }
     }
@@ -571,7 +571,7 @@ export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): strin
       if (/^Age \d+ for .+$/.test(column[key])) {
         title = "Age";
       } else if (/^Blank \d+ for .+$/.test(column[key])) {
-        title = "Blank " + column[key].charAt(6);
+        title = "Blank " + findSerialNum(column[key]);
       }
 
       xml += `${indent}<setting name="title">${title}</setting>\n`;

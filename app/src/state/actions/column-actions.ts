@@ -45,6 +45,7 @@ import {
 } from "../../util/data-mining";
 import { yieldControl } from "../../util";
 import { altUnitNamePrefix } from "../../util/constant";
+import { findSerialNum } from "../../util/util";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -538,15 +539,19 @@ export const addBlankColumn = action((column: ColumnInfo) => {
     return;
   }
   let serialNumber = 1;
-  const biggestExistedSerialNum = column.children.findLastIndex((child) => child.name.includes("Blank"));
-  if (biggestExistedSerialNum > -1) {
-    serialNumber = Number(column.children[biggestExistedSerialNum].name.charAt(6)) + 1;
+  const largestExistingSerialNum = column.children.findLastIndex(
+    (child) => /^Blank \d+ for .+$/.test(child.name) && child.columnDisplayType === "Data"
+  );
+  if (largestExistingSerialNum > -1) {
+    serialNumber = Number(column.children[largestExistingSerialNum].name.charAt(6)) + 1;
+    serialNumber = findSerialNum(column.children[largestExistingSerialNum].name) + 1;
   }
   const blankColumnName = "Blank " + `${serialNumber}` + " for " + column.name;
   const blankColumn: ColumnInfo = observable({
     ...cloneDeep(column),
     on: true,
     children: [],
+    subInfo: [],
     parent: column.name,
     popup: "",
     name: blankColumnName,
@@ -566,29 +571,29 @@ export const addBlankColumn = action((column: ColumnInfo) => {
 });
 export const addAgeColumn = action((column: ColumnInfo) => {
   if (column.children.length == 0) {
-    console.log("WARNING: tried to add a blank column to a column with no children");
+    console.log("WARNING: tried to add an age column to a column with no children");
     return;
   }
   let serialNumber = 1;
-  const biggestExistedSerialNum = column.children.findLastIndex(
-    (child) => child.name.includes("Age") && child.columnDisplayType === "Ruler"
+  const largestExistingSerialNum = column.children.findLastIndex(
+    (child) => /^Age \d+ for .+$/.test(child.name) && child.columnDisplayType === "Ruler"
   );
-  if (biggestExistedSerialNum > -1) {
-    serialNumber = Number(column.children[biggestExistedSerialNum].name.charAt(4)) + 1;
+  if (largestExistingSerialNum > -1) {
+    serialNumber = findSerialNum(column.children[largestExistingSerialNum].name) + 1;
   }
   const ageColumnName = "Age " + `${serialNumber}` + " for " + column.name;
-  const maWidth = state.settingsTabs.columnHashMap.get("Ma")?.width;
   const ageColumn: ColumnInfo = observable({
     ...cloneDeep(column),
     on: true,
     children: [],
     parent: column.name,
+    subInfo: [],
     popup: "",
     name: ageColumnName,
     editName: "Age",
     enableTitle: true,
     columnDisplayType: "Ruler",
-    width: maWidth,
+    width: undefined,
     rgb: {
       r: 255,
       g: 255,
