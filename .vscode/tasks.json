@@ -5,7 +5,6 @@
       "label": "runDevelopment",
       "dependsOrder": "parallel",
       "dependsOn": [
-        "build-shared",
         "start-server",
         "dev-server",
         "app-dev"

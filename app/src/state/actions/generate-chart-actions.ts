@@ -165,7 +165,16 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
       generalActions.setChartTimelineLocked(false);
       generalActions.pushSnackbar("Successfully generated chart", "success");
     } catch (e) {
-      displayServerError(answer, ErrorCodes.INVALID_CHART_RESPONSE, ErrorMessages[ErrorCodes.INVALID_CHART_RESPONSE]);
+      let errorCode = ErrorCodes.INVALID_CHART_RESPONSE;
+      switch (response.status) {
+        case 408:
+          errorCode = ErrorCodes.SERVER_TIMEOUT;
+          break;
+        case 503:
+          errorCode = ErrorCodes.SERVER_BUSY;
+          break;
+      }
+      displayServerError(answer, errorCode, ErrorMessages[errorCode]);
       return;
     }
   } catch (e) {
