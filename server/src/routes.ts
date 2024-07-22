@@ -690,7 +690,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   }
   try {
     await queue.add(async () => {
-      await execJavaCommand(15); // 15 seconds
+      await execJavaCommand(1000 * 15); // 15 seconds
     });
   } catch (error) {
     if ((error as Error).message.includes("timed out")) {
