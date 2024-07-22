@@ -221,8 +221,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
         (await checkFileExists(filepath)) &&
         (await checkFileExists(decryptedFilepath)) &&
         (adminconfig.datapacks.some((datapack) => datapack.file === filename) ||
-          (assetconfigs.activeDatapacks.some((datapack) => datapack.file === filename) &&
-            !adminconfig.removeDevDatapacks.includes(filename))) &&
+          assetconfigs.activeDatapacks.some((datapack) => datapack.file === filename)) &&
         datapackIndex[filename]
       ) {
         reply.status(409).send({ error: "File already exists" });
@@ -307,13 +306,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   }
   try {
     // this was a previous dev datapack that was removed
-    if (adminconfig.removeDevDatapacks.includes(filename)) {
-      adminconfig.removeDevDatapacks = adminconfig.removeDevDatapacks.filter((pack) => pack !== filename);
-      // on load, we prune datapacks that are in removeDevDatapacks so add it back but DON'T WRITE TO FILE
-      if (!assetconfigs.activeDatapacks.some((datapack) => datapack.file === filename)) {
-        assetconfigs.activeDatapacks.push(datapackInfo);
-      }
-    } else if (
+    if (
       !assetconfigs.activeDatapacks.some((datapack) => datapack.file === filename) &&
       !adminconfig.datapacks.some((datapack) => datapack.file === filename)
     ) {
@@ -346,6 +339,12 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     reply.status(400).send({ error: "Invalid file extension" });
     return;
   }
+  if (assetconfigs.activeDatapacks.some((dp) => dp.file === datapack)) {
+    reply
+      .status(403)
+      .send({ error: "Cannot delete a root datapack. See server administrator to change root dev packs." });
+    return;
+  }
   let filepath;
   let decryptedFilepath;
   try {
@@ -364,17 +363,9 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     reply.status(500).send({ error: "Datapack file does not exist" });
     return;
   }
-  if (
-    !adminconfig.datapacks.some((dp) => dp.file === datapack) &&
-    !assetconfigs.activeDatapacks.some((dp) => dp.file === datapack)
-  ) {
+  if (!adminconfig.datapacks.some((dp) => dp.file === datapack)) {
     reply.status(404).send({ error: "Datapack not found" });
     return;
-  }
-  if (assetconfigs.activeDatapacks.some((dp) => dp.file === datapack)) {
-    // don't write to file to prevent merge issues on server
-    assetconfigs.activeDatapacks = assetconfigs.activeDatapacks.filter((pack) => pack.file !== datapack);
-    adminconfig.removeDevDatapacks.push(datapack);
   }
   if (adminconfig.datapacks.some((dp) => dp.file === datapack)) {
     adminconfig.datapacks = adminconfig.datapacks.filter((pack) => pack.file !== datapack);
