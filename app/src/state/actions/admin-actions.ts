@@ -1,4 +1,4 @@
-import { action } from "mobx";
+import { action, runInAction } from "mobx";
 import { state } from "..";
 import { executeRecaptcha, fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -10,6 +10,7 @@ import {
 } from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
 import { pushError, pushSnackbar } from "./general-actions";
+import { State } from "../state";
 
 export const adminFetchUsers = action(async () => {
   const recaptchaToken = await getRecaptchaToken("adminFetchUsers");
@@ -187,9 +188,7 @@ export const adminDeleteUserDatapacks = action(async (datapacks: { uuid: string;
         body: JSON.stringify({ uuid, datapack }),
         credentials: "include"
       });
-      if (response.ok) {
-        pushSnackbar("Datapack deleted successfully", "success");
-      } else {
+      if (!response.ok) {
         deletedAllDatapacks = false;
         displayServerError(
           await response.json(),
@@ -222,3 +221,26 @@ async function getRecaptchaToken(token: string) {
     return null;
   }
 }
+
+export const adminRemoveDisplayedUserDatapack = action((uuid: string) => {
+  if (!state.admin.displayedUserDatapacks[uuid]) throw new Error(`User ${uuid} not found in displayedUserDatapacks`);
+  state.admin.displayedUserDatapacks[uuid] = {};
+});
+
+export const adminAddDisplayedUserDatapack = action(async (uuid: string) => {
+  const datapackIndex = await adminFetchUserDatapacks(uuid);
+  if (!datapackIndex) return;
+  runInAction(() => (state.admin.displayedUserDatapacks[uuid] = datapackIndex));
+});
+
+export const updateAdminUserDatapacks = action(async (uuid: string[]) => {
+  uuid.forEach(async (uuid) => {
+    const datapackIndex = await adminFetchUserDatapacks(uuid);
+    if (!datapackIndex) return;
+    runInAction(() => (state.admin.displayedUserDatapacks[uuid] = datapackIndex));
+  });
+});
+
+export const adminSetDisplayedUserDatapacks = action((datapacks: State["admin"]["displayedUserDatapacks"]) => {
+  state.admin.displayedUserDatapacks = datapacks;
+});

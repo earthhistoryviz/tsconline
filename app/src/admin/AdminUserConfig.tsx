@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { context } from "../state";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { AgGridReact } from "ag-grid-react";
@@ -70,9 +70,12 @@ const userDefaultColDefs = {
 
 export const AdminUserConfig = observer(function AdminUserConfig() {
   const { state, actions } = useContext(context);
-  const [userDatapackIndex, setUserDatapackIndex] = useState<{ [uuid: string]: DatapackIndex }>({});
   const theme = useTheme();
   const gridRef = useRef<AgGridReact<AdminSharedUser>>(null);
+
+  /**
+   * Make sure the user is an admin before loading the recaptcha and fetching users
+   */
   useEffect(() => {
     if (!state.user.isAdmin) return;
     loadRecaptcha().then(async () => {
@@ -82,6 +85,11 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
       removeRecaptcha();
     };
   }, [state.user.isAdmin]);
+
+  /**
+   * delete selected users
+   * @returns
+   */
   const deleteUsers = async () => {
     const selectedNodes = gridRef.current?.api.getSelectedNodes();
     if (!selectedNodes || !selectedNodes.length) return;
@@ -109,15 +117,15 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
         rowDragManaged
         columnDefs={userColDefs}
         rowData={state.admin.displayedUsers}
-        onModelUpdated={() => setUserDatapackIndex({})}
+        onModelUpdated={() => actions.adminSetDisplayedUserDatapacks({})}
         onRowSelected={async (event) => {
           if (event.node.isSelected()) {
             if (!event.data.uuid || typeof event.data.uuid !== "string") return;
-            const datapackIndex = await actions.adminFetchUserDatapacks(event.data.uuid);
-            if (!datapackIndex) return;
-            setUserDatapackIndex({ ...userDatapackIndex, [event.data.uuid]: datapackIndex });
+            await actions.adminAddDisplayedUserDatapack(event.data.uuid);
           } else {
-            setUserDatapackIndex({ ...userDatapackIndex, [event.data.uuid]: {} });
+            // remove the user's datapacks from the index
+            if (!event.data.uuid || typeof event.data.uuid !== "string") return;
+            actions.adminRemoveDisplayedUserDatapack(event.data.uuid);
           }
         }}
       />
@@ -128,7 +136,7 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
         </Box>
       </Box>
       <AdminDatapackDetails
-        datapackIndex={Object.values(userDatapackIndex).reduce((acc, val) => ({ ...acc, ...val }), {})}
+        datapackIndex={Object.values(state.admin.displayedUserDatapacks).reduce((acc, val) => ({ ...acc, ...val }), {})}
       />
     </Box>
   );
@@ -157,6 +165,10 @@ const AdminDatapackDetails: React.FC<AdminDatapackDetailsProps> = observer(({ da
   const theme = useTheme();
   const { actions } = useContext(context);
   const gridRef = useRef<AgGridReact<DatapackParsingPack>>(null);
+  /**
+   * delete selected datapacks then refetch the user's datapacks
+   * @returns
+   */
   const deleteDatapacks = async () => {
     const selectedNodes = gridRef.current?.api.getSelectedNodes();
     if (!selectedNodes || !selectedNodes.length) return;
@@ -166,6 +178,10 @@ const AdminDatapackDetails: React.FC<AdminDatapackDetailsProps> = observer(({ da
         return { uuid: node.data.uuid, datapack: node.data.file };
       });
       await actions.adminDeleteUserDatapacks(datapacks);
+      const uuids = new Set<string>(
+        selectedNodes.map((node) => node.data?.uuid).filter((uuid): uuid is string => typeof uuid === "string")
+      );
+      actions.updateAdminUserDatapacks([...uuids]);
     } catch (e) {
       console.error(e);
     }
