@@ -208,6 +208,57 @@ export const adminDeleteUserDatapacks = action(async (datapacks: { uuid: string;
   }
 });
 
+export const adminDeleteServerDatapacks = action(async (datapacks: string[]) => {
+  const recaptchaToken = await getRecaptchaToken("adminDeleteServerDatapacks");
+  if (!recaptchaToken) return;
+  let deletedAllDatapacks = true;
+  let deletedNoDatapacks = true;
+  for (const datapack of datapacks) {
+    try {
+      const response = await fetcher("/admin/server/datapack", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "recaptcha-token": recaptchaToken
+        },
+        body: JSON.stringify({ datapack }),
+        credentials: "include"
+      });
+      if (!response.ok) {
+        deletedAllDatapacks = false;
+        const serverResponse = await response.json();
+        if (response.status == 403 && isServerResponseError(serverResponse) && serverResponse.error.includes("root")) {
+          displayServerError(
+            serverResponse,
+            ErrorCodes.ADMIN_CANNOT_DELETE_ROOT_DATAPACK,
+            ErrorMessages[ErrorCodes.ADMIN_CANNOT_DELETE_ROOT_DATAPACK]
+          )
+        } else {
+          displayServerError(
+            serverResponse,
+            ErrorCodes.ADMIN_DELETE_SERVER_DATAPACK_FAILED,
+            ErrorMessages[ErrorCodes.ADMIN_DELETE_SERVER_DATAPACK_FAILED]
+          );
+        }
+      } else {
+        deletedNoDatapacks = false;
+      }
+    } catch (error) {
+      console.error(error);
+      pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    }
+  }
+  if (deletedNoDatapacks) {
+    pushSnackbar("No datapacks deleted", "warning");
+  } else if (deletedAllDatapacks) {
+    pushSnackbar("Datapacks deleted successfully", "success");
+  } else if (datapacks.length > 1) {
+    pushSnackbar("Some datapacks were not deleted", "warning");
+  }
+  // this will return if any datapacks were deleted
+  return !deletedNoDatapacks;
+});
+
 async function getRecaptchaToken(token: string) {
   try {
     const recaptchaToken = await executeRecaptcha(token);
