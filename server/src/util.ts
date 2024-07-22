@@ -210,7 +210,7 @@ export async function checkFileExists(filePath: string): Promise<boolean> {
 }
 
 export let assetconfigs: AssetConfig;
-export let adminconfig: AdminConfig = { datapacks: [], removeDevDatapacks: [] };
+export let adminconfig: AdminConfig = { datapacks: [] };
 export async function loadAssetConfigs() {
   try {
     const contents = JSON.parse((await readFile("assets/config.json")).toString());
@@ -225,13 +225,10 @@ export async function loadAssetConfigs() {
       const content = JSON.parse((await readFile(assetconfigs.adminConfigPath)).toString());
       assertAdminConfig(content);
       adminconfig = content;
-      assetconfigs.activeDatapacks = assetconfigs.activeDatapacks.filter(
-        (datapack) => !adminconfig.removeDevDatapacks.includes(datapack.file)
-      );
     } catch (e) {
       console.log("ERROR: Failed to load admin configs from assets/admin-config.json.  Error was: ", e);
       console.error("Removing admin-config.json and writing a new config file");
-      adminconfig = { datapacks: [], removeDevDatapacks: [] };
+      adminconfig = { datapacks: [] };
       try {
         await rm(assetconfigs.adminConfigPath);
         await writeFile(assetconfigs.adminConfigPath, JSON.stringify(adminconfig, null, 2));

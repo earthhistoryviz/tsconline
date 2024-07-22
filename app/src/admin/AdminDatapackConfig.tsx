@@ -5,6 +5,7 @@ import { useContext, useEffect } from "react";
 import { context } from "../state";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { ColDef } from "ag-grid-community";
+import { TSCButton } from "../components";
 
 const datapackColDefs: ColDef[] = [
   {
@@ -35,6 +36,9 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
   }, [state.user.isAdmin]);
   return (
     <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
+      <Box m="10px">
+        <TSCButton>Delete Selected Datapacks</TSCButton>
+      </Box>
       <AgGridReact
         columnDefs={datapackColDefs}
         rowSelection="multiple"
