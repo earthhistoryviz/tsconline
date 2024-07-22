@@ -15,7 +15,7 @@ import fastifyMultipart from "@fastify/multipart";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import fastifySecureSession from "@fastify/secure-session";
 import fastifyRateLimit from "@fastify/rate-limit";
-import dotenv from "dotenv";
+import "dotenv/config";
 import { db, findIp, createIp, updateIp, initializeDatabase } from "./database.js";
 import { sendEmail } from "./send-email.js";
 import cron from "node-cron";
@@ -23,7 +23,7 @@ import path from "path";
 import { adminRoutes } from "./admin-auth.js";
 import PQueue from "p-queue";
 
-export const maxQueueSize = 1;
+export const maxQueueSize = 3;
 
 const server = fastify({
   logger: false,
@@ -90,7 +90,6 @@ declare module "@fastify/secure-session" {
     uuid: string;
   }
 }
-dotenv.config();
 const sessionKey = process.env.SESSION_KEY
   ? Buffer.from(process.env.SESSION_KEY, "hex")
   : Buffer.from("d30a7eae1e37a08d6d5c65ac91dfbc75b54ce34dd29153439979364046cc06ae", "hex");
@@ -298,7 +297,6 @@ setInterval(
   },
   1000 * 60 * 60 * 24 * 7
 ); // 1 week
-dotenv.config();
 if (process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.NODE_ENV === "production") {
   const emailUser = process.env.EMAIL_USER as string;
   cron.schedule(
@@ -333,7 +331,7 @@ server.setNotFoundHandler((request, reply) => {
   void reply.sendFile("index.html");
 });
 
-export const queue = new PQueue({ concurrency: maxQueueSize, timeout: 1000 * 60 * 5, throwOnTimeout: true });
+export const queue = new PQueue({ concurrency: maxQueueSize });
 
 //Start the server...
 try {
