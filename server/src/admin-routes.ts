@@ -3,7 +3,7 @@ import { checkForUsersWithUsernameOrEmail, createUser, findUser } from "./databa
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { deleteUser } from "./database.js";
-import { resolve, basename, extname, join } from "path";
+import { resolve, basename, extname, join, relative } from "path";
 import { adminconfig, assetconfigs, checkFileExists, getBytes, verifyFilepath } from "./util.js";
 import { createWriteStream } from "fs";
 import { readFile, realpath, rm, writeFile } from "fs/promises";
@@ -166,25 +166,22 @@ export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
     return;
   }
   try {
-    const userDirectory = resolve(assetconfigs.uploadDirectory, uuid);
-    const datapackDirectory = resolve(userDirectory, "datapack", datapack);
-    if (
-      !userDirectory.startsWith(resolve(assetconfigs.uploadDirectory)) ||
-      !datapackDirectory.startsWith(resolve(userDirectory))
-    ) {
+    const uploadDirectory = await realpath(assetconfigs.uploadDirectory);
+    const userDirectory = await realpath(join(assetconfigs.uploadDirectory, uuid));
+    const datapackDirectory = await realpath(join(userDirectory, "datapacks", datapack));
+    if (!userDirectory.startsWith(uploadDirectory) || !datapackDirectory.startsWith(userDirectory)) {
       reply.status(403).send({ error: "Directory traversal detected" });
       return;
     }
-    await realpath(datapackDirectory);
-    await realpath(userDirectory);
     const metadata = await loadFileMetadata(assetconfigs.fileMetadata);
-    if (!Object.keys(metadata).some((filePath) => filePath === datapackDirectory)) {
+    if (!Object.keys(metadata).some((filePath) => resolve(filePath) === datapackDirectory)) {
       reply.status(404).send({ error: "Datapack not found" });
       return;
     }
-    await deleteDatapack(metadata, datapackDirectory);
+    await deleteDatapack(metadata, relative(process.cwd(), datapackDirectory));
     await writeFile(assetconfigs.fileMetadata, JSON.stringify(metadata));
   } catch (error) {
+    console.error(error);
     reply.status(500).send({ error: "Unknown error" });
     return;
   }
