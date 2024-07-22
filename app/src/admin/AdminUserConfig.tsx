@@ -193,6 +193,7 @@ const AdminDatapackDetails: React.FC<AdminDatapackDetailsProps> = observer(({ da
       <AgGridReact
         ref={gridRef}
         rowSelection="multiple"
+        rowMultiSelectWithClick
         rowDragManaged
         columnDefs={datapackColDefs}
         rowData={Object.values(datapackIndex)}
