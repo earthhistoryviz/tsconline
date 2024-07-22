@@ -89,7 +89,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => {});
+        readable.on("data", () => { });
         readable.on("end", () => {
           resolve();
         });
@@ -200,7 +200,7 @@ beforeAll(async () => {
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "error").mockImplementation(() => { });
 });
 
 afterAll(async () => {
@@ -431,6 +431,24 @@ describe("adminCreateUser tests", () => {
     expect(await response.json()).toEqual({ error: "Database error" });
     expect(response.statusCode).toBe(500);
   });
+  it("should return 500 if create user throws error and delete user throws error", async () => {
+    createUser.mockRejectedValueOnce(new Error());
+    deleteUser.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/user",
+      payload: body,
+      headers
+    });
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
+    expect(createUser).toHaveBeenCalledWith(customUser);
+    expect(createUser).toHaveBeenCalledTimes(1);
+    expect(deleteUser).toHaveBeenCalledOnce();
+    expect(deleteUser).toHaveBeenCalledWith({ email: customUser.email });
+    expect(await response.json()).toEqual({ error: "Database error" });
+    expect(response.statusCode).toBe(500);
+  })
   it("should return 500 if findUser throws error", async () => {
     // twice for prehandler
     findUser.mockResolvedValueOnce([testAdminUser]).mockRejectedValueOnce(new Error());
@@ -1090,6 +1108,27 @@ describe("adminUploadServerDatapack", () => {
     checkErrorHandler(response.statusCode);
     expect(await response.json()).toEqual({ error: "File was not decrypted properly" });
   });
+  it("should return 400 if bytesRead is 0", async () => {
+    createForm({
+      file: {
+        value: Buffer.from(""),
+        options: {
+          filename: "test.dpk",
+          contentType: "application/zip"
+        }
+      }
+    })
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/server/datapack",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(execFile).toHaveBeenCalledTimes(1);
+    expect(realpath).toHaveBeenCalledTimes(1);
+    expect(loadIndexes).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Empty file cannot be uploaded" });
+  })
   it("should return 500 if loadIndexes fails", async () => {
     loadIndexes.mockResolvedValueOnce(false);
     const response = await app.inject({
