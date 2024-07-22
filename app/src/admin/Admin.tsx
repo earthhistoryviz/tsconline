@@ -41,11 +41,11 @@ export const Admin = observer(function Admin() {
   if (!state.user.isAdmin) return <UnauthorizedAccess />;
   const tabs = [
     {
-      tabName: "User Config",
+      tabName: "Users",
       component: <AdminUserConfig />
     },
     {
-      tabName: "Datapack Config",
+      tabName: "Server Datapacks",
       component: <AdminDatapackConfig />
     }
   ];
