@@ -22,14 +22,13 @@ const datapackColDefs: ColDef[] = [
   { headerName: "Size", field: "size", flex: 0.5 },
   { headerName: "Format Version", field: "formatVersion", flex: 0.8 }
 ];
-  
 
 export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
   const theme = useTheme();
   const { state, actions } = useContext(context);
   useEffect(() => {
     if (!state.user.isAdmin) return;
-    loadRecaptcha()
+    loadRecaptcha();
     return () => {
       removeRecaptcha();
     };
@@ -37,10 +36,11 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
   return (
     <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
       <AgGridReact
-      columnDefs={datapackColDefs}
-      rowSelection="multiple"
-      rowDragManaged
-      rowData={Object.values(state.datapackIndex).filter((datapack) => datapack.uuid === undefined)}
+        columnDefs={datapackColDefs}
+        rowSelection="multiple"
+        rowDragManaged
+        rowMultiSelectWithClick
+        rowData={Object.values(state.datapackIndex).filter((datapack) => datapack.uuid === undefined)}
       />
     </Box>
   );

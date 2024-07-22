@@ -13,7 +13,7 @@ import * as index from "../src/index";
 import * as shared from "@tsconline/shared";
 import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach } from "vitest";
 import fastifySecureSession from "@fastify/secure-session";
-import { normalize, resolve } from "path";
+import { join, normalize, resolve } from "path";
 import fastifyMultipart from "@fastify/multipart";
 import formAutoContent from "form-auto-content";
 import { DatapackParsingPack, MapPack } from "@tsconline/shared";
@@ -81,7 +81,8 @@ vi.mock("path", async (importOriginal) => {
   const actual = await importOriginal<typeof path>();
   return {
     ...actual,
-    resolve: vi.fn().mockImplementation(actual.resolve)
+    resolve: vi.fn().mockImplementation(actual.resolve),
+    join: vi.fn().mockImplementation((...args) => args.join("/"))
   };
 });
 
@@ -736,7 +737,10 @@ describe("adminDeleteUserDatapack", () => {
   const realpath = vi.spyOn(fsPromises, "realpath");
   const writeFile = vi.spyOn(fsPromises, "writeFile");
   const deleteDatapack = vi.spyOn(fileMetadataHandler, "deleteDatapack");
-  const datapackDirectory = resolve("testdir/uploadDirectory", body.uuid, "datapack", body.datapack);
+  const datapackDirectory = resolve("testdir/uploadDirectory", body.uuid, "datapacks", body.datapack);
+  const relativeDatapackDirectory = normalize(
+    join("testdir", "uploadDirectory", body.uuid, "datapacks", body.datapack)
+  );
   const testMetadata = {
     [datapackDirectory]: {
       fileName: "test",
@@ -797,8 +801,8 @@ describe("adminDeleteUserDatapack", () => {
     });
     expect(loadFileMetadata).toBeCalledTimes(1);
     expect(loadFileMetadata).toBeCalledWith("testdir/fileMetadata.json");
-    expect(await response.json()).toEqual({ error: "Datapack not found" });
     expect(response.statusCode).toEqual(404);
+    expect(await response.json()).toEqual({ error: "Datapack not found" });
   });
   it("should return 500 if directory doesn't exist", async () => {
     realpath.mockRejectedValueOnce(new Error());
@@ -810,7 +814,7 @@ describe("adminDeleteUserDatapack", () => {
     });
     expect(loadFileMetadata).not.toHaveBeenCalled();
     expect(realpath).toBeCalledTimes(1);
-    expect(realpath).toBeCalledWith(datapackDirectory);
+    expect(realpath).toBeCalledWith(resolve("testdir/uploadDirectory"));
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toEqual(500);
   });
@@ -825,7 +829,7 @@ describe("adminDeleteUserDatapack", () => {
     });
     expect(loadFileMetadata).toBeCalledTimes(1);
     expect(deleteDatapack).toBeCalledTimes(1);
-    expect(deleteDatapack).toBeCalledWith(testMetadata, datapackDirectory);
+    expect(deleteDatapack).toBeCalledWith(testMetadata, relativeDatapackDirectory);
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toEqual(500);
   });
@@ -840,7 +844,7 @@ describe("adminDeleteUserDatapack", () => {
     });
     expect(loadFileMetadata).toBeCalledTimes(1);
     expect(deleteDatapack).toBeCalledTimes(1);
-    expect(deleteDatapack).toBeCalledWith(testMetadata, datapackDirectory);
+    expect(deleteDatapack).toBeCalledWith(testMetadata, relativeDatapackDirectory);
     expect(writeFile).toBeCalledTimes(1);
     expect(writeFile).toBeCalledWith("testdir/fileMetadata.json", JSON.stringify(testMetadata));
     expect(await response.json()).toEqual({ error: "Unknown error" });
@@ -856,7 +860,7 @@ describe("adminDeleteUserDatapack", () => {
     });
     expect(loadFileMetadata).toBeCalledTimes(1);
     expect(deleteDatapack).toBeCalledTimes(1);
-    expect(deleteDatapack).toBeCalledWith(testMetadata, datapackDirectory);
+    expect(deleteDatapack).toBeCalledWith(testMetadata, relativeDatapackDirectory);
     expect(writeFile).toBeCalledTimes(1);
     expect(writeFile).toBeCalledWith("testdir/fileMetadata.json", JSON.stringify(testMetadata));
     expect(await response.json()).toEqual({ message: "Datapack deleted" });
