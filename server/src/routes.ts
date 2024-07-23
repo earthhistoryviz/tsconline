@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { exec } from "child_process";
+import { exec, spawn } from "child_process";
 import { writeFile, stat, readFile, access, rm, mkdir, realpath } from "fs/promises";
 import {
   DatapackIndex,
@@ -27,6 +27,7 @@ import { glob } from "glob";
 import { DatapackDescriptionInfo } from "./types.js";
 import { MultipartFile } from "@fastify/multipart";
 import { runJavaEncrypt } from "./encryption.js";
+import { queue, maxQueueSize } from "./index.js";
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
@@ -586,11 +587,11 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
 
   for (const datapack of chartrequest.datapacks) {
     if (serverDatapacks.includes(datapack)) {
-      datapacks.push(`"${assetconfigs.datapacksDirectory}/${datapack}"`);
+      datapacks.push(`${assetconfigs.datapacksDirectory}/${datapack}`);
     } else if (uuid && userDatapackNames.includes(datapack)) {
       userDatapacks.push(path.join(assetconfigs.uploadDirectory, uuid, "datapacks", datapack));
     } else if (adminconfig.datapacks.some((datapackInfo) => datapackInfo.file === datapack)) {
-      datapacks.push(`"${assetconfigs.datapacksDirectory}/${datapack}"`);
+      datapacks.push(`${assetconfigs.datapacksDirectory}/${datapack}`);
     } else {
       console.log("ERROR: datapack: ", datapack, " is not included in activeDatapacks");
       console.log("assetconfig.activeDatapacks:", assetconfigs.activeDatapacks);
@@ -627,32 +628,80 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     return;
   }
   // Exec Java command and send final reply to browser
-  const cmd =
-    `java -jar ${assetconfigs.activeJar} ` +
-    // Turns off GUI (e.g Suggested Age pop-up (defaults to yes if -a flag is not passed))
-    `-node ` +
-    // Add settings:
-    `-s ${settingsFilePath} ` +
-    // Save settings to file:
-    `-ss ${settingsFilePath} ` +
-    // Add datapacks:
-    `-d ${datapacks.join(" ")} ` +
-    // Tell it where to save chart
-    `-o ${chartFilePath} ` +
-    // Don't use datapacks suggested age (if useSuggestedAge is true then ignore datapack ages)
-    `-a`;
+  const execJavaCommand = async (timeout: number) => {
+    const args = [
+      "-jar",
+      assetconfigs.activeJar,
+      // Turns off GUI (e.g Suggested Age pop-up (defaults to yes if -a flag is not passed))
+      "-node",
+      // Add settings:
+      "-s",
+      settingsFilePath,
+      // Save settings to file:
+      "-ss",
+      settingsFilePath,
+      // Add datapacks:
+      "-d",
+      ...datapacks,
+      // Tell it where to save chart
+      "-o",
+      chartFilePath,
+      // Don't use datapacks suggested age (if useSuggestedAge is true then ignore datapack ages)
+      "-a"
+    ];
+    return new Promise<void>((resolve, reject) => {
+      const cmd = "java";
+      console.log("Calling Java: ", `${cmd} ${args.join(" ")}`);
+      const javaProcess = spawn(cmd, args, { timeout, killSignal: "SIGKILL" });
+      let stdout = "";
+      let stderr = "";
+      let error = "";
 
-  // Exec Java command and send final reply to browser
-  await new Promise<void>((resolve) => {
-    console.log("Calling Java: ", cmd);
-    exec(cmd, function (error, stdout, stderror) {
-      console.log("Java finished, sending reply to browser");
-      console.log("Java error param: " + error);
-      console.log("Java stdout: " + stdout);
-      console.log("Java stderr: " + stderror);
-      resolve();
+      javaProcess.stdout.on("data", (data) => {
+        stdout += data;
+      });
+
+      javaProcess.stderr.on("data", (data) => {
+        stderr += data;
+      });
+
+      javaProcess.on("error", (err) => {
+        error = err.message;
+      });
+
+      javaProcess.on("close", (code, signal) => {
+        if (signal == "SIGKILL") {
+          reject(new Error("Java process timed out"));
+        }
+        console.log("Java finished, sending reply to browser");
+        console.log("Java error param: " + error);
+        console.log("Java stdout: " + stdout);
+        console.log("Java stderr: " + stderr);
+        resolve();
+      });
     });
-  });
+  };
+
+  // Add the execution task to the queue
+  if (queue.size >= maxQueueSize) {
+    console.log("Queue is full");
+    reply.status(503).send({ error: "Service is too busy. Please try again later." });
+    return;
+  }
+  try {
+    await queue.add(async () => {
+      await execJavaCommand(1000 * 15); // 15 seconds
+    });
+  } catch (error) {
+    if ((error as Error).message.includes("timed out")) {
+      console.error("Queue timed out");
+      reply.status(408).send({ error: "Request Timeout" });
+    } else {
+      console.error("Failed to execute Java command:", error);
+      reply.status(500).send({ error: "Internal Server Error" });
+    }
+    return;
+  }
   console.log("Sending reply to browser: ", {
     chartpath: chartUrlPath,
     hash: hash
