@@ -150,6 +150,12 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
     });
     const answer = await response.json();
     // will check if svg is loaded
+    if (answer.error) {
+      // If the server sends an error, display it
+      displayServerError(answer, ErrorCodes.INVALID_CHART_FROM_JAR, answer.error);
+      return;
+    }
+
     try {
       assertChartInfo(answer);
       generalActions.setChartHash(answer.hash);
