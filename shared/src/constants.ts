@@ -294,7 +294,7 @@ export const defaultRangeColumnInfoTSC: RangeColumnInfoTSC = {
 
 export const defaultRulerColumnInfoTSC: RulerColumnInfoTSC = {
   ...defaultColumnBasicInfoTSC,
-  justification: "left"
+  justification: "right"
 };
 
 export const defaultPointColumnInfoTSC: PointColumnInfoTSC = {
