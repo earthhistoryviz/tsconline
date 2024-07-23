@@ -574,7 +574,7 @@ export const addAgeColumn = action((column: ColumnInfo, serialNum: number) => {
     return;
   }
   const ageColumnName = "Age " + `${serialNum}`;
-  console.log(ageColumnName)
+  console.log(ageColumnName);
   const ageColumn: ColumnInfo = observable({
     ...cloneDeep(column),
     on: true,
