@@ -97,11 +97,13 @@ type ColumnContentProps = {
 };
 const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) => {
   const { actions } = useContext(context);
+  const [ageSerialNum, setAgeSerialNum] = useState(1);
   function addBlankColumn() {
     actions.addBlankColumn(column);
   }
   function addAgeColumn() {
-    actions.addAgeColumn(column);
+    setAgeSerialNum(ageSerialNum + 1);
+    actions.addAgeColumn(column, ageSerialNum);
   }
   function changeAgeColumnJustification(event: React.ChangeEvent<HTMLInputElement>) {
     const newJustification = event.target.value === "right" ? "right" : "left";

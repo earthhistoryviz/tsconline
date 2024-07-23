@@ -165,7 +165,7 @@ function getContrastText(color1: string) {
 export function findSerialNum(name: string) {
   const firstBlankspaceIndex = name.indexOf(" ");
   const secondBlankspaceIndex = name.indexOf(" for");
-  if (firstBlankspaceIndex === -1 || secondBlankspaceIndex === -1) {
+  if (firstBlankspaceIndex === -1 || (secondBlankspaceIndex === -1)) {
     return 0;
   }
   const serialNumber = Number(name.substring(firstBlankspaceIndex + 1, secondBlankspaceIndex));
