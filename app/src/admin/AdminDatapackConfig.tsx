@@ -44,14 +44,14 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
   };
   return (
     <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
-      <Box m="10px" gap="10px">
-        <TSCButton onClick={deleteDatapacks}>Delete Selected Datapacks</TSCButton>
+      <Box display="flex" m="10px" gap="20px">
         <TSCButton
           onClick={() => {
             setFormOpen(!formOpen);
           }}>
           Upload Datapack
         </TSCButton>
+        <TSCButton onClick={deleteDatapacks}>Delete Selected Datapacks</TSCButton>
         <Dialog open={formOpen} onClose={() => setFormOpen(false)}>
           <TSCDatapackUploadForm close={() => setFormOpen(false)} upload={actions.adminUploadServerDatapack} />
         </Dialog>
