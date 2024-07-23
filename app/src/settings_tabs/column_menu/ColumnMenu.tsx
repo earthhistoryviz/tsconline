@@ -5,12 +5,13 @@ import { Box, Typography } from "@mui/material";
 import "./ColumnMenu.css";
 import { FontMenu } from "../FontMenu";
 import { ChangeBackgroundColor } from "./BackgroundColor";
-import { ColumnInfo, assertRangeSettings } from "@tsconline/shared";
+import { ColumnInfo, assertRangeSettings, assertRulerSettings } from "@tsconline/shared";
 import {
   CustomDivider,
   CustomFormControlLabel,
   GenericTextField,
   StyledScrollbar,
+  TSCButton,
   TSCCheckbox
 } from "../../components";
 import { InfoBox } from "./InfoBox";
@@ -21,6 +22,7 @@ import { DataMiningSettings } from "../advanced_settings/DataMiningSettings";
 import AccordionPositionControls from "./AccordionPositionControls";
 import { CustomTabs } from "../../components/TSCCustomTabs";
 import { RangeSpecificSettings } from "../advanced_settings/RangeSpecificSettings";
+import { TSCRadioGroup } from "../../components/TSCRadioGroup";
 
 export const ColumnMenu = observer(() => {
   const { state } = useContext(context);
@@ -95,6 +97,26 @@ type ColumnContentProps = {
 };
 const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) => {
   const { actions } = useContext(context);
+  function addBlankColumn() {
+    actions.addBlankColumn(column);
+  }
+  function addAgeColumn() {
+    actions.addAgeColumn(column);
+  }
+  function changeAgeColumnJustification(event: React.ChangeEvent<HTMLInputElement>) {
+    const newJustification = event.target.value === "right" ? "right" : "left";
+    actions.changeAgeColumnJustification(column, newJustification);
+  }
+  const isRulerAgeColumn = () => {
+    if (column.columnDisplayType !== "Ruler" || !column.name.includes("Age")) return "";
+    try {
+      assertRulerSettings(column.columnSpecificSettings);
+      return column.columnSpecificSettings.justification;
+    } catch (e) {
+      return "";
+    }
+  };
+
   switch (tab) {
     case "General":
       return (
@@ -125,7 +147,29 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
             <ShowTitles column={column} />
             <EventSpecificSettings column={column} />
             <RangeSpecificSettings column={column} />
+            {column.children.length != 0 && (
+              <Box className="add-blank-or-age-button-container">
+                <TSCButton className="add-blank-or-age-button" onClick={addBlankColumn}>
+                  <Typography>Add Blank Column</Typography>
+                </TSCButton>
+                <TSCButton className="add-blank-or-age-button" onClick={addAgeColumn}>
+                  <Typography>Add Age Column</Typography>
+                </TSCButton>
+              </Box>
+            )}
             {!!column.popup && <InfoBox info={column.popup} />}
+
+            {!!isRulerAgeColumn() && (
+              <TSCRadioGroup
+                onChange={changeAgeColumnJustification}
+                name={"Age Ruler Justification"}
+                value={isRulerAgeColumn()}
+                radioArray={[
+                  { value: "left", label: "Left" },
+                  { value: "right", label: "Right" }
+                ]}
+              />
+            )}
           </Box>
         </StyledScrollbar>
       );
