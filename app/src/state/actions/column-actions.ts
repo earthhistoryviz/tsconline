@@ -568,13 +568,20 @@ export const addBlankColumn = action((column: ColumnInfo) => {
   column.children.splice(column.children.length, 0, blankColumn);
   state.settingsTabs.columnHashMap.set(blankColumnName, blankColumn);
 });
-export const addAgeColumn = action((column: ColumnInfo, serialNum: number) => {
+export const addAgeColumn = action((column: ColumnInfo) => {
   if (column.children.length == 0) {
     console.log("WARNING: tried to add an age column to a column with no children");
     return;
   }
-  const ageColumnName = "Age " + `${serialNum}`;
-  console.log(ageColumnName);
+
+  let serialNumber = 1;
+  const largestExistingSerialNum = column.children.findLastIndex(
+    (child) => /^Age \d+ for .+$/.test(child.name) && child.columnDisplayType === "Ruler"
+  );
+  if (largestExistingSerialNum > -1) {
+    serialNumber = findSerialNum(column.children[largestExistingSerialNum].name) + 1;
+  }
+  const ageColumnName = "Age " + `${serialNumber}` + " for " + column.name;
   const ageColumn: ColumnInfo = observable({
     ...cloneDeep(column),
     on: true,

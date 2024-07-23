@@ -474,12 +474,6 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
     case "BlockSeriesMetaColumn":
       column._id = `class datastore.${state.columnDisplayType}:` + state.name;
       break;
-    case "Data": {
-      if (/^Blank \d+ for .+$/.test(state.name)) {
-        column._id = "class datastore.DataColumn:Blank " + findSerialNum(state.name);
-        break;
-      }
-    }
     default:
       column._id = `class datastore.${state.columnDisplayType}Column:` + state.name;
   }
@@ -561,7 +555,7 @@ export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): strin
     }
     if (key === "title") {
       let title = column[key];
-      if (/^Age \d+$/.test(column[key])) {
+      if (/^Age \d+ for .+$/.test(column[key])) {
         title = "Age";
       } else if (/^Blank \d+ for .+$/.test(column[key])) {
         title = "Blank " + findSerialNum(column[key]);
