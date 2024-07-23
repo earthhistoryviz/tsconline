@@ -543,7 +543,6 @@ export const addBlankColumn = action((column: ColumnInfo) => {
     (child) => /^Blank \d+ for .+$/.test(child.name) && child.columnDisplayType === "Data"
   );
   if (largestExistingSerialNum > -1) {
-    serialNumber = Number(column.children[largestExistingSerialNum].name.charAt(6)) + 1;
     serialNumber = findSerialNum(column.children[largestExistingSerialNum].name) + 1;
   }
   const blankColumnName = "Blank " + `${serialNumber}` + " for " + column.name;
