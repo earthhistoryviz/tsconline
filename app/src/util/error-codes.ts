@@ -128,7 +128,7 @@ export const ErrorMessages = {
   [ErrorCodes.FETCH_USERS_FAILED]: "Unable to fetch users for admin display. Please try again later.",
   [ErrorCodes.ADMIN_ADD_USER_FAILED]: "Unable to add user. Please try again later.",
   [ErrorCodes.SERVER_TIMEOUT]: "Server timed out. Please try again later.",
-  [ErrorCodes.SERVER_BUSY]: "Server is too busy. Please try again later."
+  [ErrorCodes.SERVER_BUSY]: "Server is too busy. Please try again later.",
   [ErrorCodes.ADMIN_DELETE_USER_FAILED]: "Unable to delete user. Please try again later.",
   [ErrorCodes.UNABLE_TO_FETCH_USER_DATAPACKS]: "Unable to fetch user datapacks. Please try again later.",
   [ErrorCodes.CANNOT_DELETE_ROOT_USER]: "Cannot delete root user.",
