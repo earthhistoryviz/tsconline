@@ -513,7 +513,6 @@ export const addDataMiningColumn = action(
 );
 
 export const removeDataMiningColumn = action((column: ColumnInfo, type: string) => {
-  const columnToRemove = type + " for " + column.name;
   if (!column.parent) {
     console.log("WARNING: tried to remove a data mining column from a column with no parent");
     return;
@@ -523,6 +522,8 @@ export const removeDataMiningColumn = action((column: ColumnInfo, type: string) 
     console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
     return;
   }
+  const columnToRemove =
+    column.columnDisplayType !== "Chron" ? type + " for " + column.name : type + " for " + parent.name;
   const index = parent.children.findIndex((child) => child.name === columnToRemove);
   if (index === -1) {
     return;
