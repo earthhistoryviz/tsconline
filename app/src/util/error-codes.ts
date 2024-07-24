@@ -120,7 +120,7 @@ export const ErrorMessages = {
   [ErrorCodes.INCORRECT_PASSWORD]: "Incorrect password. Please try again.",
   [ErrorCodes.USERNAME_TAKEN]: "Username is already taken. Please try a different username.",
   [ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE]: "Unable to read file or file is empty. Please try again.",
-  [ErrorCodes.INVALID_CHART_FROM_JAR]: "Invalid chart generation due to invalid data/settings.",
+  [ErrorCodes.INVALID_CHART_FROM_JAR]: "Invalid chart generation due to invalid datapacks/settings.",
   [ErrorCodes.FETCH_USERS_FAILED]: "Unable to fetch users for admin display. Please try again later.",
   [ErrorCodes.ADMIN_ADD_USER_FAILED]: "Unable to add user. Please try again later.",
   [ErrorCodes.ADMIN_DELETE_USER_FAILED]: "Unable to delete user. Please try again later.",

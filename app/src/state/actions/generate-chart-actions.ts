@@ -153,6 +153,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
     if (answer.error) {
       // If the server sends an error, display it
       displayServerError(answer, ErrorCodes.INVALID_CHART_FROM_JAR, answer.error);
+      generalActions.setChartLoading(false);
       return;
     }
 
