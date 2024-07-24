@@ -401,7 +401,7 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       column = {
         ...cloneDeep(defaultZoneColumnInfoTSC),
         orientation: state.columnSpecificSettings.orientation
-      }
+      };
 
       break;
     case "Sequence":
