@@ -169,7 +169,7 @@ server.register(cors, {
   credentials: true
 });
 
-server.register(fastifyCompress, { global: true, threshold: 2048 });
+server.register(fastifyCompress, { global: false, threshold: 1024 * 20 });
 
 // removes the cached public/cts directory
 server.post("/removecache", async (request, reply) => {
@@ -189,6 +189,8 @@ server.post("/removecache", async (request, reply) => {
 server.get("/presets", async (_request, reply) => {
   reply.send(presets);
 });
+
+server.get("/server/datapack/:name", routes.fetchServerDatapack);
 
 server.get("/datapack-index", routes.fetchServerDatapackInfo);
 server.get("/map-pack-index", routes.fetchServerMapPackInfo);

@@ -55,7 +55,13 @@ export enum ErrorCodes {
   ADMIN_ADD_USER_FAILED = "ADMIN_ADD_USER_FAILED",
   ADMIN_DELETE_USER_FAILED = "ADMIN_DELETE_USER_FAILED",
   SERVER_TIMEOUT = "SERVER_TIMEOUT",
-  SERVER_BUSY = "SERVER_BUSY"
+  SERVER_BUSY = "SERVER_BUSY",
+  UNABLE_TO_FETCH_USER_DATAPACKS = "UNABLE_TO_FETCH_USER_DATAPACKS",
+  CANNOT_DELETE_ROOT_USER = "CANNOT_DELETE_ROOT_USER",
+  ADMIN_DELETE_USER_DATAPACK_FAILED = "ADMIN_DELETE_USER_DATAPACK_FAILED",
+  ADMIN_DELETE_SERVER_DATAPACK_FAILED = "ADMIN_DELETE_SERVER_DATAPACK_FAILED",
+  ADMIN_CANNOT_DELETE_ROOT_DATAPACK = "ADMIN_CANNOT_DELETE_ROOT_DATAPACK",
+  INVALID_SERVER_DATAPACK_REQUEST = "INVALID_SERVER_DATAPACK_REQUEST"
 }
 
 export const ErrorMessages = {
@@ -121,7 +127,13 @@ export const ErrorMessages = {
   [ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE]: "Unable to read file or file is empty. Please try again.",
   [ErrorCodes.FETCH_USERS_FAILED]: "Unable to fetch users for admin display. Please try again later.",
   [ErrorCodes.ADMIN_ADD_USER_FAILED]: "Unable to add user. Please try again later.",
-  [ErrorCodes.ADMIN_DELETE_USER_FAILED]: "Unable to delete user. Please try again later.",
   [ErrorCodes.SERVER_TIMEOUT]: "Server timed out. Please try again later.",
-  [ErrorCodes.SERVER_BUSY]: "Server is too busy. Please try again later."
+  [ErrorCodes.SERVER_BUSY]: "Server is too busy. Please try again later.",
+  [ErrorCodes.ADMIN_DELETE_USER_FAILED]: "Unable to delete user. Please try again later.",
+  [ErrorCodes.UNABLE_TO_FETCH_USER_DATAPACKS]: "Unable to fetch user datapacks. Please try again later.",
+  [ErrorCodes.CANNOT_DELETE_ROOT_USER]: "Cannot delete root user.",
+  [ErrorCodes.ADMIN_DELETE_USER_DATAPACK_FAILED]: "Unable to delete user datapack. Please try again later.",
+  [ErrorCodes.ADMIN_DELETE_SERVER_DATAPACK_FAILED]: "Unable to delete server datapack. Please try again later.",
+  [ErrorCodes.ADMIN_CANNOT_DELETE_ROOT_DATAPACK]: "Cannot delete root datapack. Ask server admin for assistance.",
+  [ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]: "Invalid server datapack request. Please try again later."
 };

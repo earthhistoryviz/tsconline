@@ -1,7 +1,7 @@
 import { Box, Divider, Tab, Tabs, Typography, styled } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { AdminUserConfig } from "./AdminUserConfig";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { context } from "../state";
 import { PersonOutline, DataObject } from "@mui/icons-material";
 import { useState } from "react";
@@ -9,6 +9,7 @@ import Color from "color";
 import "./Admin.css";
 import { UnauthorizedAccess } from "./UnauthorizedAccess";
 import { AdminDatapackConfig } from "./AdminDatapackConfig";
+import { loadRecaptcha, removeRecaptcha } from "../util";
 
 const AdminTab = styled(Tab)(({ theme }) => ({
   textTransform: "none",
@@ -34,18 +35,31 @@ const AdminTabs = styled(Tabs)(() => ({
 
 export const Admin = observer(function Admin() {
   const [tabIndex, setTabIndex] = useState(0);
-  const { state } = useContext(context);
+  const { actions, state } = useContext(context);
+  /**
+   * Make sure the user is an admin before loading the recaptcha and fetching users
+   */
+  useEffect(() => {
+    if (!state.user.isAdmin) return;
+    loadRecaptcha().then(async () => {
+      await actions.adminFetchUsers();
+    });
+    return () => {
+      removeRecaptcha();
+    };
+  }, [state.user.isAdmin]);
+
   const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabIndex(newValue);
   };
   if (!state.user.isAdmin) return <UnauthorizedAccess />;
   const tabs = [
     {
-      tabName: "User Config",
+      tabName: "Users",
       component: <AdminUserConfig />
     },
     {
-      tabName: "Datapack Config",
+      tabName: "Server Datapacks",
       component: <AdminDatapackConfig />
     }
   ];

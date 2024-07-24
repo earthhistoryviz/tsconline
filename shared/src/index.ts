@@ -45,7 +45,7 @@ export type DatapackParsingPack = {
   baseAge?: number;
   date?: string;
   verticalScale?: number;
-  isUserDatapack: boolean;
+  uuid?: string;
   description: string;
   title: string;
   file: string;
@@ -940,8 +940,7 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
   if ("topAge" in o && typeof o.topAge !== "number") throwError("DatapackParsingPack", "topAge", "number", o.topAge);
   if ("baseAge" in o && typeof o.baseAge !== "number")
     throwError("DatapackParsingPack", "baseAge", "number", o.baseAge);
-  if (typeof o.isUserDatapack !== "boolean")
-    throwError("DatapackParingPack", "isUserDatapack", "boolean", o.isUserDatapack);
+  if ("uuid" in o && typeof o.uuid !== "string") throwError("DatapackParsingPack", "uuid", "string", o.uuid);
   if (typeof o.description !== "string") throwError("DatapackParsingPack", "description", "string", o.description);
   if (typeof o.title !== "string") throwError("DatapackParsingPack", "title", "string", o.title);
   if (typeof o.file !== "string") throwError("DatapackParsingPack", "file", "string", o.file);
