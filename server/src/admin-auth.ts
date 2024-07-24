@@ -12,6 +12,7 @@ import {
 import { checkRecaptchaToken } from "./verify.js";
 import { googleRecaptchaBotThreshold } from "./login-routes.js";
 
+
 async function verifyAdmin(request: FastifyRequest, reply: FastifyReply) {
   const uuid = request.session.get("uuid");
   if (!uuid) {
