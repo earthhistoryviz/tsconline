@@ -48,9 +48,8 @@ import {
   findRangeOfWindowStats
 } from "../../util/data-mining";
 import { yieldControl } from "../../util";
-import { altUnitNamePrefix, snackbarTextLengthLimit } from "../../util/constant";
+import { altUnitNamePrefix } from "../../util/constant";
 import { findSerialNum } from "../../util/util";
-import { pushSnackbar } from "./general-actions";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -164,11 +163,8 @@ export const applyChartColumnSettings = action(
           parentCol.children.push(column);
         }
       }
-    } else if (curcol === undefined) {
-      //const errorDesc: string = "Unknown column name found while loading settings: ";
-      //makes website super slow if a lot of unknown columns (ex. if loaded settings for a different datapack)
-      //pushSnackbar(errorDesc + columnName.substring(0, snackbarTextLengthLimit - errorDesc.length - 1), "warning");
-    }
+    } //else column is undefined, so skip (means column isn't in selected datapack)
+
     if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
       for (let i = 0; i < settings.children.length; i++) {
         curcol = state.settingsTabs.columnHashMap.get(columnName + " " + extractName(settings.children[i]._id));
