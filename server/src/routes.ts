@@ -628,6 +628,9 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     reply.send({ error: "ERROR: failed to save settings" });
     return;
   }
+  let errorFound = false; // error found during chart generation via java jar call
+  let errorMessage = ""; // error message found during chart generation via java jar call
+  
   // Exec Java command and send final reply to browser
   const execJavaCommand = async (timeout: number) => {
     const args = [
@@ -678,6 +681,30 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
         console.log("Java error param: " + error);
         console.log("Java stdout: " + stdout);
         console.log("Java stderr: " + stderr);
+
+        // Split stdout and stderr into lines
+        const stdoutLines = stdout.toString().split("\n");
+        const stderrLines = stderr.toString().split("\n");
+
+        // Check for known errors in stdout
+        for (const line of stdoutLines) {
+          if (containsKnownError(line)) {
+            errorFound = true;
+            errorMessage = line;
+            break;
+          }
+        }
+
+        // Check for known errors in stderr if not found in stdout
+        if (!errorFound) {
+          for (const line of stderrLines) {
+            if (containsKnownError(line)) {
+              errorFound = true;
+              errorMessage = line;
+              break;
+            }
+          }
+        }
         resolve();
       });
     });
@@ -703,11 +730,26 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     }
     return;
   }
-  console.log("Sending reply to browser: ", {
-    chartpath: chartUrlPath,
-    hash: hash
-  });
-  reply.send({ chartpath: chartUrlPath, hash: hash });
+  if (errorFound) {
+    console.log("Known error found in Java output. Sending error as response");
+    console.log(
+      "The following failed: ",
+      {
+        chartpath: chartUrlPath,
+        hash: hash
+      },
+      "because of: ",
+      { errorMessage }
+    );
+    reply.send({ error: errorMessage });
+  } else {
+    console.log("No known error found in Java output. Sending chartpath and hash.");
+    console.log("Sending reply to browser: ", {
+      chartpath: chartUrlPath,
+      hash: hash
+    });
+    reply.send({ chartpath: chartUrlPath, hash: hash });
+  }
 };
 
 // Serve timescale data endpoint
