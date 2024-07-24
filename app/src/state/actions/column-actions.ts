@@ -19,6 +19,7 @@ import {
   assertEventSettings,
   assertPointColumnInfoTSC,
   assertPointSettings,
+  assertRulerSettings,
   assertSequenceColumnInfoTSC,
   assertSequenceSettings,
   assertSubChronInfoArray,
@@ -44,6 +45,7 @@ import {
 } from "../../util/data-mining";
 import { yieldControl } from "../../util";
 import { altUnitNamePrefix } from "../../util/constant";
+import { findSerialNum } from "../../util/util";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -513,7 +515,6 @@ export const addDataMiningColumn = action(
 );
 
 export const removeDataMiningColumn = action((column: ColumnInfo, type: string) => {
-  const columnToRemove = type + " for " + column.name;
   if (!column.parent) {
     console.log("WARNING: tried to remove a data mining column from a column with no parent");
     return;
@@ -523,12 +524,98 @@ export const removeDataMiningColumn = action((column: ColumnInfo, type: string) 
     console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
     return;
   }
+  const columnToRemove =
+    column.columnDisplayType !== "Chron" ? type + " for " + column.name : type + " for " + parent.name;
   const index = parent.children.findIndex((child) => child.name === columnToRemove);
   if (index === -1) {
     return;
   }
   parent.children.splice(index, 1);
   state.settingsTabs.columnHashMap.delete(columnToRemove);
+});
+
+export const addBlankColumn = action((column: ColumnInfo) => {
+  if (column.children.length == 0) {
+    console.log("WARNING: tried to add a blank column to a column with no children");
+    return;
+  }
+  let serialNumber = 1;
+  const largestExistingSerialNum = column.children.findLastIndex(
+    (child) => /^Blank \d+ for .+$/.test(child.name) && child.columnDisplayType === "Data"
+  );
+  if (largestExistingSerialNum > -1) {
+    serialNumber = findSerialNum(column.children[largestExistingSerialNum].name) + 1;
+  }
+  const blankColumnName = "Blank " + `${serialNumber}` + " for " + column.name;
+  const blankColumn: ColumnInfo = observable({
+    ...cloneDeep(column),
+    on: true,
+    children: [],
+    subInfo: [],
+    parent: column.name,
+    popup: "",
+    name: blankColumnName,
+    editName: "Blank " + `${serialNumber}`,
+    enableTitle: true,
+    columnDisplayType: "Data",
+    width: 100,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    }
+  });
+
+  column.children.splice(column.children.length, 0, blankColumn);
+  state.settingsTabs.columnHashMap.set(blankColumnName, blankColumn);
+});
+export const addAgeColumn = action((column: ColumnInfo) => {
+  if (column.children.length == 0) {
+    console.log("WARNING: tried to add an age column to a column with no children");
+    return;
+  }
+
+  let serialNumber = 1;
+  const largestExistingSerialNum = column.children.findLastIndex(
+    (child) => /^Age \d+ for .+$/.test(child.name) && child.columnDisplayType === "Ruler"
+  );
+  if (largestExistingSerialNum > -1) {
+    serialNumber = findSerialNum(column.children[largestExistingSerialNum].name) + 1;
+  }
+  const ageColumnName = "Age " + `${serialNumber}` + " for " + column.name;
+  const ageColumn: ColumnInfo = observable({
+    ...cloneDeep(column),
+    on: true,
+    children: [],
+    parent: column.name,
+    subInfo: [],
+    popup: "",
+    name: ageColumnName,
+    editName: "Age",
+    enableTitle: true,
+    columnDisplayType: "Ruler",
+    width: undefined,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    },
+    columnSpecificSettings: {
+      justification: "left"
+    }
+  });
+  column.children.splice(column.children.length, 0, ageColumn);
+  state.settingsTabs.columnHashMap.set(ageColumnName, ageColumn);
+});
+
+export const changeAgeColumnJustification = action((column: ColumnInfo, newJustification: "left" | "right") => {
+  //add assertRulerSettings to make sure the column is of ruler&Age type
+  if (column.columnDisplayType !== "Ruler" || !column.name.includes("Age")) {
+    console.log("WARNING: tried to change justification on a column which is not Age");
+    return;
+  }
+  assertRulerSettings(column.columnSpecificSettings);
+  column.columnSpecificSettings.justification = newJustification;
 });
 
 export const setShowOfAllChildren = action(async (column: ColumnInfo, isShown: boolean, counter = { count: 0 }) => {
