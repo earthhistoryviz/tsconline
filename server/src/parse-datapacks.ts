@@ -59,6 +59,7 @@ import {
   allColumnTypes,
   DatapackWarning,
   defaultRangeSettings,
+  defaultZoneSettings,
   defaultSequenceSettings,
   assertSequence,
   SequenceSettings
@@ -1516,7 +1517,8 @@ function addFaciesChildren(
     rgb,
     units,
     columnDisplayType: "Zone",
-    expanded: false
+    expanded: false,
+    columnSpecificSettings: { orientation: "normal" }
   });
   children.push({
     name: `${name} Facies Label`,
@@ -1535,7 +1537,8 @@ function addFaciesChildren(
     rgb,
     units,
     columnDisplayType: "Zone",
-    expanded: false
+    expanded: false,
+    columnSpecificSettings: { orientation: "normal" }
   });
   children.push({
     name: `${name} Series Label`,
@@ -1554,7 +1557,8 @@ function addFaciesChildren(
     units,
     columnDisplayType: "Zone",
     show: true,
-    expanded: false
+    expanded: false,
+    columnSpecificSettings: { orientation: "vertical" }
   });
   // add the font options present on children to parent
   for (const child of children) {
@@ -1627,7 +1631,8 @@ function addChronChildren(
     units,
     columnDisplayType: "Zone",
     show: true,
-    expanded: false
+    expanded: false,
+    columnSpecificSettings: { orientation: "normal" }
   });
   children.push({
     name: `${name} Series Label`,
@@ -1646,7 +1651,8 @@ function addChronChildren(
     units,
     columnDisplayType: "Zone",
     show: true,
-    expanded: false
+    expanded: false,
+    columnSpecificSettings: { orientation: "vertical" }
   });
   // add the font options present on children to parent
   for (const child of children) {
@@ -1712,6 +1718,9 @@ function addColumnSettings(column: ColumnInfo, columnSpecificSettings?: ColumnSp
         throw new Error("Error adding sequence column, no column specific settings found");
       }
       column.columnSpecificSettings = columnSpecificSettings;
+      break;
+    case "Zone":
+      column.columnSpecificSettings = _.cloneDeep(defaultZoneSettings);
       break;
     default:
       break;
@@ -1806,9 +1815,9 @@ export function configureOptionalPointSettings(tabSeparated: string[], point: Po
   if (tabSeparated.length < 1) {
     console.log(
       "Error adding optional point configuration, line is not formatted correctly: " +
-        tabSeparated +
-        " with size " +
-        tabSeparated.length
+      tabSeparated +
+      " with size " +
+      tabSeparated.length
     );
     return;
   }

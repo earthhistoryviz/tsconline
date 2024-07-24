@@ -5,7 +5,7 @@ import { Box, Typography } from "@mui/material";
 import "./ColumnMenu.css";
 import { FontMenu } from "../FontMenu";
 import { ChangeBackgroundColor } from "./BackgroundColor";
-import { ColumnInfo, assertRangeSettings, assertRulerSettings } from "@tsconline/shared";
+import { ColumnInfo, assertRangeSettings, assertRulerSettings, assertZoneSettings } from "@tsconline/shared";
 import {
   CustomDivider,
   CustomFormControlLabel,
@@ -107,11 +107,24 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
     const newJustification = event.target.value === "right" ? "right" : "left";
     actions.changeAgeColumnJustification(column, newJustification);
   }
+  function changeZoneColumnOrientation(event: React.ChangeEvent<HTMLInputElement>) {
+    const newOrientation = event.target.value === "vertical" ? "vertical" : "normal";
+    actions.changeZoneColumnOrientation(column, newOrientation);
+  }
   const isRulerAgeColumn = () => {
     if (column.columnDisplayType !== "Ruler" || !column.name.includes("Age")) return "";
     try {
       assertRulerSettings(column.columnSpecificSettings);
       return column.columnSpecificSettings.justification;
+    } catch (e) {
+      return "";
+    }
+  };
+  const isZoneColumn = () => {
+    if (column.columnDisplayType !== "Zone") return "";
+    try {
+      assertZoneSettings(column.columnSpecificSettings);
+      return column.columnSpecificSettings.orientation;
     } catch (e) {
       return "";
     }
@@ -167,6 +180,17 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
                 radioArray={[
                   { value: "left", label: "Left" },
                   { value: "right", label: "Right" }
+                ]}
+              />
+            )}
+            {!!isZoneColumn() && (
+              <TSCRadioGroup
+                onChange={changeZoneColumnOrientation}
+                name={"Label Orientation"}
+                value={isZoneColumn()}
+                radioArray={[
+                  { value: "normal", label: "Horizontal" },
+                  { value: "vertical", label: "Vertical" }
                 ]}
               />
             )}
