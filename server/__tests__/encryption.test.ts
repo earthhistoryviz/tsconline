@@ -24,25 +24,29 @@ async function checkFileExists(filePath: string): Promise<boolean> {
   }
 }
 
+const baseDir = path.resolve(__dirname, '../..');
 let jarFilePath = "";
-let resultPath = "server/__tests__/__data__/encryption-test-generated-file";
-if (await checkFileExists("/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar")) {
-  jarFilePath = "/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar";
-  resultPath = "/home/runner/work/tsconline/tsconline/server/__tests__/__data__/encryption-test-generated-file";
+const resultPath = path.join(baseDir, "server/__tests__/__data__/encryption-test-generated-file");
+const testUsageJarPath = path.join(baseDir, "server/assets/jars/testUsageJar.jar");
+if (await checkFileExists(testUsageJarPath)) {
+  jarFilePath = testUsageJarPath;
 } else {
   try {
-    const contents = JSON.parse((await readFile("server/assets/config.json")).toString());
+    const configPath = path.join(baseDir, "server/assets/config.json");
+    const contents = JSON.parse((await readFile(configPath)).toString());
     assertAssetConfig(contents);
-    jarFilePath = "server/" + contents.activeJar;
+    jarFilePath = path.join(baseDir, "server", contents.activeJar);
   } catch (e) {
-    throw new Error("ERROR: Failed to load local jar file path from assets/config.json.  Error was: " + e);
+    throw new Error("ERROR: Failed to load local jar file path from assets/config.json. Error was: " + e);
   }
 }
+
 if (!jarFilePath) throw new Error("jar file path shouldn't be empty");
 
 describe("runJavaEncrypt", async () => {
   it(
     "should correctly encrypt an unencrypted TSCreator txt file",
+    { timeout: 20000 },
     async () => {
       if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-1.txt"))) {
         await runJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-1.txt", resultPath);
@@ -61,11 +65,11 @@ describe("runJavaEncrypt", async () => {
       const sameContent = (value: Buffer) => value.equals(key1) || value.equals(key2);
       expect(result.length).toSatisfy(sameLength);
       expect(result).toSatisfy(sameContent);
-    },
-    { timeout: 20000 }
+    }
   );
   it(
     "should correctly encrypt an encrypted TSCreator txt file, when the TSCreator Encrypted Datafile title is manually removed from the original encrypted file.",
+    { timeout: 20000 },
     async () => {
       if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-2.txt"))) {
         await runJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-2.txt", resultPath);
@@ -77,11 +81,11 @@ describe("runJavaEncrypt", async () => {
       const [result, key] = await Promise.all([readFile(resultFilePath), readFile(keyFilePath)]);
       expect(result.length).toBe(key.length);
       expect(result).toEqual(key);
-    },
-    { timeout: 20000 }
+    }
   );
   it(
     "should correctly encrypt an unencrypted TSCreator zip file",
+    { timeout: 20000 },
     async () => {
       if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-5.dpk"))) {
         await runJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-5.zip", resultPath);
@@ -94,10 +98,10 @@ describe("runJavaEncrypt", async () => {
       expect(result.length).toBe(key.length);
       expect(result).toEqual(key);
     },
-    { timeout: 20000 }
   );
   it(
     "should correctly encrypt an encrypted TSCreator zip file",
+    { timeout: 20000 },
     async () => {
       if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-6.dpk"))) {
         await runJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-6.zip", resultPath);
@@ -110,7 +114,6 @@ describe("runJavaEncrypt", async () => {
       expect(result.length).toBe(key.length);
       expect(result).toEqual(key);
     },
-    { timeout: 20000 }
   );
   it("should not encrypt a bad txt file", async () => {
     await runJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-3.txt", resultPath);
