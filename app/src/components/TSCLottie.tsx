@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import lottie, { AnimationItem } from "lottie-web";
+import lottie, { AnimationItem } from "lottie-web/build/player/lottie_light";
 
 type LottieIconButtonProps = {
   animationData: object;

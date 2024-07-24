@@ -3,14 +3,12 @@ name: Merge Pipeline
 on:
   pull_request:
     types: [opened, synchronize, reopened] # Runs on opening a pr, pushing to a pr, and reopening a pr
-    branches:
-      - main
 
 jobs:
   check-files:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -69,7 +67,7 @@ jobs:
   code-quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Dependencies
         run: yarn install
@@ -117,18 +115,18 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: "21"
 
       - name: Install Dependencies
         run: yarn install
 
-      - name: Build with Vite
-        id: vite_build
+      - name: Build the project
+        id: build
         run: |
           set -o pipefail
           if ! yarn build 2>&1 | tee build.log; then
@@ -137,7 +135,7 @@ jobs:
         continue-on-error: true
 
       - name: Report Build Errors
-        if: steps.vite_build.outputs.build_failed == 'true'
+        if: steps.build.outputs.build_failed == 'true'
         uses: actions/github-script@v5
         with:
           script: |
@@ -155,7 +153,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for any build failures
-        if: steps.vite_build.outputs.build_failed == 'true'
+        if: steps.build.outputs.build_failed == 'true'
         run: exit 1
 
       - name: Set up SSH key
@@ -179,26 +177,18 @@ jobs:
           java-version: "8"
           java-package: "jdk"
 
-      - name: set up make & zip
-        run: |
-          sudo apt install make
-          sudo apt install zip
-
       - name: Build and compile TSCreator Jar for tests
         run: |
-          cd /home/runner/work/tsconline/tsconline/tscreator/devel
+          cd ${{ github.workspace }}/tscreator/devel
           make
           make jar
-          find '/home/runner/work/tsconline/tsconline/tscreator/jars/' -type f -name '*.jar' -exec cp {} '/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar' \;
-          if [ -f "/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar" ]; then
+          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/server/assets/jars/testUsageJar.jar \;
+          if [ -f "${{ github.workspace }}/server/assets/jars/testUsageJar.jar" ]; then
             echo "Successfully made jar."
           else
             echo "Failed to make jar."
             exit 1
           fi
-
-      - name: Install xvfb
-        run: sudo apt-get install xvfb
 
       - name: Run Tests
         id: run_tests
@@ -206,9 +196,9 @@ jobs:
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
           set -o pipefail
-          if ! yarn test > test_output.log 2>&1; then
-              echo "test_failed=true" >> $GITHUB_OUTPUT
-              fi
+          if ! yarn coverage:ci > test_output.log 2>&1; then
+            echo "test_failed=true" >> $GITHUB_OUTPUT
+          fi
         continue-on-error: true
 
       - name: Report Test Errors
@@ -232,6 +222,37 @@ jobs:
       - name: Check for any test failures
         if: steps.run_tests.outputs.test_failed == 'true'
         run: exit 1
+
+      - name: Checkout main branch for base lcov file
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main-branch
+          fetch-depth: 0
+
+      # Change to coverage:ci
+      - name: Generate base lcov file
+        run: |
+          cd main-branch
+          mv ${{ github.workspace }}/server/assets/jars/testUsageJar.jar ${{ github.workspace }}/main-branch/server/assets/jars/testUsageJar.jar
+          yarn
+          cd shared
+          yarn build
+          cd ..
+          yarn coverage
+          cp coverage/lcov.info ../base-lcov.info
+
+      - name: Generate Code Coverage report
+        id: code-coverage
+        uses: barecheck/code-coverage-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          barecheck-github-app-token: ${{ secrets.BARECHECK_GITHUB_APP_TOKEN }}
+          lcov-file: "./coverage/lcov.info"
+          base-lcov-file: "./base-lcov.info"
+          minimum-ratio: 0 # Fails Github action once code coverage is decreasing
+          send-summary-comment: true
+          show-annotations: "warning" # Possible options warning|error
 
   wait-for-checks:
     runs-on: ubuntu-latest
@@ -268,7 +289,7 @@ jobs:
           fi
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
 
