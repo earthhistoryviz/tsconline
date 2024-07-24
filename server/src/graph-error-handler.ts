@@ -8,7 +8,8 @@ export const knownErrors = new Set([
   "Error! No columns selected",
   "Internal error while generating!",
   "Out of Memory!",
-  "Premature end of file."
+  "Premature end of file.",
+  "Content is not allowed in prolog."
 ]);
 
 // this function checks if the line contains any of the known errors
