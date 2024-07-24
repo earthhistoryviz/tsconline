@@ -630,7 +630,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   }
   let errorFound = false; // error found during chart generation via java jar call
   let errorMessage = ""; // error message found during chart generation via java jar call
-  
+
   // Exec Java command and send final reply to browser
   const execJavaCommand = async (timeout: number) => {
     const args = [
