@@ -1,5 +1,5 @@
-import { ColumnHeaderProps, DisplayedColumnTypes, RGB, ValidFontOptions, allFontOptions } from ".";
-
+import { ColumnHeaderProps, DisplayedColumnTypes, RGB, ValidFontOptions } from "./index.js";
+import { allFontOptions } from "./constants.js";
 export function roundToDecimalPlace(value: number, decimalPlace: number) {
   const factor = Math.pow(10, decimalPlace);
   return Math.round(value * factor) / factor;

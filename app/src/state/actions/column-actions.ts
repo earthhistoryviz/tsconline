@@ -142,11 +142,11 @@ export const applyChartColumnSettings = action(
       if (settings.isDataMiningColumn) {
         const parentCol = state.settingsTabs.columnHashMap.get(parent);
         if (!parentCol) {
-          const errorDesc: string = "Unknown column found while applying settings: ";
-          pushSnackbar(errorDesc + columnName.substring(0, snackbarTextLengthLimit - errorDesc.length - 1), "warning");
+          console.error("Unknown column found while applying settings: ", parent);
         } else {
           const column: ColumnInfo = {
             ...createDefaultColumnHeaderProps(),
+            name: columnName,
             editName: "",
             fontOptions: getValidFontOptions("Point"),
             fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
@@ -159,6 +159,8 @@ export const applyChartColumnSettings = action(
             columnSpecificSettings: cloneDeep(defaultPointSettings)
           };
           setColumnProperties(column, settings);
+          //new column, so add to hashmap
+          state.settingsTabs.columnHashMap.set(columnName, column);
           parentCol.children.push(column);
         }
       }
