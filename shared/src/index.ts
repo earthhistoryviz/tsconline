@@ -1,6 +1,5 @@
 // Shared types between app and server (i.e. messages they send back and forth)
 
-import { type } from "os";
 import { defaultFontsInfoConstant } from "./constants.js";
 
 export * from "./constants.js";
@@ -246,7 +245,7 @@ export type RulerSettings = {
 };
 export type ZoneSettings = {
   orientation: ZoneOrientation;
-}
+};
 export type SequenceSettings = {
   labelMarginLeft: number;
   labelMarginRight: number;
@@ -1218,8 +1217,8 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
     default:
       throw new Error(
         "ColumnSpecificSettings must be an object of a valid column type. Found value of " +
-        type +
-        " which is not a valid column type"
+          type +
+          " which is not a valid column type"
       );
   }
 }

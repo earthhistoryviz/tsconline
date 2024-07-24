@@ -434,4 +434,4 @@ export const defaultSequenceSettings: SequenceSettings = {
 
 export const defaultZoneSettings: ZoneSettings = {
   orientation: "normal"
-}
+};

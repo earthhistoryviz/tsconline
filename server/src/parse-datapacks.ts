@@ -1815,9 +1815,9 @@ export function configureOptionalPointSettings(tabSeparated: string[], point: Po
   if (tabSeparated.length < 1) {
     console.log(
       "Error adding optional point configuration, line is not formatted correctly: " +
-      tabSeparated +
-      " with size " +
-      tabSeparated.length
+        tabSeparated +
+        " with size " +
+        tabSeparated.length
     );
     return;
   }
