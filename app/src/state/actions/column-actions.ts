@@ -9,6 +9,7 @@ import {
   DataMiningSettings,
   EventFrequency,
   EventSettings,
+  PointColumnInfoTSC,
   PointSettings,
   RGB,
   RangeSettings,
@@ -50,6 +51,7 @@ import {
 import { yieldControl } from "../../util";
 import { altUnitNamePrefix } from "../../util/constant";
 import { findSerialNum } from "../../util/util";
+import { dataminingIdentifiers } from "../../constants";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -116,6 +118,46 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
   }
 }
 
+export function handleDataMiningColumns() {
+  let distanceFromInitial = 0;
+  let distanceBucket = state.settingsTabs.dataMiningColumnsCache.get(distanceFromInitial);
+  while (distanceBucket) {
+    for (const settings of distanceBucket) {
+      const columnName = extractName(settings._id);
+      const refName = columnName.substring(columnName.indexOf("for") + 4, columnName.length);
+      const refCol = state.settingsTabs.columnHashMap.get(refName);
+      //don't add if reference column doesn't exist (or is the root column)
+      if (!refCol || !refCol.parent) continue;
+      const parentCol = state.settingsTabs.columnHashMap.get(refCol.parent);
+      if (!parentCol) continue;
+      const column: ColumnInfo = {
+        ...createDefaultColumnHeaderProps(),
+        name: columnName,
+        editName: "",
+        fontOptions: getValidFontOptions("Point"),
+        fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+        children: [],
+        parent: refCol.parent,
+        units: refCol.units,
+        columnDisplayType: "Point",
+        show: true,
+        expanded: false,
+        columnSpecificSettings: cloneDeep(defaultPointSettings)
+      };
+      setColumnProperties(column, settings);
+      //TODO: min and max of datamining column is different from reference column
+      column.minAge = refCol.minAge;
+      column.maxAge = refCol.maxAge;
+      //new column, so add to hashmap
+      state.settingsTabs.columnHashMap.set(columnName, column);
+      parentCol.children.push(column);
+    }
+    distanceBucket = state.settingsTabs.dataMiningColumnsCache.get(++distanceFromInitial);
+  }
+  //reset cache
+  state.settingsTabs.dataMiningColumnsCache = new Map<number, PointColumnInfoTSC[]>();
+}
+
 /**
  * applys the chart column settings from a settings file to the
  * columninfo stored in state.
@@ -125,58 +167,45 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
  *
  */
 
-export const applyChartColumnSettings = action(
-  "applyChartColumnSettings",
-  (settings: ColumnInfoTSC, parent: string) => {
-    const columnName = extractName(settings._id);
-    let curcol: ColumnInfo | undefined =
-      state.settingsTabs.columnHashMap.get(columnName) ||
-      state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
-    if (curcol) {
-      setColumnProperties(curcol, settings);
+export const applyChartColumnSettings = action("applyChartColumnSettings", (settings: ColumnInfoTSC) => {
+  const columnName = extractName(settings._id);
+  let curcol: ColumnInfo | undefined =
+    state.settingsTabs.columnHashMap.get(columnName) ||
+    state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
+  if (curcol) {
+    setColumnProperties(curcol, settings);
+  }
+  //while applying settings, found datamining column that hasn't been added by the user, create a new column
+  else if (extractColumnType(settings._id) === "PointColumn") {
+    assertPointColumnInfoTSC(settings);
+    if (settings.isDataMiningColumn) {
+      let refColumnName = columnName;
+      let distanceFromInitial = -1;
+      while (dataminingIdentifiers.includes(refColumnName.substring(0, refColumnName.indexOf("for") - 1))) {
+        refColumnName = refColumnName.substring(refColumnName.indexOf("for") + 4, refColumnName.length);
+        distanceFromInitial++;
+      }
+      if (distanceFromInitial === -1) {
+        console.error("datamining column had wrong identifier", columnName);
+      }
+      const distanceBucket = state.settingsTabs.dataMiningColumnsCache.get(distanceFromInitial);
+      if (!distanceBucket) {
+        state.settingsTabs.dataMiningColumnsCache.set(distanceFromInitial, [settings]);
+      } else distanceBucket.push(settings);
     }
-    //while applying settings, found datamining column that hasn't been added by the user, create a new column
-    else if (extractColumnType(settings._id) === "PointColumn") {
-      assertPointColumnInfoTSC(settings);
-      if (settings.isDataMiningColumn) {
-        const parentCol = state.settingsTabs.columnHashMap.get(parent);
-        if (!parentCol) {
-          console.error("Unknown column found while applying settings: ", parent);
-        } else {
-          const column: ColumnInfo = {
-            ...createDefaultColumnHeaderProps(),
-            name: columnName,
-            editName: "",
-            fontOptions: getValidFontOptions("Point"),
-            fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
-            children: [],
-            parent: null,
-            units: parentCol.units,
-            columnDisplayType: "Point",
-            show: true,
-            expanded: false,
-            columnSpecificSettings: cloneDeep(defaultPointSettings)
-          };
-          setColumnProperties(column, settings);
-          //new column, so add to hashmap
-          state.settingsTabs.columnHashMap.set(columnName, column);
-          parentCol.children.push(column);
-        }
-      }
-    } //else column is undefined, so skip (means column isn't in selected datapack)
+  } //else column is undefined, so skip (means column isn't in selected datapack)
 
-    if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
-      for (let i = 0; i < settings.children.length; i++) {
-        curcol = state.settingsTabs.columnHashMap.get(columnName + " " + extractName(settings.children[i]._id));
-        if (curcol !== undefined) setColumnProperties(curcol, settings.children[i]);
-      }
-    } else {
-      for (let i = 0; i < settings.children.length; i++) {
-        applyChartColumnSettings(settings.children[i], columnName);
-      }
+  if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
+    for (let i = 0; i < settings.children.length; i++) {
+      curcol = state.settingsTabs.columnHashMap.get(columnName + " " + extractName(settings.children[i]._id));
+      if (curcol !== undefined) setColumnProperties(curcol, settings.children[i]);
+    }
+  } else {
+    for (let i = 0; i < settings.children.length; i++) {
+      applyChartColumnSettings(settings.children[i]);
     }
   }
-);
+});
 
 /**
  * aligns the row order of the columns to the order specified by the loaded settings file

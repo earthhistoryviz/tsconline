@@ -1,5 +1,17 @@
 import { ChartSettings } from "./types";
 
+export const dataminingIdentifiers = [
+  "FAD",
+  "LAD",
+  "Combined Events",
+  "Regression Analysis",
+  "Minimum Value",
+  "Maximum Value",
+  "Average Value",
+  "Rate of Change",
+  "Overlay"
+];
+
 export const settings: ChartSettings = {
   timeSettings: {
     Ma: {
