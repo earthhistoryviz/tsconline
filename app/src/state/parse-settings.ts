@@ -370,7 +370,7 @@ export function generateSettingsXml(stateSettings: ChartSettings, indent: string
     xml += `${indent}<setting name="skipEmptyColumns" unit="${unit}">${timeSettings.skipEmptyColumns}</setting>\n`;
   }
   xml += `${indent}<setting name="variableColors">UNESCO</setting>\n`;
-  xml += `${indent}<setting name="noIndentPattern">false</setting>\n`;
+  xml += `${indent}<setting name="noIndentPattern">${stateSettings.noIndentPattern}</setting>\n`;
   xml += `${indent}<setting name="negativeChk">false</setting>\n`;
   xml += `${indent}<setting name="doPopups">${stateSettings.mouseOverPopupsEnabled}</setting>\n`;
   xml += `${indent}<setting name="enEventColBG">${stateSettings.enableColumnBackground}</setting>\n`;
