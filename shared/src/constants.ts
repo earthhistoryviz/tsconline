@@ -16,7 +16,8 @@ import {
   SequenceColumnInfoTSC,
   SequenceSettings,
   ValidFontOptions,
-  ZoneColumnInfoTSC
+  ZoneColumnInfoTSC,
+  ZoneSettings
 } from "./index";
 
 export const allColumnTypes = [
@@ -430,3 +431,7 @@ export const defaultSequenceSettings: SequenceSettings = {
   drawNameLabel: true,
   type: "sequence"
 };
+
+export const defaultZoneSettings: ZoneSettings = {
+  orientation: "normal"
+}
