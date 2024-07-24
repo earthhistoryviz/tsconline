@@ -311,7 +311,7 @@ export const fetchTimescaleDataAction = action("fetchTimescaleData", async () =>
 
 export const applySettings = action("applySettings", async (settings: ChartInfoTSC) => {
   applyChartSettings(settings.settings);
-  applyChartColumnSettings(settings["class datastore.RootColumn:Chart Root"]);
+  applyChartColumnSettings(settings["class datastore.RootColumn:Chart Root"], "");
   await applyRowOrder(state.settingsTabs.columns, settings["class datastore.RootColumn:Chart Root"]);
 });
 

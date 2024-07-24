@@ -28,7 +28,10 @@ import {
   assertZoneSettings,
   calculateAutoScale,
   convertPointTypeToPointShape,
+  createDefaultColumnHeaderProps,
+  defaultFontsInfo,
   defaultPointSettings,
+  getValidFontOptions,
   isDataMiningChronDataType,
   isDataMiningPointDataType,
   isEventFrequency
@@ -45,8 +48,9 @@ import {
   findRangeOfWindowStats
 } from "../../util/data-mining";
 import { yieldControl } from "../../util";
-import { altUnitNamePrefix } from "../../util/constant";
+import { altUnitNamePrefix, snackbarTextLengthLimit } from "../../util/constant";
 import { findSerialNum } from "../../util/util";
+import { pushSnackbar } from "./general-actions";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -75,30 +79,29 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
         setEventColumnSettings(column.columnSpecificSettings, { type: settings.type, rangeSort: settings.rangeSort });
       break;
     case "PointColumn":
-      {
-        assertPointColumnInfoTSC(settings);
-        assertPointSettings(column.columnSpecificSettings);
-        setPointColumnSettings(column.columnSpecificSettings, {
-          drawLine: settings.drawLine,
-          drawFill: settings.drawFill,
-          drawScale: settings.drawScale,
-          drawCurveGradient: settings.drawCurveGradient,
-          drawBackgroundGradient: settings.drawBgrndGradient,
-          backgroundGradientStart: settings.backGradStart,
-          backgroundGradientEnd: settings.backGradEnd,
-          curveGradientStart: settings.curveGradStart,
-          curveGradientEnd: settings.curveGradEnd,
-          lineColor: settings.lineColor,
-          flipScale: settings.flipScale,
-          scaleStart: settings.scaleStart,
-          scaleStep: settings.scaleStep,
-          fill: settings.fillColor,
-          pointShape: settings.drawPoints === false ? "nopoints" : convertPointTypeToPointShape(settings.pointType),
-          smoothed: settings.drawSmooth,
-          lowerRange: settings.minWindow,
-          upperRange: settings.maxWindow
-        });
-      }
+      assertPointColumnInfoTSC(settings);
+      assertPointSettings(column.columnSpecificSettings);
+      setPointColumnSettings(column.columnSpecificSettings, {
+        drawLine: settings.drawLine,
+        drawFill: settings.drawFill,
+        drawScale: settings.drawScale,
+        drawCurveGradient: settings.drawCurveGradient,
+        drawBackgroundGradient: settings.drawBgrndGradient,
+        backgroundGradientStart: settings.backGradStart,
+        backgroundGradientEnd: settings.backGradEnd,
+        curveGradientStart: settings.curveGradStart,
+        curveGradientEnd: settings.curveGradEnd,
+        lineColor: settings.lineColor,
+        flipScale: settings.flipScale,
+        scaleStart: settings.scaleStart,
+        scaleStep: settings.scaleStep,
+        fill: settings.fillColor,
+        pointShape: settings.drawPoints === false ? "nopoints" : convertPointTypeToPointShape(settings.pointType),
+        smoothed: settings.drawSmooth,
+        lowerRange: settings.minWindow,
+        upperRange: settings.maxWindow,
+        isDataMiningColumn: settings.isDataMiningColumn
+      });
       break;
     case "SequenceColumn":
       assertSequenceColumnInfoTSC(settings);
@@ -113,27 +116,69 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
       break;
   }
 }
-export const applyChartColumnSettings = action("applyChartColumnSettings", (settings: ColumnInfoTSC) => {
-  const columnName = extractName(settings._id);
-  let curcol: ColumnInfo | undefined =
-    state.settingsTabs.columnHashMap.get(columnName) ||
-    state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
-  if (curcol === undefined) {
-    //const errorDesc: string = "Unknown column name found while loading settings: ";
-    //makes website super slow if a lot of unknown columns (ex. if loaded settings for a different datapack)
-    //pushSnackbar(errorDesc + columnName.substring(0, snackbarTextLengthLimit - errorDesc.length - 1), "warning");
-  } else setColumnProperties(curcol, settings);
-  if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
-    for (let i = 0; i < settings.children.length; i++) {
-      curcol = state.settingsTabs.columnHashMap.get(columnName + " " + extractName(settings.children[i]._id));
-      if (curcol !== undefined) setColumnProperties(curcol, settings.children[i]);
+
+/**
+ * applys the chart column settings from a settings file to the
+ * columninfo stored in state.
+ *
+ * @param settings settings that is being applied to the current column
+ * @param parent parent of current column, used for creating datamining column
+ *
+ */
+
+export const applyChartColumnSettings = action(
+  "applyChartColumnSettings",
+  (settings: ColumnInfoTSC, parent: string) => {
+    const columnName = extractName(settings._id);
+    let curcol: ColumnInfo | undefined =
+      state.settingsTabs.columnHashMap.get(columnName) ||
+      state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
+    if (curcol) {
+      setColumnProperties(curcol, settings);
     }
-  } else {
-    for (let i = 0; i < settings.children.length; i++) {
-      applyChartColumnSettings(settings.children[i]);
+    //while applying settings, found datamining column that hasn't been added by the user, create a new column
+    else if (extractColumnType(settings._id) === "PointColumn") {
+      assertPointColumnInfoTSC(settings);
+      if (settings.isDataMiningColumn) {
+        const parentCol = state.settingsTabs.columnHashMap.get(parent);
+        if (!parentCol) {
+          const errorDesc: string = "Unknown column found while applying settings: ";
+          pushSnackbar(errorDesc + columnName.substring(0, snackbarTextLengthLimit - errorDesc.length - 1), "warning");
+        } else {
+          const column: ColumnInfo = {
+            ...createDefaultColumnHeaderProps(),
+            editName: "",
+            fontOptions: getValidFontOptions("Point"),
+            fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+            children: [],
+            parent: null,
+            units: parentCol.units,
+            columnDisplayType: "Point",
+            show: true,
+            expanded: false,
+            columnSpecificSettings: cloneDeep(defaultPointSettings)
+          };
+          setColumnProperties(column, settings);
+          parentCol.children.push(column);
+        }
+      }
+    } else if (curcol === undefined) {
+      //const errorDesc: string = "Unknown column name found while loading settings: ";
+      //makes website super slow if a lot of unknown columns (ex. if loaded settings for a different datapack)
+      //pushSnackbar(errorDesc + columnName.substring(0, snackbarTextLengthLimit - errorDesc.length - 1), "warning");
+    }
+    if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
+      for (let i = 0; i < settings.children.length; i++) {
+        curcol = state.settingsTabs.columnHashMap.get(columnName + " " + extractName(settings.children[i]._id));
+        if (curcol !== undefined) setColumnProperties(curcol, settings.children[i]);
+      }
+    } else {
+      for (let i = 0; i < settings.children.length; i++) {
+        applyChartColumnSettings(settings.children[i], columnName);
+      }
     }
   }
-});
+);
 
 /**
  * aligns the row order of the columns to the order specified by the loaded settings file
