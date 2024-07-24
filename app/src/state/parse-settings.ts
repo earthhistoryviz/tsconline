@@ -234,7 +234,13 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
         const child = <Element>maybeChild;
         const childName = child.getAttribute("id");
         if (child.nodeName === "column") {
-          column.children.push(processColumn(child, childName!));
+          let childColumn = processColumn(child, childName!);
+          //since isDataMiningColumn is an attribute, have to set it here
+          if (child.getAttribute("isDataMiningColumn") === "true") {
+            assertPointColumnInfoTSC(childColumn);
+            childColumn.isDataMiningColumn = true;
+          }
+          column.children.push(childColumn);
         } else if (child.nodeName === "fonts") {
           column.fonts = processFonts(child);
         } else if (child.nodeName === "setting") {
