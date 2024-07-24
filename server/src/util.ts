@@ -1,6 +1,6 @@
 import fs, { createReadStream } from "fs";
 import path from "path";
-import { rm, readFile, access, mkdir, readdir, copyFile, writeFile } from "fs/promises";
+import { rm, readFile, access, mkdir, readdir, copyFile, writeFile, realpath } from "fs/promises";
 import { glob } from "glob";
 import { createInterface } from "readline/promises";
 import { constants } from "fs";
@@ -210,7 +210,7 @@ export async function checkFileExists(filePath: string): Promise<boolean> {
 }
 
 export let assetconfigs: AssetConfig;
-export let adminconfig: AdminConfig = { datapacks: [], removeDevDatapacks: [] };
+export let adminconfig: AdminConfig = { datapacks: [] };
 export async function loadAssetConfigs() {
   try {
     const contents = JSON.parse((await readFile("assets/config.json")).toString());
@@ -225,13 +225,10 @@ export async function loadAssetConfigs() {
       const content = JSON.parse((await readFile(assetconfigs.adminConfigPath)).toString());
       assertAdminConfig(content);
       adminconfig = content;
-      assetconfigs.activeDatapacks = assetconfigs.activeDatapacks.filter(
-        (datapack) => !adminconfig.removeDevDatapacks.includes(datapack.file)
-      );
     } catch (e) {
       console.log("ERROR: Failed to load admin configs from assets/admin-config.json.  Error was: ", e);
       console.error("Removing admin-config.json and writing a new config file");
-      adminconfig = { datapacks: [], removeDevDatapacks: [] };
+      adminconfig = { datapacks: [] };
       try {
         await rm(assetconfigs.adminConfigPath);
         await writeFile(assetconfigs.adminConfigPath, JSON.stringify(adminconfig, null, 2));
@@ -273,4 +270,17 @@ export function getBytes(bytes: number) {
   const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+}
+
+export async function verifyFilepath(filepath: string) {
+  const root = process.cwd();
+  try {
+    filepath = await realpath(path.resolve(filepath));
+    if (!filepath.startsWith(root)) {
+      return false;
+    }
+  } catch {
+    return false;
+  }
+  return true;
 }

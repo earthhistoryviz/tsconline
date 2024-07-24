@@ -6,7 +6,8 @@ import {
   adminDeleteUser,
   getUsers,
   adminUploadServerDatapack,
-  adminDeleteServerDatapack
+  adminDeleteServerDatapack,
+  getAllUserDatapacks
 } from "./admin-routes.js";
 import { checkRecaptchaToken } from "./verify.js";
 import { googleRecaptchaBotThreshold } from "./login-routes.js";
@@ -73,7 +74,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     },
     required: ["email", "password"]
   };
-  const adminDeleteUserBody = {
+  const adminUUIDbody = {
     type: "object",
     properties: {
       uuid: { type: "string" }
@@ -114,7 +115,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     "/user",
     {
       schema: {
-        body: adminDeleteUserBody
+        body: adminUUIDbody
       },
       config: {
         rateLimit: moderateRateLimit
@@ -146,5 +147,10 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
       }
     },
     adminDeleteServerDatapack
+  );
+  fastify.post(
+    "/user/datapacks",
+    { schema: { body: adminUUIDbody }, config: { rateLimit: looseRateLimit } },
+    getAllUserDatapacks
   );
 };
