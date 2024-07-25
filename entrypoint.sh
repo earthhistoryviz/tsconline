@@ -19,6 +19,7 @@ rm -f $XERR
 XARGS="-e $XERR -l -f $XAUTH -n 99 --server-args='-screen 0 1280x1024x24'"
 cd /code
 yarn install
+yarn build
 echo "-----------------------------------------------------------------------------------------------"
 echo "The VNC server is not nomally running to avoid wasting resources.  If you need to view the GUI,"
 echo "then you have to start the VNC server yourself, then connect a VNC viewer to localhost:5900."

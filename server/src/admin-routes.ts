@@ -3,10 +3,10 @@ import { checkForUsersWithUsernameOrEmail, createUser, findUser } from "./databa
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { deleteUser } from "./database.js";
-import { resolve, basename, extname } from "path";
-import { adminconfig, assetconfigs, checkFileExists, getBytes } from "./util.js";
+import { resolve, extname, join, relative, parse } from "path";
+import { adminconfig, assetconfigs, checkFileExists, getBytes, verifyFilepath } from "./util.js";
 import { createWriteStream } from "fs";
-import { realpath, rm, writeFile } from "fs/promises";
+import { readFile, realpath, rm, writeFile } from "fs/promises";
 import { deleteDatapack, loadFileMetadata } from "./file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
 import { datapackIndex, mapPackIndex } from "./index.js";
@@ -15,7 +15,7 @@ import validator from "validator";
 import { pipeline } from "stream/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "util";
-import { assertAdminSharedUser } from "@tsconline/shared";
+import { assertAdminSharedUser, assertDatapackIndex } from "@tsconline/shared";
 import { DatapackDescriptionInfo, NewUser } from "./types.js";
 
 /**
@@ -121,6 +121,11 @@ export const adminDeleteUser = async function adminDeleteUser(
       reply.status(404).send({ error: "User not found" });
       return;
     }
+    // add more root logic later (maybe a new table for root users or an extra column)
+    if (user[0].email === (process.env.ADMIN_EMAIL || "test@gmail.com")) {
+      reply.status(403).send({ error: "Cannot delete root user" });
+      return;
+    }
     await deleteUser({ uuid });
     try {
       let userDirectory = resolve(assetconfigs.uploadDirectory, uuid);
@@ -161,25 +166,22 @@ export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
     return;
   }
   try {
-    const userDirectory = resolve(assetconfigs.uploadDirectory, uuid);
-    const datapackDirectory = resolve(userDirectory, "datapack", datapack);
-    if (
-      !userDirectory.startsWith(resolve(assetconfigs.uploadDirectory)) ||
-      !datapackDirectory.startsWith(resolve(userDirectory))
-    ) {
+    const uploadDirectory = await realpath(resolve(assetconfigs.uploadDirectory));
+    const userDirectory = await realpath(resolve(assetconfigs.uploadDirectory, uuid));
+    const datapackDirectory = await realpath(resolve(userDirectory, "datapacks", datapack));
+    if (!userDirectory.startsWith(uploadDirectory) || !datapackDirectory.startsWith(userDirectory)) {
       reply.status(403).send({ error: "Directory traversal detected" });
       return;
     }
-    await realpath(datapackDirectory);
-    await realpath(userDirectory);
     const metadata = await loadFileMetadata(assetconfigs.fileMetadata);
-    if (!Object.keys(metadata).some((filePath) => filePath === datapackDirectory)) {
+    if (!Object.keys(metadata).some((filePath) => resolve(filePath) === datapackDirectory)) {
       reply.status(404).send({ error: "Datapack not found" });
       return;
     }
-    await deleteDatapack(metadata, datapackDirectory);
+    await deleteDatapack(metadata, relative(process.cwd(), datapackDirectory));
     await writeFile(assetconfigs.fileMetadata, JSON.stringify(metadata));
   } catch (error) {
+    console.error(error);
     reply.status(500).send({ error: "Unknown error" });
     return;
   }
@@ -203,7 +205,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       file = part;
       filename = file.filename;
       filepath = resolve(assetconfigs.datapacksDirectory, filename);
-      decryptedFilepath = resolve(assetconfigs.decryptionDirectory, basename(filename));
+      decryptedFilepath = resolve(assetconfigs.decryptionDirectory, parse(filename).name);
       if (
         !filepath.startsWith(resolve(assetconfigs.datapacksDirectory)) ||
         !decryptedFilepath.startsWith(resolve(assetconfigs.decryptionDirectory))
@@ -219,8 +221,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
         (await checkFileExists(filepath)) &&
         (await checkFileExists(decryptedFilepath)) &&
         (adminconfig.datapacks.some((datapack) => datapack.file === filename) ||
-          (assetconfigs.activeDatapacks.some((datapack) => datapack.file === filename) &&
-            !adminconfig.removeDevDatapacks.includes(filename))) &&
+          assetconfigs.activeDatapacks.some((datapack) => datapack.file === filename)) &&
         datapackIndex[filename]
       ) {
         reply.status(409).send({ error: "File already exists" });
@@ -305,13 +306,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   }
   try {
     // this was a previous dev datapack that was removed
-    if (adminconfig.removeDevDatapacks.includes(filename)) {
-      adminconfig.removeDevDatapacks = adminconfig.removeDevDatapacks.filter((pack) => pack !== filename);
-      // on load, we prune datapacks that are in removeDevDatapacks so add it back but DON'T WRITE TO FILE
-      if (!assetconfigs.activeDatapacks.some((datapack) => datapack.file === filename)) {
-        assetconfigs.activeDatapacks.push(datapackInfo);
-      }
-    } else if (
+    if (
       !assetconfigs.activeDatapacks.some((datapack) => datapack.file === filename) &&
       !adminconfig.datapacks.some((datapack) => datapack.file === filename)
     ) {
@@ -344,11 +339,17 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     reply.status(400).send({ error: "Invalid file extension" });
     return;
   }
+  if (assetconfigs.activeDatapacks.some((dp) => dp.file === datapack)) {
+    reply
+      .status(403)
+      .send({ error: "Cannot delete a root datapack. See server administrator to change root dev packs." });
+    return;
+  }
   let filepath;
   let decryptedFilepath;
   try {
     filepath = resolve(assetconfigs.datapacksDirectory, datapack);
-    decryptedFilepath = resolve(assetconfigs.decryptionDirectory, basename(datapack));
+    decryptedFilepath = resolve(assetconfigs.decryptionDirectory, parse(datapack).name);
     if (
       !filepath.startsWith(resolve(assetconfigs.datapacksDirectory)) ||
       !decryptedFilepath.startsWith(resolve(assetconfigs.decryptionDirectory))
@@ -362,17 +363,9 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     reply.status(500).send({ error: "Datapack file does not exist" });
     return;
   }
-  if (
-    !adminconfig.datapacks.some((dp) => dp.file === datapack) &&
-    !assetconfigs.activeDatapacks.some((dp) => dp.file === datapack)
-  ) {
+  if (!adminconfig.datapacks.some((dp) => dp.file === datapack)) {
     reply.status(404).send({ error: "Datapack not found" });
     return;
-  }
-  if (assetconfigs.activeDatapacks.some((dp) => dp.file === datapack)) {
-    // don't write to file to prevent merge issues on server
-    assetconfigs.activeDatapacks = assetconfigs.activeDatapacks.filter((pack) => pack.file !== datapack);
-    adminconfig.removeDevDatapacks.push(datapack);
   }
   if (adminconfig.datapacks.some((dp) => dp.file === datapack)) {
     adminconfig.datapacks = adminconfig.datapacks.filter((pack) => pack.file !== datapack);
@@ -399,4 +392,25 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     });
   }
   reply.status(200).send({ message: `Datapack ${datapack} deleted` });
+};
+
+export const getAllUserDatapacks = async function getAllUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
+  const { uuid } = request.body as { uuid: string };
+  if (!uuid) {
+    reply.status(400).send({ error: "Missing uuid in body" });
+    return;
+  }
+  const datapackIndexFilepath = join(assetconfigs.uploadDirectory, uuid, "DatapackIndex.json");
+  if (!(await verifyFilepath(datapackIndexFilepath))) {
+    reply.send({});
+    return;
+  }
+  let userDatapackIndex;
+  try {
+    userDatapackIndex = JSON.parse(await readFile(datapackIndexFilepath, "utf-8"));
+    assertDatapackIndex(datapackIndex);
+  } catch (e) {
+    reply.status(500).send({ error: "Error reading user datapack index, possible corruption of file" });
+  }
+  reply.send(userDatapackIndex);
 };

@@ -1,2685 +1,2724 @@
 {
-    "general-parse-datapacks-test-1-key": {
-      "columnInfo": {
-        "name": "Chart Title",
-        "editName": "Chart Title",
-        "fontsInfo": {
-          "font": "Arial"
-        },
-        "fontOptions": [
-          "Column Header",
-          "Age Label",
-          "Uncertainty Label",
-          "Zone Column Label"
-        ],
-        "on": true,
-        "width": 100,
-        "enableTitle": true,
-        "show": true,
-        "expanded": true,
-        "rgb": {
-          "r": 255,
-          "g": 255,
-          "b": 255
-        },
-        "popup": "",
-        "children": [
-          {
-            "name": "Ma",
-            "editName": "Ma",
-            "fontsInfo": {
-              "font": "Arial"
-            },
-            "fontOptions": [
-              "Column Header",
-              "Ruler Label"
-            ],
-            "show": true,
-            "expanded": false,
-            "on": true,
-            "width": 100,
-            "enableTitle": true,
-            "rgb": {
-              "r": 255,
-              "g": 255,
-              "b": 255
-            },
-            "popup": "",
-            "children": [],
-            "parent": "Chart Title",
-            "minAge": 5e-324,
-            "maxAge": 1.7976931348623157e+308,
-            "units": "Ma",
-            "columnDisplayType": "Ruler"
-          },
-          {
-            "name": "Central Africa Cenozoic",
-            "editName": "Central Africa Cenozoic",
-            "on": true,
-            "enableTitle": true,
-            "show": true,
-            "expanded": false,
-            "fontsInfo": {
-              "font": "Arial"
-            },
-            "popup": "",
-            "children": [
-              {
-                "name": "Nigeria Coast",
-                "editName": "Nigeria Coast",
-                "on": true,
-                "enableTitle": true,
-                "fontsInfo": {
-                  "font": "Arial"
-                },
-                "popup": "",
-                "show": true,
-                "expanded": false,
-                "children": [
-                  {
-                    "name": "Nigeria Coast Facies",
-                    "editName": "Nigeria Coast",
-                    "on": true,
-                    "enableTitle": false,
-                    "showAgeLabels": false,
-                    "expanded": false,
-                    "showUncertaintyLabels": false,
-                    "fontsInfo": {
-                      "font": "Arial"
-                    },
-                    "fontOptions": [
-                      "Column Header",
-                      "Age Label",
-                      "Uncertainty Label"
-                    ],
-                    "popup": "",
-                    "children": [],
-                    "parent": "Nigeria Coast",
-                    "minAge": 0,
-                    "maxAge": 10,
-                    "show": true,
-                    "width": 84,
-                    "rgb": {
-                      "r": 255,
-                      "g": 255,
-                      "b": 255
-                    },
-                    "units": "Ma",
-                    "columnDisplayType": "Facies", 
-                    "subInfo": [
-                      {
-                        "age": 0,
-                        "info": "",
-                        "rockType": "TOP"
-                      },
-                      {
-                        "age": 5,
-                        "info": "",
-                        "label": "Delta",
-                        "rockType": "Sandstone"
-                      },
-                      {
-                        "age": 10,
-                        "info": "",
-                        "label": "ProDelta",
-                        "rockType": "Claystone"
-                      }
-                    ]
-                  },
-                  {
-                    "name": "Nigeria Coast Members",
-                    "editName": "Members",
-                    "on": false,
-                    "enableTitle": false,
-                    "fontOptions": [
-                      "Column Header",
-                      "Age Label",
-                      "Zone Column Label"
-                    ],
-                    "fontsInfo": {
-                      "font": "Arial"
-                    },
-                    "showAgeLabels": false,
-                    "popup": "",
-                    "children": [],
-                    "parent": "Nigeria Coast",
-                    "minAge": 0,
-                    "maxAge": 10,
-                    "width": 210,
-                    "show": true,
-                    "expanded": false,
-                    "rgb": {
-                      "r": 255,
-                      "g": 255,
-                      "b": 255
-                    },
-                    "units": "Ma",
-                    "columnDisplayType": "Zone"
-                  },
-                  {
-                    "name": "Nigeria Coast Facies Label",
-                    "editName": "Facies Label",
-                    "on": true,
-                    "enableTitle": false,
-                    "fontsInfo": {
-                      "font": "Arial"
-                    },
-                    "fontOptions": [
-                      "Column Header",
-                      "Age Label",
-                      "Zone Column Label"
-                    ],
-                    "showAgeLabels": false,
-                    "popup": "",
-                    "children": [],
-                    "parent": "Nigeria Coast",
-                    "show": true,
-                    "expanded": false,
-                    "minAge": 0,
-                    "maxAge": 10,
-                    "width": 84,
-                    "rgb": {
-                      "r": 255,
-                      "g": 255,
-                      "b": 255
-                    },
-                    "units": "Ma",
-                    "columnDisplayType": "Zone"
-                  },
-                  {
-                    "name": "Nigeria Coast Series Label",
-                    "editName": "Series Label",
-                    "show": true,
-                    "expanded": false,
-                    "on": true,
-                    "enableTitle": false,
-                    "fontsInfo": {
-                      "font": "Arial"
-                    },
-                    "fontOptions": [
-                      "Column Header",
-                      "Age Label",
-                      "Zone Column Label"
-                    ],
-                    "showAgeLabels": false,
-                    "popup": "",
-                    "children": [],
-                    "parent": "Nigeria Coast",
-                    "minAge": 0,
-                    "maxAge": 10,
-                    "rgb": {
-                      "r": 255,
-                      "g": 255,
-                      "b": 255
-                    },
-                    "width": 42,
-                    "units": "Ma",
-                    "columnDisplayType": "Zone"
-                  }
-                ],
-                "parent": "Central Africa Cenozoic",
-                "columnDisplayType": "BlockSeriesMetaColumn",
-                "minAge": 0,
-                "maxAge": 10,
-                "rgb": {
-                  "r": 255,
-                  "g": 255,
-                  "b": 255
-                },
-                "fontOptions": [
-                  "Column Header",
-                  "Age Label",
-                  "Uncertainty Label",
-                  "Zone Column Label"
-                ],
-                "units": "Ma",
-                "subInfo": [
-                  {
-                    "rockType": "TOP",
-                    "age": 0,
-                    "info": ""
-                  },
-                  {
-                    "rockType": "Sandstone",
-                    "label": "Delta",
-                    "age": 5,
-                    "info": ""
-                  },
-                  {
-                    "rockType": "Claystone",
-                    "label": "ProDelta",
-                    "age": 10,
-                    "info": ""
-                  }
-                ]
-              },
-              {
-                "name": "South Atlantic",
-                "editName": "South Atlantic",
-                "on": true,
-                "enableTitle": true,
-                "show": true,
-                "expanded": false,
-                "fontsInfo": {
-                  "font": "Arial"
-                },
-                "popup": "",
-                "children": [
-                  {
-                    "name": "South Atlantic Facies",
-                    "editName": "South Atlantic",
-                    "on": true,
-                    "enableTitle": false,
-                    "show": true,
-                    "expanded": false,
-                    "fontsInfo": {
-                      "font": "Arial"
-                    },
-                    "fontOptions": [
-                      "Column Header",
-                      "Age Label",
-                      "Uncertainty Label"
-                    ],
-                    "showAgeLabels": false,
-                    "showUncertaintyLabels": false,
-                    "popup": "",
-                    "children": [],
-                    "parent": "South Atlantic",
-                    "minAge": 0,
-                    "maxAge": 10,
-                    "width": 84,
-                    "rgb": {
-                      "r": 255,
-                      "g": 255,
-                      "b": 255
-                    },
-                    "units": "Ma",
-                    "columnDisplayType": "Facies",
-                    "subInfo": [
-                      {
-                        "age": 0,
-                        "info": "",
-                        "rockType": "TOP"
-                      },
-                      {
-                        "age": 5,
-                        "info": "",
-                        "label": "Deep marine",
-                        "rockType": "Shallow-marine marl"
-                      },
-                      {
-                        "age": 10,
-                        "info": "",
-                        "label": "Ocean crust",
-                        "rockType": "Lava"
-                      }
-                    ]
-                  },
-                  {
-                    "name": "South Atlantic Members",
-                    "editName": "Members",
-                    "show": true,
-                    "expanded": false,
-                    "on": false,
-                    "enableTitle": false,
-                    "showAgeLabels": false,
-                    "fontOptions": [
-                      "Column Header",
-                      "Age Label",
-                      "Zone Column Label"
-                    ],
-                    "fontsInfo": {
-                      "font": "Arial"
-                    },
-                    "popup": "",
-                    "children": [],
-                    "parent": "South Atlantic",
-                    "minAge": 0,
-                    "maxAge": 10,
-                    "width": 210,
-                    "rgb": {
-                      "r": 255,
-                      "g": 255,
-                      "b": 255
-                    },
-                    "units": "Ma",
-                    "columnDisplayType": "Zone"
-                  },
-                  {
-                    "name": "South Atlantic Facies Label",
-                    "editName": "Facies Label",
-                    "show": true,
-                    "expanded": false,
-                    "on": true,
-                    "enableTitle": false,
-                    "fontsInfo": {
-                      "font": "Arial"
-                    },
-                    "showAgeLabels": false,
-                    "fontOptions": [
-                      "Column Header",
-                      "Age Label",
-                      "Zone Column Label"
-                    ],
-                    "popup": "",
-                    "children": [],
-                    "parent": "South Atlantic",
-                    "minAge": 0,
-                    "maxAge": 10,
-                    "width": 84,
-                    "rgb": {
-                      "r": 255,
-                      "g": 255,
-                      "b": 255
-                    },
-                    "units": "Ma",
-                    "columnDisplayType": "Zone"
-                  },
-                  {
-                    "name": "South Atlantic Series Label",
-                    "editName": "Series Label",
-                    "show": true,
-                    "expanded": false,
-                    "on": true,
-                    "enableTitle": false,
-                    "fontsInfo": {
-                      "font": "Arial"
-                    },
-                    "showAgeLabels": false,
-                    "fontOptions": [
-                      "Column Header",
-                      "Age Label",
-                      "Zone Column Label"
-                    ],
-                    "popup": "",
-                    "children": [],
-                    "parent": "South Atlantic",
-                    "minAge": 0,
-                    "maxAge": 10,
-                    "rgb": {
-                      "r": 255,
-                      "g": 255,
-                      "b": 255
-                    },
-                    "width": 42,
-                    "units": "Ma",
-                    "columnDisplayType": "Zone"
-                  }
-                ],
-                "parent": "Central Africa Cenozoic",
-                "columnDisplayType": "BlockSeriesMetaColumn",
-                "minAge": 0,
-                "maxAge": 10,
-                "rgb": {
-                  "r": 255,
-                  "g": 255,
-                  "b": 255
-                },
-                "fontOptions": [
-                  "Column Header",
-                  "Age Label",
-                  "Uncertainty Label",
-                  "Zone Column Label"
-                ],
-                "units": "Ma",
-                "subInfo": [
-                  {
-                    "rockType": "TOP",
-                    "age": 0,
-                    "info": ""
-                  },
-                  {
-                    "rockType": "Shallow-marine marl",
-                    "label": "Deep marine",
-                    "age": 5,
-                    "info": ""
-                  },
-                  {
-                    "rockType": "Lava",
-                    "label": "Ocean crust",
-                    "age": 10,
-                    "info": ""
-                  }
-                ]
-              }
-            ],
-            "parent": "Chart Title",
-            "columnDisplayType": "MetaColumn",
-            "minAge": 0,
-            "maxAge": 10,
-            "rgb": {
-              "r": 255,
-              "g": 255,
-              "b": 255
-            },
-            "fontOptions": [
-              "Column Header",
-              "Age Label",
-              "Uncertainty Label",
-              "Zone Column Label"
-            ],
-            "units": "Ma",
-            "subInfo": [
-              {
-                "rockType": "TOP",
-                "age": 0,
-                "info": ""
-              },
-              {
-                "rockType": "Sandstone",
-                "label": "Delta",
-                "age": 5,
-                "info": ""
-              },
-              {
-                "rockType": "Claystone",
-                "label": "ProDelta",
-                "age": 10,
-                "info": ""
-              }
-            ]
-          }
-        ],
-        "parent": "Chart Root",
-        "minAge": 0,
-        "maxAge": 10,
-        "units": "Ma",
-        "columnDisplayType": "RootColumn"
+  "general-parse-datapacks-test-1-key": {
+    "columnInfo": {
+      "name": "Chart Title",
+      "editName": "Chart Title",
+      "fontsInfo": {
+        "font": "Arial"
       },
-      "ageUnits": "Ma",
-      "defaultChronostrat": "UNESCO",
-      "formatVersion": 1.5,
-      "image": "",
-      "isUserDatapack": false,
-      "file": "AfricaBight.map",
-      "description": "Africa Bight Map",
-      "title": "Africa Bight",
-      "size": "200.98 KB"
-    },
-    "general-parse-datapacks-test-2-key": {
-      "columnInfo": {
-        "name": "Chart Title",
-        "editName": "Chart Title",
-        "fontsInfo": {
-          "font": "Arial"
-        },
-        "fontOptions": [
-          "Column Header",
-          "Age Label",
-          "Zone Column Label",
-          "Uncertainty Label",
-          "Event Column Label",
-          "Range Label",
-          "Popup Body",
-          "Point Column Scale Label",
-          "Sequence Column Label"
-        ],
-        "on": true,
-        "show": true,
-        "expanded": true,
-        "width": 100,
-        "enableTitle": true,
-        "rgb": {
-          "r": 255,
-          "g": 255,
-          "b": 255
-        },
-        "popup": "",
-        "children": [
-          {
-            "name": "Ma",
-            "editName": "Ma",
-            "fontsInfo": {
-              "font": "Arial"
-            },
-            "fontOptions": [
-              "Column Header",
-              "Ruler Label"
-            ],
-            "on": true,
-            "show": true,
-            "expanded": false,
-            "width": 100,
-            "enableTitle": true,
-            "rgb": {
-              "r": 255,
-              "g": 255,
-              "b": 255
-            },
-            "popup": "",
-            "children": [],
-            "parent": "Chart Title",
-            "minAge": 5e-324,
-            "maxAge": 1.7976931348623157e+308,
-            "units": "Ma",
-            "columnDisplayType": "Ruler"
-          },
-          {
-            "name": "Parent 1",
-            "editName": "Parent 1",
-            "on": true,
-            "show": true,
-            "expanded": false,
-            "enableTitle": true,
-            "fontsInfo": {
-              "font": "Arial"
-            },
-            "popup": "",
-            "children": [
-              {
-                "name": "Block",
-                "editName": "Block",
-                "on": false,
-                "show": true,
-                "expanded": false,
-                "enableTitle": false,
-                "fontsInfo": {
-                  "font": "Arial"
-                },
-                "popup": "Block Popup",
-                "children": [],
-                "parent": "Parent 1",
-                "minAge": 419.2,
-                "maxAge": 433.35,
-                "width": 120,
-                "rgb": {
-                  "r": 197,
-                  "g": 217,
-                  "b": 234
-                },
-                "showAgeLabels": false,
-                "fontOptions": [
-                  "Column Header",
-                  "Age Label",
-                  "Zone Column Label"
-                ],
-                "units": "Ma",
-                "columnDisplayType": "Zone",
-                "subInfo": [
-                  {
-                    "label": "TOP",
-                    "age": 419.2,
-                    "popup": "",
-                    "lineStyle": "solid",
-                    "rgb": {
-                      "r": 197,
-                      "g": 217,
-                      "b": 234
-                    }
-                  },
-                  {
-                    "label": "Block SubBlock",
-                    "age": 433.35,
-                    "popup": "Block SubBlock Info",
-                    "lineStyle": "solid",
-                    "rgb": {
-                      "r": 197,
-                      "g": 217,
-                      "b": 234
-                    }
-                  }
-                ]
-              },
-              {
-                "name": "Facies",
-                "editName": "Facies",
-                "on": false,
-                "enableTitle": false,
-                "show": true,
-                "expanded": false,
-                "fontsInfo": {
-                  "font": "Arial"
-                },
-                "popup": "Facies Popup",
-                "children": [
-                  {
-                    "name": "Facies Facies",
-                    "editName": "Facies",
-                    "show": true,
-                    "expanded": false,
-                    "on": true,
-                    "enableTitle": false,
-                    "fontsInfo": {
-                      "font": "Arial"
-                    },
-                    "showAgeLabels": false,
-                    "showUncertaintyLabels": false,
-                    "fontOptions": [
-                      "Column Header",
-                      "Age Label",
-                      "Uncertainty Label"
-                    ],
-                    "popup": "",
-                    "children": [],
-                    "parent": "Facies",
-                    "minAge": 0,
-                    "maxAge": 10,
-                    "width": 84,
-                    "rgb": {
-                      "r": 100,
-                      "g": 200,
-                      "b": 255
-                    },
-                    "units": "Ma",
-                    "columnDisplayType": "Facies",
-                    "subInfo": [
-                      {
-                        "age": 0,
-                        "info": "",
-                        "rockType": "TOP"
-                      },
-                      {
-                      "age": 5,
-                      "info": "",
-                      "label": "Facies SubFaciesInfo 1 Label",
-                        "rockType": "Facies SubFaciesInfo 1"
-                      },
-                      {
-                        "age": 10,
-                        "info": "",
-                        "label": "Facies SubFaciesInfo 2 Label",
-                        "rockType": "Facies SubFaciesInfo 2"
-                      }
-                    ]
-                  },
-                  {
-                    "name": "Facies Members",
-                    "editName": "Members",
-                    "on": false,
-                    "show": true,
-                    "expanded": false,
-                    "enableTitle": false,
-                    "showAgeLabels": false,
-                    "fontOptions": [
-                      "Column Header",
-                      "Age Label",
-                      "Zone Column Label"
-                    ],
-                    "fontsInfo": {
-                      "font": "Arial"
-                    },
-                    "popup": "",
-                    "children": [],
-                    "parent": "Facies",
-                    "minAge": 0,
-                    "maxAge": 10,
-                    "width": 210,
-                    "rgb": {
-                      "r": 100,
-                      "g": 200,
-                      "b": 255
-                    },
-                    "units": "Ma",
-                    "columnDisplayType": "Zone"
-                  },
-                  {
-                    "name": "Facies Facies Label",
-                    "editName": "Facies Label",
-                    "on": true,
-                    "show": true,
-                    "expanded": false,
-                    "enableTitle": false,
-                    "fontsInfo": {
-                      "font": "Arial"
-                    },
-                    "showAgeLabels": false,
-                    "fontOptions": [
-                      "Column Header",
-                      "Age Label",
-                      "Zone Column Label"
-                    ],
-                    "popup": "",
-                    "children": [],
-                    "parent": "Facies",
-                    "minAge": 0,
-                    "maxAge": 10,
-                    "width": 84,
-                    "rgb": {
-                      "r": 100,
-                      "g": 200,
-                      "b": 255
-                    },
-                    "units": "Ma",
-                    "columnDisplayType": "Zone"
-                  },
-                  {
-                    "name": "Facies Series Label",
-                    "editName": "Series Label",
-                    "on": true,
-                    "enableTitle": false,
-                    "show": true,
-                    "expanded": false,
-                    "fontsInfo": {
-                      "font": "Arial"
-                    },
-                    "showAgeLabels": false,
-                    "fontOptions": [
-                      "Column Header",
-                      "Age Label",
-                      "Zone Column Label"
-                    ],
-                    "popup": "",
-                    "children": [],
-                    "parent": "Facies",
-                    "minAge": 0,
-                    "maxAge": 10,
-                    "rgb": {
-                      "r": 100,
-                      "g": 200,
-                      "b": 255
-                    },
-                    "width": 42,
-                    "units": "Ma",
-                    "columnDisplayType": "Zone"
-                  }
-                ],
-                "parent": "Parent 1",
-                "minAge": 0,
-                "maxAge": 10,
-                "rgb": {
-                  "r": 100,
-                  "g": 200,
-                  "b": 255
-                },
-                "fontOptions": [
-                  "Column Header",
-                  "Age Label",
-                  "Uncertainty Label",
-                  "Zone Column Label"
-                ],
-                "units": "Ma",
-                "columnDisplayType": "BlockSeriesMetaColumn",
-                "subInfo": [
-                  {
-                    "rockType": "TOP",
-                    "age": 0,
-                    "info": ""
-                  },
-                  {
-                    "rockType": "Facies SubFaciesInfo 1",
-                    "label": "Facies SubFaciesInfo 1 Label",
-                    "age": 5,
-                    "info": ""
-                  },
-                  {
-                    "rockType": "Facies SubFaciesInfo 2",
-                    "label": "Facies SubFaciesInfo 2 Label",
-                    "age": 10,
-                    "info": ""
-                  }
-                ]
-              },
-              {
-                "name": "Event",
-                "editName": "Event",
-                "on": true,
-                "show": true,
-                "expanded": false,
-                "enableTitle": true,
-                "fontsInfo": {
-                  "font": "Arial"
-                },
-                "popup": "Event Popup",
-                "children": [],
-                "parent": "Parent 1",
-                "minAge": 0.02,
-                "maxAge": 0.4,
-                "width": 250,
-                "rgb": {
-                  "r": 100,
-                  "g": 200,
-                  "b": 255
-                },
-                "showAgeLabels": false,
-                "showUncertaintyLabels": false,
-                "columnSpecificSettings": {
-                  "type": "events",
-                  "rangeSort": "first occurrence",
-                  "frequency": null,
-                  "stepSize": 1,
-                  "windowSize": 2
-                },
-                "fontOptions": [
-                  "Column Header",
-                  "Age Label",
-                  "Event Column Label",
-                  "Uncertainty Label",
-                  "Range Label"
-                ],
-                "units": "Ma",
-                "columnDisplayType": "Event",
-                "subInfo": [
-                  {
-                    "label": "SubEventInfo 1",
-                    "age": 0.02,
-                    "popup": "Event SubEventInfo Popup 1",
-                    "lineStyle": "solid",
-                    "subEventType": "EVENT"
-                  },
-                  {
-                    "label": "SubEventInfo 2",
-                    "age": 0.4,
-                    "popup": "Event SubEventInfo Popup 2",
-                    "lineStyle": "solid",
-                    "subEventType": "EVENT"
-                  }
-                ]
-              },
-              {
-                "name": "Range",
-                "editName": "Range",
-                "on": true,
-                "show": true,
-                "expanded": false,
-                "enableTitle": true,
-                "fontsInfo": {
-                  "font": "Arial"
-                },
-                "popup": "Range Popup",
-                "children": [],
-                "parent": "Parent 1",
-                "minAge": 10,
-                "maxAge": 100,
-                "width": 100,
-                "rgb": {
-                  "r": 198,
-                  "g": 207,
-                  "b": 174
-                },
-                "fontOptions": [
-                  "Column Header",
-                  "Popup Body"
-                ],
-                "units": "Ma",
-                "columnDisplayType": "Range",
-                "columnSpecificSettings": {
-                  "agePad": 2,
-                  "margin": 0.2,
-                  "rangeSort":"first occurrence"
-                },
-                "subInfo": [
-                  {
-                    "label": "SubRangeInfo 1",
-                    "age": 10,
-                    "abundance": "TOP",
-                    "popup": ""
-                  },
-                  {
-                    "label": "SubRangeInfo 2",
-                    "age": 100,
-                    "abundance": "rare",
-                    "popup": "Range SubRangeInfo Popup 2"
-                  }
-                ]
-              },
-              {
-                "name": "Chron",
-                "editName": "Chron",
-                "on": true,
-                "show": true,
-                "expanded": false,
-                "enableTitle": false,
-                "fontsInfo": {
-                  "font": "Arial"
-                },
-                "popup": "Chron Popup",
-                "children": [
-                  {
-                    "name": "Chron Chron",
-                    "editName": "Chron",
-                    "columnSpecificSettings": {
-                      "dataMiningChronDataType": null,
-                      "stepSize": 1,
-                      "windowSize": 2
-                    },
-                    "on": true,
-                    "show": true,
-                    "expanded": false,
-                    "enableTitle": false,
-                    "showAgeLabels": false,
-                    "fontOptions": [
-                      "Column Header",
-                      "Age Label"
-                    ],
-                    "fontsInfo": {
-                      "font": "Arial"
-                    },
-                    "subInfo": [
-                      {
-                        "polarity": "TOP",
-                        "age": 0,
-                        "popup": ""
-                      },
-                      {
-                        "polarity": "N",
-                        "age": 0.123,
-                        "label": "SubChronInfo 1 Label",
-                        "popup": "SubChronInfo 1 Popup"
-                      },
-                      {
-                        "polarity": "R",
-                        "age": 0.234,
-                        "label": "SubChronInfo 2 Label",
-                        "popup": "SubChronInfo 2 Popup"
-                      }
-                    ],
-                    "popup": "",
-                    "children": [],
-                    "parent": "Chron",
-                    "minAge": 0,
-                    "maxAge": 0.234,
-                    "width": 60,
-                    "rgb": {
-                      "r": 255,
-                      "g": 255,
-                      "b": 255
-                    },
-                    "units": "Ma",
-                    "columnDisplayType": "Chron"
-                  },
-                  {
-                    "name": "Chron Chron Label",
-                    "editName": "Chron Label",
-                    "show": true,
-                    "expanded": false,
-                    "on": false,
-                    "enableTitle": false,
-                    "showAgeLabels": false,
-                    "fontOptions": [
-                      "Column Header",
-                      "Age Label",
-                      "Zone Column Label"
-                    ],
-                    "fontsInfo": {
-                      "font": "Arial"
-                    },
-                    "popup": "",
-                    "children": [],
-                    "parent": "Chron",
-                    "minAge": 0,
-                    "maxAge": 0.234,
-                    "width": 40,
-                    "rgb": {
-                      "r": 255,
-                      "g": 255,
-                      "b": 255
-                    },
-                    "units": "Ma",
-                    "columnDisplayType": "Zone"
-                  },
-                  {
-                    "name": "Chron Series Label",
-                    "editName": "Series Label",
-                    "show": true,
-                    "expanded": false,
-                    "on": true,
-                    "enableTitle": false,
-                    "showAgeLabels": false,
-                    "fontOptions": [
-                      "Column Header",
-                      "Age Label",
-                      "Zone Column Label"
-                    ],
-                    "fontsInfo": {
-                      "font": "Arial"
-                    },
-                    "popup": "",
-                    "children": [],
-                    "parent": "Chron",
-                    "minAge": 0,
-                    "maxAge": 0.234,
-                    "width": 40,
-                    "rgb": {
-                      "r": 255,
-                      "g": 255,
-                      "b": 255
-                    },
-                    "units": "Ma",
-                    "columnDisplayType": "Zone"
-                  }
-                ],
-                "parent": "Parent 1",
-                "minAge": 0,
-                "maxAge": 0.234,
-                "rgb": {
-                  "r": 255,
-                  "g": 255,
-                  "b": 255
-                },
-                "fontOptions": [
-                  "Column Header",
-                  "Age Label",
-                  "Zone Column Label"
-                ],
-                "units": "Ma",
-                "columnDisplayType": "BlockSeriesMetaColumn",
-                "subInfo": [
-                  {
-                    "polarity": "TOP",
-                    "age": 0,
-                    "popup": ""
-                  },
-                  {
-                    "polarity": "N",
-                    "age": 0.123,
-                    "label": "SubChronInfo 1 Label",
-                    "popup": "SubChronInfo 1 Popup"
-                  },
-                  {
-                    "polarity": "R",
-                    "age": 0.234,
-                    "label": "SubChronInfo 2 Label",
-                    "popup": "SubChronInfo 2 Popup"
-                  }
-                ]
-              },
-              {
-                "name": "Point",
-                "editName": "Point",
-                "show": true,
-                "expanded": false,
-                "on": false,
-                "enableTitle": true,
-                "fontsInfo": {
-                  "font": "Arial"
-                },
-                "popup": "Point Popup",
-                "children": [],
-                "parent": "Parent 1",
-                "minAge": 4,
-                "maxAge": 5,
-                "width": 100,
-                "rgb": {
-                  "r": 255,
-                  "g": 255,
-                  "b": 255
-                },
-                "fontOptions": [
-                  "Column Header",
-                  "Point Column Scale Label"
-                ],
-                "units": "Ma",
-                "columnDisplayType": "Point",
-                "subInfo": [
-                  {
-                    "age": 4,
-                    "xVal": 0,
-                    "popup": "SubPointInfo Popup 1"
-                  },
-                  {
-                    "age": 5,
-                    "xVal": 9,
-                    "popup": "SubPointInfo Popup 2"
-                  }
-                ],
-                "columnSpecificSettings": {
-                  "drawFill": true,
-                  "drawLine": true,
-                  "lowerRange": 0,
-                  "upperRange": 10,
-                  "smoothed": true,
-                  "minX": 0,
-                  "maxX": 9,
-                  "pointShape": "nopoints",
-                  "backgroundGradientStart": {
-                    "r": 0,
-                    "g": 0,
-                    "b": 0
-                  },
-                  "backgroundGradientEnd": {
-                    "r": 255,
-                    "g": 255,
-                    "b": 255
-                  },
-                  "curveGradientStart": {
-                    "r": 0,
-                    "g": 0,
-                    "b": 0
-                  },
-                  "curveGradientEnd": {
-                    "r": 255,
-                    "g": 255,
-                    "b": 255
-                  },
-                  "drawBackgroundGradient": false,
-                  "drawCurveGradient": false,
-                  "drawScale": true,
-                  "fill": {
-                    "r": 64,
-                    "g": 233,
-                    "b": 191
-                  },
-                  "flipScale": false,
-                  "lineColor": {
-                    "r": 0,
-                    "g": 0,
-                    "b": 0
-                  },
-                  "scaleStart": 0,
-                  "scaleStep": 1,
-                  "dataMiningPointDataType": null,
-                  "windowSize": 2,
-                  "stepSize": 1,
-                  "isDataMiningColumn": false
-                }
-              },
-              {
-                "name": "Sequence",
-                "editName": "Sequence",
-                "show": true,
-                "expanded": false,
-                "on": true,
-                "enableTitle": false,
-                "fontsInfo": {
-                  "font": "Arial"
-                },
-                "popup": "Sequence Popup",
-                "children": [],
-                "parent": "Parent 1",
-                "minAge": 0,
-                "maxAge": 2,
-                "width": 900,
-                "rgb": {
-                  "r": 255,
-                  "g": 255,
-                  "b": 255
-                },
-                "showAgeLabels": false,
-                "fontOptions": [
-                  "Column Header",
-                  "Age Label",
-                  "Sequence Column Label"
-                ],
-                "units": "Ma",
-                "columnDisplayType": "Sequence",
-                "subInfo": [
-                  {
-                    "direction": "MFS",
-                    "age": 0,
-                    "severity": "Major",
-                    "popup": "No Label Popup"
-                  },
-                  {
-                    "label": "Label 1",
-                    "direction": "SB",
-                    "age": 2,
-                    "severity": "Medium",
-                    "popup": "Label 1 Popup"
-                  }
-                ],
-                "columnSpecificSettings": {
-                                 "drawNameLabel": true,
-                                 "graphStyle": "stroke-width: 0; fill: rgb(64, 191, 233);",
-                                 "labelMarginLeft": 5,
-                                 "labelMarginRight": 5,
-                                 "type": "sequence"
-                               }
-              },
-              {
-                "name": "Freehand",
-                "editName": "Freehand",
-                "show": true,
-                "expanded": false,
-                "on": true,
-                "enableTitle": false,
-                "fontsInfo": {
-                  "font": "Arial"
-                },
-                "popup": "",
-                "children": [],
-                "parent": "Parent 1",
-                "minAge": 0,
-                "maxAge": 1.3,
-                "width": 70,
-                "rgb": {
-                  "r": 227,
-                  "g": 123,
-                  "b": 104
-                },
-                "fontOptions": [
-                  "Column Header"
-                ],
-                "units": "Ma",
-                "columnDisplayType": "Freehand",
-                "subInfo": [
-                  {
-                    "topAge": 0,
-                    "baseAge": 1
-                  },
-                  {
-                    "topAge": 0.3,
-                    "baseAge": 1.3
-                  }
-                ]
-              },
-              {
-                "name": "Blank",
-                "editName": "Blank",
-                "show": true,
-                "expanded": false,
-                "on": false,
-                "enableTitle": false,
-                "fontsInfo": {
-                  "font": "Arial"
-                },
-                "popup": "Blank Popup",
-                "children": [],
-                "parent": "Parent 1",
-                "minAge": 1.7976931348623157e+308,
-                "maxAge": 5e-324,
-                "width": 800,
-                "rgb": {
-                  "r": 7,
-                  "g": 3,
-                  "b": 4
-                },
-                "fontOptions": [
-                  "Column Header"
-                ],
-                "units": "Ma",
-                "columnDisplayType": "Blank"
-              },
-              {
-                "name": "Transect",
-                "editName": "Transect",
-                "show": true,
-                "expanded": false,
-                "on": true,
-                "enableTitle": true,
-                "fontsInfo": {
-                  "font": "Arial"
-                },
-                "popup": "Transect Popup",
-                "children": [],
-                "parent": "Parent 1",
-                "minAge": 0,
-                "maxAge": 9.22,
-                "width": 500,
-                "rgb": {
-                  "r": 240,
-                  "g": 255,
-                  "b": 255
-                },
-                "fontOptions": [
-                  "Column Header"
-                ],
-                "units": "Ma",
-                "columnDisplayType": "Transect",
-                "subInfo": [
-                  {
-                    "age": 0
-                  },
-                  {
-                    "age": 2.58
-                  },
-                  {
-                    "age": 9.22
-                  }
-                ]
-              }
-            ],
-            "parent": "Chart Title",
-            "minAge": 0,
-            "maxAge": 433.35,
-            "rgb": {
-              "r": 255,
-              "g": 255,
-              "b": 255
-            },
-            "fontOptions": [
-              "Column Header",
-              "Age Label",
-              "Zone Column Label",
-              "Uncertainty Label",
-              "Event Column Label",
-              "Range Label",
-              "Popup Body",
-              "Point Column Scale Label",
-              "Sequence Column Label"
-            ],
-            "units": "Ma",
-            "columnDisplayType": "MetaColumn",
-            "subInfo": [
-              {
-                "rockType": "TOP",
-                "age": 0,
-                "info": ""
-              },
-              {
-                "rockType": "Facies SubFaciesInfo 1",
-                "label": "Facies SubFaciesInfo 1 Label",
-                "age": 5,
-                "info": ""
-              },
-              {
-                "rockType": "Facies SubFaciesInfo 2",
-                "label": "Facies SubFaciesInfo 2 Label",
-                "age": 10,
-                "info": ""
-              }
-            ]
-          }
-        ],
-        "parent": "Chart Root",
-        "minAge": 0,
-        "maxAge": 433.35,
-        "units": "Ma",
-        "columnDisplayType": "RootColumn"
+      "fontOptions": [
+        "Column Header",
+        "Age Label",
+        "Uncertainty Label",
+        "Zone Column Label"
+      ],
+      "on": true,
+      "width": 100,
+      "enableTitle": true,
+      "show": true,
+      "expanded": true,
+      "rgb": {
+        "r": 255,
+        "g": 255,
+        "b": 255
       },
-      "topAge": 0,
-      "baseAge": 5,
-      "ageUnits": "Ma",
-      "defaultChronostrat": "USGS",
-      "formatVersion": 1,
-      "image": "",
-      "verticalScale": 6,
-      "date": "2015-03-15",
-      "isUserDatapack": false,
-      "file": "file.dpk",
-      "description": "description",
-      "title": "Title",
-      "size": "size"
-    },
-    "column-types-facies-key": {
-        "FaciesOne": {
-            "name": "FaciesOne",
-            "editName": "FaciesOne",
-            "show": true,
-            "expanded": false,
-            "units": "Ma",
-            "fontsInfo": {
-                "font": "Arial"
-            },
-            "columnDisplayType": "Facies",
-            "children": [],
-            "parent": null,
-            "fontOptions": [
-                "Column Header",
-                "Age Label",
-                "Uncertainty Label"
-            ],
-            "width": 500,
-            "rgb": {
-                "r": 255,
-                "g": 255,
-                "b": 255
-            },
-            "subInfo": [
-                {
-                    "rockType": "TOP",
-                    "age": 374.64,
-                    "info": "\"info\""
-                },
-                {
-                    "rockType": "RockTypeOne",
-                    "label": "RockTypeOneLabel",
-                    "age": 376.11,
-                    "info": "\"info for RockTypeOne\""
-                }
-            ],
-            "minAge": 374.64,
-            "maxAge": 376.11,
-            "enableTitle": true,
-            "popup": "\"FaciesOne info\"",
-            "on": false
-        },
-        "FaciesTwo": {
-            "name": "FaciesTwo",
-            "editName": "FaciesTwo",
-            "units": "Ma",
-            "show": true,
-            "expanded": false,
-            "fontsInfo": {
-                "font": "Arial"
-            },
-            "columnDisplayType": "Facies",
-            "children": [],
-            "parent": null,
-            "fontOptions": [
-                "Column Header",
-                "Age Label",
-                "Uncertainty Label"
-            ],
-            "subInfo": [
-                {
-                    "rockType": "TOP",
-                    "age": 311.59,
-                    "info": "\"info\""
-                },
-                {
-                    "rockType": "RockTypeTwo",
-                    "label": "RockTypeTwoLabel",
-                    "age": 315,
-                    "info": "\"info for RockTypeTwo\""
-                }
-            ],
-            "minAge": 311.59,
-            "width": 500,
-            "maxAge": 315,
-            "enableTitle": true,
-            "rgb": {
-                "r": 234,
-                "g": 221,
-                "b": 221 
-            },
-            "popup": "\"FaciesTwo info\"",
-            "on": false
-        }
-    },
-    "column-types-block-key": {
-        "Block Child 1": {
-            "name": "Block Child 1",
-            "editName": "Block Child 1",
-            "columnDisplayType": "Zone",
-            "fontOptions": [
-                "Column Header",
-                "Age Label",
-                "Zone Column Label"
-            ],
-            "fontsInfo": {
-                "font": "Arial"
-            },
-            "show": true,
-            "expanded": false,
-            "children": [],
-            "parent": null,
-            "subInfo": [
-                {
-                    "label": "Sub Block Top",
-                    "age": 0,
-                    "popup": "",
-                    "lineStyle": "solid",
-                    "rgb": {
-                        "r": 255,
-                        "g": 255,
-                        "b": 255
-                    }
-                },
-                {
-                    "label": "Sub Block 1",
-                    "age": 201.36,
-                    "popup": "",
-                    "lineStyle": "solid",
-                    "rgb": {
-                        "r": 255,
-                        "g": 255,
-                        "b": 255
-                    }
-                }
-            ],
-            "width": 100,
-            "units": "Ma",
-            "minAge": 0,
-            "maxAge": 201.36,
-            "popup": "",
-            "on": true,
-            "enableTitle": true,
-            "rgb": {
-                "r": 255,
-                "g": 255,
-                "b": 255
-            }
-        },
-        "Block Child 2": {
-            "name": "Block Child 2",
-            "editName": "Block Child 2",
-            "columnDisplayType": "Zone",
-            "fontOptions": [
-                "Column Header",
-                "Age Label",
-                "Zone Column Label"
-            ],
-            "fontsInfo": {
-                "font": "Arial"
-            },
-            "show": true,
-            "expanded": false,
-            "children": [],
-            "parent": null,
-            "units": "Ma",
-            "subInfo": [
-                {
-                    "label": "Sub Block Top",
-                    "age": 0,
-                    "popup": "info",
-                    "lineStyle": "solid",
-                    "rgb": {
-                        "r": 255,
-                        "g": 225,
-                        "b": 210
-                    }
-                },
-                {
-                    "label": "Sub Block 2",
-                    "age": 23.03,
-                    "popup": "info",
-                    "lineStyle": "solid",
-                    "rgb": {
-                        "r": 222,
-                        "g": 255,
-                        "b": 0
-                    }
-                },
-                {
-                    "label": "Sub Block 3",
-                    "age": 32.02,
-                    "popup": "info",
-                    "lineStyle": "solid",
-                    "rgb": {
-                        "r": 255,
-                        "g": 225,
-                        "b": 210
-                    }
-                }
-            ],
-            "width": 70,
-            "minAge": 0,
-            "maxAge": 32.02,
-            "popup": "\"popup\"",
-            "on": false,
-            "enableTitle": false,
-            "rgb": {
-                "r": 255,
-                "g": 225,
-                "b": 210
-            }
-        }
-    },
-    "column-types-all-column-types-key": {
-        "Facies": {
-            "name": "Facies",
-            "subFaciesInfo": [
-                {
-                    "rockType": "TOP",
-                    "age": 0,
-                    "info": ""
-                },
-                {
-                    "rockType": "Facies SubFaciesInfo 1",
-                    "label": "Facies SubFaciesInfo 1 Label",
-                    "age": 5,
-                    "info": ""
-                },
-                {
-                    "rockType": "Facies SubFaciesInfo 2",
-                    "label": "Facies SubFaciesInfo 2 Label",
-                    "age": 10,
-                    "info": ""
-                }
-            ],
-            "minAge": 0,
-            "maxAge": 10,
-            "enableTitle": false,
-            "width": 210,
-            "rgb": {
-                "r": 100,
-                "g": 200,
-                "b": 255
-            },
-            "popup": "Facies Popup",
-            "on": false
-        },
-        "Block": {
-            "name": "Block",
-            "subBlockInfo": [
-                {
-                    "label": "TOP",
-                    "age": 419.2,
-                    "lineStyle": "solid",
-                    "popup": "",
-                    "rgb": {
-                        "r": 197,
-                        "g": 217,
-                        "b": 234
-                    }
-                },
-                {
-                    "label": "Block SubBlock",
-                    "age": 433.35,
-                    "lineStyle": "solid",
-                    "popup": "Block SubBlock Info",
-                    "rgb": {
-                        "r": 197,
-                        "g": 217,
-                        "b": 234
-                    }
-                }
-            ],
-            "popup": "Block Popup",
-            "on": false,
-            "enableTitle": false,
-            "rgb": {
-                "r": 197,
-                "g": 217,
-                "b": 234
-            },
-            "width": 120,
-            "minAge": 419.2,
-            "maxAge": 433.35
-        },
-        "Event": {
-            "name": "Event",
-            "on": true,
-            "subEventInfo": [
-                {
-                "label": "SubEventInfo 1",
-                "age": 0.02,
-                "popup": "Event SubEventInfo Popup 1",
-                "lineStyle": "solid"
-                },
-                {
-                "label": "SubEventInfo 2",
-                "age": 0.4,
-                "popup": "Event SubEventInfo Popup 2",
-                "lineStyle": "solid"
-                }
-            ],
-            "enableTitle": true,
-            "width": 250,
-            "rgb": {
-                "r": 100,
-                "g": 200,
-                "b": 255
-            },
-            "minAge": 0.02,
-            "maxAge": 0.4,
-            "popup": "Event Popup"
-        },
-        "Range": {
-            "name": "Range",
-            "subRangeInfo": [
-              {
-                "label": "SubRangeInfo 1",
-                "age": 10,
-                "abundance": "TOP",
-                "popup": ""
-              },
-              {
-                "label": "SubRangeInfo 2",
-                "age": 100,
-                "abundance": "rare",
-                "popup": "Range SubRangeInfo Popup 2"
-              }
-            ],
-            "enableTitle": true,
-            "width": 100,
-            "rgb": {
-              "r": 198,
-              "g": 207,
-              "b": 174
-            },
-            "minAge": 10,
-            "maxAge": 100,
-            "popup": "Range Popup",
-            "on": true 
-        }, 
-        "Chron": {
-            "name": "Chron",
-            "subChronInfo": [
-                {
-                    "polarity": "TOP",
-                    "age": 0,
-                    "popup": ""
-                },
-                {
-                    "polarity": "N",
-                    "age": 0.123,
-                    "label": "SubChronInfo 1 Label",
-                    "popup": "SubChronInfo 1 Popup"
-                },
-                {
-                    "polarity": "R",
-                    "age": 0.234,
-                    "label": "SubChronInfo 2 Label",
-                    "popup": "SubChronInfo 2 Popup"
-                }
-            ],
-            "minAge": 0,
-            "maxAge": 0.234,
-            "on": true,
-            "enableTitle": false,
-            "width": 100,
-            "rgb": {
-                "r": 255,
-                "g": 255,
-                "b": 255
-            },
-            "popup": "Chron Popup"
-        },
-        "Point": {
-            "name": "Point",
-            "minAge": 4,
-            "maxAge": 5,
-            "enableTitle": true,
-            "on": false,
-            "width": 100,
-            "popup": "Point Popup",
-            "rgb": {
-              "r": 255,
-              "g": 255,
-              "b": 255
-            },
-            "subPointInfo": [
-              {
-                "age": 4,
-                "xVal": 0,
-                "popup": "SubPointInfo Popup 1"
-              },
-              {
-                "age": 5,
-                "xVal": 9,
-                "popup": "SubPointInfo Popup 2"
-              }
-            ],
-            "drawFill": true,
-            "drawLine": true,
-            "lowerRange": 0,
-            "upperRange": 10,
-            "smoothed": true,
-            "minX": 0,
-            "maxX": 9,
-            "pointShape": "nopoints",
-            "fill": {
-              "r": 64,
-              "g": 233,
-              "b": 191
-            }
-        },
-        "Sequence": {
-            "name": "Sequence",
-            "minAge": 0,
-            "maxAge": 2,
-            "enableTitle": false,
-            "on": true,
-            "width": 900,
-            "popup": "Sequence Popup",
-            "rgb": {
-                "r": 255,
-                "g": 255,
-                "b": 255
-            },
-            "subSequenceInfo": [
-                {
-                    "direction": "MFS",
-                    "age": 0,
-                    "severity": "Major",
-                    "popup": "No Label Popup"
-                },
-                {
-                    "label": "Label 1",
-                    "direction": "SB",
-                    "age": 2,
-                    "severity": "Medium",
-                    "popup": "Label 1 Popup"
-                }
-            ]
-        },
-        "Transect": {
-            "name": "Transect",
-            "minAge": 0,
-            "maxAge": 9.22,
-            "enableTitle": true,
-            "on": true,
-            "width": 500,
-            "popup": "Transect Popup",
-            "rgb": {
-              "r": 240,
-              "g": 255,
-              "b": 255
-            },
-            "subTransectInfo": [
-              {
-                "age": 0
-              },
-              {
-                "age": 2.58
-              },
-              {
-                "age": 9.22
-              }
-            ]
-        },
-        "Freehand": {
-            "name": "Freehand",
-            "minAge": 0,
-            "maxAge": 1.3,
-            "enableTitle": false,
-            "on": true,
-            "width": 70,
-            "popup": "",
-            "rgb": {
-                "r": 227,
-                "g": 123,
-                "b": 104
-            },
-            "subFreehandInfo": [
-                {
-                "topAge": 0,
-                "baseAge": 1
-                },
-                {
-                "topAge": 0.3,
-                "baseAge": 1.3
-                }
-            ]
-        },
-        "Blank": {
-            "name": "Blank",
-            "minAge": 1.7976931348623157e+308,
-            "maxAge": 5e-324,
-            "enableTitle": false,
-            "on": false,
-            "width": 800,
-            "popup": "Blank Popup",
-            "rgb": {
-              "r": 7,
-              "g": 3,
-              "b": 4
-            }
-        }
-    },
-    "column-types-event-key": {
-        "Event 1": {
-            "name": "Event 1",
-            "editName": "Event 1",
-            "show": true,
-            "expanded": false,
-            "fontsInfo": {
-                "font": "Arial"
-            },
-            "fontOptions": [
-                "Column Header",
-                "Age Label",
-                "Event Column Label",
-                "Uncertainty Label",
-                "Range Label"
-            ],
-            "children": [],
-            "columnDisplayType": "Event",
-            "parent": null,
-            "columnSpecificSettings": {
-                "type": "events",
-                "rangeSort": "first occurrence",
-                "frequency": null,
-                "stepSize": 1,
-                "windowSize": 2
-            },
-            "units": "Ma",
-            "subInfo": [
-                {
-                "label": "Event 1 SubEvent 1",
-                "age": 2,
-                "popup": "Event 1 SubEvent 1 Popup",
-                "lineStyle": "dashed",
-                "subEventType": "EVENT"
-                },
-                {
-                "label": "Event 1 SubEvent 2",
-                "age": 4,
-                "popup": "Event 1 SubEvent 2 Popup",
-                "lineStyle": "solid",
-                "subEventType": "EVENT"
-                }
-            ],
-            "enableTitle": true,
-            "width": 250,
-            "rgb": {
-                "r": 198,
-                "g": 207,
-                "b": 174
-            },
-            "minAge": 2,
-            "maxAge": 4,
-            "popup": "\"Event 1 Popup\"",
-            "on": true
-        },
-        "Event 2": {
-            "name": "Event 2",
-            "editName": "Event 2",
-            "show": true,
-            "expanded": false,
-            "parent": null,
-            "fontsInfo": {
-                "font": "Arial"
-            },
-            "children": [],
-            "columnDisplayType": "Event",
-            "columnSpecificSettings": {
-                "type": "events",
-                "rangeSort": "first occurrence",
-                "frequency": null,
-                "stepSize": 1,
-                "windowSize": 2
-            },
-            "fontOptions": [
-                "Column Header",
-                "Age Label",
-                "Event Column Label",
-                "Uncertainty Label",
-                "Range Label"
-            ],
-            "units": "Ma",
-            "subInfo": [
-                {
-                "label": "Event 2 SubEvent 1",
-                "age": 5,
-                "popup": "",
-                "lineStyle": "solid",
-                "subEventType": "FAD"
-                },
-                {
-                "label": "Event 2 SubEvent 2",
-                "age": 6,
-                "popup": "",
-                "lineStyle": "solid",
-                "subEventType": "FAD"
-                }
-            ],
-            "enableTitle": false,
-            "width": 150,
-            "rgb": {
-                "r": 255,
-                "g": 255,
-                "b": 255
-            },
-            "minAge": 5,
-            "maxAge": 6,
-            "popup": "Event 2 Popup",
-            "on": false
-        }
-    },
-    "column-types-range-key": {
-        "Range 1": {
-            "name": "Range 1",
-            "editName": "Range 1",
-            "show": true,
-            "expanded": false,
-            "parent": null,
-            "fontsInfo": {
-                "font": "Arial"
-            },
-            "columnDisplayType": "Range",
-            "fontOptions": [
-              "Column Header",
-              "Popup Body"
-            ],
-            "units": "Ma",
-            "subInfo": [
-              {
-                "label": "Range 1 SubRangeInfo 1",
-                "age": 28.4,
-                "abundance": "TOP",
-                "popup": ""
-              },
-              {
-                "label": "Range 1 SubRangeInfo 2",
-                "age": 33.9,
-                "abundance": "rare",
-                "popup": "\"popup\""
-              }
-            ],
-            "columnSpecificSettings": {
-              "agePad": 2,
-              "margin": 0.2,
-              "rangeSort":"first occurrence"
-            },
-            "enableTitle": true,
-            "children": [],
-            "width": 100,
-            "rgb": {
-              "r": 198,
-              "g": 207,
-              "b": 174
-            },
-            "minAge": 28.4,
-            "maxAge": 33.9,
-            "popup": "Range 1 info",
-            "on": false
-        },
-        "Range 2": {
-            "name": "Range 2",
-            "editName": "Range 2",
-            "show": true,
-            "expanded": false,
-            "parent": null,
-            "fontsInfo": {
-                "font": "Arial"
-            },
-            "children": [],
-            "columnDisplayType": "Range",
-            "fontOptions": [
-              "Column Header",
-              "Popup Body"
-            ],
-            "columnSpecificSettings": {
-              "agePad": 2,
-              "margin": 0.2,
-              "rangeSort":"first occurrence"
-            },
-            "units": "Ma",
-            "subInfo": [
-              {
-                "label": "Range 2 SubRangeInfo 1",
-                "age": 0,
-                "abundance": "TOP",
-                "popup": ""
-              },
-              {
-                "label": "Range 2 SubRange Info 2",
-                "age": 0.01,
-                "abundance": "flood",
-                "popup": ""
-              }
-            ],
-            "enableTitle": false,
-            "width": 100,
-            "rgb": {
-              "r": 198,
-              "g": 207,
-              "b": 174
-            },
-            "minAge": 0,
-            "maxAge": 0.01,
-            "popup": "Range 2 Info",
-            "on": true
-        }
-    },
-    "column-types-chron-key": {
-        "Chron 1": {
-            "name": "Chron 1",
-            "editName": "Chron 1",
-            "columnDisplayType": "Chron",
-            "show": true,
-            "expanded": false,
-            "fontsInfo": {
-                "font": "Arial"
-            },
-            "fontOptions": [
-                "Column Header",
-                "Age Label"
-            ],
-            "children": [],
-            "parent": null,
-            "minAge": 28.4,
-            "maxAge": 33.9,
-            "enableTitle": true,
-            "on": false,
-            "width": 100,
-            "units": "Ma",
-            "popup": "Chron 1 info",
-            "rgb": {
-                "r": 198,
-                "g": 207,
-                "b": 174
-            },
-            "subInfo": [
-                {
-                    "polarity": "TOP",
-                    "age": 28.4,
-                    "popup": ""
-                },  
-                {
-                    "polarity": "N",
-                    "age": 33.9,
-                    "label": "SubChronInfo 1 Label",
-                    "popup": "SubChronInfo Popup 1"
-                }
-            ]
-        },
-        "Chron 2": {
-            "name": "Chron 2",
-            "editName": "Chron 2",
-            "columnDisplayType": "Chron",
-            "show": true,
-            "expanded": false,
-            "fontsInfo": {
-                "font": "Arial"
-            },
-            "fontOptions": [
-                "Column Header",
-                "Age Label"
-            ],
-            "children": [],
-            "parent": null,
-            "units": "Ma",
-            "minAge": 0,
-            "maxAge": 0.01,
-            "enableTitle": false,
-            "on": true,
-            "width": 100,
-            "popup": "Chron 2 Info",
-            "rgb": {
-                "r": 208,
-                "g": 207,
-                "b": 174
-            },
-            "subInfo": [
-                {
-                    "polarity": "TOP",
-                    "age": 0,
-                    "popup": ""
-                },
-                {
-                    "polarity": "R",
-                    "age": 0.01,
-                    "label": "SubChronInfo 2 Label",
-                    "popup": "SubChronInfo 2 Popup"
-                }
-            ]
-        }
-    },
-    "column-types-point-key": {
-        "Point 1": {
-            "name": "Point 1",
-            "editName": "Point 1",
-            "columnDisplayType": "Point",
-            "show": true,
-            "expanded": false,
-            "fontsInfo": {
-                "font": "Arial"
-            },
-            "fontOptions": [
-              "Column Header",
-              "Point Column Scale Label"
-            ],
-            "children": [],
-            "parent": null,
-            "units": "Ma",
-            "columnSpecificSettings": {
-              "drawBackgroundGradient": false,
-              "drawCurveGradient": false,
-              "drawScale": true,
-              "flipScale": false,
-              "lineColor": {
-                "r": 0,
-                "g": 0,
-                "b": 0
-              },
-              "backgroundGradientEnd": {
-                "r": 255,
-                "g": 255,
-                "b": 255
-              },
-              "backgroundGradientStart": {
-                "r": 0,
-                "g": 0,
-                "b": 0
-              },
-              "curveGradientEnd": {
-                "r": 255,
-                "g": 255,
-                "b": 255
-              },
-              "curveGradientStart": {
-                "r": 0,
-                "g": 0,
-                "b": 0
-              },
-              "drawFill": true,
-              "drawLine": true,
-              "fill": {
-                "r": 64,
-                "g": 233,
-                "b": 191
-              },
-              "lowerRange": 0,
-              "maxX": 60,
-              "minX": 0,
-              "pointShape": "nopoints",
-              "smoothed": true,
-              "upperRange": 230,
-              "scaleStart": 0,
-              "scaleStep": 1,
-              "stepSize": 1,
-              "windowSize": 2,
-              "isDataMiningColumn": false,
-              "dataMiningPointDataType": null
-            },
-            "minAge": 7,
-            "maxAge": 8,
-            "enableTitle": true,
-            "on": false,
-            "width": 100,
-            "popup": "Point 1 Popup",
-            "rgb": {
-              "r": 255,
-              "g": 255,
-              "b": 255
-            },
-            "subInfo": [
-              {
-                "age": 7,
-                "xVal": 0,
-                "popup": ""
-              },
-              {
-                "age": 8,
-                "xVal": 60,
-                "popup": ""
-              }
-            ]
-        },
-        "Point 2": {
-            "name": "Point 2",
-            "editName": "Point 2",
-            "columnDisplayType": "Point",
-            "show": true,
-            "expanded": false,
-            "fontsInfo": {
-                "font": "Arial"
-            },
-            "fontOptions": [
-              "Column Header",
-              "Point Column Scale Label"
-            ],
-            "children": [],
-            "parent": null,
-            "units": "Ma",
-            "columnSpecificSettings": {
-              "drawBackgroundGradient": false,
-              "drawCurveGradient": false,
-              "drawScale": true,
-              "flipScale": false,
-              "lineColor": {
-                "r": 0,
-                "g": 0,
-                "b": 0
-              },
-              "backgroundGradientEnd": {
-                "r": 255,
-                "g": 255,
-                "b": 255
-              },
-              "backgroundGradientStart": {
-                "r": 0,
-                "g": 0,
-                "b": 0
-              },
-              "curveGradientEnd": {
-                "r": 255,
-                "g": 255,
-                "b": 255
-              },
-              "curveGradientStart": {
-                "r": 0,
-                "g": 0,
-                "b": 0
-              },
-              "drawFill": true,
-              "drawLine": false,
-              "fill": {
-                "r": 1,
-                "g": 2,
-                "b": 3
-              },
-              "lowerRange": 9,
-              "maxX": 9.5,
-              "minX": 9,
-              "pointShape": "cross",
-              "smoothed": true,
-              "upperRange": 9.5,
-              "scaleStart": 0,
-              "scaleStep": 0.18,
-              "stepSize": 1,
-              "windowSize": 2,
-              "isDataMiningColumn": false,
-              "dataMiningPointDataType": null
-            },
-            "minAge": 1,
-            "maxAge": 1000,
-            "enableTitle": true,
-            "on": false,
-            "width": 100,
-            "popup": "Point 2 Popup",
-            "rgb": {
+      "popup": "",
+      "children": [
+        {
+          "name": "Ma",
+          "editName": "Ma",
+          "fontsInfo": {
+            "font": "Arial"
+          },
+          "fontOptions": [
+            "Column Header",
+            "Ruler Label"
+          ],
+          "show": true,
+          "expanded": false,
+          "on": true,
+          "width": 100,
+          "enableTitle": true,
+          "rgb": {
             "r": 255,
             "g": 255,
             "b": 255
-            },
-            "subInfo": [
-            {
-                "age": 1,
-                "xVal": 9.5,
-                "popup": "Popup 1"
-            },
-            {
-                "age": 1000,
-                "xVal": 9,
-                "popup": "Popup 2"
-            }
-            ]
-        }
-    },
-    "column-types-sequence-key": {
-        "Trend 1": {
-            "name": "Trend 1",
-            "editName": "Trend 1",
-            "show": true,
-            "expanded": false,
-            "fontsInfo": {
-                "font": "Arial"
-            },
-            "fontOptions": [
-                "Column Header",
-                "Age Label",
-                "Sequence Column Label"
-            ],
-            "columnDisplayType": "Sequence",
-            "children": [],
-            "parent": null,
-            "units": "Ma",
-            "minAge": 67,
-            "maxAge": 69,
-            "enableTitle": false,
-            "on": true,
-            "width": 100,
-            "popup": "Trend Popup",
-            "rgb": {
-                "r": 245,
-                "g": 204,
-                "b": 131
-            },
-            "subInfo": [
-                {
-                    "label": "Trend 1 label",
-                    "direction": "SB",
-                    "age": 67,
-                    "severity": "Minor",
-                    "popup": "SubTrend 1 Popup"
-                },
-                {
-                    "direction": "MFS",
-                    "age": 69,
-                    "severity": "Medium",
-                    "popup": "No Label Popup"
-                }
-            ],
-            "columnSpecificSettings": {
-                     "drawNameLabel": true,
-                     "graphStyle": "stroke-width: 1; stroke: black; fill: rgb(64, 191, 233);",
-                     "labelMarginLeft": 5,
-                     "labelMarginRight": 5,
-                     "type": "trend"
-                   }
+          },
+          "popup": "",
+          "children": [],
+          "parent": "Chart Title",
+          "minAge": 5e-324,
+          "maxAge": 1.7976931348623157e+308,
+          "units": "Ma",
+          "columnDisplayType": "Ruler"
         },
-        "Sequence 1": {
-            "name": "Sequence 1",
-            "editName": "Sequence 1",
-            "show": true,
-            "expanded": false,
-            "fontsInfo": {
-                "font": "Arial"
-            },
-            "fontOptions": [
-                "Column Header",
-                "Age Label",
-                "Sequence Column Label"
-            ],
-            "columnDisplayType": "Sequence",
-            "children": [],
-            "parent": null,
-            "units": "Ma",
-            "minAge": 321.39,
-            "maxAge": 322.34,
-            "enableTitle": true,
-            "on": false,
-            "width": 100,
-            "popup": "Sequence Popup",
-            "rgb": {
-                "r": 255,
-                "g": 255,
-                "b": 255
-            },
-            "subInfo": [
-                {
-                    "label": "SubSequenceInfo 1",
-                    "direction": "SB",
-                    "age": 321.39,
-                    "severity": "Major",
-                    "popup": "Popup"
-                },
-                {
-                    "direction": "MFS",
-                    "age": 322.34,
-                    "severity": "Minor",
-                    "popup": "No Label Popup"
-                }
-            ],
-            "columnSpecificSettings": {
-              "drawNameLabel": true,
-              "graphStyle": "stroke-width: 0; fill: rgb(64, 191, 233);",
-              "labelMarginLeft": 5,
-              "labelMarginRight": 5,
-              "type": "sequence"
-          }
-        }
-    },
-    "column-types-transect-key": {
-        "Transect Child 1": {
-            "name": "Transect Child 1",
-            "editName": "Transect Child 1",
-            "show": true,
-            "expanded": false,
-            "fontsInfo": {
-                "font": "Arial"
-            },
-            "fontOptions": [
-                "Column Header"
-            ],
-            "columnDisplayType": "Transect",
-            "children": [],
-            "parent": null,
-            "units": "Ma",
-            "minAge": 8.61,
-            "maxAge": 530.46,
-            "enableTitle": true,
-            "on": true,
-            "width": 200,
-            "popup": "Transect Child 1 Popup",
-            "rgb": {
-              "r": 245,
-              "g": 245,
-              "b": 245
-            },
-            "subInfo": [
-              {
-                "age": 8.61
-              },
-              {
-                "age": 10.75
-              },
-              {
-                "age": 12.15
-              },
-              {
-                "age": 530.46
-              }
-            ]
-        },
-        "Transect Child 2": {
-            "name": "Transect Child 2",
-            "editName": "Transect Child 2",
-            "show": true,
-            "expanded": false,
-            "fontsInfo": {
-                "font": "Arial"
-            },
-            "fontOptions": [
-                "Column Header"
-            ],
-            "columnDisplayType": "Transect",
-            "children": [],
-            "parent": null,
-            "units": "Ma",
-            "minAge": 0,
-            "maxAge": 9.22,
-            "enableTitle": true,
-            "on": true,
-            "width": 500,
-            "popup": "Transect Child 2 Popup",
-            "rgb": {
-            "r": 240,
-            "g": 255,
-            "b": 255
-            },
-            "subInfo": [
+        {
+          "name": "Central Africa Cenozoic",
+          "editName": "Central Africa Cenozoic",
+          "on": true,
+          "enableTitle": true,
+          "show": true,
+          "expanded": false,
+          "fontsInfo": {
+            "font": "Arial"
+          },
+          "popup": "",
+          "children": [
             {
-                "age": 0
-            },
-            {
-                "age": 2.58
-            },
-            {
-                "age": 9.22
-            }
-            ]
-        }
-    },
-    "column-types-freehand-key": {
-        "Freehand Child 1": {
-            "name": "Freehand Child 1",
-            "editName": "Freehand Child 1",
-            "show": true,
-            "expanded": false,
-            "fontsInfo": {
-                "font": "Arial"
-            },
-            "fontOptions": [
-                "Column Header"
-            ],
-            "columnDisplayType": "Freehand",
-            "children": [],
-            "parent": null,
-            "units": "Ma",
-            "minAge": 0.07,
-            "maxAge": 120.3,
-            "enableTitle": false,
-            "on": true,
-            "width": 40,
-            "popup": "",
-            "rgb": {
-                "r": 227,
-                "g": 123,
-                "b": 104
-            },
-            "subInfo": [
-                {
-                "topAge": 0.07,
-                "baseAge": 2.07
-                },
-                {
-                "topAge": 69.7,
-                "baseAge": 70.3
-                },
-                {
-                "topAge": 119.7,
-                "baseAge": 120.3
-                }
-            ]
-        },
-        "Freehand Child 2": {
-            "name": "Freehand Child 2",
-            "editName": "Freehand Child 2",
-            "show": true,
-            "expanded": false,
-            "fontsInfo": {
-                "font": "Arial"
-            },
-            "fontOptions": [
-                "Column Header"
-            ],
-            "columnDisplayType": "Freehand",
-            "children": [],
-            "parent": null,
-            "units": "Ma",
-            "minAge": 35.9,
-            "maxAge": 37.5,
-            "enableTitle": false,
-            "on": true,
-            "width": 40,
-            "popup": "Freehand Child 2 Popup",
-            "rgb": {
-                "r": 227,
-                "g": 123,
-                "b": 106
-            },
-            "subInfo": [
-                {
-                "topAge": 35.9,
-                "baseAge": 36.9
-                },
-                {
-                "topAge": 36.9,
-                "baseAge": 37.5
-                }
-            ]
-        }
-    },
-    "bad-data-key": {
-            "columnInfo": {
-              "name": "Chart Title",
-              "editName": "Chart Title",
+              "name": "Nigeria Coast",
+              "editName": "Nigeria Coast",
+              "on": true,
+              "enableTitle": true,
               "fontsInfo": {
                 "font": "Arial"
               },
-              "fontOptions": [
-                "Column Header"
-              ],
-              "on": true,
-              "show": true,
-              "expanded": true,
-              "width": 100,
-              "enableTitle": true,
-              "rgb": {
-                "r": 255,
-                "g": 255,
-                "b": 255
-              },
               "popup": "",
+              "show": true,
+              "expanded": false,
               "children": [
                 {
-                  "name": "Ma",
-                  "editName": "Ma",
+                  "name": "Nigeria Coast Facies",
+                  "editName": "Nigeria Coast",
+                  "on": true,
+                  "enableTitle": false,
+                  "showAgeLabels": false,
+                  "expanded": false,
+                  "showUncertaintyLabels": false,
                   "fontsInfo": {
                     "font": "Arial"
                   },
                   "fontOptions": [
                     "Column Header",
-                    "Ruler Label"
+                    "Age Label",
+                    "Uncertainty Label"
                   ],
-                  "on": true,
+                  "popup": "",
+                  "children": [],
+                  "parent": "Nigeria Coast",
+                  "minAge": 0,
+                  "maxAge": 10,
                   "show": true,
-                  "expanded": false,
-                  "width": 100,
-                  "enableTitle": true,
+                  "width": 84,
                   "rgb": {
                     "r": 255,
                     "g": 255,
                     "b": 255
                   },
+                  "units": "Ma",
+                  "columnDisplayType": "Facies",
+                  "subInfo": [
+                    {
+                      "age": 0,
+                      "info": "",
+                      "rockType": "TOP"
+                    },
+                    {
+                      "age": 5,
+                      "info": "",
+                      "label": "Delta",
+                      "rockType": "Sandstone"
+                    },
+                    {
+                      "age": 10,
+                      "info": "",
+                      "label": "ProDelta",
+                      "rockType": "Claystone"
+                    }
+                  ]
+                },
+                {
+                  "name": "Nigeria Coast Members",
+                  "editName": "Members",
+                  "on": false,
+                  "enableTitle": false,
+                  "fontOptions": [
+                    "Column Header",
+                    "Age Label",
+                    "Zone Column Label"
+                  ],
+                  "fontsInfo": {
+                    "font": "Arial"
+                  },
+                  "showAgeLabels": false,
                   "popup": "",
                   "children": [],
-                  "parent": "Chart Title",
-                  "minAge": 5e-324,
-                  "maxAge": 1.7976931348623157e+308,
+                  "parent": "Nigeria Coast",
+                  "minAge": 0,
+                  "maxAge": 10,
+                  "width": 210,
+                  "show": true,
+                  "expanded": false,
+                  "rgb": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                  },
                   "units": "Ma",
-                  "columnDisplayType": "Ruler"
+                  "columnDisplayType": "Zone",
+                  "columnSpecificSettings": {
+                    "orientation": "normal"
+                  }
+                },
+                {
+                  "name": "Nigeria Coast Facies Label",
+                  "editName": "Facies Label",
+                  "on": true,
+                  "enableTitle": false,
+                  "fontsInfo": {
+                    "font": "Arial"
+                  },
+                  "fontOptions": [
+                    "Column Header",
+                    "Age Label",
+                    "Zone Column Label"
+                  ],
+                  "showAgeLabels": false,
+                  "popup": "",
+                  "children": [],
+                  "parent": "Nigeria Coast",
+                  "show": true,
+                  "expanded": false,
+                  "minAge": 0,
+                  "maxAge": 10,
+                  "width": 84,
+                  "rgb": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                  },
+                  "units": "Ma",
+                  "columnDisplayType": "Zone",
+                  "columnSpecificSettings": {
+                    "orientation": "normal"
+                  }
+                },
+                {
+                  "name": "Nigeria Coast Series Label",
+                  "editName": "Series Label",
+                  "show": true,
+                  "expanded": false,
+                  "on": true,
+                  "enableTitle": false,
+                  "fontsInfo": {
+                    "font": "Arial"
+                  },
+                  "fontOptions": [
+                    "Column Header",
+                    "Age Label",
+                    "Zone Column Label"
+                  ],
+                  "showAgeLabels": false,
+                  "popup": "",
+                  "children": [],
+                  "parent": "Nigeria Coast",
+                  "minAge": 0,
+                  "maxAge": 10,
+                  "rgb": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                  },
+                  "width": 42,
+                  "units": "Ma",
+                  "columnDisplayType": "Zone",
+                  "columnSpecificSettings": {
+                    "orientation": "vertical"
+                  }
                 }
               ],
-              "parent": "Chart Root",
-              "minAge": 99999,
-              "maxAge": -99999,
+              "parent": "Central Africa Cenozoic",
+              "columnDisplayType": "BlockSeriesMetaColumn",
+              "minAge": 0,
+              "maxAge": 10,
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "fontOptions": [
+                "Column Header",
+                "Age Label",
+                "Uncertainty Label",
+                "Zone Column Label"
+              ],
               "units": "Ma",
-              "columnDisplayType": "RootColumn"
+              "subInfo": [
+                {
+                  "rockType": "TOP",
+                  "age": 0,
+                  "info": ""
+                },
+                {
+                  "rockType": "Sandstone",
+                  "label": "Delta",
+                  "age": 5,
+                  "info": ""
+                },
+                {
+                  "rockType": "Claystone",
+                  "label": "ProDelta",
+                  "age": 10,
+                  "info": ""
+                }
+              ]
             },
-            "ageUnits": "Ma",
-            "defaultChronostrat": "UNESCO",
-            "formatVersion": 1.5,
-            "image": "",
-            "isUserDatapack": false,
-            "file": "file.dpk",
-            "description": "description",
-            "title": "Title",
-            "size": "size"
+            {
+              "name": "South Atlantic",
+              "editName": "South Atlantic",
+              "on": true,
+              "enableTitle": true,
+              "show": true,
+              "expanded": false,
+              "fontsInfo": {
+                "font": "Arial"
+              },
+              "popup": "",
+              "children": [
+                {
+                  "name": "South Atlantic Facies",
+                  "editName": "South Atlantic",
+                  "on": true,
+                  "enableTitle": false,
+                  "show": true,
+                  "expanded": false,
+                  "fontsInfo": {
+                    "font": "Arial"
+                  },
+                  "fontOptions": [
+                    "Column Header",
+                    "Age Label",
+                    "Uncertainty Label"
+                  ],
+                  "showAgeLabels": false,
+                  "showUncertaintyLabels": false,
+                  "popup": "",
+                  "children": [],
+                  "parent": "South Atlantic",
+                  "minAge": 0,
+                  "maxAge": 10,
+                  "width": 84,
+                  "rgb": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                  },
+                  "units": "Ma",
+                  "columnDisplayType": "Facies",
+                  "subInfo": [
+                    {
+                      "age": 0,
+                      "info": "",
+                      "rockType": "TOP"
+                    },
+                    {
+                      "age": 5,
+                      "info": "",
+                      "label": "Deep marine",
+                      "rockType": "Shallow-marine marl"
+                    },
+                    {
+                      "age": 10,
+                      "info": "",
+                      "label": "Ocean crust",
+                      "rockType": "Lava"
+                    }
+                  ]
+                },
+                {
+                  "name": "South Atlantic Members",
+                  "editName": "Members",
+                  "show": true,
+                  "expanded": false,
+                  "on": false,
+                  "enableTitle": false,
+                  "showAgeLabels": false,
+                  "fontOptions": [
+                    "Column Header",
+                    "Age Label",
+                    "Zone Column Label"
+                  ],
+                  "fontsInfo": {
+                    "font": "Arial"
+                  },
+                  "popup": "",
+                  "children": [],
+                  "parent": "South Atlantic",
+                  "minAge": 0,
+                  "maxAge": 10,
+                  "width": 210,
+                  "rgb": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                  },
+                  "units": "Ma",
+                  "columnDisplayType": "Zone",
+                  "columnSpecificSettings": {
+                    "orientation": "normal"
+                  }
+                },
+                {
+                  "name": "South Atlantic Facies Label",
+                  "editName": "Facies Label",
+                  "show": true,
+                  "expanded": false,
+                  "on": true,
+                  "enableTitle": false,
+                  "fontsInfo": {
+                    "font": "Arial"
+                  },
+                  "showAgeLabels": false,
+                  "fontOptions": [
+                    "Column Header",
+                    "Age Label",
+                    "Zone Column Label"
+                  ],
+                  "popup": "",
+                  "children": [],
+                  "parent": "South Atlantic",
+                  "minAge": 0,
+                  "maxAge": 10,
+                  "width": 84,
+                  "rgb": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                  },
+                  "units": "Ma",
+                  "columnDisplayType": "Zone",
+                  "columnSpecificSettings": {
+                    "orientation": "normal"
+                  }
+                },
+                {
+                  "name": "South Atlantic Series Label",
+                  "editName": "Series Label",
+                  "show": true,
+                  "expanded": false,
+                  "on": true,
+                  "enableTitle": false,
+                  "fontsInfo": {
+                    "font": "Arial"
+                  },
+                  "showAgeLabels": false,
+                  "fontOptions": [
+                    "Column Header",
+                    "Age Label",
+                    "Zone Column Label"
+                  ],
+                  "popup": "",
+                  "children": [],
+                  "parent": "South Atlantic",
+                  "minAge": 0,
+                  "maxAge": 10,
+                  "rgb": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                  },
+                  "width": 42,
+                  "units": "Ma",
+                  "columnDisplayType": "Zone",
+                  "columnSpecificSettings": {
+                    "orientation": "vertical"
+                  }
+                }
+              ],
+              "parent": "Central Africa Cenozoic",
+              "columnDisplayType": "BlockSeriesMetaColumn",
+              "minAge": 0,
+              "maxAge": 10,
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "fontOptions": [
+                "Column Header",
+                "Age Label",
+                "Uncertainty Label",
+                "Zone Column Label"
+              ],
+              "units": "Ma",
+              "subInfo": [
+                {
+                  "rockType": "TOP",
+                  "age": 0,
+                  "info": ""
+                },
+                {
+                  "rockType": "Shallow-marine marl",
+                  "label": "Deep marine",
+                  "age": 5,
+                  "info": ""
+                },
+                {
+                  "rockType": "Lava",
+                  "label": "Ocean crust",
+                  "age": 10,
+                  "info": ""
+                }
+              ]
+            }
+          ],
+          "parent": "Chart Title",
+          "columnDisplayType": "MetaColumn",
+          "minAge": 0,
+          "maxAge": 10,
+          "rgb": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          },
+          "fontOptions": [
+            "Column Header",
+            "Age Label",
+            "Uncertainty Label",
+            "Zone Column Label"
+          ],
+          "units": "Ma",
+          "subInfo": [
+            {
+              "rockType": "TOP",
+              "age": 0,
+              "info": ""
+            },
+            {
+              "rockType": "Sandstone",
+              "label": "Delta",
+              "age": 5,
+              "info": ""
+            },
+            {
+              "rockType": "Claystone",
+              "label": "ProDelta",
+              "age": 10,
+              "info": ""
+            }
+          ]
+        }
+      ],
+      "parent": "Chart Root",
+      "minAge": 0,
+      "maxAge": 10,
+      "units": "Ma",
+      "columnDisplayType": "RootColumn"
+    },
+    "ageUnits": "Ma",
+    "defaultChronostrat": "UNESCO",
+    "formatVersion": 1.5,
+    "image": "",
+    "file": "AfricaBight.map",
+    "description": "Africa Bight Map",
+    "title": "Africa Bight",
+    "size": "200.98 KB"
+  },
+  "general-parse-datapacks-test-2-key": {
+    "columnInfo": {
+      "name": "Chart Title",
+      "editName": "Chart Title",
+      "fontsInfo": {
+        "font": "Arial"
+      },
+      "fontOptions": [
+        "Column Header",
+        "Age Label",
+        "Zone Column Label",
+        "Uncertainty Label",
+        "Event Column Label",
+        "Range Label",
+        "Popup Body",
+        "Point Column Scale Label",
+        "Sequence Column Label"
+      ],
+      "on": true,
+      "show": true,
+      "expanded": true,
+      "width": 100,
+      "enableTitle": true,
+      "rgb": {
+        "r": 255,
+        "g": 255,
+        "b": 255
+      },
+      "popup": "",
+      "children": [
+        {
+          "name": "Ma",
+          "editName": "Ma",
+          "fontsInfo": {
+            "font": "Arial"
+          },
+          "fontOptions": [
+            "Column Header",
+            "Ruler Label"
+          ],
+          "on": true,
+          "show": true,
+          "expanded": false,
+          "width": 100,
+          "enableTitle": true,
+          "rgb": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          },
+          "popup": "",
+          "children": [],
+          "parent": "Chart Title",
+          "minAge": 5e-324,
+          "maxAge": 1.7976931348623157e+308,
+          "units": "Ma",
+          "columnDisplayType": "Ruler"
+        },
+        {
+          "name": "Parent 1",
+          "editName": "Parent 1",
+          "on": true,
+          "show": true,
+          "expanded": false,
+          "enableTitle": true,
+          "fontsInfo": {
+            "font": "Arial"
+          },
+          "popup": "",
+          "children": [
+            {
+              "name": "Block",
+              "editName": "Block",
+              "on": false,
+              "show": true,
+              "expanded": false,
+              "enableTitle": false,
+              "fontsInfo": {
+                "font": "Arial"
+              },
+              "popup": "Block Popup",
+              "children": [],
+              "parent": "Parent 1",
+              "minAge": 419.2,
+              "maxAge": 433.35,
+              "width": 120,
+              "rgb": {
+                "r": 197,
+                "g": 217,
+                "b": 234
+              },
+              "showAgeLabels": false,
+              "fontOptions": [
+                "Column Header",
+                "Age Label",
+                "Zone Column Label"
+              ],
+              "units": "Ma",
+              "columnDisplayType": "Zone",
+              "columnSpecificSettings": {
+                "orientation": "normal"
+              },
+              "subInfo": [
+                {
+                  "label": "TOP",
+                  "age": 419.2,
+                  "popup": "",
+                  "lineStyle": "solid",
+                  "rgb": {
+                    "r": 197,
+                    "g": 217,
+                    "b": 234
+                  }
+                },
+                {
+                  "label": "Block SubBlock",
+                  "age": 433.35,
+                  "popup": "Block SubBlock Info",
+                  "lineStyle": "solid",
+                  "rgb": {
+                    "r": 197,
+                    "g": 217,
+                    "b": 234
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Facies",
+              "editName": "Facies",
+              "on": false,
+              "enableTitle": false,
+              "show": true,
+              "expanded": false,
+              "fontsInfo": {
+                "font": "Arial"
+              },
+              "popup": "Facies Popup",
+              "children": [
+                {
+                  "name": "Facies Facies",
+                  "editName": "Facies",
+                  "show": true,
+                  "expanded": false,
+                  "on": true,
+                  "enableTitle": false,
+                  "fontsInfo": {
+                    "font": "Arial"
+                  },
+                  "showAgeLabels": false,
+                  "showUncertaintyLabels": false,
+                  "fontOptions": [
+                    "Column Header",
+                    "Age Label",
+                    "Uncertainty Label"
+                  ],
+                  "popup": "",
+                  "children": [],
+                  "parent": "Facies",
+                  "minAge": 0,
+                  "maxAge": 10,
+                  "width": 84,
+                  "rgb": {
+                    "r": 100,
+                    "g": 200,
+                    "b": 255
+                  },
+                  "units": "Ma",
+                  "columnDisplayType": "Facies",
+                  "subInfo": [
+                    {
+                      "age": 0,
+                      "info": "",
+                      "rockType": "TOP"
+                    },
+                    {
+                      "age": 5,
+                      "info": "",
+                      "label": "Facies SubFaciesInfo 1 Label",
+                      "rockType": "Facies SubFaciesInfo 1"
+                    },
+                    {
+                      "age": 10,
+                      "info": "",
+                      "label": "Facies SubFaciesInfo 2 Label",
+                      "rockType": "Facies SubFaciesInfo 2"
+                    }
+                  ]
+                },
+                {
+                  "name": "Facies Members",
+                  "editName": "Members",
+                  "on": false,
+                  "show": true,
+                  "expanded": false,
+                  "enableTitle": false,
+                  "showAgeLabels": false,
+                  "fontOptions": [
+                    "Column Header",
+                    "Age Label",
+                    "Zone Column Label"
+                  ],
+                  "fontsInfo": {
+                    "font": "Arial"
+                  },
+                  "popup": "",
+                  "children": [],
+                  "parent": "Facies",
+                  "minAge": 0,
+                  "maxAge": 10,
+                  "width": 210,
+                  "rgb": {
+                    "r": 100,
+                    "g": 200,
+                    "b": 255
+                  },
+                  "units": "Ma",
+                  "columnDisplayType": "Zone",
+                  "columnSpecificSettings": {
+                    "orientation": "normal"
+                  }
+                },
+                {
+                  "name": "Facies Facies Label",
+                  "editName": "Facies Label",
+                  "on": true,
+                  "show": true,
+                  "expanded": false,
+                  "enableTitle": false,
+                  "fontsInfo": {
+                    "font": "Arial"
+                  },
+                  "showAgeLabels": false,
+                  "fontOptions": [
+                    "Column Header",
+                    "Age Label",
+                    "Zone Column Label"
+                  ],
+                  "popup": "",
+                  "children": [],
+                  "parent": "Facies",
+                  "minAge": 0,
+                  "maxAge": 10,
+                  "width": 84,
+                  "rgb": {
+                    "r": 100,
+                    "g": 200,
+                    "b": 255
+                  },
+                  "units": "Ma",
+                  "columnDisplayType": "Zone",
+                  "columnSpecificSettings": {
+                    "orientation": "normal"
+                  }
+                },
+                {
+                  "name": "Facies Series Label",
+                  "editName": "Series Label",
+                  "on": true,
+                  "enableTitle": false,
+                  "show": true,
+                  "expanded": false,
+                  "fontsInfo": {
+                    "font": "Arial"
+                  },
+                  "showAgeLabels": false,
+                  "fontOptions": [
+                    "Column Header",
+                    "Age Label",
+                    "Zone Column Label"
+                  ],
+                  "popup": "",
+                  "children": [],
+                  "parent": "Facies",
+                  "minAge": 0,
+                  "maxAge": 10,
+                  "rgb": {
+                    "r": 100,
+                    "g": 200,
+                    "b": 255
+                  },
+                  "width": 42,
+                  "units": "Ma",
+                  "columnDisplayType": "Zone",
+                  "columnSpecificSettings": {
+                    "orientation": "vertical"
+                  }
+                }
+              ],
+              "parent": "Parent 1",
+              "minAge": 0,
+              "maxAge": 10,
+              "rgb": {
+                "r": 100,
+                "g": 200,
+                "b": 255
+              },
+              "fontOptions": [
+                "Column Header",
+                "Age Label",
+                "Uncertainty Label",
+                "Zone Column Label"
+              ],
+              "units": "Ma",
+              "columnDisplayType": "BlockSeriesMetaColumn",
+              "subInfo": [
+                {
+                  "rockType": "TOP",
+                  "age": 0,
+                  "info": ""
+                },
+                {
+                  "rockType": "Facies SubFaciesInfo 1",
+                  "label": "Facies SubFaciesInfo 1 Label",
+                  "age": 5,
+                  "info": ""
+                },
+                {
+                  "rockType": "Facies SubFaciesInfo 2",
+                  "label": "Facies SubFaciesInfo 2 Label",
+                  "age": 10,
+                  "info": ""
+                }
+              ]
+            },
+            {
+              "name": "Event",
+              "editName": "Event",
+              "on": true,
+              "show": true,
+              "expanded": false,
+              "enableTitle": true,
+              "fontsInfo": {
+                "font": "Arial"
+              },
+              "popup": "Event Popup",
+              "children": [],
+              "parent": "Parent 1",
+              "minAge": 0.02,
+              "maxAge": 0.4,
+              "width": 250,
+              "rgb": {
+                "r": 100,
+                "g": 200,
+                "b": 255
+              },
+              "showAgeLabels": false,
+              "showUncertaintyLabels": false,
+              "columnSpecificSettings": {
+                "type": "events",
+                "rangeSort": "first occurrence",
+                "frequency": null,
+                "stepSize": 1,
+                "windowSize": 2
+              },
+              "fontOptions": [
+                "Column Header",
+                "Age Label",
+                "Event Column Label",
+                "Uncertainty Label",
+                "Range Label"
+              ],
+              "units": "Ma",
+              "columnDisplayType": "Event",
+              "subInfo": [
+                {
+                  "label": "SubEventInfo 1",
+                  "age": 0.02,
+                  "popup": "Event SubEventInfo Popup 1",
+                  "lineStyle": "solid",
+                  "subEventType": "EVENT"
+                },
+                {
+                  "label": "SubEventInfo 2",
+                  "age": 0.4,
+                  "popup": "Event SubEventInfo Popup 2",
+                  "lineStyle": "solid",
+                  "subEventType": "EVENT"
+                }
+              ]
+            },
+            {
+              "name": "Range",
+              "editName": "Range",
+              "on": true,
+              "show": true,
+              "expanded": false,
+              "enableTitle": true,
+              "fontsInfo": {
+                "font": "Arial"
+              },
+              "popup": "Range Popup",
+              "children": [],
+              "parent": "Parent 1",
+              "minAge": 10,
+              "maxAge": 100,
+              "width": 100,
+              "rgb": {
+                "r": 198,
+                "g": 207,
+                "b": 174
+              },
+              "fontOptions": [
+                "Column Header",
+                "Popup Body"
+              ],
+              "units": "Ma",
+              "columnDisplayType": "Range",
+              "columnSpecificSettings": {
+                "agePad": 2,
+                "margin": 0.2,
+                "rangeSort": "first occurrence"
+              },
+              "subInfo": [
+                {
+                  "label": "SubRangeInfo 1",
+                  "age": 10,
+                  "abundance": "TOP",
+                  "popup": ""
+                },
+                {
+                  "label": "SubRangeInfo 2",
+                  "age": 100,
+                  "abundance": "rare",
+                  "popup": "Range SubRangeInfo Popup 2"
+                }
+              ]
+            },
+            {
+              "name": "Chron",
+              "editName": "Chron",
+              "on": true,
+              "show": true,
+              "expanded": false,
+              "enableTitle": false,
+              "fontsInfo": {
+                "font": "Arial"
+              },
+              "popup": "Chron Popup",
+              "children": [
+                {
+                  "name": "Chron Chron",
+                  "editName": "Chron",
+                  "columnSpecificSettings": {
+                    "dataMiningChronDataType": null,
+                    "stepSize": 1,
+                    "windowSize": 2
+                  },
+                  "on": true,
+                  "show": true,
+                  "expanded": false,
+                  "enableTitle": false,
+                  "showAgeLabels": false,
+                  "fontOptions": [
+                    "Column Header",
+                    "Age Label"
+                  ],
+                  "fontsInfo": {
+                    "font": "Arial"
+                  },
+                  "subInfo": [
+                    {
+                      "polarity": "TOP",
+                      "age": 0,
+                      "popup": ""
+                    },
+                    {
+                      "polarity": "N",
+                      "age": 0.123,
+                      "label": "SubChronInfo 1 Label",
+                      "popup": "SubChronInfo 1 Popup"
+                    },
+                    {
+                      "polarity": "R",
+                      "age": 0.234,
+                      "label": "SubChronInfo 2 Label",
+                      "popup": "SubChronInfo 2 Popup"
+                    }
+                  ],
+                  "popup": "",
+                  "children": [],
+                  "parent": "Chron",
+                  "minAge": 0,
+                  "maxAge": 0.234,
+                  "width": 60,
+                  "rgb": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                  },
+                  "units": "Ma",
+                  "columnDisplayType": "Chron"
+                },
+                {
+                  "name": "Chron Chron Label",
+                  "editName": "Chron Label",
+                  "show": true,
+                  "expanded": false,
+                  "on": false,
+                  "enableTitle": false,
+                  "showAgeLabels": false,
+                  "fontOptions": [
+                    "Column Header",
+                    "Age Label",
+                    "Zone Column Label"
+                  ],
+                  "fontsInfo": {
+                    "font": "Arial"
+                  },
+                  "popup": "",
+                  "children": [],
+                  "parent": "Chron",
+                  "minAge": 0,
+                  "maxAge": 0.234,
+                  "width": 40,
+                  "rgb": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                  },
+                  "units": "Ma",
+                  "columnDisplayType": "Zone",
+                  "columnSpecificSettings": {
+                    "orientation": "normal"
+                  }
+                },
+                {
+                  "name": "Chron Series Label",
+                  "editName": "Series Label",
+                  "show": true,
+                  "expanded": false,
+                  "on": true,
+                  "enableTitle": false,
+                  "showAgeLabels": false,
+                  "fontOptions": [
+                    "Column Header",
+                    "Age Label",
+                    "Zone Column Label"
+                  ],
+                  "fontsInfo": {
+                    "font": "Arial"
+                  },
+                  "popup": "",
+                  "children": [],
+                  "parent": "Chron",
+                  "minAge": 0,
+                  "maxAge": 0.234,
+                  "width": 40,
+                  "rgb": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                  },
+                  "units": "Ma",
+                  "columnDisplayType": "Zone",
+                  "columnSpecificSettings": {
+                    "orientation": "vertical"
+                  }
+                }
+              ],
+              "parent": "Parent 1",
+              "minAge": 0,
+              "maxAge": 0.234,
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "fontOptions": [
+                "Column Header",
+                "Age Label",
+                "Zone Column Label"
+              ],
+              "units": "Ma",
+              "columnDisplayType": "BlockSeriesMetaColumn",
+              "subInfo": [
+                {
+                  "polarity": "TOP",
+                  "age": 0,
+                  "popup": ""
+                },
+                {
+                  "polarity": "N",
+                  "age": 0.123,
+                  "label": "SubChronInfo 1 Label",
+                  "popup": "SubChronInfo 1 Popup"
+                },
+                {
+                  "polarity": "R",
+                  "age": 0.234,
+                  "label": "SubChronInfo 2 Label",
+                  "popup": "SubChronInfo 2 Popup"
+                }
+              ]
+            },
+            {
+              "name": "Point",
+              "editName": "Point",
+              "show": true,
+              "expanded": false,
+              "on": false,
+              "enableTitle": true,
+              "fontsInfo": {
+                "font": "Arial"
+              },
+              "popup": "Point Popup",
+              "children": [],
+              "parent": "Parent 1",
+              "minAge": 4,
+              "maxAge": 5,
+              "width": 100,
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "fontOptions": [
+                "Column Header",
+                "Point Column Scale Label"
+              ],
+              "units": "Ma",
+              "columnDisplayType": "Point",
+              "subInfo": [
+                {
+                  "age": 4,
+                  "xVal": 0,
+                  "popup": "SubPointInfo Popup 1"
+                },
+                {
+                  "age": 5,
+                  "xVal": 9,
+                  "popup": "SubPointInfo Popup 2"
+                }
+              ],
+              "columnSpecificSettings": {
+                "drawFill": true,
+                "drawLine": true,
+                "lowerRange": 0,
+                "upperRange": 10,
+                "smoothed": true,
+                "minX": 0,
+                "maxX": 9,
+                "pointShape": "nopoints",
+                "backgroundGradientStart": {
+                  "r": 0,
+                  "g": 0,
+                  "b": 0
+                },
+                "backgroundGradientEnd": {
+                  "r": 255,
+                  "g": 255,
+                  "b": 255
+                },
+                "curveGradientStart": {
+                  "r": 0,
+                  "g": 0,
+                  "b": 0
+                },
+                "curveGradientEnd": {
+                  "r": 255,
+                  "g": 255,
+                  "b": 255
+                },
+                "drawBackgroundGradient": false,
+                "drawCurveGradient": false,
+                "drawScale": true,
+                "fill": {
+                  "r": 64,
+                  "g": 233,
+                  "b": 191
+                },
+                "flipScale": false,
+                "lineColor": {
+                  "r": 0,
+                  "g": 0,
+                  "b": 0
+                },
+                "scaleStart": 0,
+                "scaleStep": 1,
+                "dataMiningPointDataType": null,
+                "windowSize": 2,
+                "stepSize": 1,
+                "isDataMiningColumn": false
+              }
+            },
+            {
+              "name": "Sequence",
+              "editName": "Sequence",
+              "show": true,
+              "expanded": false,
+              "on": true,
+              "enableTitle": false,
+              "fontsInfo": {
+                "font": "Arial"
+              },
+              "popup": "Sequence Popup",
+              "children": [],
+              "parent": "Parent 1",
+              "minAge": 0,
+              "maxAge": 2,
+              "width": 900,
+              "rgb": {
+                "r": 255,
+                "g": 255,
+                "b": 255
+              },
+              "showAgeLabels": false,
+              "fontOptions": [
+                "Column Header",
+                "Age Label",
+                "Sequence Column Label"
+              ],
+              "units": "Ma",
+              "columnDisplayType": "Sequence",
+              "subInfo": [
+                {
+                  "direction": "MFS",
+                  "age": 0,
+                  "severity": "Major",
+                  "popup": "No Label Popup"
+                },
+                {
+                  "label": "Label 1",
+                  "direction": "SB",
+                  "age": 2,
+                  "severity": "Medium",
+                  "popup": "Label 1 Popup"
+                }
+              ],
+              "columnSpecificSettings": {
+                "drawNameLabel": true,
+                "graphStyle": "stroke-width: 0; fill: rgb(64, 191, 233);",
+                "labelMarginLeft": 5,
+                "labelMarginRight": 5,
+                "type": "sequence"
+              }
+            },
+            {
+              "name": "Freehand",
+              "editName": "Freehand",
+              "show": true,
+              "expanded": false,
+              "on": true,
+              "enableTitle": false,
+              "fontsInfo": {
+                "font": "Arial"
+              },
+              "popup": "",
+              "children": [],
+              "parent": "Parent 1",
+              "minAge": 0,
+              "maxAge": 1.3,
+              "width": 70,
+              "rgb": {
+                "r": 227,
+                "g": 123,
+                "b": 104
+              },
+              "fontOptions": [
+                "Column Header"
+              ],
+              "units": "Ma",
+              "columnDisplayType": "Freehand",
+              "subInfo": [
+                {
+                  "topAge": 0,
+                  "baseAge": 1
+                },
+                {
+                  "topAge": 0.3,
+                  "baseAge": 1.3
+                }
+              ]
+            },
+            {
+              "name": "Blank",
+              "editName": "Blank",
+              "show": true,
+              "expanded": false,
+              "on": false,
+              "enableTitle": false,
+              "fontsInfo": {
+                "font": "Arial"
+              },
+              "popup": "Blank Popup",
+              "children": [],
+              "parent": "Parent 1",
+              "minAge": 1.7976931348623157e+308,
+              "maxAge": 5e-324,
+              "width": 800,
+              "rgb": {
+                "r": 7,
+                "g": 3,
+                "b": 4
+              },
+              "fontOptions": [
+                "Column Header"
+              ],
+              "units": "Ma",
+              "columnDisplayType": "Blank"
+            },
+            {
+              "name": "Transect",
+              "editName": "Transect",
+              "show": true,
+              "expanded": false,
+              "on": true,
+              "enableTitle": true,
+              "fontsInfo": {
+                "font": "Arial"
+              },
+              "popup": "Transect Popup",
+              "children": [],
+              "parent": "Parent 1",
+              "minAge": 0,
+              "maxAge": 9.22,
+              "width": 500,
+              "rgb": {
+                "r": 240,
+                "g": 255,
+                "b": 255
+              },
+              "fontOptions": [
+                "Column Header"
+              ],
+              "units": "Ma",
+              "columnDisplayType": "Transect",
+              "subInfo": [
+                {
+                  "age": 0
+                },
+                {
+                  "age": 2.58
+                },
+                {
+                  "age": 9.22
+                }
+              ]
+            }
+          ],
+          "parent": "Chart Title",
+          "minAge": 0,
+          "maxAge": 433.35,
+          "rgb": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          },
+          "fontOptions": [
+            "Column Header",
+            "Age Label",
+            "Zone Column Label",
+            "Uncertainty Label",
+            "Event Column Label",
+            "Range Label",
+            "Popup Body",
+            "Point Column Scale Label",
+            "Sequence Column Label"
+          ],
+          "units": "Ma",
+          "columnDisplayType": "MetaColumn",
+          "subInfo": [
+            {
+              "rockType": "TOP",
+              "age": 0,
+              "info": ""
+            },
+            {
+              "rockType": "Facies SubFaciesInfo 1",
+              "label": "Facies SubFaciesInfo 1 Label",
+              "age": 5,
+              "info": ""
+            },
+            {
+              "rockType": "Facies SubFaciesInfo 2",
+              "label": "Facies SubFaciesInfo 2 Label",
+              "age": 10,
+              "info": ""
+            }
+          ]
+        }
+      ],
+      "parent": "Chart Root",
+      "minAge": 0,
+      "maxAge": 433.35,
+      "units": "Ma",
+      "columnDisplayType": "RootColumn"
+    },
+    "topAge": 0,
+    "baseAge": 5,
+    "ageUnits": "Ma",
+    "defaultChronostrat": "USGS",
+    "formatVersion": 1,
+    "image": "",
+    "verticalScale": 6,
+    "date": "2015-03-15",
+    "file": "file.dpk",
+    "description": "description",
+    "title": "Title",
+    "size": "size"
+  },
+  "column-types-facies-key": {
+    "FaciesOne": {
+      "name": "FaciesOne",
+      "editName": "FaciesOne",
+      "show": true,
+      "expanded": false,
+      "units": "Ma",
+      "fontsInfo": {
+        "font": "Arial"
+      },
+      "columnDisplayType": "Facies",
+      "children": [],
+      "parent": null,
+      "fontOptions": [
+        "Column Header",
+        "Age Label",
+        "Uncertainty Label"
+      ],
+      "width": 500,
+      "rgb": {
+        "r": 255,
+        "g": 255,
+        "b": 255
+      },
+      "subInfo": [
+        {
+          "rockType": "TOP",
+          "age": 374.64,
+          "info": "\"info\""
+        },
+        {
+          "rockType": "RockTypeOne",
+          "label": "RockTypeOneLabel",
+          "age": 376.11,
+          "info": "\"info for RockTypeOne\""
+        }
+      ],
+      "minAge": 374.64,
+      "maxAge": 376.11,
+      "enableTitle": true,
+      "popup": "\"FaciesOne info\"",
+      "on": false
+    },
+    "FaciesTwo": {
+      "name": "FaciesTwo",
+      "editName": "FaciesTwo",
+      "units": "Ma",
+      "show": true,
+      "expanded": false,
+      "fontsInfo": {
+        "font": "Arial"
+      },
+      "columnDisplayType": "Facies",
+      "children": [],
+      "parent": null,
+      "fontOptions": [
+        "Column Header",
+        "Age Label",
+        "Uncertainty Label"
+      ],
+      "subInfo": [
+        {
+          "rockType": "TOP",
+          "age": 311.59,
+          "info": "\"info\""
+        },
+        {
+          "rockType": "RockTypeTwo",
+          "label": "RockTypeTwoLabel",
+          "age": 315,
+          "info": "\"info for RockTypeTwo\""
+        }
+      ],
+      "minAge": 311.59,
+      "width": 500,
+      "maxAge": 315,
+      "enableTitle": true,
+      "rgb": {
+        "r": 234,
+        "g": 221,
+        "b": 221
+      },
+      "popup": "\"FaciesTwo info\"",
+      "on": false
     }
+  },
+  "column-types-block-key": {
+    "Block Child 1": {
+      "name": "Block Child 1",
+      "editName": "Block Child 1",
+      "columnDisplayType": "Zone",
+      "columnSpecificSettings": {
+        "orientation": "normal"
+      },
+      "fontOptions": [
+        "Column Header",
+        "Age Label",
+        "Zone Column Label"
+      ],
+      "fontsInfo": {
+        "font": "Arial"
+      },
+      "show": true,
+      "expanded": false,
+      "children": [],
+      "parent": null,
+      "subInfo": [
+        {
+          "label": "Sub Block Top",
+          "age": 0,
+          "popup": "",
+          "lineStyle": "solid",
+          "rgb": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          }
+        },
+        {
+          "label": "Sub Block 1",
+          "age": 201.36,
+          "popup": "",
+          "lineStyle": "solid",
+          "rgb": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          }
+        }
+      ],
+      "width": 100,
+      "units": "Ma",
+      "minAge": 0,
+      "maxAge": 201.36,
+      "popup": "",
+      "on": true,
+      "enableTitle": true,
+      "rgb": {
+        "r": 255,
+        "g": 255,
+        "b": 255
+      }
+    },
+    "Block Child 2": {
+      "name": "Block Child 2",
+      "editName": "Block Child 2",
+      "columnDisplayType": "Zone",
+      "columnSpecificSettings": {
+        "orientation": "normal"
+      },
+      "fontOptions": [
+        "Column Header",
+        "Age Label",
+        "Zone Column Label"
+      ],
+      "fontsInfo": {
+        "font": "Arial"
+      },
+      "show": true,
+      "expanded": false,
+      "children": [],
+      "parent": null,
+      "units": "Ma",
+      "subInfo": [
+        {
+          "label": "Sub Block Top",
+          "age": 0,
+          "popup": "info",
+          "lineStyle": "solid",
+          "rgb": {
+            "r": 255,
+            "g": 225,
+            "b": 210
+          }
+        },
+        {
+          "label": "Sub Block 2",
+          "age": 23.03,
+          "popup": "info",
+          "lineStyle": "solid",
+          "rgb": {
+            "r": 222,
+            "g": 255,
+            "b": 0
+          }
+        },
+        {
+          "label": "Sub Block 3",
+          "age": 32.02,
+          "popup": "info",
+          "lineStyle": "solid",
+          "rgb": {
+            "r": 255,
+            "g": 225,
+            "b": 210
+          }
+        }
+      ],
+      "width": 70,
+      "minAge": 0,
+      "maxAge": 32.02,
+      "popup": "\"popup\"",
+      "on": false,
+      "enableTitle": false,
+      "rgb": {
+        "r": 255,
+        "g": 225,
+        "b": 210
+      }
+    }
+  },
+  "column-types-all-column-types-key": {
+    "Facies": {
+      "name": "Facies",
+      "subFaciesInfo": [
+        {
+          "rockType": "TOP",
+          "age": 0,
+          "info": ""
+        },
+        {
+          "rockType": "Facies SubFaciesInfo 1",
+          "label": "Facies SubFaciesInfo 1 Label",
+          "age": 5,
+          "info": ""
+        },
+        {
+          "rockType": "Facies SubFaciesInfo 2",
+          "label": "Facies SubFaciesInfo 2 Label",
+          "age": 10,
+          "info": ""
+        }
+      ],
+      "minAge": 0,
+      "maxAge": 10,
+      "enableTitle": false,
+      "width": 210,
+      "rgb": {
+        "r": 100,
+        "g": 200,
+        "b": 255
+      },
+      "popup": "Facies Popup",
+      "on": false
+    },
+    "Block": {
+      "name": "Block",
+      "subBlockInfo": [
+        {
+          "label": "TOP",
+          "age": 419.2,
+          "lineStyle": "solid",
+          "popup": "",
+          "rgb": {
+            "r": 197,
+            "g": 217,
+            "b": 234
+          }
+        },
+        {
+          "label": "Block SubBlock",
+          "age": 433.35,
+          "lineStyle": "solid",
+          "popup": "Block SubBlock Info",
+          "rgb": {
+            "r": 197,
+            "g": 217,
+            "b": 234
+          }
+        }
+      ],
+      "popup": "Block Popup",
+      "on": false,
+      "enableTitle": false,
+      "rgb": {
+        "r": 197,
+        "g": 217,
+        "b": 234
+      },
+      "width": 120,
+      "minAge": 419.2,
+      "maxAge": 433.35
+    },
+    "Event": {
+      "name": "Event",
+      "on": true,
+      "subEventInfo": [
+        {
+          "label": "SubEventInfo 1",
+          "age": 0.02,
+          "popup": "Event SubEventInfo Popup 1",
+          "lineStyle": "solid"
+        },
+        {
+          "label": "SubEventInfo 2",
+          "age": 0.4,
+          "popup": "Event SubEventInfo Popup 2",
+          "lineStyle": "solid"
+        }
+      ],
+      "enableTitle": true,
+      "width": 250,
+      "rgb": {
+        "r": 100,
+        "g": 200,
+        "b": 255
+      },
+      "minAge": 0.02,
+      "maxAge": 0.4,
+      "popup": "Event Popup"
+    },
+    "Range": {
+      "name": "Range",
+      "subRangeInfo": [
+        {
+          "label": "SubRangeInfo 1",
+          "age": 10,
+          "abundance": "TOP",
+          "popup": ""
+        },
+        {
+          "label": "SubRangeInfo 2",
+          "age": 100,
+          "abundance": "rare",
+          "popup": "Range SubRangeInfo Popup 2"
+        }
+      ],
+      "enableTitle": true,
+      "width": 100,
+      "rgb": {
+        "r": 198,
+        "g": 207,
+        "b": 174
+      },
+      "minAge": 10,
+      "maxAge": 100,
+      "popup": "Range Popup",
+      "on": true
+    },
+    "Chron": {
+      "name": "Chron",
+      "subChronInfo": [
+        {
+          "polarity": "TOP",
+          "age": 0,
+          "popup": ""
+        },
+        {
+          "polarity": "N",
+          "age": 0.123,
+          "label": "SubChronInfo 1 Label",
+          "popup": "SubChronInfo 1 Popup"
+        },
+        {
+          "polarity": "R",
+          "age": 0.234,
+          "label": "SubChronInfo 2 Label",
+          "popup": "SubChronInfo 2 Popup"
+        }
+      ],
+      "minAge": 0,
+      "maxAge": 0.234,
+      "on": true,
+      "enableTitle": false,
+      "width": 100,
+      "rgb": {
+        "r": 255,
+        "g": 255,
+        "b": 255
+      },
+      "popup": "Chron Popup"
+    },
+    "Point": {
+      "name": "Point",
+      "minAge": 4,
+      "maxAge": 5,
+      "enableTitle": true,
+      "on": false,
+      "width": 100,
+      "popup": "Point Popup",
+      "rgb": {
+        "r": 255,
+        "g": 255,
+        "b": 255
+      },
+      "subPointInfo": [
+        {
+          "age": 4,
+          "xVal": 0,
+          "popup": "SubPointInfo Popup 1"
+        },
+        {
+          "age": 5,
+          "xVal": 9,
+          "popup": "SubPointInfo Popup 2"
+        }
+      ],
+      "drawFill": true,
+      "drawLine": true,
+      "lowerRange": 0,
+      "upperRange": 10,
+      "smoothed": true,
+      "minX": 0,
+      "maxX": 9,
+      "pointShape": "nopoints",
+      "fill": {
+        "r": 64,
+        "g": 233,
+        "b": 191
+      }
+    },
+    "Sequence": {
+      "name": "Sequence",
+      "minAge": 0,
+      "maxAge": 2,
+      "enableTitle": false,
+      "on": true,
+      "width": 900,
+      "popup": "Sequence Popup",
+      "rgb": {
+        "r": 255,
+        "g": 255,
+        "b": 255
+      },
+      "subSequenceInfo": [
+        {
+          "direction": "MFS",
+          "age": 0,
+          "severity": "Major",
+          "popup": "No Label Popup"
+        },
+        {
+          "label": "Label 1",
+          "direction": "SB",
+          "age": 2,
+          "severity": "Medium",
+          "popup": "Label 1 Popup"
+        }
+      ]
+    },
+    "Transect": {
+      "name": "Transect",
+      "minAge": 0,
+      "maxAge": 9.22,
+      "enableTitle": true,
+      "on": true,
+      "width": 500,
+      "popup": "Transect Popup",
+      "rgb": {
+        "r": 240,
+        "g": 255,
+        "b": 255
+      },
+      "subTransectInfo": [
+        {
+          "age": 0
+        },
+        {
+          "age": 2.58
+        },
+        {
+          "age": 9.22
+        }
+      ]
+    },
+    "Freehand": {
+      "name": "Freehand",
+      "minAge": 0,
+      "maxAge": 1.3,
+      "enableTitle": false,
+      "on": true,
+      "width": 70,
+      "popup": "",
+      "rgb": {
+        "r": 227,
+        "g": 123,
+        "b": 104
+      },
+      "subFreehandInfo": [
+        {
+          "topAge": 0,
+          "baseAge": 1
+        },
+        {
+          "topAge": 0.3,
+          "baseAge": 1.3
+        }
+      ]
+    },
+    "Blank": {
+      "name": "Blank",
+      "minAge": 1.7976931348623157e+308,
+      "maxAge": 5e-324,
+      "enableTitle": false,
+      "on": false,
+      "width": 800,
+      "popup": "Blank Popup",
+      "rgb": {
+        "r": 7,
+        "g": 3,
+        "b": 4
+      }
+    }
+  },
+  "column-types-event-key": {
+    "Event 1": {
+      "name": "Event 1",
+      "editName": "Event 1",
+      "show": true,
+      "expanded": false,
+      "fontsInfo": {
+        "font": "Arial"
+      },
+      "fontOptions": [
+        "Column Header",
+        "Age Label",
+        "Event Column Label",
+        "Uncertainty Label",
+        "Range Label"
+      ],
+      "children": [],
+      "columnDisplayType": "Event",
+      "parent": null,
+      "columnSpecificSettings": {
+        "type": "events",
+        "rangeSort": "first occurrence",
+        "frequency": null,
+        "stepSize": 1,
+        "windowSize": 2
+      },
+      "units": "Ma",
+      "subInfo": [
+        {
+          "label": "Event 1 SubEvent 1",
+          "age": 2,
+          "popup": "Event 1 SubEvent 1 Popup",
+          "lineStyle": "dashed",
+          "subEventType": "EVENT"
+        },
+        {
+          "label": "Event 1 SubEvent 2",
+          "age": 4,
+          "popup": "Event 1 SubEvent 2 Popup",
+          "lineStyle": "solid",
+          "subEventType": "EVENT"
+        }
+      ],
+      "enableTitle": true,
+      "width": 250,
+      "rgb": {
+        "r": 198,
+        "g": 207,
+        "b": 174
+      },
+      "minAge": 2,
+      "maxAge": 4,
+      "popup": "\"Event 1 Popup\"",
+      "on": true
+    },
+    "Event 2": {
+      "name": "Event 2",
+      "editName": "Event 2",
+      "show": true,
+      "expanded": false,
+      "parent": null,
+      "fontsInfo": {
+        "font": "Arial"
+      },
+      "children": [],
+      "columnDisplayType": "Event",
+      "columnSpecificSettings": {
+        "type": "events",
+        "rangeSort": "first occurrence",
+        "frequency": null,
+        "stepSize": 1,
+        "windowSize": 2
+      },
+      "fontOptions": [
+        "Column Header",
+        "Age Label",
+        "Event Column Label",
+        "Uncertainty Label",
+        "Range Label"
+      ],
+      "units": "Ma",
+      "subInfo": [
+        {
+          "label": "Event 2 SubEvent 1",
+          "age": 5,
+          "popup": "",
+          "lineStyle": "solid",
+          "subEventType": "FAD"
+        },
+        {
+          "label": "Event 2 SubEvent 2",
+          "age": 6,
+          "popup": "",
+          "lineStyle": "solid",
+          "subEventType": "FAD"
+        }
+      ],
+      "enableTitle": false,
+      "width": 150,
+      "rgb": {
+        "r": 255,
+        "g": 255,
+        "b": 255
+      },
+      "minAge": 5,
+      "maxAge": 6,
+      "popup": "Event 2 Popup",
+      "on": false
+    }
+  },
+  "column-types-range-key": {
+    "Range 1": {
+      "name": "Range 1",
+      "editName": "Range 1",
+      "show": true,
+      "expanded": false,
+      "parent": null,
+      "fontsInfo": {
+        "font": "Arial"
+      },
+      "columnDisplayType": "Range",
+      "fontOptions": [
+        "Column Header",
+        "Popup Body"
+      ],
+      "units": "Ma",
+      "subInfo": [
+        {
+          "label": "Range 1 SubRangeInfo 1",
+          "age": 28.4,
+          "abundance": "TOP",
+          "popup": ""
+        },
+        {
+          "label": "Range 1 SubRangeInfo 2",
+          "age": 33.9,
+          "abundance": "rare",
+          "popup": "\"popup\""
+        }
+      ],
+      "columnSpecificSettings": {
+        "agePad": 2,
+        "margin": 0.2,
+        "rangeSort": "first occurrence"
+      },
+      "enableTitle": true,
+      "children": [],
+      "width": 100,
+      "rgb": {
+        "r": 198,
+        "g": 207,
+        "b": 174
+      },
+      "minAge": 28.4,
+      "maxAge": 33.9,
+      "popup": "Range 1 info",
+      "on": false
+    },
+    "Range 2": {
+      "name": "Range 2",
+      "editName": "Range 2",
+      "show": true,
+      "expanded": false,
+      "parent": null,
+      "fontsInfo": {
+        "font": "Arial"
+      },
+      "children": [],
+      "columnDisplayType": "Range",
+      "fontOptions": [
+        "Column Header",
+        "Popup Body"
+      ],
+      "columnSpecificSettings": {
+        "agePad": 2,
+        "margin": 0.2,
+        "rangeSort": "first occurrence"
+      },
+      "units": "Ma",
+      "subInfo": [
+        {
+          "label": "Range 2 SubRangeInfo 1",
+          "age": 0,
+          "abundance": "TOP",
+          "popup": ""
+        },
+        {
+          "label": "Range 2 SubRange Info 2",
+          "age": 0.01,
+          "abundance": "flood",
+          "popup": ""
+        }
+      ],
+      "enableTitle": false,
+      "width": 100,
+      "rgb": {
+        "r": 198,
+        "g": 207,
+        "b": 174
+      },
+      "minAge": 0,
+      "maxAge": 0.01,
+      "popup": "Range 2 Info",
+      "on": true
+    }
+  },
+  "column-types-chron-key": {
+    "Chron 1": {
+      "name": "Chron 1",
+      "editName": "Chron 1",
+      "columnDisplayType": "Chron",
+      "show": true,
+      "expanded": false,
+      "fontsInfo": {
+        "font": "Arial"
+      },
+      "fontOptions": [
+        "Column Header",
+        "Age Label"
+      ],
+      "children": [],
+      "parent": null,
+      "minAge": 28.4,
+      "maxAge": 33.9,
+      "enableTitle": true,
+      "on": false,
+      "width": 100,
+      "units": "Ma",
+      "popup": "Chron 1 info",
+      "rgb": {
+        "r": 198,
+        "g": 207,
+        "b": 174
+      },
+      "subInfo": [
+        {
+          "polarity": "TOP",
+          "age": 28.4,
+          "popup": ""
+        },
+        {
+          "polarity": "N",
+          "age": 33.9,
+          "label": "SubChronInfo 1 Label",
+          "popup": "SubChronInfo Popup 1"
+        }
+      ]
+    },
+    "Chron 2": {
+      "name": "Chron 2",
+      "editName": "Chron 2",
+      "columnDisplayType": "Chron",
+      "show": true,
+      "expanded": false,
+      "fontsInfo": {
+        "font": "Arial"
+      },
+      "fontOptions": [
+        "Column Header",
+        "Age Label"
+      ],
+      "children": [],
+      "parent": null,
+      "units": "Ma",
+      "minAge": 0,
+      "maxAge": 0.01,
+      "enableTitle": false,
+      "on": true,
+      "width": 100,
+      "popup": "Chron 2 Info",
+      "rgb": {
+        "r": 208,
+        "g": 207,
+        "b": 174
+      },
+      "subInfo": [
+        {
+          "polarity": "TOP",
+          "age": 0,
+          "popup": ""
+        },
+        {
+          "polarity": "R",
+          "age": 0.01,
+          "label": "SubChronInfo 2 Label",
+          "popup": "SubChronInfo 2 Popup"
+        }
+      ]
+    }
+  },
+  "column-types-point-key": {
+    "Point 1": {
+      "name": "Point 1",
+      "editName": "Point 1",
+      "columnDisplayType": "Point",
+      "show": true,
+      "expanded": false,
+      "fontsInfo": {
+        "font": "Arial"
+      },
+      "fontOptions": [
+        "Column Header",
+        "Point Column Scale Label"
+      ],
+      "children": [],
+      "parent": null,
+      "units": "Ma",
+      "columnSpecificSettings": {
+        "drawBackgroundGradient": false,
+        "drawCurveGradient": false,
+        "drawScale": true,
+        "flipScale": false,
+        "lineColor": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "backgroundGradientEnd": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "backgroundGradientStart": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "curveGradientEnd": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "curveGradientStart": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "drawFill": true,
+        "drawLine": true,
+        "fill": {
+          "r": 64,
+          "g": 233,
+          "b": 191
+        },
+        "lowerRange": 0,
+        "maxX": 60,
+        "minX": 0,
+        "pointShape": "nopoints",
+        "smoothed": true,
+        "upperRange": 230,
+        "scaleStart": 0,
+        "scaleStep": 1,
+        "stepSize": 1,
+        "windowSize": 2,
+        "isDataMiningColumn": false,
+        "dataMiningPointDataType": null
+      },
+      "minAge": 7,
+      "maxAge": 8,
+      "enableTitle": true,
+      "on": false,
+      "width": 100,
+      "popup": "Point 1 Popup",
+      "rgb": {
+        "r": 255,
+        "g": 255,
+        "b": 255
+      },
+      "subInfo": [
+        {
+          "age": 7,
+          "xVal": 0,
+          "popup": ""
+        },
+        {
+          "age": 8,
+          "xVal": 60,
+          "popup": ""
+        }
+      ]
+    },
+    "Point 2": {
+      "name": "Point 2",
+      "editName": "Point 2",
+      "columnDisplayType": "Point",
+      "show": true,
+      "expanded": false,
+      "fontsInfo": {
+        "font": "Arial"
+      },
+      "fontOptions": [
+        "Column Header",
+        "Point Column Scale Label"
+      ],
+      "children": [],
+      "parent": null,
+      "units": "Ma",
+      "columnSpecificSettings": {
+        "drawBackgroundGradient": false,
+        "drawCurveGradient": false,
+        "drawScale": true,
+        "flipScale": false,
+        "lineColor": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "backgroundGradientEnd": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "backgroundGradientStart": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "curveGradientEnd": {
+          "r": 255,
+          "g": 255,
+          "b": 255
+        },
+        "curveGradientStart": {
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "drawFill": true,
+        "drawLine": false,
+        "fill": {
+          "r": 1,
+          "g": 2,
+          "b": 3
+        },
+        "lowerRange": 9,
+        "maxX": 9.5,
+        "minX": 9,
+        "pointShape": "cross",
+        "smoothed": true,
+        "upperRange": 9.5,
+        "scaleStart": 0,
+        "scaleStep": 0.18,
+        "stepSize": 1,
+        "windowSize": 2,
+        "isDataMiningColumn": false,
+        "dataMiningPointDataType": null
+      },
+      "minAge": 1,
+      "maxAge": 1000,
+      "enableTitle": true,
+      "on": false,
+      "width": 100,
+      "popup": "Point 2 Popup",
+      "rgb": {
+        "r": 255,
+        "g": 255,
+        "b": 255
+      },
+      "subInfo": [
+        {
+          "age": 1,
+          "xVal": 9.5,
+          "popup": "Popup 1"
+        },
+        {
+          "age": 1000,
+          "xVal": 9,
+          "popup": "Popup 2"
+        }
+      ]
+    }
+  },
+  "column-types-sequence-key": {
+    "Trend 1": {
+      "name": "Trend 1",
+      "editName": "Trend 1",
+      "show": true,
+      "expanded": false,
+      "fontsInfo": {
+        "font": "Arial"
+      },
+      "fontOptions": [
+        "Column Header",
+        "Age Label",
+        "Sequence Column Label"
+      ],
+      "columnDisplayType": "Sequence",
+      "children": [],
+      "parent": null,
+      "units": "Ma",
+      "minAge": 67,
+      "maxAge": 69,
+      "enableTitle": false,
+      "on": true,
+      "width": 100,
+      "popup": "Trend Popup",
+      "rgb": {
+        "r": 245,
+        "g": 204,
+        "b": 131
+      },
+      "subInfo": [
+        {
+          "label": "Trend 1 label",
+          "direction": "SB",
+          "age": 67,
+          "severity": "Minor",
+          "popup": "SubTrend 1 Popup"
+        },
+        {
+          "direction": "MFS",
+          "age": 69,
+          "severity": "Medium",
+          "popup": "No Label Popup"
+        }
+      ],
+      "columnSpecificSettings": {
+        "drawNameLabel": true,
+        "graphStyle": "stroke-width: 1; stroke: black; fill: rgb(64, 191, 233);",
+        "labelMarginLeft": 5,
+        "labelMarginRight": 5,
+        "type": "trend"
+      }
+    },
+    "Sequence 1": {
+      "name": "Sequence 1",
+      "editName": "Sequence 1",
+      "show": true,
+      "expanded": false,
+      "fontsInfo": {
+        "font": "Arial"
+      },
+      "fontOptions": [
+        "Column Header",
+        "Age Label",
+        "Sequence Column Label"
+      ],
+      "columnDisplayType": "Sequence",
+      "children": [],
+      "parent": null,
+      "units": "Ma",
+      "minAge": 321.39,
+      "maxAge": 322.34,
+      "enableTitle": true,
+      "on": false,
+      "width": 100,
+      "popup": "Sequence Popup",
+      "rgb": {
+        "r": 255,
+        "g": 255,
+        "b": 255
+      },
+      "subInfo": [
+        {
+          "label": "SubSequenceInfo 1",
+          "direction": "SB",
+          "age": 321.39,
+          "severity": "Major",
+          "popup": "Popup"
+        },
+        {
+          "direction": "MFS",
+          "age": 322.34,
+          "severity": "Minor",
+          "popup": "No Label Popup"
+        }
+      ],
+      "columnSpecificSettings": {
+        "drawNameLabel": true,
+        "graphStyle": "stroke-width: 0; fill: rgb(64, 191, 233);",
+        "labelMarginLeft": 5,
+        "labelMarginRight": 5,
+        "type": "sequence"
+      }
+    }
+  },
+  "column-types-transect-key": {
+    "Transect Child 1": {
+      "name": "Transect Child 1",
+      "editName": "Transect Child 1",
+      "show": true,
+      "expanded": false,
+      "fontsInfo": {
+        "font": "Arial"
+      },
+      "fontOptions": [
+        "Column Header"
+      ],
+      "columnDisplayType": "Transect",
+      "children": [],
+      "parent": null,
+      "units": "Ma",
+      "minAge": 8.61,
+      "maxAge": 530.46,
+      "enableTitle": true,
+      "on": true,
+      "width": 200,
+      "popup": "Transect Child 1 Popup",
+      "rgb": {
+        "r": 245,
+        "g": 245,
+        "b": 245
+      },
+      "subInfo": [
+        {
+          "age": 8.61
+        },
+        {
+          "age": 10.75
+        },
+        {
+          "age": 12.15
+        },
+        {
+          "age": 530.46
+        }
+      ]
+    },
+    "Transect Child 2": {
+      "name": "Transect Child 2",
+      "editName": "Transect Child 2",
+      "show": true,
+      "expanded": false,
+      "fontsInfo": {
+        "font": "Arial"
+      },
+      "fontOptions": [
+        "Column Header"
+      ],
+      "columnDisplayType": "Transect",
+      "children": [],
+      "parent": null,
+      "units": "Ma",
+      "minAge": 0,
+      "maxAge": 9.22,
+      "enableTitle": true,
+      "on": true,
+      "width": 500,
+      "popup": "Transect Child 2 Popup",
+      "rgb": {
+        "r": 240,
+        "g": 255,
+        "b": 255
+      },
+      "subInfo": [
+        {
+          "age": 0
+        },
+        {
+          "age": 2.58
+        },
+        {
+          "age": 9.22
+        }
+      ]
+    }
+  },
+  "column-types-freehand-key": {
+    "Freehand Child 1": {
+      "name": "Freehand Child 1",
+      "editName": "Freehand Child 1",
+      "show": true,
+      "expanded": false,
+      "fontsInfo": {
+        "font": "Arial"
+      },
+      "fontOptions": [
+        "Column Header"
+      ],
+      "columnDisplayType": "Freehand",
+      "children": [],
+      "parent": null,
+      "units": "Ma",
+      "minAge": 0.07,
+      "maxAge": 120.3,
+      "enableTitle": false,
+      "on": true,
+      "width": 40,
+      "popup": "",
+      "rgb": {
+        "r": 227,
+        "g": 123,
+        "b": 104
+      },
+      "subInfo": [
+        {
+          "topAge": 0.07,
+          "baseAge": 2.07
+        },
+        {
+          "topAge": 69.7,
+          "baseAge": 70.3
+        },
+        {
+          "topAge": 119.7,
+          "baseAge": 120.3
+        }
+      ]
+    },
+    "Freehand Child 2": {
+      "name": "Freehand Child 2",
+      "editName": "Freehand Child 2",
+      "show": true,
+      "expanded": false,
+      "fontsInfo": {
+        "font": "Arial"
+      },
+      "fontOptions": [
+        "Column Header"
+      ],
+      "columnDisplayType": "Freehand",
+      "children": [],
+      "parent": null,
+      "units": "Ma",
+      "minAge": 35.9,
+      "maxAge": 37.5,
+      "enableTitle": false,
+      "on": true,
+      "width": 40,
+      "popup": "Freehand Child 2 Popup",
+      "rgb": {
+        "r": 227,
+        "g": 123,
+        "b": 106
+      },
+      "subInfo": [
+        {
+          "topAge": 35.9,
+          "baseAge": 36.9
+        },
+        {
+          "topAge": 36.9,
+          "baseAge": 37.5
+        }
+      ]
+    }
+  },
+  "bad-data-key": {
+    "columnInfo": {
+      "name": "Chart Title",
+      "editName": "Chart Title",
+      "fontsInfo": {
+        "font": "Arial"
+      },
+      "fontOptions": [
+        "Column Header"
+      ],
+      "on": true,
+      "show": true,
+      "expanded": true,
+      "width": 100,
+      "enableTitle": true,
+      "rgb": {
+        "r": 255,
+        "g": 255,
+        "b": 255
+      },
+      "popup": "",
+      "children": [
+        {
+          "name": "Ma",
+          "editName": "Ma",
+          "fontsInfo": {
+            "font": "Arial"
+          },
+          "fontOptions": [
+            "Column Header",
+            "Ruler Label"
+          ],
+          "on": true,
+          "show": true,
+          "expanded": false,
+          "width": 100,
+          "enableTitle": true,
+          "rgb": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          },
+          "popup": "",
+          "children": [],
+          "parent": "Chart Title",
+          "minAge": 5e-324,
+          "maxAge": 1.7976931348623157e+308,
+          "units": "Ma",
+          "columnDisplayType": "Ruler"
+        }
+      ],
+      "parent": "Chart Root",
+      "minAge": 99999,
+      "maxAge": -99999,
+      "units": "Ma",
+      "columnDisplayType": "RootColumn"
+    },
+    "ageUnits": "Ma",
+    "defaultChronostrat": "UNESCO",
+    "formatVersion": 1.5,
+    "image": "",
+    "file": "file.dpk",
+    "description": "description",
+    "title": "Title",
+    "size": "size"
+  }
 }

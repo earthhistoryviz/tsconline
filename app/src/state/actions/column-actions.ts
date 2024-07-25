@@ -25,6 +25,7 @@ import {
   assertSubChronInfoArray,
   assertSubEventInfoArray,
   assertSubPointInfoArray,
+  assertZoneSettings,
   calculateAutoScale,
   convertPointTypeToPointShape,
   defaultPointSettings,
@@ -609,15 +610,21 @@ export const addAgeColumn = action((column: ColumnInfo) => {
 });
 
 export const changeAgeColumnJustification = action((column: ColumnInfo, newJustification: "left" | "right") => {
-  //add assertRulerSettings to make sure the column is of ruler&Age type
-  if (column.columnDisplayType !== "Ruler" || !column.name.includes("Age")) {
+  if (column.columnDisplayType !== "Ruler" || !/^Age \d+ for .+$/.test(column.name)) {
     console.log("WARNING: tried to change justification on a column which is not Age");
     return;
   }
   assertRulerSettings(column.columnSpecificSettings);
   column.columnSpecificSettings.justification = newJustification;
 });
-
+export const changeZoneColumnOrientation = action((column: ColumnInfo, newOrientation: "normal" | "vertical") => {
+  if (column.columnDisplayType !== "Zone") {
+    console.log("WARNING: tried to change orientation on a column which is not Zone");
+    return;
+  }
+  assertZoneSettings(column.columnSpecificSettings);
+  column.columnSpecificSettings.orientation = newOrientation;
+});
 export const setShowOfAllChildren = action(async (column: ColumnInfo, isShown: boolean, counter = { count: 0 }) => {
   column.show = isShown;
   await yieldControl(counter, 30);

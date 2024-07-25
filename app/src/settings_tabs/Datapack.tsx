@@ -101,7 +101,7 @@ export const Datapacks = observer(function Datapacks() {
         Upload Datapack
       </TSCButton>
       <Dialog classes={{ paper: styles.dd }} open={formOpen} onClose={() => setFormOpen(false)}>
-        <TSCDatapackUploadForm close={() => setFormOpen(false)} />
+        <TSCDatapackUploadForm close={() => setFormOpen(false)} upload={actions.uploadDatapack} />
       </Dialog>
     </div>
   );
@@ -113,7 +113,7 @@ type DatapackMenuProps = {
 export const DatapackMenu: React.FC<DatapackMenuProps> = ({ name, button }) => {
   const { actions } = useContext(context);
   return (
-    state.datapackIndex[name].isUserDatapack && (
+    state.datapackIndex[name].uuid && (
       <Menu
         direction="bottom"
         align="start"

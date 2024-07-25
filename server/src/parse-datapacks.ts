@@ -59,6 +59,7 @@ import {
   allColumnTypes,
   DatapackWarning,
   defaultRangeSettings,
+  defaultZoneSettings,
   defaultSequenceSettings,
   assertSequence,
   SequenceSettings
@@ -149,7 +150,7 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
 export async function parseDatapacks(
   datapackInfo: DatapackDescriptionInfo,
   decryptFilePath: string,
-  isUserDatapack: boolean = false
+  uuid?: string
 ): Promise<DatapackParsingPack | null> {
   const decryptPaths = await grabFilepaths([datapackInfo.file], decryptFilePath, "datapacks");
   if (decryptPaths.length == 0)
@@ -287,8 +288,8 @@ export async function parseDatapacks(
     file: datapackInfo.file,
     size: datapackInfo.size,
 
-    isUserDatapack,
-    image: ""
+    image: "",
+    ...(uuid ? { uuid } : {})
   };
   assertDatapackParsingPack(datapackParsingPack);
   if (date) datapackParsingPack.date = date;
@@ -1516,7 +1517,8 @@ function addFaciesChildren(
     rgb,
     units,
     columnDisplayType: "Zone",
-    expanded: false
+    expanded: false,
+    columnSpecificSettings: { orientation: "normal" }
   });
   children.push({
     name: `${name} Facies Label`,
@@ -1535,7 +1537,8 @@ function addFaciesChildren(
     rgb,
     units,
     columnDisplayType: "Zone",
-    expanded: false
+    expanded: false,
+    columnSpecificSettings: { orientation: "normal" }
   });
   children.push({
     name: `${name} Series Label`,
@@ -1554,7 +1557,8 @@ function addFaciesChildren(
     units,
     columnDisplayType: "Zone",
     show: true,
-    expanded: false
+    expanded: false,
+    columnSpecificSettings: { orientation: "vertical" }
   });
   // add the font options present on children to parent
   for (const child of children) {
@@ -1627,7 +1631,8 @@ function addChronChildren(
     units,
     columnDisplayType: "Zone",
     show: true,
-    expanded: false
+    expanded: false,
+    columnSpecificSettings: { orientation: "normal" }
   });
   children.push({
     name: `${name} Series Label`,
@@ -1646,7 +1651,8 @@ function addChronChildren(
     units,
     columnDisplayType: "Zone",
     show: true,
-    expanded: false
+    expanded: false,
+    columnSpecificSettings: { orientation: "vertical" }
   });
   // add the font options present on children to parent
   for (const child of children) {
@@ -1712,6 +1718,9 @@ function addColumnSettings(column: ColumnInfo, columnSpecificSettings?: ColumnSp
         throw new Error("Error adding sequence column, no column specific settings found");
       }
       column.columnSpecificSettings = columnSpecificSettings;
+      break;
+    case "Zone":
+      column.columnSpecificSettings = _.cloneDeep(defaultZoneSettings);
       break;
     default:
       break;

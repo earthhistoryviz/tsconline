@@ -10,7 +10,9 @@ import {
   assertSharedUser,
   assertChartInfoTSC,
   assertDatapackInfoChunk,
-  assertMapPackInfoChunk
+  assertMapPackInfoChunk,
+  DatapackParsingPack,
+  assertDatapackParsingPack
 } from "@tsconline/shared";
 
 import {
@@ -41,6 +43,29 @@ import { settings, defaultTimeSettings } from "../../constants";
 import { cloneDeep } from "lodash";
 
 const increment = 1;
+
+export const fetchServerDatapack = action("fetchServerDatapack", async (datapack: string) => {
+  try {
+    const response = await fetcher(`/server/datapack/${encodeURIComponent(datapack)}`, {
+      method: "GET"
+    });
+    const data = await response.json();
+    if (response.ok) {
+      assertDatapackParsingPack(data);
+      return data;
+    } else {
+      displayServerError(
+        data,
+        ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST,
+        ErrorMessages[ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]
+      );
+    }
+  } catch (e) {
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
+  }
+  return null;
+});
 
 export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   try {
@@ -239,6 +264,9 @@ export const setMapPackIndex = action("setMapPackIndex", async (mapPackIndex: Ma
   }
 });
 
+export const addDatapackToIndex = action("addDatapackToIndex", (datapack: string, info: DatapackParsingPack) => {
+  state.datapackIndex[datapack] = info;
+});
 export const setDatapackIndex = action("setDatapackIndex", async (datapackIndex: DatapackIndex) => {
   // This is to prevent the UI from lagging
   state.datapackIndex = {};

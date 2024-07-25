@@ -30,6 +30,23 @@ import { runJavaEncrypt } from "./encryption.js";
 import { queue, maxQueueSize } from "./index.js";
 import { containsKnownError } from "./chart-error-handler.js";
 
+export const fetchServerDatapack = async function fetchServerDatapack(
+  request: FastifyRequest<{ Params: { name: string } }>,
+  reply: FastifyReply
+) {
+  const { name } = request.params;
+  if (!name) {
+    reply.status(400).send({ error: "Invalid datapack" });
+    return;
+  }
+  const datapack = serverDatapackindex[decodeURIComponent(name)];
+  if (!datapack) {
+    reply.status(404).send({ error: "Datapack not found" });
+    return;
+  }
+  reply.send(datapack);
+};
+
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
   reply: FastifyReply
@@ -407,7 +424,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       return;
     }
   }
-  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [datapackInfo], true);
+  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [datapackInfo], uuid);
   if (!datapackIndex[filename]) {
     await errorHandler("Failed to load decrypted datapack", 500);
     return;
@@ -717,8 +734,9 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     return;
   }
   try {
+    const priority = uuid ? 1 : 0;
     await queue.add(async () => {
-      await execJavaCommand(1000 * 15); // 15 seconds
+      await execJavaCommand(1000 * 15), { priority };
     });
   } catch (error) {
     if ((error as Error).message.includes("timed out")) {
