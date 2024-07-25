@@ -11,7 +11,6 @@ import fs from "fs/promises";
 import fsSync from "fs";
 import { parseDatapacks } from "./parse-datapacks.js";
 import { parseMapPacks } from "./parse-map-packs.js";
-import { getColorFromURL } from "color-thief-node";
 import { glob } from "glob";
 import { readFile } from "fs/promises";
 import nearestColor from "nearest-color";
@@ -19,6 +18,8 @@ import path from "path";
 import { DatapackDescriptionInfo, assertColors } from "./types.js";
 import { grabFilepaths, rgbToHex, assetconfigs } from "./util.js";
 import chalk from "chalk";
+import sharp from "sharp";
+import Vibrant from "node-vibrant";
 
 /**
  * Loads all the indexes for the active datapacks and mapPacks (if they exist)
@@ -83,8 +84,14 @@ export async function loadFaciesPatterns() {
     if (patternsGlobed.length == 0) throw new Error("No patterns found");
     for (const pattern of patternsGlobed) {
       const name = path.basename(pattern).split(".")[0];
-      const dominant = await getColorFromURL(pattern);
-      const color = nearest(rgbToHex(dominant[0], dominant[1], dominant[2]));
+      const palette = await getDominantRGB(pattern);
+      if (!palette || !palette.Vibrant) {
+        console.error(
+          `Cannot get dominant color for pattern in ${assetconfigs.patternsDirectory} with path ${pattern}`
+        );
+        continue;
+      }
+      const color = nearest(rgbToHex(palette.Vibrant.r, palette.Vibrant.g, palette.Vibrant.b));
       if (!name) {
         console.error(`Unrecognized pattern file in ${assetconfigs.patternsDirectory} with path ${pattern}`);
         continue;
@@ -117,6 +124,18 @@ export async function loadFaciesPatterns() {
     console.error(e);
     return {};
   }
+}
+
+async function getDominantRGB(filepath: string) {
+  const image = await sharp(filepath).toBuffer();
+  if (!image) {
+    throw new Error("Cannot read image");
+  }
+  const palette = await Vibrant.from(image).getPalette();
+  if (!palette) {
+    throw new Error("Cannot get palette from image");
+  }
+  return palette;
 }
 
 /**

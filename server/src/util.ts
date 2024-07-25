@@ -118,7 +118,7 @@ export function componentToHex(c: number) {
  */
 export function rgbToHex(r: number, g: number, b: number) {
   if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) throw new Error("Invalid rgb value");
-  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+  return "#" + componentToHex(Math.round(r)) + componentToHex(Math.round(g)) + componentToHex(Math.round(b));
 }
 
 /**
