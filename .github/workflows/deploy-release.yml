@@ -1,0 +1,97 @@
+name: Deploy Release
+
+concurrency:
+  group: deploy-release
+
+on:
+  push:
+    branches:
+      - 'release-*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: 
+      name: production
+      url: https://tsconline.timescalecreator.org
+    env:
+      RELEASE_PATH: ${{ secrets.RELEASE_PATH }}
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+    steps:
+      - name: Create deployment
+        id: create_deployment
+        uses: octokit/request-action@v2.x
+        with:
+          route: POST /repos/:owner/:repo/deployments
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          ref: ${{ github.ref }}
+          environment: production
+          transient_environment: false
+          production_environment: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd $RELEASE_PATH
+
+            git pull
+
+            echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
+            echo 'EMAIL_PASS="${{ secrets.EMAIL_PASS }}"' >> ./server/.env
+            echo 'SESSION_KEY="${{ secrets.SESSION_KEY }}"' >> ./server/.env
+            echo 'NODE_ENV="production"' >> ./server/.env
+            echo 'RECAPTCHA_SECRET_KEY="${{ secrets.RECAPTCHA_SECRET_KEY }}"' >> ./server/.env
+            echo 'APP_URL=https://tsconline.timescalecreator.org' >> ./server/.env
+            echo 'ADMIN_USER="${{ secrets.ADMIN_USER }}"' >> ./server/.env
+            echo 'ADMIN_PASS="${{ secrets.ADMIN_PASS }}"' >> ./server/.env
+            echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> ./server/.env
+
+            echo 'VITE_APP_URL=https://tsconline.timescalecreator.org' > ./app/.env
+            echo 'VITE_SERVER_URL=https://tsconline.timescalecreator.org' >> ./app/.env
+
+            docker compose -f docker-compose.yml restart
+
+      - name: Set deployment status to success
+        uses: octokit/request-action@v2.x
+        if: success()
+        with:
+          route: POST /repos/:owner/:repo/deployments/:deployment_id/statuses
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          deployment_id: ${{ steps.create_deployment.outputs.data.id }}
+          state: success
+          environment: production
+          environment_url: https://tsconline.timescalecreator.org
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set deployment status to failure
+        uses: octokit/request-action@v2.x
+        if: failure()
+        with:
+          route: POST /repos/:owner/:repo/deployments/:deployment_id/statuses
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          deployment_id: ${{ steps.create_deployment.outputs.data.id }}
+          state: failure
+          environment: production
+          environment_url: https://tsconline.timescalecreator.org
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
