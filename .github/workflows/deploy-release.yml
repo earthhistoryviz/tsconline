@@ -15,7 +15,6 @@ jobs:
       name: production
       url: https://tsconline.timescalecreator.org
     env:
-      RELEASE_PATH: ${{ secrets.RELEASE_PATH }}
       SSH_HOST: ${{ secrets.SSH_HOST }}
     steps:
       - name: Create deployment
@@ -50,7 +49,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd $RELEASE_PATH
+            cd ${{ secrets.RELEASE_PATH }}
 
             git pull
 
