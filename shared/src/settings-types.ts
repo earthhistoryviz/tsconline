@@ -262,7 +262,7 @@ export function assertEventColumnInfoTSC(o: any): asserts o is EventColumnInfoTS
   if (typeof o.stepSize !== "number") throwError("EventColumnInfoTSC", "stepSize", "number", o.stepSize);
   if (
     o.drawExtraColumn != null &&
-    (typeof o.drawExtraColumn !== "string" || !isEventFrequency(o.drawExtraColumn) || o.drawExtraColumn !== "OVERLAY")
+    (typeof o.drawExtraColumn !== "string" || (!isEventFrequency(o.drawExtraColumn) && o.drawExtraColumn !== "OVERLAY"))
   )
     throwError("EventColumnInfoTSC", "drawExtraColumn", "string", o.drawExtraColumn);
   assertColumnBasicInfoTSC(o);
