@@ -17,23 +17,6 @@ jobs:
     env:
       SSH_HOST: ${{ secrets.SSH_HOST }}
     steps:
-      - name: Create deployment
-        id: create_deployment
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const { data: deployment } = await github.request('POST /repos/{owner}/{repo}/deployments', {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: context.ref,
-              environment: 'production',
-              description: 'Deploying to production',
-              required_contexts: []
-            });
-            return deployment.id;
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Set up SSH key
         uses: webfactory/ssh-agent@v0.5.3
         with:
@@ -72,31 +55,3 @@ jobs:
               exit 1
             fi
             docker compose -f docker-compose.yml restart
-
-      - name: Set deployment status to success
-        if: success()
-        uses: actions/github-script@v6
-        with:
-          script: |
-            await github.request('POST /repos/{owner}/{repo}/deployments/{deployment_id}/statuses', {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              deployment_id: ${{ steps.create_deployment.outputs.result }},
-              state: 'success',
-              environment_url: 'https://tsconline.timescalecreator.org'
-            });
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set deployment status to failure
-        if: failure()
-        uses: actions/github-script@v6
-        with:
-          script: |
-            await github.request('POST /repos/{owner}/{repo}/deployments/{deployment_id}/statuses', {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              deployment_id: ${{ steps.create_deployment.outputs.result }},
-              state: 'failure',
-              environment_url: 'https://tsconline.timescalecreator.org'
-            });
