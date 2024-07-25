@@ -1,10 +1,13 @@
 import { ChartSettings } from "./types";
 
 export const dataminingIdentifiers = [
+  //event
   "FAD",
   "LAD",
   "Combined Events",
-  "Regression Analysis",
+  //chron
+  "Frequency",
+  //Point
   "Minimum Value",
   "Maximum Value",
   "Average Value",
