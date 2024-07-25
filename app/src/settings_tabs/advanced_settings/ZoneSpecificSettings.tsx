@@ -11,11 +11,11 @@ type ZoneSpecificSettingsProps = {
 export const ZoneSpecificSettings: React.FC<ZoneSpecificSettingsProps> = observer(({ column }) => {
   const { actions } = useContext(context);
   if (column.columnDisplayType !== "Zone") return null;
+  assertZoneSettings(column.columnSpecificSettings);
   function changeZoneColumnOrientation(event: React.ChangeEvent<HTMLInputElement>) {
     const newOrientation = event.target.value === "vertical" ? "vertical" : "normal";
     actions.changeZoneColumnOrientation(column, newOrientation);
   }
-  assertZoneSettings(column.columnSpecificSettings);
   return (
     <TSCRadioGroup
       onChange={changeZoneColumnOrientation}

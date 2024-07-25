@@ -635,7 +635,7 @@ export function assertRangeSettings(o: any): asserts o is RangeSettings {
 }
 export function assertRulerSettings(o: any): asserts o is RulerSettings {
   if (!o || typeof o !== "object") throw new Error("RulerSettings must be a non-null object");
-  if (typeof o.justification !== "string" && isRulerJustification(o.justification))
+  if (typeof o.justification !== "string" || !isRulerJustification(o.justification))
     throwError("RulerSettings", "justification", "string and left | right", o.justification);
 }
 export function isZoneOrientation(o: any): o is ZoneOrientation {
@@ -643,7 +643,7 @@ export function isZoneOrientation(o: any): o is ZoneOrientation {
 }
 export function assertZoneSettings(o: any): asserts o is ZoneSettings {
   if (!o || typeof o !== "object") throw new Error("ZoneSettings must be a non-null object");
-  if (typeof o.orientation !== "string" && isZoneOrientation(o.justification))
+  if (typeof o.orientation !== "string" || !isZoneOrientation(o.orientation))
     throwError("ZoneSettings", "orientation", "string and normal | vertical", o.orientation);
 }
 export function assertEventSettings(o: any): asserts o is EventSettings {

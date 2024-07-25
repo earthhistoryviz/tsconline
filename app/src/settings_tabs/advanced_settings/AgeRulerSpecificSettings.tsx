@@ -1,4 +1,4 @@
-import { ColumnInfo, assertRulerSettings, assertZoneSettings } from "@tsconline/shared";
+import { ColumnInfo, assertRulerSettings } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "../../state";
@@ -10,13 +10,13 @@ type AgeRulerSpecificSettingsProps = {
 
 export const AgeRulerSpecificSettings: React.FC<AgeRulerSpecificSettingsProps> = observer(({ column }) => {
   const { actions } = useContext(context);
-  if (column.columnDisplayType !== "Ruler" || !/^Age \d+ for .+$/.test(column.name)) return null;
   assertRulerSettings(column.columnSpecificSettings);
+  if (column.columnDisplayType !== "Ruler" || !/^Age \d+ for .+$/.test(column.name)) return null;
   function changeAgeColumnJustification(event: React.ChangeEvent<HTMLInputElement>) {
     const newJustification = event.target.value === "right" ? "right" : "left";
     actions.changeAgeColumnJustification(column, newJustification);
   }
-  assertZoneSettings(column.columnSpecificSettings);
+
   return (
     <TSCRadioGroup
       onChange={changeAgeColumnJustification}
