@@ -397,16 +397,11 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       };
       break;
     case "Zone":
-      if (state.name != "Chart Root") {
-        assertZoneSettings(state.columnSpecificSettings);
-        column = {
-          ...cloneDeep(defaultZoneColumnInfoTSC),
-          orientation: state.columnSpecificSettings.orientation
-        };
-      } else {
-        column = cloneDeep(defaultZoneColumnInfoTSC);
-      }
-
+      assertZoneSettings(state.columnSpecificSettings);
+      column = {
+        ...cloneDeep(defaultZoneColumnInfoTSC),
+        orientation: state.columnSpecificSettings.orientation
+      };
       break;
     case "Sequence":
       assertSequenceSettings(state.columnSpecificSettings);
