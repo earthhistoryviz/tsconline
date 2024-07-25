@@ -134,6 +134,8 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
             <ShowTitles column={column} />
             <EventSpecificSettings column={column} />
             <RangeSpecificSettings column={column} />
+            <AgeRulerSpecificSettings column={column} />
+            <ZoneSpecificSettings column={column} />
             {column.children.length != 0 && (
               <Box className="add-blank-or-age-button-container">
                 <TSCButton className="add-blank-or-age-button" onClick={addBlankColumn}>
@@ -144,8 +146,6 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
                 </TSCButton>
               </Box>
             )}
-            <AgeRulerSpecificSettings column={column} />
-            <ZoneSpecificSettings column={column} />
             {!!column.popup && <InfoBox info={column.popup} />}
           </Box>
         </StyledScrollbar>
