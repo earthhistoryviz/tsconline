@@ -10,8 +10,8 @@ type AgeRulerSpecificSettingsProps = {
 
 export const AgeRulerSpecificSettings: React.FC<AgeRulerSpecificSettingsProps> = observer(({ column }) => {
   const { actions } = useContext(context);
-  assertRulerSettings(column.columnSpecificSettings);
   if (column.columnDisplayType !== "Ruler" || !/^Age \d+ for .+$/.test(column.name)) return null;
+  assertRulerSettings(column.columnSpecificSettings);
   function changeAgeColumnJustification(event: React.ChangeEvent<HTMLInputElement>) {
     const newJustification = event.target.value === "right" ? "right" : "left";
     actions.changeAgeColumnJustification(column, newJustification);
