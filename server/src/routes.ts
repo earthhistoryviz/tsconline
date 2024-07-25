@@ -706,8 +706,9 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     return;
   }
   try {
+    const priority = uuid ? 1 : 0;
     await queue.add(async () => {
-      await execJavaCommand(1000 * 15); // 15 seconds
+      await execJavaCommand(1000 * 15), { priority };
     });
   } catch (error) {
     if ((error as Error).message.includes("timed out")) {

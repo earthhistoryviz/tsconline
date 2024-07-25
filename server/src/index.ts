@@ -23,7 +23,8 @@ import path from "path";
 import { adminRoutes } from "./admin-auth.js";
 import PQueue from "p-queue";
 
-export const maxQueueSize = 3;
+const maxConcurrencySize = 3;
+export const maxQueueSize = 15;
 
 const server = fastify({
   logger: false,
@@ -333,7 +334,7 @@ server.setNotFoundHandler((request, reply) => {
   void reply.sendFile("index.html");
 });
 
-export const queue = new PQueue({ concurrency: maxQueueSize });
+export const queue = new PQueue({ concurrency: maxConcurrencySize });
 
 //Start the server...
 try {
