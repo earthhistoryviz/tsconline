@@ -128,30 +128,30 @@ export function handleDataMiningColumns() {
       if (!refCol || !refCol.parent) continue;
       const parentCol = state.settingsTabs.columnHashMap.get(refCol.parent);
       if (!parentCol) continue;
-      let temp: string | undefined = "";
+      let addedColumnName: string | undefined = "";
       switch (refCol.columnDisplayType) {
         case "Event":
-          if (isEventFrequency(dataMiningType)) temp = addDataMiningColumn(refCol, dataMiningType);
+          if (isEventFrequency(dataMiningType)) addedColumnName = addDataMiningColumn(refCol, dataMiningType);
           break;
         case "Chron":
         case "Point":
-          if (isDataMiningPointDataType(dataMiningType)) temp = addDataMiningColumn(refCol, dataMiningType);
+          if (isDataMiningPointDataType(dataMiningType)) addedColumnName = addDataMiningColumn(refCol, dataMiningType);
           break;
         default:
           console.log("WARNING: dataMining column references column that is not event, point, or chron");
           continue;
       }
-      if (!temp) {
+      if (!addedColumnName) {
         console.log("WARNING: failed to add datamining column while loading settings");
-        return;
+        continue;
       }
-      if (temp !== columnName)
+      if (addedColumnName !== columnName)
         console.log("WARNING: name from loaded settings does not match name from added datamining column");
 
-      const column = state.settingsTabs.columnHashMap.get(temp);
+      const column = state.settingsTabs.columnHashMap.get(addedColumnName);
       if (!column) {
         console.log("WARNING: failed to get loaded datamining column");
-        return;
+        continue;
       }
       setColumnProperties(column, settings);
     }
@@ -193,7 +193,6 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
       if (distanceFromInitial === 0) {
         console.error("datamining column had wrong identifier", columnName);
       } else {
-        
         const distanceBucket = state.settingsTabs.dataMiningColumnsCache.get(distanceFromInitial);
         if (!distanceBucket) {
           state.settingsTabs.dataMiningColumnsCache.set(distanceFromInitial, [settings]);
