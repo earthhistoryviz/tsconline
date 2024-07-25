@@ -22,7 +22,7 @@ jobs:
         id: create_deployment
         uses: octokit/request-action@v2.x
         with:
-          route: POST /repos/:owner/:repo/deployments
+          route: POST /repos/{owner}/{repo}/deployments
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
           ref: ${{ github.ref }}
