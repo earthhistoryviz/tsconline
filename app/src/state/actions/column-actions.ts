@@ -248,8 +248,8 @@ export const applyRowOrder = action(
       let childName = extractName(settingsChild._id);
       //for manually changed columns (facies, chron, etc.)
       if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
-        //keep name same for datamining column
-        if (extractColumnType(settingsChild._id) !== "PointColumn")
+        //change name for facies, chron, member, and labels (keep name same for blank, age, datamining column)
+        if (["Facies", "Chron", "Members", "Facies Label", "Series Label", "Chron Label"].includes(childName))
           childName = extractName(settings._id) + " " + childName;
       }
       //for chart titles with different units
