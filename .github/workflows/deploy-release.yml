@@ -22,10 +22,8 @@ jobs:
         id: create_deployment
         uses: octokit/request-action@v2.x
         with:
-          route: POST /repos/:owner/:repo/deployments
+          route: POST /repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/deployments
         env:
-          INPUT_OWNER: ${{ github.repository_owner }}
-          INPUT_REPO: ${{ github.event.repository.name }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up SSH key
