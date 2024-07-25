@@ -120,10 +120,10 @@ jobs:
           ref: ${{ github.base_ref }}
           fetch-depth: 0
 
-      - name: Use Node.js v20.9.0
+      - name: Use Node.js 
         uses: actions/setup-node@v3
         with:
-          node-version: v20.9.0
+          node-version: "21"
 
       - name: Install dependencies
         run: yarn
@@ -131,7 +131,6 @@ jobs:
       - name: Build the shared folder
         id: build
         run: |
-          cd shared
           yarn build
 
       - name: Run test coverage
@@ -152,7 +151,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: "21"
 
       - name: Install Dependencies
         run: yarn install
