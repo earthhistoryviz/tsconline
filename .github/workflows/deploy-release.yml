@@ -19,16 +19,18 @@ jobs:
     steps:
       - name: Create deployment
         id: create_deployment
-        uses: octokit/request-action@v2.x
+        uses: actions/github-script@v6
         with:
-          route: POST /repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/deployments
-          data: |
-            {
-              "ref": "${{ github.ref }}",
-              "environment": "production",
-              "description": "Deploying to production",
-              "required_contexts": []
-            }
+          script: |
+            const { data: deployment } = await github.request('POST /repos/{owner}/{repo}/deployments', {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.ref,
+              environment: 'production',
+              description: 'Deploying to production',
+              required_contexts: []
+            });
+            return deployment.id;
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -65,33 +67,36 @@ jobs:
 
             echo 'VITE_APP_URL=https://tsconline.timescalecreator.org' > ./app/.env
             echo 'VITE_SERVER_URL=https://tsconline.timescalecreator.org' >> ./app/.env
-
+            if [ ! -f "docker-compose.yml" ]; then
+              echo "Error: docker-compose.yml not found"
+              exit 1
+            fi
             docker compose -f docker-compose.yml restart
 
       - name: Set deployment status to success
-        uses: octokit/request-action@v2.x
         if: success()
-        with:
-          route: POST /repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/deployments/${{ steps.create_deployment.outputs.deployment_id }}/statuses
-          data: |
-            {
-              "state": "success",
-              "environment": "production",
-              "environment_url": "https://tsconline.timescalecreator.org"
-            }
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          uses: actions/github-script@v6
+          with:
+            script: |
+              await github.request('POST /repos/{owner}/{repo}/deployments/{deployment_id}/statuses', {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: ${steps.create_deployment.outputs.result},
+                state: 'success',
+                environment_url: 'https://tsconline.timescalecreator.org'
+              });
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set deployment status to failure
-        uses: octokit/request-action@v2.x
         if: failure()
-        with:
-          route: POST /repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/deployments/${{ steps.create_deployment.outputs.deployment_id }}/statuses
-          data: |
-            {
-              "state": "failure",
-              "environment": "production",
-              "environment_url": "https://tsconline.timescalecreator.org"
-            }
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          uses: actions/github-script@v6
+          with:
+            script: |
+              await github.request('POST /repos/{owner}/{repo}/deployments/{deployment_id}/statuses', {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: ${steps.create_deployment.outputs.result},
+                state: 'failure',
+                environment_url: 'https://tsconline.timescalecreator.org'
+              });
