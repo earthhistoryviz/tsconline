@@ -45,7 +45,7 @@ export type DatapackParsingPack = {
   baseAge?: number;
   date?: string;
   verticalScale?: number;
-  isUserDatapack: boolean;
+  uuid?: string;
   description: string;
   title: string;
   file: string;
@@ -237,10 +237,14 @@ export type ColumnSpecificSettings =
   | ChronSettings
   | RangeSettings
   | SequenceSettings
-  | RulerSettings;
+  | RulerSettings
+  | ZoneSettings;
 
 export type RulerSettings = {
   justification: RulerJustification;
+};
+export type ZoneSettings = {
+  orientation: ZoneOrientation;
 };
 export type SequenceSettings = {
   labelMarginLeft: number;
@@ -251,6 +255,7 @@ export type SequenceSettings = {
 };
 
 export type RulerJustification = "left" | "right";
+export type ZoneOrientation = "normal" | "vertical";
 
 export type SequenceType = "sequence" | "trend";
 
@@ -630,8 +635,16 @@ export function assertRangeSettings(o: any): asserts o is RangeSettings {
 }
 export function assertRulerSettings(o: any): asserts o is RulerSettings {
   if (!o || typeof o !== "object") throw new Error("RulerSettings must be a non-null object");
-  if (typeof o.justification !== "string" && isRulerJustification(o.justification))
+  if (typeof o.justification !== "string" || !isRulerJustification(o.justification))
     throwError("RulerSettings", "justification", "string and left | right", o.justification);
+}
+export function isZoneOrientation(o: any): o is ZoneOrientation {
+  return /^(normal|vertical)$/.test(o);
+}
+export function assertZoneSettings(o: any): asserts o is ZoneSettings {
+  if (!o || typeof o !== "object") throw new Error("ZoneSettings must be a non-null object");
+  if (typeof o.orientation !== "string" || !isZoneOrientation(o.orientation))
+    throwError("ZoneSettings", "orientation", "string and normal | vertical", o.orientation);
 }
 export function assertEventSettings(o: any): asserts o is EventSettings {
   if (!o || typeof o !== "object") throw new Error("EventSettings must be a non-null object");
@@ -940,8 +953,7 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
   if ("topAge" in o && typeof o.topAge !== "number") throwError("DatapackParsingPack", "topAge", "number", o.topAge);
   if ("baseAge" in o && typeof o.baseAge !== "number")
     throwError("DatapackParsingPack", "baseAge", "number", o.baseAge);
-  if (typeof o.isUserDatapack !== "boolean")
-    throwError("DatapackParingPack", "isUserDatapack", "boolean", o.isUserDatapack);
+  if ("uuid" in o && typeof o.uuid !== "string") throwError("DatapackParsingPack", "uuid", "string", o.uuid);
   if (typeof o.description !== "string") throwError("DatapackParsingPack", "description", "string", o.description);
   if (typeof o.title !== "string") throwError("DatapackParsingPack", "title", "string", o.title);
   if (typeof o.file !== "string") throwError("DatapackParsingPack", "file", "string", o.file);
@@ -1198,6 +1210,9 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
       break;
     case "Ruler":
       assertRulerSettings(o);
+      break;
+    case "Zone":
+      assertZoneSettings(o);
       break;
     default:
       throw new Error(
