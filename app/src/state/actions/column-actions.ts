@@ -121,13 +121,14 @@ export function handleDataMiningColumns() {
   while (distanceBucket) {
     for (const settings of distanceBucket) {
       const columnName = extractName(settings._id);
+      //don't add if it already exists
+      if (state.settingsTabs.columnHashMap.get(columnName)) continue;
       const dataMiningType = columnName.substring(0, columnName.indexOf("for") - 1);
       let refName = columnName.substring(columnName.indexOf("for") + 4, columnName.length);
       //This means it references a chron column, which has a modified name in tsconline
       if (dataMiningType === "Frequency") {
         refName = refName + " Chron";
       }
-      console.log(refName);
       const refCol = state.settingsTabs.columnHashMap.get(refName);
       //don't add if reference column doesn't exist (or is the root column)
       if (!refCol || !refCol.parent) continue;
@@ -247,7 +248,9 @@ export const applyRowOrder = action(
       let childName = extractName(settingsChild._id);
       //for manually changed columns (facies, chron, etc.)
       if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
-        childName = extractName(settings._id) + " " + childName;
+        //keep name same for datamining column
+        if (extractColumnType(settingsChild._id) !== "PointColumn")
+          childName = extractName(settings._id) + " " + childName;
       }
       //for chart titles with different units
       else if (!column.parent) {
