@@ -610,7 +610,7 @@ export const addAgeColumn = action((column: ColumnInfo) => {
 });
 
 export const changeAgeColumnJustification = action((column: ColumnInfo, newJustification: "left" | "right") => {
-  if (column.columnDisplayType !== "Ruler" || !column.name.includes("Age")) {
+  if (column.columnDisplayType !== "Ruler" || !/^Age \d+ for .+$/.test(column.name)) {
     console.log("WARNING: tried to change justification on a column which is not Age");
     return;
   }
