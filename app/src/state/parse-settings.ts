@@ -20,6 +20,7 @@ import {
   assertSequenceColumnInfoTSC,
   assertSequenceSettings,
   assertZoneColumnInfoTSC,
+  assertZoneSettings,
   convertPointShapeToPointType,
   defaultChartSettingsInfoTSC,
   defaultChronColumnInfoTSC,
@@ -396,7 +397,11 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       };
       break;
     case "Zone":
-      column = cloneDeep(defaultZoneColumnInfoTSC);
+      assertZoneSettings(state.columnSpecificSettings);
+      column = {
+        ...cloneDeep(defaultZoneColumnInfoTSC),
+        orientation: state.columnSpecificSettings.orientation
+      };
       break;
     case "Sequence":
       assertSequenceSettings(state.columnSpecificSettings);

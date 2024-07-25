@@ -7,7 +7,8 @@ import {
   defaultEventSettings,
   defaultPointSettings,
   defaultRangeSettings,
-  defaultSequenceSettings
+  defaultSequenceSettings,
+  defaultZoneSettings
 } from "@tsconline/shared";
 import * as parseSettings from "../src/state/parse-settings";
 import { ChartSettings } from "../src/types";
@@ -145,7 +146,12 @@ describe("translate columnInfo to columnInfoTSC", () => {
       "class datastore.BlankColumn:Chart Root",
       { ...basicColumn, columnDisplayType: "Blank" }
     ],
-    [basicColumn.name, "Zone", "class datastore.ZoneColumn:Chart Root", { ...basicColumn, columnDisplayType: "Zone" }],
+    [
+      basicColumn.name,
+      "Zone",
+      "class datastore.ZoneColumn:Chart Root",
+      { ...basicColumn, columnDisplayType: "Zone", columnSpecificSettings: { ...defaultZoneSettings } }
+    ],
     [
       basicColumn.name,
       "Ruler",
