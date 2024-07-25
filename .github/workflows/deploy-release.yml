@@ -23,6 +23,13 @@ jobs:
         uses: octokit/request-action@v2.x
         with:
           route: POST /repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/deployments
+          data: |
+            {
+              "ref": "${{ github.ref }}",
+              "environment": "production",
+              "description": "Deploying to production",
+              "required_contexts": []
+            }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
