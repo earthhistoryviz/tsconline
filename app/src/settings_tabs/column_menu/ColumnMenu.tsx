@@ -5,7 +5,7 @@ import { Box, Typography } from "@mui/material";
 import "./ColumnMenu.css";
 import { FontMenu } from "../FontMenu";
 import { ChangeBackgroundColor } from "./BackgroundColor";
-import { ColumnInfo, assertRangeSettings, assertRulerSettings, assertZoneSettings } from "@tsconline/shared";
+import { ColumnInfo, assertRangeSettings } from "@tsconline/shared";
 import {
   CustomDivider,
   CustomFormControlLabel,
@@ -22,7 +22,8 @@ import { DataMiningSettings } from "../advanced_settings/DataMiningSettings";
 import AccordionPositionControls from "./AccordionPositionControls";
 import { CustomTabs } from "../../components/TSCCustomTabs";
 import { RangeSpecificSettings } from "../advanced_settings/RangeSpecificSettings";
-import { TSCRadioGroup } from "../../components/TSCRadioGroup";
+import { ZoneSpecificSettings } from "../advanced_settings/ZoneSpecificSettings";
+import { AgeRulerSpecificSettings } from "../advanced_settings/AgeRulerSpecificSettings";
 
 export const ColumnMenu = observer(() => {
   const { state } = useContext(context);
@@ -103,33 +104,6 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
   function addAgeColumn() {
     actions.addAgeColumn(column);
   }
-  function changeAgeColumnJustification(event: React.ChangeEvent<HTMLInputElement>) {
-    const newJustification = event.target.value === "right" ? "right" : "left";
-    actions.changeAgeColumnJustification(column, newJustification);
-  }
-  function changeZoneColumnOrientation(event: React.ChangeEvent<HTMLInputElement>) {
-    const newOrientation = event.target.value === "vertical" ? "vertical" : "normal";
-    actions.changeZoneColumnOrientation(column, newOrientation);
-  }
-  const isRulerAgeColumn = () => {
-    if (column.columnDisplayType !== "Ruler" || !column.name.includes("Age")) return "";
-    try {
-      assertRulerSettings(column.columnSpecificSettings);
-      return column.columnSpecificSettings.justification;
-    } catch (e) {
-      return "";
-    }
-  };
-  const isZoneColumn = () => {
-    if (column.columnDisplayType !== "Zone") return "";
-    try {
-      assertZoneSettings(column.columnSpecificSettings);
-      return column.columnSpecificSettings.orientation;
-    } catch (e) {
-      return "";
-    }
-  };
-
   switch (tab) {
     case "General":
       return (
@@ -170,30 +144,9 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
                 </TSCButton>
               </Box>
             )}
+            <AgeRulerSpecificSettings column={column} />
+            <ZoneSpecificSettings column={column} />
             {!!column.popup && <InfoBox info={column.popup} />}
-
-            {!!isRulerAgeColumn() && (
-              <TSCRadioGroup
-                onChange={changeAgeColumnJustification}
-                name={"Age Ruler Justification"}
-                value={isRulerAgeColumn()}
-                radioArray={[
-                  { value: "left", label: "Left" },
-                  { value: "right", label: "Right" }
-                ]}
-              />
-            )}
-            {!!isZoneColumn() && (
-              <TSCRadioGroup
-                onChange={changeZoneColumnOrientation}
-                name={"Label Orientation"}
-                value={isZoneColumn()}
-                radioArray={[
-                  { value: "normal", label: "Horizontal" },
-                  { value: "vertical", label: "Vertical" }
-                ]}
-              />
-            )}
           </Box>
         </StyledScrollbar>
       );
