@@ -28,7 +28,7 @@ import { DatapackDescriptionInfo } from "./types.js";
 import { MultipartFile } from "@fastify/multipart";
 import { runJavaEncrypt } from "./encryption.js";
 import { queue, maxQueueSize } from "./index.js";
-import { containsKnownError } from "./graph-error-handler.js";
+import { containsKnownError } from "./chart-error-handler.js";
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
