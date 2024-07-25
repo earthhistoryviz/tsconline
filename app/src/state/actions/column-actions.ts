@@ -29,10 +29,7 @@ import {
   assertZoneSettings,
   calculateAutoScale,
   convertPointTypeToPointShape,
-  createDefaultColumnHeaderProps,
-  defaultFontsInfo,
   defaultPointSettings,
-  getValidFontOptions,
   isDataMiningChronDataType,
   isDataMiningPointDataType,
   isEventFrequency
@@ -119,38 +116,44 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
 }
 
 export function handleDataMiningColumns() {
-  let distanceFromInitial = 0;
+  let distanceFromInitial = 1;
   let distanceBucket = state.settingsTabs.dataMiningColumnsCache.get(distanceFromInitial);
   while (distanceBucket) {
     for (const settings of distanceBucket) {
       const columnName = extractName(settings._id);
+      const dataMiningType = columnName.substring(0, columnName.indexOf("for") - 1);
       const refName = columnName.substring(columnName.indexOf("for") + 4, columnName.length);
       const refCol = state.settingsTabs.columnHashMap.get(refName);
       //don't add if reference column doesn't exist (or is the root column)
       if (!refCol || !refCol.parent) continue;
       const parentCol = state.settingsTabs.columnHashMap.get(refCol.parent);
       if (!parentCol) continue;
-      const column: ColumnInfo = {
-        ...createDefaultColumnHeaderProps(),
-        name: columnName,
-        editName: "",
-        fontOptions: getValidFontOptions("Point"),
-        fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
-        children: [],
-        parent: refCol.parent,
-        units: refCol.units,
-        columnDisplayType: "Point",
-        show: true,
-        expanded: false,
-        columnSpecificSettings: cloneDeep(defaultPointSettings)
-      };
+      let temp: string | undefined = "";
+      switch (refCol.columnDisplayType) {
+        case "Event":
+          if (isEventFrequency(dataMiningType)) temp = addDataMiningColumn(refCol, dataMiningType);
+          break;
+        case "Chron":
+        case "Point":
+          if (isDataMiningPointDataType(dataMiningType)) temp = addDataMiningColumn(refCol, dataMiningType);
+          break;
+        default:
+          console.log("WARNING: dataMining column references column that is not event, point, or chron");
+          continue;
+      }
+      if (!temp) {
+        console.log("WARNING: failed to add datamining column while loading settings");
+        return;
+      }
+      if (temp !== columnName)
+        console.log("WARNING: name from loaded settings does not match name from added datamining column");
+
+      const column = state.settingsTabs.columnHashMap.get(temp);
+      if (!column) {
+        console.log("WARNING: failed to get loaded datamining column");
+        return;
+      }
       setColumnProperties(column, settings);
-      //TODO: min and max of datamining column is different from reference column
-      column.minAge = refCol.minAge;
-      column.maxAge = refCol.maxAge;
-      //new column, so add to hashmap
-      state.settingsTabs.columnHashMap.set(columnName, column);
-      parentCol.children.push(column);
     }
     distanceBucket = state.settingsTabs.dataMiningColumnsCache.get(++distanceFromInitial);
   }
@@ -180,18 +183,22 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
     assertPointColumnInfoTSC(settings);
     if (settings.isDataMiningColumn) {
       let refColumnName = columnName;
-      let distanceFromInitial = -1;
+      let distanceFromInitial = 0;
+      //find how far away datamining column is from a column that (hpothetically) exists in the datapack
+      //(ex. FAD for ... is 1 away, Average Value for FAD for ... is 2 away)
       while (dataminingIdentifiers.includes(refColumnName.substring(0, refColumnName.indexOf("for") - 1))) {
         refColumnName = refColumnName.substring(refColumnName.indexOf("for") + 4, refColumnName.length);
         distanceFromInitial++;
       }
-      if (distanceFromInitial === -1) {
+      if (distanceFromInitial === 0) {
         console.error("datamining column had wrong identifier", columnName);
+      } else {
+        
+        const distanceBucket = state.settingsTabs.dataMiningColumnsCache.get(distanceFromInitial);
+        if (!distanceBucket) {
+          state.settingsTabs.dataMiningColumnsCache.set(distanceFromInitial, [settings]);
+        } else distanceBucket.push(settings);
       }
-      const distanceBucket = state.settingsTabs.dataMiningColumnsCache.get(distanceFromInitial);
-      if (!distanceBucket) {
-        state.settingsTabs.dataMiningColumnsCache.set(distanceFromInitial, [settings]);
-      } else distanceBucket.push(settings);
     }
   } //else column is undefined, so skip (means column isn't in selected datapack)
 
@@ -584,6 +591,7 @@ export const addDataMiningColumn = action(
     });
     parent.children.splice(index + 1, 0, dataMiningColumn);
     state.settingsTabs.columnHashMap.set(dataMiningColumnName, dataMiningColumn);
+    return dataMiningColumnName;
   }
 );
 
