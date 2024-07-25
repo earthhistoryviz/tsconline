@@ -122,7 +122,12 @@ export function handleDataMiningColumns() {
     for (const settings of distanceBucket) {
       const columnName = extractName(settings._id);
       const dataMiningType = columnName.substring(0, columnName.indexOf("for") - 1);
-      const refName = columnName.substring(columnName.indexOf("for") + 4, columnName.length);
+      let refName = columnName.substring(columnName.indexOf("for") + 4, columnName.length);
+      //This means it references a chron column, which has a modified name in tsconline
+      if (dataMiningType === "Frequency") {
+        refName = refName + " Chron";
+      }
+      console.log(refName);
       const refCol = state.settingsTabs.columnHashMap.get(refName);
       //don't add if reference column doesn't exist (or is the root column)
       if (!refCol || !refCol.parent) continue;
@@ -161,6 +166,26 @@ export function handleDataMiningColumns() {
   state.settingsTabs.dataMiningColumnsCache = new Map<number, PointColumnInfoTSC[]>();
 }
 
+export function addColumnToDataMiningCache(settings: PointColumnInfoTSC) {
+  const columnName = extractName(settings._id);
+  let refColumnName = columnName;
+  let distanceFromInitial = 0;
+  //find how far away datamining column is from a column that (hypothetically) exists in the datapack
+  //(ex. FAD for ... is 1 away, Average Value for FAD for ... is 2 away)
+  while (dataminingIdentifiers.includes(refColumnName.substring(0, refColumnName.indexOf("for") - 1))) {
+    refColumnName = refColumnName.substring(refColumnName.indexOf("for") + 4, refColumnName.length);
+    distanceFromInitial++;
+  }
+  if (distanceFromInitial === 0) {
+    console.error("datamining column had wrong identifier", columnName);
+  } else {
+    const distanceBucket = state.settingsTabs.dataMiningColumnsCache.get(distanceFromInitial);
+    if (!distanceBucket) {
+      state.settingsTabs.dataMiningColumnsCache.set(distanceFromInitial, [settings]);
+    } else distanceBucket.push(settings);
+  }
+}
+
 /**
  * applys the chart column settings from a settings file to the
  * columninfo stored in state.
@@ -182,29 +207,20 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
   else if (extractColumnType(settings._id) === "PointColumn") {
     assertPointColumnInfoTSC(settings);
     if (settings.isDataMiningColumn) {
-      let refColumnName = columnName;
-      let distanceFromInitial = 0;
-      //find how far away datamining column is from a column that (hpothetically) exists in the datapack
-      //(ex. FAD for ... is 1 away, Average Value for FAD for ... is 2 away)
-      while (dataminingIdentifiers.includes(refColumnName.substring(0, refColumnName.indexOf("for") - 1))) {
-        refColumnName = refColumnName.substring(refColumnName.indexOf("for") + 4, refColumnName.length);
-        distanceFromInitial++;
-      }
-      if (distanceFromInitial === 0) {
-        console.error("datamining column had wrong identifier", columnName);
-      } else {
-        const distanceBucket = state.settingsTabs.dataMiningColumnsCache.get(distanceFromInitial);
-        if (!distanceBucket) {
-          state.settingsTabs.dataMiningColumnsCache.set(distanceFromInitial, [settings]);
-        } else distanceBucket.push(settings);
-      }
+      addColumnToDataMiningCache(settings);
     }
   } //else column is undefined, so skip (means column isn't in selected datapack)
 
   if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
     for (let i = 0; i < settings.children.length; i++) {
-      curcol = state.settingsTabs.columnHashMap.get(columnName + " " + extractName(settings.children[i]._id));
-      if (curcol !== undefined) setColumnProperties(curcol, settings.children[i]);
+      const child = settings.children[i];
+      curcol = state.settingsTabs.columnHashMap.get(columnName + " " + extractName(child._id));
+      if (curcol !== undefined) setColumnProperties(curcol, child);
+      //there is a datamining column
+      if (extractColumnType(child._id) === "PointColumn") {
+        assertPointColumnInfoTSC(child);
+        addColumnToDataMiningCache(child);
+      }
     }
   } else {
     for (let i = 0; i < settings.children.length; i++) {
