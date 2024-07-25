@@ -75,28 +75,28 @@ jobs:
 
       - name: Set deployment status to success
         if: success()
-          uses: actions/github-script@v6
-          with:
-            script: |
-              await github.request('POST /repos/{owner}/{repo}/deployments/{deployment_id}/statuses', {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                deployment_id: ${steps.create_deployment.outputs.result},
-                state: 'success',
-                environment_url: 'https://tsconline.timescalecreator.org'
-              });
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            await github.request('POST /repos/{owner}/{repo}/deployments/{deployment_id}/statuses', {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: ${steps.create_deployment.outputs.result},
+              state: 'success',
+              environment_url: 'https://tsconline.timescalecreator.org'
+            });
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set deployment status to failure
         if: failure()
-          uses: actions/github-script@v6
-          with:
-            script: |
-              await github.request('POST /repos/{owner}/{repo}/deployments/{deployment_id}/statuses', {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                deployment_id: ${steps.create_deployment.outputs.result},
-                state: 'failure',
-                environment_url: 'https://tsconline.timescalecreator.org'
-              });
+        uses: actions/github-script@v6
+        with:
+          script: |
+            await github.request('POST /repos/{owner}/{repo}/deployments/{deployment_id}/statuses', {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: ${steps.create_deployment.outputs.result},
+              state: 'failure',
+              environment_url: 'https://tsconline.timescalecreator.org'
+            });
