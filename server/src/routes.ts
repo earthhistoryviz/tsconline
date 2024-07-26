@@ -617,7 +617,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     }
   }
   datapacks.push(...userDatapacks);
-  updateFileMetadata(assetconfigs.fileMetadata, userDatapacks);
+  // updateFileMetadata(assetconfigs.fileMetadata, userDatapacks);
   // If this setting already has a chart, just return that
   try {
     await stat(chartFilePath);
