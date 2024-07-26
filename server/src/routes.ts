@@ -645,8 +645,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     reply.send({ error: "ERROR: failed to save settings" });
     return;
   }
-  let errorFound = false; // error found during chart generation via java jar call
-  let errorMessage = ""; // error message found during chart generation via java jar call
+  let errorMessage = ""; // error message found during chart generation via java jar call, "" if no errors found
 
   // Exec Java command and send final reply to browser
   const execJavaCommand = async (timeout: number) => {
@@ -703,25 +702,39 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
         const stdoutLines = stdout.toString().split("\n");
         const stderrLines = stderr.toString().split("\n");
 
-        // Check for known errors in stdout
-        for (const line of stdoutLines) {
-          if (containsKnownError(line)) {
-            errorFound = true;
-            errorMessage = line;
-            break;
-          }
-        }
-
-        // Check for known errors in stderr if not found in stdout
-        if (!errorFound) {
-          for (const line of stderrLines) {
+        if (
+          stdoutLines.length >= 2 &&
+          stdoutLines[stdoutLines.length - 2] !== "ImageGenerator did not have any errors on generation"
+        ) {
+          /*  
+            Last line is empty, so need to do -2
+            Note, this print was placed such that it happens when no fatal errors were caught/the java program did not crash
+            in the case that the above statement was not listed, something went wrong
+            The below finds the exact issue that cause the crash
+          */
+          console.log("Java had issues. Checking for specific error message in Java output.");
+          // Check for known errors in stdout
+          for (const line of stdoutLines) {
             if (containsKnownError(line)) {
-              errorFound = true;
               errorMessage = line;
               break;
             }
           }
+          // Check for known errors in stderr if not found in stdout
+          if (!errorMessage) {
+            for (const line of stderrLines) {
+              if (containsKnownError(line)) {
+                errorMessage = line;
+                break;
+              }
+            }
+          }
+          // At this point, SOME kind of error happened, but its unknown error because we did not break out
+          errorMessage = "Unknown error occurred during chart generation";
+        } else {
+          console.log("Java did not have issues on generation");
         }
+
         resolve();
       });
     });
@@ -748,8 +761,8 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     }
     return;
   }
-  if (errorFound) {
-    console.log("Known error found in Java output. Sending error as response");
+  if (errorMessage) {
+    console.log("Error found in Java output. Sending error as response");
     console.log(
       "The following failed: ",
       {
@@ -761,7 +774,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     );
     reply.send({ error: errorMessage });
   } else {
-    console.log("No known error found in Java output. Sending chartpath and hash.");
+    console.log("No error found in Java output. Sending chartpath and hash.");
     console.log("Sending reply to browser: ", {
       chartpath: chartUrlPath,
       hash: hash
