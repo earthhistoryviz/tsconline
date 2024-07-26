@@ -22,7 +22,6 @@ import type {
   MapPackIndex,
   Patterns,
   AdminSharedUser,
-  PointColumnInfoTSC
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
@@ -62,7 +61,6 @@ export type State = {
     columnSearchTerm: string;
     datapackDisplayType: "rows" | "cards" | "compact";
     eventSearchTerm: string;
-    dataMiningColumnsCache: Map<number, PointColumnInfoTSC[]>;
   };
   admin: {
     displayedUsers: AdminSharedUser[];
@@ -154,8 +152,7 @@ export const state = observable<State>({
     columnHashMap: new Map<string, ColumnInfo>(),
     columnSearchTerm: "",
     datapackDisplayType: "compact",
-    eventSearchTerm: "",
-    dataMiningColumnsCache: new Map<number, PointColumnInfoTSC[]>()
+    eventSearchTerm: ""
   },
   mapState: {
     mapInfo: {},

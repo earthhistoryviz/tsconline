@@ -115,9 +115,11 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
   }
 }
 
+const dataMiningColumnsCache = new Map<number, PointColumnInfoTSC[]>();
+
 export function handleDataMiningColumns() {
   let distanceFromInitial = 1;
-  let distanceBucket = state.settingsTabs.dataMiningColumnsCache.get(distanceFromInitial);
+  let distanceBucket = dataMiningColumnsCache.get(distanceFromInitial);
   while (distanceBucket) {
     for (const settings of distanceBucket) {
       const columnName = extractName(settings._id);
@@ -126,7 +128,7 @@ export function handleDataMiningColumns() {
       const dataMiningType = columnName.substring(0, columnName.indexOf("for") - 1);
       let refName = columnName.substring(columnName.indexOf("for") + 4, columnName.length);
       //This means it references a chron column, which has a modified name in tsconline
-      if (dataMiningType === "Frequency") {
+      if (extractColumnType(refName) === "ChronColumn") {
         refName = refName + " Chron";
       }
       const refCol = state.settingsTabs.columnHashMap.get(refName);
@@ -140,6 +142,8 @@ export function handleDataMiningColumns() {
           if (isEventFrequency(dataMiningType)) addedColumnName = addDataMiningColumn(refCol, dataMiningType);
           break;
         case "Chron":
+          if (isDataMiningChronDataType(dataMiningType)) addedColumnName = addDataMiningColumn(refCol, dataMiningType);
+          break;
         case "Point":
           if (isDataMiningPointDataType(dataMiningType)) addedColumnName = addDataMiningColumn(refCol, dataMiningType);
           break;
@@ -161,13 +165,14 @@ export function handleDataMiningColumns() {
       }
       setColumnProperties(column, settings);
     }
-    distanceBucket = state.settingsTabs.dataMiningColumnsCache.get(++distanceFromInitial);
+    distanceBucket = dataMiningColumnsCache.get(++distanceFromInitial);
   }
   //reset cache
-  state.settingsTabs.dataMiningColumnsCache = new Map<number, PointColumnInfoTSC[]>();
+  dataMiningColumnsCache.clear();
 }
 
 export function addColumnToDataMiningCache(settings: PointColumnInfoTSC) {
+  if (!settings.isDataMiningColumn) return;
   const columnName = extractName(settings._id);
   let refColumnName = columnName;
   let distanceFromInitial = 0;
@@ -180,9 +185,9 @@ export function addColumnToDataMiningCache(settings: PointColumnInfoTSC) {
   if (distanceFromInitial === 0) {
     console.error("datamining column had wrong identifier", columnName);
   } else {
-    const distanceBucket = state.settingsTabs.dataMiningColumnsCache.get(distanceFromInitial);
+    const distanceBucket = dataMiningColumnsCache.get(distanceFromInitial);
     if (!distanceBucket) {
-      state.settingsTabs.dataMiningColumnsCache.set(distanceFromInitial, [settings]);
+      dataMiningColumnsCache.set(distanceFromInitial, [settings]);
     } else distanceBucket.push(settings);
   }
 }
@@ -220,7 +225,7 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
       //there is a datamining column
       if (extractColumnType(child._id) === "PointColumn") {
         assertPointColumnInfoTSC(child);
-        addColumnToDataMiningCache(child);
+        if (child.isDataMiningColumn) addColumnToDataMiningCache(child);
       }
     }
   } else {
