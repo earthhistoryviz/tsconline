@@ -144,7 +144,6 @@ jobs:
 
   build-and-test:
     runs-on: ubuntu-latest
-    needs: base_branch_cov
     steps:
       - uses: actions/checkout@v3
 
