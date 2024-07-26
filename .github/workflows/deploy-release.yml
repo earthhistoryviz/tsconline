@@ -47,6 +47,7 @@ jobs:
             echo 'ADMIN_USER="${{ secrets.ADMIN_USER }}"' >> ./server/.env
             echo 'ADMIN_PASS="${{ secrets.ADMIN_PASS }}"' >> ./server/.env
             echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> ./server/.env
+            echo 'DOMAIN="tsconline.timescalecreator.org"' >> ./server/.env
 
             echo 'VITE_APP_URL=https://tsconline.timescalecreator.org' > ./app/.env
             echo 'VITE_SERVER_URL=https://tsconline.timescalecreator.org' >> ./app/.env
