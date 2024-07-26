@@ -21,7 +21,7 @@ import type {
   DatapackIndex,
   MapPackIndex,
   Patterns,
-  AdminSharedUser,
+  AdminSharedUser
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
