@@ -316,5 +316,8 @@ jobs:
               cp ../server/assets/jars/* ./server/assets/jars/
               mkdir -p ./server/assets/datapacks
               cp ../server/assets/datapacks/* ./server/assets/datapacks/
+              cp ../server/.env ./server
+              cp ../app/.env ./app
+              sed -i 's/^DOMAIN=.*/DOMAIN="pr-preview.geolex.org"/' ./server/.env
               docker-compose -f docker-compose-preview.yml up pr-preview-build
             fi
