@@ -15,6 +15,7 @@ import {
   RangeSettings,
   SequenceSettings,
   ValidFontOptions,
+  assertChronColumnInfoTSC,
   assertChronSettings,
   assertEventColumnInfoTSC,
   assertEventSettings,
@@ -48,7 +49,6 @@ import {
 import { yieldControl } from "../../util";
 import { altUnitNamePrefix } from "../../util/constant";
 import { findSerialNum } from "../../util/util";
-import { dataminingIdentifiers } from "../../constants";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -115,80 +115,66 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
   }
 }
 
-const dataMiningColumnsCache = new Map<number, PointColumnInfoTSC[]>();
+const dataminingFoundCache = new Map<string, PointColumnInfoTSC>();
+
+const dataMiningRefCache = new Map<string, EventFrequency | DataMiningChronDataType | DataMiningPointDataType>();
 
 export function handleDataMiningColumns() {
-  let distanceFromInitial = 1;
-  let distanceBucket = dataMiningColumnsCache.get(distanceFromInitial);
-  while (distanceBucket) {
-    for (const settings of distanceBucket) {
-      const columnName = extractName(settings._id);
-      //don't add if it already exists
-      if (state.settingsTabs.columnHashMap.get(columnName)) continue;
-      const dataMiningType = columnName.substring(0, columnName.indexOf("for") - 1);
-      let refName = columnName.substring(columnName.indexOf("for") + 4, columnName.length);
-      //This means it references a chron column, which has a modified name in tsconline
-      if (extractColumnType(refName) === "ChronColumn") {
-        refName = refName + " Chron";
-      }
-      const refCol = state.settingsTabs.columnHashMap.get(refName);
-      //don't add if reference column doesn't exist (or is the root column)
-      if (!refCol || !refCol.parent) continue;
-      const parentCol = state.settingsTabs.columnHashMap.get(refCol.parent);
-      if (!parentCol) continue;
-      let addedColumnName: string | undefined = "";
-      switch (refCol.columnDisplayType) {
-        case "Event":
-          if (isEventFrequency(dataMiningType)) addedColumnName = addDataMiningColumn(refCol, dataMiningType);
-          break;
-        case "Chron":
-          if (isDataMiningChronDataType(dataMiningType)) addedColumnName = addDataMiningColumn(refCol, dataMiningType);
-          break;
-        case "Point":
-          if (isDataMiningPointDataType(dataMiningType)) addedColumnName = addDataMiningColumn(refCol, dataMiningType);
-          break;
-        default:
-          console.log("WARNING: dataMining column references column that is not event, point, or chron");
-          continue;
-      }
-      if (!addedColumnName) {
-        console.log("WARNING: failed to add datamining column while loading settings");
-        continue;
-      }
-      if (addedColumnName !== columnName)
-        console.log("WARNING: name from loaded settings does not match name from added datamining column");
+  //shortest to largest name
+  const sortedRefNameList = Array.from(dataMiningRefCache.keys()).sort((a, b) => a.length - b.length);
+  for (const name of sortedRefNameList) {
+    const refCol = state.settingsTabs.columnHashMap.get(name);
+    const dmIdentifier = dataMiningRefCache.get(name);
 
-      const column = state.settingsTabs.columnHashMap.get(addedColumnName);
-      if (!column) {
-        console.log("WARNING: failed to get loaded datamining column");
-        continue;
-      }
-      setColumnProperties(column, settings);
+    if (!refCol) {
+      //also could not be in selected datapacks, so commented since many of these columns could exist
+      //console.error("Datamining reference column is not in state");
+      continue;
     }
-    distanceBucket = dataMiningColumnsCache.get(++distanceFromInitial);
+    if (!dmIdentifier) {
+      //this should never happen
+      console.error("While handling datamining columns, failed to find identifier for reference column");
+      continue;
+    }
+    const dmName = addDataMiningColumn(refCol, dmIdentifier);
+    if (!dmName) {
+      console.error("While handling datamining columns, failed to add datamining column");
+      continue;
+    }
+    const createdDmColumn = state.settingsTabs.columnHashMap.get(dmName);
+    if (!createdDmColumn) {
+      console.error("while handling datamining columns, failed to access created datamining column from state");
+      continue;
+    }
+    const foundDmColumn = dataminingFoundCache.get(dmName);
+    if (!foundDmColumn) {
+      console.error(
+        "While handling datamining columns, name of created datamining column does not match any datamining columns in loaded settings"
+      );
+      continue;
+    }
+    setColumnProperties(createdDmColumn, foundDmColumn);
   }
   //reset cache
-  dataMiningColumnsCache.clear();
+  dataminingFoundCache.clear();
+  dataMiningRefCache.clear();
 }
 
-export function addColumnToDataMiningCache(settings: PointColumnInfoTSC) {
-  if (!settings.isDataMiningColumn) return;
+export function addColumnToDataMiningCache(settings: ColumnInfoTSC) {
   const columnName = extractName(settings._id);
-  let refColumnName = columnName;
-  let distanceFromInitial = 0;
-  //find how far away datamining column is from a column that (hypothetically) exists in the datapack
-  //(ex. FAD for ... is 1 away, Average Value for FAD for ... is 2 away)
-  while (dataminingIdentifiers.includes(refColumnName.substring(0, refColumnName.indexOf("for") - 1))) {
-    refColumnName = refColumnName.substring(refColumnName.indexOf("for") + 4, refColumnName.length);
-    distanceFromInitial++;
-  }
-  if (distanceFromInitial === 0) {
-    console.error("datamining column had wrong identifier", columnName);
-  } else {
-    const distanceBucket = dataMiningColumnsCache.get(distanceFromInitial);
-    if (!distanceBucket) {
-      dataMiningColumnsCache.set(distanceFromInitial, [settings]);
-    } else distanceBucket.push(settings);
+  switch (extractColumnType(settings._id)) {
+    case "EventColumn":
+      assertEventColumnInfoTSC(settings);
+      if (settings.drawExtraColumn) dataMiningRefCache.set(columnName, settings.drawExtraColumn);
+      break;
+    case "ChronColumn":
+      assertChronColumnInfoTSC(settings);
+      if (settings.drawExtraColumn) dataMiningRefCache.set(columnName, settings.drawExtraColumn);
+      break;
+    case "PointColumn":
+      assertPointColumnInfoTSC(settings);
+      if (settings.drawExtraColumn) dataMiningRefCache.set(columnName, settings.drawExtraColumn);
+      if (settings.isDataMiningColumn) dataminingFoundCache.set(columnName, settings);
   }
 }
 
@@ -209,24 +195,17 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
   if (curcol) {
     setColumnProperties(curcol, settings);
   }
-  //while applying settings, found datamining column that hasn't been added by the user, create a new column
-  else if (extractColumnType(settings._id) === "PointColumn") {
-    assertPointColumnInfoTSC(settings);
-    if (settings.isDataMiningColumn) {
-      addColumnToDataMiningCache(settings);
-    }
-  } //else column is undefined, so skip (means column isn't in selected datapack)
+
+  addColumnToDataMiningCache(settings);
 
   if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
     for (let i = 0; i < settings.children.length; i++) {
       const child = settings.children[i];
-      curcol = state.settingsTabs.columnHashMap.get(columnName + " " + extractName(child._id));
-      if (curcol !== undefined) setColumnProperties(curcol, child);
-      //there is a datamining column
-      if (extractColumnType(child._id) === "PointColumn") {
-        assertPointColumnInfoTSC(child);
-        if (child.isDataMiningColumn) addColumnToDataMiningCache(child);
-      }
+      const childName = extractName(child._id);
+      curcol = state.settingsTabs.columnHashMap.get(columnName + " " + childName);
+      if (curcol) setColumnProperties(curcol, child);
+
+      addColumnToDataMiningCache(child);
     }
   } else {
     for (let i = 0; i < settings.children.length; i++) {
