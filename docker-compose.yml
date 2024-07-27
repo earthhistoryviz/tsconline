@@ -19,5 +19,9 @@ services:
       - "5800:5800"
     volumes:
       - .:/code
+      - yarn_cache:/root/.yarn
     networks:
       - shared_network
+    
+volumes:
+  yarn_cache:
