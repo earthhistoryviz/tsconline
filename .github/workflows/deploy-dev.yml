@@ -1,21 +1,18 @@
-name: Deploy Release
+name: Deploy Development
 
 concurrency:
-  group: deploy-release
-
+  group: deploy-dev
 on:
   push:
     branches:
-      - 'release-*'
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: 
-      name: production
+      name: development
       url: ${{ vars.WEBSITE_URL }}
-    env:
-      SSH_HOST: ${{ secrets.SSH_HOST }}
     steps:
       - name: Set up SSH key
         uses: webfactory/ssh-agent@v0.5.3
@@ -25,8 +22,7 @@ jobs:
       - name: Add known hosts
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
-
+          ssh-keyscan -H ${{ secrets.SSH_PRIVATE_KEY }} >> ~/.ssh/known_hosts
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -34,7 +30,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ${{ secrets.RELEASE_PATH }}
+            cd ${{ secrets.DEV_PATH }}
 
             git pull --no-edit
 
@@ -47,7 +43,7 @@ jobs:
             echo 'ADMIN_USER="${{ secrets.ADMIN_USER }}"' >> ./server/.env
             echo 'ADMIN_PASS="${{ secrets.ADMIN_PASS }}"' >> ./server/.env
             echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> ./server/.env
-            echo 'DOMAIN="tsconline.timescalecreator.org"' >> ./server/.env
+            echo 'DOMAIN="dev.timescalecreator.org"' >> ./server/.env
 
             echo 'VITE_APP_URL=${{ vars.WEBSITE_URL }}' > ./app/.env
             echo 'VITE_SERVER_URL=${{ vars.WEBSITE_URL }}' >> ./app/.env
@@ -59,4 +55,4 @@ jobs:
               echo "Error: docker-compose.yml not found"
               exit 1
             fi
-            docker compose -f docker-compose.yml restart
+            docker-compose -f docker-compose.yml restart
