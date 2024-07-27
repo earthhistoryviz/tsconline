@@ -21,6 +21,7 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | b
 # Note: you need the --login option and the PS1 variable to be set in order for /root/.bashrc to run properly
 RUN bash --login -c "export PS1=':' && source /root/.bashrc && nvm install node && nvm use node && npm install -g yarn"
 RUN bash --login -c "export PS1=':' && source /root/.bashrc && yarn install"
+COPY . /code/
 RUN bash --login -c "export PS1=':' && source /root/.bashrc && yarn build"
 
 # Setup the container to run the code from the local machine:
