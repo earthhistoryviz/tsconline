@@ -71,6 +71,8 @@ jobs:
             fi
             echo "false" > /tmp/container_status.txt
             cd /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }}
+            if [ ! -f "secrets.env" ]; then
+              touch secrets.env
             docker-compose -f docker-compose-preview.yml up -d --remove-orphans pr-preview-run
             MAX_WAIT=180
             INTERVAL=5
