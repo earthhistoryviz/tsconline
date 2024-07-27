@@ -21,7 +21,7 @@ import { parseExcelFile } from "./parse-excel-file.js";
 import path from "path";
 import pump from "pump";
 import { loadIndexes } from "./load-packs.js";
-import { updateFileMetadata, writeFileMetadata } from "./file-metadata-handler.js";
+import { writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
 import { DatapackDescriptionInfo } from "./types.js";
