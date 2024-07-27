@@ -48,9 +48,6 @@ jobs:
             echo 'VITE_APP_URL=${{ vars.WEBSITE_URL }}' > ./app/.env
             echo 'VITE_SERVER_URL=${{ vars.WEBSITE_URL }}' >> ./app/.env
 
-            yarn install
-            yarn build
-
             if [ ! -f "docker-compose.yml" ]; then
               echo "Error: docker-compose.yml not found"
               exit 1
