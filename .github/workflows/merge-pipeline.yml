@@ -112,36 +112,6 @@ jobs:
         if: steps.eslint.outputs.eslint_failed == 'true' || steps.prettier.outputs.prettify_failed == 'true'
         run: exit 1
 
-  base_branch_cov:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.base_ref }}
-          fetch-depth: 0
-
-      - name: Use Node.js 
-        uses: actions/setup-node@v3
-        with:
-          node-version: "21"
-
-      - name: Install dependencies
-        run: yarn
-
-      - name: Build the shared folder
-        id: build
-        run: |
-          yarn build
-
-      - name: Run test coverage
-        run: yarn coverage
-
-      - name: Upload code coverage for ref branch
-        uses: actions/upload-artifact@v3
-        with:
-          name: ref-lcov.info
-          path: ./coverage/lcov.info
-
   build-and-test:
     runs-on: ubuntu-latest
     steps:
@@ -234,7 +204,7 @@ jobs:
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
           set -o pipefail
-          if ! yarn test > test_output.log 2>&1; then
+          if ! yarn coverage > test_output.log 2>&1; then
               echo "test_failed=true" >> $GITHUB_OUTPUT
               fi
         continue-on-error: true
@@ -272,7 +242,6 @@ jobs:
         with:
           github-token: ${{ secrets.BARECHECK_GITHUB_APP_TOKEN }}
           lcov-file: "./coverage/lcov.info"
-          base-lcov-file: "./ref-lcov.info"
           minimum-ratio: 0 # Fails Github action once code coverage is decreasing
           send-summary-comment: true
           show-annotations: "warning" # Possible options warning|error

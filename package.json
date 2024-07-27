@@ -39,6 +39,7 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:case": "vitest run -t",
+    "test:ci": "vitest run --no-color",
     "coverage": "vitest run --coverage",
     "clean": "yarn workspaces foreach -A --parallel run clean"
   },

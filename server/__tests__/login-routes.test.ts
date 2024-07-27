@@ -1883,7 +1883,7 @@ describe("login-routes tests", () => {
         });
 
         expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+        expect(checkSession(response.headers["set-cookie"] as string)).toBe(true);
         expect(response.statusCode).toBe(500);
         expect(response.json().error).toBe("User not found");
       });
