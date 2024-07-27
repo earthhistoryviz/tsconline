@@ -18,11 +18,7 @@ import { promisify } from "util";
 import { assertAdminSharedUser, assertDatapackIndex } from "@tsconline/shared";
 import { DatapackDescriptionInfo, NewUser } from "./types.js";
 
-/**
- * Get all users for admin to configure on frontend
- * @param _request
- * @param reply
- */
+
 export const getUsers = async function getUsers(_request: FastifyRequest, reply: FastifyReply) {
   try {
     const users = await findUser({});
