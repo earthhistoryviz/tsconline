@@ -236,6 +236,7 @@ jobs:
         with:
           ref: main
           path: main-branch
+          fetch-depth: 0
 
       # Change to coverage:ci
       - name: Generate base lcov file
