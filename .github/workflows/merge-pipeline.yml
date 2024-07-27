@@ -231,6 +231,22 @@ jobs:
         if: steps.run_tests.outputs.test_failed == 'true'
         run: exit 1
 
+      - name: Checkout main branch for base lcov file
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main-branch
+
+      - name: Generate base lcov file
+        run: |
+          cd main-branch
+          yarn
+          cd shared
+          yarn build
+          cd ..
+          yarn coverage:ci
+          cp coverage/lcov.info ../base-lcov.info
+
       - name: Generate Code Coverage report
         id: code-coverage
         uses: barecheck/code-coverage-action@v1
@@ -238,6 +254,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           barecheck-github-app-token: ${{ secrets.BARECHECK_GITHUB_APP_TOKEN }}
           lcov-file: "./coverage/lcov.info"
+          base-lcov-file: "./base-lcov.info"
           minimum-ratio: 0 # Fails Github action once code coverage is decreasing
           send-summary-comment: true
           show-annotations: "warning" # Possible options warning|error
