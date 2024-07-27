@@ -51,5 +51,5 @@ echo "--------------------------------------------------------------------------
 # After a restart, this lock file still exists.  Have to remove it to get xvfb to run again
 rm -f /tmp/.X99-lock
 xvfb-run -e $XERR -l -f $XAUTH -n 99 --server-args='-screen 0 1280x1024x24' \
-    yarn start || \
+    yarn production || \
     cat $XERR

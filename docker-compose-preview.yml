@@ -13,6 +13,7 @@ services:
 
   pr-preview-run:
     build: .
+    restart: unless-stopped
     volumes:
       - .:/code
     expose:
@@ -21,4 +22,4 @@ services:
       - shared_network
     environment:
       DISPLAY: ":99"
-    command: bash -c "source /root/.nvm/nvm.sh && nvm use node && xvfb-run --server-args='-screen 0 1280x1024x24' yarn start"
+    command: bash -c "source /root/.nvm/nvm.sh && nvm use node && xvfb-run --server-args='-screen 0 1280x1024x24' yarn production"

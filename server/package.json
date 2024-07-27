@@ -68,6 +68,7 @@
     "build": "tsc -b",
     "dev": "tsc -b -w",
     "start": "nodemon --watch dist --watch ../shared/dist --watch ./package.json --watch ./public/presets dist/index.js",
+    "production": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -rf ./dist"
   },
