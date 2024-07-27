@@ -56,4 +56,5 @@ jobs:
               echo "Error: docker-compose.yml not found"
               exit 1
             fi
+            
             docker compose -f docker-compose.yml restart
