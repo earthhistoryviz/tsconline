@@ -19,4 +19,6 @@ services:
       - "3000"
     networks:
       - shared_network
-    command: bash -c "source /root/.nvm/nvm.sh && nvm use node && yarn start"
+    environment:
+      DISPLAY: ":99"
+    command: bash -c "source /root/.nvm/nvm.sh && nvm use node && xvfb-run --server-args='-screen 0 1280x1024x24' yarn start"
