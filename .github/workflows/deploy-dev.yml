@@ -39,7 +39,7 @@ jobs:
             echo 'SESSION_KEY="${{ secrets.SESSION_KEY }}"' >> ./server/.env
             echo 'NODE_ENV="production"' >> ./server/.env
             echo 'RECAPTCHA_SECRET_KEY="${{ secrets.RECAPTCHA_SECRET_KEY }}"' >> ./server/.env
-            echo 'APP_URL=https://tsconline.timescalecreator.org' >> ./server/.env
+            echo 'APP_URL="${{ vars.WEBSITE_URL }}"' >> ./server/.env
             echo 'ADMIN_USER="${{ secrets.ADMIN_USER }}"' >> ./server/.env
             echo 'ADMIN_PASS="${{ secrets.ADMIN_PASS }}"' >> ./server/.env
             echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> ./server/.env
