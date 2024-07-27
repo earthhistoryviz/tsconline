@@ -241,6 +241,9 @@ jobs:
       - name: Generate base lcov file
         run: |
           cd main-branch
+          mv /home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar /home/runner/work/tsconline/main-branch/server/assets/jars/testUsageJar.jar
+          Xvfb :1 -screen 0 1024x768x16 &
+          export DISPLAY=:1
           yarn
           cd shared
           yarn build
