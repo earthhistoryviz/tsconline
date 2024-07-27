@@ -237,6 +237,7 @@ jobs:
           ref: main
           path: main-branch
 
+      # Change to coverage:ci
       - name: Generate base lcov file
         run: |
           cd main-branch
@@ -244,7 +245,7 @@ jobs:
           cd shared
           yarn build
           cd ..
-          yarn coverage:ci
+          yarn coverage
           cp coverage/lcov.info ../base-lcov.info
 
       - name: Generate Code Coverage report
