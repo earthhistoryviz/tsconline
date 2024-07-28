@@ -177,11 +177,6 @@ jobs:
           java-version: "8"
           java-package: "jdk"
 
-      - name: set up make & zip
-        run: |
-          sudo apt install make
-          sudo apt install zip
-
       - name: Build and compile TSCreator Jar for tests
         run: |
           cd ${{ github.workspace }}/tscreator/devel
@@ -194,9 +189,6 @@ jobs:
             echo "Failed to make jar."
             exit 1
           fi
-
-      - name: Install xvfb
-        run: sudo apt-get install xvfb
 
       - name: Run Tests
         id: run_tests
