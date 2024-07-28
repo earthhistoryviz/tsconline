@@ -22,4 +22,5 @@ services:
       - shared_network
     environment:
       DISPLAY: ":99"
-    command: ["/code/entrypoint-no-build.sh"]
+      NODE_ENV: production
+    command: [ "/code/entrypoint-no-build.sh" ]
