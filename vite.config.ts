@@ -4,7 +4,6 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     maxConcurrency: 20,
-    pool: "vmThreads",
     poolOptions: {
       threads: {
         singleThread: true,
