@@ -71,6 +71,12 @@ jobs:
             fi
             echo "false" > /tmp/container_status.txt
             cd /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }}
+            BUILD_CONTAINER_ID=$(docker-compose -f docker-compose-preview.yml ps -q pr-preview-build)
+            if [ -z "$BUILD_CONTAINER_ID" ]; then
+              echo "Error: Failed to get container ID for pr-preview-build."
+              exit 1
+            fi
+            docker wait $BUILD_CONTAINER_ID
             docker-compose -f docker-compose-preview.yml up -d --remove-orphans pr-preview-run
             MAX_WAIT=180
             INTERVAL=5
