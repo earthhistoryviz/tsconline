@@ -233,15 +233,12 @@ jobs:
       # Change to coverage:ci
       - name: Generate base lcov file
         run: |
-          pkill Xvfb || true
-          Xvfb :1 -screen 0 1024x768x16 &
-          export DISPLAY=:1
-          ls
           cd main-branch
-          ls
           mv ${{ github.workspace }}/server/assets/jars/testUsageJar.jar ${{ github.workspace }}/main-branch/server/assets/jars/testUsageJar.jar
           yarn
+          cd shared
           yarn build
+          cd ..
           yarn coverage
           cp coverage/lcov.info ../base-lcov.info
 
