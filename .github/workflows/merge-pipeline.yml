@@ -184,11 +184,10 @@ jobs:
 
       - name: Build and compile TSCreator Jar for tests
         run: |
-          echo ${{ github.workspace }}
           cd ${{ github.workspace }}/tscreator/devel
           make
           make jar
-          find ${{ github.workspace }}/tsconline/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/tsconline/server/assets/jars/testUsageJar.jar \;
+          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/server/assets/jars/testUsageJar.jar \;
           if [ -f "${{ github.workspace }}/server/assets/jars/testUsageJar.jar" ]; then
             echo "Successfully made jar."
           else
