@@ -5,11 +5,6 @@ export default defineConfig({
   test: {
     maxConcurrency: 20,
     pool: "vmThreads",
-    poolOptions: {
-      threads: {
-        singleThread: true,
-      }
-    },
     isolate: false,
     cache: false,
     environment: "node",
