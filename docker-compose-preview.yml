@@ -22,4 +22,4 @@ services:
       - shared_network
     environment:
       DISPLAY: ":99"
-    command: bash -c "source /root/.nvm/nvm.sh && nvm use node && rm -f /tmp/.X99-lock && xvfb-run --server-args='-screen 0 1280x1024x24' yarn production"
+    command: bash -c "source /root/.nvm/nvm.sh && nvm use node && rm -f /tmp/.X99-lock && xvfb-run -n 99 --server-args='-screen 0 1280x1024x24' yarn production"
