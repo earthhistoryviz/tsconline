@@ -3,13 +3,6 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    maxConcurrency: 20,
-    poolOptions: {
-      threads: {
-        singleThread: true,
-      }
-    },
-    isolate: false,
     cache: false,
     environment: "node",
     include: ["server/__tests__/**.test.ts", "app/__tests__/**.test.ts", "shared/__tests__/**.test.ts"],
