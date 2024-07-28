@@ -184,11 +184,12 @@ jobs:
 
       - name: Build and compile TSCreator Jar for tests
         run: |
-          cd /home/runner/work/tsconline/tsconline/tscreator/devel
+          echo ${{ github.workspace }}
+          cd ${{ github.workspace }}/tscreator/devel
           make
           make jar
-          find '/home/runner/work/tsconline/tsconline/tscreator/jars/' -type f -name '*.jar' -exec cp {} '/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar' \;
-          if [ -f "/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar" ]; then
+          find ${{ github.workspace }}/tsconline/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/tsconline/server/assets/jars/testUsageJar.jar \;
+          if [ -f "${{ github.workspace }}/server/assets/jars/testUsageJar.jar" ]; then
             echo "Successfully made jar."
           else
             echo "Failed to make jar."
@@ -242,7 +243,7 @@ jobs:
       - name: Generate base lcov file
         run: |
           cd main-branch
-          mv /home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar /home/runner/work/tsconline/main-branch/server/assets/jars/testUsageJar.jar
+          mv ${{ github.workspace }}/server/assets/jars/testUsageJar.jar ${{ github.workspace }}/main-branch/server/assets/jars/testUsageJar.jar
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
           yarn
