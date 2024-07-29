@@ -13,9 +13,14 @@ services:
 
   pr-preview-run:
     build: .
+    restart: unless-stopped
     volumes:
       - .:/code
     expose:
       - "3000"
     networks:
       - shared_network
+    environment:
+      DISPLAY: ":99"
+      NODE_ENV: production
+    command: [ "/code/entrypoint-no-build.sh" ]

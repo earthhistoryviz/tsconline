@@ -35,6 +35,7 @@
     "prettier-format": "prettier --write \"**/*.{ts,tsx,css}\"",
     "setup": "yarn && yarn install && yarn build",
     "start": "yarn workspace @tsconline/server start",
+    "production": "yarn workspace @tsconline/server run production",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
