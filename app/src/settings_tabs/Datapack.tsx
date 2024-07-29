@@ -21,6 +21,7 @@ export const Datapacks = observer(function Datapacks() {
   const [formOpen, setFormOpen] = useState(false);
 
   const onChange = async (name: string) => {
+    console.log("hello,dpack");
     if (state.config.datapacks.includes(name)) {
       await actions.setDatapackConfig(
         state.config.datapacks.filter((datapack) => datapack !== name),

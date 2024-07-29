@@ -423,6 +423,7 @@ const setPreviousDatapackConfig = action("setPreviousDatapackConfig", (datapacks
 export const setDatapackConfig = action(
   "setDatapackConfig",
   async (datapacks: string[], settingsPath?: string): Promise<boolean> => {
+    console.log("calling");
     if (state.datapackCachedConfiguration.has(datapacks.join(","))) {
       setPreviousDatapackConfig(datapacks);
       return true;
@@ -445,6 +446,7 @@ export const setDatapackConfig = action(
             }
           })
           .catch((e) => {
+
             console.error(e);
             pushError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
             return false;
@@ -482,6 +484,7 @@ export const setDatapackConfig = action(
       // uses preparsed data on server start and appends items together
       for (const datapack of datapacks) {
         await new Promise((resolve) => setTimeout(resolve, 0));
+        console.log(state.datapackIndex[datapack]);
         if (!datapack || !state.datapackIndex[datapack])
           throw new Error(`File requested doesn't exist on server: ${datapack}`);
         const datapackParsingPack = state.datapackIndex[datapack]!;

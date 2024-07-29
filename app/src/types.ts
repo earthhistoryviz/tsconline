@@ -24,6 +24,16 @@ export type DownloadPdfCompleteMessage = {
   value: Blob | undefined;
 };
 
+export type SetDatapackConfigMessage = {
+  datapacks: string[];
+  settingsPath?: string;
+}
+
+export type SetDatapackConfigCompleteMessage = {
+  status: "success" | "failure";
+  value: boolean | undefined;
+}
+
 //id: unique id among search results
 //columnName: name of column that event/column is under
 //columnPath: path of edit names up until chart root for display

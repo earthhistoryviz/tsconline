@@ -10,6 +10,7 @@ import { useTheme, styled } from "@mui/material/styles";
 import { TSCIcon, TSCButton, TSCCard, StyledScrollbar } from "./components";
 import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import "./Home.css";
+import { SetDatapackConfigCompleteMessage, SetDatapackConfigMessage } from "./types";
 
 const HeaderContainer = styled("div")(({ theme }) => ({
   display: "flex",
@@ -97,14 +98,40 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                   <TSCCard
                     preset={preset}
                     generateChart={async () => {
-                      const success = await actions.setDatapackConfig(
-                        preset.datapacks.map((datapack) => datapack.file),
-                        preset.settings
-                      );
-                      // wait to see if we can grab necessary data
-                      if (success) {
-                        actions.initiateChartGeneration(navigate, "/home");
+                      console.log("hello, tsccard");
+
+                      const setDatapackConfigWorker: Worker = new Worker(new URL("./util/workers/set-datapack-config.ts", import.meta.url), {
+                        type: "module"
+                      });
+                      console.log("hello, tsccard2");
+                      const message: SetDatapackConfigMessage = { datapacks: preset.datapacks.map((datapack) => datapack.file), settingsPath: preset.settings };
+                      console.log("hello, tsccard3");
+                      setDatapackConfigWorker.postMessage(message);
+                      console.log("hello, tsccard4");
+                      setDatapackConfigWorker.onmessage = function (e: MessageEvent<SetDatapackConfigCompleteMessage>) {
+                        console.log("hello, tsccard5");
+                        const { status, value } = e.data;
+                        console.log(status + value);
+                        if (status === "success" && value) {
+                          actions.initiateChartGeneration(navigate, "/home");
+                          //actions.pushSnackbar("Saved Chart as PDF!", "success");
+                          console.log("sucessfully set dp config");
+                        } else {
+                          //actions.pushSnackbar("Saving Chart Timed Out", "info");
+                          console.log("setting dp config timed out");
+                        }
+
+                        setDatapackConfigWorker.terminate();
                       }
+
+                      // const success = await actions.setDatapackConfig(
+                      //   preset.datapacks.map((datapack) => datapack.file),
+                      //   preset.settings
+                      // );
+                      // wait to see if we can grab necessary data
+                      // if (success) {
+                      //   actions.initiateChartGeneration(navigate, "/home");
+                      // }
                       //TODO add an error message saying the data is irregular and can't be loaded
                     }}
                   />
