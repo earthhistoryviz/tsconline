@@ -134,7 +134,7 @@ const Status = observer(({ info }: { info: EventSearchInfo }) => {
 });
 
 const Column = observer(({ info }: { info: EventSearchInfo }) => {
-  const { state, actions } = useContext(context);
+  const { state } = useContext(context);
   const { columnName, columnPath } = info;
   const column = state.settingsTabs.columnHashMap.get(columnName);
 
@@ -147,11 +147,7 @@ const Column = observer(({ info }: { info: EventSearchInfo }) => {
   }
   return (
     <>
-      <div
-        className="search-result-column-container"
-        onClick={() => {
-          actions.toggleSettingsTabColumn(column);
-        }}>
+      <div className="search-result-column-container">
         <CustomTooltip
           enterDelay={tooltipDelayTime}
           enterNextDelay={tooltipDelayTime}
@@ -173,10 +169,10 @@ const verifyAgesAndAddAgeMargin = (age: { topAge: number; baseAge: number } | un
   let min = age.topAge;
   let max = age.baseAge;
   //for floating point inaccuracies
-  if (Number(bigDecimal.add(String(min), "-3")) < 0) {
+  if ((min = Number(bigDecimal.add(String(min), "-3"))) < 0) {
     min = 0;
   }
-  if (Number(bigDecimal.add(String(min), "3")) < 0) {
+  if ((max = Number(bigDecimal.add(String(max), "3"))) < 0) {
     max = 0;
   }
   return { topAge: min, baseAge: max };
@@ -202,6 +198,7 @@ const Center = observer(({ info }: { info: EventSearchInfo }) => {
   }
   const centerTimeOnEvent = () => {
     const ages = verifyAgesAndAddAgeMargin(info.age);
+    console.log(ages);
     if (!ages) return;
     actions.setTopStageAge(ages.topAge, info.unit);
     actions.setBaseStageAge(ages.baseAge, info.unit);
