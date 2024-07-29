@@ -157,7 +157,6 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
       return;
     }
 
-
     try {
       assertChartInfo(answer);
       generalActions.setChartHash(answer.hash);
