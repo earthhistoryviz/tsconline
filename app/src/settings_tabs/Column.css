@@ -245,6 +245,7 @@
     flex-direction: column;
   }
   .column-accordion-wrapper {
+    position: relative;
     max-width: 100vw;
     width: 100vw;
     min-height: 20vh;
@@ -260,4 +261,13 @@
   .column-search-bar > .MuiFormLabel-root {
     font-size: 0.8rem;
   }
+}
+
+.scroll-to-top-button {
+  position: fixed;
+  bottom: 2.5%;
+  left: 27%;
+  background-color: #66a3d2;
+  color: #fff;
+  z-index: 1000;
 }

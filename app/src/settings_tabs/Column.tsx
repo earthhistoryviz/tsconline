@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext } from "react";
+import React, { useContext, useState, useEffect, useRef } from "react";
 import Typography from "@mui/material/Typography";
 import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
@@ -22,17 +22,47 @@ import CompressIcon from "@mui/icons-material/Compress";
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
   const { state, actions } = useContext(context);
-  //state array of column names that are expanded
+  const [showScroll, setShowScroll] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = () => {
+    if (scrollRef.current && scrollRef.current.scrollTop > 200) {
+      setShowScroll(true);
+    } else {
+      setShowScroll(false);
+    }
+  };
+
+  const scrollToTop = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  useEffect(() => {
+    const ref = scrollRef.current;
+    if (ref) {
+      ref.addEventListener("scroll", handleScroll);
+    }
+    return () => {
+      if (ref) {
+        ref.removeEventListener("scroll", handleScroll);
+      }
+    };
+  }, []);
+
   return (
     <div className="column-top-level-container">
       <ColumnSearchBar />
       <div className="column-accordion-and-menu-container">
         <Box
           id="ResizableColumnAccordionWrapper"
+          ref={scrollRef}
           border={1}
           borderColor="divider"
           bgcolor="secondaryBackground.main"
-          className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}>
+          className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}
+          position="relative">
           <div className="column-filter-buttons">
             <CustomTooltip title="Expand All" placement="top">
               <IconButton
@@ -61,6 +91,12 @@ export const Column = observer(function Column() {
             Object.entries(state.settingsTabs.columns.children).map(([childName, childDetails]) => (
               <ColumnAccordion key={childName} details={childDetails} />
             ))}
+          {/* Button to take users to top of column menu when scrolling */}
+          {showScroll && (
+            <IconButton onClick={scrollToTop} className="scroll-to-top-button">
+              <ArrowForwardIosSharpIcon style={{ transform: "rotate(-90deg)" }} />
+            </IconButton>
+          )}
         </Box>
         <ColumnMenu />
       </div>
