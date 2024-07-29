@@ -3,77 +3,8 @@ name: Deploy Preview
 on:
   issue_comment:
     types: [created]
-  workflow_dispatch:
-    inputs:
-      pr_number:
-        description: 'PR number'
-        required: true
-        default: ''
 
 jobs:
-  test-deploy:
-    if : ${{ !github.event.issue.pull_request }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up SSH key
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.SSH_KEY }}
-
-      - name: Add known hosts
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -H dev.geolex.org >> ~/.ssh/known_hosts
-
-      - name: Deploy preview
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: dev.geolex.org
-          username: deployuser
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            if [ ! -d /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }} ]; then
-              echo "Error: Directory /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }} not found."
-              exit 1
-            fi
-            cd /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }}
-            docker ps --filter "name=pr-preview" --format "{{.Names}}" | grep -oP "pr-preview-\K[0-9]+" > /tmp/running_pr.txt
-            RUNNING_CONTAINER=$(docker ps --filter "name=pr-preview-run" --format "{{.ID}}")
-            if [ -n "$RUNNING_CONTAINER" ]; then
-              echo "Stopping and removing container $RUNNING_CONTAINER"
-              docker stop $RUNNING_CONTAINER
-              docker rm $RUNNING_CONTAINER
-            fi 
-            BUILD_CONTAINER_ID=$(docker-compose -f docker-compose-preview.yml ps -q pr-preview-build)
-            if [ -z "$BUILD_CONTAINER_ID" ]; then
-              echo "Error: Failed to get container ID for pr-preview-build."
-              exit 1
-            fi
-            docker wait $BUILD_CONTAINER_ID
-            docker-compose -f docker-compose-preview.yml up -d --remove-orphans pr-preview-run
-            CONTAINER_ID=$(docker-compose -f docker-compose-preview.yml ps -q pr-preview-run)
-            if [ -z "$CONTAINER_ID" ]; then
-              echo "Error: Failed to get container ID for pr-preview-run."
-              exit 1
-            fi
-
-            START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
-
-            MAX_WAIT=180
-            INTERVAL=5
-            ELAPSED=0
-
-            while ! docker logs --since "$START_TIME" "$CONTAINER_ID" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
-              if [ $ELAPSED -ge $MAX_WAIT ]; then
-                echo "Max wait time exceeded. Exiting..."
-                docker-compose -f docker-compose-preview.yml down
-                exit 1
-              fi
-              echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
-              sleep $INTERVAL
-              ELAPSED=$((ELAPSED + INTERVAL))
-            done
-
   deploy-preview:
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/deploy' }}
     runs-on: ubuntu-latest
