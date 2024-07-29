@@ -2,29 +2,26 @@ import { TableCell, TableBody, TableContainer, Paper, SvgIcon, Typography, Box, 
 import React, { useContext } from "react";
 import { Table } from "react-bootstrap";
 import { TableComponents, TableVirtuoso } from "react-virtuoso";
-import { CustomTooltip, StyledScrollbar } from "../components";
+import { CustomTooltip, StyledScrollbar, TSCCheckbox } from "../components";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import { ErrorOutline } from "@mui/icons-material";
 import NotesIcon from "@mui/icons-material/Notes";
 import { useTheme } from "@mui/material/styles";
 import { EventSearchInfo, GroupedEventSearchInfo } from "../types";
-import { trimQuotes } from "../util/util";
+import { checkIfDataIsInRange, trimQuotes } from "../util/util";
 import bigDecimal from "js-big-decimal";
 import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import FormatLineSpacingIcon from "@mui/icons-material/FormatLineSpacing";
-import CloseIcon from "@mui/icons-material/Close";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import CheckIcon from "@mui/icons-material/Check";
-import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
 
 import "./Results.css";
 
 const tooltipDelayTime = 700;
 
 const Status = observer(({ info }: { info: EventSearchInfo }) => {
-  const { state } = useContext(context);
+  const { state, actions } = useContext(context);
   const column = state.settingsTabs.columnHashMap.get(info.columnName);
   if (!column) {
     return (
@@ -48,76 +45,30 @@ const Status = observer(({ info }: { info: EventSearchInfo }) => {
     }
     return true;
   };
-  const isAgeWithinTimeInterval = () => {
-    const { state } = useContext(context);
-    if (!(info.unit in state.settings.timeSettings)) {
-      console.error(info.unit + "not in time settings");
-      return false;
-    }
-    const chartTopAge = state.settings.timeSettings[info.unit].topStageAge;
-    const chartBaseAge = state.settings.timeSettings[info.unit].baseStageAge;
-    const ages = info.age;
-    if (!ages) return true;
-    if (ages.topAge >= chartTopAge && ages.baseAge <= chartBaseAge) {
-      return true;
-    }
-    return false;
-  };
-  if (!info.age) {
-    return (
-      <div>
-        {ColumnPathToRootOn() ? (
-          <CustomTooltip
-            enterDelay={tooltipDelayTime}
-            enterNextDelay={tooltipDelayTime}
-            disableInteractive
-            placement="top"
-            title="Column Toggled ON">
-            <CheckIcon color="success" />
-          </CustomTooltip>
-        ) : (
-          <CustomTooltip
-            enterDelay={tooltipDelayTime}
-            enterNextDelay={tooltipDelayTime}
-            disableInteractive
-            placement="top"
-            title="Column Toggled OFF">
-            <CloseIcon color="error" />
-          </CustomTooltip>
-        )}
-      </div>
-    );
-  }
+  const ages = info.age;
+  const dataInRange = ages
+    ? checkIfDataIsInRange(
+        ages.topAge,
+        ages.baseAge,
+        state.settings.timeSettings[column.units].topStageAge,
+        state.settings.timeSettings[column.units].baseStageAge
+      )
+    : true;
   return (
     <div>
-      {ColumnPathToRootOn() ? (
-        isAgeWithinTimeInterval() ? (
-          <CustomTooltip
-            enterDelay={tooltipDelayTime}
-            enterNextDelay={tooltipDelayTime}
-            disableInteractive
-            placement="top"
-            title="Column Toggled ON, age within time interval">
-            <CheckIcon color="success" />
-          </CustomTooltip>
-        ) : (
-          <CustomTooltip
-            enterDelay={tooltipDelayTime}
-            enterNextDelay={tooltipDelayTime}
-            disableInteractive
-            placement="top"
-            title="Column Toggled ON, age not within time interval">
-            <PriorityHighIcon sx={{ color: "orange" }} />
-          </CustomTooltip>
-        )
-      ) : isAgeWithinTimeInterval() ? (
+      {dataInRange ? (
         <CustomTooltip
           enterDelay={tooltipDelayTime}
           enterNextDelay={tooltipDelayTime}
           disableInteractive
           placement="top"
-          title="Column Toggled OFF, age within time interval">
-          <PriorityHighIcon sx={{ color: "orange" }} />
+          title={ColumnPathToRootOn() ? "Column Toggled ON" : "Column Toggled OFF"}>
+          <TSCCheckbox
+            className="status-checkbox"
+            size="large"
+            onClick={() => actions.toggleSettingsTabColumn(column)}
+            checked={ColumnPathToRootOn()}
+          />
         </CustomTooltip>
       ) : (
         <CustomTooltip
@@ -125,8 +76,8 @@ const Status = observer(({ info }: { info: EventSearchInfo }) => {
           enterNextDelay={tooltipDelayTime}
           disableInteractive
           placement="top"
-          title="Column Toggled OFF, age not within time interval">
-          <CloseIcon color="error" />
+          title="age not within time interval">
+          <ErrorOutline className="status-error-icon" color="error" />
         </CustomTooltip>
       )}
     </div>
@@ -459,16 +410,18 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
     <Box className="table-container" id="event-search-results-table">
       <CustomTooltip
         enterDelay={tooltipDelayTime}
+        enterNextDelay={tooltipDelayTime}
+        placement="top"
         title={
           <>
+            Status: for ages with a range, the error outline will only show up if the entire range is outside the
+            selected time interval.
+            <br />
             Center: sets the time interval to the selected age surrounded with 3myr
             <br />
             Extend: takes the smallest top age and greatest base age between the current time interval and the selected
             age surrounded with 3myr
             <br />
-            Status: Events with ages will have a yellow/exclamation point status that indicates that either the column
-            is turned on or its age is within the time interval, but not both. Hover over the icon to see what you have
-            to change.
           </>
         }>
         <HelpOutlineIcon />
