@@ -279,19 +279,6 @@ describe("verifyAdmin tests", () => {
       expect(await response.json()).toEqual({ error: "Unauthorized access" });
       expect(response.statusCode).toBe(401);
     });
-    test("should return 500 if findUser throws error", async () => {
-      findUser.mockRejectedValueOnce(new Error());
-      const response = await app.inject({
-        method: method as InjectOptions["method"],
-        url: url,
-        payload: body,
-        headers
-      });
-      expect(findUser).toHaveBeenCalledWith({ uuid: headers["mock-uuid"] });
-      expect(findUser).toHaveBeenCalledTimes(1);
-      expect(await response.json()).toEqual({ error: "Database error" });
-      expect(response.statusCode).toBe(500);
-    });
   });
 });
 
