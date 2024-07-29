@@ -76,6 +76,7 @@ jobs:
             while ! docker logs --since "$START_TIME" "$CONTAINER_ID" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"
               if [ $ELAPSED -ge $MAX_WAIT ]; then
                 echo "Max wait time exceeded. Exiting..."
+                docker-compose -f docker-compose.yml down
                 exit 1
               fi
               echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
