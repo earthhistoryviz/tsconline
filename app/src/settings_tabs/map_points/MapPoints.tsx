@@ -58,7 +58,7 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
     if (b === "World Map") return 1;
     return a.localeCompare(b);
   });
-  const sortedMapEntries = [];
+  const sortedMapEntries: Array<[string, MapInfo[string]]> = [];
   // parent maps first
   for (const parent of sortedMapHierarchyKeys) {
     if (mapInfo[parent]) {
@@ -74,7 +74,6 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
     }
   }
   const sortedMapInfoObj: MapInfo = Object.fromEntries(sortedMapEntries);
-  assertMapInfo(sortedMapInfoObj);
   return (
     <div className="map=list">
       <Box>
