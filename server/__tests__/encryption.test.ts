@@ -33,12 +33,13 @@ process.stdout.write(`Base directory: ${baseDir}\n`);
 process.stdout.write(`Result path: ${resultPath}\n`);
 process.stdout.write(`Path of module: ${path.resolve(__dirname)}\n`);
 if (await checkFileExists(testUsageJarPath)) {
+  throw new Error("test");
   process.stdout.write("Test usage jar file exists");
   jarFilePath = testUsageJarPath;
   resultPath = path.join(baseDir, "server/__tests__/__data__/encryption-test-generated-file");
 } else {
-  throw new Error("Test usage jar file doesn't exist");
   try {
+    throw new Error("test");
     const configPath = path.join(baseDir, "server/assets/config.json");
     const contents = JSON.parse((await readFile(configPath)).toString());
     assertAssetConfig(contents);
