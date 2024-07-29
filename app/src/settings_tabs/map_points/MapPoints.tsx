@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { context } from "../../state";
 import { useTheme } from "@mui/material/styles";
 import { Typography, Dialog, List, Box, ListItemButton, ListItemAvatar, ListItemText, Avatar } from "@mui/material";
-import type { MapInfo } from "@tsconline/shared";
+import { assertMapInfo, type MapInfo } from "@tsconline/shared";
 import { styled } from "@mui/material/styles";
 import { devSafeUrl } from "../../util";
 import { observer } from "mobx-react-lite";
@@ -52,12 +52,35 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
     actions.setSelectedMap(name);
     actions.setIsMapViewerOpen(true);
   };
-
+  // Sort mapHierarchy keys so that world map is always the first
+  const sortedMapHierarchyKeys = Object.keys(state.mapState.mapHierarchy).sort((a, b) => {
+    if (a === "World Map") return -1;
+    if (b === "World Map") return 1;
+    return a.localeCompare(b);
+  });
+  const sortedMapEntries = [];
+  // parent maps first
+  for (const parent of sortedMapHierarchyKeys) {
+    if (mapInfo[parent]) {
+      sortedMapEntries.push([parent, mapInfo[parent]]);
+    }
+  }
+  // then their children
+  for (const parent of sortedMapHierarchyKeys) {
+    for (const child of state.mapState.mapHierarchy[parent]) {
+      if (!sortedMapEntries.includes([child, mapInfo[child]]) && mapInfo[child]) {
+        sortedMapEntries.push([child, mapInfo[child]]);
+      }
+    }
+  }
+  const sortedMapInfoObj = Object.fromEntries(sortedMapEntries);
+  assertMapInfo(sortedMapInfoObj);
   return (
     <div className="map=list">
       <Box>
         <List>
-          {Object.entries(mapInfo).map(([name, map]) => {
+          {Object.entries(sortedMapInfoObj).map(([name, map]) => {
+            console.log("name: " + name, " ,parent: " + map.parent?.name)
             return (
               <MapListItemButton
                 disableRipple
