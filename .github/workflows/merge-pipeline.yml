@@ -221,10 +221,6 @@ jobs:
             }
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check for any test failures
-        if: steps.run_tests.outputs.test_failed == 'true'
-        run: exit 1
-
       - name: Checkout main branch for base lcov file
         uses: actions/checkout@v4
         with:
@@ -237,8 +233,9 @@ jobs:
           pkill Xvfb || true
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
-          ###### REMOVE THIS LINE BELOW BEFORE MERGING ######
+          ###### REMOVE THE CP LINES BELOW BEFORE MERGING ######
           cp ${{ github.workspace }}/server/__tests__/encryption.test.ts ${{ github.workspace }}/main-branch/server/__tests__/encryption.test.ts
+          cp ${{ github.workspace }}/vite.config.ts ${{ github.workspace }}/main-branch/vite.config.ts
           cd main-branch
           mv ${{ github.workspace }}/server/assets/jars/testUsageJar.jar ${{ github.workspace }}/main-branch/server/assets/jars/testUsageJar.jar
           yarn
@@ -249,6 +246,7 @@ jobs:
           yarn coverage
           cp coverage/coverage-summary.json ../coverage-summary.json
           cd ..
+        ###### REMOVE THE CONTINUE-ON-ERROR LINE ABOVE BEFORE MERGING #######
 
       - name: Generate Code Coverage report
         id: code-coverage
@@ -256,6 +254,10 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           json-summary-compare-path: coverage-summary.json
+
+      - name: Check for any test failures
+        if: steps.run_tests.outputs.test_failed == 'true'
+        run: exit 1
 
   wait-for-checks:
     runs-on: ubuntu-latest
