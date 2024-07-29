@@ -302,7 +302,8 @@ jobs:
               MAX_WAIT=180
               INTERVAL=5
               ELAPSED=0
-              while ! docker-compose -f docker-compose-preview.yml logs pr-preview-run | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
+              START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
+              while ! docker logs --since "$START_TIME" "$CONTAINER_NAME" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
                 if [ $ELAPSED -ge $MAX_WAIT ]; then
                   echo "Max wait time exceeded. Exiting..."
                   exit 1
