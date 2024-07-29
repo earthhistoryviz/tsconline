@@ -28,12 +28,12 @@ const baseDir = path.resolve(__dirname, '../..');
 let jarFilePath = "";
 let resultPath = path.join(baseDir, "server/__tests__/__data__/encryption-test-generated-file");
 const testUsageJarPath = path.join(baseDir, "server/assets/jars/testUsageJar.jar");
-console.log("Test usage jar path:", testUsageJarPath);
-console.log("Base directory:", baseDir);
-console.log("Result path:", resultPath);
-console.log("Path of module:", path.resolve(__dirname));
+process.stdout.write(`Test usage jar path: ${testUsageJarPath}\n`);
+process.stdout.write(`Base directory: ${baseDir}\n`);
+process.stdout.write(`Result path: ${resultPath}\n`);
+process.stdout.write(`Path of module: ${path.resolve(__dirname)}\n`);
 if (await checkFileExists(testUsageJarPath)) {
-  console.log("Test usage jar file exists");
+  process.stdout.write("Test usage jar file exists");
   jarFilePath = testUsageJarPath;
   resultPath = path.join(baseDir, "server/__tests__/__data__/encryption-test-generated-file");
 } else {
