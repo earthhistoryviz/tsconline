@@ -3,7 +3,7 @@ import { displayServerError } from "./util-actions";
 import { state } from "../state";
 import { action } from "mobx";
 import { fetcher } from "../../util";
-import { ColumnInfo, assertChartInfo } from "@tsconline/shared";
+import { ColumnInfo, assertChartInfo, isServerResponseError } from "@tsconline/shared";
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -150,6 +150,13 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
     });
     const answer = await response.json();
     // will check if svg is loaded
+    if (isServerResponseError(answer)) {
+      // If the server sends an error, display it
+      displayServerError(answer, ErrorCodes.INVALID_CHART_FROM_JAR, ErrorMessages[ErrorCodes.INVALID_CHART_FROM_JAR]);
+      generalActions.setChartLoading(false);
+      return;
+    }
+
     try {
       assertChartInfo(answer);
       generalActions.setChartHash(answer.hash);
