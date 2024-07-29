@@ -61,15 +61,19 @@ jobs:
           username: deployuser
           key: ${{ secrets.SSH_KEY }}
           script: |
-            if docker ps --filter "name=pr-preview-${{ github.event.issue.number }}" | grep -q pr-preview; then
+            if docker ps --filter "name=pr-preview-${{ github.event.issue.number }}" | grep -q pr-preview-run; then
               echo "false" > /tmp/container_status.txt
               exit 0
             fi
-            if docker ps --filter "name=pr-preview" | grep -q pr-preview; then
+            if docker ps --filter "name=pr-preview" | grep -q pr-preview-run; then
               echo "true" > /tmp/container_status.txt
               exit 0
             fi
             echo "false" > /tmp/container_status.txt
+            if [ ! -d /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }} ]; then
+              echo "Error: Directory /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }} not found."
+              exit 1
+            fi
             cd /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }}
             BUILD_CONTAINER_ID=$(docker-compose -f docker-compose-preview.yml ps -q pr-preview-build)
             if [ -z "$BUILD_CONTAINER_ID" ]; then
@@ -78,12 +82,23 @@ jobs:
             fi
             docker wait $BUILD_CONTAINER_ID
             docker-compose -f docker-compose-preview.yml up -d --remove-orphans pr-preview-run
+
+            CONTAINER_ID=$(docker-compose -f docker-compose-preview.yml ps -q pr-preview-run)
+            if [ -z "$CONTAINER_ID" ]; then
+              echo "Error: Failed to get container ID for pr-preview-run."
+              exit 1
+            fi
+
             MAX_WAIT=180
             INTERVAL=5
             ELAPSED=0
-            while ! docker-compose -f docker-compose-preview.yml logs | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
+
+            START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
+
+            while ! docker logs --since "$START_TIME" "$CONTAINER_ID" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
               if [ $ELAPSED -ge $MAX_WAIT ]; then
                 echo "Max wait time exceeded. Exiting..."
+                docker-compose -f docker-compose-preview.yml down
                 exit 1
               fi
               echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
@@ -170,19 +185,41 @@ jobs:
           username: deployuser
           key: ${{ secrets.SSH_KEY }}
           script: |
+            if [ ! -d /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }} ]; then
+              echo "Error: Directory /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }} not found."
+              exit 1
+            fi
             cd /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }}
             docker ps --filter "name=pr-preview" --format "{{.Names}}" | grep -oP "pr-preview-\K[0-9]+" > /tmp/running_pr.txt
-            RUNNING_CONTAINER=$(docker ps --filter "name=pr-preview" --format "{{.ID}}")
-            echo "Stopping and removing container $RUNNING_CONTAINER"
-            docker stop $RUNNING_CONTAINER
-            docker rm $RUNNING_CONTAINER
+            RUNNING_CONTAINER=$(docker ps --filter "name=pr-preview-run" --format "{{.ID}}")
+            if [ -n "$RUNNING_CONTAINER" ]; then
+              echo "Stopping and removing container $RUNNING_CONTAINER"
+              docker stop $RUNNING_CONTAINER
+              docker rm $RUNNING_CONTAINER
+            fi 
+            BUILD_CONTAINER_ID=$(docker-compose -f docker-compose-preview.yml ps -q pr-preview-build)
+            if [ -z "$BUILD_CONTAINER_ID" ]; then
+              echo "Error: Failed to get container ID for pr-preview-build."
+              exit 1
+            fi
+            docker wait $BUILD_CONTAINER_ID
             docker-compose -f docker-compose-preview.yml up -d --remove-orphans pr-preview-run
+            CONTAINER_ID=$(docker-compose -f docker-compose-preview.yml ps -q pr-preview-run)
+            if [ -z "$CONTAINER_ID" ]; then
+              echo "Error: Failed to get container ID for pr-preview-run."
+              exit 1
+            fi
+
+            START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
+
             MAX_WAIT=180
             INTERVAL=5
             ELAPSED=0
-            while ! docker-compose -f docker-compose-preview.yml logs | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
+
+            while ! docker logs --since "$START_TIME" "$CONTAINER_ID" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
               if [ $ELAPSED -ge $MAX_WAIT ]; then
                 echo "Max wait time exceeded. Exiting..."
+                docker-compose -f docker-compose-preview.yml down
                 exit 1
               fi
               echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
