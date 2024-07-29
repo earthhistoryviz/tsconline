@@ -230,17 +230,17 @@ jobs:
           path: main-branch
           fetch-depth: 0
 
-      # Change to coverage:ci
       - name: Generate base lcov file
         run: |
-          ls
+          ###### REMOVE THIS LINE BElOW ###### 
+          cp ${{ github.workspace }}/server/__tests__/encryption.test.ts ${{ github.workspace }}/main-branch/server/__tests__/encryption.test.ts
           cd main-branch
           mv ${{ github.workspace }}/server/assets/jars/testUsageJar.jar ${{ github.workspace }}/main-branch/server/assets/jars/testUsageJar.jar
-          ls ${{ github.workspace }}/main-branch/server/assets/jars
           yarn
           cd shared
           yarn build
           cd ..
+          ####### CHANGE THIS TO coverage:ci #######
           yarn coverage
           cp coverage/lcov.info ../base-lcov.info
 
