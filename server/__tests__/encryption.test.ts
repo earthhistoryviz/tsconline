@@ -28,11 +28,15 @@ const baseDir = path.resolve(__dirname, '../..');
 let jarFilePath = "";
 let resultPath = path.join(baseDir, "server/__tests__/__data__/encryption-test-generated-file");
 const testUsageJarPath = path.join(baseDir, "server/assets/jars/testUsageJar.jar");
+console.log("Test usage jar path:", testUsageJarPath);
+console.log("Base directory:", baseDir);
+console.log("Result path:", resultPath);
+console.log("Path of module:", path.resolve(__dirname));
 if (await checkFileExists(testUsageJarPath)) {
+  console.log("Test usage jar file exists");
   jarFilePath = testUsageJarPath;
   resultPath = path.join(baseDir, "server/__tests__/__data__/encryption-test-generated-file");
 } else {
-  throw new Error("ERROR: testUsageJar.jar file path shouldn't be empty");
   try {
     const configPath = path.join(baseDir, "server/assets/config.json");
     const contents = JSON.parse((await readFile(configPath)).toString());
@@ -42,6 +46,7 @@ if (await checkFileExists(testUsageJarPath)) {
     throw new Error("ERROR: Failed to load local jar file path from assets/config.json. Error was: " + e);
   }
 }
+console.log("JAR file path determined:", jarFilePath);
 
 if (!jarFilePath) throw new Error("jar file path shouldn't be empty");
 
