@@ -73,7 +73,7 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
       }
     }
   }
-  const sortedMapInfoObj = Object.fromEntries(sortedMapEntries);
+  const sortedMapInfoObj: MapInfo = Object.fromEntries(sortedMapEntries);
   assertMapInfo(sortedMapInfoObj);
   return (
     <div className="map=list">
