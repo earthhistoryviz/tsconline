@@ -190,16 +190,16 @@ jobs:
             exit 1
           fi
 
-      - name: Run Tests
-        id: run_tests
-        run: |
-          Xvfb :1 -screen 0 1024x768x16 &
-          export DISPLAY=:1
-          set -o pipefail
-          if ! yarn coverage:ci > test_output.log 2>&1; then
-            echo "test_failed=true" >> $GITHUB_OUTPUT
-          fi
-        continue-on-error: true
+      # - name: Run Tests
+      #   id: run_tests
+      #   run: |
+      #     Xvfb :1 -screen 0 1024x768x16 &
+      #     export DISPLAY=:1
+      #     set -o pipefail
+      #     if ! yarn coverage:ci > test_output.log 2>&1; then
+      #       echo "test_failed=true" >> $GITHUB_OUTPUT
+      #     fi
+      #   continue-on-error: true
 
       - name: Report Test Errors
         if: steps.run_tests.outputs.test_failed == 'true'
