@@ -5,7 +5,6 @@ export default defineConfig({
   test: {
     maxConcurrency: 20,
     pool: "vmThreads",
-    isolate: false,
     cache: false,
     environment: "node",
     include: ["server/__tests__/**.test.ts", "app/__tests__/**.test.ts", "shared/__tests__/**.test.ts"],
