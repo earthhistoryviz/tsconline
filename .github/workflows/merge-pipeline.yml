@@ -237,8 +237,9 @@ jobs:
           pkill Xvfb || true
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
-          ###### REMOVE THIS LINE BELOW BEFORE MERGING ######
+          ###### REMOVE THE CP LINES BELOW BEFORE MERGING ######
           cp ${{ github.workspace }}/server/__tests__/encryption.test.ts ${{ github.workspace }}/main-branch/server/__tests__/encryption.test.ts
+          cp ${{ github.workspace }}/vite.config.ts ${{ github.workspace }}/main-branch/vite.config.ts
           cd main-branch
           mv ${{ github.workspace }}/server/assets/jars/testUsageJar.jar ${{ github.workspace }}/main-branch/server/assets/jars/testUsageJar.jar
           yarn
