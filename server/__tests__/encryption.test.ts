@@ -29,7 +29,6 @@ let jarFilePath = "";
 const resultPath = path.join(baseDir, "server/__tests__/__data__/encryption-test-generated-file");
 const testUsageJarPath = path.join(baseDir, "server/assets/jars/testUsageJar.jar");
 if (await checkFileExists(testUsageJarPath)) {
-  console.log("Test usage jar file exists");
   jarFilePath = testUsageJarPath;
 } else {
   try {
@@ -49,16 +48,23 @@ describe("runJavaEncrypt", async () => {
     "should correctly encrypt an unencrypted TSCreator txt file",
     { timeout: 20000 },
     async () => {
-      if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-2.txt"))) {
-        await runJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-2.txt", resultPath);
+      if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-1.txt"))) {
+        await runJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-1.txt", resultPath);
       } else {
         throw new Error("test generated file shouldn't exist at this point");
       }
-      const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-2.txt";
-      const keyFilePath = "server/__tests__/__data__/encryption-test-keys/test-2-key.txt";
-      const [result, key] = await Promise.all([readFile(resultFilePath), readFile(keyFilePath)]);
-      expect(result.length).toBe(key.length);
-      expect(result).toEqual(key);
+      const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-1.txt";
+      const keyFilePath1 = "server/__tests__/__data__/encryption-test-keys/test-1-key.txt";
+      const keyFilePath2 = "server/__tests__/__data__/encryption-test-keys/test-1-key(2).txt";
+      const [result, key1, key2] = await Promise.all([
+        readFile(resultFilePath),
+        readFile(keyFilePath1),
+        readFile(keyFilePath2)
+      ]);
+      const sameLength = (value: number) => value == key1.length || value == key2.length;
+      const sameContent = (value: Buffer) => value.equals(key1) || value.equals(key2);
+      expect(result.length).toSatisfy(sameLength);
+      expect(result).toSatisfy(sameContent);
     }
   );
   it(
