@@ -149,7 +149,6 @@ const Center = observer(({ info }: { info: EventSearchInfo }) => {
   }
   const centerTimeOnEvent = () => {
     const ages = verifyAgesAndAddAgeMargin(info.age);
-    console.log(ages);
     if (!ages) return;
     actions.setTopStageAge(ages.topAge, info.unit);
     actions.setBaseStageAge(ages.baseAge, info.unit);
