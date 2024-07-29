@@ -97,6 +97,12 @@ export type DatapackDescriptionInfo = {
   title: string;
   file: string;
   size: string;
+  date?: string;
+  authoredBy: string;
+  tags: string[];
+  references: string[];
+  contact?: string;
+  notes?: string;
 };
 
 export function assertAdminConfig(o: any): asserts o is AdminConfig {
@@ -152,6 +158,20 @@ export function assertDatapackDescriptionInfo(o: any): asserts o is DatapackDesc
   if (typeof o.title !== "string") throw new Error("DatapackDescriptionInfo title must be of type string");
   if (typeof o.file !== "string") throw new Error("DatapackDescriptionInfo file must be of type string");
   if (typeof o.size !== "string") throw new Error("DatapackDescriptionInfo size must be of type string");
+  if (typeof o.authoredBy !== "string") throw new Error("DatapackDescriptionInfo authoredBy must be of type string");
+  if (!Array.isArray(o.tags)) throw new Error("DatapackDescriptionInfo tags must be an array");
+  for (const tag of o.tags) {
+    if (typeof tag !== "string") throw new Error("DatapackDescriptionInfo tags must be an array of strings");
+  }
+  if (o.date && typeof o.date !== "string") throw new Error("DatapackDescriptionInfo date must be of type string");
+  if (!Array.isArray(o.references)) throw new Error("DatapackDescriptionInfo references must be an array");
+  for (const reference of o.references) {
+    if (typeof reference !== "string")
+      throw new Error("DatapackDescriptionInfo references must be an array of strings");
+  }
+  if ("contact" in o && typeof o.contact !== "string")
+    throw new Error("DatapackDescriptionInfo contact must be a string");
+  if ("notes" in o && typeof o.notes !== "string") throw new Error("DatapackDescriptionInfo notes must be a string");
 }
 
 export function assertAssetConfig(o: any): asserts o is AssetConfig {

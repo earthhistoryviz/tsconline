@@ -43,7 +43,7 @@ export type DatapackParsingPack = {
   formatVersion: number;
   topAge?: number;
   baseAge?: number;
-  date?: string;
+  date: string;
   verticalScale?: number;
   uuid?: string;
   description: string;
@@ -52,7 +52,17 @@ export type DatapackParsingPack = {
   size: string;
   warnings?: DatapackWarning[];
   image: string;
+  totalColumns: number;
+  columnTypeCount: ColumnTypeCounter;
+  authoredBy: string;
+  tags: string[];
+  references: string[];
+  contact?: string;
+  notes?: string;
+  datapackImageCount: number;
 };
+
+export type ColumnTypeCounter = Record<ColumnInfoType, number>;
 
 export type DatapackWarning = {
   lineNumber?: number;
@@ -947,9 +957,8 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
     throwError("DatapackParsingPack", "formatVersion", "number", o.formatVersion);
   if ("verticalScale" in o && typeof o.verticalScale !== "number")
     throwError("DatapackParsingPack", "verticalScale", "number", o.verticalScale);
-  if ("date" in o && typeof o.date !== "string") throwError("DatapackParsingPack", "date", "string", o.date);
-  if ("date" in o && !/^(\d{4}-\d{2}-\d{2})$/.test(o.date))
-    throwError("DatapackParsingPack", "date", "YYYY-MM-DD", o.date);
+  if (typeof o.date !== "string" || !/^(\d{4}-\d{2}-\d{2})$/.test(o.date))
+    throwError("DatapackParsingPack", "date", "string", o.date);
   if ("topAge" in o && typeof o.topAge !== "number") throwError("DatapackParsingPack", "topAge", "number", o.topAge);
   if ("baseAge" in o && typeof o.baseAge !== "number")
     throwError("DatapackParsingPack", "baseAge", "number", o.baseAge);
@@ -965,6 +974,22 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
     }
   }
   if (typeof o.image !== "string") throwError("DatapackParsingPack", "image", "string", o.image);
+  assertsColumnTypeCounter(o.columnTypeCount);
+  if (typeof o.totalColumns !== "number") throwError("DatapackParsingPack", "totalColumns", "number", o.totalColumns);
+  if (typeof o.authoredBy !== "string") throwError("DatapackParsingPack", "authoredBy", "string", o.author);
+  if (!Array.isArray(o.tags)) throwError("DatapackParsingPack", "tags", "array", o.tags);
+  for (const tag of o.tags) {
+    if (typeof tag !== "string") throwError("DatapackParsingPack", "tag", "string", tag);
+  }
+  if (!Array.isArray(o.references)) throwError("DatapackParsingPack", "references", "array", o.references);
+  for (const reference of o.references) {
+    if (typeof reference !== "string") throwError("DatapackParsingPack", "reference", "string", reference);
+  }
+  if ("contact" in o && typeof o.contact !== "string")
+    throwError("DatapackParsingPack", "contact", "string", o.contact);
+  if ("notes" in o && typeof o.notes !== "string") throwError("DatapackParsingPack", "notes", "string", o.notes);
+  if (typeof o.datapackImageCount !== "number")
+    throwError("DatapackParsingPack", "datapackImageCount", "number", o.datapackImages);
   assertColumnInfo(o.columnInfo);
 }
 
@@ -1356,6 +1381,15 @@ export function isSubEventType(o: any): o is SubEventType {
   if (typeof o !== "string") return false;
   if (!/^(EVENT|FAD|LAD|EVENTS)$/.test(o)) return false;
   return true;
+}
+
+export function assertsColumnTypeCounter(o: any): asserts o is ColumnTypeCounter {
+  const keys = ["Block", "Facies", "Event", "Range", "Chron", "Point", "Sequence", "Transect", "Freehand", "Blank"];
+  if (!o || typeof o !== "object") throw new Error("ColumnTypeCounter must be an object");
+  for (const key of keys) {
+    if (!(key in o)) throwError("ColumnTypeCounter", key, "ColumnInfoType", o[key]);
+    if (typeof o[key] !== "number") throwError("ColumnTypeCounter", key, "number", o[key]);
+  }
 }
 
 export function assertRectBounds(rectBounds: any): asserts rectBounds is RectBounds {

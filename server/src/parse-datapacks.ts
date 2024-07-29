@@ -62,6 +62,7 @@ import {
   defaultSequenceSettings,
   assertSequence,
   SequenceSettings,
+  ColumnTypeCounter,
   allFontOptions
 } from "@tsconline/shared";
 import {
@@ -69,11 +70,13 @@ import {
   hasVisibleCharacters,
   capitalizeFirstLetter,
   formatColumnName,
-  getClosestMatch
+  getClosestMatch,
+  countFiles
 } from "./util.js";
 import { createInterface } from "readline";
 import _ from "lodash";
 import { DatapackDescriptionInfo } from "./types.js";
+import { join } from "path";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;
 const patternForAbundance = /^(TOP|missing|rare|common|frequent|abundant|sample|flood)$/;
@@ -91,6 +94,18 @@ type FaciesFoundAndAgeRange = {
   minAge: number;
   maxAge: number;
   fontOptions: ValidFontOptions[];
+};
+const columnTypeCounter: ColumnTypeCounter = {
+  Block: 0,
+  Chron: 0,
+  Event: 0,
+  Facies: 0,
+  Freehand: 0,
+  Point: 0,
+  Range: 0,
+  Sequence: 0,
+  Transect: 0,
+  Blank: 0
 };
 /**
  * parses the METACOLUMN and info of the children string
@@ -174,6 +189,10 @@ export async function parseDatapacks(
   let verticalScale: number | null = null;
   let formatVersion = 1.5;
   const warnings: DatapackWarning[] = [];
+  // reset the columnTypeCounter IMPORTANT
+  for (const columnType in columnTypeCounter) {
+    columnTypeCounter[columnType as ColumnInfoType] = 0;
+  }
   try {
     for (const decryptPath of decryptPaths) {
       const { units, title, chronostrat, datapackDate, vertScale, version, top, base, filePropertyLines } =
@@ -277,22 +296,21 @@ export async function parseDatapacks(
 
   const datapackParsingPack = {
     columnInfo: chartColumn,
-
     ageUnits,
-
     defaultChronostrat,
-
     formatVersion,
-    description: datapackInfo.description,
-    title: datapackInfo.title,
-    file: datapackInfo.file,
-    size: datapackInfo.size,
-
+    columnTypeCounter,
     image: "",
-    ...(uuid ? { uuid } : {})
+    datapackImageCount:
+      (await countFiles(join(decryptFilePath, "datapack-images"))) +
+      (await countFiles(join(decryptFilePath, "MapImages"))),
+    totalColumns: Object.values(columnTypeCounter).reduce((a, b) => a + b, 0),
+    ...(uuid ? { uuid } : {}),
+    ...datapackInfo
   };
   assertDatapackParsingPack(datapackParsingPack);
-  if (date) datapackParsingPack.date = date;
+  // use datapack date if date not given by user
+  if (date && !datapackInfo.date) datapackParsingPack.date = date;
   if (topAge || topAge === 0) datapackParsingPack.topAge = topAge;
   if (baseAge || baseAge === 0) datapackParsingPack.baseAge = baseAge;
   if (verticalScale) datapackParsingPack.verticalScale = verticalScale;
@@ -1721,6 +1739,7 @@ function processColumn<T extends ColumnInfoType>(
   const { [subInfoKey]: subInfo, ...columnHeaderProps } = column;
   assertColumnHeaderProps(columnHeaderProps);
   assertSubInfo(subInfo, type);
+  columnTypeCounter[type]++;
   for (const sub of subInfo) {
     // subFreehandInfo has a topAge and baseAge instead of age
     if (isSubFreehandInfo(sub)) {
@@ -1770,9 +1789,9 @@ export function configureOptionalPointSettings(tabSeparated: string[], point: Po
   if (tabSeparated.length < 1) {
     console.log(
       "Error adding optional point configuration, line is not formatted correctly: " +
-        tabSeparated +
-        " with size " +
-        tabSeparated.length
+      tabSeparated +
+      " with size " +
+      tabSeparated.length
     );
     return;
   }

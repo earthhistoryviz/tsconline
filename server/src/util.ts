@@ -284,3 +284,12 @@ export async function verifyFilepath(filepath: string) {
   }
   return true;
 }
+
+export async function countFiles(filepath: string): Promise<number> {
+  try {
+    if (!(await checkFileExists(filepath))) return 0;
+    return (await readdir(filepath, { withFileTypes: true })).length;
+  } catch {
+    return 0;
+  }
+}

@@ -5,55 +5,141 @@
       "title": "TimeScale Creator Internal Datapack",
       "description": "TSC Internal Datapack 2020 version",
       "file": "TSC2020_InternalDatapack_encrypted_13Feb2021.txt",
-      "size": "5.01 MB"
+      "date": "02-13-2021",
+      "size": "5.01 MB",
+      "authoredBy": "Gradstein, Ogg, Schmitz, & Ogg, 2020, Elsevier",
+      "references": [],
+      "tags": [],
+      "notes": "This is the internal datapack for TimeScale Creator 2020"
     },
     {
       "title": "Human Evolution",
-      "description": "Tool intervals, main Homo and Australopithecus ranges (ca. 5 Ma, includes images) and major events in Primate evolution (ca. 50 Ma). Pop-ups have detailed informtion and links. [Images courtesy of American Museum of History and Smithsonian, Jan. 2021.] [NOTE: Suggest beginning with 0.05 to 2 Ma with vertical scale of 8. (encoded zip file, 0.5Mb, 5 columns, includes 20 images).]",
+      "description": "Tool intervals, main Homo and Australopithecus ranges (ca. 5 Ma, includes images) and major events in Primate evolution (ca. 50 Ma). Pop-ups have detailed informtion and links. [Images courtesy of American Museum of History and Smithsonian, Jan. 2021.] (encoded zip file, 0.5Mb, 5 columns, includes 20 images).]",
       "file": "Hominids_wImages_GTS2020_Encrypted.dpk",
-      "size": "0.5 MB"
+      "date": "01-01-20",
+      "size": "0.5 MB",
+      "authoredBy": "TSCreator Group",
+      "tags": [],
+      "references": [
+        "American Museum of History and Smithsonian, Mar2021."
+      ],
+      "notes": "Suggest beginning with 0.05 to 2 Ma with vertical scale of 8"
     },
     {
       "title": "Australia",
-      "description": "Australian biostratigraphy and basin lithostratigraphy with map interface and reconstructions.(encrypted zippack, 15 Mb, ca. 500 columns, includes 125 reconstructions and facies maps). Detailed Table of contents and references at AustraliaMappack_Contents_12July2016.pdf. Geoscience Australia has compiled the following: (1) Regional biostratigraphy (70 columns) with complete references, and (2) Detailed lithostratigraphy for all hydrocarbon-rich basins (including oil-gas levels with reference wells) (ca. 300 columns), and we added (3) Precambrian and other Phanerozoic basins (150 columns). Each lithology formation has pop-ups that include URL-links to the GA lexicon, the header for each Phanerozoic basin has links to location maps, and all oil-gas levels are linked to the GA well database. [NOTE: Contact Andrew Kelman <Andrew.Kelman@ga.gov.au> for a special Public 'GA-TS_Creator' JAVA version (ca. 25 Mb) that has this Australian dataset and their extensive reconstruction images pre-installed with the full global suite.]",
+      "description": "Australian biostratigraphy and basin lithostratigraphy with map interface and reconstructions.(encrypted zippack, 15 Mb, ca. 500 columns, includes 125 reconstructions and facies maps). Detailed Table of contents and references at AustraliaMappack_Contents_12July2016.pdf. Geoscience Australia has compiled the following: (1) Regional biostratigraphy (70 columns) with complete references, and (2) Detailed lithostratigraphy for all hydrocarbon-rich basins (including oil-gas levels with reference wells) (ca. 300 columns), and we added (3) Precambrian and other Phanerozoic basins (150 columns). Each lithology formation has pop-ups that include URL-links to the GA lexicon, the header for each Phanerozoic basin has links to location maps, and all oil-gas levels are linked to the GA well database.",
       "file": "Australia Mappack GTS2016 ENCRYPTED PUBLIC.mdpk",
-      "size": "15.05 MB"
+      "date": "07-12-2016",
+      "size": "15.05 MB",
+      "authoredBy": "Geoscience Australia in collaboration with TSCreator Group",
+      "contact": "Andrew Kelman: andrew.kelman@ga.gov.au",
+      "references": [
+        "Kelman, A., 2016, Australian biostratigraphy and basin lithostratigraphy with map interface and reconstructions: Geoscience Australia, Canberra, Australia, 15 Mb, ca. 500 columns, includes 125 reconstructions and facies maps."
+      ],
+      "notes": "Contact Andrew Kelman for a special Public 'GA-TS_Creator' JAVA version (ca. 25 Mb) that has this Australian dataset and their extensive reconstruction images pre-installed with the full global suite."
     },
     {
       "title": "Belgium",
-      "description": "Belgium regional formations with map interface. (encrypted mappack, 2Mb, 20 columns). Detailed Table of contents and references at Belgium_LithostratContents.pdf. Compiled by Jane Block in coordination with Belgium Stratigraphic Commission (Noel Vandenberghe, Hance Luc, et al.)",
+      "description": "Belgium regional formations with map interface. (encrypted mappack, 2Mb, 20 columns). Detailed Table of contents and references at Belgium_LithostratContents.pdf.",
       "file": "Belgium_GTS2020.mdpk",
-      "size": "2.19 MB"
+      "date": "12-02-2012",
+      "size": "2.19 MB",
+      "tags": [],
+      "authoredBy": "Jane Block in collaboration with Belgium Stratigraphic Commission (Noel Vandenberghe, Hance Luc, et al.)",
+      "references": [
+        "Bultynck, P., and Dejonghe, L., (editors), 2001, Guide to a revised lithostratigraphic scale of Belgium: Geologica Belgica, v. 4",
+        "Dejonghe, L. (editor), 2006. Currentstatus of Chronostatigraphic Units Named from Belgium and Adjacent Areas. Geologica Belgica, volume 9."
+      ]
     },
     {
       "title": "South American Basins",
       "description": "South American Basins with map interfaces -- currently 33 selected basins (with main coverage concentrating on Brazil, Colombia and Venezuela) with lithostratigraphy, transects, and selected biostratigraphy (including ca. 500 images, with large format images in popups). Standardized to GTS2012 age model. Main compilers: BRAZIL = Marcos dos Santos Filho and Shalli Teixeira (Univ. Vale do Rio dos Sinos, UNISINOS); visiting scholars to Purdue Univ., Autumn 2014); COLOMBIA-VENEZUELA = Estefania Salgado Jauregui (Universidad Nacional de Colombia-Sede Bogotá; visiting scholar to Purdue Univ., Autumn 2015); COORDINATION and ASSEMBLY: Rebecca Bobick (2015-early 2016 as part of her Masters degree at Purdue University).",
+      "date": "04-29-2019",
       "file": "SouthAmericaEncrypted_29Apr2019.mdpk",
-      "size": "50 MB"
+      "size": "50 MB",
+      "tags": [],
+      "authoredBy": "Marcos dos Santos Filho, Shalli Teixeira, Estefania Salgado Jauregui, and Rebecca Bobick",
+      "references": [
+        "Grahn, 'Silurian and Lower Devonian chitinozoan taxonomy and biostratigraphy of the Trombetas Group, Amazonas Basin, northern Brazil' Bulletin of geosciences, Volume 80, Number 4, 2005",
+        "Cunha et al., 'Bacia do Amazonas', Boletim de Geociencias da Petrobras, Rio de Janeiro, Volume 15, n.2, 2007",
+        "Gomide, J., 1982. Bioestratigrafia do Nanoplanction Calcario da Bacia de Campos. Boletim Tecnico da Petrobras, Rio de Janeiro, v. 25, n. 3, p. 129-137",
+        "Maciel, D. M., Alves, C. F., Ferreira, E. P., 2012. Bioestratigrafia com Base em Nanofosseis Calcarios do Testemunho GL-77, Bacia de Campos, Sudeste do Brasil. Revista Brasileira de Paleontologia, v. 15, n. 2, p. 164 - 172",
+        "BouDagher-Fadel, M. K., Price, G. D., Koutsoukos, E. A. M., 2010. Foraminiferal Biostratigraphy and Paleoenvironments of the Pligocene-Miocene carbonate succession in Campos Basin, southeastern Brazil. Stratigraphy, v. 7, n. 4, p. 283 - 300",
+        "Winder, W. R., Jahnert, R. J., Franca, A. B. 2007. Bacia de Campos. B. Geoci. Petrobras, Rio de Janeiro, v. 15, n. 2, p. 511-529",
+        "Franca et al. 'Bacia do Espirito Santo'. Boletim de Geociencias da Petrobras, Volume 15, Number 2, pp 501-509, 2007",
+        "Sousa et al. 'Cenozoic biostratigraphy of larger foraminifera from the Foz do Amazonas Basin, Brazil', Micropaleontology, Volume 49, N.3, 2003",
+        "Figueiredo et al. 'Bacia da Foz do Amazonas', Boletim de Geociencias da Petrobras, Volume 15, n.2, 2007",
+        "Noetinger, S., di Pasquo, M. M., 2011. Devonian Palynological Assemblages from the San Antonio x-1 Borehole, Tarija Basin, Northwestern Argentina. Geologica Acta, v. 9, n. 2, p. 199-216",
+        "Milani, E. J., Thomaz Filho, A., 2000. Sedimentary domains of the South American Plater. In: Edison Jose Milani, Antonio Thomaz Filho (eds). SEDIMENTARY BASINS OF SOUTH AMERICA",
+        "Barragan, R., Baby, P. and Duncan, R., 2005. Cretaceous alkaline intra-plate magmatism in the Ecuadorian Oriente Basin: Geochemical, geochronological and tectonic evidence. Earth and Planetary Science Letters, 236: 670-690",
+        "Porturas F., Vela I., Pazos J., Humbert O. 2009. Lifting more dry oil reducing water production with inflow control devices in wells drilled and completed in consolidated reservoirs, bloques 15, Ecuador. European region newsletter, vol.4, p.2-6",
+        "Silva et al. 'Bacia do reconcavo - Boletim de Geociencias da Petrobras', Volume 15, Number 2, 2007",
+        "Sylmam, C. A., 2001. Geologia de la Cuenca del Golfo San Jorge, Argentina. Journal of Iberian Geology, 27, 123-",
+        "Zalan, P. V., Silva, P. C. R., 2007. Bacia do Sao Francisco. Boletim de Geociencias da Petrobras, Rio de Janeiro, v. 15, n. 2, p. 561 - 571",
+        "Neto, O. P. A. C., Lima, W. S., Cruz, F. E. G., 2007. Bacia de Sergipe-Alagoas. B. Geoci. Petrobras, Rio de Janeiro, v. 15, n. 2, p. 405-415",
+        "Campos, L. M., 2006. Los Dinoflagelados del Mioceno Medio alto - Mioceno Superior del Caribe Colombiano: Taxonomia, Bioestratigrafia e Implicaciones Geologicas. Mastership thesis, EAFIT University, 92 p.",
+        "Jaramillo, C., Rueda, M., 2004. Impact of Biostratigraphy on Oil Exploration. 3rd Convencion Tecnica de la ACGGP",
+        "Rincon, D. A., Arenas, J. E., Cuartas, C. H., Cardena, A. L., Molinares, C. E., Caicedo, C., Jaramillo, C., 2007. Eocene-Pliocene Planktonic Foraminifera Biostratigraphy from the Continental Margin of the Southwest Caribbean. Stratigraphy, v. 4, n. 4, p. 261-311",
+        "ECOPETROL-ICP-GOX. 2001. Evaluación de la prospectividad del Sector Atlántico. Technical report",
+        "PetroSeis Ltda., 2011. Informe Final de Interpretacion Sismica Componente Horizontal y Vertical. Report for the ANH, Colombia, 76 p.",
+        "INGEOMINAS 1998 Geological map No. 25 Fundacion; Hernandez M. 2002. GEOLOGÍA DE LAS PLANCHAS 25 FUNDACIÓN, 32 MONTERRUBIO Y 39 EL DIFICIL",
+        "Barrero, D., Pardo, A., Vargas, C.A., and Martínez, J.F., 2007, Colombian Sedimentary Basins: Nomenclature, Boundaries, and Petroleum Geology, a New Proposal, Agencia Nacional de Hidrocarburos",
+        "Grahn, Y., Bergamaschi, S., Pereira, E., 2002. Middle and Upper Devonian Chitinozoan Biostratigraphy of the Parana Basin in Brazil and Paraguay. Palynology, 26, p. 135-165",
+        "Ghran, Y., Pereira, E. 2000. Silurian and Lower Devonian Chitinozoan Biostratigraphy of the Parana Basin in Brazil and Paraguay. Palynology, 24, p. 147-176",
+        "Souza, P. A. Marques-Toigo, M., 2003. An overview on the Palynostratigraphy of the Upper Paleozoic strata of the Brazilian Parana Basin. Rev. Mus. Argentino Cienc. Nat., v. 5, n. 2, p. 205-214",
+        "Milani, E. J., Melo, J. H. G., Souza, P. A., Fernandes, L. A., Franca, A. B. 2007. Bacia do Parana. Boletim de Geociencias da Petrobras, v. 15, n. 2, p. 265-287",
+        "Wise, S. W., 2007. Mesozoic and Cenozoic Calcareous Nannofossils recovered by Deep sea Drilling Project LEG 71 in the Falkland Plateau Region, Southwest Atlantic Ocean. In: Deep Sea Drilling Project Initial Reports, v. 71, p. 481-550",
+        "Galeazzi, J. S., 1998. Structural and Stratigraphic Evolution of the Western Malvinas Basin, Argentina. AAPG Bulletin, v. 82, n. 4, p. 596-636"
+      ]
     },
     {
       "title": "Africa Bight",
       "description": "Africa Bight Map",
       "file": "AfricaBight.map",
-      "size": "0.2 MB"
+      "size": "0.2 MB",
+      "authoredBy": "James Ogg",
+      "tags": [],
+      "references": []
     },
     {
       "title": "British Isles",
-      "description": "British Isles regional formations with map interface. (encrypted zippack, 3Mb, ca. 25 columns). Detailed Table of contents and references at UK_lithostrat_contents_30Nov12.pdf. Approximately two dozen sub-regions, with each formation linked to the BGS lexicon; compiled in coordination with British Geological Survey, BGS.",
+      "description": "British Isles regional formations with map interface. (encrypted zippack, 3Mb, ca. 25 columns). Detailed Table of contents and references at UK_lithostrat_contents_30Nov12.pdf. Approximately two dozen sub-regions, with each formation linked to the BGS lexicon",
       "file": "British_Suite_wWiderColumns_GTS2020_5July2024.mdpk",
-      "size": "3 MB"
+      "date": "07-15-2016",
+      "size": "3 MB",
+      "authoredBy": "In coordination with British Geological Survey, BGS",
+      "contact": "Colin Waters: cnw@bgs.ac.uk",
+      "references": [
+        "Waters, C.N., Waters, R.A., Barclay, W.J., and Davies, J.R., 2009, A lithostratigraphical framework for the Carboniferous successions of southern Great Britain (onshore): British Geological Survey Research Report, RR/09/01, 58 p."
+      ],
+      "notes": "Each set of columns is separated by a strip \"color of time\" of the international-stage divisions to clarify the temporal correlations"
     },
     {
       "title": "Evolution of Modern Life",
-      "description": "From Archea microbes to primates, spanning 4 billion years. View as super-tree, individual microbe/plant/animal trees, or as trees for specific types of life (ca. 50 groups). Based on molecular clocks and the fossil record (but only for extant life) from TimeTree of Life (Hedges, S.B., and Kumar, S., eds, Oxford Univ. Press, 2009). [NOTE: Evolution branching is best visualized using intervals greater than 60 myr and with a vertical scale of 0.5 or less.] (encoded zip file, 15Mb, 3 main suites, 1200 organisms each); ",
+      "description": "From Archea microbes to primates, spanning 4 billion years. View as super-tree, individual microbe/plant/animal trees, or as trees for specific types of life (ca. 50 groups). Based on molecular clocks and the fossil record (but only for extant life) from TimeTree of Life (Hedges, S.B., and Kumar, S., eds, Oxford Univ. Press, 2009).(encoded zip file, 15Mb, 3 main suites, 1200 organisms each); ",
       "file": "TimeTree_of_Life_GTS2020_ENCRYPTED_23Jan2020.dpk",
-      "size": "15 MB"
+      "date": "01-23-2020",
+      "size": "15 MB",
+      "authoredBy": "Rebecca Bobick (2015)",
+      "tags": [],
+      "references": [
+        "The TimeTree of Life, Hedges, S.B., and Kumar, S., eds, Oxford Univ. Press, 2009"
+      ],
+      "notes": "Evolution branching is best visualized using intervals greater than 60 myr and with a vertical scale of 0.5 or less.",
+      "contact": "James Ogg: jogg@purdue.edu"
     },
     {
       "title": "Vertebrate Evolution",
-      "description": "From earliest fish to primates (with an extended section on dinosaurs) acccompanied by schematic images and external links. In addition to branching evolution, one can turn on a more extensive suite of ranges of selected ancient groups. [NOTE: Evolution branching is best visualized using intervals greater than 60 myr and with a vertical scale of 0.5 or less.]",
+      "description": "From earliest fish to primates (with an extended section on dinosaurs) acccompanied by schematic images and external links. In addition to branching evolution, one can turn on a more extensive suite of ranges of selected ancient groups.",
+      "date": "01-23-2021",
       "file": "Vertebrates w_Images GTS2020 23Jan2021.dpk",
-      "size": "5 MB"
+      "size": "5 MB",
+      "authoredBy": "TSCreator Group",
+      "tags": [],
+      "references": [
+        " Dixon, Dougal, et al. (1988) The Macmillan illustrated encyclopedia of dinosaurs and prehistoric animals. Macmillan New York: 312pp"
+      ],
+      "notes": "Evolution branching is best visualized using intervals greater than 60 myr and with a vertical scale of 0.5 or less. Ranges of different selected fossil vertebrates are defaulted OFF (turn on from within each directory). "
     }
   ],
   "decryptionJar": "assets/jars/datapack-decrypter_21Jun2024.jar",
