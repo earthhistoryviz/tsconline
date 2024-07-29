@@ -235,7 +235,7 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
         const childName = child.getAttribute("id");
         if (child.nodeName === "column") {
           let childColumn = processColumn(child, childName!);
-          //since isDataMiningColumn is an attribute, have to set it here
+          //since isDataMiningColumn is an attribute of the column node, have to set it here
           if (child.getAttribute("isDataMiningColumn") === "true") {
             assertPointColumnInfoTSC(childColumn);
             childColumn.isDataMiningColumn = true;

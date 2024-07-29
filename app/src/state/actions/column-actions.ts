@@ -123,8 +123,8 @@ const dataminingFoundCache = new Map<string, PointColumnInfoTSC>();
 const dataMiningRefCache = new Map<
   string,
   {
-    currIdentifier: EventFrequency | DataMiningChronDataType | DataMiningPointDataType | null;
-    loadedIdentifier: EventFrequency | DataMiningChronDataType | DataMiningPointDataType;
+    existingDataMiningType: EventFrequency | DataMiningChronDataType | DataMiningPointDataType | null;
+    loadedDataMiningType: EventFrequency | DataMiningChronDataType | DataMiningPointDataType;
   }
 >();
 
@@ -136,7 +136,6 @@ export function handleDataMiningColumns() {
   for (const name of sortedRefNameList) {
     const refCol = state.settingsTabs.columnHashMap.get(name);
     const refInfo = dataMiningRefCache.get(name);
-    console.log(name);
     if (!refCol) {
       //also could not be in selected datapacks, so commented since many of these columns could exist
       //console.error("Datamining reference column is not in state");
@@ -146,8 +145,14 @@ export function handleDataMiningColumns() {
       console.error("While handling datamining columns, failed to find refInfo for reference column");
       continue;
     }
-    const { currIdentifier, loadedIdentifier } = refInfo;
-    const dmName = addDataMiningColumn(refCol, loadedIdentifier);
+    const { existingDataMiningType, loadedDataMiningType } = refInfo;
+    let dmName: string | undefined = undefined;
+    try {
+      dmName = addDataMiningColumn(refCol, loadedDataMiningType);
+    } catch (e) {
+      console.log(e);
+      continue;
+    }
     if (!dmName) {
       console.error("While handling datamining columns, failed to add datamining column");
       continue;
@@ -166,7 +171,7 @@ export function handleDataMiningColumns() {
     }
     setColumnProperties(createdDmColumn, foundDmColumn);
     //this means there was a datamine column for the refcol before loading settings, so remove it since we can only have one datamine at a time
-    if (currIdentifier) removeDataMiningColumn(refCol, currIdentifier);
+    if (existingDataMiningType) removeDataMiningColumn(refCol, existingDataMiningType);
   }
   //reset cache
   dataminingFoundCache.clear();
@@ -180,67 +185,51 @@ export function addColumnToDataMiningCache(settings: ColumnInfoTSC) {
     case "EventColumn":
       assertEventColumnInfoTSC(settings);
       if (settings.drawExtraColumn) {
-        if (column) {
-          if (column.columnDisplayType !== "Event") {
-            console.log(
-              "WARNING: column in state and column in loaded settings both have the name ",
-              columnName,
-              " but different column types Event and ",
-              column.columnDisplayType
-            );
-            dataMiningRefCache.set(columnName, { currIdentifier: null, loadedIdentifier: settings.drawExtraColumn });
-            return;
-          }
+        //column in state and column in loaded settings that have same name (unique identifier per column) could have different types
+        //if loaded settings came from a different datapack
+        if (column && column.columnDisplayType === "Event") {
           assertEventSettings(column.columnSpecificSettings);
           dataMiningRefCache.set(columnName, {
-            currIdentifier: column.columnSpecificSettings.frequency,
-            loadedIdentifier: settings.drawExtraColumn
+            existingDataMiningType: column.columnSpecificSettings.frequency,
+            loadedDataMiningType: settings.drawExtraColumn
           });
-        } else dataMiningRefCache.set(columnName, { currIdentifier: null, loadedIdentifier: settings.drawExtraColumn });
+        } else
+          dataMiningRefCache.set(columnName, {
+            existingDataMiningType: null,
+            loadedDataMiningType: settings.drawExtraColumn
+          });
       }
       break;
     case "ChronColumn":
       assertChronColumnInfoTSC(settings);
       if (settings.drawExtraColumn) {
-        if (column) {
-          if (column.columnDisplayType !== "Chron") {
-            console.log(
-              "WARNING: column in state and column in loaded settings both have the name ",
-              columnName,
-              " but different column types Event and ",
-              column.columnDisplayType
-            );
-            dataMiningRefCache.set(columnName, { currIdentifier: null, loadedIdentifier: settings.drawExtraColumn });
-            return;
-          }
+        if (column && column.columnDisplayType === "Chron") {
           assertChronSettings(column.columnSpecificSettings);
           dataMiningRefCache.set(columnName, {
-            currIdentifier: column.columnSpecificSettings.dataMiningChronDataType,
-            loadedIdentifier: settings.drawExtraColumn
+            existingDataMiningType: column.columnSpecificSettings.dataMiningChronDataType,
+            loadedDataMiningType: settings.drawExtraColumn
           });
-        } else dataMiningRefCache.set(columnName, { currIdentifier: null, loadedIdentifier: settings.drawExtraColumn });
+        } else
+          dataMiningRefCache.set(columnName, {
+            existingDataMiningType: null,
+            loadedDataMiningType: settings.drawExtraColumn
+          });
       }
       break;
     case "PointColumn":
       assertPointColumnInfoTSC(settings);
       if (settings.drawExtraColumn) {
-        if (column) {
-          if (column.columnDisplayType !== "Point") {
-            console.log(
-              "WARNING: column in state and column in loaded settings both have the name ",
-              columnName,
-              " but different column types Event and ",
-              column.columnDisplayType
-            );
-            dataMiningRefCache.set(columnName, { currIdentifier: null, loadedIdentifier: settings.drawExtraColumn });
-            return;
-          }
+        if (column && column.columnDisplayType === "Point") {
           assertPointSettings(column.columnSpecificSettings);
           dataMiningRefCache.set(columnName, {
-            currIdentifier: column.columnSpecificSettings.dataMiningPointDataType,
-            loadedIdentifier: settings.drawExtraColumn
+            existingDataMiningType: column.columnSpecificSettings.dataMiningPointDataType,
+            loadedDataMiningType: settings.drawExtraColumn
           });
-        } else dataMiningRefCache.set(columnName, { currIdentifier: null, loadedIdentifier: settings.drawExtraColumn });
+        } else
+          dataMiningRefCache.set(columnName, {
+            existingDataMiningType: null,
+            loadedDataMiningType: settings.drawExtraColumn
+          });
       }
       if (settings.isDataMiningColumn) {
         dataminingFoundCache.set(columnName, settings);
