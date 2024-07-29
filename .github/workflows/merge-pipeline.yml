@@ -233,6 +233,7 @@ jobs:
       # Change to coverage:ci
       - name: Generate base lcov file
         run: |
+          ls
           cd main-branch
           mv ${{ github.workspace }}/server/assets/jars/testUsageJar.jar ${{ github.workspace }}/main-branch/server/assets/jars/testUsageJar.jar
           ls ${{ github.workspace }}/main-branch/server/assets/jars

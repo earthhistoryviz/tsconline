@@ -37,6 +37,7 @@ if (await checkFileExists(testUsageJarPath)) {
   jarFilePath = testUsageJarPath;
   resultPath = path.join(baseDir, "server/__tests__/__data__/encryption-test-generated-file");
 } else {
+  throw new Error("Test usage jar file doesn't exist");
   try {
     const configPath = path.join(baseDir, "server/assets/config.json");
     const contents = JSON.parse((await readFile(configPath)).toString());
