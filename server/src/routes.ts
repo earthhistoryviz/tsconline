@@ -324,7 +324,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   }
   const name = fields.name;
   const description = fields.description;
-  const references = fields.references;
 
   if (!uploadedFile) {
     await errorHandler("No file uploaded", 400);
