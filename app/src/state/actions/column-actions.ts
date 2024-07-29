@@ -187,6 +187,15 @@ export function addColumnToDataMiningCache(settings: ColumnInfoTSC) {
       if (settings.drawExtraColumn) {
         //column in state and column in loaded settings that have same name (unique identifier per column) could have different types
         //if loaded settings came from a different datapack
+        if (column && column.columnDisplayType !== "Event") {
+          console.log(
+            "WARNING: column in state and column in loaded settings have the same name ",
+            columnName,
+            "but have different types Event and ",
+            column.columnDisplayType
+          );
+          return;
+        }
         if (column && column.columnDisplayType === "Event") {
           assertEventSettings(column.columnSpecificSettings);
           dataMiningRefCache.set(columnName, {
@@ -203,6 +212,15 @@ export function addColumnToDataMiningCache(settings: ColumnInfoTSC) {
     case "ChronColumn":
       assertChronColumnInfoTSC(settings);
       if (settings.drawExtraColumn) {
+        if (column && column.columnDisplayType !== "Chron") {
+          console.log(
+            "WARNING: column in state and column in loaded settings have the same name ",
+            columnName,
+            "but have different types Chron and ",
+            column.columnDisplayType
+          );
+          return;
+        }
         if (column && column.columnDisplayType === "Chron") {
           assertChronSettings(column.columnSpecificSettings);
           dataMiningRefCache.set(columnName, {
@@ -219,6 +237,15 @@ export function addColumnToDataMiningCache(settings: ColumnInfoTSC) {
     case "PointColumn":
       assertPointColumnInfoTSC(settings);
       if (settings.drawExtraColumn) {
+        if (column && column.columnDisplayType !== "Point") {
+          console.log(
+            "WARNING: column in state and column in loaded settings have the same name ",
+            columnName,
+            "but have different types Point and ",
+            column.columnDisplayType
+          );
+          return;
+        }
         if (column && column.columnDisplayType === "Point") {
           assertPointSettings(column.columnSpecificSettings);
           dataMiningRefCache.set(columnName, {
