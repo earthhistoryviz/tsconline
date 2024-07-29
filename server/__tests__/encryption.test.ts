@@ -47,6 +47,7 @@ if (await checkFileExists(testUsageJarPath)) {
     throw new Error("ERROR: Failed to load local jar file path from assets/config.json. Error was: " + e);
   }
 }
+throw new Error("test");
 console.log("JAR file path determined:", jarFilePath);
 
 if (!jarFilePath) throw new Error("jar file path shouldn't be empty");
