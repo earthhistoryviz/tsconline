@@ -232,7 +232,7 @@ jobs:
 
       - name: Generate base lcov file
         run: |
-          ###### REMOVE THIS LINE BElOW ###### 
+          ###### REMOVE THIS LINE BELOW BEFORE MERGING (WILL CAUSE TEST FAILRE) ######
           cp ${{ github.workspace }}/server/__tests__/encryption.test.ts ${{ github.workspace }}/main-branch/server/__tests__/encryption.test.ts
           cd main-branch
           mv ${{ github.workspace }}/server/assets/jars/testUsageJar.jar ${{ github.workspace }}/main-branch/server/assets/jars/testUsageJar.jar
