@@ -232,6 +232,9 @@ jobs:
 
       - name: Generate base lcov file
         run: |
+          pkill Xvfb || true
+          Xvfb :1 -screen 0 1024x768x16 &
+          export DISPLAY=:1
           ###### REMOVE THIS LINE BELOW BEFORE MERGING ######
           cp ${{ github.workspace }}/server/__tests__/encryption.test.ts ${{ github.workspace }}/main-branch/server/__tests__/encryption.test.ts
           cd main-branch
