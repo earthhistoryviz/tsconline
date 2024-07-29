@@ -4,8 +4,8 @@ import { access, readFile, rm } from "fs/promises";
 import { assertAssetConfig } from "../src/types";
 import path from "path";
 beforeAll(async () => {
-  // vi.spyOn(console, "error").mockImplementation(() => undefined);
-  // vi.spyOn(console, "log").mockImplementation(() => undefined);
+  vi.spyOn(console, "error").mockImplementation(() => undefined);
+  vi.spyOn(console, "log").mockImplementation(() => undefined);
 });
 afterAll(async () => {
   const generatedFilePath = path.resolve("server/__tests__/__data__/encryption-test-generated-file/");
@@ -49,24 +49,16 @@ describe("runJavaEncrypt", async () => {
     "should correctly encrypt an unencrypted TSCreator txt file",
     { timeout: 20000 },
     async () => {
-      const inputFilePath = path.resolve(baseDir, "server/__tests__/__data__/encryption-test-1.txt");
-      const resultFilePath = path.resolve(baseDir, "server/__tests__/__data__/encryption-test-generated-file/encryption-test-1.txt");
-      const keyFilePath1 = path.resolve(baseDir, "server/__tests__/__data__/encryption-test-keys/test-1-key.txt");
-      const keyFilePath2 = path.resolve(baseDir, "server/__tests__/__data__/encryption-test-keys/test-1-key(2).txt");
-      if (!(await checkFileExists(resultFilePath))) {
-        await runJavaEncrypt(jarFilePath, inputFilePath, resultPath);
+      if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-2.txt"))) {
+        await runJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-2.txt", resultPath);
       } else {
         throw new Error("test generated file shouldn't exist at this point");
       }
-      const [result, key1, key2] = await Promise.all([
-        readFile(resultFilePath),
-        readFile(keyFilePath1),
-        readFile(keyFilePath2)
-      ]);
-      const sameLength = (value: number) => value == key1.length || value == key2.length;
-      const sameContent = (value: Buffer) => value.equals(key1) || value.equals(key2);
-      expect(result.length).toSatisfy(sameLength);
-      expect(result).toSatisfy(sameContent);
+      const resultFilePath = "server/__tests__/__data__/encryption-test-generated-file/encryption-test-2.txt";
+      const keyFilePath = "server/__tests__/__data__/encryption-test-keys/test-2-key.txt";
+      const [result, key] = await Promise.all([readFile(resultFilePath), readFile(keyFilePath)]);
+      expect(result.length).toBe(key.length);
+      expect(result).toEqual(key);
     }
   );
   it(

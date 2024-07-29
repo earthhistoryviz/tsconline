@@ -246,6 +246,7 @@ jobs:
           ####### CHANGE THIS TO coverage:ci #######
           yarn coverage
           cp coverage/lcov.info ../base-lcov.info
+          cd ..
 
       - name: Generate Code Coverage report
         id: code-coverage
