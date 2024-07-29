@@ -114,6 +114,9 @@ jobs:
 
   build-and-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
 
@@ -195,11 +198,9 @@ jobs:
         run: |
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
-          set -o pipefail
-          yarn coverage:ci
-          # if ! yarn coverage:ci > test_output.log 2>&1; then
-          #   echo "test_failed=true" >> $GITHUB_OUTPUT
-          # fi
+          if ! yarn coverage:ci > test_output.log 2>&1; then
+            echo "test_failed=true" >> $GITHUB_OUTPUT
+          fi
         continue-on-error: true
 
       - name: Report Test Errors
@@ -246,20 +247,15 @@ jobs:
           cd ..
           ####### CHANGE THIS TO coverage:ci #######
           yarn coverage
-          cp coverage/lcov.info ../base-lcov.info
+          cp coverage/coverage-summary.json ../coverage-summary.json
           cd ..
 
       - name: Generate Code Coverage report
         id: code-coverage
-        uses: barecheck/code-coverage-action@v1
+        uses: davelosert/vitest-coverage-report-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          barecheck-github-app-token: ${{ secrets.BARECHECK_GITHUB_APP_TOKEN }}
-          lcov-file: "./coverage/lcov.info"
-          base-lcov-file: "./base-lcov.info"
-          minimum-ratio: 0 # Fails Github action once code coverage is decreasing
-          send-summary-comment: true
-          show-annotations: "warning"
+          json-summary-compare-path: coverage-summary.json
 
   wait-for-checks:
     runs-on: ubuntu-latest

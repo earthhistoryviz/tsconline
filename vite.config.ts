@@ -8,7 +8,7 @@ export default defineConfig({
     environment: "node",
     include: ["server/__tests__/**.test.ts", "app/__tests__/**.test.ts", "shared/__tests__/**.test.ts"],
     coverage: {
-      reporter: ["lcov", "text"],
+      reporter: ["text", "json-summary", "json", "lcov"],
       include: ["server/src/**", "app/src/**", "shared/src/**"]
     },
     outputFile: "coverage/sonar-report.xml"
