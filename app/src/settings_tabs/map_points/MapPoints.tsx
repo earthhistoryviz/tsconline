@@ -80,7 +80,6 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
       <Box>
         <List>
           {Object.entries(sortedMapInfoObj).map(([name, map]) => {
-            console.log("name: " + name, " ,parent: " + map.parent?.name);
             return (
               <MapListItemButton
                 disableRipple
