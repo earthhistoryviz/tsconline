@@ -6,6 +6,34 @@ import path from "path";
 beforeAll(async () => {
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   // vi.spyOn(console, "log").mockImplementation(() => undefined);
+  const baseDir = path.resolve(__dirname, '../..');
+  let jarFilePath = "";
+  let resultPath = path.join(baseDir, "server/__tests__/__data__/encryption-test-generated-file");
+  const testUsageJarPath = path.join(baseDir, "server/assets/jars/testUsageJar.jar");
+  process.stdout.write(`Test usage jar path: ${testUsageJarPath}\n`);
+  process.stdout.write(`Base directory: ${baseDir}\n`);
+  process.stdout.write(`Result path: ${resultPath}\n`);
+  process.stdout.write(`Path of module: ${path.resolve(__dirname)}\n`);
+  if (await checkFileExists(testUsageJarPath)) {
+    throw new Error("test");
+    process.stdout.write("Test usage jar file exists");
+    jarFilePath = testUsageJarPath;
+    resultPath = path.join(baseDir, "server/__tests__/__data__/encryption-test-generated-file");
+  } else {
+    throw new Error("test");
+    try {
+      const configPath = path.join(baseDir, "server/assets/config.json");
+      const contents = JSON.parse((await readFile(configPath)).toString());
+      assertAssetConfig(contents);
+      jarFilePath = path.join(baseDir, "server", contents.activeJar);
+    } catch (e) {
+      throw new Error("ERROR: Failed to load local jar file path from assets/config.json. Error was: " + e);
+    }
+  }
+  throw new Error("test");
+  console.log("JAR file path determined:", jarFilePath);
+
+  if (!jarFilePath) throw new Error("jar file path shouldn't be empty");
 });
 afterAll(async () => {
   const generatedFilePath = path.resolve("server/__tests__/__data__/encryption-test-generated-file/");
@@ -23,35 +51,6 @@ async function checkFileExists(filePath: string): Promise<boolean> {
     return false;
   }
 }
-
-const baseDir = path.resolve(__dirname, '../..');
-let jarFilePath = "";
-let resultPath = path.join(baseDir, "server/__tests__/__data__/encryption-test-generated-file");
-const testUsageJarPath = path.join(baseDir, "server/assets/jars/testUsageJar.jar");
-process.stdout.write(`Test usage jar path: ${testUsageJarPath}\n`);
-process.stdout.write(`Base directory: ${baseDir}\n`);
-process.stdout.write(`Result path: ${resultPath}\n`);
-process.stdout.write(`Path of module: ${path.resolve(__dirname)}\n`);
-if (await checkFileExists(testUsageJarPath)) {
-  throw new Error("test");
-  process.stdout.write("Test usage jar file exists");
-  jarFilePath = testUsageJarPath;
-  resultPath = path.join(baseDir, "server/__tests__/__data__/encryption-test-generated-file");
-} else {
-  try {
-    throw new Error("test");
-    const configPath = path.join(baseDir, "server/assets/config.json");
-    const contents = JSON.parse((await readFile(configPath)).toString());
-    assertAssetConfig(contents);
-    jarFilePath = path.join(baseDir, "server", contents.activeJar);
-  } catch (e) {
-    throw new Error("ERROR: Failed to load local jar file path from assets/config.json. Error was: " + e);
-  }
-}
-throw new Error("test");
-console.log("JAR file path determined:", jarFilePath);
-
-if (!jarFilePath) throw new Error("jar file path shouldn't be empty");
 
 describe("runJavaEncrypt", async () => {
   it(
