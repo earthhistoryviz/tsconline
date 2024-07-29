@@ -116,6 +116,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -195,12 +197,46 @@ jobs:
         run: |
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
-          set -o pipefail
-          yarn coverage:ci
-          # if ! yarn coverage:ci > test_output.log 2>&1; then
-          #   echo "test_failed=true" >> $GITHUB_OUTPUT
-          # fi
+          yarn coverage:ci > test_output.log 2>&1 || echo "test_failed=true" >> $GITHUB_OUTPUT
         continue-on-error: true
+
+      - name: Check Test Results
+        if: steps.run_tests.outputs.test_failed == 'true'
+        run: |
+          if grep -q 'ERROR: Coverage' test_output.log; then
+            echo "coverage_failed=true" >> $GITHUB_OUTPUT
+          else
+            echo "tests_failed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Post Coverage Comment
+        if: steps.run_tests.outputs.coverage_failed == 'true'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const log = fs.readFileSync('test_output.log', 'utf8');
+            const coverageErrors = log.split('\n').filter(line => line.includes('ERROR: Coverage'));
+  
+            const commentBody = `
+            ## :x: Coverage Thresholds Not Met
+  
+            The following coverage thresholds were not met:
+            
+            \`\`\`
+            ${coverageErrors.join('\n')}
+            \`\`\`
+  
+            Please review the coverage report and improve the tests to meet the thresholds.
+            `;
+  
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: commentBody
+            });
 
       - name: Report Test Errors
         if: steps.run_tests.outputs.test_failed == 'true'
@@ -221,45 +257,8 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for any test failures
-        if: steps.run_tests.outputs.test_failed == 'true'
+        if: steps.run_tests.outputs.test_failed == 'true' || steps.run_tests.outputs.coverage_failed == 'true'
         run: exit 1
-
-      - name: Checkout main branch for base lcov file
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          path: main-branch
-          fetch-depth: 0
-
-      - name: Generate base lcov file
-        run: |
-          pkill Xvfb || true
-          Xvfb :1 -screen 0 1024x768x16 &
-          export DISPLAY=:1
-          ###### REMOVE THIS LINE BELOW BEFORE MERGING ######
-          cp ${{ github.workspace }}/server/__tests__/encryption.test.ts ${{ github.workspace }}/main-branch/server/__tests__/encryption.test.ts
-          cd main-branch
-          mv ${{ github.workspace }}/server/assets/jars/testUsageJar.jar ${{ github.workspace }}/main-branch/server/assets/jars/testUsageJar.jar
-          yarn
-          cd shared
-          yarn build
-          cd ..
-          ####### CHANGE THIS TO coverage:ci #######
-          yarn coverage
-          cp coverage/lcov.info ../base-lcov.info
-          cd ..
-
-      - name: Generate Code Coverage report
-        id: code-coverage
-        uses: barecheck/code-coverage-action@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          barecheck-github-app-token: ${{ secrets.BARECHECK_GITHUB_APP_TOKEN }}
-          lcov-file: "./coverage/lcov.info"
-          base-lcov-file: "./base-lcov.info"
-          minimum-ratio: 0 # Fails Github action once code coverage is decreasing
-          send-summary-comment: true
-          show-annotations: "warning"
 
   wait-for-checks:
     runs-on: ubuntu-latest
