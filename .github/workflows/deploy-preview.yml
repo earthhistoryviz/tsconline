@@ -98,6 +98,7 @@ jobs:
             while ! docker logs --since "$START_TIME" "$CONTAINER_ID" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
               if [ $ELAPSED -ge $MAX_WAIT ]; then
                 echo "Max wait time exceeded. Exiting..."
+                docker-compose -f docker-compose-preview.yml down
                 exit 1
               fi
               echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
@@ -196,6 +197,13 @@ jobs:
               docker stop $RUNNING_CONTAINER
               docker rm $RUNNING_CONTAINER
             fi 
+            docker-compose -f docker-compose-preview.yml up -d --remove-orphans pr-preview-build
+            BUILD_CONTAINER_ID=$(docker-compose -f docker-compose-preview.yml ps -q pr-preview-build)
+            if [ -z "$BUILD_CONTAINER_ID" ]; then
+              echo "Error: Failed to get container ID for pr-preview-build."
+              exit 1
+            fi
+            docker wait $BUILD_CONTAINER_ID
             docker-compose -f docker-compose-preview.yml up -d --remove-orphans pr-preview-run
             CONTAINER_ID=$(docker-compose -f docker-compose-preview.yml ps -q pr-preview-run)
             if [ -z "$CONTAINER_ID" ]; then
@@ -212,6 +220,7 @@ jobs:
             while ! docker logs --since "$START_TIME" "$CONTAINER_ID" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
               if [ $ELAPSED -ge $MAX_WAIT ]; then
                 echo "Max wait time exceeded. Exiting..."
+                docker-compose -f docker-compose-preview.yml down
                 exit 1
               fi
               echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
