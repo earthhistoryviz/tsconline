@@ -11,6 +11,8 @@ x11vnc -storepasswd ${VNC_PASSWORD} ~/.vnc/passwd
 # You need this PS1 variable to be set for /root/.bashrc to run and get the nvm environment vars
 PS1=":"
 source /root/.bashrc
+: "${NODE_ENV:=development}"
+echo "Running in NODE_ENV=${NODE_ENV}"
 
 XAUTH="/root/.Xauthority"
 touch $XAUTH
@@ -18,7 +20,13 @@ XERR="/root/.Xerrors"
 rm -f $XERR
 XARGS="-e $XERR -l -f $XAUTH -n 99 --server-args='-screen 0 1280x1024x24'"
 cd /code
-yarn install
+if [ "$NODE_ENV" == "production" ]; then
+  yarn install --production
+  start_server_cmd="yarn start"
+else
+  yarn install
+  start_server_cmd="yarn production"
+fi
 yarn build
 echo "-----------------------------------------------------------------------------------------------"
 echo "The VNC server is not nomally running to avoid wasting resources.  If you need to view the GUI,"
@@ -51,5 +59,5 @@ echo "--------------------------------------------------------------------------
 # After a restart, this lock file still exists.  Have to remove it to get xvfb to run again
 rm -f /tmp/.X99-lock
 xvfb-run -e $XERR -l -f $XAUTH -n 99 --server-args='-screen 0 1280x1024x24' \
-    yarn start || \
+    $start_server_cmd || \
     cat $XERR

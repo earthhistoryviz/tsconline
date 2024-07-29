@@ -5,11 +5,14 @@ networks:
 services:
   tsconline:
     build: .
+    restart: unless-stopped
     #image: tscreator/tscreator_online:v2
-    env_file: # You have to create this file yourself with a VNCPASSWORD=thepasswordyouwant
+    env_file:
+      # You have to create this file yourself with a VNCPASSWORD=thepasswordyouwant
       - secrets.env
     expose:
-      - 3000 # if PORT environment variable is set, use it.  If not, use 3000
+      - 3000
+        # if PORT environment variable is set, use it.  If not, use 3000
         # Uncomment these if you need to view the GUI, connect browser to one of them
       - 5900
       - 5800
@@ -19,5 +22,11 @@ services:
       - "5800:5800"
     volumes:
       - .:/code
+      - yarn_cache:/root/.yarn/cache
     networks:
       - shared_network
+    environment:
+      - NODE_ENV=production
+
+volumes:
+  yarn_cache:

@@ -21,7 +21,7 @@ import { parseExcelFile } from "./parse-excel-file.js";
 import path from "path";
 import pump from "pump";
 import { loadIndexes } from "./load-packs.js";
-import { updateFileMetadata, writeFileMetadata } from "./file-metadata-handler.js";
+import { writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
 import { DatapackDescriptionInfo } from "./types.js";
@@ -618,7 +618,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     }
   }
   datapacks.push(...userDatapacks);
-  updateFileMetadata(assetconfigs.fileMetadata, userDatapacks);
+  // updateFileMetadata(assetconfigs.fileMetadata, userDatapacks);
   // If this setting already has a chart, just return that
   try {
     await stat(chartFilePath);
@@ -749,7 +749,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   try {
     const priority = uuid ? 1 : 0;
     await queue.add(async () => {
-      await execJavaCommand(1000 * 15), { priority };
+      await execJavaCommand(1000 * 30), { priority };
     });
   } catch (error) {
     if ((error as Error).message.includes("timed out")) {
