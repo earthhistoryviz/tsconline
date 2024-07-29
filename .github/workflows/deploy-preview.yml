@@ -191,13 +191,12 @@ jobs:
             fi
             cd /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }}
             docker ps --filter "name=pr-preview" --format "{{.Names}}" | grep -oP "pr-preview-\K[0-9]+" > /tmp/running_pr.txt
-            RUNNING_CONTAINER=$(docker ps --filter "name=pr-preview" --format "{{.ID}}")
+            RUNNING_CONTAINER=$(docker ps --filter "name=pr-preview-run" --format "{{.ID}}")
             if [ -n "$RUNNING_CONTAINER" ]; then
               echo "Stopping and removing container $RUNNING_CONTAINER"
               docker stop $RUNNING_CONTAINER
               docker rm $RUNNING_CONTAINER
             fi 
-            docker-compose -f docker-compose-preview.yml up -d --remove-orphans pr-preview-build
             BUILD_CONTAINER_ID=$(docker-compose -f docker-compose-preview.yml ps -q pr-preview-build)
             if [ -z "$BUILD_CONTAINER_ID" ]; then
               echo "Error: Failed to get container ID for pr-preview-build."
