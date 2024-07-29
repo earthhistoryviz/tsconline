@@ -4,7 +4,7 @@ import { access, readFile, rm } from "fs/promises";
 import { assertAssetConfig } from "../src/types";
 import path from "path";
 beforeAll(async () => {
-  vi.spyOn(console, "error").mockImplementation(() => undefined);
+  // vi.spyOn(console, "error").mockImplementation(() => undefined);
   // vi.spyOn(console, "log").mockImplementation(() => undefined);
 });
 afterAll(async () => {
@@ -28,10 +28,6 @@ const baseDir = path.resolve(__dirname, '../..');
 let jarFilePath = "";
 const resultPath = path.join(baseDir, "server/__tests__/__data__/encryption-test-generated-file");
 const testUsageJarPath = path.join(baseDir, "server/assets/jars/testUsageJar.jar");
-console.log("Test usage jar path:", testUsageJarPath);
-console.log("Base directory:", baseDir);
-console.log("Result path:", resultPath);
-console.log("Path of module:", path.resolve(__dirname));
 if (await checkFileExists(testUsageJarPath)) {
   console.log("Test usage jar file exists");
   jarFilePath = testUsageJarPath;
