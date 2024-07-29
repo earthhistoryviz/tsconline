@@ -70,6 +70,10 @@ jobs:
               exit 0
             fi
             echo "false" > /tmp/container_status.txt
+            if [ ! -d /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }} ]; then
+              echo "Error: Directory /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }} not found."
+              exit 1
+            fi
             cd /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }}
             BUILD_CONTAINER_ID=$(docker-compose -f docker-compose-preview.yml ps -q pr-preview-build)
             if [ -z "$BUILD_CONTAINER_ID" ]; then
@@ -180,6 +184,10 @@ jobs:
           username: deployuser
           key: ${{ secrets.SSH_KEY }}
           script: |
+            if [ ! -d /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }} ]; then
+              echo "Error: Directory /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }} not found."
+              exit 1
+            fi
             cd /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }}
             docker ps --filter "name=pr-preview" --format "{{.Names}}" | grep -oP "pr-preview-\K[0-9]+" > /tmp/running_pr.txt
             RUNNING_CONTAINER=$(docker ps --filter "name=pr-preview" --format "{{.ID}}")
