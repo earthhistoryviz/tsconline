@@ -5,7 +5,7 @@ import { assertAssetConfig } from "../src/types";
 import path from "path";
 beforeAll(async () => {
   vi.spyOn(console, "error").mockImplementation(() => undefined);
-  vi.spyOn(console, "log").mockImplementation(() => undefined);
+  // vi.spyOn(console, "log").mockImplementation(() => undefined);
 });
 afterAll(async () => {
   const generatedFilePath = path.resolve("server/__tests__/__data__/encryption-test-generated-file/");
