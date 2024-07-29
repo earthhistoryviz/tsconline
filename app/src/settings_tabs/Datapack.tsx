@@ -16,6 +16,7 @@ import DeselectIcon from "@mui/icons-material/Deselect";
 import ViewCompactIcon from "@mui/icons-material/ViewCompact";
 import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompactDatapackRow";
 import { loadRecaptcha, removeRecaptcha } from "../util";
+import { SetDatapackConfigCompleteMessage, SetDatapackConfigMessage } from "../types";
 
 export const Datapacks = observer(function Datapacks() {
   const { state, actions } = useContext(context);
@@ -33,13 +34,40 @@ export const Datapacks = observer(function Datapacks() {
   }, []);
 
   const onChange = async (name: string) => {
-    if (state.config.datapacks.includes(name)) {
-      await actions.setDatapackConfig(
-        state.config.datapacks.filter((datapack) => datapack !== name),
-        ""
-      );
+    console.log("hello,dpack");
+    // if (state.config.datapacks.includes(name)) {
+    //   await actions.setDatapackConfig(
+    //     state.config.datapacks.filter((datapack) => datapack !== name),
+    //     ""
+    //   );
+    // } else {
+    //   await actions.setDatapackConfig([...state.config.datapacks, name], "");
+    // }
+    const datapacks = state.config.datapacks.includes(name) ? state.config.datapacks.filter((datapack) => datapack !== name) : [...state.config.datapacks, name];
+
+    const hasPreviousConfig = actions.setPreviousDatapackConfig(datapacks);
+    if (hasPreviousConfig) {
+      return;
     } else {
-      await actions.setDatapackConfig([...state.config.datapacks, name], "");
+      const chartSettings = null;
+      const setDatapackConfigWorker: Worker = new Worker(new URL("../util/workers/set-datapack-config.ts", import.meta.url), {
+        type: "module"
+      });
+      const message: SetDatapackConfigMessage = {
+        datapacks: datapacks, settingsPath: "",
+        chartSettings: chartSettings, stateCopy: JSON.stringify(state)
+      };
+      setDatapackConfigWorker.postMessage(message);
+      setDatapackConfigWorker.onmessage = async function (e: MessageEvent<SetDatapackConfigCompleteMessage>) {
+        const { status, value } = e.data;
+        if (status === "success" && value) {
+          actions.afterSetDatapackConfig(value.columnRoot, value.foundDefaultAge, value.mapHierarchy, value.mapInfo, value.datapacks, value.chartSettings);
+        } else {
+          actions.pushSnackbar("Setting Datapack Config Timed Out", "info");
+        }
+        setDatapackConfigWorker.terminate();
+      }
+
     }
   };
 
