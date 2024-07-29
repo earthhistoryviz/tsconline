@@ -1,4 +1,5 @@
-import { DataMiningPointDataType, SharedUser } from "@tsconline/shared";
+import { ChartInfoTSC, DataMiningPointDataType, SharedUser } from "@tsconline/shared";
+import { State } from "./state/state";
 
 export type User = SharedUser & {
   settings: {
@@ -28,6 +29,26 @@ export type DownloadPdfCompleteMessage = {
   status: "success" | "failure";
   value: Blob | undefined;
 };
+
+export type SetDatapackConfigMessage = {
+  datapacks: string[];
+  settingsPath?: string;
+  chartSettings: ChartInfoTSC | null;
+  stateCopy: string;
+}
+
+export type SetDatapackConfigCompleteMessage = {
+  status: "success" | "failure";
+  value: SetDatapackConfigCompleteValue | undefined;
+}
+export type SetDatapackConfigCompleteValue = {
+  columnRoot: ColumnInfo;
+  foundDefaultAge: boolean;
+  mapHierarchy: MapHierarchy;
+  mapInfo: MapInfo;
+  datapacks: string[];
+  chartSettings: ChartInfoTSC | null;
+}
 
 //id: unique id among search results
 //columnName: name of column that event/column is under
