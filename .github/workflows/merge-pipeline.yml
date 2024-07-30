@@ -232,7 +232,6 @@ jobs:
       - name: Check for any test failures
         if: steps.run_tests.outputs.test_failed == 'true'
         run: exit 1
-
   setup-preview:
     runs-on: ubuntu-latest
     steps:
