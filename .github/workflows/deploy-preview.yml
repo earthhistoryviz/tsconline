@@ -76,11 +76,9 @@ jobs:
             fi
             cd /home/aaron/tsconline/pr-preview-${{ github.event.issue.number }}
             BUILD_CONTAINER_ID=$(docker-compose -f docker-compose-preview.yml ps -q pr-preview-build)
-            if [ -z "$BUILD_CONTAINER_ID" ]; then
-              echo "Error: Failed to get container ID for pr-preview-build."
-              exit 1
+            if [ -n "$BUILD_CONTAINER_ID" ]; then
+              docker wait $BUILD_CONTAINER_ID
             fi
-            docker wait $BUILD_CONTAINER_ID
             docker-compose -f docker-compose-preview.yml up -d --remove-orphans pr-preview-run
 
             CONTAINER_ID=$(docker-compose -f docker-compose-preview.yml ps -q pr-preview-run)
@@ -198,11 +196,9 @@ jobs:
               docker rm $RUNNING_CONTAINER
             fi 
             BUILD_CONTAINER_ID=$(docker-compose -f docker-compose-preview.yml ps -q pr-preview-build)
-            if [ -z "$BUILD_CONTAINER_ID" ]; then
-              echo "Error: Failed to get container ID for pr-preview-build."
-              exit 1
+            if [ -n "$BUILD_CONTAINER_ID" ]; then
+              docker wait $BUILD_CONTAINER_ID
             fi
-            docker wait $BUILD_CONTAINER_ID
             docker-compose -f docker-compose-preview.yml up -d --remove-orphans pr-preview-run
             CONTAINER_ID=$(docker-compose -f docker-compose-preview.yml ps -q pr-preview-run)
             if [ -z "$CONTAINER_ID" ]; then
