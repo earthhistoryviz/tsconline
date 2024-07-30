@@ -94,7 +94,7 @@ export const Column = observer(function Column() {
           {/* Button to take users to top of column menu when scrolling */}
           {showScroll && (
             <IconButton onClick={scrollToTop} className="scroll-to-top-button">
-              <ArrowForwardIosSharpIcon style={{ transform: "rotate(-90deg)" }} />
+              <ArrowForwardIosSharpIcon style={{ transform: "rotate(-90deg)"}} sx={{ fontSize: 15 }}/>
             </IconButton>
           )}
         </Box>

@@ -263,9 +263,9 @@
 }
 
 .scroll-to-top-button {
-  position: fixed;
+  position: sticky;
   bottom: 2.5%;
-  left: 27%;
+  left: 90%;
   background-color: #66a3d2;
   color: #fff;
   z-index: 1000;
