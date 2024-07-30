@@ -187,14 +187,11 @@ export function addColumnToDataMiningCache(settings: ColumnInfoTSC) {
       if (settings.drawExtraColumn) {
         //column in state and column in loaded settings that have same name (unique identifier per column) could have different types
         //if loaded settings came from a different datapack
-        if (column && column.columnDisplayType !== "Event") {
-          console.log(
-            "WARNING: column in state and column in loaded settings have the same name ",
-            columnName,
-            "but have different types Event and ",
-            column.columnDisplayType
-          );
-          return;
+        if (!column) {
+          dataMiningRefCache.set(columnName, {
+            existingDataMiningType: null,
+            loadedDataMiningType: settings.drawExtraColumn
+          });
         }
         if (column && column.columnDisplayType === "Event") {
           assertEventSettings(column.columnSpecificSettings);
@@ -202,24 +199,17 @@ export function addColumnToDataMiningCache(settings: ColumnInfoTSC) {
             existingDataMiningType: column.columnSpecificSettings.frequency,
             loadedDataMiningType: settings.drawExtraColumn
           });
-        } else
-          dataMiningRefCache.set(columnName, {
-            existingDataMiningType: null,
-            loadedDataMiningType: settings.drawExtraColumn
-          });
+        }
       }
       break;
     case "ChronColumn":
       assertChronColumnInfoTSC(settings);
       if (settings.drawExtraColumn) {
-        if (column && column.columnDisplayType !== "Chron") {
-          console.log(
-            "WARNING: column in state and column in loaded settings have the same name ",
-            columnName,
-            "but have different types Chron and ",
-            column.columnDisplayType
-          );
-          return;
+        if (!column) {
+          dataMiningRefCache.set(columnName, {
+            existingDataMiningType: null,
+            loadedDataMiningType: settings.drawExtraColumn
+          });
         }
         if (column && column.columnDisplayType === "Chron") {
           assertChronSettings(column.columnSpecificSettings);
@@ -227,24 +217,17 @@ export function addColumnToDataMiningCache(settings: ColumnInfoTSC) {
             existingDataMiningType: column.columnSpecificSettings.dataMiningChronDataType,
             loadedDataMiningType: settings.drawExtraColumn
           });
-        } else
-          dataMiningRefCache.set(columnName, {
-            existingDataMiningType: null,
-            loadedDataMiningType: settings.drawExtraColumn
-          });
+        }
       }
       break;
     case "PointColumn":
       assertPointColumnInfoTSC(settings);
       if (settings.drawExtraColumn) {
-        if (column && column.columnDisplayType !== "Point") {
-          console.log(
-            "WARNING: column in state and column in loaded settings have the same name ",
-            columnName,
-            "but have different types Point and ",
-            column.columnDisplayType
-          );
-          return;
+        if (!column) {
+          dataMiningRefCache.set(columnName, {
+            existingDataMiningType: null,
+            loadedDataMiningType: settings.drawExtraColumn
+          });
         }
         if (column && column.columnDisplayType === "Point") {
           assertPointSettings(column.columnSpecificSettings);
@@ -252,11 +235,7 @@ export function addColumnToDataMiningCache(settings: ColumnInfoTSC) {
             existingDataMiningType: column.columnSpecificSettings.dataMiningPointDataType,
             loadedDataMiningType: settings.drawExtraColumn
           });
-        } else
-          dataMiningRefCache.set(columnName, {
-            existingDataMiningType: null,
-            loadedDataMiningType: settings.drawExtraColumn
-          });
+        }
       }
       if (settings.isDataMiningColumn) {
         dataminingFoundCache.set(columnName, settings);
