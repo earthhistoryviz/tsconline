@@ -24,7 +24,7 @@ import { loadIndexes } from "./load-packs.js";
 import { writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
-import { DatapackDescriptionInfo } from "./types.js";
+import { DatapackMetadata } from "./types.js";
 import { MultipartFile } from "@fastify/multipart";
 import { runJavaEncrypt } from "./encryption.js";
 import { queue, maxQueueSize } from "./index.js";
@@ -325,14 +325,9 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     await errorHandler("No file uploaded", 400);
     return;
   }
-  const title = fields.title;
-  const description = fields.description;
-  const authoredBy = fields.authoredBy;
-  const contact = fields.contact;
-  const notes = fields.notes;
-  let references = fields.references;
-  let tags = fields.tags;
-  if (!tags || !references || !authoredBy || !title || !description ||) {
+  const { title, description, authoredBy, contact, notes, date } = fields;
+  let { references, tags } = fields;
+  if (!tags || !references || !authoredBy || !title || !description) {
     await errorHandler("Missing required fields", 400);
     return;
   }
@@ -367,11 +362,17 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     reply.status(400).send({ error: `Empty file cannot be uploaded` });
     return;
   }
-  const datapackInfo: DatapackDescriptionInfo = {
+  const datapackInfo: DatapackMetadata = {
     file: filename,
-    description: description,
-    title: name,
-    size: getBytes(bytes)
+    description,
+    title,
+    authoredBy,
+    references,
+    tags,
+    size: getBytes(bytes),
+    ...(contact && { contact }),
+    ...(notes && { notes }),
+    ...(date && { date })
   };
 
   if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(ext)) {
