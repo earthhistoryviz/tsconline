@@ -314,23 +314,36 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
           return;
         }
       } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
-        const field = part as { fieldname: string; value: string };
-        fields[part.fieldname] = field.value;
+        fields[part.fieldname] = part.value;
       }
     }
   } catch (e) {
     await errorHandler("Failed to upload file with error " + e, 500, e);
     return;
   }
-  const name = fields.name;
-  const description = fields.description;
-
   if (!uploadedFile) {
     await errorHandler("No file uploaded", 400);
     return;
   }
-  if (!name || !description) {
-    await errorHandler("Name or description not provided", 400);
+  const title = fields.title;
+  const description = fields.description;
+  const authoredBy = fields.authoredBy;
+  const contact = fields.contact;
+  const notes = fields.notes;
+  let references = fields.references;
+  let tags = fields.tags;
+  if (!tags || !references || !authoredBy || !title || !description ||) {
+    await errorHandler("Missing required fields", 400);
+    return;
+  }
+  references = JSON.parse(references);
+  tags = JSON.parse(tags);
+  if (!Array.isArray(references) || !references.every((ref) => typeof ref === "string")) {
+    await errorHandler("References must be an array of strings", 400);
+    return;
+  }
+  if (!Array.isArray(tags) || !tags.every((tag) => typeof tag === "string")) {
+    await errorHandler("Tags must be an array of strings", 400);
     return;
   }
   // only accept a binary file (encoded) or an unecnrypted text file or a zip file
