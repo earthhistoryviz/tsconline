@@ -193,12 +193,11 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   reply: FastifyReply
 ) {
   const parts = request.parts();
-  let title: string | undefined;
-  let description: string | undefined;
   let file: MultipartFile | undefined;
   let filename: string | undefined;
   let filepath: string | undefined;
   let decryptedFilepath: string | undefined;
+  const fields: { [fieldname: string]: string } = {}
   for await (const part of parts) {
     if (part.type === "file") {
       // DOWNLOAD FILE HERE AND SAVE TO FILE
@@ -240,14 +239,29 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
         reply.status(400).send({ error: "File too large" });
         return;
       }
-    } else if (part.fieldname === "title" && typeof part.value === "string") {
-      title = part.value;
-    } else if (part.fieldname === "description" && typeof part.value === "string") {
-      description = part.value;
+    } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
+      fields[part.fieldname] = part.value;
     }
   }
-  if (!title || !description || !file || !filepath || !filename || !decryptedFilepath) {
+  const title = fields.title;
+  const description = fields.description;
+  const authoredBy = fields.authoredBy;
+  const contact = fields.contact;
+  const notes = fields.notes;
+  let references = fields.references;
+  let tags = fields.tags;
+  if (!tags || !references || !authoredBy || !title || !description || !file || !filepath || !filename || !decryptedFilepath) {
     reply.status(400).send({ error: "Missing required fields" });
+    return;
+  }
+  references = JSON.parse(references);
+  tags = JSON.parse(tags);
+  if (!Array.isArray(references) || !references.every((ref) => typeof ref === "string")) {
+    reply.status(400).send({ error: "References must be an array of strings" });
+    return;
+  }
+  if (!Array.isArray(tags) || !tags.every((tag) => typeof tag === "string")) {
+    reply.status(400).send({ error: "Tags must be an array of strings" });
     return;
   }
   const errorHandler = async (error: string) => {
@@ -294,9 +308,14 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   }
   const datapackInfo: DatapackDescriptionInfo = {
     file: filename,
-    description: description,
-    title: title,
-    size: getBytes(bytes)
+    description,
+    title,
+    size: getBytes(bytes),
+    authoredBy,
+    tags,
+    references,
+    ...(contact ? { contact } : {}),
+    ...(notes ? { notes } : {})
   };
 
   const successful = await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, [datapackInfo]);
