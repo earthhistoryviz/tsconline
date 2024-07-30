@@ -10,7 +10,7 @@ import Color from "color";
  * @returns
  */
 export function checkIfDataIsInRange(minDataAge: number, maxDataAge: number, userTopAge: number, userBaseAge: number) {
-  if (userBaseAge == userTopAge) {
+  if (userBaseAge <= userTopAge) {
     return false;
   }
 
