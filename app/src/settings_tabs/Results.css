@@ -70,7 +70,18 @@
   max-width: 50px;
 }
 
-.search-result-column-container:hover {
+.MuiSvgIcon-root.status-error-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.status-checkbox,
+.MuiSvgIcon-root.status-error-icon {
+  margin: 0 9px 0 0px;
+  padding: 0px;
+}
+
+.search-result-status-container:hover {
   cursor: pointer;
 }
 
