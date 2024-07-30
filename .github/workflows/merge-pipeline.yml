@@ -221,10 +221,6 @@ jobs:
             }
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check for any test failures
-        if: steps.run_tests.outputs.test_failed == 'true'
-        run: exit 1
-
       - name: Checkout main branch for base lcov file
         uses: actions/checkout@v4
         with:
@@ -257,6 +253,10 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           json-summary-compare-path: coverage-summary.json
+
+      - name: Check for any test failures
+        if: steps.run_tests.outputs.test_failed == 'true'
+        run: exit 1
 
   wait-for-checks:
     runs-on: ubuntu-latest
