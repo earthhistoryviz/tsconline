@@ -16,7 +16,7 @@ import { pipeline } from "stream/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "util";
 import { assertAdminSharedUser, assertDatapackIndex } from "@tsconline/shared";
-import { DatapackDescriptionInfo, NewUser } from "./types.js";
+import { DatapackMetadata, NewUser } from "./types.js";
 
 /**
  * Get all users for admin to configure on frontend
@@ -197,7 +197,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   let filename: string | undefined;
   let filepath: string | undefined;
   let decryptedFilepath: string | undefined;
-  const fields: { [fieldname: string]: string } = {}
+  const fields: { [fieldname: string]: string } = {};
   for await (const part of parts) {
     if (part.type === "file") {
       // DOWNLOAD FILE HERE AND SAVE TO FILE
@@ -243,14 +243,19 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       fields[part.fieldname] = part.value;
     }
   }
-  const title = fields.title;
-  const description = fields.description;
-  const authoredBy = fields.authoredBy;
-  const contact = fields.contact;
-  const notes = fields.notes;
-  let references = fields.references;
-  let tags = fields.tags;
-  if (!tags || !references || !authoredBy || !title || !description || !file || !filepath || !filename || !decryptedFilepath) {
+  const { title, description, authoredBy, contact, notes, date } = fields;
+  let { references, tags } = fields;
+  if (
+    !tags ||
+    !references ||
+    !authoredBy ||
+    !title ||
+    !description ||
+    !file ||
+    !filepath ||
+    !filename ||
+    !decryptedFilepath
+  ) {
     reply.status(400).send({ error: "Missing required fields" });
     return;
   }
@@ -306,7 +311,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     reply.status(400).send({ error: `Empty file cannot be uploaded` });
     return;
   }
-  const datapackInfo: DatapackDescriptionInfo = {
+  const datapackInfo: DatapackMetadata = {
     file: filename,
     description,
     title,
@@ -314,8 +319,9 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     authoredBy,
     tags,
     references,
-    ...(contact ? { contact } : {}),
-    ...(notes ? { notes } : {})
+    ...(contact && { contact }),
+    ...(notes && { notes }),
+    ...(date && { date })
   };
 
   const successful = await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, [datapackInfo]);

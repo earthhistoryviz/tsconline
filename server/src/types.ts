@@ -57,7 +57,7 @@ export type Email = {
 
 export type AssetConfig = {
   activeJar: string;
-  activeDatapacks: DatapackDescriptionInfo[];
+  activeDatapacks: DatapackMetadata[];
   decryptionJar: string;
   decryptionDirectory: string;
   datapacksDirectory: string;
@@ -73,7 +73,7 @@ export type AssetConfig = {
 };
 
 export type AdminConfig = {
-  datapacks: DatapackDescriptionInfo[];
+  datapacks: DatapackMetadata[];
 };
 
 export type Colors = {
@@ -92,7 +92,7 @@ export type FileMetadata = {
   datapackIndexFilepath: string;
 };
 
-export type DatapackDescriptionInfo = {
+export type DatapackMetadata = {
   description: string;
   title: string;
   file: string;
@@ -109,7 +109,7 @@ export function assertAdminConfig(o: any): asserts o is AdminConfig {
   if (typeof o !== "object" || !o) throw "AdminConfig must be an object";
   if (!o.datapacks || !Array.isArray(o.datapacks)) throw 'AdminConfig must have a "datapacks" array';
   for (const datapack of o.datapacks) {
-    assertDatapackDescriptionInfo(datapack);
+    assertDatapackMetadata(datapack);
   }
 }
 export function assertEmail(o: any): asserts o is Email {
@@ -152,26 +152,24 @@ export function assertColors(o: any): asserts o is Colors {
   }
 }
 
-export function assertDatapackDescriptionInfo(o: any): asserts o is DatapackDescriptionInfo {
-  if (!o || typeof o !== "object") throw new Error("DatapackDescriptionInfo must be a non-null object");
-  if (typeof o.description !== "string") throw new Error("DatapackDescriptionInfo description must be of type string");
-  if (typeof o.title !== "string") throw new Error("DatapackDescriptionInfo title must be of type string");
-  if (typeof o.file !== "string") throw new Error("DatapackDescriptionInfo file must be of type string");
-  if (typeof o.size !== "string") throw new Error("DatapackDescriptionInfo size must be of type string");
-  if (typeof o.authoredBy !== "string") throw new Error("DatapackDescriptionInfo authoredBy must be of type string");
-  if (!Array.isArray(o.tags)) throw new Error("DatapackDescriptionInfo tags must be an array");
+export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
+  if (!o || typeof o !== "object") throw new Error("DatapackMetadata must be a non-null object");
+  if (typeof o.description !== "string") throw new Error("DatapackMetadata description must be of type string");
+  if (typeof o.title !== "string") throw new Error("DatapackMetadata title must be of type string");
+  if (typeof o.file !== "string") throw new Error("DatapackMetadata file must be of type string");
+  if (typeof o.size !== "string") throw new Error("DatapackMetadata size must be of type string");
+  if (typeof o.authoredBy !== "string") throw new Error("DatapackMetadata authoredBy must be of type string");
+  if (!Array.isArray(o.tags)) throw new Error("DatapackMetadata tags must be an array");
   for (const tag of o.tags) {
-    if (typeof tag !== "string") throw new Error("DatapackDescriptionInfo tags must be an array of strings");
+    if (typeof tag !== "string") throw new Error("DatapackMetadata tags must be an array of strings");
   }
-  if (o.date && typeof o.date !== "string") throw new Error("DatapackDescriptionInfo date must be of type string");
-  if (!Array.isArray(o.references)) throw new Error("DatapackDescriptionInfo references must be an array");
+  if (o.date && typeof o.date !== "string") throw new Error("DatapackMetadata date must be of type string");
+  if (!Array.isArray(o.references)) throw new Error("DatapackMetadata references must be an array");
   for (const reference of o.references) {
-    if (typeof reference !== "string")
-      throw new Error("DatapackDescriptionInfo references must be an array of strings");
+    if (typeof reference !== "string") throw new Error("DatapackMetadata references must be an array of strings");
   }
-  if ("contact" in o && typeof o.contact !== "string")
-    throw new Error("DatapackDescriptionInfo contact must be a string");
-  if ("notes" in o && typeof o.notes !== "string") throw new Error("DatapackDescriptionInfo notes must be a string");
+  if ("contact" in o && typeof o.contact !== "string") throw new Error("DatapackMetadata contact must be a string");
+  if ("notes" in o && typeof o.notes !== "string") throw new Error("DatapackMetadata notes must be a string");
 }
 
 export function assertAssetConfig(o: any): asserts o is AssetConfig {
@@ -189,7 +187,7 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
   if (!o.activeDatapacks || !Array.isArray(o.activeDatapacks)) throw 'AssetConfig must have an "activeJar" string';
   for (const [index, ad] of o.activeDatapacks.entries()) {
     if (typeof ad !== "object")
-      throw "AssetConfig activeDatapacks item " + index + " must be a valid DatapackDescriptionInfo object";
+      throw "AssetConfig activeDatapacks item " + index + " must be a valid DatapackMetadata object";
     if (typeof ad.description !== "string")
       throw "AssetConfig activeDatapacks description item " + index + " must be a valid string";
     if (typeof ad.title !== "string")

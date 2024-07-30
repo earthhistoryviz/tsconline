@@ -75,7 +75,7 @@ import {
 } from "./util.js";
 import { createInterface } from "readline";
 import _ from "lodash";
-import { DatapackDescriptionInfo } from "./types.js";
+import { DatapackMetadata } from "./types.js";
 import { join } from "path";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;
@@ -163,7 +163,7 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
  * @returns
  */
 export async function parseDatapacks(
-  datapackInfo: DatapackDescriptionInfo,
+  datapackInfo: DatapackMetadata,
   decryptFilePath: string,
   uuid?: string
 ): Promise<DatapackParsingPack | null> {
