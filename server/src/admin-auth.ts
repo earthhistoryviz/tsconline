@@ -96,8 +96,8 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     },
     required: ["datapack"]
   };
-  // fastify.addHook("preHandler", verifyAdmin);
-  // fastify.addHook("preHandler", verifyRecaptcha);
+  fastify.addHook("preHandler", verifyAdmin);
+  fastify.addHook("preHandler", verifyRecaptcha);
   fastify.post("/users", { config: { rateLimit: looseRateLimit } }, getUsers);
   fastify.post(
     "/user",

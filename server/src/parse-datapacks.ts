@@ -39,7 +39,6 @@ import {
   ColumnInfoType,
   assertSubInfo,
   SubInfo,
-  assertDatapackParsingPack,
   defaultEventSettings,
   isPointShape,
   assertPoint,
@@ -369,35 +368,34 @@ export async function getAllEntries(
     if (!line) continue;
     // grab any datapack properties
     const split = line.split("\t");
-    let value = split[1];
+    let value = split[1]?.trim();
     if (value) {
       switch (split[0]?.toLowerCase().trim()) {
         case "settop:":
-          if (!isNaN(Number(value.trim()))) top = Number(value);
+          if (!isNaN(Number(value))) top = Number(value);
           filePropertyLines++;
           continue;
         case "setbase:":
-          if (!isNaN(Number(value.trim()))) base = Number(value);
+          if (!isNaN(Number(value))) base = Number(value);
           filePropertyLines++;
           continue;
         case "chart title:":
-          chartTitle = value.trim();
+          chartTitle = value;
           filePropertyLines++;
           continue;
         case "age units:":
-          ageUnits = value.trim();
+          ageUnits = value;
           filePropertyLines++;
           continue;
         case "default chronostrat:":
           filePropertyLines++;
-          const trim = value.trim();
-          if (!isDefaultChronostrat(trim)) {
+          if (!isDefaultChronostrat(value)) {
             console.error(
               "Default chronostrat value in datapack is neither USGS nor UNESCO, setting to default UNESCO"
             );
             continue;
           }
-          defaultChronostrat = trim;
+          defaultChronostrat = value;
           continue;
         case "date:":
           if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) value = value.split("/").reverse().join("-");
@@ -405,7 +403,7 @@ export async function getAllEntries(
           filePropertyLines++;
           continue;
         case "format version:":
-          formatVersion = Number(value.trim());
+          formatVersion = Number(value);
           if (isNaN(formatVersion)) {
             console.error("Format version is not a number, setting to default 1.5");
             formatVersion = 1.5;
