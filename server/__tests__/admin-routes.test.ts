@@ -99,7 +99,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => { });
+        readable.on("data", () => {});
         readable.on("end", () => {
           resolve();
         });
@@ -210,7 +210,7 @@ beforeAll(async () => {
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => { });
+  vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 afterAll(async () => {
@@ -914,7 +914,7 @@ describe("adminUploadServerDatapack", () => {
     references: ["test-reference"],
     contact: "test-contact",
     notes: "test-notes",
-    authoredBy: "test-author",
+    authoredBy: "test-author"
   };
   const checkErrorHandler = (statusCode: number) => {
     expect(rm).toHaveBeenNthCalledWith(1, expect.stringContaining(normalize("testdir/datapacksDirectory")), {
@@ -1331,7 +1331,7 @@ describe("adminDeleteServerDatapack", () => {
     references: ["test-reference"],
     contact: "test-contact",
     notes: "test-notes",
-    authoredBy: "test-author",
+    authoredBy: "test-author"
   };
   const body = {
     datapack: "active-datapack.dpk"

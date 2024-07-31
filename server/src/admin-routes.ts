@@ -255,7 +255,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   }
   fields.filepath = filepath;
   fields.filename = filename;
-  const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async (error) => {
+  const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async () => {
     filepath && (await rm(filepath, { force: true }));
     reply.status(500).send({ error: "Unexpected error with request fields." });
   });
