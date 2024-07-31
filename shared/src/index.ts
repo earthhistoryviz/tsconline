@@ -552,8 +552,12 @@ export function isDefaultChronostrat(o: any): o is DefaultChronostrat {
 
 export function isDateValid(date: string): boolean {
   for (const format of validDateFormats) {
-    if (validator.isDate(date, { strictMode: true, format })) {
-      return true;
+    try {
+      if (validator.isDate(date, { format, delimiters: ["-", ".", "/"] })) {
+        return true;
+      }
+    } catch {
+      continue;
     }
   }
   return false;
