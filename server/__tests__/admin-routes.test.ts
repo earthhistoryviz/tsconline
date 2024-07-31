@@ -17,6 +17,8 @@ import { join, normalize, parse, resolve } from "path";
 import fastifyMultipart from "@fastify/multipart";
 import formAutoContent from "form-auto-content";
 import { DatapackParsingPack, MapPack } from "@tsconline/shared";
+import { DatapackMetadata } from "../src/types";
+import * as uploadHandlers from "../src/upload-handlers";
 
 vi.mock("node:child_process", async () => {
   return {
@@ -33,6 +35,12 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
   return {
     assertAdminSharedUser: vi.fn().mockImplementation(actual.assertAdminSharedUser),
     assertDatapackIndex: vi.fn().mockReturnValue(true)
+  };
+});
+
+vi.mock("./upload-handlers.js", async () => {
+  return {
+    userUploadHandler: vi.fn().mockResolvedValue({})
   };
 });
 vi.mock("../src/util", async () => {
@@ -89,7 +97,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => {});
+        readable.on("data", () => { });
         readable.on("end", () => {
           resolve();
         });
@@ -200,7 +208,7 @@ beforeAll(async () => {
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "error").mockImplementation(() => { });
 });
 
 afterAll(async () => {
@@ -893,11 +901,18 @@ describe("adminUploadServerDatapack", () => {
   const loadIndexes = vi.spyOn(loadPacks, "loadIndexes");
   const writeFile = vi.spyOn(fsPromises, "writeFile");
   const pipeline = vi.spyOn(streamPromises, "pipeline");
-  const testDatapackDescription = {
+  const uploadUserDataPackHandler = vi.spyOn(uploadHandlers, "uploadUserDatapackHandler");
+  const testDatapackDescription: DatapackMetadata = {
     file: "test.dpk",
     description: "test-description",
     title: "test-title",
-    size: "30MB"
+    size: "30MB",
+    date: "2021-01-01",
+    tags: ["test-tag"],
+    references: ["test-reference"],
+    contact: "test-contact",
+    notes: "test-notes",
+    authoredBy: "test-author",
   };
   const checkErrorHandler = (statusCode: number) => {
     expect(rm).toHaveBeenNthCalledWith(1, expect.stringContaining(normalize("testdir/datapacksDirectory")), {
@@ -919,42 +934,26 @@ describe("adminUploadServerDatapack", () => {
         }
       };
     }
-    if (!("title" in json)) {
-      json.title = testDatapackDescription.title;
-    }
-    if (!("description" in json)) {
-      json.description = testDatapackDescription.description;
-    }
     formData = formAutoContent({ ...json }, { payload: "body", forceMultiPart: true });
     formHeaders = { ...headers, ...(formData.headers as Record<string, string>) };
   };
   beforeEach(() => {
     createForm();
-  });
-
-  beforeEach(() => {
     vi.clearAllMocks();
+    uploadUserDataPackHandler.mockResolvedValueOnce(testDatapackDescription);
   });
-  test.each([{ title: "" }, { description: "" }, { file: "" }])("should return 400 if missing %p", async (json) => {
-    createForm({ ...json });
+  afterAll(() => {
+    uploadUserDataPackHandler.mockReset();
+  });
+  it("should return 400 if missing file field", async () => {
+    createForm({ file: "" });
     const response = await app.inject({
       method: "POST",
       url: "/admin/server/datapack",
       payload: formData.body,
       headers: formHeaders
     });
-    expect(await response.json()).toEqual({ error: "Missing required fields" });
-    expect(response.statusCode).toBe(400);
-  });
-  it("should return 400 if no fields exist", async () => {
-    const emptyForm = formAutoContent({});
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/server/datapack",
-      payload: emptyForm.payload,
-      headers: formHeaders
-    });
-    expect(await response.json()).toEqual({ error: "Missing required fields" });
+    expect(await response.json()).toEqual({ error: "Missing file" });
     expect(response.statusCode).toBe(400);
   });
   it("should return 403 if file attempts directory traversal", async () => {
@@ -977,6 +976,7 @@ describe("adminUploadServerDatapack", () => {
       headers: formHeaders
     });
     expect(execFile).not.toHaveBeenCalled();
+    expect(pipeline).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ error: "Directory traversal detected" });
     expect(response.statusCode).toBe(403);
   });
@@ -998,6 +998,7 @@ describe("adminUploadServerDatapack", () => {
         payload: formData.body,
         headers: formHeaders
       });
+      expect(pipeline).not.toHaveBeenCalled();
       expect(execFile).not.toHaveBeenCalled();
       expect(await response.json()).toEqual({ error: "Invalid file type" });
       expect(response.statusCode).toBe(400);
@@ -1019,6 +1020,7 @@ describe("adminUploadServerDatapack", () => {
       payload: formData.body,
       headers: formHeaders
     });
+    expect(pipeline).not.toHaveBeenCalled();
     expect(execFile).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ error: "File already exists" });
     expect(response.statusCode).toBe(409);
@@ -1040,6 +1042,7 @@ describe("adminUploadServerDatapack", () => {
       headers: formHeaders
     });
     expect(execFile).not.toHaveBeenCalled();
+    expect(pipeline).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ error: "File already exists" });
     expect(response.statusCode).toBe(409);
   });
@@ -1095,6 +1098,36 @@ describe("adminUploadServerDatapack", () => {
     expect(await response.json()).toEqual({ error: "File too large" });
     expect(response.statusCode).toBe(400);
   });
+  it("should return 500 if uploadUserDataPackHandler throws error", async () => {
+    uploadUserDataPackHandler.mockReset();
+    uploadUserDataPackHandler.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/server/datapack",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(rm).toHaveBeenCalledTimes(1);
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/test.dpk`), { force: true });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Unexpected error with request fields." });
+  });
+  it("should just return if uploadUserDataPackHandler returns void", async () => {
+    uploadUserDataPackHandler.mockReset();
+    uploadUserDataPackHandler.mockResolvedValueOnce();
+    await app.inject({
+      method: "POST",
+      url: "/admin/server/datapack",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(uploadUserDataPackHandler).toHaveBeenCalledTimes(1);
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(execFile).not.toHaveBeenCalled();
+    expect(rm).not.toHaveBeenCalled();
+    expect(loadIndexes).not.toHaveBeenCalled();
+  });
   it("should return 500 if realpath doesn't find a real path for the decrypted file", async () => {
     realpath.mockRejectedValueOnce(new Error());
     const response = await app.inject({
@@ -1124,8 +1157,10 @@ describe("adminUploadServerDatapack", () => {
       payload: formData.body,
       headers: formHeaders
     });
-    expect(execFile).toHaveBeenCalledTimes(1);
-    expect(realpath).toHaveBeenCalledTimes(1);
+    expect(rm).toHaveBeenCalledTimes(1);
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/test.dpk`), { force: true });
+    expect(execFile).not.toHaveBeenCalled();
+    expect(realpath).not.toHaveBeenCalled();
     expect(loadIndexes).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ error: "Empty file cannot be uploaded" });
   });
@@ -1284,11 +1319,17 @@ describe("getUsers", () => {
 describe("adminDeleteServerDatapack", () => {
   const writeFile = vi.spyOn(fsPromises, "writeFile");
   const rm = vi.spyOn(fsPromises, "rm");
-  const testDatapackDescription = {
+  const testDatapackDescription: DatapackMetadata = {
     title: "test-title",
     description: "test-description",
     file: "active-datapack.dpk",
-    size: "30MB"
+    size: "30MB",
+    date: "2021-01-01",
+    tags: ["test-tag"],
+    references: ["test-reference"],
+    contact: "test-contact",
+    notes: "test-notes",
+    authoredBy: "test-author",
   };
   const body = {
     datapack: "active-datapack.dpk"
