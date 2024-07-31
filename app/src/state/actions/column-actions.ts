@@ -9,11 +9,13 @@ import {
   DataMiningSettings,
   EventFrequency,
   EventSettings,
+  PointColumnInfoTSC,
   PointSettings,
   RGB,
   RangeSettings,
   SequenceSettings,
   ValidFontOptions,
+  assertChronColumnInfoTSC,
   assertChronSettings,
   assertEventColumnInfoTSC,
   assertEventSettings,
@@ -75,30 +77,29 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
         setEventColumnSettings(column.columnSpecificSettings, { type: settings.type, rangeSort: settings.rangeSort });
       break;
     case "PointColumn":
-      {
-        assertPointColumnInfoTSC(settings);
-        assertPointSettings(column.columnSpecificSettings);
-        setPointColumnSettings(column.columnSpecificSettings, {
-          drawLine: settings.drawLine,
-          drawFill: settings.drawFill,
-          drawScale: settings.drawScale,
-          drawCurveGradient: settings.drawCurveGradient,
-          drawBackgroundGradient: settings.drawBgrndGradient,
-          backgroundGradientStart: settings.backGradStart,
-          backgroundGradientEnd: settings.backGradEnd,
-          curveGradientStart: settings.curveGradStart,
-          curveGradientEnd: settings.curveGradEnd,
-          lineColor: settings.lineColor,
-          flipScale: settings.flipScale,
-          scaleStart: settings.scaleStart,
-          scaleStep: settings.scaleStep,
-          fill: settings.fillColor,
-          pointShape: settings.drawPoints === false ? "nopoints" : convertPointTypeToPointShape(settings.pointType),
-          smoothed: settings.drawSmooth,
-          lowerRange: settings.minWindow,
-          upperRange: settings.maxWindow
-        });
-      }
+      assertPointColumnInfoTSC(settings);
+      assertPointSettings(column.columnSpecificSettings);
+      setPointColumnSettings(column.columnSpecificSettings, {
+        drawLine: settings.drawLine,
+        drawFill: settings.drawFill,
+        drawScale: settings.drawScale,
+        drawCurveGradient: settings.drawCurveGradient,
+        drawBackgroundGradient: settings.drawBgrndGradient,
+        backgroundGradientStart: settings.backGradStart,
+        backgroundGradientEnd: settings.backGradEnd,
+        curveGradientStart: settings.curveGradStart,
+        curveGradientEnd: settings.curveGradEnd,
+        lineColor: settings.lineColor,
+        flipScale: settings.flipScale,
+        scaleStart: settings.scaleStart,
+        scaleStep: settings.scaleStep,
+        fill: settings.fillColor,
+        pointShape: settings.drawPoints === false ? "nopoints" : convertPointTypeToPointShape(settings.pointType),
+        smoothed: settings.drawSmooth,
+        lowerRange: settings.minWindow,
+        upperRange: settings.maxWindow,
+        isDataMiningColumn: settings.isDataMiningColumn
+      });
       break;
     case "SequenceColumn":
       assertSequenceColumnInfoTSC(settings);
@@ -113,20 +114,163 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
       break;
   }
 }
+
+const dataminingFoundCache = new Map<string, PointColumnInfoTSC>();
+
+//key: column name
+//currIdentifier: indicates the datamine column (if it exists) that references the key.
+//loadedIdentifier: the type of datamine column to draw according to the loaded settings
+const dataMiningRefCache = new Map<
+  string,
+  {
+    existingDataMiningType: EventFrequency | DataMiningChronDataType | DataMiningPointDataType | null;
+    loadedDataMiningType: EventFrequency | DataMiningChronDataType | DataMiningPointDataType;
+  }
+>();
+
+//TODO: maybe ask user to confirm overwrite of datamining columns
+
+export function handleDataMiningColumns() {
+  //shortest to largest name
+  const sortedRefNameList = Array.from(dataMiningRefCache.keys()).sort((a, b) => a.length - b.length);
+  for (const name of sortedRefNameList) {
+    const refCol = state.settingsTabs.columnHashMap.get(name);
+    const refInfo = dataMiningRefCache.get(name);
+    if (!refCol) {
+      //also could not be in selected datapacks, so commented since many of these columns could exist
+      //console.error("Datamining reference column is not in state");
+      continue;
+    }
+    if (!refInfo) {
+      console.error("While handling datamining columns, failed to find refInfo for reference column");
+      continue;
+    }
+    const { existingDataMiningType, loadedDataMiningType } = refInfo;
+    let dmName: string | undefined = undefined;
+    try {
+      dmName = addDataMiningColumn(refCol, loadedDataMiningType);
+    } catch (e) {
+      console.log(e);
+      continue;
+    }
+    if (!dmName) {
+      console.error("While handling datamining columns, failed to add datamining column");
+      continue;
+    }
+    const createdDmColumn = state.settingsTabs.columnHashMap.get(dmName);
+    if (!createdDmColumn) {
+      console.error("while handling datamining columns, failed to access created datamining column from state");
+      continue;
+    }
+    const foundDmColumn = dataminingFoundCache.get(dmName);
+    if (!foundDmColumn) {
+      console.error(
+        "While handling datamining columns, name of created datamining column does not match any datamining columns in loaded settings"
+      );
+      continue;
+    }
+    setColumnProperties(createdDmColumn, foundDmColumn);
+    //this means there was a datamine column for the refcol before loading settings, so remove it since we can only have one datamine at a time
+    if (existingDataMiningType) removeDataMiningColumn(refCol, existingDataMiningType);
+  }
+  //reset cache
+  dataminingFoundCache.clear();
+  dataMiningRefCache.clear();
+}
+
+export function addColumnToDataMiningCache(settings: ColumnInfoTSC) {
+  const columnName = extractName(settings._id);
+  const column = state.settingsTabs.columnHashMap.get(columnName);
+  switch (extractColumnType(settings._id)) {
+    case "EventColumn":
+      assertEventColumnInfoTSC(settings);
+      if (settings.drawExtraColumn) {
+        //column in state and column in loaded settings that have same name (unique identifier per column) could have different types
+        //if loaded settings came from a different datapack
+        if (!column) {
+          dataMiningRefCache.set(columnName, {
+            existingDataMiningType: null,
+            loadedDataMiningType: settings.drawExtraColumn
+          });
+        }
+        if (column && column.columnDisplayType === "Event") {
+          assertEventSettings(column.columnSpecificSettings);
+          dataMiningRefCache.set(columnName, {
+            existingDataMiningType: column.columnSpecificSettings.frequency,
+            loadedDataMiningType: settings.drawExtraColumn
+          });
+        }
+      }
+      break;
+    case "ChronColumn":
+      assertChronColumnInfoTSC(settings);
+      if (settings.drawExtraColumn) {
+        if (!column) {
+          dataMiningRefCache.set(columnName, {
+            existingDataMiningType: null,
+            loadedDataMiningType: settings.drawExtraColumn
+          });
+        }
+        if (column && column.columnDisplayType === "Chron") {
+          assertChronSettings(column.columnSpecificSettings);
+          dataMiningRefCache.set(columnName, {
+            existingDataMiningType: column.columnSpecificSettings.dataMiningChronDataType,
+            loadedDataMiningType: settings.drawExtraColumn
+          });
+        }
+      }
+      break;
+    case "PointColumn":
+      assertPointColumnInfoTSC(settings);
+      if (settings.drawExtraColumn) {
+        if (!column) {
+          dataMiningRefCache.set(columnName, {
+            existingDataMiningType: null,
+            loadedDataMiningType: settings.drawExtraColumn
+          });
+        }
+        if (column && column.columnDisplayType === "Point") {
+          assertPointSettings(column.columnSpecificSettings);
+          dataMiningRefCache.set(columnName, {
+            existingDataMiningType: column.columnSpecificSettings.dataMiningPointDataType,
+            loadedDataMiningType: settings.drawExtraColumn
+          });
+        }
+      }
+      if (settings.isDataMiningColumn) {
+        dataminingFoundCache.set(columnName, settings);
+      }
+  }
+}
+
+/**
+ * applys the chart column settings from a settings file to the
+ * columninfo stored in state.
+ *
+ * @param settings settings that is being applied to the current column
+ * @param parent parent of current column, used for creating datamining column
+ *
+ */
+
 export const applyChartColumnSettings = action("applyChartColumnSettings", (settings: ColumnInfoTSC) => {
   const columnName = extractName(settings._id);
   let curcol: ColumnInfo | undefined =
     state.settingsTabs.columnHashMap.get(columnName) ||
     state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
-  if (curcol === undefined) {
-    //const errorDesc: string = "Unknown column name found while loading settings: ";
-    //makes website super slow if a lot of unknown columns (ex. if loaded settings for a different datapack)
-    //pushSnackbar(errorDesc + columnName.substring(0, snackbarTextLengthLimit - errorDesc.length - 1), "warning");
-  } else setColumnProperties(curcol, settings);
+  if (curcol) {
+    setColumnProperties(curcol, settings);
+  }
+
+  addColumnToDataMiningCache(settings);
+
   if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
     for (let i = 0; i < settings.children.length; i++) {
-      curcol = state.settingsTabs.columnHashMap.get(columnName + " " + extractName(settings.children[i]._id));
-      if (curcol !== undefined) setColumnProperties(curcol, settings.children[i]);
+      const child = settings.children[i];
+      const childName = extractName(child._id);
+      curcol = state.settingsTabs.columnHashMap.get(columnName + " " + childName);
+      if (curcol) setColumnProperties(curcol, child);
+
+      addColumnToDataMiningCache(child);
     }
   } else {
     for (let i = 0; i < settings.children.length; i++) {
@@ -153,7 +297,9 @@ export const applyRowOrder = action(
       let childName = extractName(settingsChild._id);
       //for manually changed columns (facies, chron, etc.)
       if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
-        childName = extractName(settings._id) + " " + childName;
+        //change name for facies, chron, member, and labels (keep name same for blank, age, datamining column)
+        if (["Facies", "Chron", "Members", "Facies Label", "Series Label", "Chron Label"].includes(childName))
+          childName = extractName(settings._id) + " " + childName;
       }
       //for chart titles with different units
       else if (!column.parent) {
@@ -512,6 +658,7 @@ export const addDataMiningColumn = action(
     });
     parent.children.splice(index + 1, 0, dataMiningColumn);
     state.settingsTabs.columnHashMap.set(dataMiningColumnName, dataMiningColumn);
+    return dataMiningColumnName;
   }
 );
 
