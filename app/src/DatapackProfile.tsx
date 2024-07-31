@@ -13,7 +13,6 @@ import CampaignIcon from "@mui/icons-material/Campaign";
 import { PageNotFound } from "./PageNotFound";
 import { DatapackParsingPack, DatapackWarning } from "@tsconline/shared";
 
-const tags: string[] = ["Large", "Small", "Medium", "Huge", "Tiny", "Normal", "Abnormal"];
 export const DatapackProfile = observer(() => {
   const { state } = useContext(context);
   const { id } = useParams();
@@ -115,16 +114,16 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
       </div>
       <div className={styles.additional}>
         <div className={styles.ai}>
-          <Typography className={styles.aih}>Author</Typography>
-          <Typography>Duval et al.</Typography>
+          <Typography className={styles.aih}>Authored By</Typography>
+          <Typography>{datapack.authoredBy}</Typography>
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>Created</Typography>
-          <Typography>12/12/2004</Typography>
+          <Typography>{datapack.date || "Unknown"}</Typography>
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>Columns</Typography>
-          <Typography>50</Typography>
+          <Typography>{datapack.totalColumns}</Typography>
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>File Name</Typography>
@@ -137,11 +136,13 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
         <div className={styles.ai}>
           <Typography className={styles.aih}>Tags</Typography>
           <div className={styles.tags}>
-            {tags.map((tag) => (
-              <TagButton key={tag}>
-                <Typography fontSize="0.9rem">{tag}</Typography>
-              </TagButton>
-            ))}
+            {datapack.tags[0]
+              ? datapack.tags.map((tag) => (
+                  <TagButton key={tag}>
+                    <Typography fontSize="0.9rem">{tag}</Typography>
+                  </TagButton>
+                ))
+              : "No tags"}
           </div>
         </div>
       </div>
