@@ -2347,7 +2347,9 @@ __metadata:
   resolution: "@tsconline/shared@workspace:shared"
   dependencies:
     "@types/node": "npm:^20.11.28"
+    "@types/validator": "npm:^13"
     typescript: "npm:5.2.2"
+    validator: "npm:^13.12.0"
     vitest: "npm:^1.6.0"
   languageName: unknown
   linkType: soft

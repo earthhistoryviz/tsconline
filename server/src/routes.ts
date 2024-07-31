@@ -29,6 +29,7 @@ import { MultipartFile } from "@fastify/multipart";
 import { runJavaEncrypt } from "./encryption.js";
 import { queue, maxQueueSize } from "./index.js";
 import { containsKnownError } from "./chart-error-handler.js";
+import { pipeline } from "stream/promises";
 
 export const fetchServerDatapack = async function fetchServerDatapack(
   request: FastifyRequest<{ Params: { name: string } }>,
@@ -282,7 +283,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     await resetUploadDirectory(filepath, decryptedFilepathDir);
     reply.status(errorStatus).send({ error: message });
   }
-
   const parts = request.parts();
   const fields: Record<string, string> = {};
   let uploadedFile: MultipartFile | undefined;
@@ -301,16 +301,31 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     for await (const part of parts) {
       if (part.type === "file") {
         uploadedFile = part;
+        // only accept a binary file (encoded) or an unecnrypted text file or a zip file
+        if (
+          (uploadedFile.mimetype !== "application/octet-stream" &&
+            uploadedFile.mimetype !== "text/plain" &&
+            uploadedFile.mimetype !== "application/zip") ||
+          !/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(path.extname(uploadedFile.filename))
+        ) {
+          reply.status(415).send({ error: "Invalid file type" });
+          return;
+        }
         filepath = path.join(datapackDir, uploadedFile.filename);
-        const fileStream = fs.createWriteStream(filepath);
         try {
-          await pump(uploadedFile.file, fileStream);
+          await pipeline(uploadedFile.file, fs.createWriteStream(filepath));
         } catch (e) {
-          await errorHandler("Failed to upload file with error " + e, 500, e);
+          reply.status(500).send({ error: "Failed to save file with error " + e });
           return;
         }
         if (uploadedFile.file.truncated) {
-          await errorHandler("File too large", 413);
+          await rm(filepath, { force: true });
+          reply.status(400).send({ error: "File is too large" });
+          return;
+        }
+        if (uploadedFile.file.bytesRead === 0) {
+          await rm(filepath, { force: true });
+          reply.status(400).send({ error: `Empty file cannot be uploaded` });
           return;
         }
       } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
@@ -318,36 +333,32 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       }
     }
   } catch (e) {
-    await errorHandler("Failed to upload file with error " + e, 500, e);
+    filepath && (await rm(filepath, { force: true }));
+    reply.status(500).send({ error: "Failed to upload file with error " + e });
     return;
   }
-  if (!uploadedFile) {
-    await errorHandler("No file uploaded", 400);
+  if (!uploadedFile || !filepath) {
+    filepath && (await rm(filepath, { force: true }));
+    reply.status(400).send({ error: "No file uploaded" });
     return;
   }
   const { title, description, authoredBy, contact, notes, date } = fields;
   let { references, tags } = fields;
   if (!tags || !references || !authoredBy || !title || !description) {
-    await errorHandler("Missing required fields", 400);
+    await rm(filepath, { force: true });
+    reply.status(400).send({ error: "Missing required fields" });
     return;
   }
   references = JSON.parse(references);
   tags = JSON.parse(tags);
   if (!Array.isArray(references) || !references.every((ref) => typeof ref === "string")) {
-    await errorHandler("References must be an array of strings", 400);
+    await rm(filepath, { force: true });
+    reply.status(400).send({ error: "References must be an array of strings" });
     return;
   }
   if (!Array.isArray(tags) || !tags.every((tag) => typeof tag === "string")) {
-    await errorHandler("Tags must be an array of strings", 400);
-    return;
-  }
-  // only accept a binary file (encoded) or an unecnrypted text file or a zip file
-  if (
-    uploadedFile.mimetype !== "application/octet-stream" &&
-    uploadedFile.mimetype !== "text/plain" &&
-    uploadedFile.mimetype !== "application/zip"
-  ) {
-    await errorHandler(`Invalid mimetype of uploaded file, received ${uploadedFile.mimetype}`, 400);
+    await rm(filepath, { force: true });
+    reply.status(400).send({ error: "Tags must be an array of strings" });
     return;
   }
   const filename = uploadedFile.filename;
@@ -358,10 +369,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   const mapPackIndexFilepath = path.join(userDir, "MapPackIndex.json");
   const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json");
   const bytes = uploadedFile.file.bytesRead;
-  if (bytes === 0) {
-    reply.status(400).send({ error: `Empty file cannot be uploaded` });
-    return;
-  }
   const datapackInfo: DatapackMetadata = {
     file: filename,
     description,
@@ -374,11 +381,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     ...(notes && { notes }),
     ...(date && { date })
   };
-
-  if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(ext)) {
-    reply.status(415).send({ error: "Invalid file type" });
-    return;
-  }
 
   try {
     await new Promise<void>((resolve, reject) => {
@@ -438,14 +440,20 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       return;
     }
   }
-  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [datapackInfo], uuid);
-  if (!datapackIndex[filename]) {
+  const success = await loadIndexes(
+    datapackIndex,
+    mapPackIndex,
+    decryptDir.replaceAll("\\", "/"),
+    [datapackInfo],
+    uuid
+  );
+  if (!success) {
     await errorHandler("Failed to load decrypted datapack", 500);
     return;
   }
   try {
-    await writeFile(datapackIndexFilepath, JSON.stringify(datapackIndex));
-    await writeFile(mapPackIndexFilepath, JSON.stringify(mapPackIndex));
+    await writeFile(datapackIndexFilepath, JSON.stringify(datapackIndex, null, 2));
+    await writeFile(mapPackIndexFilepath, JSON.stringify(mapPackIndex, null, 2));
   } catch (e) {
     await errorHandler("Failed to save indexes", 500, e);
     return;
