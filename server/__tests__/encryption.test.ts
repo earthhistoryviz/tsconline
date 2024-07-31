@@ -24,23 +24,20 @@ async function checkFileExists(filePath: string): Promise<boolean> {
   }
 }
 
-const baseDir = path.resolve(__dirname, "../..");
 let jarFilePath = "";
-const resultPath = path.join(baseDir, "server/__tests__/__data__/encryption-test-generated-file");
-const testUsageJarPath = path.join(baseDir, "server/assets/jars/testUsageJar.jar");
-if (await checkFileExists(testUsageJarPath)) {
-  jarFilePath = testUsageJarPath;
+let resultPath = "server/__tests__/__data__/encryption-test-generated-file";
+if (await checkFileExists("/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar")) {
+  jarFilePath = "/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar";
+  resultPath = "/home/runner/work/tsconline/tsconline/server/__tests__/__data__/encryption-test-generated-file";
 } else {
   try {
-    const configPath = path.join(baseDir, "server/assets/config.json");
-    const contents = JSON.parse((await readFile(configPath)).toString());
+    const contents = JSON.parse((await readFile("server/assets/config.json")).toString());
     assertAssetConfig(contents);
-    jarFilePath = path.join(baseDir, "server", contents.activeJar);
+    jarFilePath = "server/" + contents.activeJar;
   } catch (e) {
-    throw new Error("ERROR: Failed to load local jar file path from assets/config.json. Error was: " + e);
+    throw new Error("ERROR: Failed to load local jar file path from assets/config.json.  Error was: " + e);
   }
 }
-
 if (!jarFilePath) throw new Error("jar file path shouldn't be empty");
 
 describe("runJavaEncrypt", async () => {
