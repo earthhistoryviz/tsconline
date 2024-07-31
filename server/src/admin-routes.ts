@@ -239,6 +239,11 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
         reply.status(400).send({ error: "File too large" });
         return;
       }
+      if (file.file.bytesRead === 0) {
+        await rm(filepath, { force: true });
+        reply.status(400).send({ error: `Empty file cannot be uploaded` });
+        return;
+      }
     } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
       fields[part.fieldname] = part.value;
     }
@@ -270,14 +275,16 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     return;
   }
   if (!Array.isArray(references) || !references.every((ref) => typeof ref === "string")) {
+    await rm(filepath, { force: true });
     reply.status(400).send({ error: "References must be an array of strings" });
     return;
   }
   if (!Array.isArray(tags) || !tags.every((tag) => typeof tag === "string")) {
+    await rm(filepath, { force: true });
     reply.status(400).send({ error: "Tags must be an array of strings" });
     return;
   }
-  if (date && isDateValid(date)) {
+  if (date && !isDateValid(date)) {
     await rm(filepath, { force: true });
     reply.status(400).send({ error: "Date must be a valid date string" });
     return;
@@ -320,10 +327,6 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   }
 
   const bytes = file.file.bytesRead;
-  if (bytes === 0) {
-    reply.status(400).send({ error: `Empty file cannot be uploaded` });
-    return;
-  }
   const datapackInfo: DatapackMetadata = {
     file: filename,
     description,
