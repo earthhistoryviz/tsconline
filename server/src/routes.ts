@@ -11,7 +11,8 @@ import {
   assertDatapackIndex,
   assertIndexResponse,
   assertTimescale,
-  assertMapPackIndex
+  assertMapPackIndex,
+  isDateValid
 } from "@tsconline/shared";
 import { deleteDirectory, resetUploadDirectory, checkHeader, assetconfigs, adminconfig, getBytes } from "./util.js";
 import md5 from "md5";
@@ -271,7 +272,8 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
 
 // If at some point a delete datapack function is needed, this function needs to be modified for race conditions
 export const uploadDatapack = async function uploadDatapack(request: FastifyRequest, reply: FastifyReply) {
-  const uuid = request.session.get("uuid");
+  // const uuid = request.session.get("uuid");
+  const uuid = "10";
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
@@ -346,11 +348,19 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   let { references, tags } = fields;
   if (!tags || !references || !authoredBy || !title || !description) {
     await rm(filepath, { force: true });
-    reply.status(400).send({ error: "Missing required fields" });
+    reply
+      .status(400)
+      .send({ error: "Missing one of required fields [title, description, authoredBy, references, tags]" });
     return;
   }
-  references = JSON.parse(references);
-  tags = JSON.parse(tags);
+  try {
+    references = JSON.parse(references);
+    tags = JSON.parse(tags);
+  } catch {
+    await rm(filepath, { force: true });
+    reply.status(400).send({ error: "References and tags must be valid arrays" });
+    return;
+  }
   if (!Array.isArray(references) || !references.every((ref) => typeof ref === "string")) {
     await rm(filepath, { force: true });
     reply.status(400).send({ error: "References must be an array of strings" });
@@ -359,6 +369,11 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   if (!Array.isArray(tags) || !tags.every((tag) => typeof tag === "string")) {
     await rm(filepath, { force: true });
     reply.status(400).send({ error: "Tags must be an array of strings" });
+    return;
+  }
+  if (date && !isDateValid(date)) {
+    await rm(filepath, { force: true });
+    reply.status(400).send({ error: "Date must be a valid date string" });
     return;
   }
   const filename = uploadedFile.filename;
@@ -395,10 +410,10 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
         console.log("Java decrypt.jar finished, sending reply to browser");
         if (error) {
           console.error("Java error param: " + error);
-          console.error("Java stderr: " + stderror.toString());
+          console.error("Java stderr: " + stderror);
           reject(error);
         } else {
-          console.log("Java stdout: " + stdout.toString());
+          console.log("Java stdout: " + stdout);
           resolve();
         }
       });

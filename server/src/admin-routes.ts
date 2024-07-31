@@ -15,7 +15,7 @@ import validator from "validator";
 import { pipeline } from "stream/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "util";
-import { assertAdminSharedUser, assertDatapackIndex } from "@tsconline/shared";
+import { assertAdminSharedUser, assertDatapackIndex, isDateValid } from "@tsconline/shared";
 import { DatapackMetadata, NewUser } from "./types.js";
 
 /**
@@ -256,17 +256,30 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     !filename ||
     !decryptedFilepath
   ) {
-    reply.status(400).send({ error: "Missing required fields" });
+    reply
+      .status(400)
+      .send({ error: "Missing required fields [file, tags, references, authoredBy, title, description]" });
     return;
   }
-  references = JSON.parse(references);
-  tags = JSON.parse(tags);
+  try {
+    references = JSON.parse(references);
+    tags = JSON.parse(tags);
+  } catch {
+    await rm(filepath, { force: true });
+    reply.status(400).send({ error: "References and tags must be valid JSON" });
+    return;
+  }
   if (!Array.isArray(references) || !references.every((ref) => typeof ref === "string")) {
     reply.status(400).send({ error: "References must be an array of strings" });
     return;
   }
   if (!Array.isArray(tags) || !tags.every((tag) => typeof tag === "string")) {
     reply.status(400).send({ error: "Tags must be an array of strings" });
+    return;
+  }
+  if (date && isDateValid(date)) {
+    await rm(filepath, { force: true });
+    reply.status(400).send({ error: "Date must be a valid date string" });
     return;
   }
   const errorHandler = async (error: string) => {
