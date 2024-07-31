@@ -257,7 +257,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   fields.filename = filename;
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async (error) => {
     filepath && (await rm(filepath, { force: true }));
-    reply.status(500).send({ error });
+    reply.status(500).send({ error: "Unexpected error with request fields." });
   });
   // if uploadUserDatapackHandler fails, it will send the error and delete the file and set the message so just return
   if (!datapackMetadata) {
