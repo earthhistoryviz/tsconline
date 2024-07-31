@@ -1,8 +1,8 @@
 import { isDateValid } from "@tsconline/shared";
 import { FastifyReply } from "fastify";
 import { rm } from "fs/promises";
-import { DatapackMetadata } from "./types";
-import { getBytes } from "./util";
+import { DatapackMetadata } from "./types.js";
+import { getBytes } from "./util.js";
 
 async function userUploadHandler(reply: FastifyReply, code: number, message: string, filepath?: string) {
   filepath && (await rm(filepath, { force: true }));
