@@ -20,7 +20,8 @@ export default defineConfig({
         "server/src/admin-auth.ts": config,
         "server/src/admin-routes.ts": config,
         "server/src/encryption.ts": {
-          ...config
+          ...config,
+          branches: 50
         },
         "server/src/login-routes.ts": config,
         "server/src/parse-datapacks.ts": config,
