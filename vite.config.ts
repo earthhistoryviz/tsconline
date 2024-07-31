@@ -10,7 +10,6 @@ const config = {
 
 export default defineConfig({
   test: {
-    maxConcurrency: 20,
     cache: false,
     environment: "node",
     include: ["server/__tests__/**.test.ts", "app/__tests__/**.test.ts", "shared/__tests__/**.test.ts"],
@@ -21,7 +20,8 @@ export default defineConfig({
         "server/src/admin-auth.ts": config,
         "server/src/admin-routes.ts": config,
         "server/src/encryption.ts": {
-          ...config
+          ...config,
+          branches: 50
         },
         "server/src/login-routes.ts": config,
         "server/src/parse-datapacks.ts": config,

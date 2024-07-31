@@ -197,17 +197,8 @@ jobs:
         run: |
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
-          yarn coverage:ci > test_output.log 2>&1 || echo "test_failed=true" >> $GITHUB_OUTPUT
+          yarn coverage:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
         continue-on-error: true
-
-      - name: Check Test Results
-        if: steps.run_tests.outputs.test_failed == 'true'
-        run: |
-          if grep -q 'ERROR: Coverage' test_output.log; then
-            echo "coverage_failed=true" >> $GITHUB_OUTPUT
-          else
-            echo "tests_failed=true" >> $GITHUB_OUTPUT
-          fi
 
       - name: Post Coverage Comment
         if: steps.run_tests.outputs.coverage_failed == 'true'
