@@ -197,7 +197,7 @@ jobs:
         run: |
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
-          yarn coverage:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
+          yarn coverage:ci 2>&1 | tee test_output.log || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
         continue-on-error: true
 
       - name: Post Coverage Comment
