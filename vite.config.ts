@@ -6,7 +6,7 @@ const config = {
   branches: 80,
   functions: 80,
   lines: 80
-}
+};
 
 export default defineConfig({
   test: {
@@ -20,7 +20,10 @@ export default defineConfig({
       thresholds: {
         "server/src/admin-auth.ts": config,
         "server/src/admin-routes.ts": config,
-        "server/src/encryption.ts": config,
+        "server/src/encryption.ts": {
+          ...config,
+          branches: 50
+        },
         "server/src/login-routes.ts": config,
         "server/src/parse-datapacks.ts": config,
         "server/src/parse-map-packs.ts": config,

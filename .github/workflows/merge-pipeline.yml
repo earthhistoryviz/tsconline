@@ -246,7 +246,6 @@ jobs:
           yarn coverage
           cp coverage/coverage-summary.json ../coverage-summary.json
           cd ..
-        continue-on-error: true
         ###### REMOVE THE CONTINUE-ON-ERROR LINE ABOVE BEFORE MERGING #######
 
       - name: Generate Code Coverage report
