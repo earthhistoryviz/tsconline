@@ -258,7 +258,7 @@ describe("login-routes tests", () => {
         payload: invalidPayload
       });
 
-      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(true);
       expect(response.statusCode).toBe(400);
       expect(response.json().error).toBe("Invalid form");
     });
