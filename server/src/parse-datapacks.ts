@@ -63,6 +63,8 @@ import {
   assertSequence,
   SequenceSettings,
   ColumnTypeCounter,
+  isDefaultChronostrat,
+  DefaultChronostrat,
   allFontOptions
 } from "@tsconline/shared";
 import {
@@ -184,7 +186,7 @@ export async function parseDatapacks(
   let baseAge: number | null = null;
   let chartTitle = "Chart Title";
   let ageUnits = "Ma";
-  let defaultChronostrat = "UNESCO";
+  let defaultChronostrat: DefaultChronostrat = "UNESCO";
   let date: string | null = null;
   let verticalScale: number | null = null;
   let formatVersion = 1.5;
@@ -294,12 +296,12 @@ export async function parseDatapacks(
   };
   setShowLabels(chartColumn);
 
-  const datapackParsingPack = {
+  const datapackParsingPack: DatapackParsingPack = {
     columnInfo: chartColumn,
     ageUnits,
     defaultChronostrat,
     formatVersion,
-    columnTypeCounter,
+    columnTypeCount: columnTypeCounter,
     image: "",
     datapackImageCount:
       (await countFiles(join(decryptFilePath, "datapack-images"))) +
@@ -308,7 +310,6 @@ export async function parseDatapacks(
     ...(uuid ? { uuid } : {}),
     ...datapackInfo
   };
-  assertDatapackParsingPack(datapackParsingPack);
   // use datapack date if date not given by user
   if (date && !datapackInfo.date) datapackParsingPack.date = date;
   if (topAge || topAge === 0) datapackParsingPack.topAge = topAge;
@@ -360,7 +361,7 @@ export async function getAllEntries(
   let date: string | null = null;
   let ageUnits: string = "Ma";
   let chartTitle: string = "Chart Title";
-  let defaultChronostrat = "UNESCO";
+  let defaultChronostrat: DefaultChronostrat = "UNESCO";
   let formatVersion = 1.5;
   let vertScale: number | null = null;
   let filePropertyLines = 0;
@@ -389,13 +390,14 @@ export async function getAllEntries(
           continue;
         case "default chronostrat:":
           filePropertyLines++;
-          if (!/^(USGS|UNESCO)$/.test(value.trim())) {
+          const trim = value.trim();
+          if (!isDefaultChronostrat(trim)) {
             console.error(
               "Default chronostrat value in datapack is neither USGS nor UNESCO, setting to default UNESCO"
             );
             continue;
           }
-          defaultChronostrat = value.trim();
+          defaultChronostrat = trim;
           continue;
         case "date:":
           if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) value = value.split("/").reverse().join("-");

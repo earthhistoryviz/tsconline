@@ -33,6 +33,7 @@
       "size": "15.05 MB",
       "authoredBy": "Geoscience Australia in collaboration with TSCreator Group",
       "contact": "Andrew Kelman: andrew.kelman@ga.gov.au",
+      "tags": [],
       "references": [
         "Kelman, A., 2016, Australian biostratigraphy and basin lithostratigraphy with map interface and reconstructions: Geoscience Australia, Canberra, Australia, 15 Mb, ca. 500 columns, includes 125 reconstructions and facies maps."
       ],
@@ -109,6 +110,7 @@
       "size": "3 MB",
       "authoredBy": "In coordination with British Geological Survey, BGS",
       "contact": "Colin Waters: cnw@bgs.ac.uk",
+      "tags": [],
       "references": [
         "Waters, C.N., Waters, R.A., Barclay, W.J., and Davies, J.R., 2009, A lithostratigraphical framework for the Carboniferous successions of southern Great Britain (onshore): British Geological Survey Research Report, RR/09/01, 58 p."
       ],

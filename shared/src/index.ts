@@ -1,6 +1,7 @@
 // Shared types between app and server (i.e. messages they send back and forth)
 
-import { defaultFontsInfoConstant } from "./constants.js";
+import { defaultFontsInfoConstant, validDateFormats } from "./constants.js";
+import validator from "validator";
 
 export * from "./constants.js";
 export * from "./util.js";
@@ -43,7 +44,7 @@ export type DatapackParsingPack = {
   formatVersion: number;
   topAge?: number;
   baseAge?: number;
-  date: string;
+  date?: string;
   verticalScale?: number;
   uuid?: string;
   description: string;
@@ -543,6 +544,21 @@ export type TimescaleItem = {
   value: number;
 };
 
+export type DefaultChronostrat = "USGS" | "UNESCO";
+
+export function isDefaultChronostrat(o: any): o is DefaultChronostrat {
+  return /^(USGS|UNESCO)$/.test(o);
+}
+
+export function isDateValid(date: string): boolean {
+  for (const format of validDateFormats) {
+    if (validator.isDate(date, { strictMode: true, format })) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function assertAdminSharedUserArray(o: any): asserts o is AdminSharedUser[] {
   if (!Array.isArray(o)) throw new Error("AdminSharedUser must be an array");
   for (const user of o) {
@@ -957,7 +973,7 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
     throwError("DatapackParsingPack", "formatVersion", "number", o.formatVersion);
   if ("verticalScale" in o && typeof o.verticalScale !== "number")
     throwError("DatapackParsingPack", "verticalScale", "number", o.verticalScale);
-  if (typeof o.date !== "string" || !/^(\d{4}-\d{2}-\d{2})$/.test(o.date))
+  if ("date" in o && (typeof o.date !== "string" || !isDateValid(o.date)))
     throwError("DatapackParsingPack", "date", "string", o.date);
   if ("topAge" in o && typeof o.topAge !== "number") throwError("DatapackParsingPack", "topAge", "number", o.topAge);
   if ("baseAge" in o && typeof o.baseAge !== "number")
