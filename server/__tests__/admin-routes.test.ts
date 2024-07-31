@@ -38,9 +38,11 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
   };
 });
 
-vi.mock("./upload-handlers.js", async () => {
+vi.mock("../src/upload-handlers", async (importOriginal) => {
+  const actual = await importOriginal<typeof uploadHandlers>();
   return {
-    userUploadHandler: vi.fn().mockResolvedValue({})
+    ...actual,
+    userUploadDatapackHandler: vi.fn().mockResolvedValue({})
   };
 });
 vi.mock("../src/util", async () => {
@@ -901,7 +903,7 @@ describe("adminUploadServerDatapack", () => {
   const loadIndexes = vi.spyOn(loadPacks, "loadIndexes");
   const writeFile = vi.spyOn(fsPromises, "writeFile");
   const pipeline = vi.spyOn(streamPromises, "pipeline");
-  const uploadUserDataPackHandler = vi.spyOn(uploadHandlers, "uploadUserDatapackHandler");
+  const uploadUserDatapackHandler = vi.spyOn(uploadHandlers, "uploadUserDatapackHandler");
   const testDatapackDescription: DatapackMetadata = {
     file: "test.dpk",
     description: "test-description",
@@ -940,10 +942,10 @@ describe("adminUploadServerDatapack", () => {
   beforeEach(() => {
     createForm();
     vi.clearAllMocks();
-    uploadUserDataPackHandler.mockResolvedValueOnce(testDatapackDescription);
+    uploadUserDatapackHandler.mockResolvedValueOnce(testDatapackDescription);
   });
   afterAll(() => {
-    uploadUserDataPackHandler.mockReset();
+    uploadUserDatapackHandler.mockReset();
   });
   it("should return 400 if missing file field", async () => {
     createForm({ file: "" });
@@ -1098,9 +1100,9 @@ describe("adminUploadServerDatapack", () => {
     expect(await response.json()).toEqual({ error: "File too large" });
     expect(response.statusCode).toBe(400);
   });
-  it("should return 500 if uploadUserDataPackHandler throws error", async () => {
-    uploadUserDataPackHandler.mockReset();
-    uploadUserDataPackHandler.mockRejectedValueOnce(new Error());
+  it("should return 500 if uploadUserDatapackHandler throws error", async () => {
+    uploadUserDatapackHandler.mockReset();
+    uploadUserDatapackHandler.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "POST",
       url: "/admin/server/datapack",
@@ -1114,15 +1116,15 @@ describe("adminUploadServerDatapack", () => {
     expect(await response.json()).toEqual({ error: "Unexpected error with request fields." });
   });
   it("should just return if uploadUserDataPackHandler returns void", async () => {
-    uploadUserDataPackHandler.mockReset();
-    uploadUserDataPackHandler.mockResolvedValueOnce();
+    uploadUserDatapackHandler.mockReset();
+    uploadUserDatapackHandler.mockResolvedValueOnce();
     await app.inject({
       method: "POST",
       url: "/admin/server/datapack",
       payload: formData.body,
       headers: formHeaders
     });
-    expect(uploadUserDataPackHandler).toHaveBeenCalledTimes(1);
+    expect(uploadUserDatapackHandler).toHaveBeenCalledTimes(1);
     expect(pipeline).toHaveBeenCalledTimes(1);
     expect(execFile).not.toHaveBeenCalled();
     expect(rm).not.toHaveBeenCalled();
