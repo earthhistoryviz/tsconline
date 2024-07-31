@@ -264,9 +264,38 @@
 
 .scroll-to-top-button {
   position: sticky;
-  bottom: 2.5%;
+  bottom: 10px;
   left: 90%;
-  background-color: #66a3d2;
+  background-color: #6693c9;
   color: #fff;
   z-index: 1000;
+  margin-right: 10px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-2px);
+  transition:
+    opacity 0.5s ease,
+    visibility 0s 0.5s,
+    transform 0.5s ease;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0px;
+}
+
+.scroll-to-top-button:hover {
+  background-color: #89a8cc;
+  color: #fff;
+}
+
+.scroll-to-top-button.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition-delay: 0s;
+  margin-right: 10px;
 }
