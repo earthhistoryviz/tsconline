@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { deleteUser } from "./database.js";
 import { resolve, extname, join, relative, parse } from "path";
-import { adminconfig, assetconfigs, checkFileExists, getBytes, verifyFilepath } from "./util.js";
+import { adminconfig, assetconfigs, checkFileExists, verifyFilepath } from "./util.js";
 import { createWriteStream } from "fs";
 import { readFile, realpath, rm, writeFile } from "fs/promises";
 import { deleteDatapack, loadFileMetadata } from "./file-metadata-handler.js";
@@ -15,8 +15,9 @@ import validator from "validator";
 import { pipeline } from "stream/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "util";
-import { assertAdminSharedUser, assertDatapackIndex, isDateValid } from "@tsconline/shared";
-import { DatapackMetadata, NewUser } from "./types.js";
+import { assertAdminSharedUser, assertDatapackIndex } from "@tsconline/shared";
+import { NewUser } from "./types.js";
+import { uploadUserDatapackHandler } from "./upload-handlers.js";
 
 /**
  * Get all users for admin to configure on frontend
@@ -248,45 +249,18 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       fields[part.fieldname] = part.value;
     }
   }
-  const { title, description, authoredBy, contact, notes, date } = fields;
-  let { references, tags } = fields;
-  if (
-    !tags ||
-    !references ||
-    !authoredBy ||
-    !title ||
-    !description ||
-    !file ||
-    !filepath ||
-    !filename ||
-    !decryptedFilepath
-  ) {
-    reply
-      .status(400)
-      .send({ error: "Missing required fields [file, tags, references, authoredBy, title, description]" });
+  if (!file || !filepath || !filename || !decryptedFilepath) {
+    reply.status(400).send({ error: "Missing file" });
     return;
   }
-  try {
-    references = JSON.parse(references);
-    tags = JSON.parse(tags);
-  } catch {
-    await rm(filepath, { force: true });
-    reply.status(400).send({ error: "References and tags must be valid JSON" });
-    return;
-  }
-  if (!Array.isArray(references) || !references.every((ref) => typeof ref === "string")) {
-    await rm(filepath, { force: true });
-    reply.status(400).send({ error: "References must be an array of strings" });
-    return;
-  }
-  if (!Array.isArray(tags) || !tags.every((tag) => typeof tag === "string")) {
-    await rm(filepath, { force: true });
-    reply.status(400).send({ error: "Tags must be an array of strings" });
-    return;
-  }
-  if (date && !isDateValid(date)) {
-    await rm(filepath, { force: true });
-    reply.status(400).send({ error: "Date must be a valid date string" });
+  fields.filepath = filepath;
+  fields.filename = filename;
+  const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async (error) => {
+    filepath && (await rm(filepath, { force: true }));
+    reply.status(500).send({ error });
+  });
+  // if uploadUserDatapackHandler fails, it will send the error and delete the file and set the message so just return
+  if (!datapackMetadata) {
     return;
   }
   const errorHandler = async (error: string) => {
@@ -325,22 +299,9 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     await errorHandler("File was not decrypted properly");
     return;
   }
-
-  const bytes = file.file.bytesRead;
-  const datapackInfo: DatapackMetadata = {
-    file: filename,
-    description,
-    title,
-    size: getBytes(bytes),
-    authoredBy,
-    tags,
-    references,
-    ...(contact && { contact }),
-    ...(notes && { notes }),
-    ...(date && { date })
-  };
-
-  const successful = await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, [datapackInfo]);
+  const successful = await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, [
+    datapackMetadata
+  ]);
   if (!successful) {
     await errorHandler("Error parsing the datapack for chart generation");
     return;
@@ -351,7 +312,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       !assetconfigs.activeDatapacks.some((datapack) => datapack.file === filename) &&
       !adminconfig.datapacks.some((datapack) => datapack.file === filename)
     ) {
-      adminconfig.datapacks.push(datapackInfo);
+      adminconfig.datapacks.push(datapackMetadata);
     }
     await writeFile(assetconfigs.adminConfigPath, JSON.stringify(adminconfig, null, 2));
   } catch (e) {

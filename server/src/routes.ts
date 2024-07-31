@@ -11,26 +11,24 @@ import {
   assertDatapackIndex,
   assertIndexResponse,
   assertTimescale,
-  assertMapPackIndex,
-  isDateValid
+  assertMapPackIndex
 } from "@tsconline/shared";
-import { deleteDirectory, resetUploadDirectory, checkHeader, assetconfigs, adminconfig, getBytes } from "./util.js";
+import { deleteDirectory, resetUploadDirectory, checkHeader, assetconfigs, adminconfig } from "./util.js";
 import md5 from "md5";
 import svgson from "svgson";
 import fs, { realpathSync } from "fs";
 import { parseExcelFile } from "./parse-excel-file.js";
 import path from "path";
-import pump from "pump";
 import { loadIndexes } from "./load-packs.js";
 import { writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
-import { DatapackMetadata } from "./types.js";
 import { MultipartFile } from "@fastify/multipart";
 import { runJavaEncrypt } from "./encryption.js";
 import { queue, maxQueueSize } from "./index.js";
 import { containsKnownError } from "./chart-error-handler.js";
 import { pipeline } from "stream/promises";
+import { uploadUserDatapackHandler } from "./upload-handlers.js";
 
 export const fetchServerDatapack = async function fetchServerDatapack(
   request: FastifyRequest<{ Params: { name: string } }>,
@@ -343,58 +341,25 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     reply.status(400).send({ error: "No file uploaded" });
     return;
   }
-  const { title, description, authoredBy, contact, notes, date } = fields;
-  let { references, tags } = fields;
-  if (!tags || !references || !authoredBy || !title || !description) {
-    await rm(filepath, { force: true });
-    reply
-      .status(400)
-      .send({ error: "Missing one of required fields [title, description, authoredBy, references, tags]" });
-    return;
-  }
-  try {
-    references = JSON.parse(references);
-    tags = JSON.parse(tags);
-  } catch {
-    await rm(filepath, { force: true });
-    reply.status(400).send({ error: "References and tags must be valid arrays" });
-    return;
-  }
-  if (!Array.isArray(references) || !references.every((ref) => typeof ref === "string")) {
-    await rm(filepath, { force: true });
-    reply.status(400).send({ error: "References must be an array of strings" });
-    return;
-  }
-  if (!Array.isArray(tags) || !tags.every((tag) => typeof tag === "string")) {
-    await rm(filepath, { force: true });
-    reply.status(400).send({ error: "Tags must be an array of strings" });
-    return;
-  }
-  if (date && !isDateValid(date)) {
-    await rm(filepath, { force: true });
-    reply.status(400).send({ error: "Date must be a valid date string" });
-    return;
-  }
   const filename = uploadedFile.filename;
+  fields.filename = filename;
+  fields.filepath = filepath;
+  const datapackMetadata = await uploadUserDatapackHandler(reply, fields, uploadedFile.file.bytesRead).catch(
+    async (e) => {
+      filepath && (await rm(filepath, { force: true }));
+      reply.status(500).send({ error: "Failed to upload datapack with error " + e });
+    }
+  );
+  // if uploadUserDatapackHandler returns void, it means there was an error and the error message has already been sent
+  if (!datapackMetadata) {
+    return;
+  }
   const ext = path.extname(filename);
   const filenameWithoutExtension = path.basename(filename, ext);
   const decryptDir = path.join(userDir, "decrypted");
   const decryptedFilepathDir = path.join(decryptDir, filenameWithoutExtension);
   const mapPackIndexFilepath = path.join(userDir, "MapPackIndex.json");
   const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json");
-  const bytes = uploadedFile.file.bytesRead;
-  const datapackInfo: DatapackMetadata = {
-    file: filename,
-    description,
-    title,
-    authoredBy,
-    references,
-    tags,
-    size: getBytes(bytes),
-    ...(contact && { contact }),
-    ...(notes && { notes }),
-    ...(date && { date })
-  };
 
   try {
     await new Promise<void>((resolve, reject) => {
@@ -458,7 +423,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     datapackIndex,
     mapPackIndex,
     decryptDir.replaceAll("\\", "/"),
-    [datapackInfo],
+    [datapackMetadata],
     uuid
   );
   if (!success) {
