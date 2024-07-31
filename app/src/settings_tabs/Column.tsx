@@ -5,7 +5,7 @@ import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
 import { Box, IconButton, TextField } from "@mui/material";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
-import { ColumnContainer, TSCCheckbox, Accordion, CustomTooltip } from "../components";
+import { ColumnContainer, TSCCheckbox, Accordion, CustomTooltip, Lottie } from "../components";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 
 import { ColumnMenu } from "./column_menu/ColumnMenu";
@@ -18,6 +18,7 @@ import { setExpanded } from "../state/actions";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ExpandIcon from "@mui/icons-material/Expand";
 import CompressIcon from "@mui/icons-material/Compress";
+import LightArrowUpIcon from "../assets/icons/light-arrow-up.json";
 
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
@@ -93,8 +94,13 @@ export const Column = observer(function Column() {
             ))}
           {/* Button to take users to top of column menu when scrolling */}
           {showScroll && (
-            <IconButton onClick={scrollToTop} className="scroll-to-top-button">
-              <ArrowForwardIosSharpIcon style={{ transform: "rotate(-90deg)" }} sx={{ fontSize: 15 }} />
+            <IconButton onClick={scrollToTop} className={`scroll-to-top-button ${showScroll ? "show" : ""}`}>
+              <Lottie
+                key="settings-arrow-up"
+                style={{ width: "28px", height: "28px" }}
+                animationData={LightArrowUpIcon}
+                playOnClick
+              />
             </IconButton>
           )}
         </Box>
