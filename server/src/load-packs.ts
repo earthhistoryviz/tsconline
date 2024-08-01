@@ -4,7 +4,8 @@ import {
   Patterns,
   assertDatapackParsingPack,
   assertMapPack,
-  assertPatterns
+  assertPatterns,
+  DatapackMetadata
 } from "@tsconline/shared";
 import pmap from "p-map";
 import fs from "fs/promises";
@@ -15,7 +16,7 @@ import { glob } from "glob";
 import { readFile } from "fs/promises";
 import nearestColor from "nearest-color";
 import path from "path";
-import { DatapackMetadata, assertColors } from "./types.js";
+import { assertColors } from "./types.js";
 import { grabFilepaths, rgbToHex, assetconfigs } from "./util.js";
 import chalk from "chalk";
 import sharp from "sharp";
