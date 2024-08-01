@@ -77,7 +77,7 @@ import {
 } from "./util.js";
 import { createInterface } from "readline";
 import _ from "lodash";
-import { join } from "path";
+import { join, parse } from "path";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;
 const patternForAbundance = /^(TOP|missing|rare|common|frequent|abundant|sample|flood)$/;
@@ -303,8 +303,8 @@ export async function parseDatapacks(
     columnTypeCount: columnTypeCounter,
     image: "",
     datapackImageCount:
-      (await countFiles(join(decryptFilePath, "datapack-images"))) +
-      (await countFiles(join(decryptFilePath, "MapImages"))),
+      (await countFiles(join(decryptFilePath, parse(datapackInfo.file).name, "datapack-images"))) +
+      (await countFiles(join(decryptFilePath, parse(datapackInfo.file).name, "MapImages"))),
     totalColumns: Object.values(columnTypeCounter).reduce((a, b) => a + b, 0),
     ...(uuid ? { uuid } : {}),
     ...datapackInfo
@@ -1791,9 +1791,9 @@ export function configureOptionalPointSettings(tabSeparated: string[], point: Po
   if (tabSeparated.length < 1) {
     console.log(
       "Error adding optional point configuration, line is not formatted correctly: " +
-      tabSeparated +
-      " with size " +
-      tabSeparated.length
+        tabSeparated +
+        " with size " +
+        tabSeparated.length
     );
     return;
   }
