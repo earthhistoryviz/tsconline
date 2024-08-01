@@ -15,6 +15,19 @@ export type SharedUser = {
   isAdmin: boolean;
 };
 
+export type DatapackMetadata = {
+  description: string;
+  title: string;
+  file: string;
+  size: string;
+  date?: string;
+  authoredBy: string;
+  tags: string[];
+  references: string[];
+  contact?: string;
+  notes?: string;
+};
+
 export type AdminSharedUser = {
   userId: number;
   uuid: string;
@@ -897,6 +910,26 @@ export function assertPatterns(o: any): asserts o is Patterns {
     if (typeof pattern.filePath !== "string") throwError("Patterns", "filePath", "string", pattern.filePath);
     assertColor(pattern.color);
   }
+}
+
+export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
+  if (!o || typeof o !== "object") throw new Error("DatapackMetadata must be a non-null object");
+  if (typeof o.description !== "string") throw new Error("DatapackMetadata description must be of type string");
+  if (typeof o.title !== "string") throw new Error("DatapackMetadata title must be of type string");
+  if (typeof o.file !== "string") throw new Error("DatapackMetadata file must be of type string");
+  if (typeof o.size !== "string") throw new Error("DatapackMetadata size must be of type string");
+  if (typeof o.authoredBy !== "string") throw new Error("DatapackMetadata authoredBy must be of type string");
+  if (!Array.isArray(o.tags)) throw new Error("DatapackMetadata tags must be an array");
+  for (const tag of o.tags) {
+    if (typeof tag !== "string") throw new Error("DatapackMetadata tags must be an array of strings");
+  }
+  if (o.date && typeof o.date !== "string") throw new Error("DatapackMetadata date must be of type string");
+  if (!Array.isArray(o.references)) throw new Error("DatapackMetadata references must be an array");
+  for (const reference of o.references) {
+    if (typeof reference !== "string") throw new Error("DatapackMetadata references must be an array of strings");
+  }
+  if ("contact" in o && typeof o.contact !== "string") throw new Error("DatapackMetadata contact must be a string");
+  if ("notes" in o && typeof o.notes !== "string") throw new Error("DatapackMetadata notes must be a string");
 }
 export function assertMapPackIndex(o: any): asserts o is MapPackIndex {
   if (!o || typeof o !== "object") throw new Error("MapPackIndex must be a non-null object");

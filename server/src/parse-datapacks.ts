@@ -64,6 +64,7 @@ import {
   ColumnTypeCounter,
   isDefaultChronostrat,
   DefaultChronostrat,
+  DatapackMetadata,
   allFontOptions
 } from "@tsconline/shared";
 import {
@@ -76,7 +77,6 @@ import {
 } from "./util.js";
 import { createInterface } from "readline";
 import _ from "lodash";
-import { DatapackMetadata } from "./types.js";
 import { join } from "path";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;

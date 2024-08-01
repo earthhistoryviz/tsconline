@@ -1,4 +1,4 @@
-import { throwError } from "@tsconline/shared";
+import { throwError, DatapackMetadata, assertDatapackMetadata } from "@tsconline/shared";
 import { Generated, Insertable, Selectable, Updateable } from "kysely";
 
 export interface Database {
@@ -92,19 +92,6 @@ export type FileMetadata = {
   datapackIndexFilepath: string;
 };
 
-export type DatapackMetadata = {
-  description: string;
-  title: string;
-  file: string;
-  size: string;
-  date?: string;
-  authoredBy: string;
-  tags: string[];
-  references: string[];
-  contact?: string;
-  notes?: string;
-};
-
 export function assertAdminConfig(o: any): asserts o is AdminConfig {
   if (typeof o !== "object" || !o) throw "AdminConfig must be an object";
   if (!o.datapacks || !Array.isArray(o.datapacks)) throw 'AdminConfig must have a "datapacks" array';
@@ -150,26 +137,6 @@ export function assertColors(o: any): asserts o is Colors {
     if (typeof color !== "string") throw 'Colors must have a "color" key that is a string';
     if (typeof o[color] !== "string") throw "Colors must have a indexed value with type string";
   }
-}
-
-export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
-  if (!o || typeof o !== "object") throw new Error("DatapackMetadata must be a non-null object");
-  if (typeof o.description !== "string") throw new Error("DatapackMetadata description must be of type string");
-  if (typeof o.title !== "string") throw new Error("DatapackMetadata title must be of type string");
-  if (typeof o.file !== "string") throw new Error("DatapackMetadata file must be of type string");
-  if (typeof o.size !== "string") throw new Error("DatapackMetadata size must be of type string");
-  if (typeof o.authoredBy !== "string") throw new Error("DatapackMetadata authoredBy must be of type string");
-  if (!Array.isArray(o.tags)) throw new Error("DatapackMetadata tags must be an array");
-  for (const tag of o.tags) {
-    if (typeof tag !== "string") throw new Error("DatapackMetadata tags must be an array of strings");
-  }
-  if (o.date && typeof o.date !== "string") throw new Error("DatapackMetadata date must be of type string");
-  if (!Array.isArray(o.references)) throw new Error("DatapackMetadata references must be an array");
-  for (const reference of o.references) {
-    if (typeof reference !== "string") throw new Error("DatapackMetadata references must be an array of strings");
-  }
-  if ("contact" in o && typeof o.contact !== "string") throw new Error("DatapackMetadata contact must be a string");
-  if ("notes" in o && typeof o.notes !== "string") throw new Error("DatapackMetadata notes must be a string");
 }
 
 export function assertAssetConfig(o: any): asserts o is AssetConfig {
