@@ -511,7 +511,21 @@
     "file": "AfricaBight.map",
     "description": "Africa Bight Map",
     "title": "Africa Bight",
-    "size": "200.98 KB"
+    "size": "200.98 KB",
+    "columnTypeCount": {
+      "Block": 6,
+      "Facies": 2,
+      "Event": 0,
+      "Range": 0,
+      "Chron": 0,
+      "Point": 0,
+      "Sequence": 0,
+      "Transect": 0,
+      "Freehand": 0,
+      "Blank": 0
+    },
+    "datapackImageCount": 0,
+    "totalColumns": 8
   },
   "general-parse-datapacks-test-2-key": {
     "columnInfo": {
@@ -1011,7 +1025,7 @@
                   "editName": "Chron Label",
                   "show": true,
                   "expanded": false,
-                  "on": false,
+                  "on": true,
                   "enableTitle": false,
                   "showAgeLabels": false,
                   "fontOptions": [
@@ -1412,7 +1426,21 @@
     "file": "file.dpk",
     "description": "description",
     "title": "Title",
-    "size": "size"
+    "size": "size",
+    "columnTypeCount": {
+      "Blank": 0,
+      "Block": 6,
+      "Chron": 1,
+      "Event": 1,
+      "Freehand": 1,
+      "Point": 1,
+      "Range": 1,
+      "Sequence": 1,
+      "Transect": 1,
+      "Facies": 1
+    },
+    "datapackImageCount": 0,
+    "totalColumns": 14
   },
   "column-types-facies-key": {
     "FaciesOne": {
@@ -2719,6 +2747,20 @@
     "file": "file.dpk",
     "description": "description",
     "title": "Title",
-    "size": "size"
+    "size": "size",
+    "columnTypeCount": {
+      "Blank": 0,
+      "Block": 0,
+      "Chron": 0,
+      "Event": 0,
+      "Facies": 0,
+      "Freehand": 0,
+      "Point": 0,
+      "Range": 0,
+      "Sequence": 0,
+      "Transect": 0
+    },
+    "datapackImageCount": 0,
+    "totalColumns": 0
   }
 }
