@@ -34,7 +34,6 @@ import {
   assertSubFreehandInfo,
   assertColumnHeaderProps,
   ValidFontOptions,
-  allFontOptions,
   DisplayedColumnTypes,
   ColumnInfoTypeMap,
   ColumnInfoType,
@@ -62,7 +61,8 @@ import {
   defaultZoneSettings,
   defaultSequenceSettings,
   assertSequence,
-  SequenceSettings
+  SequenceSettings,
+  allFontOptions
 } from "@tsconline/shared";
 import {
   grabFilepaths,
@@ -1444,22 +1444,6 @@ function recursive(
   return returnValue;
 }
 
-export function createDefaultColumnHeaderProps(overrides: Partial<ColumnHeaderProps> = {}): ColumnHeaderProps {
-  const defaultRGB: RGB = { r: 255, g: 255, b: 255 };
-  const defaultProps: ColumnHeaderProps = {
-    name: "",
-    minAge: Number.MAX_VALUE,
-    maxAge: Number.MIN_VALUE,
-    enableTitle: true,
-    on: true,
-    width: 100,
-    popup: "",
-    rgb: defaultRGB
-  };
-
-  return { ...defaultProps, ...overrides };
-}
-
 /**
  * facies columns consist of 4 different "columns" and we need to add them to the children array
  * since they are manually added in the java file
@@ -1727,35 +1711,6 @@ function addColumnSettings(column: ColumnInfo, columnSpecificSettings?: ColumnSp
   }
 }
 
-function getValidFontOptions(type: DisplayedColumnTypes): ValidFontOptions[] {
-  switch (type) {
-    case "Block":
-    case "Zone":
-      return ["Column Header", "Age Label", "Zone Column Label"];
-    case "Chron":
-      return ["Column Header", "Age Label"];
-    case "Event":
-      return ["Column Header", "Age Label", "Event Column Label", "Uncertainty Label", "Range Label"];
-    case "Facies":
-      return ["Column Header", "Age Label", "Uncertainty Label"];
-    case "Point":
-      return ["Column Header", "Point Column Scale Label"];
-    case "Range":
-      return [...allFontOptions];
-    case "Sequence":
-      return ["Column Header", "Age Label", "Sequence Column Label"];
-    case "Ruler":
-    case "AgeAge":
-      return ["Column Header", "Ruler Label"];
-    case "Transect":
-      return ["Column Header"];
-    case "Freehand":
-      return ["Column Header"];
-    default:
-      return ["Column Header"];
-  }
-}
-
 function processColumn<T extends ColumnInfoType>(
   type: T,
   column: ColumnInfoTypeMap[T],
@@ -1925,4 +1880,49 @@ function handlePointFields(point: Point, loneColumns: Map<string, ColumnInfo>, u
     point.name,
     createLoneColumn(headerInfo, getValidFontOptions("Point"), units, subPointInfo, "Point", columnSpecificSettings)
   );
+}
+
+export function createDefaultColumnHeaderProps(overrides: Partial<ColumnHeaderProps> = {}): ColumnHeaderProps {
+  const defaultRGB: RGB = { r: 255, g: 255, b: 255 };
+  const defaultProps: ColumnHeaderProps = {
+    name: "",
+    minAge: Number.MAX_VALUE,
+    maxAge: Number.MIN_VALUE,
+    enableTitle: true,
+    on: true,
+    width: 100,
+    popup: "",
+    rgb: defaultRGB
+  };
+
+  return { ...defaultProps, ...overrides };
+}
+
+export function getValidFontOptions(type: DisplayedColumnTypes): ValidFontOptions[] {
+  switch (type) {
+    case "Block":
+    case "Zone":
+      return ["Column Header", "Age Label", "Zone Column Label"];
+    case "Chron":
+      return ["Column Header", "Age Label"];
+    case "Event":
+      return ["Column Header", "Age Label", "Event Column Label", "Uncertainty Label", "Range Label"];
+    case "Facies":
+      return ["Column Header", "Age Label", "Uncertainty Label"];
+    case "Point":
+      return ["Column Header", "Point Column Scale Label"];
+    case "Range":
+      return [...allFontOptions];
+    case "Sequence":
+      return ["Column Header", "Age Label", "Sequence Column Label"];
+    case "Ruler":
+    case "AgeAge":
+      return ["Column Header", "Ruler Label"];
+    case "Transect":
+      return ["Column Header"];
+    case "Freehand":
+      return ["Column Header"];
+    default:
+      return ["Column Header"];
+  }
 }
