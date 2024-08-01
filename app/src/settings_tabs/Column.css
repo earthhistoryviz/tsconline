@@ -1,3 +1,7 @@
+:root {
+  --button-size: 35px;
+}
+
 .column-top-level-container {
   display: flex;
   flex-direction: column;
@@ -264,10 +268,8 @@
 
 .scroll-to-top-button {
   position: sticky;
-  bottom: 10px;
-  left: 90%;
-  background-color: #6693c9;
-  color: #fff;
+  bottom: calc(5% - var(--button-size) / 2);
+  left: calc(95% - var(--button-size) / 2);
   z-index: 1000;
   margin-right: 10px;
   opacity: 0;
@@ -278,8 +280,8 @@
     opacity 0.5s ease,
     visibility 0s 0.5s,
     transform 0.5s ease;
-  width: 35px;
-  height: 35px;
+  width: var(--button-size);
+  height: var(--button-size);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -287,8 +289,7 @@
 }
 
 .scroll-to-top-button:hover {
-  background-color: #89a8cc;
-  color: #fff;
+  filter: brightness(2);
 }
 
 .scroll-to-top-button.show {

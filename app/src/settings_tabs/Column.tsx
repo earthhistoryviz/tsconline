@@ -18,6 +18,7 @@ import { setExpanded } from "../state/actions";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ExpandIcon from "@mui/icons-material/Expand";
 import CompressIcon from "@mui/icons-material/Compress";
+import DarkArrowUpIcon from "../assets/icons/dark-arrow-up.json";
 import LightArrowUpIcon from "../assets/icons/light-arrow-up.json";
 
 // column with generate button, and accordion columns
@@ -25,6 +26,7 @@ export const Column = observer(function Column() {
   const { state, actions } = useContext(context);
   const [showScroll, setShowScroll] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const theme = useTheme();
 
   const handleScroll = () => {
     if (scrollRef.current && scrollRef.current.scrollTop > 200) {
@@ -93,16 +95,16 @@ export const Column = observer(function Column() {
               <ColumnAccordion key={childName} details={childDetails} />
             ))}
           {/* Button to take users to top of column menu when scrolling */}
-          {showScroll && (
-            <IconButton onClick={scrollToTop} className={`scroll-to-top-button ${showScroll ? "show" : ""}`}>
-              <Lottie
-                key="settings-arrow-up"
-                style={{ width: "28px", height: "28px" }}
-                animationData={LightArrowUpIcon}
-                playOnClick
-              />
-            </IconButton>
-          )}
+
+          <IconButton onClick={scrollToTop} className={`scroll-to-top-button ${showScroll ? "show" : ""}`}>
+            <Lottie
+              key="settings-arrow-up"
+              style={{ width: "28px", height: "28px" }}
+              // animationData={theme.palette.mode === "light" ? LightArrowUpIcon : DarkArrowUpIcon}
+              animationData={theme.palette.mode === "light" ? DarkArrowUpIcon : LightArrowUpIcon}
+              playOnClick
+            />
+          </IconButton>
         </Box>
         <ColumnMenu />
       </div>
