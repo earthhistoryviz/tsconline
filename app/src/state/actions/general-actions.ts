@@ -4,7 +4,6 @@ import {
   ChartInfoTSC,
   ChartSettingsInfoTSC,
   DatapackIndex,
-  FontsInfo,
   MapPackIndex,
   TimescaleItem,
   assertSharedUser,
@@ -27,7 +26,6 @@ import {
   assertMapHierarchy,
   assertColumnInfo,
   assertMapInfo,
-  defaultFontsInfo,
   assertIndexResponse,
   assertPresets,
   assertPatterns
@@ -48,7 +46,6 @@ import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { SettingsTabs, equalChartSettings, equalConfig } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
-import { cloneDeep } from "lodash";
 
 const increment = 1;
 
@@ -98,11 +95,7 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
 /**
  * Resets any user defined settings
  */
-export const resetSettings = action("resetSettings", (stateCopyObj?: State) => {
-  if (stateCopyObj) {
-    stateCopyObj.settings = JSON.parse(JSON.stringify(settings));
-    return;
-  }
+export const resetSettings = action("resetSettings", () => {
   state.settings = JSON.parse(JSON.stringify(settings));
 });
 
@@ -336,7 +329,7 @@ export const fetchTimescaleDataAction = action("fetchTimescaleData", async () =>
   }
 });
 
-export const applySettings = action("applySettings", async (settings: ChartInfoTSC, stateCopyObj?: State) => {
+export const applySettings = action("applySettings", async (settings: ChartInfoTSC) => {
   applyChartSettings(settings.settings);
   applyChartColumnSettings(settings["class datastore.RootColumn:Chart Root"]);
   handleDataMiningColumns();
@@ -609,8 +602,6 @@ export const removeCache = action("removeCache", async () => {
 export const resetState = action("resetState", () => {
   setChartMade(true);
   setChartLoading(true);
-  //console.log("when call reset state" + JSON.stringify(state.config.datapacks));
-  setDatapackConfig([], ""); //need to change after take out setDatepackConfig
   setChartHash("");
   setChartContent("");
   setUseCache(true);
@@ -621,8 +612,6 @@ export const resetState = action("resetState", () => {
   setMapInfo({});
   state.settingsTabs.columnSelected = null;
   state.settingsXML = "";
-  console.log("after reset:" + JSON.stringify(state.settingsTabs.columns) + " , " + JSON.stringify(state.datapackCachedConfiguration));
-  //console.log("after reset: column is" + JSON.stringify(state.settingsTabs.columns) + " , " + JSON.stringify(state.datapackCachedConfiguration));
 });
 
 export const loadPresets = action("loadPresets", (presets: Presets) => {

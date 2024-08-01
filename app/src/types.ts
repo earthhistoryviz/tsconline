@@ -1,4 +1,4 @@
-import { ChartInfoTSC, DataMiningPointDataType, SharedUser } from "@tsconline/shared";
+import { ChartInfoTSC, ColumnInfo, DataMiningPointDataType, MapHierarchy, MapInfo, SharedUser } from "@tsconline/shared";
 import { State } from "./state/state";
 
 export type User = SharedUser & {
@@ -35,12 +35,12 @@ export type SetDatapackConfigMessage = {
   settingsPath?: string;
   chartSettings: ChartInfoTSC | null;
   stateCopy: string;
-}
+};
 
 export type SetDatapackConfigCompleteMessage = {
   status: "success" | "failure";
   value: SetDatapackConfigCompleteValue | undefined;
-}
+};
 export type SetDatapackConfigCompleteValue = {
   columnRoot: ColumnInfo;
   foundDefaultAge: boolean;
@@ -48,7 +48,7 @@ export type SetDatapackConfigCompleteValue = {
   mapInfo: MapInfo;
   datapacks: string[];
   chartSettings: ChartInfoTSC | null;
-}
+};
 
 //id: unique id among search results
 //columnName: name of column that event/column is under
