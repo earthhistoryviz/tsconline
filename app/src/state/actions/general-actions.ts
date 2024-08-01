@@ -95,7 +95,11 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
 /**
  * Resets any user defined settings
  */
-export const resetSettings = action("resetSettings", () => {
+export const resetSettings = action("resetSettings", (stateCopyObj?: State) => {
+  if (stateCopyObj) {
+    stateCopyObj.settings = JSON.parse(JSON.stringify(settings));
+    return;
+  }
   state.settings = JSON.parse(JSON.stringify(settings));
 });
 
@@ -314,7 +318,7 @@ export const fetchTimescaleDataAction = action("fetchTimescaleData", async () =>
   }
 });
 
-export const applySettings = action("applySettings", async (settings: ChartInfoTSC) => {
+export const applySettings = action("applySettings", async (settings: ChartInfoTSC, stateCopyObj?: State) => {
   applyChartSettings(settings.settings);
   applyChartColumnSettings(settings["class datastore.RootColumn:Chart Root"]);
   handleDataMiningColumns();
@@ -390,13 +394,17 @@ const applyChartSettings = action("applyChartSettings", (settings: ChartSettings
   setEnableHideBlockLabel(enHideBlockLable);
 });
 
-const setPreviousDatapackConfig = action("setPreviousDatapackConfig", (datapacks: string[]) => {
-  if (!state.datapackCachedConfiguration.has(state.config.datapacks.join(","))) {
-    return;
+export const setPreviousDatapackConfig = action("setPreviousDatapackConfig", (datapacks: string[]) => {
+  console.log("dp:" + datapacks);
+  console.log(JSON.stringify(state.datapackCachedConfiguration));
+  if (!state.datapackCachedConfiguration.has(datapacks.join(",")) || !state.datapackCachedConfiguration.has(state.config.datapacks.join(","))) {
+    console.log("yes,false")
+    return false;
   }
   const cachedConfig = state.datapackCachedConfiguration.get(state.config.datapacks.join(","))!;
   state.config.datapacks = datapacks;
   state.settingsTabs.columns = cachedConfig.columns;
+  console.log("cachedConfig.columns:" + JSON.stringify(cachedConfig.columns));
   state.settingsTabs.columnHashMap = cachedConfig.columnHashMap;
   state.mapState.mapInfo = cachedConfig.mapInfo;
   state.mapState.mapHierarchy = cachedConfig.mapHierarchy;
@@ -413,6 +421,7 @@ const setPreviousDatapackConfig = action("setPreviousDatapackConfig", (datapacks
       delete state.settings.timeSettings[unit];
     }
   }
+  return true;
 });
 
 /**
@@ -423,8 +432,8 @@ const setPreviousDatapackConfig = action("setPreviousDatapackConfig", (datapacks
 export const setDatapackConfig = action(
   "setDatapackConfig",
   async (datapacks: string[], settingsPath?: string): Promise<boolean> => {
-    console.log("calling");
     if (state.datapackCachedConfiguration.has(datapacks.join(","))) {
+      console.log("shouldn't be here , dp is " + datapacks);
       setPreviousDatapackConfig(datapacks);
       return true;
     }
@@ -574,7 +583,214 @@ export const setDatapackConfig = action(
   }
 );
 
-const fetchSettingsXML = async (settingsPath: string): Promise<ChartInfoTSC | null> => {
+/* export const setDatapackConfig = action(
+  "setDatapackConfig",
+  async (datapacks: string[], stateCopy: string, settingsPath?: string, chartSettings?: ChartInfoTSC | null): Promise<string> => {
+    const stateCopyObj: State = JSON.parse(stateCopy);
+    //return "";
+    // if (stateCopyObj.datapackCachedConfiguration.has(datapacks.join(","))) {
+    //   setPreviousDatapackConfig(datapacks);
+    //   return true;
+    // }
+    const unitMap: Map<string, ColumnInfo> = new Map();
+    let mapInfo: MapInfo = {};
+    let mapHierarchy: MapHierarchy = {};
+    let columnRoot: ColumnInfo;
+    //let chartSettings: ChartInfoTSC | null = null;
+    let foundDefaultAge = false;
+    try {
+      if (settingsPath && settingsPath.length > 0) {
+        if (chartSettings) {
+          removeError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
+          chartSettings = JSON.parse(JSON.stringify(settings));
+        } else {
+          pushError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
+          return "";
+        }
+      }
+      // the default overarching variable for the columnInfo
+      columnRoot = {
+        name: "Chart Root", // if you change this, change parse-datapacks.ts :69
+        editName: "Chart Root",
+        fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
+        fontOptions: ["Column Header"],
+        popup: "",
+        on: true,
+        width: 100,
+        enableTitle: true,
+        rgb: {
+          r: 255,
+          g: 255,
+          b: 255
+        },
+        minAge: Number.MAX_VALUE,
+        maxAge: Number.MIN_VALUE,
+        children: [],
+        parent: null,
+        units: "",
+        columnDisplayType: "RootColumn",
+        show: true,
+        expanded: true
+      };
+      // all chart root font options have inheritable on
+      for (const opt in columnRoot.fontsInfo) {
+        columnRoot.fontsInfo[opt as keyof FontsInfo].inheritable = true;
+      }
+      // add everything together
+      // uses preparsed data on server start and appends items together
+      for (const datapack of datapacks) {
+        //await new Promise((resolve) => setTimeout(resolve, 0));
+        if (!datapack || !stateCopyObj.datapackIndex[datapack])
+          throw new Error(`File requested doesn't exist on server: ${datapack}`);
+        const datapackParsingPack = stateCopyObj.datapackIndex[datapack]!;
+        if (
+          ((datapackParsingPack.topAge || datapackParsingPack.topAge === 0) &&
+            (datapackParsingPack.baseAge || datapackParsingPack.baseAge === 0)) ||
+          datapackParsingPack.verticalScale
+        )
+          foundDefaultAge = true;
+        if (unitMap.has(datapackParsingPack.ageUnits)) {
+          const existingUnitColumnInfo = unitMap.get(datapackParsingPack.ageUnits)!;
+          const newUnitChart = datapackParsingPack.columnInfo;
+          // slice off the existing unit column
+          const columnsToAdd = cloneDeep(newUnitChart.children.slice(1));
+          for (const child of columnsToAdd) {
+            child.parent = existingUnitColumnInfo.name;
+          }
+          existingUnitColumnInfo.children = existingUnitColumnInfo.children.concat(columnsToAdd);
+        } else {
+          const columnInfo = cloneDeep(datapackParsingPack.columnInfo);
+          columnInfo.parent = columnRoot.name;
+          unitMap.set(datapackParsingPack.ageUnits, columnInfo);
+        }
+        const mapPack = stateCopyObj.mapPackIndex[datapack]!;
+        if (!mapInfo) mapInfo = mapPack.mapInfo;
+        else Object.assign(mapInfo, mapPack.mapInfo);
+        if (!mapHierarchy) mapHierarchy = mapPack.mapHierarchy;
+        else Object.assign(mapHierarchy, mapPack.mapHierarchy);
+      }
+      // makes sure things are named correctly for users and for the hash map to not have collisions
+      for (const [unit, column] of unitMap) {
+        //await new Promise((resolve) => setTimeout(resolve, 0));
+        if (unit !== "Ma" && column.name === "Chart Title") {
+          column.name = column.name + " in " + unit;
+          column.editName = unit;
+          for (const child of column.children) {
+            child.parent = column.name;
+          }
+        }
+        columnRoot.fontOptions = Array.from(new Set([...columnRoot.fontOptions, ...column.fontOptions]));
+        columnRoot.children.push(column);
+      }
+      assertMapHierarchy(mapHierarchy);
+      assertColumnInfo(columnRoot);
+      assertMapInfo(mapInfo);
+    } catch (e) {
+      console.error(e);
+      pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
+      chartSettings = null;
+      return "";
+    }
+    resetSettings(stateCopyObj);
+    stateCopyObj.settingsTabs.columns = columnRoot;
+    stateCopyObj.settings.datapackContainsSuggAge = foundDefaultAge;
+    stateCopyObj.mapState.mapHierarchy = mapHierarchy;
+    stateCopyObj.mapState.mapInfo = mapInfo;
+    stateCopyObj.settingsTabs.columnHashMap = new Map();
+    // throws warning if this isn't in its own action. may have other fix but left as is
+    runInAction(() => {
+      stateCopyObj.config.datapacks = datapacks;
+    });
+    // this is for app start up or when all datapacks are removed
+    if (datapacks.length === 0) {
+      stateCopyObj.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
+    }
+    await initializeColumnHashMap(stateCopyObj.settingsTabs.columns, stateCopyObj); //worker can't directly access to state, so stateCopyObj is needed
+    if (chartSettings !== null) {
+      assertChartInfoTSC(chartSettings);
+      await applySettings(chartSettings, stateCopyObj); //worker can't directly access to state, so stateCopyObj is needed
+    } else {
+      // set any new units in the time
+      for (const chart of columnRoot.children) {
+        if (!stateCopyObj.settings.timeSettings[chart.units]) {
+          stateCopyObj.settings.timeSettings[chart.units] = JSON.parse(JSON.stringify(defaultTimeSettings));
+        }
+      }
+    }
+    stateCopyObj.datapackCachedConfiguration.set(datapacks.join(","), {
+      columns: columnRoot,
+      columnHashMap: stateCopyObj.settingsTabs.columnHashMap,
+      mapInfo,
+      mapHierarchy,
+      datapackContainsSuggAge: stateCopyObj.settings.datapackContainsSuggAge,
+      units: Object.keys(stateCopyObj.settings.timeSettings)
+    });
+    return JSON.stringify(stateCopyObj);//change to return a type include {columnRoot, foundDefaultge, mapHierarchy,mapInfo}
+  }
+); */
+
+export const beforeSetDatapackConfig = action((settingsPath: String, chartSettings: ChartInfoTSC | null) => {
+
+  if (settingsPath && settingsPath.length > 0) {
+    if (chartSettings) {
+      removeError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
+      chartSettings = JSON.parse(JSON.stringify(settings));
+    } else {
+      pushError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
+      return false;
+    }
+  }
+});
+
+export const afterSetDatapackConfig = action(async (columnRoot: ColumnInfo, foundDefaultAge: boolean, mapHierarchy: MapHierarchy, mapInfo: MapInfo, datapacks: string[], chartSettings: ChartInfoTSC | null): Promise<boolean> => {
+  try {
+    assertMapHierarchy(mapHierarchy);
+    assertColumnInfo(columnRoot);
+    assertMapInfo(mapInfo);
+  } catch (e) {
+    console.error(e);
+    pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
+    chartSettings = null;
+    return false;
+  }
+  resetSettings(state);
+  state.settingsTabs.columns = columnRoot;
+  state.settings.datapackContainsSuggAge = foundDefaultAge;
+  state.mapState.mapHierarchy = mapHierarchy;
+  state.mapState.mapInfo = mapInfo;
+  state.settingsTabs.columnHashMap = new Map();
+  // throws warning if this isn't in its own action. may have other fix but left as is
+  runInAction(() => {
+    state.config.datapacks = datapacks;
+  });
+  // this is for app start up or when all datapacks are removed
+  if (datapacks.length === 0) {
+    state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
+  }
+  await initializeColumnHashMap(state.settingsTabs.columns);
+  if (chartSettings !== null) {
+    assertChartInfoTSC(chartSettings);
+    await applySettings(chartSettings);
+  } else {
+    // set any new units in the time
+    for (const chart of columnRoot.children) {
+      if (!state.settings.timeSettings[chart.units]) {
+        state.settings.timeSettings[chart.units] = JSON.parse(JSON.stringify(defaultTimeSettings));
+      }
+    }
+  }
+  state.datapackCachedConfiguration.set(datapacks.join(","), {
+    columns: columnRoot,
+    columnHashMap: state.settingsTabs.columnHashMap,
+    mapInfo,
+    mapHierarchy,
+    datapackContainsSuggAge: state.settings.datapackContainsSuggAge,
+    units: Object.keys(state.settings.timeSettings)
+  });
+  return true;
+});
+
+export const fetchSettingsXML = async (settingsPath: string): Promise<ChartInfoTSC | null> => {
   const res = await fetcher(`/settingsXml/${encodeURIComponent(settingsPath)}`, {
     method: "GET"
   });
@@ -623,7 +839,8 @@ export const removeCache = action("removeCache", async () => {
 export const resetState = action("resetState", () => {
   setChartMade(true);
   setChartLoading(true);
-  setDatapackConfig([], "");
+  console.log("when call reset state" + JSON.stringify(state.config.datapacks));
+  setDatapackConfig([], ""); //need to change after take out setDatepackConfig
   setChartHash("");
   setChartContent("");
   setUseCache(true);

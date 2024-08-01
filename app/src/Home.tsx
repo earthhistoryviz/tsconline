@@ -3,7 +3,7 @@ import { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import { NavigateFunction, useNavigate } from "react-router-dom";
 import { ChartConfig } from "@tsconline/shared";
-import { context } from "./state";
+import { context, state } from "./state";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Accordion, AccordionSummary, AccordionDetails, Grid, Typography } from "@mui/material";
 import { useTheme, styled } from "@mui/material/styles";
@@ -11,6 +11,8 @@ import { TSCIcon, TSCButton, TSCCard, StyledScrollbar } from "./components";
 import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import "./Home.css";
 import { SetDatapackConfigCompleteMessage, SetDatapackConfigMessage } from "./types";
+import { fetchSettingsXML } from "./state/actions";
+import { action } from "mobx";
 
 const HeaderContainer = styled("div")(({ theme }) => ({
   display: "flex",
@@ -99,40 +101,64 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                     preset={preset}
                     generateChart={async () => {
                       console.log("hello, tsccard");
+                      let success;
+                      const hasPreviousConfig = actions.setPreviousDatapackConfig(preset.datapacks.map((datapack) => datapack.file));
+                      console.log("hasPreviousConfig" + hasPreviousConfig);
+                      if (hasPreviousConfig) {
+                        success = true;
+                      } else {
+                        const chartSettings = await fetchSettingsXML(preset.settings);
+                        const setDatapackConfigWorker: Worker = new Worker(new URL("./util/workers/set-datapack-config.ts", import.meta.url), {
+                          type: "module"
+                        });
+                        console.log("hello, tsccard2");
+                        const message: SetDatapackConfigMessage = {
+                          datapacks: preset.datapacks.map((datapack) => datapack.file), settingsPath: preset.settings,
+                          chartSettings: chartSettings, stateCopy: JSON.stringify(state)
+                        };
+                        console.log("hello, tsccard3");
+                        setDatapackConfigWorker.postMessage(message);
+                        console.log("hello, tsccard4.5");
 
-                      const setDatapackConfigWorker: Worker = new Worker(new URL("./util/workers/set-datapack-config.ts", import.meta.url), {
-                        type: "module"
-                      });
-                      console.log("hello, tsccard2");
-                      const message: SetDatapackConfigMessage = { datapacks: preset.datapacks.map((datapack) => datapack.file), settingsPath: preset.settings };
-                      console.log("hello, tsccard3");
-                      setDatapackConfigWorker.postMessage(message);
-                      console.log("hello, tsccard4");
-                      setDatapackConfigWorker.onmessage = function (e: MessageEvent<SetDatapackConfigCompleteMessage>) {
-                        console.log("hello, tsccard5");
-                        const { status, value } = e.data;
-                        console.log(status + value);
-                        if (status === "success" && value) {
-                          actions.initiateChartGeneration(navigate, "/home");
-                          //actions.pushSnackbar("Saved Chart as PDF!", "success");
-                          console.log("sucessfully set dp config");
-                        } else {
-                          //actions.pushSnackbar("Saving Chart Timed Out", "info");
-                          console.log("setting dp config timed out");
+                        setDatapackConfigWorker.onmessage = async function (e: MessageEvent<SetDatapackConfigCompleteMessage>) {
+
+                          const { status, value } = e.data;
+                          console.log(status);
+                          if (status === "success" && value) {
+                            //actions.updateState(value);
+                            //actions.initiateChartGeneration(navigate, "/home");
+                            //actions.pushSnackbar("Saved Chart as PDF!", "success");
+
+                            console.log("sucessfully set dp config");
+                            success = await actions.afterSetDatapackConfig(value.columnRoot, value.foundDefaultAge, value.mapHierarchy, value.mapInfo, value.datapacks, value.chartSettings);
+                            console.log("after:" + success);
+                            console.log("when afterSetDatapackConfig finished:" + JSON.stringify(state.config.datapacks));
+
+                            actions.initiateChartGeneration(navigate, "/home");
+                          } else {
+                            //actions.pushSnackbar("Saving Chart Timed Out", "info");
+                            console.log("setting dp config timed out");
+                          }
+
+                          setDatapackConfigWorker.terminate();
                         }
 
-                        setDatapackConfigWorker.terminate();
+                        console.log("Hello6");
+                        // const success = await actions.setDatapackConfig(
+                        //   preset.datapacks.map((datapack) => datapack.file),
+                        //   preset.settings
+                        // );
+                        // wait to see if we can grab necessary data
+                        // if (success) {
+                        //   actions.initiateChartGeneration(navigate, "/home");
+                        // }
+                        //TODO add an error message saying the data is irregular and can't be loaded
                       }
-
-                      // const success = await actions.setDatapackConfig(
-                      //   preset.datapacks.map((datapack) => datapack.file),
-                      //   preset.settings
-                      // );
-                      // wait to see if we can grab necessary data
-                      // if (success) {
-                      //   actions.initiateChartGeneration(navigate, "/home");
-                      // }
-                      //TODO add an error message saying the data is irregular and can't be loaded
+                      console.log("success should be true:" + success);
+                      if (success) {
+                        console.log("should be here");
+                        actions.initiateChartGeneration(navigate, "/home");
+                      }
                     }}
                   />
                 </Grid>

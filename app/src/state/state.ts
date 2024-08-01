@@ -201,7 +201,7 @@ export const state = observable<State>({
   errors: {
     errorAlerts: new Map<ErrorCodes, ErrorAlert>()
   },
-  presetColors: JSON.parse(JSON.stringify(defaultColors)),//localStorage.getItem("savedColors") || 
+  presetColors: JSON.parse(localStorage.getItem("savedColors") || JSON.stringify(defaultColors)),
   snackbars: [],
   datapackCachedConfiguration: new Map<string, CachedConfig>()
 });

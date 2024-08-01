@@ -1,5 +1,5 @@
 import { action, observable } from "mobx";
-import { state } from "../state";
+import { State, state } from "../state";
 import {
   ChronSettings,
   ColumnInfo,
@@ -286,7 +286,7 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
 
 export const applyRowOrder = action(
   "applyRowOrder",
-  async (column: ColumnInfo | undefined, settings: ColumnInfoTSC, counter = { count: 0 }) => {
+  async (column: ColumnInfo | undefined, settings: ColumnInfoTSC, stateCopyObj?: State, counter = { count: 0 }) => {
     if (!column) return;
     //needed since number of children in column and settings file could be different
     let columnIndex = 0;
@@ -303,8 +303,13 @@ export const applyRowOrder = action(
       }
       //for chart titles with different units
       else if (!column.parent) {
-        if (state.settingsTabs.columnHashMap.get(altUnitNamePrefix + childName))
-          childName = altUnitNamePrefix + childName;
+        if (stateCopyObj) {
+          if (stateCopyObj.settingsTabs.columnHashMap.get(altUnitNamePrefix + childName))
+            childName = altUnitNamePrefix + childName;
+        } else {
+          if (state.settingsTabs.columnHashMap.get(altUnitNamePrefix + childName))
+            childName = altUnitNamePrefix + childName;
+        }
       }
       let indexOfMatch = -1;
       //column doesn't exist in the childrens of loaded column, so skip
@@ -319,18 +324,23 @@ export const applyRowOrder = action(
           column.children[columnIndex]
         ];
       }
-      await applyRowOrder(column.children[columnIndex], settingsChild, counter);
+      await applyRowOrder(column.children[columnIndex], settingsChild, stateCopyObj, counter);
       columnIndex++;
     }
   }
 );
 
-export const initializeColumnHashMap = action(async (columnInfo: ColumnInfo, counter = { count: 0 }) => {
+export const initializeColumnHashMap = action(async (columnInfo: ColumnInfo, stateCopyObj?: State, counter = { count: 0 }) => {
   await yieldControl(counter, 30);
-  state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
-  for (const childColumn of columnInfo.children) {
-    await initializeColumnHashMap(childColumn, counter);
+  if (stateCopyObj) {
+    stateCopyObj.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
+  } else {
+    state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
   }
+  for (const childColumn of columnInfo.children) {
+    await initializeColumnHashMap(childColumn, stateCopyObj, counter);
+  }
+
 });
 
 /*
