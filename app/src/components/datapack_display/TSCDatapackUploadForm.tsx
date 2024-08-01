@@ -1,4 +1,4 @@
-import { IconButton, TextField, Typography } from "@mui/material";
+import { Box, IconButton, TextField, Typography } from "@mui/material";
 import { useContext, useState } from "react";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { InputFileUpload } from "../TSCFileUpload";
@@ -21,7 +21,7 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [references, setReferences] = useState<string[]>([]);
-  const [authoredBy, setAuthoredBy] = useState("");
+  const [authoredBy, setAuthoredBy] = useState(state.user.username);
   const [notes, setNotes] = useState("");
   const [contact, setContact] = useState("");
   const [date, setDate] = useState("");
@@ -38,19 +38,38 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
     ...(notes && { notes }),
     ...(date && { date })
   };
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (form.checkValidity() === false) {
+      event.stopPropagation();
+      actions.pushError(ErrorCodes.INVALID_FORM);
+      return;
+    }
+    if (!file) {
+      actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
+      return;
+    }
+    actions.removeError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
+    actions.removeError(ErrorCodes.UNFINISHED_DATAPACK_UPLOAD_FORM);
+    upload(file, metadata);
+    setFile(null);
+    setTitle("");
+    setDescription("");
+  };
   return (
-    <>
+    <Box margin="20px" justifyContent="center" textAlign="center">
       <div className="close-upload-form">
         <IconButton className="icon" onClick={close} size="large">
           <CloseIcon className="close-icon" />
         </IconButton>
       </div>
-      <div className="datapack-upload-form">
-        <Typography className="upload-datapack-header" variant="h4">
-          Upload Your Own Datapack
-        </Typography>
-        <CustomDivider />
-        <div className="file-upload">
+      <Typography className="upload-datapack-header" variant="h4">
+        Upload Your Own Datapack
+      </Typography>
+      <CustomDivider />
+      <form className="datapack-upload-form" onSubmit={handleSubmit}>
+        <Box className="file-upload">
           <InputFileUpload
             startIcon={<CloudUploadIcon />}
             text="Upload Datapack"
@@ -90,26 +109,58 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
               <DeleteOutlineIcon className="close-icon" />
             </IconButton>
           )}
-        </div>
-        <TextField
-          label="Datapack Name"
-          placeholder="Enter a name for your datapack."
-          InputLabelProps={{ shrink: true }}
-          className="datapack-name-input"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-        />
+        </Box>
+        <Box gap="10px" display="flex">
+          <TextField
+            label="Datapack Name"
+            required
+            sx={{ flexGrow: 0.5 }}
+            placeholder="Enter a name for your datapack."
+            InputLabelProps={{ shrink: true }}
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+          />
+          <TextField
+            label="Authored By"
+            sx={{ flexGrow: 1 }}
+            placeholder="Credited to..."
+            required
+            InputLabelProps={{ shrink: true }}
+            value={authoredBy}
+            onChange={(event) => setAuthoredBy(event.target.value)}
+          />
+        </Box>
         <TextField
           multiline
-          rows={10}
+          required
+          rows={5}
           label="Datapack Description"
           placeholder="Enter a description for your datapack."
-          className="datapack-description-input"
           inputProps={{ className: "datapack-description-input-text" }}
           InputLabelProps={{ shrink: true }}
           value={description}
           onChange={(event) => setDescription(event.target.value)}
         />
+        <Box gap="10px" display="flex">
+          <TextField
+            label="Contact"
+            placeholder="Enter your contact information"
+            sx={{ flexGrow: 0.5 }}
+            helperText="(OPTIONAL) If you would like others to contact you about this datapack"
+            InputLabelProps={{ shrink: true }}
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+          />
+          <TextField
+            label="Notes"
+            placeholder="Enter notes for the datapack here"
+            helperText="(OPTIONAL) Generally notes are settings recommendations/How to use your datapack most efficiently"
+            sx={{ flexGrow: 1 }}
+            InputLabelProps={{ shrink: true }}
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+          />
+        </Box>
         <div className="file-upload-button">
           <TSCButton
             onClick={() => {
@@ -119,27 +170,9 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
             }}>
             Start Over
           </TSCButton>
-          <TSCButton
-            onClick={() => {
-              if (!file) {
-                actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
-                return;
-              }
-              if (!title || !description) {
-                actions.pushError(ErrorCodes.UNFINISHED_DATAPACK_UPLOAD_FORM);
-                return;
-              }
-              actions.removeError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
-              actions.removeError(ErrorCodes.UNFINISHED_DATAPACK_UPLOAD_FORM);
-              upload(file, metadata);
-              setFile(null);
-              setTitle("");
-              setDescription("");
-            }}>
-            Finish & Upload
-          </TSCButton>
+          <TSCButton type="submit">Finish & Upload</TSCButton>
         </div>
-      </div>
-    </>
+      </form>
+    </Box>
   );
 };

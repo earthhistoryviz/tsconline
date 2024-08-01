@@ -38,7 +38,7 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack
           />
         </div>
         <Typography className={styles.description}>{datapack.description}</Typography>
-        <Typography className={styles.fd}>Dixon, Dougal, et al. (1980) · {datapack.size}</Typography>
+        <Typography className={styles.fd}>{datapack.authoredBy}</Typography>
       </CardContent>
       <div className={styles.footer} onClick={(e) => e.stopPropagation()}>
         <CardActions className={styles.ca}>
