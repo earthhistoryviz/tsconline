@@ -298,6 +298,7 @@ jobs:
             cd /home/aaron/tsconline/pr-preview-${PR_NUMBER}
             if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
               echo "Container for PR ${PR_NUMBER} is already running. Rebuilding..."
+              docker-compose -f docker-compose-preview.yml up pr-preview-build
               docker-compose -f docker-compose-preview.yml restart pr-preview-run
               MAX_WAIT=180
               INTERVAL=5
