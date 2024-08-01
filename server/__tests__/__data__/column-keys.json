@@ -512,6 +512,8 @@
     "description": "Africa Bight Map",
     "title": "Africa Bight",
     "size": "200.98 KB",
+    "tags": [],
+    "references": [],
     "columnTypeCount": {
       "Block": 6,
       "Facies": 2,
@@ -524,6 +526,7 @@
       "Freehand": 0,
       "Blank": 0
     },
+    "authoredBy": "authoredBy",
     "datapackImageCount": 0,
     "totalColumns": 8
   },
@@ -1440,7 +1443,10 @@
       "Facies": 1
     },
     "datapackImageCount": 0,
-    "totalColumns": 14
+    "totalColumns": 14,
+    "tags": [],
+    "references": [],
+    "authoredBy": "authoredBy"
   },
   "column-types-facies-key": {
     "FaciesOne": {
@@ -2761,6 +2767,9 @@
       "Transect": 0
     },
     "datapackImageCount": 0,
-    "totalColumns": 0
+    "totalColumns": 0,
+    "authoredBy": "authoredBy",
+    "references": [],
+    "tags": []
   }
 }
