@@ -9,16 +9,35 @@ import { ErrorCodes } from "../../util/error-codes";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { CustomDivider } from "../TSCComponents";
+import { DatapackMetadata } from "@tsconline/shared";
 
 type TSCDatapackUploadFormProps = {
   close: () => void;
-  upload: (file: File, name: string, description: string) => Promise<void>;
+  upload: (file: File, metadata: DatapackMetadata) => Promise<void>;
 };
 export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ close, upload }) => {
   const { state, actions } = useContext(context);
-  const [datapackName, setDatapackName] = useState("");
-  const [datapackDescription, setDatapackDescription] = useState("");
-  const [datapackFile, setDatapackFile] = useState<File | null>(null);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [references, setReferences] = useState<string[]>([]);
+  const [authoredBy, setAuthoredBy] = useState("");
+  const [notes, setNotes] = useState("");
+  const [contact, setContact] = useState("");
+  const [date, setDate] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const metadata: DatapackMetadata = {
+    file: file?.name || "",
+    description,
+    title,
+    authoredBy,
+    references,
+    tags,
+    size: "0", // placeholder, this will get set after the file is uploaded
+    ...(contact && { contact }),
+    ...(notes && { notes }),
+    ...(date && { date })
+  };
   return (
     <>
       <div className="close-upload-form">
@@ -60,14 +79,14 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
                 return;
               }
               actions.removeAllErrors();
-              setDatapackFile(file);
+              setFile(file);
             }}
           />
           <Typography className="file-upload-text" variant="body2">
-            {datapackFile ? datapackFile.name : "No file selected"}
+            {file ? file.name : "No file selected"}
           </Typography>
-          {datapackFile && (
-            <IconButton className="icon" onClick={() => setDatapackFile(null)}>
+          {file && (
+            <IconButton className="icon" onClick={() => setFile(null)}>
               <DeleteOutlineIcon className="close-icon" />
             </IconButton>
           )}
@@ -77,8 +96,8 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
           placeholder="Enter a name for your datapack."
           InputLabelProps={{ shrink: true }}
           className="datapack-name-input"
-          value={datapackName}
-          onChange={(event) => setDatapackName(event.target.value)}
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
         />
         <TextField
           multiline
@@ -88,34 +107,34 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
           className="datapack-description-input"
           inputProps={{ className: "datapack-description-input-text" }}
           InputLabelProps={{ shrink: true }}
-          value={datapackDescription}
-          onChange={(event) => setDatapackDescription(event.target.value)}
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
         />
         <div className="file-upload-button">
           <TSCButton
             onClick={() => {
-              setDatapackFile(null);
-              setDatapackName("");
-              setDatapackDescription("");
+              setFile(null);
+              setTitle("");
+              setDescription("");
             }}>
             Start Over
           </TSCButton>
           <TSCButton
             onClick={() => {
-              if (!datapackFile) {
+              if (!file) {
                 actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
                 return;
               }
-              if (!datapackName || !datapackDescription) {
+              if (!title || !description) {
                 actions.pushError(ErrorCodes.UNFINISHED_DATAPACK_UPLOAD_FORM);
                 return;
               }
               actions.removeError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
               actions.removeError(ErrorCodes.UNFINISHED_DATAPACK_UPLOAD_FORM);
-              upload(datapackFile, datapackName, datapackDescription);
-              setDatapackFile(null);
-              setDatapackName("");
-              setDatapackDescription("");
+              upload(file, metadata);
+              setFile(null);
+              setTitle("");
+              setDescription("");
             }}>
             Finish & Upload
           </TSCButton>

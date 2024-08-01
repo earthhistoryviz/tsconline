@@ -4,6 +4,7 @@ import { executeRecaptcha, fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   AdminSharedUser,
+  DatapackMetadata,
   assertAdminSharedUserArray,
   assertDatapackIndex,
   isServerResponseError
@@ -262,7 +263,7 @@ export const adminDeleteServerDatapacks = action(async (datapacks: string[]) => 
   return !deletedNoDatapacks;
 });
 
-export const adminUploadServerDatapack = action(async (file: File, title: string, description: string) => {
+export const adminUploadServerDatapack = action(async (file: File, metadata: DatapackMetadata) => {
   const recaptchaToken = await getRecaptchaToken("adminUploadServerDatapack");
   if (!recaptchaToken) return;
   if (state.datapackIndex[file.name]) {
@@ -270,9 +271,16 @@ export const adminUploadServerDatapack = action(async (file: File, title: string
     return;
   }
   const formData = new FormData();
+  const { title, description, authoredBy, contact, notes, date, references, tags } = metadata;
   formData.append("file", file);
   formData.append("title", title);
   formData.append("description", description);
+  formData.append("references", JSON.stringify(references));
+  formData.append("tags", JSON.stringify(tags));
+  formData.append("authoredBy", authoredBy);
+  if (notes) formData.append("notes", notes);
+  if (date) formData.append("date", date);
+  if (contact) formData.append("contact", contact);
   try {
     const response = await fetcher(`/admin/server/datapack`, {
       method: "POST",
