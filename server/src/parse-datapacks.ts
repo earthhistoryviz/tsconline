@@ -1562,6 +1562,7 @@ function addFaciesChildren(
     expanded: false,
     columnSpecificSettings: { orientation: "vertical" }
   });
+  columnTypeCounter.Block += 3;
   // add the font options present on children to parent
   for (const child of children) {
     for (const fontOption of child.fontOptions) {
@@ -1619,7 +1620,7 @@ function addChronChildren(
   children.push({
     name: `${name} Chron Label`,
     editName: "Chron Label",
-    on: false,
+    on: true,
     enableTitle: false,
     fontOptions: getValidFontOptions("Zone"),
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
@@ -1656,6 +1657,7 @@ function addChronChildren(
     expanded: false,
     columnSpecificSettings: { orientation: "vertical" }
   });
+  columnTypeCounter.Block += 2;
   // add the font options present on children to parent
   for (const child of children) {
     for (const fontOption of child.fontOptions) {
