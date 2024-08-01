@@ -11,7 +11,7 @@ import {
   TextField,
   Typography
 } from "@mui/material";
-import { useContext, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { InputFileUpload } from "../TSCFileUpload";
 import { context } from "../../state";
@@ -24,6 +24,8 @@ import { CustomDivider, StyledScrollbar } from "../TSCComponents";
 import { DatapackMetadata } from "@tsconline/shared";
 import { AddCircleOutline, ArrowForwardIosSharp, ExpandMore } from "@mui/icons-material";
 import { Reference } from "../../types";
+import { DatePicker, DateValidationError, PickerChangeHandlerContext } from "@mui/x-date-pickers";
+import dayjs, { Dayjs } from "dayjs";
 
 type TSCDatapackUploadFormProps = {
   close: () => void;
@@ -33,13 +35,14 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
   const { state, actions } = useContext(context);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
-  const [references, setReferences] = useState<Reference[]>([]);
   const [currentId, setCurrentId] = useState(0);
   const [authoredBy, setAuthoredBy] = useState(state.user.username);
   const [notes, setNotes] = useState("");
   const [contact, setContact] = useState("");
-  const [date, setDate] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [references, setReferences] = useState<Reference[]>([]);
+  const [date, setDate] = useState<Dayjs | null>(null);
+  const [dateError, setDateError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const metadata: DatapackMetadata = {
     file: file?.name || "",
@@ -51,7 +54,7 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
     size: "0", // placeholder, this will get set after the file is uploaded
     ...(contact && { contact }),
     ...(notes && { notes }),
-    ...(date && { date })
+    ...(date && { date: date.format("YYYY-MM-DD") })
   };
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -61,16 +64,16 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
       actions.pushError(ErrorCodes.INVALID_FORM);
       return;
     }
+    if (dateError) {
+      return;
+    }
     if (!file) {
       actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
       return;
     }
     actions.removeError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
     actions.removeError(ErrorCodes.UNFINISHED_DATAPACK_UPLOAD_FORM);
-    upload(file, metadata);
-    setFile(null);
-    setTitle("");
-    setDescription("");
+    // upload(file, metadata);
   };
   const addReference = () => {
     if (references[0] && references[references.length - 1].reference === "") {
@@ -83,6 +86,14 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
     const newReferences = [...references];
     newReferences[index].reference = event.target.value;
     setReferences(newReferences);
+  };
+  const handleDateChange = (date: Dayjs | null, context: PickerChangeHandlerContext<DateValidationError>) => {
+    if (context.validationError) {
+      setDateError("Invalid Date");
+    } else {
+      setDateError(null);
+      setDate(date);
+    }
   };
   return (
     <Box margin="20px" justifyContent="center" textAlign="center" maxWidth="70vw">
@@ -169,6 +180,19 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
             value={description}
             onChange={(event) => setDescription(event.target.value)}
           />
+          <Box display="flex" flexDirection="column">
+            <DatePicker
+              className="datapack-date-picker"
+              value={date}
+              maxDate={dayjs()}
+              slotProps={{
+                field: { clearable: true, onClear: () => setDate(null) },
+                textField: { helperText: dateError },
+                popper: { className: "datapack-date-picker" }
+              }}
+              onChange={handleDateChange}
+            />
+          </Box>
           <Autocomplete
             className="tag-autocomplete"
             multiple

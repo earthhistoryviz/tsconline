@@ -45,7 +45,6 @@
   top: 5px;
   display: flex;
 }
-
 .MuiIconButton-root.icon {
   width: 35px;
   height: 35px;
@@ -67,4 +66,7 @@
   align-items: center;
   justify-content: center;
   margin-top: 30px;
+}
+.datapack-date-picker .MuiPickersYear-yearButton {
+  font-size: 1rem; /*HACK this is bugged for some reason on the main library */
 }
