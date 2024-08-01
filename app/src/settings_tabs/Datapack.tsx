@@ -22,40 +22,43 @@ export const Datapacks = observer(function Datapacks() {
   const [formOpen, setFormOpen] = useState(false);
 
   const onChange = async (name: string) => {
-    console.log("hello,dpack");
-    // if (state.config.datapacks.includes(name)) {
-    //   await actions.setDatapackConfig(
-    //     state.config.datapacks.filter((datapack) => datapack !== name),
-    //     ""
-    //   );
-    // } else {
-    //   await actions.setDatapackConfig([...state.config.datapacks, name], "");
-    // }
-    const datapacks = state.config.datapacks.includes(name) ? state.config.datapacks.filter((datapack) => datapack !== name) : [...state.config.datapacks, name];
-
+    const datapacks = state.config.datapacks.includes(name)
+      ? state.config.datapacks.filter((datapack) => datapack !== name)
+      : [...state.config.datapacks, name];
     const hasPreviousConfig = actions.setPreviousDatapackConfig(datapacks);
     if (hasPreviousConfig) {
       return;
     } else {
       const chartSettings = null;
-      const setDatapackConfigWorker: Worker = new Worker(new URL("../util/workers/set-datapack-config.ts", import.meta.url), {
-        type: "module"
-      });
+      const setDatapackConfigWorker: Worker = new Worker(
+        new URL("../util/workers/set-datapack-config.ts", import.meta.url),
+        {
+          type: "module"
+        }
+      );
       const message: SetDatapackConfigMessage = {
-        datapacks: datapacks, settingsPath: "",
-        chartSettings: chartSettings, stateCopy: JSON.stringify(state)
+        datapacks: datapacks,
+        settingsPath: "",
+        chartSettings: chartSettings,
+        stateCopy: JSON.stringify(state)
       };
       setDatapackConfigWorker.postMessage(message);
       setDatapackConfigWorker.onmessage = async function (e: MessageEvent<SetDatapackConfigCompleteMessage>) {
         const { status, value } = e.data;
         if (status === "success" && value) {
-          actions.afterSetDatapackConfig(value.columnRoot, value.foundDefaultAge, value.mapHierarchy, value.mapInfo, value.datapacks, value.chartSettings);
+          actions.afterSetDatapackConfig(
+            value.columnRoot,
+            value.foundDefaultAge,
+            value.mapHierarchy,
+            value.mapInfo,
+            value.datapacks,
+            value.chartSettings
+          );
         } else {
           actions.pushSnackbar("Setting Datapack Config Timed Out", "info");
         }
         setDatapackConfigWorker.terminate();
-      }
-
+      };
     }
   };
 
@@ -63,7 +66,43 @@ export const Datapacks = observer(function Datapacks() {
     <div className={styles.dc}>
       <div className={styles.hdc}>
         <CustomTooltip title="Deselect All" placement="top">
-          <IconButton className={styles.ib} onClick={() => actions.setDatapackConfig([], "")}>
+          <IconButton
+            className={styles.ib}
+            onClick={() => {
+              const hasPreviousConfig = actions.setPreviousDatapackConfig([]);
+              if (!hasPreviousConfig) {
+                const chartSettings = null;
+                const setDatapackConfigWorker: Worker = new Worker(
+                  new URL("../util/workers/set-datapack-config.ts", import.meta.url),
+                  {
+                    type: "module"
+                  }
+                );
+                const message: SetDatapackConfigMessage = {
+                  datapacks: [],
+                  settingsPath: "",
+                  chartSettings: chartSettings,
+                  stateCopy: JSON.stringify(state)
+                };
+                setDatapackConfigWorker.postMessage(message);
+                setDatapackConfigWorker.onmessage = function (e: MessageEvent<SetDatapackConfigCompleteMessage>) {
+                  const { status, value } = e.data;
+                  if (status === "success" && value) {
+                    actions.afterSetDatapackConfig(
+                      value.columnRoot,
+                      value.foundDefaultAge,
+                      value.mapHierarchy,
+                      value.mapInfo,
+                      value.datapacks,
+                      value.chartSettings
+                    );
+                  } else {
+                    actions.pushSnackbar("Setting Datapack Config Timed Out", "info");
+                  }
+                  setDatapackConfigWorker.terminate();
+                };
+              }
+            }}>
             <DeselectIcon />
           </IconButton>
         </CustomTooltip>

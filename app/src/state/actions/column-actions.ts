@@ -330,18 +330,19 @@ export const applyRowOrder = action(
   }
 );
 
-export const initializeColumnHashMap = action(async (columnInfo: ColumnInfo, stateCopyObj?: State, counter = { count: 0 }) => {
-  await yieldControl(counter, 30);
-  if (stateCopyObj) {
-    stateCopyObj.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
-  } else {
-    state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
+export const initializeColumnHashMap = action(
+  async (columnInfo: ColumnInfo, stateCopyObj?: State, counter = { count: 0 }) => {
+    await yieldControl(counter, 30);
+    if (stateCopyObj) {
+      stateCopyObj.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
+    } else {
+      state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
+    }
+    for (const childColumn of columnInfo.children) {
+      await initializeColumnHashMap(childColumn, stateCopyObj, counter);
+    }
   }
-  for (const childColumn of columnInfo.children) {
-    await initializeColumnHashMap(childColumn, stateCopyObj, counter);
-  }
-
-});
+);
 
 /*
  * toggles the "on" state for a column that had its checkbox clicked
