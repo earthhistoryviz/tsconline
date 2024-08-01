@@ -1,11 +1,11 @@
 import { fileURLToPath, URL } from "url";
 import { defineConfig } from "vitest/config";
 
-const config = {
-  statements: 80,
-  branches: 80,
-  functions: 80,
-  lines: 80
+const thresholdConfig = {
+  statements: 90,
+  branches: 90,
+  functions: 90,
+  lines: 90
 };
 
 export default defineConfig({
@@ -17,16 +17,13 @@ export default defineConfig({
       reporter: ["text", "lcov"],
       include: ["server/src/**", "app/src/**", "shared/src/**"],
       thresholds: {
-        "server/src/admin-auth.ts": config,
-        "server/src/admin-routes.ts": config,
-        "server/src/encryption.ts": {
-          ...config,
-          branches: 50
-        },
-        "server/src/login-routes.ts": config,
-        "server/src/parse-datapacks.ts": config,
-        "server/src/parse-map-packs.ts": config,
-        "shared/src/util.ts": config
+        "server/src/admin-auth.ts": thresholdConfig,
+        "server/src/admin-routes.ts": thresholdConfig,
+        "server/src/encryption.ts": thresholdConfig,
+        "server/src/login-routes.ts": thresholdConfig,
+        "server/src/parse-datapacks.ts": thresholdConfig,
+        "server/src/parse-map-packs.ts": thresholdConfig,
+        "shared/src/util.ts": thresholdConfig
       },
       ignoreEmptyLines: true
     },
