@@ -21,7 +21,7 @@ import { DatapackMetadata } from "@tsconline/shared";
 import { AddCircleOutline, ExpandMore } from "@mui/icons-material";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
-import useDatapackUploadForm from "./DatapackUploadFormHook";
+import useDatapackUploadForm from "./datapack-upload-form-hook";
 
 type DatapackUploadFormProps = {
   close: () => void;
