@@ -73,6 +73,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
   configArray: ChartConfig[];
 }) {
   const { actions } = useContext(context);
+  const [clicked, setClicked] = useState(false);
   const theme = useTheme();
   const [expanded, setExpanded] = useState(true);
   const handleAccordionChange = () => {
@@ -100,64 +101,35 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                   <TSCCard
                     preset={preset}
                     generateChart={async () => {
-                      console.log("hello, tsccard");
-                      let success;
-                      const hasPreviousConfig = actions.setPreviousDatapackConfig(preset.datapacks.map((datapack) => datapack.file));
-                      console.log("hasPreviousConfig" + hasPreviousConfig);
-                      if (hasPreviousConfig) {
-                        success = true;
-                      } else {
-                        const chartSettings = await fetchSettingsXML(preset.settings);
-                        const setDatapackConfigWorker: Worker = new Worker(new URL("./util/workers/set-datapack-config.ts", import.meta.url), {
-                          type: "module"
-                        });
-                        console.log("hello, tsccard2");
-                        const message: SetDatapackConfigMessage = {
-                          datapacks: preset.datapacks.map((datapack) => datapack.file), settingsPath: preset.settings,
-                          chartSettings: chartSettings, stateCopy: JSON.stringify(state)
-                        };
-                        console.log("hello, tsccard3");
-                        setDatapackConfigWorker.postMessage(message);
-                        console.log("hello, tsccard4.5");
-
-                        setDatapackConfigWorker.onmessage = async function (e: MessageEvent<SetDatapackConfigCompleteMessage>) {
-
-                          const { status, value } = e.data;
-                          console.log(status);
-                          if (status === "success" && value) {
-                            //actions.updateState(value);
-                            //actions.initiateChartGeneration(navigate, "/home");
-                            //actions.pushSnackbar("Saved Chart as PDF!", "success");
-
-                            console.log("sucessfully set dp config");
-                            success = await actions.afterSetDatapackConfig(value.columnRoot, value.foundDefaultAge, value.mapHierarchy, value.mapInfo, value.datapacks, value.chartSettings);
-                            console.log("after:" + success);
-                            console.log("when afterSetDatapackConfig finished:" + JSON.stringify(state.config.datapacks));
-
-                            actions.initiateChartGeneration(navigate, "/home");
-                          } else {
-                            //actions.pushSnackbar("Saving Chart Timed Out", "info");
-                            console.log("setting dp config timed out");
+                      if (!clicked) {
+                        setClicked(true);
+                        const hasPreviousConfig = actions.setPreviousDatapackConfig(preset.datapacks.map((datapack) => datapack.file));
+                        if (hasPreviousConfig) {
+                          actions.initiateChartGeneration(navigate, "/home");
+                        } else {
+                          const chartSettings = await actions.fetchSettingsXML(preset.settings);
+                          const setDatapackConfigWorker: Worker = new Worker(new URL("./util/workers/set-datapack-config.ts", import.meta.url), {
+                            type: "module"
+                          });
+                          const message: SetDatapackConfigMessage = {
+                            datapacks: preset.datapacks.map((datapack) => datapack.file), settingsPath: preset.settings,
+                            chartSettings: chartSettings, stateCopy: JSON.stringify(state)
+                          };
+                          setDatapackConfigWorker.postMessage(message);
+                          setDatapackConfigWorker.onmessage = async function (e: MessageEvent<SetDatapackConfigCompleteMessage>) {
+                            const { status, value } = e.data;
+                            if (status === "success" && value) {
+                              actions.afterSetDatapackConfig(value.columnRoot, value.foundDefaultAge, value.mapHierarchy, value.mapInfo, value.datapacks, value.chartSettings);
+                              actions.initiateChartGeneration(navigate, "/home");
+                            } else {
+                              actions.pushSnackbar("Setting Datapack Config Timed Out", "info");
+                            }
+                            setDatapackConfigWorker.terminate();
+                            setClicked(false);
                           }
-
-                          setDatapackConfigWorker.terminate();
                         }
-
-                        console.log("Hello6");
-                        // const success = await actions.setDatapackConfig(
-                        //   preset.datapacks.map((datapack) => datapack.file),
-                        //   preset.settings
-                        // );
-                        // wait to see if we can grab necessary data
-                        // if (success) {
-                        //   actions.initiateChartGeneration(navigate, "/home");
-                        // }
-                        //TODO add an error message saying the data is irregular and can't be loaded
-                      }
-                      console.log("success should be true:" + success);
-                      if (success) {
-                        console.log("should be here");
-                        actions.initiateChartGeneration(navigate, "/home");
+                      } else {
+                        actions.pushSnackbar("Wait For Setting Datapack Config", "info");
                       }
                     }}
                   />

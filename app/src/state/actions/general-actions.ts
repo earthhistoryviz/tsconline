@@ -395,16 +395,12 @@ const applyChartSettings = action("applyChartSettings", (settings: ChartSettings
 });
 
 export const setPreviousDatapackConfig = action("setPreviousDatapackConfig", (datapacks: string[]) => {
-  console.log("dp:" + datapacks);
-  console.log(JSON.stringify(state.datapackCachedConfiguration));
   if (!state.datapackCachedConfiguration.has(datapacks.join(",")) || !state.datapackCachedConfiguration.has(state.config.datapacks.join(","))) {
-    console.log("yes,false")
     return false;
   }
+  state.config.datapacks = datapacks; // @jacqui: if we don't put this line above the next line, there will be a NO_COLUMNS_SELECTED error when click the generate button after removed cache. This happens on the main branch as well, so I think it's not caused by the refactoring
   const cachedConfig = state.datapackCachedConfiguration.get(state.config.datapacks.join(","))!;
-  state.config.datapacks = datapacks;
   state.settingsTabs.columns = cachedConfig.columns;
-  console.log("cachedConfig.columns:" + JSON.stringify(cachedConfig.columns));
   state.settingsTabs.columnHashMap = cachedConfig.columnHashMap;
   state.mapState.mapInfo = cachedConfig.mapInfo;
   state.mapState.mapHierarchy = cachedConfig.mapHierarchy;
@@ -839,7 +835,7 @@ export const removeCache = action("removeCache", async () => {
 export const resetState = action("resetState", () => {
   setChartMade(true);
   setChartLoading(true);
-  console.log("when call reset state" + JSON.stringify(state.config.datapacks));
+  //console.log("when call reset state" + JSON.stringify(state.config.datapacks));
   setDatapackConfig([], ""); //need to change after take out setDatepackConfig
   setChartHash("");
   setChartContent("");
@@ -851,6 +847,8 @@ export const resetState = action("resetState", () => {
   setMapInfo({});
   state.settingsTabs.columnSelected = null;
   state.settingsXML = "";
+  console.log("after reset:" + JSON.stringify(state.settingsTabs.columns) + " , " + JSON.stringify(state.datapackCachedConfiguration));
+  //console.log("after reset: column is" + JSON.stringify(state.settingsTabs.columns) + " , " + JSON.stringify(state.datapackCachedConfiguration));
 });
 
 export const loadPresets = action("loadPresets", (presets: Presets) => {
