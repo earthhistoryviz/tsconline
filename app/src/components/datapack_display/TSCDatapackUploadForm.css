@@ -21,6 +21,10 @@
   padding: 0px 10px;
 }
 
+.tag-ref-scrollbar {
+  max-height: 116px;
+}
+
 .MuiTextField-root.datapack-name-input > .MuiInputLabel-root,
 .MuiTextField-root.datapack-description-input > .MuiInputLabel-root {
   color: gray;

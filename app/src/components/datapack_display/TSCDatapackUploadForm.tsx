@@ -8,7 +8,7 @@ import { TSCButton } from "../TSCButton";
 import { ErrorCodes } from "../../util/error-codes";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import { CustomDivider } from "../TSCComponents";
+import { CustomDivider, StyledScrollbar } from "../TSCComponents";
 import { DatapackMetadata } from "@tsconline/shared";
 
 type TSCDatapackUploadFormProps = {
@@ -23,6 +23,7 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
   const [tagInput, setTagInput] = useState("");
   const [tagError, setTagError] = useState("");
   const [references, setReferences] = useState<string[]>([]);
+  const [referenceInput, setReferenceInput] = useState("");
   const [authoredBy, setAuthoredBy] = useState(state.user.username);
   const [notes, setNotes] = useState("");
   const [contact, setContact] = useState("");
@@ -59,7 +60,7 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
     setTitle("");
     setDescription("");
   };
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleTagKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" && tagInput.trim()) {
       if (tags.length > 10) {
         setTagError("You can only have up to 10 tags");
@@ -69,6 +70,13 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
       event.preventDefault();
       setTags([...tags, tagInput.trim()]);
       setTagInput("");
+    }
+  };
+  const handleReferenceKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter" && referenceInput.trim()) {
+      event.preventDefault();
+      setReferences([...references, referenceInput.trim()]);
+      setReferenceInput("");
     }
   };
   return (
@@ -175,25 +183,71 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
             onChange={(event) => setDescription(event.target.value)}
           />
         </Box>
-        <Box display="flex" flexDirection="column" gap="10px">
-          <TextField
-            label="Tags"
-            placeholder="Enter tags for your datapack"
-            helperText={tagError}
-            error={!!tagError}
-            value={tagInput}
-            onChange={(event) => setTagInput(event.target.value)}
-            InputLabelProps={{ shrink: true }}
-            onKeyDown={handleKeyDown}
-          />
-          <Button className="clear-upload-tags-button" onClick={() => setTags([])}>
-            Clear All
-          </Button>
-          <Stack direction="row" useFlexGap flexWrap="wrap" gap="10px 5px">
-            {tags.map((tag, index) => (
-              <Chip key={tag + index} label={tag} onDelete={() => setTags(tags.filter((_, i) => i !== index))} />
-            ))}
-          </Stack>
+        <Box display="flex" flexDirection="row" gap="5px">
+          <Box display="flex" flexDirection="column" gap="10px" flex={0.5}>
+            <TextField
+              label="Tags"
+              placeholder="Enter tags for your datapack"
+              helperText={tagError}
+              error={!!tagError}
+              value={tagInput}
+              onChange={(event) => setTagInput(event.target.value)}
+              InputLabelProps={{ shrink: true }}
+              onKeyDown={handleTagKeyDown}
+            />
+            <Button className="clear-upload-tags-button" onClick={() => setTags([])}>
+              Clear All
+            </Button>
+            {tags[0] && (
+              <>
+                <Typography alignSelf="flex-start" marginLeft="10px">
+                  Tags
+                </Typography>
+                <StyledScrollbar className="tag-ref-scrollbar">
+                  <Stack direction="row" useFlexGap flexWrap="wrap" gap="10px 5px">
+                    {tags.map((tag, index) => (
+                      <Chip
+                        key={tag + index}
+                        label={tag}
+                        onDelete={() => setTags(tags.filter((_, i) => i !== index))}
+                      />
+                    ))}
+                  </Stack>
+                </StyledScrollbar>
+              </>
+            )}
+          </Box>
+          <Box display="flex" flexDirection="column" gap="10px" flex={1}>
+            <TextField
+              label="References"
+              placeholder="Enter references for your datapack"
+              value={referenceInput}
+              onChange={(event) => setReferenceInput(event.target.value)}
+              InputLabelProps={{ shrink: true }}
+              onKeyDown={handleReferenceKeyDown}
+            />
+            <Button className="clear-upload-tags-button" onClick={() => setReferences([])}>
+              Clear All
+            </Button>
+            {references[0] && (
+              <>
+                <Typography alignSelf="flex-start" marginLeft="10px">
+                  References
+                </Typography>
+                <StyledScrollbar className="tag-ref-scrollbar">
+                  <Stack direction="row" useFlexGap flexWrap="wrap" gap="10px 5px">
+                    {references.map((tag, index) => (
+                      <Chip
+                        key={tag + index}
+                        label={tag}
+                        onDelete={() => setReferences(references.filter((_, i) => i !== index))}
+                      />
+                    ))}
+                  </Stack>
+                </StyledScrollbar>
+              </>
+            )}
+          </Box>
         </Box>
         <div className="file-upload-button">
           <TSCButton
