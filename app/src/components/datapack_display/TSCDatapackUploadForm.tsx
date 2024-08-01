@@ -1,4 +1,4 @@
-import { Box, IconButton, TextField, Typography } from "@mui/material";
+import { Box, Chip, IconButton, Stack, TextField, Typography } from "@mui/material";
 import { useContext, useState } from "react";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { InputFileUpload } from "../TSCFileUpload";
@@ -20,6 +20,7 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
   const [references, setReferences] = useState<string[]>([]);
   const [authoredBy, setAuthoredBy] = useState(state.user.username);
   const [notes, setNotes] = useState("");
@@ -56,6 +57,13 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
     setFile(null);
     setTitle("");
     setDescription("");
+  };
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter" && tagInput.trim()) {
+      event.preventDefault();
+      setTags([...tags, tagInput.trim()]);
+      setTagInput("");
+    }
   };
   return (
     <Box margin="20px" justifyContent="center" textAlign="center">
@@ -159,6 +167,22 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
             InputLabelProps={{ shrink: true }}
             value={description}
             onChange={(event) => setDescription(event.target.value)}
+          />
+        </Box>
+        <Box display="flex" flexDirection="column" gap="10px">
+          <Stack direction="row" spacing={1} flexWrap="wrap" gap="10px 0px">
+            {tags.map((tag, index) => (
+              <Chip key={tag + index} label={tag} onDelete={() => setTags(tags.filter((_, i) => i !== index))} />
+            ))}
+          </Stack>
+          <TextField
+            label="Tags"
+            placeholder="Enter tags for your datapack"
+            helperText="Separate tags with commas"
+            value={tagInput}
+            onChange={(event) => setTagInput(event.target.value)}
+            InputLabelProps={{ shrink: true }}
+            onKeyDown={handleKeyDown}
           />
         </Box>
         <div className="file-upload-button">
