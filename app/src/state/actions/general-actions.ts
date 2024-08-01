@@ -92,11 +92,7 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
 /**
  * Resets any user defined settings
  */
-export const resetSettings = action("resetSettings", (stateCopyObj?: State) => {
-  if (stateCopyObj) {
-    stateCopyObj.settings = JSON.parse(JSON.stringify(settings));
-    return;
-  }
+export const resetSettings = action("resetSettings", () => {
   state.settings = JSON.parse(JSON.stringify(settings));
 });
 
@@ -315,7 +311,7 @@ export const fetchTimescaleDataAction = action("fetchTimescaleData", async () =>
   }
 });
 
-export const applySettings = action("applySettings", async (settings: ChartInfoTSC, stateCopyObj?: State) => {
+export const applySettings = action("applySettings", async (settings: ChartInfoTSC) => {
   applyChartSettings(settings.settings);
   applyChartColumnSettings(settings["class datastore.RootColumn:Chart Root"]);
   handleDataMiningColumns();
@@ -451,7 +447,7 @@ export const afterSetDatapackConfig = action(
       chartSettings = null;
       return false;
     }
-    resetSettings(state);
+    resetSettings();
     state.settingsTabs.columns = columnRoot;
     state.settings.datapackContainsSuggAge = foundDefaultAge;
     state.mapState.mapHierarchy = mapHierarchy;
