@@ -12,7 +12,8 @@ import {
   assertDatapackInfoChunk,
   assertMapPackInfoChunk,
   DatapackParsingPack,
-  assertDatapackParsingPack
+  assertDatapackParsingPack,
+  DatapackMetadata
 } from "@tsconline/shared";
 
 import {
@@ -231,15 +232,22 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
   }
 });
 
-export const uploadDatapack = action("uploadDatapack", async (file: File, name: string, description: string) => {
+export const uploadDatapack = action("uploadDatapack", async (file: File, metadata: DatapackMetadata) => {
   if (state.datapackIndex[file.name]) {
     pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
     return;
   }
   const formData = new FormData();
+  const { title, description, authoredBy, contact, notes, date, references, tags } = metadata;
   formData.append("file", file);
-  formData.append("name", name);
+  formData.append("title", title);
   formData.append("description", description);
+  formData.append("references", JSON.stringify(references));
+  formData.append("tags", JSON.stringify(tags));
+  formData.append("authoredBy", authoredBy);
+  if (notes) formData.append("notes", notes);
+  if (date) formData.append("date", date);
+  if (contact) formData.append("contact", contact);
   try {
     const response = await fetcher(`/upload`, {
       method: "POST",
@@ -250,7 +258,7 @@ export const uploadDatapack = action("uploadDatapack", async (file: File, name: 
 
     if (response.ok) {
       fetchUserDatapacks();
-      pushSnackbar("Successfully uploaded " + name + " datapack", "success");
+      pushSnackbar("Successfully uploaded " + title + " datapack", "success");
     } else {
       displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
     }
