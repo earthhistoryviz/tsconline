@@ -249,7 +249,7 @@ export const uploadDatapack = action("uploadDatapack", async (file: File, metada
   if (date) formData.append("date", date);
   if (contact) formData.append("contact", contact);
   try {
-    const response = await fetcher(`/upload`, {
+    const response = await fetcher(`/user/datapack`, {
       method: "POST",
       body: formData,
       credentials: "include"
