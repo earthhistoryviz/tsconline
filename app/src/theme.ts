@@ -545,7 +545,7 @@ export let originalDarkTheme = createTheme(baseTheme, {
     }),
     secondaryButton: baseTheme.palette.augmentColor({
       color: {
-        main: "#f64747"
+        main: "#acbfd7"
       },
       name: "secondaryButton"
     }),

@@ -52,7 +52,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
           Upload Datapack
         </TSCButton>
         <TSCButton onClick={deleteDatapacks}>Delete Selected Datapacks</TSCButton>
-        <Dialog open={formOpen} onClose={() => setFormOpen(false)}>
+        <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth={false}>
           <TSCDatapackUploadForm close={() => setFormOpen(false)} upload={actions.adminUploadServerDatapack} />
         </Dialog>
       </Box>
