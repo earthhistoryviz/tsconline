@@ -97,8 +97,7 @@ function areSettingsValidForGeneration() {
     return false;
   }
   generalActions.removeError(ErrorCodes.IS_BAD_RANGE);
-  state.settingsTabs.columns.children.map((column) => { console.log(column.name + " : " + column.on) });
-  if (!state.settingsTabs.columns.children.some((column) => column.on)) {//console.log(column.name);
+  if (!state.settingsTabs.columns.children.some((column) => column.on)) {
     generalActions.pushError(ErrorCodes.NO_COLUMNS_SELECTED);
     return false;
   }
