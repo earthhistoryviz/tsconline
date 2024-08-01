@@ -12,8 +12,13 @@
   align-self: center;
 }
 
-.MuiInputBase-input.datapack-description-input-text {
-  width: 50vw;
+.clear-upload-tags-button {
+  color: gray;
+  font-size: 12px;
+  justify-self: flex-end;
+  align-self: flex-end;
+  margin: 0px;
+  padding: 0px 10px;
 }
 
 .MuiTextField-root.datapack-name-input > .MuiInputLabel-root,

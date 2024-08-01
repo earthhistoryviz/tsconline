@@ -1,4 +1,4 @@
-import { Box, Chip, IconButton, Stack, TextField, Typography } from "@mui/material";
+import { Box, Button, Chip, IconButton, Stack, TextField, Typography } from "@mui/material";
 import { useContext, useState } from "react";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { InputFileUpload } from "../TSCFileUpload";
@@ -21,6 +21,7 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const [tagError, setTagError] = useState("");
   const [references, setReferences] = useState<string[]>([]);
   const [authoredBy, setAuthoredBy] = useState(state.user.username);
   const [notes, setNotes] = useState("");
@@ -60,13 +61,18 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
   };
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" && tagInput.trim()) {
+      if (tags.length > 10) {
+        setTagError("You can only have up to 10 tags");
+        return;
+      }
+      setTagError("");
       event.preventDefault();
       setTags([...tags, tagInput.trim()]);
       setTagInput("");
     }
   };
   return (
-    <Box margin="20px" justifyContent="center" textAlign="center">
+    <Box margin="20px" justifyContent="center" textAlign="center" maxWidth="70vw">
       <div className="close-upload-form">
         <IconButton className="icon" onClick={close} size="large">
           <CloseIcon className="close-icon" />
@@ -170,20 +176,24 @@ export const TSCDatapackUploadForm: React.FC<TSCDatapackUploadFormProps> = ({ cl
           />
         </Box>
         <Box display="flex" flexDirection="column" gap="10px">
-          <Stack direction="row" spacing={1} flexWrap="wrap" gap="10px 0px">
-            {tags.map((tag, index) => (
-              <Chip key={tag + index} label={tag} onDelete={() => setTags(tags.filter((_, i) => i !== index))} />
-            ))}
-          </Stack>
           <TextField
             label="Tags"
             placeholder="Enter tags for your datapack"
-            helperText="Separate tags with commas"
+            helperText={tagError}
+            error={!!tagError}
             value={tagInput}
             onChange={(event) => setTagInput(event.target.value)}
             InputLabelProps={{ shrink: true }}
             onKeyDown={handleKeyDown}
           />
+          <Button className="clear-upload-tags-button" onClick={() => setTags([])}>
+            Clear All
+          </Button>
+          <Stack direction="row" useFlexGap flexWrap="wrap" gap="10px 5px">
+            {tags.map((tag, index) => (
+              <Chip key={tag + index} label={tag} onDelete={() => setTags(tags.filter((_, i) => i !== index))} />
+            ))}
+          </Stack>
         </Box>
         <div className="file-upload-button">
           <TSCButton
