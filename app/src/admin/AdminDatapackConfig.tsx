@@ -4,7 +4,7 @@ import { AgGridReact } from "ag-grid-react";
 import { useContext, useRef, useState } from "react";
 import { context } from "../state";
 import { ColDef } from "ag-grid-community";
-import { TSCButton, TSCDatapackUploadForm } from "../components";
+import { TSCButton, DatapackUploadForm } from "../components";
 import { DatapackParsingPack, assertDatapackParsingPack } from "@tsconline/shared";
 
 const datapackColDefs: ColDef[] = [
@@ -53,7 +53,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
         </TSCButton>
         <TSCButton onClick={deleteDatapacks}>Delete Selected Datapacks</TSCButton>
         <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth={false}>
-          <TSCDatapackUploadForm close={() => setFormOpen(false)} upload={actions.adminUploadServerDatapack} />
+          <DatapackUploadForm close={() => setFormOpen(false)} upload={actions.adminUploadServerDatapack} />
         </Dialog>
       </Box>
       <AgGridReact
