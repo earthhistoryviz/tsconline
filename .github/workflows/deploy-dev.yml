@@ -33,6 +33,15 @@ jobs:
             cd ${{ secrets.DEV_PATH }}
 
             git pull --no-edit
+            PULL_STATUS=$?
+
+            if [ $PULL_STATUS -eq 0 ]; then
+              echo "git pull succeeded"
+            else
+              echo "git pull failed with exit status $PULL_STATUS"
+              echo "General error: Possible reasons could include merge conflicts, network issues, or authentication problems."
+              exit 1
+            fi
 
             echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
             echo 'EMAIL_PASS="${{ secrets.EMAIL_PASS }}"' >> ./server/.env
