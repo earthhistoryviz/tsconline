@@ -2477,7 +2477,6 @@ __metadata:
     sharp: "npm:^0.33.4"
     sqlite3: "npm:^5.1.7"
     svgson: "npm:^5.3.1"
-    tsc: "npm:^2.0.4"
     tsx: "npm:^4.9.3"
     typescript: "npm:5.2.2"
     validator: "npm:^13.12.0"
@@ -10624,15 +10623,6 @@ __metadata:
   version: 9.6.0
   resolution: "ts-toolbelt@npm:9.6.0"
   checksum: 2c2dea2631dbd7372a79cccc6d09a377a6ca2f319f767fd239d2e312cd1d9165a90f8c1777a047227bfdcda6aeba3addbadce88fdfc7f43caf4534d385a43c82
-  languageName: node
-  linkType: hard
-
-"tsc@npm:^2.0.4":
-  version: 2.0.4
-  resolution: "tsc@npm:2.0.4"
-  bin:
-    tsc: bin/tsc
-  checksum: 50b10240887424c66454687f0fca4e319713b35cb44f0dab228719eb4dd757251f83c3d79e60d29dfbe90c2d6f1272f793b83e75a9fca2c622b4213ad3eb8cb1
   languageName: node
   linkType: hard
 

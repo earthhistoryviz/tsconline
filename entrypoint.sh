@@ -21,8 +21,9 @@ rm -f $XERR
 XARGS="-e $XERR -l -f $XAUTH -n 99 --server-args='-screen 0 1280x1024x24'"
 cd /code
 if [ "$NODE_ENV" == "production" ]; then
-  yarn install:prod
+  yarn install
   start_server_cmd="yarn start"
+  yarn install:prod
 else
   yarn install
   start_server_cmd="yarn production"
