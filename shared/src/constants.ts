@@ -34,6 +34,8 @@ export const allColumnTypes = [
   "Trend"
 ];
 
+export const validDateFormats = ["YYYY-MM-DD", "YY-MM-DD", "MM-DD-YYYY", "MM-DD-YY", "DD-MM-YYYY", "DD-MM-YY"];
+
 export const defaultDataMiningSettings: DataMiningSettings = {
   windowSize: 2,
   stepSize: 1

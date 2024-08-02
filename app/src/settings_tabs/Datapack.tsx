@@ -1,6 +1,6 @@
 import { useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
-import { TSCDatapackUploadForm, TSCButton, CustomTooltip } from "../components";
+import { DatapackUploadForm, TSCButton, CustomTooltip } from "../components";
 import { context, state } from "../state";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -101,7 +101,7 @@ export const Datapacks = observer(function Datapacks() {
         Upload Datapack
       </TSCButton>
       <Dialog classes={{ paper: styles.dd }} open={formOpen} onClose={() => setFormOpen(false)}>
-        <TSCDatapackUploadForm close={() => setFormOpen(false)} upload={actions.uploadDatapack} />
+        <DatapackUploadForm close={() => setFormOpen(false)} upload={actions.uploadDatapack} />
       </Dialog>
     </div>
   );
