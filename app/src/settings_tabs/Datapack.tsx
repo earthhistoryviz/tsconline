@@ -21,6 +21,7 @@ export const Datapacks = observer(function Datapacks() {
   const { actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
   const [selectedDatapackWaitList, setSelectedDatapackWaitList] = useState<string[]>([]);
+  const [webworkerProcessing, setWebworkerProcessing] = useState(false);
   function enqueueSelectedDatapackWaitList(newDatapack: string) {
     setSelectedDatapackWaitList((prevState) => [...prevState, newDatapack]);
   }
@@ -29,52 +30,57 @@ export const Datapacks = observer(function Datapacks() {
       setSelectedDatapackWaitList((prevState) => prevState.slice(1));
     }
   }
-  const onChange = async (name: string) => {
-    console.log(selectedDatapackWaitList);
-    if (!selectedDatapackWaitList.includes(name)) {
-      enqueueSelectedDatapackWaitList(name);
+  function processSelectedDatapackWaitList() {
+    if (webworkerProcessing || selectedDatapackWaitList.length === 0) {
+      return;
     }
-    for (const datapackName of selectedDatapackWaitList) {
-      const datapacks = state.config.datapacks.includes(datapackName)
-        ? state.config.datapacks.filter((datapack) => datapack !== datapackName)
-        : [...state.config.datapacks, datapackName];
-      const hasPreviousConfig = actions.setPreviousDatapackConfig(datapacks);
-      if (hasPreviousConfig) {
-        return;
-      } else {
-        const chartSettings = null;
-        const setDatapackConfigWorker: Worker = new Worker(
-          new URL("../util/workers/set-datapack-config.ts", import.meta.url),
-          {
-            type: "module"
-          }
-        );
-        const message: SetDatapackConfigMessage = {
-          datapacks: datapacks,
-          settingsPath: "",
-          chartSettings: chartSettings,
-          stateCopy: JSON.stringify(state)
-        };
-        setDatapackConfigWorker.postMessage(message);
-        setDatapackConfigWorker.onmessage = async function (e: MessageEvent<SetDatapackConfigCompleteMessage>) {
-          const { status, value } = e.data;
-          if (status === "success" && value) {
-            actions.afterSetDatapackConfig(
-              value.columnRoot,
-              value.foundDefaultAge,
-              value.mapHierarchy,
-              value.mapInfo,
-              value.datapacks,
-              value.chartSettings
-            );
-          } else {
-            actions.pushSnackbar("Setting Datapack Config Timed Out", "info");
-          }
-          setDatapackConfigWorker.terminate();
-          dequeueSelectedDatapackWaitList();
+    setWebworkerProcessing(true);
+    const datapackName = selectedDatapackWaitList[0];
+    const datapacks = state.config.datapacks.includes(datapackName)
+      ? state.config.datapacks.filter((datapack) => datapack !== datapackName)
+      : [...state.config.datapacks, datapackName];
+    const hasPreviousConfig = actions.setPreviousDatapackConfig(datapacks);
+    if (hasPreviousConfig) {
+      dequeueSelectedDatapackWaitList();
+    } else {
+      const setDatapackConfigWorker: Worker = new Worker(
+        new URL("../util/workers/set-datapack-config.ts", import.meta.url),
+        {
+          type: "module"
         }
+      );
+      const message: SetDatapackConfigMessage = {
+        datapacks: datapacks,
+        settingsPath: "",
+        chartSettings: null,
+        stateCopy: JSON.stringify(state)
+      };
+      setDatapackConfigWorker.postMessage(message);
+      setDatapackConfigWorker.onmessage = async function (e: MessageEvent<SetDatapackConfigCompleteMessage>) {
+        const { status, value } = e.data;
+        if (status === "success" && value) {
+          actions.afterSetDatapackConfig(
+            value.columnRoot,
+            value.foundDefaultAge,
+            value.mapHierarchy,
+            value.mapInfo,
+            value.datapacks,
+            value.chartSettings
+          );
+        } else {
+          actions.pushSnackbar("Setting Datapack Config Timed Out", "info");
+        }
+        setDatapackConfigWorker.terminate();
+        dequeueSelectedDatapackWaitList();
       }
-    };
+    }
+    setWebworkerProcessing(false);
+    processSelectedDatapackWaitList();
+  }
+  const onChange = (name: string) => {
+    enqueueSelectedDatapackWaitList(name);
+    console.log(selectedDatapackWaitList);
+    processSelectedDatapackWaitList();
   };
 
   return (
