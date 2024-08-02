@@ -17,7 +17,7 @@ type TSCDatapackRowProps = {
   name: string;
   datapack: DatapackParsingPack;
   value: boolean;
-  onChange: (name: string) => Promise<void>;
+  onChange: (name: string) => void;
 };
 
 export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, value, onChange }) => {
