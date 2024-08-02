@@ -14,6 +14,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
   const { state, actions } = useContext(context);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [isPublic, setIsPublic] = useState("false");
   const [currentId, setCurrentId] = useState(0);
   const [authoredBy, setAuthoredBy] = useState(state.user.username);
   const [notes, setNotes] = useState("");
@@ -27,6 +28,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     file: file?.name || "",
     description,
     title,
+    isPublic,
     authoredBy,
     references: references.map((reference) => reference.reference),
     tags,
@@ -106,6 +108,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
   const resetForm = () => {
     setTitle("");
     setDescription("");
+    setIsPublic("false");
     setAuthoredBy(state.user.username);
     setNotes("");
     setContact("");
@@ -115,10 +118,11 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     setFile(null);
   };
   return {
-    state: { title, description, authoredBy, notes, contact, tags, references, date, dateError, file },
+    state: { title, description, isPublic, authoredBy, notes, contact, tags, references, date, dateError, file },
     setters: {
       setTitle,
       setDescription,
+      setIsPublic,
       setAuthoredBy,
       setNotes,
       setContact,
