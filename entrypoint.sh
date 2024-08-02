@@ -24,7 +24,6 @@ yarn install
 yarn build
 if [ "$NODE_ENV" == "production" ]; then
   start_server_cmd="yarn start"
-  yarn install:prod
 else
   start_server_cmd="yarn production"
 fi
