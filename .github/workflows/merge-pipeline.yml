@@ -10,7 +10,7 @@ jobs:
   check-files:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -69,7 +69,7 @@ jobs:
   code-quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Dependencies
         run: yarn install
@@ -117,18 +117,20 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: "21"
 
       - name: Install Dependencies
         run: yarn install
 
-      - name: Build with Vite
-        id: vite_build
+      - name: Build the project
+        id: build
         run: |
           set -o pipefail
           if ! yarn build 2>&1 | tee build.log; then
@@ -137,7 +139,7 @@ jobs:
         continue-on-error: true
 
       - name: Report Build Errors
-        if: steps.vite_build.outputs.build_failed == 'true'
+        if: steps.build.outputs.build_failed == 'true'
         uses: actions/github-script@v5
         with:
           script: |
@@ -155,7 +157,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for any build failures
-        if: steps.vite_build.outputs.build_failed == 'true'
+        if: steps.build.outputs.build_failed == 'true'
         run: exit 1
 
       - name: Set up SSH key
@@ -172,44 +174,62 @@ jobs:
         run: |
           git clone git@bitbucket.org:strat/tscreator.git
 
-      - name: set up jdk
+      - name: Set up jdk
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "8"
           java-package: "jdk"
 
-      - name: set up make & zip
-        run: |
-          sudo apt install make
-          sudo apt install zip
-
       - name: Build and compile TSCreator Jar for tests
         run: |
-          cd /home/runner/work/tsconline/tsconline/tscreator/devel
+          cd ${{ github.workspace }}/tscreator/devel
           make
           make jar
-          find '/home/runner/work/tsconline/tsconline/tscreator/jars/' -type f -name '*.jar' -exec cp {} '/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar' \;
-          if [ -f "/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar" ]; then
+          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/server/assets/jars/testUsageJar.jar \;
+          if [ -f "${{ github.workspace }}/server/assets/jars/testUsageJar.jar" ]; then
             echo "Successfully made jar."
           else
             echo "Failed to make jar."
             exit 1
           fi
 
-      - name: Install xvfb
-        run: sudo apt-get install xvfb
-
       - name: Run Tests
         id: run_tests
         run: |
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
-          set -o pipefail
-          if ! yarn test > test_output.log 2>&1; then
-              echo "test_failed=true" >> $GITHUB_OUTPUT
-              fi
+          yarn coverage:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
         continue-on-error: true
+
+      - name: Post Coverage Comment
+        if: steps.run_tests.outputs.coverage_failed == 'true'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const log = fs.readFileSync('test_output.log', 'utf8');
+            const coverageErrors = log.split('\n').filter(line => line.includes('ERROR: Coverage'));
+  
+            const commentBody = `
+            ## :x: Coverage Thresholds Not Met
+  
+            The following coverage thresholds were not met:
+            
+            \`\`\`
+            ${coverageErrors.join('\n')}
+            \`\`\`
+  
+            Please review the coverage report and improve the tests to meet the thresholds.
+            `;
+  
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: commentBody
+            });
 
       - name: Report Test Errors
         if: steps.run_tests.outputs.test_failed == 'true'
@@ -230,7 +250,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for any test failures
-        if: steps.run_tests.outputs.test_failed == 'true'
+        if: steps.run_tests.outputs.test_failed == 'true' || steps.run_tests.outputs.coverage_failed == 'true'
         run: exit 1
 
   wait-for-checks:
@@ -268,7 +288,7 @@ jobs:
           fi
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
 
@@ -298,6 +318,7 @@ jobs:
             cd /home/aaron/tsconline/pr-preview-${PR_NUMBER}
             if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
               echo "Container for PR ${PR_NUMBER} is already running. Rebuilding..."
+              docker-compose -f docker-compose-preview.yml up pr-preview-build
               docker-compose -f docker-compose-preview.yml restart pr-preview-run
               MAX_WAIT=180
               INTERVAL=5

@@ -64,10 +64,11 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
           {datapack.title}
         </Typography>
         <Typography className={styles.fd} color="textSecondary">
-          Dixon, Dougal, et al. · Created 10/10/2024
+          {datapack.authoredBy}
         </Typography>
         <Typography className={styles.ci} color="textSecondary">
-          50 Columns · {datapack.size} · 350 images{" "}
+          {datapack.totalColumns} Columns · {datapack.size} · {datapack.datapackImageCount} Images
+          {datapack.date && ` · Created ${datapack.date}`}
         </Typography>
       </div>
       <div

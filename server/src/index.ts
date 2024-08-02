@@ -257,7 +257,7 @@ server.get<{ Params: { filename: string }; Querystring: { needEncryption?: boole
   routes.requestDownload
 );
 // uploads datapack
-server.post("/upload", moderateRateLimit, routes.uploadDatapack);
+server.post("/user/datapack", moderateRateLimit, routes.uploadDatapack);
 server.register(adminRoutes, { prefix: "/admin" });
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
