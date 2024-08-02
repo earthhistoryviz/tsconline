@@ -13,7 +13,7 @@ type TSCCompactDatapackRowProps = {
   name: string;
   datapack: DatapackParsingPack;
   value: boolean;
-  onChange: (name: string) => Promise<void>;
+  onChange: (name: string) => void;
 };
 export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = observer(function TSCCompactDatapackRow({
   name,
