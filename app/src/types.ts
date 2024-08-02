@@ -7,6 +7,11 @@ export type User = SharedUser & {
   };
 };
 
+export type Reference = {
+  id: number;
+  reference: string;
+};
+
 export type WindowStats = {
   windowStart: number;
   windowEnd: number;

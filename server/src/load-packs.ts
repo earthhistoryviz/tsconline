@@ -4,7 +4,8 @@ import {
   Patterns,
   assertDatapackParsingPack,
   assertMapPack,
-  assertPatterns
+  assertPatterns,
+  DatapackMetadata
 } from "@tsconline/shared";
 import pmap from "p-map";
 import fs from "fs/promises";
@@ -15,7 +16,7 @@ import { glob } from "glob";
 import { readFile } from "fs/promises";
 import nearestColor from "nearest-color";
 import path from "path";
-import { DatapackDescriptionInfo, assertColors } from "./types.js";
+import { assertColors } from "./types.js";
 import { grabFilepaths, rgbToHex, assetconfigs } from "./util.js";
 import chalk from "chalk";
 import sharp from "sharp";
@@ -32,7 +33,7 @@ export async function loadIndexes(
   datapackIndex: DatapackIndex,
   mapPackIndex: MapPackIndex,
   decryptionDirectory: string,
-  datapacks: DatapackDescriptionInfo[],
+  datapacks: DatapackMetadata[],
   uuid?: string
 ) {
   let successful = true;

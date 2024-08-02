@@ -1,11 +1,3 @@
-.datapack-upload-form {
-  display: flex;
-  flex-direction: column;
-  align-items: left;
-  justify-content: center;
-  margin: 20px;
-}
-
 .MuiTypography-root.upload-datapack-header {
   font-size: 30px;
   font-weight: 900;
@@ -13,31 +5,46 @@
   align-self: center;
 }
 
-.MuiTextField-root.datapack-name-input {
-  margin-bottom: 20px;
-  margin-top: 20px;
-}
-
-.MuiTextField-root.datapack-description-input {
-  margin-bottom: 20px;
-}
-
-.MuiInputBase-input.datapack-description-input-text {
-  width: 50vw;
-}
-
 .MuiTextField-root.datapack-name-input > .MuiInputLabel-root,
 .MuiTextField-root.datapack-description-input > .MuiInputLabel-root {
   color: gray;
 }
-
+.datapack-upload-form-container {
+  width: 70vw;
+  height: 70vh;
+}
+.datapack-upload-form-container .simplebar-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.add-reference-plus-button {
+  width: 15px;
+  height: 15px;
+}
+.tag-autocomplete {
+  flex: 0.5;
+}
+.add-reference-button {
+  display: flex;
+  align-self: flex-start;
+  height: 30px;
+  width: auto;
+  font-size: 12px;
+}
+.additional-options-upload-form {
+  background-color: transparent;
+  box-shadow: none;
+}
+.additional-options-upload-form::before {
+  display: none;
+}
 .close-upload-form {
   position: absolute;
   left: calc(100% - 40px);
   top: 5px;
   display: flex;
 }
-
 .MuiIconButton-root.icon {
   width: 35px;
   height: 35px;
@@ -51,16 +58,15 @@
   z-index: 1;
 }
 
-.file-upload,
-.file-upload-button {
+.file-upload {
   margin: 10px;
   display: flex;
   flex-direction: row;
   gap: 20px;
   align-items: center;
   justify-content: center;
-}
-
-.file-upload {
   margin-top: 30px;
+}
+.datapack-date-picker .MuiPickersYear-yearButton {
+  font-size: 1rem; /*HACK this is bugged for some reason on the main library */
 }
