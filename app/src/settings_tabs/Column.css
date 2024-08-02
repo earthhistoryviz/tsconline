@@ -1,3 +1,7 @@
+:root {
+  --button-size: 35px;
+}
+
 .column-top-level-container {
   display: flex;
   flex-direction: column;
@@ -260,4 +264,39 @@
   .column-search-bar > .MuiFormLabel-root {
     font-size: 0.8rem;
   }
+}
+
+.scroll-to-top-button {
+  position: sticky;
+  bottom: calc(5% - var(--button-size) / 2);
+  left: calc(95% - var(--button-size) / 2);
+  z-index: 1000;
+  margin-right: 10px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-2px);
+  transition:
+    opacity 0.5s ease,
+    visibility 0s 0.5s,
+    transform 0.5s ease;
+  width: var(--button-size);
+  height: var(--button-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0px;
+}
+
+.scroll-to-top-button:hover {
+  filter: brightness(2);
+}
+
+.scroll-to-top-button.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition-delay: 0s;
+  margin-right: 10px;
 }
