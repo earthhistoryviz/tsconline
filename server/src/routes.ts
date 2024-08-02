@@ -13,22 +13,22 @@ import {
   assertTimescale,
   assertMapPackIndex
 } from "@tsconline/shared";
-import { deleteDirectory, resetUploadDirectory, checkHeader, assetconfigs, adminconfig, getBytes } from "./util.js";
+import { deleteDirectory, resetUploadDirectory, checkHeader, assetconfigs, adminconfig } from "./util.js";
 import md5 from "md5";
 import svgson from "svgson";
 import fs, { realpathSync } from "fs";
 import { parseExcelFile } from "./parse-excel-file.js";
 import path from "path";
-import pump from "pump";
 import { loadIndexes } from "./load-packs.js";
 import { writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
-import { DatapackDescriptionInfo } from "./types.js";
 import { MultipartFile } from "@fastify/multipart";
 import { runJavaEncrypt } from "./encryption.js";
 import { queue, maxQueueSize } from "./index.js";
 import { containsKnownError } from "./chart-error-handler.js";
+import { pipeline } from "stream/promises";
+import { uploadUserDatapackHandler } from "./upload-handlers.js";
 
 export const fetchServerDatapack = async function fetchServerDatapack(
   request: FastifyRequest<{ Params: { name: string } }>,
@@ -282,7 +282,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     await resetUploadDirectory(filepath, decryptedFilepathDir);
     reply.status(errorStatus).send({ error: message });
   }
-
   const parts = request.parts();
   const fields: Record<string, string> = {};
   let uploadedFile: MultipartFile | undefined;
@@ -301,70 +300,66 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     for await (const part of parts) {
       if (part.type === "file") {
         uploadedFile = part;
+        // only accept a binary file (encoded) or an unecnrypted text file or a zip file
+        if (
+          (uploadedFile.mimetype !== "application/octet-stream" &&
+            uploadedFile.mimetype !== "text/plain" &&
+            uploadedFile.mimetype !== "application/zip") ||
+          !/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(path.extname(uploadedFile.filename))
+        ) {
+          reply.status(415).send({ error: "Invalid file type" });
+          return;
+        }
         filepath = path.join(datapackDir, uploadedFile.filename);
-        const fileStream = fs.createWriteStream(filepath);
         try {
-          await pump(uploadedFile.file, fileStream);
+          await pipeline(uploadedFile.file, fs.createWriteStream(filepath));
         } catch (e) {
-          await errorHandler("Failed to upload file with error " + e, 500, e);
+          reply.status(500).send({ error: "Failed to save file with error " + e });
           return;
         }
         if (uploadedFile.file.truncated) {
-          await errorHandler("File too large", 413);
+          await rm(filepath, { force: true });
+          reply.status(400).send({ error: "File is too large" });
+          return;
+        }
+        if (uploadedFile.file.bytesRead === 0) {
+          await rm(filepath, { force: true });
+          reply.status(400).send({ error: `Empty file cannot be uploaded` });
           return;
         }
       } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
-        const field = part as { fieldname: string; value: string };
-        fields[part.fieldname] = field.value;
+        fields[part.fieldname] = part.value;
       }
     }
   } catch (e) {
-    await errorHandler("Failed to upload file with error " + e, 500, e);
+    filepath && (await rm(filepath, { force: true }));
+    reply.status(500).send({ error: "Failed to upload file with error " + e });
     return;
   }
-  const name = fields.name;
-  const description = fields.description;
-
-  if (!uploadedFile) {
-    await errorHandler("No file uploaded", 400);
-    return;
-  }
-  if (!name || !description) {
-    await errorHandler("Name or description not provided", 400);
-    return;
-  }
-  // only accept a binary file (encoded) or an unecnrypted text file or a zip file
-  if (
-    uploadedFile.mimetype !== "application/octet-stream" &&
-    uploadedFile.mimetype !== "text/plain" &&
-    uploadedFile.mimetype !== "application/zip"
-  ) {
-    await errorHandler(`Invalid mimetype of uploaded file, received ${uploadedFile.mimetype}`, 400);
+  if (!uploadedFile || !filepath) {
+    filepath && (await rm(filepath, { force: true }));
+    reply.status(400).send({ error: "No file uploaded" });
     return;
   }
   const filename = uploadedFile.filename;
+  fields.filename = filename;
+  fields.filepath = filepath;
+  const datapackMetadata = await uploadUserDatapackHandler(reply, fields, uploadedFile.file.bytesRead).catch(
+    async (e) => {
+      filepath && (await rm(filepath, { force: true }));
+      reply.status(500).send({ error: "Failed to upload datapack with error " + e });
+    }
+  );
+  // if uploadUserDatapackHandler returns void, it means there was an error and the error message has already been sent
+  if (!datapackMetadata) {
+    return;
+  }
   const ext = path.extname(filename);
   const filenameWithoutExtension = path.basename(filename, ext);
   const decryptDir = path.join(userDir, "decrypted");
   const decryptedFilepathDir = path.join(decryptDir, filenameWithoutExtension);
   const mapPackIndexFilepath = path.join(userDir, "MapPackIndex.json");
   const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json");
-  const bytes = uploadedFile.file.bytesRead;
-  if (bytes === 0) {
-    reply.status(400).send({ error: `Empty file cannot be uploaded` });
-    return;
-  }
-  const datapackInfo: DatapackDescriptionInfo = {
-    file: filename,
-    description: description,
-    title: name,
-    size: getBytes(bytes)
-  };
-
-  if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(ext)) {
-    reply.status(415).send({ error: "Invalid file type" });
-    return;
-  }
 
   try {
     await new Promise<void>((resolve, reject) => {
@@ -379,10 +374,10 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
         console.log("Java decrypt.jar finished, sending reply to browser");
         if (error) {
           console.error("Java error param: " + error);
-          console.error("Java stderr: " + stderror.toString());
+          console.error("Java stderr: " + stderror);
           reject(error);
         } else {
-          console.log("Java stdout: " + stdout.toString());
+          console.log("Java stdout: " + stdout);
           resolve();
         }
       });
@@ -424,14 +419,20 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       return;
     }
   }
-  await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [datapackInfo], uuid);
-  if (!datapackIndex[filename]) {
+  const success = await loadIndexes(
+    datapackIndex,
+    mapPackIndex,
+    decryptDir.replaceAll("\\", "/"),
+    [datapackMetadata],
+    uuid
+  );
+  if (!success) {
     await errorHandler("Failed to load decrypted datapack", 500);
     return;
   }
   try {
-    await writeFile(datapackIndexFilepath, JSON.stringify(datapackIndex));
-    await writeFile(mapPackIndexFilepath, JSON.stringify(mapPackIndex));
+    await writeFile(datapackIndexFilepath, JSON.stringify(datapackIndex, null, 2));
+    await writeFile(mapPackIndexFilepath, JSON.stringify(mapPackIndex, null, 2));
   } catch (e) {
     await errorHandler("Failed to save indexes", 500, e);
     return;
