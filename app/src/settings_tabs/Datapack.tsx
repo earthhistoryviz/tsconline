@@ -72,7 +72,7 @@ export const Datapacks = observer(function Datapacks() {
         }
         setDatapackConfigWorker.terminate();
         dequeueSelectedDatapackWaitList();
-      }
+      };
     }
     setWebworkerProcessing(false);
     processSelectedDatapackWaitList();
