@@ -28,6 +28,7 @@ export const Column = observer(function Column() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
 
+  // Below scroll features refers to code for button that scrolls to top of settings page when it is clicked
   const handleScroll = () => {
     if (scrollRef.current && scrollRef.current.scrollTop > 200) {
       setShowScroll(true);
@@ -100,7 +101,6 @@ export const Column = observer(function Column() {
             <Lottie
               key="settings-arrow-up"
               style={{ width: "28px", height: "28px" }}
-              // animationData={theme.palette.mode === "light" ? LightArrowUpIcon : DarkArrowUpIcon}
               animationData={theme.palette.mode === "light" ? DarkArrowUpIcon : LightArrowUpIcon}
               playOnClick
             />
