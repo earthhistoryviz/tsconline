@@ -33,6 +33,7 @@ jobs:
             cd ${{ secrets.DEV_PATH }}
 
             git pull --no-edit
+
             PULL_STATUS=$?
 
             if [ $PULL_STATUS -eq 0 ]; then
