@@ -1,6 +1,7 @@
 // Shared types between app and server (i.e. messages they send back and forth)
 
-import { defaultFontsInfoConstant } from "./constants.js";
+import { defaultFontsInfoConstant, validDateFormats } from "./constants.js";
+import validator from "validator";
 
 export * from "./constants.js";
 export * from "./util.js";
@@ -12,6 +13,19 @@ export type SharedUser = {
   pictureUrl: string | null;
   isGoogleUser: boolean;
   isAdmin: boolean;
+};
+
+export type DatapackMetadata = {
+  description: string;
+  title: string;
+  file: string;
+  size: string;
+  date?: string;
+  authoredBy: string;
+  tags: string[];
+  references: string[];
+  contact?: string;
+  notes?: string;
 };
 
 export type AdminSharedUser = {
@@ -52,7 +66,17 @@ export type DatapackParsingPack = {
   size: string;
   warnings?: DatapackWarning[];
   image: string;
+  totalColumns: number;
+  columnTypeCount: ColumnTypeCounter;
+  authoredBy: string;
+  tags: string[];
+  references: string[];
+  contact?: string;
+  notes?: string;
+  datapackImageCount: number;
 };
+
+export type ColumnTypeCounter = Record<ColumnInfoType, number>;
 
 export type DatapackWarning = {
   lineNumber?: number;
@@ -533,6 +557,25 @@ export type TimescaleItem = {
   value: number;
 };
 
+export type DefaultChronostrat = "USGS" | "UNESCO";
+
+export function isDefaultChronostrat(o: any): o is DefaultChronostrat {
+  return /^(USGS|UNESCO)$/.test(o);
+}
+
+export function isDateValid(date: string): boolean {
+  for (const format of validDateFormats) {
+    try {
+      if (validator.isDate(date, { format, delimiters: ["-", ".", "/"] })) {
+        return true;
+      }
+    } catch {
+      continue;
+    }
+  }
+  return false;
+}
+
 export function assertAdminSharedUserArray(o: any): asserts o is AdminSharedUser[] {
   if (!Array.isArray(o)) throw new Error("AdminSharedUser must be an array");
   for (const user of o) {
@@ -868,6 +911,26 @@ export function assertPatterns(o: any): asserts o is Patterns {
     assertColor(pattern.color);
   }
 }
+
+export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
+  if (!o || typeof o !== "object") throw new Error("DatapackMetadata must be a non-null object");
+  if (typeof o.description !== "string") throw new Error("DatapackMetadata description must be of type string");
+  if (typeof o.title !== "string") throw new Error("DatapackMetadata title must be of type string");
+  if (typeof o.file !== "string") throw new Error("DatapackMetadata file must be of type string");
+  if (typeof o.size !== "string") throw new Error("DatapackMetadata size must be of type string");
+  if (typeof o.authoredBy !== "string") throw new Error("DatapackMetadata authoredBy must be of type string");
+  if (!Array.isArray(o.tags)) throw new Error("DatapackMetadata tags must be an array");
+  for (const tag of o.tags) {
+    if (typeof tag !== "string") throw new Error("DatapackMetadata tags must be an array of strings");
+  }
+  if (o.date && typeof o.date !== "string") throw new Error("DatapackMetadata date must be of type string");
+  if (!Array.isArray(o.references)) throw new Error("DatapackMetadata references must be an array");
+  for (const reference of o.references) {
+    if (typeof reference !== "string") throw new Error("DatapackMetadata references must be an array of strings");
+  }
+  if ("contact" in o && typeof o.contact !== "string") throw new Error("DatapackMetadata contact must be a string");
+  if ("notes" in o && typeof o.notes !== "string") throw new Error("DatapackMetadata notes must be a string");
+}
 export function assertMapPackIndex(o: any): asserts o is MapPackIndex {
   if (!o || typeof o !== "object") throw new Error("MapPackIndex must be a non-null object");
   for (const key in o) {
@@ -947,9 +1010,8 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
     throwError("DatapackParsingPack", "formatVersion", "number", o.formatVersion);
   if ("verticalScale" in o && typeof o.verticalScale !== "number")
     throwError("DatapackParsingPack", "verticalScale", "number", o.verticalScale);
-  if ("date" in o && typeof o.date !== "string") throwError("DatapackParsingPack", "date", "string", o.date);
-  if ("date" in o && !/^(\d{4}-\d{2}-\d{2})$/.test(o.date))
-    throwError("DatapackParsingPack", "date", "YYYY-MM-DD", o.date);
+  if ("date" in o && (typeof o.date !== "string" || !isDateValid(o.date)))
+    throwError("DatapackParsingPack", "date", "string", o.date);
   if ("topAge" in o && typeof o.topAge !== "number") throwError("DatapackParsingPack", "topAge", "number", o.topAge);
   if ("baseAge" in o && typeof o.baseAge !== "number")
     throwError("DatapackParsingPack", "baseAge", "number", o.baseAge);
@@ -965,6 +1027,22 @@ export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingP
     }
   }
   if (typeof o.image !== "string") throwError("DatapackParsingPack", "image", "string", o.image);
+  assertsColumnTypeCounter(o.columnTypeCount);
+  if (typeof o.totalColumns !== "number") throwError("DatapackParsingPack", "totalColumns", "number", o.totalColumns);
+  if (typeof o.authoredBy !== "string") throwError("DatapackParsingPack", "authoredBy", "string", o.author);
+  if (!Array.isArray(o.tags)) throwError("DatapackParsingPack", "tags", "array", o.tags);
+  for (const tag of o.tags) {
+    if (typeof tag !== "string") throwError("DatapackParsingPack", "tag", "string", tag);
+  }
+  if (!Array.isArray(o.references)) throwError("DatapackParsingPack", "references", "array", o.references);
+  for (const reference of o.references) {
+    if (typeof reference !== "string") throwError("DatapackParsingPack", "reference", "string", reference);
+  }
+  if ("contact" in o && typeof o.contact !== "string")
+    throwError("DatapackParsingPack", "contact", "string", o.contact);
+  if ("notes" in o && typeof o.notes !== "string") throwError("DatapackParsingPack", "notes", "string", o.notes);
+  if (typeof o.datapackImageCount !== "number")
+    throwError("DatapackParsingPack", "datapackImageCount", "number", o.datapackImages);
   assertColumnInfo(o.columnInfo);
 }
 
@@ -1356,6 +1434,15 @@ export function isSubEventType(o: any): o is SubEventType {
   if (typeof o !== "string") return false;
   if (!/^(EVENT|FAD|LAD|EVENTS)$/.test(o)) return false;
   return true;
+}
+
+export function assertsColumnTypeCounter(o: any): asserts o is ColumnTypeCounter {
+  const keys = ["Block", "Facies", "Event", "Range", "Chron", "Point", "Sequence", "Transect", "Freehand", "Blank"];
+  if (!o || typeof o !== "object") throw new Error("ColumnTypeCounter must be an object");
+  for (const key of keys) {
+    if (!(key in o)) throwError("ColumnTypeCounter", key, "ColumnInfoType", o[key]);
+    if (typeof o[key] !== "number") throwError("ColumnTypeCounter", key, "number", o[key]);
+  }
 }
 
 export function assertRectBounds(rectBounds: any): asserts rectBounds is RectBounds {
