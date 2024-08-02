@@ -221,6 +221,9 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
     case "PointColumn":
       column = JSON.parse(JSON.stringify(defaultPointColumnInfoTSC));
       break;
+    case "ChronColumn":
+      column = JSON.parse(JSON.stringify(defaultChronColumnInfoTSC));
+      break;
     default:
       column = JSON.parse(JSON.stringify(defaultColumnBasicInfoTSC));
   }
