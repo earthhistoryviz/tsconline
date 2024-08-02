@@ -8,7 +8,8 @@ import {
   IconButton,
   Stack,
   TextField,
-  Typography
+  Typography,
+  FormControlLabel
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { InputFileUpload } from "../TSCFileUpload";
@@ -22,6 +23,7 @@ import { AddCircleOutline, ExpandMore } from "@mui/icons-material";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import useDatapackUploadForm from "./datapack-upload-form-hook";
+import { TSCCheckbox } from "../TSCCheckbox";
 
 type DatapackUploadFormProps = {
   close: () => void;
@@ -102,6 +104,17 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
               onChange={handlers.handleDateChange}
             />
           </Box>
+          <FormControlLabel
+            name="public-datapack"
+            control={
+              <TSCCheckbox
+                className="public-checkbox"
+                checked={state.isPublic === "true"}
+                onChange={(event) => setters.setIsPublic(event.target.checked ? "true" : "false")}
+              />
+            }
+            label="Make this upload public"
+          />
           <Autocomplete
             className="tag-autocomplete"
             multiple
