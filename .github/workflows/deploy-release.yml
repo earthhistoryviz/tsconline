@@ -38,6 +38,8 @@ jobs:
 
             git pull --no-edit
 
+            PULL_STATUS=$?
+
             if [ $PULL_STATUS -eq 0 ]; then
               echo "git pull succeeded"
             else
