@@ -11,7 +11,7 @@ type TSCDatapackCardProps = {
   name: string;
   datapack: DatapackParsingPack;
   value: boolean;
-  onChange: (name: string) => Promise<void>;
+  onChange: (name: string) => void;
 };
 export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack, value, onChange }) => {
   const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));

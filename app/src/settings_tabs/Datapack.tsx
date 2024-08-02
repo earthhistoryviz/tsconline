@@ -32,16 +32,29 @@ export const Datapacks = observer(function Datapacks() {
       }
     };
   }, []);
-
-  const onChange = async (name: string) => {
-    const datapacks = state.config.datapacks.includes(name)
-      ? state.config.datapacks.filter((datapack) => datapack !== name)
-      : [...state.config.datapacks, name];
+  const [selectedDatapackWaitList, setSelectedDatapackWaitList] = useState<string[]>([]);
+  const [webworkerProcessing, setWebworkerProcessing] = useState(false);
+  function enqueueSelectedDatapackWaitList(newDatapack: string) {
+    setSelectedDatapackWaitList((prevState) => [...prevState, newDatapack]);
+  }
+  function dequeueSelectedDatapackWaitList() {
+    if (selectedDatapackWaitList) {
+      setSelectedDatapackWaitList((prevState) => prevState.slice(1));
+    }
+  }
+  function processSelectedDatapackWaitList() {
+    if (webworkerProcessing || selectedDatapackWaitList.length === 0) {
+      return;
+    }
+    setWebworkerProcessing(true);
+    const datapackName = selectedDatapackWaitList[0];
+    const datapacks = state.config.datapacks.includes(datapackName)
+      ? state.config.datapacks.filter((datapack) => datapack !== datapackName)
+      : [...state.config.datapacks, datapackName];
     const hasPreviousConfig = actions.setPreviousDatapackConfig(datapacks);
     if (hasPreviousConfig) {
-      return;
+      dequeueSelectedDatapackWaitList();
     } else {
-      const chartSettings = null;
       const setDatapackConfigWorker: Worker = new Worker(
         new URL("../util/workers/set-datapack-config.ts", import.meta.url),
         {
@@ -51,7 +64,7 @@ export const Datapacks = observer(function Datapacks() {
       const message: SetDatapackConfigMessage = {
         datapacks: datapacks,
         settingsPath: "",
-        chartSettings: chartSettings,
+        chartSettings: null,
         stateCopy: JSON.stringify(state)
       };
       setDatapackConfigWorker.postMessage(message);
@@ -70,8 +83,16 @@ export const Datapacks = observer(function Datapacks() {
           actions.pushSnackbar("Setting Datapack Config Timed Out", "info");
         }
         setDatapackConfigWorker.terminate();
+        dequeueSelectedDatapackWaitList();
       };
     }
+    setWebworkerProcessing(false);
+    processSelectedDatapackWaitList();
+  }
+  const onChange = (name: string) => {
+    enqueueSelectedDatapackWaitList(name);
+    console.log(selectedDatapackWaitList);
+    processSelectedDatapackWaitList();
   };
 
   return (
