@@ -20,6 +20,7 @@ export type DatapackMetadata = {
   title: string;
   file: string;
   size: string;
+  isPublic: string;
   date?: string;
   authoredBy: string;
   tags: string[];
@@ -60,7 +61,7 @@ export type DatapackParsingPack = {
   date?: string;
   verticalScale?: number;
   uuid?: string;
-  isPublic: boolean;
+  isPublic: string;
   description: string;
   title: string;
   file: string;

@@ -14,7 +14,7 @@ export async function uploadUserDatapackHandler(
   fields: Record<string, string>,
   bytes: number
 ): Promise<DatapackMetadata | void> {
-  const { title, description, authoredBy, contact, notes, date, filepath, filename } = fields;
+  const { title, description, isPublic, authoredBy, contact, notes, date, filepath, filename } = fields;
   let { references, tags } = fields;
   if (!tags || !references || !authoredBy || !title || !description || !filepath || !filename) {
     await userUploadHandler(
@@ -52,6 +52,7 @@ export async function uploadUserDatapackHandler(
     file: filename,
     description,
     title,
+    isPublic: isPublic || "false",
     authoredBy,
     references,
     tags,

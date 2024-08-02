@@ -214,6 +214,33 @@ export const fetchPresets = action("fetchPresets", async () => {
   }
 });
 
+export const fetchPublicDatapacks = action("fetchPublicDatapacks", async () => {
+  try {
+    const response = await fetcher("/public/datapacks", {
+      method: "GET"
+    });
+    const data = await response.json();
+    if (data.datapackIndex === undefined && data.mapPackIndex === undefined) {
+      console.log("No public datapacks");
+      return;
+    }
+    try {
+      assertIndexResponse(data);
+      const { mapPackIndex: publicMapPackIndex, datapackIndex: publicDatapackIndex } = data;
+      const totalMapPackIndex = { ...state.mapPackIndex, ...publicMapPackIndex };
+      setMapPackIndex(totalMapPackIndex);
+      const totalDatapackIndex = { ...state.datapackIndex, ...publicDatapackIndex };
+      setDatapackIndex(totalDatapackIndex);
+      console.log("Public Datapacks loaded");
+    } catch (e) {
+      displayServerError(data, ErrorCodes.INVALID_PUBLIC_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_PUBLIC_DATAPACKS]);
+    }
+  } catch (e) {
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
+  }
+});
+
 /**
  * This will grab the user datapacks AND the server datapacks from the server
  */
@@ -249,10 +276,11 @@ export const uploadDatapack = action("uploadDatapack", async (file: File, metada
   const recaptcha = await getRecaptchaToken("uploadUserDatapack");
   if (!recaptcha) return;
   const formData = new FormData();
-  const { title, description, authoredBy, contact, notes, date, references, tags } = metadata;
+  const { title, description, isPublic, authoredBy, contact, notes, date, references, tags } = metadata;
   formData.append("file", file);
   formData.append("title", title);
   formData.append("description", description);
+  formData.append("isPublic", isPublic);
   formData.append("references", JSON.stringify(references));
   formData.append("tags", JSON.stringify(tags));
   formData.append("authoredBy", authoredBy);
@@ -267,6 +295,13 @@ export const uploadDatapack = action("uploadDatapack", async (file: File, metada
       headers: {
         "recaptcha-token": recaptcha
       }
+    });
+    const data = await response.json();
+  try {
+    const response = await fetcher(`/user/datapack`, {
+      method: "POST",
+      body: formData,
+      credentials: "include"
     });
     const data = await response.json();
 
