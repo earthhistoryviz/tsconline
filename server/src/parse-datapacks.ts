@@ -39,7 +39,6 @@ import {
   ColumnInfoType,
   assertSubInfo,
   SubInfo,
-  assertDatapackParsingPack,
   defaultEventSettings,
   isPointShape,
   assertPoint,
@@ -62,6 +61,10 @@ import {
   defaultSequenceSettings,
   assertSequence,
   SequenceSettings,
+  ColumnTypeCounter,
+  isDefaultChronostrat,
+  DefaultChronostrat,
+  DatapackMetadata,
   allFontOptions
 } from "@tsconline/shared";
 import {
@@ -69,11 +72,12 @@ import {
   hasVisibleCharacters,
   capitalizeFirstLetter,
   formatColumnName,
-  getClosestMatch
+  getClosestMatch,
+  countFiles
 } from "./util.js";
 import { createInterface } from "readline";
 import _ from "lodash";
-import { DatapackDescriptionInfo } from "./types.js";
+import { join, parse } from "path";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;
 const patternForAbundance = /^(TOP|missing|rare|common|frequent|abundant|sample|flood)$/;
@@ -91,6 +95,18 @@ type FaciesFoundAndAgeRange = {
   minAge: number;
   maxAge: number;
   fontOptions: ValidFontOptions[];
+};
+const columnTypeCounter: ColumnTypeCounter = {
+  Block: 0,
+  Chron: 0,
+  Event: 0,
+  Facies: 0,
+  Freehand: 0,
+  Point: 0,
+  Range: 0,
+  Sequence: 0,
+  Transect: 0,
+  Blank: 0
 };
 /**
  * parses the METACOLUMN and info of the children string
@@ -148,7 +164,7 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
  * @returns
  */
 export async function parseDatapacks(
-  datapackInfo: DatapackDescriptionInfo,
+  datapackInfo: DatapackMetadata,
   decryptFilePath: string,
   uuid?: string
 ): Promise<DatapackParsingPack | null> {
@@ -169,11 +185,15 @@ export async function parseDatapacks(
   let baseAge: number | null = null;
   let chartTitle = "Chart Title";
   let ageUnits = "Ma";
-  let defaultChronostrat = "UNESCO";
+  let defaultChronostrat: DefaultChronostrat = "UNESCO";
   let date: string | null = null;
   let verticalScale: number | null = null;
   let formatVersion = 1.5;
   const warnings: DatapackWarning[] = [];
+  // reset the columnTypeCounter IMPORTANT
+  for (const columnType in columnTypeCounter) {
+    columnTypeCounter[columnType as ColumnInfoType] = 0;
+  }
   try {
     for (const decryptPath of decryptPaths) {
       const { units, title, chronostrat, datapackDate, vertScale, version, top, base, filePropertyLines } =
@@ -275,24 +295,22 @@ export async function parseDatapacks(
   };
   setShowLabels(chartColumn);
 
-  const datapackParsingPack = {
+  const datapackParsingPack: DatapackParsingPack = {
     columnInfo: chartColumn,
-
     ageUnits,
-
     defaultChronostrat,
-
     formatVersion,
-    description: datapackInfo.description,
-    title: datapackInfo.title,
-    file: datapackInfo.file,
-    size: datapackInfo.size,
-
+    columnTypeCount: columnTypeCounter,
     image: "",
-    ...(uuid ? { uuid } : {})
+    datapackImageCount:
+      (await countFiles(join(decryptFilePath, parse(datapackInfo.file).name, "datapack-images"))) +
+      (await countFiles(join(decryptFilePath, parse(datapackInfo.file).name, "MapImages"))),
+    totalColumns: Object.values(columnTypeCounter).reduce((a, b) => a + b, 0),
+    ...(uuid ? { uuid } : {}),
+    ...datapackInfo
   };
-  assertDatapackParsingPack(datapackParsingPack);
-  if (date) datapackParsingPack.date = date;
+  // use datapack date if date not given by user
+  if (date && !datapackInfo.date) datapackParsingPack.date = date;
   if (topAge || topAge === 0) datapackParsingPack.topAge = topAge;
   if (baseAge || baseAge === 0) datapackParsingPack.baseAge = baseAge;
   if (verticalScale) datapackParsingPack.verticalScale = verticalScale;
@@ -342,7 +360,7 @@ export async function getAllEntries(
   let date: string | null = null;
   let ageUnits: string = "Ma";
   let chartTitle: string = "Chart Title";
-  let defaultChronostrat = "UNESCO";
+  let defaultChronostrat: DefaultChronostrat = "UNESCO";
   let formatVersion = 1.5;
   let vertScale: number | null = null;
   let filePropertyLines = 0;
@@ -350,34 +368,34 @@ export async function getAllEntries(
     if (!line) continue;
     // grab any datapack properties
     const split = line.split("\t");
-    let value = split[1];
+    let value = split[1]?.trim();
     if (value) {
       switch (split[0]?.toLowerCase().trim()) {
         case "settop:":
-          if (!isNaN(Number(value.trim()))) top = Number(value);
+          if (!isNaN(Number(value))) top = Number(value);
           filePropertyLines++;
           continue;
         case "setbase:":
-          if (!isNaN(Number(value.trim()))) base = Number(value);
+          if (!isNaN(Number(value))) base = Number(value);
           filePropertyLines++;
           continue;
         case "chart title:":
-          chartTitle = value.trim();
+          chartTitle = value;
           filePropertyLines++;
           continue;
         case "age units:":
-          ageUnits = value.trim();
+          ageUnits = value;
           filePropertyLines++;
           continue;
         case "default chronostrat:":
           filePropertyLines++;
-          if (!/^(USGS|UNESCO)$/.test(value.trim())) {
+          if (!isDefaultChronostrat(value)) {
             console.error(
               "Default chronostrat value in datapack is neither USGS nor UNESCO, setting to default UNESCO"
             );
             continue;
           }
-          defaultChronostrat = value.trim();
+          defaultChronostrat = value;
           continue;
         case "date:":
           if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) value = value.split("/").reverse().join("-");
@@ -385,7 +403,7 @@ export async function getAllEntries(
           filePropertyLines++;
           continue;
         case "format version:":
-          formatVersion = Number(value.trim());
+          formatVersion = Number(value);
           if (isNaN(formatVersion)) {
             console.error("Format version is not a number, setting to default 1.5");
             formatVersion = 1.5;
@@ -1544,6 +1562,7 @@ function addFaciesChildren(
     expanded: false,
     columnSpecificSettings: { orientation: "vertical" }
   });
+  columnTypeCounter.Block += 3;
   // add the font options present on children to parent
   for (const child of children) {
     for (const fontOption of child.fontOptions) {
@@ -1601,7 +1620,7 @@ function addChronChildren(
   children.push({
     name: `${name} Chron Label`,
     editName: "Chron Label",
-    on: false,
+    on: true,
     enableTitle: false,
     fontOptions: getValidFontOptions("Zone"),
     fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
@@ -1638,6 +1657,7 @@ function addChronChildren(
     expanded: false,
     columnSpecificSettings: { orientation: "vertical" }
   });
+  columnTypeCounter.Block += 2;
   // add the font options present on children to parent
   for (const child of children) {
     for (const fontOption of child.fontOptions) {
@@ -1721,6 +1741,7 @@ function processColumn<T extends ColumnInfoType>(
   const { [subInfoKey]: subInfo, ...columnHeaderProps } = column;
   assertColumnHeaderProps(columnHeaderProps);
   assertSubInfo(subInfo, type);
+  columnTypeCounter[type]++;
   for (const sub of subInfo) {
     // subFreehandInfo has a topAge and baseAge instead of age
     if (isSubFreehandInfo(sub)) {

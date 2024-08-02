@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { deleteUser } from "./database.js";
 import { resolve, extname, join, relative, parse } from "path";
-import { adminconfig, assetconfigs, checkFileExists, getBytes, verifyFilepath } from "./util.js";
+import { adminconfig, assetconfigs, checkFileExists, verifyFilepath } from "./util.js";
 import { createWriteStream } from "fs";
 import { readFile, realpath, rm, writeFile } from "fs/promises";
 import { deleteDatapack, loadFileMetadata } from "./file-metadata-handler.js";
@@ -16,7 +16,8 @@ import { pipeline } from "stream/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "util";
 import { assertAdminSharedUser, assertDatapackIndex } from "@tsconline/shared";
-import { DatapackDescriptionInfo, NewUser } from "./types.js";
+import { NewUser } from "./types.js";
+import { uploadUserDatapackHandler } from "./upload-handlers.js";
 
 /**
  * Get all users for admin to configure on frontend
@@ -193,12 +194,11 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   reply: FastifyReply
 ) {
   const parts = request.parts();
-  let title: string | undefined;
-  let description: string | undefined;
   let file: MultipartFile | undefined;
   let filename: string | undefined;
   let filepath: string | undefined;
   let decryptedFilepath: string | undefined;
+  const fields: { [fieldname: string]: string } = {};
   for await (const part of parts) {
     if (part.type === "file") {
       // DOWNLOAD FILE HERE AND SAVE TO FILE
@@ -240,14 +240,27 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
         reply.status(400).send({ error: "File too large" });
         return;
       }
-    } else if (part.fieldname === "title" && typeof part.value === "string") {
-      title = part.value;
-    } else if (part.fieldname === "description" && typeof part.value === "string") {
-      description = part.value;
+      if (file.file.bytesRead === 0) {
+        await rm(filepath, { force: true });
+        reply.status(400).send({ error: `Empty file cannot be uploaded` });
+        return;
+      }
+    } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
+      fields[part.fieldname] = part.value;
     }
   }
-  if (!title || !description || !file || !filepath || !filename || !decryptedFilepath) {
-    reply.status(400).send({ error: "Missing required fields" });
+  if (!file || !filepath || !filename || !decryptedFilepath) {
+    reply.status(400).send({ error: "Missing file" });
+    return;
+  }
+  fields.filepath = filepath;
+  fields.filename = filename;
+  const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async () => {
+    filepath && (await rm(filepath, { force: true }));
+    reply.status(500).send({ error: "Unexpected error with request fields." });
+  });
+  // if uploadUserDatapackHandler fails, it will send the error and delete the file and set the message so just return
+  if (!datapackMetadata) {
     return;
   }
   const errorHandler = async (error: string) => {
@@ -286,20 +299,9 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     await errorHandler("File was not decrypted properly");
     return;
   }
-
-  const bytes = file.file.bytesRead;
-  if (bytes === 0) {
-    reply.status(400).send({ error: `Empty file cannot be uploaded` });
-    return;
-  }
-  const datapackInfo: DatapackDescriptionInfo = {
-    file: filename,
-    description: description,
-    title: title,
-    size: getBytes(bytes)
-  };
-
-  const successful = await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, [datapackInfo]);
+  const successful = await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, [
+    datapackMetadata
+  ]);
   if (!successful) {
     await errorHandler("Error parsing the datapack for chart generation");
     return;
@@ -310,7 +312,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       !assetconfigs.activeDatapacks.some((datapack) => datapack.file === filename) &&
       !adminconfig.datapacks.some((datapack) => datapack.file === filename)
     ) {
-      adminconfig.datapacks.push(datapackInfo);
+      adminconfig.datapacks.push(datapackMetadata);
     }
     await writeFile(assetconfigs.adminConfigPath, JSON.stringify(adminconfig, null, 2));
   } catch (e) {
