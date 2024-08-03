@@ -54,7 +54,7 @@ This holds the charts in a hashed directory. The hash consists of an `md5` hash 
 
 #### public/mapimages
 
-This holds any map images if the datapacks used are those with [map points](#Parse-MapPacks). Everytime the app [requests new datapack info](#get-datapackinfofiles), we delete this directory. The app will service these map images for the settings map points.
+This holds any map images if the datapacks used are those with [map points](#Parse-MapPacks). There is currently no cleanup here.
 
 ---
 
@@ -84,7 +84,7 @@ After decrypting the datapacks, the server will simply listen for any requests f
 
 ---
 
-## Routes
+## Routes (ADD MORE ROUTES)
 
 ---
 
@@ -92,30 +92,8 @@ After decrypting the datapacks, the server will simply listen for any requests f
 
 ---
 
-`params`: {usecache (default `false`)}
+*FIX* *TODO*
 
-This will service the function `routes.fetchChart`. If the user decides to use the chart cache, the `GET` request will contain a URL param for `usecache` with string value `true`.
-
-A chart request must be
-
-```js
-export type ChartRequest = {
-  settings: string, // XML string representing the settings file you want to use to make a chart
-  datapacks: string[], // active datapacks to be used on chart
-};
-```
-
-We hash the `settings` and `datapacks` to check if the chart already exists in `public/charts` if `cache` is true.
-
-If cache is not used or the directory doesn't exist then we make the directory. If any datapacks requested do not exist in `assetconfigs.activeDatapacks` we return a `ServerResponseError`.
-
-After checking datapacks, we proceed to call the java file TSCreator.jar. We call a bash command
-
-```bash
-java -Xmx512m -XX:MaxDirectMemorySize=64m -XX:MaxRAM=1g -jar TSCreator.jar -node -s {settings_filepath} -d {datapacks} -o {chart_filepath}
-```
-
-We reply to the app with the chart path and hash that we have just used.
 
 ### POST /removecache
 
@@ -127,17 +105,8 @@ We simply delete `public/charts`. If any error occurs we return `ServerResponseE
 
 ---
 
-`params`: {hash: string}
+*FIX* *TODO*
 
-We check `public/charts/{hash}` for the chart and if it exists and is readable we return true, otherwise false.
-
-**_NOTE: if hash is wrong there is not way of knowing. Will possibly need a fix_**
-
-### GET /datapackinfo/:files
-
----
-
-`params`: {files: a string of space indented datapack filenames}
 
 #### Parse Datapacks
 
@@ -218,12 +187,6 @@ export type MapPoints = {
 ```
 
 This data structure is for the buttons that represent columns on the map itself.
-
-### GET /presets
-
----
-
-Simple route that sends the presets we generated at the [yarn start](#yarn-start) step
 
 ### Login Routes
 
