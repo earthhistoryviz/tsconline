@@ -7,7 +7,7 @@ import { styled, useTheme } from "@mui/material/styles";
 import HomeIcon from "@mui/icons-material/Home";
 import { IconButton, Tab, Tabs, Typography } from "@mui/material";
 import { context } from "./state";
-import { TSCMenuItem, TSCButton } from "./components";
+import { TSCMenuItem, TSCButton, TSCPopupDialog } from "./components";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { ControlledMenu, useHover, useMenuState } from "@szhsin/react-menu";
 import "./NavBar.css";
@@ -121,6 +121,13 @@ export const NavBar = observer(function Navbar() {
         <TSCButton buttonType="gradient" onClick={() => actions.initiateChartGeneration(navigate, location.pathname)}>
           Generate Chart
         </TSCButton>
+        <TSCPopupDialog open={state.datapackSelection.regenerateChart && state.datapackSelection.isDirty} title="Confirm Datapack Selection Change" message="You have unsaved change on datapack selction. Do you want to save the change?" onYes={async () => {
+          const datapacks = state.datapackSelection.unselectedDatapacks.length > 0 ? state.datapackSelection.selectedDatapacks.concat(state.config.datapacks.filter((datapack) => !state.datapackSelection.unselectedDatapacks.includes(datapack))) : state.datapackSelection.selectedDatapacks.concat(state.config.datapacks);
+          await actions.processSelectedDatapackList(datapacks, null);
+          actions.initiateChartGeneration(navigate, location.pathname);
+          actions.setRegenerateChart(false);
+        }} onNo={() => { actions.setSelectedDatapacks([]); actions.setUnselectedDatapacks([]); actions.initiateChartGeneration(navigate, location.pathname); actions.setIsDirty(false); actions.setRegenerateChart(false); }} onClose={() => { actions.setSelectedDatapacks([]); actions.setUnselectedDatapacks([]); actions.initiateChartGeneration(navigate, location.pathname); actions.setRegenerateChart(false); actions.setIsDirty(false); }}></TSCPopupDialog>
+
         {state.isLoggedIn ? (
           <AccountMenu />
         ) : (
