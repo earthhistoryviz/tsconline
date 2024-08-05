@@ -44,8 +44,11 @@ import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import { SettingsTabs, equalChartSettings, equalConfig } from "../../types";
+import { SetDatapackConfigCompleteValue, SettingsTabs, equalChartSettings, equalConfig } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
+import { act } from "react";
+import { cloneDeep } from "lodash";
+import { actions } from "..";
 
 const increment = 1;
 
@@ -405,11 +408,7 @@ const applyChartSettings = action("applyChartSettings", (settings: ChartSettings
   setEnableHideBlockLabel(enHideBlockLable);
 });
 
-/**
- * Rests the settings, sets the tabs to 0
- * sets chart to newval and requests info on the datapacks from the server
- * If attributed settings, load them.
- */
+
 export const setDatapackConfig = action(
   "setDatapackConfig",
   async (datapacks: string[], settingsPath?: string): Promise<boolean> => {
