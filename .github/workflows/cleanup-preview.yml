@@ -32,7 +32,7 @@ jobs:
             CONTAINER_NAME="pr-preview-${PR_ID}_pr-preview-run_1"
             if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
               echo "Container is running. Stopping and removing..."
-              docker-compose -f docker-compose-preview.yml down --remove-orphans --volumes
+              docker-compose -f docker-compose-preview.yml down --remove-orphans --volumes --rmi all
             else
               echo "Container is not running. Proceeding with cleanup..."
             fi
