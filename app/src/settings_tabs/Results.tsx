@@ -326,14 +326,14 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
           <TableCell className="event-group-header-text search-result-status-column" align="left">
             Status
           </TableCell>
-          <TableCell className="event-group-header-text search-result-column-column" align="left">
-            Column
-          </TableCell>
-          <TableCell className="event-group-header-text search-result-center-column" align="center">
+          <TableCell className="event-group-header-text search-result-center-column" align="left">
             Center
           </TableCell>
-          <TableCell className="event-group-header-text search-result-extend-column" align="center">
+          <TableCell className="event-group-header-text search-result-extend-column" align="left">
             Extend
+          </TableCell>
+          <TableCell className="event-group-header-text search-result-column-column" align="left">
+            Column
           </TableCell>
           <TableCell className="event-group-header-text search-result-age-column" align="center">
             Age
@@ -364,14 +364,14 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
           <TableCell className="search-result-status-column" align="left">
             <Status info={info} />
           </TableCell>
-          <TableCell className="search-result-column-column" align="left">
-            <Column info={info} />
-          </TableCell>
-          <TableCell className="search-result-center-column" align="center">
+          <TableCell className="search-result-center-column" align="left">
             <Center info={info} />
           </TableCell>
-          <TableCell className="search-result-extend-column" align="center">
+          <TableCell className="search-result-extend-column" align="left">
             <Extend info={info} />
+          </TableCell>
+          <TableCell className="search-result-column-column" align="left">
+            <Column info={info} />
           </TableCell>
           <TableCell className="search-result-age-column" align="center">
             <Age info={info} />
