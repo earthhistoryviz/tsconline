@@ -13,26 +13,12 @@
 }
 
 .search-time-display-container {
-  min-width: 18vw;
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  align-items: center;
+  min-width: 10vw;
+  padding-left: 20px;
 }
 
 .search-time-display-ages-container {
-  margin-top: 20px;
-}
-.search-time-display-ages {
-  padding: 8px;
-  margin: 8px;
-  border: 1px solid;
-}
-
-@media (max-width: 520px) {
-  .search-time-display-ages-container {
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-  }
+  min-height: 30px;
+  overflow-y: auto;
+  resize: vertical;
 }
