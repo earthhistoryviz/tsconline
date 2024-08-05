@@ -68,6 +68,10 @@ function setDatapackTimeDefaults() {
 export const initiateChartGeneration = action(
   "initiateChartGeneration",
   (navigate: NavigateFunction, location: string) => {
+    state.datapackSelection.regenerateChart = true;
+    if (state.datapackSelection.isDirty) {
+      return;
+    }
     if (
       state.settings.datapackContainsSuggAge &&
       ((location === "/settings" && state.settingsTabs.selected === "datapacks") || location !== "/settings")
