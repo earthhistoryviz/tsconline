@@ -313,40 +313,13 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
   const stretchedEvents: (string | EventSearchInfo)[] = [];
   groupedEvents.map((value) => {
     stretchedEvents.push(value.key);
-    stretchedEvents.push("subheader");
     for (const event of value.info) {
       stretchedEvents.push(event);
     }
   });
 
   function EventGroup(index: number, info: string | EventSearchInfo) {
-    if (info === "subheader") {
-      return (
-        <>
-          <TableCell className="event-group-header-text search-result-status-column" align="left">
-            Status
-          </TableCell>
-          <TableCell className="event-group-header-text search-result-center-column" align="left">
-            Center
-          </TableCell>
-          <TableCell className="event-group-header-text search-result-extend-column" align="left">
-            Extend
-          </TableCell>
-          <TableCell className="event-group-header-text search-result-column-column" align="left">
-            Column
-          </TableCell>
-          <TableCell className="event-group-header-text search-result-age-column" align="center">
-            Age
-          </TableCell>
-          <TableCell className="event-group-header-text search-result-qualifier-column" align="center">
-            Qualifier
-          </TableCell>
-          <TableCell className="event-group-header-text search-result-notes-column" align="right">
-            Notes
-          </TableCell>
-        </>
-      );
-    } else if (typeof info === "string") {
+    if (typeof info === "string") {
       return (
         <TableCell
           className="event-group-identifier"
@@ -404,7 +377,6 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
   if (!VirtuosoTableComponents.Scroller || !VirtuosoTableComponents.TableBody) return;
   VirtuosoTableComponents.Scroller.displayName = "Scroller";
   VirtuosoTableComponents.TableBody.displayName = "TableBody";
-
   return (
     <Box className="table-container" id="event-search-results-table">
       <CustomTooltip
@@ -427,6 +399,31 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
       </CustomTooltip>
       <TableVirtuoso
         className="events-search-results-table"
+        fixedHeaderContent={() => (
+          <>
+            <TableCell className="event-group-header-text search-result-status-column" align="left">
+              Status
+            </TableCell>
+            <TableCell className="event-group-header-text search-result-center-column" align="left">
+              Center
+            </TableCell>
+            <TableCell className="event-group-header-text search-result-extend-column" align="left">
+              Extend
+            </TableCell>
+            <TableCell className="event-group-header-text search-result-column-column" align="left">
+              Column
+            </TableCell>
+            <TableCell className="event-group-header-text search-result-age-column" align="center">
+              Age
+            </TableCell>
+            <TableCell className="event-group-header-text search-result-qualifier-column" align="center">
+              Qualifier
+            </TableCell>
+            <TableCell className="event-group-header-text search-result-notes-column" align="right">
+              Notes
+            </TableCell>
+          </>
+        )}
         data={stretchedEvents}
         components={VirtuosoTableComponents}
         itemContent={EventGroup}
