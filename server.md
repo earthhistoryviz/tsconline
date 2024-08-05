@@ -292,6 +292,58 @@ Host: dev.timescalecreator.org
 
 ---
 
+### Fetch Image
+
+- **Endpoint:** `/images/:datapackName/:imageName`
+- **Method:** `GET`
+- **Description:** Fetch the image for the given datapack and image name
+
+#### Parameters
+
+| Name         | Type   | Description              | Required |
+| ------------ | ------ | ------------------------ | -------- |
+| datapackName | string | The name of the datapack | Yes      |
+| imageName    | string | The name of the image    | Yes      |
+
+#### Example Request
+
+```http
+GET /images/TSC2020/image.png HTTP/1.1
+Host: dev.timescalecreator.org
+```
+
+#### Example Response
+
+```json
+{
+  "image": "images/TSC2020/image.png"
+}
+```
+
+#### Error Responses
+
+- **Status Code:** `404 Not Found`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the server cannot find the image
+
+```json
+{
+  "error": "Image not found"
+}
+```
+
+- **Status Code:** `403 Forbidden`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the filepath goes outside the allowed directory
+
+```json
+{
+  "error": "Invalid image path"
+}
+```
+
+---
+
 ### User Datapacks
 
 - **Endpoint:** `/user-datapacks`
