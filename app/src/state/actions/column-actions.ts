@@ -169,9 +169,9 @@ export function handleDataMiningColumns() {
       );
       continue;
     }
-    
+
     setColumnProperties(createdDmColumn, foundDmColumn);
-    
+
     switch (refCol.columnDisplayType) {
       case "Event":
         assertEventSettings(refCol.columnSpecificSettings);
