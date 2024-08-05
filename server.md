@@ -100,6 +100,85 @@ After decrypting the datapacks, the server will simply listen for any requests f
 
 ## User Endpoints
 
+### Fetch Chart
+
+- **Endpoint:** `/charts/:usecache`
+- **Method:** `POST`
+- **Description:** Fetch the chart image for the given settings and datapacks
+
+#### Request Body
+
+| Name      | Type    | Description                                                                                    | Required |
+| --------- | ------- | ---------------------------------------------------------------------------------------------- | -------- |
+| settings  | string  | The settings for the chart in xml format.                                                      | Yes      |
+| datapacks | string  | The datapacks to use for the chart.                                                            | Yes      |
+| useCache  | boolean | Whether to use the cache or not. If `true`, the server will use the cached chart if it exists. | Yes      |
+
+#### Example Request
+
+```http
+POST /charts/false HTTP/1.1
+Content-Type: application/json
+Host: https://dev.timescalecreator.org
+{
+  "settings": "<xml>[settings]</xml>",
+  "datapacks": ["datapack1", "datapack2"],
+  "useCache": true
+}
+```
+
+#### Example Response
+
+```json
+{
+  "chart": "https://dev.timescalecreator.org/charts/72309213/chart.png"
+}
+```
+
+#### Error Responses
+
+- **Status Code:** `400 Bad Request`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the request body is invalid
+
+```json
+{
+  "error": "ERROR: chart request is not valid. Error was: ..."
+}
+```
+
+- **Status Code:** `503 Service Unavailable`
+- **Content-Type:** `application/json`
+- **Description:** If the queue is full, the server will return this error (IMPORTANT because the java file takes around 2GB of RAM and server is limited to ~16 GB at the moment)
+
+```json
+{
+  "error": "Server is too busy. Please try again later."
+}
+```
+
+- **Status Code:** `408 Request Timeout`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the chart generation takes too long
+
+```json
+{
+  "error": "Request timed out"
+}
+```
+
+- **Status Code:** `500 Internal Server Error`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the server encounters an error while generating the chart. Could also return if the server is unable to save the chart, or the java file failed.
+
+```json
+{
+  "error": "Internal server error"
+}
+```
+
+---
+
 ### Remove Cache
 
 - **Endpoint:** `/removecache`
