@@ -121,12 +121,37 @@ export const NavBar = observer(function Navbar() {
         <TSCButton buttonType="gradient" onClick={() => actions.initiateChartGeneration(navigate, location.pathname)}>
           Generate Chart
         </TSCButton>
-        <TSCPopupDialog open={state.datapackSelection.regenerateChart && state.datapackSelection.isDirty} title="Confirm Datapack Selection Change" message="You have unsaved change on datapack selction. Do you want to save the change?" onYes={async () => {
-          const datapacks = state.datapackSelection.unselectedDatapacks.length > 0 ? state.datapackSelection.selectedDatapacks.concat(state.config.datapacks.filter((datapack) => !state.datapackSelection.unselectedDatapacks.includes(datapack))) : state.datapackSelection.selectedDatapacks.concat(state.config.datapacks);
-          await actions.processSelectedDatapackList(datapacks, null);
-          actions.initiateChartGeneration(navigate, location.pathname);
-          actions.setRegenerateChart(false);
-        }} onNo={() => { actions.setSelectedDatapacks([]); actions.setUnselectedDatapacks([]); actions.initiateChartGeneration(navigate, location.pathname); actions.setIsDirty(false); actions.setRegenerateChart(false); }} onClose={() => { actions.setSelectedDatapacks([]); actions.setUnselectedDatapacks([]); actions.initiateChartGeneration(navigate, location.pathname); actions.setRegenerateChart(false); actions.setIsDirty(false); }}></TSCPopupDialog>
+        <TSCPopupDialog
+          open={state.datapackSelection.regenerateChart && state.datapackSelection.isDirty}
+          title="Confirm Datapack Selection Change"
+          message="You have unsaved change on datapack selection. Do you want to save the change?"
+          onYes={async () => {
+            const datapacks =
+              state.datapackSelection.unselectedDatapacks.length > 0
+                ? state.datapackSelection.selectedDatapacks.concat(
+                    state.config.datapacks.filter(
+                      (datapack) => !state.datapackSelection.unselectedDatapacks.includes(datapack)
+                    )
+                  )
+                : state.datapackSelection.selectedDatapacks.concat(state.config.datapacks);
+            await actions.processSelectedDatapackList(datapacks, null);
+            actions.initiateChartGeneration(navigate, location.pathname);
+            actions.setRegenerateChart(false);
+          }}
+          onNo={() => {
+            actions.setSelectedDatapacks([]);
+            actions.setUnselectedDatapacks([]);
+            actions.initiateChartGeneration(navigate, location.pathname);
+            actions.setIsDirty(false);
+            actions.setRegenerateChart(false);
+          }}
+          onClose={() => {
+            actions.setSelectedDatapacks([]);
+            actions.setUnselectedDatapacks([]);
+            actions.initiateChartGeneration(navigate, location.pathname);
+            actions.setRegenerateChart(false);
+            actions.setIsDirty(false);
+          }}></TSCPopupDialog>
 
         {state.isLoggedIn ? (
           <AccountMenu />
