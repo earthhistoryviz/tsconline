@@ -80,6 +80,7 @@ export const initiateChartGeneration = action(
     } else {
       fetchChartFromServer(navigate);
     }
+    state.datapackSelection.regenerateChart = false;
   }
 );
 

@@ -12,7 +12,9 @@ import {
   assertMapPackInfoChunk,
   DatapackParsingPack,
   assertDatapackParsingPack,
-  DatapackMetadata
+  DatapackMetadata,
+  defaultFontsInfo,
+  FontsInfo
 } from "@tsconline/shared";
 
 import {
@@ -46,9 +48,7 @@ import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { SetDatapackConfigCompleteValue, SettingsTabs, equalChartSettings, equalConfig } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
-import { act } from "react";
 import { cloneDeep } from "lodash";
-import { actions } from "..";
 
 const increment = 1;
 

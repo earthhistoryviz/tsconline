@@ -141,6 +141,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                         );
                         if (hasPreviousConfig) {
                           actions.initiateChartGeneration(navigate, "/home");
+                          actions.setRegenerateChart(false);
                         } else {
                           const chartSettings = await actions.fetchSettingsXML(preset.settings);
                           const setDatapackConfigWorker: Worker = new Worker(
@@ -170,6 +171,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                                 value.chartSettings
                               );
                               actions.initiateChartGeneration(navigate, "/home");
+                              actions.setRegenerateChart(false);
                             } else {
                               actions.pushSnackbar("Setting Datapack Config Timed Out", "info");
                             }
