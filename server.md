@@ -102,9 +102,10 @@ After decrypting the datapacks, the server will simply listen for any requests f
 
 ### Fetch Chart
 
-- **Endpoint:** `/charts/:usecache`
+- **Endpoint:** `/charts`
 - **Method:** `POST`
 - **Description:** Fetch the chart image for the given settings and datapacks
+- **Requires Valid Session:** No
 
 #### Request Body
 
@@ -179,11 +180,314 @@ Host: https://dev.timescalecreator.org
 
 ---
 
+### Fetch Timescale
+
+- **Endpoint:** `/timescale`
+- **Method:** `GET`
+- **Description:** Fetch the timescale data that holds all the ages/stages of Earth
+- **Requires Valid Session:** No
+
+#### Example Request
+
+```http
+GET /timescale HTTP/1.1
+Host: https://dev.timescalecreator.org
+```
+
+#### Example Response
+
+```json
+{
+  "timescaleData": [
+    {
+      "key": "Holocene",
+      "value": 0
+    },
+    {
+      "key": "Lt. Pleistocene",
+      "value": 0.126
+    }
+  ]
+}
+```
+
+#### Error Responses
+
+- **Status Code:** `500 Internal Server Error`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the server encounters an error while fetching the timescale data or it cannot read the excel file
+
+```json
+{
+  "error": "Internal server error"
+}
+```
+
+- **Status Code:** `404 Not Found`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the server cannot find the excel file
+
+```json
+{
+  "error": "Excel file not found"
+}
+```
+
+---
+
+### Facies Patterns
+
+- **Endpoint:** `/facies-patterns`
+- **Method:** `GET`
+- **Description:** Fetch the facies patterns data that holds all the facies patterns (loaded on server startup)
+- **Requires Valid Session:** No
+
+#### Example Request
+
+```http
+GET /facies-patterns HTTP/1.1
+Host: https://dev.timescalecreator.org
+```
+
+#### Example Response
+
+```json
+{
+  "patterns": {
+    ["Limestone"]: {
+      "name": "Limestone",
+      "formattedName": "Limestone",
+      "filepath": "public/facies-patterns/Limestone.png",
+      "color": {
+        "name": "Red",
+        "hex": "#FF0000",
+        "rgb": "rgb(255, 0, 0)"
+      }
+    },
+    ["Sandstone"]: {
+      "name": "Sandstone",
+      "formattedName": "Sandstone",
+      "filepath": "public/facies-patterns/Sandstone.png",
+      "color": {
+        "name": "Green",
+        "hex": "#00FF00",
+        "rgb": "rgb(0, 255, 0)"
+      }
+    }
+  }
+}
+```
+
+#### Error Responses
+
+- **Status Code:** `500 Internal Server Error`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the server doesn't load the facies patterns on startup
+
+```json
+{
+  "error": "Servver isn't able to load facies patterns"
+}
+```
+
+---
+
+### User Datapacks
+
+- **Endpoint:** `/user-datapacks`
+- **Method:** `GET`
+- **Description:** Fetch the user's datapacks
+- **Requires Valid Session:** Yes
+
+#### Example Request
+
+```http
+GET /user-datapacks HTTP/1.1
+Host: https://dev.timescalecreator.org
+Header: Cookie: loginSession=123
+```
+
+#### Example Response
+
+```json
+{
+  "datapackIndex": {
+    ["TSC2020"]: {
+      "<DatapackParsingPack>"
+    },
+    ["TSC2021"]: {
+      "<DatapackParsingPack>"
+    }
+  },
+  "mapPackIndex": {
+    ["TSC2020"]: {
+      "<MapPack>"
+    },
+    ["TSC2021"]: {
+      "<MapPack>"
+    }
+  }
+}
+```
+
+#### Error Responses
+
+- **Status Code:** `401 Unauthorized`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the user is not logged in
+
+```json
+{
+  "error": "User not logged in"
+}
+```
+
+- **Status Code:** `404 Not Found`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the user has no datapacks
+
+```json
+{
+  "error": "User has no uploaded datapacks"
+}
+```
+
+- **Status Code:** `500 Internal Server Error`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the server encounters an error while fetching and/or reading the user's datapacks
+
+```json
+{
+  "error": "Failed to load indexes, corrupt json files present. Please contact customer service."
+}
+```
+
+---
+
+### Server Datapack Info (Chunks)
+
+- **Endpoint:** `/datapack-index`
+- **Method:** `GET`
+- **Description:** Fetch the server's datapack info (in chunks)
+- **Requires Valid Session:** No
+- **Note:** This is used to fetch all the datapacks on the server in chunks. The server will return the total number of chunks and the datapacks in the requested chunk. Chunks are requested by the `start` and `increment` query parameters. They also signify datapacks to fetch (one datapack = one chunk).
+
+#### Query Parameters
+
+| Name      | Type   | Description                                             | Required |
+| --------- | ------ | ------------------------------------------------------- | -------- |
+| start     | number | The starting index of the chunk to fetch (default is 0) | No       |
+| increment | number | The increment of the chunk to fetch (default is 1)      | No       |
+
+#### Example Request
+
+```http
+GET /datapack-index?start=0&increment=1 HTTP/1.1
+Host: https://dev.timescalecreator.org
+```
+
+#### Example Response
+
+```json
+{
+  "datapackIndex": {
+    ["TSC2020"]: {
+      "<DatapackParsingPack>"
+    }
+  },
+  "totalChunks": 10
+}
+```
+
+#### Error Responses
+
+- **Status Code:** `500 Internal Server Error`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the server encounters an error while fetching and/or reading the datapacks
+
+```json
+{
+  "error": "Failed to load datapack"
+}
+```
+
+- **Status Code:** `404 Not Found`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the server has no datapacks at the requested chunks
+
+```json
+{
+  "error": "No datapacks found"
+}
+```
+
+---
+
+### Server MapPack Info (Chunks)
+
+- **Endpoint:** `/map-pack-index`
+- **Method:** `GET`
+- **Description:** Fetch the server's map pack info (in chunks)
+- **Requires Valid Session:** No
+- **Note:** This is used to fetch all the map packs on the server in chunks. The server will return the total number of chunks and the map packs in the requested chunk. Chunks are requested by the `start` and `increment` query parameters. They also signify map packs to fetch (one map pack = one chunk).
+
+#### Query Parameters
+
+| Name      | Type   | Description                                             | Required |
+| --------- | ------ | ------------------------------------------------------- | -------- |
+| start     | number | The starting index of the chunk to fetch (default is 0) | No       |
+| increment | number | The increment of the chunk to fetch (default is 1)      | No       |
+
+#### Example Request
+
+```http
+GET /map-pack-index?start=0&increment=1 HTTP/1.1
+Host: https://dev.timescalecreator.org
+```
+
+#### Example Response
+
+```json
+{
+  "mapPackIndex": {
+    ["TSC2020"]: {
+      "<MapPack>"
+    }
+  },
+  "totalChunks": 10
+}
+```
+
+#### Error Responses
+
+- **Status Code:** `500 Internal Server Error`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the server encounters an error while fetching and/or reading the map packs
+
+```json
+{
+  "error": "Failed to load map pack"
+}
+```
+
+- **Status Code:** `404 Not Found`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the server has no map packs at the requested chunks
+
+```json
+{
+  "error": "No map packs found"
+}
+```
+
+---
+
 ### Remove Cache
 
 - **Endpoint:** `/removecache`
 - **Method:** `POST`
 - **Description:** Removes the cache for the charts
+- **Requires Valid Session:** No
 
 #### Example Request
 
@@ -207,6 +511,7 @@ Host: https://dev.timescalecreator.org
 - **Endpoint:** `/svgstatus/:hash`
 - **Method:** `GET`
 - **Description:** Check the readiness of the svg file identified by the hash
+- **Requires Valid Session:** No
 
 #### Parameters
 
@@ -256,6 +561,7 @@ Host: https://dev.timescalecreator.org
 - **Endpoint:** `/settingsXml/:file`
 - **Method:** `GET`
 - **Description:** Fetch the settings xml file requested
+- **Requires Valid Session:** No
 
 #### Parameters
 
