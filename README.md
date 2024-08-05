@@ -92,6 +92,13 @@ brew install yarn
 yarn setup
 ```
 
+- Make sure to note the exit code and make sure it is 0. If not, try running
+```bash
+sudo apt-get install -y python3 make g++
+```
+
+- If above doesn't seem to work, print out the `build.log` using `cat` and ask a team member for assistance (or download whatever it doesn't have)
+
 - For reference, this will run `yarn install` and `yarn build` to download all the packages we use internally (dev and production) and additionally compile all the `Typescript` files (`.ts`) into `Javascript` files (`.js`)
 
 2. **Manual setup**
@@ -134,13 +141,14 @@ cd server && yarn start
 
 NOTE: this doesn't work on some machines unfortunately.
 
-### If above doesn't start/work (DOCKER)
+### If above doesn't start/work (NOT WORKING YET)
 
 - No worries if the above doesn't work. We can use docker to make a fake environment for you to run the server on
 
-1. Create a `secrets.env` file in the root dir
+1. Create a `secrets.env` file in the root dir and a network
 
 ```bash
+docker create network shared_network
 touch secrets.env
 ```
 
