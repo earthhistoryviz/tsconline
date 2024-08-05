@@ -120,7 +120,7 @@ After decrypting the datapacks, the server will simply listen for any requests f
 ```http
 POST /charts/false HTTP/1.1
 Content-Type: application/json
-Host: https://dev.timescalecreator.org
+Host: dev.timescalecreator.org
 {
   "settings": "<xml>[settings]</xml>",
   "datapacks": ["datapack1", "datapack2"],
@@ -191,7 +191,7 @@ Host: https://dev.timescalecreator.org
 
 ```http
 GET /timescale HTTP/1.1
-Host: https://dev.timescalecreator.org
+Host: dev.timescalecreator.org
 ```
 
 #### Example Response
@@ -246,7 +246,7 @@ Host: https://dev.timescalecreator.org
 
 ```http
 GET /facies-patterns HTTP/1.1
-Host: https://dev.timescalecreator.org
+Host: dev.timescalecreator.org
 ```
 
 #### Example Response
@@ -303,8 +303,8 @@ Host: https://dev.timescalecreator.org
 
 ```http
 GET /user-datapacks HTTP/1.1
-Host: https://dev.timescalecreator.org
-Header: Cookie: loginSession=123
+Host: dev.timescalecreator.org
+Cookie: loginSession=123
 ```
 
 #### Example Response
@@ -383,7 +383,7 @@ Header: Cookie: loginSession=123
 
 ```http
 GET /datapack-index?start=0&increment=1 HTTP/1.1
-Host: https://dev.timescalecreator.org
+Host: dev.timescalecreator.org
 ```
 
 #### Example Response
@@ -442,7 +442,7 @@ Host: https://dev.timescalecreator.org
 
 ```http
 GET /map-pack-index?start=0&increment=1 HTTP/1.1
-Host: https://dev.timescalecreator.org
+Host: dev.timescalecreator.org
 ```
 
 #### Example Response
@@ -493,7 +493,7 @@ Host: https://dev.timescalecreator.org
 
 ```http
 POST /removecache HTTP/1.1
-Host: https://dev.timescalecreator.org
+Host: dev.timescalecreator.org
 ```
 
 #### Example Response
@@ -523,7 +523,7 @@ Host: https://dev.timescalecreator.org
 
 ```http
 POST /svgstatus/72309213 HTTP/1.1
-Host: https://dev.timescalecreator.org
+Host: dev.timescalecreator.org
 ```
 
 #### Example Response
@@ -573,7 +573,7 @@ Host: https://dev.timescalecreator.org
 
 ```http
 GET /settingsXml/public/presets/001-TSC2020/settings.xml HTTP/1.1
-Host: https://dev.timescalecreator.org
+Host: dev.timescalecreator.org
 ```
 
 #### Example Response
