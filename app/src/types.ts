@@ -1,6 +1,11 @@
 import { ChartInfoTSC, ColumnInfo, DataMiningPointDataType, MapHierarchy, MapInfo, SharedUser } from "@tsconline/shared";
 import { State } from "./state/state";
 
+// export type DatapackStatus = {
+//   datapackName: string;
+//   unselect?: boolean;
+// }
+
 export type User = SharedUser & {
   settings: {
     darkMode: boolean;

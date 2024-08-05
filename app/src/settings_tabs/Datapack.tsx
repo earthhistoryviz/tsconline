@@ -1,13 +1,13 @@
 import { useContext, useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
-import { DatapackUploadForm, TSCButton, CustomTooltip } from "../components";
+import { DatapackUploadForm, TSCButton, CustomTooltip, TSCPopupDialog } from "../components";
 import { context } from "../state";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Menu, MenuItem } from "@szhsin/react-menu";
 import styles from "./Datapack.module.css";
-import { Dialog, ToggleButtonGroup, ToggleButton, IconButton } from "@mui/material";
+import { Dialog, ToggleButtonGroup, ToggleButton, IconButton, DialogContentText, ClickAwayListener } from "@mui/material";
 import { TSCDatapackCard } from "../components/datapack_display/TSCDatapackCard";
 import TableRowsIcon from "@mui/icons-material/TableRows";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -17,6 +17,13 @@ import ViewCompactIcon from "@mui/icons-material/ViewCompact";
 import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompactDatapackRow";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { SetDatapackConfigCompleteMessage, SetDatapackConfigMessage } from "../types";
+import { TSCLoadingDatapacks } from "../components/TSCLoadingDatapacks";
+import loader from "../assets/icons/loading.json";
+import { DialogContent } from "@mui/joy";
+import { ChartInfoTSC } from "@tsconline/shared";
+import { action } from "mobx";
+
+
 
 export const Datapacks = observer(function Datapacks() {
   const { state, actions } = useContext(context);
@@ -32,109 +39,41 @@ export const Datapacks = observer(function Datapacks() {
       }
     };
   }, []);
-  const [selectedDatapackWaitList, setSelectedDatapackWaitList] = useState<string[]>([]);
+
   const [webworkerProcessing, setWebworkerProcessing] = useState(false);
-  function enqueueSelectedDatapackWaitList(newDatapack: string) {
-    setSelectedDatapackWaitList((prevState) => [...prevState, newDatapack]);
-  }
-  function dequeueSelectedDatapackWaitList() {
-    if (selectedDatapackWaitList) {
-      setSelectedDatapackWaitList((prevState) => prevState.slice(1));
-    }
-  }
-  function processSelectedDatapackWaitList() {
-    if (webworkerProcessing || selectedDatapackWaitList.length === 0) {
-      return;
-    }
-    setWebworkerProcessing(true);
-    const datapackName = selectedDatapackWaitList[0];
-    const datapacks = state.config.datapacks.includes(datapackName)
-      ? state.config.datapacks.filter((datapack) => datapack !== datapackName)
-      : [...state.config.datapacks, datapackName];
-    const hasPreviousConfig = actions.setPreviousDatapackConfig(datapacks);
-    if (hasPreviousConfig) {
-      dequeueSelectedDatapackWaitList();
+  //let webworkerProcessing = false;x
+
+
+
+  function enqueueSelectedDatapackList(newDatapack: string) {
+    if (state.datapackSelection.selectedDatapacks.includes(newDatapack)) {
+      actions.setSelectedDatapacks(state.datapackSelection.selectedDatapacks.filter(datapack => datapack !== newDatapack));
+    } else if (state.datapackSelection.unselectedDatapacks.includes(newDatapack)) {
+      actions.setUnselectedDatapacks(state.datapackSelection.unselectedDatapacks.filter(datapack => datapack !== newDatapack));
+    } else if (state.config.datapacks.includes(newDatapack) && !state.datapackSelection.selectedDatapacks.includes(newDatapack)) {
+      actions.setUnselectedDatapacks([...state.datapackSelection.unselectedDatapacks, newDatapack]);
     } else {
-      const setDatapackConfigWorker: Worker = new Worker(
-        new URL("../util/workers/set-datapack-config.ts", import.meta.url),
-        {
-          type: "module"
-        }
-      );
-      const message: SetDatapackConfigMessage = {
-        datapacks: datapacks,
-        settingsPath: "",
-        chartSettings: null,
-        stateCopy: JSON.stringify(state)
-      };
-      setDatapackConfigWorker.postMessage(message);
-      setDatapackConfigWorker.onmessage = async function (e: MessageEvent<SetDatapackConfigCompleteMessage>) {
-        const { status, value } = e.data;
-        if (status === "success" && value) {
-          actions.afterSetDatapackConfig(
-            value.columnRoot,
-            value.foundDefaultAge,
-            value.mapHierarchy,
-            value.mapInfo,
-            value.datapacks,
-            value.chartSettings
-          );
-        } else {
-          actions.pushSnackbar("Setting Datapack Config Timed Out", "info");
-        }
-        setDatapackConfigWorker.terminate();
-        dequeueSelectedDatapackWaitList();
-      };
+      actions.setSelectedDatapacks([...state.datapackSelection.selectedDatapacks, newDatapack]);
     }
-    setWebworkerProcessing(false);
-    processSelectedDatapackWaitList();
+
   }
+
   const onChange = (name: string) => {
-    enqueueSelectedDatapackWaitList(name);
-    console.log(selectedDatapackWaitList);
-    processSelectedDatapackWaitList();
+    enqueueSelectedDatapackList(name);
+    actions.setIsDirty(true);
   };
 
   return (
+
     <div className={styles.dc}>
       <div className={styles.hdc}>
         <CustomTooltip title="Deselect All" placement="top">
           <IconButton
             className={styles.ib}
-            onClick={() => {
-              const hasPreviousConfig = actions.setPreviousDatapackConfig([]);
-              if (!hasPreviousConfig) {
-                const chartSettings = null;
-                const setDatapackConfigWorker: Worker = new Worker(
-                  new URL("../util/workers/set-datapack-config.ts", import.meta.url),
-                  {
-                    type: "module"
-                  }
-                );
-                const message: SetDatapackConfigMessage = {
-                  datapacks: [],
-                  settingsPath: "",
-                  chartSettings: chartSettings,
-                  stateCopy: JSON.stringify(state)
-                };
-                setDatapackConfigWorker.postMessage(message);
-                setDatapackConfigWorker.onmessage = function (e: MessageEvent<SetDatapackConfigCompleteMessage>) {
-                  const { status, value } = e.data;
-                  if (status === "success" && value) {
-                    actions.afterSetDatapackConfig(
-                      value.columnRoot,
-                      value.foundDefaultAge,
-                      value.mapHierarchy,
-                      value.mapInfo,
-                      value.datapacks,
-                      value.chartSettings
-                    );
-                  } else {
-                    actions.pushSnackbar("Setting Datapack Config Timed Out", "info");
-                  }
-                  setDatapackConfigWorker.terminate();
-                };
-              }
+            onClick={async () => {
+              actions.setSelectedDatapacks([]);
+              const finished = await actions.processSelectedDatapackList([], null);
+              if (finished) { setWebworkerProcessing(false) };
             }}>
             <DeselectIcon />
           </IconButton>
@@ -172,7 +111,7 @@ export const Datapacks = observer(function Datapacks() {
               key={datapack}
               name={datapack}
               datapack={state.datapackIndex[datapack]}
-              value={state.config.datapacks.includes(datapack)}
+              value={(state.datapackSelection.selectedDatapacks.includes(datapack) || state.config.datapacks.includes(datapack)) && !state.datapackSelection.unselectedDatapacks.includes(datapack)}
               onChange={onChange}
             />
           ) : state.settingsTabs.datapackDisplayType === "compact" ? (
@@ -180,7 +119,7 @@ export const Datapacks = observer(function Datapacks() {
               key={datapack}
               name={datapack}
               datapack={state.datapackIndex[datapack]}
-              value={state.config.datapacks.includes(datapack)}
+              value={(state.datapackSelection.selectedDatapacks.includes(datapack) || state.config.datapacks.includes(datapack)) && !state.datapackSelection.unselectedDatapacks.includes(datapack)}
               onChange={onChange}
             />
           ) : (
@@ -188,25 +127,39 @@ export const Datapacks = observer(function Datapacks() {
               key={datapack}
               name={datapack}
               datapack={state.datapackIndex[datapack]}
-              value={state.config.datapacks.includes(datapack)}
+              value={(state.datapackSelection.selectedDatapacks.includes(datapack) || state.config.datapacks.includes(datapack)) && !state.datapackSelection.unselectedDatapacks.includes(datapack)}
               onChange={onChange}
             />
           );
         })}
       </Box>
-
-      {state.isLoggedIn && (
+      <Box className={styles.container}>
+        {state.isLoggedIn && (
+          <TSCButton
+            onClick={() => {
+              setFormOpen(!formOpen);
+            }}>
+            Upload Datapack
+          </TSCButton>
+        )}
         <TSCButton
-          onClick={() => {
-            setFormOpen(!formOpen);
+          className={styles.buttons}
+          onClick={async () => {
+            setWebworkerProcessing(true);
+            const datapacks = state.datapackSelection.unselectedDatapacks.length > 0 ? state.datapackSelection.selectedDatapacks.concat(state.config.datapacks.filter((datapack) => !state.datapackSelection.unselectedDatapacks.includes(datapack))) : state.datapackSelection.selectedDatapacks.concat(state.config.datapacks);
+            const finished = await actions.processSelectedDatapackList(datapacks, null);
+            if (finished) {
+              setWebworkerProcessing(false);
+            }
           }}>
-          Upload Datapack
+          Confirm Selection
         </TSCButton>
-      )}
+      </Box>
+      <TSCLoadingDatapacks open={webworkerProcessing}></TSCLoadingDatapacks>
       <Dialog classes={{ paper: styles.dd }} open={formOpen} onClose={() => setFormOpen(false)}>
         <DatapackUploadForm close={() => setFormOpen(false)} upload={actions.uploadDatapack} />
       </Dialog>
-    </div>
+    </div >
   );
 });
 type DatapackMenuProps = {
@@ -238,3 +191,5 @@ export const DatapackMenu: React.FC<DatapackMenuProps> = ({ name, button, isUser
     </Menu>
   );
 };
+
+
