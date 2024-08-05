@@ -22,9 +22,13 @@ server
     |   `-- *.txt
     |-- decrypted
     |   `--[decrypted datapacks]
+    |-- uploads
+    |   `--[uuid]
+    |       `--datapacks
     |-- jars
     |   | -- TSCreator.jar
     |   ` -- decrypt.jar
+    |-- adminconfig.json
     `-- configs.json
 ```
 
@@ -33,6 +37,10 @@ We keep datapacks used on the server in this folder `assets/datapacks`. The conf
 Again, make sure to denote the name of your jars in their respective fields. EX. (`decryptionJar: "assets/jars/decrypt.jar"`)
 
 `configs.json` contains all the information of where assets are to be used on the server side. This is asserted in `server/src/types.ts`. Any changes to `configs.json` will need to be additionally changed in the `types.ts` files.
+
+`uploads` directory contains all the user uploaded datapacks
+
+`assetconfig.json` contains all the added configurations any admin user uploads
 
 ---
 
@@ -70,11 +78,17 @@ We then `glob` all the presets by parsing each preset in `public/presets`. This 
 
 After grabbing all the pre-initialized presets we parse the `assets/config.json` file to grab all the correct filepaths and datapacks to be used. Any error in reading this config file will stop the server.
 
+### Session
+
+The session key represents the user's session. This is a random string that is generated when the user logs in. The `fastify-secure-session` plugin is used to create a session for the user. This session is stored in the `session` cookie. The session is used to authenticate the user and to store the user's information. The session key stores the uuid of the user as well so we can easily attach the user to the session.
+
+This allows the user to stay logged in even if they refresh the page. This also allows us to verify that the user is logged in and to get the user's potentially confidential information.
+
+Session keys will last for 1 week. After 1 week, the user will be logged out and will have to log in again.
+
 ### Datapacks
 
 Datapacks can be unencrypted or encrypted but must be in a certain format for us to be able to display settings correctly. This is what we use `decrypt.jar` for. We give the datapacks parsed from `assets/config.json` and the destination also located in that file for the decrypted packs and decrypt said datapacks. Any errors like a datapack formatted or encrypted wrong will result in the datapack not being decrypted.
-
-Currently there is no error checking for if the datapack was correctly decrypted. However, for future implementation this would be easy since you would just cross reference the datapacks and the decrypted datapack directory. Additionally, images not related to maps will need to be extracted as this is not implemented either.
 
 The end result will have folders within the decryption directory that contain datapacks and mappack info if there are any.
 
@@ -84,29 +98,127 @@ After decrypting the datapacks, the server will simply listen for any requests f
 
 ---
 
-## Routes (ADD MORE ROUTES)
+## User Endpoints
+
+### Remove Cache
+
+- **Endpoint:** `/removecache`
+- **Method:** `POST`
+- **Description:** Removes the cache for the charts
+
+#### Example Request
+
+```http
+POST /removecache HTTP/1.1
+Host: https://dev.timescalecreator.org
+```
+
+#### Example Response
+
+```json
+{
+  "message": "Directory public/charts successfully deleted"
+}
+```
 
 ---
 
-### GET /charts/:usecache
+### Svg Status
+
+- **Endpoint:** `/svgstatus/:hash`
+- **Method:** `GET`
+- **Description:** Check the readiness of the svg file identified by the hash
+
+#### Parameters
+
+| Name | Type   | Description          | Required |
+| ---- | ------ | -------------------- | -------- |
+| hash | string | Hash of the svg file | Yes      |
+
+#### Example Request
+
+```http
+POST /svgstatus/72309213 HTTP/1.1
+Host: https://dev.timescalecreator.org
+```
+
+#### Example Response
+
+```json
+{
+  "ready": true
+}
+```
+
+#### Error Responses
+
+- **Status Code:** `403 Forbidden`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the hash is invalid or the filepath goes outside the allowed directory
+
+```json
+{
+  "message": "Invalid hash"
+}
+```
+
+- **Status Code:** `404 Not Found`
+- **Content-Type:** `application/json`
+- **Description:** Returned if no directory is found for the hash
+
+```json
+{
+  "message": "No directory exists at hash: 72309213"
+}
+```
+
+### Fetch Settings XML
+
+- **Endpoint:** `/settingsXml/:file`
+- **Method:** `GET`
+- **Description:** Fetch the settings xml file requested
+
+#### Parameters
+
+| Name | Type   | Description               | Required |
+| ---- | ------ | ------------------------- | -------- |
+| file | string | Name of the settings file | Yes      |
+
+#### Example Request
+
+```http
+GET /settingsXml/public/presets/001-TSC2020/settings.xml HTTP/1.1
+Host: https://dev.timescalecreator.org
+```
+
+#### Example Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+  <setting>
+    <name>setting1</name>
+    <value>value1</value>
+  </setting>
+  <setting>
+    <name>setting2</name>
+    <value>value2</value>
+  </setting>
+```
+
+#### Error Responses
+
+- **Status Code:** `404 Not Found`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the file is not found
+
+```json
+{
+  "error": "File not found"
+}
+```
 
 ---
-
-*FIX* *TODO*
-
-
-### POST /removecache
-
----
-
-We simply delete `public/charts`. If any error occurs we return `ServerResponseError`
-
-### GET /pdfstatus/:hash
-
----
-
-*FIX* *TODO*
-
 
 #### Parse Datapacks
 
