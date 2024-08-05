@@ -1,4 +1,14 @@
-import { TableCell, TableBody, TableContainer, Paper, SvgIcon, Typography, Box, IconButton } from "@mui/material";
+import {
+  TableCell,
+  TableBody,
+  TableContainer,
+  Paper,
+  SvgIcon,
+  Typography,
+  Box,
+  IconButton,
+  TableRow
+} from "@mui/material";
 import React, { useContext } from "react";
 import { Table } from "react-bootstrap";
 import { TableComponents, TableVirtuoso } from "react-virtuoso";
@@ -400,7 +410,7 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
       <TableVirtuoso
         className="events-search-results-table"
         fixedHeaderContent={() => (
-          <>
+          <TableRow>
             <TableCell className="event-group-header-text search-result-status-column" align="left">
               Status
             </TableCell>
@@ -422,7 +432,7 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
             <TableCell className="event-group-header-text search-result-notes-column" align="right">
               Notes
             </TableCell>
-          </>
+          </TableRow>
         )}
         data={stretchedEvents}
         components={VirtuosoTableComponents}
