@@ -292,8 +292,11 @@ server.get<{ Params: { datapackName: string; imageName: string } }>(
 );
 
 setInterval(async () => {
-  await checkFileMetadata(assetconfigs.fileMetadata);
-  console.log("Successfully checked file metadata");
+  await checkFileMetadata(assetconfigs.fileMetadata)
+    .catch((e) => {
+      console.error("Error checking file metadata: ", e);
+    })
+    .finally(() => console.log("Successfully checked file metadata"));
 }, sunsetInterval);
 setInterval(
   () => {
