@@ -18,7 +18,30 @@
 }
 
 .search-time-display-ages-container {
-  min-height: 30px;
-  overflow-y: auto;
-  resize: vertical;
+  margin: auto;
+  position: relative;
+}
+
+.time-display-resize-wrapper {
+  resize: both;
+  overflow: auto;
+  position: absolute;
+  min-height: 20px;
+  max-height: 70px;
+  min-width: 100px;
+}
+
+.search-time-display-ages {
+  display: flex;
+  flex-direction: row;
+  text-overflow: ellipsis;
+}
+
+@media screen and (max-width: 440px) {
+  .search-time-display-ages {
+    flex-direction: column;
+  }
+  .time-display-resize-wrapper {
+    max-height: 20px;
+  }
 }
