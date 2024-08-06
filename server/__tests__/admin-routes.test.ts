@@ -18,7 +18,6 @@ import fastifyMultipart from "@fastify/multipart";
 import formAutoContent from "form-auto-content";
 import { DatapackMetadata, DatapackParsingPack, MapPack } from "@tsconline/shared";
 import * as uploadHandlers from "../src/upload-handlers";
-import { afterEach } from "node:test";
 
 vi.mock("node:child_process", async () => {
   return {
@@ -55,7 +54,7 @@ vi.mock("../src/util", async () => {
       datapacksDirectory: "testdir/datapacksDirectory",
       decryptionDirectory: "testdir/decryptionDirectory",
       decryptionJar: "testdir/decryptionJar.jar",
-      adminConfigPath: "testdir/adminConfig.json",
+      adminConfigPath: "testdir/adminConfig.json"
     },
     adminconfig: {
       datapacks: [
@@ -97,7 +96,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => { });
+        readable.on("data", () => {});
         readable.on("end", () => {
           resolve();
         });
@@ -208,7 +207,7 @@ beforeAll(async () => {
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => { });
+  vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 afterAll(async () => {
@@ -1221,7 +1220,10 @@ describe("adminUploadServerDatapack", () => {
     expect(realpath).toHaveBeenCalledTimes(1);
     expect(loadIndexes).toHaveBeenCalledTimes(1);
     expect(writeFile).toHaveBeenCalledTimes(1);
-    expect(writeFile).toHaveBeenCalledWith("testdir/adminConfig.json", JSON.stringify({ datapacks: [testDatapackDescription] }, null, 2));
+    expect(writeFile).toHaveBeenCalledWith(
+      "testdir/adminConfig.json",
+      JSON.stringify({ datapacks: [testDatapackDescription] }, null, 2)
+    );
     expect(util.adminconfig).toEqual({ datapacks: [testDatapackDescription] });
     expect(await response.json()).toEqual({ message: "Datapack uploaded" });
     expect(response.statusCode).toBe(200);
@@ -1388,11 +1390,13 @@ describe("adminDeleteServerDatapack", () => {
   describe("admin datapack deletion where datapack is in adminconfig", async () => {
     let adminconfigSpy;
     beforeEach(() => {
-      adminconfigSpy = vi.spyOn(util, "adminconfig", "get").mockReturnValueOnce({ datapacks: [testDatapackDescription] });
-    })
+      adminconfigSpy = vi
+        .spyOn(util, "adminconfig", "get")
+        .mockReturnValueOnce({ datapacks: [testDatapackDescription] });
+    });
     afterAll(() => {
       adminconfigSpy.mockReturnValue({ datapacks: [] });
-    })
+    });
     it("should return 500 if datapack does not exist", async () => {
       realpath.mockRejectedValueOnce(new Error());
       const response = await app.inject({
