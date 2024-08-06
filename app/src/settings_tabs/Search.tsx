@@ -1,6 +1,6 @@
-import { Box, Paper, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { TextField, Typography } from "@mui/material";
 import { observer } from "mobx-react-lite";
-import { useContext, useRef, useState } from "react";
+import { useContext, useRef } from "react";
 import "./Search.css";
 import { context } from "../state";
 import { Results } from "./Results";
@@ -123,54 +123,22 @@ export const Search = observer(function Search() {
   }
 
   const TimeDisplay = observer(() => {
-    const [units, setUnits] = useState<string>(Object.keys(state.settings.timeSettings)[0]);
     return (
-      <Paper
-        variant="outlined"
-        className="search-time-display-container"
-        sx={(theme) => ({
-          backgroundColor: theme.palette.backgroundColor.main
-        })}>
-        <ToggleButtonGroup
-          value={units}
-          exclusive
-          size="small"
-          onChange={(_event: React.MouseEvent<HTMLElement>, value: string) => {
-            if (value === null) {
-              return;
-            }
-            setUnits(value);
-          }}
-          className="ToggleButtonGroup"
-          aria-label="Units">
-          {Object.keys(state.settings.timeSettings).map((unit) => (
-            <ToggleButton key={unit} value={unit} disableRipple>
-              {unit}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
-        <Box className="search-time-display-ages-container">
-          <Box
-            className="search-time-display-ages"
-            bgcolor="secondaryBackground.main"
-            sx={{
-              display: "inline",
-              borderRadius: 2
-            }}>
-            Top Age: {state.settings.timeSettings[units].topStageAge}
-          </Box>
-          <Box
-            className="search-time-display-ages"
-            bgcolor="secondaryBackground.main"
-            sx={{
-              display: "inline",
-              borderRadius: 2
-            }}>
-            Base Age:
-            {state.settings.timeSettings[units].baseStageAge}
-          </Box>
-        </Box>
-      </Paper>
+      <div className="search-time-display-container">
+        <Typography>Current Time Settings (Top / Base)</Typography>
+        <div className="search-time-display-ages-container">
+          <div className="time-display-resize-wrapper">
+            {Object.keys(state.settings.timeSettings).map((unit) => (
+              <div className="search-time-display-ages" key={unit}>
+                <Typography width={"50%"}>{unit}:</Typography>
+                <Typography>
+                  {state.settings.timeSettings[unit].topStageAge} / {state.settings.timeSettings[unit].baseStageAge}
+                </Typography>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     );
   });
 
