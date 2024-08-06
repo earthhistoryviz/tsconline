@@ -20,7 +20,7 @@ import fs, { realpathSync } from "fs";
 import { parseExcelFile } from "./parse-excel-file.js";
 import path from "path";
 import { loadIndexes } from "./load-packs.js";
-import { writeFileMetadata } from "./file-metadata-handler.js";
+import { updateFileMetadata, writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
 import { MultipartFile } from "@fastify/multipart";
@@ -619,7 +619,13 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     }
   }
   datapacks.push(...userDatapacks);
-  // updateFileMetadata(assetconfigs.fileMetadata, userDatapacks);
+  try {
+    await updateFileMetadata(assetconfigs.fileMetadata, userDatapacks);
+  } catch (e) {
+    console.error("Error updating file metadata:", e);
+    reply.status(500).send({ errorCode: 100, error: "Internal Server Error" });
+    return;
+  }
   // If this setting already has a chart, just return that
   try {
     await stat(chartFilePath);
@@ -758,7 +764,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       reply.status(408).send({ error: "Request Timeout" });
     } else {
       console.error("Failed to execute Java command:", error);
-      reply.status(500).send({ error: "Internal Server Error" });
+      reply.status(500).send({ errorCode: 400, error: "Internal Server Error" });
     }
     return;
   }
