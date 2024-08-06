@@ -72,7 +72,7 @@ try {
   execSync(cmd, { stdio: "inherit" });
   console.log("Finished decryption");
 } catch (e) {
-  console.log("ERROR: Failed to decrypt activeDatapacks in AssetConfig with error: ", e);
+  console.log("ERROR: Failed to decrypt adminconfig datapacks with error: ", e);
   process.exit(1);
 }
 
