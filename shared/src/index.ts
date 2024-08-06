@@ -931,6 +931,12 @@ export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
   if ("contact" in o && typeof o.contact !== "string") throw new Error("DatapackMetadata contact must be a string");
   if ("notes" in o && typeof o.notes !== "string") throw new Error("DatapackMetadata notes must be a string");
 }
+export function assertDatapackMetadataArray(o: any): asserts o is DatapackMetadata[] {
+  if (!Array.isArray(o)) throw new Error("DatapackMetadata must be an array");
+  for (const metadata of o) {
+    assertDatapackMetadata(metadata);
+  }
+}
 export function assertMapPackIndex(o: any): asserts o is MapPackIndex {
   if (!o || typeof o !== "object") throw new Error("MapPackIndex must be a non-null object");
   for (const key in o) {

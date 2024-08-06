@@ -1,5 +1,6 @@
 decrypted
 datapacks/*
 uploads
-file_metadata.json
+file-metadata.json
 admin-config.json
+dev-config.json
