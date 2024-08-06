@@ -150,7 +150,7 @@ export function handleDataMiningColumns() {
     try {
       dmName = addDataMiningColumn(refCol, loadedDataMiningType);
     } catch (e) {
-      console.log(e);
+      console.error(e);
       continue;
     }
     if (!dmName) {
@@ -194,7 +194,7 @@ export function handleDataMiningColumns() {
           console.log("WARNING: datamining reference column's type is not event, chron, or point");
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
   //reset cache
