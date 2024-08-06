@@ -216,6 +216,15 @@ function createThemeOverrides(theme: Theme, primary: string) {
             }
           }
         ]
+      },
+      MuiTableCell: {
+        styleOverrides: {
+          root: {
+            "&.event-group-header-text": {
+              backgroundColor: theme.palette.secondaryBackground.main
+            }
+          }
+        }
       }
     }
   });
