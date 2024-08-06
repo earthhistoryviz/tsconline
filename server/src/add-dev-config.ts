@@ -25,19 +25,39 @@ async function readDevConfig() {
   return devConfig;
 }
 
-console.log("Reading asset config...");
-const adminConfig = await readAdminConfig();
-console.log("Admin config read successfully");
-const devConfig = await readDevConfig();
-console.log("Dev config read successfully");
-const unaddedDatapacks = [];
-for (const datapack of devConfig) {
-  if (adminConfig.datapacks.find((d) => d.file === datapack.file)) {
-    console.log(chalk.red(`Skipping ${datapack.file} because it is already in the admin config`));
-  } else {
-    console.log(chalk.green(`Adding ${datapack.file} to the admin config`));
-    unaddedDatapacks.push(datapack);
+const successSymbol = chalk.green("✔");
+const skipSymbol = chalk.yellow("⚠");
+/**
+ * Adds all datapacks from the dev config that are not already in the admin config
+ */
+try {
+  console.log("Reading asset config...");
+  const adminConfig = await readAdminConfig();
+  console.log(chalk.green(`${successSymbol} Admin config read successfully`));
+  const devConfig = await readDevConfig();
+  console.log(chalk.green(`${successSymbol} Dev config read successfully`));
+  const unaddedDatapacks = [];
+  for (const datapack of devConfig) {
+    if (adminConfig.datapacks.find((d) => d.file === datapack.file)) {
+      console.log(
+        chalk.yellowBright(
+          `${skipSymbol} Skipping ${chalk.bold(chalk.rgb(255, 100, 100)(datapack.file))} because it is already in the admin config`
+        )
+      );
+    } else {
+      console.log(
+        chalk.green(
+          `${successSymbol} ${chalk.green(`Adding`)} ${chalk.bold(chalk.rgb(214, 97, 230)(datapack.file))} ${chalk.green(`to the admin config`)}`
+        )
+      );
+      unaddedDatapacks.push(datapack);
+    }
   }
+  const newAdminConfig: AdminConfig = {
+    datapacks: adminConfig.datapacks.concat(unaddedDatapacks)
+  };
+  await writeFile(adminConfigPath, JSON.stringify(newAdminConfig, null, 2));
+} catch (e) {
+  console.error("Error adding dev config to admin config", e);
+  console.error("Exiting...");
 }
-const newAdminConfig = adminConfig.datapacks.concat(unaddedDatapacks);
-await writeFile(adminConfigPath, JSON.stringify(newAdminConfig, null, 2));
