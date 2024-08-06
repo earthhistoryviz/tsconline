@@ -127,11 +127,16 @@ export const Search = observer(function Search() {
       <div className="search-time-display-container">
         <Typography>Current Time Settings (Top / Base)</Typography>
         <div className="search-time-display-ages-container">
-          {Object.keys(state.settings.timeSettings).map((unit) => (
-            <Typography key={unit}>
-              {unit}: {state.settings.timeSettings[unit].topStageAge} / {state.settings.timeSettings[unit].baseStageAge}
-            </Typography>
-          ))}
+          <div className="time-display-resize-wrapper">
+            {Object.keys(state.settings.timeSettings).map((unit) => (
+              <div className="search-time-display-ages" key={unit}>
+                <Typography width={"50%"}>{unit}:</Typography>
+                <Typography>
+                  {state.settings.timeSettings[unit].topStageAge} / {state.settings.timeSettings[unit].baseStageAge}
+                </Typography>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );

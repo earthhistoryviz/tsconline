@@ -175,7 +175,8 @@ const Center = observer(({ info }: { info: EventSearchInfo }) => {
           centerTimeOnEvent();
           actions.setColumnOn(false, column);
           actions.toggleSettingsTabColumn(column);
-        }}>
+        }}
+        sx={{ padding: 0 }}>
         <VerticalAlignCenterIcon color="info" />
       </IconButton>
     </CustomTooltip>
@@ -222,7 +223,8 @@ const Extend = observer(({ info }: { info: EventSearchInfo }) => {
           extendTimeToIncludeEvent();
           actions.setColumnOn(false, column);
           actions.toggleSettingsTabColumn(column);
-        }}>
+        }}
+        sx={{ padding: 0 }}>
         <FormatLineSpacingIcon color="info" />
       </IconButton>
     </CustomTooltip>
