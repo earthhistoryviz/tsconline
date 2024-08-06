@@ -84,6 +84,11 @@ export type DatapackWarning = {
   warning: string;
 };
 
+export type ChartErrorResponse = {
+  error: string;
+  errorCode: number;
+};
+
 export type IndexResponse = {
   datapackIndex: DatapackIndex;
   mapPackIndex: MapPackIndex;
@@ -558,6 +563,12 @@ export type TimescaleItem = {
 };
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
+
+export function assertChartErrorResponse(o: any): asserts o is ChartErrorResponse {
+  if (!o || typeof o !== "object") throw new Error("ChartErrorResponse must be a non-null object");
+  if (typeof o.error !== "string") throwError("ChartErrorResponse", "error", "string", o.error);
+  if (typeof o.errorCode !== "number") throwError("ChartErrorResponse", "errorCode", "number", o.errorCode);
+}
 
 export function isDefaultChronostrat(o: any): o is DefaultChronostrat {
   return /^(USGS|UNESCO)$/.test(o);

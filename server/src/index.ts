@@ -278,7 +278,7 @@ server.post("/upload-profile-picture", moderateRateLimit, loginRoutes.uploadProf
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
 server.post<{ Params: { usecache: string; useSuggestedAge: string; username: string } }>(
-  "/charts/:usecache/:useSuggestedAge/:username",
+  "/chart",
   looseRateLimit,
   routes.fetchChart
 );
@@ -291,8 +291,9 @@ server.get<{ Params: { datapackName: string; imageName: string } }>(
   routes.fetchImage
 );
 
-setInterval(() => {
-  checkFileMetadata(assetconfigs.fileMetadata);
+setInterval(async () => {
+  await checkFileMetadata(assetconfigs.fileMetadata);
+  console.log("Successfully checked file metadata");
 }, sunsetInterval);
 setInterval(
   () => {
