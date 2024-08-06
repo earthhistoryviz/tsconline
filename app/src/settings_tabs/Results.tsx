@@ -1,4 +1,14 @@
-import { TableCell, TableBody, TableContainer, Paper, SvgIcon, Typography, Box, IconButton } from "@mui/material";
+import {
+  TableCell,
+  TableBody,
+  TableContainer,
+  Paper,
+  SvgIcon,
+  Typography,
+  Box,
+  IconButton,
+  TableRow
+} from "@mui/material";
 import React, { useContext } from "react";
 import { Table } from "react-bootstrap";
 import { TableComponents, TableVirtuoso } from "react-virtuoso";
@@ -165,7 +175,8 @@ const Center = observer(({ info }: { info: EventSearchInfo }) => {
           centerTimeOnEvent();
           actions.setColumnOn(false, column);
           actions.toggleSettingsTabColumn(column);
-        }}>
+        }}
+        sx={{ padding: 0 }}>
         <VerticalAlignCenterIcon color="info" />
       </IconButton>
     </CustomTooltip>
@@ -212,7 +223,8 @@ const Extend = observer(({ info }: { info: EventSearchInfo }) => {
           extendTimeToIncludeEvent();
           actions.setColumnOn(false, column);
           actions.toggleSettingsTabColumn(column);
-        }}>
+        }}
+        sx={{ padding: 0 }}>
         <FormatLineSpacingIcon color="info" />
       </IconButton>
     </CustomTooltip>
@@ -313,40 +325,13 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
   const stretchedEvents: (string | EventSearchInfo)[] = [];
   groupedEvents.map((value) => {
     stretchedEvents.push(value.key);
-    stretchedEvents.push("subheader");
     for (const event of value.info) {
       stretchedEvents.push(event);
     }
   });
 
   function EventGroup(index: number, info: string | EventSearchInfo) {
-    if (info === "subheader") {
-      return (
-        <>
-          <TableCell className="event-group-header-text search-result-status-column" align="left">
-            Status
-          </TableCell>
-          <TableCell className="event-group-header-text search-result-column-column" align="left">
-            Column
-          </TableCell>
-          <TableCell className="event-group-header-text search-result-center-column" align="center">
-            Center
-          </TableCell>
-          <TableCell className="event-group-header-text search-result-extend-column" align="center">
-            Extend
-          </TableCell>
-          <TableCell className="event-group-header-text search-result-age-column" align="center">
-            Age
-          </TableCell>
-          <TableCell className="event-group-header-text search-result-qualifier-column" align="center">
-            Qualifier
-          </TableCell>
-          <TableCell className="event-group-header-text search-result-notes-column" align="right">
-            Notes
-          </TableCell>
-        </>
-      );
-    } else if (typeof info === "string") {
+    if (typeof info === "string") {
       return (
         <TableCell
           className="event-group-identifier"
@@ -364,14 +349,14 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
           <TableCell className="search-result-status-column" align="left">
             <Status info={info} />
           </TableCell>
-          <TableCell className="search-result-column-column" align="left">
-            <Column info={info} />
-          </TableCell>
-          <TableCell className="search-result-center-column" align="center">
+          <TableCell className="search-result-center-column" align="left">
             <Center info={info} />
           </TableCell>
-          <TableCell className="search-result-extend-column" align="center">
+          <TableCell className="search-result-extend-column" align="left">
             <Extend info={info} />
+          </TableCell>
+          <TableCell className="search-result-column-column" align="left">
+            <Column info={info} />
           </TableCell>
           <TableCell className="search-result-age-column" align="center">
             <Age info={info} />
@@ -404,7 +389,6 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
   if (!VirtuosoTableComponents.Scroller || !VirtuosoTableComponents.TableBody) return;
   VirtuosoTableComponents.Scroller.displayName = "Scroller";
   VirtuosoTableComponents.TableBody.displayName = "TableBody";
-
   return (
     <Box className="table-container" id="event-search-results-table">
       <CustomTooltip
@@ -427,6 +411,31 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
       </CustomTooltip>
       <TableVirtuoso
         className="events-search-results-table"
+        fixedHeaderContent={() => (
+          <TableRow>
+            <TableCell className="event-group-header-text search-result-status-column" align="left">
+              Status
+            </TableCell>
+            <TableCell className="event-group-header-text search-result-center-column" align="left">
+              Center
+            </TableCell>
+            <TableCell className="event-group-header-text search-result-extend-column" align="left">
+              Extend
+            </TableCell>
+            <TableCell className="event-group-header-text search-result-column-column" align="left">
+              Column
+            </TableCell>
+            <TableCell className="event-group-header-text search-result-age-column" align="center">
+              Age
+            </TableCell>
+            <TableCell className="event-group-header-text search-result-qualifier-column" align="center">
+              Qualifier
+            </TableCell>
+            <TableCell className="event-group-header-text search-result-notes-column" align="right">
+              Notes
+            </TableCell>
+          </TableRow>
+        )}
         data={stretchedEvents}
         components={VirtuosoTableComponents}
         itemContent={EventGroup}
