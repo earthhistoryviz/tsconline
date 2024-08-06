@@ -150,7 +150,7 @@ export function handleDataMiningColumns() {
     try {
       dmName = addDataMiningColumn(refCol, loadedDataMiningType);
     } catch (e) {
-      console.log(e);
+      console.error(e);
       continue;
     }
     if (!dmName) {
@@ -169,9 +169,33 @@ export function handleDataMiningColumns() {
       );
       continue;
     }
+
     setColumnProperties(createdDmColumn, foundDmColumn);
-    //this means there was a datamine column for the refcol before loading settings, so remove it since we can only have one datamine at a time
+    //this means there was a datamine column for the refcol before loading settings, so remove it since we only have one datamine at a time
     if (existingDataMiningType) removeDataMiningColumn(refCol, existingDataMiningType);
+
+    try {
+      switch (refCol.columnDisplayType) {
+        case "Event":
+          assertEventSettings(refCol.columnSpecificSettings);
+          if (isEventFrequency(loadedDataMiningType)) refCol.columnSpecificSettings.frequency = loadedDataMiningType;
+          break;
+        case "Chron":
+          assertChronSettings(refCol.columnSpecificSettings);
+          if (isDataMiningChronDataType(loadedDataMiningType))
+            refCol.columnSpecificSettings.dataMiningChronDataType = loadedDataMiningType;
+          break;
+        case "Point":
+          assertPointSettings(refCol.columnSpecificSettings);
+          if (isDataMiningPointDataType(loadedDataMiningType))
+            refCol.columnSpecificSettings.dataMiningPointDataType = loadedDataMiningType;
+          break;
+        default:
+          console.log("WARNING: datamining reference column's type is not event, chron, or point");
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
   //reset cache
   dataminingFoundCache.clear();
