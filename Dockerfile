@@ -4,13 +4,15 @@ FROM ubuntu:latest
 RUN apt-get update && \
     apt-get install -y curl wget openbox x11vnc xvfb
 
+RUN apt-get install -y python3 make g++
+
 
 # Download Java    
 RUN apt-get install -y openjdk-17-jdk
 RUN apt-get install -y apt-utils
 RUN apt-get install -y git
 RUN apt-get install -y curl
-Run apt-get install -y xterm
+RUN apt-get install -y xterm
 
 # Command to save a password (the entrypoint.sh script actually runs x11 and it uses the environment for the password)
 # RUN x11vnc -storepasswd 1234 ~/.vnc/passwd
