@@ -98,6 +98,31 @@ After decrypting the datapacks, the server will simply listen for any requests f
 
 ---
 
+## File Metadata
+
+The server will store the metadata of any uploaded files in `file-metdata.json` in `server/assets`.
+
+This metadata will be in the form
+
+```js
+export type FileMetadataIndex = {
+  [filepath: string]: FileMetadata,
+};
+export type FileMetadata = {
+  fileName: string,
+  lastUpdated: string,
+  decryptedFilepath: string,
+  mapPackIndexFilepath: string,
+  datapackIndexFilepath: string,
+};
+```
+
+This is done so that we can easily access when the file was last used/updated and where all its information is stored. Once `lastUpdated` becomes stale (after 2 weeks) the server will delete the file and its metadata.
+
+This is **NOT** to be confused with `DatapackMetadata` which is specifically for characterizing the datapacks and map packs.
+
+**NOTE**: If the file is updated when a user uses it for chart generation and the server's `FileMetadata` does not have an entry for that uploaded file, an error is thrown. Therefore, if the file exists and is not in metadata, manual cleanup is required. However, if the file does not exist and the metadata says that it exists, the server will check it's existence and remove the metadata if it does not exist.
+
 ## User Endpoints
 
 ### Fetch Chart
