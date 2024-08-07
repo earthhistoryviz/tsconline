@@ -2,16 +2,14 @@
 FROM ubuntu:latest
 
 RUN apt-get update && \
-    apt-get install -y curl wget openbox x11vnc xvfb
+    apt-get install -y curl wget openbox x11vnc xvfb build-essential
 
-RUN apt-get install -y python3 make g++
+RUN apt-get install -y python3
 
-
-# Download Java    
+# Download Java and necessary tools
 RUN apt-get install -y openjdk-17-jdk
 RUN apt-get install -y apt-utils
 RUN apt-get install -y git
-RUN apt-get install -y curl
 RUN apt-get install -y xterm
 
 # Command to save a password (the entrypoint.sh script actually runs x11 and it uses the environment for the password)
