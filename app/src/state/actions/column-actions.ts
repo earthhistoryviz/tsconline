@@ -59,7 +59,7 @@ function extractColumnType(text: string): string {
 function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
   console.log("Settings(setColProp):", settings);
   console.log("Column(setColProp):", column);
-  
+
   setEditName(settings.title, column);
   setEnableTitle(settings.drawTitle, column);
   if ("showUncertaintyLabels" in column) setShowUncertaintyLabels(settings.drawUncertaintyLabel, column);
@@ -257,15 +257,15 @@ export function addColumnToDataMiningCache(settings: ColumnInfoTSC) {
 
 export const applyChartColumnSettings = action("applyChartColumnSettings", (settings: ColumnInfoTSC) => {
   const columnName = extractName(settings._id);
-  let curcol: ColumnInfo | undefined =
+  const curcol: ColumnInfo | undefined =
     state.settingsTabs.columnHashMap.get(columnName) ||
     state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
   console.log(`Processing column: ${columnName}`);
-  console.log('Current column:', curcol);
-  console.log('Settings:', settings);
+  console.log("Current column:", curcol);
+  console.log("Settings:", settings);
   // Apply settings to the current column
   if (curcol) {
-    console.log('Applying settings to column:', columnName);
+    console.log("Applying settings to column:", columnName);
     setColumnProperties(curcol, settings);
   } else {
     console.warn(`Column not found in hash map: ${columnName}`);
