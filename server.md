@@ -898,6 +898,53 @@ Cookie: loginSession=123
 }
 ```
 
+---
+
+### Create User
+
+- **Endpoint:** `/admin/user`
+- **Method:** `POST`
+- **Description:** Create a user
+- **Requires Valid Session:** Yes
+
+#### Request Body
+
+| Name       | Type    | Description                                        | Required |
+| ---------- | ------- | -------------------------------------------------- | -------- |
+| email      | string  | The email for the user                             | Yes      |
+| password   | string  | The password for the user                          | Yes      |
+| username   | string  | The username for the user                          | No       |
+| pictureUrl | string  | The picture url for the user                       | No       |
+| isAdmin    | boolean | Whether the user is an admin (Defaults to "false") | No       |
+
+#### Example Request
+
+```http
+POST /admin/user HTTP/1.1
+Host: dev.timescalecreator.org
+recaptcha: 123
+Cookie: loginSession=123
+{
+  "username": "user1",
+  "password": "password1",
+  "email": "email1",
+  "pictureUrl": "google.com",
+  "isAdmin": "true"
+}
+```
+
+#### Example Response
+
+```json
+{
+  "message": "User created"
+}
+```
+
+#### Error Responses
+
+---
+
 #### Parse Datapacks
 
 For all the datapacks in the paramaters return all the column data and any map data along with that. The datapack parsing takes place in `src/parse.ts`.
