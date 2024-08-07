@@ -16,6 +16,7 @@ import "@szhsin/react-menu/dist/transitions/slide.css";
 import { SettingsMenuOptionLabels, assertSettingsTabs } from "./types";
 import Color from "color";
 import { AccountMenu } from "./account_settings/AccountMenu";
+import { processDatapackConfig } from "./process-datapack-config";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: Color(theme.palette.dark.main).alpha(0.9).string(),
@@ -34,6 +35,13 @@ export const NavBar = observer(function Navbar() {
   const { anchorProps, hoverProps } = useHover(settingsMenuState.state, settingsMenuToggle);
 
   const location = useLocation();
+  const checkOpen = () => {
+    // need to use state.datapackSelection.regenerateChart to check if the user is trying to generate a chart without confirming selections
+    return (
+      state.datapackSelection.regenerateChart &&
+      JSON.stringify(state.datapackSelection.selectedDatapacks) !== JSON.stringify(state.config.datapacks)
+    );
+  };
   return (
     <StyledAppBar position="fixed">
       <Toolbar>
@@ -118,39 +126,30 @@ export const NavBar = observer(function Navbar() {
           </>
         }
         <div style={{ flexGrow: 1 }} />
-        <TSCButton buttonType="gradient" onClick={() => actions.initiateChartGeneration(navigate, location.pathname)}>
+        <TSCButton
+          buttonType="gradient"
+          onClick={() => {
+            actions.initiateChartGeneration(navigate, location.pathname);
+          }}>
           Generate Chart
         </TSCButton>
         <TSCPopupDialog
-          open={state.datapackSelection.regenerateChart && state.datapackSelection.isDirty}
+          open={checkOpen()}
           title="Confirm Datapack Selection Change"
           message="You have unsaved change on datapack selection. Do you want to save the change?"
           onYes={async () => {
-            const datapacks =
-              state.datapackSelection.unselectedDatapacks.length > 0
-                ? state.datapackSelection.selectedDatapacks.concat(
-                    state.config.datapacks.filter(
-                      (datapack) => !state.datapackSelection.unselectedDatapacks.includes(datapack)
-                    )
-                  )
-                : state.datapackSelection.selectedDatapacks.concat(state.config.datapacks);
-            await actions.processSelectedDatapackList(datapacks, null);
-            actions.initiateChartGeneration(navigate, location.pathname);
-            actions.setRegenerateChart(false);
+            await processDatapackConfig(JSON.parse(JSON.stringify(state)).datapackSelection.selectedDatapacks, "", {
+              navigate: navigate,
+              path: location.pathname
+            });
           }}
           onNo={() => {
-            actions.setSelectedDatapacks([]);
-            actions.setUnselectedDatapacks([]);
+            actions.setSelectedDatapacks(state.config.datapacks);
             actions.initiateChartGeneration(navigate, location.pathname);
-            actions.setIsDirty(false);
-            actions.setRegenerateChart(false);
           }}
           onClose={() => {
-            actions.setSelectedDatapacks([]);
-            actions.setUnselectedDatapacks([]);
+            actions.setSelectedDatapacks(state.config.datapacks);
             actions.initiateChartGeneration(navigate, location.pathname);
-            actions.setRegenerateChart(false);
-            actions.setIsDirty(false);
           }}></TSCPopupDialog>
 
         {state.isLoggedIn ? (

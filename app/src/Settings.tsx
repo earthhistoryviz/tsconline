@@ -15,6 +15,7 @@ import { CustomTabs } from "./components/TSCCustomTabs";
 import { SettingsMenuOptionLabels, SettingsTabs } from "./types";
 import { Search } from "./settings_tabs/Search";
 import { TSCPopupDialog } from "./components";
+import { processDatapackConfig } from "./process-datapack-config";
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
@@ -33,6 +34,12 @@ export const Settings = observer(function Settings() {
   const tabs = Object.values(SettingsMenuOptionLabels).map((val) => ({ id: val, tab: val }));
   const tabKeys = Object.keys(SettingsMenuOptionLabels);
   const tabIndex = tabKeys.indexOf(state.settingsTabs.selected);
+  const checkOpen = () => {
+    return (
+      state.settingsTabs.selected != "datapacks" &&
+      JSON.stringify(state.config.datapacks) !== JSON.stringify(state.datapackSelection.selectedDatapacks)
+    );
+  };
   return (
     <div className="settings-container" style={{ background: theme.palette.backgroundColor.main }}>
       <SettingsHeader />
@@ -46,29 +53,17 @@ export const Settings = observer(function Settings() {
       />
       <SettingsTab tab={state.settingsTabs.selected} />
       <TSCPopupDialog
-        open={state.settingsTabs.selected != "datapacks" && state.datapackSelection.isDirty}
+        open={checkOpen()}
         title="Confirm Datapack Selection Change"
         message="You have unsaved change on datapack selection. Do you want to save the change?"
         onYes={async () => {
-          const datapacks =
-            state.datapackSelection.unselectedDatapacks.length > 0
-              ? state.datapackSelection.selectedDatapacks.concat(
-                  state.config.datapacks.filter(
-                    (datapack) => !state.datapackSelection.unselectedDatapacks.includes(datapack)
-                  )
-                )
-              : state.datapackSelection.selectedDatapacks.concat(state.config.datapacks);
-          await actions.processSelectedDatapackList(datapacks, null);
+          await processDatapackConfig(JSON.parse(JSON.stringify(state)).datapackSelection.selectedDatapacks);
         }}
         onNo={() => {
-          actions.setSelectedDatapacks([]);
-          actions.setUnselectedDatapacks([]);
-          actions.setIsDirty(false);
+          actions.setSelectedDatapacks(state.config.datapacks);
         }}
         onClose={() => {
-          actions.setSelectedDatapacks([]);
-          actions.setUnselectedDatapacks([]);
-          actions.setIsDirty(false);
+          actions.setSelectedDatapacks(state.config.datapacks);
         }}></TSCPopupDialog>
     </div>
   );

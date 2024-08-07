@@ -12,9 +12,7 @@ import {
   assertMapPackInfoChunk,
   DatapackParsingPack,
   assertDatapackParsingPack,
-  DatapackMetadata,
-  defaultFontsInfo,
-  FontsInfo
+  DatapackMetadata
 } from "@tsconline/shared";
 
 import {
@@ -25,9 +23,6 @@ import {
   Presets,
   assertSVGStatus,
   IndexResponse,
-  assertMapHierarchy,
-  assertColumnInfo,
-  assertMapInfo,
   assertIndexResponse,
   assertPresets,
   assertPatterns
@@ -46,9 +41,8 @@ import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import { SetDatapackConfigCompleteValue, SettingsTabs, equalChartSettings, equalConfig } from "../../types";
+import { SettingsTabs, equalChartSettings, equalConfig } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
-import { cloneDeep } from "lodash";
 
 const increment = 1;
 
@@ -408,118 +402,28 @@ const applyChartSettings = action("applyChartSettings", (settings: ChartSettings
   setEnableHideBlockLabel(enHideBlockLable);
 });
 
+export const setIsProcessingDatapacks = action("setIsProcessingDatapacks", (isProcessingDatapacks: boolean) => {
+  state.isProcessingDatapacks = isProcessingDatapacks;
+});
+
+export const setRegenerateChart = action("setRegenerateChart", (regenerateChart: boolean) => {
+  state.datapackSelection.regenerateChart = regenerateChart;
+});
+
+export const setSelectedDatapacks = action("setSelectedDatapacks", (newDatapacks: string[]) => {
+  state.datapackSelection.selectedDatapacks = newDatapacks;
+});
 
 export const setDatapackConfig = action(
   "setDatapackConfig",
-  async (datapacks: string[], settingsPath?: string): Promise<boolean> => {
-    const unitMap: Map<string, ColumnInfo> = new Map();
-    let mapInfo: MapInfo = {};
-    let mapHierarchy: MapHierarchy = {};
-    let columnRoot: ColumnInfo;
-    let chartSettings: ChartInfoTSC | null = null;
-    let foundDefaultAge = false;
-    try {
-      if (settingsPath && settingsPath.length > 0) {
-        await fetchSettingsXML(settingsPath)
-          .then((settings) => {
-            if (settings) {
-              removeError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
-              chartSettings = JSON.parse(JSON.stringify(settings));
-            } else {
-              return false;
-            }
-          })
-          .catch((e) => {
-
-            console.error(e);
-            pushError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
-            return false;
-          });
-      }
-      // the default overarching variable for the columnInfo
-      columnRoot = {
-        name: "Chart Root", // if you change this, change parse-datapacks.ts :69
-        editName: "Chart Root",
-        fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
-        fontOptions: ["Column Header"],
-        popup: "",
-        on: true,
-        width: 100,
-        enableTitle: true,
-        rgb: {
-          r: 255,
-          g: 255,
-          b: 255
-        },
-        minAge: Number.MAX_VALUE,
-        maxAge: Number.MIN_VALUE,
-        children: [],
-        parent: null,
-        units: "",
-        columnDisplayType: "RootColumn",
-        show: true,
-        expanded: true
-      };
-      // all chart root font options have inheritable on
-      for (const opt in columnRoot.fontsInfo) {
-        columnRoot.fontsInfo[opt as keyof FontsInfo].inheritable = true;
-      }
-      // add everything together
-      // uses preparsed data on server start and appends items together
-      for (const datapack of datapacks) {
-        await new Promise((resolve) => setTimeout(resolve, 0));
-        console.log(state.datapackIndex[datapack]);
-        if (!datapack || !state.datapackIndex[datapack])
-          throw new Error(`File requested doesn't exist on server: ${datapack}`);
-        const datapackParsingPack = state.datapackIndex[datapack]!;
-        if (
-          ((datapackParsingPack.topAge || datapackParsingPack.topAge === 0) &&
-            (datapackParsingPack.baseAge || datapackParsingPack.baseAge === 0)) ||
-          datapackParsingPack.verticalScale
-        )
-          foundDefaultAge = true;
-        if (unitMap.has(datapackParsingPack.ageUnits)) {
-          const existingUnitColumnInfo = unitMap.get(datapackParsingPack.ageUnits)!;
-          const newUnitChart = datapackParsingPack.columnInfo;
-          // slice off the existing unit column
-          const columnsToAdd = cloneDeep(newUnitChart.children.slice(1));
-          for (const child of columnsToAdd) {
-            child.parent = existingUnitColumnInfo.name;
-          }
-          existingUnitColumnInfo.children = existingUnitColumnInfo.children.concat(columnsToAdd);
-        } else {
-          const columnInfo = cloneDeep(datapackParsingPack.columnInfo);
-          columnInfo.parent = columnRoot.name;
-          unitMap.set(datapackParsingPack.ageUnits, columnInfo);
-        }
-        const mapPack = state.mapPackIndex[datapack]!;
-        if (!mapInfo) mapInfo = mapPack.mapInfo;
-        else Object.assign(mapInfo, mapPack.mapInfo);
-        if (!mapHierarchy) mapHierarchy = mapPack.mapHierarchy;
-        else Object.assign(mapHierarchy, mapPack.mapHierarchy);
-      }
-      // makes sure things are named correctly for users and for the hash map to not have collisions
-      for (const [unit, column] of unitMap) {
-        await new Promise((resolve) => setTimeout(resolve, 0));
-        if (unit !== "Ma" && column.name === "Chart Title") {
-          column.name = column.name + " in " + unit;
-          column.editName = unit;
-          for (const child of column.children) {
-            child.parent = column.name;
-          }
-        }
-        columnRoot.fontOptions = Array.from(new Set([...columnRoot.fontOptions, ...column.fontOptions]));
-        columnRoot.children.push(column);
-      }
-      assertMapHierarchy(mapHierarchy);
-      assertColumnInfo(columnRoot);
-      assertMapInfo(mapInfo);
-    } catch (e) {
-      console.error(e);
-      pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
-      chartSettings = null;
-      return false;
-    }
+  async (
+    columnRoot: ColumnInfo,
+    foundDefaultAge: boolean,
+    mapHierarchy: MapHierarchy,
+    mapInfo: MapInfo,
+    datapacks: string[],
+    chartSettings: ChartInfoTSC | null
+  ): Promise<boolean> => {
     resetSettings();
     // throws warning if this isn't in its own action. may have other fix but left as is
     await runInAction(async () => {

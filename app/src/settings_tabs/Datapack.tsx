@@ -17,7 +17,7 @@ import ViewCompactIcon from "@mui/icons-material/ViewCompact";
 import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompactDatapackRow";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 
-import { TSCLoadingDatapacks } from "../components/TSCLoadingDatapacks";
+import { processDatapackConfig } from "../process-datapack-config";
 
 export const Datapacks = observer(function Datapacks() {
   const { state, actions } = useContext(context);
@@ -34,33 +34,18 @@ export const Datapacks = observer(function Datapacks() {
     };
   }, []);
 
-  const [webworkerProcessing, setWebworkerProcessing] = useState(false);
-  //let webworkerProcessing = false;x
 
-
-
-  function enqueueSelectedDatapackList(newDatapack: string) {
+  function updateSelectedDatapack(newDatapack: string) {
     if (state.datapackSelection.selectedDatapacks.includes(newDatapack)) {
       actions.setSelectedDatapacks(
         state.datapackSelection.selectedDatapacks.filter((datapack) => datapack !== newDatapack)
       );
-    } else if (state.datapackSelection.unselectedDatapacks.includes(newDatapack)) {
-      actions.setUnselectedDatapacks(
-        state.datapackSelection.unselectedDatapacks.filter((datapack) => datapack !== newDatapack)
-      );
-    } else if (
-      state.config.datapacks.includes(newDatapack) &&
-      !state.datapackSelection.selectedDatapacks.includes(newDatapack)
-    ) {
-      actions.setUnselectedDatapacks([...state.datapackSelection.unselectedDatapacks, newDatapack]);
     } else {
       actions.setSelectedDatapacks([...state.datapackSelection.selectedDatapacks, newDatapack]);
     }
   }
-
   const onChange = (name: string) => {
-    enqueueSelectedDatapackList(name);
-    actions.setIsDirty(true);
+    updateSelectedDatapack(name);
   };
 
   return (
@@ -71,10 +56,7 @@ export const Datapacks = observer(function Datapacks() {
             className={styles.ib}
             onClick={async () => {
               actions.setSelectedDatapacks([]);
-              const finished = await actions.processSelectedDatapackList([], null);
-              if (finished) {
-                setProcessing(false);
-              }
+              await processDatapackConfig([]);
             }}>
             <DeselectIcon />
           </IconButton>
@@ -112,11 +94,7 @@ export const Datapacks = observer(function Datapacks() {
               key={datapack}
               name={datapack}
               datapack={state.datapackIndex[datapack]}
-              value={
-                (state.datapackSelection.selectedDatapacks.includes(datapack) ||
-                  state.config.datapacks.includes(datapack)) &&
-                !state.datapackSelection.unselectedDatapacks.includes(datapack)
-              }
+              value={state.datapackSelection.selectedDatapacks.includes(datapack)}
               onChange={onChange}
             />
           ) : state.settingsTabs.datapackDisplayType === "compact" ? (
@@ -124,11 +102,7 @@ export const Datapacks = observer(function Datapacks() {
               key={datapack}
               name={datapack}
               datapack={state.datapackIndex[datapack]}
-              value={
-                (state.datapackSelection.selectedDatapacks.includes(datapack) ||
-                  state.config.datapacks.includes(datapack)) &&
-                !state.datapackSelection.unselectedDatapacks.includes(datapack)
-              }
+              value={state.datapackSelection.selectedDatapacks.includes(datapack)}
               onChange={onChange}
             />
           ) : (
@@ -136,11 +110,7 @@ export const Datapacks = observer(function Datapacks() {
               key={datapack}
               name={datapack}
               datapack={state.datapackIndex[datapack]}
-              value={
-                (state.datapackSelection.selectedDatapacks.includes(datapack) ||
-                  state.config.datapacks.includes(datapack)) &&
-                !state.datapackSelection.unselectedDatapacks.includes(datapack)
-              }
+              value={state.datapackSelection.selectedDatapacks.includes(datapack)}
               onChange={onChange}
             />
           );
@@ -158,24 +128,11 @@ export const Datapacks = observer(function Datapacks() {
         <TSCButton
           className={styles.buttons}
           onClick={async () => {
-            setProcessing(true);
-            const datapacks =
-              state.datapackSelection.unselectedDatapacks.length > 0
-                ? state.datapackSelection.selectedDatapacks.concat(
-                  state.config.datapacks.filter(
-                    (datapack) => !state.datapackSelection.unselectedDatapacks.includes(datapack)
-                  )
-                )
-                : state.datapackSelection.selectedDatapacks.concat(state.config.datapacks);
-            const finished = await actions.processSelectedDatapackList(datapacks, null);
-            if (finished) {
-              setProcessing(false);
-            }
+            await processDatapackConfig(JSON.parse(JSON.stringify(state)).datapackSelection.selectedDatapacks);
           }}>
           Confirm Selection
         </TSCButton>
       </Box>
-      <TSCLoadingDatapacks open={processing}></TSCLoadingDatapacks>
       <Dialog classes={{ paper: styles.dd }} open={formOpen} onClose={() => setFormOpen(false)}>
         <DatapackUploadForm close={() => setFormOpen(false)} upload={actions.uploadDatapack} />
       </Dialog>
