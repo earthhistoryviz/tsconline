@@ -807,6 +807,97 @@ Cookie: loginSession=123
 
 ---
 
+## Admin Endpoints
+
+This section will detail all the admin endpoints that are available to the admin user. All these endpoints require a valid session to be used and a recaptcha token to be passed in the headers.
+
+### General Request Headers/Requirements for the route
+
+| Name      | Type   | Description                                                                                                       | Required |
+| --------- | ------ | ----------------------------------------------------------------------------------------------------------------- | -------- |
+| recaptcha | string | The recaptcha token to verify the user is not a bot.                                                              | Yes      |
+| session   | string | The session token to verify the user is logged in. which will also connect the user to their uuid in the database | Yes      |
+
+### Example Base Request
+
+```http
+POST /admin/users HTTP/1.1
+Host: dev.timescalecreator.org
+recaptcha: 123
+Cookie: loginSession=123
+```
+
+### General Error Responses
+
+- **Status Code:** `401 Unauthorized`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the user is not an admin, not an existing user, or the session is invalid/nonexistent
+
+```json
+{
+  "error": "Unauthorized Access"
+}
+```
+
+- **Status Code:** `400 Bad Request`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the request header is missing the recaptcha token
+
+```json
+{
+  "error": "Missing recaptcha token"
+}
+```
+
+- **Status Code:** `422 Unprocessable Entity`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the recaptcha token is invalid
+
+```json
+{
+  "error": "Invalid recaptcha token"
+}
+```
+
+---
+
+### Fetch Users
+
+- **Endpoint:** `/admin/users`
+- **Method:** `POST`
+- **Description:** Fetch all the users
+- **Requires Valid Session:** Yes
+- **NOTE** We choose POST so we have more data available to send as the user's increase (GET requests are limited compared to POST)
+
+#### Example Request
+
+```http
+POST /admin/users HTTP/1.1
+Host: dev.timescalecreator.org
+recaptcha: 123
+Cookie: loginSession=123
+```
+
+#### Example Response
+
+```json
+{
+  "users": [
+    {
+      "uuid": "123",
+      "userId": "user1",
+      "email": "user@gmail.com",
+      "username": "user1",
+      "emailVerified": true,
+      "invalidateSession": false,
+      "isGoogleUser": false,
+      "isAdmin": false,
+      "pictureUrl": "https://www.google.com"
+    }
+  ]
+}
+```
+
 #### Parse Datapacks
 
 For all the datapacks in the paramaters return all the column data and any map data along with that. The datapack parsing takes place in `src/parse.ts`.
