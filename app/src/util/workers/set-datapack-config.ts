@@ -1,10 +1,6 @@
 import { ColumnInfo, FontsInfo, MapHierarchy, MapInfo, defaultFontsInfo } from "@tsconline/shared";
 import { State } from "../../state";
-import {
-  SetDatapackConfigCompleteMessage,
-  SetDatapackConfigMessage,
-  SetDatapackConfigCompleteValue
-} from "../../types";
+import { SetDatapackConfigCompleteMessage, SetDatapackConfigMessage, SetDatapackConfigReturnValue } from "../../types";
 import { cloneDeep } from "lodash";
 
 /**
@@ -12,7 +8,14 @@ import { cloneDeep } from "lodash";
  */
 self.onmessage = async (e: MessageEvent<SetDatapackConfigMessage>) => {
   const { datapacks, chartSettings, stateCopy } = e.data;
-  const stateCopyObj: State = JSON.parse(stateCopy);
+  let stateCopyObj: State;
+  try {
+    stateCopyObj = JSON.parse(stateCopy);
+  } catch (e) {
+    console.error("failed to parse state in worker");
+    return;
+  }
+
   const SetDatapackConfig = () => {
     const unitMap: Map<string, ColumnInfo> = new Map();
     let mapInfo: MapInfo = {};
@@ -91,7 +94,7 @@ self.onmessage = async (e: MessageEvent<SetDatapackConfigMessage>) => {
       columnRoot.fontOptions = Array.from(new Set([...columnRoot.fontOptions, ...column.fontOptions]));
       columnRoot.children.push(column);
     }
-    const returnValue: SetDatapackConfigCompleteValue = {
+    const returnValue: SetDatapackConfigReturnValue = {
       columnRoot: columnRoot,
       foundDefaultAge: foundDefaultAge,
       mapHierarchy: mapHierarchy,
@@ -102,7 +105,7 @@ self.onmessage = async (e: MessageEvent<SetDatapackConfigMessage>) => {
     return returnValue;
   };
 
-  const timeoutThreshold = 3000000;
+  const timeoutThreshold = 120000; // 2 min
   const timeoutPromise = new Promise((_, reject) => {
     setTimeout(() => {
       reject(new Error("Function timed out after" + timeoutThreshold + " ms"));
@@ -118,6 +121,7 @@ self.onmessage = async (e: MessageEvent<SetDatapackConfigMessage>) => {
         message.status = "failure";
       }
     } catch (error) {
+      console.error(error);
       message.status = "failure";
     }
   }

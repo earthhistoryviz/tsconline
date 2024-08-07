@@ -24,6 +24,7 @@ import { Profile } from "./account_settings/Profile";
 import { Admin } from "./admin/Admin";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { TSCLoadingDatapacks } from "./components/TSCLoadingDatapacks";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -73,6 +74,7 @@ export default observer(function App() {
             onNo={() => actions.handlePopupResponse(false, navigate)}
             onClose={() => actions.fetchChartFromServer(navigate)}
           />
+          <TSCLoadingDatapacks open={state.isProcessingDatapacks}></TSCLoadingDatapacks>
           {state.snackbars.map((info, index) => (
             <TSCSnackbar
               key={info.snackbarText}

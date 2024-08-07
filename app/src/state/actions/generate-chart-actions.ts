@@ -69,7 +69,7 @@ export const initiateChartGeneration = action(
   "initiateChartGeneration",
   (navigate: NavigateFunction, location: string) => {
     state.datapackSelection.regenerateChart = true;
-    if (state.datapackSelection.isDirty) {
+    if (JSON.stringify(state.datapackSelection.selectedDatapacks) !== JSON.stringify(state.config.datapacks)) {
       return;
     }
     if (

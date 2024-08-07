@@ -1,11 +1,6 @@
 import { ChartInfoTSC, ColumnInfo, DataMiningPointDataType, MapHierarchy, MapInfo, SharedUser } from "@tsconline/shared";
 import { State } from "./state/state";
 
-// export type DatapackStatus = {
-//   datapackName: string;
-//   unselect?: boolean;
-// }
-
 export type User = SharedUser & {
   settings: {
     darkMode: boolean;
@@ -37,16 +32,15 @@ export type DownloadPdfCompleteMessage = {
 
 export type SetDatapackConfigMessage = {
   datapacks: string[];
-  settingsPath?: string;
   chartSettings: ChartInfoTSC | null;
   stateCopy: string;
 };
 
 export type SetDatapackConfigCompleteMessage = {
   status: "success" | "failure";
-  value: SetDatapackConfigCompleteValue | undefined;
+  value: SetDatapackConfigReturnValue | undefined;
 };
-export type SetDatapackConfigCompleteValue = {
+export type SetDatapackConfigReturnValue = {
   columnRoot: ColumnInfo;
   foundDefaultAge: boolean;
   mapHierarchy: MapHierarchy;
