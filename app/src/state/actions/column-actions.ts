@@ -57,6 +57,9 @@ function extractColumnType(text: string): string {
   return text.substring(text.indexOf(".") + 1, text.indexOf(":"));
 }
 function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
+  console.log("Settings(setColProp):", settings);
+  console.log("Column(setColProp):", column);
+  
   setEditName(settings.title, column);
   setEnableTitle(settings.drawTitle, column);
   if ("showUncertaintyLabels" in column) setShowUncertaintyLabels(settings.drawUncertaintyLabel, column);
@@ -257,25 +260,28 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
   let curcol: ColumnInfo | undefined =
     state.settingsTabs.columnHashMap.get(columnName) ||
     state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
+  console.log(`Processing column: ${columnName}`);
+  console.log('Current column:', curcol);
+  console.log('Settings:', settings);
+  // Apply settings to the current column
   if (curcol) {
+    console.log('Applying settings to column:', columnName);
     setColumnProperties(curcol, settings);
+  } else {
+    console.warn(`Column not found in hash map: ${columnName}`);
   }
 
   addColumnToDataMiningCache(settings);
 
-  if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
+  // Recursively apply settings to children
+  if (settings.children) {
     for (let i = 0; i < settings.children.length; i++) {
-      const child = settings.children[i];
-      const childName = extractName(child._id);
-      curcol = state.settingsTabs.columnHashMap.get(columnName + " " + childName);
-      if (curcol) setColumnProperties(curcol, child);
-
-      addColumnToDataMiningCache(child);
+      const childSettings = settings.children[i];
+      console.log(`Recursively processing child: ${extractName(childSettings._id)}`);
+      applyChartColumnSettings(childSettings);
     }
   } else {
-    for (let i = 0; i < settings.children.length; i++) {
-      applyChartColumnSettings(settings.children[i]);
-    }
+    console.warn(`No children found for column: ${columnName}`);
   }
 });
 
