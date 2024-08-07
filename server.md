@@ -98,6 +98,35 @@ After decrypting the datapacks, the server will simply listen for any requests f
 
 ---
 
+### Admin Config
+
+The server holds `DatapackMetadata` which describes multiple facets and characteristics of the datapacks. See below
+
+```js
+export type DatapackMetadata = {
+  description: string,
+  title: string,
+  file: string,
+  size: string,
+  date?: string,
+  authoredBy: string,
+  tags: string[],
+  references: string[],
+  contact?: string,
+  notes?: string,
+};
+```
+
+However, we want to keep the repo a shell. This means that the repo will not contain any predetermined datapacks. The server will then have a .gitignored `admin-config.json` that will hold all the metadata for the datapacks. This will be used to populate the `DatapackMetadata` for the server.
+
+The config that we have on command if we want to populate it is stored in `dev-config.json`. This is the config that we will use to populate the `admin-config.json` file.
+
+To run this you will run `yarn dev:config` in `server`.
+
+This will run a script to add the datapack metadata in `dev-config.json` to `admin-config.json`. This will **NOT** add any datapacks to `asset/datapacks` or `assets/decrypted`.
+
+You will need to download the datapacks yourself and run `yarn start` to decrypt them properly (assuming the files are correct)
+
 ## File Metadata
 
 The server will store the metadata of any uploaded files in `file-metdata.json` in `server/assets`.
