@@ -6,11 +6,30 @@ import * as utilModule from "../src/util";
 import * as fspModule from "fs/promises";
 import * as database from "../src/database";
 import * as verify from "../src/verify";
+import logger from "../src/error-logger";
+import * as fileMetadataHandler from "../src/file-metadata-handler";
 import { userRoutes } from "../src/routes/user-auth";
+import { FileMetadata } from "../src/types";
+import { join } from "path";
+
+vi.mock("../src/error-logger", async () => {
+  return {
+    default: {
+      error: vi.fn().mockResolvedValue(undefined)
+    }
+  };
+});
 
 vi.mock("../src/database", async () => {
   return {
     findUser: vi.fn(() => Promise.resolve([testUser]))
+  };
+});
+
+vi.mock("../src/file-metadata-handler", async () => {
+  return {
+    loadFileMetadata: vi.fn().mockResolvedValue({} as FileMetadata),
+    deleteDatapack: vi.fn().mockResolvedValue(undefined)
   };
 });
 
@@ -24,7 +43,7 @@ vi.mock("fs/promises", async (importOriginal) => {
   const actual = await importOriginal<typeof fspModule>();
   return {
     ...actual,
-    realpath: vi.fn(() => Promise.resolve(`/${uuid}/datapacks`)), //only the first two test cases have different mocked value/implementation than this
+    realpath: vi.fn(() => Promise.resolve(`uploadDirectory/${uuid}/datapacks`)), //only the first two test cases have different mocked value/implementation than this
     mkdir: vi.fn().mockResolvedValue(undefined),
     access: vi.fn().mockResolvedValue(undefined),
     readFile: vi.fn().mockResolvedValue(undefined),
@@ -41,7 +60,6 @@ vi.mock("../src/encryption", async (importOriginal) => {
 });
 vi.mock("../src/index", async () => {
   return {
-    assetconfigs: { activeJar: "", uploadDirectory: "" },
     datapackIndex: {},
     mapPackIndex: {}
   };
@@ -51,7 +69,8 @@ vi.mock("../src/util", async (importOriginal) => {
   const actual = await importOriginal<typeof utilModule>();
   return {
     ...actual,
-    assetconfigs: { uploadDirectory: "" },
+    verifyFilepath: vi.fn().mockReturnValue(true),
+    assetconfigs: { uploadDirectory: "uploadDirectory" },
     loadAssetConfigs: vi.fn().mockImplementation(() => {}),
     deleteDirectory: vi.fn().mockImplementation(() => {}),
     resetUploadDirectory: vi.fn().mockImplementation(() => {}),
@@ -68,6 +87,9 @@ vi.mock("path", async () => {
       resolve: (...args: string[]) => {
         return args.join("/");
       }
+    },
+    join: (...args: string[]) => {
+      return args.join("/");
     }
   };
 });
@@ -123,6 +145,7 @@ beforeEach(() => {
 const uuid = "123e4567-e89b-12d3-a456-426614174000";
 const headers = { "mock-uuid": uuid, "recaptcha-token": "mock-token" };
 const filename = "test_filename";
+const uploadDirectory = utilModule.assetconfigs.uploadDirectory;
 const testUser = {
   uuid,
   userId: 123,
@@ -356,7 +379,7 @@ describe("requestDownload", () => {
     expect(runJavaEncryptSpy).toHaveReturnedWith(undefined);
     expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
     expect(checkHeaderSpy).toHaveNthReturnedWith(2, false);
-    expect(rmSpy).toHaveBeenCalledWith(`/${uuid}/encrypted-datapacks/${filename}`, { force: true });
+    expect(rmSpy).toHaveBeenCalledWith(`${uploadDirectory}/${uuid}/encrypted-datapacks/${filename}`, { force: true });
     expect(accessSpy).toBeCalledTimes(3);
     expect(response.statusCode).toBe(422);
     expect(response.json().error).toBe(
@@ -640,5 +663,101 @@ describe("requestDownload", () => {
     expect(accessSpy).toHaveBeenCalledTimes(3);
     expect(rmSpy).not.toHaveBeenCalled();
     expect(response.json().error).toBe("An error occurred: Error: Unknown Error");
+  });
+});
+
+describe("userDeleteDatapack tests", () => {
+  const rmSpy = vi.spyOn(fspModule, "rm");
+  const verifyFilepathSpy = vi.spyOn(utilModule, "verifyFilepath");
+  const loadFileMetadataSpy = vi.spyOn(fileMetadataHandler, "loadFileMetadata");
+  const deleteDatapackSpy = vi.spyOn(fileMetadataHandler, "deleteDatapack");
+  const writeFileSpy = vi.spyOn(fspModule, "writeFile").mockResolvedValue(undefined);
+  const loggerSpy = vi.spyOn(logger, "error");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should reply 400 when filename is missing", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/user/datapack/",
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "Missing filename" });
+    expect(response.statusCode).toBe(400);
+    expect(rmSpy).not.toHaveBeenCalled();
+    expect(verifyFilepathSpy).not.toHaveBeenCalled();
+  });
+  it("should reply 403 when file path is invalid", async () => {
+    verifyFilepathSpy.mockResolvedValueOnce(false);
+    const response = await app.inject({
+      method: "DELETE",
+      url: `/user/datapack/${filename}`,
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "Invalid filename/File doesn't exist" });
+    expect(response.statusCode).toBe(403);
+    expect(rmSpy).not.toHaveBeenCalled();
+    expect(verifyFilepathSpy).toHaveBeenCalledOnce();
+  });
+  it("should reply 500 when an error occurred in verifyFilepath", async () => {
+    verifyFilepathSpy.mockRejectedValueOnce(new Error("Unknown Error"));
+    const response = await app.inject({
+      method: "DELETE",
+      url: `/user/datapack/${filename}`,
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "Failed to verify file path" });
+    expect(response.statusCode).toBe(500);
+    expect(rmSpy).not.toHaveBeenCalled();
+    expect(verifyFilepathSpy).toHaveBeenCalledOnce();
+  });
+  it("should reply 500 when an error occurred in loadFileMetadata", async () => {
+    loadFileMetadataSpy.mockRejectedValueOnce(new Error("Unknown Error"));
+    const response = await app.inject({
+      method: "DELETE",
+      url: `/user/datapack/${filename}`,
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "There was an error loading/writing file metadata" });
+    expect(response.statusCode).toBe(500);
+    expect(rmSpy).not.toHaveBeenCalled();
+    expect(verifyFilepathSpy).toHaveBeenCalledOnce();
+    expect(loadFileMetadataSpy).toHaveBeenCalledOnce();
+    expect(deleteDatapackSpy).not.toHaveBeenCalled();
+  });
+  it("should reply 404 when the file exists, but it does not have metadata", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: `/user/datapack/${filename}`,
+      headers
+    });
+    expect(await response.json()).toEqual({
+      error: "File not found in metadata, but file was deleted. See administrator for more help."
+    });
+    expect(response.statusCode).toBe(404);
+    expect(rmSpy).toHaveBeenCalledWith(expect.stringContaining(filename), { force: true });
+    expect(verifyFilepathSpy).toHaveBeenCalledOnce();
+    expect(loadFileMetadataSpy).toHaveBeenCalledOnce();
+    expect(deleteDatapackSpy).not.toHaveBeenCalled();
+    expect(writeFileSpy).not.toHaveBeenCalled();
+    expect(loggerSpy).toHaveBeenCalled();
+  });
+  it("should reply 200 when the file exists and has metadata", async () => {
+    const path = join(uploadDirectory, uuid, "datapacks", filename);
+    const metadata = { [path]: {} as FileMetadata };
+    loadFileMetadataSpy.mockResolvedValueOnce(metadata);
+    const response = await app.inject({
+      method: "DELETE",
+      url: `/user/datapack/${filename}`,
+      headers
+    });
+    expect(await response.json()).toEqual({ message: "File deleted" });
+    expect(response.statusCode).toBe(200);
+    expect(verifyFilepathSpy).toHaveBeenCalledOnce();
+    expect(loadFileMetadataSpy).toHaveBeenCalledOnce();
+    expect(deleteDatapackSpy).toHaveBeenCalledOnce();
+    expect(deleteDatapackSpy).toHaveBeenCalledWith(metadata, path);
+    expect(writeFileSpy).toHaveBeenCalledOnce();
+    expect(loggerSpy).not.toHaveBeenCalled();
   });
 });
