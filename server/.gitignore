@@ -3,3 +3,4 @@ dist
 .env
 db/TSC.db
 *.log
+server-error.log
