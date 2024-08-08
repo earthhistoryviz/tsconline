@@ -239,7 +239,7 @@ const looseRateLimit = {
     }
   }
 };
-server.get("/public/datapacks", moderateRateLimit, routes.fetchPublicDatapacks);
+server.get("/public/datapacks", moderateRateLimit, userRoutes.fetchPublicDatapacks);
 server.get("/user-datapacks", moderateRateLimit, userRoutes.fetchUserDatapacks);
 // checks chart.pdf-status
 server.get<{ Params: { hash: string } }>("/svgstatus/:hash", looseRateLimit, routes.fetchSVGStatus);
