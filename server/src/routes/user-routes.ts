@@ -7,7 +7,7 @@ import { MultipartFile } from "@fastify/multipart";
 import { assertDatapackIndex, assertMapPackIndex, DatapackIndex, MapPackIndex } from "@tsconline/shared";
 import { exec } from "child_process";
 import { createWriteStream } from "fs";
-import { pipeline } from "stream/promises"
+import { pipeline } from "stream/promises";
 import { writeFileMetadata } from "../file-metadata-handler.js";
 import { loadIndexes } from "../load-packs.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";

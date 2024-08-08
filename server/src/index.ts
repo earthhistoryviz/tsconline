@@ -5,7 +5,7 @@ import process from "process";
 import { execSync } from "child_process";
 import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs, adminconfig } from "./util.js";
 import * as routes from "./routes/routes.js";
-import * as userRoutes from "./routes/user-routes.js"
+import * as userRoutes from "./routes/user-routes.js";
 import * as loginRoutes from "./routes/login-routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
 import fastifyCompress from "@fastify/compress";
