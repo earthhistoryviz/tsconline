@@ -12,7 +12,7 @@ import { deleteDatapack, loadFileMetadata, writeFileMetadata } from "../file-met
 import { loadIndexes } from "../load-packs.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import logger from "../error-logger.js";
-import { FileMetadata } from "../types.js";
+import { findUser } from "../database.js";
 
 export const requestDownload = async function requestDownload(
   request: FastifyRequest<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>,
@@ -136,6 +136,7 @@ export const requestDownload = async function requestDownload(
   }
 };
 
+// NOTE: this is not used in user-auth.ts since it does not require recaptcha verification
 export const fetchUserDatapacks = async function fetchUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
   // for test usage: const uuid = "username";
   const uuid = request.session.get("uuid");
@@ -143,6 +144,17 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
+  try {
+    const user = await findUser({ uuid });
+    if (!user || user.length !== 1 || !user[0]) {
+      reply.status(401).send({ error: "Unauthorized access" });
+      return;
+    }
+  } catch (e) {
+    reply.status(500).send({ error: "Database error" });
+    return;
+  }
+
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
 
   try {
@@ -388,7 +400,9 @@ export const userDeleteDatapack = async function userDeleteDatapack(
         filename
       });
       await rm(path, { force: true });
-      reply.status(404).send({ error: "File not found in metadata, but file was deleted. See administrator for more help." });
+      reply
+        .status(404)
+        .send({ error: "File not found in metadata, but file was deleted. See administrator for more help." });
       return;
     }
     await deleteDatapack(metadataIndex, path);

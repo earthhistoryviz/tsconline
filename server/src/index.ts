@@ -23,6 +23,7 @@ import path from "path";
 import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
+import { fetchUserDatapacks } from "./routes/user-routes.js";
 
 const maxConcurrencySize = 3;
 export const maxQueueSize = 15;
@@ -245,8 +246,13 @@ server.get<{ Params: { hash: string } }>("/svgstatus/:hash", looseRateLimit, rou
 
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, routes.fetchSettingsXml);
+
 server.register(adminRoutes, { prefix: "/admin" });
+
 server.register(userRoutes, { prefix: "/user" });
+// this is seperate from the user routes because it doesn't require recaptcha
+server.get("/user/datapacks", looseRateLimit, fetchUserDatapacks);
+
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
 server.post("/auth/signup", strictRateLimit, loginRoutes.signup);

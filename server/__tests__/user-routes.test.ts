@@ -1,4 +1,4 @@
-import { vi, beforeAll, afterAll, describe, beforeEach, it, expect, test } from "vitest";
+import { vi, beforeAll, afterAll, describe, beforeEach, it, expect } from "vitest";
 import fastify, { FastifyInstance, HTTPMethods, InjectOptions } from "fastify";
 import fastifySecureSession from "@fastify/secure-session";
 import * as runJavaEncryptModule from "../src/encryption";
@@ -136,7 +136,6 @@ const testUser = {
 };
 
 const routes: { method: HTTPMethods; url: string; body?: object }[] = [
-  { method: "GET", url: "/user/datapacks" },
   { method: "GET", url: `/user/datapack/${filename}` },
   { method: "POST", url: "/user/datapack" },
   { method: "DELETE", url: `/user/datapack/${filename}` }
