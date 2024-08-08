@@ -145,7 +145,7 @@
         "title": "Human Culture",
         "description": "Global \"human culture\" intervals (ca. 200 columns), plus climate signal from Greenland ice cores (From Seierstad et al. (2014 QuatSciRev); NGRIP1 until 9820 b2k, NGRIP2 below).",
         "date": "04-21-2020",
-        "file": "HumanCulture_ENCRYPTED_21Apr2020.dpk",
+        "file": "HumanCulture_ENCRYPTED_21Apr2020.txt",
         "notes": "This datapack must be inserted using the \"Replace Data with Datapack\" command; the scale in kyr is not compatible with the internal dataset in myr. A vertical scale of 5 kyr/cm is recommended to see details.] [Provided courtesy of Grace Conyers and Colleen Klockow, Purdue University; with updates and enhancements for Concise Geologic TimeScale 2016]. We are looking for volunteers to enhance the regional sets.",
         "size": "0.5 MB",
         "authoredBy": "Gabi Ogg",
