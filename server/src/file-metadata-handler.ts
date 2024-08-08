@@ -1,6 +1,7 @@
 import { access, readFile, rm, writeFile } from "fs/promises";
 import { FileMetadataIndex, assertFileMetadataIndex } from "./types.js";
 import { assertDatapackIndex, assertMapPackIndex } from "@tsconline/shared";
+import { checkFileExists } from "./util.js";
 
 export const sunsetInterval = 1000 * 60 * 60 * 24 * 14;
 
@@ -43,7 +44,7 @@ export async function writeFileMetadata(
     mapPackIndexFilepath,
     datapackIndexFilepath
   };
-  await writeFile(fileMetadataFilepath, JSON.stringify(metadata));
+  await writeFile(fileMetadataFilepath, JSON.stringify(metadata, null, 2));
 }
 
 /**
@@ -56,12 +57,15 @@ export async function checkFileMetadata(fileMetadataFilepath: string) {
     const metadata = await loadFileMetadata(fileMetadataFilepath);
     const twoWeeksAgo = Date.now() - sunsetInterval;
     for (const file in metadata) {
-      if (new Date(metadata[file]!.lastUpdated).getTime() < twoWeeksAgo) {
+      if (!(await checkFileExists(file))) {
+        console.log("Deleting file: ", file, " for not existing");
+        await deleteDatapack(metadata, file);
+      } else if (new Date(metadata[file]!.lastUpdated).getTime() < twoWeeksAgo) {
         console.log("Deleting file: ", file, " for being older than 2 weeks");
         await deleteDatapack(metadata, file);
       }
     }
-    await writeFile(fileMetadataFilepath, JSON.stringify(metadata));
+    await writeFile(fileMetadataFilepath, JSON.stringify(metadata, null, 2));
   } catch (e) {
     console.error("Error checking file metadata for sunsetted files: ", e);
   }
@@ -70,16 +74,20 @@ export async function checkFileMetadata(fileMetadataFilepath: string) {
 export async function deleteDatapack(metadata: FileMetadataIndex, filePath: string) {
   if (!metadata[filePath]) throw new Error(`File ${filePath} not found in metadata`);
   const file = metadata[filePath]!;
-  const datapackIndex = JSON.parse(await readFile(file.datapackIndexFilepath, "utf-8"));
-  assertDatapackIndex(datapackIndex);
-  const mapPackIndex = JSON.parse(await readFile(file.mapPackIndexFilepath, "utf-8"));
-  assertMapPackIndex(mapPackIndex);
   await rm(file.decryptedFilepath, { recursive: true, force: true });
   await rm(filePath, { force: true });
-  delete datapackIndex[file.fileName];
-  delete mapPackIndex[file.fileName];
-  await writeFile(file.datapackIndexFilepath, JSON.stringify(datapackIndex));
-  await writeFile(file.mapPackIndexFilepath, JSON.stringify(mapPackIndex));
+  if (await checkFileExists(file.datapackIndexFilepath)) {
+    const datapackIndex = JSON.parse(await readFile(file.datapackIndexFilepath, "utf-8"));
+    assertDatapackIndex(datapackIndex);
+    delete datapackIndex[file.fileName];
+    await writeFile(file.datapackIndexFilepath, JSON.stringify(datapackIndex, null, 2));
+  }
+  if (await checkFileExists(file.mapPackIndexFilepath)) {
+    const mapPackIndex = JSON.parse(await readFile(file.mapPackIndexFilepath, "utf-8"));
+    assertMapPackIndex(mapPackIndex);
+    delete mapPackIndex[file.fileName];
+    await writeFile(file.mapPackIndexFilepath, JSON.stringify(mapPackIndex, null, 2));
+  }
   delete metadata[filePath];
 }
 
@@ -89,5 +97,5 @@ export async function updateFileMetadata(fileMetadataFilepath: string, filepath:
     if (!metadata[file]) throw new Error(`File ${file} not found in metadata`);
     metadata[file]!.lastUpdated = new Date().toISOString();
   }
-  await writeFile(fileMetadataFilepath, JSON.stringify(metadata));
+  await writeFile(fileMetadataFilepath, JSON.stringify(metadata, null, 2));
 }
