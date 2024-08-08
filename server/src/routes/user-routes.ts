@@ -8,10 +8,11 @@ import { assertDatapackIndex, assertMapPackIndex, DatapackIndex, MapPackIndex } 
 import { exec } from "child_process";
 import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
-import { loadFileMetadata, writeFileMetadata } from "../file-metadata-handler.js";
+import { deleteDatapack, loadFileMetadata, writeFileMetadata } from "../file-metadata-handler.js";
 import { loadIndexes } from "../load-packs.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import logger from "../error-logger.js";
+import { FileMetadata } from "../types.js";
 
 export const requestDownload = async function requestDownload(
   request: FastifyRequest<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>,
@@ -377,8 +378,9 @@ export const userDeleteDatapack = async function userDeleteDatapack(
     return;
   }
   try {
-    const metadata = await loadFileMetadata(assetconfigs.fileMetadata);
-    if (!metadata[path]) {
+    const metadataIndex = await loadFileMetadata(assetconfigs.fileMetadata);
+    const metadata = metadataIndex[path];
+    if (!metadata) {
       // file exists but not in metadata (THIS CASE SHOULD NOT HAPPEN AND SHOULD BE INVESTIGATED IF OCCURS)
       logger.error("File exists but not in metadata, could require extra supervision of deletion ", {
         path,
@@ -386,11 +388,14 @@ export const userDeleteDatapack = async function userDeleteDatapack(
         filename
       });
       await rm(path, { force: true });
-      reply.status(404).send({ error: "File not found" });
+      reply.status(404).send({ error: "File not found in metadata, but file was deleted. See administrator for more help." });
       return;
     }
+    await deleteDatapack(metadataIndex, path);
+    await writeFile(assetconfigs.fileMetadata, JSON.stringify(metadataIndex, null, 2));
   } catch (e) {
     reply.status(500).send({ error: "There was an error loading/writing file metadata" });
     return;
   }
+  reply.status(200).send({ message: "File deleted" });
 };
