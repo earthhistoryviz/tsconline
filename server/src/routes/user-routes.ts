@@ -11,7 +11,6 @@ import { pipeline } from "stream/promises";
 import { loadFileMetadata, writeFileMetadata } from "../file-metadata-handler.js";
 import { loadIndexes } from "../load-packs.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
-import { findUser } from "../database.js";
 
 export const requestDownload = async function requestDownload(
   request: FastifyRequest<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>,
@@ -20,16 +19,6 @@ export const requestDownload = async function requestDownload(
   const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
-    return;
-  }
-  try {
-    const user = await findUser({ uuid });
-    if (!user || user.length !== 1 || !user[0]) {
-      reply.status(401).send({ error: "User doesn't exist" });
-      return;
-    }
-  } catch (e) {
-    reply.status(500).send({ error: "Database error" });
     return;
   }
   // for test usage: const uuid = "username";
@@ -150,16 +139,6 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
   const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
-    return;
-  }
-  try {
-    const user = await findUser({ uuid });
-    if (!user || user.length !== 1 || !user[0]) {
-      reply.status(401).send({ error: "User doesn't exist" });
-      return;
-    }
-  } catch (e) {
-    reply.status(500).send({ error: "Database error" });
     return;
   }
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
@@ -374,20 +353,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
 
 export const deleteDatapack = async function deleteDatapack(request: FastifyRequest, reply: FastifyReply) {
   const uuid = request.session.get("uuid");
-  if (!uuid) {
-    reply.status(401).send({ error: "User not logged in" });
-    return;
-  }
-  try {
-    const user = await findUser({ uuid });
-    if (!user || user.length !== 1 || !user[0]) {
-      reply.status(401).send({ error: "User doesn't exist" });
-      return;
-    }
-  } catch (e) {
-    reply.status(500).send({ error: "Database error" });
-    return;
-  }
   try {
     const metadata = await loadFileMetadata(assetconfigs.fileMetadata);
   } catch (e) {
