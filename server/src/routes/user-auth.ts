@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyReply, FastifyRequest, RegisterOptions } from "fastify";
-import { fetchUserDatapacks, requestDownload, userDeleteDatapack } from "./user-routes.js";
+import { requestDownload, userDeleteDatapack } from "./user-routes.js";
 import { findUser } from "../database.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "./login-routes.js";
@@ -10,9 +10,8 @@ async function verifySession(request: FastifyRequest, reply: FastifyReply) {
     reply.status(401).send({ error: "Unauthorized access" });
     return;
   }
-  let user;
   try {
-    user = await findUser({ uuid });
+    const user = await findUser({ uuid });
     if (!user || user.length !== 1 || !user[0]) {
       reply.status(401).send({ error: "Unauthorized access" });
       return;
@@ -63,9 +62,8 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
       needEncryption: { type: "boolean" }
     }
   };
-  fastify.addHook("preHandler", verifyRecaptcha);
   fastify.addHook("preHandler", verifySession);
-  fastify.get("/datapacks", { config: { rateLimit: looseRateLimit } }, fetchUserDatapacks);
+  fastify.addHook("preHandler", verifyRecaptcha);
   fastify.get(
     "/datapack/:filename",
     {

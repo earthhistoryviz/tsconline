@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { DatapackUploadForm, TSCButton, CustomTooltip } from "../components";
-import { context, state } from "../state";
+import { context } from "../state";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -17,7 +17,7 @@ import ViewCompactIcon from "@mui/icons-material/ViewCompact";
 import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompactDatapackRow";
 
 export const Datapacks = observer(function Datapacks() {
-  const { actions } = useContext(context);
+  const { state, actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
 
   const onChange = async (name: string) => {
@@ -114,7 +114,7 @@ type DatapackMenuProps = {
   button?: JSX.Element;
 };
 export const DatapackMenu: React.FC<DatapackMenuProps> = ({ name, button }) => {
-  const { actions } = useContext(context);
+  const { state, actions } = useContext(context);
   return (
     state.datapackIndex[name].uuid && (
       <Menu

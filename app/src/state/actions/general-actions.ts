@@ -213,7 +213,7 @@ export const fetchPresets = action("fetchPresets", async () => {
  */
 export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
   try {
-    const response = await fetcher(`/user-datapacks`, {
+    const response = await fetcher(`/user/datapacks`, {
       method: "GET",
       credentials: "include"
     });
