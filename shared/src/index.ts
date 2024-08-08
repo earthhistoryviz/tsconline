@@ -932,6 +932,7 @@ export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
   if (typeof o.title !== "string") throw new Error("DatapackMetadata title must be of type string");
   if (typeof o.file !== "string") throw new Error("DatapackMetadata file must be of type string");
   if (typeof o.size !== "string") throw new Error("DatapackMetadata size must be of type string");
+  if (typeof o.isPublic !== "string") throw new Error("DatapackMetadata isPublic must be of type string");
   if (typeof o.authoredBy !== "string") throw new Error("DatapackMetadata authoredBy must be of type string");
   if (!Array.isArray(o.tags)) throw new Error("DatapackMetadata tags must be an array");
   for (const tag of o.tags) {
