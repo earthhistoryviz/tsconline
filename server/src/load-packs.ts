@@ -17,7 +17,7 @@ import { readFile } from "fs/promises";
 import nearestColor from "nearest-color";
 import path from "path";
 import { assertColors } from "./types.js";
-import { grabFilepaths, rgbToHex, assetconfigs } from "./util.js";
+import { grabFilepaths, rgbToHex, assetconfigs, adminconfig } from "./util.js";
 import chalk from "chalk";
 import sharp from "sharp";
 import Vibrant from "node-vibrant";
@@ -144,7 +144,7 @@ async function getDominantRGB(filepath: string) {
  * For access from fastify server servicing
  */
 export async function grabMapImages(
-  datapacks: string[] = assetconfigs.activeDatapacks.map((datapack) => datapack.file),
+  datapacks: string[] = adminconfig.datapacks.map((datapack) => datapack.file),
   decryptionDirectory: string = assetconfigs.decryptionDirectory
 ): Promise<{ images: string[]; successful: boolean }> {
   const imagePaths = await grabFilepaths(datapacks, decryptionDirectory, "MapImages");

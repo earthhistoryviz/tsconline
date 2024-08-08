@@ -57,7 +57,6 @@ export type Email = {
 
 export type AssetConfig = {
   activeJar: string;
-  activeDatapacks: DatapackMetadata[];
   decryptionJar: string;
   decryptionDirectory: string;
   datapacksDirectory: string;
@@ -151,17 +150,6 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
   if (typeof o.colors !== "string") throw 'AssetConfig must have a "colors" string';
   if (typeof o.fileMetadata !== "string") throw 'AssetConfig must have a "fileMetadata" string';
   if (typeof o.uploadDirectory !== "string") throw 'AssetConfig must have a "uploadDirectory" string';
-  if (!o.activeDatapacks || !Array.isArray(o.activeDatapacks)) throw 'AssetConfig must have an "activeJar" string';
-  for (const [index, ad] of o.activeDatapacks.entries()) {
-    if (typeof ad !== "object")
-      throw "AssetConfig activeDatapacks item " + index + " must be a valid DatapackMetadata object";
-    if (typeof ad.description !== "string")
-      throw "AssetConfig activeDatapacks description item " + index + " must be a valid string";
-    if (typeof ad.title !== "string")
-      throw "AssetConfig activeDatapacks title item " + index + " must be a valid string";
-    if (typeof ad.file !== "string") throw "AssetConfig activeDatapacks file item " + index + " must be a valid string";
-    if (typeof ad.size !== "string") throw "AssetConfig activeDatapacks size item " + index + " must be a valid string";
-  }
   if (typeof o.timescaleFilepath !== "string") throw 'AssetConfig must have a "timescaleFilepath" string';
   if (typeof o.datapackImagesDirectory !== "string") throw 'AssetConfig must have a "datapackImagesDirectory" string';
   if (typeof o.adminConfigPath !== "string") throw 'AssetConfig must have a "adminConfigPath" string';

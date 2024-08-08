@@ -59,7 +59,7 @@ if (!(await checkFileExists(decryptionJarPath))) {
 
 // this try will run the decryption jar to decrypt all files in the datapack folder
 try {
-  const datapackPaths = assetconfigs.activeDatapacks.map(
+  const datapackPaths = adminconfig.datapacks.map(
     (datapack) => '"' + assetconfigs.datapacksDirectory + "/" + datapack.file + '"'
   );
   const cmd =
@@ -72,19 +72,14 @@ try {
   execSync(cmd, { stdio: "inherit" });
   console.log("Finished decryption");
 } catch (e) {
-  console.log("ERROR: Failed to decrypt activeDatapacks in AssetConfig with error: ", e);
+  console.log("ERROR: Failed to decrypt adminconfig datapacks with error: ", e);
   process.exit(1);
 }
 
 export const datapackIndex: DatapackIndex = {};
 export const mapPackIndex: MapPackIndex = {};
 const patterns = await loadFaciesPatterns();
-await loadIndexes(
-  datapackIndex,
-  mapPackIndex,
-  assetconfigs.decryptionDirectory,
-  assetconfigs.activeDatapacks.concat(adminconfig.datapacks)
-);
+await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, adminconfig.datapacks);
 
 declare module "@fastify/secure-session" {
   interface SessionData {

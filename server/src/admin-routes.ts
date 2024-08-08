@@ -220,8 +220,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       if (
         (await checkFileExists(filepath)) &&
         (await checkFileExists(decryptedFilepath)) &&
-        (adminconfig.datapacks.some((datapack) => datapack.file === filename) ||
-          assetconfigs.activeDatapacks.some((datapack) => datapack.file === filename)) &&
+        adminconfig.datapacks.some((datapack) => datapack.file === filename) &&
         datapackIndex[filename]
       ) {
         reply.status(409).send({ error: "File already exists" });
@@ -307,11 +306,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     return;
   }
   try {
-    // this was a previous dev datapack that was removed
-    if (
-      !assetconfigs.activeDatapacks.some((datapack) => datapack.file === filename) &&
-      !adminconfig.datapacks.some((datapack) => datapack.file === filename)
-    ) {
+    if (!adminconfig.datapacks.some((dp) => dp.file === filename)) {
       adminconfig.datapacks.push(datapackMetadata);
     }
     await writeFile(assetconfigs.adminConfigPath, JSON.stringify(adminconfig, null, 2));
@@ -339,12 +334,6 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
   }
   if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(extname(datapack))) {
     reply.status(400).send({ error: "Invalid file extension" });
-    return;
-  }
-  if (assetconfigs.activeDatapacks.some((dp) => dp.file === datapack)) {
-    reply
-      .status(403)
-      .send({ error: "Cannot delete a root datapack. See server administrator to change root dev packs." });
     return;
   }
   let filepath;

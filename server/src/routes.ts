@@ -598,18 +598,17 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   const userDatapackNames = userDatapackFilepaths.map((datapack) => path.basename(datapack));
   const datapacks: string[] = [];
   const userDatapacks = [];
-  const serverDatapacks = assetconfigs.activeDatapacks.map((datapack) => datapack.file);
+  const serverDatapacks = adminconfig.datapacks.map((datapackInfo) => datapackInfo.file);
 
   for (const datapack of chartrequest.datapacks) {
     if (serverDatapacks.includes(datapack)) {
       datapacks.push(`${assetconfigs.datapacksDirectory}/${datapack}`);
     } else if (uuid && userDatapackNames.includes(datapack)) {
       userDatapacks.push(path.join(assetconfigs.uploadDirectory, uuid, "datapacks", datapack));
-    } else if (adminconfig.datapacks.some((datapackInfo) => datapackInfo.file === datapack)) {
-      datapacks.push(`${assetconfigs.datapacksDirectory}/${datapack}`);
     } else {
-      console.log("ERROR: datapack: ", datapack, " is not included in activeDatapacks");
-      console.log("assetconfig.activeDatapacks:", assetconfigs.activeDatapacks);
+      console.log("ERROR: datapack: ", datapack, " is not included in any configuration (server or user)");
+      console.log("adminconfig.datapacks: ", adminconfig.datapacks);
+      console.log("Available user datapacks: ", userDatapackNames);
       console.log("chartrequest.datapacks: ", chartrequest.datapacks);
       reply.send({ error: "ERROR: failed to load datapacks" });
     }
