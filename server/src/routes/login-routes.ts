@@ -9,20 +9,20 @@ import {
   deleteVerification,
   deleteUser,
   checkForUsersWithUsernameOrEmail
-} from "./database.js";
+} from "../database.js";
 import { compare, hash } from "bcrypt-ts";
 import { OAuth2Client } from "google-auth-library";
-import { Email, NewUser, NewVerification, UpdatedUser } from "./types.js";
-import { sendEmail } from "./send-email.js";
+import { Email, NewUser, NewVerification, UpdatedUser } from "../types.js";
+import { sendEmail } from "../send-email.js";
 import "dotenv/config";
-import { assetconfigs } from "./util.js";
+import { assetconfigs } from "../util.js";
 import path from "path";
 import { pipeline } from "stream/promises";
 import { createWriteStream } from "fs";
 import { SharedUser, assertSharedUser } from "@tsconline/shared";
-import { loadFileMetadata } from "./file-metadata-handler.js";
+import { loadFileMetadata } from "../file-metadata-handler.js";
 import { readdir, rm, writeFile, mkdir } from "fs/promises";
-import { checkRecaptchaToken, generateToken } from "./verify.js";
+import { checkRecaptchaToken, generateToken } from "../verify.js";
 import * as validator from "validator";
 
 export const googleRecaptchaBotThreshold = 0.5;

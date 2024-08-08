@@ -4,8 +4,9 @@ import fastifyStatic from "@fastify/static";
 import process from "process";
 import { execSync } from "child_process";
 import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs, adminconfig } from "./util.js";
-import * as routes from "./routes.js";
-import * as loginRoutes from "./login-routes.js";
+import * as routes from "./routes/routes.js";
+import * as userRoutes from "./routes/user-routes.js"
+import * as loginRoutes from "./routes/login-routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
 import fastifyCompress from "@fastify/compress";
 import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
@@ -20,7 +21,7 @@ import { db, findIp, createIp, updateIp, initializeDatabase } from "./database.j
 import { sendEmail } from "./send-email.js";
 import cron from "node-cron";
 import path from "path";
-import { adminRoutes } from "./admin-auth.js";
+import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 
 const maxConcurrencySize = 3;
@@ -239,7 +240,7 @@ const looseRateLimit = {
   }
 };
 
-server.get("/user-datapacks", moderateRateLimit, routes.fetchUserDatapacks);
+server.get("/user-datapacks", moderateRateLimit, userRoutes.fetchUserDatapacks);
 // checks chart.pdf-status
 server.get<{ Params: { hash: string } }>("/svgstatus/:hash", looseRateLimit, routes.fetchSVGStatus);
 
@@ -249,10 +250,10 @@ server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, r
 server.get<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>(
   "/download/user-datapacks/:filename",
   moderateRateLimit,
-  routes.requestDownload
+  userRoutes.requestDownload
 );
 // uploads datapack
-server.post("/user/datapack", moderateRateLimit, routes.uploadDatapack);
+server.post("/user/datapack", moderateRateLimit, userRoutes.uploadDatapack);
 server.register(adminRoutes, { prefix: "/admin" });
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);

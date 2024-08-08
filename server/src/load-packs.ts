@@ -147,6 +147,7 @@ export async function grabMapImages(
   datapacks: string[] = adminconfig.datapacks.map((datapack) => datapack.file),
   decryptionDirectory: string = assetconfigs.decryptionDirectory
 ): Promise<{ images: string[]; successful: boolean }> {
+  if (datapacks.length === 0) return { images: [], successful: true };
   const imagePaths = await grabFilepaths(datapacks, decryptionDirectory, "MapImages");
   const compiledImages: string[] = [];
   let successful = true;

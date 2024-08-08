@@ -1,7 +1,7 @@
 import { vi, beforeAll, afterAll, describe, beforeEach, it, expect } from "vitest";
 import fastify, { FastifyRequest, FastifyInstance } from "fastify";
 import fastifySecureSession from "@fastify/secure-session";
-import { requestDownload } from "../src/routes";
+import { requestDownload } from "../src/routes/user-routes";
 import * as runJavaEncryptModule from "../src/encryption";
 import * as utilModule from "../src/util";
 import * as fspModule from "fs/promises";
