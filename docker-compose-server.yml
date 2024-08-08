@@ -9,6 +9,7 @@ services:
     ports: []
     environment:
       - NODE_ENV=production
+      - CLOSE_BROWSER=true
 
 networks:
   shared_network:
