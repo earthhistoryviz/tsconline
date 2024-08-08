@@ -133,6 +133,7 @@ export const fetchDatapackIndex = action("fetchDatapackIndex", async () => {
     setDatapackIndex({ ...state.datapackIndex, ...datapackIndex });
     console.log("Datapacks loaded");
   } catch (e) {
+    console.log("Error in fetchDatapackIndex", e);
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
   }
@@ -165,6 +166,7 @@ export const fetchMapPackIndex = action("fetchMapPackIndex", async () => {
     setMapPackIndex({ ...state.mapPackIndex, ...mapPackIndex });
     console.log("MapPacks loaded");
   } catch (e) {
+    console.log("Error in fetchMapPackIndex", e);
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
   }
@@ -263,6 +265,7 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
       displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
     }
   } catch (e) {
+    console.log("Error in fetchUserDatapacks", e);
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
   }
@@ -280,7 +283,7 @@ export const uploadDatapack = action("uploadDatapack", async (file: File, metada
   formData.append("file", file);
   formData.append("title", title);
   formData.append("description", description);
-  formData.append("isPublic", isPublic);
+  formData.append("isPublic", String(isPublic));
   formData.append("references", JSON.stringify(references));
   formData.append("tags", JSON.stringify(tags));
   formData.append("authoredBy", authoredBy);
@@ -295,13 +298,6 @@ export const uploadDatapack = action("uploadDatapack", async (file: File, metada
       headers: {
         "recaptcha-token": recaptcha
       }
-    });
-    const data = await response.json();
-  try {
-    const response = await fetcher(`/user/datapack`, {
-      method: "POST",
-      body: formData,
-      credentials: "include"
     });
     const data = await response.json();
 

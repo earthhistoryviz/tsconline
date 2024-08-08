@@ -52,7 +52,7 @@ export async function uploadUserDatapackHandler(
     file: filename,
     description,
     title,
-    isPublic: isPublic || "false",
+    isPublic: isPublic ?? "false",
     authoredBy,
     references,
     tags,
