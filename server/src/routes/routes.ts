@@ -36,16 +36,6 @@ export const fetchServerDatapack = async function fetchServerDatapack(
     reply.status(404).send({ error: "Datapack not found" });
     return;
   }
-  try{
-    await access(assetconfigs.publicDirectory);
-    console.log("Loading public datapacks");
-    const publicDatapackPath = await readFile(path.join(assetconfigs.publicDirectory, "DatapackIndex.json"), "utf8");
-    Object.assign(serverDatapack, JSON.parse(publicDatapackPath));
-    const publicMapPackPath = await readFile(path.join(assetconfigs.publicDirectory, "MapPackIndex.json"), "utf8");
-    Object.assign(serverDatapack, JSON.parse(publicMapPackPath));
-  }catch(e){
-    console.log("No public datapacks to load");
-  }
   reply.send(serverDatapack);
 };
 
