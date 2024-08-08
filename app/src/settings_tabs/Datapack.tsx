@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { DatapackUploadForm, TSCButton, CustomTooltip } from "../components";
 import { context } from "../state";
@@ -15,10 +15,22 @@ import { TSCDatapackRow } from "../components/datapack_display/TSCDatapackRow";
 import DeselectIcon from "@mui/icons-material/Deselect";
 import ViewCompactIcon from "@mui/icons-material/ViewCompact";
 import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompactDatapackRow";
+import { loadRecaptcha, removeRecaptcha } from "../util";
 
 export const Datapacks = observer(function Datapacks() {
   const { state, actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
+
+  useEffect(() => {
+    if (state.isLoggedIn) {
+      loadRecaptcha();
+    }
+    return () => {
+      if (state.isLoggedIn) {
+        removeRecaptcha();
+      }
+    };
+  }, []);
 
   const onChange = async (name: string) => {
     if (state.config.datapacks.includes(name)) {
