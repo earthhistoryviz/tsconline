@@ -2,6 +2,7 @@ import { access, readFile, rm, writeFile } from "fs/promises";
 import { FileMetadataIndex, assertFileMetadataIndex } from "./types.js";
 import { assertDatapackIndex, assertMapPackIndex } from "@tsconline/shared";
 import { checkFileExists } from "./util.js";
+import logger from "./error-logger.js";
 
 export const sunsetInterval = 1000 * 60 * 60 * 24 * 14;
 
@@ -81,12 +82,16 @@ export async function deleteDatapack(metadata: FileMetadataIndex, filePath: stri
     assertDatapackIndex(datapackIndex);
     delete datapackIndex[file.fileName];
     await writeFile(file.datapackIndexFilepath, JSON.stringify(datapackIndex, null, 2));
+  } else {
+    logger.error(`Datapack index file not found for file ${filePath}`);
   }
   if (await checkFileExists(file.mapPackIndexFilepath)) {
     const mapPackIndex = JSON.parse(await readFile(file.mapPackIndexFilepath, "utf-8"));
     assertMapPackIndex(mapPackIndex);
     delete mapPackIndex[file.fileName];
     await writeFile(file.mapPackIndexFilepath, JSON.stringify(mapPackIndex, null, 2));
+  } else {
+    logger.error(`Map pack index file not found for file ${filePath}`);
   }
   delete metadata[filePath];
 }
