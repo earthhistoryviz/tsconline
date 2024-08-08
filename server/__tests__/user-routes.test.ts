@@ -137,8 +137,8 @@ const testUser = {
 
 const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   { method: "GET", url: "/user/datapacks" },
-  { method: "GET", url: `/user/datapack/${filename}`, body: { filename } },
-  { method: "POST", url: "/user/datapack", body: { filename } }
+  { method: "GET", url: `/user/datapack/${filename}` },
+  { method: "POST", url: "/user/datapack" }
 ];
 
 describe("verifySession tests", () => {
