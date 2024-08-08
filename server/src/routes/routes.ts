@@ -8,7 +8,8 @@ import {
   MapPackInfoChunk,
   TimescaleItem,
   assertChartRequest,
-  assertTimescale} from "@tsconline/shared";
+  assertTimescale
+} from "@tsconline/shared";
 import { deleteDirectory, assetconfigs, adminconfig } from "../util.js";
 import md5 from "md5";
 import svgson from "svgson";
@@ -101,7 +102,6 @@ export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
   const mapPackInfoChunk: MapPackInfoChunk = { mapPackIndex: chunk!, totalChunks: allMapPackKeys.length };
   reply.status(200).send(mapPackInfoChunk);
 };
-
 
 export const fetchImage = async function (
   request: FastifyRequest<{ Params: { datapackName: string; imageName: string } }>,
