@@ -1,9 +1,11 @@
-import { vi, beforeAll, afterAll, describe, beforeEach, it, expect } from "vitest";
-import fastify, { FastifyInstance } from "fastify";
+import { vi, beforeAll, afterAll, describe, beforeEach, it, expect, test } from "vitest";
+import fastify, { FastifyInstance, HTTPMethods, InjectOptions } from "fastify";
 import fastifySecureSession from "@fastify/secure-session";
 import * as runJavaEncryptModule from "../src/encryption";
 import * as utilModule from "../src/util";
 import * as fspModule from "fs/promises";
+import * as database from "../src/database";
+import * as verify from "../src/verify";
 import { userRoutes } from "../src/routes/user-auth";
 
 vi.mock("../src/database", async () => {
@@ -50,9 +52,9 @@ vi.mock("../src/util", async (importOriginal) => {
   return {
     ...actual,
     assetconfigs: { uploadDirectory: "" },
-    loadAssetConfigs: vi.fn().mockImplementation(() => {}),
-    deleteDirectory: vi.fn().mockImplementation(() => {}),
-    resetUploadDirectory: vi.fn().mockImplementation(() => {}),
+    loadAssetConfigs: vi.fn().mockImplementation(() => { }),
+    deleteDirectory: vi.fn().mockImplementation(() => { }),
+    resetUploadDirectory: vi.fn().mockImplementation(() => { }),
     checkHeader: vi.fn().mockReturnValue(true)
   };
 });
@@ -132,6 +134,97 @@ const testUser = {
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 0
 };
+
+const routes: { method: HTTPMethods; url: string; body?: object }[] = [
+  { method: "GET", url: "/user/datapacks" },
+  { method: "GET", url: `/user/datapack/${filename}`, body: { filename } },
+  { method: "POST", url: "/user/datapack", body: { filename } }
+];
+
+describe("verifySession tests", () => {
+  describe.each(routes)("when request is %s %s", ({ method, url, body }) => {
+    const findUser = vi.spyOn(database, "findUser");
+    beforeEach(() => {
+      findUser.mockClear();
+    })
+    it("should reply 401 when uuid is not found in session", async () => {
+      const response = await app.inject({
+        method: method as InjectOptions["method"],
+        url,
+        headers: { "recaptcha-token": "mock-token", "mock-uuid": "" },
+        payload: body
+      });
+      expect(findUser).not.toHaveBeenCalled();
+      expect(response.statusCode).toBe(401);
+      expect(await response.json()).toEqual({ error: "Unauthorized access" });
+    })
+    it("should reply 401 when user is not found in database", async () => {
+      findUser.mockResolvedValueOnce([]);
+      const response = await app.inject({
+        method: method as InjectOptions["method"],
+        url,
+        headers,
+        payload: body
+      });
+      expect(findUser).toHaveBeenCalledOnce();
+      expect(response.statusCode).toBe(401);
+      expect(await response.json()).toEqual({ error: "Unauthorized access" });
+    })
+    it("should reply 500 when an error occurred in database", async () => {
+      findUser.mockRejectedValueOnce(new Error("Database error"));
+      const response = await app.inject({
+        method: method as InjectOptions["method"],
+        url,
+        headers,
+        payload: body
+      });
+      expect(findUser).toHaveBeenCalledOnce();
+      expect(response.statusCode).toBe(500);
+      expect(await response.json()).toEqual({ error: "Database error" });
+    });
+  })
+})
+
+describe("verifyRecaptcha tests", () => {
+  describe.each(routes)("when request is %s %s", ({ method, url, body }) => {
+    it("should reply 400 when recaptcha token is missing", async () => {
+      const response = await app.inject({
+        method: method as InjectOptions["method"],
+        url,
+        headers: { "mock-uuid": uuid },
+        payload: body
+      });
+      expect(response.statusCode).toBe(400);
+      expect(await response.json()).toEqual({ error: "Missing recaptcha token" });
+    })
+    it("should reply 422 when recaptcha failed", async () => {
+      const checkRecaptchaToken = vi.spyOn(verify, "checkRecaptchaToken");
+      checkRecaptchaToken.mockResolvedValueOnce(0);
+      const response = await app.inject({
+        method: method as InjectOptions["method"],
+        url,
+        headers,
+        payload: body
+      });
+      expect(checkRecaptchaToken).toHaveBeenCalledOnce();
+      expect(response.statusCode).toBe(422);
+      expect(await response.json()).toEqual({ error: "Recaptcha failed" });
+    })
+    it("should reply 500 when an error occurred in checkRecaptchaToken", async () => {
+      const checkRecaptchaToken = vi.spyOn(verify, "checkRecaptchaToken");
+      checkRecaptchaToken.mockRejectedValueOnce(new Error("Recaptcha error"));
+      const response = await app.inject({
+        method: method as InjectOptions["method"],
+        url,
+        headers,
+        payload: body
+      });
+      expect(checkRecaptchaToken).toHaveBeenCalledOnce();
+      expect(response.statusCode).toBe(500);
+      expect(await response.json()).toEqual({ error: "Recaptcha error" });
+    })
+  })
+})
 
 describe("requestDownload", () => {
   it("should reply 403 when realpath throw an error", async () => {
