@@ -26,8 +26,8 @@ jobs:
           if git diff --name-only main...HEAD | grep -E 'uploads/'; then
             echo "uploads folder detected, please remove" >> disallowed_files.txt
           fi
-          if git diff --name-only main...HEAD | grep 'file_metadata.json'; then
-            echo "file_metadata.json detected, please remove" >> disallowed_files.txt
+          if git diff --name-only main...HEAD | grep 'file-metadata.json'; then
+            echo "file-metadata.json detected, please remove" >> disallowed_files.txt
           fi   
           git diff --name-only main...HEAD | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store|db)$' |grep -v -E '^server/__tests__/__data__/(encryption-test-keys/.*|.*)\.(dpk|txt)$' >> disallowed_files.txt || true
           if git diff --name-only main...HEAD | grep -E 'app/dist/|server/dist/|shared/dist'; then
