@@ -1,8 +1,8 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { realpath, access, rm, mkdir, readFile, writeFile } from "fs/promises";
-import path from "path";
+import path, { join } from "path";
 import { runJavaEncrypt } from "../encryption.js";
-import { assetconfigs, checkHeader, resetUploadDirectory } from "../util.js";
+import { assetconfigs, checkHeader, resetUploadDirectory, verifyFilepath } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
 import { assertDatapackIndex, assertMapPackIndex, DatapackIndex, MapPackIndex } from "@tsconline/shared";
 import { exec } from "child_process";
@@ -11,6 +11,7 @@ import { pipeline } from "stream/promises";
 import { loadFileMetadata, writeFileMetadata } from "../file-metadata-handler.js";
 import { loadIndexes } from "../load-packs.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
+import logger from "../error-logger.js";
 
 export const requestDownload = async function requestDownload(
   request: FastifyRequest<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>,
@@ -351,12 +352,45 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   reply.status(200).send({ message: "File uploaded" });
 };
 
-export const deleteDatapack = async function deleteDatapack(request: FastifyRequest, reply: FastifyReply) {
+export const userDeleteDatapack = async function userDeleteDatapack(
+  request: FastifyRequest<{ Params: { filename: string } }>,
+  reply: FastifyReply
+) {
   const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  }
+  const { filename } = request.params;
+  if (!filename) {
+    reply.status(400).send({ error: "Missing filename" });
+    return;
+  }
+  const path = join(assetconfigs.uploadDirectory, uuid, "datapacks", filename);
+  try {
+    if (!(await verifyFilepath(path))) {
+      reply.status(403).send({ error: "Invalid filename/File doesn't exist" });
+      return;
+    }
+  } catch (e) {
+    reply.status(500).send({ error: "Failed to verify file path" });
+    return;
+  }
   try {
     const metadata = await loadFileMetadata(assetconfigs.fileMetadata);
+    if (!metadata[path]) {
+      // file exists but not in metadata (THIS CASE SHOULD NOT HAPPEN AND SHOULD BE INVESTIGATED IF OCCURS)
+      logger.error("File exists but not in metadata, could require extra supervision of deletion ", {
+        path,
+        uuid,
+        filename
+      });
+      await rm(path, { force: true });
+      reply.status(404).send({ error: "File not found" });
+      return;
+    }
   } catch (e) {
-    reply.status(500).send({ error: "THere was an error loading/writing file metadata" });
+    reply.status(500).send({ error: "There was an error loading/writing file metadata" });
     return;
   }
 };
