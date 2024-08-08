@@ -11,7 +11,7 @@ import * as util from "../src/util";
 import * as streamPromises from "stream/promises";
 import * as index from "../src/index";
 import * as shared from "@tsconline/shared";
-import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach } from "vitest";
+import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach, MockInstance } from "vitest";
 import fastifySecureSession from "@fastify/secure-session";
 import { join, normalize, parse, resolve } from "path";
 import fastifyMultipart from "@fastify/multipart";
@@ -1388,7 +1388,7 @@ describe("adminDeleteServerDatapack", () => {
     expect(response.statusCode).toBe(404);
   });
   describe("admin datapack deletion where datapack is in adminconfig", async () => {
-    let adminconfigSpy;
+    let adminconfigSpy: MockInstance;
     beforeEach(() => {
       adminconfigSpy = vi
         .spyOn(util, "adminconfig", "get")

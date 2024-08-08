@@ -17,10 +17,10 @@ export default defineConfig({
       reporter: ["text", "lcov"],
       include: ["server/src/**", "app/src/**", "shared/src/**"],
       thresholds: {
-        "server/src/admin-auth.ts": thresholdConfig,
-        "server/src/admin-routes.ts": thresholdConfig,
+        "server/src/admin/admin-auth.ts": thresholdConfig,
+        "server/src/admin/admin-routes.ts": thresholdConfig,
         "server/src/encryption.ts": thresholdConfig,
-        "server/src/login-routes.ts": thresholdConfig,
+        "server/src/routes/login-routes.ts": thresholdConfig,
         "server/src/parse-datapacks.ts": thresholdConfig,
         "server/src/parse-map-packs.ts": thresholdConfig,
         "shared/src/util.ts": thresholdConfig
