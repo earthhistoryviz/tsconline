@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyReply, FastifyRequest, RegisterOptions } from "fastify";
-import { findUser } from "./database.js";
+import { findUser } from "../database.js";
 import {
   adminCreateUser,
   adminDeleteUserDatapack,
@@ -9,8 +9,8 @@ import {
   adminDeleteServerDatapack,
   getAllUserDatapacks
 } from "./admin-routes.js";
-import { checkRecaptchaToken } from "./verify.js";
-import { googleRecaptchaBotThreshold } from "./login-routes.js";
+import { checkRecaptchaToken } from "../verify.js";
+import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
 
 async function verifyAdmin(request: FastifyRequest, reply: FastifyReply) {
   const uuid = request.session.get("uuid");

@@ -7,7 +7,7 @@ import { compare } from "bcrypt-ts";
 import { Verification } from "../src/types";
 import formAutoContent from "form-auto-content";
 import * as cryptoModule from "crypto";
-import * as loginRoutes from "../src/login-routes";
+import * as loginRoutes from "../src/routes/login-routes";
 import * as verifyModule from "../src/verify";
 import * as databaseModule from "../src/database";
 import * as emailModule from "../src/send-email";

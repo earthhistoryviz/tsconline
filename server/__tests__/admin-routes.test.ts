@@ -1,5 +1,5 @@
 import fastify, { FastifyInstance, HTTPMethods, InjectOptions } from "fastify";
-import * as adminAuth from "../src/admin-auth";
+import * as adminAuth from "../src/admin/admin-auth";
 import * as database from "../src/database";
 import * as verify from "../src/verify";
 import * as fsPromises from "fs/promises";
