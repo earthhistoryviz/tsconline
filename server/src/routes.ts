@@ -46,16 +46,6 @@ export const fetchServerDatapack = async function fetchServerDatapack(
     reply.status(404).send({ error: "Datapack not found" });
     return;
   }
-  try {
-    await access(assetconfigs.publicDirectory);
-    console.log("Loading public datapacks");
-    const publicDatapackPath = await readFile(path.join(assetconfigs.publicDirectory, "DatapackIndex.json"), "utf8");
-    Object.assign(serverDatapack, JSON.parse(publicDatapackPath));
-    const publicMapPackPath = await readFile(path.join(assetconfigs.publicDirectory, "MapPackIndex.json"), "utf8");
-    Object.assign(serverDatapack, JSON.parse(publicMapPackPath));
-  } catch (e) {
-    console.log("No public datapacks to load");
-  }
   reply.send(serverDatapack);
 };
 
@@ -253,7 +243,6 @@ export const fetchPublicDatapacks = async function fetchPublicDatapacks(request:
     try {
       await access(path.join(assetconfigs.publicDirectory, "DatapackIndex.json"));
     } catch (e) {
-      console.log("No public datapacks to load");
       reply.status(200).send({
         datapackIndex: datapackIndex,
         mapPackIndex: mapPackIndex
@@ -348,7 +337,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   let userDir: string;
   let datapackDir: string;
   let filepath: string = "";
-  let isPublic = "false";
   try {
     userDir = path.join(assetconfigs.uploadDirectory, uuid);
     datapackDir = path.join(userDir, "datapacks");
@@ -402,16 +390,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     reply.status(400).send({ error: "No file uploaded" });
     return;
   }
-  const name = fields.name;
-  const description = fields.description;
-  if (fields.isPublic === "true") {
-    isPublic = "true";
-  }
-
-  if (!name || !description) {
-    await errorHandler("Name or description not provided", 400);
-    return;
-  }
+  const isPublic = fields.isPublic === "true";
   const filename = uploadedFile.filename;
   fields.filename = filename;
   fields.filepath = filepath;

@@ -206,8 +206,6 @@ server.get("/datapackinfoindex", (_request, reply) => {
   }
 });
 
-server.get("/public/datapacks", routes.fetchPublicDatapacks);
-
 server.get("/facies-patterns", (_request, reply) => {
   if (!patterns || Object.keys(patterns).length === 0) {
     reply.status(500).send({ error: "Server isn't able to load facies patterns" });
@@ -241,7 +239,7 @@ const looseRateLimit = {
     }
   }
 };
-
+server.get("/public/datapacks", moderateRateLimit, routes.fetchPublicDatapacks);
 server.get("/user-datapacks", moderateRateLimit, userRoutes.fetchUserDatapacks);
 // checks chart.pdf-status
 server.get<{ Params: { hash: string } }>("/svgstatus/:hash", looseRateLimit, routes.fetchSVGStatus);

@@ -54,6 +54,7 @@ describe("general parse-datapacks tests", () => {
     title: "Title",
     file: "file.dpk",
     size: "size",
+    isPublic: "false",
     tags: [],
     authoredBy: "authoredBy",
     references: []
