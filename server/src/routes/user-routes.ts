@@ -39,7 +39,10 @@ export const requestDownload = async function requestDownload(
     return;
   }
   maybeEncryptedFilepath = path.resolve(maybeEncryptedFilepath);
-  if (!filepath.startsWith(datapackDir) || !maybeEncryptedFilepath.startsWith(encryptedFilepathDir)) {
+  if (
+    !filepath.startsWith(path.resolve(datapackDir)) ||
+    !maybeEncryptedFilepath.startsWith(path.resolve(encryptedFilepathDir))
+  ) {
     reply.status(403).send({ error: "Invalid file path" });
     return;
   }
