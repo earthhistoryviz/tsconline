@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyReply, FastifyRequest, RegisterOptions } from "fastify";
-import { requestDownload, userDeleteDatapack } from "./user-routes.js";
+import { requestDownload, uploadDatapack, userDeleteDatapack } from "./user-routes.js";
 import { findUser } from "../database.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "./login-routes.js";
@@ -73,7 +73,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     requestDownload
   );
   // TODO - TRY WITH SCHEMA
-  fastify.post("/datapack", { config: { rateLimit: moderateRateLimit } }, requestDownload);
+  fastify.post("/datapack", { config: { rateLimit: moderateRateLimit } }, uploadDatapack);
   fastify.delete(
     "/datapack/:filename",
     { config: { rateLimit: moderateRateLimit }, schema: { params: fileNameParams } },

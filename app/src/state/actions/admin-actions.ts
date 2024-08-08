@@ -1,6 +1,6 @@
 import { action, runInAction } from "mobx";
 import { state } from "..";
-import { executeRecaptcha, fetcher } from "../../util";
+import { fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   AdminSharedUser,
@@ -10,7 +10,7 @@ import {
   isServerResponseError
 } from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
-import { addDatapackToIndex, fetchServerDatapack, pushError, pushSnackbar } from "./general-actions";
+import { addDatapackToIndex, fetchServerDatapack, getRecaptchaToken, pushError, pushSnackbar } from "./general-actions";
 import { State } from "../state";
 
 export const adminFetchUsers = action(async () => {
@@ -307,20 +307,6 @@ export const adminUploadServerDatapack = action(async (file: File, metadata: Dat
     console.error(e);
   }
 });
-
-async function getRecaptchaToken(token: string) {
-  try {
-    const recaptchaToken = await executeRecaptcha(token);
-    if (!recaptchaToken) {
-      pushError(ErrorCodes.RECAPTCHA_FAILED);
-      return null;
-    }
-    return recaptchaToken;
-  } catch (error) {
-    pushError(ErrorCodes.RECAPTCHA_FAILED);
-    return null;
-  }
-}
 
 export const adminRemoveDisplayedUserDatapack = action((uuid: string) => {
   if (!state.admin.displayedUserDatapacks[uuid]) throw new Error(`User ${uuid} not found in displayedUserDatapacks`);
