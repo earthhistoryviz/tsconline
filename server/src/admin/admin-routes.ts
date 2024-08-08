@@ -1,23 +1,23 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { checkForUsersWithUsernameOrEmail, createUser, findUser } from "./database.js";
+import { checkForUsersWithUsernameOrEmail, createUser, findUser } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
-import { deleteUser } from "./database.js";
+import { deleteUser } from "../database.js";
 import { resolve, extname, join, relative, parse } from "path";
-import { adminconfig, assetconfigs, checkFileExists, verifyFilepath } from "./util.js";
+import { adminconfig, assetconfigs, checkFileExists, verifyFilepath } from "../util.js";
 import { createWriteStream } from "fs";
 import { readFile, realpath, rm, writeFile } from "fs/promises";
-import { deleteDatapack, loadFileMetadata } from "./file-metadata-handler.js";
+import { deleteDatapack, loadFileMetadata } from "../file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
-import { datapackIndex, mapPackIndex } from "./index.js";
-import { loadIndexes } from "./load-packs.js";
+import { datapackIndex, mapPackIndex } from "../index.js";
+import { loadIndexes } from "../load-packs.js";
 import validator from "validator";
 import { pipeline } from "stream/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "util";
 import { assertAdminSharedUser, assertDatapackIndex } from "@tsconline/shared";
-import { NewUser } from "./types.js";
-import { uploadUserDatapackHandler } from "./upload-handlers.js";
+import { NewUser } from "../types.js";
+import { uploadUserDatapackHandler } from "../upload-handlers.js";
 
 /**
  * Get all users for admin to configure on frontend
