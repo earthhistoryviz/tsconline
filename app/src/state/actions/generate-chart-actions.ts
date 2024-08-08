@@ -3,7 +3,7 @@ import { displayServerError } from "./util-actions";
 import { state } from "../state";
 import { action } from "mobx";
 import { fetcher } from "../../util";
-import { ColumnInfo, assertChartInfo, isServerResponseError } from "@tsconline/shared";
+import { ColumnInfo, assertChartErrorResponse, assertChartInfo } from "@tsconline/shared";
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -143,20 +143,33 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   }
   console.log("Sending settings to server...");
   try {
-    const response = await fetcher(`/charts/${state.useCache}/${state.settings.useDatapackSuggestedAge}/username`, {
+    const response = await fetcher(`/chart`, {
       method: "POST",
       body,
       credentials: "include"
     });
     const answer = await response.json();
-    // will check if svg is loaded
-    if (isServerResponseError(answer)) {
-      // If the server sends an error, display it
-      displayServerError(answer, ErrorCodes.INVALID_CHART_FROM_JAR, ErrorMessages[ErrorCodes.INVALID_CHART_FROM_JAR]);
+    if (response.status === 500) {
+      assertChartErrorResponse(answer);
+      switch (answer.errorCode) {
+        case 100:
+          displayServerError(
+            answer,
+            ErrorCodes.SERVER_FILE_METADATA_ERROR,
+            ErrorMessages[ErrorCodes.SERVER_FILE_METADATA_ERROR]
+          );
+          break;
+        case 400:
+          displayServerError(
+            answer,
+            ErrorCodes.INVALID_CHART_FROM_JAR,
+            ErrorMessages[ErrorCodes.INVALID_CHART_FROM_JAR]
+          );
+          break;
+      }
       generalActions.setChartLoading(false);
       return;
     }
-
     try {
       assertChartInfo(answer);
       generalActions.setChartHash(answer.hash);
