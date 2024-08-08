@@ -52,9 +52,9 @@ vi.mock("../src/util", async (importOriginal) => {
   return {
     ...actual,
     assetconfigs: { uploadDirectory: "" },
-    loadAssetConfigs: vi.fn().mockImplementation(() => { }),
-    deleteDirectory: vi.fn().mockImplementation(() => { }),
-    resetUploadDirectory: vi.fn().mockImplementation(() => { }),
+    loadAssetConfigs: vi.fn().mockImplementation(() => {}),
+    deleteDirectory: vi.fn().mockImplementation(() => {}),
+    resetUploadDirectory: vi.fn().mockImplementation(() => {}),
     checkHeader: vi.fn().mockReturnValue(true)
   };
 });
@@ -138,7 +138,8 @@ const testUser = {
 const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   { method: "GET", url: "/user/datapacks" },
   { method: "GET", url: `/user/datapack/${filename}` },
-  { method: "POST", url: "/user/datapack" }
+  { method: "POST", url: "/user/datapack" },
+  { method: "DELETE", url: `/user/datapack/${filename}` }
 ];
 
 describe("verifySession tests", () => {
@@ -146,7 +147,7 @@ describe("verifySession tests", () => {
     const findUser = vi.spyOn(database, "findUser");
     beforeEach(() => {
       findUser.mockClear();
-    })
+    });
     it("should reply 401 when uuid is not found in session", async () => {
       const response = await app.inject({
         method: method as InjectOptions["method"],
@@ -157,7 +158,7 @@ describe("verifySession tests", () => {
       expect(findUser).not.toHaveBeenCalled();
       expect(response.statusCode).toBe(401);
       expect(await response.json()).toEqual({ error: "Unauthorized access" });
-    })
+    });
     it("should reply 401 when user is not found in database", async () => {
       findUser.mockResolvedValueOnce([]);
       const response = await app.inject({
@@ -169,7 +170,7 @@ describe("verifySession tests", () => {
       expect(findUser).toHaveBeenCalledOnce();
       expect(response.statusCode).toBe(401);
       expect(await response.json()).toEqual({ error: "Unauthorized access" });
-    })
+    });
     it("should reply 500 when an error occurred in database", async () => {
       findUser.mockRejectedValueOnce(new Error("Database error"));
       const response = await app.inject({
@@ -182,8 +183,8 @@ describe("verifySession tests", () => {
       expect(response.statusCode).toBe(500);
       expect(await response.json()).toEqual({ error: "Database error" });
     });
-  })
-})
+  });
+});
 
 describe("verifyRecaptcha tests", () => {
   describe.each(routes)("when request is %s %s", ({ method, url, body }) => {
@@ -196,7 +197,7 @@ describe("verifyRecaptcha tests", () => {
       });
       expect(response.statusCode).toBe(400);
       expect(await response.json()).toEqual({ error: "Missing recaptcha token" });
-    })
+    });
     it("should reply 422 when recaptcha failed", async () => {
       const checkRecaptchaToken = vi.spyOn(verify, "checkRecaptchaToken");
       checkRecaptchaToken.mockResolvedValueOnce(0);
@@ -209,7 +210,7 @@ describe("verifyRecaptcha tests", () => {
       expect(checkRecaptchaToken).toHaveBeenCalledOnce();
       expect(response.statusCode).toBe(422);
       expect(await response.json()).toEqual({ error: "Recaptcha failed" });
-    })
+    });
     it("should reply 500 when an error occurred in checkRecaptchaToken", async () => {
       const checkRecaptchaToken = vi.spyOn(verify, "checkRecaptchaToken");
       checkRecaptchaToken.mockRejectedValueOnce(new Error("Recaptcha error"));
@@ -222,9 +223,9 @@ describe("verifyRecaptcha tests", () => {
       expect(checkRecaptchaToken).toHaveBeenCalledOnce();
       expect(response.statusCode).toBe(500);
       expect(await response.json()).toEqual({ error: "Recaptcha error" });
-    })
-  })
-})
+    });
+  });
+});
 
 describe("requestDownload", () => {
   it("should reply 403 when realpath throw an error", async () => {
