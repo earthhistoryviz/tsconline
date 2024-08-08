@@ -9,7 +9,6 @@ import {
   TimescaleItem,
   assertChartRequest,
   assertDatapackIndex,
-  assertIndexResponse,
   assertTimescale,
   assertMapPackIndex
 } from "@tsconline/shared";
@@ -20,7 +19,7 @@ import fs, { realpathSync } from "fs";
 import { parseExcelFile } from "./parse-excel-file.js";
 import path from "path";
 import { loadIndexes } from "./load-packs.js";
-import { writeFileMetadata } from "./file-metadata-handler.js";
+import { updateFileMetadata, writeFileMetadata } from "./file-metadata-handler.js";
 import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "./index.js";
 import { glob } from "glob";
 import { MultipartFile } from "@fastify/multipart";
@@ -245,27 +244,24 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
   try {
     await access(userDir);
     await access(path.join(userDir, "DatapackIndex.json"));
+    await access(path.join(userDir, "MapPackIndex.json"));
   } catch (e) {
-    reply.status(404).send({ error: "User has no uploaded datapacks" });
+    reply.send({ datapackIndex: {}, mapPackIndex: {} });
     return;
   }
-
-  const datapackIndex: DatapackIndex = JSON.parse(JSON.stringify(serverDatapackindex));
-  const mapPackIndex: MapPackIndex = JSON.parse(JSON.stringify(serverMapPackIndex));
   try {
-    const dataPackData = await readFile(path.join(userDir, "DatapackIndex.json"), "utf8");
-    Object.assign(datapackIndex, JSON.parse(dataPackData));
-    const mapPackData = await readFile(path.join(userDir, "MapPackIndex.json"), "utf8");
-    Object.assign(mapPackIndex, JSON.parse(mapPackData));
+    const datapackIndex = JSON.parse(await readFile(path.join(userDir, "DatapackIndex.json"), "utf8"));
+    assertDatapackIndex(datapackIndex);
+    const mapPackIndex = JSON.parse(await readFile(path.join(userDir, "MapPackIndex.json"), "utf8"));
+    assertMapPackIndex(mapPackIndex);
+    const indexResponse = { datapackIndex, mapPackIndex };
+    reply.status(200).send(indexResponse);
   } catch (e) {
     reply
       .status(500)
       .send({ error: "Failed to load indexes, corrupt json files present. Please contact customer service." });
     return;
   }
-  const indexResponse = { datapackIndex, mapPackIndex };
-  assertIndexResponse(indexResponse);
-  reply.status(200).send(indexResponse);
 };
 
 // If at some point a delete datapack function is needed, this function needs to be modified for race conditions
@@ -619,7 +615,13 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     }
   }
   datapacks.push(...userDatapacks);
-  // updateFileMetadata(assetconfigs.fileMetadata, userDatapacks);
+  try {
+    await updateFileMetadata(assetconfigs.fileMetadata, userDatapacks);
+  } catch (e) {
+    console.error("Error updating file metadata:", e);
+    reply.status(500).send({ errorCode: 100, error: "Internal Server Error" });
+    return;
+  }
   // If this setting already has a chart, just return that
   try {
     await stat(chartFilePath);
@@ -758,7 +760,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       reply.status(408).send({ error: "Request Timeout" });
     } else {
       console.error("Failed to execute Java command:", error);
-      reply.status(500).send({ error: "Internal Server Error" });
+      reply.status(500).send({ errorCode: 400, error: "Internal Server Error" });
     }
     return;
   }

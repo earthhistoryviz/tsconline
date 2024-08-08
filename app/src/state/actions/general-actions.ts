@@ -121,7 +121,10 @@ export const fetchDatapackIndex = action("fetchDatapackIndex", async () => {
       }
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
-    setDatapackIndex(datapackIndex);
+    // we keep all the previous datapacks (careful as we do not delete old entries if they are removed on the server)
+    // ^ this is to accomodate for the user datapacks and any other way to add datapacks
+    // TODO: potentially check for staleness sometime
+    setDatapackIndex({ ...state.datapackIndex, ...datapackIndex });
     console.log("Datapacks loaded");
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
@@ -150,7 +153,10 @@ export const fetchMapPackIndex = action("fetchMapPackIndex", async () => {
       }
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
-    setMapPackIndex(mapPackIndex);
+    // we keep all the previous datapacks (careful as we do not delete old entries if they are removed on the server)
+    // ^ this is to accomodate for the user datapacks and any other way to add datapacks
+    // TODO: potentially check for staleness sometime
+    setMapPackIndex({ ...state.mapPackIndex, ...mapPackIndex });
     console.log("MapPacks loaded");
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
@@ -215,16 +221,23 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
     try {
       assertIndexResponse(data);
       const { mapPackIndex, datapackIndex } = data;
-      setMapPackIndex(mapPackIndex);
-      setDatapackIndex(datapackIndex);
+      const mapPackKeys = Object.keys(state.mapPackIndex);
+      const hasDuplicateMapPackKeys = Object.keys(mapPackIndex).some((key) => mapPackKeys.includes(key));
+      const datapackKeys = Object.keys(state.datapackIndex);
+      const hasDuplicateDatapackKeys = Object.keys(datapackIndex).some((key) => datapackKeys.includes(key));
+      if (hasDuplicateMapPackKeys) {
+        pushSnackbar("User MapPacks loaded with duplicate keys!", "warning");
+      }
+      if (hasDuplicateDatapackKeys) {
+        pushSnackbar("User Datapacks loaded with duplicate keys!", "warning");
+      }
+      // we keep all the server datapacks (careful as we do not delete old entries if they are removed on the server)
+      // TODO: potentially check for staleness sometime
+      setMapPackIndex({ ...state.mapPackIndex, ...mapPackIndex });
+      setDatapackIndex({ ...state.datapackIndex, ...datapackIndex });
       console.log("User Datapacks loaded");
     } catch (e) {
-      if (response.status != 404) {
-        displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
-      } else {
-        fetchDatapackIndex();
-        fetchMapPackIndex();
-      }
+      displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
     }
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
@@ -918,8 +931,6 @@ export const sessionCheck = action("sessionCheck", async () => {
       setUser(data.user);
       fetchUserDatapacks();
     } else {
-      fetchDatapackIndex();
-      fetchMapPackIndex();
       setIsLoggedIn(false);
     }
   } catch (error) {
@@ -939,6 +950,18 @@ export const setDefaultUserState = action(() => {
       language: "en"
     }
   };
+  // Take out all the user datapacks
+  const serverDatapacks = Object.values(state.datapackIndex)
+    .filter((datapack) => datapack.uuid === undefined)
+    .map((datapack) => datapack.file);
+  const datapackIndex = Object.fromEntries(
+    Object.entries(state.datapackIndex).filter(([key]) => serverDatapacks.includes(key))
+  );
+  const mapPackIndex = Object.fromEntries(
+    Object.entries(state.mapPackIndex).filter(([key]) => serverDatapacks.includes(key))
+  );
+  setDatapackIndex(datapackIndex);
+  setMapPackIndex(mapPackIndex);
 });
 
 export const setChartTimelineEnabled = action("setChartTimelineEnabled", (enabled: boolean) => {
