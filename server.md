@@ -712,7 +712,7 @@ Host: dev.timescalecreator.org
 ---
 ### Download User-Datapacks
 
-- **Endpoint:** `/download/user-datapacks/:file`
+- **Endpoint:** `/user/datapack/:filename`
 - **Method:** `GET`
 - **Description:** Download the user's datapacks. If the user chooses `Encrypted Download`, the encrypted file will be downloaded. Otherwise, the original file will be downloaded.
 - **Requires Valid Session:** Yes
@@ -733,7 +733,7 @@ Host: dev.timescalecreator.org
 #### Example Request
 
 ```http
-GET /download/user-datapacks/defaultDatapack?needEncryption=true HTTP/1.1
+GET /user/datapack/defaultDatapack?needEncryption=true HTTP/1.1
 Host: dev.timescalecreator.org
 Cookie: loginSession=123
 ```
