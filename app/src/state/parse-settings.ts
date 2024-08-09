@@ -434,7 +434,8 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       };
       break;
     case "Ruler":
-      if (state.name != "Ma" && state.name != "Chart Root") {
+      if (state.name != "Ma" && state.name != "Chart Root" && state.name != state.units.split(" ")[0]) {
+        console.log(state.name);
         assertRulerSettings(state.columnSpecificSettings);
         column = { ...cloneDeep(defaultRulerColumnInfoTSC), justification: state.columnSpecificSettings.justification };
       } else {
