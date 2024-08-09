@@ -5,7 +5,6 @@ import process from "process";
 import { execSync } from "child_process";
 import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs, adminconfig } from "./util.js";
 import * as routes from "./routes/routes.js";
-import * as userRoutes from "./routes/user-routes.js";
 import * as loginRoutes from "./routes/login-routes.js";
 import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
 import fastifyCompress from "@fastify/compress";
@@ -23,6 +22,8 @@ import cron from "node-cron";
 import path from "path";
 import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
+import { userRoutes } from "./routes/user-auth.js";
+import { fetchUserDatapacks } from "./routes/user-routes.js";
 
 const maxConcurrencySize = 3;
 export const maxQueueSize = 15;
@@ -240,21 +241,18 @@ const looseRateLimit = {
   }
 };
 
-server.get("/user-datapacks", moderateRateLimit, userRoutes.fetchUserDatapacks);
 // checks chart.pdf-status
 server.get<{ Params: { hash: string } }>("/svgstatus/:hash", looseRateLimit, routes.fetchSVGStatus);
 
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, routes.fetchSettingsXml);
-//download datapack
-server.get<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>(
-  "/download/user-datapacks/:filename",
-  moderateRateLimit,
-  userRoutes.requestDownload
-);
-// uploads datapack
-server.post("/user/datapack", moderateRateLimit, userRoutes.uploadDatapack);
+
 server.register(adminRoutes, { prefix: "/admin" });
+
+server.register(userRoutes, { prefix: "/user" });
+// this is seperate from the user routes because it doesn't require recaptcha
+server.get("/user/datapacks", looseRateLimit, fetchUserDatapacks);
+
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
 server.post("/auth/signup", strictRateLimit, loginRoutes.signup);
