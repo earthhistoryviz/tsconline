@@ -23,7 +23,7 @@ import { SharedUser, assertSharedUser } from "@tsconline/shared";
 import { loadFileMetadata } from "../file-metadata-handler.js";
 import { readdir, rm, writeFile, mkdir } from "fs/promises";
 import { checkRecaptchaToken, generateToken } from "../verify.js";
-import * as validator from "validator";
+import validator from "validator";
 
 export const googleRecaptchaBotThreshold = 0.5;
 

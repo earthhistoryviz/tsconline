@@ -28,7 +28,7 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
 import "./Results.css";
 
-const tooltipDelayTime = 700;
+const tooltipDelayTime = 400;
 
 const Status = observer(({ info }: { info: EventSearchInfo }) => {
   const { state, actions } = useContext(context);
@@ -81,12 +81,7 @@ const Status = observer(({ info }: { info: EventSearchInfo }) => {
           />
         </CustomTooltip>
       ) : (
-        <CustomTooltip
-          enterDelay={tooltipDelayTime}
-          enterNextDelay={tooltipDelayTime}
-          disableInteractive
-          placement="top"
-          title="age not within time interval">
+        <CustomTooltip disableInteractive placement="top" title="age not within time interval">
           <ErrorOutline className="status-error-icon" color="error" />
         </CustomTooltip>
       )}
