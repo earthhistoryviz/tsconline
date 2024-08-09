@@ -710,6 +710,102 @@ Host: dev.timescalecreator.org
 ```
 
 ---
+### Download User-Datapacks
+
+- **Endpoint:** `/user/datapack/:filename`
+- **Method:** `GET`
+- **Description:** Download the user's datapacks. If the user chooses `Encrypted Download`, the encrypted file will be downloaded. Otherwise, the original file will be downloaded.
+- **Requires Valid Session:** Yes
+
+#### Parameter
+
+| Name           | Type    | Description                                                  | Required |
+| -------------  | ------- | ------------------------------------------------------------ | -------- |
+| filename       | string  | The name of the file that needs to be downloaded             | Yes      |
+
+#### Query Parameter
+
+| Name           | Type    | Description                                                  | Required |
+| -------------  | ------- | ------------------------------------------------------------ | -------- |
+| needEncryption | boolean | Whether need to encrypt the file                             | No       |
+
+
+#### Example Request
+
+```http
+GET /user/datapack/defaultDatapack?needEncryption=true HTTP/1.1
+Host: dev.timescalecreator.org
+Cookie: loginSession=123
+```
+
+#### Example Response
+
+```blob
+  <Binary data of the file>
+```
+
+#### Error Responses
+- **Status Code:** `401 Unauthorized`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the user is not logged in
+
+```json
+{
+  "error": "User not logged in"
+}
+```
+
+- **Status Code:** `403 Forbidden`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the filepath is not valid
+
+```json
+{
+  "error": "Invalid file path"
+}
+```
+
+- **Status Code:** `404 Not Found`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the file requested is not found
+
+```json
+{
+  "error": "The file requested <filename> does not exist within user's upload directory"
+}
+```
+
+- **Status Code:** `500 Internal Server Error`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the encryption process failed
+
+```json
+{
+  "error": "Failed to encrypt datapacks with error <error>"
+}
+```
+
+- **Status Code:** `500 Internal Server Error`
+- **Content-Type:** `application/json`
+- **Description:** Returned if failed to create encrypted directory for the user
+
+```json
+{
+  "error": "Failed to create encrypted directory with error <error>"
+}
+```
+
+- **Status Code:** `422 Unprocessable Content`
+- **Content-Type:** `application/json`
+- **Description:** Returned if Java file failed to generate the correct encrypted file
+
+```json
+{
+  "error": "Java file was unable to encrypt the file <filename>, resulting in an incorrect encryption header"
+}
+```
+
+---
 
 #### Parse Datapacks
 
