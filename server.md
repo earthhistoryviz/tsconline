@@ -710,6 +710,7 @@ Host: dev.timescalecreator.org
 ```
 
 ---
+
 ### Download User-Datapacks
 
 - **Endpoint:** `/user/datapack/:filename`
@@ -719,16 +720,15 @@ Host: dev.timescalecreator.org
 
 #### Parameter
 
-| Name           | Type    | Description                                                  | Required |
-| -------------  | ------- | ------------------------------------------------------------ | -------- |
-| filename       | string  | The name of the file that needs to be downloaded             | Yes      |
+| Name     | Type   | Description                                      | Required |
+| -------- | ------ | ------------------------------------------------ | -------- |
+| filename | string | The name of the file that needs to be downloaded | Yes      |
 
 #### Query Parameter
 
-| Name           | Type    | Description                                                  | Required |
-| -------------  | ------- | ------------------------------------------------------------ | -------- |
-| needEncryption | boolean | Whether need to encrypt the file                             | No       |
-
+| Name           | Type    | Description                      | Required |
+| -------------- | ------- | -------------------------------- | -------- |
+| needEncryption | boolean | Whether need to encrypt the file | No       |
 
 #### Example Request
 
@@ -745,6 +745,7 @@ Cookie: loginSession=123
 ```
 
 #### Error Responses
+
 - **Status Code:** `401 Unauthorized`
 - **Content-Type:** `application/json`
 - **Description:** Returned if the user is not logged in
@@ -855,7 +856,7 @@ Cookie: loginSession=123
 
 ```json
 {
-  "error": "Invalid recaptcha token"
+  "error": "Recaptcha failed"
 }
 ```
 
@@ -942,6 +943,413 @@ Cookie: loginSession=123
 ```
 
 #### Error Responses
+
+- **Status Code:** `400 Bad Request`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the request body is invalid
+
+```json
+{
+  "error": "Missing/invalid required fields"
+}
+```
+
+- **Status Code:** `409 Conflict`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the user already exists
+
+```json
+{
+  "error": "User already exists"
+}
+```
+
+### Delete User
+
+- **Endpoint:** `/admin/user`
+- **Method:** `DELETE`
+- **Description:** Delete a user
+- **Requires Valid Session:** Yes
+
+#### Request Body
+
+| Name | Type   | Description                        | Required |
+| ---- | ------ | ---------------------------------- | -------- |
+| uuid | string | The uuid of the user to be deleted | Yes      |
+
+#### Example Request
+
+```http
+DELETE /admin/user HTTP/1.1
+Host: dev.timescalecreator.org
+recaptcha: 123
+Cookie: loginSession=123
+{
+  "uuid": "123"
+}
+```
+
+#### Example Response
+
+```json
+{
+  "message": "User deleted"
+}
+```
+
+#### Error Responses
+
+- **Status Code:** `400 Bad Request`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the request body is invalid
+
+```json
+{
+  "error": "Missing uuid"
+}
+```
+
+- **Status Code:** `404 Not Found`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the user does not exist
+
+```json
+{
+  "error": "User does not exist"
+}
+```
+
+- **Status Code:** `403 Forbidden`
+- **Content-Type:** `application/json`
+- **Description:** Cannot delete the root user
+
+```json
+{
+  "error": "Cannot delete root user"
+}
+```
+
+### Delete User Datapack
+
+- **Endpoint:** `/admin/user/datapack`
+- **Method:** `DELETE`
+- **Description:** Delete a user's datapack
+- **Requires Valid Session:** Yes
+
+#### Request Body
+
+| Name     | Type   | Description                     | Required |
+| -------- | ------ | ------------------------------- | -------- |
+| datapack | string | The datapack                    | Yes      |
+| uuid     | string | The uuid of the datapack's user | Yes      |
+
+#### Example Request
+
+```http
+DELETE /admin/user/datapack HTTP/1.1
+Host: dev.timescalecreator.org
+recaptcha: 123
+Cookie: loginSession=123
+{
+  "datapack": "datapack1",
+  "uuid": "123"
+}
+```
+
+#### Example Response
+
+```json
+{
+  "message": "Datapack deleted"
+}
+```
+
+#### Error Responses
+
+- **Status Code:** `400 Bad Request`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the request body is invalid
+
+```json
+{
+  "error": "Missing uuid or datapack id"
+}
+```
+
+- **Status Code:** `404 Not Found`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the datapack does not exist
+
+```json
+{
+  "error": "Datapack not found"
+}
+```
+
+### Upload Server Datapack
+
+- **Endpoint:** `/admin/server/datapack`
+- **Method:** `POST`
+- **Description:** Upload a server datapack
+- **Requires Valid Session:** Yes
+
+#### Request Body -> **_Multipart Form Data_**
+
+| Name        | Type   | Description                                               | Required |
+| ----------- | ------ | --------------------------------------------------------- | -------- |
+| file        | file   | The datapack file to upload                               | Yes      |
+| tags        | string | The tags for the datapack                                 | Yes      |
+| references  | string | The references for the datapack                           | Yes      |
+| authoredBy  | string | The author of the datapack                                | Yes      |
+| title       | string | The title of the datapack                                 | Yes      |
+| description | string | The description of the datapack                           | Yes      |
+| date        | string | The date of the datapack (a valid date string DD/MM/YYYY) | No       |
+| contact     | string | The contact for the datapack                              | No       |
+| notes       | string | The notes for the datapack                                | No       |
+
+#### Example Request
+
+```http
+POST /admin/server/datapack HTTP/1.1
+Host: dev.timescalecreator.org
+recaptcha: 123
+Cookie: loginSession=123
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+{
+  "file": "datapack1",
+  "tags": "tag1, tag2",
+  "references": "ref1, ref2",
+  "authoredBy": "author1",
+  "title": "title1",
+  "description": "description1",
+  "date": "date1",
+  "contact": "contact1",
+  "notes": "notes1"
+}
+```
+
+#### Example Response
+
+```json
+{
+  "message": "Datapack uploaded"
+}
+```
+
+#### Error Responses
+
+- **Status Code:** `400 Bad Request`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the request body is invalid
+
+```json
+{
+  "error": "Missing required fields [title, description, authoredBy, references, tags, filepath, filename]"
+}
+```
+
+```json
+{
+  "error": "File is empty"
+}
+```
+
+```json
+{
+  "error": "References and tags must be valid arrays"
+}
+```
+
+```json
+{
+  "error": "Date must be a valid date string"
+}
+```
+
+```json
+{
+  "error": "Invalid file type"
+}
+```
+
+- **Status Code:** `409 Conflict`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the datapack already exists
+
+```json
+{
+  "error": "File already exists"
+}
+```
+
+### Delete Server Datapack
+
+- **Endpoint:** `/admin/server/datapack`
+- **Method:** `DELETE`
+- **Description:** Delete a server datapack
+- **Requires Valid Session:** Yes
+
+#### Request Body
+
+| Name     | Type   | Description                | Required |
+| -------- | ------ | -------------------------- | -------- |
+| datapack | string | The datapack to be deleted | Yes      |
+
+#### Example Request
+
+```http
+DELETE /admin/server/datapack HTTP/1.1
+Host: dev.timescalecreator.org
+recaptcha: 123
+Cookie: loginSession=123
+{
+  "datapack": "datapack1"
+}
+```
+
+#### Example Response
+
+```json
+{
+  "message": "Datapack <datapack> deleted"
+}
+```
+
+#### Error Responses
+
+- **Status Code:** `400 Bad Request`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the request body is invalid
+
+```json
+{
+  "error": "Missing datapack id"
+}
+```
+
+```json
+{
+  "error": "Invalid file extension"
+}
+```
+
+- **Status Code:** `500 Internal Server Error`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the server encounters an error while deleting the datapack
+
+```json
+{
+  "error": "Failed to delete datapack"
+}
+```
+
+- **Status Code:** `500 Internal Server Error`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the server encounters an error while deleting the datapack
+
+```json
+{
+  "error": "Failed to delete datapack"
+}
+```
+
+- **Status Code:** `500 Internal Server Error`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the server encounters an error while deleting the datapack
+
+```json
+{
+  "error": "Failed to delete datapack"
+}
+```
+
+- **Status Code:** `500 Internal Server Error`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the server encounters an error while deleting the datapack
+
+```json
+{
+  "error": "Failed to delete datapack"
+}
+```
+
+- **Status Code:** `500 Internal Server Error`
+- **Content-Type:** `application/json`
+- **Description:** Datapack file does not exist
+
+```json
+{
+  "error": "Datapack file does not exist"
+}
+```
+
+- **Status Code:** `404 Not Found`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the datapack does not exist
+
+```json
+{
+  "error": "Datapack not found"
+}
+```
+
+### Fetch all User Datapacks
+
+- **Endpoint:** `/admin/user/datapacks`
+- **Method:** `POST`
+- **Description:** Fetch all the user's datapacks
+- **Requires Valid Session:** Yes
+
+#### Request Body
+
+| Name | Type   | Description          | Required |
+| ---- | ------ | -------------------- | -------- |
+| uuid | string | The uuid of the user | Yes      |
+
+#### Example Request
+
+```http
+POST /admin/user/datapacks HTTP/1.1
+Host: dev.timescalecreator.org
+recaptcha: 123
+Cookie: loginSession=123
+{
+  "uuid": "123"
+}
+```
+
+#### Example Response
+
+```json
+{
+  "datapacks": [
+    {
+      "description": "description1",
+      "title": "title1",
+      "file": "file1",
+      "size": "size1",
+      "date": "date1",
+      "authoredBy": "authoredBy1",
+      "tags": ["tag1", "tag2"],
+      "references": ["ref1", "ref2"],
+      "contact": "contact1",
+      "notes": "notes1"
+    }
+  ]
+}
+```
+
+#### Error Responses
+
+- **Status Code:** `400 Bad Request`
+- **Content-Type:** `application/json`
+- **Description:** Returned if the request body is invalid
+
+```json
+{
+  "error": "Missing uuid in body"
+}
+```
 
 ---
 
