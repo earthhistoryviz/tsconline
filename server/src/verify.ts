@@ -20,6 +20,11 @@ export async function checkRecaptchaToken(token: string): Promise<number> {
 }
 
 export function generateToken(uuid: string): string {
-  const aesCipher = createCipheriv("aes-256-cbc", process.env.TOKEN_SECRET_KEY || "", process.env.TOKEN_IV || "");
+  // Ensure that the key is 32 bytes (256 bits)
+  const key = process.env.TOKEN_SECRET_KEY ? Buffer.from(process.env.TOKEN_SECRET_KEY, "hex") : randomBytes(32);
+
+  // Ensure that the IV is 16 bytes (128 bits)
+  const iv = process.env.TOKEN_IV ? Buffer.from(process.env.TOKEN_IV, "hex") : randomBytes(16);
+  const aesCipher = createCipheriv("aes-256-cbc", key, iv);
   return randomBytes(16).toString("hex") + aesCipher.update(uuid, "utf8", "hex");
 }
