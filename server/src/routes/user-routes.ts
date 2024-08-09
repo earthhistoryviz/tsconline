@@ -1,16 +1,18 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { realpath, access, rm, mkdir, readFile, writeFile } from "fs/promises";
-import path from "path";
+import path, { join } from "path";
 import { runJavaEncrypt } from "../encryption.js";
-import { assetconfigs, checkHeader, resetUploadDirectory } from "../util.js";
+import { assetconfigs, checkHeader, resetUploadDirectory, verifyFilepath } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
 import { assertDatapackIndex, assertMapPackIndex, DatapackIndex, MapPackIndex } from "@tsconline/shared";
 import { exec } from "child_process";
 import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
-import { writeFileMetadata } from "../file-metadata-handler.js";
+import { deleteDatapack, loadFileMetadata, writeFileMetadata } from "../file-metadata-handler.js";
 import { loadIndexes } from "../load-packs.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
+import logger from "../error-logger.js";
+import { findUser } from "../database.js";
 
 export const requestDownload = async function requestDownload(
   request: FastifyRequest<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>,
@@ -37,7 +39,10 @@ export const requestDownload = async function requestDownload(
     return;
   }
   maybeEncryptedFilepath = path.resolve(maybeEncryptedFilepath);
-  if (!filepath.startsWith(datapackDir) || !maybeEncryptedFilepath.startsWith(encryptedFilepathDir)) {
+  if (
+    !filepath.startsWith(path.resolve(datapackDir)) ||
+    !maybeEncryptedFilepath.startsWith(path.resolve(encryptedFilepathDir))
+  ) {
     reply.status(403).send({ error: "Invalid file path" });
     return;
   }
@@ -134,6 +139,7 @@ export const requestDownload = async function requestDownload(
   }
 };
 
+// NOTE: this is not used in user-auth.ts since it does not require recaptcha verification
 export const fetchUserDatapacks = async function fetchUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
   // for test usage: const uuid = "username";
   const uuid = request.session.get("uuid");
@@ -141,6 +147,17 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
+  try {
+    const user = await findUser({ uuid });
+    if (!user || user.length !== 1 || !user[0]) {
+      reply.status(401).send({ error: "Unauthorized access" });
+      return;
+    }
+  } catch (e) {
+    reply.status(500).send({ error: "Database error" });
+    return;
+  }
+
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
 
   try {
@@ -349,4 +366,53 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     return;
   }
   reply.status(200).send({ message: "File uploaded" });
+};
+
+export const userDeleteDatapack = async function userDeleteDatapack(
+  request: FastifyRequest<{ Params: { filename: string } }>,
+  reply: FastifyReply
+) {
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  }
+  const { filename } = request.params;
+  if (!filename) {
+    reply.status(400).send({ error: "Missing filename" });
+    return;
+  }
+  const path = join(assetconfigs.uploadDirectory, uuid, "datapacks", filename);
+  try {
+    if (!(await verifyFilepath(path))) {
+      reply.status(403).send({ error: "Invalid filename/File doesn't exist" });
+      return;
+    }
+  } catch (e) {
+    reply.status(500).send({ error: "Failed to verify file path" });
+    return;
+  }
+  try {
+    const metadataIndex = await loadFileMetadata(assetconfigs.fileMetadata);
+    const metadata = metadataIndex[path];
+    if (!metadata) {
+      // file exists but not in metadata (THIS CASE SHOULD NOT HAPPEN AND SHOULD BE INVESTIGATED IF OCCURS)
+      logger.error("File exists but not in metadata, could require extra supervision of deletion ", {
+        path,
+        uuid,
+        filename
+      });
+      await rm(path, { force: true });
+      reply
+        .status(404)
+        .send({ error: "File not found in metadata, but file was deleted. See administrator for more help." });
+      return;
+    }
+    await deleteDatapack(metadataIndex, path);
+    await writeFile(assetconfigs.fileMetadata, JSON.stringify(metadataIndex, null, 2));
+  } catch (e) {
+    reply.status(500).send({ error: "There was an error loading/writing file metadata" });
+    return;
+  }
+  reply.status(200).send({ message: "File deleted" });
 };

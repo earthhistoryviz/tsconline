@@ -33,7 +33,7 @@ import {
   assertPatterns
 } from "@tsconline/shared";
 import { state, State } from "../state";
-import { fetcher } from "../../util";
+import { executeRecaptcha, fetcher } from "../../util";
 import {
   applyChartColumnSettings,
   applyRowOrder,
@@ -213,7 +213,7 @@ export const fetchPresets = action("fetchPresets", async () => {
  */
 export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
   try {
-    const response = await fetcher(`/user-datapacks`, {
+    const response = await fetcher(`/user/datapacks`, {
       method: "GET",
       credentials: "include"
     });
@@ -250,6 +250,8 @@ export const uploadDatapack = action("uploadDatapack", async (file: File, metada
     pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
     return;
   }
+  const recaptcha = await getRecaptchaToken("uploadUserDatapack");
+  if (!recaptcha) return;
   const formData = new FormData();
   const { title, description, authoredBy, contact, notes, date, references, tags } = metadata;
   formData.append("file", file);
@@ -265,7 +267,10 @@ export const uploadDatapack = action("uploadDatapack", async (file: File, metada
     const response = await fetcher(`/user/datapack`, {
       method: "POST",
       body: formData,
-      credentials: "include"
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptcha
+      }
     });
     const data = await response.json();
 
@@ -805,6 +810,7 @@ export const removeSnackbar = action("removeSnackbar", (text: string) => {
   state.snackbars = state.snackbars.filter((info) => info.snackbarText !== text);
 });
 export const pushSnackbar = action("pushSnackbar", (text: string, severity: "success" | "info" | "warning") => {
+  if (severity === "warning") console.warn(text);
   for (const snackbar of state.snackbars) {
     if (snackbar.snackbarText === text) {
       snackbar.snackbarCount += 1;
@@ -835,16 +841,35 @@ export const fetchImage = action("fetchImage", async (datapackName: string, imag
   return image;
 });
 
+export async function getRecaptchaToken(token: string) {
+  try {
+    const recaptchaToken = await executeRecaptcha(token);
+    if (!recaptchaToken) {
+      pushError(ErrorCodes.RECAPTCHA_FAILED);
+      return null;
+    }
+    return recaptchaToken;
+  } catch (error) {
+    pushError(ErrorCodes.RECAPTCHA_FAILED);
+    return null;
+  }
+}
+
 export const requestDownload = action(async (filename: string, needEncryption: boolean) => {
   let route;
   if (!needEncryption) {
-    route = `/download/user-datapacks/${filename}`;
+    route = `/user/datapack/${filename}`;
   } else {
-    route = `/download/user-datapacks/${filename}?needEncryption=${needEncryption}`;
+    route = `/user/datapack/${filename}?needEncryption=${needEncryption}`;
   }
+  const recaptchaToken = await getRecaptchaToken("downloadUserDatapacks");
+  if (!recaptchaToken) return null;
   const response = await fetcher(route, {
     method: "GET",
-    credentials: "include"
+    credentials: "include",
+    headers: {
+      "recaptcha-token": recaptchaToken
+    }
   });
   if (!response.ok) {
     let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
