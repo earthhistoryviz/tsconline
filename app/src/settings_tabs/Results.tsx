@@ -264,15 +264,15 @@ const Age = observer(({ info }: { info: EventSearchInfo }) => {
   return <AgeDisplay />;
 });
 
-const Qualifier = observer(({ info }: { info: EventSearchInfo }) => {
-  if (!info.qualifier) {
+const Type = observer(({ info }: { info: EventSearchInfo }) => {
+  if (!info.type) {
     return (
       <SvgIcon>
         <HorizontalRuleIcon />
       </SvgIcon>
     );
   }
-  return <Typography variant="subtitle2">{info.qualifier}</Typography>;
+  return <Typography variant="subtitle2">{info.type}</Typography>;
 });
 
 const Notes = observer(({ info }: { info: EventSearchInfo }) => {
@@ -351,8 +351,8 @@ export const Results = observer(({ groupedEvents }: { groupedEvents: GroupedEven
           <TableCell className="search-result-age-column" align="center">
             <Age info={info} />
           </TableCell>
-          <TableCell className="search-result-qualifier-column" align="center">
-            <Qualifier info={info} />
+          <TableCell className="search-result-type-column" align="center">
+            <Type info={info} />
           </TableCell>
           <TableCell className="search-result-notes-column" align="right">
             <Notes info={info} />
