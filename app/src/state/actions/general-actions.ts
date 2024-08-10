@@ -1,4 +1,4 @@
-import { action, runInAction } from "mobx";
+import { action, runInAction, toJS } from "mobx";
 import {
   SharedUser,
   ChartInfoTSC,
@@ -41,8 +41,15 @@ import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import { SettingsTabs, equalChartSettings, equalConfig } from "../../types";
+import {
+  SetDatapackConfigCompleteMessage,
+  SetDatapackConfigMessage,
+  SettingsTabs,
+  equalChartSettings,
+  equalConfig
+} from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
+import { actions } from "..";
 
 const increment = 1;
 
@@ -406,13 +413,91 @@ export const setIsProcessingDatapacks = action("setIsProcessingDatapacks", (isPr
   state.isProcessingDatapacks = isProcessingDatapacks;
 });
 
-export const setRegenerateChart = action("setRegenerateChart", (regenerateChart: boolean) => {
-  state.datapackSelection.regenerateChart = regenerateChart;
+export const setUnsavedDatapackConfig = action("setUnsavedDatapackConfig", (newDatapacks: string[]) => {
+  state.unsavedDatapackConfig = newDatapacks;
 });
 
-export const setSelectedDatapacks = action("setSelectedDatapacks", (newDatapacks: string[]) => {
-  state.datapackSelection.selectedDatapacks = newDatapacks;
-});
+export const processDatapackConfig = action(
+  "processDatapackConfig",
+  async (datapacks: string[], settingsPath?: string) => {
+    if (state.isProcessingDatapacks) return;
+    //when first open the website they are both empty. We still need to process the config under that situation
+    if (
+      JSON.stringify(state.unsavedDatapackConfig) == JSON.stringify(state.config.datapacks) &&
+      state.config.datapacks.length !== 0
+    )
+      return;
+    setIsProcessingDatapacks(true);
+    const fetchSettings = async () => {
+      if (settingsPath && settingsPath.length !== 0) {
+        try {
+          const settings = await fetchSettingsXML(settingsPath);
+          if (settings) {
+            removeError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
+            return JSON.parse(JSON.stringify(settings));
+          }
+        } catch (e) {
+          console.error(e);
+          pushError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
+        }
+      }
+      return null;
+    };
+    const chartSettings = await fetchSettings();
+    try {
+      await new Promise((resolve, reject) => {
+        const setDatapackConfigWorker: Worker = new Worker(
+          new URL("../../util/workers/set-datapack-config.ts", import.meta.url),
+          {
+            type: "module"
+          }
+        );
+
+        const message: SetDatapackConfigMessage = {
+          datapacks: datapacks,
+          stateCopy: toJS(state)
+        };
+
+        setDatapackConfigWorker.postMessage(message);
+
+        setDatapackConfigWorker.onmessage = async function (e: MessageEvent<SetDatapackConfigCompleteMessage>) {
+          const { status, value } = e.data;
+          if (status === "success" && value) {
+            try {
+              await actions.setDatapackConfig(
+                value.columnRoot,
+                value.foundDefaultAge,
+                value.mapHierarchy,
+                value.mapInfo,
+                value.datapacks,
+                chartSettings
+              );
+
+              pushSnackbar("Datapack Config Updated", "success");
+              setUnsavedDatapackConfig(datapacks);
+              resolve("Datapack Config Updated successfully.");
+
+            } catch (e) {
+              reject(new Error("Failed to set datapack config with error " + e));
+            }
+          } else {
+            reject(new Error("Setting Datapack Config Timed Out"));
+          }
+          setIsProcessingDatapacks(false);
+          setDatapackConfigWorker.terminate();
+        };
+
+        setDatapackConfigWorker.onerror = function (error) {
+          setDatapackConfigWorker.terminate();
+          setIsProcessingDatapacks(false);
+          reject(new Error("Webworker failed with error." + error));
+        };
+      });
+    } catch (e) {
+      pushError(ErrorCodes.UNABLE_TO_PROCESS_DATAPACK_CONFIG);
+    }
+  }
+);
 
 export const setDatapackConfig = action(
   "setDatapackConfig",
@@ -438,7 +523,10 @@ export const setDatapackConfig = action(
     // this is for app start up or when all datapacks are removed
     if (datapacks.length === 0) {
       state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
+    } else {
+      delete state.settings.timeSettings["Ma"];
     }
+
     if (chartSettings !== null) {
       assertChartInfoTSC(chartSettings);
       await applySettings(chartSettings);

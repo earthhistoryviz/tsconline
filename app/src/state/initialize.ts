@@ -1,5 +1,4 @@
 import { actions } from "./index";
-import { processDatapackConfig } from "../process-datapack-config";
 
 export async function initialize() {
   // If we're running in dev mode (yarn dev), then the app is not served from the same URL
@@ -8,7 +7,7 @@ export async function initialize() {
   actions.fetchDatapackIndex();
   actions.fetchMapPackIndex();
   actions.fetchPresets();
-  await processDatapackConfig([]);
+  await actions.processDatapackConfig([]);
   actions.fetchFaciesPatterns();
   actions.fetchTimescaleDataAction();
 }

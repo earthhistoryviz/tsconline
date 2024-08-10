@@ -7,7 +7,7 @@ import { styled, useTheme } from "@mui/material/styles";
 import HomeIcon from "@mui/icons-material/Home";
 import { IconButton, Tab, Tabs, Typography } from "@mui/material";
 import { context } from "./state";
-import { TSCMenuItem, TSCButton, TSCPopupDialog } from "./components";
+import { TSCMenuItem, TSCButton } from "./components";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { ControlledMenu, useHover, useMenuState } from "@szhsin/react-menu";
 import "./NavBar.css";
@@ -16,7 +16,7 @@ import "@szhsin/react-menu/dist/transitions/slide.css";
 import { SettingsMenuOptionLabels, assertSettingsTabs } from "./types";
 import Color from "color";
 import { AccountMenu } from "./account_settings/AccountMenu";
-import { processDatapackConfig } from "./process-datapack-config";
+import { toJS } from "mobx";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: Color(theme.palette.dark.main).alpha(0.9).string(),
@@ -35,13 +35,6 @@ export const NavBar = observer(function Navbar() {
   const { anchorProps, hoverProps } = useHover(settingsMenuState.state, settingsMenuToggle);
 
   const location = useLocation();
-  const checkOpen = () => {
-    // need to use state.datapackSelection.regenerateChart to check if the user is trying to generate a chart without confirming selections
-    return (
-      state.datapackSelection.regenerateChart &&
-      JSON.stringify(state.datapackSelection.selectedDatapacks) !== JSON.stringify(state.config.datapacks)
-    );
-  };
   return (
     <StyledAppBar position="fixed">
       <Toolbar>
@@ -128,29 +121,13 @@ export const NavBar = observer(function Navbar() {
         <div style={{ flexGrow: 1 }} />
         <TSCButton
           buttonType="gradient"
-          onClick={() => {
+          onClick={async () => {
+            // await actions.processDatapackConfig(JSON.parse(JSON.stringify(state)).unsavedDatapackConfig, "");
+            await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig), "");
             actions.initiateChartGeneration(navigate, location.pathname);
           }}>
           Generate Chart
         </TSCButton>
-        <TSCPopupDialog
-          open={checkOpen()}
-          title="Confirm Datapack Selection Change"
-          message="You have unsaved change on datapack selection. Do you want to save the change?"
-          onYes={async () => {
-            await processDatapackConfig(JSON.parse(JSON.stringify(state)).datapackSelection.selectedDatapacks, "", {
-              navigate: navigate,
-              path: location.pathname
-            });
-          }}
-          onNo={() => {
-            actions.setSelectedDatapacks(state.config.datapacks);
-            actions.initiateChartGeneration(navigate, location.pathname);
-          }}
-          onClose={() => {
-            actions.setSelectedDatapacks(state.config.datapacks);
-            actions.initiateChartGeneration(navigate, location.pathname);
-          }}></TSCPopupDialog>
 
         {state.isLoggedIn ? (
           <AccountMenu />

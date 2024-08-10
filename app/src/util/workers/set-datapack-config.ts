@@ -1,22 +1,29 @@
 import { ColumnInfo, FontsInfo, MapHierarchy, MapInfo, defaultFontsInfo } from "@tsconline/shared";
 import { State } from "../../state";
-import { SetDatapackConfigCompleteMessage, SetDatapackConfigMessage, SetDatapackConfigReturnValue } from "../../types";
+import {
+  SetDatapackConfigCompleteMessage,
+  SetDatapackConfigMessage,
+  SetDatapackConfigReturnValue,
+  assertState
+} from "../../types";
 import { cloneDeep } from "lodash";
 
 /**
  * sets chart to newval and requests info on the datapacks from the server
  */
 self.onmessage = async (e: MessageEvent<SetDatapackConfigMessage>) => {
-  const { datapacks, chartSettings, stateCopy } = e.data;
-  let stateCopyObj: State;
+  const { datapacks, stateCopy } = e.data;
+  /* let stateCopyObj: State;
   try {
     stateCopyObj = JSON.parse(stateCopy);
+    assertState(stateCopyObj);
   } catch (e) {
+    console.log(e);
     console.error("failed to parse state in worker");
     return;
-  }
+  } */
 
-  const SetDatapackConfig = () => {
+  const setDatapackConfig = () => {
     const unitMap: Map<string, ColumnInfo> = new Map();
     let mapInfo: MapInfo = {};
     let mapHierarchy: MapHierarchy = {};
@@ -51,10 +58,9 @@ self.onmessage = async (e: MessageEvent<SetDatapackConfigMessage>) => {
     // add everything together
     // uses preparsed data on server start and appends items together
     for (const datapack of datapacks) {
-      //await new Promise((resolve) => setTimeout(resolve, 0));
-      if (!datapack || !stateCopyObj.datapackIndex[datapack])
+      if (!datapack || !stateCopy.datapackIndex[datapack])
         throw new Error(`File requested doesn't exist on server: ${datapack}`);
-      const datapackParsingPack = stateCopyObj.datapackIndex[datapack]!;
+      const datapackParsingPack = stateCopy.datapackIndex[datapack]!;
       if (
         ((datapackParsingPack.topAge || datapackParsingPack.topAge === 0) &&
           (datapackParsingPack.baseAge || datapackParsingPack.baseAge === 0)) ||
@@ -75,7 +81,7 @@ self.onmessage = async (e: MessageEvent<SetDatapackConfigMessage>) => {
         columnInfo.parent = columnRoot.name;
         unitMap.set(datapackParsingPack.ageUnits, columnInfo);
       }
-      const mapPack = stateCopyObj.mapPackIndex[datapack]!;
+      const mapPack = stateCopy.mapPackIndex[datapack]!;
       if (!mapInfo) mapInfo = mapPack.mapInfo;
       else Object.assign(mapInfo, mapPack.mapInfo);
       if (!mapHierarchy) mapHierarchy = mapPack.mapHierarchy;
@@ -83,7 +89,6 @@ self.onmessage = async (e: MessageEvent<SetDatapackConfigMessage>) => {
     }
     // makes sure things are named correctly for users and for the hash map to not have collisions
     for (const [unit, column] of unitMap) {
-      //await new Promise((resolve) => setTimeout(resolve, 0));
       if (unit !== "Ma" && column.name === "Chart Title") {
         column.name = column.name + " in " + unit;
         column.editName = unit;
@@ -99,8 +104,7 @@ self.onmessage = async (e: MessageEvent<SetDatapackConfigMessage>) => {
       foundDefaultAge: foundDefaultAge,
       mapHierarchy: mapHierarchy,
       datapacks: datapacks,
-      mapInfo: mapInfo,
-      chartSettings: chartSettings
+      mapInfo: mapInfo
     };
     return returnValue;
   };
@@ -114,9 +118,9 @@ self.onmessage = async (e: MessageEvent<SetDatapackConfigMessage>) => {
   const message: SetDatapackConfigCompleteMessage = { status: "success", value: undefined };
   async function runWithTimeout() {
     try {
-      await Promise.race([SetDatapackConfig(), timeoutPromise]);
-      if (SetDatapackConfig()) {
-        message.value = SetDatapackConfig();
+      const result = await Promise.race([setDatapackConfig(), timeoutPromise]);
+      if (result) {
+        message.value = result as SetDatapackConfigReturnValue;
       } else {
         message.status = "failure";
       }
