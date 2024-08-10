@@ -404,7 +404,7 @@ export const Results = observer(({ groupedEvents }: { groupedEvents: GroupedEven
         fixedHeaderContent={() => (
           <TableRow>
             <TableCell className="event-group-header-text search-result-status-column" align="left">
-              Status
+              Column On?
             </TableCell>
             <TableCell className="event-group-header-text search-result-center-column" align="left">
               Center
@@ -419,7 +419,7 @@ export const Results = observer(({ groupedEvents }: { groupedEvents: GroupedEven
               Age
             </TableCell>
             <TableCell className="event-group-header-text search-result-qualifier-column" align="center">
-              Qualifier
+              Type
             </TableCell>
             <TableCell className="event-group-header-text search-result-notes-column" align="right">
               Notes
