@@ -3,14 +3,13 @@ import { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import { NavigateFunction, useNavigate } from "react-router-dom";
 import { ChartConfig } from "@tsconline/shared";
-import { context, state } from "./state";
+import { context } from "./state";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Accordion, AccordionSummary, AccordionDetails, Grid, Typography } from "@mui/material";
 import { useTheme, styled } from "@mui/material/styles";
 import { TSCIcon, TSCButton, TSCCard, StyledScrollbar } from "./components";
 import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import "./Home.css";
-import { processDatapackConfig } from "./process-datapack-config";
 
 const HeaderContainer = styled("div")(({ theme }) => ({
   display: "flex",
@@ -52,8 +51,7 @@ export const Home = observer(function Home() {
           }}
           onClick={async () => {
             actions.removeCache();
-            actions.setSelectedDatapacks([]);
-            await processDatapackConfig([]);
+            await actions.processDatapackConfig([]);
             actions.resetState();
           }}>
           Remove Cache
@@ -100,12 +98,11 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                   <TSCCard
                     preset={preset}
                     generateChart={async () => {
-                      actions.setSelectedDatapacks(preset.datapacks.map((datapack) => datapack.file)); //make sure seletedDatapacks gets updated
-                      await processDatapackConfig(
-                        JSON.parse(JSON.stringify(state)).datapackSelection.selectedDatapacks,
-                        preset.settings,
-                        { navigate: navigate, path: "/home" }
+                      await actions.processDatapackConfig(
+                        preset.datapacks.map((datapack) => datapack.file),
+                        preset.settings
                       );
+                      actions.initiateChartGeneration(navigate, "/home");
                     }}
                   />
                 </Grid>

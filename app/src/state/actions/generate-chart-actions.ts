@@ -68,10 +68,6 @@ function setDatapackTimeDefaults() {
 export const initiateChartGeneration = action(
   "initiateChartGeneration",
   (navigate: NavigateFunction, location: string) => {
-    state.datapackSelection.regenerateChart = true;
-    if (JSON.stringify(state.datapackSelection.selectedDatapacks) !== JSON.stringify(state.config.datapacks)) {
-      return;
-    }
     if (
       state.settings.datapackContainsSuggAge &&
       ((location === "/settings" && state.settingsTabs.selected === "datapacks") || location !== "/settings")
@@ -80,7 +76,6 @@ export const initiateChartGeneration = action(
     } else {
       fetchChartFromServer(navigate);
     }
-    state.datapackSelection.regenerateChart = false;
   }
 );
 
