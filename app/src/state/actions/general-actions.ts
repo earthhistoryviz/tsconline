@@ -38,7 +38,8 @@ import {
   applyChartColumnSettings,
   applyRowOrder,
   handleDataMiningColumns,
-  initializeColumnHashMap
+  initializeColumnHashMap,
+  searchColumns
 } from "./column-actions";
 import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
@@ -593,6 +594,7 @@ export const setDatapackConfig = action(
       datapackContainsSuggAge: state.settings.datapackContainsSuggAge,
       units: Object.keys(state.settings.timeSettings)
     });
+    searchColumns(state.settingsTabs.columnSearchTerm);
     return true;
   }
 );
