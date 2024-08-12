@@ -39,7 +39,8 @@ import {
   applyRowOrder,
   handleDataMiningColumns,
   initializeColumnHashMap,
-  searchColumns
+  searchColumns,
+  searchEvents
 } from "./column-actions";
 import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
@@ -595,6 +596,7 @@ export const setDatapackConfig = action(
       units: Object.keys(state.settings.timeSettings)
     });
     searchColumns(state.settingsTabs.columnSearchTerm);
+    searchEvents(state.settingsTabs.eventSearchTerm);
     return true;
   }
 );

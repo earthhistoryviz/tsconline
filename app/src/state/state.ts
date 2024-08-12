@@ -9,7 +9,8 @@ import {
   Config,
   SettingsTabs,
   CachedConfig,
-  User
+  User,
+  GroupedEventSearchInfo
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -61,6 +62,7 @@ export type State = {
     columnSearchTerm: string;
     datapackDisplayType: "rows" | "cards" | "compact";
     eventSearchTerm: string;
+    groupedEvents: GroupedEventSearchInfo[];
   };
   admin: {
     displayedUsers: AdminSharedUser[];
@@ -152,7 +154,8 @@ export const state = observable<State>({
     columnHashMap: new Map<string, ColumnInfo>(),
     columnSearchTerm: "",
     datapackDisplayType: "compact",
-    eventSearchTerm: ""
+    eventSearchTerm: "",
+    groupedEvents: []
   },
   mapState: {
     mapInfo: {},
