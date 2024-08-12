@@ -233,7 +233,6 @@ const ColumnSearchBar = observer(() => {
   const { state, actions } = useContext(context);
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const term = event.target.value;
-    actions.setColumnSearchTerm(term);
     actions.searchColumns(term);
   };
   return (

@@ -438,6 +438,7 @@ export const setColumnSelected = action((name: string) => {
 });
 
 export const searchColumns = action(async (searchTerm: string, counter = { count: 0 }) => {
+  setColumnSearchTerm(searchTerm);
   await yieldControl(counter, 30);
   if (searchTerm === "") {
     state.settingsTabs.columnHashMap.forEach((columnInfo) => {
@@ -455,8 +456,15 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
     setExpanded(false, columnInfo);
   }
 
+  const regExp = new RegExp(searchTerm);
+
   for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
-    if (columnInfo.show != true && columnInfo.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+    const match =
+      columnInfo.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      regExp.test(columnInfo.name) ||
+      regExp.test(columnInfo.editName) ||
+      columnInfo.editName.toLowerCase().includes(searchTerm.toLowerCase());
+    if (columnInfo.show != true && match) {
       setShow(true, columnInfo);
       setExpanded(true, columnInfo);
       let parentName = columnInfo.parent;
