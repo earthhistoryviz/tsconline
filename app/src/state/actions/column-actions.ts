@@ -462,12 +462,7 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
 
   for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
     await yieldControl(counter, 30);
-    const match =
-      columnInfo.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      regExp.test(columnInfo.name) ||
-      regExp.test(columnInfo.editName) ||
-      columnInfo.editName.toLowerCase().includes(searchTerm.toLowerCase());
-    if (columnInfo.show != true && match) {
+    if (columnInfo.show != true && (regExp.test(columnInfo.name) || regExp.test(columnInfo.editName))) {
       setShow(true, columnInfo);
       setExpanded(true, columnInfo);
       let parentName = columnInfo.parent;
@@ -807,6 +802,7 @@ export const searchEvents = action(async (searchTerm: string, counter = { count:
   setEventSearchTerm(searchTerm);
   let count = 0;
   if (state.settingsTabs.eventSearchTerm === "") return 0;
+  const regExp = getRegex(state.settingsTabs.eventSearchTerm);
 
   //key: column name/event name
   //info: info found in subinfo array
@@ -817,7 +813,7 @@ export const searchEvents = action(async (searchTerm: string, counter = { count:
     if (columnInfo.name === "Chart Root") {
       continue;
     }
-    if (columnInfo.editName.toLowerCase().includes(state.settingsTabs.eventSearchTerm.toLowerCase())) {
+    if (regExp.test(columnInfo.name) || regExp.test(columnInfo.editName)) {
       //for column names
       const id = columnInfo.editName + " - " + "Column";
       if (!results.has(id)) {
@@ -839,7 +835,6 @@ export const searchEvents = action(async (searchTerm: string, counter = { count:
       for (let i = 0; i < columnInfo.subInfo.length; i++) {
         const subInfo = columnInfo.subInfo[i];
         if ("label" in subInfo && subInfo.label) {
-          const regExp = getRegex(state.settingsTabs.eventSearchTerm);
           if (regExp.test(subInfo.label)) {
             const resultType = columnInfo.columnDisplayType === "Zone" ? "Block" : columnInfo.columnDisplayType;
             const resInfo: EventSearchInfo = {
