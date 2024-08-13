@@ -1,5 +1,6 @@
 import { Checkbox, CheckboxProps } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import { forwardRef } from "react";
 
 interface TSCCheckboxProps extends CheckboxProps {
   outlineColor?: string;
@@ -9,20 +10,21 @@ interface TSCCheckboxProps extends CheckboxProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export const TSCCheckbox: React.FC<TSCCheckboxProps> = ({
+export const TSCCheckbox= forwardRef<HTMLButtonElement, TSCCheckboxProps>(({
   outlineColor,
   checkedColor,
   checked,
   onChange,
   className,
   ...props
-}) => {
+}, ref) => {
   const theme = useTheme();
   outlineColor = outlineColor || theme.palette.outline.main;
   checkedColor = checkedColor || theme.palette.button.main;
   return (
     <Checkbox
       {...props}
+      ref={ref}
       checked={checked}
       onChange={onChange}
       size="small"
@@ -35,4 +37,4 @@ export const TSCCheckbox: React.FC<TSCCheckboxProps> = ({
       }}
     />
   );
-};
+});

@@ -312,7 +312,7 @@ const Notes = observer(({ info }: { info: EventSearchInfo }) => {
   );
 });
 
-export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchInfo[] }) => {
+export const Results = observer(({ groupedEvents }: { groupedEvents: GroupedEventSearchInfo[] }) => {
   const theme = useTheme();
   //this is necessary to prevent table hierachy errors
   //virtuoso assigns each array element to a table row, and a table row can't be a child
@@ -437,4 +437,4 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
       />
     </Box>
   );
-};
+});

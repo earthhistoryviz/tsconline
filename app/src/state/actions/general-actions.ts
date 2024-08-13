@@ -566,7 +566,9 @@ export const setDatapackConfig = action(
     state.settings.datapackContainsSuggAge = foundDefaultAge;
     state.mapState.mapHierarchy = mapHierarchy;
     state.mapState.mapInfo = mapInfo;
-    state.settingsTabs.columnHashMap = new Map();
+    runInAction(() => {
+      state.settingsTabs.columnHashMap = new Map();
+    })
     // throws warning if this isn't in its own action. may have other fix but left as is
     runInAction(() => {
       state.config.datapacks = datapacks;

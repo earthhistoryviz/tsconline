@@ -7,7 +7,6 @@ import { Results } from "./Results";
 import { EventSearchInfo, GroupedEventSearchInfo } from "../types";
 export const Search = observer(function Search() {
   const { state, actions } = useContext(context);
-  const [groupedEvents, setGroupedEvents] = useState<GroupedEventSearchInfo[]>([]);
   const countRef = useRef(0);
   const TimeDisplay = observer(() => {
     return (
@@ -40,9 +39,7 @@ export const Search = observer(function Search() {
             size="small"
             fullWidth
             onChange={async (e) => {
-              const { count, groupedEvents } = await actions.searchEvents(e.target.value);
-              countRef.current = count;
-              setGroupedEvents(groupedEvents);
+              countRef.current = await actions.searchEvents(e.target.value);
             }}
             value={state.settingsTabs.eventSearchTerm}
           />
@@ -51,7 +48,7 @@ export const Search = observer(function Search() {
         <TimeDisplay />
       </div>
 
-      <Results groupedEvents={groupedEvents} />
+      <Results groupedEvents={state.settingsTabs.groupedEvents} />
     </div>
   );
 });

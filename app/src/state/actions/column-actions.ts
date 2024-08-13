@@ -806,7 +806,7 @@ export const makeColumnPath = action((name: string): string[] => {
 export const searchEvents = action(async (searchTerm: string, counter = { count: 0 }) => {
   setEventSearchTerm(searchTerm);
   let count = 0;
-  if (state.settingsTabs.eventSearchTerm === "") return { groupedEvents: [], count: 0 };
+  if (state.settingsTabs.eventSearchTerm === "") return 0
 
   //key: column name/event name
   //info: info found in subinfo array
@@ -860,8 +860,8 @@ export const searchEvents = action(async (searchTerm: string, counter = { count:
               } else {
                 console.error(
                   "While searching, could not find Facies or Chron label for " +
-                    columnInfo.name +
-                    " but should have found it"
+                  columnInfo.name +
+                  " but should have found it"
                 );
                 continue;
               }
@@ -893,7 +893,7 @@ export const searchEvents = action(async (searchTerm: string, counter = { count:
             }
             const eventGroup = results.get(key)!;
             eventGroup.push(resInfo);
-            count;
+            count++;
           }
         }
       }
@@ -904,8 +904,13 @@ export const searchEvents = action(async (searchTerm: string, counter = { count:
   results.forEach((info: EventSearchInfo[], key: string) => {
     groupedEvents.push({ key: key, info: [...info] });
   });
-  return { groupedEvents, count };
+  setGroupedEvents(groupedEvents);
+  return count
 });
+
+export const setGroupedEvents = action((groupedEvents: GroupedEventSearchInfo[]) => {
+  state.settingsTabs.groupedEvents = groupedEvents;
+})
 
 export const changeAgeColumnJustification = action((column: ColumnInfo, newJustification: "left" | "right") => {
   if (column.columnDisplayType !== "Ruler" || !/^Age \d+ for .+$/.test(column.name)) {
