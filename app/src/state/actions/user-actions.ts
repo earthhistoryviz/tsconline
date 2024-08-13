@@ -1,8 +1,9 @@
-import { action } from "mobx";
+import { action, runInAction } from "mobx";
 import { fetcher } from "../../util";
 import { getRecaptchaToken, pushError, pushSnackbar } from "./general-actions";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
+import { state } from "../state";
 
 export const userDeleteDatapack = action(async (datapack: string) => {
   try {
@@ -16,6 +17,10 @@ export const userDeleteDatapack = action(async (datapack: string) => {
       }
     });
     if (response.ok) {
+      runInAction(() => {
+        delete state.datapackIndex[datapack];
+        delete state.mapPackIndex[datapack];
+      });
       pushSnackbar(`Datapack ${datapack} deleted`, "success");
     } else {
       displayServerError(
