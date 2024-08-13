@@ -141,14 +141,13 @@ cd server && yarn start
 
 NOTE: this doesn't work on some machines unfortunately.
 
-### If above doesn't start/work (NOT WORKING YET)
+### If above doesn't start/work
 
-- No worries if the above doesn't work. We can use docker to make a fake environment for you to run the server on
+- No worries if the above doesn't work. We can use docker to make a fake environment for you to run the server on.
 
-1. Create a `secrets.env` file in the root dir and a network
+1. Create a `secrets.env` file in the root dir
 
 ```bash
-docker create network shared_network
 touch secrets.env
 ```
 
@@ -157,6 +156,11 @@ touch secrets.env
 ```bash
 docker-compose up -d
 ```
+or
+```bash
+docker compose up -d
+```
+depending on which version of compose you have.
 
 3. Try opening the website [here](http://localhost:5173)
 
@@ -164,6 +168,15 @@ docker-compose up -d
 
 ```bash
 docker-compose logs
+```
+or
+```bash
+docker compose logs
+```
+
+This comes with a problem where docker will change the ownership of files, preventing you from running the website using the steps above without docker. To fix this run
+```bash
+sudo chown -R <user> <project-directory>
 ```
 
 ## Structure
