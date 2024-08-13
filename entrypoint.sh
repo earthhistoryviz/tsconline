@@ -20,12 +20,11 @@ XERR="/root/.Xerrors"
 rm -f $XERR
 XARGS="-e $XERR -l -f $XAUTH -n 99 --server-args='-screen 0 1280x1024x24'"
 cd /code
-yarn install
-yarn build
+yarn setup
 if [ "$NODE_ENV" == "production" ]; then
-  start_server_cmd="yarn start"
-else
   start_server_cmd="yarn production"
+else
+  start_server_cmd="yarn dev"
 fi
 echo "-----------------------------------------------------------------------------------------------"
 echo "The VNC server is not nomally running to avoid wasting resources.  If you need to view the GUI,"
