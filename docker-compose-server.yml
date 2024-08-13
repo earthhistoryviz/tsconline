@@ -1,14 +1,17 @@
 version: "3"
 services:
   tsconline:
-    extends:
-      file: docker-compose.yml
-      service: tsconline
-    networks:
-      - shared_network
-    ports: []
+    build: .
+    restart: unless-stopped
+    #image: tscreator/tscreator_online:v2
+    env_file:
+      - secrets.env
+    volumes:
+      - .:/code
     environment:
       - NODE_ENV=production
+    networks:
+      - shared_network
 networks:
   shared_network:
     external: true
