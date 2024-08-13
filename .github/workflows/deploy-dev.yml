@@ -62,7 +62,11 @@ jobs:
               echo "Error: docker-compose.yml not found"
               exit 1
             fi
-            docker-compose -f docker-compose.yml restart
+            if [ ! -f "docker-compose-server.yml" ]; then
+              echo "Error: docker-compose-server.yml not found"
+              exit 1
+            fi
+            docker-compose -f docker-compose-server.yml restart
 
             START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
 
@@ -82,8 +86,8 @@ jobs:
               if [ $ELAPSED -ge $MAX_WAIT ]; then
                 echo "Max wait time exceeded. Exiting..."
                 echo "Last 200 lines in container:"
-                docker-compose -f docker-compose logs --tail=200
-                docker-compose -f docker-compose.yml down
+                docker-compose -f docker-compose-server.yml logs --tail=200
+                docker-compose -f docker-compose-server.yml down
                 exit 1
               fi
               echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
