@@ -9,7 +9,7 @@ services:
       - .:/code
     networks:
       - shared_network
-    command: bash -c "source /root/.nvm/nvm.sh && nvm use node && yarn setup"
+    command: bash -c "source /root/.nvm/nvm.sh && nvm use node && yarn && yarn build && yarn dev:config"
 
   pr-preview-run:
     build: .
