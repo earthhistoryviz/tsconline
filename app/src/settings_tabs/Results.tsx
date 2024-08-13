@@ -317,14 +317,9 @@ export const Results = observer(({ groupedEvents }: { groupedEvents: GroupedEven
   //this is necessary to prevent table hierachy errors
   //virtuoso assigns each array element to a table row, and a table row can't be a child
   //of a table row which would be necessary for display without stretching the array.
-  const stretchedEvents: (string | EventSearchInfo)[] = [];
-  groupedEvents.map((value) => {
-    stretchedEvents.push(value.key);
-    for (const event of value.info) {
-      stretchedEvents.push(event);
-    }
+  const stretchedEvents: (string | EventSearchInfo)[] = groupedEvents.flatMap((value) => {
+    return [value.key, ...value.info];
   });
-
   function EventGroup(index: number, info: string | EventSearchInfo) {
     if (typeof info === "string") {
       return (

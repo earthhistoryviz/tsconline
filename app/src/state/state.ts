@@ -8,7 +8,6 @@ import {
   MapHistory,
   Config,
   SettingsTabs,
-  CachedConfig,
   User,
   GroupedEventSearchInfo
 } from "../types";
@@ -104,7 +103,6 @@ export type State = {
   };
   snackbars: SnackbarInfo[];
   presetColors: string[];
-  datapackCachedConfiguration: Map<string, CachedConfig>;
 };
 
 export const state = observable<State>({
@@ -205,6 +203,5 @@ export const state = observable<State>({
     errorAlerts: new Map<ErrorCodes, ErrorAlert>()
   },
   presetColors: JSON.parse(localStorage.getItem("savedColors") || JSON.stringify(defaultColors)),
-  snackbars: [],
-  datapackCachedConfiguration: new Map<string, CachedConfig>()
+  snackbars: []
 });

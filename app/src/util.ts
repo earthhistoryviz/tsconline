@@ -86,6 +86,7 @@ export async function yieldControl(counter: { count: number }, limit: number) {
 }
 
 export function getRegex(string: string) {
+  string = string.replace(/[.+?^${}()|[\]\\]/g, "\\$&");
   string = string.replace(/\*/g, ".*");
   return new RegExp(string, "i");
 }
