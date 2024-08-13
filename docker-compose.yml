@@ -16,4 +16,4 @@ services:
     volumes:
       - .:/code
     environment:
-      - CLOSE_BROWSER=true
+      - VITE_OPEN_SCREEN=false

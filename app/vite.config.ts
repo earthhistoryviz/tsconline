@@ -5,7 +5,7 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   server: {
-    open: process.env.CLOSE_BROWSER !== "true",
+    open: process.env.VITE_OPEN_SCREEN !== undefined ? process.env.VITE_OPEN_SCREEN === "true" : true,
     port: 5173,
     host: "0.0.0.0"
   },
