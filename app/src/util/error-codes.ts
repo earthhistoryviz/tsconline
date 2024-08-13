@@ -63,7 +63,8 @@ export enum ErrorCodes {
   ADMIN_DELETE_SERVER_DATAPACK_FAILED = "ADMIN_DELETE_SERVER_DATAPACK_FAILED",
   ADMIN_CANNOT_DELETE_ROOT_DATAPACK = "ADMIN_CANNOT_DELETE_ROOT_DATAPACK",
   INVALID_SERVER_DATAPACK_REQUEST = "INVALID_SERVER_DATAPACK_REQUEST",
-  SERVER_FILE_METADATA_ERROR = "SERVER_FILE_METADATA_ERROR"
+  SERVER_FILE_METADATA_ERROR = "SERVER_FILE_METADATA_ERROR",
+  USER_DELETE_DATAPAACK_FAILED = "USER_DELETE_DATAPACK_FAILED"
 }
 
 export const ErrorMessages = {
@@ -139,5 +140,6 @@ export const ErrorMessages = {
   [ErrorCodes.ADMIN_DELETE_SERVER_DATAPACK_FAILED]: "Unable to delete server datapack. Please try again later.",
   [ErrorCodes.ADMIN_CANNOT_DELETE_ROOT_DATAPACK]: "Cannot delete root datapack. Ask server admin for assistance.",
   [ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]: "Invalid server datapack request. Please try again later.",
-  [ErrorCodes.SERVER_FILE_METADATA_ERROR]: "Server file metadata error. Please try again later."
+  [ErrorCodes.SERVER_FILE_METADATA_ERROR]: "Server file metadata error. Please try again later.",
+  [ErrorCodes.USER_DELETE_DATAPAACK_FAILED]: "Unable to delete user datapack. Please try again later."
 };
