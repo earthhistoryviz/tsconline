@@ -35,7 +35,7 @@
     "lint-format": "yarn eslint **/*.{tsx,ts} --fix --quiet --config ./.eslintrc.json",
     "prettier-check": "prettier --check \"**/*.{ts,tsx,css}\"",
     "prettier-format": "prettier --write \"**/*.{ts,tsx,css}\"",
-    "setup": "yarn && yarn build && yarn dev:config",
+    "setup": "yarn build && yarn dev:config",
     "start": "yarn workspace @tsconline/server start",
     "dev": "concurrently \"yarn start\" \"yarn workspace @tsconline/server dev\" \"yarn workspace @tsconline/app dev\" \"yarn workspace @tsconline/shared dev\"",
     "production": "yarn workspace @tsconline/server run production",
