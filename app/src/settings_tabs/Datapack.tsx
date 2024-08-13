@@ -124,22 +124,29 @@ export const Datapacks = observer(function Datapacks() {
 type DatapackMenuProps = {
   name: string;
   button?: JSX.Element;
+  isUserDatapack?: boolean;
 };
-export const DatapackMenu: React.FC<DatapackMenuProps> = ({ name, button }) => {
+export const DatapackMenu: React.FC<DatapackMenuProps> = ({ name, button, isUserDatapack = false }) => {
   const { actions } = useContext(context);
   return (
-      <Menu
-        direction="bottom"
-        align="start"
-        portal
-        menuButton={button || <DownloadIcon className="download-icon" />}
-        transition>
-        <MenuItem onClick={async () => await actions.requestDownload(name, true)}>
-          <Typography>Encrypted Download</Typography>
+    <Menu
+      direction="bottom"
+      align="start"
+      portal
+      menuButton={button || <DownloadIcon className="download-icon" />}
+      onClick={(e) => e.stopPropagation()}
+      transition>
+      <MenuItem onClick={async () => await actions.requestDownload(name, true)}>
+        <Typography>Encrypted Download</Typography>
+      </MenuItem>
+      <MenuItem onClick={async () => await actions.requestDownload(name, false)}>
+        <Typography>Retrieve Original File</Typography>
+      </MenuItem>
+      {isUserDatapack && (
+        <MenuItem onClick={async () => await actions.userDeleteDatapack(name)}>
+          <Typography>Delete Datapack</Typography>
         </MenuItem>
-        <MenuItem onClick={async () => await actions.requestDownload(name, false)}>
-          <Typography>Retrieve Original File</Typography>
-        </MenuItem>
-      </Menu>
+      )}
+    </Menu>
   );
 };

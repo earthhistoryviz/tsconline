@@ -1,6 +1,6 @@
 import { DatapackParsingPack } from "@tsconline/shared";
 import styles from "./TSCDatapackRow.module.css";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { devSafeUrl } from "../../util";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
@@ -11,6 +11,7 @@ import { CheckIcon, Loader } from "../TSCComponents";
 import Color from "color";
 import Lottie from "../TSCLottie";
 import TrashCanIcon from "../../assets/icons/trash-icon.json";
+import { context } from "../../state";
 
 type TSCDatapackRowProps = {
   name: string;
@@ -23,6 +24,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
   const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { actions } = useContext(context);
   const theme = useTheme();
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
 
@@ -73,22 +75,37 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
           {datapack.date && ` · Created ${datapack.date}`}
         </Typography>
       </div>
-      { datapack.uuid &&
+      {datapack.uuid && (
         <div
-        className={styles.right}
-        onClick={(e) => {
-          e.stopPropagation();
-        }}>
-        <DatapackMenu
-          name={name}
-          button={
-            <IconButton className={styles.iconbutton}>
-              <MoreHorizIcon />
-            </IconButton>
-          }
-        />
-        <Lottie className={styles.lottie} animationData={TrashCanIcon} width={20} height={20} playOnHover speed={1.7} />
-      </div>}
+          className={styles.right}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}>
+          <DatapackMenu
+            name={name}
+            button={
+              <IconButton className={styles.iconbutton}>
+                <MoreHorizIcon />
+              </IconButton>
+            }
+            isUserDatapack={!!datapack.uuid}
+          />
+          <Box
+            onClick={async (e) => {
+              e.stopPropagation();
+              await actions.userDeleteDatapack(datapack.file);
+            }}>
+            <Lottie
+              className={styles.lottie}
+              animationData={TrashCanIcon}
+              width={20}
+              height={20}
+              playOnHover
+              speed={1.7}
+            />
+          </Box>
+        </div>
+      )}
     </Box>
   );
 };
