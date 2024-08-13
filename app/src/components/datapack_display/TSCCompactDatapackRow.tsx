@@ -8,6 +8,8 @@ import { useTheme } from "@mui/material";
 import { CheckIcon, Loader } from "../TSCComponents";
 import { devSafeUrl } from "../../util";
 import { useNavigate } from "react-router";
+import TrashCanIcon from "../../assets/icons/trash-icon.json";
+import Lottie from "../TSCLottie";
 
 type TSCCompactDatapackRowProps = {
   name: string;
@@ -56,11 +58,14 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
         {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
       </Box>
       <img className={styles.image} src={imageUrl} alt="datapack" onError={() => setImageUrl(defaultImageUrl)} />
-      <div className={styles.right}>
+      <div className={styles.title}>
         <Typography className={styles.header} color="textSecondary">
           {datapack.title}
         </Typography>
       </div>
+      {datapack.uuid && (
+        <Lottie className={styles.lottie} animationData={TrashCanIcon} width={20} height={20} playOnHover speed={1.7} />
+      )}
     </Box>
   );
 });
