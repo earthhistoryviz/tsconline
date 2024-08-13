@@ -439,7 +439,10 @@ export const setColumnSelected = action((name: string) => {
   }
 });
 
+let searchColumnsAbortController: AbortController | null = null;
 export const searchColumns = action(async (searchTerm: string, counter = { count: 0 }) => {
+  if (searchColumnsAbortController) searchColumnsAbortController.abort();
+  searchColumnsAbortController = new AbortController();
   setColumnSearchTerm(searchTerm);
   if (searchTerm === "") {
     state.settingsTabs.columnHashMap.forEach((columnInfo) => {
@@ -480,6 +483,7 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
       }
     }
   }
+  searchColumnsAbortController = null;
 });
 
 export const addDataMiningColumn = action(
@@ -798,7 +802,10 @@ export const makeColumnPath = action((name: string): string[] => {
   }
   return columnPath;
 });
+let searchEventsAbortController: AbortController | null = null;
 export const searchEvents = action(async (searchTerm: string, counter = { count: 0 }) => {
+  if (searchEventsAbortController) searchEventsAbortController.abort();
+  searchEventsAbortController = new AbortController();
   setEventSearchTerm(searchTerm);
   let count = 0;
   if (state.settingsTabs.eventSearchTerm === "") return 0;
@@ -900,6 +907,7 @@ export const searchEvents = action(async (searchTerm: string, counter = { count:
     groupedEvents.push({ key: key, info: [...info] });
   });
   setGroupedEvents(groupedEvents);
+  searchEventsAbortController = null;
   return count;
 });
 
