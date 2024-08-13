@@ -215,7 +215,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
     async function downloadChart() {
       actions.setChartTabIsSavingChart(true);
       if (state.chartTab.downloadFiletype === "svg") {
-        const blob = new Blob([state.chartContent]);
+        const blob = new Blob([state.chartTab.unsafeChartContent]);
         FileSaver.saveAs(blob, state.chartTab.downloadFilename + ".svg");
         actions.pushSnackbar("Saved Chart as SVG!", "success");
         actions.setChartTabIsSavingChart(false);
