@@ -9,6 +9,8 @@ import { DatapackMenu } from "../../settings_tabs/Datapack";
 import "./SharedDatapackDisplay.css";
 import { CheckIcon, Loader } from "../TSCComponents";
 import Color from "color";
+import Lottie from "../TSCLottie";
+import TrashCanIcon from "../../assets/icons/trash-icon.json";
 
 type TSCDatapackRowProps = {
   name: string;
@@ -71,15 +73,12 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
           {datapack.date && ` · Created ${datapack.date}`}
         </Typography>
       </div>
-      <div
+      { datapack.uuid &&
+        <div
         className={styles.right}
         onClick={(e) => {
           e.stopPropagation();
         }}>
-        <div className={styles.vc}>
-          <Typography className={styles.views}>100</Typography>
-          <span className={styles.eye} />
-        </div>
         <DatapackMenu
           name={name}
           button={
@@ -88,7 +87,8 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
             </IconButton>
           }
         />
-      </div>
+        <Lottie className={styles.lottie} animationData={TrashCanIcon} width={20} height={20} playOnHover speed={1.7} />
+      </div>}
     </Box>
   );
 };
