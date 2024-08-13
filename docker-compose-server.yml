@@ -1,0 +1,14 @@
+version: "3"
+services:
+  tsconline:
+    extends:
+      file: docker-compose.yml
+      service: tsconline
+    networks:
+      - shared_network
+    ports: []
+    environment:
+      - NODE_ENV=production
+networks:
+  shared_network:
+    external: true

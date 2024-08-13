@@ -57,6 +57,8 @@ Put all the datapacks in `datapacks` into `server/assets/datapacks`
   - Visit the [nvm repo](https://github.com/nvm-sh/nvm) and install `nvm`
 - **WINDOWS**
   - use [nvm-windows](https://github.com/coreybutler/nvm-windows/releases)
+  - use WSL with VSCode (install nvm from MACOS link)
+  - use Docker (explanation below)
 - Then run these commands to install the `node` version 20 that the repo uses and `npm` which it should come bundled with
 
   ```bash
@@ -142,3 +144,20 @@ cd server && yarn start
 ```
 
 NOTE: this doesn't work on some machines unfortunately.
+
+### Using docker to run the website
+- Simply run
+```bash
+docker-compose up -d
+```
+or
+```bash
+docker compose up -d
+```
+depending on which version of compose you have. The website should now be available at the links listed above.
+
+This comes with a problem where docker will change the ownership of files, preventing you from running the website using the steps above without docker. To fix this run
+```bash
+sudo chown -R <user> <project-directory>
+```
+
