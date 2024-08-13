@@ -1,7 +1,4 @@
 version: "3"
-networks:
-  shared_network:
-    external: true
 services:
   tsconline:
     build: .
@@ -10,23 +7,13 @@ services:
     env_file:
       # You have to create this file yourself with a VNCPASSWORD=thepasswordyouwant
       - secrets.env
-    expose:
-      - 3000
-        # if PORT environment variable is set, use it.  If not, use 3000
-        # Uncomment these if you need to view the GUI, connect browser to one of them
-      - 5900
-      - 5800
     ports:
-      - "${BIND_ADDRESS:-127.0.0.1}:${EXTERNAL_PORT:-6000}:3000" # container accessible on localhost:6000 unless specified in .env file
-      - "5900:5900"
-      - "5800:5800"
+      - "3000:3000"
+      - "5173:5173"
+      # Uncomment these if you need to view the GUI, connect browser to one of them
+      # - "5900:5900"
+      # - "5800:5800"
     volumes:
       - .:/code
-      - yarn_cache:/root/.yarn/cache
-    networks:
-      - shared_network
     environment:
-      - NODE_ENV=production
-
-volumes:
-  yarn_cache:
+      - VITE_OPEN_SCREEN=false
