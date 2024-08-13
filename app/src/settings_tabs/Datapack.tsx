@@ -126,9 +126,8 @@ type DatapackMenuProps = {
   button?: JSX.Element;
 };
 export const DatapackMenu: React.FC<DatapackMenuProps> = ({ name, button }) => {
-  const { state, actions } = useContext(context);
+  const { actions } = useContext(context);
   return (
-    state.datapackIndex[name].uuid && (
       <Menu
         direction="bottom"
         align="start"
@@ -142,6 +141,5 @@ export const DatapackMenu: React.FC<DatapackMenuProps> = ({ name, button }) => {
           <Typography>Retrieve Original File</Typography>
         </MenuItem>
       </Menu>
-    )
   );
 };
