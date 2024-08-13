@@ -418,31 +418,6 @@ const applyChartSettings = action("applyChartSettings", (settings: ChartSettings
   setEnableHideBlockLabel(enHideBlockLable);
 });
 
-const setPreviousDatapackConfig = action("setPreviousDatapackConfig", (datapacks: string[]) => {
-  if (!state.datapackCachedConfiguration.has(state.config.datapacks.join(","))) {
-    return;
-  }
-  const cachedConfig = state.datapackCachedConfiguration.get(state.config.datapacks.join(","))!;
-  state.config.datapacks = datapacks;
-  state.settingsTabs.columns = cachedConfig.columns;
-  state.settingsTabs.columnHashMap = cachedConfig.columnHashMap;
-  state.mapState.mapInfo = cachedConfig.mapInfo;
-  state.mapState.mapHierarchy = cachedConfig.mapHierarchy;
-  state.settings.datapackContainsSuggAge = cachedConfig.datapackContainsSuggAge;
-  // add new units
-  for (const unit of cachedConfig.units) {
-    if (!state.settings.timeSettings[unit]) {
-      state.settings.timeSettings[unit] = JSON.parse(JSON.stringify(defaultTimeSettings));
-    }
-  }
-  // remove old units
-  for (const unit of Object.keys(state.settings.timeSettings)) {
-    if (!cachedConfig.units.includes(unit)) {
-      delete state.settings.timeSettings[unit];
-    }
-  }
-});
-
 /**
  * Rests the settings, sets the tabs to 0
  * sets chart to newval and requests info on the datapacks from the server
@@ -451,10 +426,6 @@ const setPreviousDatapackConfig = action("setPreviousDatapackConfig", (datapacks
 export const setDatapackConfig = action(
   "setDatapackConfig",
   async (datapacks: string[], settingsPath?: string): Promise<boolean> => {
-    if (state.datapackCachedConfiguration.has(datapacks.join(","))) {
-      setPreviousDatapackConfig(datapacks);
-      return true;
-    }
     const unitMap: Map<string, ColumnInfo> = new Map();
     let mapInfo: MapInfo = {};
     let mapHierarchy: MapHierarchy = {};
@@ -562,22 +533,20 @@ export const setDatapackConfig = action(
       return false;
     }
     resetSettings();
-    state.settingsTabs.columns = columnRoot;
-    state.settings.datapackContainsSuggAge = foundDefaultAge;
-    state.mapState.mapHierarchy = mapHierarchy;
-    state.mapState.mapInfo = mapInfo;
-    runInAction(() => {
-      state.settingsTabs.columnHashMap = new Map();
-    })
     // throws warning if this isn't in its own action. may have other fix but left as is
-    runInAction(() => {
+    await runInAction(async () => {
+      state.settingsTabs.columns = columnRoot;
+      state.settings.datapackContainsSuggAge = foundDefaultAge;
+      state.mapState.mapHierarchy = mapHierarchy;
+      state.mapState.mapInfo = mapInfo;
+      state.settingsTabs.columnHashMap = new Map();
       state.config.datapacks = datapacks;
+      await initializeColumnHashMap(state.settingsTabs.columns);
     });
     // this is for app start up or when all datapacks are removed
     if (datapacks.length === 0) {
       state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
     }
-    await initializeColumnHashMap(state.settingsTabs.columns);
     if (chartSettings !== null) {
       assertChartInfoTSC(chartSettings);
       await applySettings(chartSettings);
@@ -589,14 +558,6 @@ export const setDatapackConfig = action(
         }
       }
     }
-    state.datapackCachedConfiguration.set(datapacks.join(","), {
-      columns: columnRoot,
-      columnHashMap: state.settingsTabs.columnHashMap,
-      mapInfo,
-      mapHierarchy,
-      datapackContainsSuggAge: state.settings.datapackContainsSuggAge,
-      units: Object.keys(state.settings.timeSettings)
-    });
     searchColumns(state.settingsTabs.columnSearchTerm);
     searchEvents(state.settingsTabs.eventSearchTerm);
     return true;

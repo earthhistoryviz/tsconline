@@ -1,4 +1,4 @@
-import { ColumnInfo, DataMiningPointDataType, MapHierarchy, MapInfo, SharedUser } from "@tsconline/shared";
+import { DataMiningPointDataType, SharedUser } from "@tsconline/shared";
 
 export type User = SharedUser & {
   settings: {
@@ -123,15 +123,6 @@ export type ChartSettings = {
   mouseOverPopupsEnabled: boolean;
   datapackContainsSuggAge: boolean;
   useDatapackSuggestedAge: boolean;
-};
-
-export type CachedConfig = {
-  mapHierarchy: MapHierarchy;
-  columnHashMap: Map<string, ColumnInfo>;
-  columns: ColumnInfo;
-  datapackContainsSuggAge: boolean;
-  mapInfo: MapInfo;
-  units: string[];
 };
 
 export function convertDataMiningPointDataTypeToDataMiningStatisticApproach(
