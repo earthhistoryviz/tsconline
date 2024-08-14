@@ -35,6 +35,7 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack
                 <span className={styles.more} />
               </IconButton>
             }
+            isUserDatapack={!!datapack.uuid}
           />
         </div>
         <Typography className={styles.description}>{datapack.description}</Typography>

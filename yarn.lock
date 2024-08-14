@@ -2324,16 +2324,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@szhsin/react-menu@npm:^4.1.0":
-  version: 4.1.0
-  resolution: "@szhsin/react-menu@npm:4.1.0"
+"@szhsin/react-menu@npm:4.2.2":
+  version: 4.2.2
+  resolution: "@szhsin/react-menu@npm:4.2.2"
   dependencies:
     prop-types: "npm:^15.7.2"
     react-transition-state: "npm:^2.1.0"
   peerDependencies:
     react: ">=16.14.0"
     react-dom: ">=16.14.0"
-  checksum: 34974d9f66e7c0b211981c96cf0c027ed714ed536b6fed236ddd2af9504a141d66200a1b215361bac9df3582aaa5fd67ebced32282cd1cf34b3b5523b57507ad
+  checksum: 96d0d5db0a77123410c22c82f12b6c41b399cc23cb2354e2fc68055dff1a93ede3dcd57234e87efc326139ae49f2749b842c4a8c538ac709391f7613fd968a7e
   languageName: node
   linkType: hard
 
@@ -2401,7 +2401,7 @@ __metadata:
     "@mui/material": "npm:^5.16.1"
     "@mui/x-date-pickers": "npm:^7.12.0"
     "@react-oauth/google": "npm:^0.12.1"
-    "@szhsin/react-menu": "npm:^4.1.0"
+    "@szhsin/react-menu": "npm:4.2.2"
     "@tsconline/shared": "npm:1.0.0"
     "@types/color": "npm:^3.0.6"
     "@types/dompurify": "npm:^3"
