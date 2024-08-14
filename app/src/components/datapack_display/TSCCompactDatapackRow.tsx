@@ -1,6 +1,6 @@
 import { DatapackParsingPack } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Box, Typography } from "@mui/material";
 import styles from "./TSCCompactDatapackRow.module.css";
 import Color from "color";
@@ -8,6 +8,9 @@ import { useTheme } from "@mui/material";
 import { CheckIcon, Loader } from "../TSCComponents";
 import { devSafeUrl } from "../../util";
 import { useNavigate } from "react-router";
+import TrashCanIcon from "../../assets/icons/trash-icon.json";
+import Lottie from "../TSCLottie";
+import { context } from "../../state";
 
 type TSCCompactDatapackRowProps = {
   name: string;
@@ -23,6 +26,7 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
 }) {
   const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
   const [loading, setLoading] = useState(false);
+  const { actions } = useContext(context);
   const theme = useTheme();
   const navigate = useNavigate();
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
@@ -56,11 +60,27 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
         {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
       </Box>
       <img className={styles.image} src={imageUrl} alt="datapack" onError={() => setImageUrl(defaultImageUrl)} />
-      <div className={styles.right}>
+      <div className={styles.title}>
         <Typography className={styles.header} color="textSecondary">
           {datapack.title}
         </Typography>
       </div>
+      {datapack.uuid && (
+        <Box
+          onClick={async (e) => {
+            e.stopPropagation();
+            await actions.userDeleteDatapack(datapack.file);
+          }}>
+          <Lottie
+            className={styles.lottie}
+            animationData={TrashCanIcon}
+            width={20}
+            height={20}
+            playOnHover
+            speed={1.7}
+          />
+        </Box>
+      )}
     </Box>
   );
 });
