@@ -221,16 +221,6 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
     try {
       assertIndexResponse(data);
       const { mapPackIndex, datapackIndex } = data;
-      const mapPackKeys = Object.keys(state.mapPackIndex);
-      const hasDuplicateMapPackKeys = Object.keys(mapPackIndex).some((key) => mapPackKeys.includes(key));
-      const datapackKeys = Object.keys(state.datapackIndex);
-      const hasDuplicateDatapackKeys = Object.keys(datapackIndex).some((key) => datapackKeys.includes(key));
-      if (hasDuplicateMapPackKeys) {
-        pushSnackbar("User MapPacks loaded with duplicate keys!", "warning");
-      }
-      if (hasDuplicateDatapackKeys) {
-        pushSnackbar("User Datapacks loaded with duplicate keys!", "warning");
-      }
       // we keep all the server datapacks (careful as we do not delete old entries if they are removed on the server)
       // TODO: potentially check for staleness sometime
       setMapPackIndex({ ...state.mapPackIndex, ...mapPackIndex });
