@@ -180,6 +180,9 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
         ADD_URI_SAFE_ATTR: ["docbase", "popuptext"]
       };
       const sanitizedSVG = DOMPurify.sanitize(content, domPurifyConfig);
+      // for download ONLY
+      generalActions.setUnsafeChartContent(content);
+      // the display version
       generalActions.setChartContent(sanitizedSVG);
       generalActions.setChartTimelineEnabled(false);
       generalActions.setChartTimelineLocked(false);
