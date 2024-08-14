@@ -8,8 +8,8 @@ import {
   MapHistory,
   Config,
   SettingsTabs,
-  CachedConfig,
-  User
+  User,
+  GroupedEventSearchInfo
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -62,6 +62,7 @@ export type State = {
     columnSearchTerm: string;
     datapackDisplayType: "rows" | "cards" | "compact";
     eventSearchTerm: string;
+    groupedEvents: GroupedEventSearchInfo[];
   };
   admin: {
     displayedUsers: AdminSharedUser[];
@@ -103,7 +104,6 @@ export type State = {
   };
   snackbars: SnackbarInfo[];
   presetColors: string[];
-  datapackCachedConfiguration: Map<string, CachedConfig>;
 };
 
 export const state = observable<State>({
@@ -154,7 +154,8 @@ export const state = observable<State>({
     columnHashMap: new Map<string, ColumnInfo>(),
     columnSearchTerm: "",
     datapackDisplayType: "compact",
-    eventSearchTerm: ""
+    eventSearchTerm: "",
+    groupedEvents: []
   },
   mapState: {
     mapInfo: {},
@@ -204,6 +205,5 @@ export const state = observable<State>({
     errorAlerts: new Map<ErrorCodes, ErrorAlert>()
   },
   presetColors: JSON.parse(localStorage.getItem("savedColors") || JSON.stringify(defaultColors)),
-  snackbars: [],
-  datapackCachedConfiguration: new Map<string, CachedConfig>()
+  snackbars: []
 });
