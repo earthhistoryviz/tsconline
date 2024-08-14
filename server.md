@@ -102,7 +102,7 @@ After decrypting the datapacks, the server will simply listen for any requests f
 
 The TSC Online platform uses a specific JAR file, named `datapack-decrypter_DDMMMYYYY.jar`, to decrypt encrypted datapacks during server startup. For instance, a typical JAR file might be named `datapack-decrypter_21Jun2024.jar`.
 
-To ensure the server starts correctly, this JAR file must be placed in the `tsconline/server/assets/jars` directory alongside the active server JAR file. Additionally, the JAR file and its input arguments should be specified in the `tsconline/server/assets/config.json` file.
+To ensure the server starts correctly, this JAR file must be placed in the `tsconline/server/assets/jars` directory alongside the active server JAR file. Additionally, the JAR file and its input arguments should be specified in the `tsconline/server/assets/admin-config.json` file.
 
 
 ##### Example Usage
@@ -151,7 +151,9 @@ This ensures that the new decryption JAR will redecrypt the datapacks using the 
 
 
 #### Building the JAR
-To create the decryption JAR file, use Maven.
+The decryption jar can be created from the datapack-decrypter Java program repository stored on Bitbucket by using Maven.
+
+First, clone this repository, then in the working directory, use Maven to compile the program into a Jar.
 
 Check Maven Installation:
 ```
@@ -175,7 +177,7 @@ This will create a decryption JAR file inside the `/target` folder with the date
 `datapack-decrypter_21Jun2024.jar`
 
 Note on JAR Naming
-The date appended to the JAR file's name is for informational purposes only and has no impact on the version control mechanism. This date helps users identify when the file was last changed. Remember, after building the new JAR, update the config.json file to reference the correct JAR, as the filename will have changed.
+The date appended to the JAR file's name is for informational purposes only and has no impact on the version control mechanism. This date helps users identify when the file was last changed. Remember, after building the new JAR, update the admin-config.json file to reference the correct JAR, as the filename will have changed.
 
 ---
 
