@@ -40,6 +40,7 @@ export type State = {
     downloadFiletype: "svg" | "pdf" | "png";
     isSavingChart: boolean;
     enableScrollZoom: boolean;
+    unsafeChartContent: string;
   };
   loadSaveFilename: string;
   cookieConsent: boolean | null;
@@ -117,7 +118,8 @@ export const state = observable<State>({
     downloadFilename: "chart",
     downloadFiletype: "svg",
     isSavingChart: false,
-    enableScrollZoom: false
+    enableScrollZoom: false,
+    unsafeChartContent: "" // this is used to store the chart content for download which is vulnerable to XSS
   },
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,
