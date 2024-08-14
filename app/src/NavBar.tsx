@@ -122,7 +122,6 @@ export const NavBar = observer(function Navbar() {
         <TSCButton
           buttonType="gradient"
           onClick={async () => {
-            // await actions.processDatapackConfig(JSON.parse(JSON.stringify(state)).unsavedDatapackConfig, "");
             await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig), "");
             actions.initiateChartGeneration(navigate, location.pathname);
           }}>

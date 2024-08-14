@@ -33,7 +33,6 @@ export const Datapacks = observer(function Datapacks() {
     };
   }, []);
 
-
   const onChange = (newDatapack: string) => {
     if (state.unsavedDatapackConfig.includes(newDatapack)) {
       actions.setUnsavedDatapackConfig(state.unsavedDatapackConfig.filter((datapack) => datapack !== newDatapack));

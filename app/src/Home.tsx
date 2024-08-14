@@ -51,7 +51,6 @@ export const Home = observer(function Home() {
           }}
           onClick={async () => {
             actions.removeCache();
-            await actions.processDatapackConfig([]);
             actions.resetState();
           }}>
           Remove Cache

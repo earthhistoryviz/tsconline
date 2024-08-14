@@ -1,6 +1,6 @@
 // Shared types between app and server (i.e. messages they send back and forth)
 
-import { defaultFontsInfoConstant, validDateFormats } from "./constants.js";
+import { defaultColumnRootConstant, defaultFontsInfoConstant, validDateFormats } from "./constants.js";
 import validator from "validator";
 
 export * from "./constants.js";
@@ -184,6 +184,7 @@ export type FontsInfo = {
 };
 
 export const defaultFontsInfo: FontsInfo = defaultFontsInfoConstant;
+export const defaultColumnRoot: ColumnInfo = defaultColumnRootConstant;
 
 export type SubBlockInfo = {
   label: string;
