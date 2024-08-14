@@ -98,6 +98,89 @@ After decrypting the datapacks, the server will simply listen for any requests f
 
 ---
 
+### Decrypter
+
+The TSC Online platform uses a specific JAR file, named `datapack-decrypter_DDMMMYYYY.jar`, to decrypt encrypted datapacks during server startup. For instance, a typical JAR file might be named `datapack-decrypter_21Jun2024.jar`.
+
+To ensure the server starts correctly, this JAR file must be placed in the `tsconline/server/assets/jars` directory alongside the active server JAR file. Additionally, the JAR file and its input arguments should be specified in the `tsconline/server/assets/admin-config.json` file.
+
+
+##### Example Usage
+To invoke the decryption process using the JAR file, you can use a command like the following:
+
+```
+const cmd = 
+    `java -jar ${assetconfigs.decryptionJar} ` + 
+    `-d ${datapackPaths.join(" ")} ` + 
+    `-dest ${assetconfigs.decryptionDirectory} `;
+```
+
+#### Arguments
+- **`-d <file1> <file2> ...`**: Specifies one or more datapack files to decrypt. These files can have extensions such as `.dpk`, `.txt`, `.mdpk`, or `.map`.
+- **`-dest <directory>`**: Specifies the destination directory where the decrypted files should be stored. If the directory does not exist, it will be created automatically. The program also manages version control within this directory.
+- **`-h`**: Displays a help message detailing how to use the program, including descriptions of the available arguments.
+
+
+#### Output
+- **Decrypted Files**: The program saves the decrypted content of the datapack files in the specified destination directory. If the datapacks are ZIP archives, the program will extract and process the files contained within.
+  
+- **Version Control**: The program creates a `version.info` file in the destination directory to store the version number of the decryption script. This mechanism ensures changes in the decryption program will cause the server to redecrypt the datapacks.
+
+- **Error Handling**: If any errors occur during decryption or extraction, the program logs the errors and deletes any partially processed files to prevent corrupted data from being left in the destination directory.
+
+
+#### Version Control of Decryptionn on Server Startup
+The decryption program checks for a version.info file in the destination directory. If the version in this file matches the version in the program, the program will skip redecrypting the datapacks. However, if the version is different or the version.info file does not exist, the program will proceed with decrypting the datapacks.
+
+
+#### Modifying the Decryption Program
+The decryption program's source code is stored in Bitbucket.
+
+When making any changes to the decryption program, it is crucial to update the version_number string by incrementing it by 0.01.
+
+For example, if the current version is:
+```
+private static String version_number = "1.00";
+```
+Change it to:
+```
+private static String version_number = "1.01";
+```
+
+This ensures that the new decryption JAR will redecrypt the datapacks using the updated logic.
+
+
+#### Building the JAR
+The decryption jar can be created from the datapack-decrypter Java program repository stored on Bitbucket by using Maven.
+
+First, clone this repository, then in the working directory, use Maven to compile the program into a Jar.
+
+Check Maven Installation:
+```
+mvn -v
+```
+If Maven is not installed, run the following commands:
+
+```
+sudo apt update
+sudo apt install maven
+```
+
+Build the JAR:
+While in the directory containing the pom.xml file, run:
+
+```
+mvn clean install
+```
+
+This will create a decryption JAR file inside the `/target` folder with the date appended to the filename, such as:
+`datapack-decrypter_21Jun2024.jar`
+
+Note on JAR Naming
+The date appended to the JAR file's name is for informational purposes only and has no impact on the version control mechanism. This date helps users identify when the file was last changed. Remember, after building the new JAR, update the admin-config.json file to reference the correct JAR, as the filename will have changed.
+
+---
+
 ### Admin Config
 
 The server holds `DatapackMetadata` which describes multiple facets and characteristics of the datapacks. See below
