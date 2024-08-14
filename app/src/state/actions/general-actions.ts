@@ -12,7 +12,9 @@ import {
   assertMapPackInfoChunk,
   DatapackParsingPack,
   assertDatapackParsingPack,
-  DatapackMetadata
+  DatapackMetadata,
+  defaultColumnRoot,
+  FontsInfo
 } from "@tsconline/shared";
 
 import {
@@ -50,6 +52,7 @@ import {
 } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
 import { actions } from "..";
+import { cloneDeep } from "lodash";
 
 const increment = 1;
 
@@ -417,16 +420,40 @@ export const setUnsavedDatapackConfig = action("setUnsavedDatapackConfig", (newD
   state.unsavedDatapackConfig = newDatapacks;
 });
 
+const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
+  resetSettings();
+  const columnRoot: ColumnInfo = cloneDeep(defaultColumnRoot);
+  // all chart root font options have inheritable on
+  for (const opt in columnRoot.fontsInfo) {
+    columnRoot.fontsInfo[opt as keyof FontsInfo].inheritable = true;
+  }
+  // throws warning if this isn't in its own action.
+  runInAction(() => {
+    state.settingsTabs.columns = columnRoot;
+    state.settings.datapackContainsSuggAge = false;
+    state.mapState.mapHierarchy = {};
+    state.mapState.mapInfo = {};
+    state.settingsTabs.columnHashMap = new Map();
+    state.config.datapacks = [];
+    state.settingsTabs.columnHashMap.set(columnRoot.name, columnRoot);
+  });
+
+  // we add Ma unit by default
+  state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
+
+  searchColumns(state.settingsTabs.columnSearchTerm);
+  searchEvents(state.settingsTabs.eventSearchTerm);
+  setUnsavedDatapackConfig([]);
+});
+
 export const processDatapackConfig = action(
   "processDatapackConfig",
   async (datapacks: string[], settingsPath?: string) => {
-    if (state.isProcessingDatapacks) return;
-    //when first open the website they are both empty. We still need to process the config under that situation
-    if (
-      JSON.stringify(state.unsavedDatapackConfig) == JSON.stringify(state.config.datapacks) &&
-      state.config.datapacks.length !== 0
-    )
+    if (datapacks.length === 0) {
+      setEmptyDatapackConfig();
       return;
+    }
+    if (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)) return;
     setIsProcessingDatapacks(true);
     const fetchSettings = async () => {
       if (settingsPath && settingsPath.length !== 0) {
@@ -462,6 +489,7 @@ export const processDatapackConfig = action(
 
         setDatapackConfigWorker.onmessage = async function (e: MessageEvent<SetDatapackConfigCompleteMessage>) {
           const { status, value } = e.data;
+
           if (status === "success" && value) {
             try {
               await actions.setDatapackConfig(
@@ -476,7 +504,6 @@ export const processDatapackConfig = action(
               pushSnackbar("Datapack Config Updated", "success");
               setUnsavedDatapackConfig(datapacks);
               resolve("Datapack Config Updated successfully.");
-
             } catch (e) {
               reject(new Error("Failed to set datapack config with error " + e));
             }
@@ -520,10 +547,8 @@ export const setDatapackConfig = action(
       state.config.datapacks = datapacks;
       await initializeColumnHashMap(state.settingsTabs.columns);
     });
-    // this is for app start up or when all datapacks are removed
-    if (datapacks.length === 0) {
-      state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
-    } else {
+    // when datapacks is empty, setEmptyDatapackConfig() is called instead and Ma is added by default. So when datapacks is no longer empty we will delete that default Ma here
+    if (datapacks.length !== 0) {
       delete state.settings.timeSettings["Ma"];
     }
 
@@ -593,6 +618,7 @@ export const removeCache = action("removeCache", async () => {
 export const resetState = action("resetState", () => {
   setChartMade(true);
   setChartLoading(true);
+  processDatapackConfig([]);
   setChartHash("");
   setChartContent("");
   setUseCache(true);

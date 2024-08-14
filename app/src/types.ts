@@ -1,9 +1,4 @@
-import {
-  ChartInfoTSC, ColumnInfo, DataMiningPointDataType, MapHierarchy, MapInfo, SharedUser,
-  assertDatapackIndex,
-  assertMapPackIndex
-} from "@tsconline/shared";
-import { State } from "./state/state";
+import { ColumnInfo, DataMiningPointDataType, MapHierarchy, MapInfo, SharedUser } from "@tsconline/shared";
 import { State } from "./state";
 
 export type User = SharedUser & {
@@ -214,11 +209,4 @@ export function assertSettingsTabs(value: string): asserts value is SettingsTabs
   if (!(value in SettingsMenuOptionLabels)) {
     throw new Error(`Invalid settings tab: ${value}`);
   }
-}
-
-export function assertState(o: any): asserts o is State {
-  //put it in here because webworker can't access to function in the state file
-  if (!o || typeof o !== "object") throw new Error("State must be a non-null object");
-  assertDatapackIndex(o.datapackIndex);
-  assertMapPackIndex(o.mapPackIndex);
 }
