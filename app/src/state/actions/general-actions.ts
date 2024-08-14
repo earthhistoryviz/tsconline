@@ -1185,3 +1185,6 @@ export const setChartTabEnableScrollZoom = action("setChartTabEnableScrollZoom",
 export const setChartTabIsSavingChart = action((term: boolean) => {
   state.chartTab.isSavingChart = term;
 });
+export const setUnsafeChartContent = action((content: string) => {
+  state.chartTab.unsafeChartContent = content;
+});
