@@ -25,11 +25,16 @@
 .loading {
   background-color: rgba(0, 0, 0, 0.068) !important;
 }
-.right {
+.title {
   flex-grow: 1;
   display: flex;
   overflow: hidden;
   flex-direction: column;
+}
+
+.lottie {
+  cursor: pointer;
+  margin: 5px;
 }
 
 .header {
