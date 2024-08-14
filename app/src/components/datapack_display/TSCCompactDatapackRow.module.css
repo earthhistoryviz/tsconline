@@ -9,6 +9,7 @@
   line-height: 1.2rem;
   border-radius: 10px;
   margin: 1px 0;
+  cursor: pointer;
 }
 .cc {
   display: flex;
