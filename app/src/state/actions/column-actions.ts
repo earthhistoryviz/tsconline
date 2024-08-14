@@ -57,9 +57,6 @@ function extractColumnType(text: string): string {
   return text.substring(text.indexOf(".") + 1, text.indexOf(":"));
 }
 function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
-  console.log("Settings(setColProp):", settings);
-  console.log("Column(setColProp):", column);
-
   setEditName(settings.title, column);
   setEnableTitle(settings.drawTitle, column);
   if ("showUncertaintyLabels" in column) setShowUncertaintyLabels(settings.drawUncertaintyLabel, column);
@@ -257,31 +254,32 @@ export function addColumnToDataMiningCache(settings: ColumnInfoTSC) {
 
 export const applyChartColumnSettings = action("applyChartColumnSettings", (settings: ColumnInfoTSC) => {
   const columnName = extractName(settings._id);
-  const curcol: ColumnInfo | undefined =
+  let curcol: ColumnInfo | undefined =
     state.settingsTabs.columnHashMap.get(columnName) ||
     state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
-  console.log(`Processing column: ${columnName}`);
-  console.log("Current column:", curcol);
-  console.log("Settings:", settings);
-  // Apply settings to the current column
   if (curcol) {
-    console.log("Applying settings to column:", columnName);
     setColumnProperties(curcol, settings);
-  } else {
-    console.warn(`Column not found in hash map: ${columnName}`);
   }
 
   addColumnToDataMiningCache(settings);
 
-  // Recursively apply settings to children
-  if (settings.children) {
+  if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
+    console.log("current block: for settingsid", settings._id);
     for (let i = 0; i < settings.children.length; i++) {
-      const childSettings = settings.children[i];
-      console.log(`Recursively processing child: ${extractName(childSettings._id)}`);
-      applyChartColumnSettings(childSettings);
+      const child = settings.children[i];
+      const childName = extractName(child._id);
+      console.log("childName: ", childName);
+      console.log("child: ", child);
+      console.log(columnName, childName);
+      curcol = state.settingsTabs.columnHashMap.get(childName);
+      if (curcol) setColumnProperties(curcol, child);
+
+      addColumnToDataMiningCache(child);
     }
   } else {
-    console.warn(`No children found for column: ${columnName}`);
+    for (let i = 0; i < settings.children.length; i++) {
+      applyChartColumnSettings(settings.children[i]);
+    }
   }
 });
 
