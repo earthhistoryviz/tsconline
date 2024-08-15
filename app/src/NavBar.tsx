@@ -66,6 +66,7 @@ export const NavBar = observer(function Navbar() {
               sx={{
                 "& .MuiTab-root": {
                   color: "dark.contrastText",
+                  fontWeight: 600,
                   "&:hover:not(.Mui-selected)": {
                     color: "button.main"
                   }
