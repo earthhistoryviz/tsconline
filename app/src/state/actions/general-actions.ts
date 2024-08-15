@@ -10,11 +10,12 @@ import {
   assertChartInfoTSC,
   assertDatapackInfoChunk,
   assertMapPackInfoChunk,
-  BaseDatapackProps,
-  assertBaseDatapackProps,
+  assertDatapack,
   DatapackMetadata,
   defaultColumnRoot,
-  FontsInfo
+  FontsInfo,
+  isPrivateUserDatapack,
+  Datapack
 } from "@tsconline/shared";
 
 import {
@@ -47,6 +48,7 @@ import {
   SetDatapackConfigCompleteMessage,
   SetDatapackConfigMessage,
   SettingsTabs,
+  UploadOptions,
   equalChartSettings,
   equalConfig
 } from "../../types";
@@ -63,7 +65,7 @@ export const fetchServerDatapack = action("fetchServerDatapack", async (datapack
     });
     const data = await response.json();
     if (response.ok) {
-      assertBaseDatapackProps(data);
+      assertDatapack(data);
       return data;
     } else {
       displayServerError(
@@ -268,47 +270,50 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
   }
 });
 
-export const uploadDatapack = action("uploadDatapack", async (file: File, metadata: DatapackMetadata) => {
-  if (state.datapackIndex[file.name]) {
-    pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
-    return;
-  }
-  const recaptcha = await getRecaptchaToken("uploadUserDatapack");
-  if (!recaptcha) return;
-  const formData = new FormData();
-  const { title, description, isPublic, authoredBy, contact, notes, date, references, tags } = metadata;
-  formData.append("file", file);
-  formData.append("title", title);
-  formData.append("description", description);
-  formData.append("isPublic", isPublic);
-  formData.append("references", JSON.stringify(references));
-  formData.append("tags", JSON.stringify(tags));
-  formData.append("authoredBy", authoredBy);
-  if (notes) formData.append("notes", notes);
-  if (date) formData.append("date", date);
-  if (contact) formData.append("contact", contact);
-  try {
-    const response = await fetcher(`/user/datapack`, {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-      headers: {
-        "recaptcha-token": recaptcha
-      }
-    });
-    const data = await response.json();
-
-    if (response.ok) {
-      fetchUserDatapacks();
-      pushSnackbar("Successfully uploaded " + title + " datapack", "success");
-    } else {
-      displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+export const uploadUserDatapack = action(
+  "uploadDatapack",
+  async (file: File, metadata: DatapackMetadata, options?: UploadOptions) => {
+    if (state.datapackIndex[file.name]) {
+      pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
+      return;
     }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
+    const recaptcha = await getRecaptchaToken("uploadUserDatapack");
+    if (!recaptcha) return;
+    const formData = new FormData();
+    const { title, description, authoredBy, contact, notes, date, references, tags } = metadata;
+    formData.append("file", file);
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("references", JSON.stringify(references));
+    formData.append("tags", JSON.stringify(tags));
+    formData.append("authoredBy", authoredBy);
+    options?.isPublic && formData.append("isPublic", String(options.isPublic));
+    if (notes) formData.append("notes", notes);
+    if (date) formData.append("date", date);
+    if (contact) formData.append("contact", contact);
+    try {
+      const response = await fetcher(`/user/datapack`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+        headers: {
+          "recaptcha-token": recaptcha
+        }
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        fetchUserDatapacks();
+        pushSnackbar("Successfully uploaded " + title + " datapack", "success");
+      } else {
+        displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+      }
+    } catch (e) {
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      console.error(e);
+    }
   }
-});
+);
 
 export const setMapPackIndex = action("setMapPackIndex", async (mapPackIndex: MapPackIndex) => {
   // This is to prevent the UI from lagging
@@ -319,7 +324,7 @@ export const setMapPackIndex = action("setMapPackIndex", async (mapPackIndex: Ma
   }
 });
 
-export const addDatapackToIndex = action("addDatapackToIndex", (datapack: string, info: BaseDatapackProps) => {
+export const addDatapackToIndex = action("addDatapackToIndex", (datapack: string, info: Datapack) => {
   state.datapackIndex[datapack] = info;
 });
 export const setDatapackIndex = action("setDatapackIndex", async (datapackIndex: DatapackIndex) => {
@@ -977,7 +982,7 @@ export const setDefaultUserState = action(() => {
   };
   // Take out all the user datapacks
   const serverDatapacks = Object.values(state.datapackIndex)
-    .filter((datapack) => datapack.uuid === undefined)
+    .filter((datapack) => isPrivateUserDatapack(datapack))
     .map((datapack) => datapack.file);
   const datapackIndex = Object.fromEntries(
     Object.entries(state.datapackIndex).filter(([key]) => serverDatapacks.includes(key))

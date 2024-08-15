@@ -92,6 +92,10 @@ interface PublicUserDatapack {
 export type DatapackType = ServerDatapack | WorkshopDatapack | PrivateUserDatapack | PublicUserDatapack;
 export type Datapack = DatapackType & BaseDatapackProps;
 
+export type PresetDatapack = {
+  file: string;
+  name: string;
+};
 export type ColumnTypeCounter = Record<ColumnInfoType, number>;
 
 export type DatapackWarning = {
@@ -162,7 +166,7 @@ export type ChartConfig = {
   title: string;
   description: string;
   settings: string; // path to base settings file
-  datapacks: Datapack[]; // active datapack names
+  datapacks: PresetDatapack[]; // active datapack names
   date: string; // active datapack names
   type?: string; // type of preset
 };
@@ -998,6 +1002,18 @@ export function assertDatapack(o: any): asserts o is Datapack {
   assertDatapackType(o);
   assertBaseDatapackProps(o);
 }
+export function isServerDatapack(o: any): o is ServerDatapack {
+  return o.type === "server";
+}
+export function isWorkshopDatapack(o: any): o is WorkshopDatapack {
+  return o.type === "workshop";
+}
+export function isPublicUserDatapack(o: any): o is PublicUserDatapack {
+  return o.type === "public_user" && typeof o.uuid === "string";
+}
+export function isPrivateUserDatapack(o: any): o is PrivateUserDatapack {
+  return o.type === "private_user" && typeof o.uuid === "string";
+}
 export function assertDatapackType(o: any): asserts o is DatapackType {
   if (!o || typeof o !== "object") throw new Error("DatapackType must be a non-null object");
   switch (o.type) {
@@ -1097,6 +1113,12 @@ export function assertBaseDatapackProps(o: any): asserts o is BaseDatapackProps 
   if (typeof o.datapackImageCount !== "number")
     throwError("BaseDatapackProps", "datapackImageCount", "number", o.datapackImages);
   assertColumnInfo(o.columnInfo);
+}
+
+export function assertPresetDatapack(o: any): asserts o is PresetDatapack {
+  if (!o || typeof o !== "object") throw new Error("PresetDatapack must be a non-null object");
+  if (typeof o.name !== "string") throwError("PresetDatapack", "name", "string", o.name);
+  if (typeof o.file !== "string") throwError("PresetDatapack", "file", "string", o.file);
 }
 
 export function assertDatapackWarning(o: any): asserts o is DatapackWarning {

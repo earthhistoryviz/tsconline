@@ -13,6 +13,10 @@ export type Reference = {
   reference: string;
 };
 
+export type UploadOptions = {
+  isPublic: boolean;
+};
+
 export type WindowStats = {
   windowStart: number;
   windowEnd: number;

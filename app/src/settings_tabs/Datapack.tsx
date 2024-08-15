@@ -126,7 +126,7 @@ export const Datapacks = observer(function Datapacks() {
         </TSCButton>
       </Box>
       <Dialog classes={{ paper: styles.dd }} open={formOpen} onClose={() => setFormOpen(false)}>
-        <DatapackUploadForm close={() => setFormOpen(false)} upload={actions.uploadDatapack} />
+        <DatapackUploadForm close={() => setFormOpen(false)} upload={actions.uploadUserDatapack} />
       </Dialog>
     </div>
   );
