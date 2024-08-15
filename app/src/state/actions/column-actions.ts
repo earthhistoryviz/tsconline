@@ -353,7 +353,9 @@ export const applyRowOrder = action(
 
 export const initializeColumnHashMap = action(async (columnInfo: ColumnInfo, counter = { count: 0 }) => {
   await yieldControl(counter, 30);
+
   state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
+
   for (const childColumn of columnInfo.children) {
     await initializeColumnHashMap(childColumn, counter);
   }

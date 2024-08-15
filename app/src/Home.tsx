@@ -49,7 +49,7 @@ export const Home = observer(function Home() {
           style={{
             fontSize: theme.typography.pxToRem(12)
           }}
-          onClick={() => {
+          onClick={async () => {
             actions.removeCache();
             actions.resetState();
           }}>
@@ -97,15 +97,11 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                   <TSCCard
                     preset={preset}
                     generateChart={async () => {
-                      const success = await actions.setDatapackConfig(
+                      await actions.processDatapackConfig(
                         preset.datapacks.map((datapack) => datapack.file),
                         preset.settings
                       );
-                      // wait to see if we can grab necessary data
-                      if (success) {
-                        actions.initiateChartGeneration(navigate, "/home");
-                      }
-                      //TODO add an error message saying the data is irregular and can't be loaded
+                      actions.initiateChartGeneration(navigate, "/home");
                     }}
                   />
                 </Grid>

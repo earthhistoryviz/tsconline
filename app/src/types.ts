@@ -1,4 +1,5 @@
-import { DataMiningPointDataType, SharedUser } from "@tsconline/shared";
+import { ColumnInfo, DataMiningPointDataType, MapHierarchy, MapInfo, SharedUser } from "@tsconline/shared";
+import { State } from "./state";
 
 export type User = SharedUser & {
   settings: {
@@ -27,6 +28,23 @@ export type DownloadPdfMessage = {
 export type DownloadPdfCompleteMessage = {
   status: "success" | "failure";
   value: Blob | undefined;
+};
+
+export type SetDatapackConfigMessage = {
+  datapacks: string[];
+  stateCopy: State;
+};
+
+export type SetDatapackConfigCompleteMessage = {
+  status: "success" | "failure";
+  value: SetDatapackConfigReturnValue | undefined;
+};
+export type SetDatapackConfigReturnValue = {
+  columnRoot: ColumnInfo;
+  foundDefaultAge: boolean;
+  mapHierarchy: MapHierarchy;
+  mapInfo: MapInfo;
+  datapacks: string[];
 };
 
 //id: unique id among search results

@@ -104,6 +104,8 @@ export type State = {
   };
   snackbars: SnackbarInfo[];
   presetColors: string[];
+  isProcessingDatapacks: boolean;
+  unsavedDatapackConfig: string[];
 };
 
 export const state = observable<State>({
@@ -205,5 +207,7 @@ export const state = observable<State>({
     errorAlerts: new Map<ErrorCodes, ErrorAlert>()
   },
   presetColors: JSON.parse(localStorage.getItem("savedColors") || JSON.stringify(defaultColors)),
-  snackbars: []
+  snackbars: [],
+  isProcessingDatapacks: false,
+  unsavedDatapackConfig: []
 });

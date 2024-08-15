@@ -24,6 +24,7 @@ import { Profile } from "./account_settings/Profile";
 import { Admin } from "./admin/Admin";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { TSCLoadingDatapacks } from "./components/TSCLoadingDatapacks";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -35,6 +36,11 @@ export default observer(function App() {
     document.documentElement.style.backgroundColor = backgroundColor;
     document.body.style.backgroundColor = backgroundColor;
   }, [theme]);
+  const checkOpen =
+    location.pathname === "/settings" &&
+    state.settingsTabs.selected !== "datapacks" &&
+    JSON.stringify(state.config.datapacks) !== JSON.stringify(state.unsavedDatapackConfig);
+
   return (
     <StyledEngineProvider injectFirst>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -72,6 +78,25 @@ export default observer(function App() {
             onYes={() => actions.handlePopupResponse(true, navigate)}
             onNo={() => actions.handlePopupResponse(false, navigate)}
             onClose={() => actions.fetchChartFromServer(navigate)}
+          />
+          <TSCLoadingDatapacks open={state.isProcessingDatapacks} />
+          <TSCPopupDialog
+            open={checkOpen}
+            title="Confirm Datapack Selection Change"
+            message="You have unsaved changes! If you leave now, your changes will not be saved."
+            onYes={async () => {
+              actions.setUnsavedDatapackConfig(state.config.datapacks);
+            }}
+            onNo={() => {
+              navigate("/settings");
+              actions.setSettingsTabsSelected("datapacks");
+            }}
+            onClose={() => {
+              navigate("/settings");
+              actions.setSettingsTabsSelected("datapacks");
+            }}
+            customNo="Cancel"
+            customYes="Leave Without Changes "
           />
           {state.snackbars.map((info, index) => (
             <TSCSnackbar
