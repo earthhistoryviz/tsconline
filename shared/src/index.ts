@@ -75,21 +75,22 @@ export type BaseDatapackProps = {
   datapackImageCount: number;
 };
 
-interface ServerDatapack extends BaseDatapackProps {
+interface ServerDatapack {
   type: "server";
 }
-interface WorkshopDatapack extends BaseDatapackProps {
+interface WorkshopDatapack {
   type: "workshop";
 }
-interface PrivateUserDatapack extends BaseDatapackProps {
+interface PrivateUserDatapack {
   type: "private_user";
   uuid: string;
 }
-interface PublicUserDatapack extends BaseDatapackProps {
+interface PublicUserDatapack {
   type: "public_user";
   uuid: string;
 }
-export type Datapack = ServerDatapack | WorkshopDatapack | PrivateUserDatapack | PublicUserDatapack;
+export type DatapackType = ServerDatapack | WorkshopDatapack | PrivateUserDatapack | PublicUserDatapack;
+export type Datapack = DatapackType & BaseDatapackProps;
 
 export type ColumnTypeCounter = Record<ColumnInfoType, number>;
 
@@ -110,7 +111,7 @@ export type IndexResponse = {
 };
 
 export type DatapackIndex = {
-  [name: string]: BaseDatapackProps;
+  [name: string]: Datapack;
 };
 export type MapPackIndex = {
   [name: string]: MapPack;
@@ -994,6 +995,11 @@ export function assertTransects(o: any): asserts o is Transects {
 export function assertDatapack(o: any): asserts o is Datapack {
   if (!o || typeof o !== "object") throw new Error("Datapack must be a non-null object");
   if (typeof o.type !== "string") throwError("Datapack", "type", "string", o.type);
+  assertDatapackType(o);
+  assertBaseDatapackProps(o);
+}
+export function assertDatapackType(o: any): asserts o is DatapackType {
+  if (!o || typeof o !== "object") throw new Error("DatapackType must be a non-null object");
   switch (o.type) {
     case "private_user":
       assertPrivateUserDatapack(o);
@@ -1012,12 +1018,10 @@ export function assertDatapack(o: any): asserts o is Datapack {
 export function assertPrivateUserDatapack(o: any): asserts o is PrivateUserDatapack {
   if (!o || typeof o !== "object") throw new Error("PrivateUserDatapack must be a non-null object");
   if (typeof o.uuid !== "string") throwError("PrivateUserDatapack", "uuid", "string", o.uuid);
-  assertBaseDatapackProps(o);
 }
 export function assertPublicUserDatapack(o: any): asserts o is PublicUserDatapack {
   if (!o || typeof o !== "object") throw new Error("PublicUserDatapack must be a non-null object");
   if (typeof o.uuid !== "string") throwError("PublicUserDatapack", "uuid", "string", o.uuid);
-  assertBaseDatapackProps(o);
 }
 
 export function assertSubBlockInfo(o: any): asserts o is SubBlockInfo {
@@ -1344,8 +1348,8 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
     default:
       throw new Error(
         "ColumnSpecificSettings must be an object of a valid column type. Found value of " +
-        type +
-        " which is not a valid column type"
+          type +
+          " which is not a valid column type"
       );
   }
 }

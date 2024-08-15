@@ -81,7 +81,9 @@ try {
 export const datapackIndex: DatapackIndex = {};
 export const mapPackIndex: MapPackIndex = {};
 const patterns = await loadFaciesPatterns();
-await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, adminconfig.datapacks);
+await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, adminconfig.datapacks, {
+  type: "server"
+});
 
 declare module "@fastify/secure-session" {
   interface SessionData {
