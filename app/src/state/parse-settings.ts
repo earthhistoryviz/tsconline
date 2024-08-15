@@ -88,7 +88,7 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
     if (!settingName) continue;
 
     const nestedSettingsNode = settingNode.getElementsByTagName("setting")[0];
-    if (!nestedSettingsNode && settingName !== "unitsPerMY") continue;
+    if (!nestedSettingsNode && settingName !== "unitsPerMY" && settingName !== "skipEmptyColumns") continue;
     let settingValue: string = "";
     if (nestedSettingsNode && nestedSettingsNode.textContent) {
       settingValue = nestedSettingsNode.textContent.trim();
