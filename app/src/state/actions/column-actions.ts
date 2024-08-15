@@ -264,13 +264,9 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
   addColumnToDataMiningCache(settings);
 
   if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
-    console.log("current block: for settingsid", settings._id);
     for (let i = 0; i < settings.children.length; i++) {
       const child = settings.children[i];
       const childName = extractName(child._id);
-      console.log("childName: ", childName);
-      console.log("child: ", child);
-      console.log(columnName, childName);
       curcol = state.settingsTabs.columnHashMap.get(childName);
       if (curcol) setColumnProperties(curcol, child);
 
