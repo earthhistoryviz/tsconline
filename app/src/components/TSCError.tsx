@@ -41,7 +41,7 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ errorContext, messa
       <div
         className="alert"
         style={{
-          backgroundColor: Color(theme.palette.error.light).lighten(0.1).string(),
+          backgroundColor: Color(theme.palette.error.light).lighten(0.3).string(),
           border: `1px solid ${Color(theme.palette.error.light).darken(0.4)}`
         }}>
         <div className="alert-header">
@@ -55,7 +55,7 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ errorContext, messa
             <CloseIcon className="alert-close-icon" style={{ color: theme.palette.error.dark }} />
           </IconButton>
         </div>
-        <CustomDivider key={`${index} error`} />
+        <CustomDivider key={`${index} error`} style={{ borderColor: theme.palette.error.dark }} />
         <StyledScrollbar className="alert-text">
           <Typography className="alert-info-text" color="error.dark">
             {message}
