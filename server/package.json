@@ -12,6 +12,7 @@
     "@fastify/static": "^6.10.1",
     "@tsconline/shared": "1.0.0",
     "@xmldom/xmldom": "0.8.10",
+    "async-mutex": "^0.5.0",
     "bcrypt-ts": "^5.0.2",
     "better-sqlite3": "^9.4.4",
     "chalk": "^5.3.0",
