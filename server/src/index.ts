@@ -25,8 +25,8 @@ import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
 import { fetchUserDatapacks } from "./routes/user-routes.js";
 
-const maxConcurrencySize = 3;
-export const maxQueueSize = 15;
+const maxConcurrencySize = 2;
+export const maxQueueSize = 30;
 
 const server = fastify({
   logger: false,
