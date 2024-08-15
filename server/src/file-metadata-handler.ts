@@ -3,7 +3,9 @@ import { FileMetadataIndex, assertFileMetadataIndex } from "./types.js";
 import { assertDatapackIndex, assertMapPackIndex } from "@tsconline/shared";
 import { checkFileExists } from "./util.js";
 import logger from "./error-logger.js";
+import { Mutex } from "async-mutex";
 
+const mutex = new Mutex();
 export const sunsetInterval = 1000 * 60 * 60 * 24 * 14;
 
 /**
@@ -37,15 +39,20 @@ export async function writeFileMetadata(
   mapPackIndexFilepath: string,
   datapackIndexFilepath: string
 ) {
-  const metadata = await loadFileMetadata(fileMetadataFilepath);
-  metadata[filepath] = {
-    fileName,
-    lastUpdated: new Date().toISOString(),
-    decryptedFilepath,
-    mapPackIndexFilepath,
-    datapackIndexFilepath
-  };
-  await writeFile(fileMetadataFilepath, JSON.stringify(metadata, null, 2));
+  const release = await mutex.acquire();
+  try {
+    const metadata = await loadFileMetadata(fileMetadataFilepath);
+    metadata[filepath] = {
+      fileName,
+      lastUpdated: new Date().toISOString(),
+      decryptedFilepath,
+      mapPackIndexFilepath,
+      datapackIndexFilepath
+    };
+    await writeFile(fileMetadataFilepath, JSON.stringify(metadata, null, 2));
+  } finally {
+    release();
+  }
 }
 
 /**
@@ -54,6 +61,7 @@ export async function writeFileMetadata(
  */
 export async function checkFileMetadata(fileMetadataFilepath: string) {
   console.log("Checking file metadata for sunsetted files");
+  const release = await mutex.acquire();
   try {
     const metadata = await loadFileMetadata(fileMetadataFilepath);
     const twoWeeksAgo = Date.now() - sunsetInterval;
@@ -69,38 +77,50 @@ export async function checkFileMetadata(fileMetadataFilepath: string) {
     await writeFile(fileMetadataFilepath, JSON.stringify(metadata, null, 2));
   } catch (e) {
     console.error("Error checking file metadata for sunsetted files: ", e);
+  } finally {
+    release();
   }
 }
 
 export async function deleteDatapack(metadata: FileMetadataIndex, filePath: string) {
-  if (!metadata[filePath]) throw new Error(`File ${filePath} not found in metadata`);
-  const file = metadata[filePath]!;
-  await rm(file.decryptedFilepath, { recursive: true, force: true });
-  await rm(filePath, { force: true });
-  if (await checkFileExists(file.datapackIndexFilepath)) {
-    const datapackIndex = JSON.parse(await readFile(file.datapackIndexFilepath, "utf-8"));
-    assertDatapackIndex(datapackIndex);
-    delete datapackIndex[file.fileName];
-    await writeFile(file.datapackIndexFilepath, JSON.stringify(datapackIndex, null, 2));
-  } else {
-    logger.error(`Datapack index file not found for file ${filePath}`);
+  const release = await mutex.acquire();
+  try {
+    if (!metadata[filePath]) throw new Error(`File ${filePath} not found in metadata`);
+    const file = metadata[filePath]!;
+    await rm(file.decryptedFilepath, { recursive: true, force: true });
+    await rm(filePath, { force: true });
+    if (await checkFileExists(file.datapackIndexFilepath)) {
+      const datapackIndex = JSON.parse(await readFile(file.datapackIndexFilepath, "utf-8"));
+      assertDatapackIndex(datapackIndex);
+      delete datapackIndex[file.fileName];
+      await writeFile(file.datapackIndexFilepath, JSON.stringify(datapackIndex, null, 2));
+    } else {
+      logger.error(`Datapack index file not found for file ${filePath}`);
+    }
+    if (await checkFileExists(file.mapPackIndexFilepath)) {
+      const mapPackIndex = JSON.parse(await readFile(file.mapPackIndexFilepath, "utf-8"));
+      assertMapPackIndex(mapPackIndex);
+      delete mapPackIndex[file.fileName];
+      await writeFile(file.mapPackIndexFilepath, JSON.stringify(mapPackIndex, null, 2));
+    } else {
+      logger.error(`Map pack index file not found for file ${filePath}`);
+    }
+    delete metadata[filePath];
+  } finally {
+    release();
   }
-  if (await checkFileExists(file.mapPackIndexFilepath)) {
-    const mapPackIndex = JSON.parse(await readFile(file.mapPackIndexFilepath, "utf-8"));
-    assertMapPackIndex(mapPackIndex);
-    delete mapPackIndex[file.fileName];
-    await writeFile(file.mapPackIndexFilepath, JSON.stringify(mapPackIndex, null, 2));
-  } else {
-    logger.error(`Map pack index file not found for file ${filePath}`);
-  }
-  delete metadata[filePath];
 }
 
 export async function updateFileMetadata(fileMetadataFilepath: string, filepath: string[]) {
-  const metadata = await loadFileMetadata(fileMetadataFilepath);
-  for (const file of filepath) {
-    if (!metadata[file]) throw new Error(`File ${file} not found in metadata`);
-    metadata[file]!.lastUpdated = new Date().toISOString();
+  const release = await mutex.acquire();
+  try {
+    const metadata = await loadFileMetadata(fileMetadataFilepath);
+    for (const file of filepath) {
+      if (!metadata[file]) throw new Error(`File ${file} not found in metadata`);
+      metadata[file]!.lastUpdated = new Date().toISOString();
+    }
+    await writeFile(fileMetadataFilepath, JSON.stringify(metadata, null, 2));
+  } finally {
+    release();
   }
-  await writeFile(fileMetadataFilepath, JSON.stringify(metadata, null, 2));
 }
