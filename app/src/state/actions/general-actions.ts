@@ -15,7 +15,9 @@ import {
   defaultColumnRoot,
   FontsInfo,
   isPrivateUserDatapack,
-  Datapack
+  assertPrivateUserDatapack,
+  Datapack,
+  assertServerDatapack
 } from "@tsconline/shared";
 
 import {
@@ -65,6 +67,9 @@ export const fetchServerDatapack = action("fetchServerDatapack", async (datapack
     });
     const data = await response.json();
     if (response.ok) {
+      // we add this just to make sure it is the correct type
+      assertServerDatapack(data);
+      // this is to make sure the BaseDatapackProps are available
       assertDatapack(data);
       return data;
     } else {
@@ -256,10 +261,14 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
     try {
       assertIndexResponse(data);
       const { mapPackIndex, datapackIndex } = data;
-      // we keep all the server datapacks (careful as we do not delete old entries if they are removed on the server)
-      // TODO: potentially check for staleness sometime
+
+      // make sure these are private user datapacks since datapackIndex is ambiguous
+      Object.values(datapackIndex).forEach((datapack) => {
+        assertPrivateUserDatapack(datapack);
+      });
       setMapPackIndex({ ...state.mapPackIndex, ...mapPackIndex });
       setDatapackIndex({ ...state.datapackIndex, ...datapackIndex });
+
       console.log("User Datapacks loaded");
     } catch (e) {
       displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);

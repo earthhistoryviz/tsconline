@@ -8,7 +8,7 @@ import {
 } from "@tsconline/shared";
 import { Mutex } from "async-mutex";
 import { readFile, writeFile } from "fs/promises";
-import { checkFileExists } from "./util";
+import { checkFileExists } from "./util.js";
 
 const mutex = new Mutex();
 export async function addPublicUserDatapack(
