@@ -16,7 +16,7 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
   return {
     ...actual,
     assertSubSequenceInfo: vi.fn().mockReturnValue(true),
-    assertDatapackParsingPack: vi.fn().mockReturnValue(true),
+    assertBaseDatapackProps: vi.fn().mockReturnValue(true),
     assertColumnSpecificSettings: vi.fn().mockReturnValue(true),
     calculateAutoScale: vi.fn().mockImplementation((min: number, max: number) => {
       return { lowerRange: min, upperRange: max, scaleStep: 0.18 };

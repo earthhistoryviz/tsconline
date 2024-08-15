@@ -9,7 +9,7 @@ import {
   assertIndexResponse,
   assertMapPackIndex,
   DatapackIndex,
-  DatapackParsingPack,
+  BaseDatapackProps,
   MapPack,
   MapPackIndex
 } from "@tsconline/shared";
@@ -456,7 +456,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     assertDatapackIndex(publicDatapacks);
     assertMapPackIndex(publicMappacks);
     if (datapackIndex[filename]) {
-      publicDatapacks[filename] = datapackIndex[filename] as DatapackParsingPack; //error without cast
+      publicDatapacks[filename] = datapackIndex[filename] as BaseDatapackProps; //error without cast
     }
     if (mapPackIndex[filename]) {
       publicMappacks[filename] = mapPackIndex[filename] as MapPack;

@@ -47,16 +47,16 @@ const setDatapackConfig = (datapacks: string[], stateCopy: State) => {
   for (const datapack of datapacks) {
     if (!datapack || !stateCopy.datapackIndex[datapack])
       throw new Error(`File requested doesn't exist on server: ${datapack}`);
-    const datapackParsingPack = stateCopy.datapackIndex[datapack]!;
+    const baseDatapackProps = stateCopy.datapackIndex[datapack]!;
     if (
-      ((datapackParsingPack.topAge || datapackParsingPack.topAge === 0) &&
-        (datapackParsingPack.baseAge || datapackParsingPack.baseAge === 0)) ||
-      datapackParsingPack.verticalScale
+      ((baseDatapackProps.topAge || baseDatapackProps.topAge === 0) &&
+        (baseDatapackProps.baseAge || baseDatapackProps.baseAge === 0)) ||
+      baseDatapackProps.verticalScale
     )
       foundDefaultAge = true;
-    if (unitMap.has(datapackParsingPack.ageUnits)) {
-      const existingUnitColumnInfo = unitMap.get(datapackParsingPack.ageUnits)!;
-      const newUnitChart = datapackParsingPack.columnInfo;
+    if (unitMap.has(baseDatapackProps.ageUnits)) {
+      const existingUnitColumnInfo = unitMap.get(baseDatapackProps.ageUnits)!;
+      const newUnitChart = baseDatapackProps.columnInfo;
       // slice off the existing unit column
       const columnsToAdd = cloneDeep(newUnitChart.children.slice(1));
       for (const child of columnsToAdd) {
@@ -64,9 +64,9 @@ const setDatapackConfig = (datapacks: string[], stateCopy: State) => {
       }
       existingUnitColumnInfo.children = existingUnitColumnInfo.children.concat(columnsToAdd);
     } else {
-      const columnInfo = cloneDeep(datapackParsingPack.columnInfo);
+      const columnInfo = cloneDeep(baseDatapackProps.columnInfo);
       columnInfo.parent = columnRoot.name;
-      unitMap.set(datapackParsingPack.ageUnits, columnInfo);
+      unitMap.set(baseDatapackProps.ageUnits, columnInfo);
     }
     const mapPack = stateCopy.mapPackIndex[datapack]!;
     if (!mapInfo) mapInfo = mapPack.mapInfo;
