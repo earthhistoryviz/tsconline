@@ -3,6 +3,7 @@ import {
   ChronColumnInfoTSC,
   ChronSettings,
   ColumnBasicInfoTSC,
+  ColumnInfo,
   DataMiningSettings,
   EventColumnInfoTSC,
   EventSettings,
@@ -206,6 +207,30 @@ export const defaultFontsInfoConstant: FontsInfo = {
     italic: true,
     size: 14
   }
+};
+
+export const defaultColumnRootConstant: ColumnInfo = {
+  name: "Chart Root",
+  editName: "Chart Root",
+  fontsInfo: defaultFontsInfoConstant,
+  fontOptions: ["Column Header"],
+  popup: "",
+  on: true,
+  width: 100,
+  enableTitle: true,
+  rgb: {
+    r: 255,
+    g: 255,
+    b: 255
+  },
+  minAge: Number.MAX_VALUE,
+  maxAge: Number.MIN_VALUE,
+  children: [],
+  parent: null,
+  units: "",
+  columnDisplayType: "RootColumn",
+  show: true,
+  expanded: true
 };
 
 export const defaultChartSettingsInfoTSC: ChartSettingsInfoTSC = {

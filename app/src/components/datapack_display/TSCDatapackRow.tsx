@@ -17,7 +17,7 @@ type TSCDatapackRowProps = {
   name: string;
   datapack: DatapackParsingPack;
   value: boolean;
-  onChange: (name: string) => Promise<void>;
+  onChange: (name: string) => void;
 };
 
 export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, value, onChange }) => {
@@ -56,8 +56,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
         onClick={async (e) => {
           e.stopPropagation();
           setLoading(true);
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          await onChange(name);
+          onChange(name);
           setLoading(false);
         }}>
         {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
