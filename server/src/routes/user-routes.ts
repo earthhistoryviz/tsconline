@@ -9,8 +9,6 @@ import {
   assertIndexResponse,
   assertMapPackIndex,
   DatapackIndex,
-  BaseDatapackProps,
-  MapPack,
   MapPackIndex
 } from "@tsconline/shared";
 import { exec } from "child_process";
@@ -152,7 +150,10 @@ export const fetchPublicDatapacks = async function fetchPublicDatapacks(request:
   try {
     const publicDatapackIndexFilepath = path.join(assetconfigs.publicDirectory, "DatapackIndex.json");
     const publicMapPackIndexFilepath = path.join(assetconfigs.publicDirectory, "MapPackIndex.json");
-    const { datapackIndex, mapPackIndex } = await loadPublicUserDatapacks(publicDatapackIndexFilepath, publicMapPackIndexFilepath);
+    const { datapackIndex, mapPackIndex } = await loadPublicUserDatapacks(
+      publicDatapackIndexFilepath,
+      publicMapPackIndexFilepath
+    );
     const indexResponse = { datapackIndex, mapPackIndex };
     assertIndexResponse(indexResponse);
     reply.send(indexResponse);
@@ -357,12 +358,10 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       return;
     }
   }
-  const success = await loadIndexes(
-    datapackIndex,
-    mapPackIndex,
-    decryptDir.replaceAll("\\", "/"),
-    [datapackMetadata]
-  );
+  const success = await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [datapackMetadata], {
+    type: isPublic ? "public_user" : "private_user",
+    uuid
+  });
   if (!datapackIndex[filename] || !success) {
     await errorHandler("Failed to load decrypted datapack", 500);
     return;
@@ -372,7 +371,13 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       const publicDatapackPath = path.join(assetconfigs.publicDirectory, "DatapackIndex.json");
       const publicMappackPath = path.join(assetconfigs.publicDirectory, "MapPackIndex.json");
       await mkdir(assetconfigs.publicDirectory, { recursive: true });
-      await addPublicUserDatapack(filename, datapackIndex[filename]!, publicDatapackPath, publicMappackPath, mapPackIndex[filename]);
+      await addPublicUserDatapack(
+        filename,
+        datapackIndex[filename]!,
+        publicDatapackPath,
+        publicMappackPath,
+        mapPackIndex[filename]
+      );
     } catch (e) {
       await errorHandler("Could not write to public datapacks, please try again later", 500, e);
       return;
