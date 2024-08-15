@@ -7,7 +7,13 @@ import "ag-grid-community/styles/ag-theme-quartz.css";
 import { ColDef } from "ag-grid-community";
 import { Box, Divider, Typography, useTheme } from "@mui/material";
 import { AdminAddUserForm } from "./AdminAddUserForm";
-import { AdminSharedUser, DatapackIndex, BaseDatapackProps, assertAdminSharedUser } from "@tsconline/shared";
+import {
+  AdminSharedUser,
+  DatapackIndex,
+  BaseDatapackProps,
+  assertAdminSharedUser,
+  isPrivateUserDatapack
+} from "@tsconline/shared";
 import { TSCButton } from "../components";
 
 const checkboxRenderer = (params: { value: boolean }) => {
@@ -159,13 +165,11 @@ const AdminDatapackDetails: React.FC<AdminDatapackDetailsProps> = observer(({ da
     if (!selectedNodes || !selectedNodes.length) return;
     try {
       const datapacks = selectedNodes.map((node) => {
-        if (!node.data?.file || !node.data?.uuid) throw new Error("Invalid datapack");
+        if (!node.data?.file || !isPrivateUserDatapack(node.data)) throw new Error("Invalid datapack");
         return { uuid: node.data.uuid, datapack: node.data.file };
       });
+      const uuids = new Set<string>(datapacks.map((dp) => dp.uuid));
       await actions.adminDeleteUserDatapacks(datapacks);
-      const uuids = new Set<string>(
-        selectedNodes.map((node) => node.data?.uuid).filter((uuid): uuid is string => typeof uuid === "string")
-      );
       actions.updateAdminUserDatapacks([...uuids]);
     } catch (e) {
       console.error(e);

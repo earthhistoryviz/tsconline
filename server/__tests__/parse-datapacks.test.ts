@@ -43,8 +43,8 @@ import {
 import { readFileSync } from "fs";
 import { DatapackMetadata, ColumnInfo, DatapackWarning, Point } from "@tsconline/shared";
 const key = JSON.parse(readFileSync("server/__tests__/__data__/column-keys.json").toString());
-vi.spyOn(console, "log").mockImplementation(() => { });
-vi.spyOn(console, "error").mockImplementation(() => { });
+vi.spyOn(console, "log").mockImplementation(() => {});
+vi.spyOn(console, "error").mockImplementation(() => {});
 describe("general parse-datapacks tests", () => {
   /**
    * Parses the general Africa Bight map pack

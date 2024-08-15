@@ -1,5 +1,5 @@
 import { Card, CardActions, CardContent, CardMedia, IconButton, Typography } from "@mui/material";
-import { BaseDatapackProps } from "@tsconline/shared";
+import { BaseDatapackProps, isPrivateUserDatapack } from "@tsconline/shared";
 import { devSafeUrl } from "../../util";
 import { useState } from "react";
 import styles from "./TSCDatapackCard.module.css";
@@ -35,7 +35,7 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack
                 <span className={styles.more} />
               </IconButton>
             }
-            isUserDatapack={!!datapack.uuid}
+            isUserDatapack={isPrivateUserDatapack(datapack)}
           />
         </div>
         <Typography className={styles.description}>{datapack.description}</Typography>

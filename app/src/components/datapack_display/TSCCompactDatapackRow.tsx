@@ -1,4 +1,4 @@
-import { BaseDatapackProps } from "@tsconline/shared";
+import { BaseDatapackProps, isPrivateUserDatapack } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
 import { useContext, useState } from "react";
 import { Box, Typography } from "@mui/material";
@@ -64,7 +64,7 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
           {datapack.title}
         </Typography>
       </div>
-      {datapack.uuid && (
+      {isPrivateUserDatapack(datapack) && (
         <Box
           onClick={async (e) => {
             e.stopPropagation();

@@ -24,10 +24,11 @@ import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import useDatapackUploadForm from "./datapack-upload-form-hook";
 import { TSCCheckbox } from "../TSCCheckbox";
+import { UploadOptions } from "../../types";
 
 type DatapackUploadFormProps = {
   close: () => void;
-  upload: (file: File, metadata: DatapackMetadata) => Promise<void>;
+  upload: (file: File, metadata: DatapackMetadata, options?: UploadOptions) => Promise<void>;
 };
 export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, upload }) => {
   const { state, setters, handlers } = useDatapackUploadForm({ upload });
