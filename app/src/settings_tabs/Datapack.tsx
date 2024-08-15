@@ -111,6 +111,7 @@ export const Datapacks = observer(function Datapacks() {
       <Box className={styles.container}>
         {state.isLoggedIn && (
           <TSCButton
+            className={styles.buttons}
             onClick={() => {
               setFormOpen(!formOpen);
             }}>

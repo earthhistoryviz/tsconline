@@ -1024,12 +1024,24 @@ export function assertDatapackType(o: any): asserts o is DatapackType {
       assertPublicUserDatapack(o);
       break;
     case "server":
+      assertServerDatapack(o);
+      break;
     case "workshop":
-      assertBaseDatapackProps(o);
+      assertWorkshopDatapack(o);
       break;
     default:
       throwError("Datapack", "type", "private_user | public_user | server | workshop", o.type);
   }
+}
+export function assertServerDatapack(o: any): asserts o is ServerDatapack {
+  if (!o || typeof o !== "object") throw new Error("ServerDatapack must be a non-null object");
+  if (typeof o.type !== "string") throwError("ServerDatapack", "type", "string", o.type);
+  if (o.type !== "server") throwError("ServerDatapack", "type", "server", o.type);
+}
+export function assertWorkshopDatapack(o: any): asserts o is WorkshopDatapack {
+  if (!o || typeof o !== "object") throw new Error("WorkshopDatapack must be a non-null object");
+  if (typeof o.type !== "string") throwError("WorkshopDatapack", "type", "string", o.type);
+  if (o.type !== "workshop") throwError("WorkshopDatapack", "type", "workshop", o.type);
 }
 export function assertPrivateUserDatapack(o: any): asserts o is PrivateUserDatapack {
   if (!o || typeof o !== "object") throw new Error("PrivateUserDatapack must be a non-null object");
