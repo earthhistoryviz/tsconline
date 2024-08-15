@@ -21,6 +21,7 @@ import { loadIndexes } from "../load-packs.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import logger from "../error-logger.js";
 import { findUser } from "../database.js";
+import { addPublicUserDatapack, loadPublicUserDatapacks } from "../public-datapack-handler.js";
 
 export const requestDownload = async function requestDownload(
   request: FastifyRequest<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>,
@@ -148,50 +149,15 @@ export const requestDownload = async function requestDownload(
 };
 
 export const fetchPublicDatapacks = async function fetchPublicDatapacks(request: FastifyRequest, reply: FastifyReply) {
-  const datapackIndex: DatapackIndex = {};
-  const mapPackIndex: MapPackIndex = {};
-
   try {
-    try {
-      await access(path.join(assetconfigs.publicDirectory, "DatapackIndex.json"));
-    } catch (e) {
-      reply.status(200).send({
-        datapackIndex: datapackIndex,
-        mapPackIndex: mapPackIndex
-      });
-      return;
-    }
-    try {
-      const publicDatapackPath = await readFile(path.join(assetconfigs.publicDirectory, "DatapackIndex.json"), "utf8");
-      const parsedDatapackIndex = JSON.parse(publicDatapackPath);
-      assertDatapackIndex(parsedDatapackIndex);
-      if (parsedDatapackIndex) {
-        Object.assign(datapackIndex, parsedDatapackIndex);
-      }
-    } catch (e) {
-      console.error("Error loading public datapacks:", e);
-    }
-    try {
-      const publicMapPackPath = await readFile(path.join(assetconfigs.publicDirectory, "MapPackIndex.json"), "utf8");
-      const parsedMapPackIndex = JSON.parse(publicMapPackPath);
-      assertMapPackIndex(parsedMapPackIndex);
-      if (parsedMapPackIndex) {
-        Object.assign(mapPackIndex, parsedMapPackIndex);
-      }
-    } catch (e) {
-      console.error("Error loading public mappacks:", e);
-    }
+    const publicDatapackIndexFilepath = path.join(assetconfigs.publicDirectory, "DatapackIndex.json");
+    const publicMapPackIndexFilepath = path.join(assetconfigs.publicDirectory, "MapPackIndex.json");
+    const { datapackIndex, mapPackIndex } = await loadPublicUserDatapacks(publicDatapackIndexFilepath, publicMapPackIndexFilepath);
     const indexResponse = { datapackIndex, mapPackIndex };
-    try {
-      assertIndexResponse(indexResponse);
-      reply.status(200).send(indexResponse);
-    } catch (e) {
-      console.error("Invalid index response structure:", e);
-      reply.status(500).send({ error: "Invalid index response structure" });
-    }
+    assertIndexResponse(indexResponse);
+    reply.send(indexResponse);
   } catch (e) {
     reply.status(500).send({ error: "Failed to load public datapacks" });
-    console.error("Failed to load public datapacks:", e);
   }
 };
 
@@ -395,12 +361,22 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     datapackIndex,
     mapPackIndex,
     decryptDir.replaceAll("\\", "/"),
-    [datapackMetadata],
-    uuid
+    [datapackMetadata]
   );
-  if (!success) {
+  if (!datapackIndex[filename] || !success) {
     await errorHandler("Failed to load decrypted datapack", 500);
     return;
+  }
+  if (isPublic) {
+    try {
+      const publicDatapackPath = path.join(assetconfigs.publicDirectory, "DatapackIndex.json");
+      const publicMappackPath = path.join(assetconfigs.publicDirectory, "MapPackIndex.json");
+      await mkdir(assetconfigs.publicDirectory, { recursive: true });
+      await addPublicUserDatapack(filename, datapackIndex[filename]!, publicDatapackPath, publicMappackPath, mapPackIndex[filename]);
+    } catch (e) {
+      await errorHandler("Could not write to public datapacks, please try again later", 500, e);
+      return;
+    }
   }
   try {
     await writeFile(datapackIndexFilepath, JSON.stringify(datapackIndex, null, 2));
@@ -421,54 +397,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   } catch (e) {
     await errorHandler("Failed to load and write metadata for file", 500, e);
     return;
-  }
-  if (isPublic) {
-    const publicDatapackPath = path.join(assetconfigs.publicDirectory, "DatapackIndex.json");
-    const publicMappackPath = path.join(assetconfigs.publicDirectory, "MapPackIndex.json");
-    const publicFilesPath = path.join(assetconfigs.publicDirectory, "publicFiles.json");
-    await mkdir(assetconfigs.publicDirectory, { recursive: true });
-
-    let publicDatapacks: DatapackIndex = {};
-    let publicMappacks: MapPackIndex = {};
-    let publicFiles: string[] = [];
-
-    try {
-      const publicData = await readFile(publicDatapackPath, "utf-8");
-      publicDatapacks = JSON.parse(publicData);
-      assertDatapackIndex(publicDatapacks);
-      const publicMapData = await readFile(publicMappackPath, "utf-8");
-      publicMappacks = JSON.parse(publicMapData);
-      assertMapPackIndex(publicMappacks);
-      const publicFilesData = await readFile(publicFilesPath, "utf-8");
-      publicFiles = JSON.parse(publicFilesData);
-
-      if (publicFiles.includes(filename)) {
-        await errorHandler("File ${filename} already exists in public directory", 409);
-        return;
-      }
-      publicFiles.push(filename);
-    } catch (e) {
-      if ((e as NodeJS.ErrnoException).code != "ENOENT") {
-        await errorHandler("Failed to read public JSON files", 500, e);
-        return;
-      }
-    }
-    assertDatapackIndex(publicDatapacks);
-    assertMapPackIndex(publicMappacks);
-    if (datapackIndex[filename]) {
-      publicDatapacks[filename] = datapackIndex[filename] as BaseDatapackProps; //error without cast
-    }
-    if (mapPackIndex[filename]) {
-      publicMappacks[filename] = mapPackIndex[filename] as MapPack;
-    }
-    try {
-      await writeFile(publicDatapackPath, JSON.stringify(publicDatapacks));
-      await writeFile(publicMappackPath, JSON.stringify(publicMappacks));
-      await writeFile(publicFilesPath, JSON.stringify(publicFiles));
-    } catch (e) {
-      await errorHandler("Failed to update public index files", 500, e);
-      return;
-    }
   }
   reply.status(200).send({ message: "File uploaded" });
 };

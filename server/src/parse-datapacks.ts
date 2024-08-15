@@ -165,8 +165,7 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
  */
 export async function parseDatapacks(
   datapackInfo: DatapackMetadata,
-  decryptFilePath: string,
-  uuid?: string
+  decryptFilePath: string
 ): Promise<BaseDatapackProps | null> {
   const decryptPaths = await grabFilepaths([datapackInfo.file], decryptFilePath, "datapacks");
   if (decryptPaths.length == 0)
@@ -306,7 +305,6 @@ export async function parseDatapacks(
       (await countFiles(join(decryptFilePath, parse(datapackInfo.file).name, "datapack-images"))) +
       (await countFiles(join(decryptFilePath, parse(datapackInfo.file).name, "MapImages"))),
     totalColumns: Object.values(columnTypeCounter).reduce((a, b) => a + b, 0),
-    ...(uuid ? { uuid } : {}),
     ...datapackInfo
   };
   // use datapack date if date not given by user
@@ -1791,9 +1789,9 @@ export function configureOptionalPointSettings(tabSeparated: string[], point: Po
   if (tabSeparated.length < 1) {
     console.log(
       "Error adding optional point configuration, line is not formatted correctly: " +
-        tabSeparated +
-        " with size " +
-        tabSeparated.length
+      tabSeparated +
+      " with size " +
+      tabSeparated.length
     );
     return;
   }
