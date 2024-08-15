@@ -1,4 +1,4 @@
-import { DatapackParsingPack } from "@tsconline/shared";
+import { BaseDatapackProps } from "@tsconline/shared";
 import styles from "./TSCDatapackRow.module.css";
 import { useContext, useState } from "react";
 import { devSafeUrl } from "../../util";
@@ -15,7 +15,7 @@ import { context } from "../../state";
 
 type TSCDatapackRowProps = {
   name: string;
-  datapack: DatapackParsingPack;
+  datapack: BaseDatapackProps;
   value: boolean;
   onChange: (name: string) => void;
 };

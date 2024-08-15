@@ -23,7 +23,7 @@ import path from "path";
 import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
-import { fetchUserDatapacks } from "./routes/user-routes.js";
+import { fetchUserDatapacks, fetchPublicDatapacks } from "./routes/user-routes.js";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -240,7 +240,7 @@ const looseRateLimit = {
     }
   }
 };
-server.get("/public/datapacks", moderateRateLimit, userRoutes.fetchPublicDatapacks);
+server.get("/public/datapacks", moderateRateLimit, fetchPublicDatapacks);
 // checks chart.pdf-status
 server.get<{ Params: { hash: string } }>("/svgstatus/:hash", looseRateLimit, routes.fetchSVGStatus);
 

@@ -10,8 +10,8 @@ import {
   assertChartInfoTSC,
   assertDatapackInfoChunk,
   assertMapPackInfoChunk,
-  DatapackParsingPack,
-  assertDatapackParsingPack,
+  BaseDatapackProps,
+  assertBaseDatapackProps,
   DatapackMetadata,
   defaultColumnRoot,
   FontsInfo
@@ -63,7 +63,7 @@ export const fetchServerDatapack = action("fetchServerDatapack", async (datapack
     });
     const data = await response.json();
     if (response.ok) {
-      assertDatapackParsingPack(data);
+      assertBaseDatapackProps(data);
       return data;
     } else {
       displayServerError(
@@ -319,7 +319,7 @@ export const setMapPackIndex = action("setMapPackIndex", async (mapPackIndex: Ma
   }
 });
 
-export const addDatapackToIndex = action("addDatapackToIndex", (datapack: string, info: DatapackParsingPack) => {
+export const addDatapackToIndex = action("addDatapackToIndex", (datapack: string, info: BaseDatapackProps) => {
   state.datapackIndex[datapack] = info;
 });
 export const setDatapackIndex = action("setDatapackIndex", async (datapackIndex: DatapackIndex) => {

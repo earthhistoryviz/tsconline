@@ -2,7 +2,7 @@ import {
   DatapackIndex,
   MapPackIndex,
   Patterns,
-  assertDatapackParsingPack,
+  assertBaseDatapackProps,
   assertMapPack,
   assertPatterns,
   DatapackMetadata
@@ -40,17 +40,17 @@ export async function loadIndexes(
   console.log(`\nParsing datapacks \n`);
   for (const datapack of datapacks) {
     await parseDatapacks(datapack, decryptionDirectory, uuid)
-      .then((datapackParsingPack) => {
-        if (!datapackParsingPack) {
+      .then((baseDatapackProps) => {
+        if (!baseDatapackProps) {
           return;
         }
-        assertDatapackParsingPack(datapackParsingPack);
-        datapackIndex[datapack.file] = datapackParsingPack;
+        assertBaseDatapackProps(baseDatapackProps);
+        datapackIndex[datapack.file] = baseDatapackProps;
         console.log(chalk.green(`Successfully parsed ${datapack.file}`));
       })
       .catch((e) => {
         successful = false;
-        console.log(chalk.red(`Cannot create a datapackParsingPack with datapack ${datapack.file} and error: ${e}`));
+        console.log(chalk.red(`Cannot create a baseDatapackProps with datapack ${datapack.file} and error: ${e}`));
       });
     await parseMapPacks([datapack.file], decryptionDirectory)
       .then((mapPack) => {

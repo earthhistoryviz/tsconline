@@ -2,7 +2,7 @@ import { createReadStream } from "fs";
 import {
   ColumnInfo,
   Facies,
-  DatapackParsingPack,
+  BaseDatapackProps,
   SubBlockInfo,
   Block,
   RGB,
@@ -167,7 +167,7 @@ export async function parseDatapacks(
   datapackInfo: DatapackMetadata,
   decryptFilePath: string,
   uuid?: string
-): Promise<DatapackParsingPack | null> {
+): Promise<BaseDatapackProps | null> {
   const decryptPaths = await grabFilepaths([datapackInfo.file], decryptFilePath, "datapacks");
   if (decryptPaths.length == 0)
     throw new Error(`Did not find any datapacks for ${datapackInfo.file} in decryptFilePath ${decryptFilePath}`);
@@ -295,7 +295,7 @@ export async function parseDatapacks(
   };
   setShowLabels(chartColumn);
 
-  const datapackParsingPack: DatapackParsingPack = {
+  const baseDatapackProps: BaseDatapackProps = {
     columnInfo: chartColumn,
     ageUnits,
     defaultChronostrat,
@@ -310,12 +310,12 @@ export async function parseDatapacks(
     ...datapackInfo
   };
   // use datapack date if date not given by user
-  if (date && !datapackInfo.date) datapackParsingPack.date = date;
-  if (topAge || topAge === 0) datapackParsingPack.topAge = topAge;
-  if (baseAge || baseAge === 0) datapackParsingPack.baseAge = baseAge;
-  if (verticalScale) datapackParsingPack.verticalScale = verticalScale;
-  if (warnings.length > 0) datapackParsingPack.warnings = warnings;
-  return datapackParsingPack;
+  if (date && !datapackInfo.date) baseDatapackProps.date = date;
+  if (topAge || topAge === 0) baseDatapackProps.topAge = topAge;
+  if (baseAge || baseAge === 0) baseDatapackProps.baseAge = baseAge;
+  if (verticalScale) baseDatapackProps.verticalScale = verticalScale;
+  if (warnings.length > 0) baseDatapackProps.warnings = warnings;
+  return baseDatapackProps;
 }
 
 /**
