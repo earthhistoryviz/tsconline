@@ -20,7 +20,6 @@ export type DatapackMetadata = {
   title: string;
   file: string;
   size: string;
-  isPublic: string;
   date?: string;
   authoredBy: string;
   tags: string[];
@@ -60,8 +59,6 @@ export type BaseDatapackProps = {
   baseAge?: number;
   date?: string;
   verticalScale?: number;
-  uuid?: string;
-  isPublic: string;
   description: string;
   title: string;
   file: string;
@@ -944,7 +941,6 @@ export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
   if (typeof o.title !== "string") throw new Error("DatapackMetadata title must be of type string");
   if (typeof o.file !== "string") throw new Error("DatapackMetadata file must be of type string");
   if (typeof o.size !== "string") throw new Error("DatapackMetadata size must be of type string");
-  if (typeof o.isPublic !== "string") throw new Error("DatapackMetadata isPublic must be of type string");
   if (typeof o.authoredBy !== "string") throw new Error("DatapackMetadata authoredBy must be of type string");
   if (!Array.isArray(o.tags)) throw new Error("DatapackMetadata tags must be an array");
   for (const tag of o.tags) {
@@ -1015,13 +1011,13 @@ export function assertDatapack(o: any): asserts o is Datapack {
 }
 export function assertPrivateUserDatapack(o: any): asserts o is PrivateUserDatapack {
   if (!o || typeof o !== "object") throw new Error("PrivateUserDatapack must be a non-null object");
-  assertBaseDatapackProps(o);
   if (typeof o.uuid !== "string") throwError("PrivateUserDatapack", "uuid", "string", o.uuid);
+  assertBaseDatapackProps(o);
 }
 export function assertPublicUserDatapack(o: any): asserts o is PublicUserDatapack {
   if (!o || typeof o !== "object") throw new Error("PublicUserDatapack must be a non-null object");
-  assertBaseDatapackProps(o);
   if (typeof o.uuid !== "string") throwError("PublicUserDatapack", "uuid", "string", o.uuid);
+  assertBaseDatapackProps(o);
 }
 
 export function assertSubBlockInfo(o: any): asserts o is SubBlockInfo {
@@ -1348,8 +1344,8 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
     default:
       throw new Error(
         "ColumnSpecificSettings must be an object of a valid column type. Found value of " +
-          type +
-          " which is not a valid column type"
+        type +
+        " which is not a valid column type"
       );
   }
 }
