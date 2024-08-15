@@ -7,7 +7,7 @@ export async function initialize() {
   actions.fetchDatapackIndex();
   actions.fetchMapPackIndex();
   actions.fetchPresets();
-  actions.setDatapackConfig([], "");
+  await actions.processDatapackConfig([]);
   actions.fetchFaciesPatterns();
   actions.fetchTimescaleDataAction();
 }

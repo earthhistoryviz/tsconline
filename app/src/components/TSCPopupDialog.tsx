@@ -10,8 +10,19 @@ type TSCPopupDialogProps = {
   onYes: () => void;
   onNo: () => void;
   onClose: () => void;
+  customYes?: string;
+  customNo?: string;
 };
-export const TSCPopupDialog: React.FC<TSCPopupDialogProps> = ({ open, title, message, onYes, onNo, onClose }) => {
+export const TSCPopupDialog: React.FC<TSCPopupDialogProps> = ({
+  open,
+  title,
+  message,
+  onYes,
+  onNo,
+  onClose,
+  customNo,
+  customYes
+}) => {
   return (
     <Dialog
       open={open}
@@ -25,10 +36,10 @@ export const TSCPopupDialog: React.FC<TSCPopupDialogProps> = ({ open, title, mes
       </DialogContent>
       <DialogActions className="dialog-actions">
         <Button variant="outlined" className="tsc-button" onClick={onNo}>
-          No
+          {customNo ?? "No"}
         </Button>
         <TSCButton buttonType="gradient" className="tsc-button" onClick={onYes}>
-          Yes
+          {customYes ?? "Yes"}
         </TSCButton>
       </DialogActions>
     </Dialog>
