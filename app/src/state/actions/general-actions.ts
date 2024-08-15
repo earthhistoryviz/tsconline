@@ -1,10 +1,9 @@
-import { action, runInAction } from "mobx";
+import { action, runInAction, toJS } from "mobx";
 import {
   SharedUser,
   ChartInfoTSC,
   ChartSettingsInfoTSC,
   DatapackIndex,
-  FontsInfo,
   MapPackIndex,
   TimescaleItem,
   assertSharedUser,
@@ -13,7 +12,9 @@ import {
   assertMapPackInfoChunk,
   DatapackParsingPack,
   assertDatapackParsingPack,
-  DatapackMetadata
+  DatapackMetadata,
+  defaultColumnRoot,
+  FontsInfo
 } from "@tsconline/shared";
 
 import {
@@ -24,10 +25,6 @@ import {
   Presets,
   assertSVGStatus,
   IndexResponse,
-  assertMapHierarchy,
-  assertColumnInfo,
-  assertMapInfo,
-  defaultFontsInfo,
   assertIndexResponse,
   assertPresets,
   assertPatterns
@@ -46,8 +43,15 @@ import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import { SettingsTabs, equalChartSettings, equalConfig } from "../../types";
+import {
+  SetDatapackConfigCompleteMessage,
+  SetDatapackConfigMessage,
+  SettingsTabs,
+  equalChartSettings,
+  equalConfig
+} from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
+import { actions } from "..";
 import { cloneDeep } from "lodash";
 
 const increment = 1;
@@ -408,120 +412,130 @@ const applyChartSettings = action("applyChartSettings", (settings: ChartSettings
   setEnableHideBlockLabel(enHideBlockLable);
 });
 
-/**
- * Rests the settings, sets the tabs to 0
- * sets chart to newval and requests info on the datapacks from the server
- * If attributed settings, load them.
- */
+export const setIsProcessingDatapacks = action("setIsProcessingDatapacks", (isProcessingDatapacks: boolean) => {
+  state.isProcessingDatapacks = isProcessingDatapacks;
+});
+
+export const setUnsavedDatapackConfig = action("setUnsavedDatapackConfig", (newDatapacks: string[]) => {
+  state.unsavedDatapackConfig = newDatapacks;
+});
+
+const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
+  resetSettings();
+  const columnRoot: ColumnInfo = cloneDeep(defaultColumnRoot);
+  // all chart root font options have inheritable on
+  for (const opt in columnRoot.fontsInfo) {
+    columnRoot.fontsInfo[opt as keyof FontsInfo].inheritable = true;
+  }
+  // throws warning if this isn't in its own action.
+  runInAction(() => {
+    state.settingsTabs.columns = columnRoot;
+    state.settings.datapackContainsSuggAge = false;
+    state.mapState.mapHierarchy = {};
+    state.mapState.mapInfo = {};
+    state.settingsTabs.columnHashMap = new Map();
+    state.config.datapacks = [];
+    state.settingsTabs.columnHashMap.set(columnRoot.name, columnRoot);
+  });
+
+  // we add Ma unit by default
+  state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
+
+  searchColumns(state.settingsTabs.columnSearchTerm);
+  searchEvents(state.settingsTabs.eventSearchTerm);
+  setUnsavedDatapackConfig([]);
+});
+
+export const processDatapackConfig = action(
+  "processDatapackConfig",
+  async (datapacks: string[], settingsPath?: string) => {
+    if (datapacks.length === 0) {
+      setEmptyDatapackConfig();
+      return;
+    }
+    if (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)) return;
+    setIsProcessingDatapacks(true);
+    const fetchSettings = async () => {
+      if (settingsPath && settingsPath.length !== 0) {
+        try {
+          const settings = await fetchSettingsXML(settingsPath);
+          if (settings) {
+            removeError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
+            return JSON.parse(JSON.stringify(settings));
+          }
+        } catch (e) {
+          console.error(e);
+          pushError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
+        }
+      }
+      return null;
+    };
+    const chartSettings = await fetchSettings();
+    try {
+      await new Promise((resolve, reject) => {
+        const setDatapackConfigWorker: Worker = new Worker(
+          new URL("../../util/workers/set-datapack-config.ts", import.meta.url),
+          {
+            type: "module"
+          }
+        );
+
+        const message: SetDatapackConfigMessage = {
+          datapacks: datapacks,
+          stateCopy: toJS(state)
+        };
+
+        setDatapackConfigWorker.postMessage(message);
+
+        setDatapackConfigWorker.onmessage = async function (e: MessageEvent<SetDatapackConfigCompleteMessage>) {
+          const { status, value } = e.data;
+
+          if (status === "success" && value) {
+            try {
+              await actions.setDatapackConfig(
+                value.columnRoot,
+                value.foundDefaultAge,
+                value.mapHierarchy,
+                value.mapInfo,
+                value.datapacks,
+                chartSettings
+              );
+
+              pushSnackbar("Datapack Config Updated", "success");
+              setUnsavedDatapackConfig(datapacks);
+              resolve("Datapack Config Updated successfully.");
+            } catch (e) {
+              reject(new Error("Failed to set datapack config with error " + e));
+            }
+          } else {
+            reject(new Error("Setting Datapack Config Timed Out"));
+          }
+          setIsProcessingDatapacks(false);
+          setDatapackConfigWorker.terminate();
+        };
+
+        setDatapackConfigWorker.onerror = function (error) {
+          setDatapackConfigWorker.terminate();
+          setIsProcessingDatapacks(false);
+          reject(new Error("Webworker failed with error." + error));
+        };
+      });
+    } catch (e) {
+      pushError(ErrorCodes.UNABLE_TO_PROCESS_DATAPACK_CONFIG);
+    }
+  }
+);
+
 export const setDatapackConfig = action(
   "setDatapackConfig",
-  async (datapacks: string[], settingsPath?: string): Promise<boolean> => {
-    const unitMap: Map<string, ColumnInfo> = new Map();
-    let mapInfo: MapInfo = {};
-    let mapHierarchy: MapHierarchy = {};
-    let columnRoot: ColumnInfo;
-    let chartSettings: ChartInfoTSC | null = null;
-    let foundDefaultAge = false;
-    try {
-      if (settingsPath && settingsPath.length > 0) {
-        await fetchSettingsXML(settingsPath)
-          .then((settings) => {
-            if (settings) {
-              removeError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
-              chartSettings = JSON.parse(JSON.stringify(settings));
-            } else {
-              return false;
-            }
-          })
-          .catch((e) => {
-            console.error(e);
-            pushError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
-            return false;
-          });
-      }
-      // the default overarching variable for the columnInfo
-      columnRoot = {
-        name: "Chart Root", // if you change this, change parse-datapacks.ts :69
-        editName: "Chart Root",
-        fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
-        fontOptions: ["Column Header"],
-        popup: "",
-        on: true,
-        width: 100,
-        enableTitle: true,
-        rgb: {
-          r: 255,
-          g: 255,
-          b: 255
-        },
-        minAge: Number.MAX_VALUE,
-        maxAge: Number.MIN_VALUE,
-        children: [],
-        parent: null,
-        units: "",
-        columnDisplayType: "RootColumn",
-        show: true,
-        expanded: true
-      };
-      // all chart root font options have inheritable on
-      for (const opt in columnRoot.fontsInfo) {
-        columnRoot.fontsInfo[opt as keyof FontsInfo].inheritable = true;
-      }
-      // add everything together
-      // uses preparsed data on server start and appends items together
-      for (const datapack of datapacks) {
-        await new Promise((resolve) => setTimeout(resolve, 0));
-        if (!datapack || !state.datapackIndex[datapack])
-          throw new Error(`File requested doesn't exist on server: ${datapack}`);
-        const datapackParsingPack = state.datapackIndex[datapack]!;
-        if (
-          ((datapackParsingPack.topAge || datapackParsingPack.topAge === 0) &&
-            (datapackParsingPack.baseAge || datapackParsingPack.baseAge === 0)) ||
-          datapackParsingPack.verticalScale
-        )
-          foundDefaultAge = true;
-        if (unitMap.has(datapackParsingPack.ageUnits)) {
-          const existingUnitColumnInfo = unitMap.get(datapackParsingPack.ageUnits)!;
-          const newUnitChart = datapackParsingPack.columnInfo;
-          // slice off the existing unit column
-          const columnsToAdd = cloneDeep(newUnitChart.children.slice(1));
-          for (const child of columnsToAdd) {
-            child.parent = existingUnitColumnInfo.name;
-          }
-          existingUnitColumnInfo.children = existingUnitColumnInfo.children.concat(columnsToAdd);
-        } else {
-          const columnInfo = cloneDeep(datapackParsingPack.columnInfo);
-          columnInfo.parent = columnRoot.name;
-          unitMap.set(datapackParsingPack.ageUnits, columnInfo);
-        }
-        const mapPack = state.mapPackIndex[datapack]!;
-        if (!mapInfo) mapInfo = mapPack.mapInfo;
-        else Object.assign(mapInfo, mapPack.mapInfo);
-        if (!mapHierarchy) mapHierarchy = mapPack.mapHierarchy;
-        else Object.assign(mapHierarchy, mapPack.mapHierarchy);
-      }
-      // makes sure things are named correctly for users and for the hash map to not have collisions
-      for (const [unit, column] of unitMap) {
-        await new Promise((resolve) => setTimeout(resolve, 0));
-        if (unit !== "Ma" && column.name === "Chart Title") {
-          column.name = column.name + " in " + unit;
-          column.editName = unit;
-          for (const child of column.children) {
-            child.parent = column.name;
-          }
-        }
-        columnRoot.fontOptions = Array.from(new Set([...columnRoot.fontOptions, ...column.fontOptions]));
-        columnRoot.children.push(column);
-      }
-      assertMapHierarchy(mapHierarchy);
-      assertColumnInfo(columnRoot);
-      assertMapInfo(mapInfo);
-    } catch (e) {
-      console.error(e);
-      pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
-      chartSettings = null;
-      return false;
-    }
+  async (
+    columnRoot: ColumnInfo,
+    foundDefaultAge: boolean,
+    mapHierarchy: MapHierarchy,
+    mapInfo: MapInfo,
+    datapacks: string[],
+    chartSettings: ChartInfoTSC | null
+  ): Promise<boolean> => {
     resetSettings();
     // throws warning if this isn't in its own action. may have other fix but left as is
     await runInAction(async () => {
@@ -533,10 +547,11 @@ export const setDatapackConfig = action(
       state.config.datapacks = datapacks;
       await initializeColumnHashMap(state.settingsTabs.columns);
     });
-    // this is for app start up or when all datapacks are removed
-    if (datapacks.length === 0) {
-      state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
+    // when datapacks is empty, setEmptyDatapackConfig() is called instead and Ma is added by default. So when datapacks is no longer empty we will delete that default Ma here
+    if (datapacks.length !== 0) {
+      delete state.settings.timeSettings["Ma"];
     }
+
     if (chartSettings !== null) {
       assertChartInfoTSC(chartSettings);
       await applySettings(chartSettings);
@@ -603,7 +618,7 @@ export const removeCache = action("removeCache", async () => {
 export const resetState = action("resetState", () => {
   setChartMade(true);
   setChartLoading(true);
-  setDatapackConfig([], "");
+  processDatapackConfig([]);
   setChartHash("");
   setChartContent("");
   setUseCache(true);

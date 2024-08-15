@@ -16,6 +16,7 @@ import "@szhsin/react-menu/dist/transitions/slide.css";
 import { SettingsMenuOptionLabels, assertSettingsTabs } from "./types";
 import Color from "color";
 import { AccountMenu } from "./account_settings/AccountMenu";
+import { toJS } from "mobx";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: Color(theme.palette.dark.main).alpha(0.9).string(),
@@ -119,9 +120,15 @@ export const NavBar = observer(function Navbar() {
           </>
         }
         <div style={{ flexGrow: 1 }} />
-        <TSCButton buttonType="gradient" onClick={() => actions.initiateChartGeneration(navigate, location.pathname)}>
+        <TSCButton
+          buttonType="gradient"
+          onClick={async () => {
+            await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig), "");
+            actions.initiateChartGeneration(navigate, location.pathname);
+          }}>
           Generate Chart
         </TSCButton>
+
         {state.isLoggedIn ? (
           <AccountMenu />
         ) : (

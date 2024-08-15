@@ -16,6 +16,7 @@ import DeselectIcon from "@mui/icons-material/Deselect";
 import ViewCompactIcon from "@mui/icons-material/ViewCompact";
 import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompactDatapackRow";
 import { loadRecaptcha, removeRecaptcha } from "../util";
+import { toJS } from "mobx";
 
 export const Datapacks = observer(function Datapacks() {
   const { state, actions } = useContext(context);
@@ -32,14 +33,11 @@ export const Datapacks = observer(function Datapacks() {
     };
   }, []);
 
-  const onChange = async (name: string) => {
-    if (state.config.datapacks.includes(name)) {
-      await actions.setDatapackConfig(
-        state.config.datapacks.filter((datapack) => datapack !== name),
-        ""
-      );
+  const onChange = (newDatapack: string) => {
+    if (state.unsavedDatapackConfig.includes(newDatapack)) {
+      actions.setUnsavedDatapackConfig(state.unsavedDatapackConfig.filter((datapack) => datapack !== newDatapack));
     } else {
-      await actions.setDatapackConfig([...state.config.datapacks, name], "");
+      actions.setUnsavedDatapackConfig([...state.unsavedDatapackConfig, newDatapack]);
     }
   };
 
@@ -47,7 +45,11 @@ export const Datapacks = observer(function Datapacks() {
     <div className={styles.dc}>
       <div className={styles.hdc}>
         <CustomTooltip title="Deselect All" placement="top">
-          <IconButton className={styles.ib} onClick={() => actions.setDatapackConfig([], "")}>
+          <IconButton
+            className={styles.ib}
+            onClick={async () => {
+              await actions.processDatapackConfig([]);
+            }}>
             <DeselectIcon />
           </IconButton>
         </CustomTooltip>
@@ -84,7 +86,7 @@ export const Datapacks = observer(function Datapacks() {
               key={datapack}
               name={datapack}
               datapack={state.datapackIndex[datapack]}
-              value={state.config.datapacks.includes(datapack)}
+              value={state.unsavedDatapackConfig.includes(datapack)}
               onChange={onChange}
             />
           ) : state.settingsTabs.datapackDisplayType === "compact" ? (
@@ -92,7 +94,7 @@ export const Datapacks = observer(function Datapacks() {
               key={datapack}
               name={datapack}
               datapack={state.datapackIndex[datapack]}
-              value={state.config.datapacks.includes(datapack)}
+              value={state.unsavedDatapackConfig.includes(datapack)}
               onChange={onChange}
             />
           ) : (
@@ -100,21 +102,29 @@ export const Datapacks = observer(function Datapacks() {
               key={datapack}
               name={datapack}
               datapack={state.datapackIndex[datapack]}
-              value={state.config.datapacks.includes(datapack)}
+              value={state.unsavedDatapackConfig.includes(datapack)}
               onChange={onChange}
             />
           );
         })}
       </Box>
-
-      {state.isLoggedIn && (
+      <Box className={styles.container}>
+        {state.isLoggedIn && (
+          <TSCButton
+            onClick={() => {
+              setFormOpen(!formOpen);
+            }}>
+            Upload Datapack
+          </TSCButton>
+        )}
         <TSCButton
-          onClick={() => {
-            setFormOpen(!formOpen);
+          className={styles.buttons}
+          onClick={async () => {
+            await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
           }}>
-          Upload Datapack
+          Confirm Selection
         </TSCButton>
-      )}
+      </Box>
       <Dialog classes={{ paper: styles.dd }} open={formOpen} onClose={() => setFormOpen(false)}>
         <DatapackUploadForm close={() => setFormOpen(false)} upload={actions.uploadDatapack} />
       </Dialog>
