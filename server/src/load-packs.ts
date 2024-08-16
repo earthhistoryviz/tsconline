@@ -2,7 +2,6 @@ import {
   DatapackIndex,
   MapPackIndex,
   Patterns,
-  assertMapPack,
   assertPatterns,
   DatapackMetadata,
   assertDatapack,
@@ -12,7 +11,6 @@ import pmap from "p-map";
 import fs from "fs/promises";
 import fsSync from "fs";
 import { parseDatapacks } from "./parse-datapacks.js";
-import { parseMapPacks } from "./parse-map-packs.js";
 import { glob } from "glob";
 import { readFile } from "fs/promises";
 import nearestColor from "nearest-color";
@@ -56,15 +54,6 @@ export async function loadIndexes(
       .catch((e) => {
         successful = false;
         console.log(chalk.red(`Cannot create a baseDatapackProps with datapack ${datapack.file} and error: ${e}`));
-      });
-    await parseMapPacks([datapack.file], decryptionDirectory)
-      .then((mapPack) => {
-        assertMapPack(mapPack);
-        mapPackIndex[datapack.file] = mapPack;
-      })
-      .catch((e) => {
-        successful = false;
-        console.log(chalk.red(`Cannot create a mapPack with datapack ${datapack.file} and error: ${e}`));
       });
   }
   successful =

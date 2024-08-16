@@ -73,6 +73,7 @@ export type BaseDatapackProps = {
   contact?: string;
   notes?: string;
   datapackImageCount: number;
+  mapPack: MapPack; // this can be empty
 };
 
 type ServerDatapack = {
@@ -509,30 +510,34 @@ export type ChartResponseInfo = {
   hash: string; // hash for where it is stored
 };
 
+export type MapTransect = {
+  startMapPoint: string;
+  endMapPoint: string;
+  note?: string;
+};
 export type Transects = {
-  [name: string]: {
-    startMapPoint: string;
-    endMapPoint: string;
-    note?: string;
-  };
+  [name: string]: MapTransect;
+};
+export type MapPoint = {
+  lat: number;
+  lon: number;
+  default?: string;
+  minage?: number;
+  maxage?: number;
+  note?: string;
 };
 export type MapPoints = {
-  [name: string]: {
-    lat: number;
-    lon: number;
-    default?: string;
-    minage?: number;
-    maxage?: number;
-    note?: string;
-  };
+  [name: string]: MapPoint;
+};
+
+export type InfoPoint = {
+  lat: number;
+  lon: number;
+  note?: string;
 };
 
 export type InfoPoints = {
-  [name: string]: {
-    lat: number;
-    lon: number;
-    note?: string;
-  };
+  [name: string]: InfoPoint;
 };
 
 export type MapInfo = {
@@ -983,6 +988,12 @@ export function assertPresets(o: any): asserts o is Presets {
       assertChartConfig(config);
     }
   }
+}
+export function assertMapTransect(o: any): asserts o is Transects[string] {
+  if (!o || typeof o !== "object") throw new Error("MapTransect must be a non-null object");
+  if (typeof o.startMapPoint !== "string") throwError("MapTransect", "startMapPoint", "string", o.startMapPoint);
+  if (typeof o.endMapPoint !== "string") throwError("MapTransect", "endMapPoint", "string", o.endMapPoint);
+  if ("note" in o && typeof o.note !== "string") throwError("MapTransect", "note", "string", o.note);
 }
 export function assertTransects(o: any): asserts o is Transects {
   if (!o || typeof o !== "object") throw new Error("Transects must be a non-null object");
@@ -1549,6 +1560,14 @@ export function assertRectBounds(rectBounds: any): asserts rectBounds is RectBou
     throw new Error("RectBounds must have a lowerRightLat number property");
   }
 }
+export function assertInfoPoint(o: any): asserts o is InfoPoint {
+  if (typeof o !== "object" || o === null) {
+    throw new Error("InfoPoint must be a non-null object");
+  }
+  if (typeof o.lat !== "number") throwError("InfoPoint", "lat", "number", o.lat);
+  if (typeof o.lon !== "number") throwError("InfoPoint", "lon", "number", o.lon);
+  if (o.note !== undefined && typeof o.note !== "string") throwError("InfoPoint", "note", "string", o.note);
+}
 export function assertInfoPoints(o: any): asserts o is InfoPoints {
   if (typeof o !== "object" || o === null) {
     throw new Error("InfoPoints must be a non-null object");
@@ -1571,6 +1590,17 @@ export function assertInfoPoints(o: any): asserts o is InfoPoints {
   }
 }
 
+export function assertMapPoint(o: any): asserts o is MapPoint {
+  if (typeof o !== "object" || o === null) {
+    throw new Error("MapPoint must be a non-null object");
+  }
+  if (typeof o.lat !== "number") throwError("MapPoint", "lat", "number", o.lat);
+  if (typeof o.lon !== "number") throwError("MapPoint", "lon", "number", o.lon);
+  if (o.default !== undefined && typeof o.default !== "string") throwError("MapPoint", "default", "string", o.default);
+  if (o.minage !== undefined && typeof o.minage !== "number") throwError("MapPoint", "minage", "number", o.minage);
+  if (o.maxage !== undefined && typeof o.maxage !== "number") throwError("MapPoint", "maxage", "number", o.maxage);
+  if (o.note !== undefined && typeof o.note !== "string") throwError("MapPoint", "note", "string", o.note);
+}
 export function assertMapPoints(o: any): asserts o is MapPoints {
   if (typeof o !== "object" || o === null) {
     throw new Error("MapPoints must be a non-null object");
