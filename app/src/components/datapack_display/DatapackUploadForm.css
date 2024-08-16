@@ -22,9 +22,6 @@
   width: 15px;
   height: 15px;
 }
-.tag-autocomplete {
-  flex: 0.5;
-}
 .add-reference-button {
   display: flex;
   align-self: flex-start;

@@ -29,9 +29,10 @@ import { UploadOptions } from "../../types";
 type DatapackUploadFormProps = {
   close: () => void;
   upload: (file: File, metadata: DatapackMetadata, options?: UploadOptions) => Promise<void>;
+  type?: "user" | "server";
 };
-export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, upload }) => {
-  const { state, setters, handlers } = useDatapackUploadForm({ upload });
+export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, upload, type = "user" }) => {
+  const { state, setters, handlers } = useDatapackUploadForm({ upload, type });
   return (
     <Box margin="20px" justifyContent="center" textAlign="center" maxWidth="70vw">
       <div className="close-upload-form">
@@ -105,19 +106,7 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
               onChange={handlers.handleDateChange}
             />
           </Box>
-          <FormControlLabel
-            name="public-datapack"
-            control={
-              <TSCCheckbox
-                className="public-checkbox"
-                checked={state.isPublic === "true"}
-                onChange={(event) => setters.setIsPublic(event.target.checked ? "true" : "false")}
-              />
-            }
-            label="Make this upload public"
-          />
           <Autocomplete
-            className="tag-autocomplete"
             multiple
             value={state.tags}
             onChange={(_, value) => setters.setTags(value)}
@@ -125,6 +114,15 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
             freeSolo
             renderInput={(params) => <TextField {...params} label="Tags" />}
           />
+          {type === "user" && (
+            <FormControlLabel
+              name="public-datapack"
+              control={
+                <TSCCheckbox checked={state.isPublic} onChange={(event) => setters.setIsPublic(event.target.checked)} />
+              }
+              label="Make Datapack Publicly Accessible"
+            />
+          )}
           <Stack spacing={2} flexShrink={0} alignSelf="center" width="100%">
             {state.references.map((reference, index) => (
               <Box key={reference.id} display="flex" alignItems="center">
