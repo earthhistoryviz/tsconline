@@ -8,7 +8,8 @@ import {
   IconButton,
   Stack,
   TextField,
-  Typography
+  Typography,
+  FormControlLabel
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { InputFileUpload } from "../TSCFileUpload";
@@ -22,13 +23,16 @@ import { AddCircleOutline, ExpandMore } from "@mui/icons-material";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import useDatapackUploadForm from "./datapack-upload-form-hook";
+import { TSCCheckbox } from "../TSCCheckbox";
+import { UploadOptions } from "../../types";
 
 type DatapackUploadFormProps = {
   close: () => void;
-  upload: (file: File, metadata: DatapackMetadata) => Promise<void>;
+  upload: (file: File, metadata: DatapackMetadata, options?: UploadOptions) => Promise<void>;
+  type?: "user" | "server";
 };
-export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, upload }) => {
-  const { state, setters, handlers } = useDatapackUploadForm({ upload });
+export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, upload, type = "user" }) => {
+  const { state, setters, handlers } = useDatapackUploadForm({ upload, type });
   return (
     <Box margin="20px" justifyContent="center" textAlign="center" maxWidth="70vw">
       <div className="close-upload-form">
@@ -103,7 +107,6 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
             />
           </Box>
           <Autocomplete
-            className="tag-autocomplete"
             multiple
             value={state.tags}
             onChange={(_, value) => setters.setTags(value)}
@@ -111,6 +114,15 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
             freeSolo
             renderInput={(params) => <TextField {...params} label="Tags" />}
           />
+          {type === "user" && (
+            <FormControlLabel
+              name="public-datapack"
+              control={
+                <TSCCheckbox checked={state.isPublic} onChange={(event) => setters.setIsPublic(event.target.checked)} />
+              }
+              label="Make Datapack Publicly Accessible"
+            />
+          )}
           <Stack spacing={2} flexShrink={0} alignSelf="center" width="100%">
             {state.references.map((reference, index) => (
               <Box key={reference.id} display="flex" alignItems="center">

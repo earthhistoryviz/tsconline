@@ -298,9 +298,13 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     await errorHandler("File was not decrypted properly");
     return;
   }
-  const successful = await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, [
-    datapackMetadata
-  ]);
+  const successful = await loadIndexes(
+    datapackIndex,
+    mapPackIndex,
+    assetconfigs.decryptionDirectory,
+    [datapackMetadata],
+    { type: "server" }
+  );
   if (!successful) {
     await errorHandler("Error parsing the datapack for chart generation");
     return;

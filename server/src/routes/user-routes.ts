@@ -4,7 +4,13 @@ import path, { join } from "path";
 import { runJavaEncrypt } from "../encryption.js";
 import { assetconfigs, checkHeader, resetUploadDirectory, verifyFilepath } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
-import { assertDatapackIndex, assertMapPackIndex, DatapackIndex, MapPackIndex } from "@tsconline/shared";
+import {
+  assertDatapackIndex,
+  assertIndexResponse,
+  assertMapPackIndex,
+  DatapackIndex,
+  MapPackIndex
+} from "@tsconline/shared";
 import { exec } from "child_process";
 import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
@@ -13,6 +19,7 @@ import { loadIndexes } from "../load-packs.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import logger from "../error-logger.js";
 import { findUser } from "../database.js";
+import { addPublicUserDatapack, loadPublicUserDatapacks } from "../public-datapack-handler.js";
 
 export const requestDownload = async function requestDownload(
   request: FastifyRequest<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>,
@@ -139,6 +146,22 @@ export const requestDownload = async function requestDownload(
   }
 };
 
+export const fetchPublicDatapacks = async function fetchPublicDatapacks(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const publicDatapackIndexFilepath = path.join(assetconfigs.publicDirectory, "DatapackIndex.json");
+    const publicMapPackIndexFilepath = path.join(assetconfigs.publicDirectory, "MapPackIndex.json");
+    const { datapackIndex, mapPackIndex } = await loadPublicUserDatapacks(
+      publicDatapackIndexFilepath,
+      publicMapPackIndexFilepath
+    );
+    const indexResponse = { datapackIndex, mapPackIndex };
+    assertIndexResponse(indexResponse);
+    reply.send(indexResponse);
+  } catch (e) {
+    reply.status(500).send({ error: "Failed to load public datapacks" });
+  }
+};
+
 // NOTE: this is not used in user-auth.ts since it does not require recaptcha verification
 export const fetchUserDatapacks = async function fetchUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
   // for test usage: const uuid = "username";
@@ -256,6 +279,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     reply.status(400).send({ error: "No file uploaded" });
     return;
   }
+  const isPublic = fields.isPublic === "true";
   const filename = uploadedFile.filename;
   fields.filename = filename;
   fields.filepath = filepath;
@@ -334,16 +358,32 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       return;
     }
   }
-  const success = await loadIndexes(
-    datapackIndex,
-    mapPackIndex,
-    decryptDir.replaceAll("\\", "/"),
-    [datapackMetadata],
+  const success = await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [datapackMetadata], {
+    type: isPublic ? "public_user" : "private_user",
     uuid
-  );
-  if (!success) {
+  });
+  if (!datapackIndex[filename] || !success) {
     await errorHandler("Failed to load decrypted datapack", 500);
     return;
+  }
+  if (isPublic) {
+    try {
+      const publicDatapackPath = path.join(assetconfigs.publicDirectory, "DatapackIndex.json");
+      const publicMappackPath = path.join(assetconfigs.publicDirectory, "MapPackIndex.json");
+      await mkdir(assetconfigs.publicDirectory, { recursive: true });
+      await addPublicUserDatapack(
+        filename,
+        datapackIndex[filename]!,
+        publicDatapackPath,
+        publicMappackPath,
+        filepath,
+        assetconfigs.publicUserDatapacksDirectory,
+        mapPackIndex[filename]
+      );
+    } catch (e) {
+      await errorHandler("Could not write to public datapacks, please try again later", 500, e);
+      return;
+    }
   }
   try {
     await writeFile(datapackIndexFilepath, JSON.stringify(datapackIndex, null, 2));

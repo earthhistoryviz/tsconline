@@ -1,5 +1,5 @@
 import { Card, CardActions, CardContent, CardMedia, IconButton, Typography } from "@mui/material";
-import { DatapackParsingPack } from "@tsconline/shared";
+import { BaseDatapackProps, isPrivateUserDatapack } from "@tsconline/shared";
 import { devSafeUrl } from "../../util";
 import { useState } from "react";
 import styles from "./TSCDatapackCard.module.css";
@@ -9,7 +9,7 @@ import { DatapackMenu } from "../../settings_tabs/Datapack";
 
 type TSCDatapackCardProps = {
   name: string;
-  datapack: DatapackParsingPack;
+  datapack: BaseDatapackProps;
   value: boolean;
   onChange: (name: string) => void;
 };
@@ -35,7 +35,7 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack
                 <span className={styles.more} />
               </IconButton>
             }
-            isUserDatapack={!!datapack.uuid}
+            isUserDatapack={isPrivateUserDatapack(datapack)}
           />
         </div>
         <Typography className={styles.description}>{datapack.description}</Typography>

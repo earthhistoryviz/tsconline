@@ -1,4 +1,4 @@
-import { DatapackParsingPack } from "@tsconline/shared";
+import { BaseDatapackProps, isPrivateUserDatapack } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
 import { useContext, useState } from "react";
 import { Box, Typography } from "@mui/material";
@@ -14,7 +14,7 @@ import { context } from "../../state";
 
 type TSCCompactDatapackRowProps = {
   name: string;
-  datapack: DatapackParsingPack;
+  datapack: BaseDatapackProps;
   value: boolean;
   onChange: (name: string) => void;
 };
@@ -64,7 +64,7 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
           {datapack.title}
         </Typography>
       </div>
-      {datapack.uuid && (
+      {isPrivateUserDatapack(datapack) && (
         <Box
           onClick={async (e) => {
             e.stopPropagation();

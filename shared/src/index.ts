@@ -50,7 +50,7 @@ export type MapPackInfoChunk = {
 
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 
-export type DatapackParsingPack = {
+export type BaseDatapackProps = {
   columnInfo: ColumnInfo;
   ageUnits: string;
   defaultChronostrat: "USGS" | "UNESCO";
@@ -59,7 +59,6 @@ export type DatapackParsingPack = {
   baseAge?: number;
   date?: string;
   verticalScale?: number;
-  uuid?: string;
   description: string;
   title: string;
   file: string;
@@ -76,6 +75,27 @@ export type DatapackParsingPack = {
   datapackImageCount: number;
 };
 
+type ServerDatapack = {
+  type: "server";
+};
+type WorkshopDatapack = {
+  type: "workshop";
+};
+type PrivateUserDatapack = {
+  type: "private_user";
+  uuid: string;
+};
+type PublicUserDatapack = {
+  type: "public_user";
+  uuid: string;
+};
+export type DatapackType = ServerDatapack | WorkshopDatapack | PrivateUserDatapack | PublicUserDatapack;
+export type Datapack = DatapackType & BaseDatapackProps;
+
+export type PresetDatapack = {
+  file: string;
+  name: string;
+};
 export type ColumnTypeCounter = Record<ColumnInfoType, number>;
 
 export type DatapackWarning = {
@@ -95,7 +115,7 @@ export type IndexResponse = {
 };
 
 export type DatapackIndex = {
-  [name: string]: DatapackParsingPack;
+  [name: string]: Datapack;
 };
 export type MapPackIndex = {
   [name: string]: MapPack;
@@ -146,13 +166,9 @@ export type ChartConfig = {
   title: string;
   description: string;
   settings: string; // path to base settings file
-  datapacks: Datapack[]; // active datapack names
+  datapacks: PresetDatapack[]; // active datapack names
   date: string; // active datapack names
   type?: string; // type of preset
-};
-export type Datapack = {
-  name: string;
-  file: string;
 };
 
 export type FontLabelOptions = {
@@ -981,9 +997,59 @@ export function assertTransects(o: any): asserts o is Transects {
   }
 }
 export function assertDatapack(o: any): asserts o is Datapack {
-  if (typeof o !== "object") throw new Error("Datapack must be an object");
-  if (typeof o.name !== "string") throw new Error("Datapack must have a field name of type string");
-  if (typeof o.file !== "string") throw new Error("Datapack must have a field file of type string");
+  if (!o || typeof o !== "object") throw new Error("Datapack must be a non-null object");
+  if (typeof o.type !== "string") throwError("Datapack", "type", "string", o.type);
+  assertDatapackType(o);
+  assertBaseDatapackProps(o);
+}
+export function isServerDatapack(o: any): o is ServerDatapack {
+  return o.type === "server";
+}
+export function isWorkshopDatapack(o: any): o is WorkshopDatapack {
+  return o.type === "workshop";
+}
+export function isPublicUserDatapack(o: any): o is PublicUserDatapack {
+  return o.type === "public_user" && typeof o.uuid === "string";
+}
+export function isPrivateUserDatapack(o: any): o is PrivateUserDatapack {
+  return o.type === "private_user" && typeof o.uuid === "string";
+}
+export function assertDatapackType(o: any): asserts o is DatapackType {
+  if (!o || typeof o !== "object") throw new Error("DatapackType must be a non-null object");
+  switch (o.type) {
+    case "private_user":
+      assertPrivateUserDatapack(o);
+      break;
+    case "public_user":
+      assertPublicUserDatapack(o);
+      break;
+    case "server":
+      assertServerDatapack(o);
+      break;
+    case "workshop":
+      assertWorkshopDatapack(o);
+      break;
+    default:
+      throwError("Datapack", "type", "private_user | public_user | server | workshop", o.type);
+  }
+}
+export function assertServerDatapack(o: any): asserts o is ServerDatapack {
+  if (!o || typeof o !== "object") throw new Error("ServerDatapack must be a non-null object");
+  if (typeof o.type !== "string") throwError("ServerDatapack", "type", "string", o.type);
+  if (o.type !== "server") throwError("ServerDatapack", "type", "server", o.type);
+}
+export function assertWorkshopDatapack(o: any): asserts o is WorkshopDatapack {
+  if (!o || typeof o !== "object") throw new Error("WorkshopDatapack must be a non-null object");
+  if (typeof o.type !== "string") throwError("WorkshopDatapack", "type", "string", o.type);
+  if (o.type !== "workshop") throwError("WorkshopDatapack", "type", "workshop", o.type);
+}
+export function assertPrivateUserDatapack(o: any): asserts o is PrivateUserDatapack {
+  if (!o || typeof o !== "object") throw new Error("PrivateUserDatapack must be a non-null object");
+  if (typeof o.uuid !== "string") throwError("PrivateUserDatapack", "uuid", "string", o.uuid);
+}
+export function assertPublicUserDatapack(o: any): asserts o is PublicUserDatapack {
+  if (!o || typeof o !== "object") throw new Error("PublicUserDatapack must be a non-null object");
+  if (typeof o.uuid !== "string") throwError("PublicUserDatapack", "uuid", "string", o.uuid);
 }
 
 export function assertSubBlockInfo(o: any): asserts o is SubBlockInfo {
@@ -1017,51 +1083,54 @@ export function assertFacies(o: any): asserts o is Facies {
   assertSubFaciesInfoArray(o.subFaciesInfo);
   assertColumnHeaderProps(o);
 }
-export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingPack {
-  if (!o || typeof o !== "object") throw new Error("DatapackParsingPack must be a non-null object");
-  if (typeof o.ageUnits !== "string") throwError("DatapackParsingPack", "ageUnits", "string", o.ageUnits);
+export function assertBaseDatapackProps(o: any): asserts o is BaseDatapackProps {
+  if (!o || typeof o !== "object") throw new Error("BaseDatapackProps must be a non-null object");
+  if (typeof o.ageUnits !== "string") throwError("BaseDatapackProps", "ageUnits", "string", o.ageUnits);
   if (typeof o.defaultChronostrat !== "string")
-    throwError("DatapackParsingPack", "defaultChronostrat", "string", o.defaultChronostrat);
+    throwError("BaseDatapackProps", "defaultChronostrat", "string", o.defaultChronostrat);
   if (!/^(USGS|UNESCO)$/.test(o.defaultChronostrat))
-    throwError("DatapackParsingPack", "defaultChronostrat", "USGS | UNESCO", o.defaultChronostrat);
-  if (typeof o.formatVersion !== "number")
-    throwError("DatapackParsingPack", "formatVersion", "number", o.formatVersion);
+    throwError("BaseDatapackProps", "defaultChronostrat", "USGS | UNESCO", o.defaultChronostrat);
+  if (typeof o.formatVersion !== "number") throwError("BaseDatapackProps", "formatVersion", "number", o.formatVersion);
   if ("verticalScale" in o && typeof o.verticalScale !== "number")
-    throwError("DatapackParsingPack", "verticalScale", "number", o.verticalScale);
+    throwError("BaseDatapackProps", "verticalScale", "number", o.verticalScale);
   if ("date" in o && (typeof o.date !== "string" || !isDateValid(o.date)))
-    throwError("DatapackParsingPack", "date", "string", o.date);
-  if ("topAge" in o && typeof o.topAge !== "number") throwError("DatapackParsingPack", "topAge", "number", o.topAge);
-  if ("baseAge" in o && typeof o.baseAge !== "number")
-    throwError("DatapackParsingPack", "baseAge", "number", o.baseAge);
-  if ("uuid" in o && typeof o.uuid !== "string") throwError("DatapackParsingPack", "uuid", "string", o.uuid);
-  if (typeof o.description !== "string") throwError("DatapackParsingPack", "description", "string", o.description);
-  if (typeof o.title !== "string") throwError("DatapackParsingPack", "title", "string", o.title);
-  if (typeof o.file !== "string") throwError("DatapackParsingPack", "file", "string", o.file);
-  if (typeof o.size !== "string") throwError("DatapackParsingPack", "size", "string", o.size);
+    throwError("BaseDatapackProps", "date", "string", o.date);
+  if ("topAge" in o && typeof o.topAge !== "number") throwError("BaseDatapackProps", "topAge", "number", o.topAge);
+  if ("baseAge" in o && typeof o.baseAge !== "number") throwError("BaseDatapackProps", "baseAge", "number", o.baseAge);
+  if ("uuid" in o && typeof o.uuid !== "string") throwError("BaseDatapackProps", "uuid", "string", o.uuid);
+  if (typeof o.description !== "string") throwError("BaseDatapackProps", "description", "string", o.description);
+  if (typeof o.title !== "string") throwError("BaseDatapackProps", "title", "string", o.title);
+  if (typeof o.file !== "string") throwError("BaseDatapackProps", "file", "string", o.file);
+  if (typeof o.size !== "string") throwError("BaseDatapackProps", "size", "string", o.size);
   if ("warnings" in o) {
-    if (!Array.isArray(o.warnings)) throwError("DatapackParsingPack", "warnings", "array", o.warnings);
+    if (!Array.isArray(o.warnings)) throwError("BaseDatapackProps", "warnings", "array", o.warnings);
     for (const warning of o.warnings) {
       assertDatapackWarning(warning);
     }
   }
-  if (typeof o.image !== "string") throwError("DatapackParsingPack", "image", "string", o.image);
+  if (typeof o.image !== "string") throwError("BaseDatapackProps", "image", "string", o.image);
   assertsColumnTypeCounter(o.columnTypeCount);
-  if (typeof o.totalColumns !== "number") throwError("DatapackParsingPack", "totalColumns", "number", o.totalColumns);
-  if (typeof o.authoredBy !== "string") throwError("DatapackParsingPack", "authoredBy", "string", o.author);
-  if (!Array.isArray(o.tags)) throwError("DatapackParsingPack", "tags", "array", o.tags);
+  if (typeof o.totalColumns !== "number") throwError("BaseDatapackProps", "totalColumns", "number", o.totalColumns);
+  if (typeof o.authoredBy !== "string") throwError("BaseDatapackProps", "authoredBy", "string", o.author);
+  if (!Array.isArray(o.tags)) throwError("BaseDatapackProps", "tags", "array", o.tags);
   for (const tag of o.tags) {
-    if (typeof tag !== "string") throwError("DatapackParsingPack", "tag", "string", tag);
+    if (typeof tag !== "string") throwError("BaseDatapackProps", "tag", "string", tag);
   }
-  if (!Array.isArray(o.references)) throwError("DatapackParsingPack", "references", "array", o.references);
+  if (!Array.isArray(o.references)) throwError("BaseDatapackProps", "references", "array", o.references);
   for (const reference of o.references) {
-    if (typeof reference !== "string") throwError("DatapackParsingPack", "reference", "string", reference);
+    if (typeof reference !== "string") throwError("BaseDatapackProps", "reference", "string", reference);
   }
-  if ("contact" in o && typeof o.contact !== "string")
-    throwError("DatapackParsingPack", "contact", "string", o.contact);
-  if ("notes" in o && typeof o.notes !== "string") throwError("DatapackParsingPack", "notes", "string", o.notes);
+  if ("contact" in o && typeof o.contact !== "string") throwError("BaseDatapackProps", "contact", "string", o.contact);
+  if ("notes" in o && typeof o.notes !== "string") throwError("BaseDatapackProps", "notes", "string", o.notes);
   if (typeof o.datapackImageCount !== "number")
-    throwError("DatapackParsingPack", "datapackImageCount", "number", o.datapackImages);
+    throwError("BaseDatapackProps", "datapackImageCount", "number", o.datapackImages);
   assertColumnInfo(o.columnInfo);
+}
+
+export function assertPresetDatapack(o: any): asserts o is PresetDatapack {
+  if (!o || typeof o !== "object") throw new Error("PresetDatapack must be a non-null object");
+  if (typeof o.name !== "string") throwError("PresetDatapack", "name", "string", o.name);
+  if (typeof o.file !== "string") throwError("PresetDatapack", "file", "string", o.file);
 }
 
 export function assertDatapackWarning(o: any): asserts o is DatapackWarning {
@@ -1075,7 +1144,7 @@ export function assertDatapackIndex(o: any): asserts o is DatapackIndex {
   if (!o || typeof o !== "object") throw new Error("DatapackIndex must be a non-null object");
   for (const key in o) {
     const pack = o[key];
-    assertDatapackParsingPack(pack);
+    assertDatapack(pack);
   }
 }
 
