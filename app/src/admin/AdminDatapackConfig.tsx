@@ -53,7 +53,11 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
         </TSCButton>
         <TSCButton onClick={deleteDatapacks}>Delete Selected Datapacks</TSCButton>
         <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth={false}>
-          <DatapackUploadForm close={() => setFormOpen(false)} upload={actions.adminUploadServerDatapack} />
+          <DatapackUploadForm
+            close={() => setFormOpen(false)}
+            upload={actions.adminUploadServerDatapack}
+            type="server"
+          />
         </Dialog>
       </Box>
       <AgGridReact

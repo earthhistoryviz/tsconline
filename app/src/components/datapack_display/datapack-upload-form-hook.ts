@@ -2,19 +2,20 @@ import { DatapackMetadata } from "@tsconline/shared";
 import { Dayjs } from "dayjs";
 import { useContext, useState } from "react";
 import { context } from "../../state";
-import { Reference } from "../../types";
+import { Reference, UploadOptions } from "../../types";
 import { ErrorCodes } from "../../util/error-codes";
 import { PickerChangeHandlerContext, DateValidationError } from "@mui/x-date-pickers";
 
 type DatapackUploadFormProps = {
-  upload: (file: File, metadata: DatapackMetadata) => Promise<void>;
+  upload: (file: File, metadata: DatapackMetadata, options?: UploadOptions) => Promise<void>;
+  type: "user" | "server";
 };
 const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
-  const { upload } = props;
+  const { upload, type } = props;
   const { state, actions } = useContext(context);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [isPublic, setIsPublic] = useState("false");
+  const [isPublic, setIsPublic] = useState(false);
   const [currentId, setCurrentId] = useState(0);
   const [authoredBy, setAuthoredBy] = useState(state.user.username);
   const [notes, setNotes] = useState("");
@@ -57,7 +58,13 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       return;
     }
     actions.removeAllErrors();
-    upload(file, metadata);
+    // server datapacks are always public
+    // @Paolo: I'm not sure how to generically handle this because I don't want `isPublic` to be in the FileMetadata
+    // and I also don't know how to generically pass it into the upload function besides this.
+    const uploadOptions = {
+      isPublic
+    };
+    upload(file, metadata, type === "user" ? uploadOptions : undefined);
   };
   const addReference = () => {
     if (references[0] && references[references.length - 1].reference === "") {
@@ -108,7 +115,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
   const resetForm = () => {
     setTitle("");
     setDescription("");
-    setIsPublic("false");
+    setIsPublic(false);
     setAuthoredBy(state.user.username);
     setNotes("");
     setContact("");

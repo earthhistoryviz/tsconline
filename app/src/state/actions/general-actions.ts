@@ -113,7 +113,7 @@ export const resetSettings = action("resetSettings", () => {
   state.settings = JSON.parse(JSON.stringify(settings));
 });
 
-export const fetchDatapackIndex = action("fetchDatapackIndex", async () => {
+export const fetchServerDatapackIndex = action("fetchDatapackIndex", async () => {
   let start = 0;
   let total = -1;
   const datapackIndex: DatapackIndex = {};
@@ -145,7 +145,7 @@ export const fetchDatapackIndex = action("fetchDatapackIndex", async () => {
   }
 });
 
-export const fetchMapPackIndex = action("fetchMapPackIndex", async () => {
+export const fetchServerMapPackIndex = action("fetchMapPackIndex", async () => {
   let start = 0;
   let total = -1;
   const mapPackIndex: MapPackIndex = {};
