@@ -16,7 +16,7 @@ import fastifySecureSession from "@fastify/secure-session";
 import { join, normalize, parse, resolve } from "path";
 import fastifyMultipart from "@fastify/multipart";
 import formAutoContent from "form-auto-content";
-import { DatapackMetadata, BaseDatapackProps, MapPack } from "@tsconline/shared";
+import { DatapackMetadata, MapPack, Datapack } from "@tsconline/shared";
 import * as uploadHandlers from "../src/upload-handlers";
 
 vi.mock("node:child_process", async () => {
@@ -907,7 +907,6 @@ describe("adminUploadServerDatapack", () => {
     title: "test-title",
     size: "30MB",
     date: "2021-01-01",
-    isPublic: "false",
     tags: ["test-tag"],
     references: ["test-reference"],
     contact: "test-contact",
@@ -1303,7 +1302,6 @@ describe("adminDeleteServerDatapack", () => {
     file: "active-datapack.dpk",
     size: "30MB",
     date: "2021-01-01",
-    isPublic: "false",
     tags: ["test-tag"],
     references: ["test-reference"],
     contact: "test-contact",
@@ -1319,7 +1317,7 @@ describe("adminDeleteServerDatapack", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     vi.spyOn(util, "adminconfig", "get").mockReturnValue({ datapacks: [] });
-    vi.spyOn(index, "datapackIndex", "get").mockReturnValue({ [body.datapack]: {} as BaseDatapackProps });
+    vi.spyOn(index, "datapackIndex", "get").mockReturnValue({ [body.datapack]: {} as Datapack });
     vi.spyOn(index, "mapPackIndex", "get").mockReturnValue({ [body.datapack]: {} as MapPack });
   });
   it("should return 400 if incorrect body", async () => {
