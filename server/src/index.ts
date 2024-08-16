@@ -19,11 +19,12 @@ import "dotenv/config";
 import { db, findIp, createIp, updateIp, initializeDatabase } from "./database.js";
 import { sendEmail } from "./send-email.js";
 import cron from "node-cron";
-import path from "path";
+import path, { join } from "path";
 import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
-import { fetchUserDatapacks } from "./routes/user-routes.js";
+import { fetchUserDatapacks, fetchPublicDatapacks } from "./routes/user-routes.js";
+import { loadPublicUserDatapacks } from "./public-datapack-handler.js";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -81,7 +82,13 @@ try {
 export const datapackIndex: DatapackIndex = {};
 export const mapPackIndex: MapPackIndex = {};
 const patterns = await loadFaciesPatterns();
-await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, adminconfig.datapacks);
+await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, adminconfig.datapacks, {
+  type: "server"
+});
+export const { datapackIndex: publicDatapackIndex, mapPackIndex: publicMapPackIndex } = await loadPublicUserDatapacks(
+  join(assetconfigs.publicDirectory, "DatapackIndex.json"),
+  join(assetconfigs.publicDirectory, "MapPackIndex.json")
+);
 
 declare module "@fastify/secure-session" {
   interface SessionData {
@@ -240,7 +247,7 @@ const looseRateLimit = {
     }
   }
 };
-
+server.get("/public/datapacks", moderateRateLimit, fetchPublicDatapacks);
 // checks chart.pdf-status
 server.get<{ Params: { hash: string } }>("/svgstatus/:hash", looseRateLimit, routes.fetchSVGStatus);
 

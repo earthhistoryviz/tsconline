@@ -1,4 +1,4 @@
-import { DatapackParsingPack } from "@tsconline/shared";
+import { BaseDatapackProps, isPrivateUserDatapack } from "@tsconline/shared";
 import styles from "./TSCDatapackRow.module.css";
 import { useContext, useState } from "react";
 import { devSafeUrl } from "../../util";
@@ -15,7 +15,7 @@ import { context } from "../../state";
 
 type TSCDatapackRowProps = {
   name: string;
-  datapack: DatapackParsingPack;
+  datapack: BaseDatapackProps;
   value: boolean;
   onChange: (name: string) => void;
 };
@@ -74,7 +74,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
           {datapack.date && ` · Created ${datapack.date}`}
         </Typography>
       </div>
-      {datapack.uuid && (
+      {isPrivateUserDatapack(datapack) && (
         <div
           className={styles.right}
           onClick={(e) => {

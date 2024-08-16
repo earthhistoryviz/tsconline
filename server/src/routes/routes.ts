@@ -17,7 +17,11 @@ import fs, { realpathSync } from "fs";
 import { parseExcelFile } from "../parse-excel-file.js";
 import path from "path";
 import { updateFileMetadata } from "../file-metadata-handler.js";
-import { datapackIndex as serverDatapackindex, mapPackIndex as serverMapPackIndex } from "../index.js";
+import {
+  publicDatapackIndex,
+  datapackIndex as serverDatapackindex,
+  mapPackIndex as serverMapPackIndex
+} from "../index.js";
 import { glob } from "glob";
 import { queue, maxQueueSize } from "../index.js";
 import { containsKnownError } from "../chart-error-handler.js";
@@ -31,12 +35,12 @@ export const fetchServerDatapack = async function fetchServerDatapack(
     reply.status(400).send({ error: "Invalid datapack" });
     return;
   }
-  const datapack = serverDatapackindex[decodeURIComponent(name)];
-  if (!datapack) {
+  const serverDatapack = serverDatapackindex[decodeURIComponent(name)];
+  if (!serverDatapack) {
     reply.status(404).send({ error: "Datapack not found" });
     return;
   }
-  reply.send(datapack);
+  reply.send(serverDatapack);
 };
 
 export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
@@ -259,6 +263,9 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       datapacks.push(`${assetconfigs.datapacksDirectory}/${datapack}`);
     } else if (uuid && userDatapackNames.includes(datapack)) {
       userDatapacks.push(path.join(assetconfigs.uploadDirectory, uuid, "datapacks", datapack));
+    } else if (publicDatapackIndex[datapack]) {
+      const datapackInfo = publicDatapackIndex[datapack]!;
+      datapacks.push(path.join(assetconfigs.publicUserDatapacksDirectory, datapackInfo.file));
     } else {
       console.log("ERROR: datapack: ", datapack, " is not included in any configuration (server or user)");
       console.log("adminconfig.datapacks: ", adminconfig.datapacks);

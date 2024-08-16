@@ -5,7 +5,7 @@ import { useContext, useRef, useState } from "react";
 import { context } from "../state";
 import { ColDef } from "ag-grid-community";
 import { TSCButton, DatapackUploadForm } from "../components";
-import { DatapackParsingPack, assertDatapackParsingPack } from "@tsconline/shared";
+import { BaseDatapackProps, assertBaseDatapackProps } from "@tsconline/shared";
 
 const datapackColDefs: ColDef[] = [
   {
@@ -28,13 +28,13 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
   const theme = useTheme();
   const { state, actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
-  const gridRef = useRef<AgGridReact<DatapackParsingPack>>(null);
+  const gridRef = useRef<AgGridReact<BaseDatapackProps>>(null);
   const deleteDatapacks = async () => {
     const selectedNodes = gridRef.current?.api.getSelectedNodes();
     if (!selectedNodes || !selectedNodes.length) return;
     try {
       const datapacks = selectedNodes.map((node) => {
-        assertDatapackParsingPack(node.data);
+        assertBaseDatapackProps(node.data);
         return node.data.file;
       });
       await actions.adminDeleteServerDatapacks(datapacks);
@@ -53,7 +53,11 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
         </TSCButton>
         <TSCButton onClick={deleteDatapacks}>Delete Selected Datapacks</TSCButton>
         <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth={false}>
-          <DatapackUploadForm close={() => setFormOpen(false)} upload={actions.adminUploadServerDatapack} />
+          <DatapackUploadForm
+            close={() => setFormOpen(false)}
+            upload={actions.adminUploadServerDatapack}
+            type="server"
+          />
         </Dialog>
       </Box>
       <AgGridReact
@@ -62,7 +66,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
         rowSelection="multiple"
         rowDragManaged
         rowMultiSelectWithClick
-        rowData={Object.values(state.datapackIndex).filter((datapack) => datapack.uuid === undefined)}
+        rowData={Object.values(state.datapackIndex).filter((datapack) => datapack.type === "server")}
       />
     </Box>
   );

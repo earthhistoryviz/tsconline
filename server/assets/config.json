@@ -11,5 +11,7 @@
   "fileMetadata": "assets/file-metadata.json",
   "uploadDirectory": "assets/uploads",
   "datapackImagesDirectory": "assets/datapack_images",
-  "adminConfigPath": "assets/admin-config.json"
+  "adminConfigPath": "assets/admin-config.json",
+  "publicDirectory": "assets/uploads/public",
+  "publicUserDatapacksDirectory": "assets/uploads/public/datapacks"
 }

@@ -11,6 +11,7 @@ export enum ErrorCodes {
   INVALID_PATH = "INVALID_PATH",
   INVALID_DATAPACK_UPLOAD = "INVALID_DATAPACK_UPLOAD",
   INVALID_USER_DATAPACKS = "INVALID_USER_DATAPACKS",
+  INVALID_PUBLIC_DATAPACKS = "INVALID_PUBLIC_DATAPACKS",
   NO_DATAPACK_FILE_FOUND = "NO_DATAPACK_FILE_FOUND",
   DATAPACK_FILE_NAME_TOO_LONG = "DATAPACK_FILE_NAME_TOO_LONG",
   UNRECOGNIZED_DATAPACK_EXTENSION = "UNRECOGNIZED_DATAPACK_EXTENSION",
@@ -81,6 +82,7 @@ export const ErrorMessages = {
   [ErrorCodes.INVALID_PATH]: "The requested path was invalid. Please ensure the path is correct.",
   [ErrorCodes.INVALID_DATAPACK_UPLOAD]: "Invalid datapack upload.",
   [ErrorCodes.INVALID_USER_DATAPACKS]: "Invalid user datapacks received from server. Please try again later.",
+  [ErrorCodes.INVALID_PUBLIC_DATAPACKS]: "Invalid public datapacks received from server. Please try again later.",
   [ErrorCodes.NO_DATAPACK_FILE_FOUND]: "No datapack file found. Please upload a datapack file first.",
   [ErrorCodes.DATAPACK_FILE_NAME_TOO_LONG]: "Datapack file name is too long. Please shorten the file name.",
   [ErrorCodes.UNRECOGNIZED_DATAPACK_EXTENSION]:

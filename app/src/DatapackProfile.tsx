@@ -11,7 +11,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Discussion } from "./components/TSCDiscussion";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import { PageNotFound } from "./PageNotFound";
-import { DatapackParsingPack, DatapackWarning } from "@tsconline/shared";
+import { BaseDatapackProps, DatapackWarning } from "@tsconline/shared";
 
 export const DatapackProfile = observer(() => {
   const { state } = useContext(context);
@@ -77,7 +77,7 @@ const WarningsTab: React.FC<WarningTabProps> = ({ count }) => {
 
 type DatapackProfileContentProps = {
   index: number;
-  datapack: DatapackParsingPack;
+  datapack: BaseDatapackProps;
 };
 const DatapackProfileContent: React.FC<DatapackProfileContentProps> = ({ index, datapack }) => {
   switch (index) {
@@ -103,7 +103,7 @@ const DatapackProfileContent: React.FC<DatapackProfileContentProps> = ({ index, 
   }
 };
 type AboutProps = {
-  datapack: DatapackParsingPack;
+  datapack: BaseDatapackProps;
 };
 const About: React.FC<AboutProps> = ({ datapack }) => {
   return (
