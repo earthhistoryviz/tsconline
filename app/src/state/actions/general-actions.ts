@@ -17,7 +17,8 @@ import {
   isPrivateUserDatapack,
   assertPrivateUserDatapack,
   Datapack,
-  assertServerDatapack
+  assertServerDatapack,
+  assertDatapackIndex
 } from "@tsconline/shared";
 
 import {
@@ -27,8 +28,6 @@ import {
   assertSuccessfulServerResponse,
   Presets,
   assertSVGStatus,
-  IndexResponse,
-  assertIndexResponse,
   assertPresets,
   assertPatterns
 } from "@tsconline/shared";
@@ -144,66 +143,6 @@ export const fetchServerDatapackIndex = action("fetchDatapackIndex", async () =>
     console.error(e);
   }
 });
-
-export const fetchServerMapPackIndex = action("fetchMapPackIndex", async () => {
-  let start = 0;
-  let total = -1;
-  const mapPackIndex: MapPackIndex = {};
-  try {
-    while (total == -1 || start < total) {
-      const response = await fetcher(`/map-pack-index?start=${start}&increment=${increment}`, {
-        method: "GET"
-      });
-      const index = await response.json();
-      try {
-        assertMapPackInfoChunk(index);
-        Object.assign(mapPackIndex, index.mapPackIndex);
-        if (total == -1) total = index.totalChunks;
-        start += increment;
-      } catch (e) {
-        displayServerError(index, ErrorCodes.INVALID_MAPPACK_INFO, ErrorMessages[ErrorCodes.INVALID_MAPPACK_INFO]);
-        return;
-      }
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    }
-    // we keep all the previous datapacks (careful as we do not delete old entries if they are removed on the server)
-    // ^ this is to accomodate for the user datapacks and any other way to add datapacks
-    // TODO: potentially check for staleness sometime
-    setMapPackIndex({ ...state.mapPackIndex, ...mapPackIndex });
-    console.log("MapPacks loaded");
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
-  }
-});
-
-/**
- * This is not used to prioritize chunk loading to prevent ui lag
- * however, this will technichally load faster with the current datapacks 5/4/2024
- */
-export const fetchAllIndexes = action("fetchAllIndexes", async () => {
-  try {
-    const response = await fetcher("/datapackinfoindex", {
-      method: "GET"
-    });
-    const indexResponse = await response.json();
-    try {
-      assertIndexResponse(indexResponse);
-      loadIndexResponse(indexResponse);
-      console.log("Indexes loaded");
-    } catch (e) {
-      displayServerError(
-        indexResponse,
-        ErrorCodes.INVALID_DATAPACK_INFO,
-        ErrorMessages[ErrorCodes.INVALID_DATAPACK_INFO]
-      );
-    }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
-  }
-});
-
 export const fetchPresets = action("fetchPresets", async () => {
   try {
     const response = await fetcher("/presets");
@@ -228,12 +167,8 @@ export const fetchPublicDatapacks = action("fetchPublicDatapacks", async () => {
     });
     const data = await response.json();
     try {
-      assertIndexResponse(data);
-      const { mapPackIndex: publicMapPackIndex, datapackIndex: publicDatapackIndex } = data;
-      const totalMapPackIndex = { ...state.mapPackIndex, ...publicMapPackIndex };
-      setMapPackIndex(totalMapPackIndex);
-      const totalDatapackIndex = { ...state.datapackIndex, ...publicDatapackIndex };
-      setDatapackIndex(totalDatapackIndex);
+      assertDatapackIndex(data);
+      setDatapackIndex({ ...state.datapackIndex, ...data });
       console.log("Public Datapacks loaded");
     } catch (e) {
       displayServerError(data, ErrorCodes.INVALID_PUBLIC_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_PUBLIC_DATAPACKS]);
@@ -255,19 +190,17 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
     });
     const data = await response.json();
     try {
-      assertIndexResponse(data);
-      const { mapPackIndex, datapackIndex } = data;
-
+      assertDatapackIndex(data)
       // make sure these are private user datapacks since datapackIndex is ambiguous
-      Object.values(datapackIndex).forEach((datapack) => {
+      Object.values(data).forEach((datapack) => {
         assertPrivateUserDatapack(datapack);
       });
-      setMapPackIndex({ ...state.mapPackIndex, ...mapPackIndex });
-      setDatapackIndex({ ...state.datapackIndex, ...datapackIndex });
+      setDatapackIndex({ ...state.datapackIndex, ...data });
 
       console.log("User Datapacks loaded");
     } catch (e) {
       displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
+      console.error(e);
     }
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
@@ -341,11 +274,6 @@ export const setDatapackIndex = action("setDatapackIndex", async (datapackIndex:
     });
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
-});
-
-export const loadIndexResponse = action("loadIndexResponse", async (response: IndexResponse) => {
-  setDatapackIndex(response.datapackIndex);
-  setMapPackIndex(response.mapPackIndex);
 });
 export const fetchTimescaleDataAction = action("fetchTimescaleData", async () => {
   try {

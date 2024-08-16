@@ -7,9 +7,9 @@ import { resolve, extname, join, relative, parse } from "path";
 import { adminconfig, assetconfigs, checkFileExists, verifyFilepath } from "../util.js";
 import { createWriteStream } from "fs";
 import { readFile, realpath, rm, writeFile } from "fs/promises";
-import { deleteDatapack, loadFileMetadata } from "../file-metadata-handler.js";
+import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
-import { datapackIndex, mapPackIndex } from "../index.js";
+import { datapackIndex } from "../index.js";
 import { loadIndexes } from "../load-packs.js";
 import validator from "validator";
 import { pipeline } from "stream/promises";
@@ -143,13 +143,7 @@ export const adminDeleteUser = async function adminDeleteUser(
     } catch {
       // eslint-disable-next-line no-empty
     }
-    const metadata = await loadFileMetadata(assetconfigs.fileMetadata);
-    for (const file in metadata) {
-      if (file.includes(uuid)) {
-        delete metadata[file];
-      }
-    }
-    await writeFile(assetconfigs.fileMetadata, JSON.stringify(metadata));
+    await deleteAllUserMetadata(assetconfigs.fileMetadata, uuid);
   } catch (error) {
     reply.status(500).send({ error: "Unknown error" });
     return;
@@ -174,13 +168,7 @@ export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
       reply.status(403).send({ error: "Directory traversal detected" });
       return;
     }
-    const metadata = await loadFileMetadata(assetconfigs.fileMetadata);
-    if (!Object.keys(metadata).some((filePath) => resolve(filePath) === datapackDirectory)) {
-      reply.status(404).send({ error: "Datapack not found" });
-      return;
-    }
-    await deleteDatapack(metadata, relative(process.cwd(), datapackDirectory));
-    await writeFile(assetconfigs.fileMetadata, JSON.stringify(metadata));
+    await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, relative(process.cwd(), datapackDirectory));
   } catch (error) {
     console.error(error);
     reply.status(500).send({ error: "Unknown error" });
@@ -270,9 +258,6 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     if (datapackIndex[filename]) {
       delete datapackIndex[filename];
     }
-    if (mapPackIndex[filename]) {
-      delete mapPackIndex[filename];
-    }
     reply.status(500).send({ error });
   };
   try {
@@ -298,13 +283,9 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     await errorHandler("File was not decrypted properly");
     return;
   }
-  const successful = await loadIndexes(
-    datapackIndex,
-    mapPackIndex,
-    assetconfigs.decryptionDirectory,
-    [datapackMetadata],
-    { type: "server" }
-  );
+  const successful = await loadIndexes(datapackIndex, assetconfigs.decryptionDirectory, [datapackMetadata], {
+    type: "server"
+  });
   if (!successful) {
     await errorHandler("Error parsing the datapack for chart generation");
     return;
@@ -367,9 +348,6 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
   }
   if (datapackIndex[datapack]) {
     delete datapackIndex[datapack];
-  }
-  if (mapPackIndex[datapack]) {
-    delete mapPackIndex[datapack];
   }
   try {
     await rm(filepath, { force: true });

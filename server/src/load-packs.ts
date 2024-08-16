@@ -1,6 +1,5 @@
 import {
   DatapackIndex,
-  MapPackIndex,
   Patterns,
   assertPatterns,
   DatapackMetadata,
@@ -26,14 +25,12 @@ import Vibrant from "node-vibrant";
  * will stop parsing if an error is thrown
  * will keep parsed datapacks that don't have errors
  * @param datapackIndex the datapackIndex to load
- * @param mapPackIndex the mapPackIndex to load
  * @param decryptionDirectory the directory that has the decrypted files
  * @param datapacks the datapacks to load
  * @param type the type of datapack (and any additional properties that come with the type)
  */
 export async function loadIndexes(
   datapackIndex: DatapackIndex,
-  mapPackIndex: MapPackIndex,
   decryptionDirectory: string,
   datapacks: DatapackMetadata[],
   type: DatapackType

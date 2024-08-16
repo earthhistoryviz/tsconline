@@ -110,11 +110,6 @@ export type ChartErrorResponse = {
   errorCode: number;
 };
 
-export type IndexResponse = {
-  datapackIndex: DatapackIndex;
-  mapPackIndex: MapPackIndex;
-};
-
 export type DatapackIndex = {
   [name: string]: Datapack;
 };
@@ -1166,12 +1161,6 @@ export function assertSubFaciesInfo(o: any): asserts o is SubFaciesInfo {
   if ("label" in o && typeof o.label !== "string") throwError("SubFaciesInfo", "label", "string", o.label);
   if (typeof o.age !== "number") throwError("SubFaciesInfo", "age", "number", o.age);
 }
-export function assertIndexResponse(o: any): asserts o is IndexResponse {
-  if (!o || typeof o !== "object") throw new Error("IndexResponse must be a non-null object");
-  assertDatapackIndex(o.datapackIndex);
-  assertMapPackIndex(o.mapPackIndex);
-}
-
 export function assertChartConfig(o: any): asserts o is ChartConfig {
   if (typeof o !== "object") throw new Error("ChartConfig must be an object");
   if (typeof o.icon !== "string") throwError("ChartConfig", "icon", "string", o.icon);

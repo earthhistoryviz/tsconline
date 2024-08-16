@@ -29,7 +29,7 @@ vi.mock("../src/database", async () => {
 vi.mock("../src/file-metadata-handler", async () => {
   return {
     loadFileMetadata: vi.fn().mockResolvedValue({} as FileMetadata),
-    deleteDatapack: vi.fn().mockResolvedValue(undefined)
+    deleteDatapackFoundInMetadata: vi.fn().mockResolvedValue(undefined)
   };
 });
 
@@ -670,7 +670,7 @@ describe("userDeleteDatapack tests", () => {
   const rmSpy = vi.spyOn(fspModule, "rm");
   const verifyFilepathSpy = vi.spyOn(utilModule, "verifyFilepath");
   const loadFileMetadataSpy = vi.spyOn(fileMetadataHandler, "loadFileMetadata");
-  const deleteDatapackSpy = vi.spyOn(fileMetadataHandler, "deleteDatapack");
+  const deleteDatapackSpy = vi.spyOn(fileMetadataHandler, "deleteDatapackFoundInMetadata");
   const writeFileSpy = vi.spyOn(fspModule, "writeFile").mockResolvedValue(undefined);
   const loggerSpy = vi.spyOn(logger, "error");
   beforeEach(() => {
