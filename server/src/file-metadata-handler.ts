@@ -1,8 +1,6 @@
 import { access, readFile, rm, writeFile } from "fs/promises";
-import { FileMetadataIndex, assertFileMetadataIndex } from "./types.js";
-import { assertDatapackIndex, assertMapPackIndex } from "@tsconline/shared";
+import { assertFileMetadataIndex } from "./types.js";
 import { checkFileExists } from "./util.js";
-import logger from "./error-logger.js";
 import { Mutex } from "async-mutex";
 
 const mutex = new Mutex();
@@ -35,9 +33,7 @@ export async function writeFileMetadata(
   fileMetadataFilepath: string,
   fileName: string,
   filepath: string,
-  decryptedFilepath: string,
-  mapPackIndexFilepath: string,
-  datapackIndexFilepath: string
+  uuid: string
 ) {
   const release = await mutex.acquire();
   try {
@@ -45,9 +41,7 @@ export async function writeFileMetadata(
     metadata[filepath] = {
       fileName,
       lastUpdated: new Date().toISOString(),
-      decryptedFilepath,
-      mapPackIndexFilepath,
-      datapackIndexFilepath
+      uuid
     };
     await writeFile(fileMetadataFilepath, JSON.stringify(metadata, null, 2));
   } finally {
@@ -68,10 +62,12 @@ export async function checkFileMetadata(fileMetadataFilepath: string) {
     for (const file in metadata) {
       if (!(await checkFileExists(file))) {
         console.log("Deleting file: ", file, " for not existing");
-        await deleteDatapack(metadata, file);
+        await rm(file, { recursive: true, force: true });
+        delete metadata[file];
       } else if (new Date(metadata[file]!.lastUpdated).getTime() < twoWeeksAgo) {
         console.log("Deleting file: ", file, " for being older than 2 weeks");
-        await deleteDatapack(metadata, file);
+        await rm(file, { recursive: true, force: true });
+        delete metadata[file];
       }
     }
     await writeFile(fileMetadataFilepath, JSON.stringify(metadata, null, 2));
@@ -82,30 +78,31 @@ export async function checkFileMetadata(fileMetadataFilepath: string) {
   }
 }
 
-export async function deleteDatapack(metadata: FileMetadataIndex, filePath: string) {
+export async function deleteAllUserMetadata(fileMetadataFilepath: string, uuid: string) {
   const release = await mutex.acquire();
   try {
+    const metadata = await loadFileMetadata(fileMetadataFilepath);
+    for (const file in metadata) {
+      const val = metadata[file];
+      if (!val) throw new Error("Error parsing metadata");
+      if (val.uuid === uuid) {
+        delete metadata[file];
+      }
+    }
+    await writeFile(fileMetadataFilepath, JSON.stringify(metadata, null, 2));
+  } finally {
+    release();
+  }
+}
+
+export async function deleteDatapackFoundInMetadata(fileMetadataFilepath: string, filePath: string) {
+  const release = await mutex.acquire();
+  try {
+    const metadata = await loadFileMetadata(fileMetadataFilepath);
     if (!metadata[filePath]) throw new Error(`File ${filePath} not found in metadata`);
-    const file = metadata[filePath]!;
-    await rm(file.decryptedFilepath, { recursive: true, force: true });
-    await rm(filePath, { force: true });
-    if (await checkFileExists(file.datapackIndexFilepath)) {
-      const datapackIndex = JSON.parse(await readFile(file.datapackIndexFilepath, "utf-8"));
-      assertDatapackIndex(datapackIndex);
-      delete datapackIndex[file.fileName];
-      await writeFile(file.datapackIndexFilepath, JSON.stringify(datapackIndex, null, 2));
-    } else {
-      logger.error(`Datapack index file not found for file ${filePath}`);
-    }
-    if (await checkFileExists(file.mapPackIndexFilepath)) {
-      const mapPackIndex = JSON.parse(await readFile(file.mapPackIndexFilepath, "utf-8"));
-      assertMapPackIndex(mapPackIndex);
-      delete mapPackIndex[file.fileName];
-      await writeFile(file.mapPackIndexFilepath, JSON.stringify(mapPackIndex, null, 2));
-    } else {
-      logger.error(`Map pack index file not found for file ${filePath}`);
-    }
+    await rm(filePath, { recursive: true, force: true });
     delete metadata[filePath];
+    await writeFile(fileMetadataFilepath, JSON.stringify(metadata, null, 2));
   } finally {
     release();
   }

@@ -20,8 +20,8 @@ import path from "path";
 import { pipeline } from "stream/promises";
 import { createWriteStream } from "fs";
 import { SharedUser, assertSharedUser } from "@tsconline/shared";
-import { loadFileMetadata } from "../file-metadata-handler.js";
-import { readdir, rm, writeFile, mkdir } from "fs/promises";
+import { deleteAllUserMetadata } from "../file-metadata-handler.js";
+import { readdir, rm, mkdir } from "fs/promises";
 import { checkRecaptchaToken, generateToken } from "../verify.js";
 import validator from "validator";
 
@@ -46,13 +46,7 @@ export const deleteProfile = async function deleteProfile(request: FastifyReques
     } catch (error) {
       console.error("Error removing user directory:", error);
     }
-    const metadata = await loadFileMetadata(assetconfigs.fileMetadata);
-    for (const file in metadata) {
-      if (file.includes(uuid)) {
-        delete metadata[file];
-      }
-    }
-    await writeFile(assetconfigs.fileMetadata, JSON.stringify(metadata));
+    await deleteAllUserMetadata(assetconfigs.fileMetadata, uuid);
     request.session.delete();
     reply.send({ message: "Profile deleted" });
   } catch (error) {

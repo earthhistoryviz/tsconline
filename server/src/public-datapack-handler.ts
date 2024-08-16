@@ -1,15 +1,8 @@
-import {
-  Datapack,
-  DatapackIndex,
-  MapPack,
-  MapPackIndex,
-  assertDatapackIndex,
-  assertMapPackIndex
-} from "@tsconline/shared";
+import { Datapack, DatapackIndex, assertDatapackIndex } from "@tsconline/shared";
 import { Mutex } from "async-mutex";
 import { readFile, writeFile, mkdir, copyFile } from "fs/promises";
 import { checkFileExists } from "./util.js";
-import { publicDatapackIndex, publicMapPackIndex } from "./index.js";
+import { publicDatapackIndex } from "./index.js";
 import { join } from "path";
 
 const mutex = new Mutex();
@@ -27,19 +20,13 @@ export async function addPublicUserDatapack(
   filename: string,
   datapack: Datapack,
   datapackIndexFilepath: string,
-  mapPackIndexFilepath: string,
   datapackFilepath: string,
-  publicDatapacksDirectory: string,
-  mapPack?: MapPack
+  publicDatapacksDirectory: string
 ) {
   const release = await mutex.acquire();
   try {
-    const { datapackIndex: parsedPublicDatapackIndex, mapPackIndex: parsedMapPackIndex } =
-      await loadPublicUserDatapacks(datapackIndexFilepath, mapPackIndexFilepath);
+    const { datapackIndex: parsedPublicDatapackIndex } = await loadPublicUserDatapacks(datapackIndexFilepath);
     parsedPublicDatapackIndex[filename] = datapack;
-    if (mapPack) {
-      parsedMapPackIndex[filename] = mapPack;
-    }
     if (!(await checkFileExists(datapackFilepath))) {
       throw new Error("Datapack file does not exist");
     }
@@ -48,27 +35,18 @@ export async function addPublicUserDatapack(
     await copyFile(datapackFilepath, join(publicDatapacksDirectory, filename));
     // update the file
     await writeFile(datapackIndexFilepath, JSON.stringify(parsedPublicDatapackIndex, null, 2));
-    await writeFile(mapPackIndexFilepath, JSON.stringify(parsedMapPackIndex, null, 2));
     // Update the in-memory index
     publicDatapackIndex[filename] = datapack;
-    if (mapPack) {
-      publicMapPackIndex[filename] = mapPack;
-    }
   } finally {
     release();
   }
 }
 
-export async function loadPublicUserDatapacks(datapackIndexFilepath: string, mapPackIndexFilepath: string) {
+export async function loadPublicUserDatapacks(datapackIndexFilepath: string) {
   let parsedPublicDatapackIndex: DatapackIndex = {};
-  let parsedMapPackIndex: MapPackIndex = {};
   if (await checkFileExists(datapackIndexFilepath)) {
     parsedPublicDatapackIndex = JSON.parse(await readFile(datapackIndexFilepath, "utf-8"));
     assertDatapackIndex(parsedPublicDatapackIndex);
   }
-  if (await checkFileExists(mapPackIndexFilepath)) {
-    parsedMapPackIndex = JSON.parse(await readFile(mapPackIndexFilepath, "utf-8"));
-    assertMapPackIndex(parsedMapPackIndex);
-  }
-  return { datapackIndex: parsedPublicDatapackIndex, mapPackIndex: parsedMapPackIndex };
+  return { datapackIndex: parsedPublicDatapackIndex };
 }

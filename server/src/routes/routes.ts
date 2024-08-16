@@ -4,8 +4,6 @@ import { writeFile, stat, readFile, mkdir, realpath } from "fs/promises";
 import {
   DatapackIndex,
   DatapackInfoChunk,
-  MapPackIndex,
-  MapPackInfoChunk,
   TimescaleItem,
   assertChartRequest,
   assertTimescale
@@ -17,11 +15,7 @@ import fs, { realpathSync } from "fs";
 import { parseExcelFile } from "../parse-excel-file.js";
 import path from "path";
 import { updateFileMetadata } from "../file-metadata-handler.js";
-import {
-  publicDatapackIndex,
-  datapackIndex as serverDatapackindex,
-  mapPackIndex as serverMapPackIndex
-} from "../index.js";
+import { publicDatapackIndex, datapackIndex as serverDatapackIndex } from "../index.js";
 import { glob } from "glob";
 import { queue, maxQueueSize } from "../index.js";
 import { containsKnownError } from "../chart-error-handler.js";
@@ -35,7 +29,7 @@ export const fetchServerDatapack = async function fetchServerDatapack(
     reply.status(400).send({ error: "Invalid datapack" });
     return;
   }
-  const serverDatapack = serverDatapackindex[decodeURIComponent(name)];
+  const serverDatapack = serverDatapackIndex[decodeURIComponent(name)];
   if (!serverDatapack) {
     reply.status(404).send({ error: "Datapack not found" });
     return;
@@ -50,7 +44,7 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   const { start = 0, increment = 1 } = request.query;
   const startIndex = Number(start);
   let incrementValue = Number(increment);
-  const allDatapackKeys = Object.keys(serverDatapackindex);
+  const allDatapackKeys = Object.keys(serverDatapackIndex);
   if (isNaN(Number(startIndex)) || isNaN(Number(incrementValue)) || startIndex < 0 || incrementValue <= 0) {
     reply.status(400).send({ error: "Invalid range" });
     return;
@@ -61,11 +55,11 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   const keys = allDatapackKeys.slice(startIndex, startIndex + incrementValue);
   const chunk: DatapackIndex = {};
   for (const key of keys) {
-    if (!serverDatapackindex[key]) {
+    if (!serverDatapackIndex[key]) {
       reply.status(500).send({ error: "Failed to load datapack" });
       return;
     }
-    chunk[key] = serverDatapackindex[key]!;
+    chunk[key] = serverDatapackIndex[key]!;
   }
   if (Object.keys(chunk).length === 0) {
     reply.send({ datapackIndex: {}, totalChunks: 0 });
@@ -73,38 +67,6 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   }
   const datapackInfoChunk: DatapackInfoChunk = { datapackIndex: chunk!, totalChunks: allDatapackKeys.length };
   reply.status(200).send(datapackInfoChunk);
-};
-
-export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
-  request: FastifyRequest<{ Querystring: { start?: number; increment?: number } }>,
-  reply: FastifyReply
-) {
-  const { start = 0, increment = 1 } = request.query;
-  const startIndex = Number(start);
-  let incrementValue = Number(increment);
-  const allMapPackKeys = Object.keys(serverMapPackIndex);
-  if (isNaN(Number(startIndex)) || isNaN(Number(incrementValue)) || startIndex < 0 || incrementValue <= 0) {
-    reply.status(400).send({ error: "Invalid range" });
-    return;
-  }
-  if (startIndex + incrementValue > allMapPackKeys.length) {
-    incrementValue = allMapPackKeys.length - startIndex;
-  }
-  const keys = allMapPackKeys.slice(startIndex, startIndex + incrementValue);
-  const chunk: MapPackIndex = {};
-  for (const key of keys) {
-    if (!serverMapPackIndex[key]) {
-      reply.status(500).send({ error: "Failed to load map pack" });
-      return;
-    }
-    chunk[key] = serverMapPackIndex[key]!;
-  }
-  if (Object.keys(chunk).length === 0) {
-    reply.send({ mapPackIndex: {}, totalChunks: 0 });
-    return;
-  }
-  const mapPackInfoChunk: MapPackInfoChunk = { mapPackIndex: chunk!, totalChunks: allMapPackKeys.length };
-  reply.status(200).send(mapPackInfoChunk);
 };
 
 export const fetchImage = async function (
