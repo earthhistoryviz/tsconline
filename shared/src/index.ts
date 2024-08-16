@@ -75,20 +75,20 @@ export type BaseDatapackProps = {
   datapackImageCount: number;
 };
 
-interface ServerDatapack {
+type ServerDatapack = {
   type: "server";
-}
-interface WorkshopDatapack {
+};
+type WorkshopDatapack = {
   type: "workshop";
-}
-interface PrivateUserDatapack {
+};
+type PrivateUserDatapack = {
   type: "private_user";
   uuid: string;
-}
-interface PublicUserDatapack {
+};
+type PublicUserDatapack = {
   type: "public_user";
   uuid: string;
-}
+};
 export type DatapackType = ServerDatapack | WorkshopDatapack | PrivateUserDatapack | PublicUserDatapack;
 export type Datapack = DatapackType & BaseDatapackProps;
 
