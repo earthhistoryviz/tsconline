@@ -376,6 +376,8 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
         datapackIndex[filename]!,
         publicDatapackPath,
         publicMappackPath,
+        filepath,
+        assetconfigs.publicUserDatapacksDirectory,
         mapPackIndex[filename]
       );
     } catch (e) {

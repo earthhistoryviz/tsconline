@@ -227,10 +227,6 @@ export const fetchPublicDatapacks = action("fetchPublicDatapacks", async () => {
       method: "GET"
     });
     const data = await response.json();
-    if (data.datapackIndex === undefined && data.mapPackIndex === undefined) {
-      console.log("No public datapacks");
-      return;
-    }
     try {
       assertIndexResponse(data);
       const { mapPackIndex: publicMapPackIndex, datapackIndex: publicDatapackIndex } = data;
@@ -991,7 +987,7 @@ export const setDefaultUserState = action(() => {
   };
   // Take out all the user datapacks
   const serverDatapacks = Object.values(state.datapackIndex)
-    .filter((datapack) => isPrivateUserDatapack(datapack))
+    .filter((datapack) => !isPrivateUserDatapack(datapack))
     .map((datapack) => datapack.file);
   const datapackIndex = Object.fromEntries(
     Object.entries(state.datapackIndex).filter(([key]) => serverDatapacks.includes(key))

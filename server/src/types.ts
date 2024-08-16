@@ -70,6 +70,7 @@ export type AssetConfig = {
   publicDirectory: string;
   datapackImagesDirectory: string;
   adminConfigPath: string;
+  publicUserDatapacksDirectory: string;
 };
 
 export type AdminConfig = {
@@ -154,4 +155,7 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
   if (typeof o.timescaleFilepath !== "string") throw 'AssetConfig must have a "timescaleFilepath" string';
   if (typeof o.datapackImagesDirectory !== "string") throw 'AssetConfig must have a "datapackImagesDirectory" string';
   if (typeof o.adminConfigPath !== "string") throw 'AssetConfig must have a "adminConfigPath" string';
+  if (typeof o.publicDirectory !== "string") throw 'AssetConfig must have a "publicDirectory" string';
+  if (typeof o.publicUserDatapacksDirectory !== "string")
+    throw 'AssetConfig must have a "publicUserDatapacksDirectory" string';
 }
