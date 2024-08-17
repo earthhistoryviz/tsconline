@@ -1,6 +1,13 @@
 import { vi, describe, beforeEach, it, expect, test } from "vitest";
 import * as utilModule from "../src/util";
 import * as sharedModule from "@tsconline/shared";
+vi.mock("../src/parse-map-packs", async () => {
+  return {
+    parseMapPacks: vi.fn().mockResolvedValue({
+      mapInfo: ""
+    })
+  };
+});
 vi.mock("../src/util", async (importOriginal) => {
   const actual = await importOriginal<typeof utilModule>();
   return {

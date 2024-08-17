@@ -526,6 +526,9 @@
       "Freehand": 0,
       "Blank": 0
     },
+    "mapPack": {
+      "mapInfo": ""
+    },
     "authoredBy": "authoredBy",
     "datapackImageCount": 0,
     "totalColumns": 8
@@ -1441,6 +1444,9 @@
       "Sequence": 1,
       "Transect": 1,
       "Facies": 1
+    },
+    "mapPack": {
+      "mapInfo": ""
     },
     "datapackImageCount": 0,
     "totalColumns": 14,
@@ -2765,6 +2771,9 @@
       "Range": 0,
       "Sequence": 0,
       "Transect": 0
+    },
+    "mapPack": {
+      "mapInfo": ""
     },
     "datapackImageCount": 0,
     "totalColumns": 0,

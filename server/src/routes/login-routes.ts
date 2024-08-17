@@ -24,6 +24,7 @@ import { deleteAllUserMetadata } from "../file-metadata-handler.js";
 import { readdir, rm, mkdir } from "fs/promises";
 import { checkRecaptchaToken, generateToken } from "../verify.js";
 import validator from "validator";
+import logger from "../error-logger.js";
 
 export const googleRecaptchaBotThreshold = 0.5;
 
@@ -43,10 +44,18 @@ export const deleteProfile = async function deleteProfile(request: FastifyReques
     const userDirectory = path.join(assetconfigs.uploadDirectory, uuid);
     try {
       await rm(userDirectory, { recursive: true, force: true });
-    } catch (error) {
-      console.error("Error removing user directory:", error);
+    } catch (e) {
+      logger.error(
+        `User uuid "${uuid}" deleted their profile and their directory could not be deleted with\n Error ${e}`
+      );
     }
-    await deleteAllUserMetadata(assetconfigs.fileMetadata, uuid);
+    try {
+      await deleteAllUserMetadata(assetconfigs.fileMetadata, uuid);
+    } catch (e) {
+      logger.error(
+        `User uuid "${uuid}" deleted their profile and their metadata could not be deleted with\n Error ${e}`
+      );
+    }
     request.session.delete();
     reply.send({ message: "Profile deleted" });
   } catch (error) {
