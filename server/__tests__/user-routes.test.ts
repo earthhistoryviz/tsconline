@@ -9,8 +9,6 @@ import * as verify from "../src/verify";
 import logger from "../src/error-logger";
 import * as fileMetadataHandler from "../src/file-metadata-handler";
 import { userRoutes } from "../src/routes/user-auth";
-import { FileMetadata } from "../src/types";
-import { join } from "path";
 
 vi.mock("../src/error-logger", async () => {
   return {
@@ -28,7 +26,6 @@ vi.mock("../src/database", async () => {
 
 vi.mock("../src/file-metadata-handler", async () => {
   return {
-    loadFileMetadata: vi.fn().mockResolvedValue({} as FileMetadata),
     deleteDatapackFoundInMetadata: vi.fn().mockResolvedValue(undefined)
   };
 });
@@ -86,6 +83,11 @@ vi.mock("path", async () => {
       },
       resolve: (...args: string[]) => {
         return args.join("/");
+      },
+      basename: (arg: string) => {
+        const split = arg.split(".");
+        split.pop();
+        return split.join(".");
       }
     },
     join: (...args: string[]) => {
@@ -669,9 +671,7 @@ describe("requestDownload", () => {
 describe("userDeleteDatapack tests", () => {
   const rmSpy = vi.spyOn(fspModule, "rm");
   const verifyFilepathSpy = vi.spyOn(utilModule, "verifyFilepath");
-  const loadFileMetadataSpy = vi.spyOn(fileMetadataHandler, "loadFileMetadata");
-  const deleteDatapackSpy = vi.spyOn(fileMetadataHandler, "deleteDatapackFoundInMetadata");
-  const writeFileSpy = vi.spyOn(fspModule, "writeFile").mockResolvedValue(undefined);
+  const deleteDatapackFoundInMetadata = vi.spyOn(fileMetadataHandler, "deleteDatapackFoundInMetadata");
   const loggerSpy = vi.spyOn(logger, "error");
   beforeEach(() => {
     vi.clearAllMocks();
@@ -711,41 +711,20 @@ describe("userDeleteDatapack tests", () => {
     expect(rmSpy).not.toHaveBeenCalled();
     expect(verifyFilepathSpy).toHaveBeenCalledOnce();
   });
-  it("should reply 500 when an error occurred in loadFileMetadata", async () => {
-    loadFileMetadataSpy.mockRejectedValueOnce(new Error("Unknown Error"));
+  it("should reply 500 when an error occurs in deleting the metadata", async () => {
+    deleteDatapackFoundInMetadata.mockRejectedValueOnce(new Error("Unknown Error"));
     const response = await app.inject({
       method: "DELETE",
       url: `/user/datapack/${filename}`,
       headers
     });
-    expect(await response.json()).toEqual({ error: "There was an error loading/writing file metadata" });
+    expect(await response.json()).toEqual({ error: "There was an error deleting the datapack" });
     expect(response.statusCode).toBe(500);
     expect(rmSpy).not.toHaveBeenCalled();
     expect(verifyFilepathSpy).toHaveBeenCalledOnce();
-    expect(loadFileMetadataSpy).toHaveBeenCalledOnce();
-    expect(deleteDatapackSpy).not.toHaveBeenCalled();
-  });
-  it("should reply 404 when the file exists, but it does not have metadata", async () => {
-    const response = await app.inject({
-      method: "DELETE",
-      url: `/user/datapack/${filename}`,
-      headers
-    });
-    expect(await response.json()).toEqual({
-      error: "File not found in metadata, but file was deleted. See administrator for more help."
-    });
-    expect(response.statusCode).toBe(404);
-    expect(rmSpy).toHaveBeenCalledWith(expect.stringContaining(filename), { force: true });
-    expect(verifyFilepathSpy).toHaveBeenCalledOnce();
-    expect(loadFileMetadataSpy).toHaveBeenCalledOnce();
-    expect(deleteDatapackSpy).not.toHaveBeenCalled();
-    expect(writeFileSpy).not.toHaveBeenCalled();
-    expect(loggerSpy).toHaveBeenCalled();
+    expect(deleteDatapackFoundInMetadata).toHaveBeenCalledOnce();
   });
   it("should reply 200 when the file exists and has metadata", async () => {
-    const path = join(uploadDirectory, uuid, "datapacks", filename);
-    const metadata = { [path]: {} as FileMetadata };
-    loadFileMetadataSpy.mockResolvedValueOnce(metadata);
     const response = await app.inject({
       method: "DELETE",
       url: `/user/datapack/${filename}`,
@@ -754,10 +733,7 @@ describe("userDeleteDatapack tests", () => {
     expect(await response.json()).toEqual({ message: "File deleted" });
     expect(response.statusCode).toBe(200);
     expect(verifyFilepathSpy).toHaveBeenCalledOnce();
-    expect(loadFileMetadataSpy).toHaveBeenCalledOnce();
-    expect(deleteDatapackSpy).toHaveBeenCalledOnce();
-    expect(deleteDatapackSpy).toHaveBeenCalledWith(metadata, path);
-    expect(writeFileSpy).toHaveBeenCalledOnce();
+    expect(deleteDatapackFoundInMetadata).toHaveBeenCalledOnce();
     expect(loggerSpy).not.toHaveBeenCalled();
   });
 });
