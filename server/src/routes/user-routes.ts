@@ -1,10 +1,10 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { realpath, access, rm, mkdir, readFile, writeFile } from "fs/promises";
-import path, { basename, join } from "path";
+import path from "path";
 import { runJavaEncrypt } from "../encryption.js";
 import { assetconfigs, checkHeader, resetUploadDirectory, verifyFilepath } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
-import { assertDatapackIndex, assertMapPackIndex, DatapackIndex } from "@tsconline/shared";
+import { assertDatapackIndex, DatapackIndex } from "@tsconline/shared";
 import { exec } from "child_process";
 import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
@@ -371,9 +371,9 @@ export const userDeleteDatapack = async function userDeleteDatapack(
     reply.status(400).send({ error: "Missing filename" });
     return;
   }
-  const path = join(assetconfigs.uploadDirectory, uuid, basename(filename));
+  const filepath = path.join(assetconfigs.uploadDirectory, uuid, path.basename(filename));
   try {
-    if (!(await verifyFilepath(path))) {
+    if (!(await verifyFilepath(filepath))) {
       reply.status(403).send({ error: "Invalid filename/File doesn't exist" });
       return;
     }
@@ -382,7 +382,7 @@ export const userDeleteDatapack = async function userDeleteDatapack(
     return;
   }
   try {
-    await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, path);
+    await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, filepath);
   } catch (e) {
     reply.status(500).send({ error: "There was an error deleting the datapack" });
     return;

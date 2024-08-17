@@ -9,7 +9,6 @@ import {
   assertSharedUser,
   assertChartInfoTSC,
   assertDatapackInfoChunk,
-  assertMapPackInfoChunk,
   assertDatapack,
   DatapackMetadata,
   defaultColumnRoot,
@@ -190,7 +189,7 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
     });
     const data = await response.json();
     try {
-      assertDatapackIndex(data)
+      assertDatapackIndex(data);
       // make sure these are private user datapacks since datapackIndex is ambiguous
       Object.values(data).forEach((datapack) => {
         assertPrivateUserDatapack(datapack);
