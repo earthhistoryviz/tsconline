@@ -59,19 +59,18 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
     return a.localeCompare(b);
   });
   const sortedMapEntries: Array<[string, MapInfo[string]]> = [];
+  const mapEntries = new Set<string>();
   // parent maps first
   for (const parent of sortedMapHierarchyKeys) {
     if (mapInfo[parent]) {
       sortedMapEntries.push([parent, mapInfo[parent]]);
+      mapEntries.add(parent);
     }
   }
-  // then their children
-  for (const parent of sortedMapHierarchyKeys) {
-    for (const child of state.mapState.mapHierarchy[parent]) {
-      if (!sortedMapEntries.includes([child, mapInfo[child]]) && mapInfo[child]) {
-        sortedMapEntries.push([child, mapInfo[child]]);
-      }
-    }
+  for (const map in state.mapState.mapInfo) {
+    const mapInfo = state.mapState.mapInfo[map];
+    if (mapEntries.has(map)) continue;
+    sortedMapEntries.push([map, mapInfo]);
   }
   const sortedMapInfoObj: MapInfo = Object.fromEntries(sortedMapEntries);
   return (
