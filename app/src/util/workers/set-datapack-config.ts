@@ -34,8 +34,8 @@ self.onmessage = async (e: MessageEvent<SetDatapackConfigMessage>) => {
 };
 const setDatapackConfig = (datapacks: string[], stateCopy: State) => {
   const unitMap: Map<string, ColumnInfo> = new Map();
-  let mapInfo: MapInfo = {};
-  let mapHierarchy: MapHierarchy = {};
+  const mapInfo: MapInfo = {};
+  const mapHierarchy: MapHierarchy = {};
   let foundDefaultAge = false;
   const columnRoot: ColumnInfo = cloneDeep(defaultColumnRoot);
   // all chart root font options have inheritable on
@@ -68,11 +68,17 @@ const setDatapackConfig = (datapacks: string[], stateCopy: State) => {
       columnInfo.parent = columnRoot.name;
       unitMap.set(baseDatapackProps.ageUnits, columnInfo);
     }
-    const mapPack = stateCopy.mapPackIndex[datapack]!;
-    if (!mapInfo) mapInfo = mapPack.mapInfo;
-    else Object.assign(mapInfo, mapPack.mapInfo);
-    if (!mapHierarchy) mapHierarchy = mapPack.mapHierarchy;
-    else Object.assign(mapHierarchy, mapPack.mapHierarchy);
+    const mapPack = baseDatapackProps.mapPack;
+    Object.assign(mapInfo, mapPack.mapInfo);
+    // ie. World Map is the parent in multiple map packs, so make sure it appends various children to it
+    for (const parent in mapPack.mapHierarchy) {
+      const children = mapPack.mapHierarchy[parent];
+      if (mapHierarchy[parent]) {
+        mapHierarchy[parent].concat(children);
+      } else {
+        mapHierarchy[parent] = children;
+      }
+    }
   }
   // makes sure things are named correctly for users and for the hash map to not have collisions
   for (const [unit, column] of unitMap) {

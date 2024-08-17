@@ -4,7 +4,6 @@ import {
   ChartInfoTSC,
   ChartSettingsInfoTSC,
   DatapackIndex,
-  MapPackIndex,
   TimescaleItem,
   assertSharedUser,
   assertChartInfoTSC,
@@ -251,15 +250,6 @@ export const uploadUserDatapack = action(
     }
   }
 );
-
-export const setMapPackIndex = action("setMapPackIndex", async (mapPackIndex: MapPackIndex) => {
-  // This is to prevent the UI from lagging
-  state.mapPackIndex = {};
-  for (const key in mapPackIndex) {
-    state.mapPackIndex[key] = mapPackIndex[key];
-    await new Promise((resolve) => setTimeout(resolve, 0));
-  }
-});
 
 export const addDatapackToIndex = action("addDatapackToIndex", (datapack: string, info: Datapack) => {
   state.datapackIndex[datapack] = info;
@@ -919,11 +909,7 @@ export const setDefaultUserState = action(() => {
   const datapackIndex = Object.fromEntries(
     Object.entries(state.datapackIndex).filter(([key]) => serverDatapacks.includes(key))
   );
-  const mapPackIndex = Object.fromEntries(
-    Object.entries(state.mapPackIndex).filter(([key]) => serverDatapacks.includes(key))
-  );
   setDatapackIndex(datapackIndex);
-  setMapPackIndex(mapPackIndex);
 });
 
 export const setChartTimelineEnabled = action("setChartTimelineEnabled", (enabled: boolean) => {

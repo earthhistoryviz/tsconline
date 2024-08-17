@@ -19,7 +19,6 @@ import type {
   ColumnInfo,
   Presets,
   DatapackIndex,
-  MapPackIndex,
   Patterns,
   AdminSharedUser
 } from "@tsconline/shared";
@@ -86,7 +85,6 @@ export type State = {
   prevConfig: Config;
   presets: Presets;
   datapackIndex: DatapackIndex;
-  mapPackIndex: MapPackIndex;
   mapPatterns: {
     patterns: Patterns;
     sortedPatterns: Patterns[string][];
@@ -190,7 +188,6 @@ export const state = observable<State>({
   },
   presets: {},
   datapackIndex: {},
-  mapPackIndex: {},
   mapPatterns: {
     patterns: {},
     sortedPatterns: []
