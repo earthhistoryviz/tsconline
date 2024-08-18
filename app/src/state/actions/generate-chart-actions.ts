@@ -151,22 +151,32 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
     const answer = await response.json();
     if (response.status === 500) {
       assertChartErrorResponse(answer);
+      let errorCode = ErrorCodes.INVALID_CHART_RESPONSE;
       switch (answer.errorCode) {
         case 100:
-          displayServerError(
-            answer,
-            ErrorCodes.SERVER_FILE_METADATA_ERROR,
-            ErrorMessages[ErrorCodes.SERVER_FILE_METADATA_ERROR]
-          );
+          errorCode = ErrorCodes.SERVER_FILE_METADATA_ERROR;
           break;
         case 400:
-          displayServerError(
-            answer,
-            ErrorCodes.INVALID_CHART_FROM_JAR,
-            ErrorMessages[ErrorCodes.INVALID_CHART_FROM_JAR]
-          );
+          errorCode = ErrorCodes.INVALID_CHART_FROM_JAR;
+          break;
+        case 1000:
+          errorCode = ErrorCodes.INVALID_SETTINGS;
+          break;
+        case 1001:
+          errorCode = ErrorCodes.NO_COLUMNS_SELECTED;
+          break;
+        case 1002:
+        case 1003:
+        case 1004:
+        case 1005:
+        case 2000:
+        case 2001:
+        case 2002:
+        case 2003:
+          errorCode = ErrorCodes.INTERNAL_ERROR;
           break;
       }
+      displayServerError(answer, errorCode, ErrorMessages[errorCode]);
       generalActions.setChartLoading(false);
       return;
     }
