@@ -156,15 +156,13 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
         case 100:
           errorCode = ErrorCodes.SERVER_FILE_METADATA_ERROR;
           break;
-        case 400:
-          errorCode = ErrorCodes.INVALID_CHART_FROM_JAR;
-          break;
         case 1000:
           errorCode = ErrorCodes.INVALID_SETTINGS;
           break;
         case 1001:
           errorCode = ErrorCodes.NO_COLUMNS_SELECTED;
           break;
+        case 400:
         case 1002:
         case 1003:
         case 1004:
