@@ -9,6 +9,14 @@ import * as verify from "../src/verify";
 import logger from "../src/error-logger";
 import * as fileMetadataHandler from "../src/file-metadata-handler";
 import { userRoutes } from "../src/routes/user-auth";
+import path from "path";
+import * as pathModule from "path";
+
+vi.mock("../src/upload-handlers", async () => {
+  return {
+    getFileNameFromCachedDatapack: vi.fn(() => Promise.resolve(filename))
+  };
+});
 
 vi.mock("../src/error-logger", async () => {
   return {
@@ -40,7 +48,7 @@ vi.mock("fs/promises", async (importOriginal) => {
   const actual = await importOriginal<typeof fspModule>();
   return {
     ...actual,
-    realpath: vi.fn(() => Promise.resolve(`uploadDirectory/${uuid}/datapacks`)), //only the first two test cases have different mocked value/implementation than this
+    realpath: vi.fn().mockImplementation((str) => str),
     mkdir: vi.fn().mockResolvedValue(undefined),
     access: vi.fn().mockResolvedValue(undefined),
     readFile: vi.fn().mockResolvedValue(undefined),
@@ -66,7 +74,7 @@ vi.mock("../src/util", async (importOriginal) => {
   const actual = await importOriginal<typeof utilModule>();
   return {
     ...actual,
-    verifyFilepath: vi.fn().mockReturnValue(true),
+    verifyFilepath: vi.fn().mockResolvedValue(true),
     assetconfigs: { uploadDirectory: "uploadDirectory" },
     loadAssetConfigs: vi.fn().mockImplementation(() => {}),
     deleteDirectory: vi.fn().mockImplementation(() => {}),
@@ -75,9 +83,11 @@ vi.mock("../src/util", async (importOriginal) => {
   };
 });
 
-vi.mock("path", async () => {
+vi.mock("path", async (importOriginal) => {
+  const actual = await importOriginal<typeof pathModule>();
   return {
     default: {
+      ...actual,
       join: (...args: string[]) => {
         return args.join("/");
       },
@@ -103,7 +113,6 @@ const accessSpy = vi.spyOn(fspModule, "access");
 const runJavaEncryptSpy = vi.spyOn(runJavaEncryptModule, "runJavaEncrypt");
 const rmSpy = vi.spyOn(fspModule, "rm");
 const mkdirSpy = vi.spyOn(fspModule, "mkdir");
-const realpathSpy = vi.spyOn(fspModule, "realpath");
 let app: FastifyInstance;
 beforeAll(async () => {
   app = fastify();
@@ -132,8 +141,8 @@ beforeAll(async () => {
     };
   });
   await app.register(userRoutes, { prefix: "/user" });
-  vi.spyOn(console, "error").mockImplementation(() => undefined);
-  vi.spyOn(console, "log").mockImplementation(() => undefined);
+  // vi.spyOn(console, "error").mockImplementation(() => undefined);
+  // vi.spyOn(console, "log").mockImplementation(() => undefined);
   await app.listen({ host: "", port: 1234 });
 });
 
@@ -252,8 +261,12 @@ describe("verifyRecaptcha tests", () => {
 });
 
 describe("requestDownload", () => {
-  it("should reply 403 when realpath throw an error", async () => {
-    realpathSpy.mockRejectedValueOnce(new Error("Unknown Error"));
+  const verifyFilepathSpy = vi.spyOn(utilModule, "verifyFilepath");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should reply 403 when cached datapack is invalid", async () => {
+    verifyFilepathSpy.mockResolvedValueOnce(false);
     const response = await app.inject({
       method: "GET",
       url: `/user/datapack/${filename}`,
@@ -265,9 +278,22 @@ describe("requestDownload", () => {
     expect(response.statusCode).toBe(403);
     expect(response.json().error).toBe("Invalid file path");
   });
+  it("should reply 500 when verifyFilepath throws an error", async () => {
+    verifyFilepathSpy.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/${filename}`,
+      headers
+    });
+    expect(accessSpy).not.toHaveBeenCalled();
+    expect(runJavaEncryptSpy).not.toHaveBeenCalled();
+    expect(checkHeaderSpy).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(500);
+    expect(response.json().error).toBe("Failed to load cached datapack");
+  });
 
-  it("should reply 403 when file path is invalid", async () => {
-    realpathSpy.mockResolvedValueOnce("bad/file/path");
+  it("should reply 403 when file path is invalid from loaded cache", async () => {
+    verifyFilepathSpy.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
     const response = await app.inject({
       method: "GET",
       url: `/user/datapack/${filename}`,
@@ -278,6 +304,20 @@ describe("requestDownload", () => {
     expect(checkHeaderSpy).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(403);
     expect(response.json().error).toBe("Invalid file path");
+  });
+  it("should reply 403 when encrypted filepath given is malicious", async () => {
+    const resolveSpy = vi.spyOn(path, "resolve").mockReturnValueOnce("bad/file/path");
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/${filename}`,
+      headers
+    });
+    expect(resolveSpy).toHaveBeenCalledTimes(2);
+    expect(accessSpy).not.toHaveBeenCalled();
+    expect(runJavaEncryptSpy).not.toHaveBeenCalled();
+    expect(checkHeaderSpy).not.toHaveBeenCalled();
+    expect(response.json().error).toBe("Invalid file path");
+    expect(response.statusCode).toBe(403);
   });
 
   it("should reply with 500 when fail to create encrypted directory for the user", async () => {
@@ -381,7 +421,10 @@ describe("requestDownload", () => {
     expect(runJavaEncryptSpy).toHaveReturnedWith(undefined);
     expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
     expect(checkHeaderSpy).toHaveNthReturnedWith(2, false);
-    expect(rmSpy).toHaveBeenCalledWith(`${uploadDirectory}/${uuid}/encrypted-datapacks/${filename}`, { force: true });
+    expect(rmSpy).toHaveBeenCalledWith(
+      path.join(uploadDirectory, uuid, path.parse(filename).name, "encrypted-datapacks", filename),
+      { force: true }
+    );
     expect(accessSpy).toBeCalledTimes(3);
     expect(response.statusCode).toBe(422);
     expect(response.json().error).toBe(
@@ -657,6 +700,7 @@ describe("requestDownload", () => {
       url: `/user/datapack/${filename}?needEncryption=true`,
       headers
     });
+    expect(response.json().error).toBe("An error occurred: Error: Unknown Error");
     expect(response.statusCode).toBe(500);
     expect(runJavaEncryptSpy).toHaveNthReturnedWith(1, undefined);
     expect(mkdirSpy).toHaveNthReturnedWith(1, undefined);
@@ -664,7 +708,6 @@ describe("requestDownload", () => {
     expect(readFileSpy).toHaveNthReturnedWith(1, "default content");
     expect(accessSpy).toHaveBeenCalledTimes(3);
     expect(rmSpy).not.toHaveBeenCalled();
-    expect(response.json().error).toBe("An error occurred: Error: Unknown Error");
   });
 });
 
@@ -676,7 +719,7 @@ describe("userDeleteDatapack tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  it("should reply 400 when filename is missing", async () => {
+  it("should reply 400 when datapack title is missing", async () => {
     const response = await app.inject({
       method: "DELETE",
       url: "/user/datapack/",

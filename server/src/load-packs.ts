@@ -43,9 +43,12 @@ export async function loadIndexes(
         if (!baseDatapackProps) {
           return;
         }
+        if (datapackIndex[datapack.title]) {
+          throw new Error(`Datapack ${datapack.title} already exists`);
+        }
         const finalDatapack = { ...baseDatapackProps, ...type };
         assertDatapack(finalDatapack);
-        datapackIndex[datapack.file] = finalDatapack;
+        datapackIndex[datapack.title] = finalDatapack;
         console.log(chalk.green(`Successfully parsed ${datapack.file}`));
       })
       .catch((e) => {

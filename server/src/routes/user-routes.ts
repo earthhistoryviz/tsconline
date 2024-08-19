@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { realpath, access, rm, mkdir, readFile, writeFile } from "fs/promises";
+import { access, rm, mkdir, readFile, writeFile, rename } from "fs/promises";
 import path from "path";
 import { runJavaEncrypt } from "../encryption.js";
 import { assetconfigs, checkHeader, resetUploadDirectory, verifyFilepath } from "../util.js";
@@ -10,12 +10,13 @@ import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
 import { deleteDatapackFoundInMetadata, writeFileMetadata } from "../file-metadata-handler.js";
 import { loadIndexes } from "../load-packs.js";
-import { uploadUserDatapackHandler } from "../upload-handlers.js";
+import { getFileNameFromCachedDatapack, uploadUserDatapackHandler } from "../upload-handlers.js";
 import { findUser } from "../database.js";
 import { addPublicUserDatapack, loadPublicUserDatapacks } from "../public-datapack-handler.js";
+import { CACHED_USER_DATAPACK_FILENAME, PUBLIC_DATAPACK_INDEX_FILENAME } from "../constants.js";
 
 export const requestDownload = async function requestDownload(
-  request: FastifyRequest<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>,
+  request: FastifyRequest<{ Params: { datapack: string }; Querystring: { needEncryption?: boolean } }>,
   reply: FastifyReply
 ) {
   const uuid = request.session.get("uuid");
@@ -25,27 +26,36 @@ export const requestDownload = async function requestDownload(
   }
   // for test usage: const uuid = "username";
   const { needEncryption } = request.query;
-  const { filename } = request.params;
+  const { datapack } = request.params;
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
-  const datapackDir = path.join(userDir, "datapacks");
-  let filepath = path.join(datapackDir, filename);
-  const encryptedFilepathDir = path.join(userDir, "encrypted-datapacks");
-  let maybeEncryptedFilepath = path.join(encryptedFilepathDir, filename);
-  // check and sanitize filepath
+  const datapackDir = path.join(userDir, datapack);
+  const encryptedFilepathDir = path.join(datapackDir, "encrypted-datapacks");
+  let filepath = "";
+  // get valid filepath/filename from cache
   try {
-    filepath = await realpath(path.resolve(filepath));
+    const cachedDatapackFilepath = path.join(datapackDir, CACHED_USER_DATAPACK_FILENAME);
+    if (!(await verifyFilepath(cachedDatapackFilepath))) {
+      reply.status(403).send({ error: "Invalid file path" });
+      return;
+    }
+    const filename = await getFileNameFromCachedDatapack(cachedDatapackFilepath);
+    filepath = path.join(datapackDir, filename);
+    // check and sanitize filepath
+    if (!(await verifyFilepath(filepath))) {
+      reply.status(403).send({ error: "Invalid file path" });
+      return;
+    }
   } catch (e) {
+    reply.status(500).send({ error: "Failed to load cached datapack" });
+    return;
+  }
+  // sanitize this differently since this might not exist
+  const maybeEncryptedFilepath = path.resolve(path.join(encryptedFilepathDir, datapack));
+  if (!maybeEncryptedFilepath.startsWith(path.resolve(encryptedFilepathDir))) {
     reply.status(403).send({ error: "Invalid file path" });
     return;
   }
-  maybeEncryptedFilepath = path.resolve(maybeEncryptedFilepath);
-  if (
-    !filepath.startsWith(path.resolve(datapackDir)) ||
-    !maybeEncryptedFilepath.startsWith(path.resolve(encryptedFilepathDir))
-  ) {
-    reply.status(403).send({ error: "Invalid file path" });
-    return;
-  }
+  // user did not ask for an encryption, so send original file
   if (needEncryption === undefined) {
     try {
       await access(filepath);
@@ -55,7 +65,7 @@ export const requestDownload = async function requestDownload(
     } catch (e) {
       const error = e as NodeJS.ErrnoException;
       if (error.code === "ENOENT") {
-        const errormsg = "The file requested " + filename + " does not exist within user's upload directory";
+        const errormsg = "The file requested " + datapack + " does not exist within user's upload directory";
         reply.status(404).send({ error: errormsg });
       } else {
         reply.status(500).send({ error: "An error occurred: " + e });
@@ -63,6 +73,7 @@ export const requestDownload = async function requestDownload(
       return;
     }
   }
+  // see if we have already encrypted the file
   try {
     await access(maybeEncryptedFilepath);
     const file = await readFile(maybeEncryptedFilepath);
@@ -89,7 +100,7 @@ export const requestDownload = async function requestDownload(
   } catch (e) {
     const error = e as NodeJS.ErrnoException;
     if (error.code === "ENOENT") {
-      const errormsg = "The file requested " + filename + " does not exist within user's upload directory";
+      const errormsg = "The file requested " + datapack + " does not exist within user's upload directory";
       reply.status(404).send({ error: errormsg });
     } else {
       reply.status(500).send({ error: "An error occurred: " + e });
@@ -122,7 +133,7 @@ export const requestDownload = async function requestDownload(
     } else {
       await rm(maybeEncryptedFilepath, { force: true });
       const errormsg =
-        "Java file was unable to encrypt the file " + filename + ", resulting in an incorrect encryption header.";
+        "Java file was unable to encrypt the file " + datapack + ", resulting in an incorrect encryption header.";
       reply.status(422).send({
         error: errormsg
       });
@@ -131,7 +142,7 @@ export const requestDownload = async function requestDownload(
   } catch (e) {
     const error = e as NodeJS.ErrnoException;
     if (error.code === "ENOENT") {
-      const errormsg = "Java file did not successfully process the file " + filename;
+      const errormsg = "Java file did not successfully process the file " + datapack;
       reply.status(404).send({ error: errormsg });
     } else {
       reply.status(500).send({ error: "An error occurred: " + e });
@@ -230,9 +241,8 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
           reply.status(415).send({ error: "Invalid file type" });
           return;
         }
-        datapackDir = path.join(userDir, path.basename(uploadedFile.filename));
-        await mkdir(datapackDir, { recursive: true });
-        filepath = path.join(datapackDir, uploadedFile.filename);
+        // store it in a temp file since we need to know title before we effectively save the file
+        filepath = path.join(userDir, "temp_" + uploadedFile.filename);
         try {
           await pipeline(uploadedFile.file, createWriteStream(filepath));
         } catch (e) {
@@ -258,7 +268,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     reply.status(500).send({ error: "Failed to upload file with error " + e });
     return;
   }
-  if (!uploadedFile || !filepath || !datapackDir) {
+  if (!uploadedFile || !filepath) {
     filepath && (await rm(filepath, { force: true }));
     reply.status(400).send({ error: "No file uploaded" });
     return;
@@ -277,10 +287,16 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   if (!datapackMetadata) {
     return;
   }
-  const ext = path.extname(filename);
-  const filenameWithoutExtension = path.basename(filename, ext);
-  const decryptedFilepathDir = path.join(datapackDir, filenameWithoutExtension);
-  const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json");
+  try {
+    datapackDir = path.join(userDir, datapackMetadata.title);
+    await mkdir(datapackDir, { recursive: true });
+    await rename(filepath, path.join(datapackDir, datapackMetadata.file));
+    filepath = path.join(datapackDir, datapackMetadata.file);
+  } catch (e) {
+    reply.status(500).send({ error: "Failed to create and move the datapack to the correct directory." });
+  }
+  const decryptedFilepathDir = path.join(datapackDir, path.parse(filename).name);
+  const cachedDatapackFilepath = path.join(userDir, CACHED_USER_DATAPACK_FILENAME);
 
   try {
     await new Promise<void>((resolve, reject) => {
@@ -322,17 +338,16 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     type: isPublic ? "public_user" : "private_user",
     uuid
   });
-  if (!datapackIndex[filename] || !success) {
+  if (!datapackIndex[datapackMetadata.title] || !success) {
     await errorHandler("Failed to load decrypted datapack", 500);
     return;
   }
   if (isPublic) {
     try {
-      const publicDatapackPath = path.join(assetconfigs.publicDirectory, "DatapackIndex.json");
+      const publicDatapackPath = path.join(assetconfigs.publicDirectory, PUBLIC_DATAPACK_INDEX_FILENAME);
       await mkdir(assetconfigs.publicDirectory, { recursive: true });
       await addPublicUserDatapack(
-        filename,
-        datapackIndex[filename]!,
+        datapackIndex[datapackMetadata.title]!,
         publicDatapackPath,
         filepath,
         assetconfigs.publicUserDatapacksDirectory
@@ -343,9 +358,10 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     }
   }
   try {
-    await writeFile(datapackIndexFilepath, JSON.stringify(datapackIndex, null, 2));
+    const datapack = datapackIndex[datapackMetadata.title];
+    await writeFile(cachedDatapackFilepath, JSON.stringify(datapack, null, 2));
   } catch (e) {
-    await errorHandler("Failed to save indexes", 500, e);
+    await errorHandler("Failed to save index", 500, e);
     return;
   }
   try {

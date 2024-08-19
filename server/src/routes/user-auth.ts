@@ -56,6 +56,13 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     },
     required: ["filename"]
   };
+  const datapackTitleParams = {
+    type: "object",
+    properties: {
+      datapack: { type: "string" }
+    },
+    required: ["datapack"]
+  };
   const requestDownloadQuery = {
     type: "object",
     properties: {
@@ -65,10 +72,10 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
   fastify.addHook("preHandler", verifySession);
   fastify.addHook("preHandler", verifyRecaptcha);
   fastify.get(
-    "/datapack/:filename",
+    "/datapack/:datapack",
     {
       config: { rateLimit: looseRateLimit },
-      schema: { params: fileNameParams, querystring: requestDownloadQuery }
+      schema: { params: datapackTitleParams, querystring: requestDownloadQuery }
     },
     requestDownload
   );
