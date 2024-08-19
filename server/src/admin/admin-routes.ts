@@ -1,8 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { checkForUsersWithUsernameOrEmail, createUser, findUser, updateUser } from "../database.js";
+import { checkForUsersWithUsernameOrEmail, createUser, findUser, deleteUser } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
-import { deleteUser } from "../database.js";
 import { resolve, extname, join, relative, parse } from "path";
 import { adminconfig, assetconfigs, checkFileExists, verifyFilepath } from "../util.js";
 import { createWriteStream } from "fs";
@@ -19,7 +18,6 @@ import { assertAdminSharedUser, assertDatapackIndex } from "@tsconline/shared";
 import { NewUser } from "../types.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import { parseExcelFile } from "../parse-excel-file.js";
-import { sendEmail } from "../send-email.js";
 
 /**
  * Get all users for admin to configure on frontend
@@ -419,61 +417,79 @@ export const getAllUserDatapacks = async function getAllUserDatapacks(request: F
  * @returns
  */
 export const adminAddUsersToWorkshop = async function addUsersToWorkshop(
-  request: FastifyRequest<{ Params: { workshopId: string }; Body: { emails: string[]; file: MultipartFile } }>,
+  request: FastifyRequest<{ Params: { workshopId: string } }>,
   reply: FastifyReply
 ) {
+  const parts = request.parts();
+  let file: MultipartFile | undefined;
+  let filename: string | undefined;
+  let filepath: string | undefined;
+  let emails: Set<string> | undefined;
+  for await (const part of parts) {
+    if (part.type === "file") {
+      // DOWNLOAD FILE HERE AND SAVE TO FILE
+      file = part;
+      filename = file.filename;
+      filepath = resolve(assetconfigs.uploadDirectory, filename);
+      if (!filepath.startsWith(resolve(assetconfigs.uploadDirectory))) {
+        reply.status(403).send({ error: "Directory traversal detected" });
+        return;
+      }
+      if (!/^(\.xls|\.xlsx)$/.test(extname(file.filename))) {
+        reply.status(400).send({ error: "Invalid file type" });
+        return;
+      }
+      try {
+        await pipeline(file.file, createWriteStream(filepath));
+      } catch (error) {
+        console.error(error);
+        await rm(filepath, { force: true });
+        reply.status(500).send({ error: "Error saving file" });
+        return;
+      }
+      if (file.file.truncated) {
+        await rm(filepath, { force: true });
+        reply.status(400).send({ error: "File too large" });
+        return;
+      }
+      if (file.file.bytesRead === 0) {
+        await rm(filepath, { force: true });
+        reply.status(400).send({ error: `Empty file cannot be uploaded` });
+        return;
+      }
+    } else if (part.fieldname === "emails") {
+      emails = new Set((part.value as string).split(",").map((email) => email.trim()));
+    }
+  }
   const workshopId = parseInt(request.params.workshopId);
   if (isNaN(workshopId)) {
     reply.status(400).send({ error: "Invalid or missing workshop id" });
     return;
   }
-  const { emails, file } = request.body;
   if (!emails && !file) {
     reply.status(400).send({ error: "Missing emails or file" });
     return;
   }
   let emailList: string[] = [];
+  let invalidEmails: string[] = [];
   try {
-    if (file) {
-      const filePath = resolve(assetconfigs.uploadDirectory, file.filename);
+    if (file && filepath) {
       try {
-        await pipeline(file.file, createWriteStream(filePath));
-      } catch (error) {
-        console.error(error);
-        reply.status(500).send({ error: "Error saving file" });
-        return;
-      }
-      if (file.file.truncated) {
-        await rm(filePath, { force: true });
-        reply.status(400).send({ error: "File too large" });
-        return;
-      }
-      if (file.file.bytesRead === 0) {
-        await rm(filePath, { force: true });
-        reply.status(400).send({ error: `Empty file cannot be uploaded` });
-        return;
-      }
-      try {
-        const excelData = await parseExcelFile(filePath, 0, false);
+        const excelData = await parseExcelFile(filepath, 0, false);
         emailList = excelData.flat();
       } catch (e) {
         reply.status(400).send({ error: "Error parsing excel file" });
         return;
       }
-      const invalidEmails = emailList.filter(email => !validator.isEmail(email));
-      if (invalidEmails.length > 0) {
-        await rm(filePath, { force: true });
-        reply.status(422).send({ error: "Invalid email addresses found in the file", details: invalidEmails });
-        return;
-      }
+      invalidEmails = emailList.filter((email) => !validator.isEmail(email));
     }
     if (emails) {
-      const invalidEmails = emails.filter(email => !validator.isEmail(email));
-      if (invalidEmails.length > 0) {
-        reply.status(422).send({ error: "Invalid email addresses provided", details: invalidEmails });
-        return;
-      }
+      invalidEmails.push(...Array.from(emails).filter((email) => !validator.isEmail(email)));
       emailList.push(...emails);
+    }
+    if (invalidEmails.length > 0) {
+      reply.status(409).send({ error: "Invalid email addresses provided", invalidEmails: invalidEmails.join(", ") });
+      return;
     }
     for (const email of emailList) {
       const user = await checkForUsersWithUsernameOrEmail(email, email);
@@ -493,7 +509,8 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(
         });
         const newUser = await findUser({ email });
         if (newUser.length !== 1) {
-          throw new Error("User not created");
+          reply.status(500).send({ error: "Error creating user", invalidEmails: email });
+          return;
         }
       }
     }

@@ -1,5 +1,5 @@
 import { action, runInAction } from "mobx";
-import { state } from "..";
+import { actions, state } from "..";
 import { fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
@@ -10,35 +10,15 @@ import {
   isServerResponseError
 } from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
-import { addDatapackToIndex, fetchServerDatapack, getRecaptchaToken, pushError, pushSnackbar } from "./general-actions";
+import {
+  addDatapackToIndex,
+  fetchServerDatapack,
+  getRecaptchaToken,
+  pushError,
+  pushSnackbar,
+  removeAllErrors
+} from "./general-actions";
 import { State } from "../state";
-
-export const adminAddUsersToWorkshop = action(async (workshopId: number, data: FormData) => {
-  const recaptchaToken = await getRecaptchaToken("adminAddUsersToWorkshop");
-  if (!recaptchaToken) return;
-  try {
-    const response = await fetcher(`/admin/workshop/${workshopId}/users`, {
-      method: "POST",
-      body: data,
-      headers: {
-        "recaptcha-token": recaptchaToken
-      },
-      credentials: "include"
-    });
-    if (response.ok) {
-      pushSnackbar("Users added to workshop successfully", "success");
-    } else {
-      displayServerError(
-        await response.json(),
-        ErrorCodes.ADMIN_ADD_USERS_TO_WORKSHOP_FAILED,
-        ErrorMessages[ErrorCodes.ADMIN_ADD_USERS_TO_WORKSHOP_FAILED]
-      );
-    }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
-  }
-});
 
 export const adminFetchUsers = action(async () => {
   const recaptchaToken = await getRecaptchaToken("adminFetchUsers");
@@ -147,8 +127,6 @@ export const adminAddUser = action(async (email: string, password: string, isAdm
 });
 
 export const adminDeleteUsers = action(async (users: AdminSharedUser[]) => {
-  const recaptchaToken = await getRecaptchaToken("adminDeleteUsers");
-  if (!recaptchaToken) return;
   let deletedAllUsers = true;
   for (const user of users) {
     if (user.email === state.user.email) {
@@ -160,6 +138,8 @@ export const adminDeleteUsers = action(async (users: AdminSharedUser[]) => {
       uuid: user.uuid
     });
     try {
+      const recaptchaToken = await getRecaptchaToken("adminDeleteUsers");
+      if (!recaptchaToken) return;
       const response = await fetcher("/admin/user", {
         method: "DELETE",
         headers: {
@@ -328,6 +308,46 @@ export const adminUploadServerDatapack = action(async (file: File, metadata: Dat
       pushSnackbar("Successfully uploaded " + title + " datapack", "success");
     } else {
       displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+    }
+  } catch (e) {
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
+  }
+});
+
+export const adminAddUsersToWorkshop = action(async (workshopId: number, formData: FormData) => {
+  const recaptchaToken = await getRecaptchaToken("adminAddUsersToWorkshop");
+  if (!recaptchaToken) return;
+  try {
+    const response = await fetcher(`/admin/workshop/${workshopId}/users`, {
+      method: "POST",
+      body: formData,
+      headers: {
+        "recaptcha-token": recaptchaToken
+      },
+      credentials: "include"
+    });
+    if (response.ok) {
+      removeAllErrors();
+      pushSnackbar("Users added to workshop successfully", "success");
+    } else {
+      if (response.status === 409) {
+        const serverResponse = await response.json();
+        const invalidEmails = serverResponse.invalidEmails;
+        pushError(ErrorCodes.ADMIN_EMAIL_INVALID);
+        pushSnackbar(`Invalid emails: ${invalidEmails.join(", ")}`, "warning");
+        return;
+      }
+      let errorCode = ErrorCodes.ADMIN_ADD_USERS_TO_WORKSHOP_FAILED;
+      switch (response.status) {
+        case 400:
+          errorCode = ErrorCodes.INVALID_FORM;
+          break;
+        case 422:
+          errorCode = ErrorCodes.RECAPTCHA_FAILED;
+          break;
+      }
+      displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
     }
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
