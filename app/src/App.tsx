@@ -25,6 +25,7 @@ import { Admin } from "./admin/Admin";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { TSCLoadingDatapacks } from "./components/TSCLoadingDatapacks";
+import { toJS } from "mobx";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -83,20 +84,18 @@ export default observer(function App() {
           <TSCPopupDialog
             open={checkOpen}
             title="Confirm Datapack Selection Change"
-            message="You have unsaved changes! If you leave now, your changes will not be saved."
-            onYes={async () => {
+            message="You have unsaved changes! Do you want to save your changes?"
+            onNo={async () => {
               actions.setUnsavedDatapackConfig(state.config.datapacks);
             }}
-            onNo={() => {
-              navigate("/settings");
-              actions.setSettingsTabsSelected("datapacks");
+            onYes={async () => {
+              await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
             }}
-            onClose={() => {
-              navigate("/settings");
-              actions.setSettingsTabsSelected("datapacks");
+            onClose={async () => {
+              actions.setUnsavedDatapackConfig(state.config.datapacks);
             }}
-            customNo="Cancel"
-            customYes="Leave Without Changes "
+            customNo="Discard"
+            customYes="Save"
           />
           {state.snackbars.map((info, index) => (
             <TSCSnackbar
