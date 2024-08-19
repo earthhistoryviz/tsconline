@@ -13,6 +13,33 @@ import { displayServerError } from "./util-actions";
 import { addDatapackToIndex, fetchServerDatapack, getRecaptchaToken, pushError, pushSnackbar } from "./general-actions";
 import { State } from "../state";
 
+export const adminAddUsersToWorkshop = action(async (workshopId: number, data: FormData) => {
+  const recaptchaToken = await getRecaptchaToken("adminAddUsersToWorkshop");
+  if (!recaptchaToken) return;
+  try {
+    const response = await fetcher(`/admin/workshop/${workshopId}/users`, {
+      method: "POST",
+      body: data,
+      headers: {
+        "recaptcha-token": recaptchaToken
+      },
+      credentials: "include"
+    });
+    if (response.ok) {
+      pushSnackbar("Users added to workshop successfully", "success");
+    } else {
+      displayServerError(
+        await response.json(),
+        ErrorCodes.ADMIN_ADD_USERS_TO_WORKSHOP_FAILED,
+        ErrorMessages[ErrorCodes.ADMIN_ADD_USERS_TO_WORKSHOP_FAILED]
+      );
+    }
+  } catch (e) {
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
+  }
+});
+
 export const adminFetchUsers = action(async () => {
   const recaptchaToken = await getRecaptchaToken("adminFetchUsers");
   if (!recaptchaToken) return;

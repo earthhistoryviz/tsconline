@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { checkForUsersWithUsernameOrEmail, createUser, findUser } from "../database.js";
+import { checkForUsersWithUsernameOrEmail, createUser, findUser, updateUser } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { deleteUser } from "../database.js";
@@ -18,6 +18,8 @@ import { promisify } from "util";
 import { assertAdminSharedUser, assertDatapackIndex } from "@tsconline/shared";
 import { NewUser } from "../types.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
+import { parseExcelFile } from "../parse-excel-file.js";
+import { sendEmail } from "../send-email.js";
 
 /**
  * Get all users for admin to configure on frontend
@@ -408,4 +410,96 @@ export const getAllUserDatapacks = async function getAllUserDatapacks(request: F
     reply.status(500).send({ error: "Error reading user datapack index, possible corruption of file" });
   }
   reply.send(userDatapackIndex);
+};
+
+/**
+ * Add users to a workshop
+ * @param request
+ * @param reply
+ * @returns
+ */
+export const adminAddUsersToWorkshop = async function addUsersToWorkshop(
+  request: FastifyRequest<{ Params: { workshopId: string }; Body: { emails: string[]; file: MultipartFile } }>,
+  reply: FastifyReply
+) {
+  const workshopId = parseInt(request.params.workshopId);
+  if (isNaN(workshopId)) {
+    reply.status(400).send({ error: "Invalid or missing workshop id" });
+    return;
+  }
+  const { emails, file } = request.body;
+  if (!emails && !file) {
+    reply.status(400).send({ error: "Missing emails or file" });
+    return;
+  }
+  let emailList: string[] = [];
+  try {
+    if (file) {
+      const filePath = resolve(assetconfigs.uploadDirectory, file.filename);
+      try {
+        await pipeline(file.file, createWriteStream(filePath));
+      } catch (error) {
+        console.error(error);
+        reply.status(500).send({ error: "Error saving file" });
+        return;
+      }
+      if (file.file.truncated) {
+        await rm(filePath, { force: true });
+        reply.status(400).send({ error: "File too large" });
+        return;
+      }
+      if (file.file.bytesRead === 0) {
+        await rm(filePath, { force: true });
+        reply.status(400).send({ error: `Empty file cannot be uploaded` });
+        return;
+      }
+      try {
+        const excelData = await parseExcelFile(filePath, 0, false);
+        emailList = excelData.flat();
+      } catch (e) {
+        reply.status(400).send({ error: "Error parsing excel file" });
+        return;
+      }
+      const invalidEmails = emailList.filter(email => !validator.isEmail(email));
+      if (invalidEmails.length > 0) {
+        await rm(filePath, { force: true });
+        reply.status(422).send({ error: "Invalid email addresses found in the file", details: invalidEmails });
+        return;
+      }
+    }
+    if (emails) {
+      const invalidEmails = emails.filter(email => !validator.isEmail(email));
+      if (invalidEmails.length > 0) {
+        reply.status(422).send({ error: "Invalid email addresses provided", details: invalidEmails });
+        return;
+      }
+      emailList.push(...emails);
+    }
+    for (const email of emailList) {
+      const user = await checkForUsersWithUsernameOrEmail(email, email);
+      if (user.length > 0) {
+        // TODO: Update existing user to workshop user
+      } else {
+        // TODO: These users cannot login yet, needs to be a workshop system to give them a password
+        createUser({
+          email,
+          hashedPassword: null,
+          isAdmin: 0,
+          emailVerified: 1,
+          invalidateSession: 0,
+          pictureUrl: null,
+          username: email,
+          uuid: randomUUID()
+        });
+        const newUser = await findUser({ email });
+        if (newUser.length !== 1) {
+          throw new Error("User not created");
+        }
+      }
+    }
+  } catch (error) {
+    reply.status(500).send({ error: "Unknown error" });
+    return;
+  }
+  reply.send({ message: "Users added" });
 };
