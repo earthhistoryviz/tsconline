@@ -3,12 +3,13 @@ import { observer } from "mobx-react-lite";
 import { AdminUserConfig } from "./AdminUserConfig";
 import { useContext, useEffect } from "react";
 import { context } from "../state";
-import { PersonOutline, DataObject } from "@mui/icons-material";
+import { PersonOutline, DataObject, School } from "@mui/icons-material";
 import { useState } from "react";
 import Color from "color";
 import "./Admin.css";
 import { UnauthorizedAccess } from "./UnauthorizedAccess";
 import { AdminDatapackConfig } from "./AdminDatapackConfig";
+import { AdminWorkshop } from "./AdminWorkshop";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 
 const AdminTab = styled(Tab)(({ theme }) => ({
@@ -61,17 +62,22 @@ export const Admin = observer(function Admin() {
     {
       tabName: "Server Datapacks",
       component: <AdminDatapackConfig />
+    },
+    {
+      tabName: "Workshops",
+      component: <AdminWorkshop />
     }
   ];
   return (
     <Box className="admin-container">
-      <Typography variant="h4" mb="20px">
+      <Typography variant="h4" mb="20px" mt="20px">
         Admin Settings
       </Typography>
       <Box display="flex" flexDirection="row">
         <AdminTabs onChange={handleChange} value={tabIndex} orientation="vertical">
           <AdminTab icon={<PersonOutline />} iconPosition="start" label={tabs[0].tabName} />
           <AdminTab icon={<DataObject />} iconPosition="start" label={tabs[1].tabName} />
+          <AdminTab icon={<School />} iconPosition="start" label={tabs[2].tabName} />
         </AdminTabs>
         <Box display="flex" flexDirection="column" flexGrow={1} m="10px">
           <Typography variant="h5">{tabs[tabIndex].tabName}</Typography>

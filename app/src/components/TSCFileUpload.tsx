@@ -18,13 +18,15 @@ type InputFileUploadProps = {
   variant?: "text" | "outlined" | "contained";
   onChange: ChangeEventHandler<HTMLInputElement>;
   multiple?: boolean;
+  accept?: string;
 };
 export const InputFileUpload: React.FC<InputFileUploadProps> = ({
   startIcon,
   text,
   variant = "text",
   onChange,
-  multiple = false
+  multiple = false,
+  accept
 }) => {
   return (
     <TSCButton
@@ -34,7 +36,7 @@ export const InputFileUpload: React.FC<InputFileUploadProps> = ({
       onClick={resetHandler}
       sx={{ bgcolor: "button.main" }}>
       {text}
-      <VisuallyHiddenInput type="file" multiple={multiple} onChange={onChange} />
+      <VisuallyHiddenInput type="file" multiple={multiple} onChange={onChange} {...(accept ? { accept } : {})} />
     </TSCButton>
   );
 };

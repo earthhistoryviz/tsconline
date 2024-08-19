@@ -67,7 +67,8 @@ export enum ErrorCodes {
   USER_DELETE_DATAPAACK_FAILED = "USER_DELETE_DATAPACK_FAILED",
   UNABLE_TO_PROCESS_DATAPACK_CONFIG = "UNABLE_TO_PROCESS_DATAPACK_CONFIG",
   INVALID_SETTINGS = "INVALID_SETTINGS",
-  INTERNAL_ERROR = "INTERNAL_ERROR"
+  INTERNAL_ERROR = "INTERNAL_ERROR",
+  ADMIN_ADD_USERS_TO_WORKSHOP_FAILED = "ADMIN_ADD_USERS_TO_WORKSHOP_FAILED"
 }
 
 export const ErrorMessages = {
@@ -147,5 +148,6 @@ export const ErrorMessages = {
   [ErrorCodes.USER_DELETE_DATAPAACK_FAILED]: "Unable to delete user datapack. Please try again later.",
   [ErrorCodes.UNABLE_TO_PROCESS_DATAPACK_CONFIG]: "falied to process datapack config. Please try again later.",
   [ErrorCodes.INVALID_SETTINGS]: "Invalid settings. Please try again.",
-  [ErrorCodes.INTERNAL_ERROR]: "There was an internal error while generating the chart. Please try again later."
+  [ErrorCodes.INTERNAL_ERROR]: "There was an internal error while generating the chart. Please try again later.",
+  [ErrorCodes.ADMIN_ADD_USERS_TO_WORKSHOP_FAILED]: "Unable to add users to workshop. Please try again later."
 };
