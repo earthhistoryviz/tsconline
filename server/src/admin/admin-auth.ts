@@ -97,14 +97,22 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     },
     required: ["datapack"]
   };
-  const adminAddUsersToWorkshopBody = {
-    type: "object",
-    properties: {
-      emails: { type: "array" },
-      file: { type: "object" }
+  const adminAddUsersToWorkshopSchema = {
+    params: {
+      type: "object",
+      properties: {
+        workshopId: { type: "string" }
+      },
+      required: ["workshopId"]
     },
-    required: [],
-    anyOf: [{ required: ["emails"] }, { required: ["file"] }]
+    body: {
+      type: "object",
+      properties: {
+        file: { type: "string", format: "binary" },
+        emails: { type: "string" }
+      },
+      required: []
+    }
   };
   fastify.addHook("preHandler", verifyAdmin);
   fastify.addHook("preHandler", verifyRecaptcha);
@@ -165,7 +173,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   );
   fastify.post(
     "/workshop/:workshopId/users",
-    { schema: { body: adminAddUsersToWorkshopBody }, config: { rateLimit: looseRateLimit } },
+    { schema: adminAddUsersToWorkshopSchema, config: { rateLimit: looseRateLimit } },
     adminAddUsersToWorkshop
   );
 };
