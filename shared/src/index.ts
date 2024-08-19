@@ -206,9 +206,14 @@ export type SubBlockInfo = {
   rgb: RGB;
 };
 
+export type DatapackConfigForChartRequest = {
+  file: string;
+  title: string;
+} & DatapackType;
+
 export type ChartRequest = {
   settings: string; // JSON string representing the settings file you want to use to make a chart
-  datapacks: string[]; // active datapacks to be used on chart
+  datapacks: DatapackConfigForChartRequest[]; // array of datapacks you want to use to make a chart
   useCache: boolean; // whether to use the cache or not
 };
 
@@ -580,6 +585,13 @@ export type TimescaleItem = {
 };
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
+
+export function assertDatapackConfigForChartRequest(o: any): asserts o is DatapackConfigForChartRequest {
+  if (!o || typeof o !== "object") throw new Error("DatapackConfigForChartRequest must be a non-null object");
+  if (typeof o.filename !== "string") throwError("DatapackConfigForChartRequest", "filename", "string", o.filename);
+  if (typeof o.title !== "string") throwError("DatapackConfigForChartRequest", "title", "string", o.title);
+  assertDatapackType(o);
+}
 
 export function assertChartErrorResponse(o: any): asserts o is ChartErrorResponse {
   if (!o || typeof o !== "object") throw new Error("ChartErrorResponse must be a non-null object");

@@ -16,9 +16,9 @@ import { parseExcelFile } from "../parse-excel-file.js";
 import path from "path";
 import { updateFileMetadata } from "../file-metadata-handler.js";
 import { publicDatapackIndex, datapackIndex as serverDatapackIndex } from "../index.js";
-import { glob } from "glob";
 import { queue, maxQueueSize } from "../index.js";
 import { containsKnownError } from "../chart-error-handler.js";
+import { getDirectories } from "../user/user-handler.js";
 
 export const fetchServerDatapack = async function fetchServerDatapack(
   request: FastifyRequest<{ Params: { name: string } }>,
@@ -214,31 +214,57 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   const chartFilePath = chartUrlPath.slice(1);
   const settingsFilePath = chartDirFilePath + "/settings.tsc";
 
-  const userDatapackFilepaths = await glob(`${assetconfigs.uploadDirectory}/${uuid}/datapacks/*`);
-  const userDatapackNames = userDatapackFilepaths.map((datapack) => path.basename(datapack));
-  const datapacks: string[] = [];
-  const userDatapacks = [];
-  const serverDatapacks = adminconfig.datapacks.map((datapackInfo) => datapackInfo.file);
+  const userDatapacks = uuid ? await getDirectories(path.join(assetconfigs.uploadDirectory, uuid)) : [];
+  const datapacksToSendToCommandLine: string[] = [];
+  const usedUserDatapackFilepaths: string[] = [];
+  const serverDatapacks = adminconfig.datapacks.map((datapackInfo) => datapackInfo.title);
 
   for (const datapack of chartrequest.datapacks) {
-    if (serverDatapacks.includes(datapack)) {
-      datapacks.push(`${assetconfigs.datapacksDirectory}/${datapack}`);
-    } else if (uuid && userDatapackNames.includes(datapack)) {
-      userDatapacks.push(path.join(assetconfigs.uploadDirectory, uuid, "datapacks", datapack));
-    } else if (publicDatapackIndex[datapack]) {
-      const datapackInfo = publicDatapackIndex[datapack]!;
-      datapacks.push(path.join(assetconfigs.publicUserDatapacksDirectory, datapackInfo.file));
-    } else {
-      console.log("ERROR: datapack: ", datapack, " is not included in any configuration (server or user)");
-      console.log("adminconfig.datapacks: ", adminconfig.datapacks);
-      console.log("Available user datapacks: ", userDatapackNames);
-      console.log("chartrequest.datapacks: ", chartrequest.datapacks);
-      reply.send({ error: "ERROR: failed to load datapacks" });
+    switch (datapack.type) {
+      case "server":
+        if (serverDatapacks.includes(datapack.title)) {
+          datapacksToSendToCommandLine.push(`${assetconfigs.datapacksDirectory}/${datapack.file}`);
+        } else {
+          console.log("ERROR: datapack: ", datapack, " is not included in the server configuration");
+          console.log("adminconfig.datapacks: ", adminconfig.datapacks);
+          console.log("chartrequest.datapacks: ", chartrequest.datapacks);
+          reply.send({ error: "ERROR: failed to load datapacks" });
+          return;
+        }
+        break;
+      case "private_user":
+        if (uuid && userDatapacks.includes(datapack.title)) {
+          const filepath = path.join(assetconfigs.uploadDirectory, uuid, datapack.title, datapack.file);
+          datapacksToSendToCommandLine.push(filepath);
+          usedUserDatapackFilepaths.push(filepath);
+        } else {
+          console.log("ERROR: datapack: ", datapack, " is not included in the user configuration");
+          console.log("Available user datapacks: ", userDatapacks);
+          console.log("chartrequest.datapacks: ", chartrequest.datapacks);
+          reply.send({ error: "ERROR: failed to load datapacks" });
+          return;
+        }
+        break;
+      case "public_user":
+        if (publicDatapackIndex[datapack.title]) {
+          const datapackInfo = publicDatapackIndex[datapack.title]!;
+          datapacksToSendToCommandLine.push(path.join(assetconfigs.publicUserDatapacksDirectory, datapackInfo.file));
+        } else {
+          console.log("ERROR: datapack: ", datapack, " is not included in the public user configuration");
+          console.log("Available user datapacks: ", userDatapacks);
+          console.log("chartrequest.datapacks: ", chartrequest.datapacks);
+          reply.send({ error: "ERROR: failed to load datapacks" });
+          return;
+        }
+        break;
+      case "workshop":
+        reply.send({ error: "ERROR: failed to load datapacks, workshop datapacks do not exist." });
+        break;
     }
   }
-  datapacks.push(...userDatapacks);
   try {
-    await updateFileMetadata(assetconfigs.fileMetadata, userDatapacks);
+    // update file metadata for all used datapacks (recently used datapacks will be updated)
+    await updateFileMetadata(assetconfigs.fileMetadata, usedUserDatapackFilepaths);
   } catch (e) {
     console.error("Error updating file metadata:", e);
     reply.status(500).send({ errorCode: 100, error: "Internal Server Error" });
@@ -288,7 +314,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       settingsFilePath,
       // Add datapacks:
       "-d",
-      ...datapacks,
+      ...datapacksToSendToCommandLine,
       // Tell it where to save chart
       "-o",
       chartFilePath,

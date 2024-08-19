@@ -4,7 +4,7 @@ import { readFile, writeFile, mkdir, copyFile } from "fs/promises";
 import { checkFileExists } from "./util.js";
 import { publicDatapackIndex } from "./index.js";
 import { join } from "path";
-import { cloneDeep } from "lodash";
+import _ from "lodash";
 
 const mutex = new Mutex();
 /**
@@ -27,7 +27,7 @@ export async function addPublicUserDatapack(
   try {
     const { datapackIndex: parsedPublicDatapackIndex } = await loadPublicUserDatapacks(datapackIndexFilepath);
     // so we can modify it and not the original
-    datapack = cloneDeep(datapack);
+    datapack = _.cloneDeep(datapack);
     datapack.type = "public_user";
     parsedPublicDatapackIndex[datapack.title] = datapack;
     if (!(await checkFileExists(datapackFilepath))) {
@@ -51,8 +51,13 @@ export async function addPublicUserDatapack(
 export async function loadPublicUserDatapacks(datapackIndexFilepath: string) {
   let parsedPublicDatapackIndex: DatapackIndex = {};
   if (await checkFileExists(datapackIndexFilepath)) {
-    parsedPublicDatapackIndex = JSON.parse(await readFile(datapackIndexFilepath, "utf-8"));
-    assertDatapackIndex(parsedPublicDatapackIndex);
+    try {
+      parsedPublicDatapackIndex = JSON.parse(await readFile(datapackIndexFilepath, "utf-8"));
+      assertDatapackIndex(parsedPublicDatapackIndex);
+    } catch (e) {
+      console.error("Error parsing public datapack index", e);
+      return { datapackIndex: {} };
+    }
   }
   return { datapackIndex: parsedPublicDatapackIndex };
 }

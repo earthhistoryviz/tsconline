@@ -17,6 +17,7 @@ import ViewCompactIcon from "@mui/icons-material/ViewCompact";
 import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompactDatapackRow";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { toJS } from "mobx";
+import { Datapack, DatapackConfigForChartRequest, isPrivateUserDatapack } from "@tsconline/shared";
 
 export const Datapacks = observer(function Datapacks() {
   const { state, actions } = useContext(context);
@@ -33,7 +34,7 @@ export const Datapacks = observer(function Datapacks() {
     };
   }, []);
 
-  const onChange = (newDatapack: string) => {
+  const onChange = (newDatapack: DatapackConfigForChartRequest) => {
     if (state.unsavedDatapackConfig.includes(newDatapack)) {
       actions.setUnsavedDatapackConfig(state.unsavedDatapackConfig.filter((datapack) => datapack !== newDatapack));
     } else {
@@ -86,7 +87,7 @@ export const Datapacks = observer(function Datapacks() {
               key={datapack}
               name={datapack}
               datapack={state.datapackIndex[datapack]}
-              value={state.unsavedDatapackConfig.includes(datapack)}
+              value={state.unsavedDatapackConfig.map((dp) => dp.title).includes(datapack)}
               onChange={onChange}
             />
           ) : state.settingsTabs.datapackDisplayType === "compact" ? (
@@ -94,7 +95,7 @@ export const Datapacks = observer(function Datapacks() {
               key={datapack}
               name={datapack}
               datapack={state.datapackIndex[datapack]}
-              value={state.unsavedDatapackConfig.includes(datapack)}
+              value={state.unsavedDatapackConfig.map((dp) => dp.title).includes(datapack)}
               onChange={onChange}
             />
           ) : (
@@ -102,7 +103,7 @@ export const Datapacks = observer(function Datapacks() {
               key={datapack}
               name={datapack}
               datapack={state.datapackIndex[datapack]}
-              value={state.unsavedDatapackConfig.includes(datapack)}
+              value={state.unsavedDatapackConfig.map((dp) => dp.title).includes(datapack)}
               onChange={onChange}
             />
           );
@@ -133,11 +134,10 @@ export const Datapacks = observer(function Datapacks() {
   );
 });
 type DatapackMenuProps = {
-  name: string;
+  datapack: Datapack;
   button?: JSX.Element;
-  isUserDatapack?: boolean;
 };
-export const DatapackMenu: React.FC<DatapackMenuProps> = ({ name, button, isUserDatapack = false }) => {
+export const DatapackMenu: React.FC<DatapackMenuProps> = ({ datapack, button }) => {
   const { actions } = useContext(context);
   return (
     <Menu
@@ -147,14 +147,14 @@ export const DatapackMenu: React.FC<DatapackMenuProps> = ({ name, button, isUser
       menuButton={button || <DownloadIcon className="download-icon" />}
       onClick={(e) => e.stopPropagation()}
       transition>
-      <MenuItem onClick={async () => await actions.requestDownload(name, true)}>
+      <MenuItem onClick={async () => await actions.requestDownload(datapack, true)}>
         <Typography>Encrypted Download</Typography>
       </MenuItem>
-      <MenuItem onClick={async () => await actions.requestDownload(name, false)}>
+      <MenuItem onClick={async () => await actions.requestDownload(datapack, false)}>
         <Typography>Retrieve Original File</Typography>
       </MenuItem>
-      {isUserDatapack && (
-        <MenuItem onClick={async () => await actions.userDeleteDatapack(name)}>
+      {isPrivateUserDatapack(datapack) && (
+        <MenuItem onClick={async () => await actions.userDeleteDatapack(datapack.title)}>
           <Typography>Delete Datapack</Typography>
         </MenuItem>
       )}

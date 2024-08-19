@@ -1,14 +1,15 @@
-import { readFile, readdir } from "fs/promises";
+import { mkdir, readFile, readdir } from "fs/promises";
 import path from "path";
-import { CACHED_USER_DATAPACK_FILENAME } from "../constants";
-import { checkFileExists } from "../util";
+import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
+import { checkFileExists } from "../util.js";
 import { DatapackIndex, assertDatapack, assertPrivateUserDatapack } from "@tsconline/shared";
 
-async function getDirectories(source: string): Promise<string[]> {
+export async function getDirectories(source: string): Promise<string[]> {
   const entries = await readdir(source, { withFileTypes: true });
   return entries.filter((dirent) => dirent.isDirectory()).map((dirent) => dirent.name);
 }
 export async function fetchAllUsersDatapacks(userDirectory: string): Promise<DatapackIndex> {
+  await mkdir(userDirectory, { recursive: true });
   const datapacks = await getDirectories(userDirectory);
   const datapackIndex: DatapackIndex = {};
   for (const datapack of datapacks) {

@@ -1,4 +1,11 @@
-import { ColumnInfo, FontsInfo, MapHierarchy, MapInfo, defaultColumnRoot } from "@tsconline/shared";
+import {
+  ColumnInfo,
+  DatapackConfigForChartRequest,
+  FontsInfo,
+  MapHierarchy,
+  MapInfo,
+  defaultColumnRoot
+} from "@tsconline/shared";
 import { SetDatapackConfigCompleteMessage, SetDatapackConfigMessage, SetDatapackConfigReturnValue } from "../../types";
 import { cloneDeep } from "lodash";
 import { State } from "../../state";
@@ -32,7 +39,7 @@ self.onmessage = async (e: MessageEvent<SetDatapackConfigMessage>) => {
   await runWithTimeout();
   self.postMessage(message);
 };
-const setDatapackConfig = (datapacks: string[], stateCopy: State) => {
+const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], stateCopy: State) => {
   const unitMap: Map<string, ColumnInfo> = new Map();
   const mapInfo: MapInfo = {};
   const mapHierarchy: MapHierarchy = {};
@@ -45,9 +52,9 @@ const setDatapackConfig = (datapacks: string[], stateCopy: State) => {
   // add everything together
   // uses preparsed data on server start and appends items together
   for (const datapack of datapacks) {
-    if (!datapack || !stateCopy.datapackIndex[datapack])
+    if (!datapack || !stateCopy.datapackIndex[datapack.title])
       throw new Error(`File requested doesn't exist on server: ${datapack}`);
-    const baseDatapackProps = stateCopy.datapackIndex[datapack]!;
+    const baseDatapackProps = stateCopy.datapackIndex[datapack.title]!;
     if (
       ((baseDatapackProps.topAge || baseDatapackProps.topAge === 0) &&
         (baseDatapackProps.baseAge || baseDatapackProps.baseAge === 0)) ||

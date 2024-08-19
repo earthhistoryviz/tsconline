@@ -2,7 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { access, rm, mkdir, readFile, writeFile, rename } from "fs/promises";
 import path from "path";
 import { runJavaEncrypt } from "../encryption.js";
-import { assetconfigs, checkHeader, resetUploadDirectory, verifyFilepath } from "../util.js";
+import { assetconfigs, checkFileExists, checkHeader, resetUploadDirectory, verifyFilepath } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
 import { DatapackIndex } from "@tsconline/shared";
 import { exec } from "child_process";
@@ -32,6 +32,7 @@ export const requestDownload = async function requestDownload(
   const datapackDir = path.join(userDir, datapack);
   const encryptedFilepathDir = path.join(datapackDir, "encrypted-datapacks");
   let filepath = "";
+  let filename = "";
   // get valid filepath/filename from cache
   try {
     const cachedDatapackFilepath = path.join(datapackDir, CACHED_USER_DATAPACK_FILENAME);
@@ -39,7 +40,7 @@ export const requestDownload = async function requestDownload(
       reply.status(403).send({ error: "Invalid file path" });
       return;
     }
-    const filename = await getFileNameFromCachedDatapack(cachedDatapackFilepath);
+    filename = await getFileNameFromCachedDatapack(cachedDatapackFilepath);
     filepath = path.join(datapackDir, filename);
     // check and sanitize filepath
     if (!(await verifyFilepath(filepath))) {
@@ -51,7 +52,7 @@ export const requestDownload = async function requestDownload(
     return;
   }
   // sanitize this differently since this might not exist
-  const maybeEncryptedFilepath = path.resolve(path.join(encryptedFilepathDir, datapack));
+  const maybeEncryptedFilepath = path.resolve(path.join(encryptedFilepathDir, filename));
   if (!maybeEncryptedFilepath.startsWith(path.resolve(encryptedFilepathDir))) {
     reply.status(403).send({ error: "Invalid file path" });
     return;
@@ -66,6 +67,7 @@ export const requestDownload = async function requestDownload(
     } catch (e) {
       const error = e as NodeJS.ErrnoException;
       if (error.code === "ENOENT") {
+        console.log(filepath);
         const errormsg = "The file requested " + datapack + " does not exist within user's upload directory";
         reply.status(404).send({ error: errormsg });
       } else {
@@ -185,6 +187,7 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
     const datapackIndex = await fetchAllUsersDatapacks(userDir);
     reply.send(datapackIndex);
   } catch (e) {
+    console.error(e);
     reply.status(500).send({ error: "Failed to load cached user datapacks in user directory" });
   }
 };
@@ -276,6 +279,11 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   if (!datapackMetadata) {
     return;
   }
+  if (await checkFileExists(path.join(userDir, datapackMetadata.title))) {
+    filepath && (await rm(filepath, { force: true }));
+    reply.status(500).send({ error: "Datapack with the same title already exists" });
+    return;
+  }
   try {
     datapackDir = path.join(userDir, datapackMetadata.title);
     await mkdir(datapackDir, { recursive: true });
@@ -284,8 +292,9 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   } catch (e) {
     reply.status(500).send({ error: "Failed to create and move the datapack to the correct directory." });
   }
-  const decryptedFilepathDir = path.join(datapackDir, path.parse(filename).name);
-  const cachedDatapackFilepath = path.join(userDir, CACHED_USER_DATAPACK_FILENAME);
+  const decryptedDir = path.join(datapackDir, "decrypted");
+  const decryptedFilepathDir = path.join(decryptedDir, path.parse(filename).name);
+  const cachedDatapackFilepath = path.join(datapackDir, CACHED_USER_DATAPACK_FILENAME);
 
   try {
     await new Promise<void>((resolve, reject) => {
@@ -294,7 +303,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
         // Decrypting these datapacks:
         `-d "${filepath.replaceAll("\\", "/")}" ` +
         // Tell it where to send the datapacks
-        `-dest ${datapackDir.replaceAll("\\", "/")} `;
+        `-dest ${decryptedDir.replaceAll("\\", "/")} `;
       console.log("Calling Java decrypt.jar: ", cmd);
       exec(cmd, function (error, stdout, stderror) {
         console.log("Java decrypt.jar finished, sending reply to browser");
@@ -323,7 +332,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
 
   const datapackIndex: DatapackIndex = {};
   // check for if this user has a datapack index already
-  const success = await loadIndexes(datapackIndex, datapackDir.replaceAll("\\", "/"), [datapackMetadata], {
+  const success = await loadIndexes(datapackIndex, decryptedDir.replaceAll("\\", "/"), [datapackMetadata], {
     type: isPublic ? "public_user" : "private_user",
     uuid
   });
