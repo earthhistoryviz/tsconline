@@ -4,7 +4,7 @@ import path from "path";
 import { runJavaEncrypt } from "../encryption.js";
 import { assetconfigs, checkHeader, resetUploadDirectory, verifyFilepath } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
-import { assertDatapackIndex, DatapackIndex } from "@tsconline/shared";
+import { DatapackIndex } from "@tsconline/shared";
 import { exec } from "child_process";
 import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
@@ -14,6 +14,7 @@ import { getFileNameFromCachedDatapack, uploadUserDatapackHandler } from "../upl
 import { findUser } from "../database.js";
 import { addPublicUserDatapack, loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { CACHED_USER_DATAPACK_FILENAME, PUBLIC_DATAPACK_INDEX_FILENAME } from "../constants.js";
+import { fetchAllUsersDatapacks } from "../user/user-handler.js";
 
 export const requestDownload = async function requestDownload(
   request: FastifyRequest<{ Params: { datapack: string }; Querystring: { needEncryption?: boolean } }>,
@@ -179,24 +180,12 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
     return;
   }
 
-  const userDir = path.join(assetconfigs.uploadDirectory, uuid);
-
   try {
-    await access(userDir);
-    await access(path.join(userDir, "DatapackIndex.json"));
+    const userDir = path.join(assetconfigs.uploadDirectory, uuid);
+    const datapackIndex = await fetchAllUsersDatapacks(userDir);
+    reply.send(datapackIndex);
   } catch (e) {
-    reply.send({});
-    return;
-  }
-  try {
-    const datapackIndex = JSON.parse(await readFile(path.join(userDir, "DatapackIndex.json"), "utf8"));
-    assertDatapackIndex(datapackIndex);
-    reply.status(200).send(datapackIndex);
-  } catch (e) {
-    reply
-      .status(500)
-      .send({ error: "Failed to load indexes, corrupt json files present. Please contact customer service." });
-    return;
+    reply.status(500).send({ error: "Failed to load cached user datapacks in user directory" });
   }
 };
 

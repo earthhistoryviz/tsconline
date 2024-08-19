@@ -36,6 +36,15 @@
                     "camelCase",
                     "PascalCase"
                 ]
+            },
+            {
+                "selector": "variable",
+                "modifiers": ["const"],
+                "format": [
+                    "camelCase",
+                    "UPPER_CASE",
+                    "PascalCase"
+                ]
             }
         ],
         "@typescript-eslint/no-unused-vars": [
