@@ -1,4 +1,11 @@
-import { ColumnInfo, DataMiningPointDataType, MapHierarchy, MapInfo, SharedUser } from "@tsconline/shared";
+import {
+  ColumnInfo,
+  DataMiningPointDataType,
+  DatapackConfigForChartRequest,
+  MapHierarchy,
+  MapInfo,
+  SharedUser
+} from "@tsconline/shared";
 import { State } from "./state";
 
 export type User = SharedUser & {
@@ -35,7 +42,7 @@ export type DownloadPdfCompleteMessage = {
 };
 
 export type SetDatapackConfigMessage = {
-  datapacks: string[];
+  datapacks: DatapackConfigForChartRequest[];
   stateCopy: State;
 };
 
@@ -48,7 +55,7 @@ export type SetDatapackConfigReturnValue = {
   foundDefaultAge: boolean;
   mapHierarchy: MapHierarchy;
   mapInfo: MapInfo;
-  datapacks: string[];
+  datapacks: DatapackConfigForChartRequest[];
 };
 
 //id: unique id among search results
@@ -104,7 +111,7 @@ export type ErrorAlert = {
   errorCount: number;
 };
 export type Config = {
-  datapacks: string[];
+  datapacks: DatapackConfigForChartRequest[];
   settingsPath: string;
 };
 

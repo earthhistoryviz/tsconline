@@ -1,4 +1,4 @@
-import { BaseDatapackProps, isPrivateUserDatapack } from "@tsconline/shared";
+import { Datapack, DatapackConfigForChartRequest, isPrivateUserDatapack } from "@tsconline/shared";
 import styles from "./TSCDatapackRow.module.css";
 import { useContext, useState } from "react";
 import { devSafeUrl } from "../../util";
@@ -15,9 +15,9 @@ import { context } from "../../state";
 
 type TSCDatapackRowProps = {
   name: string;
-  datapack: BaseDatapackProps;
+  datapack: Datapack;
   value: boolean;
-  onChange: (name: string) => void;
+  onChange: (datapack: DatapackConfigForChartRequest) => void;
 };
 
 export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, value, onChange }) => {
@@ -56,7 +56,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
         onClick={async (e) => {
           e.stopPropagation();
           setLoading(true);
-          onChange(name);
+          onChange(datapack);
           setLoading(false);
         }}>
         {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
@@ -81,13 +81,12 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
             e.stopPropagation();
           }}>
           <DatapackMenu
-            name={name}
+            datapack={datapack}
             button={
               <IconButton className={styles.iconbutton}>
                 <MoreHorizIcon />
               </IconButton>
             }
-            isUserDatapack={!!datapack.uuid}
           />
           <Box
             onClick={async (e) => {

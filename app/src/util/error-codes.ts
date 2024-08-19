@@ -91,7 +91,7 @@ export const ErrorMessages = {
   [ErrorCodes.UNRECOGNIZED_DATAPACK_FILE]: "Unrecognized datapack file. Please upload a valid datapack file.",
   [ErrorCodes.UNFINISHED_DATAPACK_UPLOAD_FORM]:
     "Please finish the datapack upload form before attempting to upload the file.",
-  [ErrorCodes.DATAPACK_ALREADY_EXISTS]: "Datapack already exists. Please upload a new datapack file.",
+  [ErrorCodes.DATAPACK_ALREADY_EXISTS]: "Datapack already exists. Please upload a datapack with a unique title.",
   [ErrorCodes.NO_DATAPACKS_SELECTED]: "No datapacks selected. Please select at least one datapack to generate.",
   [ErrorCodes.NO_COLUMNS_SELECTED]: "No columns selected. Please select at least one column to generate.",
   [ErrorCodes.IS_BAD_RANGE]: "Base age must be greater than the top age.",

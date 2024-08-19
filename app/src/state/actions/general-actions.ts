@@ -16,7 +16,8 @@ import {
   assertPrivateUserDatapack,
   Datapack,
   assertServerDatapack,
-  assertDatapackIndex
+  assertDatapackIndex,
+  DatapackConfigForChartRequest
 } from "@tsconline/shared";
 
 import {
@@ -207,9 +208,9 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
 });
 
 export const uploadUserDatapack = action(
-  "uploadDatapack",
+  "uploadUserDatapack",
   async (file: File, metadata: DatapackMetadata, options?: UploadOptions) => {
-    if (state.datapackIndex[file.name]) {
+    if (state.datapackIndex[metadata.title]) {
       pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
       return;
     }
@@ -371,9 +372,12 @@ export const setIsProcessingDatapacks = action("setIsProcessingDatapacks", (isPr
   state.isProcessingDatapacks = isProcessingDatapacks;
 });
 
-export const setUnsavedDatapackConfig = action("setUnsavedDatapackConfig", (newDatapacks: string[]) => {
-  state.unsavedDatapackConfig = newDatapacks;
-});
+export const setUnsavedDatapackConfig = action(
+  "setUnsavedDatapackConfig",
+  (newDatapacks: DatapackConfigForChartRequest[]) => {
+    state.unsavedDatapackConfig = newDatapacks;
+  }
+);
 
 const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
   resetSettings();
@@ -403,7 +407,7 @@ const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
 
 export const processDatapackConfig = action(
   "processDatapackConfig",
-  async (datapacks: string[], settingsPath?: string) => {
+  async (datapacks: DatapackConfigForChartRequest[], settingsPath?: string) => {
     if (datapacks.length === 0) {
       setEmptyDatapackConfig();
       return;
@@ -488,7 +492,7 @@ export const setDatapackConfig = action(
     foundDefaultAge: boolean,
     mapHierarchy: MapHierarchy,
     mapInfo: MapInfo,
-    datapacks: string[],
+    datapacks: DatapackConfigForChartRequest[],
     chartSettings: ChartInfoTSC | null
   ): Promise<boolean> => {
     resetSettings();
@@ -782,12 +786,12 @@ export async function getRecaptchaToken(token: string) {
   }
 }
 
-export const requestDownload = action(async (filename: string, needEncryption: boolean) => {
+export const requestDownload = action(async (datapack: Datapack, needEncryption: boolean) => {
   let route;
   if (!needEncryption) {
-    route = `/user/datapack/${filename}`;
+    route = `/user/datapack/${datapack.title}`;
   } else {
-    route = `/user/datapack/${filename}?needEncryption=${needEncryption}`;
+    route = `/user/datapack/${datapack.title}?needEncryption=${needEncryption}`;
   }
   const recaptchaToken = await getRecaptchaToken("downloadUserDatapacks");
   if (!recaptchaToken) return null;
@@ -835,7 +839,7 @@ export const requestDownload = action(async (filename: string, needEncryption: b
         const aTag = document.createElement("a");
         aTag.href = fileURL;
 
-        aTag.setAttribute("download", filename);
+        aTag.setAttribute("download", datapack.file);
 
         document.body.appendChild(aTag);
         aTag.click();

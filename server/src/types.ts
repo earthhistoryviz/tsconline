@@ -116,8 +116,6 @@ export function assertFileMetadata(o: any): asserts o is FileMetadata {
   if (typeof o.fileName !== "string") throwError("FileMetadata", "fileName", "string", o.fileName);
   if (typeof o.lastUpdated !== "string") throwError("FileMetadata", "lastUpdated", "string", o.lastUpdated);
   if (typeof o.uuid !== "string") throwError("FileMetadata", "uuid", "string", o.uuid);
-  if (typeof o.datapackIndexFilepath !== "string")
-    throwError("FileMetadata", "datapackIndexFilepath", "string", o.datapackIndexFilepath);
 }
 
 export function assertFileMetadataIndex(o: any): asserts o is FileMetadataIndex {

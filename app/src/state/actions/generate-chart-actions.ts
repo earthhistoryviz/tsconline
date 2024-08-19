@@ -33,7 +33,7 @@ function setDatapackTimeDefaults() {
   // combine the datapacks and the min and max ages for their respective units
   // (can't just min or max the time settings immediately, since we have to set it on top of the user settings)
   for (const datapack of state.config.datapacks) {
-    const pack = state.datapackIndex[datapack];
+    const pack = state.datapackIndex[datapack.title];
     const timeSettings = state.settings.timeSettings[pack.ageUnits];
     if (!timeSettings) continue;
     if (!unitMap.has(pack.ageUnits)) {
