@@ -4,6 +4,7 @@ import { readFile, writeFile, mkdir, copyFile } from "fs/promises";
 import { checkFileExists } from "./util.js";
 import { publicDatapackIndex } from "./index.js";
 import { join } from "path";
+import { cloneDeep } from "lodash";
 
 const mutex = new Mutex();
 /**
@@ -17,7 +18,6 @@ const mutex = new Mutex();
  * @param mapPack the map pack to add (optional)
  */
 export async function addPublicUserDatapack(
-  filename: string,
   datapack: Datapack,
   datapackIndexFilepath: string,
   datapackFilepath: string,
@@ -26,17 +26,23 @@ export async function addPublicUserDatapack(
   const release = await mutex.acquire();
   try {
     const { datapackIndex: parsedPublicDatapackIndex } = await loadPublicUserDatapacks(datapackIndexFilepath);
-    parsedPublicDatapackIndex[filename] = datapack;
+    // so we can modify it and not the original
+    datapack = cloneDeep(datapack);
+    datapack.type = "public_user";
+    parsedPublicDatapackIndex[datapack.title] = datapack;
     if (!(await checkFileExists(datapackFilepath))) {
       throw new Error("Datapack file does not exist");
     }
+    if (publicDatapackIndex[datapack.title]) {
+      throw new Error(`Datapack ${datapack.title} already exists`);
+    }
     await mkdir(publicDatapacksDirectory, { recursive: true });
     // copy the file (so charts can be generated seperate from the user dir)
-    await copyFile(datapackFilepath, join(publicDatapacksDirectory, filename));
+    await copyFile(datapackFilepath, join(publicDatapacksDirectory, datapack.file));
     // update the file
     await writeFile(datapackIndexFilepath, JSON.stringify(parsedPublicDatapackIndex, null, 2));
     // Update the in-memory index
-    publicDatapackIndex[filename] = datapack;
+    publicDatapackIndex[datapack.title] = datapack;
   } finally {
     release();
   }
