@@ -308,7 +308,8 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     reply.send({ error: "ERROR: failed to save settings" });
     return;
   }
-  let errorMessage = ""; // error message found during chart generation via java jar call, "" if no errors found
+  let knownErrorCode = 0; // known error found during chart generation via java jar call, 0 means no error
+  let errorMessage = "";
 
   // Exec Java command and send final reply to browser
   const execJavaCommand = async (timeout: number) => {
@@ -355,6 +356,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       javaProcess.on("close", (code, signal) => {
         if (signal == "SIGKILL") {
           reject(new Error("Java process timed out"));
+          return;
         }
         console.log("Java finished, sending reply to browser");
         console.log("Java error param: " + error);
@@ -378,26 +380,30 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
           console.log("Java had issues. Checking for specific error message in Java output.");
           // Check for known errors in stdout
           for (const line of stdoutLines) {
-            if (containsKnownError(line)) {
+            knownErrorCode = containsKnownError(line);
+            if (knownErrorCode) {
               errorMessage = line;
               break;
             }
           }
           // Check for known errors in stderr if not found in stdout
-          if (!errorMessage) {
+          if (!knownErrorCode) {
             for (const line of stderrLines) {
-              if (containsKnownError(line)) {
+              knownErrorCode = containsKnownError(line);
+              if (knownErrorCode) {
                 errorMessage = line;
                 break;
               }
             }
           }
-          // At this point, SOME kind of error happened, but its unknown error because we did not break out
-          errorMessage = "Unknown error occurred during chart generation";
+          if (!knownErrorCode) {
+            // At this point, SOME kind of error happened, but its unknown error because we did not break out
+            knownErrorCode = 1005;
+            errorMessage = "Unknown error occurred during chart generation";
+          }
         } else {
           console.log("Java did not have issues on generation");
         }
-
         resolve();
       });
     });
@@ -424,7 +430,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     }
     return;
   }
-  if (errorMessage) {
+  if (knownErrorCode) {
     console.log("Error found in Java output. Sending error as response");
     console.log(
       "The following failed: ",
@@ -435,7 +441,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       "because of: ",
       { errorMessage }
     );
-    reply.send({ error: errorMessage });
+    reply.status(500).send({ errorCode: knownErrorCode, error: errorMessage });
   } else {
     console.log("No error found in Java output. Sending chartpath and hash.");
     console.log("Sending reply to browser: ", {
