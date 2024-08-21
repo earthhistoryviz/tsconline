@@ -1,30 +1,53 @@
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from "@mui/material";
+import {
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  useTheme
+} from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { useContext, useRef } from "react";
 import "./Search.css";
 import { context } from "../state";
 import { Results } from "./Results";
-import { EventSearchInfo, GroupedEventSearchInfo } from "../types";
 import { StyledScrollbar } from "../components";
 export const Search = observer(function Search() {
   const { state, actions } = useContext(context);
   const countRef = useRef(0);
+  const theme = useTheme();
   const TimeDisplay = observer(() => {
     return (
-      <TableContainer component={Paper} className="search-time-display-container">
+      <TableContainer
+        component={Paper}
+        sx={{ background: theme.palette.backgroundColor.main }}
+        className="search-time-display-container">
         <StyledScrollbar>
           <Table stickyHeader size="small">
             <TableHead>
               <TableRow>
-                <TableCell sx={{ padding: 0 }} align="center" colSpan={2}>
+                <TableCell
+                  className="search-time-display-first-header"
+                  sx={{ background: theme.palette.backgroundColor.main }}
+                  align="center"
+                  colSpan={2}>
                   Current Time Settings
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell sx={{ padding: "0 16px" }} align="left">
+                <TableCell
+                  className="search-time-display-second-header"
+                  sx={{ background: theme.palette.backgroundColor.main }}
+                  align="left">
                   Unit
                 </TableCell>
-                <TableCell sx={{ padding: "0 16px" }} align="right">
+                <TableCell
+                  className="search-time-display-second-header"
+                  sx={{ background: theme.palette.backgroundColor.main }}
+                  align="left">
                   Top/Base
                 </TableCell>
               </TableRow>
@@ -33,7 +56,7 @@ export const Search = observer(function Search() {
               {Object.keys(state.settings.timeSettings).map((unit) => (
                 <TableRow key={unit} sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
                   <TableCell>{unit}</TableCell>
-                  <TableCell align="right">
+                  <TableCell align="left">
                     {state.settings.timeSettings[unit].topStageAge}/{state.settings.timeSettings[unit].baseStageAge}
                   </TableCell>
                 </TableRow>

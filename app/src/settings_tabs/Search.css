@@ -17,6 +17,13 @@
   min-height: 70px;
   resize: both;
 }
+.search-time-display-first-header {
+  padding: 0;
+}
+.search-time-display-second-header {
+  top: 26px;
+  padding: 0 16px;
+}
 
 .search-header-container {
   display: flex;
