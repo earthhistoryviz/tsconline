@@ -113,6 +113,8 @@ export async function updateFileMetadata(fileMetadataFilepath: string, filepath:
   try {
     const metadata = await loadFileMetadata(fileMetadataFilepath);
     for (const file of filepath) {
+      if (file === "__proto__" || file === "constructor" || file === "prototype")
+        throw new Error(`Invalid file name: ${file}`);
       if (!metadata[file]) throw new Error(`File ${file} not found in metadata`);
       metadata[file]!.lastUpdated = new Date().toISOString();
     }
