@@ -468,8 +468,8 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       reply.status(400).send({ error: "Invalid or missing workshop id" });
       return;
     }
-    if (!emails && !file) {
-      reply.status(400).send({ error: "Missing emails or file" });
+    if ((!emails || emails.size === 0) && (!file || !filepath || !filename)) {
+      reply.status(400).send({ error: "Missing either emails or file" });
       return;
     }
     let emailList: string[] = [];
@@ -521,7 +521,7 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
     console.error(error);
     reply.status(500).send({ error: "Unknown error" });
   } finally {
-    if (filepath) {
+    if (file && filepath) {
       await rm(filepath, { force: true }).catch((e) => {
         console.error("Error cleaning up file:", e);
       });
