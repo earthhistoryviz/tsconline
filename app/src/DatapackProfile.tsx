@@ -24,10 +24,13 @@ export const DatapackProfile = observer(() => {
   const fetchDatapack = () => {
     let datapack: Datapack | undefined;
     switch (query.get("index")) {
-      case "public":
+      case "server":
+        datapack = state.datapackCollection.serverDatapackIndex[id];
+        break;
+      case "public_user":
         datapack = state.datapackCollection.publicUserDatapackIndex[id];
         break;
-      case "private":
+      case "private_user":
         datapack = state.datapackCollection.privateUserDatapackIndex[id];
         break;
       case "workshop":
