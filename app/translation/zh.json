@@ -1,0 +1,47 @@
+{
+    "translation": {
+        "title": {
+            "main": "Time Scale Creator 在线版",
+            "settings": "设置"
+        },
+        "presets": {
+            "BASIC": "基础预置数据包",
+            "MAP-PACK": "地图预置数据包"
+        },
+        "navBar": {
+            "chart": "图表",
+            "settings": "设置",
+            "help": "帮助",
+            "about": "关于"
+        },
+        "settingsTabs": {
+            "Time": "选择时间区间",
+            "Column": "选择列",
+            "Search": "搜索",
+            "Font": "字体",
+            "Map Points": "地图",
+            "Datapacks": "选择数据包"
+        },
+        "settings": {
+            "time": {
+                "interval": {
+                    "top": "区间顶部",
+                    "base": "区间底部",
+                    "top-name": "年代/阶段 名称",
+                    "base-name": "年代/阶段 名称",
+                    "not-avaliable": "该时间单位无可选年代",
+                    "vertical-scale": "垂直比例（厘米 每 1"
+                }
+            }
+        },
+        "button": {
+            "generate": "绘制",
+            "generate-chart": "绘制图表",
+            "remove-cache": "清除缓存"
+        },
+        "languageNames": {
+            "en": "English",
+            "zh": "中文"
+        }
+    }
+}

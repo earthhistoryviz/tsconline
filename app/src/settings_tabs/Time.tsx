@@ -7,6 +7,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import { useContext, useState } from "react";
 import { context } from "../state/index";
 import "./Time.css";
+import { useTranslation } from "react-i18next";
 
 export const Time = observer(function Time() {
   const { state, actions } = useContext(context);
@@ -20,6 +21,7 @@ export const Time = observer(function Time() {
   function checkAgeRange() {
     return state.settings.timeSettings[units].topStageAge > state.settings.timeSettings[units].baseStageAge;
   }
+  const { t } = useTranslation();
   return (
     <div>
       <ToggleButtonGroup
@@ -41,10 +43,10 @@ export const Time = observer(function Time() {
       </ToggleButtonGroup>
       <Box className="time-settings-container" bgcolor="secondaryBackground.main">
         <Box className="time-settings-age-container">
-          <Typography className="IntervalLabel">Top of Interval</Typography>
+          <Typography className="IntervalLabel">{t("settings.time.interval.top")}</Typography>
           <CustomDivider className="time-form-divider" />
           <FormControl className="FormControlIntervals" size="small" error={checkAgeRange()}>
-            <InputLabel>{disabled ? "Not Available for this Unit" : "Top Age/Stage Name"}</InputLabel>
+            <InputLabel>{disabled ? t("settings.time.interval.not-avaliable") : t("settings.time.interval.top-name")}</InputLabel>
             <Select
               className="SelectTop"
               inputProps={{ id: "top-age-selector" }}
@@ -83,11 +85,11 @@ export const Time = observer(function Time() {
               FormHelperTextProps={{ style: { fontSize: "13px" } }}
             />
           </FormControl>
-          <Typography className="IntervalLabel">Base of Interval</Typography>
+          <Typography className="IntervalLabel">{t("settings.time.interval.base")}</Typography>
           <CustomDivider className="time-form-divider" />
           <FormControl className="FormControlIntervals" size="small" error={checkAgeRange()}>
             <InputLabel htmlFor="base-age-selector">
-              {disabled ? "Not Available for this Unit" : "Base Age/Stage Name"}
+              {disabled ? t("settings.time.interval.not-avaliable") : t("settings.time.interval.base-name")}
             </InputLabel>
             <Select
               className="SelectBase"
@@ -131,7 +133,7 @@ export const Time = observer(function Time() {
           </FormControl>
           <TextField
             className="VerticalScale"
-            label={`Vertical Scale (cm per 1 ${units}):`}
+            label={`${t("settings.time.interval.vertical-scale")} ${units}):`}
             type="number"
             size="small"
             name="vertical-scale-text-field"
