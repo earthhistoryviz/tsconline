@@ -15,7 +15,7 @@ import fs, { realpathSync } from "fs";
 import { parseExcelFile } from "../parse-excel-file.js";
 import path from "path";
 import { updateFileMetadata } from "../file-metadata-handler.js";
-import { publicDatapackIndex, datapackIndex as serverDatapackIndex } from "../index.js";
+import { publicDatapackIndex, serverDatapackIndex } from "../index.js";
 import { queue, maxQueueSize } from "../index.js";
 import { containsKnownError } from "../chart-error-handler.js";
 import { getDirectories } from "../user/user-handler.js";

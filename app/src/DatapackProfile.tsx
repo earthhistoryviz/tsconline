@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import styles from "./DatapackProfile.module.css";
 import { useContext, useState } from "react";
 import { context } from "./state";
@@ -11,7 +11,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Discussion } from "./components/TSCDiscussion";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import { PageNotFound } from "./PageNotFound";
-import { BaseDatapackProps, DatapackWarning } from "@tsconline/shared";
+import { BaseDatapackProps, Datapack, DatapackWarning } from "@tsconline/shared";
 
 export const DatapackProfile = observer(() => {
   const { state } = useContext(context);
@@ -20,7 +20,31 @@ export const DatapackProfile = observer(() => {
   const navigate = useNavigate();
   const [tabIndex, setTabIndex] = useState(0);
   if (!id) return <PageNotFound />;
-  const datapack = state.datapackIndex[decodeURIComponent(id)];
+  const query = new URLSearchParams(useLocation().search);
+  const fetchDatapack = () => {
+    let datapack: Datapack | undefined;
+    switch (query.get("index")) {
+      case "public":
+        datapack = state.datapackCollection.publicUserDatapackIndex[id];
+        break;
+      case "private":
+        datapack = state.datapackCollection.privateUserDatapackIndex[id];
+        break;
+      case "workshop":
+        datapack = state.datapackCollection.workshopDatapackIndex[id];
+        break;
+      default:
+        datapack =
+          state.datapackCollection.serverDatapackIndex[id] ||
+          state.datapackCollection.publicUserDatapackIndex[id] ||
+          state.datapackCollection.privateUserDatapackIndex[id] ||
+          state.datapackCollection.workshopDatapackIndex[id] ||
+          null;
+        break;
+    }
+    return datapack;
+  };
+  const datapack = fetchDatapack();
   if (!datapack) return <PageNotFound />;
   const tabs = [
     {
