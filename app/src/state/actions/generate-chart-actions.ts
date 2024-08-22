@@ -3,12 +3,16 @@ import { displayServerError } from "./util-actions";
 import { state } from "../state";
 import { action } from "mobx";
 import { fetcher } from "../../util";
-import { ColumnInfo, assertChartErrorResponse, assertChartInfo } from "@tsconline/shared";
+import {
+  ColumnInfo,
+  assertChartErrorResponse,
+  assertChartInfo
+} from "@tsconline/shared";
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import DOMPurify from "dompurify";
-import { pushSnackbar } from "./general-actions";
+import { getDatapackFromIndex, pushSnackbar } from "./general-actions";
 import { ChartSettings } from "../../types";
 import { cloneDeep } from "lodash";
 
@@ -26,14 +30,14 @@ type UnitValues = {
   baseStageAge: number;
   verticalScale: number;
 };
-
 function setDatapackTimeDefaults() {
   const unitMap = new Map<string, UnitValues>();
 
   // combine the datapacks and the min and max ages for their respective units
   // (can't just min or max the time settings immediately, since we have to set it on top of the user settings)
   for (const datapack of state.config.datapacks) {
-    const pack = state.datapackIndex[datapack.title];
+    const pack = getDatapackFromIndex(datapack, state);
+    if (!pack) continue;
     const timeSettings = state.settings.timeSettings[pack.ageUnits];
     if (!timeSettings) continue;
     if (!unitMap.has(pack.ageUnits)) {

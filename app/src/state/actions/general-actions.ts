@@ -81,6 +81,21 @@ export const fetchServerDatapack = action("fetchServerDatapack", async (datapack
   return null;
 });
 
+export function getDatapackFromIndex(datapack: DatapackConfigForChartRequest, state: State) {
+  switch (datapack.type) {
+    case "server":
+      return state.datapackCollection.serverDatapackIndex[datapack.title];
+    case "private_user":
+      return state.datapackCollection.privateUserDatapackIndex[datapack.title];
+    case "public_user":
+      return state.datapackCollection.publicUserDatapackIndex[datapack.title];
+    case "workshop":
+      return state.datapackCollection.workshopDatapackIndex[datapack.title];
+    default:
+      return null;
+  }
+}
+
 export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   try {
     const response = await fetcher("/facies-patterns");
@@ -264,7 +279,8 @@ export const setLargeDataIndex = action(
   "setLargeDataIndex",
   async <T>(target: Record<string, T>, index: Record<string, T>) => {
     // This is to prevent the UI from lagging
-    target = {};
+    // we delete so we don't reassign
+    Object.keys(index).forEach((key) => delete target[key]);
     for (const key in index) {
       runInAction(() => {
         target[key] = index[key];
