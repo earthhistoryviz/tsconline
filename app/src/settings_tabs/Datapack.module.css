@@ -12,6 +12,12 @@
   font-weight: bold;
 }
 
+.idh {
+  justify-self: flex-start;
+  align-self: flex-start;
+  text-align: left;
+}
+
 .hdc {
   display: flex;
   flex-direction: row;
@@ -61,11 +67,12 @@
   flex-wrap: wrap;
   padding: 4px;
   width: 70%;
+  margin-bottom: 3px;
   justify-content: center;
 }
 
 .container.cards {
-  gap: 20px;
+  gap: 10px;
   width: 90%;
   margin: 0 20px 20px 20px;
   justify-content: flex-start;
@@ -76,9 +83,22 @@
 .buttons {
   margin: 10px;
 }
+.divider {
+  width: 98%;
+  margin: 5px 0;
+}
 
 .loader {
   margin-left: 30px;
+}
+.header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  gap: 10px;
+  margin-left: 5px;
 }
 
 @media (max-width: 720px) {
