@@ -4,7 +4,12 @@ import {
   DatapackConfigForChartRequest,
   MapHierarchy,
   MapInfo,
-  SharedUser
+  SharedUser,
+  assertColumnInfo,
+  assertDatapackConfigForChartRequest,
+  assertMapHierarchy,
+  assertMapInfo,
+  throwError
 } from "@tsconline/shared";
 import { State } from "./state";
 
@@ -153,6 +158,20 @@ export type ChartSettings = {
   datapackContainsSuggAge: boolean;
   useDatapackSuggestedAge: boolean;
 };
+
+export function assertSetDatapackConfigReturnValue(o: any): asserts o is SetDatapackConfigReturnValue {
+  if (!o || typeof o !== "object") throw new Error("SetDatapackConfigReturnValue must be a non-null object");
+  if (!o.datapacks || !Array.isArray(o.datapacks))
+    throw new Error("SetDatapackConfigReturnValue datapacks must be an array");
+  if (typeof o.foundDefaultAge !== "boolean")
+    throwError("SetDatapackConfigReturnValue", "foundDefaultAge", "boolean", o.foundDefaultAge);
+  for (const datapack of o.datapacks) {
+    assertDatapackConfigForChartRequest(datapack);
+  }
+  assertMapHierarchy(o.mapHierarchy);
+  assertMapInfo(o.mapInfo);
+  assertColumnInfo(o.columnRoot);
+}
 
 export function convertDataMiningPointDataTypeToDataMiningStatisticApproach(
   value: DataMiningPointDataType

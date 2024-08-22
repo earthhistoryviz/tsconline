@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import { NavigateFunction, useNavigate } from "react-router-dom";
-import { ChartConfig } from "@tsconline/shared";
+import { ChartConfig, assertDatapackConfigForChartRequest } from "@tsconline/shared";
 import { context } from "./state";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Accordion, AccordionSummary, AccordionDetails, Grid, Typography } from "@mui/material";
@@ -11,6 +11,7 @@ import { TSCIcon, TSCButton, TSCCard, StyledScrollbar } from "./components";
 import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import "./Home.css";
 import { ErrorCodes } from "./util/error-codes";
+import _ from "lodash";
 
 const HeaderContainer = styled("div")(({ theme }) => ({
   display: "flex",
@@ -98,12 +99,17 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                   <TSCCard
                     preset={preset}
                     generateChart={async () => {
-                      const datapacks = preset.datapacks.map((dp) => state.datapackIndex[dp.name]);
+                      const datapacks = preset.datapacks.map((dp) => {
+                        const datapack = _.cloneDeep(state.datapackIndex[dp.name]);
+                        assertDatapackConfigForChartRequest(datapack);
+                        return datapack;
+                      });
                       if (datapacks.some((dp) => !dp)) {
                         actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
                         return;
                       }
-                      await actions.processDatapackConfig(datapacks, preset.settings);
+                      const success = await actions.processDatapackConfig(datapacks, preset.settings);
+                      if (!success) return;
                       actions.initiateChartGeneration(navigate, "/home");
                     }}
                   />

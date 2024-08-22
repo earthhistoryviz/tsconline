@@ -6,7 +6,12 @@ import {
   MapInfo,
   defaultColumnRoot
 } from "@tsconline/shared";
-import { SetDatapackConfigCompleteMessage, SetDatapackConfigMessage, SetDatapackConfigReturnValue } from "../../types";
+import {
+  SetDatapackConfigCompleteMessage,
+  SetDatapackConfigMessage,
+  SetDatapackConfigReturnValue,
+  assertSetDatapackConfigReturnValue
+} from "../../types";
 import { cloneDeep } from "lodash";
 import { State } from "../../state";
 
@@ -27,7 +32,8 @@ self.onmessage = async (e: MessageEvent<SetDatapackConfigMessage>) => {
     try {
       const result = await Promise.race([setDatapackConfig(datapacks, stateCopy), timeoutPromise]);
       if (result) {
-        message.value = result as SetDatapackConfigReturnValue;
+        assertSetDatapackConfigReturnValue(result);
+        message.value = result;
       } else {
         message.status = "failure";
       }
