@@ -145,7 +145,7 @@ export const ErrorMessages = {
   [ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]: "Invalid server datapack request. Please try again later.",
   [ErrorCodes.SERVER_FILE_METADATA_ERROR]: "Server file metadata error. Please try again later.",
   [ErrorCodes.USER_DELETE_DATAPAACK_FAILED]: "Unable to delete user datapack. Please try again later.",
-  [ErrorCodes.UNABLE_TO_PROCESS_DATAPACK_CONFIG]: "falied to process datapack config. Please try again later.",
+  [ErrorCodes.UNABLE_TO_PROCESS_DATAPACK_CONFIG]: "Failed to process datapack config. Please try again later.",
   [ErrorCodes.INVALID_SETTINGS]: "Invalid settings. Please try again.",
   [ErrorCodes.INTERNAL_ERROR]: "There was an internal error while generating the chart. Please try again later."
 };

@@ -441,10 +441,9 @@ export const processDatapackConfig = action(
         );
 
         const message: SetDatapackConfigMessage = {
-          datapacks: datapacks,
+          datapacks,
           stateCopy: toJS(state)
         };
-
         setDatapackConfigWorker.postMessage(message);
 
         setDatapackConfigWorker.onmessage = async function (e: MessageEvent<SetDatapackConfigCompleteMessage>) {
@@ -481,8 +480,12 @@ export const processDatapackConfig = action(
         };
       });
     } catch (e) {
+      console.error(e);
+      setIsProcessingDatapacks(false);
       pushError(ErrorCodes.UNABLE_TO_PROCESS_DATAPACK_CONFIG);
+      return false;
     }
+    return true;
   }
 );
 

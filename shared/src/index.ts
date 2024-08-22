@@ -588,7 +588,7 @@ export type DefaultChronostrat = "USGS" | "UNESCO";
 
 export function assertDatapackConfigForChartRequest(o: any): asserts o is DatapackConfigForChartRequest {
   if (!o || typeof o !== "object") throw new Error("DatapackConfigForChartRequest must be a non-null object");
-  if (typeof o.filename !== "string") throwError("DatapackConfigForChartRequest", "filename", "string", o.filename);
+  if (typeof o.file !== "string") throwError("DatapackConfigForChartRequest", "filename", "string", o.file);
   if (typeof o.title !== "string") throwError("DatapackConfigForChartRequest", "title", "string", o.title);
   assertDatapackType(o);
 }
