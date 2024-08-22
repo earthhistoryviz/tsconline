@@ -18,7 +18,7 @@ export const userDeleteDatapack = action(async (datapack: string) => {
     });
     if (response.ok) {
       runInAction(() => {
-        delete state.datapackIndex[datapack];
+        delete state.datapackCollection.privateUserDatapackIndex[datapack];
       });
       pushSnackbar(`Datapack ${datapack} deleted`, "success");
     } else {

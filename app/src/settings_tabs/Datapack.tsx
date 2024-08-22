@@ -72,9 +72,10 @@ export const Datapacks = observer(function Datapacks() {
           </ToggleButton>
         </ToggleButtonGroup>
       </div>
-      lk
       <DatapackIndexDisplay index={state.datapackCollection.serverDatapackIndex} />
       <DatapackIndexDisplay index={state.datapackCollection.privateUserDatapackIndex} />
+      <DatapackIndexDisplay index={state.datapackCollection.publicUserDatapackIndex} />
+      <DatapackIndexDisplay index={state.datapackCollection.workshopDatapackIndex} />
       <Box className={styles.container}>
         {state.isLoggedIn && (
           <TSCButton
