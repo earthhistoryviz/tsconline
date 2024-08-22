@@ -36,7 +36,9 @@ export const Datapacks = observer(function Datapacks() {
 
   const onChange = (newDatapack: DatapackConfigForChartRequest) => {
     if (state.unsavedDatapackConfig.includes(newDatapack)) {
-      actions.setUnsavedDatapackConfig(state.unsavedDatapackConfig.filter((datapack) => datapack !== newDatapack));
+      actions.setUnsavedDatapackConfig(
+        state.unsavedDatapackConfig.filter((datapack) => datapack.title !== newDatapack.title)
+      );
     } else {
       actions.setUnsavedDatapackConfig([...state.unsavedDatapackConfig, newDatapack]);
     }

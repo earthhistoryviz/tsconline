@@ -1029,6 +1029,9 @@ export function isWorkshopDatapack(o: any): o is WorkshopDatapack {
 export function isPublicUserDatapack(o: any): o is PublicUserDatapack {
   return o.type === "public_user" && typeof o.uuid === "string";
 }
+export function isUserDatapack(o: any): o is PublicUserDatapack | PrivateUserDatapack {
+  return isPublicUserDatapack(o) || isPrivateUserDatapack(o);
+}
 export function isPrivateUserDatapack(o: any): o is PrivateUserDatapack {
   return o.type === "private_user" && typeof o.uuid === "string";
 }

@@ -8,7 +8,7 @@ import {
   assertChartRequest,
   assertTimescale
 } from "@tsconline/shared";
-import { deleteDirectory, assetconfigs, adminconfig } from "../util.js";
+import { deleteDirectory, assetconfigs, adminconfig, verifyFilepath } from "../util.js";
 import md5 from "md5";
 import svgson from "svgson";
 import fs, { realpathSync } from "fs";
@@ -69,14 +69,9 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   reply.status(200).send(datapackInfoChunk);
 };
 
-export const fetchImage = async function (
-  request: FastifyRequest<{ Params: { datapackName: string; imageName: string } }>,
-  reply: FastifyReply
-) {
+export const fetchImage = async function (request: FastifyRequest, reply: FastifyReply) {
   const tryReadFile = async (filepath: string) => {
-    const root = process.cwd();
-    filepath = realpathSync(path.resolve(root, filepath));
-    if (!filepath.startsWith(root)) {
+    if (!(await verifyFilepath(filepath))) {
       reply.status(403).send({ error: "Invalid file path" });
       return;
     }
@@ -91,25 +86,35 @@ export const fetchImage = async function (
     }
   };
   try {
-    const imagePath = path.join(
-      assetconfigs.decryptionDirectory,
-      request.params.datapackName,
-      "datapack-images",
-      request.params.imageName
-    );
-    let image = await tryReadFile(imagePath);
-    const uuid = request.session.get("uuid");
-    if (!image && uuid) {
-      const userImagePath = path.join(
+    const { datapackTitle, datapackFilename, imageName, uuid } = request.body as {
+      datapackTitle: string;
+      datapackFilename: string;
+      imageName: string;
+      uuid?: string;
+    };
+    if (!datapackTitle || !imageName || !datapackFilename) {
+      reply.status(400).send({ error: "Invalid request" });
+    }
+    let imagePath = "";
+    if (uuid) {
+      imagePath = path.join(
         assetconfigs.uploadDirectory,
         uuid,
+        datapackTitle,
         "decrypted",
-        request.params.datapackName,
+        path.parse(datapackFilename).name,
         "datapack-images",
-        request.params.imageName
+        imageName
       );
-      image = await tryReadFile(userImagePath);
+    } else {
+      imagePath = path.join(
+        assetconfigs.decryptionDirectory,
+        path.parse(datapackFilename).name,
+        "datapack-images",
+        imageName
+      );
     }
+    const image = await tryReadFile(imagePath);
     if (!image) {
       reply.status(404).send({ error: "Image not found" });
       return;
