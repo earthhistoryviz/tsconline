@@ -1,0 +1,18 @@
+.popup-title {
+  font-size: 1.5rem;
+}
+
+.popup-close-button {
+  color: black;
+  margin-bottom: 30px;
+}
+
+.popup-close-button-dark {
+  color: white;
+  margin-bottom: 30px;
+}
+
+.popup-content {
+  padding-top: 0;
+  word-wrap: break-word;
+}

@@ -1,9 +1,9 @@
 import React from "react";
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import { TSCButton } from "./TSCButton";
-import "./TSCPopupDialog.css";
+import "./TSCYesNoPopup.css";
 
-type TSCPopupDialogProps = {
+type TSCYesNoPopup = {
   open: boolean;
   title: string;
   message?: string;
@@ -13,7 +13,7 @@ type TSCPopupDialogProps = {
   customYes?: string;
   customNo?: string;
 };
-export const TSCPopupDialog: React.FC<TSCPopupDialogProps> = ({
+export const TSCYesNoPopup: React.FC<TSCYesNoPopup> = ({
   open,
   title,
   message,

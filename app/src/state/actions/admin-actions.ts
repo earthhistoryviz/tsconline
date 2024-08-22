@@ -1,5 +1,5 @@
 import { action, runInAction } from "mobx";
-import { actions, state } from "..";
+import { state } from "..";
 import { fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
@@ -315,11 +315,11 @@ export const adminUploadServerDatapack = action(async (file: File, metadata: Dat
   }
 });
 
-export const adminAddUsersToWorkshop = action(async (workshopId: number, formData: FormData) => {
+export const adminAddUsersToWorkshop = action(async (formData: FormData): Promise<string | undefined> => {
   const recaptchaToken = await getRecaptchaToken("adminAddUsersToWorkshop");
   if (!recaptchaToken) return;
   try {
-    const response = await fetcher(`/admin/workshop/${workshopId}/users`, {
+    const response = await fetcher(`/admin/workshop/users`, {
       method: "POST",
       body: formData,
       headers: {
@@ -331,23 +331,21 @@ export const adminAddUsersToWorkshop = action(async (workshopId: number, formDat
       removeAllErrors();
       pushSnackbar("Users added to workshop successfully", "success");
     } else {
-      if (response.status === 409) {
-        const serverResponse = await response.json();
-        const invalidEmails = serverResponse.invalidEmails;
-        pushError(ErrorCodes.ADMIN_EMAIL_INVALID);
-        pushSnackbar(`Invalid emails: ${invalidEmails.join(", ")}`, "warning");
-        return;
-      }
       let errorCode = ErrorCodes.ADMIN_ADD_USERS_TO_WORKSHOP_FAILED;
       switch (response.status) {
         case 400:
           errorCode = ErrorCodes.INVALID_FORM;
           break;
+        case 409:
+          errorCode = ErrorCodes.ADMIN_EMAIL_INVALID;
+          break;
         case 422:
           errorCode = ErrorCodes.RECAPTCHA_FAILED;
           break;
       }
-      displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
+      const serverResponse = await response.json();
+      displayServerError(serverResponse, errorCode, ErrorMessages[errorCode]);
+      return serverResponse.invalidEmails;
     }
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
