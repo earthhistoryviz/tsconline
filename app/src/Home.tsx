@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import { NavigateFunction, useNavigate } from "react-router-dom";
-import { ChartConfig, assertDatapackConfigForChartRequest } from "@tsconline/shared";
+import { ChartConfig, DatapackConfigForChartRequest, assertDatapackConfigForChartRequest } from "@tsconline/shared";
 import { context } from "./state";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Accordion, AccordionSummary, AccordionDetails, Grid, Typography } from "@mui/material";
@@ -99,12 +99,14 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                   <TSCCard
                     preset={preset}
                     generateChart={async () => {
-                      const datapacks = preset.datapacks.map((dp) => {
-                        const datapack = _.cloneDeep(state.datapackIndex[dp.name]);
-                        assertDatapackConfigForChartRequest(datapack);
-                        return datapack;
-                      });
-                      if (datapacks.some((dp) => !dp)) {
+                      let datapacks: DatapackConfigForChartRequest[] = [];
+                      try {
+                        datapacks = preset.datapacks.map((dp) => {
+                          const datapack = _.cloneDeep(state.datapackIndex[dp.name]);
+                          assertDatapackConfigForChartRequest(datapack);
+                          return datapack;
+                        });
+                      } catch (e) {
                         actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
                         return;
                       }
