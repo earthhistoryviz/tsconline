@@ -37,6 +37,10 @@ export async function uploadUserDatapackHandler(
     );
     return;
   }
+  if (title === "__proto__" || title === "constructor" || title === "prototype") {
+    await userUploadHandler(reply, 400, "Invalid title", filepath);
+    return;
+  }
   if (!bytes) {
     await userUploadHandler(reply, 400, "File is empty", filepath);
     return;
