@@ -54,6 +54,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
         <TSCButton onClick={deleteDatapacks}>Delete Selected Datapacks</TSCButton>
         <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth={false}>
           <DatapackUploadForm
+            index={state.datapackCollection.serverDatapackIndex}
             close={() => setFormOpen(false)}
             upload={actions.adminUploadServerDatapack}
             type="server"
@@ -66,7 +67,9 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
         rowSelection="multiple"
         rowDragManaged
         rowMultiSelectWithClick
-        rowData={Object.values(state.datapackIndex).filter((datapack) => datapack.type === "server")}
+        rowData={Object.values(state.datapackCollection.serverDatapackIndex).filter(
+          (datapack) => datapack.type === "server"
+        )}
       />
     </Box>
   );

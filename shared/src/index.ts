@@ -93,6 +93,19 @@ type PublicUserDatapack = {
 export type DatapackType = ServerDatapack | WorkshopDatapack | PrivateUserDatapack | PublicUserDatapack;
 export type Datapack = DatapackType & BaseDatapackProps;
 
+export type ServerDatapackIndex = {
+  [name: string]: ServerDatapack & BaseDatapackProps;
+};
+export type WorkshopDatapackIndex = {
+  [name: string]: WorkshopDatapack & BaseDatapackProps;
+};
+export type PrivateUserDatapackIndex = {
+  [name: string]: PrivateUserDatapack & BaseDatapackProps;
+};
+export type PublicUserDatapackIndex = {
+  [name: string]: PublicUserDatapack & BaseDatapackProps;
+};
+
 export type PresetDatapack = {
   file: string;
   name: string;
@@ -1034,6 +1047,46 @@ export function isUserDatapack(o: any): o is PublicUserDatapack | PrivateUserDat
 }
 export function isPrivateUserDatapack(o: any): o is PrivateUserDatapack {
   return o.type === "private_user" && typeof o.uuid === "string";
+}
+export function assertServerDatapackWithBaseProps(o: any): asserts o is ServerDatapack & BaseDatapackProps {
+  assertServerDatapack(o);
+  assertBaseDatapackProps(o);
+}
+export function assertWorkshopDatapackWithBaseProps(o: any): asserts o is WorkshopDatapack & BaseDatapackProps {
+  assertWorkshopDatapack(o);
+  assertBaseDatapackProps(o);
+}
+export function assertPublicUserDatapackWithBaseProps(o: any): asserts o is PublicUserDatapack & BaseDatapackProps {
+  assertPublicUserDatapack(o);
+  assertBaseDatapackProps(o);
+}
+export function assertPrivateUserDatapackWithBaseProps(o: any): asserts o is PrivateUserDatapack & BaseDatapackProps {
+  assertPrivateUserDatapack(o);
+  assertBaseDatapackProps(o);
+}
+export function assertServerDatapackIndex(o: any): asserts o is ServerDatapackIndex {
+  if (!o || typeof o !== "object") throw new Error("ServerDatapackIndex must be a non-null object");
+  for (const key in o) {
+    assertServerDatapackWithBaseProps(o[key]);
+  }
+}
+export function assertWorkshopDatapackIndex(o: any): asserts o is WorkshopDatapackIndex {
+  if (!o || typeof o !== "object") throw new Error("WorkshopDatapackIndex must be a non-null object");
+  for (const key in o) {
+    assertWorkshopDatapackWithBaseProps(o[key]);
+  }
+}
+export function assertPublicUserDatapackIndex(o: any): asserts o is PublicUserDatapackIndex {
+  if (!o || typeof o !== "object") throw new Error("PublicUserDatapackIndex must be a non-null object");
+  for (const key in o) {
+    assertPublicUserDatapackWithBaseProps(o[key]);
+  }
+}
+export function assertPrivateUserDatapackIndex(o: any): asserts o is PrivateUserDatapackIndex {
+  if (!o || typeof o !== "object") throw new Error("PrivateUserDatapackIndex must be a non-null object");
+  for (const key in o) {
+    assertPrivateUserDatapackWithBaseProps(o[key]);
+  }
 }
 export function assertDatapackType(o: any): asserts o is DatapackType {
   if (!o || typeof o !== "object") throw new Error("DatapackType must be a non-null object");

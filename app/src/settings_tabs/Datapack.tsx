@@ -17,7 +17,7 @@ import ViewCompactIcon from "@mui/icons-material/ViewCompact";
 import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompactDatapackRow";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { toJS } from "mobx";
-import { Datapack, DatapackConfigForChartRequest, isPrivateUserDatapack } from "@tsconline/shared";
+import { Datapack, DatapackConfigForChartRequest, DatapackIndex, isPrivateUserDatapack } from "@tsconline/shared";
 
 export const Datapacks = observer(function Datapacks() {
   const { state, actions } = useContext(context);
@@ -33,16 +33,6 @@ export const Datapacks = observer(function Datapacks() {
       }
     };
   }, []);
-
-  const onChange = (newDatapack: DatapackConfigForChartRequest) => {
-    if (state.unsavedDatapackConfig.includes(newDatapack)) {
-      actions.setUnsavedDatapackConfig(
-        state.unsavedDatapackConfig.filter((datapack) => datapack.title !== newDatapack.title)
-      );
-    } else {
-      actions.setUnsavedDatapackConfig([...state.unsavedDatapackConfig, newDatapack]);
-    }
-  };
 
   return (
     <div className={styles.dc}>
@@ -82,35 +72,9 @@ export const Datapacks = observer(function Datapacks() {
           </ToggleButton>
         </ToggleButtonGroup>
       </div>
-      <Box className={`${styles.container} ${state.settingsTabs.datapackDisplayType === "cards" ? styles.cards : ""}`}>
-        {Object.keys(state.datapackIndex).map((datapack) => {
-          return state.settingsTabs.datapackDisplayType === "rows" ? (
-            <TSCDatapackRow
-              key={datapack}
-              name={datapack}
-              datapack={state.datapackIndex[datapack]}
-              value={state.unsavedDatapackConfig.map((dp) => dp.title).includes(datapack)}
-              onChange={onChange}
-            />
-          ) : state.settingsTabs.datapackDisplayType === "compact" ? (
-            <TSCCompactDatapackRow
-              key={datapack}
-              name={datapack}
-              datapack={state.datapackIndex[datapack]}
-              value={state.unsavedDatapackConfig.map((dp) => dp.title).includes(datapack)}
-              onChange={onChange}
-            />
-          ) : (
-            <TSCDatapackCard
-              key={datapack}
-              name={datapack}
-              datapack={state.datapackIndex[datapack]}
-              value={state.unsavedDatapackConfig.map((dp) => dp.title).includes(datapack)}
-              onChange={onChange}
-            />
-          );
-        })}
-      </Box>
+      lk
+      <DatapackIndexDisplay index={state.datapackCollection.serverDatapackIndex} />
+      <DatapackIndexDisplay index={state.datapackCollection.privateUserDatapackIndex} />
       <Box className={styles.container}>
         {state.isLoggedIn && (
           <TSCButton
@@ -130,7 +94,11 @@ export const Datapacks = observer(function Datapacks() {
         </TSCButton>
       </Box>
       <Dialog classes={{ paper: styles.dd }} open={formOpen} onClose={() => setFormOpen(false)}>
-        <DatapackUploadForm close={() => setFormOpen(false)} upload={actions.uploadUserDatapack} />
+        <DatapackUploadForm
+          close={() => setFormOpen(false)}
+          upload={actions.uploadUserDatapack}
+          index={state.datapackCollection.privateUserDatapackIndex}
+        />
       </Dialog>
     </div>
   );
@@ -163,3 +131,51 @@ export const DatapackMenu: React.FC<DatapackMenuProps> = ({ datapack, button }) 
     </Menu>
   );
 };
+
+type DatapackIndexDisplayProps = {
+  index: DatapackIndex;
+};
+const DatapackIndexDisplay: React.FC<DatapackIndexDisplayProps> = observer(({ index }) => {
+  const { state, actions } = useContext(context);
+  const onChange = (newDatapack: DatapackConfigForChartRequest) => {
+    if (state.unsavedDatapackConfig.includes(newDatapack)) {
+      actions.setUnsavedDatapackConfig(
+        state.unsavedDatapackConfig.filter((datapack) => datapack.title !== newDatapack.title)
+      );
+    } else {
+      actions.setUnsavedDatapackConfig([...state.unsavedDatapackConfig, newDatapack]);
+    }
+  };
+
+  return (
+    <Box className={`${styles.container} ${state.settingsTabs.datapackDisplayType === "cards" ? styles.cards : ""}`}>
+      {Object.keys(index).map((datapack) => {
+        return state.settingsTabs.datapackDisplayType === "rows" ? (
+          <TSCDatapackRow
+            key={datapack}
+            name={datapack}
+            datapack={index[datapack]}
+            value={state.unsavedDatapackConfig.map((dp) => dp.title).includes(datapack)}
+            onChange={onChange}
+          />
+        ) : state.settingsTabs.datapackDisplayType === "compact" ? (
+          <TSCCompactDatapackRow
+            key={datapack}
+            name={datapack}
+            datapack={index[datapack]}
+            value={state.unsavedDatapackConfig.map((dp) => dp.title).includes(datapack)}
+            onChange={onChange}
+          />
+        ) : (
+          <TSCDatapackCard
+            key={datapack}
+            name={datapack}
+            datapack={index[datapack]}
+            value={state.unsavedDatapackConfig.map((dp) => dp.title).includes(datapack)}
+            onChange={onChange}
+          />
+        );
+      })}
+    </Box>
+  );
+});
