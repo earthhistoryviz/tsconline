@@ -1,0 +1,47 @@
+{
+    "translation": {
+        "title": {
+            "main": "Time Scale Creator Online",
+            "settings": "Settings"
+        },
+        "presets": {
+            "BASIC": "BASIC PRESETS",
+            "MAP-PACK": "MAP-PACK PRESETS"
+        },
+        "navBar": {
+            "chart": "Chart",
+            "settings": "Settings",
+            "help": "Help",
+            "about": "About"
+        },
+        "settingsTabs": {
+            "Time": "Time",
+            "Column": "Column",
+            "Search": "Search",
+            "Font": "Font",
+            "Map Points": "Map Points",
+            "Datapacks": "Datapacks"
+        },
+        "settings": {
+            "time": {
+                "interval": {
+                    "top": "Top of Interval",
+                    "base": "Base of Interval",
+                    "top-name": "Top Age/Stage Name",
+                    "base-name": "Base Age/Stage Name",
+                    "not-avaliable": "Not Available for this Unit",
+                    "vertical-scale": "Vertical Scale (cm per 1 "
+                }
+            }
+        },
+        "button": {
+            "generate": "Generate",
+            "generate-chart": "Generate Chart",
+            "remove-cache": "Remove Cache"
+        },
+        "languageNames": {
+            "en": "English",
+            "zh": "中文"
+        }
+    }
+}

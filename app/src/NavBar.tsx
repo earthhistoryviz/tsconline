@@ -5,7 +5,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import Toolbar from "@mui/material/Toolbar";
 import { styled, useTheme } from "@mui/material/styles";
 import HomeIcon from "@mui/icons-material/Home";
-import { IconButton, Tab, Tabs, Typography } from "@mui/material";
+import { ClickAwayListener, IconButton, Menu, Tab, Tabs, Typography } from "@mui/material";
 import { context } from "./state";
 import { TSCMenuItem, TSCButton } from "./components";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
@@ -17,6 +17,9 @@ import { SettingsMenuOptionLabels, assertSettingsTabs } from "./types";
 import Color from "color";
 import { AccountMenu } from "./account_settings/AccountMenu";
 import { toJS } from "mobx";
+import LanguageIcon from '@mui/icons-material/Language';
+import i18next from "i18next";
+import { useTranslation } from "react-i18next";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: Color(theme.palette.dark.main).alpha(0.9).string(),
@@ -26,14 +29,21 @@ const StyledAppBar = styled(AppBar)(({ theme }) => ({
   WebkitBackdropFilter: "blur(8px)"
 }));
 
+
+
 export const NavBar = observer(function Navbar() {
   const theme = useTheme();
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
   const settingsRef = useRef(null);
+  const languageRef = useRef(null);
   const [settingsMenuState, settingsMenuToggle] = useMenuState({ transition: true });
-  const { anchorProps, hoverProps } = useHover(settingsMenuState.state, settingsMenuToggle);
-
+  const [languageMenuState, languageMenuToggle] = useMenuState({ transition: true });
+  const { anchorProps: settingsAnchorProps, hoverProps: settingsHoverProps } = useHover(settingsMenuState.state, settingsMenuToggle);
+  const { anchorProps: langAnchorProps, hoverProps: langHoverProps } = useHover(languageMenuState.state, languageMenuToggle);
+  const { t } = useTranslation();
+  const currentLanguage = i18next.language;
+  const avaliableLanguages = i18next.languages;
   const location = useLocation();
   return (
     <StyledAppBar position="fixed">
@@ -76,21 +86,37 @@ export const NavBar = observer(function Navbar() {
                 }
               }}
               TabIndicatorProps={{ sx: { bgcolor: "button.light" } }}>
-              <Tab value={1} disableRipple label="Chart" to="/chart" component={Link} />
+              <Tab value={1} disableRipple label={t("navBar.chart")} to="/chart" component={Link} />
               <Tab
                 value={2}
                 disableRipple
-                label="Settings"
+                label={t("navBar.settings")}
                 to="/settings"
                 component={Link}
                 ref={settingsRef}
-                {...anchorProps}
+                {...settingsAnchorProps}
               />
-              <Tab value={3} disableRipple label="Help" to="/help" component={Link} />
-              <Tab value={4} disableRipple label="About" to="/about" component={Link} />
+              <Tab value={3} disableRipple label={t("navBar.help")} to="/help" component={Link} />
+              <Tab value={4} disableRipple label={t("navBar.about")} to="/about" component={Link} />
+
+              <IconButton
+                size="large"
+                sx={{
+                  "&:hover": {
+                    opacity: 0.9
+                  }
+                }}
+                value={5}
+                ref={languageRef}
+                {...langAnchorProps}
+                onClick={() => {
+                }}>
+                <LanguageIcon />
+                <Typography>{t(`languageNames.${currentLanguage}`)}</Typography>
+              </IconButton>
             </Tabs>
             <ControlledMenu
-              {...hoverProps}
+              {...settingsHoverProps}
               {...settingsMenuState}
               anchorRef={settingsRef}
               className="settings-sub-menu"
@@ -113,7 +139,31 @@ export const NavBar = observer(function Navbar() {
                     navigate("/settings");
                     settingsMenuToggle(false);
                   }}>
-                  <Typography>{label}</Typography>
+                  <Typography>{t(`settingsTabs.${label}`)}</Typography>
+                </TSCMenuItem>
+              ))}
+            </ControlledMenu>
+            <ControlledMenu
+              {...langHoverProps}
+              {...languageMenuState}
+              anchorRef={languageRef}
+              className="settings-sub-menu"
+              align="center"
+              menuStyle={{
+                color: theme.palette.dark.contrastText,
+                backgroundColor: theme.palette.dark.light,
+                border: `1px solid ${theme.palette.divider}`
+              }}
+              gap={-2}
+              onClose={() => languageMenuToggle(false)}>
+              {avaliableLanguages.map((value, index) => (
+                <TSCMenuItem
+                  key={index}
+                  className="settings-sub-menu-item"
+                  onClick={() => {
+                    i18next.changeLanguage(value);
+                  }}>
+                  <Typography>{t(`languageNames.${value}`)}</Typography>
                 </TSCMenuItem>
               ))}
             </ControlledMenu>
@@ -126,7 +176,7 @@ export const NavBar = observer(function Navbar() {
             await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig), "");
             actions.initiateChartGeneration(navigate, location.pathname);
           }}>
-          Generate Chart
+          {t("button.generate-chart")}
         </TSCButton>
 
         {state.isLoggedIn ? (
