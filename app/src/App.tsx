@@ -16,7 +16,7 @@ import { SignUp } from "./SignUp";
 import { ForgotPassword } from "./ForgotPassword";
 import { AccountVerify } from "./AccountVerify";
 import { AccountRecovery } from "./AccountRecovery";
-import { TSCPopupDialog, TSCError, TSCSnackbar } from "./components";
+import { TSCYesNoPopup, TSCError, TSCSnackbar } from "./components";
 import { CssBaseline } from "@mui/material";
 import "./App.css";
 import { DatapackProfile } from "./DatapackProfile";
@@ -73,7 +73,7 @@ export default observer(function App() {
               count={error.errorCount}
             />
           ))}
-          <TSCPopupDialog
+          <TSCYesNoPopup
             open={state.showSuggestedAgePopup}
             title="Use default age range?"
             onYes={() => actions.handlePopupResponse(true, navigate)}
@@ -81,7 +81,7 @@ export default observer(function App() {
             onClose={() => actions.fetchChartFromServer(navigate)}
           />
           <TSCLoadingDatapacks open={state.isProcessingDatapacks} />
-          <TSCPopupDialog
+          <TSCYesNoPopup
             open={checkOpen}
             title="Confirm Datapack Selection Change"
             message="You have unsaved changes! Do you want to save your changes?"

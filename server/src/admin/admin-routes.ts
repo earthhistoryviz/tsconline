@@ -416,68 +416,70 @@ export const getAllUserDatapacks = async function getAllUserDatapacks(request: F
  * @param reply
  * @returns
  */
-export const adminAddUsersToWorkshop = async function addUsersToWorkshop(
-  request: FastifyRequest<{ Params: { workshopId: string } }>,
-  reply: FastifyReply
-) {
+export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request: FastifyRequest, reply: FastifyReply) {
   const parts = request.parts();
   let file: MultipartFile | undefined;
   let filename: string | undefined;
   let filepath: string | undefined;
   let emails: Set<string> | undefined;
-  for await (const part of parts) {
-    if (part.type === "file") {
-      // DOWNLOAD FILE HERE AND SAVE TO FILE
-      file = part;
-      filename = file.filename;
-      filepath = resolve(assetconfigs.uploadDirectory, filename);
-      if (!filepath.startsWith(resolve(assetconfigs.uploadDirectory))) {
-        reply.status(403).send({ error: "Directory traversal detected" });
-        return;
-      }
-      if (!/^(\.xls|\.xlsx)$/.test(extname(file.filename))) {
-        reply.status(400).send({ error: "Invalid file type" });
-        return;
-      }
-      try {
-        await pipeline(file.file, createWriteStream(filepath));
-      } catch (error) {
-        console.error(error);
-        await rm(filepath, { force: true });
-        reply.status(500).send({ error: "Error saving file" });
-        return;
-      }
-      if (file.file.truncated) {
-        await rm(filepath, { force: true });
-        reply.status(400).send({ error: "File too large" });
-        return;
-      }
-      if (file.file.bytesRead === 0) {
-        await rm(filepath, { force: true });
-        reply.status(400).send({ error: `Empty file cannot be uploaded` });
-        return;
-      }
-    } else if (part.fieldname === "emails") {
-      emails = new Set((part.value as string).split(",").map((email) => email.trim()));
-    }
-  }
-  const workshopId = parseInt(request.params.workshopId);
-  if (isNaN(workshopId)) {
-    reply.status(400).send({ error: "Invalid or missing workshop id" });
-    return;
-  }
-  if (!emails && !file) {
-    reply.status(400).send({ error: "Missing emails or file" });
-    return;
-  }
-  let emailList: string[] = [];
-  let invalidEmails: string[] = [];
+  let workshopId: number | undefined;
   try {
+    for await (const part of parts) {
+      if (part.type === "file") {
+        // DOWNLOAD FILE HERE AND SAVE TO FILE
+        file = part;
+        filename = file.filename;
+        filepath = resolve(assetconfigs.uploadDirectory, filename);
+        if (!filepath.startsWith(resolve(assetconfigs.uploadDirectory))) {
+          reply.status(403).send({ error: "Directory traversal detected" });
+          return;
+        }
+        if (!/^(\.xls|\.xlsx)$/.test(extname(file.filename))) {
+          reply.status(400).send({ error: "Invalid file type" });
+          return;
+        }
+        try {
+          await pipeline(file.file, createWriteStream(filepath));
+        } catch (error) {
+          console.error(error);
+          reply.status(500).send({ error: "Error saving file" });
+          return;
+        }
+        if (file.file.truncated) {
+          reply.status(400).send({ error: "File too large" });
+          return;
+        }
+        if (file.file.bytesRead === 0) {
+          reply.status(400).send({ error: `Empty file cannot be uploaded` });
+          return;
+        }
+      } else if (part.fieldname === "emails") {
+        emails = new Set(
+          (part.value as string)
+            .split(",")
+            .map((email) => email.trim())
+            .filter((email) => email !== "")
+        );
+      } else if (part.fieldname === "workshopId") {
+        workshopId = parseInt(part.value as string);
+      }
+    }
+    if (!workshopId || isNaN(workshopId)) {
+      reply.status(400).send({ error: "Invalid or missing workshop id" });
+      return;
+    }
+    if (!emails && !file) {
+      reply.status(400).send({ error: "Missing emails or file" });
+      return;
+    }
+    let emailList: string[] = [];
+    let invalidEmails: string[] = [];
     if (file && filepath) {
       try {
         const excelData = await parseExcelFile(filepath, 0, false);
-        emailList = excelData.flat();
+        emailList = excelData.flat().map((email) => String(email).trim());
       } catch (e) {
+        console.error("Error parsing excel file:", e);
         reply.status(400).send({ error: "Error parsing excel file" });
         return;
       }
@@ -497,7 +499,7 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(
         // TODO: Update existing user to workshop user
       } else {
         // TODO: These users cannot login yet, needs to be a workshop system to give them a password
-        createUser({
+        await createUser({
           email,
           hashedPassword: null,
           isAdmin: 0,
@@ -514,9 +516,15 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(
         }
       }
     }
+    reply.send({ message: "Users added" });
   } catch (error) {
+    console.error(error);
     reply.status(500).send({ error: "Unknown error" });
-    return;
+  } finally {
+    if (filepath) {
+      await rm(filepath, { force: true }).catch((e) => {
+        console.error("Error cleaning up file:", e);
+      });
+    }
   }
-  reply.send({ message: "Users added" });
 };

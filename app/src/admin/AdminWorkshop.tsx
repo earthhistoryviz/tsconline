@@ -7,6 +7,7 @@ import { ColDef } from "ag-grid-community";
 import { TSCButton, InputFileUpload } from "../components";
 import { ErrorCodes } from "../util/error-codes";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { TSCPopup } from "../components/TSCPopup";
 
 const workshopColDefs: ColDef[] = [
   {
@@ -24,23 +25,23 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
   const theme = useTheme();
   const { actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
-  const [fileName, setFileName] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [invalidEmails, setInvalidEmails] = useState<string>("");
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const emails = formData.get("emails")?.toString();
-    const fileInput = formData.get("file");
-    if (!emails && !fileInput) {
+    const form = new FormData(event.currentTarget);
+    const emails = form.get("emails")?.toString();
+    if (!emails && !file) {
       actions.pushError(ErrorCodes.ADMIN_WORKSHOP_FIELDS_EMPTY);
       return;
     }
-    const data = new FormData();
-    if (emails) data.append("emails", emails);
-    if (fileInput) data.append("file", fileInput as File);
+    if (file) form.append("file", file);
     // TODO: Add some sort of id here, probably generated when the workshop is created
-    await actions.adminAddUsersToWorkshop(Math.floor(Math.random() * 100000), data);
+    form.append("workshopId", "123");
+    const invalidEmails = await actions.adminAddUsersToWorkshop(form);
+    setInvalidEmails(invalidEmails || "");
     await actions.adminFetchUsers();
-    setFormOpen(false);
+    setFile(null);
   };
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files![0];
@@ -60,23 +61,36 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
       actions.pushError(ErrorCodes.UNRECOGNIZED_EXCEL_FILE);
       return;
     }
-    setFileName(file.name);
+    setFile(file);
   };
   return (
     <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
       <Box display="flex" m="10px" gap="20px">
         <TSCButton
           onClick={() => {
-            setFormOpen(!formOpen);
+            setFormOpen(true);
           }}>
           Add Users to Workshop
         </TSCButton>
+        <TSCPopup
+          open={!!invalidEmails}
+          title="Please fix the following emails:"
+          message={invalidEmails}
+          onClose={() => setInvalidEmails("")}
+          maxWidth="xs"
+        />
         <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth={false}>
           <Box width="30vw" textAlign="center" padding="10px">
             <Typography variant="h5" mb="5px">
               Add Users
             </Typography>
-            <Box component="form" gap="20px" display="flex" flexDirection="column" alignItems="center" onSubmit={handleSubmit}>
+            <Box
+              component="form"
+              gap="20px"
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              onSubmit={handleSubmit}>
               <TextField
                 label="Paste Emails"
                 name="emails"
@@ -93,11 +107,11 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
                   accept=".xls,.xlsx"
                   startIcon={<CloudUploadIcon />}
                 />
-                <Typography ml="10px">
-                  {fileName || "No file selected"}
-                </Typography>
+                <Typography ml="10px">{file?.name || "No file selected"}</Typography>
               </Box>
-              <TSCButton type="submit">Submit</TSCButton>
+              <TSCButton type="submit" onClick={() => setFormOpen(false)}>
+                Submit
+              </TSCButton>
             </Box>
           </Box>
         </Dialog>
