@@ -35,6 +35,10 @@ export const requestDownload = async function requestDownload(
   let filename = "";
   // get valid filepath/filename from cache
   try {
+    if (!(await verifyFilepath(datapackDir))) {
+      reply.status(403).send({ error: "Invalid file path" });
+      return;
+    }
     const cachedDatapackFilepath = path.join(datapackDir, CACHED_USER_DATAPACK_FILENAME);
     if (!(await verifyFilepath(cachedDatapackFilepath))) {
       reply.status(403).send({ error: "Invalid file path" });
