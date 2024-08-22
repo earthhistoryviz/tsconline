@@ -10,6 +10,7 @@ import { useTheme, styled } from "@mui/material/styles";
 import { TSCIcon, TSCButton, TSCCard, StyledScrollbar } from "./components";
 import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import "./Home.css";
+import { ErrorCodes } from "./util/error-codes";
 
 const HeaderContainer = styled("div")(({ theme }) => ({
   display: "flex",
@@ -97,10 +98,12 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                   <TSCCard
                     preset={preset}
                     generateChart={async () => {
-                      await actions.processDatapackConfig(
-                        preset.datapacks.map((dp) => state.datapackIndex[dp.name]),
-                        preset.settings
-                      );
+                      const datapacks = preset.datapacks.map((dp) => state.datapackIndex[dp.name]);
+                      if (datapacks.some((dp) => !dp)) {
+                        actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
+                        return;
+                      }
+                      await actions.processDatapackConfig(datapacks, preset.settings);
                       actions.initiateChartGeneration(navigate, "/home");
                     }}
                   />

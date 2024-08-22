@@ -7,7 +7,7 @@
   "settings": "settings.tsc",
   "datapacks": [
     {
-      "name": "British Isles Map-Pack",
+      "name": "British Isles",
       "file": "British_Suite_wWiderColumns_GTS2020_5July2024.mdpk"
     }
   ],

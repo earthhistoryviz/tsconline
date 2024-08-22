@@ -7,7 +7,7 @@
   "settings": "settings.tsc",
   "datapacks": [
     {
-      "name": "South America Map-Pack",
+      "name": "South American Basins",
       "file": "SouthAmericaEncrypted_29Apr2019.mdpk"
     }
   ],
