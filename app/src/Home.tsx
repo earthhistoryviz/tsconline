@@ -69,7 +69,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
   navigate: NavigateFunction;
   configArray: ChartConfig[];
 }) {
-  const { actions } = useContext(context);
+  const { actions, state } = useContext(context);
   const theme = useTheme();
   const [expanded, setExpanded] = useState(true);
   const handleAccordionChange = () => {
@@ -98,7 +98,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                     preset={preset}
                     generateChart={async () => {
                       await actions.processDatapackConfig(
-                        preset.datapacks.map((datapack) => datapack.file),
+                        preset.datapacks.map((dp) => state.datapackIndex[dp.name]),
                         preset.settings
                       );
                       actions.initiateChartGeneration(navigate, "/home");

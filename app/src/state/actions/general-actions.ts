@@ -17,7 +17,8 @@ import {
   Datapack,
   assertServerDatapack,
   assertDatapackIndex,
-  DatapackConfigForChartRequest
+  DatapackConfigForChartRequest,
+  isUserDatapack
 } from "@tsconline/shared";
 
 import {
@@ -755,9 +756,19 @@ export const pushSnackbar = action("pushSnackbar", (text: string, severity: "suc
   });
 });
 
-export const fetchImage = action("fetchImage", async (datapackName: string, imageName: string) => {
-  const response = await fetcher(`/images/${datapackName}/${imageName}`, {
-    method: "GET"
+export const fetchImage = action("fetchImage", async (datapack: DatapackConfigForChartRequest, imageName: string) => {
+  const { title, file } = datapack;
+  const response = await fetcher(`/images`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      datapackTitle: title,
+      datapackFilename: file,
+      imageName,
+      ...(isUserDatapack(datapack) ? { uuid: datapack.uuid } : {})
+    })
   });
   if (!response.ok) {
     if (response.status === 404) {

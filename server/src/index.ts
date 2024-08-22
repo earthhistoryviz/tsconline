@@ -270,8 +270,28 @@ server.post<{ Params: { usecache: string; useSuggestedAge: string; username: str
 // Serve timescale data endpoint
 server.get("/timescale", looseRateLimit, routes.fetchTimescale);
 
-server.get<{ Params: { datapackName: string; imageName: string } }>(
-  "/images/:datapackName/:imageName",
+server.post(
+  "/images",
+  {
+    config: {
+      rateLimit: {
+        max: 60,
+        timeWindow: 1000 * 60
+      }
+    },
+    schema: {
+      body: {
+        type: "object",
+        properties: {
+          datapackTitle: { type: "string" },
+          datapackFilename: { type: "string" },
+          uuid: { type: "string" },
+          imageName: { type: "string" }
+        },
+        required: ["datapackTitle", "imageName", "datapackFilename"]
+      }
+    }
+  },
   routes.fetchImage
 );
 
