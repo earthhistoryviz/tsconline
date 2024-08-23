@@ -81,21 +81,6 @@ export const fetchServerDatapack = action("fetchServerDatapack", async (datapack
   return null;
 });
 
-export function getDatapackFromIndex(datapack: DatapackConfigForChartRequest, state: State) {
-  switch (datapack.type) {
-    case "server":
-      return state.datapackCollection.serverDatapackIndex[datapack.title];
-    case "private_user":
-      return state.datapackCollection.privateUserDatapackIndex[datapack.title];
-    case "public_user":
-      return state.datapackCollection.publicUserDatapackIndex[datapack.title];
-    case "workshop":
-      return state.datapackCollection.workshopDatapackIndex[datapack.title];
-    default:
-      return null;
-  }
-}
-
 export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   try {
     const response = await fetcher("/facies-patterns");
@@ -499,7 +484,7 @@ export const processDatapackConfig = action(
         setDatapackConfigWorker.onerror = function (error) {
           setDatapackConfigWorker.terminate();
           setIsProcessingDatapacks(false);
-          reject(new Error("Webworker failed with error." + error));
+          reject(new Error("Webworker failed with error." + error.message));
         };
       });
     } catch (e) {
