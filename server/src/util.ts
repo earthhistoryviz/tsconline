@@ -210,9 +210,7 @@ export async function loadAssetConfigs() {
   }
   if (await checkFileExists(assetconfigs.adminConfigPath)) {
     try {
-      const content = JSON.parse((await readFile(assetconfigs.adminConfigPath)).toString());
-      assertAdminConfig(content);
-      adminconfig = content;
+      adminconfig = await loadAdminConfig();
     } catch (e) {
       console.log("ERROR: Failed to load admin configs from assets/admin-config.json.  Error was: ", e);
       console.error("Removing admin-config.json and writing a new config file");
@@ -226,6 +224,12 @@ export async function loadAssetConfigs() {
       }
     }
   }
+}
+
+export async function loadAdminConfig() {
+  const content = JSON.parse((await readFile(assetconfigs.adminConfigPath)).toString());
+  assertAdminConfig(content);
+  return content;
 }
 
 /**
