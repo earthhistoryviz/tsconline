@@ -15,6 +15,7 @@ import { NumericFormat } from "react-number-format";
 import { ColumnInfo } from "@tsconline/shared";
 import { convertHexToRGB } from "../util/util";
 import { CustomDivider, CustomFormControlLabel, StyledScrollbar, TSCCheckbox } from "../components";
+import { useTranslation } from "react-i18next";
 const FontSizeTextField = ({ ...props }: TextFieldProps) => (
   <TextField {...props} className="font-size-container" label="Size" size="small" variant="outlined" />
 );
@@ -146,11 +147,14 @@ type FontMenuProps = {
 
 export const FontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
   const metaColumn = column.children.length > 0;
+  const { t } = useTranslation();
+  const name = column.name; //can't pass it directly to the translator
   return (
     <Box id="FontMenuContainer">
       <StyledScrollbar>
         <Typography variant="h6" className="font-menu-header">
-          Font Options for {`"${column.name}"`}
+          {/* Font Options for {`"${column.name}"`} */}
+          {t("settings.column.titles.font-option-title", { name })}
         </Typography>
         <CustomDivider className="settings-header-divider" />
         {metaColumn ? <MetaColumnFontMenu column={column} /> : <LeafColumnFontMenu column={column} />}

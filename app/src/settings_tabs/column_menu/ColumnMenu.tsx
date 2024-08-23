@@ -25,6 +25,7 @@ import { RangeSpecificSettings } from "../advanced_settings/RangeSpecificSetting
 import { ZoneSpecificSettings } from "../advanced_settings/ZoneSpecificSettings";
 import { AgeRulerSpecificSettings } from "../advanced_settings/AgeRulerSpecificSettings";
 import { setColumnMenuTabValue } from "../../state/actions";
+import { useTranslation } from "react-i18next";
 
 export const ColumnMenu = observer(() => {
   const { state } = useContext(context);
@@ -52,12 +53,13 @@ export const ColumnMenu = observer(() => {
       resizeObserver.disconnect();
     };
   }, []);
+  const { t } = useTranslation();
   return (
     <div className="column-menu">
       <div className="column-menu-header">
         <div className="column-menu-label">
           <Typography component="h1" variant="h5" whiteSpace={"nowrap"}>
-            Column Customization
+            {t("settings.column.titles.column-menu-title")}
           </Typography>
         </div>
       </div>

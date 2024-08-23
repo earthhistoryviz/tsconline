@@ -1,5 +1,8 @@
 {
     "translation": {
+        "login": {
+            "signin": "登陆"
+        },
         "title": {
             "main": "Time Scale Creator 在线版",
             "settings": "设置"
@@ -20,7 +23,9 @@
             "Search": "搜索",
             "Font": "字体",
             "Map Points": "地图",
-            "Datapacks": "选择数据包"
+            "Datapacks": "选择数据包",
+            "General": "基础选项",
+            "Data Mining": "数据挖掘"
         },
         "settings": {
             "time": {
@@ -31,13 +36,55 @@
                     "base-name": "年代/阶段 名称",
                     "not-avaliable": "该时间单位无可选年代",
                     "vertical-scale": "垂直比例（厘米 每 1"
+                },
+                "checkboxs": {
+                    "skip-empty-columns": "在已选时间段内没有数据的列将不会被画出",
+                    "mouse-over-info": "鼠标移至目标上时显示详细信息",
+                    "global-priority": "启用优先级过滤",
+                    "stage-background": "启用事件列的背景",
+                    "enable-legend": "启用添加图例",
+                    "lithology-auto-indent": "禁用自动缩进岩性图案",
+                    "conserve-chart": "使用家谱绘图时节省图表空间（暂无该功能）",
+                    "hide-block-labels": "根据优先级隐藏组标签",
+                    "use-suggested-age-spans": "禁用数据包建议的时间区间"
                 }
+            },
+            "column": {
+                "titles": {
+                    "column-menu-title": "个性化设置列",
+                    "data-mining-title": "数据挖掘设置",
+                    "font-option-title": "设置\"{{name}}\"列的字体"
+                }
+            },
+            "search": {
+                "search-bar": "搜索",
+                "found-result": "找到 {{count}} 个结果",
+                "current-time-settings": "当前时间区间设置(顶部 / 底部)",
+                "header": {
+                    "status": "状态",
+                    "center": "居中",
+                    "extend": "延展",
+                    "column": "列名称",
+                    "age": "年代",
+                    "qualifier": "类别",
+                    "notes": "注释"
+                }
+            },
+            "font": {},
+            "map-points": {},
+            "datapacks": {
+                "see-info-guidance": "点击数据包以查看更多信息！",
+                "add-datapack-guidance": "点击加号添加数据包"
             }
+        },
+        "chart": {
+            "no-chart-yet": "您还未制作任何图表"
         },
         "button": {
             "generate": "绘制",
             "generate-chart": "绘制图表",
-            "remove-cache": "清除缓存"
+            "remove-cache": "清除缓存",
+            "confirm-selection": "确认选择"
         },
         "languageNames": {
             "en": "English",

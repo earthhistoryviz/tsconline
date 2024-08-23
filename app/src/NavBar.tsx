@@ -5,7 +5,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import Toolbar from "@mui/material/Toolbar";
 import { styled, useTheme } from "@mui/material/styles";
 import HomeIcon from "@mui/icons-material/Home";
-import { ClickAwayListener, IconButton, Menu, Tab, Tabs, Typography } from "@mui/material";
+import { IconButton, Tab, Tabs, Typography } from "@mui/material";
 import { context } from "./state";
 import { TSCMenuItem, TSCButton } from "./components";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
@@ -185,7 +185,7 @@ export const NavBar = observer(function Navbar() {
           <Tab
             className="login-tab"
             value={5}
-            label="Sign in"
+            label={t("login.signin")}
             icon={<AccountCircleIcon />}
             to="/login"
             component={Link}
