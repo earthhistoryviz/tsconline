@@ -18,6 +18,8 @@ import isValidFilename from "valid-filename";
 import "./SaveSettings.css";
 import { observer } from "mobx-react-lite";
 import { CustomTooltip, TSCButton } from "../components";
+import { changeManuallyAddedColumns } from "../state/actions/generate-chart-actions";
+
 const SaveSettings = observer(() => {
   const { state, actions } = React.useContext(context);
   function saveSettings(filename: string) {
@@ -30,6 +32,7 @@ const SaveSettings = observer(() => {
     }
     const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
     const settingsCopy: ChartSettings = cloneDeep(state.settings);
+    changeManuallyAddedColumns(columnCopy);
     const blob = new Blob([jsonToXml(columnCopy, settingsCopy)], { type: "text/plain;charset=utf-8" });
     FileSaver.saveAs(blob, filename + ".tsc");
     actions.pushSnackbar("Successfully saved settings!", "success");

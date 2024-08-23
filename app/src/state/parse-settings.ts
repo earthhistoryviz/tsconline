@@ -38,7 +38,6 @@ import {
 import { ChartSettings } from "../types";
 import { convertRgbToString, convertTSCColorToRGB, findSerialNum } from "../util/util";
 import { cloneDeep, range } from "lodash";
-import { changeManuallyAddedColumns } from "../state/actions/generate-chart-actions";
 //for testing purposes
 //https://stackoverflow.com/questions/51269431/jest-mock-inner-function
 import * as parseSettings from "./parse-settings";
@@ -662,7 +661,6 @@ export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): strin
 }
 
 export function jsonToXml(state: ColumnInfo, settings: ChartSettings, version: string = "PRO8.1"): string {
-  changeManuallyAddedColumns(state);
   let settingsTSC = JSON.parse(JSON.stringify(parseSettings.columnInfoToSettingsTSC(state, settings)));
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
