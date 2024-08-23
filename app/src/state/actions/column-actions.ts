@@ -882,7 +882,7 @@ export const searchEvents = action(async (searchTerm: string, counter = { count:
               }
             }
             if ("subEventType" in subInfo) {
-              resInfo.qualifier = subInfo.subEventType;
+              resInfo.type = subInfo.subEventType;
             }
             if ("popup" in subInfo) {
               resInfo.notes = subInfo.popup;

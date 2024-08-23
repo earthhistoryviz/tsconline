@@ -68,7 +68,7 @@ export type SetDatapackConfigReturnValue = {
 //columnPath: path of edit names up until chart root for display
 //unit: unit of time (ex. Ma) for "in context" feature
 //age: undefined = no age, topAge and baseAge can be the same
-//qualifier: qualifier for events
+//type: type for events
 //notes: popup included with event and any other info
 export type EventSearchInfo = {
   id: number;
@@ -76,7 +76,7 @@ export type EventSearchInfo = {
   columnPath: string[];
   unit: string;
   age?: { topAge: number; baseAge: number };
-  qualifier?: string;
+  type?: string;
   notes?: string;
 };
 
