@@ -725,7 +725,7 @@ describe("userDeleteDatapack tests", () => {
       url: "/user/datapack/",
       headers
     });
-    expect(await response.json()).toEqual({ error: "Missing filename" });
+    expect(await response.json()).toEqual({ error: "Missing datapack" });
     expect(response.statusCode).toBe(400);
     expect(rmSpy).not.toHaveBeenCalled();
     expect(verifyFilepathSpy).not.toHaveBeenCalled();
@@ -737,7 +737,7 @@ describe("userDeleteDatapack tests", () => {
       url: `/user/datapack/${filename}`,
       headers
     });
-    expect(await response.json()).toEqual({ error: "Invalid filename/File doesn't exist" });
+    expect(await response.json()).toEqual({ error: "Invalid datapack/File doesn't exist" });
     expect(response.statusCode).toBe(403);
     expect(rmSpy).not.toHaveBeenCalled();
     expect(verifyFilepathSpy).toHaveBeenCalledOnce();

@@ -49,13 +49,6 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     max: 30,
     timeWindow: "1 minute"
   };
-  const fileNameParams = {
-    type: "object",
-    properties: {
-      filename: { type: "string" }
-    },
-    required: ["filename"]
-  };
   const datapackTitleParams = {
     type: "object",
     properties: {
@@ -82,8 +75,8 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
   // TODO - TRY WITH SCHEMA
   fastify.post("/datapack", { config: { rateLimit: moderateRateLimit } }, uploadDatapack);
   fastify.delete(
-    "/datapack/:filename",
-    { config: { rateLimit: moderateRateLimit }, schema: { params: fileNameParams } },
+    "/datapack/:datapack",
+    { config: { rateLimit: moderateRateLimit }, schema: { params: datapackTitleParams } },
     userDeleteDatapack
   );
 };
