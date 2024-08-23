@@ -38,6 +38,8 @@ export async function writeFileMetadata(
   const release = await mutex.acquire();
   try {
     const metadata = await loadFileMetadata(fileMetadataFilepath);
+    if (fileName === "__proto__" || fileName === "constructor" || fileName === "prototype")
+      throw new Error(`Invalid file name: ${fileName}`);
     metadata[filepath] = {
       fileName,
       lastUpdated: new Date().toISOString(),
