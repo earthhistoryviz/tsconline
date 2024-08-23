@@ -267,7 +267,7 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
     for (let i = 0; i < settings.children.length; i++) {
       const child = settings.children[i];
       const childName = extractName(child._id);
-      curcol = state.settingsTabs.columnHashMap.get(childName);
+      curcol = state.settingsTabs.columnHashMap.get(columnName + " " + childName);
       if (curcol) setColumnProperties(curcol, child);
 
       addColumnToDataMiningCache(child);

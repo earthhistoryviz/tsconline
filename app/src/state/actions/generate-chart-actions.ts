@@ -126,7 +126,6 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   try {
     normalizeColumnProperties(state.settingsTabs.columns!);
     const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
-    changeManuallyAddedColumns(columnCopy);
     const chartSettingsCopy: ChartSettings = cloneDeep(state.settings);
     const xmlSettings = jsonToXml(columnCopy, chartSettingsCopy);
     body = JSON.stringify({
@@ -199,7 +198,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
  * However, this is asyncronous, which makes it less likely to cause problems.
  * @param column
  */
-const changeManuallyAddedColumns = action((column: ColumnInfo) => {
+export const changeManuallyAddedColumns = action((column: ColumnInfo) => {
   const parent = column.parent && state.settingsTabs.columnHashMap.get(column.parent);
   if (parent && parent.columnDisplayType === "BlockSeriesMetaColumn") {
     if (column.name === `${column.parent} Facies Label`) {
