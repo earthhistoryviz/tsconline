@@ -1,8 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { checkForUsersWithUsernameOrEmail, createUser, findUser } from "../database.js";
+import { checkForUsersWithUsernameOrEmail, createUser, findUser, deleteUser } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
-import { deleteUser } from "../database.js";
 import { resolve, extname, join, relative, parse } from "path";
 import { adminconfig, assetconfigs, checkFileExists, verifyFilepath } from "../util.js";
 import { createWriteStream } from "fs";
@@ -18,6 +17,8 @@ import { promisify } from "util";
 import { assertAdminSharedUser, assertDatapackIndex } from "@tsconline/shared";
 import { NewUser } from "../types.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
+import { parseExcelFile } from "../parse-excel-file.js";
+import logger from "../error-logger.js";
 
 /**
  * Get all users for admin to configure on frontend
@@ -408,4 +409,123 @@ export const getAllUserDatapacks = async function getAllUserDatapacks(request: F
     reply.status(500).send({ error: "Error reading user datapack index, possible corruption of file" });
   }
   reply.send(userDatapackIndex);
+};
+
+/**
+ * Add users to a workshop
+ * @param request
+ * @param reply
+ * @returns
+ */
+export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request: FastifyRequest, reply: FastifyReply) {
+  const parts = request.parts();
+  let file: MultipartFile | undefined;
+  let filename: string | undefined;
+  let filepath: string | undefined;
+  let emails: Set<string> | undefined;
+  let workshopId: number | undefined;
+  try {
+    for await (const part of parts) {
+      if (part.type === "file") {
+        // DOWNLOAD FILE HERE AND SAVE TO FILE
+        file = part;
+        filename = file.filename;
+        filepath = resolve(assetconfigs.uploadDirectory, filename);
+        if (!filepath.startsWith(resolve(assetconfigs.uploadDirectory))) {
+          reply.status(403).send({ error: "Directory traversal detected" });
+          return;
+        }
+        if (!/^(\.xls|\.xlsx)$/.test(extname(file.filename))) {
+          reply.status(400).send({ error: "Invalid file type" });
+          return;
+        }
+        try {
+          await pipeline(file.file, createWriteStream(filepath));
+        } catch (error) {
+          console.error(error);
+          reply.status(500).send({ error: "Error saving file" });
+          return;
+        }
+        if (file.file.truncated) {
+          reply.status(400).send({ error: "File too large" });
+          return;
+        }
+        if (file.file.bytesRead === 0) {
+          reply.status(400).send({ error: `Empty file cannot be uploaded` });
+          return;
+        }
+      } else if (part.fieldname === "emails") {
+        emails = new Set(
+          (part.value as string)
+            .split(",")
+            .map((email) => email.trim())
+            .filter((email) => email !== "")
+        );
+      } else if (part.fieldname === "workshopId") {
+        workshopId = parseInt(part.value as string);
+      }
+    }
+    if (!workshopId || isNaN(workshopId)) {
+      reply.status(400).send({ error: "Invalid or missing workshop id" });
+      return;
+    }
+    if ((!emails || emails.size === 0) && (!file || !filepath || !filename)) {
+      reply.status(400).send({ error: "Missing either emails or file" });
+      return;
+    }
+    let emailList: string[] = [];
+    let invalidEmails: string[] = [];
+    if (file && filepath) {
+      try {
+        const excelData = await parseExcelFile(filepath);
+        emailList = excelData.flat().map((email) => String(email).trim());
+      } catch (e) {
+        console.error("Error parsing excel file:", e);
+        reply.status(400).send({ error: "Error parsing excel file" });
+        return;
+      }
+      invalidEmails = emailList.filter((email) => !validator.isEmail(email));
+    }
+    if (emails) {
+      invalidEmails.push(...Array.from(emails).filter((email) => !validator.isEmail(email)));
+      emailList.push(...emails);
+    }
+    if (invalidEmails.length > 0) {
+      reply.status(409).send({ error: "Invalid email addresses provided", invalidEmails: invalidEmails.join(", ") });
+      return;
+    }
+    for (const email of emailList) {
+      const user = await checkForUsersWithUsernameOrEmail(email, email);
+      if (user.length > 0) {
+        // TODO: Update existing user to workshop user
+      } else {
+        // TODO: These users cannot login yet, needs to be a workshop system to give them a password
+        await createUser({
+          email,
+          hashedPassword: null,
+          isAdmin: 0,
+          emailVerified: 1,
+          invalidateSession: 0,
+          pictureUrl: null,
+          username: email,
+          uuid: randomUUID()
+        });
+        const newUser = await findUser({ email });
+        if (newUser.length !== 1) {
+          reply.status(500).send({ error: "Error creating user", invalidEmails: email });
+          return;
+        }
+      }
+    }
+    reply.send({ message: "Users added" });
+  } catch (error) {
+    console.error(error);
+    reply.status(500).send({ error: "Unknown error" });
+  } finally {
+    if (file && filepath) {
+      await rm(filepath, { force: true }).catch((e) => {
+        logger.error("Error cleaning up file:", e);
+      });
+    }
+  }
 };
