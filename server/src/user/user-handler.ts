@@ -3,6 +3,7 @@ import path from "path";
 import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
 import { checkFileExists } from "../util.js";
 import { DatapackIndex, assertDatapack, assertPrivateUserDatapack } from "@tsconline/shared";
+import logger from "../error-logger.js";
 
 export async function getDirectories(source: string): Promise<string[]> {
   const entries = await readdir(source, { withFileTypes: true });
@@ -21,6 +22,7 @@ export async function fetchAllUsersDatapacks(userDirectory: string): Promise<Dat
     assertPrivateUserDatapack(parsedCachedDatapack);
     assertDatapack(parsedCachedDatapack);
     if (datapackIndex[datapack]) {
+      logger.error(`File system is corrupted, multiple datapacks with the same name: ${datapack}`);
       throw new Error(`Datapack ${datapack} already exists in the index`);
     }
     datapackIndex[datapack] = parsedCachedDatapack;
