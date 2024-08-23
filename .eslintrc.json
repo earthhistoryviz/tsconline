@@ -36,6 +36,15 @@
                     "camelCase",
                     "PascalCase"
                 ]
+            },
+            {
+                "selector": "variable",
+                "modifiers": ["const"],
+                "format": [
+                    "camelCase",
+                    "UPPER_CASE",
+                    "PascalCase"
+                ]
             }
         ],
         "@typescript-eslint/no-unused-vars": [
@@ -60,8 +69,7 @@
             "files": [
                 "shared/**/*",
                 "app/src/types.ts",
-                "server/src/types.ts",
-                "server/src/parse-map-packs.ts"
+                "server/src/types.ts"
             ],
             "rules": {
                 "@typescript-eslint/no-explicit-any": "off"

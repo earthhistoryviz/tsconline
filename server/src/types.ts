@@ -88,9 +88,7 @@ export type FileMetadataIndex = {
 export type FileMetadata = {
   fileName: string;
   lastUpdated: string;
-  decryptedFilepath: string;
-  mapPackIndexFilepath: string;
-  datapackIndexFilepath: string;
+  uuid: string;
 };
 
 export function assertAdminConfig(o: any): asserts o is AdminConfig {
@@ -117,12 +115,7 @@ export function assertFileMetadata(o: any): asserts o is FileMetadata {
   if (typeof o !== "object" || !o) throw "FileMetadata must be an object";
   if (typeof o.fileName !== "string") throwError("FileMetadata", "fileName", "string", o.fileName);
   if (typeof o.lastUpdated !== "string") throwError("FileMetadata", "lastUpdated", "string", o.lastUpdated);
-  if (typeof o.decryptedFilepath !== "string")
-    throwError("FileMetadata", "decryptedFilepath", "string", o.decryptedFilepath);
-  if (typeof o.mapPackIndexFilepath !== "string")
-    throwError("FileMetadata", "mapPackIndexFilepath", "string", o.mapPackIndexFilepath);
-  if (typeof o.datapackIndexFilepath !== "string")
-    throwError("FileMetadata", "datapackIndexFilepath", "string", o.datapackIndexFilepath);
+  if (typeof o.uuid !== "string") throwError("FileMetadata", "uuid", "string", o.uuid);
 }
 
 export function assertFileMetadataIndex(o: any): asserts o is FileMetadataIndex {

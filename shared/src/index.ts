@@ -73,6 +73,7 @@ export type BaseDatapackProps = {
   contact?: string;
   notes?: string;
   datapackImageCount: number;
+  mapPack: MapPack; // this can be empty
 };
 
 type ServerDatapack = {
@@ -107,11 +108,6 @@ export type DatapackWarning = {
 export type ChartErrorResponse = {
   error: string;
   errorCode: number;
-};
-
-export type IndexResponse = {
-  datapackIndex: DatapackIndex;
-  mapPackIndex: MapPackIndex;
 };
 
 export type DatapackIndex = {
@@ -210,9 +206,14 @@ export type SubBlockInfo = {
   rgb: RGB;
 };
 
+export type DatapackConfigForChartRequest = {
+  file: string;
+  title: string;
+} & DatapackType;
+
 export type ChartRequest = {
   settings: string; // JSON string representing the settings file you want to use to make a chart
-  datapacks: string[]; // active datapacks to be used on chart
+  datapacks: DatapackConfigForChartRequest[]; // array of datapacks you want to use to make a chart
   useCache: boolean; // whether to use the cache or not
 };
 
@@ -509,30 +510,34 @@ export type ChartResponseInfo = {
   hash: string; // hash for where it is stored
 };
 
+export type MapTransect = {
+  startMapPoint: string;
+  endMapPoint: string;
+  note?: string;
+};
 export type Transects = {
-  [name: string]: {
-    startMapPoint: string;
-    endMapPoint: string;
-    note?: string;
-  };
+  [name: string]: MapTransect;
+};
+export type MapPoint = {
+  lat: number;
+  lon: number;
+  default?: string;
+  minage?: number;
+  maxage?: number;
+  note?: string;
 };
 export type MapPoints = {
-  [name: string]: {
-    lat: number;
-    lon: number;
-    default?: string;
-    minage?: number;
-    maxage?: number;
-    note?: string;
-  };
+  [name: string]: MapPoint;
+};
+
+export type InfoPoint = {
+  lat: number;
+  lon: number;
+  note?: string;
 };
 
 export type InfoPoints = {
-  [name: string]: {
-    lat: number;
-    lon: number;
-    note?: string;
-  };
+  [name: string]: InfoPoint;
 };
 
 export type MapInfo = {
@@ -580,6 +585,13 @@ export type TimescaleItem = {
 };
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
+
+export function assertDatapackConfigForChartRequest(o: any): asserts o is DatapackConfigForChartRequest {
+  if (!o || typeof o !== "object") throw new Error("DatapackConfigForChartRequest must be a non-null object");
+  if (typeof o.file !== "string") throwError("DatapackConfigForChartRequest", "filename", "string", o.file);
+  if (typeof o.title !== "string") throwError("DatapackConfigForChartRequest", "title", "string", o.title);
+  assertDatapackType(o);
+}
 
 export function assertChartErrorResponse(o: any): asserts o is ChartErrorResponse {
   if (!o || typeof o !== "object") throw new Error("ChartErrorResponse must be a non-null object");
@@ -984,6 +996,12 @@ export function assertPresets(o: any): asserts o is Presets {
     }
   }
 }
+export function assertMapTransect(o: any): asserts o is Transects[string] {
+  if (!o || typeof o !== "object") throw new Error("MapTransect must be a non-null object");
+  if (typeof o.startMapPoint !== "string") throwError("MapTransect", "startMapPoint", "string", o.startMapPoint);
+  if (typeof o.endMapPoint !== "string") throwError("MapTransect", "endMapPoint", "string", o.endMapPoint);
+  if ("note" in o && typeof o.note !== "string") throwError("MapTransect", "note", "string", o.note);
+}
 export function assertTransects(o: any): asserts o is Transects {
   if (!o || typeof o !== "object") throw new Error("Transects must be a non-null object");
   for (const key in o) {
@@ -1010,6 +1028,9 @@ export function isWorkshopDatapack(o: any): o is WorkshopDatapack {
 }
 export function isPublicUserDatapack(o: any): o is PublicUserDatapack {
   return o.type === "public_user" && typeof o.uuid === "string";
+}
+export function isUserDatapack(o: any): o is PublicUserDatapack | PrivateUserDatapack {
+  return isPublicUserDatapack(o) || isPrivateUserDatapack(o);
 }
 export function isPrivateUserDatapack(o: any): o is PrivateUserDatapack {
   return o.type === "private_user" && typeof o.uuid === "string";
@@ -1155,12 +1176,6 @@ export function assertSubFaciesInfo(o: any): asserts o is SubFaciesInfo {
   if ("label" in o && typeof o.label !== "string") throwError("SubFaciesInfo", "label", "string", o.label);
   if (typeof o.age !== "number") throwError("SubFaciesInfo", "age", "number", o.age);
 }
-export function assertIndexResponse(o: any): asserts o is IndexResponse {
-  if (!o || typeof o !== "object") throw new Error("IndexResponse must be a non-null object");
-  assertDatapackIndex(o.datapackIndex);
-  assertMapPackIndex(o.mapPackIndex);
-}
-
 export function assertChartConfig(o: any): asserts o is ChartConfig {
   if (typeof o !== "object") throw new Error("ChartConfig must be an object");
   if (typeof o.icon !== "string") throwError("ChartConfig", "icon", "string", o.icon);
@@ -1549,6 +1564,14 @@ export function assertRectBounds(rectBounds: any): asserts rectBounds is RectBou
     throw new Error("RectBounds must have a lowerRightLat number property");
   }
 }
+export function assertInfoPoint(o: any): asserts o is InfoPoint {
+  if (typeof o !== "object" || o === null) {
+    throw new Error("InfoPoint must be a non-null object");
+  }
+  if (typeof o.lat !== "number") throwError("InfoPoint", "lat", "number", o.lat);
+  if (typeof o.lon !== "number") throwError("InfoPoint", "lon", "number", o.lon);
+  if (o.note !== undefined && typeof o.note !== "string") throwError("InfoPoint", "note", "string", o.note);
+}
 export function assertInfoPoints(o: any): asserts o is InfoPoints {
   if (typeof o !== "object" || o === null) {
     throw new Error("InfoPoints must be a non-null object");
@@ -1571,6 +1594,17 @@ export function assertInfoPoints(o: any): asserts o is InfoPoints {
   }
 }
 
+export function assertMapPoint(o: any): asserts o is MapPoint {
+  if (typeof o !== "object" || o === null) {
+    throw new Error("MapPoint must be a non-null object");
+  }
+  if (typeof o.lat !== "number") throwError("MapPoint", "lat", "number", o.lat);
+  if (typeof o.lon !== "number") throwError("MapPoint", "lon", "number", o.lon);
+  if (o.default !== undefined && typeof o.default !== "string") throwError("MapPoint", "default", "string", o.default);
+  if (o.minage !== undefined && typeof o.minage !== "number") throwError("MapPoint", "minage", "number", o.minage);
+  if (o.maxage !== undefined && typeof o.maxage !== "number") throwError("MapPoint", "maxage", "number", o.maxage);
+  if (o.note !== undefined && typeof o.note !== "string") throwError("MapPoint", "note", "string", o.note);
+}
 export function assertMapPoints(o: any): asserts o is MapPoints {
   if (typeof o !== "object" || o === null) {
     throw new Error("MapPoints must be a non-null object");

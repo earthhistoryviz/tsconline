@@ -20,8 +20,7 @@ export const TSCPopupManager = () => {
         if (imageName) {
           try {
             for (const datapack of state.config.datapacks) {
-              const datapackName = datapack.replace(/\.[^/.]+$/, "");
-              const imageBlob = await actions.fetchImage(datapackName, imageName);
+              const imageBlob = await actions.fetchImage(datapack, imageName);
               const reader = new FileReader();
               reader.readAsDataURL(imageBlob);
               await new Promise((resolve, reject) => {

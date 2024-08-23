@@ -6,7 +6,7 @@ import { execSync } from "child_process";
 import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs, adminconfig } from "./util.js";
 import * as routes from "./routes/routes.js";
 import * as loginRoutes from "./routes/login-routes.js";
-import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
+import { DatapackIndex } from "@tsconline/shared";
 import fastifyCompress from "@fastify/compress";
 import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
@@ -80,14 +80,12 @@ try {
 }
 
 export const datapackIndex: DatapackIndex = {};
-export const mapPackIndex: MapPackIndex = {};
 const patterns = await loadFaciesPatterns();
-await loadIndexes(datapackIndex, mapPackIndex, assetconfigs.decryptionDirectory, adminconfig.datapacks, {
+await loadIndexes(datapackIndex, assetconfigs.decryptionDirectory, adminconfig.datapacks, {
   type: "server"
 });
-export const { datapackIndex: publicDatapackIndex, mapPackIndex: publicMapPackIndex } = await loadPublicUserDatapacks(
-  join(assetconfigs.publicDirectory, "DatapackIndex.json"),
-  join(assetconfigs.publicDirectory, "MapPackIndex.json")
+export const { datapackIndex: publicDatapackIndex } = await loadPublicUserDatapacks(
+  join(assetconfigs.publicDirectory, "DatapackIndex.json")
 );
 
 declare module "@fastify/secure-session" {
@@ -198,21 +196,6 @@ server.get("/presets", async (_request, reply) => {
 server.get("/server/datapack/:name", routes.fetchServerDatapack);
 
 server.get("/datapack-index", routes.fetchServerDatapackInfo);
-server.get("/map-pack-index", routes.fetchServerMapPackInfo);
-
-server.get("/datapackinfoindex", (_request, reply) => {
-  if (!datapackIndex || !mapPackIndex) {
-    reply.send({ error: "datapackIndex/mapPackIndex is null" });
-  } else {
-    const indexResponse = { datapackIndex, mapPackIndex };
-    try {
-      assertIndexResponse(indexResponse);
-      reply.send(indexResponse);
-    } catch (e) {
-      reply.send({ error: `${e}` });
-    }
-  }
-});
 
 server.get("/facies-patterns", (_request, reply) => {
   if (!patterns || Object.keys(patterns).length === 0) {
@@ -287,8 +270,28 @@ server.post<{ Params: { usecache: string; useSuggestedAge: string; username: str
 // Serve timescale data endpoint
 server.get("/timescale", looseRateLimit, routes.fetchTimescale);
 
-server.get<{ Params: { datapackName: string; imageName: string } }>(
-  "/images/:datapackName/:imageName",
+server.post(
+  "/images",
+  {
+    config: {
+      rateLimit: {
+        max: 60,
+        timeWindow: 1000 * 60
+      }
+    },
+    schema: {
+      body: {
+        type: "object",
+        properties: {
+          datapackTitle: { type: "string" },
+          datapackFilename: { type: "string" },
+          uuid: { type: "string" },
+          imageName: { type: "string" }
+        },
+        required: ["datapackTitle", "imageName", "datapackFilename"]
+      }
+    }
+  },
   routes.fetchImage
 );
 

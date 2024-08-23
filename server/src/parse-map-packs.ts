@@ -2,7 +2,21 @@ import fs from "fs/promises";
 import path from "path";
 import { formatColumnName, grabFilepaths, trimQuotes, assetconfigs } from "./util.js";
 import pmap from "p-map";
-import { MapHierarchy, MapInfo, MapPack, assertTransects } from "@tsconline/shared";
+import {
+  InfoPoints,
+  MapHierarchy,
+  MapInfo,
+  MapPack,
+  MapPoint,
+  MapTransect,
+  ParentMap,
+  RectBounds,
+  VertBounds,
+  assertInfoPoint,
+  assertMapPoint,
+  assertMapTransect,
+  assertTransects
+} from "@tsconline/shared";
 import {
   assertMapPoints,
   assertInfoPoints,
@@ -157,6 +171,7 @@ export function processLine(
         const { mapName, mapPoint } = grabMapPoints(headerLabels, info);
         index++;
         info = tabSeparated[index];
+        assertMapPoint(mapPoint);
         map.mapPoints[mapName] = mapPoint;
       }
       assertMapPoints(map.mapPoints);
@@ -172,6 +187,7 @@ export function processLine(
         const { name, infoPoint } = grabInfoPoints(headerLabels, info);
         index++;
         info = tabSeparated[index];
+        assertInfoPoint(infoPoint);
         map.infoPoints[name] = infoPoint;
       }
       assertInfoPoints(map.infoPoints);
@@ -188,6 +204,7 @@ export function processLine(
         const { transect, name } = grabTransects(headerLabels, info);
         index++;
         info = tabSeparated[index];
+        assertMapTransect(transect);
         map.transects[name] = transect;
       }
       assertTransects(map.transects);
@@ -209,7 +226,7 @@ function grabNames(line: string[]) {
 }
 
 function grabRectBounds(headerLabels: string[], info: string[]) {
-  const rectBounds: any = {};
+  const rectBounds: Partial<RectBounds> = {};
   for (let i = 1; i < info.length; i++) {
     if (!headerLabels || !headerLabels[i]) continue;
     switch (headerLabels[i]!) {
@@ -237,7 +254,7 @@ function grabRectBounds(headerLabels: string[], info: string[]) {
   return rectBounds;
 }
 export function grabVertBounds(headerLabels: string[], info: string[]) {
-  const vertBounds: any = {};
+  const vertBounds: Partial<VertBounds> = {};
   for (let i = 1; i < info.length; i++) {
     if (!info[i] || !headerLabels || !headerLabels[i]) continue;
     switch (headerLabels[i]!) {
@@ -265,7 +282,7 @@ export function grabVertBounds(headerLabels: string[], info: string[]) {
 }
 
 function grabTransects(headerLabels: string[], info: string[]) {
-  const transect: any = {};
+  const transect: Partial<MapTransect> = {};
   let name = "";
   for (let i = 1; i < info.length; i++) {
     if (!info[i] || !headerLabels || !headerLabels[i]) continue;
@@ -290,7 +307,7 @@ function grabTransects(headerLabels: string[], info: string[]) {
 }
 
 function grabInfoPoints(headerLabels: string[], info: string[]) {
-  const infoPoint: any = {};
+  const infoPoint: Partial<InfoPoints[string]> = {};
   let name = "";
   for (let i = 1; i < info.length; i++) {
     if (!info[i] || !headerLabels || !headerLabels[i]) continue;
@@ -316,7 +333,7 @@ function grabInfoPoints(headerLabels: string[], info: string[]) {
 }
 
 function grabMapPoints(headerLabels: string[], info: string[]) {
-  const mapPoint: any = {};
+  const mapPoint: Partial<MapPoint> = {};
   let mapName = "";
   for (let j = 1; j < info.length; j++) {
     if (!info[j] || !headerLabels || !headerLabels[j] || !headerLabels[j]!) continue;
@@ -350,9 +367,10 @@ function grabMapPoints(headerLabels: string[], info: string[]) {
 }
 
 export function grabParent(headerLabels: string[], info: string[]) {
-  const parent: any = {};
+  const parent: Partial<ParentMap> = {};
   //TODO: we only assume rect bounds as parent, will need change if not the case
   const bounds = grabRectBounds(headerLabels, info);
+  assertRectBounds(bounds);
   parent.bounds = bounds;
   assertRectBounds(bounds);
   for (let i = 1; i < info.length; i++) {

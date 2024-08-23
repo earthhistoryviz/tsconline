@@ -1,4 +1,4 @@
-import { BaseDatapackProps, isPrivateUserDatapack } from "@tsconline/shared";
+import { Datapack, DatapackConfigForChartRequest, isPrivateUserDatapack } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
 import { useContext, useState } from "react";
 import { Box, Typography } from "@mui/material";
@@ -14,9 +14,9 @@ import { context } from "../../state";
 
 type TSCCompactDatapackRowProps = {
   name: string;
-  datapack: BaseDatapackProps;
+  datapack: Datapack;
   value: boolean;
-  onChange: (name: string) => void;
+  onChange: (datapack: DatapackConfigForChartRequest) => void;
 };
 export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = observer(function TSCCompactDatapackRow({
   name,
@@ -53,7 +53,7 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
         onClick={async (e) => {
           e.stopPropagation();
           setLoading(true);
-          onChange(name);
+          onChange(datapack);
           setLoading(false);
         }}>
         {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
