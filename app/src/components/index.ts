@@ -4,7 +4,7 @@ export { TSCButton } from "./TSCButton";
 export { TSCCard } from "./TSCCard";
 export { TSCIcon } from "./TSCIcon";
 export * from "./TSCFileUpload";
-export { TSCPopupDialog } from "./TSCPopupDialog";
+export { TSCYesNoPopup } from "./TSCYesNoPopup";
 export { TSCSvgComponent } from "./TSCSvgComponent";
 export { TSCPopupManager } from "./TSCPopupManager";
 export * from "./TSCComponents";

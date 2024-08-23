@@ -457,7 +457,7 @@ export const fetchTimescale = async function (_request: FastifyRequest, reply: F
       return;
     }
 
-    const excelData: string[][] = await parseExcelFile(filePath);
+    const excelData: string[][] = await parseExcelFile(filePath, 2);
     const timescaleData: TimescaleItem[] = excelData
       .map(([, , stage, ma]) => {
         const age = parseFloat(ma as string);

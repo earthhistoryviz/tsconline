@@ -1,13 +1,8 @@
 import { useEffect, useState, useContext } from "react";
 import { context } from "../state/index";
-import Dialog from "@mui/material/Dialog";
-import DialogContent from "@mui/material/DialogContent";
 import { ErrorCodes } from "../util/error-codes";
 import { Typography } from "@mui/material";
-import CloseSharpIcon from "@mui/icons-material/CloseSharp";
-import IconButton from "@mui/material/IconButton";
-import DialogTitle from "@mui/material/DialogTitle";
-import "./TSCPopupManager.css";
+import { TSCPopup } from "./TSCPopup";
 
 export const TSCPopupManager = () => {
   const [popupContent, setPopupContent] = useState({ open: false, message: "" });
@@ -80,20 +75,18 @@ export const TSCPopupManager = () => {
     return <Typography>Invalid SVG Path. Please check the path and try again.</Typography>;
   }
 
-  const handleClose = () => setPopupContent((prev) => ({ ...prev, open: false }));
   const addTargetBlank = (html: string) => {
     return html.replace(/<a\s+href=/g, '<a target="_blank" href=');
   };
   const processedPopupContent = addTargetBlank(popupContent.message);
   return (
-    <Dialog open={popupContent.open} onClose={handleClose} sx={{ minWidth: "260px" }}>
-      <DialogTitle className="popup-title">Details</DialogTitle>
-      <IconButton aria-label="close" onClick={handleClose} className="popup-close-button">
-        <CloseSharpIcon />
-      </IconButton>
-      <DialogContent className="popup-dialog">
-        <div dangerouslySetInnerHTML={{ __html: processedPopupContent }} />
-      </DialogContent>
-    </Dialog>
+    <TSCPopup
+      open={popupContent.open}
+      title="Details"
+      message={processedPopupContent}
+      onClose={() => setPopupContent((prev) => ({ ...prev, open: false }))}
+      dangerous={true}
+      maxWidth="lg"
+    />
   );
 };

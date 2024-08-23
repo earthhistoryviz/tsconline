@@ -18,6 +18,7 @@ import fastifyMultipart from "@fastify/multipart";
 import formAutoContent from "form-auto-content";
 import { DatapackMetadata, Datapack } from "@tsconline/shared";
 import * as uploadHandlers from "../src/upload-handlers";
+import * as excel from "../src/parse-excel-file";
 
 vi.mock("node:child_process", async () => {
   return {
@@ -156,7 +157,8 @@ vi.mock("../src/database", async (importOriginal) => {
     findUser: vi.fn(() => Promise.resolve([testAdminUser])), // just so we can verify the user is an admin for prehandlers
     checkForUsersWithUsernameOrEmail: vi.fn().mockResolvedValue([]),
     createUser: vi.fn().mockResolvedValue({}),
-    deleteUser: vi.fn().mockResolvedValue({})
+    deleteUser: vi.fn().mockResolvedValue({}),
+    findUsers: vi.fn().mockResolvedValue([])
   };
 });
 
@@ -170,6 +172,12 @@ vi.mock("../src/file-metadata-handler", async () => {
   return {
     deleteAllUserMetadata: vi.fn().mockResolvedValue(undefined),
     deleteDatapackFoundInMetadata: vi.fn().mockResolvedValue({})
+  };
+});
+
+vi.mock("../src/parse-excel-file", async () => {
+  return {
+    parseExcelFile: vi.fn().mockResolvedValue([])
   };
 });
 
@@ -241,7 +249,8 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   { method: "DELETE", url: "/admin/user/datapack", body: { uuid: "test", datapack: "test" } },
   { method: "DELETE", url: "/admin/server/datapack", body: { datapack: "test" } },
   { method: "POST", url: "/admin/server/datapack", body: { datapack: "test" } },
-  { method: "POST", url: "/admin/user/datapacks", body: { uuid: "test" } }
+  { method: "POST", url: "/admin/user/datapacks", body: { uuid: "test" } },
+  { method: "POST", url: "/admin/workshop/users", body: { file: "test", emails: "test@email.com", workshopId: "1" } }
 ];
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
 describe("verifyAdmin tests", () => {
@@ -1486,6 +1495,291 @@ describe("getAllUserDatapacks", () => {
     expect(readFile).toHaveBeenCalledTimes(0);
     expect(assertDatapackIndex).toHaveBeenCalledTimes(0);
     expect(await response.json()).toEqual({});
+    expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("adminAddUsersToWorkshop", () => {
+  let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
+  const rm = vi.spyOn(fsPromises, "rm");
+  const pipeline = vi.spyOn(streamPromises, "pipeline");
+  const parseExcelFile = vi.spyOn(excel, "parseExcelFile");
+  const findUser = vi.spyOn(database, "findUser");
+  const createUser = vi.spyOn(database, "createUser");
+  const checkForUsersWithUsernameOrEmail = vi.spyOn(database, "checkForUsersWithUsernameOrEmail");
+  const createForm = (json: Record<string, unknown> = {}) => {
+    if (!("file" in json)) {
+      json.file = {
+        value: Buffer.from("test"),
+        options: {
+          filename: "test.xlsx",
+          contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        }
+      };
+    }
+    if (!("emails" in json)) {
+      json.emails = "test@gmail.com, test2@gmail.com";
+    }
+    if (!("workshopId" in json)) {
+      json.workshopId = "1";
+    }
+    formData = formAutoContent({ ...json }, { payload: "body", forceMultiPart: true });
+    formHeaders = { ...headers, ...(formData.headers as Record<string, string>) };
+  };
+  beforeEach(() => {
+    createForm();
+    vi.clearAllMocks();
+  });
+  it("should return 403 if file attempts directory traversal", async () => {
+    vi.mocked(path.resolve)
+      .mockImplementationOnce((...args) => resolve(...args))
+      .mockReturnValueOnce("root");
+    createForm({
+      file: {
+        value: Buffer.from("test"),
+        options: {
+          filename: "./../../../etc.xlsx", // multipart form data doesn't allow ../ so this goes to etc.xlsx
+          contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        }
+      }
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(parseExcelFile).not.toHaveBeenCalled();
+    expect(pipeline).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Directory traversal detected" });
+    expect(response.statusCode).toBe(403);
+  });
+  test.each(["text.png", "text.jpg", "text.gif", "text.bmp", "text", "text.tx", "text.zip"])(
+    `should return 400 if file is not in a correct format: %s`,
+    async (filename) => {
+      createForm({
+        file: {
+          value: Buffer.from("test"),
+          options: {
+            filename: filename,
+            contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          }
+        }
+      });
+      const response = await app.inject({
+        method: "POST",
+        url: "/admin/workshop/users",
+        payload: formData.body,
+        headers: formHeaders
+      });
+      expect(pipeline).not.toHaveBeenCalled();
+      expect(parseExcelFile).not.toHaveBeenCalled();
+      expect(await response.json()).toEqual({ error: "Invalid file type" });
+      expect(response.statusCode).toBe(400);
+    }
+  );
+  it("should return 500 if pipeline throws error", async () => {
+    pipeline.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(parseExcelFile).not.toHaveBeenCalled();
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
+    expect(await response.json()).toEqual({ error: "Error saving file" });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 400 if file is too big", async () => {
+    createForm({
+      file: {
+        value: Buffer.from("t".repeat(60 * 1024 * 1024 + 1)), // 60MB + 1 byte
+        options: {
+          filename: "test.xlsx",
+          contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        }
+      }
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(parseExcelFile).not.toHaveBeenCalled();
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
+    expect(await response.json()).toEqual({ error: "File too large" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if bytesRead is 0", async () => {
+    createForm({
+      file: {
+        value: Buffer.from(""),
+        options: {
+          filename: "test.xlsx",
+          contentType: "application/zip"
+        }
+      }
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
+    expect(await response.json()).toEqual({ error: "Empty file cannot be uploaded" });
+  });
+  it("should return 400 if missing workshopId", async () => {
+    createForm({ workshopId: "" });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
+    expect(await response.json()).toEqual({ error: "Invalid or missing workshop id" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if workshopId is not a number", async () => {
+    createForm({ workshopId: "abcd" });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
+    expect(await response.json()).toEqual({ error: "Invalid or missing workshop id" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if missing file field and email field", async () => {
+    createForm({
+      file: "",
+      emails: ""
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Missing either emails or file" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if emails is invalid", async () => {
+    createForm({ emails: "test1, test2" });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(parseExcelFile).toHaveBeenCalledTimes(1);
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
+    expect(await response.json()).toEqual({ error: "Invalid email addresses provided", invalidEmails: "test1, test2" });
+    expect(response.statusCode).toBe(409);
+  });
+  it("should return 500 if parseExcelFile fails", async () => {
+    parseExcelFile.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(parseExcelFile).toHaveBeenCalledTimes(1);
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
+    expect(await response.json()).toEqual({ error: "Error parsing excel file" });
+  });
+  it("should return 500 if findUser returns empty", async () => {
+    findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(parseExcelFile).toHaveBeenCalledTimes(1);
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
+    expect(await response.json()).toEqual({ error: "Error creating user", invalidEmails: "test@gmail.com" });
+  });
+  it("should return 500 if findUser throws an error", async () => {
+    findUser.mockResolvedValueOnce([testAdminUser]).mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(parseExcelFile).toHaveBeenCalledTimes(1);
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
+    expect(await response.json()).toEqual({ error: "Unknown error" });
+  });
+  it("should return 200 if successful and add new users", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(parseExcelFile).toHaveBeenCalledTimes(1);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(2);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(1, "test@gmail.com", "test@gmail.com");
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(2, "test2@gmail.com", "test2@gmail.com");
+    expect(createUser).toHaveBeenCalledTimes(2);
+    expect(createUser).toHaveBeenNthCalledWith(1, {
+      email: "test@gmail.com",
+      hashedPassword: null,
+      isAdmin: 0,
+      emailVerified: 1,
+      invalidateSession: 0,
+      pictureUrl: null,
+      username: "test@gmail.com",
+      uuid: "random-uuid"
+    });
+    expect(createUser).toHaveBeenNthCalledWith(2, {
+      email: "test2@gmail.com",
+      hashedPassword: null,
+      isAdmin: 0,
+      emailVerified: 1,
+      invalidateSession: 0,
+      pictureUrl: null,
+      username: "test2@gmail.com",
+      uuid: "random-uuid"
+    });
+    expect(findUser).toHaveBeenCalledTimes(3); // 1st call is from the prehandler verifyAdmin
+    expect(findUser).toHaveBeenNthCalledWith(2, { email: "test@gmail.com" });
+    expect(findUser).toHaveBeenNthCalledWith(3, { email: "test2@gmail.com" });
+    expect(await response.json()).toEqual({ message: "Users added" });
+    expect(response.statusCode).toBe(200);
+  });
+  it("should return 200 if successful and update old users", async () => {
+    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(parseExcelFile).toHaveBeenCalledTimes(1);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(2);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(1, "test@gmail.com", "test@gmail.com");
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(2, "test2@gmail.com", "test2@gmail.com");
+    expect(createUser).not.toHaveBeenCalled();
+    expect(findUser).toHaveBeenCalledTimes(1); // 1st call is from the prehandler verifyAdmin
+    expect(await response.json()).toEqual({ message: "Users added" });
     expect(response.statusCode).toBe(200);
   });
 });
